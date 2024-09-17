@@ -348,38 +348,30 @@ export const Default = {
   render: () => <Story text={text} extensions={defaultExtensions} selection={{ anchor: 99, head: 110 }} />,
 };
 
-export const ScrollTo = {
-  render: () => {
-    // NOTE: Selection won't appear if text is reformatted.
-    const word = 'Scroll to here...';
-    const text = str('# Scroll To', longText, '', word, '', longText);
-    const idx = text.indexOf(word);
-    return (
-      <Story
-        text={text}
-        extensions={defaultExtensions}
-        scrollTo={idx}
-        selection={{ anchor: idx, head: idx + word.length }}
-      />
-    );
-  },
+export const Empty = {
+  render: () => <Story extensions={defaultExtensions} />,
 };
 
 export const Readonly = {
   render: () => <Story text={text} extensions={defaultExtensions} readonly />,
 };
 
-export const Empty = {
-  render: () => <Story extensions={defaultExtensions} />,
-};
-
 export const NoExtensions = {
   render: () => <Story text={text} />,
 };
 
-export const Folding = {
-  render: () => <Story text={text} extensions={[editorGutter, folding()]} />,
+export const Vim = {
+  render: () => (
+    <Story
+      text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', content.paragraphs)}
+      extensions={[defaultExtensions, InputModeExtensions.vim]}
+    />
+  ),
 };
+
+//
+// Scrolling
+//
 
 const longText = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
 
@@ -394,11 +386,11 @@ const headings = str(
     .flat(),
 );
 
-export const Headings = {
-  render: () => <Story text={headings} extensions={decorateMarkdown({ numberedHeadings: { from: 2, to: 4 } })} />,
-};
-
 const global = new Map<string, EditorSelectionState>();
+
+export const Folding = {
+  render: () => <Story text={text} extensions={[editorGutter, folding()]} />,
+};
 
 export const Scrolling = {
   render: () => (
@@ -416,6 +408,31 @@ export const ScrollingWithImages = {
   render: () => (
     <Story text={str('# Large Document', '', largeWithImages)} extensions={[decorateMarkdown(), image()]} />
   ),
+};
+
+export const ScrollTo = {
+  render: () => {
+    // NOTE: Selection won't appear if text is reformatted.
+    const word = 'Scroll to here...';
+    const text = str('# Scroll To', longText, '', word, '', longText);
+    const idx = text.indexOf(word);
+    return (
+      <Story
+        text={text}
+        extensions={defaultExtensions}
+        scrollTo={idx}
+        selection={{ anchor: idx, head: idx + word.length }}
+      />
+    );
+  },
+};
+
+//
+// Markdown
+//
+
+export const Headings = {
+  render: () => <Story text={headings} extensions={decorateMarkdown({ numberedHeadings: { from: 2, to: 4 } })} />,
 };
 
 export const Links = {
@@ -455,6 +472,23 @@ export const Table = {
   render: () => <Story text={str(content.table, content.footer)} extensions={[decorateMarkdown(), table()]} />,
 };
 
+export const CommentedOut = {
+  render: () => (
+    <Story
+      text={str('# Commented out', '', content.comment, content.footer)}
+      extensions={[
+        decorateMarkdown(),
+        markdown(),
+        // commentBlock()
+      ]}
+    />
+  ),
+};
+
+//
+// Custom
+//
+
 export const Autocomplete = {
   render: () => (
     <Story
@@ -464,25 +498,6 @@ export const Autocomplete = {
         autocomplete({
           onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
         }),
-      ]}
-    />
-  ),
-};
-
-export const Search = {
-  render: () => (
-    <Story text={str('# Search', text)} extensions={defaultExtensions} onReady={(view) => openSearchPanel(view)} />
-  ),
-};
-
-export const CommentedOut = {
-  render: () => (
-    <Story
-      text={str('# Commented out', '', content.comment, content.footer)}
-      extensions={[
-        decorateMarkdown(),
-        markdown(),
-        // commentBlock()
       ]}
     />
   ),
@@ -501,7 +516,13 @@ export const Mention = {
   ),
 };
 
-const CommandDialog: FC<{ onClose: (action?: CommandAction) => void }> = ({ onClose }) => {
+export const Search = {
+  render: () => (
+    <Story text={str('# Search', text)} extensions={defaultExtensions} onReady={(view) => openSearchPanel(view)} />
+  ),
+};
+
+const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void }) => {
   const [text, setText] = useState('');
   const handleInsert = () => {
     onClose(text.length ? { insert: text + '\n' } : undefined);
@@ -596,15 +617,6 @@ export const Comments = {
   },
 };
 
-export const Vim = {
-  render: () => (
-    <Story
-      text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', content.paragraphs)}
-      extensions={[defaultExtensions, InputModeExtensions.vim]}
-    />
-  ),
-};
-
 export const Annotations = {
   render: () => <Story text={str('# Annotations', '', longText)} extensions={[annotations({ match: /volup/gi })]} />,
 };
@@ -624,8 +636,6 @@ export const DND = {
   ),
 };
 
-const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
-
 export const Listener = {
   render: () => (
     <Story
@@ -643,6 +653,8 @@ export const Listener = {
     />
   ),
 };
+
+const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
 
 export const Typewriter = {
   render: () => (
