@@ -123,7 +123,7 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
-  test('references are loaded lazily nad receive signal notifications', async () => {
+  test('references are loaded lazily and receive signal notifications', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using peer = await builder.createPeer();
 
