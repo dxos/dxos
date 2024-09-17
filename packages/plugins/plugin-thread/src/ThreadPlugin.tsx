@@ -707,7 +707,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
           // TODO(Zan): When we have the deepsignal specific equivalent of this we should use that instead.
           const threads = computed(() =>
-            [...doc.threads.filter(nonNullable), ...(state.staging[doc.id] ?? [])].filter(
+            [...doc.threads.filter(nonNullable), ...(state.staging[fullyQualifiedId(doc)] ?? [])].filter(
               (thread) => !(thread?.status === 'resolved'),
             ),
           );
@@ -754,7 +754,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               },
               onDelete: ({ id }) => {
                 // If the thread is in the staging area, remove it.
-                const stagingArea = state.staging[doc.id];
+                const stagingArea = state.staging[fullyQualifiedId(doc)];
                 if (stagingArea) {
                   const index = stagingArea.findIndex((thread) => thread.id === id);
                   if (index !== -1) {
@@ -769,7 +769,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               },
               onUpdate: ({ id, cursor }) => {
                 const thread =
-                  state.staging[doc.id]?.find((thread) => thread.id === id) ??
+                  state.staging[fullyQualifiedId(doc)]?.find((thread) => thread.id === id) ??
                   doc.threads.find((thread) => thread?.id === id);
 
                 if (thread instanceof ThreadType && thread.anchor) {
