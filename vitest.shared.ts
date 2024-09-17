@@ -4,8 +4,8 @@
 
 import { join } from 'node:path';
 import inject from '@rollup/plugin-inject';
-import { type Plugin } from 'vite';
-import { defineConfig, type UserConfig } from 'vitest/config';
+import { type Plugin, UserConfig as ViteConfig } from 'vite';
+import { defineConfig, type UserConfig as VitestConfig } from 'vitest/config';
 // import Inspect from 'vite-plugin-inspect';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
@@ -98,7 +98,7 @@ const createBrowserConfig = ({ browserName, nodeExternal = false, injectGlobals 
     },
   });
 
-const resolveReporterConfig = (args: { browserMode: boolean }): UserConfig['test'] => {
+const resolveReporterConfig = (args: { browserMode: boolean }): VitestConfig['test'] => {
   if (shouldCreateXmlReport) {
     const vitestReportDir = `vitest${args.browserMode ? '-browser' : ''}-reports`;
     return {
@@ -116,7 +116,7 @@ const resolveReporterConfig = (args: { browserMode: boolean }): UserConfig['test
 
 export type ConfigOptions = Omit<BrowserOptions, 'browserName'>;
 
-export const baseConfig = (options: ConfigOptions = {}): UserConfig => {
+export const baseConfig = (options: ConfigOptions = {}): ViteConfig => {
   switch (environment) {
     case 'chromium':
       return createBrowserConfig({ browserName: environment, ...options });
