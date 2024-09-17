@@ -58,7 +58,7 @@
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "@tldraw/tldraw": "^2.3.0",
+    "@tldraw/tldraw": "^3.0.0",
     "date-fns": "^3.3.1",
     "lodash.get": "^4.4.2",
     "react-json-tree": "^0.18.0",

@@ -5,7 +5,7 @@
 import { type Icon } from '@phosphor-icons/react';
 import React, { type PropsWithChildren } from 'react';
 
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 import { styles } from '../../styles';
 
@@ -40,7 +40,7 @@ export const Panel = ({
         onClick={() => onToggle?.(id, !open)}
       >
         <div className='flex items-center gap-2 py-1'>
-          <Icon className={getSize(4)} />
+          <Icon size={4} />
           <span>{title}</span>
         </div>
         {info}

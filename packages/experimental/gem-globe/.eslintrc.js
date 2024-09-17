@@ -3,7 +3,7 @@ module.exports = {
     "../../../.eslintrc.js"
   ],
   "ignorePatterns": [
-    "data"
+    "data",
   ],
   "parserOptions": {
     "project": "tsconfig.json",

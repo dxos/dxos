@@ -74,7 +74,7 @@ export const DetailsPanel = ({ classNames, functionUrl, binding: _binding, onBin
     setResult('');
     setPending(true);
 
-    fetch(functionUrl!, {
+    void fetch(functionUrl!, {
       method: 'POST',
       body: input,
     })
