@@ -8,7 +8,6 @@ import { Tooltip, Popover, Treegrid, useTranslation, toLocalizedString, Button }
 import { type MosaicTileComponentProps, Path, useMosaic } from '@dxos/react-ui-mosaic';
 import {
   focusRing,
-  getSize,
   hoverableControls,
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
@@ -187,11 +186,19 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
               }}
               onClick={() => onItemOpenChange?.(item, !open)}
             >
+<<<<<<< Updated upstream
               <svg
                 className={mx('shrink-0 transition duration-200 text-[--icons-color]', open && 'rotate-90', getSize(3))}
               >
                 <use href={'/icons.svg#ph--caret-right--regular'} />
               </svg>
+=======
+              <Icon
+                icon='ph--caret-right--regular'
+                size={3}
+                classNames={['transition duration-200 text-[--icons-color]', open && 'rotate-90']}
+              />
+>>>>>>> Stashed changes
             </Button>
             <NavTreeItemHeading
               {...{
