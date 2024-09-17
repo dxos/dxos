@@ -3,7 +3,7 @@
 //
 
 import { LitElement, html } from 'lit';
-import { customElement, state, property } from 'lit/decorators.js';
+import { customElement, state, property, eventOptions } from 'lit/decorators.js';
 import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 
 /**
@@ -350,6 +350,31 @@ export class DxGrid extends LitElement {
     this.updateVisBlock();
   }
 
+  // Focus handlers
+
+  @state()
+  focusedCell: Record<DxGridAxis, number> = { col: 0, row: 0 };
+
+  @state()
+  focusActive: boolean = false;
+
+  @eventOptions({ capture: true })
+  handleFocus(event: FocusEvent) {
+    const target = event.target as HTMLElement;
+    const action = target.getAttribute('data-dx-grid-action');
+    if (action === 'cell') {
+      const c = parseInt(target.getAttribute('aria-colindex') ?? 'never');
+      const r = parseInt(target.getAttribute('aria-rowindex') ?? 'never');
+      this.focusedCell = { col: c, row: r };
+      this.focusActive = true;
+    }
+  }
+
+  @eventOptions({ capture: true })
+  handleBlur(event: FocusEvent) {
+    this.focusActive = false;
+  }
+
   //
   // Render and other lifecycle methods
   //
@@ -357,9 +382,8 @@ export class DxGrid extends LitElement {
   override render() {
     const visibleCols = this.visColMax - this.visColMin;
     const visibleRows = this.visRowMax - this.visRowMin;
-    // TODO NEXT -> ensure offset is using the right components
-    const offsetInline = this.binInlineMin - this.posInline - this.overscanInline;
-    const offsetBlock = this.binBlockMin - this.posBlock - this.overscanBlock;
+    const offsetInline = gap + this.binInlineMin - this.posInline - this.overscanInline;
+    const offsetBlock = gap + this.binBlockMin - this.posBlock - this.overscanBlock;
 
     return html`<div
       role="none"
@@ -367,6 +391,8 @@ export class DxGrid extends LitElement {
       @pointerdown=${this.handlePointerDown}
       @pointerup=${this.handlePointerUp}
       @pointermove=${this.handlePointerMove}
+      @focus=${this.handleFocus}
+      @blur=${this.handleBlur}
     >
       <div role="none" class="dx-grid__corner"></div>
       <div role="none" class="dx-grid__columnheader">
@@ -411,7 +437,7 @@ export class DxGrid extends LitElement {
           })}
         </div>
       </div>
-      <div role="none" class="dx-grid__viewport" @wheel="${this.handleWheel}" ${ref(this.viewportRef)}>
+      <div role="none" class="dx-grid__viewport" @wheel=${this.handleWheel} ${ref(this.viewportRef)}>
         <div
           role="grid"
           class="dx-grid__content"
@@ -425,6 +451,7 @@ export class DxGrid extends LitElement {
               const cell = this.getCell(c, r);
               return html`<div
                 role="gridcell"
+                tabindex="0"
                 ?inert=${c < 0 || r < 0}
                 aria-rowindex=${r}
                 aria-colindex=${c}
@@ -462,6 +489,18 @@ export class DxGrid extends LitElement {
       }
       return acc;
     }, {});
+  }
+
+  override updated(changedProperties: Map<string, any>) {
+    // Update the focused element if there is a change in bounds (otherwise Lit keeps focus on the relative element).
+    if (this.focusActive && (changedProperties.has('visRowMin') || changedProperties.has('visColMin'))) {
+      (document.activeElement as HTMLElement | undefined)?.blur();
+      (
+        this.viewportRef.value?.querySelector(
+          `[aria-rowindex="${this.focusedCell.row}"][aria-colindex="${this.focusedCell.col}"]`,
+        ) as HTMLElement | null
+      )?.focus();
+    }
   }
 
   override disconnectedCallback() {
