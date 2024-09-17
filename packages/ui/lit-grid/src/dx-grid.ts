@@ -382,7 +382,28 @@ export class DxGrid extends LitElement {
 
   @eventOptions({ capture: true })
   handleBlur(event: FocusEvent) {
-    this.focusActive = false;
+    // Only unset `focusActive` if focus is not moving to an element within the grid.
+    if (
+      !event.relatedTarget ||
+      (event.relatedTarget as HTMLElement).closest('.dx-grid__viewport') !== this.viewportRef.value
+    ) {
+      this.focusActive = false;
+    }
+  }
+
+  /**
+   * Moves focus to the cell with actual focus, otherwise moves focus to the viewport.
+   */
+  refocus() {
+    (this.focusedCell.row < this.visRowMin ||
+    this.focusedCell.row > this.visRowMax ||
+    this.focusedCell.col < this.visColMin ||
+    this.focusedCell.col > this.visColMax
+      ? this.viewportRef.value
+      : (this.viewportRef.value?.querySelector(
+          `[aria-rowindex="${this.focusedCell.row}"][aria-colindex="${this.focusedCell.col}"]`,
+        ) as HTMLElement | null)
+    )?.focus();
   }
 
   //
@@ -503,12 +524,7 @@ export class DxGrid extends LitElement {
   override updated(changedProperties: Map<string, any>) {
     // Update the focused element if there is a change in bounds (otherwise Lit keeps focus on the relative element).
     if (this.focusActive && (changedProperties.has('visRowMin') || changedProperties.has('visColMin'))) {
-      (document.activeElement as HTMLElement | undefined)?.blur();
-      (
-        this.viewportRef.value?.querySelector(
-          `[aria-rowindex="${this.focusedCell.row}"][aria-colindex="${this.focusedCell.col}"]`,
-        ) as HTMLElement | null
-      )?.focus();
+      this.refocus();
     }
   }
 
