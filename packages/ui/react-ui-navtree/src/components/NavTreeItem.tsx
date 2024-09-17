@@ -8,7 +8,6 @@ import { Tooltip, Popover, Treegrid, useTranslation, toLocalizedString, Button, 
 import { type MosaicTileComponentProps, Path, useMosaic } from '@dxos/react-ui-mosaic';
 import {
   focusRing,
-  getSize,
   hoverableControls,
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
@@ -188,7 +187,8 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             >
               <Icon
                 icon='ph--caret-right--regular'
-                classNames={['shrink-0 transition duration-200 text-[--icons-color]', open && 'rotate-90', getSize(3)]}
+                size={3}
+                classNames={['transition duration-200', open && 'rotate-90']}
               />
             </Button>
             <NavTreeItemHeading
