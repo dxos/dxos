@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Mutex, scheduleMicroTask, synchronized, Trigger } from '@dxos/async';
+import { Mutex, Trigger } from '@dxos/async';
 import * as A from '@dxos/automerge/automerge';
 import { type Message as AutomergeMessage, cbor } from '@dxos/automerge/automerge-repo';
 import { Context, Resource } from '@dxos/context';
+import { randomUUID } from '@dxos/crypto';
 import {
   getSpaceIdFromCollectionId,
   type EchoReplicator,
@@ -25,7 +26,6 @@ import {
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
-import { randomUUID } from '@dxos/crypto';
 
 export type EchoEdgeReplicatorParams = {
   edgeConnection: EdgeConnection;
@@ -205,7 +205,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   }
 
   protected override async _close(): Promise<void> {
-    this._onRemoteDisconnected();
+    await this._onRemoteDisconnected();
   }
 
   get peerId(): string {
