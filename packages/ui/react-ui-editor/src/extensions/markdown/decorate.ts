@@ -10,7 +10,7 @@ import { type SyntaxNodeRef } from '@lezer/common';
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
-import { inspectChanges } from './changes';
+import { adjustChanges } from './changes';
 import { image } from './image';
 import { formattingStyles, bulletListIndentationWidth, orderedListIndentationWidth } from './styles';
 import { table } from './table';
@@ -258,7 +258,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           return false;
         }
 
-        // Add line decoration to indent.
+        // Add line decoration for continuation indent.
         deco.add(
           line.from,
           line.from,
@@ -284,7 +284,6 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         // Look-ahead for task marker.
         // NOTE: Requires space to exist (otherwise processes as a link).
         const next = tree.resolve(node.to + 1, 1);
-        // console.log(node.to, next?.name);
         if (next?.name === 'TaskMarker') {
           atomicDeco.add(node.from, node.to + 1, hide);
           break;
@@ -438,7 +437,6 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
     }
   } else {
     // NOTE: If line numbering then we must iterate from the start of document.
-    // TODO(burdon): Same for lists?
     tree.iterate({
       enter: wrapWithCatch(enterNode),
       leave: wrapWithCatch(leaveNode),
@@ -523,7 +521,7 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
     ),
     image(),
     table(),
-    inspectChanges(),
+    adjustChanges(),
     formattingStyles,
   ];
 };

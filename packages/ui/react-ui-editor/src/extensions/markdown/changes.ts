@@ -9,8 +9,8 @@ import { ViewPlugin, type ViewUpdate, type PluginValue } from '@codemirror/view'
 /**
  * Monitors and augments changes.
  */
-// TODO(burdon): Tests. Check also remote updates.
-export const inspectChanges = () => {
+// TODO(burdon): Tests.
+export const adjustChanges = () => {
   return ViewPlugin.fromClass(
     class implements PluginValue {
       update(update: ViewUpdate) {
