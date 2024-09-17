@@ -2,23 +2,56 @@
 // Copyright 2024 DXOS.org
 //
 
-import { LitElement, html, type PropertyValues } from 'lit';
+import { LitElement, html } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 
-import { colToA1Notation, posFromNumericNotation, rowToA1Notation } from './position';
+/**
+ * The size in pixels of the gap between cells
+ */
+const gap = 1;
 
-const colSize = 64;
+/**
+ * This should be about the width of the `1` numeral so resize is triggered as the row header column’s intrinsic size
+ * changes when scrolling vertically.
+ */
+const resizeTolerance = 8;
 
-const rowSize = 20;
+//
+// `overscan` is the number of columns or rows to render outside of the viewport
+//
+const overscanCol = 1;
+const overscanRow = 1;
 
-const gap = 0;
+//
+// `size`, when suffixed with ‘row’ or ‘col’, are limits on size applied when resizing
+//
+const sizeColMin = 32;
+const sizeColMax = 1024;
+const sizeRowMin = 16;
+const sizeRowMax = 1024;
+
+/**
+ * Separator for serializing cell position vectors
+ */
+const separator = ',';
+
+//
+// A1 notation is the fallback for numbering columns and rows.
+//
+
+const colToA1Notation = (col: number): string => {
+  return (
+    (col >= 26 ? String.fromCharCode('A'.charCodeAt(0) + Math.floor(col / 26) - 1) : '') +
+    String.fromCharCode('A'.charCodeAt(0) + (col % 26))
+  );
+};
+
+const rowToA1Notation = (row: number): string => {
+  return `${row + 1}`;
+};
 
 export type CellValue = {
-  /**
-   * The position (or topleft-most of the range) in numeric notation
-   */
-  pos: string;
   /**
    * The content value
    */
@@ -33,10 +66,39 @@ export type CellValue = {
   style?: string;
 };
 
+type AxisMeta = {
+  size: number;
+  description?: string;
+  resizeable?: boolean;
+};
+
+export type DxGridProps = Pick<DxGrid, 'cells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault'>;
+
+const localChId = (c0: number) => `ch--${c0}`;
+const localRhId = (r0: number) => `rh--${r0}`;
+
+const getPage = (axis: string, event: PointerEvent) => (axis === 'col' ? event.pageX : event.pageY);
+
 @customElement('dx-grid')
 export class DxGrid extends LitElement {
   @property({ type: Object })
-  values: Record<string, CellValue> = {};
+  rowDefault: AxisMeta = { size: 32 };
+
+  @property({ type: Object })
+  columnDefault: AxisMeta = { size: 180 };
+
+  @property({ type: Object })
+  rows: Record<string, AxisMeta> = {};
+
+  @property({ type: Object })
+  columns: Record<string, AxisMeta> = {};
+
+  @property({ type: Object })
+  cells: Record<string, CellValue> = {};
+
+  //
+  // `pos`, short for ‘position’, is the position in pixels of the viewport from the origin.
+  //
 
   @state()
   posInline = 0;
@@ -44,14 +106,136 @@ export class DxGrid extends LitElement {
   @state()
   posBlock = 0;
 
+  //
+  // `size` (when not suffixed with ‘row’ or ‘col’, see above) is the size in pixels of the viewport.
+  //
+
   @state()
   sizeInline = 0;
 
   @state()
   sizeBlock = 0;
 
+  //
+  // `overscan` is the amount in pixels to offset the grid content due to the number of overscanned columns or rows.
+  //
+
   @state()
-  cellByPosition: Record<string, string> = {};
+  overscanInline = 0;
+
+  @state()
+  overscanBlock = 0;
+
+  //
+  // `bin`, not short for anything, is the range in pixels within which virtualization does not need to reassess.
+  //
+
+  @state()
+  binInlineMin = 0;
+
+  @state()
+  binInlineMax = this.colSize(0);
+
+  @state()
+  binBlockMin = 0;
+
+  @state()
+  binBlockMax = this.rowSize(0);
+
+  //
+  // `vis`, short for ‘visible’, is the range in numeric index of the columns or rows which should be rendered within
+  // the viewport. These start with naïve values that are updated before first contentful render.
+  //
+
+  @state()
+  visColMin = 0;
+
+  @state()
+  visColMax = 1;
+
+  @state()
+  visRowMin = 0;
+
+  @state()
+  visRowMax = 1;
+
+  //
+  // `template` is the rendered value of `grid-{axis}-template`.
+  //
+  @state()
+  templateColumns = `${this.colSize(0)}px`;
+
+  @state()
+  templateRows = `${this.rowSize(0)}px`;
+
+  //
+  // Resize state and handlers
+  //
+
+  @state()
+  colSizes: Record<string, number> = {};
+
+  @state()
+  rowSizes: Record<string, number> = {};
+
+  @state()
+  resizing: null | { axis: 'col' | 'row'; page: number; size: number; index: string } = null;
+
+  handlePointerDown = (event: PointerEvent) => {
+    const actionEl = (event.target as HTMLElement)?.closest('[data-dx-grid-action]');
+    const action = actionEl?.getAttribute('data-dx-grid-action');
+    if (action) {
+      if (action.startsWith('resize')) {
+        const [resize, index] = action.split(',');
+        const [_, axis] = resize.split('-');
+        this.resizing = {
+          axis: axis as 'col' | 'row',
+          size: axis === 'col' ? this.colSize(index) : this.rowSize(index),
+          page: getPage(axis, event),
+          index,
+        };
+      }
+    }
+  };
+
+  handlePointerUp = (_event: PointerEvent) => {
+    this.resizing = null;
+  };
+
+  handlePointerMove = (event: PointerEvent) => {
+    if (this.resizing) {
+      const delta = getPage(this.resizing.axis, event) - this.resizing.page;
+      if (this.resizing.axis === 'col') {
+        const nextSize = Math.max(sizeColMin, Math.min(sizeColMax, this.resizing.size + delta));
+        this.colSizes = { ...this.colSizes, [this.resizing.index]: nextSize };
+        this.updateVisInline();
+      } else {
+        const nextSize = Math.max(sizeRowMin, Math.min(sizeRowMax, this.resizing.size + delta));
+        this.rowSizes = { ...this.rowSizes, [this.resizing.index]: nextSize };
+        this.updateVisBlock();
+      }
+    }
+  };
+
+  //
+  // Accessors
+  //
+
+  private colSize(c: number | string) {
+    return this.colSizes?.[c] ?? this.columnDefault.size;
+  }
+
+  private rowSize(r: number | string) {
+    return this.rowSizes?.[r] ?? this.rowDefault.size;
+  }
+
+  private getCell(c: number | string, r: number | string) {
+    return this.cells[`${c}${separator}${r}`];
+  }
+
+  //
+  // Resize & reposition handlers, observer, ref
+  //
 
   @state()
   observer = new ResizeObserver((entries) => {
@@ -59,8 +243,15 @@ export class DxGrid extends LitElement {
       inlineSize: 0,
       blockSize: 0,
     };
-    this.sizeInline = inlineSize;
-    this.sizeBlock = blockSize;
+    if (
+      Math.abs(inlineSize - this.sizeInline) > resizeTolerance ||
+      Math.abs(blockSize - this.sizeBlock) > resizeTolerance
+    ) {
+      // console.info('[updating bounds]', 'resize', [inlineSize - this.sizeInline, blockSize - this.sizeBlock]);
+      this.sizeInline = inlineSize;
+      this.sizeBlock = blockSize;
+      this.updateVis();
+    }
   });
 
   viewportRef: Ref<HTMLDivElement> = createRef();
@@ -68,111 +259,135 @@ export class DxGrid extends LitElement {
   handleWheel = ({ deltaX, deltaY }: WheelEvent) => {
     this.posInline = Math.max(0, this.posInline + deltaX);
     this.posBlock = Math.max(0, this.posBlock + deltaY);
+    if (
+      this.posInline >= this.binInlineMin &&
+      this.posInline < this.binInlineMax &&
+      this.posBlock >= this.binBlockMin &&
+      this.posBlock < this.binBlockMax
+    ) {
+      // do nothing
+    } else {
+      // console.info(
+      //   '[updating bounds]',
+      //   'wheel',
+      //   [this.binInlineMin, this.posInline, this.binInlineMax],
+      //   [this.binBlockMin, this.posBlock, this.binBlockMax],
+      // );
+      this.updateVis();
+    }
   };
 
-  override willUpdate(changed: PropertyValues<this>) {
-    if (changed.has('values')) {
-      // console.log('[computing cellByPosition]');
-      this.cellByPosition = Object.entries(this.values).reduce((acc: Record<string, string>, [id, { pos, end }]) => {
-        const { i: i1, j: j1 } = posFromNumericNotation(pos);
-        if (end) {
-          const { i: i2, j: j2 } = posFromNumericNotation(end);
-          for (let ci = i1; ci <= i2; ci += 1) {
-            for (let cj = j1; cj <= j2; cj += 1) {
-              acc[`${ci},${cj}`] = id;
-            }
-          }
-        } else {
-          acc[`${i1},${j1}`] = id;
-        }
-        return acc;
-      }, {});
+  private updateVisInline() {
+    // todo: avoid starting from zero
+    let colIndex = 0;
+    let pxInline = this.colSize(colIndex);
+
+    while (pxInline < this.posInline) {
+      colIndex += 1;
+      pxInline += this.colSize(colIndex) + gap;
     }
-  }
 
-  private getCell(i: number, j: number) {
-    const pos = `${i},${j}`;
-    const cellId = this.cellByPosition[pos];
-    return cellId ? this.values[cellId] : undefined;
-  }
+    this.visColMin = colIndex - overscanCol;
 
-  private computeExtrema() {
-    const colVisMin = Math.floor(this.posInline / (colSize + gap));
-    const colVisMax = Math.ceil((this.sizeInline + this.posInline) / (colSize + gap));
+    this.binInlineMin = pxInline - this.colSize(colIndex) - gap;
+    this.binInlineMax = pxInline + gap;
 
-    const rowVisMin = Math.floor(this.posBlock / (rowSize + gap));
-    const rowVisMax = Math.ceil((this.sizeBlock + this.posBlock) / (rowSize + gap));
-
-    const { colExtMin, colExtMax } = [...Array(rowVisMax - rowVisMin)].reduce(
-      (acc, _, j) => {
-        const colVisMinCell = this.getCell(colVisMin, j + rowVisMin);
-        if (colVisMinCell?.end) {
-          const { i: iStart } = posFromNumericNotation(colVisMinCell.pos);
-          acc.colExtMin = Math.min(acc.colExtMin, iStart);
-        }
-        const colVisMaxCell = this.getCell(colVisMax, j + rowVisMin);
-        if (colVisMaxCell?.end) {
-          const { i: iEnd } = posFromNumericNotation(colVisMaxCell.end);
-          acc.colExtMax = Math.max(acc.colExtMax, iEnd);
-        }
+    this.overscanInline =
+      [...Array(overscanCol)].reduce((acc, _, c0) => {
+        acc += this.colSize(this.visColMin + c0);
         return acc;
-      },
-      { colExtMin: colVisMin, colExtMax: colVisMax },
-    );
+      }, 0) +
+      gap * (overscanCol - 1);
 
-    const { rowExtMin, rowExtMax } = [...Array(colVisMax - colVisMin)].reduce(
-      (acc, _, i) => {
-        const rowVisMinCell = this.getCell(i + colVisMin, rowVisMin);
-        if (rowVisMinCell?.end) {
-          const { j: jStart } = posFromNumericNotation(rowVisMinCell.pos);
-          acc.rowExtMin = Math.min(acc.rowExtMin, jStart);
-        }
-        const rowVisMaxCell = this.getCell(i + colVisMin, rowVisMax);
-        if (rowVisMaxCell?.end) {
-          const { j: jEnd } = posFromNumericNotation(rowVisMaxCell.end);
-          acc.rowExtMax = Math.max(acc.rowExtMax, jEnd);
-        }
-        return acc;
-      },
-      { rowExtMin: rowVisMin, rowExtMax: rowVisMax },
-    );
+    while (pxInline < this.binInlineMax + this.sizeInline) {
+      colIndex += 1;
+      pxInline += this.colSize(colIndex) + gap;
+    }
 
-    return {
-      colVisMin,
-      colExtMin,
-      colVisMax,
-      colExtMax,
-      rowVisMin,
-      rowExtMin,
-      rowVisMax,
-      rowExtMax,
-    };
+    this.visColMax = colIndex + overscanCol + 1;
+
+    this.templateColumns = [...Array(this.visColMax - this.visColMin)]
+      .map((_, c0) => `${this.colSize(this.visColMin + c0)}px`)
+      .join(' ');
   }
+
+  private updateVisBlock() {
+    // todo: avoid starting from zero
+    let rowIndex = 0;
+    let pxBlock = this.rowSize(rowIndex);
+
+    while (pxBlock < this.posBlock) {
+      rowIndex += 1;
+      pxBlock += this.rowSize(rowIndex) + gap;
+    }
+
+    this.visRowMin = rowIndex - overscanRow;
+
+    this.binBlockMin = pxBlock - this.rowSize(rowIndex) - gap;
+    this.binBlockMax = pxBlock + gap;
+
+    this.overscanBlock =
+      [...Array(overscanRow)].reduce((acc, _, r0) => {
+        acc += this.rowSize(this.visRowMin + r0);
+        return acc;
+      }, 0) +
+      gap * (overscanRow - 1);
+
+    while (pxBlock < this.binBlockMax + this.sizeBlock) {
+      rowIndex += 1;
+      pxBlock += this.rowSize(rowIndex) + gap;
+    }
+
+    this.visRowMax = rowIndex + overscanRow + 1;
+
+    this.templateRows = [...Array(this.visRowMax - this.visRowMin)]
+      .map((_, r0) => `${this.rowSize(this.visRowMin + r0)}px`)
+      .join(' ');
+  }
+
+  private updateVis() {
+    this.updateVisInline();
+    this.updateVisBlock();
+  }
+
+  //
+  // Render and other lifecycle methods
+  //
 
   override render() {
-    const { colVisMin, colVisMax, rowVisMin, rowVisMax } = this.computeExtrema();
+    const visibleCols = this.visColMax - this.visColMin;
+    const visibleRows = this.visRowMax - this.visRowMin;
+    // TODO NEXT -> ensure offset is using the right components
+    const offsetInline = this.binInlineMin - this.posInline - this.overscanInline;
+    const offsetBlock = this.binBlockMin - this.posBlock - this.overscanBlock;
 
-    const visibleCols = colVisMax - colVisMin;
-    const visibleRows = rowVisMax - rowVisMin;
-
-    // TODO(thure): now compute the offset based on the extrema.
-    const offsetInline = colVisMin * colSize - this.posInline;
-    const offsetBlock = rowVisMin * rowSize - this.posBlock;
-
-    return html`<div role="none" class="dx-grid">
+    return html`<div
+      role="none"
+      class="dx-grid"
+      @pointerdown=${this.handlePointerDown}
+      @pointerup=${this.handlePointerUp}
+      @pointermove=${this.handlePointerMove}
+    >
       <div role="none" class="dx-grid__corner"></div>
       <div role="none" class="dx-grid__columnheader">
         <div
           role="none"
           class="dx-grid__columnheader__content"
-          style="transform:translate3d(${offsetInline}px,0,0);grid-template-columns:repeat(${visibleCols},${colSize}px);"
+          style="transform:translate3d(${offsetInline}px,0,0);grid-template-columns:${this.templateColumns};"
         >
-          ${[...Array(visibleCols)].map((_, i) => {
+          ${[...Array(visibleCols)].map((_, c0) => {
+            const c = this.visColMin + c0;
             return html`<div
-              role="gridcell"
-              style="inline-size:${colSize}px;block-size:${rowSize}px;grid-column:${i + 1}/${i + 2};"
+              role="columnheader"
+              ?inert=${c < 0}
+              style="inline-size:${this.colSize(c)}px;block-size:${this.rowDefault.size}px;grid-column:${c0 + 1}/${c0 +
+              2};"
             >
-              ${colToA1Notation(colVisMin + i)}
+              <span id=${localChId(c0)}>${colToA1Notation(c)}</span>
+              ${(this.columns[c]?.resizeable ?? this.columnDefault.resizeable) &&
+              html`<button class="dx-grid__resize-handle" data-dx-grid-action=${`resize-col,${c}`}>
+                <span class="sr-only">Resize</span>
+              </button>`}
             </div>`;
           })}
         </div>
@@ -180,9 +395,18 @@ export class DxGrid extends LitElement {
       <div role="none" class="dx-grid__corner"></div>
       <div role="none" class="dx-grid__rowheader">
         <div role="none" class="dx-grid__rowheader__content" style="transform:translate3d(0,${offsetBlock}px,0);">
-          ${[...Array(visibleRows)].map((_, j) => {
-            return html`<div role="gridcell" style="block-size:${rowSize}px;grid-row:${j + 1}/${j + 2}">
-              ${rowToA1Notation(rowVisMin + j)}
+          ${[...Array(visibleRows)].map((_, r0) => {
+            const r = this.visRowMin + r0;
+            return html`<div
+              role="rowheader"
+              ?inert=${r < 0}
+              style="block-size:${this.rowSize(r)}px;grid-row:${r0 + 1}/${r0 + 2}"
+            >
+              <span id=${localRhId(r0)}>${rowToA1Notation(r)}</span>
+              ${(this.rows[r]?.resizeable ?? this.rowDefault.resizeable) &&
+              html`<button class="dx-grid__resize-handle" data-dx-grid-action=${`resize-row,${r}`}>
+                <span class="sr-only">Resize</span>
+              </button>`}
             </div>`;
           })}
         </div>
@@ -191,33 +415,24 @@ export class DxGrid extends LitElement {
         <div
           role="grid"
           class="dx-grid__content"
-          style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:repeat(${visibleCols},${colSize}px);grid-template-rows:repeat(${visibleRows},${rowSize}px);"
+          style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:${this
+            .templateColumns};grid-template-rows:${this.templateRows};"
         >
-          ${[...Array(visibleCols)].map((_, i) => {
-            return [...Array(visibleRows)].map((_, j) => {
-              const posAbs = `${i + colVisMin},${j + rowVisMin}`;
-              const cellId = this.cellByPosition[posAbs];
-              const cell = cellId ? this.values[cellId] : undefined;
-              if (cell?.end) {
-                // This is a merged cell
-                if (posAbs !== cell?.pos) {
-                  // Don’t render subcells within the merge if not at the start (probably)
-                  return null;
-                } else {
-                  // Render the full merged cell
-                  const { i: iEndAbs, j: jEndAbs } = posFromNumericNotation(cell.end);
-                  return html`<div
-                    role="gridcell"
-                    style="grid-column:${i + 1} / ${iEndAbs - colVisMin + 2};grid-row:${j + 1} / ${jEndAbs -
-                    rowVisMin +
-                    2}"
-                  >
-                    ${cell?.value}
-                  </div>`;
-                }
-              } else {
-                return html`<div role="gridcell" style="grid-column:${i + 1};grid-row:${j + 1}">${cell?.value}</div>`;
-              }
+          ${[...Array(visibleCols)].map((_, c0) => {
+            return [...Array(visibleRows)].map((_, r0) => {
+              const c = c0 + this.visColMin;
+              const r = r0 + this.visRowMin;
+              const cell = this.getCell(c, r);
+              return html`<div
+                role="gridcell"
+                ?inert=${c < 0 || r < 0}
+                aria-rowindex=${r}
+                aria-colindex=${c}
+                data-dx-grid-action="cell"
+                style="grid-column:${c0 + 1};grid-row:${r0 + 1}"
+              >
+                ${cell?.value}
+              </div>`;
             });
           })}
         </div>
@@ -235,6 +450,18 @@ export class DxGrid extends LitElement {
 
   override firstUpdated() {
     this.observer.observe(this.viewportRef.value!);
+    this.colSizes = Object.entries(this.columns).reduce((acc: Record<string, number>, [colId, colMeta]) => {
+      if (colMeta?.size) {
+        acc[colId] = colMeta.size;
+      }
+      return acc;
+    }, {});
+    this.rowSizes = Object.entries(this.rows).reduce((acc: Record<string, number>, [rowId, rowMeta]) => {
+      if (rowMeta?.size) {
+        acc[rowId] = rowMeta.size;
+      }
+      return acc;
+    }, {});
   }
 
   override disconnectedCallback() {
