@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { log, LogLevel } from '@dxos/log';
 import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
-import { beforeEach, describe, test } from '@dxos/test';
 
 import { LoggingServiceImpl } from './logging-service';
 

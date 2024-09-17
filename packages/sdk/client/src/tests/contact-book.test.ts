@@ -2,14 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import type { Space } from '@dxos/client-protocol';
 import { create } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { Invitation, type Contact } from '@dxos/protocols/proto/dxos/client/services';
-import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
@@ -137,7 +136,9 @@ describe('ContactBook', () => {
         return c;
       }),
     );
-    afterTest(() => Promise.all(clients.map((c) => c.destroy())));
+    onTestFinished(async () => {
+      await Promise.all(clients.map((c) => c.destroy()));
+    });
     return initialized;
   };
 

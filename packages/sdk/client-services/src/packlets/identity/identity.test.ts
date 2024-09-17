@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
@@ -24,7 +24,6 @@ import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { Identity } from './identity';
 
@@ -106,7 +105,7 @@ describe('identity/identity', () => {
     });
 
     await identity.open(new Context());
-    afterTest(() => identity.close(new Context()));
+    onTestFinished(() => identity.close(new Context()));
 
     //
     // Identity genesis
@@ -221,7 +220,7 @@ describe('identity/identity', () => {
       }));
 
       await identity.open(new Context());
-      afterTest(() => identity.close(new Context()));
+      onTestFinished(() => identity.close(new Context()));
 
       //
       // Identity genesis
@@ -314,7 +313,7 @@ describe('identity/identity', () => {
       }));
 
       await identity.open(new Context());
-      afterTest(() => identity.close(new Context()));
+      onTestFinished(() => identity.close(new Context()));
     }
 
     //

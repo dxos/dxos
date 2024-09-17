@@ -2,8 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
@@ -12,7 +11,6 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { type Client } from '../client';
 import { create, Expando, SpaceState } from '../echo';
@@ -112,20 +110,18 @@ describe('Lazy Space Loading', () => {
     await openAndWaitReady(hostSpace);
     await guestSpace.db.flush();
 
-    await waitForExpect(() => {
-      expect(hostSpace.db.getObjectById(guestObject.id)).not.to.be.undefined;
-    });
+    await expect.poll(() => hostSpace.db.getObjectById(guestObject.id)).toBeDefined();
 
     guestObject.content = 'foo';
 
-    await waitForExpect(() => {
-      expect(hostSpace.db.getObjectById(guestObject.id)?.content).to.eq(guestObject.content);
-    });
+    await expect.poll(() => hostSpace.db.getObjectById(guestObject.id)?.content).toEqual(guestObject.content);
   });
 
   const createInitializedClients = async (count: number, options?: { fastPresence: boolean }): Promise<Client[]> => {
     const context = new Context();
-    afterTest(() => context.dispose());
+    onTestFinished(async () => {
+      await context.dispose();
+    });
     return createInitializedClientsWithContext(context, count, {
       config: new Config({ runtime: { client: { lazySpaceOpen: true } } }),
       serviceConfig: options?.fastPresence ? { fastPeerPresenceUpdate: true } : undefined,

@@ -2,16 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-// @dxos/test platform=nodejs
-
-import { expect } from 'chai';
+import { describe, expect, test, onTestFinished } from 'vitest';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { verifyPresentation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
 import { TestBuilder } from '../testing';
@@ -34,7 +31,7 @@ describe('Halo', () => {
 
     {
       const client = new Client({ config, services: testBuilder.createLocalClientServices() });
-      afterTest(() => client.destroy());
+      onTestFinished(() => client.destroy());
       await client.initialize();
 
       await client.halo.createIdentity({ displayName: 'test-user' });
@@ -66,7 +63,7 @@ describe('Halo', () => {
     const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createLocalClientServices() });
-    afterTest(() => client.destroy());
+    onTestFinished(() => client.destroy());
     await client.initialize();
 
     await client.halo.createIdentity({ displayName: 'test-user' });

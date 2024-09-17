@@ -4,7 +4,7 @@
 
 import { runTestSignalServer } from '@dxos/signal';
 
-const port = 12001;
+const port = 12004;
 
 export default async () => {
   await runTestSignalServer({ port, killExisting: true });

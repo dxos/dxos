@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { afterEach, onTestFinished, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type NetworkService, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
 import { NetworkServiceImpl } from './network-service';
 import { type ServiceContext } from '../services';
@@ -41,7 +40,7 @@ describe('NetworkService', () => {
     query.subscribe(({ swarm }) => {
       result.wake(swarm);
     });
-    afterTest(() => query.close());
+    onTestFinished(() => query.close());
     expect(await result.wait()).to.equal(ConnectionState.ONLINE);
 
     result = new Trigger<ConnectionState | undefined>();

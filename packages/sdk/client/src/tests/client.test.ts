@@ -2,22 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
 import { rmSync } from 'node:fs';
-import waitForExpect from 'wait-for-expect';
+import { afterEach, beforeEach, describe, expect, test, onTestFinished } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Filter } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
-import { describe, test, afterTest } from '@dxos/test';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
 import { MessageType, TextV0Type, ThreadType, TestBuilder, performInvitation } from '../testing';
-
-chai.use(chaiAsPromised);
 
 describe('Client', () => {
   const dataRoot = '/tmp/dxos/client/storage';
@@ -31,16 +26,16 @@ describe('Client', () => {
 
     const client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
-    afterTest(() => client.destroy());
+    onTestFinished(() => client.destroy());
     expect(client.initialized).to.be.true;
   });
 
   test('default space loads', async () => {
     const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
 
     const client = new Client({ services: testBuilder.createLocalClientServices() });
-    afterTest(() => client.destroy());
+    onTestFinished(() => client.destroy());
     await asyncTimeout(client.initialize(), 2_000);
     await asyncTimeout(client.halo.createIdentity(), 2_000);
     await asyncTimeout(client.spaces.isReady.wait(), 2_000);
@@ -77,14 +72,14 @@ describe('Client', () => {
     expect(client.initialized).to.be.false;
   });
 
-  test('create space before identity', async () => {
+  test('create space before identity', { timeout: 1_000 }, async () => {
     const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
-    afterTest(() => client.destroy());
-    await expect(client.spaces.create()).to.eventually.be.rejectedWith('This device has no HALO identity available.');
-  }).timeout(1_000);
+    onTestFinished(() => client.destroy());
+    await expect(client.spaces.create()).rejects.toThrowError('This device has no HALO identity available.');
+  });
 
   test('creates identity then resets', async () => {
     const config = new Config({
@@ -113,7 +108,7 @@ describe('Client', () => {
       await client.initialize();
       expect(client.halo.identity).to.exist;
       // TODO(burdon): Error type.
-      await expect(client.halo.createIdentity({ displayName })).to.be.rejected;
+      await expect(client.halo.createIdentity({ displayName })).rejects.toThrow();
       await client.spaces.isReady.wait();
     }
     {
@@ -129,18 +124,18 @@ describe('Client', () => {
       await client.spaces.isReady.wait();
       await client.destroy();
     }
-  }).onlyEnvironments('nodejs', 'chromium', 'firefox');
+  });
 
   test('objects are being synced between clients', async () => {
     const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
 
     const client1 = new Client({ services: testBuilder.createLocalClientServices() });
     const client2 = new Client({ services: testBuilder.createLocalClientServices() });
     await client1.initialize();
-    afterTest(() => client1.destroy());
+    onTestFinished(() => client1.destroy());
     await client2.initialize();
-    afterTest(() => client2.destroy());
+    onTestFinished(() => client2.destroy());
 
     await client1.halo.createIdentity();
     await client2.halo.createIdentity();
@@ -183,10 +178,8 @@ describe('Client', () => {
     thread2.messages.push(message);
     await space2.db.flush();
 
-    await waitForExpect(() => {
-      expect(thread1.messages.length).to.eq(1);
-      expect(thread1.messages[0]!.blocks[0].content?.content).to.eq(text);
-    }, 1000);
+    await expect.poll(() => thread1.messages.length, { timeout: 1_000 }).toEqual(1);
+    await expect.poll(() => thread1.messages[0]!.blocks[0].content?.content, { timeout: 1_000 }).toEqual(text);
   });
 
   test('reset & create space', async () => {
@@ -194,7 +187,7 @@ describe('Client', () => {
 
     const client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
-    afterTest(() => client.destroy());
+    onTestFinished(() => client.destroy());
 
     await client.reset();
 

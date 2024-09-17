@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 import { AutomergeContext } from '@dxos/echo-db';
 import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { afterTest, describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 describe('AutomergeHost', () => {
   test('automerge context is being synced with host', async () => {
@@ -22,14 +22,16 @@ describe('AutomergeHost', () => {
 
     const level = createTestLevel();
     await level.open();
-    afterTest(() => level.close());
+    onTestFinished(() => level.close());
 
     const host = new AutomergeHost({
       db: level,
       indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
     });
     await host.open();
-    afterTest(() => host.close());
+    onTestFinished(async () => {
+      await host.close();
+    });
 
     const dataService = new DataServiceImpl({ automergeHost: host, updateIndexes: async () => {} });
     const client = new AutomergeContext(dataService);

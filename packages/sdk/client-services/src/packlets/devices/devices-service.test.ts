@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { afterEach, onTestFinished, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type DevicesService, type Device } from '@dxos/protocols/proto/dxos/client/services';
-import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
 import { DevicesServiceImpl } from './devices-service';
 import { type ServiceContext } from '../services';
@@ -36,7 +35,7 @@ describe('DevicesService', () => {
       query.subscribe(({ devices }) => {
         result.wake(devices);
       });
-      afterTest(() => query.close());
+      onTestFinished(() => query.close());
       expect(device.profile?.label).to.equal('test-device');
     });
   });
@@ -51,7 +50,7 @@ describe('DevicesService', () => {
         },
         (err) => log.catch(err),
       );
-      afterTest(() => query.close().catch((err) => log.catch(err)));
+      onTestFinished(() => query.close().catch((err) => log.catch(err)));
       expect(await result.wait()).to.be.length(0);
     });
 
@@ -61,7 +60,7 @@ describe('DevicesService', () => {
       query.subscribe(({ devices }) => {
         result.wake(devices);
       });
-      afterTest(() => query.close());
+      onTestFinished(() => query.close());
       expect(await result.wait()).to.be.length(0);
 
       result = new Trigger<Device[] | undefined>();

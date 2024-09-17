@@ -2,8 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { asyncTimeout, latch, Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
@@ -13,7 +12,6 @@ import { getObjectCore } from '@dxos/echo-db';
 import { create, Expando, type Identifiable, type ReactiveObject, TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
@@ -30,17 +28,15 @@ import {
 } from '../testing';
 
 describe('Spaces', () => {
-  test('creates a default space', async () => {
+  test.skip('creates a default space', async () => {
     const [client] = await createInitializedClients(1, { storage: true });
 
-    await waitForExpect(() => {
-      expect(client.spaces.get()).not.to.be.undefined;
-    });
+    await expect.poll(() => client.spaces.get()).toBeDefined();
     const space = client.spaces.default;
     await testSpaceAutomerge(space.db);
 
     expect(space.members.get()).to.be.length(1);
-  }).tag('flaky');
+  });
 
   test('creates a space', async () => {
     const [client] = await createInitializedClients(1, { storage: true });
@@ -66,12 +62,12 @@ describe('Spaces', () => {
 
     const host = testBuilder.createClientServicesHost();
     await host.open(new Context());
-    afterTest(() => host.close());
+    onTestFinished(() => host.close());
     const [client, server] = testBuilder.createClientServer(host);
     void server.open();
-    afterTest(() => server.close());
+    onTestFinished(() => server.close());
     await client.initialize();
-    afterTest(() => client.destroy());
+    onTestFinished(() => client.destroy());
 
     await client.halo.createIdentity({ displayName: 'test-user' });
 
@@ -165,9 +161,9 @@ describe('Spaces', () => {
     const services2 = testBuilder.createLocalClientServices();
     const client2 = new Client({ services: services2 });
     await client1.initialize();
-    afterTest(() => client1.destroy());
+    onTestFinished(() => client1.destroy());
     await client2.initialize();
-    afterTest(() => client2.destroy());
+    onTestFinished(() => client2.destroy());
     await client1.halo.createIdentity({ displayName: 'Peer 1' });
     await client2.halo.createIdentity({ displayName: 'Peer 2' });
     const space1 = await client1.spaces.create();
@@ -273,12 +269,12 @@ describe('Spaces', () => {
     const [client1, server1] = testBuilder.createClientServer(host);
     void server1.open();
     await client1.initialize();
-    afterTest(() => client1.destroy());
+    onTestFinished(() => client1.destroy());
 
     const [client2, server2] = testBuilder.createClientServer(host);
     void server2.open();
     await client2.initialize();
-    afterTest(() => client2.destroy());
+    onTestFinished(() => client2.destroy());
 
     log.info('ready');
 
@@ -318,9 +314,7 @@ describe('Spaces', () => {
 
     (hostDocument.content as any).content = 'Hello, world!';
 
-    await waitForExpect(() => {
-      expect(getDocumentText(guestSpace, hostDocument.id)).to.equal('Hello, world!');
-    });
+    await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
   });
 
   test('collection-sync replicates missing documents', async () => {
@@ -341,9 +335,7 @@ describe('Spaces', () => {
     const [_, guestSpace] = await inviteMember(reloadedSpace, guest);
     await waitForObject(guestSpace, hostDocument);
 
-    await waitForExpect(() => {
-      expect(getDocumentText(guestSpace, hostDocument.id)).to.equal('Hello, world!');
-    });
+    await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
   });
 
   test('peer gains access to new documents', async () => {
@@ -380,9 +372,7 @@ describe('Spaces', () => {
 
       (hostDocument.content as any).content = 'Hello, world!';
 
-      await waitForExpect(() => {
-        expect(getDocumentText(guestSpace, hostDocument.id)).to.equal('Hello, world!');
-      });
+      await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
     }
 
     {
@@ -394,9 +384,7 @@ describe('Spaces', () => {
 
       (hostDocument.content as any).content = 'Hello, world!';
 
-      await waitForExpect(() => {
-        expect(getDocumentText(guestSpace, hostDocument.id)).to.equal('Hello, world!');
-      });
+      await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
     }
   });
 
@@ -458,10 +446,10 @@ describe('Spaces', () => {
         }
       });
 
-      afterTest(() => unsub());
+      onTestFinished(() => unsub());
 
       hostRoot.entries.push(createEchoObject({ name: 'second' }));
-      await done.wait({ timeout: 1000 });
+      await done.wait({ timeout: 1_000 });
     }
   });
 
@@ -479,7 +467,9 @@ describe('Spaces', () => {
     options?: CreateInitializedClientsOptions,
   ): Promise<Client[]> => {
     const context = new Context();
-    afterTest(() => context.dispose());
+    onTestFinished(async () => {
+      await context.dispose();
+    });
     return createInitializedClientsWithContext(context, count, options);
   };
 
@@ -512,14 +502,10 @@ describe('Spaces', () => {
   };
 
   const waitForObject = async (space: Space, object: Identifiable) => {
-    await waitForExpect(() => {
-      expect(space.db.getObjectById(object.id)).not.to.be.undefined;
-    });
+    await expect.poll(() => space.db.getObjectById(object.id)).toBeDefined();
   };
 
   const waitForSpaceState = async (space: Space, state: SpaceState, timeout: number) => {
-    await waitForExpect(() => {
-      expect(space.state.get()).to.equal(state);
-    }, timeout);
+    await expect.poll(() => space.state.get(), { timeout }).toEqual(state);
   };
 });

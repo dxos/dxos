@@ -2,13 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test, onTestFinished } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { performInvitation } from '@dxos/client-services/testing';
 import { invariant } from '@dxos/invariant';
 import { DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
-import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
 import { TestBuilder } from '../testing';
@@ -18,7 +17,7 @@ describe('Halo', () => {
     const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createLocalClientServices() });
-    afterTest(() => client.destroy());
+    onTestFinished(() => client.destroy());
     await client.initialize();
 
     await client.halo.createIdentity({ displayName: 'test-user' });
@@ -32,7 +31,7 @@ describe('Halo', () => {
     const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createLocalClientServices() });
-    afterTest(() => client.destroy());
+    onTestFinished(() => client.destroy());
     await client.initialize();
 
     await client.halo.createIdentity({ displayName: 'test-user' }, { label: 'custom-device-profile' });
@@ -47,7 +46,7 @@ describe('Halo', () => {
     const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createLocalClientServices() });
-    afterTest(() => client.destroy());
+    onTestFinished(() => client.destroy());
     await client.initialize();
 
     await client.halo.createIdentity({ displayName: 'test-user' });
@@ -61,7 +60,7 @@ describe('Halo', () => {
     const testBuilder = new TestBuilder();
 
     const client1 = new Client({ services: testBuilder.createLocalClientServices() });
-    afterTest(() => client1.destroy());
+    onTestFinished(() => client1.destroy());
     await client1.initialize();
 
     // Set a custom device profile for the host to ensure we're matching the default on the guest.
@@ -71,7 +70,7 @@ describe('Halo', () => {
     expect(await client1.halo.devices.get()).to.have.lengthOf(1);
 
     const client2 = new Client({ services: testBuilder.createLocalClientServices() });
-    afterTest(() => client2.destroy());
+    onTestFinished(() => client2.destroy());
     await client2.initialize();
 
     const trigger = new Trigger();
@@ -106,7 +105,7 @@ describe('Halo', () => {
     const testBuilder = new TestBuilder();
 
     const client1 = new Client({ services: testBuilder.createLocalClientServices() });
-    afterTest(() => client1.destroy());
+    onTestFinished(() => client1.destroy());
     await client1.initialize();
 
     await client1.halo.createIdentity({ displayName: 'test-user' });
@@ -115,7 +114,7 @@ describe('Halo', () => {
     expect(await client1.halo.devices.get()).to.have.lengthOf(1);
 
     const client2 = new Client({ services: testBuilder.createLocalClientServices() });
-    afterTest(() => client2.destroy());
+    onTestFinished(() => client2.destroy());
     await client2.initialize();
     // TODO(nf): how to test halo.join() more directly?
 
@@ -150,7 +149,7 @@ describe('Halo', () => {
     const testBuilder = new TestBuilder();
 
     const client1 = new Client({ services: testBuilder.createLocalClientServices() });
-    afterTest(() => client1.destroy());
+    onTestFinished(() => client1.destroy());
     await client1.initialize();
 
     await client1.halo.createIdentity({ displayName: 'test-user' });
@@ -159,7 +158,7 @@ describe('Halo', () => {
     expect(await client1.halo.devices.get()).to.have.lengthOf(1);
 
     const client2 = new Client({ services: testBuilder.createLocalClientServices() });
-    afterTest(() => client2.destroy());
+    onTestFinished(() => client2.destroy());
     await client2.initialize();
 
     await Promise.all(performInvitation({ host: client1.halo, guest: client2.halo }));
@@ -183,7 +182,7 @@ describe('Halo', () => {
     const testBuilder = new TestBuilder();
 
     const client1 = new Client({ services: testBuilder.createLocalClientServices() });
-    afterTest(() => client1.destroy());
+    onTestFinished(() => client1.destroy());
     await client1.initialize();
 
     await client1.halo.createIdentity({ displayName: 'test-user' });
@@ -192,7 +191,7 @@ describe('Halo', () => {
     expect(await client1.halo.devices.get()).to.have.lengthOf(1);
 
     const client2 = new Client({ services: testBuilder.createLocalClientServices() });
-    afterTest(() => client2.destroy());
+    onTestFinished(() => client2.destroy());
     await client2.initialize();
 
     await Promise.all(performInvitation({ host: client1.halo, guest: client2.halo }));

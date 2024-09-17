@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test, onTestFinished } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { valueEncoding, MetadataStore, SpaceManager, AuthStatus } from '@dxos/echo-pipeline';
@@ -13,7 +13,6 @@ import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manag
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, type Storage, StorageType } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
-import { describe, test, afterTest } from '@dxos/test';
 
 import { IdentityManager } from './identity-manager';
 
@@ -39,7 +38,7 @@ describe('identity/identity-manager', () => {
       }),
     });
 
-    afterTest(() => feedStore.close());
+    onTestFinished(() => feedStore.close());
 
     const networkManager = new SwarmNetworkManager({
       signalManager: new MemorySignalManager(signalContext),
@@ -64,7 +63,7 @@ describe('identity/identity-manager', () => {
   test('creates identity', async () => {
     const { identityManager } = await setupPeer();
     await identityManager.open(new Context());
-    afterTest(() => identityManager.close());
+    onTestFinished(() => identityManager.close());
 
     const identity = await identityManager.createIdentity();
     expect(identity).to.exist;
@@ -95,7 +94,7 @@ describe('identity/identity-manager', () => {
   test('update profile', async () => {
     const { identityManager } = await setupPeer();
     await identityManager.open(new Context());
-    afterTest(() => identityManager.close());
+    onTestFinished(() => identityManager.close());
 
     const identity = await identityManager.createIdentity();
     expect(identity.profileDocument?.displayName).to.be.undefined;

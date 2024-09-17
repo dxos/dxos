@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
 import isEqual from 'lodash.isequal';
+import { describe, onTestFinished, expect, test } from 'vitest';
 
 import { asyncTimeout, Trigger, TriggerState } from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
@@ -13,7 +13,6 @@ import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { afterTest, test } from '@dxos/test';
 
 import { Client } from '../client';
 import { ContactType, DocumentType, TestBuilder, TextV0Type } from '../testing';
@@ -106,12 +105,12 @@ describe('Index queries', () => {
 
   test('index queries work with client', async () => {
     const builder = new TestBuilder();
-    afterTest(async () => {
+    onTestFinished(async () => {
       await builder.destroy();
     });
     const client = await initClient(builder.createLocalClientServices());
     await client.halo.createIdentity();
-    afterTest(() => client.destroy());
+    onTestFinished(() => client.destroy());
 
     const space = await client.spaces.create();
 
@@ -124,7 +123,7 @@ describe('Index queries', () => {
     let spaceKey: PublicKey;
 
     const { builder } = createTestBuilder();
-    afterTest(async () => {
+    onTestFinished(async () => {
       await builder.destroy();
     });
 
@@ -144,7 +143,7 @@ describe('Index queries', () => {
 
     {
       const client = await initClient(builder.createLocalClientServices());
-      afterTest(() => client.destroy());
+      onTestFinished(() => client.destroy());
       await asyncTimeout(client.spaces.isReady.wait(), 5000);
       const space = client.spaces.get(spaceKey)!;
       await space.waitUntilReady();
@@ -155,7 +154,7 @@ describe('Index queries', () => {
 
   test('index available data', async () => {
     const { builder, level } = createTestBuilder();
-    afterTest(async () => {
+    onTestFinished(async () => {
       await builder.destroy();
     });
 
@@ -178,7 +177,7 @@ describe('Index queries', () => {
 
     {
       const client = await initClient(builder.createLocalClientServices());
-      afterTest(() => client.destroy());
+      onTestFinished(() => client.destroy());
       await client.spaces.isReady.wait({ timeout: TIMEOUT });
       const space = client.spaces.get(spaceKey)!;
       await asyncTimeout(space.waitUntilReady(), TIMEOUT);
@@ -189,7 +188,7 @@ describe('Index queries', () => {
 
   test('re-index', async () => {
     const { builder, level } = createTestBuilder();
-    afterTest(async () => {
+    onTestFinished(async () => {
       await builder.destroy();
     });
 
@@ -214,7 +213,7 @@ describe('Index queries', () => {
 
     {
       const client = await initClient(builder.createLocalClientServices());
-      afterTest(() => client.destroy());
+      onTestFinished(() => client.destroy());
       await client.spaces.isReady.wait();
       const space = client.spaces.get(spaceKey)!;
       await asyncTimeout(space.waitUntilReady(), TIMEOUT);
@@ -226,7 +225,7 @@ describe('Index queries', () => {
 
   test('`or` query', async () => {
     const builder = new TestBuilder();
-    afterTest(async () => await builder.destroy());
+    onTestFinished(async () => await builder.destroy());
     const client = await initClient(builder.createLocalClientServices());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
@@ -254,7 +253,7 @@ describe('Index queries', () => {
 
   test('`not(or)` query', async () => {
     const builder = new TestBuilder();
-    afterTest(async () => await builder.destroy());
+    onTestFinished(async () => await builder.destroy());
     const client = await initClient(builder.createLocalClientServices());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
@@ -276,7 +275,7 @@ describe('Index queries', () => {
 
   test('query Expando objects', async () => {
     const builder = new TestBuilder();
-    afterTest(async () => await builder.destroy());
+    onTestFinished(async () => await builder.destroy());
     const client = await initClient(builder.createLocalClientServices());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
@@ -289,7 +288,7 @@ describe('Index queries', () => {
 
   test('object deletion triggers query update', async () => {
     const builder = new TestBuilder();
-    afterTest(async () => await builder.destroy());
+    onTestFinished(async () => await builder.destroy());
     const client = await initClient(builder.createLocalClientServices());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
@@ -315,7 +314,7 @@ describe('Index queries', () => {
         receivedDeleteUpdate.wake();
       }
     });
-    afterTest(() => unsub());
+    onTestFinished(() => unsub());
 
     await queriedEverything.wait({ timeout: TIMEOUT });
     expect(receivedDeleteUpdate.state).to.equal(TriggerState.WAITING);

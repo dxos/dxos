@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
 import { rmSync } from 'node:fs';
+import { afterEach, onTestFinished, describe, expect, test } from 'vitest';
 
 import { asyncTimeout, latch, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
@@ -14,12 +13,9 @@ import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { afterTest, describe, test } from '@dxos/test';
 import { isNode } from '@dxos/util';
 
 import { createMockCredential, createServiceHost } from '../testing';
-
-chai.use(chaiAsPromised);
 
 describe('ClientServicesHost', () => {
   const dataRoot = '/tmp/dxos/client-services/service-host/storage';
@@ -38,7 +34,7 @@ describe('ClientServicesHost', () => {
   test('queryCredentials', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
     await host.open(new Context());
-    afterTest(() => host.close());
+    onTestFinished(() => host.close());
 
     await host.services.IdentityService!.createIdentity({});
     const { spaceKey } = await host.services.SpacesService!.createSpace();
@@ -49,7 +45,7 @@ describe('ClientServicesHost', () => {
       tick();
       // console.log(credential);
     });
-    afterTest(() => stream.close());
+    onTestFinished(() => stream.close());
 
     await done();
   });
@@ -57,7 +53,7 @@ describe('ClientServicesHost', () => {
   test('write and query credentials', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
     await host.open(new Context());
-    afterTest(() => host.close());
+    onTestFinished(() => host.close());
 
     await host.services.IdentityService!.createIdentity({});
 
@@ -86,7 +82,7 @@ describe('ClientServicesHost', () => {
         queriedCredential.wake(credential);
       }
     });
-    afterTest(() => credentials.close());
+    onTestFinished(() => credentials.close());
 
     await queriedCredential.wait();
   });
@@ -94,7 +90,7 @@ describe('ClientServicesHost', () => {
   test('sign presentation', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
     await host.open(new Context());
-    afterTest(() => host.close());
+    onTestFinished(() => host.close());
 
     await host.services.IdentityService!.createIdentity({});
 
@@ -147,9 +143,9 @@ describe('ClientServicesHost', () => {
           trigger.wake(identity.identity);
         }
       });
-      await expect(asyncTimeout(trigger.wait(), 200)).to.be.rejectedWith();
+      await expect(asyncTimeout(trigger.wait(), 200)).rejects.toThrow();
       await stream?.close();
       await host.close();
     }
-  }).onlyEnvironments('nodejs', 'chromium', 'firefox');
+  });
 });

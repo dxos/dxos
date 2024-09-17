@@ -2,20 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { afterEach, onTestFinished, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { type Space, type SpacesService } from '@dxos/protocols/proto/dxos/client/services';
-import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
 import { SpacesServiceImpl } from './spaces-service';
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
-
-chai.use(chaiAsPromised);
 
 describe('SpacesService', () => {
   let serviceContext: ServiceContext;
@@ -36,7 +32,7 @@ describe('SpacesService', () => {
 
   describe('createSpace', () => {
     test('fails if no identity is available', async () => {
-      await expect(spacesService.createSpace()).to.be.rejectedWith();
+      await expect(spacesService.createSpace()).rejects.toThrow();
     });
 
     test('creates a new space', async () => {
@@ -56,7 +52,7 @@ describe('SpacesService', () => {
       query.subscribe(({ spaces }) => {
         result.wake(spaces);
       });
-      afterTest(() => query.close());
+      onTestFinished(() => query.close());
       expect(await result.wait()).to.be.length(0);
     });
 
@@ -73,7 +69,7 @@ describe('SpacesService', () => {
       query.subscribe(({ spaces }) => {
         result.wake(spaces);
       });
-      afterTest(() => query.close());
+      onTestFinished(() => query.close());
 
       const spaces = await result.wait();
       expect(spaces).to.be.length(3);
@@ -87,7 +83,7 @@ describe('SpacesService', () => {
       query.subscribe(({ spaces }) => {
         result.wake(spaces);
       });
-      afterTest(() => query.close());
+      onTestFinished(() => query.close());
       expect(await result.wait()).to.be.length(0);
 
       result.reset();

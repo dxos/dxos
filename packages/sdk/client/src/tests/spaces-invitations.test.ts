@@ -2,14 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { sleep, Trigger } from '@dxos/async';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { type Client } from '../client';
 import { createInitializedClientsWithContext, testSpaceAutomerge, waitForSpace } from '../testing';
@@ -103,7 +102,7 @@ describe('Spaces/invitations', () => {
     const invitationIds = new Set();
     const invitationsEmpty = new Trigger();
     const invitationStream = peer.services.services.InvitationsService!.queryInvitations();
-    afterTest(() => invitationStream.close());
+    onTestFinished(() => invitationStream.close());
     invitationStream.subscribe((msg) => {
       if (msg.type === QueryInvitationsResponse.Type.ACCEPTED) {
         return;
@@ -145,7 +144,9 @@ describe('Spaces/invitations', () => {
 
   const createInitializedClients = (count: number): Promise<Client[]> => {
     const context = new Context();
-    afterTest(() => context.dispose());
+    onTestFinished(async () => {
+      await context.dispose();
+    });
     return createInitializedClientsWithContext(context, count);
   };
 });

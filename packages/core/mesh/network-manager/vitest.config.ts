@@ -10,7 +10,6 @@ export default mergeConfig(
   baseConfig({ nodeExternal: true }),
   defineConfig({
     test: {
-      globalSetup: 'src/testing/setup.ts',
       retry: 3,
     },
   }),

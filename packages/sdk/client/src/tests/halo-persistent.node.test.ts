@@ -2,15 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-// @dxos/test platform=nodejs
-
-import { expect } from 'chai';
+import { describe, expect, test, onTestFinished } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
 import { TestBuilder } from '../testing';
@@ -34,7 +31,7 @@ describe('Halo', () => {
 
     {
       const client = new Client({ config, services: testBuilder.createLocalClientServices() });
-      afterTest(() => client.destroy());
+      onTestFinished(() => client.destroy());
       await client.initialize();
 
       await client.halo.createIdentity({ displayName: 'test-user' });
@@ -45,7 +42,7 @@ describe('Halo', () => {
 
     {
       const client = new Client({ config, services: testBuilder.createLocalClientServices() });
-      afterTest(() => client.destroy());
+      onTestFinished(() => client.destroy());
       await client.initialize();
 
       await waitForCondition({ condition: () => !!client.halo.identity });

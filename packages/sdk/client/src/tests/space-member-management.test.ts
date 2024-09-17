@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
@@ -11,7 +11,6 @@ import { Context } from '@dxos/context';
 import { AlreadyJoinedError, AuthorizationError } from '@dxos/protocols';
 import { ConnectionState, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { type Client } from '../client';
 import { createInitializedClientsWithContext } from '../testing';
@@ -77,8 +76,9 @@ describe('Spaces/member-management', () => {
     await waitHasStatus([space1, space3], client2, SpaceMember.PresenceState.OFFLINE);
     await client2.mesh.updateConfig(ConnectionState.OFFLINE);
     await client2.mesh.updateConfig(ConnectionState.ONLINE);
-    await expect(waitHasStatus([space1, space3], client2, SpaceMember.PresenceState.ONLINE, { timeout: 500 })).to.be
-      .rejected;
+    await expect(
+      waitHasStatus([space1, space3], client2, SpaceMember.PresenceState.ONLINE, { timeout: 500 }),
+    ).rejects.toThrow();
   });
 
   test('removed member can rejoin with new role', async () => {
@@ -104,7 +104,9 @@ describe('Spaces/member-management', () => {
 
   const createInitializedClients = async (count: number): Promise<Client[]> => {
     const context = new Context();
-    afterTest(() => context.dispose());
+    onTestFinished(async () => {
+      await context.dispose();
+    });
     return createInitializedClientsWithContext(context, count, { serviceConfig: { fastPeerPresenceUpdate: true } });
   };
 });

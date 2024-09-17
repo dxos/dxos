@@ -9410,6 +9410,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../common/test-utils
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -9589,6 +9592,9 @@ importers:
       '@dxos/signal':
         specifier: workspace:*
         version: link:../../core/mesh/signal
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../common/test-utils
       '@types/platform':
         specifier: ^1.3.4
         version: 1.3.5

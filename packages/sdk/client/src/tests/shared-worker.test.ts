@@ -2,20 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { describe, expect, test, onTestFinished } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { createLinkedPorts } from '@dxos/rpc';
-import { describe, test, afterTest } from '@dxos/test';
 import { type MaybePromise, type Provider } from '@dxos/util';
 
 import { Client } from '../client';
 import { ClientServicesProxy, SharedWorkerConnection } from '../services';
-
-chai.use(chaiAsPromised);
 
 const setup = (configProvider: Provider<MaybePromise<Config>>) => {
   const workerRuntime = new WorkerRuntime({
@@ -47,7 +43,7 @@ const setup = (configProvider: Provider<MaybePromise<Config>>) => {
   const client = new Client({
     services: new ClientServicesProxy(appPorts[0]),
   });
-  afterTest(async () => {
+  onTestFinished(async () => {
     await client.destroy();
     await clientProxy.close().catch(() => {});
     await workerRuntime.stop();
@@ -77,7 +73,7 @@ describe('Shared worker', () => {
       clientProxy.open({ origin: '*' }).catch(() => {}),
     ]);
 
-    await expect(client.initialize()).to.be.rejectedWith('Test error');
+    await expect(client.initialize()).rejects.toThrowError('Test error');
 
     await promise;
   });

@@ -2,14 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
+import { describe, expect, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { createCredentialSignerWithKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { describe, test } from '@dxos/test';
 import { ComplexSet } from '@dxos/util';
 
 import { createAuthProvider, TrustedKeySetAuthVerifier } from './authenticator';
@@ -30,5 +29,5 @@ describe('identity/authenticator', () => {
     const credential = await authProvider(nonce);
     invariant(credential);
     expect(await authVerifier.verifier(nonce, credential)).toBeTruthy();
-  }).onlyEnvironments('nodejs');
+  });
 });

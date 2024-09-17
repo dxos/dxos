@@ -2,20 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { asyncChain, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { type ServiceContext } from '../services';
 import { createIdentity, createPeers } from '../testing';
 import { acceptInvitation, createInvitation, performInvitation } from '../testing/invitation-utils';
 
 const closeAfterTest = async (peer: ServiceContext) => {
-  afterTest(() => peer.close());
+  onTestFinished(async () => {
+    await peer.close();
+  });
   return peer;
 };
 
