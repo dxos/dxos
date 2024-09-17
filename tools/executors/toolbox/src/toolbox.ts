@@ -566,7 +566,8 @@ export class Toolbox {
         }
         if (isNode) {
           (packageJson.exports[exportName] as any).node = {
-            default: `./dist/lib/node/${distSlug}.cjs`,
+            require: `./dist/lib/node/${distSlug}.cjs`,
+            default: `./dist/lib/node-esm/${distSlug}.mjs`,
           };
         }
         (packageJson.exports[exportName] as any).types = `./dist/types/src/${distSlug}.d.ts`;
