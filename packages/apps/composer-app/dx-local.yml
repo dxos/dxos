@@ -5,10 +5,12 @@ runtime:
     # devtoolsProxy: wss://192.168.50.25:8080/host
     edgeFeatures:
       echoReplicator: true
+    # disableP2pReplication: true
 
   services:
     edge:
-       url: wss://edge.dxos.workers.dev/
-#      url: wss://edge-main.dxos.workers.dev/
+      # url: wss://edge.dxos.workers.dev/
+      url: wss://edge-main.dxos.workers.dev/
+      # url: ws://localhost:8787/
     agentHosting:
       type: LOCAL_TESTING

@@ -1,11 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" style="overscroll-behavior: none">
   <head>
     <meta charset="UTF-8" />
     <title>Composer</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,interactive-widget=resizes-content,viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,user-scalable=no,interactive-widget=resizes-content,viewport-fit=cover"
+    />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <link rel="manifest" href="/site.webmanifest">
+    <link rel="manifest" href="/site.webmanifest" />
     <meta name="description" content="DXOS Composer Application" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
@@ -17,7 +20,7 @@
     <meta
       http-equiv="Content-Security-Policy"
       content="
-        connect-src https: file: ipc: socket: http://*.dxos.network wss://*.dxos.org ws://localhost:* http://localhost:*;
+        connect-src https: file: ipc: socket: http://*.dxos.network wss://*.dxos.org ws://localhost:* http://localhost:* wss://*;
         script-src https: socket: http://localhost:* 'unsafe-eval' 'unsafe-inline';
         frame-src https: socket: http://localhost:* composer:;
         worker-src https: socket: http://localhost:* blob:;
