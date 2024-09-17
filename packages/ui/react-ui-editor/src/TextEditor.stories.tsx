@@ -11,7 +11,7 @@ import { type EditorView } from '@codemirror/view';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, type KeyboardEvent, StrictMode, useEffect, useState } from 'react';
+import React, { type FC, type KeyboardEvent, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { create, Expando } from '@dxos/echo-schema';
@@ -53,6 +53,8 @@ import {
   type Comment,
   type CommentsOptions,
   type EditorSelectionState,
+  debugTree,
+  type DebugNode,
 } from './extensions';
 import { renderRoot } from './extensions/util';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
@@ -220,12 +222,10 @@ const hover =
 const renderLinkTooltip = (el: Element, url: string) => {
   const web = new URL(url);
   createRoot(el).render(
-    <StrictMode>
-      <a href={url} target='_blank' rel='noreferrer' className={hover}>
-        {web.origin}
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1')} />
-      </a>
-    </StrictMode>,
+    <a href={url} target='_blank' rel='noreferrer' className={hover}>
+      {web.origin}
+      <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1')} />
+    </a>,
   );
 };
 
@@ -237,26 +237,22 @@ const Key: FC<{ char: string }> = ({ char }) => (
 
 const onCommentsHover: CommentsOptions['onHover'] = (el, shortcut) => {
   createRoot(el).render(
-    <StrictMode>
-      <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
-        <div>Create comment</div>
-        <div className='flex gap-1'>
-          {keySymbols(parseShortcut(shortcut)).map((char) => (
-            <Key key={char} char={char} />
-          ))}
-        </div>
+    <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
+      <div>Create comment</div>
+      <div className='flex gap-1'>
+        {keySymbols(parseShortcut(shortcut)).map((char) => (
+          <Key key={char} char={char} />
+        ))}
       </div>
-    </StrictMode>,
+    </div>,
   );
 };
 
 const renderLinkButton = (el: Element, url: string) => {
   createRoot(el).render(
-    <StrictMode>
-      <a href={url} target='_blank' rel='noreferrer' className={hover}>
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-[2px]')} />
-      </a>
-    </StrictMode>,
+    <a href={url} target='_blank' rel='noreferrer' className={hover}>
+      <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-[2px]')} />
+    </a>,
   );
 };
 
@@ -266,6 +262,7 @@ const renderLinkButton = (el: Element, url: string) => {
 
 type StoryProps = {
   id?: string;
+  debug?: boolean;
   text?: string;
   readonly?: boolean;
   placeholder?: string;
@@ -274,6 +271,7 @@ type StoryProps = {
 
 const Story = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
+  debug,
   text,
   extensions,
   readonly,
@@ -284,6 +282,7 @@ const Story = ({
 }: StoryProps) => {
   const [object] = useState(createEchoObject(create(Expando, { content: text ?? '' })));
   const { themeMode } = useThemeContext();
+  const [tree, setTree] = useState<DebugNode>();
   const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
       id,
@@ -301,6 +300,7 @@ const Story = ({
           },
         }),
         extensions || [],
+        debug ? debugTree(setTree) : [],
       ],
       scrollTo,
       selection,
@@ -314,7 +314,16 @@ const Story = ({
     }
   }, [view]);
 
-  return <div role='none' className='flex w-full overflow-hidden' ref={parentRef} {...focusAttributes} />;
+  return (
+    <div className='flex w-full'>
+      <div role='none' className='flex w-full overflow-hidden' ref={parentRef} {...focusAttributes} />
+      {debug && (
+        <div className='w-[800px] border-l border-separator overflow-auto'>
+          <pre className='font-mono text-xs text-green-800 dark:text-green-200'>{JSON.stringify(tree, null, 2)}</pre>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default {
@@ -437,7 +446,7 @@ export const OrderedList = {
 };
 
 export const TaskList = {
-  render: () => <Story text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} />,
+  render: () => <Story text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} debug />,
 };
 
 export const Table = {

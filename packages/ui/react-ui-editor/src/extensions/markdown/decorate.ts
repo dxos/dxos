@@ -10,8 +10,8 @@ import { type SyntaxNodeRef } from '@lezer/common';
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
+import { inspectChanges } from './changes';
 import { image } from './image';
-import { linkPastePlugin } from './link-paste';
 import { formattingStyles, bulletListIndentationWidth, orderedListIndentationWidth } from './styles';
 import { table } from './table';
 import { theme, type HeadingLevel } from '../../styles';
@@ -284,7 +284,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         // Look-ahead for task marker.
         // NOTE: Requires space to exist (otherwise processes as a link).
         const next = tree.resolve(node.to + 1, 1);
-        console.log(node.to, next?.name);
+        // console.log(node.to, next?.name);
         if (next?.name === 'TaskMarker') {
           atomicDeco.add(node.from, node.to + 1, hide);
           break;
@@ -451,6 +451,8 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
   };
 };
 
+const forceUpdate = StateEffect.define<null>();
+
 export interface DecorateOptions {
   /**
    * Prevents triggering decorations as the cursor moves through the document.
@@ -459,8 +461,6 @@ export interface DecorateOptions {
   numberedHeadings?: { from: number; to?: number };
   renderLinkButton?: (el: Element, url: string) => void;
 }
-
-const forceUpdate = StateEffect.define<null>();
 
 export const decorateMarkdown = (options: DecorateOptions = {}) => {
   return [
@@ -479,7 +479,7 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
             update.docChanged ||
             update.viewportChanged ||
             update.focusChanged ||
-            update.transactions.some((tr) => tr.effects.some((e) => e.is(forceUpdate))) ||
+            update.transactions.some((tr) => tr.effects.some((effect) => effect.is(forceUpdate))) ||
             (update.selectionSet && !options.selectionChangeDelay)
           ) {
             ({ deco: this.deco, atomicDeco: this.atomicDeco } = buildDecorations(
@@ -494,6 +494,7 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
           }
         }
 
+        // Defer update in case moving through the document.
         scheduleUpdate(view: EditorView) {
           this.clearUpdate();
           this.pendingUpdate = setTimeout(() => {
@@ -520,9 +521,9 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
         ],
       },
     ),
-    formattingStyles,
-    linkPastePlugin,
     image(),
     table(),
+    inspectChanges(),
+    formattingStyles,
   ];
 };
