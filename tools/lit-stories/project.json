@@ -1,5 +1,6 @@
 {
-  "sourceRoot": "tools/lit-stories/src",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "lit-stories",
   "projectType": "library",
   "targets": {
     "lint": {
@@ -21,7 +22,7 @@
         }
       },
       "dependsOn": [
-        "^build",
+        "lit-grid:compile",
         "mkdist"
       ],
       "executor": "@nx/storybook:storybook",
@@ -29,6 +30,5 @@
         "configDir": "tools/lit-stories/config/all"
       }
     }
-  },
-  "root": "tools/lit-stories"
+  }
 }
