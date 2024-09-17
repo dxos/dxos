@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { test } from 'vitest';
+
 import type * as rpc from '@dxos/rpc';
-import { test } from '@dxos/test';
 
 import { type RpcPort } from './rpc-port';
 

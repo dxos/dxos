@@ -2,37 +2,31 @@
 // Copyright 2023 DXOS.org
 //
 
+import { afterAll, beforeAll, describe, test } from 'vitest';
+
 import { asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
-import { afterAll, beforeAll, describe, test, openAndClose } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { WebsocketSignalManager } from './websocket-signal-manager';
 import { createMessage, expectPeerAvailable, expectReceivedMessage } from '../testing';
 
-describe('WebSocketSignalManager', () => {
+describe.skip('WebSocketSignalManager', () => {
   let broker1: SignalServerRunner;
   let broker2: SignalServerRunner;
 
   beforeAll(async () => {
-    if (!mochaExecutor.tags.includes('e2e')) {
-      return;
-    }
-
     broker1 = await runTestSignalServer({ port: 5001 });
     broker2 = await runTestSignalServer({ port: 5002 });
   });
 
   afterAll(() => {
-    if (!mochaExecutor.tags.includes('e2e')) {
-      return;
-    }
-
     void broker1.stop();
     void broker2.stop();
   });
 
-  test('join swarm with two brokers', async () => {
+  test('join swarm with two brokers', { timeout: 1_000 }, async () => {
     const client1 = new WebsocketSignalManager([{ server: broker1.url() }, { server: broker2.url() }]);
     const client2 = new WebsocketSignalManager([{ server: broker1.url() }]);
     const client3 = new WebsocketSignalManager([{ server: broker2.url() }]);
@@ -50,12 +44,9 @@ describe('WebSocketSignalManager', () => {
     await client3.join({ topic, peer: { peerKey: peer3.toHex() } });
 
     await Promise.all([joined12, joined13, joined21, joined31]);
-  })
-    .timeout(1_000)
-    .retries(2)
-    .tag('e2e');
+  });
 
-  test('join single swarm with doubled brokers', async () => {
+  test('join single swarm with doubled brokers', { timeout: 1_000 }, async () => {
     const client1 = new WebsocketSignalManager([{ server: broker1.url() }, { server: broker2.url() }]);
     const client2 = new WebsocketSignalManager([{ server: broker1.url() }, { server: broker2.url() }]);
     await openAndClose(client1, client2);
@@ -78,12 +69,9 @@ describe('WebSocketSignalManager', () => {
     await client1.sendMessage(message);
 
     await asyncTimeout(received, 1_000);
-  })
-    .timeout(1_000)
-    .retries(2)
-    .tag('e2e');
+  });
 
-  test('works with one broken server', async () => {
+  test('works with one broken server', { timeout: 1_000 }, async () => {
     const client1 = new WebsocketSignalManager([{ server: 'ws://broken.server/signal' }, { server: broker1.url() }]);
     const client2 = new WebsocketSignalManager([{ server: 'ws://broken.server/signal' }, { server: broker1.url() }]);
     await openAndClose(client1, client2);
@@ -97,12 +85,9 @@ describe('WebSocketSignalManager', () => {
     await client2.join({ topic, peer: { peerKey: peer2.toHex() } });
 
     await Promise.all([joined12, joined21]);
-  })
-    .timeout(1_000)
-    .retries(2)
-    .tag('e2e');
+  });
 
-  test('join two swarms with a broken signal server', async () => {
+  test('join two swarms with a broken signal server', { timeout: 1_000 }, async () => {
     const client1 = new WebsocketSignalManager([{ server: 'ws://broken.server/signal' }, { server: broker1.url() }]);
     const client2 = new WebsocketSignalManager([{ server: 'ws://broken.server/signal' }, { server: broker1.url() }]);
     await openAndClose(client1, client2);
@@ -122,8 +107,5 @@ describe('WebSocketSignalManager', () => {
     await client1.join({ topic: topic2, peer: { peerKey: peer1.toHex() } });
     await client2.join({ topic: topic2, peer: { peerKey: peer2.toHex() } });
     await Promise.all([joined212, joined221]);
-  })
-    .timeout(1_000)
-    .retries(2)
-    .tag('e2e');
+  });
 });

@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { latch } from '@dxos/async';
 import { log } from '@dxos/log';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { TestBuilder, TestPeer } from './testing';
 import { TestExtension } from './testing/test-extension';
@@ -14,7 +13,7 @@ import { TestExtension } from './testing/test-extension';
 describe('Teleport', () => {
   test('sends rpc via TestExtension', async () => {
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
     const [peer1, peer2] = builder.createPeers({ factory: () => new TestPeer() });
     const [connection1, connection2] = await builder.connect(peer1, peer2);
 
@@ -34,7 +33,7 @@ describe('Teleport', () => {
 
   test('disconnect', async () => {
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
     const [peer1, peer2] = builder.createPeers({ factory: () => new TestPeer() });
     const [connection1, connection2] = await builder.connect(peer1, peer2);
 
@@ -55,7 +54,7 @@ describe('Teleport', () => {
 
   test('destroy is idempotent', async () => {
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
     const [peer1, peer2] = builder.createPeers({ factory: () => new TestPeer() });
     const [connection1, connection2] = await builder.connect(peer1, peer2);
 

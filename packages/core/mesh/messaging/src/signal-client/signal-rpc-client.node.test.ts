@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'earljs';
+import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
 import { type Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
@@ -10,7 +10,6 @@ import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
 import { type Message as SignalMessage, type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
-import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { SignalRPCClient } from './signal-rpc-client';
 
@@ -28,11 +27,11 @@ describe('SignalRPCClient', () => {
   // TODO(burdon): Convert to TestBuilder pattern.
   const setupClient = async () => {
     const client = new SignalRPCClient({ url: broker.url() });
-    afterTest(async () => await client.close());
+    onTestFinished(async () => await client.close());
     return client;
   };
 
-  test('signal between 2 peers', async () => {
+  test('signal between 2 peers', { timeout: 2_000 }, async () => {
     const client1 = await setupClient();
     const client2 = await setupClient();
 
@@ -65,14 +64,12 @@ describe('SignalRPCClient', () => {
       payload,
     });
 
-    expect((await received).author).toEqual(peerId2.asUint8Array());
-    expect((await received).payload).toBeAnObjectWith(payload);
+    expect((await received).author).toEqual(peerId2.asBuffer());
+    expect((await received).payload).toEqual(expect.objectContaining(payload));
     void stream1.close();
-  })
-    .timeout(2_000)
-    .retries(2);
+  });
 
-  test('join', async () => {
+  test('join', { timeout: 2_000 }, async () => {
     const client1 = await setupClient();
     const client2 = await setupClient();
 
@@ -101,7 +98,5 @@ describe('SignalRPCClient', () => {
     expect((await promise).peerAvailable?.peer).toEqual(peerId2.asBuffer());
     void stream1.close();
     void stream2.close();
-  })
-    .timeout(2_000)
-    .retries(2);
+  });
 });

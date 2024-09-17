@@ -2,15 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-import { expect } from 'earljs';
+import { afterAll, beforeAll, describe, expect, test, onTestFinished } from 'vitest';
 
 import { asyncTimeout, waitForCondition } from '@dxos/async';
 import { type Any, type TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { type TYPES } from '@dxos/protocols/proto';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
-import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 import { ComplexSet, range } from '@dxos/util';
 
 import { SignalClient } from './signal-client';
@@ -90,7 +88,7 @@ describe('SignalClient', () => {
     {
       const receivedMessage = peer1.waitForNextMessage({ timeout: 200 });
       await peer2.client.sendMessage(message);
-      await expect(receivedMessage).toBeRejected();
+      await expect(receivedMessage).rejects.toThrow();
     }
   });
 
@@ -138,7 +136,7 @@ describe('SignalClient', () => {
       });
 
       void client.open();
-      afterTest(async () => {
+      onTestFinished(async () => {
         await client.close();
       });
       return {

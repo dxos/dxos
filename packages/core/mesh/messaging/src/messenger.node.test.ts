@@ -2,11 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
+import { afterAll, onTestFinished, beforeAll, test, describe } from 'vitest';
+
 import { asyncTimeout } from '@dxos/async';
 import { EdgeClient } from '@dxos/edge-client';
 import { type PublicKey } from '@dxos/keys';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
-import { afterAll, afterTest, beforeAll, openAndClose, test, describe } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { messengerTests } from './messenger.blueprint-test';
 import { EdgeSignalManager, WebsocketSignalManager } from './signal-manager';
@@ -26,12 +28,12 @@ describe('Messenger with WebsocketSignalManager', () => {
 
   messengerTests(async () => new WebsocketSignalManager([{ server: broker.url() }]));
 
-  test('Message with broken signal server', async () => {
+  test('Message with broken signal server', { timeout: 1000 }, async () => {
     const builder = new TestBuilder({
       signalManagerFactory: async () =>
         new WebsocketSignalManager([{ server: 'ws://broken.kube.' }, { server: broker.url() }]),
     });
-    afterTest(() => builder.close());
+    onTestFinished(() => builder.close());
     const peer1 = await builder.createPeer();
     const peer2 = await builder.createPeer();
 
@@ -46,7 +48,7 @@ describe('Messenger with WebsocketSignalManager', () => {
       await peer1.messenger.sendMessage(message);
       await asyncTimeout(receivePromise, 1_000);
     }
-  }).timeout(1_000);
+  });
 });
 
 // TODO(mykola): Expects wrangler dev in edge repo to run. Skip to pass CI.

@@ -12,24 +12,13 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts"
-        ],
-        "platforms": [
-          "browser",
-          "node"
         ]
       }
     },
     "lint": {},
-    "test": {
-      "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ]
-      }
-    }
+    "vitest": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "test"
+    "esbuild"
   ]
 }

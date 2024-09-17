@@ -3176,6 +3176,9 @@ importers:
       '@dxos/signal':
         specifier: workspace:*
         version: link:../signal
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../../common/test-utils
       '@types/node':
         specifier: ^18.11.9
         version: 18.11.9

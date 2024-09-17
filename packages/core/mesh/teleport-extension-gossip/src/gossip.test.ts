@@ -2,18 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { latch } from '@dxos/async';
 import { TestBuilder } from '@dxos/teleport/testing';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { TestAgent } from './testing';
 
 describe('Gossip', () => {
   test('Two peers exchange messages', async () => {
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
     const [agent1, agent2] = builder.createPeers({ factory: () => new TestAgent() });
 
     await builder.connect(agent1, agent2);
@@ -33,7 +32,7 @@ describe('Gossip', () => {
     // first peer  <->  second peer  <->  third  peer
 
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
 
     const [agent1, agent2, agent3] = builder.createPeers({ factory: () => new TestAgent() });
 
@@ -57,7 +56,7 @@ describe('Gossip', () => {
     // first peer  <->  second peer  <->  third  peer
 
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
 
     const [agent1, agent2, agent3] = builder.createPeers({ factory: () => new TestAgent() });
 

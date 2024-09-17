@@ -2,20 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
+import { onTestFinished, describe, test } from 'vitest';
+
 import { sleep } from '@dxos/async';
 import { log } from '@dxos/log';
 import { TestBuilder } from '@dxos/teleport/testing';
-import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { TestAgent } from './testing';
 
-describe('Presence stress-test ', () => {
+describe.skip('Presence stress-test ', () => {
   test('N peers chain', async () => {
     const amountOfPeers = 80;
 
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
 
     const peers: TestAgent[] = [];
 
@@ -45,5 +46,5 @@ describe('Presence stress-test ', () => {
     // Check if peers on the ends see each other.
     await peers[0].waitForAgentsOnline([peers[amountOfPeers - 1]], 500);
     await peers[amountOfPeers - 1].waitForAgentsOnline([peers[0]], 500);
-  }).tag('stress');
+  });
 });

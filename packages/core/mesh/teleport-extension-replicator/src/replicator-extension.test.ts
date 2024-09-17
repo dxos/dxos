@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
+import { describe, expect, test } from 'vitest';
 
 import { Event, sleep } from '@dxos/async';
-import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { createReplicatorPair, TestBuilder } from './testing';

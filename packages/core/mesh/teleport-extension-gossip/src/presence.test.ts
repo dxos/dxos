@@ -2,16 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
+import { onTestFinished, describe, test } from 'vitest';
+
 import { latch, sleep } from '@dxos/async';
 import { TestBuilder } from '@dxos/teleport/testing';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { TestAgent } from './testing';
 
 describe('Presence', () => {
   test('Two peers see each other', async () => {
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
     const [agent1, agent2] = builder.createPeers({ factory: () => new TestAgent() });
 
     await builder.connect(agent1, agent2);
@@ -22,7 +23,7 @@ describe('Presence', () => {
 
   test('Reannounce', async () => {
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
     const [agent1, agent2] = builder.createPeers({ factory: () => new TestAgent() });
 
     await builder.connect(agent1, agent2);
@@ -39,7 +40,7 @@ describe('Presence', () => {
     // first peer  <->  second peer  <->  third  peer
 
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
 
     const [agent1, agent2, agent3] = builder.createPeers({ factory: () => new TestAgent() });
 
@@ -56,7 +57,7 @@ describe('Presence', () => {
     // first peer  <->  second peer  <->  third  peer
 
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
 
     const [agent1, agent2, agent3] = builder.createPeers({ factory: () => new TestAgent() });
 
@@ -76,7 +77,7 @@ describe('Presence', () => {
 
   test('Four peers connected', async () => {
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
 
     const [agent1, agent2, agent3, agent4] = builder.createPeers({
       factory: () => new TestAgent({ announceInterval: 10, offlineTimeout: 50 }),

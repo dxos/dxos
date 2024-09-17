@@ -2,8 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect } from 'earljs';
-import expectJest from 'expect';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import { sleep, latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
@@ -14,10 +13,9 @@ import {
   type TestRpcResponse,
   type TestService,
 } from '@dxos/protocols/proto/example/testing/rpc';
-import { describe, test } from '@dxos/test';
 
 import { createProtoRpcPeer, type ProtoRpcPeer, createServiceBundle } from './service';
-import { createLinkedPorts } from './testing';
+import { createLinkedPorts, encodeMessage } from './testing';
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
 
@@ -96,7 +94,7 @@ describe('Protobuf service', () => {
       error = err;
     }
 
-    expect(error).toBeA(SystemError);
+    expect(error).toBeInstanceOf(SystemError);
     expect(error.message).toEqual('TestError');
     expect(error.stack?.includes('handlerFn')).toEqual(true);
     expect(error.stack?.includes('TestCall')).toEqual(true);
@@ -449,7 +447,7 @@ describe('Protobuf service', () => {
       const stream = await client.rpc.TestStreamService.testCall({
         data: 'requestData',
       });
-      expect(await Stream.consume(stream)).toEqual([expect.objectWith({ closed: true })]);
+      expect(await Stream.consume(stream)).toEqual([expect.objectContaining({ closed: true })]);
     });
   });
 
@@ -510,11 +508,11 @@ describe('Protobuf service', () => {
             testCall: async (req) => {
               expect(req.payload['@type']).toEqual('google.protobuf.Any');
               expect(req.payload.type_url).toEqual('example.testing.Example');
-              expect(req.payload.value).toEqual(Buffer.from('hello'));
+              expect(req.payload.value).toEqual(encodeMessage('hello'));
               return {
                 payload: {
                   type_url: 'example.testing.Example',
-                  value: Buffer.from('world'),
+                  value: encodeMessage('world'),
                 },
               };
             },
@@ -541,12 +539,12 @@ describe('Protobuf service', () => {
       const response = await client.rpc.TestAnyService.testCall({
         payload: {
           type_url: 'example.testing.Example',
-          value: Buffer.from('hello'),
+          value: encodeMessage('hello'),
         },
       });
 
       expect(response.payload.type_url).toEqual('example.testing.Example');
-      expect(response.payload.value).toEqual(Buffer.from('world'));
+      expect(response.payload.value).toEqual(encodeMessage('world'));
     });
   });
 
@@ -585,6 +583,6 @@ describe('Protobuf service', () => {
       },
       { timeout: 1 },
     );
-    await expectJest(promise).rejects.toThrow(/Timeout/);
+    await expect(promise).rejects.toThrow(/Timeout/);
   });
 });

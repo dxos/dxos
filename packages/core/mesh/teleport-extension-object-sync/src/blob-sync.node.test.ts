@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import expect from 'expect';
+// TODO(wittjosiah): This is preventing this suite from running in browser.
 import { randomBytes } from 'node:crypto';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { TestBuilder, type TestConnection, TestPeer } from '@dxos/teleport/testing';
-import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { BlobStore, DEFAULT_CHUNK_SIZE } from './blob-store';
@@ -40,7 +40,7 @@ class TestAgent extends TestPeer {
 describe('BlobSync', () => {
   test('two peers synchronize', async () => {
     const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
     const [peer1, peer2] = await Promise.all(
       range(2).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })),
     );
@@ -58,7 +58,7 @@ describe('BlobSync', () => {
 
   test('downloading existing chunk completes immediately', async () => {
     const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
     const [peer1, peer2] = await Promise.all(
       range(2).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })),
     );
@@ -71,7 +71,7 @@ describe('BlobSync', () => {
 
   test('different blob sizes', async () => {
     const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
     const [peer1, peer2] = await Promise.all(
       range(2).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })),
     );
@@ -104,7 +104,7 @@ describe('BlobSync', () => {
 
   test('3 peers in a chain', async () => {
     const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
     const [peer1, peer2, peer3] = await Promise.all(
       range(3).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })),
     );
@@ -125,7 +125,7 @@ describe('BlobSync', () => {
 
   test('cancel download', async () => {
     const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
     const [peer1, peer2] = await Promise.all(
       range(2).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })),
     );

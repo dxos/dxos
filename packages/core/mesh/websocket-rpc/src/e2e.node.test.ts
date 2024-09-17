@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { schema } from '@dxos/protocols/proto';
 import { createServiceBundle, type ServiceTypesOf } from '@dxos/rpc';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { WebsocketRpcClient } from './client';
 import { WebsocketRpcServer } from './server';
@@ -45,9 +44,9 @@ describe('e2e', () => {
     });
 
     await server.open();
-    afterTest(() => server.close());
+    onTestFinished(() => server.close());
     await client.open();
-    afterTest(() => client.close());
+    onTestFinished(() => client.close());
 
     const response = await client.rpc.TestService.testCall({ data: 'hello' });
     expect(response.data).to.equal('hello');
