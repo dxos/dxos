@@ -10,24 +10,24 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node-esm/index.mjs",
-        "require": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
     "./light": {
       "browser": "./dist/lib/browser/light.mjs",
       "node": {
-        "default": "./dist/lib/node-esm/light.mjs",
-        "require": "./dist/lib/node/light.cjs"
+        "require": "./dist/lib/node/light.cjs",
+        "default": "./dist/lib/node-esm/light.mjs"
       },
       "types": "./dist/types/src/light.d.ts"
     },
     "./testing": {
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": {
-        "default": "./dist/lib/node-esm/testing/index.mjs",
-        "require": "./dist/lib/node/testing/index.cjs"
+        "require": "./dist/lib/node/testing/index.cjs",
+        "default": "./dist/lib/node-esm/testing/index.mjs"
       },
       "types": "./dist/types/src/testing/index.d.ts"
     }

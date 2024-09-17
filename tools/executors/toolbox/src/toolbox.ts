@@ -578,7 +578,7 @@ export class Toolbox {
         }
       }
 
-      packageJson.exports = sortJson(packageJson.exports, { depth: -1 });
+      packageJson.exports = sortJson(packageJson.exports, { depth: 1 });
       packageJson.typesVersions['*'] = sortJson(packageJson.typesVersions['*'], { depth: -1 });
 
       if (typeof packageJson.browser === 'object' && packageJson.browser !== null) {

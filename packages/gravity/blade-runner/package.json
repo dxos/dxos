@@ -11,16 +11,16 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node-esm/index.mjs",
-        "require": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
     "./main": {
       "browser": "./dist/lib/browser/main.mjs",
       "node": {
-        "default": "./dist/lib/node-esm/main.mjs",
-        "require": "./dist/lib/node/main.cjs"
+        "require": "./dist/lib/node/main.cjs",
+        "default": "./dist/lib/node-esm/main.mjs"
       },
       "types": "./dist/types/src/main.d.ts"
     }

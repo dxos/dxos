@@ -9,16 +9,16 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node-esm/index.mjs",
-        "require": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
     "./stream": {
       "browser": "./dist/lib/browser/stream.mjs",
       "node": {
-        "default": "./dist/lib/node-esm/stream.mjs",
-        "require": "./dist/lib/node/stream.cjs"
+        "require": "./dist/lib/node/stream.cjs",
+        "default": "./dist/lib/node-esm/stream.mjs"
       },
       "types": "./dist/types/src/stream.d.ts"
     }
