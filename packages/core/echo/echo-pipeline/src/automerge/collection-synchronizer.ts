@@ -143,6 +143,7 @@ export class CollectionSynchronizer extends Resource {
    * Callback when a peer sends the state of a collection.
    */
   onRemoteStateReceived(collectionId: string, peerId: PeerId, state: CollectionState) {
+    validateCollectionState(state);
     const perCollectionState = this._getPerCollectionState(collectionId);
     perCollectionState.remoteStates.set(peerId, state);
     this.remoteStateUpdated.emit({ peerId, collectionId });
@@ -201,4 +202,19 @@ export const diffCollectionState = (local: CollectionState, remote: CollectionSt
   }
 
   return { different };
+};
+
+const validateCollectionState = (state: CollectionState) => {
+  Object.entries(state.documents).forEach(([documentId, heads]) => {
+    if (!isValidDocumentId(documentId as DocumentId)) {
+      throw new Error(`Invalid documentId: ${documentId}`);
+    }
+    if (Array.isArray(heads) && heads.some((head) => typeof head !== 'string')) {
+      throw new Error(`Invalid heads: ${heads}`);
+    }
+  });
+};
+
+const isValidDocumentId = (documentId: DocumentId) => {
+  return typeof documentId === 'string' && !documentId.includes(':');
 };
