@@ -63,7 +63,7 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
     [script, script.source, space, identity],
   );
 
-  const [showDetails, setShowDetails] = useState(false);
+  const [showPanel, setShowPanel] = useState(false);
   const initialValue = useMemo(() => script.source?.content, [script.source]);
   const existingFunctionUrl = fn && getUserFunctionUrlInMetadata(getMeta(fn));
   const [error, setError] = useState<string>();
@@ -163,9 +163,10 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
         deployed={Boolean(existingFunctionUrl) && !script.changed}
         functionUrl={functionUrl}
         error={error}
+        showPanel={showPanel}
         onDeploy={handleDeploy}
         onFormat={handleFormat}
-        onToggleInfo={async () => setShowDetails((run) => !run)}
+        onTogglePanel={async () => setShowPanel((showDetails) => !showDetails)}
       />
 
       <TypescriptEditor
@@ -176,7 +177,7 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
         className='flex is-full bs-full overflow-hidden'
       />
 
-      {showDetails && (
+      {showPanel && (
         <DetailsPanel
           classNames='border-t border-separator'
           functionUrl={functionUrl}

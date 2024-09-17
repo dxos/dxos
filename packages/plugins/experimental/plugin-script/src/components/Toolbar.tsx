@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Checks, CircleNotch, Info, Link, MagicWand, UploadSimple, WarningCircle } from '@phosphor-icons/react';
+import { Checks, CircleNotch, Link, MagicWand, UploadSimple, WarningCircle } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import {
   DensityProvider,
   ElevationProvider,
+  Icon,
   type ThemedClassName,
   Toolbar as NaturalToolbar,
   Tooltip,
@@ -18,12 +19,13 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { SCRIPT_PLUGIN } from '../meta';
 
 export type ToolbarProps = ThemedClassName<{
-  onFormat?: () => Promise<void>;
   deployed?: boolean;
-  onDeploy?: () => Promise<void>;
-  onToggleInfo?: () => Promise<void>;
-  functionUrl?: string;
   error?: string;
+  functionUrl?: string;
+  showPanel?: boolean;
+  onDeploy?: () => Promise<void>;
+  onFormat?: () => Promise<void>;
+  onTogglePanel?: () => Promise<void>;
 }>;
 
 export const Toolbar = ({
@@ -31,9 +33,10 @@ export const Toolbar = ({
   deployed,
   error,
   functionUrl,
+  showPanel,
   onDeploy,
   onFormat,
-  onToggleInfo,
+  onTogglePanel,
 }: ToolbarProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const [pending, setPending] = useState(false);
@@ -57,11 +60,11 @@ export const Toolbar = ({
     <DensityProvider density='fine'>
       <ElevationProvider elevation='chrome'>
         <NaturalToolbar.Root classNames={['p-1', classNames]} style={{ contain: 'layout' }}>
-          {onToggleInfo && (
+          {onTogglePanel && (
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
-                <NaturalToolbar.Button variant='ghost' onClick={onToggleInfo}>
-                  <Info className={getSize(4)} />
+                <NaturalToolbar.Button variant='ghost' onClick={onTogglePanel}>
+                  <Icon icon={showPanel ? 'ph--caret-down--regular' : 'ph--caret-up--regular'} size={4} />
                 </NaturalToolbar.Button>
               </Tooltip.Trigger>
               <Tooltip.Portal>
