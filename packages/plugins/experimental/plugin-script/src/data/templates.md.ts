@@ -18,8 +18,8 @@ export default async ({
 
   const answer = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
     prompt: `
-     Use ONLY the context data below to answer the question. 
-     If you cannot deduce the answer from the provided data reply with "I don't know.".
+     Using the context data only to answer the user's question. 
+     If you don't know the answer reply with "I don't know.".
      
      CONTEXT:
      ${context}
@@ -30,6 +30,7 @@ export default async ({
     stream: true,
   });
 
+  // TODO(burdon): Create wrapper for stream response.
   // Transform event stream into raw text.
   const { readable, writable } = new TransformStream({
     transform: (chunk, controller) => {
@@ -38,7 +39,6 @@ export default async ({
       );
     },
   });
-
   answer.pipeTo(writable);
   return new Response(readable);
 };
