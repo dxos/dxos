@@ -31,6 +31,9 @@ export class DXN {
   });
 
   static parse(dxn: string): DXN {
+    if (typeof dxn !== 'string') {
+      throw new Error('Invalid DXN');
+    }
     const [prefix, kind, ...parts] = dxn.split(':');
     if (!(prefix === 'dxn')) {
       throw new Error('Invalid DXN');
