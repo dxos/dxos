@@ -4,7 +4,7 @@
 
 import { SHEET_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [SHEET_PLUGIN]: {
@@ -16,6 +16,9 @@ export default [
         'toolbar left label': 'Align left',
         'toolbar left center': 'Align center',
         'toolbar left right': 'Align right',
+        'selection overlaps existing comment label': 'Selection overlaps existing comment',
+        'select cells to comment label': 'Select cells to comment',
+        'comment label': 'Comment',
       },
     },
   },

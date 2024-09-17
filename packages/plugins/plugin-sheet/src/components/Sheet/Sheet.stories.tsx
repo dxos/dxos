@@ -75,6 +75,10 @@ const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) =
         format.precision = 2;
         break;
       }
+      case 'comment': {
+        console.log('Comment action');
+        break;
+      }
     }
   };
 
@@ -90,7 +94,8 @@ const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) =
         <Toolbar.Format />
         <Toolbar.Alignment />
         <Toolbar.Separator />
-        <Toolbar.Actions />
+        {/* TODO(Zan): Don't hard code selection. */}
+        <Toolbar.Actions selection={true} />
         <Button onClick={handleRefresh}>Refresh</Button>
       </Toolbar.Root>
       <Sheet.Main />

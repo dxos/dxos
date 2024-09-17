@@ -32,7 +32,7 @@ import { type Formatting } from '../../types';
 // Root
 //
 
-export type ToolbarActionType = 'clear' | 'highlight' | 'left' | 'center' | 'right' | 'date' | 'currency';
+export type ToolbarActionType = 'clear' | 'highlight' | 'left' | 'center' | 'right' | 'date' | 'currency' | 'comment';
 
 export type ToolbarAction = {
   type: ToolbarActionType;
@@ -170,18 +170,28 @@ const Styles = () => {
 // Actions
 //
 
-const Actions = () => {
-  // const { onAction } = useToolbarContext('Actions');
+// TODO(Zan): Instead of taking props, can we access the state from sheet context?
+const Actions = ({ selection, overlapsComment }: { selection?: boolean; overlapsComment?: boolean }) => {
+  const { onAction } = useToolbarContext('Actions');
   const { t } = useTranslation(SHEET_PLUGIN);
+
+  const isDisabled = !selection || overlapsComment;
+
+  const tooltipLabelKey = overlapsComment
+    ? 'selection overlaps existing comment label'
+    : !selection
+      ? 'select cells to comment label'
+      : 'comment label';
+
   return (
     <ToolbarButton
       value='comment'
       Icon={ChatText}
       data-testid='editor.toolbar.comment'
-      // onClick={() => onAction?.({ type: 'comment' })}
-      // disabled={!state || state.comment || !state.selection}
+      onClick={() => onAction?.({ type: 'comment' })}
+      disabled={isDisabled}
     >
-      {t('comment label')}
+      {t(tooltipLabelKey)}
     </ToolbarButton>
   );
 };
