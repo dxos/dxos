@@ -6,7 +6,7 @@ import { CaretRight, Circle, File, Folder, type Icon, type IconProps, Plus, User
 import React, { type HTMLAttributes, type PropsWithChildren } from 'react';
 
 import { type ClassNameValue, type Size } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Rounded border if first/last.
 const styles = {
@@ -29,7 +29,7 @@ export const IconButton = ({
   // TODO(burdon): Density aware.
   return (
     <div className={mx('flex w-6 h-6 items-center justify-center select-none', classNames)} onClick={onClick}>
-      <Icon className={mx(getSize(size), 'cursor-pointer')} {...props} />
+      <Icon size={size} className='cursor-pointer' {...props} />
     </div>
   );
 };

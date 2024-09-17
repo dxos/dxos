@@ -34,7 +34,7 @@ export type FunctionContextOptions = {
 export const defaultFunctionContextOptions: FunctionContextOptions = {
   defaultTtl: 5_000,
   recalculationDelay: 200,
-  remoteFunctionUrl: 'https://edge-main.dxos.workers.dev/functions',
+  remoteFunctionUrl: 'https://edge.dxos.workers.dev/functions', // TODO(burdon): Config.
 };
 
 /**

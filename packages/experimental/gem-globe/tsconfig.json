@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "lib": [
       "DOM",
       "ESNext"
@@ -9,7 +10,7 @@
     "strict": false
   },
   "include": [
-    "data/*.js",
+    "data/*.ts",
     "src"
   ],
   "references": [
