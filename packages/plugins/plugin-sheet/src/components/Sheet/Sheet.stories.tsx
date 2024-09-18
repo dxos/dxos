@@ -94,8 +94,7 @@ const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) =
         <Toolbar.Format />
         <Toolbar.Alignment />
         <Toolbar.Separator />
-        {/* TODO(Zan): Don't hard code selection. */}
-        <Toolbar.Actions selection={true} />
+        <Toolbar.Actions />
         <Button onClick={handleRefresh}>Refresh</Button>
       </Toolbar.Root>
       <Sheet.Main />

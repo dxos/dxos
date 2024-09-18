@@ -77,6 +77,7 @@ import {
   rangeExtension,
   sheetExtension,
 } from '../CellEditor';
+import { useThreads } from './threads';
 
 // TODO(burdon): Virtualization bug.
 // TODO(burdon): Toolbar styles and formatting.
@@ -142,6 +143,10 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
 
   // Scrolling.
   const { rowsRef, columnsRef, contentRef } = useScrollHandlers();
+
+  // Threads.
+  // TODO(Zan): Move this to an extension once we have an extension model.
+  useThreads();
 
   //
   // Order of Row/columns.

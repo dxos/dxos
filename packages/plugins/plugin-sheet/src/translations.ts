@@ -3,8 +3,7 @@
 //
 
 import { SHEET_PLUGIN } from './meta';
-
-export const translations = [
+export default [
   {
     'en-US': {
       [SHEET_PLUGIN]: {
@@ -19,6 +18,7 @@ export const translations = [
         'selection overlaps existing comment label': 'Selection overlaps existing comment',
         'select cells to comment label': 'Select cells to comment',
         'comment label': 'Comment',
+        'comment ranges not supported label': 'Commenting on ranges is not supported (yet)',
       },
     },
   },

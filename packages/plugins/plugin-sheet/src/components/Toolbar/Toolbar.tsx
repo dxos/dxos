@@ -27,6 +27,7 @@ import {
 import { ToolbarButton, ToolbarSeparator, ToolbarToggleButton } from './common';
 import { SHEET_PLUGIN } from '../../meta';
 import { type Formatting } from '../../types';
+import { useSheetContext } from '../Sheet/sheet-context';
 
 //
 // Root
@@ -171,16 +172,18 @@ const Styles = () => {
 //
 
 // TODO(Zan): Instead of taking props, can we access the state from sheet context?
-const Actions = ({ selection, overlapsComment }: { selection?: boolean; overlapsComment?: boolean }) => {
+const Actions = () => {
   const { onAction } = useToolbarContext('Actions');
+  const { cursor, range } = useSheetContext();
   const { t } = useTranslation(SHEET_PLUGIN);
 
-  const isDisabled = !selection || overlapsComment;
-
-  const tooltipLabelKey = overlapsComment
+  // TODO(Zan): Implement me!
+  const overlapsCommentAnchor = false;
+  const cursorOnly = cursor || !range;
+  const tooltipLabelKey = overlapsCommentAnchor
     ? 'selection overlaps existing comment label'
-    : !selection
-      ? 'select cells to comment label'
+    : !cursorOnly
+      ? 'comment ranges not supported label'
       : 'comment label';
 
   return (
@@ -189,7 +192,7 @@ const Actions = ({ selection, overlapsComment }: { selection?: boolean; overlaps
       Icon={ChatText}
       data-testid='editor.toolbar.comment'
       onClick={() => onAction?.({ type: 'comment' })}
-      disabled={isDisabled}
+      disabled={!cursorOnly || overlapsCommentAnchor}
     >
       {t(tooltipLabelKey)}
     </ToolbarButton>

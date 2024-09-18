@@ -9,9 +9,10 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { create, S, TypedObject } from '@dxos/echo-schema';
+import { create, ref, S, TypedObject } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-client';
 import { type StackProvides } from '@dxos/plugin-stack';
+import { ThreadType } from '@dxos/plugin-space/types';
 
 import { SHEET_PLUGIN } from './meta';
 
@@ -103,8 +104,20 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
 
   // Cell formatting referenced by indexed range.
   formatting: S.mutable(S.Record(S.String, S.mutable(Formatting))),
+
+  // Threads associated with the sheet
+  threads: S.mutable(S.Array(ref(ThreadType))),
 }) {}
 
 // TODO(burdon): Fix defaults.
 export const createSheet = (title?: string): SheetType =>
-  create(SheetType, { title, cells: {}, rows: [], columns: [], rowMeta: {}, columnMeta: {}, formatting: {} });
+  create(SheetType, {
+    title,
+    cells: {},
+    rows: [],
+    columns: [],
+    rowMeta: {},
+    columnMeta: {},
+    formatting: {},
+    threads: [],
+  });
