@@ -15,12 +15,14 @@ export default {
 };
 
 export const Basic = (props: DxGridProps) => {
-  return html`<dx-grid
-    cells=${props.cells ?? nothing}
-    columnDefault=${props.columnDefault ?? nothing}
-    rowDefault=${props.rowDefault ?? nothing}
-    columns=${props.columns ?? nothing}
-  ></dx-grid>`;
+  return html`<div style="position:fixed;inset:0;">
+    <dx-grid
+      cells=${props.cells ?? nothing}
+      columnDefault=${props.columnDefault ?? nothing}
+      rowDefault=${props.rowDefault ?? nothing}
+      columns=${props.columns ?? nothing}
+    ></dx-grid>
+  </div>`;
 };
 
 Basic.args = {

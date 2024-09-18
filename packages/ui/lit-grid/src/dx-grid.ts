@@ -60,14 +60,20 @@ const rowToA1Notation = (row: number): string => {
   return `${row + 1}`;
 };
 
-const closestAction = (target: EventTarget | null) => {
-  return (target as HTMLElement | null)?.closest('[data-dx-grid-action]')?.getAttribute('data-dx-grid-action');
+const closestAction = (target: EventTarget | null): { action: string | null; actionEl: HTMLElement | null } => {
+  const actionEl: HTMLElement | null = (target as HTMLElement | null)?.closest('[data-dx-grid-action]') ?? null;
+  return { actionEl, action: actionEl?.getAttribute('data-dx-grid-action') ?? null };
 };
 
-const closestCell = (target: EventTarget | null): Record<DxGridAxis, number> | null => {
-  const action = closestAction(target);
-  if (action === 'cell') {
-    const cellElement = target as HTMLElement;
+const closestCell = (target: EventTarget | null, actionEl?: HTMLElement | null): Record<DxGridAxis, number> | null => {
+  let cellElement = actionEl;
+  if (!cellElement) {
+    const { action, actionEl } = closestAction(target);
+    if (action === 'cell') {
+      cellElement = actionEl as HTMLElement;
+    }
+  }
+  if (cellElement) {
     const col = parseInt(cellElement.getAttribute('aria-colindex') ?? 'never');
     const row = parseInt(cellElement.getAttribute('aria-rowindex') ?? 'never');
     return { col, row };
@@ -80,6 +86,8 @@ const isSameCell = (a: DxGridPositionNullable, b: DxGridPositionNullable) =>
   a && b && Number.isFinite(a.col) && Number.isFinite(a.row) && a.col === b.col && a.row === b.row;
 
 const toCellIndex = (cellCoords: Record<DxGridAxis, number>): CellIndex => `${cellCoords.col},${cellCoords.row}`;
+
+const _cellOffset = () => {};
 
 export type CellValue = {
   /**
@@ -212,7 +220,7 @@ export class DxGrid extends LitElement {
   resizing: null | (DxAxisResizeProps & { page: number }) = null;
 
   handlePointerDown = (event: PointerEvent) => {
-    const action = closestAction(event.target);
+    const { action, actionEl } = closestAction(event.target);
     if (action) {
       if (action.startsWith('resize')) {
         const [resize, index] = action.split(',');
@@ -224,7 +232,7 @@ export class DxGrid extends LitElement {
           index,
         };
       } else if (action === 'cell') {
-        const cellCoords = closestCell(event.target);
+        const cellCoords = closestCell(event.target, actionEl);
         if (this.focusActive && isSameCell(this.focusedCell, cellCoords)) {
           this.dispatchEvent(new DxEditRequest({ cellIndex: toCellIndex(cellCoords!) }));
         }
