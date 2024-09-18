@@ -23,7 +23,7 @@ export const Chain: FC<{ chain: ChainType }> = ({ chain }) => {
     chain.name = preset.title;
     // TODO(burdon): API issue.
     chain.prompts?.filter(nonNullable).forEach((prompt) => space.db.remove(prompt));
-    chain.prompts = [preset.prompt()];
+    chain.prompts = [preset.createPrompt()];
   };
 
   return (

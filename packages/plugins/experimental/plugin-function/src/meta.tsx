@@ -11,8 +11,8 @@ export const FUNCTION_PLUGIN = 'dxos.org/plugin/function';
 
 export default pluginMeta({
   id: FUNCTION_PLUGIN,
-  name: 'Function',
-  description: 'Distributed functions.',
+  name: 'Rule',
+  description: 'Rules for distributed functions.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <Function {...props} />,
   iconSymbol: 'ph--function--regular',

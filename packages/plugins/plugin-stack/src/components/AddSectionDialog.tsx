@@ -84,7 +84,7 @@ export const AddSectionDialog = ({ path, position, collection }: AddSectionDialo
       <Dialog.Title>{t(`add section ${position} dialog title`)}</Dialog.Title>
       <SearchList.Root label={t('add section input placeholder')}>
         <SearchList.Input placeholder={t('add section input placeholder')} classNames='pli-3' disabled={pending} />
-        <SearchList.Content classNames='min-bs-24 bs-fit max-bs-48 overflow-auto' {...(pending && { inert: 'true' })}>
+        <SearchList.Content classNames='min-bs-24 bs-fit max-bs-64 overflow-auto' {...(pending && { inert: 'true' })}>
           {stackPlugin?.provides?.stack.creators?.map(({ id, icon: Icon, label: propsLabel, testId, intent }) => {
             const label = toLocalizedString(propsLabel, t);
             return (

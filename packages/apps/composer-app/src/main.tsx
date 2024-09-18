@@ -23,7 +23,6 @@ import ExplorerMeta from '@dxos/plugin-explorer/meta';
 import FilesMeta from '@dxos/plugin-files/meta';
 import FunctionMeta from '@dxos/plugin-function/meta';
 import GithubMeta from '@dxos/plugin-github/meta';
-import GptMeta from '@dxos/plugin-gpt/meta';
 import GraphMeta from '@dxos/plugin-graph/meta';
 import GridMeta from '@dxos/plugin-grid/meta';
 import HelpMeta from '@dxos/plugin-help/meta';
@@ -65,6 +64,9 @@ import { steps } from './help';
 import { meta as WelcomeMeta } from './plugins/welcome/meta';
 import translations from './translations';
 import { removeQueryParamByValue } from './util';
+
+const isTrue = (str?: string) => str === 'true' || str === '1';
+const isFalse = (str?: string) => str === 'false' || str === '0';
 
 const main = async () => {
   TRACE_PROCESSOR.setInstanceTag('app');
@@ -118,9 +120,9 @@ const main = async () => {
 
   const firstRun = new Trigger();
   const isSocket = !!(globalThis as any).__args;
-  const isPwa = config.values.runtime?.app?.env?.DX_PWA !== 'false';
+  const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
   const isDev = !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT);
-  const isExperimental = config.values.runtime?.app?.env?.DX_EXPERIMENTAL === 'true';
+  const isLabs = isTrue(config.values.runtime?.app?.env?.DX_LABS);
 
   const App = createApp({
     fallback: ({ error }) => (
@@ -189,9 +191,7 @@ const main = async () => {
       // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
       SearchMeta,
 
-      ...(isExperimental
-        ? [ChainMeta, FunctionMeta, GithubMeta, GptMeta, GridMeta, InboxMeta, KanbanMeta, OutlinerMeta]
-        : []),
+      ...(isLabs ? [ChainMeta, FunctionMeta, GithubMeta, GridMeta, InboxMeta, KanbanMeta, OutlinerMeta] : []),
     ],
     plugins: {
       [AttentionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-attention')),
@@ -259,7 +259,6 @@ const main = async () => {
       [FilesMeta.id]: Plugin.lazy(() => import('@dxos/plugin-files')),
       [FunctionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-function')),
       [GithubMeta.id]: Plugin.lazy(() => import('@dxos/plugin-github')),
-      [GptMeta.id]: Plugin.lazy(() => import('@dxos/plugin-gpt')),
       [GraphMeta.id]: Plugin.lazy(() => import('@dxos/plugin-graph')),
       [GridMeta.id]: Plugin.lazy(() => import('@dxos/plugin-grid')),
       [HelpMeta.id]: Plugin.lazy(() => import('@dxos/plugin-help'), { steps }),

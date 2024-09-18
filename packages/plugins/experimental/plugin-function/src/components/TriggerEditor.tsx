@@ -2,12 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ChangeEventHandler, type FC, type PropsWithChildren, useEffect, useMemo } from 'react';
+import React, { type ChangeEventHandler, type FC, useEffect, useMemo } from 'react';
 
-import { GameType } from '@dxos/chess-app/types';
-import { create } from '@dxos/echo-schema';
 import {
-  FunctionDef,
   type FunctionTrigger,
   type FunctionTriggerType,
   type SubscriptionTrigger,
@@ -16,38 +13,19 @@ import {
   type WebhookTrigger,
   type WebsocketTrigger,
 } from '@dxos/functions/types';
-import { ChainPresets, chainPresets, PromptTemplate } from '@dxos/plugin-chain';
-import { type ChainPromptType } from '@dxos/plugin-chain/types';
-import { FileType } from '@dxos/plugin-ipfs/types';
-import { DocumentType } from '@dxos/plugin-markdown/types';
-import { DiagramType } from '@dxos/plugin-sketch/types';
-import { CollectionType, MessageType } from '@dxos/plugin-space/types';
+import { ScriptType } from '@dxos/plugin-script/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select } from '@dxos/react-ui';
-import { distinctBy, safeParseInt } from '@dxos/util';
+import { distinctBy } from '@dxos/util';
 
-type TriggerId = string;
-
-const stateInitialValues = {
-  schemas: [
-    // TODO(burdon): Get all schema from API.
-    DocumentType,
-    FileType,
-    GameType,
-    MessageType,
-    DiagramType,
-    CollectionType,
-  ] as any[],
-  selectedSchema: {} as Record<TriggerId, any>,
-};
-
-const state = create<typeof stateInitialValues>(stateInitialValues);
+import { InputRow } from './Form';
+import { getMeta, state } from './meta';
 
 const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook', 'websocket'];
 
 export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: FunctionTrigger }) => {
-  const query = useQuery(space, Filter.schema(FunctionDef));
-  const fn = useMemo(() => query.find((fn) => fn.uri === trigger.function), [trigger.function, query]);
+  const scripts = useQuery(space, Filter.schema(ScriptType));
+  const script = useMemo(() => scripts.find((script) => script.id === trigger.function), [trigger.function, scripts]);
 
   useEffect(() => {
     void space.db.schema
@@ -78,7 +56,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
 
   useEffect(() => {
     if (!trigger.meta) {
-      const extension = metaExtensions[trigger.function];
+      const extension = getMeta(trigger);
       if (extension?.initialValue) {
         trigger.meta = extension.initialValue();
       }
@@ -86,9 +64,9 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   }, [trigger.function, trigger.meta]);
 
   const handleSelectFunction = (value: string) => {
-    const match = query.find((fn) => fn.uri === value);
+    const match = scripts.find((fn) => fn.id === value);
     if (match) {
-      trigger.function = match.uri;
+      trigger.function = match.id;
     }
   };
 
@@ -114,20 +92,22 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
     }
   };
 
+  const TriggerMeta = trigger.meta?.component;
+
   return (
     <DensityProvider density='fine'>
       <div className='flex flex-col my-2'>
         <table className='is-full table-fixed'>
           <tbody>
             <InputRow label='Function'>
-              <Select.Root value={fn?.uri} onValueChange={handleSelectFunction}>
+              <Select.Root value={script?.id} onValueChange={handleSelectFunction}>
                 <Select.TriggerButton placeholder={'Select function'} />
                 <Select.Portal>
                   <Select.Content>
                     <Select.Viewport>
-                      {query.map(({ id, uri }) => (
-                        <Select.Option key={id} value={uri}>
-                          {uri}
+                      {scripts.map(({ id, name }) => (
+                        <Select.Option key={id} value={id}>
+                          {name ?? 'Unnamed'}
                         </Select.Option>
                       ))}
                     </Select.Viewport>
@@ -135,9 +115,13 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
                 </Select.Portal>
               </Select.Root>
             </InputRow>
-            <InputRow>
-              <div className='px-2'>{fn && <p className='text-sm text-description'>{fn.description}</p>}</div>
-            </InputRow>
+            {script?.description?.length && (
+              <InputRow>
+                <div className='px-2'>
+                  <p className='text-sm text-description'>{script?.description?.length}</p>
+                </div>
+              </InputRow>
+            )}
             <InputRow label='Type'>
               <Select.Root value={trigger.spec?.type} onValueChange={handleSelectTriggerType}>
                 <Select.TriggerButton placeholder={'Select trigger'} />
@@ -164,7 +148,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
               </div>
             </InputRow>
           </tbody>
-          {trigger.function && (
+          {TriggerMeta && (
             <tbody>
               <tr>
                 <td />
@@ -294,143 +278,3 @@ const TriggerSpec = ({ space, spec }: TriggerSpecProps) => {
   const Component = triggerRenderers[spec.type];
   return Component ? <Component space={space} spec={spec} /> : null;
 };
-
-//
-// Trigger meta.
-//
-
-const TriggerMeta = ({ trigger }: { trigger: FunctionTrigger }) => {
-  const meta = useMemo(() => (trigger?.function ? metaExtensions[trigger.function] : undefined), [trigger.function]);
-
-  const Component = meta?.component;
-  if (Component && trigger.meta) {
-    return <Component meta={trigger.meta} />;
-  }
-
-  return null;
-};
-
-type MetaProps<T> = { meta: T } & { triggerId?: string };
-type MetaExtension<T> = {
-  initialValue?: () => T;
-  component: FC<MetaProps<T>>;
-};
-
-// TODO(burdon): Possible to build form from function meta schema.
-
-type ChessMeta = { level?: number };
-
-const ChessMetaProps = ({ meta }: MetaProps<ChessMeta>) => {
-  return (
-    <>
-      <InputRow label='Level'>
-        <Input.TextInput
-          type='number'
-          value={meta.level ?? 1}
-          onChange={(event) => (meta.level = safeParseInt(event.target.value))}
-          placeholder='Engine strength.'
-        />
-      </InputRow>
-    </>
-  );
-};
-
-type EmailWorkerMeta = { account?: string };
-
-const EmailWorkerMetaProps = ({ meta }: MetaProps<EmailWorkerMeta>) => {
-  return (
-    <>
-      <InputRow label='Account'>
-        <Input.TextInput
-          value={meta.account ?? ''}
-          onChange={(event) => (meta.account = event.target.value)}
-          placeholder='https://'
-        />
-      </InputRow>
-    </>
-  );
-};
-
-type ChainPromptMeta = { model?: string; prompt?: ChainPromptType };
-
-const ChainPromptMetaProps = ({ meta, triggerId }: MetaProps<ChainPromptMeta>) => {
-  const schema = triggerId ? state.selectedSchema[triggerId] : undefined;
-  return (
-    <>
-      <InputRow label='Model'>
-        <Input.TextInput
-          value={meta.model ?? ''}
-          onChange={(event) => (meta.model = event.target.value)}
-          placeholder='llama2'
-        />
-      </InputRow>
-      <InputRow label='Presets'>
-        <ChainPresets
-          presets={chainPresets}
-          onSelect={(preset) => {
-            meta.prompt = preset.prompt();
-          }}
-        />
-      </InputRow>
-      {meta.prompt && (
-        <InputRow label='Prompt'>
-          <PromptTemplate prompt={meta.prompt} schema={schema} />
-        </InputRow>
-      )}
-    </>
-  );
-};
-
-type EmbeddingMeta = { model?: string; prompt?: ChainPromptType };
-
-const EmbeddingMetaProps = ({ meta }: MetaProps<EmbeddingMeta>) => {
-  return (
-    <>
-      <InputRow label='Model'>
-        <Input.TextInput
-          value={meta.model ?? ''}
-          onChange={(event) => (meta.model = event.target.value)}
-          placeholder='llama2'
-        />
-      </InputRow>
-    </>
-  );
-};
-
-const metaExtensions: Record<string, MetaExtension<any>> = {
-  'dxos.org/function/chess': {
-    initialValue: () => ({ level: 2 }),
-    component: ChessMetaProps,
-  } satisfies MetaExtension<ChessMeta>,
-
-  'dxos.org/function/email-worker': {
-    initialValue: () => ({ account: 'hello@dxos.network' }),
-    component: EmailWorkerMetaProps,
-  } satisfies MetaExtension<EmailWorkerMeta>,
-
-  'dxos.org/function/gpt': {
-    initialValue: () => ({ model: 'llama2' }),
-    component: ChainPromptMetaProps,
-  } satisfies MetaExtension<ChainPromptMeta>,
-
-  'dxos.org/function/embedding': {
-    initialValue: () => ({ model: 'llama2' }),
-    component: EmbeddingMetaProps,
-  } satisfies MetaExtension<EmbeddingMeta>,
-};
-
-//
-// Utils.
-//
-
-// TODO(burdon): Generalize and reuse forms in other plugins (extract to react-ui-form?)
-const InputRow = ({ label, children }: PropsWithChildren<{ label?: string }>) => (
-  <Input.Root>
-    <tr>
-      <td className='w-[100px] px-2 text-right align-top pt-3'>
-        <Input.Label classNames='text-xs'>{label}</Input.Label>
-      </td>
-      <td className='p-1'>{children}</td>
-    </tr>
-  </Input.Root>
-);

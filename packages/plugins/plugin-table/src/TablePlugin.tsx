@@ -99,11 +99,14 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         creators: [
           {
             id: 'create-stack-section-table',
-            testId: 'tablePlugin.createSectionSpaceSketch',
+            testId: 'tablePlugin.createSection',
             type: ['plugin name', { ns: TABLE_PLUGIN }],
             label: ['create stack section label', { ns: TABLE_PLUGIN }],
             icon: (props: any) => <Table {...props} />,
-            intent: { plugin: TABLE_PLUGIN, action: TableAction.CREATE },
+            intent: {
+              plugin: TABLE_PLUGIN,
+              action: TableAction.CREATE,
+            },
           },
         ],
       },

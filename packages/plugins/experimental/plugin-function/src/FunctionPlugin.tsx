@@ -35,7 +35,7 @@ export const FunctionPlugin = (): PluginDefinition<FunctionPluginProvides> => {
         creators: [
           {
             id: 'create-stack-section-function',
-            testId: 'functionPlugin.createSectionSpaceFunction',
+            testId: 'functionPlugin.createSection',
             type: ['plugin name', { ns: FUNCTION_PLUGIN }],
             label: ['create stack section label', { ns: FUNCTION_PLUGIN }],
             icon: (props: any) => <Function {...props} />,

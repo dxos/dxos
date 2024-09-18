@@ -632,9 +632,6 @@ importers:
       '@dxos/plugin-github':
         specifier: workspace:*
         version: link:../../plugins/experimental/plugin-github
-      '@dxos/plugin-gpt':
-        specifier: workspace:*
-        version: link:../../plugins/experimental/plugin-gpt
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../../plugins/plugin-graph
@@ -6256,6 +6253,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugin-markdown
+      '@dxos/plugin-script':
+        specifier: workspace:*
+        version: link:../plugin-script
       '@dxos/plugin-sketch':
         specifier: workspace:*
         version: link:../../plugin-sketch
@@ -6396,85 +6396,6 @@ importers:
       '@types/lodash.update':
         specifier: ^4.10.7
         version: 4.10.7
-      '@types/react':
-        specifier: ~18.2.0
-        version: 18.2.79
-      '@types/react-dom':
-        specifier: ~18.2.0
-        version: 18.2.25
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^5.3.4
-        version: 5.3.4(@types/node@18.11.9)
-
-  packages/plugins/experimental/plugin-gpt:
-    dependencies:
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../../core/echo/echo-schema
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../../common/local-storage
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../../plugin-client
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../../plugin-graph
-      '@dxos/plugin-markdown':
-        specifier: workspace:*
-        version: link:../../plugin-markdown
-      '@dxos/plugin-settings':
-        specifier: workspace:*
-        version: link:../../plugin-settings
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../../plugin-space
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../../sdk/react-client
-      '@preact/signals-core':
-        specifier: ^1.6.0
-        version: 1.6.0
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-      openai:
-        specifier: ^4.26.1
-        version: 4.26.1
-    devDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../../ui/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
