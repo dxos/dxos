@@ -6,7 +6,7 @@
 
 import { type BundleParams, makeSprite, scanString } from '@ch-ui/icons';
 import fs from 'fs';
-import { join, resolve } from 'path';
+import { dirname, join, resolve } from 'path';
 import pm from 'picomatch';
 import type { Plugin, ViteDevServer } from 'vite';
 
@@ -36,6 +36,28 @@ export const IconsPlugin = (params: BundleParams & { manifestPath?: string; verb
     return updated;
   };
 
+  const readManifest = (filepath: string) => {
+    if (fs.existsSync(filepath)) {
+      const icons = fs.readFileSync(filepath, { encoding: 'utf8' }).toString();
+      detectedSymbols.clear();
+      JSON.parse(icons).forEach((icon: string) => detectedSymbols.add(icon));
+      if (params.verbose) {
+        // eslint-disable-next-line no-console
+        console.log('Cached icons:', detectedSymbols.size);
+      }
+    }
+  };
+
+  const writeManifest = (filepath: string) => {
+    const baseDir = dirname(filepath);
+    if (!fs.existsSync(baseDir)) {
+      fs.mkdirSync(baseDir, { recursive: true });
+    }
+    fs.writeFileSync(filepath, JSON.stringify(Array.from(detectedSymbols), null, 2), {
+      encoding: 'utf8',
+    });
+  };
+
   return [
     {
       // Step 1: Scan source files for detectedSymbols
@@ -45,16 +67,7 @@ export const IconsPlugin = (params: BundleParams & { manifestPath?: string; verb
       configResolved: (config) => {
         rootDir = resolve(config.root);
         if (params.manifestPath) {
-          try {
-            const icons = fs.readFileSync(params.manifestPath, { encoding: 'utf8' }).toString();
-            detectedSymbols.clear();
-            JSON.parse(icons).forEach((icon: string) => detectedSymbols.add(icon));
-            // eslint-disable-next-line no-console
-            console.log('Cached icons:', detectedSymbols.size);
-          } catch (err) {
-            // eslint-disable-next-line no-console
-            console.error(err);
-          }
+          readManifest(params.manifestPath);
         }
       },
       configureServer: (_server) => {
@@ -109,10 +122,9 @@ export const IconsPlugin = (params: BundleParams & { manifestPath?: string; verb
           status.updated = false;
           await makeSprite(params, detectedSymbols);
           if (params.manifestPath) {
-            fs.writeFileSync(params.manifestPath, JSON.stringify(Array.from(detectedSymbols), null, 2), {
-              encoding: 'utf8',
-            });
+            writeManifest(params.manifestPath);
           }
+
           if (params.verbose) {
             const symbols = Array.from(detectedSymbols.values());
             symbols.sort();
