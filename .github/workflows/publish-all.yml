@@ -88,15 +88,16 @@ jobs:
           DX_TELEMETRY_API_KEY: ${{ env.CLI_SEGMENT_API_KEY }}
           NODE_ENV: production
 
-      - name: Publish to NPM
-        id: npm-publish
-        run: .github/workflows/scripts/publish.sh
-        if: env.BRANCH == 'production' || env.BRANCH == 'staging' || github.event.inputs.publish_npm == 'true'
-
+      # NOTE: Shell must be bundled before npm publish.
       - name: Bundle Shell
         run: pnpm nx bundle shell
         env:
           NODE_ENV: production
+
+      - name: Publish to NPM
+        id: npm-publish
+        run: .github/workflows/scripts/publish.sh
+        if: env.BRANCH == 'production' || env.BRANCH == 'staging' || github.event.inputs.publish_npm == 'true'
 
       - name: Publish Apps
         run: .github/workflows/scripts/publish-apps.sh
