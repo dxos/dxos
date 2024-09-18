@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type LayoutCoordinate } from '@dxos/app-framework';
+import { type LayoutContainerProps } from '@dxos/app-framework';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Sheet, type SheetRootProps } from './Sheet';
@@ -13,8 +13,8 @@ const SheetContainer = ({
   sheet,
   space,
   role,
-  coordinate = { part: 'main', entryId: '' },
-}: SheetRootProps & { role?: string; coordinate?: LayoutCoordinate }) => {
+  // coordinate = { part: 'main', entryId: '' },
+}: LayoutContainerProps<SheetRootProps>) => {
   return (
     <div
       role='none'
@@ -22,7 +22,7 @@ const SheetContainer = ({
         'flex',
         role === 'article' && 'row-span-2', // TODO(burdon): Container with toolbar.
         role === 'section' && 'aspect-square border-y border-is border-separator',
-        coordinate.part !== 'solo' && 'border-is border-separator',
+        // coordinate.part !== 'solo' && 'border-is border-separator',
       )}
     >
       <Sheet.Root sheet={sheet} space={space}>
