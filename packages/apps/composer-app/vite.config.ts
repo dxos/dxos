@@ -103,7 +103,7 @@ export default defineConfig({
       symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
       assetPath: (name, variant) =>
         `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
-      manifestPath: resolve(__dirname, 'out/icons.json'),
+      manifestPath: resolve(__dirname, 'out/composer/icons.json'),
       spritePath: resolve(__dirname, 'public/icons.svg'),
       contentPaths: [
         `${resolve(__dirname, '../../..')}/{packages,tools}/**/dist/**/*.{mjs,html}`,
@@ -157,6 +157,8 @@ export default defineConfig({
       // No PWA in dev to make it easier to ensure the latest version is being used.
       // May be mitigated in the future by https://github.com/dxos/dxos/issues/4939.
       // https://vite-pwa-org.netlify.app/guide/unregister-service-worker.html#unregister-service-worker
+      // NOTE: Check cached resources (on CF, and in the PWA).
+      // curl -I --header "Cache-Control: no-cache" https://staging.composer.space/icons.svg
       selfDestroying: process.env.DX_PWA === 'false',
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,
@@ -241,7 +243,7 @@ export default defineConfig({
     {
       name: 'copy-icons',
       buildEnd() {
-        cp(join(__dirname, 'public/icons.svg'), join(__dirname, 'dist/icons.svg'), (err) => {
+        cp(join(__dirname, 'public/icons.svg'), join(__dirname, 'out/composer/icons.svg'), (err) => {
           if (err) {
             console.error('Error copying public assets:', err);
           } else {
