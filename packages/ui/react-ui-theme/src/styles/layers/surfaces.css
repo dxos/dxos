@@ -28,12 +28,12 @@
   }
 
   .modal-surface {
-    background-color: var(--dx-modal);
-    --surface-bg: var(--dx-modal);
+    background-color: var(--dx-modalSurface);
+    --surface-bg: var(--dx-modalSurface);
   }
 
   .dark .modal-surface {
-    background-color: var(--dx-modal);
-    --surface-bg: var(--dx-modal);
+    background-color: var(--dx-modalSurface);
+    --surface-bg: var(--dx-modalSurface);
   }
 }

@@ -208,8 +208,15 @@ const semanticColors = {
     light: [':root'],
     dark: ['.dark'],
   },
-  // TODO(burdon): Organize by category (e.g., surface, text, etc.)
+
+  // TODO(burdon): Organize by category.
+  // TODO(burdon): Standardize suffix (e.g., -surface?)
+  // TODO(burdon): Add comments.
+  // TODO(burdon): Create storybook.
   sememes: {
+    //
+    // Surfaces (bg-)
+    //
     attention: {
       light: ['neutral', surfaceCadence.light[0]],
       dark: ['neutral', surfaceCadence.dark[0]],
@@ -222,7 +229,7 @@ const semanticColors = {
       light: ['neutral', `${surfaceCadence.light[4]}/.65`],
       dark: ['neutral', `${surfaceCadence.dark[1]}/.65`],
     },
-    baseGlass: {
+    dialogSurface: {
       light: ['neutral', `${surfaceCadence.light[1]}/.88`],
       dark: ['neutral', `${surfaceCadence.dark[2]}/.88`],
     },
@@ -234,6 +241,7 @@ const semanticColors = {
       light: ['neutral', surfaceCadence.light[2]],
       dark: ['neutral', surfaceCadence.dark[3]],
     },
+    // TODO(burdon): Not used?
     modalSelected: {
       light: ['neutral', surfaceCadence.light[2]],
       dark: ['neutral', surfaceCadence.dark[3]],
@@ -242,13 +250,11 @@ const semanticColors = {
       light: ['neutral', surfaceCadence.light[3]],
       dark: ['neutral', surfaceCadence.dark[4]],
     },
-    modal: {
-      light: ['neutral', surfaceCadence.light[0]],
-      dark: ['neutral', surfaceCadence.dark[5]],
-    },
-    separator: {
-      light: ['neutral', surfaceCadence.light[4]],
-      dark: ['neutral', surfaceCadence.dark[6]],
+    modalSurface: {
+      light: ['neutral', `${surfaceCadence.light[1]}/.88`],
+      dark: ['neutral', `${surfaceCadence.dark[2]}/.88`],
+      // light: ['neutral', surfaceCadence.light[0]],
+      // dark: ['neutral', surfaceCadence.dark[5]],
     },
     accentSurface: {
       light: ['primary', 500],
@@ -258,10 +264,6 @@ const semanticColors = {
       light: ['primary', 600],
       dark: ['primary', 475],
     },
-    accentFocusIndicator: {
-      light: ['primary', 350],
-      dark: ['primary', 450],
-    },
     unAccent: {
       light: ['neutral', 400],
       dark: ['neutral', 400],
@@ -270,6 +272,24 @@ const semanticColors = {
       light: ['neutral', 400],
       dark: ['neutral', 500],
     },
+
+    //
+    // Borders
+    //
+
+    separator: {
+      light: ['neutral', surfaceCadence.light[4]],
+      dark: ['neutral', surfaceCadence.dark[6]],
+    },
+    accentFocusIndicator: {
+      light: ['primary', 350],
+      dark: ['primary', 450],
+    },
+
+    //
+    // Foreground (text-)
+    //
+
     inverse: {
       light: ['neutral', 0],
       dark: ['neutral', 0],
