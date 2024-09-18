@@ -5,6 +5,7 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cp } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
@@ -50,6 +51,8 @@ export default defineConfig({
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
     rollupOptions: {
+      // NOTE: Set cache to fix to help debug flaky builds.
+      // cache: false,
       input: {
         internal: resolve(__dirname, './internal.html'),
         main: resolve(__dirname, './index.html'),
@@ -101,10 +104,12 @@ export default defineConfig({
       assetPath: (name, variant) =>
         `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
       spritePath: resolve(__dirname, 'public/icons.svg'),
+      manifestPath: resolve(__dirname, 'public/icons.json'),
       contentPaths: [
         `${resolve(__dirname, '../../..')}/{packages,tools}/**/dist/**/*.{mjs,html}`,
         `${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}`,
       ],
+      verbose: true,
     }),
     // https://github.com/antfu-collective/vite-plugin-inspect#readme
     // localhost:5173/__inspect
@@ -152,6 +157,8 @@ export default defineConfig({
       // No PWA in dev to make it easier to ensure the latest version is being used.
       // May be mitigated in the future by https://github.com/dxos/dxos/issues/4939.
       // https://vite-pwa-org.netlify.app/guide/unregister-service-worker.html#unregister-service-worker
+      // NOTE: Check cached resources (on CF, and in the PWA).
+      // curl -I --header "Cache-Control: no-cache" https://staging.composer.space/icons.svg
       selfDestroying: process.env.DX_PWA === 'false',
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,
@@ -232,7 +239,21 @@ export default defineConfig({
           },
         ]
       : []),
-  ],
+    // Copy post-build assets to dist.
+    {
+      name: 'copy-icons',
+      enforce: 'post',
+      buildEnd() {
+        cp(join(__dirname, 'public/icons.svg'), join(__dirname, 'out/composer/icons.svg'), (err) => {
+          if (err) {
+            console.error('Error copying public assets:', err);
+          } else {
+            console.log('Copied public assets.');
+          }
+        });
+      }
+    }
+  ], // Plugins
 });
 
 /**

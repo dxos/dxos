@@ -6,18 +6,18 @@
 
 import { type BundleParams, makeSprite, scanString } from '@ch-ui/icons';
 import fs from 'fs';
-import { join, resolve } from 'path';
-import pm from 'picomatch';
+import { dirname, join, resolve } from 'path';
+import picomatch from 'picomatch';
 import type { Plugin, ViteDevServer } from 'vite';
 
-export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugin[] => {
-  const { symbolPattern, contentPaths } = params;
+export const IconsPlugin = (params: BundleParams & { manifestPath?: string; verbose?: boolean }): Plugin[] => {
+  const { manifestPath, spritePath, symbolPattern, contentPaths, verbose } = params;
 
-  const pms = contentPaths.map((contentPath) => pm(contentPath));
-  const isContent = (id: string) => !!pms.find((pm) => pm(id));
-  const shouldIgnore = (id: string) => !isContent(id);
+  const pms = contentPaths.map((contentPath) => picomatch(contentPath));
+  const isContent = (filepath: string) => !!pms.find((pm) => pm(filepath));
+  const shouldIgnore = (filepath: string) => !isContent(filepath);
 
-  let roodDir: string;
+  let rootDir: string;
   let server: ViteDevServer | null = null;
   const detectedSymbols = new Set<string>();
   const visitedFiles = new Set<string>();
@@ -36,15 +36,45 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
     return updated;
   };
 
+  const readManifest = (filepath: string) => {
+    if (fs.existsSync(filepath)) {
+      const icons = fs.readFileSync(filepath, { encoding: 'utf8' }).toString();
+      detectedSymbols.clear();
+      JSON.parse(icons).forEach((icon: string) => detectedSymbols.add(icon));
+      if (verbose) {
+        // eslint-disable-next-line no-console
+        console.log('Cached icons:', detectedSymbols.size);
+      }
+    }
+  };
+
+  const writeManifest = (filepath: string) => {
+    const baseDir = dirname(filepath);
+    if (!fs.existsSync(baseDir)) {
+      fs.mkdirSync(baseDir, { recursive: true });
+    }
+    if (verbose) {
+      // eslint-disable-next-line no-console
+      console.log('Writing manifest:', JSON.stringify({ path: filepath, size: detectedSymbols.size }));
+    }
+    const symbols = Array.from(detectedSymbols.values());
+    symbols.sort();
+    fs.writeFileSync(filepath, JSON.stringify(symbols, null, 2), { encoding: 'utf8' });
+  };
+
   return [
     {
-      // Step 1: Scan source files for detectedSymbols
+      // Step 1: Scan source files incrementally.
       name: '@ch-ui/icons:scan',
       enforce: 'pre',
 
       configResolved: (config) => {
-        roodDir = resolve(config.root);
+        rootDir = resolve(config.root);
+        if (manifestPath) {
+          readManifest(manifestPath);
+        }
       },
+
       configureServer: (_server) => {
         server = _server;
 
@@ -54,18 +84,19 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
             const match = req.url?.match(/^(\/@fs)?(.+)\.(\w+)$/);
             if (match) {
               const [, prefix, path, ext] = match;
-              const filename = join((prefix ? '' : roodDir) + `${path}.${ext}`);
+              const filename = join((prefix ? '' : rootDir) + `${path}.${ext}`);
               if (!visitedFiles.has(filename)) {
                 visitedFiles.add(filename);
                 // TODO(burdon): Check if matches contentPaths (incl. mjs).
                 const extensions = ['js', 'ts', 'jsx', 'tsx', 'mjs'];
                 if (extensions.some((e) => e === ext) && path.indexOf('node_modules') === -1) {
                   try {
-                    const src = fs.readFileSync(filename, 'utf-8');
-                    status.updated ||= scan(src);
+                    const src = fs.readFileSync(filename, 'utf8');
+                    const match = scan(src);
+                    status.updated ||= match;
                   } catch (err) {
                     // eslint-disable-next-line no-console
-                    console.error(`Missing file: ${req.url}`);
+                    console.error('Missing file', req.url);
                   }
                 }
               }
@@ -77,18 +108,20 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
       },
 
       transformIndexHtml: (html) => {
-        status.updated ||= scan(html);
+        const match = scan(html);
+        status.updated ||= match;
       },
 
       transform: (src, id) => {
         if (!shouldIgnore(id)) {
-          status.updated ||= scan(src);
+          const match = scan(src);
+          status.updated ||= match;
         }
       },
     },
-
     {
-      // Step 2: Write sprite
+      // Step 2: Write sprite.
+      // NOTE: This must run before the public directory is copied.
       name: '@ch-ui/icons:write',
       enforce: 'post',
 
@@ -96,17 +129,21 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
         if (status.updated) {
           status.updated = false;
           await makeSprite(params, detectedSymbols);
-          if (params.verbose) {
+          if (manifestPath) {
+            writeManifest(manifestPath);
+          }
+
+          if (verbose) {
             const symbols = Array.from(detectedSymbols.values());
             symbols.sort();
             // eslint-disable-next-line no-console
             console.log(
-              'sprite updated:',
-              JSON.stringify({ path: params.spritePath, size: detectedSymbols.size, symbols }, null, 2),
+              'Sprite updated:',
+              JSON.stringify({ path: spritePath, size: detectedSymbols.size, symbols }, null, 2),
             );
           }
         }
       },
     },
-  ] satisfies Plugin[];
+  ] as Plugin[];
 };
