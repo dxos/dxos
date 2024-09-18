@@ -5,6 +5,7 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cp } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
@@ -50,6 +51,8 @@ export default defineConfig({
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
     rollupOptions: {
+      // NOTE: Set cache to fix to help debug flaky builds.
+      // cache: false,
       input: {
         internal: resolve(__dirname, './internal.html'),
         main: resolve(__dirname, './index.html'),
@@ -100,11 +103,13 @@ export default defineConfig({
       symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
       assetPath: (name, variant) =>
         `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+      manifestPath: resolve(__dirname, 'out/icons.json'),
       spritePath: resolve(__dirname, 'public/icons.svg'),
       contentPaths: [
         `${resolve(__dirname, '../../..')}/{packages,tools}/**/dist/**/*.{mjs,html}`,
         `${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}`,
       ],
+      verbose: true,
     }),
     // https://github.com/antfu-collective/vite-plugin-inspect#readme
     // localhost:5173/__inspect
@@ -232,7 +237,20 @@ export default defineConfig({
           },
         ]
       : []),
-  ],
+    // Copy post-build assets to dist.
+    {
+      name: 'copy-icons',
+      buildEnd() {
+        cp(join(__dirname, 'public/icons.svg'), join(__dirname, 'dist/icons.svg'), (err) => {
+          if (err) {
+            console.error('Error copying public assets:', err);
+          } else {
+            console.log('Public assets copied to dist.');
+          }
+        });
+      }
+    }
+  ], // Plugins
 });
 
 /**

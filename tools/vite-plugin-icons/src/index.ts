@@ -10,14 +10,14 @@ import { join, resolve } from 'path';
 import pm from 'picomatch';
 import type { Plugin, ViteDevServer } from 'vite';
 
-export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugin[] => {
+export const IconsPlugin = (params: BundleParams & { manifestPath?: string; verbose?: boolean }): Plugin[] => {
   const { symbolPattern, contentPaths } = params;
 
   const pms = contentPaths.map((contentPath) => pm(contentPath));
   const isContent = (id: string) => !!pms.find((pm) => pm(id));
   const shouldIgnore = (id: string) => !isContent(id);
 
-  let roodDir: string;
+  let rootDir: string;
   let server: ViteDevServer | null = null;
   const detectedSymbols = new Set<string>();
   const visitedFiles = new Set<string>();
@@ -43,7 +43,19 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
       enforce: 'pre',
 
       configResolved: (config) => {
-        roodDir = resolve(config.root);
+        rootDir = resolve(config.root);
+        if (params.manifestPath) {
+          try {
+            const icons = fs.readFileSync(params.manifestPath, { encoding: 'utf8' }).toString();
+            detectedSymbols.clear();
+            JSON.parse(icons).forEach((icon: string) => detectedSymbols.add(icon));
+            // eslint-disable-next-line no-console
+            console.log('Cached icons:', detectedSymbols.size);
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error(err);
+          }
+        }
       },
       configureServer: (_server) => {
         server = _server;
@@ -54,7 +66,7 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
             const match = req.url?.match(/^(\/@fs)?(.+)\.(\w+)$/);
             if (match) {
               const [, prefix, path, ext] = match;
-              const filename = join((prefix ? '' : roodDir) + `${path}.${ext}`);
+              const filename = join((prefix ? '' : rootDir) + `${path}.${ext}`);
               if (!visitedFiles.has(filename)) {
                 visitedFiles.add(filename);
                 // TODO(burdon): Check if matches contentPaths (incl. mjs).
@@ -65,7 +77,7 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
                     status.updated ||= scan(src);
                   } catch (err) {
                     // eslint-disable-next-line no-console
-                    console.error(`Missing file: ${req.url}`);
+                    console.error('Missing file', req.url);
                   }
                 }
               }
@@ -89,13 +101,18 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
 
     {
       // Step 2: Write sprite
+      // NOTE: This must run before the public directory is copied.
       name: '@ch-ui/icons:write',
-      enforce: 'post',
 
       transform: async () => {
         if (status.updated) {
           status.updated = false;
           await makeSprite(params, detectedSymbols);
+          if (params.manifestPath) {
+            fs.writeFileSync(params.manifestPath, JSON.stringify(Array.from(detectedSymbols), null, 2), {
+              encoding: 'utf8',
+            });
+          }
           if (params.verbose) {
             const symbols = Array.from(detectedSymbols.values());
             symbols.sort();
