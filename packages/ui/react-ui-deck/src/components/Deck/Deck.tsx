@@ -127,7 +127,7 @@ const DeckPlankRoot = forwardRef<HTMLDivElement, DeckPlankRootProps>(
           {...focusGroupAttrs}
           {...props}
           className={mx(
-            'grid col-span-2 row-span-3 grid-cols-subgrid grid-rows-subgrid relative ch-focus-ring-inset-over-all',
+            'grid col-span-2 row-span-3 grid-cols-subgrid grid-rows-subgrid relative ch-focus-ring-inset-over-all overflow-hidden',
             classNames,
           )}
           ref={forwardedRef}
