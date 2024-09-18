@@ -11,7 +11,7 @@ The simplest way to access data in [`ECHO`](../) from `react` is by using a [`us
 
 The first argument to [`useQuery`](/api/@dxos/react-client/functions#usequery-space-filter) from package `@dxos/react-client` is the [`space`](../../glossary.md#space) and the second is an optional filter which matches all objects which have all the keys and values specified in the filter. The return type is an iterable array of `Document` objects.
 
-```tsx{10} file=./snippets/use-query.tsx#L5-
+```tsx{11} file=./snippets/use-query.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -43,7 +43,7 @@ root.render(
 The API definition of `useQuery` is below. It returns a generic `TypedObject` type which supports the ability to set and read arbitrary keys and values. See [below](#typed-queries) for how to add type safety.
 
 :::apidoc[@dxos/react-client.useQuery]
-### [useQuery(\[spaceOrEcho\], \[filter\], \[options\], \[deps\])](https://github.com/dxos/dxos/blob/52455dba3/packages/sdk/react-client/src/echo/useQuery.ts#L21)
+### [useQuery(\[spaceOrEcho\], \[filter\], \[options\], \[deps\])](https://github.com/dxos/dxos/blob/88f322397/packages/sdk/react-client/src/echo/useQuery.ts#L21)
 
 Create subscription.
 

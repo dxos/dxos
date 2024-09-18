@@ -14,18 +14,20 @@ import {
   NavigationAction,
   Surface,
   useIntentDispatcher,
+  type Layout,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';
-import { Button, Tooltip, useTranslation, type ClassNameValue } from '@dxos/react-ui';
+import { Button, Tooltip, useTranslation } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { Plank as NaturalPlank } from '@dxos/react-ui-deck';
+import { mainIntrinsicSize } from '@dxos/react-ui-theme';
 
 import { NodePlankHeading } from './NodePlankHeading';
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
 import { DeckAction } from '../../DeckPlugin';
-import { useNode } from '../../hooks';
+import { useNode, useMainSize } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 import { useDeckContext } from '../DeckContext';
 import { useLayout } from '../LayoutContext';
@@ -35,13 +37,12 @@ export type PlankProps = {
   layoutParts: LayoutParts;
   // TODO(wittjosiah): Remove.
   part: LayoutPart;
-  resizeable?: boolean;
+  layoutMode: Layout['layoutMode'];
   flatDeck?: boolean;
   searchEnabled?: boolean;
-  classNames?: ClassNameValue;
 };
 
-export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEnabled, classNames }: PlankProps) => {
+export const Plank = ({ entry, layoutParts, part, flatDeck, searchEnabled, layoutMode }: PlankProps) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const dispatch = useIntentDispatcher();
   const { popoverAnchorId, scrollIntoView } = useLayout();
@@ -49,6 +50,7 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
   const { graph } = useGraph();
   const node = useNode(graph, entry.id);
   const rootElement = useRef<HTMLDivElement | null>(null);
+  const resizeable = layoutMode === 'deck';
 
   const attendableAttrs = createAttendableAttributes(entry.id);
   const coordinate: LayoutCoordinate = { part, entryId: entry.id };
@@ -70,20 +72,31 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
 
   useLayoutEffect(() => {
     if (scrollIntoView === entry.id) {
-      rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      rootElement.current?.focus({ preventScroll: true });
+      layoutMode === 'deck' && rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
     }
-  }, [scrollIntoView]);
+  }, [scrollIntoView, layoutMode]);
+
+  const isSolo = layoutMode === 'solo' && part === 'solo';
+  const isSuppressed = layoutMode === 'solo' && part !== 'solo';
+
+  const sizeAttrs = useMainSize();
 
   return (
     <NaturalPlank.Root
       size={size}
       setSize={setSize}
-      classNames={classNames}
+      classNames={[isSuppressed && '!sr-only']}
       {...attendableAttrs}
+      {...(isSuppressed && { inert: '' })}
       onKeyDown={handleKeyDown}
       ref={rootElement}
     >
-      <NaturalPlank.Content classNames={[!flatDeck && 'surface-base']}>
+      <NaturalPlank.Content
+        {...(isSolo && sizeAttrs)}
+        classNames={[isSolo && mainIntrinsicSize, !flatDeck && 'bg-base']}
+        style={isSolo ? { inlineSize: '' } : {}}
+      >
         {node ? (
           <>
             <NodePlankHeading

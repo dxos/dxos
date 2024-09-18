@@ -28,7 +28,7 @@ export const StatusBarImpl = () => {
           </Popover.Trigger>
           {/* TODO(zan): Configure this label? */}
           <StatusBar.Button aria-label='Open DXOS Discord' asChild>
-            <a href='https://discord.gg/zsxWrKjteV' target='_blank' rel='noopener noreferrer'>
+            <a href='https://dxos.org/discord' target='_blank' rel='noopener noreferrer'>
               <DiscordLogo />
               <StatusBar.Text classNames='hidden sm:block'>Discord</StatusBar.Text>
             </a>

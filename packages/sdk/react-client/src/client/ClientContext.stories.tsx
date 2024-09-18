@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import React, { Component, type PropsWithChildren } from 'react';
 

@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { BaselimeRum } from '@baselime/react-rum';
 import { withProfiler } from '@sentry/react';

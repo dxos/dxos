@@ -7,7 +7,7 @@ import WebSocket from 'isomorphic-ws';
 
 import { Trigger, Event } from '@dxos/async';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type Supervisor } from '@dxos/protocols/proto/dxos/service/supervisor';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 

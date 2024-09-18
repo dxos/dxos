@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "gem-globe",
+  "tags": [
+    "scope:experimental"
+  ],
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "{projectRoot}/src/data.ts",
+          "{projectRoot}/src/index.ts"
+        ]
+      }
+    },
+    "lint": {}
+  },
+  "implicitDependencies": [
+    "test"
+  ]
+}

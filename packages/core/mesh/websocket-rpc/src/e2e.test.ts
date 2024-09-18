@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { createServiceBundle, type ServiceTypesOf } from '@dxos/rpc';
 import { afterTest, describe, test } from '@dxos/test';
 

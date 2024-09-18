@@ -4,7 +4,7 @@
   "tags": [
     "scope:common"
   ],
-  "sourceRoot": "packages/common/phoenix/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},

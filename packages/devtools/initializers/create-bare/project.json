@@ -4,10 +4,13 @@
   "tags": [
     "scope:initializers"
   ],
-  "sourceRoot": "packages/devtools/initializers/create-bare/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": [
+        "^build"
+      ],
       "options": {
         "outputPath": "packages/devtools/initializers/create-bare/dist"
       }

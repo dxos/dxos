@@ -1,0 +1,42 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types",
+    "strict": false
+  },
+  "include": [
+    "data/*.ts",
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../ui/storybook-utils"
+    },
+    {
+      "path": "../gem-core"
+    }
+  ]
+}

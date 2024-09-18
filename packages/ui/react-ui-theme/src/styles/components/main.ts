@@ -30,19 +30,31 @@ export const mainSidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
     ...etc,
   );
 
+export const mainPadding = mx(
+  'pis-0 scroll-ps-0 lg:data-[sidebar-inline-start-state=open]:pis-[--nav-sidebar-size]',
+  'lg:data-[sidebar-inline-start-state=open]:scroll-ps-[--nav-sidebar-size]',
+  'pie-0 scroll-pe-0 lg:data-[sidebar-inline-end-state=open]:pie-[--complementary-sidebar-size]',
+  'lg:data-[sidebar-inline-end-state=open]:scroll-pe-[--complementary-sidebar-size]',
+);
+
 export const mainContent: ComponentFunction<MainStyleProps> = ({ bounce, handlesFocus }, ...etc) =>
   mx(
     'transition-[padding-inline-start,padding-inline-end,scroll-padding-start,scroll-padding-end] duration-200 ease-in-out',
-    'pis-0 scroll-ps-0 lg:data-[sidebar-inline-start-state=open]:pis-[--nav-sidebar-size] lg:data-[sidebar-inline-start-state=open]:scroll-ps-[--nav-sidebar-size]',
-    'pie-0 scroll-pe-0 lg:data-[sidebar-inline-end-state=open]:pie-[--complementary-sidebar-size] lg:data-[sidebar-inline-end-state=open]:scroll-pe-[--complementary-sidebar-size]',
+    mainPadding,
     handlesFocus && 'ch-focus-ring-main',
     bounce && bounceLayout,
     ...etc,
   );
 
+export const mainIntrinsicSize = mx(
+  'is-dvw lg:data-[sidebar-inline-start-state=open]:is-[calc(100dvw-var(--nav-sidebar-size))]',
+  'lg:data-[sidebar-inline-end-state=open]:is-[calc(100dvw-var(--complementary-sidebar-size))]',
+  'lg:data-[sidebar-inline-start-state=open]:data-[sidebar-inline-end-state=open]:is-[calc(100dvw-var(--nav-sidebar-size)-var(--complementary-sidebar-size))]',
+);
+
 export const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
-    'fixed inset-0 z-[9] surface-scrim',
+    'fixed inset-0 z-[9] bg-scrim',
     'transition-opacity duration-200 ease-in-out',
     'opacity-0 data-[state=open]:opacity-100 lg:data-[state=open]:opacity-100',
     'hidden data-[state=open]:block lg:data-[state=open]:hidden',
@@ -51,7 +63,7 @@ export const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) =>
 
 export const mainNotch: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
-    'fixed z-[11] block-end-0 inline-start-0 pbe-[env(safe-area-inset-bottom)] rounded-se-lg min-bs-[var(--rail-size)] is-fit separator-separator surface-base',
+    'fixed z-[11] block-end-0 inline-start-0 pbe-[env(safe-area-inset-bottom)] rounded-se-lg min-bs-[var(--rail-size)] is-fit border-separator bg-base',
     'transition-[border-width] box-content border-bs border-ie data-[nav-sidebar-state=open]:border-bs-0 data-[nav-sidebar-state=open]:border-ie-0',
     'pli-1 grid grid-cols-[repeat(auto-fit,var(--rail-action))]',
     'max-is-[--nav-sidebar-size] ch-focus-ring-inset focus-visible:!z-[11]',

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import {
   AirplaneTakeoff,
@@ -20,11 +20,12 @@ import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import hash from 'string-hash';
 
-import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
+import { Grid, SVG, SVGRoot, Zoom } from '@dxos/gem-core';
 import { Markers, type GraphLayoutNode } from '@dxos/gem-spore';
 import { convertTreeToGraph, createTree, type TestNode, TestGraphModel } from '@dxos/gem-spore/testing';
 import { faker } from '@dxos/random';
 import { getSize, mx } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Plexus } from './Plexus';
 
@@ -34,6 +35,9 @@ const icons = [AirplaneTakeoff, Bank, Buildings, Notepad, User, Users];
 
 export default {
   component: Plexus,
+  title: 'plexus/Plexus',
+  render: () => <Test />,
+  decorators: [withTheme],
 };
 
 // TODO(burdon): Factor testing out of gem-spore/testing
@@ -165,7 +169,7 @@ const Test = () => {
   return (
     <div ref={containerRef} className='flex flex-col absolute left-0 right-0 top-0 bottom-0'>
       <div className='flex flex-1 relative'>
-        <SVGContextProvider>
+        <SVGRoot>
           <SVG className={slots?.root}>
             <Markers arrowSize={6} />
             <Grid className={slots?.grid?.className} />
@@ -176,7 +180,7 @@ const Test = () => {
               <Plexus model={model} slots={slots?.plexus} onSelect={handleSelect} onTransition={setSpinning} />
             </Zoom>
           </SVG>
-        </SVGContextProvider>
+        </SVGRoot>
 
         {node && (
           <div
@@ -206,6 +210,4 @@ const Test = () => {
   );
 };
 
-export const Default = {
-  render: () => <Test />,
-};
+export const Default = {};

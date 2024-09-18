@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "description": "Low-level React components for DXOS, applying a theme to a core group of primitives",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -26,6 +26,7 @@
     "@dxos/react-input": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "^9.19.0",
     "@radix-ui/react-alert-dialog": "^1.0.3",
     "@radix-ui/react-avatar": "^1.0.2",

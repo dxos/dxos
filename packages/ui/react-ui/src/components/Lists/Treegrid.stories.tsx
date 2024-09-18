@@ -7,6 +7,7 @@ import { faker } from '@dxos/random';
 
 import { Treegrid as Tg } from './Treegrid';
 import { withTheme } from '../../testing';
+import { Icon } from '../Icon';
 
 faker.seed(1234);
 
@@ -129,11 +130,7 @@ const StorybookTreegrid = () => {
             {...(parentOf && { parentOf: parentOf.join(Tg.PARENT_OF_SEPARATOR) })}
           >
             <Tg.Cell indent classNames='flex items-center'>
-              {node.icon && (
-                <svg className='is-[1em] bs-[1em] mlb-1'>
-                  <use href={`/icons.svg#${node.icon}`} />
-                </svg>
-              )}
+              {node.icon && <Icon icon={node.icon} classNames='is-[1em] bs-[1em] mlb-1' />}
               {node.title}
             </Tg.Cell>
           </Tg.Row>

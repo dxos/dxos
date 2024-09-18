@@ -219,8 +219,10 @@ const useDiagnostic = <T>(request: DiagnosticsRequest, refreshInterval: number):
     const channel = new DiagnosticsChannel();
 
     const fetch = async () => {
-      const { data } = await channel.fetch(request);
-      setData(data);
+      try {
+        const { data } = await channel.fetch(request);
+        setData(data);
+      } catch (error) {}
     };
 
     void fetch();

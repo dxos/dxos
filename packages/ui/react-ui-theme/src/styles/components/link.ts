@@ -11,13 +11,12 @@ export type LinkStyleProps = {
   variant?: 'accent' | 'neutral';
 };
 
-// TODO(burdon): Export fragment.
 export const linkRoot: ComponentFunction<LinkStyleProps> = ({ variant }, ...etc) =>
   mx(
     'underline decoration-1 underline-offset-2 transition-color rounded-sm',
     variant === 'neutral'
       ? 'text-inherit hover:opacity-90 visited:text-inherit visited:hover:opacity-90'
-      : 'fg-accent hover:fg-accentHover visited:fg-accent visited:hover:fg-accentHover',
+      : 'text-accentText hover:text-accentTextHover visited:text-accentText visited:hover:text-accentTextHover',
     focusRing,
     ...etc,
   );

@@ -4,15 +4,15 @@
 
 import get from 'lodash.get';
 
-import { tailwindConfig, type TailwindConfig } from '@dxos/react-ui-theme';
-
-const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
+import { tokens } from '@dxos/react-ui-theme';
 
 /**
- * @deprecated
- * Replace with CSS vars.
+ * Returns the tailwind token value.
  */
-export const getToken = (path: string, defaultValue?: string | string[]): string => {
+const getToken = (path: string, defaultValue?: string | string[]): string => {
   const value = get(tokens, path, defaultValue);
   return value?.toString() ?? '';
 };
+
+export const fontBody = getToken('fontFamily.body');
+export const fontMono = getToken('fontFamily.mono');

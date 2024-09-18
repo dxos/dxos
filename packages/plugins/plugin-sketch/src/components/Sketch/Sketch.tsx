@@ -18,11 +18,10 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { useStoreAdapter } from '../../hooks';
 import { type SketchGridType, type DiagramType } from '../../types';
-import { CustomStylePanel, DottedGrid, MeshGrid } from '../custom';
+import { handleSnap } from '../actions';
+import { CustomMenu, CustomStylePanel, DottedGrid, MeshGrid } from '../custom';
 
 import './theme.css';
-
-// NOTE(zan): Color overrides can be found in `/layers/tldraw.css` in `react-ui-theme`.
 
 const gridComponents: Record<SketchGridType, FC<TLGridProps>> = {
   mesh: MeshGrid,
@@ -136,8 +135,6 @@ export const Sketch = ({
     return null;
   }
 
-  // console.log(JSON.stringify(adapter.store.getStoreSnapshot()));
-
   return (
     <div
       role='none'
@@ -157,14 +154,33 @@ export const Sketch = ({
         // https://tldraw.dev/docs/assets
         maxAssetSize={1024 * 1024}
         assetUrls={assetUrls}
+        // https://tldraw.dev/examples/ui/action-overrides
+        overrides={{
+          actions: (_editor, actions, _helpers) => {
+            return {
+              ...actions,
+              snap: {
+                id: 'snap',
+                label: 'Snap',
+                kbd: 's',
+                icon: 'horizontal-align-middle',
+                onSelect: () => {
+                  void handleSnap(sketch);
+                },
+              },
+            };
+          },
+        }}
+        // tools={customTools}
         // https://tldraw.dev/installation#Customize-the-default-components
         components={{
           DebugPanel: null,
           Grid: gridComponents[grid ?? 'mesh'],
           HelpMenu: null,
-          MenuPanel: null,
+          MenuPanel: CustomMenu,
           NavigationPanel: null,
           StylePanel: CustomStylePanel,
+          // Toolbar: CustomToolbar,
           TopPanel: null,
           ZoomMenu: null,
         }}

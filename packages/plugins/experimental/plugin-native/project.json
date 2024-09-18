@@ -5,7 +5,7 @@
     "scope:experimental",
     "scope:plugins"
   ],
-  "sourceRoot": "packages/apps/plugins/plugin-native/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},

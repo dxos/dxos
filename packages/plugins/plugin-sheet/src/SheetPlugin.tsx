@@ -44,7 +44,11 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         return;
       }
 
-      remoteFunctionUrl = client.config.values.runtime?.app?.env?.DX_FUNCTIONS_SERVICE_HOST;
+      if (client.config.values.runtime?.services?.edge?.url) {
+        const url = new URL('/functions', client.config.values.runtime?.services?.edge?.url);
+        url.protocol = 'https';
+        remoteFunctionUrl = url.toString();
+      }
     },
     provides: {
       context: ({ children }) => {

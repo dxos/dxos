@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { type Decorator } from '@storybook/react';
 import React, { useContext, useEffect, useState } from 'react';
