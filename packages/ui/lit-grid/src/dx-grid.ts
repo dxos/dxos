@@ -314,7 +314,7 @@ export class DxGrid extends LitElement {
       pxInline += this.colSize(colIndex) + gap;
     }
 
-    this.visColMax = colIndex + overscanCol + 1;
+    this.visColMax = colIndex + overscanCol;
 
     this.templateColumns = [...Array(this.visColMax - this.visColMin)]
       .map((_, c0) => `${this.colSize(this.visColMin + c0)}px`)
@@ -348,7 +348,7 @@ export class DxGrid extends LitElement {
       pxBlock += this.rowSize(rowIndex) + gap;
     }
 
-    this.visRowMax = rowIndex + overscanRow + 1;
+    this.visRowMax = rowIndex + overscanRow;
 
     this.templateRows = [...Array(this.visRowMax - this.visRowMin)]
       .map((_, r0) => `${this.rowSize(this.visRowMin + r0)}px`)
@@ -419,9 +419,9 @@ export class DxGrid extends LitElement {
       // console.warn('Snapping position to a focused cell that is not already mounted is unsupported.');
     } else if (
       this.focusedCell.col > this.visColMin + overscanCol &&
-      this.focusedCell.col < this.visColMax - overscanCol - 2 &&
+      this.focusedCell.col < this.visColMax - overscanCol - 1 &&
       this.focusedCell.row > this.visRowMin + overscanRow &&
-      this.focusedCell.row < this.visRowMax - overscanRow - 2
+      this.focusedCell.row < this.visRowMax - overscanRow - 1
     ) {
       console.log(
         '[within bounds]',
@@ -430,25 +430,28 @@ export class DxGrid extends LitElement {
         [this.visRowMin, this.visRowMax, overscanRow],
       );
     } else {
-      if (this.focusedCell.col === this.visColMin + overscanCol) {
+      if (this.focusedCell.col <= this.visColMin + overscanCol) {
         this.posInline = this.binInlineMin;
         this.updateVisInline();
-      } else if (this.focusedCell.row === this.visRowMin + overscanRow) {
-        this.posBlock = this.binBlockMin;
-        this.updateVisBlock();
-      } else if (this.focusedCell.col === this.visColMax - overscanCol - 2) {
-        const sizeSumCol = [...Array(this.visColMax - this.visColMin - overscanCol * 2)].reduce((acc, _, c0) => {
+      } else if (this.focusedCell.col >= this.visColMax - overscanCol - 1) {
+        // todo: need to not rely on `visColMax` and instead use `focusedCell.col`
+        const sizeSumCol = [...Array(this.focusedCell.col - this.visColMin)].reduce((acc, _, c0) => {
           acc += this.colSize(this.visColMin + overscanCol + c0) + gap;
           return acc;
         }, 0);
-        this.posInline = this.binInlineMin + sizeSumCol - this.sizeInline;
+        this.posInline = this.binInlineMin + sizeSumCol + gap * 4 - this.sizeInline;
         this.updateVisInline();
-      } else if (this.focusedCell.row === this.visRowMax - overscanRow - 2) {
-        const sizeSumRow = [...Array(this.visRowMax - this.visRowMin - overscanRow * 2)].reduce((acc, _, r0) => {
+      }
+      if (this.focusedCell.row <= this.visRowMin + overscanRow) {
+        this.posBlock = this.binBlockMin;
+        this.updateVisBlock();
+      } else if (this.focusedCell.row >= this.visRowMax - overscanRow - 1) {
+        // todo: need to not rely on `visRowMax` and instead use `focusedCell.row`
+        const sizeSumRow = [...Array(this.focusedCell.row - this.visRowMin)].reduce((acc, _, r0) => {
           acc += this.rowSize(this.visRowMin + overscanRow + r0) + gap;
           return acc;
         }, 0);
-        this.posBlock = this.binBlockMin + sizeSumRow - this.sizeBlock;
+        this.posBlock = this.binBlockMin + sizeSumRow + gap * 4 - this.sizeBlock;
         this.updateVisBlock();
       }
     }
