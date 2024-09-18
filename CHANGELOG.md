@@ -1,5 +1,52 @@
 # Changelog
 
+## [0.6.10](https://github.com/dxos/dxos/compare/v0.6.9...v0.6.10) (2024-09-18)
+
+
+### Features
+
+* Color tokens ([#7662](https://github.com/dxos/dxos/issues/7662)) ([91ef0d2](https://github.com/dxos/dxos/commit/91ef0d290d49f7c687c6c9d2bacb28cb34513808))
+* CRUD api improvements ([#7715](https://github.com/dxos/dxos/issues/7715)) ([bbdfaa4](https://github.com/dxos/dxos/commit/bbdfaa498dc4ccb0f8415baa1d606b0ef62eeb8e))
+* **devtools:** additional info for feed and echo explorer devtools  ([#7673](https://github.com/dxos/dxos/issues/7673)) ([cda9a9a](https://github.com/dxos/dxos/commit/cda9a9a7b70b87f84a138b53c45fbe45fc57470c))
+* Enable EDGE signaling in Composer and Testbench ([#7709](https://github.com/dxos/dxos/issues/7709)) ([17891d6](https://github.com/dxos/dxos/commit/17891d69b56ad1621682538538223629f88b6048))
+* Expose attention state in console global ([#7733](https://github.com/dxos/dxos/issues/7733)) ([d75b687](https://github.com/dxos/dxos/commit/d75b6879c81a9e2a4d4561c4a6417c8ea52bb62c))
+* Functions details panel ([#7736](https://github.com/dxos/dxos/issues/7736)) ([3db9209](https://github.com/dxos/dxos/commit/3db9209acc02f7ae12a6288387283cd27f986a0f))
+* Globe control for map plugin ([#7681](https://github.com/dxos/dxos/issues/7681)) ([71363b7](https://github.com/dxos/dxos/commit/71363b76187c89cacf7b860e9d75ad2943f416f5))
+* Handle EDGE client reconnects ([#7669](https://github.com/dxos/dxos/issues/7669)) ([0a3e454](https://github.com/dxos/dxos/commit/0a3e45441508ee776def523d486737b70f04db54))
+* **lit-stories,lit-spreadsheet:** Spreadsheet Lit component ([#7704](https://github.com/dxos/dxos/issues/7704)) ([d9da569](https://github.com/dxos/dxos/commit/d9da569e798ce09f7e8c4dce20b7d72f05b49d78))
+* Map experiments ([#7729](https://github.com/dxos/dxos/issues/7729)) ([81a1a5f](https://github.com/dxos/dxos/commit/81a1a5fc9ba18ab87ae95b986ab9113615125954))
+* Map/globe plugin with editor style updates. ([#7682](https://github.com/dxos/dxos/issues/7682)) ([b94be4a](https://github.com/dxos/dxos/commit/b94be4abe2408d2ff76f690de4587da61a3cec60))
+* **plugin-script:** new editing capabilities ([#7703](https://github.com/dxos/dxos/issues/7703)) ([e722ece](https://github.com/dxos/dxos/commit/e722ecee3186b974068fa5e274420deac2b99ea1))
+* **plugin-sheet:** allow args to be passed to edge functions ([#7675](https://github.com/dxos/dxos/issues/7675)) ([72461ba](https://github.com/dxos/dxos/commit/72461ba367c20ecfa03815b7f88f5da3d8230ced))
+* **plugin-sheet:** subscribe to function updates ([#7674](https://github.com/dxos/dxos/issues/7674)) ([4d78bcb](https://github.com/dxos/dxos/commit/4d78bcbdd0dbe63b4410743d6faa66b25a527a12))
+* react-ui Icon class ([#7728](https://github.com/dxos/dxos/issues/7728)) ([41a1ebf](https://github.com/dxos/dxos/commit/41a1ebf5721df5aa2b12f86a8f4d4d4984c62ab1))
+* **react-ui-grid:** Intermediate React component for DxGrid ([#7713](https://github.com/dxos/dxos/issues/7713)) ([617ed2d](https://github.com/dxos/dxos/commit/617ed2d6755f4a664df4a2ab84718c9dd0150e6e))
+* Script GPT editor ([#7742](https://github.com/dxos/dxos/issues/7742)) ([bf21a92](https://github.com/dxos/dxos/commit/bf21a9226b422752d607008f23439f2e9f625643))
+* Update function handler defintions ([#7694](https://github.com/dxos/dxos/issues/7694)) ([e92b5eb](https://github.com/dxos/dxos/commit/e92b5eb1ad0755326f94b71bb4d0800994784c16))
+
+
+### Bug Fixes
+
+* article width and editor styles ([#7727](https://github.com/dxos/dxos/issues/7727)) ([a861d0a](https://github.com/dxos/dxos/commit/a861d0a3608b925d5530494999b9acc7940d835f))
+* Correct base foreground token is `baseText` ([#7699](https://github.com/dxos/dxos/issues/7699)) ([ac94089](https://github.com/dxos/dxos/commit/ac9408946a0dfc86b8a7f4d84914c47456ce67ae))
+* Fix indentation for lists. ([#7680](https://github.com/dxos/dxos/issues/7680)) ([5d28dff](https://github.com/dxos/dxos/commit/5d28dffd68b6c49a8a7bd64a476121cfbb296a87))
+* Fix race condition in `EdgeClient.send` ([#7711](https://github.com/dxos/dxos/issues/7711)) ([6b7226f](https://github.com/dxos/dxos/commit/6b7226f23d0f85d247103900b70040b36d75e022))
+* Function URL copy ([#7731](https://github.com/dxos/dxos/issues/7731)) ([08ec47c](https://github.com/dxos/dxos/commit/08ec47c54685c792a4b57440fec21a76d0992cd4))
+* hack to add theme to map toolbars ([014d6d3](https://github.com/dxos/dxos/commit/014d6d306ca47d21ad0028d861ea76221dfbba58))
+* Include functions/ fragment in copied URL ([#7730](https://github.com/dxos/dxos/issues/7730)) ([1e28795](https://github.com/dxos/dxos/commit/1e287951f8072907b60caecf135a589a8d8f3c59))
+* **plugin-deck:** Plank focus and scroll position, variation 2 ([#7693](https://github.com/dxos/dxos/issues/7693)) ([01da88b](https://github.com/dxos/dxos/commit/01da88b242c551c27513fcfb2d1bea9e0e4cb0d4))
+* **plugin-space:** incorrect names for graph serializer ([#7685](https://github.com/dxos/dxos/issues/7685)) ([feb7020](https://github.com/dxos/dxos/commit/feb7020a46188cc87c5c8cde3a7310d1c0efb6dd))
+* react-ui-theme tweaks ([#7697](https://github.com/dxos/dxos/issues/7697)) ([b275c99](https://github.com/dxos/dxos/commit/b275c9912bb69bc6edb5d8c13030d73025fcecb4))
+* remove bottom margin ([#7745](https://github.com/dxos/dxos/issues/7745)) ([3cfcc89](https://github.com/dxos/dxos/commit/3cfcc89002db055eabe0ed48f3265fba5c690abc))
+* Set a random peerID for every edge connection & include space root in collection sync ([#7741](https://github.com/dxos/dxos/issues/7741)) ([ffceeaf](https://github.com/dxos/dxos/commit/ffceeaf6854eee82ffc778e07a88d0e18ca0fc52))
+* **shell:** Blur active element when shell panels close ([#7652](https://github.com/dxos/dxos/issues/7652)) ([82d2461](https://github.com/dxos/dxos/commit/82d24614649ad2d50c70218078411960f67aa91b))
+* shortcuts dialog ([#7702](https://github.com/dxos/dxos/issues/7702)) ([6c65b8b](https://github.com/dxos/dxos/commit/6c65b8b82bf0a3dbe85224800c0636e871a40c2b))
+* storybook JSON data imports ([#7671](https://github.com/dxos/dxos/issues/7671)) ([528da03](https://github.com/dxos/dxos/commit/528da031d76d34351b0a6e643890dbb66ca982fd))
+* Task list editing ([#7735](https://github.com/dxos/dxos/issues/7735)) ([307b7d1](https://github.com/dxos/dxos/commit/307b7d125f03d9d58e8c97fe192e6dd6e58ac994))
+* **threads:** bidirectional linking ([#7743](https://github.com/dxos/dxos/issues/7743)) ([0c03e89](https://github.com/dxos/dxos/commit/0c03e89be333de1dceb34db50cabc09c9070bb0e))
+* Update default script example & fix url copy ([#7732](https://github.com/dxos/dxos/issues/7732)) ([e59c1ab](https://github.com/dxos/dxos/commit/e59c1ab10b3e9ab142332151246f8d26206fd903))
+* update vite-plugin-icons ([#7696](https://github.com/dxos/dxos/issues/7696)) ([0c5a88e](https://github.com/dxos/dxos/commit/0c5a88e4e2fa4d98a8966cf325b8d1e2b13290d5))
+
 ## [0.6.9](https://github.com/dxos/dxos/compare/v0.6.8...v0.6.9) (2024-09-06)
 
 
