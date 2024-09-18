@@ -403,7 +403,85 @@ export class DxGrid extends LitElement {
       : (this.viewportRef.value?.querySelector(
           `[aria-rowindex="${this.focusedCell.row}"][aria-colindex="${this.focusedCell.col}"]`,
         ) as HTMLElement | null)
-    )?.focus();
+    )?.focus({ preventScroll: true });
+  }
+
+  /**
+   * Updates `pos` so that a cell in focus is fully within the viewport
+   */
+  snapPosToFocusedCell() {
+    if (
+      this.focusedCell.col < this.visColMin ||
+      this.focusedCell.col > this.visColMax ||
+      this.focusedCell.row < this.visRowMin ||
+      this.focusedCell.row > this.visRowMax
+    ) {
+      // console.warn('Snapping position to a focused cell that is not already mounted is unsupported.');
+    } else if (
+      this.focusedCell.col > this.visColMin + overscanCol &&
+      this.focusedCell.col < this.visColMax - overscanCol - 2 &&
+      this.focusedCell.row > this.visRowMin + overscanRow &&
+      this.focusedCell.row < this.visRowMax - overscanRow - 2
+    ) {
+      console.log(
+        '[within bounds]',
+        this.focusedCell,
+        [this.visColMin, this.visColMax, overscanCol],
+        [this.visRowMin, this.visRowMax, overscanRow],
+      );
+    } else {
+      if (this.focusedCell.col === this.visColMin + overscanCol) {
+        this.posInline = this.binInlineMin;
+        this.updateVisInline();
+      } else if (this.focusedCell.row === this.visRowMin + overscanRow) {
+        this.posBlock = this.binBlockMin;
+        this.updateVisBlock();
+      } else if (this.focusedCell.col === this.visColMax - overscanCol - 2) {
+        const sizeSumCol = [...Array(this.visColMax - this.visColMin - overscanCol * 2)].reduce((acc, _, c0) => {
+          acc += this.colSize(this.visColMin + overscanCol + c0) + gap;
+          return acc;
+        }, 0);
+        this.posInline = this.binInlineMin + sizeSumCol - this.sizeInline;
+        this.updateVisInline();
+      } else if (this.focusedCell.row === this.visRowMax - overscanRow - 2) {
+        const sizeSumRow = [...Array(this.visRowMax - this.visRowMin - overscanRow * 2)].reduce((acc, _, r0) => {
+          acc += this.rowSize(this.visRowMin + overscanRow + r0) + gap;
+          return acc;
+        }, 0);
+        this.posBlock = this.binBlockMin + sizeSumRow - this.sizeBlock;
+        this.updateVisBlock();
+      }
+    }
+  }
+
+  // Keyboard interactions
+  handleKeydown(event: KeyboardEvent) {
+    if (this.focusActive) {
+      switch (event.key) {
+        case 'ArrowDown':
+          this.focusedCell = { ...this.focusedCell, row: this.focusedCell.row + 1 };
+          break;
+        case 'ArrowUp':
+          this.focusedCell = { ...this.focusedCell, row: Math.max(0, this.focusedCell.row - 1) };
+          break;
+        case 'ArrowRight':
+          this.focusedCell = { ...this.focusedCell, col: this.focusedCell.col + 1 };
+          break;
+        case 'ArrowLeft':
+          this.focusedCell = { ...this.focusedCell, col: Math.max(0, this.focusedCell.col - 1) };
+          break;
+      }
+      switch (event.key) {
+        case 'ArrowDown':
+        case 'ArrowUp':
+        case 'ArrowRight':
+        case 'ArrowLeft':
+          event.preventDefault();
+          this.snapPosToFocusedCell();
+          this.refocus();
+          break;
+      }
+    }
   }
 
   //
@@ -424,6 +502,7 @@ export class DxGrid extends LitElement {
       @pointermove=${this.handlePointerMove}
       @focus=${this.handleFocus}
       @blur=${this.handleBlur}
+      @keydown=${this.handleKeydown}
     >
       <div role="none" class="dx-grid__corner"></div>
       <div role="none" class="dx-grid__columnheader">
