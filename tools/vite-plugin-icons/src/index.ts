@@ -10,14 +10,22 @@ import { join, resolve } from 'path';
 import pm from 'picomatch';
 import type { Plugin, ViteDevServer } from 'vite';
 
-export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugin[] => {
-  const { symbolPattern, contentPaths } = params;
+export type IconsPluginParams = Omit<BundleParams, 'spritePath'> & { spriteFile: string; verbose?: boolean };
 
+export const IconsPlugin = ({
+  assetPath,
+  symbolPattern,
+  spriteFile,
+  contentPaths,
+  config,
+  verbose,
+}: IconsPluginParams): Plugin[] => {
   const pms = contentPaths.map((contentPath) => pm(contentPath));
   const isContent = (id: string) => !!pms.find((pm) => pm(id));
   const shouldIgnore = (id: string) => !isContent(id);
 
-  let roodDir: string;
+  let rootDir: string;
+  let spritePath: string;
   let server: ViteDevServer | null = null;
   const detectedSymbols = new Set<string>();
   const visitedFiles = new Set<string>();
@@ -43,7 +51,8 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
       enforce: 'pre',
 
       configResolved: (config) => {
-        roodDir = resolve(config.root);
+        rootDir = resolve(config.root);
+        spritePath = resolve(config.publicDir, spriteFile);
       },
       configureServer: (_server) => {
         server = _server;
@@ -54,7 +63,7 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
             const match = req.url?.match(/^(\/@fs)?(.+)\.(\w+)$/);
             if (match) {
               const [, prefix, path, ext] = match;
-              const filename = join((prefix ? '' : roodDir) + `${path}.${ext}`);
+              const filename = join((prefix ? '' : rootDir) + `${path}.${ext}`);
               if (!visitedFiles.has(filename)) {
                 visitedFiles.add(filename);
                 // TODO(burdon): Check if matches contentPaths (incl. mjs).
@@ -90,19 +99,18 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
     {
       // Step 2: Write sprite
       name: '@ch-ui/icons:write',
-      enforce: 'post',
 
       transform: async () => {
         if (status.updated) {
           status.updated = false;
-          await makeSprite(params, detectedSymbols);
-          if (params.verbose) {
+          await makeSprite({ assetPath, symbolPattern, spritePath, contentPaths, config }, detectedSymbols);
+          if (verbose) {
             const symbols = Array.from(detectedSymbols.values());
             symbols.sort();
             // eslint-disable-next-line no-console
             console.log(
               'sprite updated:',
-              JSON.stringify({ path: params.spritePath, size: detectedSymbols.size, symbols }, null, 2),
+              JSON.stringify({ path: spritePath, size: detectedSymbols.size, symbols }, null, 2),
             );
           }
         }
