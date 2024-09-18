@@ -135,7 +135,7 @@ export default defineConfig({
 
   worker: {
     format: 'es',
-    plugins: () => [topLevelAwait(), wasm()],
+    plugins: [topLevelAwait(), wasm()],
   },
 });
 ```
