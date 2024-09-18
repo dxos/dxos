@@ -84,7 +84,7 @@
   "devDependencies": {
     "@bufbuild/buf": "^1.35.0",
     "@bufbuild/protoc-gen-es": "^2.0.0",
-    "glob": "~7.1.6"
+    "glob": "^7.2.3"
   },
   "publishConfig": {
     "access": "public"

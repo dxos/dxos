@@ -7,15 +7,15 @@
 import { type BundleParams, makeSprite, scanString } from '@ch-ui/icons';
 import fs from 'fs';
 import { dirname, join, resolve } from 'path';
-import pm from 'picomatch';
+import picomatch from 'picomatch';
 import type { Plugin, ViteDevServer } from 'vite';
 
 export const IconsPlugin = (params: BundleParams & { manifestPath?: string; verbose?: boolean }): Plugin[] => {
-  const { symbolPattern, contentPaths } = params;
+  const { manifestPath, spritePath, symbolPattern, contentPaths, verbose } = params;
 
-  const pms = contentPaths.map((contentPath) => pm(contentPath));
-  const isContent = (id: string) => !!pms.find((pm) => pm(id));
-  const shouldIgnore = (id: string) => !isContent(id);
+  const pms = contentPaths.map((contentPath) => picomatch(contentPath));
+  const isContent = (filepath: string) => !!pms.find((pm) => pm(filepath));
+  const shouldIgnore = (filepath: string) => !isContent(filepath);
 
   let rootDir: string;
   let server: ViteDevServer | null = null;
@@ -41,7 +41,7 @@ export const IconsPlugin = (params: BundleParams & { manifestPath?: string; verb
       const icons = fs.readFileSync(filepath, { encoding: 'utf8' }).toString();
       detectedSymbols.clear();
       JSON.parse(icons).forEach((icon: string) => detectedSymbols.add(icon));
-      if (params.verbose) {
+      if (verbose) {
         // eslint-disable-next-line no-console
         console.log('Cached icons:', detectedSymbols.size);
       }
@@ -53,25 +53,28 @@ export const IconsPlugin = (params: BundleParams & { manifestPath?: string; verb
     if (!fs.existsSync(baseDir)) {
       fs.mkdirSync(baseDir, { recursive: true });
     }
+    if (verbose) {
+      // eslint-disable-next-line no-console
+      console.log('Writing manifest:', JSON.stringify({ path: filepath, size: detectedSymbols.size }));
+    }
     const symbols = Array.from(detectedSymbols.values());
     symbols.sort();
-    fs.writeFileSync(filepath, JSON.stringify(symbols, null, 2), {
-      encoding: 'utf8',
-    });
+    fs.writeFileSync(filepath, JSON.stringify(symbols, null, 2), { encoding: 'utf8' });
   };
 
   return [
     {
-      // Step 1: Scan source files for detectedSymbols
+      // Step 1: Scan source files incrementally.
       name: '@ch-ui/icons:scan',
       enforce: 'pre',
 
       configResolved: (config) => {
         rootDir = resolve(config.root);
-        if (params.manifestPath) {
-          readManifest(params.manifestPath);
+        if (manifestPath) {
+          readManifest(manifestPath);
         }
       },
+
       configureServer: (_server) => {
         server = _server;
 
@@ -88,7 +91,7 @@ export const IconsPlugin = (params: BundleParams & { manifestPath?: string; verb
                 const extensions = ['js', 'ts', 'jsx', 'tsx', 'mjs'];
                 if (extensions.some((e) => e === ext) && path.indexOf('node_modules') === -1) {
                   try {
-                    const src = fs.readFileSync(filename, 'utf-8');
+                    const src = fs.readFileSync(filename, 'utf8');
                     status.updated ||= scan(src);
                   } catch (err) {
                     // eslint-disable-next-line no-console
@@ -104,40 +107,42 @@ export const IconsPlugin = (params: BundleParams & { manifestPath?: string; verb
       },
 
       transformIndexHtml: (html) => {
-        status.updated ||= scan(html);
+        const match = scan(html);
+        status.updated ||= match;
       },
 
       transform: (src, id) => {
         if (!shouldIgnore(id)) {
-          status.updated ||= scan(src);
+          const match = scan(src);
+          status.updated ||= match;
         }
       },
     },
-
     {
-      // Step 2: Write sprite
+      // Step 2: Write sprite.
       // NOTE: This must run before the public directory is copied.
       name: '@ch-ui/icons:write',
+      enforce: 'post',
 
       transform: async () => {
         if (status.updated) {
           status.updated = false;
           await makeSprite(params, detectedSymbols);
-          if (params.manifestPath) {
-            writeManifest(params.manifestPath);
+          if (manifestPath) {
+            writeManifest(manifestPath);
           }
 
-          if (params.verbose) {
+          if (verbose) {
             const symbols = Array.from(detectedSymbols.values());
             symbols.sort();
             // eslint-disable-next-line no-console
             console.log(
-              'sprite updated:',
-              JSON.stringify({ path: params.spritePath, size: detectedSymbols.size, symbols }, null, 2),
+              'Sprite updated:',
+              JSON.stringify({ path: spritePath, size: detectedSymbols.size, symbols }, null, 2),
             );
           }
         }
       },
     },
-  ] satisfies Plugin[];
+  ] as Plugin[];
 };
