@@ -434,7 +434,6 @@ export class DxGrid extends LitElement {
         this.posInline = this.binInlineMin;
         this.updateVisInline();
       } else if (this.focusedCell.col >= this.visColMax - overscanCol - 1) {
-        // todo: need to not rely on `visColMax` and instead use `focusedCell.col`
         const sizeSumCol = [...Array(this.focusedCell.col - this.visColMin)].reduce((acc, _, c0) => {
           acc += this.colSize(this.visColMin + overscanCol + c0) + gap;
           return acc;
@@ -446,7 +445,6 @@ export class DxGrid extends LitElement {
         this.posBlock = this.binBlockMin;
         this.updateVisBlock();
       } else if (this.focusedCell.row >= this.visRowMax - overscanRow - 1) {
-        // todo: need to not rely on `visRowMax` and instead use `focusedCell.row`
         const sizeSumRow = [...Array(this.focusedCell.row - this.visRowMin)].reduce((acc, _, r0) => {
           acc += this.rowSize(this.visRowMin + overscanRow + r0) + gap;
           return acc;
