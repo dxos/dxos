@@ -103,7 +103,7 @@ export default defineConfig({
       symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
       assetPath: (name, variant) =>
         `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
-      manifestPath: resolve(__dirname, 'public/composer/icons.json'),
+      manifestPath: resolve(__dirname, 'public/icons.json'),
       spritePath: resolve(__dirname, 'public/icons.svg'),
       contentPaths: [
         `${resolve(__dirname, '../../..')}/{packages,tools}/**/dist/**/*.{mjs,html}`,
