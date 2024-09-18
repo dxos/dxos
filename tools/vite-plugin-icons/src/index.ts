@@ -53,7 +53,9 @@ export const IconsPlugin = (params: BundleParams & { manifestPath?: string; verb
     if (!fs.existsSync(baseDir)) {
       fs.mkdirSync(baseDir, { recursive: true });
     }
-    fs.writeFileSync(filepath, JSON.stringify(Array.from(detectedSymbols), null, 2), {
+    const symbols = Array.from(detectedSymbols.values());
+    symbols.sort();
+    fs.writeFileSync(filepath, JSON.stringify(symbols, null, 2), {
       encoding: 'utf8',
     });
   };
