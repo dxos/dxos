@@ -7,6 +7,7 @@ import { next as A } from '@dxos/automerge/automerge';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import type { SpaceDoc } from '@dxos/echo-protocol';
+import { invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -17,7 +18,8 @@ import {
 import { nonNullable } from '@dxos/util';
 
 import type { CoreDatabase } from './core-database';
-import type { Filter, QueryContext, QueryResult } from '../query';
+import type { ObjectCore } from './object-core';
+import { filterMatch, type Filter, type QueryContext, type QueryResult } from '../query';
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
@@ -51,6 +53,18 @@ export class CoreDatabaseQueryContext implements QueryContext {
 
     const start = Date.now();
 
+    // Special case for object id filter.
+    if (filter.isObjectIdFilter()) {
+      invariant(filter.objectIds?.length === 1);
+      const core = await this._coreDatabase.loadObjectCoreById(filter.objectIds[0]);
+
+      if (!core || ctx.disposed) {
+        return [];
+      }
+
+      return [this._filterMapCore(filter, core, start, undefined)].filter(nonNullable);
+    }
+
     const response = await Stream.first(
       this._queryService.execQuery(
         { filter: filter.toProto(), reactivity: QueryReactivity.ONE_SHOT },
@@ -68,7 +82,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
     });
 
     const processedResults = await Promise.all(
-      (response.results ?? []).map((result) => this._filterMapResult(ctx, start, result)),
+      (response.results ?? []).map((result) => this._filterMapResult(ctx, filter, start, result)),
     );
     const results = processedResults.filter(nonNullable);
 
@@ -87,6 +101,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
 
   private async _filterMapResult(
     ctx: Context,
+    filter: Filter,
     queryStartTimestamp: number,
     result: RemoteQueryResult,
   ): Promise<QueryResult | null> {
@@ -144,15 +159,28 @@ export class CoreDatabaseQueryContext implements QueryContext {
         return null;
       }
 
-      return {
-        id: core.id,
-        spaceId: core.database!.spaceId,
-        spaceKey: core.database!.spaceKey,
-        object: core.toPlainObject(),
-        match: { rank: result.rank },
-        resolution: { source: 'remote', time: Date.now() - queryStartTimestamp },
-      } satisfies QueryResult;
+      return this._filterMapCore(filter, core, queryStartTimestamp, result);
     }
+  }
+
+  private _filterMapCore(
+    filter: Filter,
+    core: ObjectCore,
+    queryStartTimestamp: number,
+    result: RemoteQueryResult | undefined,
+  ): QueryResult | null {
+    if (!filterMatch(filter, core)) {
+      return null;
+    }
+
+    return {
+      id: core.id,
+      spaceId: core.database!.spaceId,
+      spaceKey: core.database!.spaceKey,
+      object: core.toPlainObject(),
+      match: result && { rank: result.rank },
+      resolution: { source: 'remote', time: Date.now() - queryStartTimestamp },
+    } satisfies QueryResult;
   }
 }
 

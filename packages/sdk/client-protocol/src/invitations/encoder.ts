@@ -4,7 +4,7 @@
 
 import base from 'base-x';
 
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 // Encode with URL-safe alpha-numeric characters.

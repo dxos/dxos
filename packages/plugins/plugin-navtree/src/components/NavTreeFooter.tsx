@@ -54,7 +54,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
     <div
       role='none'
       className={mx(
-        'bs-[--rail-size] pbe-[env(safe-area-inset-bottom)] box-content separator-separator border-bs pli-1 flex justify-end',
+        'bs-[--rail-size] pbe-[env(safe-area-inset-bottom)] box-content border-separator border-bs pli-1 flex justify-end',
         layoutPart === 'complementary' && 'md:justify-end flex-row-reverse',
       )}
     >
@@ -84,7 +84,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
                 </Link>
               </Message.Body>
             </Message.Root>
-            <div role='none' className='plb-4 pli-5 space-b-2 text-base'>
+            <div role='none' className='plb-4 pli-5 space-b-2 text-baseText'>
               {timestamp && (
                 <p>
                   {t('released message', {

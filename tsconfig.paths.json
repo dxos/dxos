@@ -323,6 +323,9 @@
       "@dxos/brand": [
         "packages/ui/brand/src/index.ts"
       ],
+      "@dxos/lit-grid": [
+        "packages/ui/lit-grid/src/index.ts"
+      ],
       "@dxos/react-ui": [
         "packages/ui/react-ui/src/index.ts"
       ],
@@ -337,6 +340,9 @@
       ],
       "@dxos/react-ui-editor": [
         "packages/ui/react-ui-editor/src/index.ts"
+      ],
+      "@dxos/react-ui-grid": [
+        "packages/ui/react-ui-grid/src/index.ts"
       ],
       "@dxos/react-ui-mosaic": [
         "packages/ui/react-ui-mosaic/src/index.ts"

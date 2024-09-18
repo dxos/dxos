@@ -4,7 +4,7 @@
   "tags": [
     "scope:ui"
   ],
-  "sourceRoot": "packages/ui/brand/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},

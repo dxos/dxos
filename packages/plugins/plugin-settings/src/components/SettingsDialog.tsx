@@ -5,9 +5,9 @@
 import React, { useState } from 'react';
 
 import { type Plugin, Surface, usePlugins } from '@dxos/app-framework';
-import { Button, Dialog, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { Tabs, type TabsActivePart } from '@dxos/react-ui-tabs';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { getSize } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { SETTINGS_PLUGIN } from '../meta';
@@ -52,9 +52,10 @@ export const SettingsDialog = ({
           aria-description={t('click to return to tablist description')}
           classNames='flex cursor-pointer items-center group/title'
         >
-          <svg className={mx('@md:hidden', getSize(4), tabsActivePart === 'list' && 'invisible')}>
-            <use href='/icons.svg#ph--caret-left--regular' />
-          </svg>
+          <Icon
+            icon='ph--caret-left--regular'
+            classNames={['@md:hidden', getSize(4), tabsActivePart === 'list' && 'invisible']}
+          />
           <span
             className={
               tabsActivePart !== 'list'
@@ -67,9 +68,7 @@ export const SettingsDialog = ({
         </Dialog.Title>
         <Dialog.Close asChild>
           <Button density='fine' variant='ghost' autoFocus>
-            <svg className={mx(getSize(3))}>
-              <use href={'/icons.svg#ph--x--regular'} />
-            </svg>
+            <Icon icon='ph--x--regular' size={3} />
           </Button>
         </Dialog.Close>
       </div>
@@ -83,7 +82,7 @@ export const SettingsDialog = ({
         classNames='flex flex-col flex-1 mbs-2'
       >
         <Tabs.Viewport classNames='flex-1 min-bs-0'>
-          <div role='none' className='overflow-y-auto pli-3 @md:pis-2 @md:pie-0 mbe-4 border-r separator-separator'>
+          <div role='none' className='overflow-y-auto pli-3 @md:pis-2 @md:pie-0 mbe-4 border-r border-separator'>
             <Tabs.Tablist classNames='max-bs-none overflow-y-visible'>
               <PluginList title='Options' plugins={corePlugins} />
               {filteredPlugins.length > 0 && <PluginList title='Plugins' plugins={filteredPlugins} gap />}

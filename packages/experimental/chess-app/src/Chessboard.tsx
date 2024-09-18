@@ -28,9 +28,24 @@ const chessPieces = {
 
 // TODO(burdon): Replace with classes.
 const props = {
-  customDarkSquareStyle: { backgroundColor: '#CCD3DB' },
-  customLightSquareStyle: { backgroundColor: '#6C95B9' },
   customDropSquareStyle: { boxShadow: 'inset 0 0 1px 2px black' },
+};
+
+export type BoardStyle = 'default' | 'blue' | 'dark';
+
+export const boardStyles: Record<BoardStyle, any> = {
+  default: {
+    customDarkSquareStyle: { backgroundColor: '#AE8A68' },
+    customLightSquareStyle: { backgroundColor: '#f0d9b5' },
+  },
+  blue: {
+    customDarkSquareStyle: { backgroundColor: '#CCD3DB' },
+    customLightSquareStyle: { backgroundColor: '#6C95B9' },
+  },
+  dark: {
+    customDarkSquareStyle: { backgroundColor: '#555' },
+    customLightSquareStyle: { backgroundColor: '#888' },
+  },
 };
 
 export type ChessModel = {
@@ -47,6 +62,7 @@ export type ChessboardProps = {
   model: ChessModel;
   orientation?: Color;
   readonly?: boolean;
+  boardStyle?: BoardStyle;
   pieces?: ChessPieces;
   onUpdate?: (move: ChessMove) => void;
 };
@@ -55,14 +71,16 @@ export type ChessboardProps = {
  * https://www.npmjs.com/package/chess.js
  * https://www.npmjs.com/package/react-chessboard
  */
-export const Chessboard: FC<ChessboardProps> = ({
+export const Chessboard = ({
   model: { chess },
   orientation = 'w',
   readonly = false,
+  boardStyle = 'blue',
   pieces = ChessPieces.STANDARD,
   onUpdate,
-}) => {
+}: ChessboardProps) => {
   const { ref, width } = useResizeDetector();
+  const style = boardStyles[boardStyle];
 
   const handleDrop = (source: any, target: any, piece: any) => {
     // TODO(burdon): Select promotion piece.
@@ -91,6 +109,7 @@ export const Chessboard: FC<ChessboardProps> = ({
         arePiecesDraggable={!readonly}
         onPieceDrop={handleDrop}
         customPieces={chessPieces[pieces]}
+        {...style}
         {...props}
       />
     </div>

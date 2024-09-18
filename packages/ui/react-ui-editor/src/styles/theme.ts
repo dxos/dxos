@@ -4,13 +4,9 @@
 
 import { type StyleSpec } from 'style-mod';
 
-import { getToken } from './tokens';
+import { fontBody } from './tokens';
 
 export type ThemeStyles = Record<string, StyleSpec>;
-
-// TODO(burdon): Factor out theme.
-// TODO(burdon): Can we use @apply and import css file?
-//  https://tailwindcss.com/docs/reusing-styles#extracting-classes-with-apply?
 
 /**
  * Minimal styles.
@@ -43,8 +39,8 @@ export type ThemeStyles = Record<string, StyleSpec>;
  *   </div>
  * </div>
  *
- * NOTE: Use one of '&', '&light', and '&dark' prefix to scope instance.
  * NOTE: `light` and `dark` selectors are preprocessed by CodeMirror and can only be in the base theme.
+ * NOTE: Use 'unset' to remove default CM style.
  */
 export const defaultTheme: ThemeStyles = {
   '&': {},
@@ -65,16 +61,11 @@ export const defaultTheme: ThemeStyles = {
    */
   '.cm-content': {
     padding: 'unset',
+    fontFamily: fontBody,
     // NOTE: Base font size (otherwise defined by HTML tag, which might be different for storybook).
     fontSize: '16px',
-    fontFamily: getToken('fontFamily.body'),
     lineHeight: 1.5,
-  },
-  '&light .cm-content': {
-    color: getToken('extend.semanticColors.base.fg.light', 'black'),
-  },
-  '&dark .cm-content': {
-    color: getToken('extend.semanticColors.base.fg.dark', 'white'),
+    color: 'unset',
   },
 
   /**
@@ -82,107 +73,85 @@ export const defaultTheme: ThemeStyles = {
    * NOTE: Gutters should have the same top margin as the content.
    */
   '.cm-gutters': {
-    background: 'transparent',
+    background: 'unset',
   },
   '.cm-gutter': {},
   '.cm-gutterElement': {
+    fontSize: '16px',
     lineHeight: 1.5,
   },
 
-  //
-  // Cursor
-  //
-  '&light .cm-cursor, &light .cm-dropCursor': {
-    borderLeft: '2px solid black',
-  },
-  '&dark .cm-cursor, &dark .cm-dropCursor': {
-    borderLeft: '2px solid white',
-  },
-  '&light .cm-placeholder': {
-    color: getToken('extend.semanticColors.description.light', 'rgba(0,0,0,.2)'),
-  },
-  '&dark .cm-placeholder': {
-    color: getToken('extend.semanticColors.description.dark', 'rgba(255,255,255,.2)'),
-  },
-
-  //
-  // line
-  //
-  '.cm-line': {
-    paddingInline: 0,
-  },
-  '.cm-activeLine': {
-    background: 'transparent',
-  },
-
-  //
-  // gutter
-  //
   '.cm-lineNumbers': {
     minWidth: '36px',
   },
 
-  //
-  // Selection
-  //
-
-  '&light .cm-selectionBackground': {
-    background: getToken('extend.colors.primary.100'),
+  /**
+   * Line.
+   */
+  '.cm-line': {
+    paddingInline: 0,
   },
-  '&light.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
-    background: getToken('extend.colors.primary.200'),
-  },
-  '&dark .cm-selectionBackground': {
-    background: getToken('extend.colors.primary.700'),
-  },
-  '&dark.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
-    background: getToken('extend.colors.primary.600'),
+  '.cm-activeLine': {
+    background: 'var(--dx-hoverSurface)',
   },
 
-  //
-  // Search
-  //
-
-  '&light .cm-searchMatch': {
-    backgroundColor: getToken('extend.colors.yellow.100'),
+  /**
+   * Cursor (layer).
+   */
+  '.cm-cursor, .cm-dropCursor': {
+    borderLeft: '2px solid var(--dx-cmCursor)',
   },
-  '&dark .cm-searchMatch': {
-    backgroundColor: getToken('extend.colors.yellow.700'),
+  '.cm-placeholder': {
+    color: 'var(--dx-subdued)',
   },
 
-  //
-  // link
-  //
+  /**
+   * Selection (layer).
+   */
+  '.cm-selectionBackground': {
+    background: 'var(--dx-cmSelection)',
+  },
+
+  /**
+   * Search.
+   * NOTE: Matches comment.
+   */
+  '.cm-searchMatch': {
+    margin: '0 -3px',
+    padding: '3px',
+    borderRadius: '3px',
+    background: 'var(--dx-cmHighlightSurface)',
+    color: 'var(--dx-cmHighlight)',
+  },
+  '.cm-searchMatch-selected': {
+    textDecoration: 'underline',
+  },
+
+  /**
+   * Link.
+   */
   '.cm-link': {
     textDecorationLine: 'underline',
     textDecorationThickness: '1px',
     textUnderlineOffset: '2px',
     borderRadius: '.125rem',
-    fontFamily: getToken('fontFamily.body'),
   },
-  '&light .cm-link > span': {
-    color: getToken('extend.colors.primary.600'),
-  },
-  '&dark .cm-link > span': {
-    color: getToken('extend.colors.primary.400'),
+  '.cm-link > span': {
+    color: 'var(--dx-accentText)',
   },
 
-  //
-  // tooltip
-  //
-  '.cm-tooltip': {},
-  '&light .cm-tooltip': {
-    background: `${getToken('extend.colors.neutral.100')} !important`,
-  },
-  '&dark .cm-tooltip': {
-    background: `${getToken('extend.colors.neutral.900')} !important`,
+  /**
+   * Tooltip.
+   */
+  '.cm-tooltip': {
+    background: 'var(--dx-base)',
   },
   '.cm-tooltip-below': {},
 
-  //
-  // autocomplete
-  // https://github.com/codemirror/autocomplete/blob/main/src/completion.ts
-  //
+  /**
+   * Autocomplete.
+   * https://github.com/codemirror/autocomplete/blob/main/src/completion.ts
+   */
   '.cm-tooltip.cm-tooltip-autocomplete': {
     marginTop: '4px',
     marginLeft: '-3px',
@@ -195,31 +164,27 @@ export const defaultTheme: ThemeStyles = {
   '.cm-tooltip.cm-tooltip-autocomplete > ul > completion-section': {
     paddingLeft: '4px !important',
     borderBottom: 'none !important',
-    color: getToken('extend.colors.primary.500'),
+    color: 'var(--dx-accentText)',
   },
   '.cm-tooltip.cm-completionInfo': {
-    border: getToken('extend.colors.neutral.500'),
     width: '360px !important',
     margin: '-10px 1px 0 1px',
     padding: '8px !important',
+    borderColor: 'var(--dx-separator)',
   },
   '.cm-completionIcon': {
     display: 'none',
   },
   '.cm-completionLabel': {
-    fontFamily: getToken('fontFamily.body'),
+    fontFamily: fontBody,
   },
   '.cm-completionMatchedText': {
     textDecoration: 'none !important',
     opacity: 0.5,
   },
 
-  // TODO(burdon): Override vars --cm-background.
-  //  https://www.npmjs.com/package/codemirror-theme-vars
-
   /**
    * Panels
-   * TODO(burdon): Needs styling attention (esp. dark mode).
    * https://github.com/codemirror/search/blob/main/src/search.ts#L745
    *
    * Find/replace panel.
@@ -233,76 +198,49 @@ export const defaultTheme: ThemeStyles = {
    *   </div>
    * </div
    */
+  // TODO(burdon): Apply react-ui-theme or replace panel.
   '.cm-panels': {},
   '.cm-panel': {
-    fontFamily: getToken('fontFamily.body'),
+    fontFamily: fontBody,
+    backgroundColor: 'var(--dx-base)',
   },
+  '.cm-panel input, .cm-panel button, .cm-panel label': {
+    fontFamily: fontBody,
+    fontSize: '14px',
+    all: 'unset',
+    margin: '3px !important',
+    padding: '2px 6px !important',
+    outline: '1px solid transparent',
+  },
+  '.cm-panel input, .cm-panel button': {
+    backgroundColor: 'var(--dx-input)',
+  },
+  '.cm-panel input:focus, .cm-panel button:focus': {
+    outline: '1px solid var(--dx-accentFocusIndicator)',
+  },
+  '.cm-panel label': {
+    display: 'inline-flex',
+    alignItems: 'center',
+    cursor: 'pointer',
+  },
+  '.cm-panel input.cm-textfield': {},
   '.cm-panel input[type=checkbox]': {
-    marginRight: '0.4rem !important',
+    width: '8px',
+    height: '8px',
+    marginRight: '6px !important',
+    padding: '2px !important',
+    color: 'var(--dx-accentFocusIndicator)',
   },
-  '&light .cm-panel': {
-    background: getToken('extend.colors.neutral.50'),
-  },
-  '&dark .cm-panel': {
-    background: getToken('extend.colors.neutral.850'),
-  },
-  '.cm-button': {
-    margin: '4px',
-    fontFamily: getToken('fontFamily.body'),
-    backgroundImage: 'none',
-    border: 'none',
-    '&:active': {
-      backgroundImage: 'none',
-    },
-  },
-  '&light .cm-button': {
-    background: getToken('extend.colors.neutral.100'),
+  '.cm-panel button': {
     '&:hover': {
-      background: getToken('extend.colors.neutral.200'),
+      backgroundColor: 'var(--dx-accentSurfaceHover) !important',
     },
     '&:active': {
-      background: getToken('extend.colors.neutral.300'),
+      backgroundColor: 'var(--dx-accentSurfaceHover)',
     },
   },
-  '&dark .cm-button': {
-    background: getToken('extend.colors.neutral.800'),
-    '&:hover': {
-      background: getToken('extend.colors.neutral.700'),
-    },
-    '&:active': {
-      background: getToken('extend.colors.neutral.600'),
-    },
-  },
-
-  // TODO(burdon): Factor out element specific logic.
-
-  //
-  // table
-  //
-  '.cm-table *': {
-    fontFamily: `${getToken('fontFamily.mono')} !important`,
-    textDecoration: 'none !important',
-  },
-  '.cm-table-head': {
-    padding: '2px 16px 2px 0px',
-    textAlign: 'left',
-    borderBottom: `1px solid ${getToken('extend.colors.primary.500')}`,
-    color: getToken('extend.colors.neutral.500'),
-  },
-  '.cm-table-cell': {
-    padding: '2px 16px 2px 0px',
-  },
-
-  //
-  // image
-  //
-  '.cm-image': {
-    display: 'block',
-    height: '0',
-  },
-  '.cm-image.cm-loaded-image': {
-    height: 'auto',
-    borderTop: '0.5rem solid transparent',
-    borderBottom: '0.5rem solid transparent',
+  '.cm-panel.cm-search': {
+    padding: '4px',
+    borderTop: '1px solid var(--dx-separator)',
   },
 };

@@ -7,7 +7,8 @@ import expectJest from 'expect';
 
 import { sleep, latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { SystemError, schema } from '@dxos/protocols';
+import { SystemError } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import {
   type TestStreamService,
   type TestRpcResponse,

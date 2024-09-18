@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { openSearchPanel } from '@codemirror/search';
 import { EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 
@@ -47,7 +48,7 @@ import type { MarkdownPluginState } from '../types';
 
 const attentionFragment = mx(
   'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
-  'group-focus-within/editor:separator-separator',
+  'group-focus-within/editor:border-separator',
 );
 
 const DEFAULT_VIEW_MODE: EditorViewMode = 'preview';
@@ -106,7 +107,7 @@ export const MarkdownEditor = ({
         if (editorView && data?.id === id && data?.cursor) {
           // TODO(burdon): We need typed intents.
           const range = Cursor.getRangeFromCursor(editorView.state, data.cursor);
-          if (range?.from) {
+          if (range) {
             const selection = editorView.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
             const effects = [
               // NOTE: This does not use the DOM scrollIntoView function.
@@ -164,7 +165,7 @@ export const MarkdownEditor = ({
         id,
         scrollTo,
         selection,
-        // TODO(wittjosiah): Autofocus based on layout is racey.
+        // TODO(wittjosiah): Autofocus based on layout is racy.
         autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
         moveToEndOfLine: true,
       }),
@@ -177,8 +178,17 @@ export const MarkdownEditor = ({
   // Toolbar handler.
   const handleToolbarAction = useActionHandler(editorView);
   const handleAction = (action: Action) => {
-    if (action.type === 'view-mode') {
-      onViewModeChange?.(id, action.data);
+    switch (action.type) {
+      case 'search': {
+        if (editorView) {
+          openSearchPanel(editorView);
+        }
+        return;
+      }
+      case 'view-mode': {
+        onViewModeChange?.(id, action.data);
+        return;
+      }
     }
 
     handleToolbarAction?.(action);
@@ -208,7 +218,7 @@ export const MarkdownEditor = ({
                   ]
                 : [
                     textBlockWidth,
-                    'group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator',
+                    'group-focus-within/editor:border-separator group-[[aria-current]]/editor:border-separator',
                   ]
             }
             state={formattingState && { ...formattingState, ...commentsState }}

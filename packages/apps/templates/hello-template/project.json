@@ -4,28 +4,23 @@
   "tags": [
     "scope:templates"
   ],
-  "sourceRoot": "packages/apps/templates/hello-template/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": [
+        "^build"
+      ],
       "options": {
-        "main": "{projectRoot}/src/index.ts",
-        "outputPath": "packages/apps/templates/hello-template/dist",
-        "tsConfig": "packages/apps/templates/hello-template/tsconfig.json"
+        "main": "{projectRoot}/src/template.t.ts",
+        "outputPath": "{projectRoot}/dist"
       }
     },
     "lint": {},
-    "test": {
+    "vitest": {
       "dependsOn": [
         "build"
-      ],
-      "options": {
-        "checkLeaks": false,
-        "ciEnvironments": [
-          "nodejs"
-        ],
-        "forceExit": true
-      }
+      ]
     }
   }
 }

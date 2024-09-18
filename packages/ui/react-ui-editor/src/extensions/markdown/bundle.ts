@@ -44,6 +44,9 @@ export const createMarkdownExtensions = ({ themeMode }: MarkdownBundleOptions = 
       // Languages for syntax highlighting fenced code blocks.
       codeLanguages: languages,
 
+      // Don't complete HTML tags.
+      completeHTMLTags: false,
+
       // Parser extensions.
       extensions: [
         // GFM provided by default.
@@ -58,7 +61,6 @@ export const createMarkdownExtensions = ({ themeMode }: MarkdownBundleOptions = 
     syntaxHighlighting(markdownHighlightStyle()),
 
     keymap.of([
-      // TODO(burdon): Indent by 4 if in task list.
       // https://codemirror.net/docs/ref/#commands.indentWithTab
       indentWithTab,
 

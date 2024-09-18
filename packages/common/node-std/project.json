@@ -4,7 +4,7 @@
   "tags": [
     "scope:common"
   ],
-  "sourceRoot": "packages/common/node-std/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "compile": {

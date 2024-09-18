@@ -4,6 +4,7 @@
 
 export * from './action';
 export * from './bundle';
+export * from './debug';
 export * from './decorate';
 export * from './formatting';
 export * from './highlight';

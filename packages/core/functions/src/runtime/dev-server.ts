@@ -222,7 +222,7 @@ export class DevServer {
     const context: FunctionContext = {
       client: this._client,
       dataDir: this._options.dataDir,
-    };
+    } as any;
 
     let statusCode = 200;
     const response: FunctionResponse = {

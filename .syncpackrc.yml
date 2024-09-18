@@ -40,6 +40,11 @@ versionGroups:
     dependencies:
       - 'xstate'
       - '@automerge/automerge-wasm'
+  - packages:
+      - '@dxos/cf-labs'
+    dependencies:
+      - '@vitest/*'
+      - 'vitest'
 sortFirst:
   - name
   - version

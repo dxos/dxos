@@ -6,7 +6,8 @@ import { boolean } from 'boolean';
 import defaultsDeep from 'lodash.defaultsdeep';
 import isMatch from 'lodash.ismatch';
 
-import { InvalidConfigError, schema } from '@dxos/protocols';
+import { InvalidConfigError } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { trace } from '@dxos/tracing';
 import { getDeep, setDeep } from '@dxos/util';

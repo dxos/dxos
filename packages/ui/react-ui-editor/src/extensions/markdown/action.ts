@@ -40,6 +40,7 @@ export type ActionType =
   | 'list-task'
   | 'mention'
   | 'prompt'
+  | 'search'
   | 'strikethrough'
   | 'table';
 

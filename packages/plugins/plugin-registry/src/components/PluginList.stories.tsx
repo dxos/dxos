@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { Bug, Compass, GithubLogo, Kanban, Gear, Table } from '@phosphor-icons/react';
 import React, { useState } from 'react';

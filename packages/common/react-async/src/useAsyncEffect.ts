@@ -26,11 +26,11 @@ import { useEffect } from 'react';
  * }, () => console.log('Unmounted'), []);
  * ```
  *
- * @param callback Receives a getter function that determines if the componet is still mounted.
- * @param destructor Receives the value retuned from the callback.
+ * @param callback Receives a getter function that determines if the component is still mounted.
+ * @param destructor Receives the value returned from the callback.
  * @param deps
  */
-// TODO(burdon): Create useAsyncMemo?
+// TODO(burdon): Move to @dxos/react-ui.
 export const useAsyncEffect = <T>(
   callback: (isMounted: () => boolean) => Promise<T> | undefined,
   destructor?: ((value?: T) => void) | any[],

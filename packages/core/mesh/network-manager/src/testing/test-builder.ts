@@ -10,7 +10,7 @@ import {
   type SignalManager,
   WebsocketSignalManager,
 } from '@dxos/messaging';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';

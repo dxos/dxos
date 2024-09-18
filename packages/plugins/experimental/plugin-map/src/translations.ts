@@ -13,6 +13,7 @@ export default [
         'create object label': 'Create map',
         'delete object label': 'Delete',
         'create stack section label': 'Create map',
+        'toggle type label': 'Toggle view',
       },
     },
   },

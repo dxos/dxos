@@ -33,6 +33,11 @@ Type: <code>function</code>
 
 
 
+### [getMeta]()
+Type: <code>function</code>
+
+
+
 ### [halo]()
 Type: <code>[Halo](/api/@dxos/react-client/interfaces/Halo)</code>
 

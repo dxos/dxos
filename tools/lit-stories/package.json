@@ -1,0 +1,27 @@
+{
+  "name": "@dxos/lit-stories",
+  "version": "0.6.10",
+  "private": true,
+  "description": "Storybook config package for Lit components of the DXOS monorepo.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "devDependencies": {
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/vite-plugin-icons": "workspace:*",
+    "@storybook/addon-essentials": "~8.1.11",
+    "@storybook/addon-interactions": "~8.1.11",
+    "@storybook/addon-links": "~8.1.11",
+    "@storybook/addon-themes": "~8.1.11",
+    "@storybook/blocks": "~8.1.11",
+    "@storybook/builder-vite": "~8.1.11",
+    "@storybook/core-server": "~8.1.11",
+    "@storybook/test": "~8.1.11",
+    "@storybook/web-components": "~8.1.11",
+    "@storybook/web-components-vite": "~8.1.11",
+    "lit": "^3.2.0",
+    "storybook": "^8.2.9",
+    "vite": "^5.3.4"
+  }
+}

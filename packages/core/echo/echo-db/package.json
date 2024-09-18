@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -39,6 +39,7 @@
     "@dxos/automerge": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
