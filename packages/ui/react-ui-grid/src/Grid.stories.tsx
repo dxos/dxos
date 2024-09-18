@@ -10,6 +10,7 @@ export default {
   title: 'react-ui-grid/Grid',
   component: Grid,
   decorators: [withTheme],
+  parameters: { layout: 'fullscreen' },
 };
 
 export const Basic = {

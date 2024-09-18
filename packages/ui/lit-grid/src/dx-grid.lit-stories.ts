@@ -11,6 +11,7 @@ import { type DxGridProps } from './dx-grid';
 
 export default {
   title: 'dx-grid',
+  parameters: { layout: 'fullscreen' },
 };
 
 export const Basic = (props: DxGridProps) => {
