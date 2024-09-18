@@ -92,7 +92,8 @@ export const IconsPlugin = (params: BundleParams & { manifestPath?: string; verb
                 if (extensions.some((e) => e === ext) && path.indexOf('node_modules') === -1) {
                   try {
                     const src = fs.readFileSync(filename, 'utf8');
-                    status.updated ||= scan(src);
+                    const match = scan(src);
+                    status.updated ||= match;
                   } catch (err) {
                     // eslint-disable-next-line no-console
                     console.error('Missing file', req.url);
