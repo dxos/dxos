@@ -41,7 +41,6 @@ import {
   Filter,
   createDocAccessor,
   fullyQualifiedId,
-  getRangeFromCursor,
   loadObjectReferences,
 } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
@@ -61,7 +60,7 @@ import {
 } from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
-import { ThreadAction, ThreadProvides, type ThreadPluginProvides, type ThreadSettingsProps } from './types';
+import { ThreadAction, type ThreadProvides, type ThreadPluginProvides, type ThreadSettingsProps } from './types';
 
 type ThreadState = {
   /** An in-memory staging area for threads that are being drafted. */
