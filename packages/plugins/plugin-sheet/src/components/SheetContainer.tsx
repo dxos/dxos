@@ -9,18 +9,13 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { Sheet, type SheetRootProps } from './Sheet';
 
-const SheetContainer = ({
-  sheet,
-  space,
-  role,
-  // coordinate = { part: 'main', entryId: '' },
-}: LayoutContainerProps<SheetRootProps>) => {
+const SheetContainer = ({ sheet, space, role }: LayoutContainerProps<SheetRootProps>) => {
   return (
     <div
       role='none'
       className={mx(
         'flex',
-        role === 'article' && 'row-span-2', // TODO(burdon): Container with toolbar.
+        role === 'article' && 'row-span-2',
         role === 'section' && 'aspect-square border-y border-is border-separator',
         // coordinate.part !== 'solo' && 'border-is border-separator',
       )}
