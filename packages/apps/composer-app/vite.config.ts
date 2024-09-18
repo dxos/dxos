@@ -240,6 +240,7 @@ export default defineConfig({
         ]
       : []),
     // Copy post-build assets to dist.
+    // TODO(burdon): Move into vite icons plugin?
     {
       name: 'copy-icons',
       buildEnd() {
@@ -247,7 +248,7 @@ export default defineConfig({
           if (err) {
             console.error('Error copying public assets:', err);
           } else {
-            console.log('Public assets copied to dist.');
+            console.log('Copied public assets.');
           }
         });
       }
