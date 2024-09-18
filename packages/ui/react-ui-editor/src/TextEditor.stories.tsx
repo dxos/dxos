@@ -204,6 +204,7 @@ const text = str(
   content.table,
   content.image,
   content.footer,
+  '=== LAST LINE ===',
 );
 
 const links = [
@@ -289,7 +290,7 @@ const Story = ({
       initialValue: text,
       extensions: [
         createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
-        createBasicExtensions({ readonly, placeholder }),
+        createBasicExtensions({ readonly, placeholder, scrollPastEnd: true }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({
           themeMode,
