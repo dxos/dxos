@@ -4,3 +4,4 @@
 
 export * from './useNode';
 export * from './useNodeActionExpander';
+export * from './useMainSize';

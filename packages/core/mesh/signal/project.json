@@ -4,7 +4,7 @@
   "tags": [
     "scope:mesh"
   ],
-  "sourceRoot": "packages/core/mesh/signal/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},

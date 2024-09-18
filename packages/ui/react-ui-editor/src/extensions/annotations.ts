@@ -69,10 +69,10 @@ export const annotations = (options: AnnotationOptions = {}): Extension => {
   ];
 };
 
-const styles = EditorView.baseTheme({
+const styles = EditorView.theme({
   '.cm-annotation': {
     textDecoration: 'underline',
     textDecorationStyle: 'wavy',
-    textDecorationColor: 'red',
+    textDecorationColor: 'var(--dx-error)',
   },
 });

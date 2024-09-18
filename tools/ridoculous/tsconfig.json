@@ -5,7 +5,7 @@
     "composite": true,
     "emitDeclarationOnly": false,
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "outDir": "dist",
     "target": "ESNext"
   },

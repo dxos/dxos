@@ -24,7 +24,12 @@ const createNodeConfig = () =>
     test: {
       ...resolveReporterConfig({ browserMode: false }),
       environment: 'node',
-      include: ['**/src/**/*.test.ts', '!**/src/**/*.browser.test.ts'],
+      include: [
+        '**/src/**/*.test.ts',
+        '**/test/**/*.test.ts',
+        '!**/src/**/*.browser.test.ts',
+        '!**/test/**/*.browser.test.ts',
+      ],
     },
   });
 
@@ -48,7 +53,12 @@ const createBrowserConfig = (browserName: 'chrome') =>
     test: {
       ...resolveReporterConfig({ browserMode: true }),
       name: targetProject,
-      include: ['**/src/**/*.test.ts', '!**/src/**/*.node.test.ts'],
+      include: [
+        '**/src/**/*.test.ts',
+        '**/test/**/*.test.ts',
+        '!**/src/**/*.node.test.ts',
+        '!**/test/**/*.node.test.ts',
+      ],
 
       testTimeout: isDebug ? 9999999 : 5000,
       inspect: isDebug,

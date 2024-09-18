@@ -4,29 +4,23 @@
   "tags": [
     "scope:templates"
   ],
-  "sourceRoot": "packages/apps/templates/tasks-template/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": [
+        "^build"
+      ],
       "options": {
-        "main": "{projectRoot}/src/index.ts",
-        "outputPath": "packages/apps/templates/tasks-template/dist",
-        "tsConfig": "packages/apps/templates/tasks-template/tsconfig.json"
+        "main": "{projectRoot}/src/template.t.ts",
+        "outputPath": "{projectRoot}/dist"
       }
     },
     "lint": {},
-    "test": {
+    "vitest": {
       "dependsOn": [
         "build"
-      ],
-      "options": {
-        "checkLeaks": false,
-        "ciEnvironments": [
-          "nodejs"
-        ],
-        "forceExit": true,
-        "timeout": 1000000
-      }
+      ]
     }
   }
 }

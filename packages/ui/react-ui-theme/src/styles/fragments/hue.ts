@@ -4,7 +4,7 @@
 
 import type { Theme } from '@dxos/react-ui-types';
 
-import { type HuePalette, physicalColors } from '../../config';
+import { type HuePalette } from '../../types';
 
 export type HueToken = {
   text: string;
@@ -12,117 +12,93 @@ export type HueToken = {
   fill: string;
   cursorLightValue: string;
   cursorDarkValue: string;
-  // highlightLightValue: string;
-  // highlightDarkValue: string;
-};
-
-const hueTokenValueShades = {
-  cursorLightValue: 400,
-  cursorDarkValue: 300,
-  // highlightLightValue: 50,
-  // highlightDarkValue: 900,
 };
 
 export const hueTokenThemes: Record<HuePalette, Pick<HueToken, 'text' | 'textHover' | 'fill'>> = {
   red: {
-    text: 'text-red-550 dark:text-red-300',
-    textHover: 'hover:text-red-450 focus-visible:text-red-450 dark:hover:text-red-200 dark:focus-visible:text-red-200',
-    fill: 'fill-red-500/60',
+    text: 'text-[--dx-red-text]',
+    textHover: 'hover:text-[--dx-red-text-hover] focus-visible:text-[--dx-red-text-hover]',
+    fill: 'fill-[--dx-red-fill]',
   },
   orange: {
-    text: 'text-orange-550 dark:text-orange-300',
-    textHover:
-      'hover:text-orange-450 focus-visible:text-orange-450 dark:hover:text-orange-200 dark:focus-visible:text-orange-200',
-    fill: 'fill-orange-500/60',
+    text: 'text-[--dx-orange-text]',
+    textHover: 'hover:text-[--dx-orange-text-hover] focus-visible:text-[--dx-orange-text-hover]',
+    fill: 'fill-[--dx-orange-fill]',
   },
   amber: {
-    text: 'text-amber-550 dark:text-amber-300',
-    textHover:
-      'hover:text-amber-450 focus-visible:text-amber-450 dark:hover:text-amber-200 dark:focus-visible:text-amber-200',
-    fill: 'fill-amber-500/60',
+    text: 'text-[--dx-amber-text]',
+    textHover: 'hover:text-[--dx-amber-text-hover] focus-visible:text-[--dx-amber-text-hover]',
+    fill: 'fill-[--dx-amber-fill]',
   },
   yellow: {
-    text: 'text-yellow-550 dark:text-yellow-300',
-    textHover:
-      'hover:text-yellow-450 focus-visible:text-yellow-450 dark:hover:text-yellow-200 dark:focus-visible:text-yellow-200',
-    fill: 'fill-yellow-500/60',
+    text: 'text-[--dx-yellow-text]',
+    textHover: 'hover:text-[--dx-yellow-text-hover] focus-visible:text-[--dx-yellow-text-hover]',
+    fill: 'fill-[--dx-yellow-fill]',
   },
   lime: {
-    text: 'text-lime-550 dark:text-lime-300',
-    textHover:
-      'hover:text-lime-450 focus-visible:text-lime-450 dark:hover:text-lime-200 dark:focus-visible:text-lime-200',
-    fill: 'fill-lime-500/60',
+    text: 'text-[--dx-lime-text]',
+    textHover: 'hover:text-[--dx-lime-text-hover] focus-visible:text-[--dx-lime-text-hover]',
+    fill: 'fill-[--dx-lime-fill]',
   },
   green: {
-    text: 'text-green-550 dark:text-green-300',
-    textHover:
-      'hover:text-green-450 focus-visible:text-green-450 dark:hover:text-green-200 dark:focus-visible:text-green-200',
-    fill: 'fill-green-500/60',
+    text: 'text-[--dx-green-text]',
+    textHover: 'hover:text-[--dx-green-text-hover] focus-visible:text-[--dx-green-text-hover]',
+    fill: 'fill-[--dx-green-fill]',
   },
   emerald: {
-    text: 'text-emerald-550 dark:text-emerald-300',
-    textHover:
-      'hover:text-emerald-450 focus-visible:text-emerald-450 dark:hover:text-emerald-200 dark:focus-visible:text-emerald-200',
-    fill: 'fill-emerald-500/60',
+    text: 'text-[--dx-emerald-text]',
+    textHover: 'hover:text-[--dx-emerald-text-hover] focus-visible:text-[--dx-emerald-text-hover]',
+    fill: 'fill-[--dx-emerald-fill]',
   },
   teal: {
-    text: 'text-teal-550 dark:text-teal-300',
-    textHover:
-      'hover:text-teal-450 focus-visible:text-teal-450 dark:hover:text-teal-200 dark:focus-visible:text-teal-200',
-    fill: 'fill-teal-500/60',
+    text: 'text-[--dx-teal-text]',
+    textHover: 'hover:text-[--dx-teal-text-hover] focus-visible:text-[--dx-teal-text-hover]',
+    fill: 'fill-[--dx-teal-fill]',
   },
   cyan: {
-    text: 'text-cyan-550 dark:text-cyan-300',
-    textHover:
-      'hover:text-cyan-450 focus-visible:text-cyan-450 dark:hover:text-cyan-200 dark:focus-visible:text-cyan-200',
-    fill: 'fill-cyan-500/60',
+    text: 'text-[--dx-cyan-text]',
+    textHover: 'hover:text-[--dx-cyan-text-hover] focus-visible:text-[--dx-cyan-text-hover]',
+    fill: 'fill-[--dx-cyan-fill]',
   },
   sky: {
-    text: 'text-sky-550 dark:text-sky-300',
-    textHover: 'hover:text-sky-450 focus-visible:text-sky-450 dark:hover:text-sky-200 dark:focus-visible:text-sky-200',
-    fill: 'fill-sky-500/60',
+    text: 'text-[--dx-sky-text]',
+    textHover: 'hover:text-[--dx-sky-text-hover] focus-visible:text-[--dx-sky-text-hover]',
+    fill: 'fill-[--dx-sky-fill]',
   },
   blue: {
-    text: 'text-blue-550 dark:text-blue-300',
-    textHover:
-      'hover:text-blue-450 focus-visible:text-blue-450 dark:hover:text-blue-200 dark:focus-visible:text-blue-200',
-    fill: 'fill-blue-500/60',
+    text: 'text-[--dx-blue-text]',
+    textHover: 'hover:text-[--dx-blue-text-hover] focus-visible:text-[--dx-blue-text-hover]',
+    fill: 'fill-[--dx-blue-fill]',
   },
   indigo: {
-    text: 'text-indigo-550 dark:text-indigo-300',
-    textHover:
-      'hover:text-indigo-450 focus-visible:text-indigo-450 dark:hover:text-indigo-200 dark:focus-visible:text-indigo-200',
-    fill: 'fill-indigo-500/60',
+    text: 'text-[--dx-indigo-text]',
+    textHover: 'hover:text-[--dx-indigo-text-hover] focus-visible:text-[--dx-indigo-text-hover]',
+    fill: 'fill-[--dx-indigo-fill]',
   },
   violet: {
-    text: 'text-violet-550 dark:text-violet-300',
-    textHover:
-      'hover:text-violet-450 focus-visible:text-violet-450 dark:hover:text-violet-200 dark:focus-visible:text-violet-200',
-    fill: 'fill-violet-500/60',
+    text: 'text-[--dx-violet-text]',
+    textHover: 'hover:text-[--dx-violet-text-hover] focus-visible:text-[--dx-violet-text-hover]',
+    fill: 'fill-[--dx-violet-fill]',
   },
   purple: {
-    text: 'text-purple-550 dark:text-purple-300',
-    textHover:
-      'hover:text-purple-450 focus-visible:text-purple-450 dark:hover:text-purple-200 dark:focus-visible:text-purple-200',
-    fill: 'fill-purple-500/60',
+    text: 'text-[--dx-purple-text]',
+    textHover: 'hover:text-[--dx-purple-text-hover] focus-visible:text-[--dx-purple-text-hover]',
+    fill: 'fill-[--dx-purple-fill]',
   },
   fuchsia: {
-    text: 'text-fuchsia-550 dark:text-fuchsia-300',
-    textHover:
-      'hover:text-fuchsia-450 focus-visible:text-fuchsia-450 dark:hover:text-fuchsia-200 dark:focus-visible:text-fuchsia-200',
-    fill: 'fill-fuchsia-500/60',
+    text: 'text-[--dx-fuchsia-text]',
+    textHover: 'hover:text-[--dx-fuchsia-text-hover] focus-visible:text-[--dx-fuchsia-text-hover]',
+    fill: 'fill-[--dx-fuchsia-fill]',
   },
   pink: {
-    text: 'text-pink-550 dark:text-pink-300',
-    textHover:
-      'hover:text-pink-450 focus-visible:text-pink-450 dark:hover:text-pink-200 dark:focus-visible:text-pink-200',
-    fill: 'fill-pink-500/60',
+    text: 'text-[--dx-pink-text]',
+    textHover: 'hover:text-[--dx-pink-text-hover] focus-visible:text-[--dx-pink-text-hover]',
+    fill: 'fill-[--dx-pink-fill]',
   },
   rose: {
-    text: 'text-rose-550 dark:text-rose-300',
-    textHover:
-      'hover:text-rose-450 focus-visible:text-rose-450 dark:hover:text-rose-200 dark:focus-visible:text-rose-200',
-    fill: 'fill-rose-500/60',
+    text: 'text-[--dx-rose-text]',
+    textHover: 'hover:text-[--dx-rose-text-hover] focus-visible:text-[--dx-rose-text-hover]',
+    fill: 'fill-[--dx-rose-fill]',
   },
 };
 
@@ -130,10 +106,8 @@ export const hueTokens: Record<HuePalette, HueToken> = Object.keys(hueTokenTheme
   (acc: Record<string, HueToken>, huePalette) => {
     acc[huePalette] = {
       ...hueTokenThemes[huePalette as HuePalette],
-      cursorDarkValue: `${physicalColors[huePalette][hueTokenValueShades.cursorDarkValue]}88`,
-      cursorLightValue: physicalColors[huePalette][hueTokenValueShades.cursorLightValue],
-      // highlightDarkValue: physicalColors[huePalette][hueTokenValueShades.highlightDarkValue],
-      // highlightLightValue: physicalColors[huePalette][hueTokenValueShades.highlightLightValue],
+      cursorDarkValue: `var(--dx-${huePalette}-cursor)`,
+      cursorLightValue: `var(--dx-${huePalette}-cursor)`,
     };
     return acc;
   },

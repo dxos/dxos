@@ -4,7 +4,7 @@
   "tags": [
     "scope:plugins"
   ],
-  "sourceRoot": "packages/apps/plugins/plugin-wildcard/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
@@ -14,7 +14,6 @@
           "{projectRoot}/src/index.ts",
           "{projectRoot}/src/meta.ts"
         ],
-        "outputPath": "packages/apps/plugins/plugin-wildcard/dist/lib",
         "platforms": [
           "browser"
         ]

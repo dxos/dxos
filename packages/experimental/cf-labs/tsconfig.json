@@ -8,7 +8,6 @@
     "moduleResolution": "Bundler",
     "outDir": "dist/types",
     "types": [
-      "@cloudflare/vitest-pool-workers",
       "@cloudflare/workers-types"
     ]
   },

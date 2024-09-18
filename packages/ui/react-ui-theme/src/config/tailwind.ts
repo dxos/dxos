@@ -6,14 +6,12 @@ import tailwindContainers from '@tailwindcss/container-queries';
 import tailwindcssForms from '@tailwindcss/forms';
 import merge from 'lodash.merge';
 import tailwindScrollbar from 'tailwind-scrollbar';
-import tailwindColors from 'tailwindcss/colors';
 import defaultConfig from 'tailwindcss/stubs/config.full.js';
 import { type Config, type ThemeConfig } from 'tailwindcss/types/config';
 import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
 
-import { physicalColors, semanticColors } from './colors';
-import { semanticColors as semanticColorsPlugin } from './semanticColors';
+import { tokensTailwindConfig } from './tokens';
 
 export type TailwindConfig = Config;
 export type TailwindThemeConfig = ThemeConfig;
@@ -28,6 +26,7 @@ export const tailwindConfig = ({
   extensions?: Partial<TailwindThemeConfig>[];
 }): TailwindConfig => ({
   darkMode: 'class',
+  // TODO(burdon): Factor out theme for lib.
   theme: {
     // Configure fonts in theme.css and package.json.
     fontFamily: {
@@ -40,22 +39,6 @@ export const tailwindConfig = ({
           'pointer-fine': { raw: '(pointer: fine)' },
           'hover-hover': { raw: '(hover: hover)' },
         },
-        colors: {
-          ...physicalColors,
-          slate: tailwindColors.slate,
-          gray: tailwindColors.gray,
-          zinc: tailwindColors.zinc,
-          stone: tailwindColors.stone,
-          success: physicalColors.emerald,
-          warning: physicalColors.amber,
-          error: physicalColors.rose,
-          info: physicalColors.cyan,
-          transparent: 'transparent',
-          current: 'currentColor',
-          white: '#ffffff',
-          black: '#000000',
-        },
-        semanticColors,
         fontSize: {
           // Base size 16px
           // Scale 1.125
@@ -192,11 +175,11 @@ export const tailwindConfig = ({
           'progress-linear': 'progress-linear 2s ease-out infinite',
         },
       },
+      tokensTailwindConfig,
       ...extensions,
     ),
   },
   plugins: [
-    semanticColorsPlugin,
     tailwindcssLogical,
     tailwindcssForms,
     tailwindcssRadix(),

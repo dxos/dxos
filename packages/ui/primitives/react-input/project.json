@@ -4,7 +4,7 @@
   "tags": [
     "scope:primitives"
   ],
-  "sourceRoot": "packages/ui/primitives/react-input/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},

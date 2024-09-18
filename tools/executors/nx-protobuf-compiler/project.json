@@ -4,20 +4,15 @@
   "sourceRoot": "tools/executors/nx-protobuf-compiler/src",
   "projectType": "library",
   "targets": {
-    "compile": {
-      "executor": "@nx/js:tsc",
+    "build": {
       "options": {
-        "main": "tools/executors/nx-protobuf-compiler/src/index.ts",
-        "outputPath": "tools/executors/nx-protobuf-compiler/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "tools/executors/nx-protobuf-compiler/tsconfig.json"
+        "outputPath": "{projectRoot}/dist"
       }
     },
     "lint": {}
   },
   "implicitDependencies": [
+    "log-hook",
     "protobuf-compiler"
   ]
 }

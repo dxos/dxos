@@ -3,6 +3,8 @@
 //
 
 import { Code, type IconProps } from '@phosphor-icons/react';
+// @ts-ignore
+import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React from 'react';
 
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
@@ -13,19 +15,35 @@ import { TextType } from '@dxos/plugin-markdown/types';
 import { SpaceAction } from '@dxos/plugin-space';
 import { loadObjectReferences } from '@dxos/react-client/echo';
 
+import { initializeBundler } from './bundler';
+import { Compiler } from './compiler';
 import { ScriptEditor } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
 import { FunctionType, ScriptType } from './types';
 import { ScriptAction, type ScriptPluginProvides } from './types';
 
-export type ScriptPluginProps = {
-  containerUrl: string;
-};
+export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
+  const compiler = new Compiler();
 
-export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinition<ScriptPluginProvides> => {
   return {
     meta,
+    initialize: async () => {
+      await compiler.initialize();
+      // TODO(wittjosiah): Fetch types for https modules.
+      compiler.setFile('/src/typings.d.ts', "declare module 'https://*';");
+      // TODO(wittjosiah): Proper function handler types.
+      // TODO(wittjosiah): Remove.
+      compiler.setFile(
+        '/src/runtime.ts',
+        `
+        export const Filter: any = {};
+        export type FunctionHandler = ({ event, context }: { event: any; context: any }) => Promise<Response>;
+        export const functionHandler = (handler: FunctionHandler) => handler;
+      `,
+      );
+      await initializeBundler({ wasmUrl });
+    },
     provides: {
       metadata: {
         records: {
@@ -104,7 +122,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
           }
 
           if (data.object instanceof ScriptType) {
-            return <ScriptEditor script={data.object} role={role} />;
+            return <ScriptEditor env={compiler.environment} script={data.object} role={role} />;
           }
 
           return null;
@@ -125,10 +143,11 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
 
 // TODO(burdon): Import.
 const example = [
-  'export default {',
-  '  async fetch(request, env, ctx) {',
-  "    return new Response('Hello World, from ScriptPlugin!');",
-  '  }',
-  '}',
+  'export default async ({ ',
+  '  event: { data: { request } },',
+  '  context: { space, ai } ',
+  '}) => {',
+  "  return new Response('Hello World, from ScriptPlugin!');",
+  '};',
   '',
 ].join('\n');

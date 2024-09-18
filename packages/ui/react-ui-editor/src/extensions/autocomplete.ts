@@ -9,6 +9,7 @@
 import {
   autocompletion,
   completionKeymap,
+  type CompletionSource,
   type Completion,
   type CompletionContext,
   type CompletionResult,
@@ -20,13 +21,14 @@ export type AutocompleteResult = Completion;
 
 export type AutocompleteOptions = {
   activateOnTyping?: boolean;
+  override?: CompletionSource[];
   onSearch?: (text: string) => Completion[];
 };
 
 /**
  * Autocomplete extension.
  */
-export const autocomplete = ({ activateOnTyping, onSearch }: AutocompleteOptions = {}) => {
+export const autocomplete = ({ activateOnTyping, override, onSearch }: AutocompleteOptions = {}) => {
   const extentions = [
     // https://codemirror.net/docs/ref/#view.keymap
     // https://discuss.codemirror.net/t/how-can-i-replace-the-default-autocompletion-keymap-v6/3322
@@ -37,6 +39,7 @@ export const autocomplete = ({ activateOnTyping, onSearch }: AutocompleteOptions
     // https://codemirror.net/docs/ref/#autocomplete.autocompletion
     autocompletion({
       activateOnTyping,
+      override,
 
       // closeOnBlur: false,
       // defaultKeymap: false,

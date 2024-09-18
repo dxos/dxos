@@ -4,7 +4,7 @@
   "tags": [
     "scope:mesh"
   ],
-  "sourceRoot": "packages/core/mesh/websocket-rpc/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},

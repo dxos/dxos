@@ -190,7 +190,7 @@ export const SpacePlugin = ({
 
             // Group parts by space for efficient messaging.
             const idsBySpace = reduceGroupBy(ids, (id) => {
-              const [spaceId] = id.split(':');
+              const [spaceId] = id.split(':'); // TODO(burdon): Factor out.
               return spaceId;
             });
 
@@ -303,8 +303,7 @@ export const SpacePlugin = ({
         const defaultSpace = client.spaces.default;
 
         // Create root collection structure.
-        const personalSpaceCollection = create(CollectionType, { objects: [], views: {} });
-        defaultSpace.properties[CollectionType.typename] = personalSpaceCollection;
+        defaultSpace.properties[CollectionType.typename] = create(CollectionType, { objects: [], views: {} });
         if (Migrations.versionProperty) {
           defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
@@ -315,7 +314,6 @@ export const SpacePlugin = ({
       client.spaces.isReady.subscribe(async (ready) => {
         if (ready) {
           await clientPlugin?.provides.client.spaces.default.waitUntilReady();
-
           if (firstRun) {
             void firstRun?.wait().then(handleFirstRun);
           } else {
@@ -729,8 +727,8 @@ export const SpacePlugin = ({
               inputType: SPACE_TYPE,
               outputType: DIRECTORY_TYPE,
               serialize: (node) => ({
-                name: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
-                data: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
+                name: node.data.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
+                data: node.data.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
                 type: DIRECTORY_TYPE,
               }),
               deserialize: async (data) => {
@@ -746,8 +744,8 @@ export const SpacePlugin = ({
               inputType: CollectionType.typename,
               outputType: DIRECTORY_TYPE,
               serialize: (node) => ({
-                name: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
-                data: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
+                name: node.data.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
+                data: node.data.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
                 type: DIRECTORY_TYPE,
               }),
               deserialize: async (data, ancestors) => {

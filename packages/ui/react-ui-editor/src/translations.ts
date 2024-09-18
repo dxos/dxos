@@ -30,6 +30,7 @@ export default [
         'view mode label': 'Editor view',
         'preview mode label': 'Live preview',
         'readonly mode label': 'Read only',
+        'search label': 'Search',
         'source mode label': 'Source',
       },
     },

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { IconBase, type IconWeight, GithubLogo, type IconProps } from '@phosphor-icons/react';
 import React, { forwardRef, type SVGProps, type ReactElement } from 'react';

@@ -16,7 +16,7 @@ export const messageRoot: ComponentFunction<MessageStyleProps> = ({ valence, ele
   mx('p-3 rounded-md max-is-full overflow-auto', contentElevation({ elevation }), messageValence(valence), ...etc);
 
 export const messageTitle: ComponentFunction<MessageStyleProps> = (_props, ...etc) =>
-  mx('text-base font-medium mb-2', ...etc);
+  mx('text-baseText font-medium mb-2', ...etc);
 
 export const messageBody: ComponentFunction<MessageStyleProps> = (_props, ...etc) => mx(...etc);
 

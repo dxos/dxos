@@ -365,16 +365,16 @@ describe('CoreDatabase', () => {
     });
   });
 
-  describe('Core query API', () => {
+  describe('CRUD API', () => {
     test('can query and mutate data', async () => {
       await using testBuilder = await new EchoTestBuilder().open();
-      const { db } = await testBuilder.createDatabase();
+      const { crud } = await testBuilder.createDatabase();
 
-      const { id } = await db.coreDatabase.insert({ kind: 'task', title: 'A' });
-      await db.flush({ indexes: true });
+      const { id } = await crud.insert({ kind: 'task', title: 'A' });
+      await crud.flush({ indexes: true });
 
       {
-        const { objects } = await db.coreDatabase.query(Filter.all()).run();
+        const { objects } = await crud.query(Filter.all()).run();
         expect(objects).to.deep.eq([
           {
             id,
@@ -388,13 +388,17 @@ describe('CoreDatabase', () => {
         ]);
       }
 
-      await db.coreDatabase.update({
-        id,
-        title: 'B',
-      });
+      await crud.update(
+        {
+          id,
+        },
+        {
+          title: 'B',
+        },
+      );
 
       {
-        const { objects } = await db.coreDatabase.query(Filter.all()).run();
+        const { objects } = await crud.query(Filter.all()).run();
         expect(objects).to.deep.eq([
           {
             id,
@@ -408,18 +412,102 @@ describe('CoreDatabase', () => {
         ]);
       }
     });
-  });
 
-  test('insert typed objects', async () => {
-    await using testBuilder = await new EchoTestBuilder().open();
-    const { db } = await testBuilder.createDatabase();
+    test('query with JSON filter', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { crud } = await testBuilder.createDatabase();
 
-    const { id } = await db.coreDatabase.insert({ __typename: Task.typename, title: 'A' });
-    await db.flush({ indexes: true });
+      await crud.insert([
+        { __typename: Task.typename, title: 'Task 1', completed: true },
+        {
+          __typename: Task.typename,
+          title: 'Task 2',
+          completed: false,
+        },
+        { __typename: Task.typename, title: 'Task 3', completed: true },
+      ]);
+      await crud.flush({ indexes: true });
 
-    const { objects } = await db.query(Filter.schema(Task)).run();
-    expect(objects.length).to.eq(1);
-    expect(objects[0].id).to.eq(id);
+      {
+        const { objects } = await crud.query({ __typename: Task.typename }).run();
+        expect(objects.length).to.eq(3);
+      }
+
+      {
+        const { objects } = await crud.query({ __typename: Task.typename, completed: true }).run();
+        expect(objects.length).to.eq(2);
+      }
+    });
+
+    test('query by id', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { crud } = await testBuilder.createDatabase();
+
+      const [{ id: id1 }] = await crud.insert([
+        { __typename: Task.typename, title: 'Task 1', completed: true },
+        {
+          __typename: Task.typename,
+          title: 'Task 2',
+          completed: false,
+        },
+      ]);
+      await crud.flush({ indexes: true });
+
+      {
+        const { objects } = await crud.query({ id: id1 }).run();
+        expect(objects.length).to.eq(1);
+        expect(objects[0].id).to.eq(id1);
+      }
+
+      {
+        const object = await crud.query({ id: id1 }).first();
+        expect(object.id).to.eq(id1);
+      }
+    });
+
+    test('insert typed objects & interop with proxies', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { db, crud } = await testBuilder.createDatabase();
+
+      const { id } = await crud.insert({ __typename: Task.typename, title: 'A' });
+      await crud.flush({ indexes: true });
+
+      const { objects } = await db.query(Filter.schema(Task)).run();
+      expect(objects.length).to.eq(1);
+      expect(objects[0].id).to.eq(id);
+    });
+
+    test('references in plain object notation', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { crud } = await testBuilder.createDatabase();
+
+      const { id: id1 } = await crud.insert({ title: 'Inner' });
+      const { id: id2 } = await crud.insert({ title: 'Outer', inner: { '/': id1 } });
+      await crud.flush({ indexes: true });
+
+      {
+        const object = await crud.query({ id: id2 }).first();
+        expect(object).to.deep.eq({
+          id: id2,
+          __typename: null,
+          __meta: {
+            keys: [],
+          },
+          title: 'Outer',
+          inner: { '/': `dxn:echo:@:${id1}` },
+        });
+
+        const inner = await crud.query({ id: object.inner }).first();
+        expect(inner).to.deep.eq({
+          id: id1,
+          __typename: null,
+          __meta: {
+            keys: [],
+          },
+          title: 'Inner',
+        });
+      }
+    });
   });
 });
 
