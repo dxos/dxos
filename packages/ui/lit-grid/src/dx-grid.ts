@@ -7,7 +7,9 @@ import { customElement, state, property, eventOptions } from 'lit/decorators.js'
 import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 
 import {
+  type AxisMeta,
   type CellIndex,
+  type CellValue,
   DxAxisResize,
   type DxAxisResizeProps,
   DxEditRequest,
@@ -87,30 +89,21 @@ const isSameCell = (a: DxGridPositionNullable, b: DxGridPositionNullable) =>
 
 const toCellIndex = (cellCoords: Record<DxGridAxis, number>): CellIndex => `${cellCoords.col},${cellCoords.row}`;
 
-const _cellOffset = () => {};
-
-export type CellValue = {
-  /**
-   * The content value
-   */
-  value: string;
-  /**
-   * If this is a merged cell, the bottomright-most of the range in numeric notation, otherwise undefined.
-   */
-  end?: string;
-  /**
-   * CSS inline styles to apply to the gridcell element
-   */
-  style?: string;
+const cellTotalOffset = (cellElement: HTMLElement | null): { inline: number; block: number } => {
+  if (!cellElement) {
+    return { inline: NaN, block: NaN };
+  }
+  const contentElement = cellElement.offsetParent as HTMLElement;
+  // Note that storing `offset` in state causes performance issues, so instead the transform is parsed here.
+  const [_translate3d, inlineStr, blockStr] = contentElement.style.transform.split(/[()]|px,?\s?/);
+  const contentOffsetInline = parseFloat(inlineStr);
+  const contentOffsetBlock = parseFloat(blockStr);
+  const offsetParent = (contentElement.offsetParent as HTMLElement).offsetParent as HTMLElement;
+  return {
+    inline: cellElement.offsetLeft + contentOffsetInline + offsetParent.offsetLeft,
+    block: cellElement.offsetTop + contentOffsetBlock + offsetParent.offsetTop,
+  };
 };
-
-type AxisMeta = {
-  size: number;
-  description?: string;
-  resizeable?: boolean;
-};
-
-export type DxGridProps = Partial<Pick<DxGrid, 'cells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault'>>;
 
 const localChId = (c0: number) => `ch--${c0}`;
 const localRhId = (r0: number) => `rh--${r0}`;
@@ -234,7 +227,12 @@ export class DxGrid extends LitElement {
       } else if (action === 'cell') {
         const cellCoords = closestCell(event.target, actionEl);
         if (this.focusActive && isSameCell(this.focusedCell, cellCoords)) {
-          this.dispatchEvent(new DxEditRequest({ cellIndex: toCellIndex(cellCoords!) }));
+          this.dispatchEvent(
+            new DxEditRequest({
+              cellIndex: toCellIndex(cellCoords!),
+              totalOffset: cellTotalOffset(this.getFocusedCellElement()),
+            }),
+          );
         }
       }
     }
@@ -428,6 +426,12 @@ export class DxGrid extends LitElement {
     }
   }
 
+  getFocusedCellElement() {
+    return this.viewportRef.value?.querySelector(
+      `[aria-colindex="${this.focusedCell.col}"][aria-rowindex="${this.focusedCell.row}"]`,
+    ) as HTMLElement | null;
+  }
+
   /**
    * Moves focus to the cell with actual focus, otherwise moves focus to the viewport.
    */
@@ -437,9 +441,7 @@ export class DxGrid extends LitElement {
     this.focusedCell.col < this.visColMin ||
     this.focusedCell.col > this.visColMax
       ? this.viewportRef.value
-      : (this.viewportRef.value?.querySelector(
-          `[aria-colindex="${this.focusedCell.col}"][aria-rowindex="${this.focusedCell.row}"]`,
-        ) as HTMLElement | null)
+      : this.getFocusedCellElement()
     )?.focus({ preventScroll: true });
   }
 
@@ -514,7 +516,12 @@ export class DxGrid extends LitElement {
       // Emit interactions
       switch (event.key) {
         case 'Enter':
-          this.dispatchEvent(new DxEditRequest({ cellIndex: toCellIndex(this.focusedCell) }));
+          this.dispatchEvent(
+            new DxEditRequest({
+              cellIndex: toCellIndex(this.focusedCell),
+              totalOffset: cellTotalOffset(this.getFocusedCellElement()),
+            }),
+          );
           break;
       }
       // Handle virtualization & focus consequences

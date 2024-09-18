@@ -7,7 +7,7 @@ import './dx-grid.pcss';
 
 import { html, nothing } from 'lit';
 
-import { type DxGridProps } from './dx-grid';
+import { type DxGridProps } from './types';
 
 export default {
   title: 'dx-grid',
