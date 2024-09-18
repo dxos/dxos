@@ -34,7 +34,6 @@ export const config = (
     '@storybook/addon-themes',
     'storybook-dark-mode',
   ],
-  staticDirs: [resolve(__dirname, '../static')],
   // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
   typescript: {
     reactDocgen: false,
@@ -65,6 +64,7 @@ export const config = (
       {
         // When `jsxRuntime` is set to 'classic', top-level awaits are rejected unless build.target is 'esnext'
         ...(configType === 'PRODUCTION' && { build: { target: 'esnext' } }),
+        publicDir: resolve(__dirname, '../static'),
         build: {
           assetsInlineLimit: 0,
           rollupOptions: {
@@ -98,7 +98,7 @@ export const config = (
             symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
             assetPath: (name, variant) =>
               `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
-            spritePath: resolve(__dirname, '../static/icons.svg'),
+            spriteFile: 'icons.svg',
             contentPaths: [resolve(__dirname, '../../../packages/**/src/**/*.{ts,tsx}')],
           }),
           ThemePlugin({
