@@ -38,5 +38,8 @@ export const Basic = {
     onAxisResize: (event) => {
       console.log('[axis resize]', event);
     },
+    onEdit: (event) => {
+      console.log('[edit]', event);
+    },
   } satisfies GridProps,
 };
