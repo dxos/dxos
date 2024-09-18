@@ -3,6 +3,7 @@
 //
 
 import { SHEET_PLUGIN } from './meta';
+
 export default [
   {
     'en-US': {
@@ -16,10 +17,10 @@ export default [
         'toolbar left center': 'Align center',
         'toolbar left right': 'Align right',
         'selection overlaps existing comment label': 'Selection overlaps existing comment',
-        'select cells to comment label': 'Select cells to comment',
-        'comment label': 'Comment',
+        'comment label': 'Add comment',
         'comment ranges not supported label': 'Commenting on ranges is not supported (yet)',
+        'no cursor label': 'Select a cell to comment',
       },
     },
   },
-];
+] as const;

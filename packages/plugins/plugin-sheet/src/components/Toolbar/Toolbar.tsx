@@ -177,14 +177,18 @@ const Actions = () => {
   const { cursor, range } = useSheetContext();
   const { t } = useTranslation(SHEET_PLUGIN);
 
-  // TODO(Zan): Implement me!
+  // TODO(Zan): Implement overlap detection!
   const overlapsCommentAnchor = false;
-  const cursorOnly = cursor || !range;
-  const tooltipLabelKey = overlapsCommentAnchor
-    ? 'selection overlaps existing comment label'
-    : !cursorOnly
-      ? 'comment ranges not supported label'
-      : 'comment label';
+  const hasCursor = !!cursor;
+  const cursorOnly = hasCursor && !range;
+
+  const tooltipLabelKey = !hasCursor
+    ? 'no cursor label'
+    : overlapsCommentAnchor
+      ? 'selection overlaps existing comment label'
+      : range
+        ? 'comment ranges not supported label'
+        : 'comment label';
 
   return (
     <ToolbarButton

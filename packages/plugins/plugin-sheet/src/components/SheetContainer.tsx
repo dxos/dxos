@@ -47,7 +47,7 @@ const SheetContainer = ({
               {/* <Toolbar.Alignment /> */}
               <Toolbar.Separator />
               {/* TODO(Zan): Don't hard code selection. */}
-              <Toolbar.Actions selection={true} />
+              <Toolbar.Actions />
             </Toolbar.Root>
           </div>
         )}

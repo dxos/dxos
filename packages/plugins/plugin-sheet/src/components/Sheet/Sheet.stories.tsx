@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { type Decorator } from '@storybook/react';
 import React, { useContext, useEffect, useState } from 'react';
 
+import { useIntentDispatcher } from '@dxos/app-framework';
 import { Client } from '@dxos/client';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -28,6 +29,7 @@ import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
 // TODO(burdon): Allow toolbar to access sheet context; provide state for current cursor/range.
 const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) => {
   const { model, cursor, range } = useSheetContext();
+  const dispatch = useIntentDispatcher();
 
   // TODO(burdon): Factor out.
   const handleAction: ToolbarActionHandler = ({ type }) => {
