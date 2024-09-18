@@ -91,8 +91,7 @@
     "@dxos/test-utils": "workspace:*",
     "fast-check": "^3.19.0",
     "hypercore-protocol": "^8.0.7",
-    "source-map-support": "^0.5.12",
-    "wait-for-expect": "^3.0.2"
+    "source-map-support": "^0.5.12"
   },
   "publishConfig": {
     "access": "public"

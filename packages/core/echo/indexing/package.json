@@ -48,8 +48,7 @@
     "@dxos/test-utils": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
     "@types/node": "^18.11.9",
-    "fast-check": "^3.19.0",
-    "wait-for-expect": "^3.0.2"
+    "fast-check": "^3.19.0"
   },
   "publishConfig": {
     "access": "public"

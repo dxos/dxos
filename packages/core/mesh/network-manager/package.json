@@ -76,7 +76,6 @@
     "@swc-node/register": "1.9.1",
     "@types/simple-peer": "9.11.3",
     "@types/ws": "^7.4.0",
-    "earljs": "~0.1.10",
     "fast-check": "^3.19.0",
     "fetch-mock": "^11.0.0",
     "typescript": "^5.5.4"

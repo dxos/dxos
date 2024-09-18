@@ -4,7 +4,7 @@
 
 import { expect, test } from '@playwright/test';
 
-import { setupPage } from '@dxos/test/playwright';
+import { setupPage } from '@dxos/test-utils';
 
 import { StackManager } from '../testing';
 

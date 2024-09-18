@@ -6,7 +6,7 @@ import type { Browser, Locator, Page } from '@playwright/test';
 import os from 'node:os';
 
 import { ShellManager } from '@dxos/shell/testing';
-import { setupPage } from '@dxos/test/playwright';
+import { setupPage } from '@dxos/test-utils';
 
 import { DeckManager } from './plugins';
 

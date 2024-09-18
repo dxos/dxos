@@ -2,14 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Browser, ConsoleMessage } from '@playwright/test';
-import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
+import { expect, type Browser, type ConsoleMessage } from '@playwright/test';
 
 import { Trigger } from '@dxos/async';
 import { type Invitation } from '@dxos/react-client/invitations';
 import { ConnectionState } from '@dxos/react-client/mesh';
-import { setupPage } from '@dxos/test/playwright';
+import { setupPage } from '@dxos/test-utils';
 
 import { ScopedShellManager } from '../testing';
 
@@ -119,9 +117,7 @@ export class InvitationsManager extends ScopedShellManager {
     const createIdentity = this.peer(id).getByTestId('invitations.create-identity');
     // TODO(wittjosiah): Clicking on buttons wrapped in tooltips is flaky in webkit playwright.
     await createIdentity.click();
-    await waitForExpect(async () => {
-      expect(await createIdentity.isDisabled()).to.be.true;
-    });
+    await expect(createIdentity).toBeDisabled();
   }
 
   async createSpace(id: number) {

@@ -4,7 +4,7 @@
 
 import { type PlaywrightTestConfig } from '@playwright/test';
 
-import { defaultPlaywrightConfig } from '@dxos/test/playwright';
+import { defaultPlaywrightConfig } from '@dxos/test-utils';
 
 const config: PlaywrightTestConfig = { ...defaultPlaywrightConfig, timeout: 30_000 };
 

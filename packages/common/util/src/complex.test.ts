@@ -2,8 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
-import { test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 

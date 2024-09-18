@@ -7,7 +7,6 @@
     ],
     "outDir": "dist/types",
     "types": [
-      "@dxos/test",
       "@dxos/typings",
       "node"
     ]

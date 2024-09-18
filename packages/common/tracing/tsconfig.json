@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../../tools/executors/test"
-    },
-    {
       "path": "../../core/protocols"
     },
     {

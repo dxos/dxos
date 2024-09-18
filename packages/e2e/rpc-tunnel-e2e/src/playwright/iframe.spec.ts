@@ -2,11 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { test } from '@playwright/test';
-import type { Page } from '@playwright/test';
-import { expect } from 'chai';
+import { type Page, expect, test } from '@playwright/test';
 
-import { setupPage } from '@dxos/test/playwright';
+import { setupPage } from '@dxos/test-utils';
 
 const config = {
   baseUrl: 'http://localhost:5173',
@@ -26,7 +24,7 @@ test.describe('iframe', () => {
 
   test('loads and connects.', async () => {
     const isVisible = await page.isVisible(':has-text("value")');
-    expect(isVisible).to.be.true;
+    expect(isVisible).toBe(true);
   });
 
   test('parent and child share source of truth.', async () => {
@@ -38,6 +36,6 @@ test.describe('iframe', () => {
       .textContent();
     const [intA, intB] = [a!, b!].map((str) => parseInt(str.slice(1)));
 
-    expect(Math.abs(intA - intB)).to.be.lessThan(50);
+    expect(Math.abs(intA - intB)).toBeLessThan(50);
   });
 });

@@ -2,12 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import crypto from 'crypto';
 import del from 'del';
-import expect from 'expect';
-import { promises as fs, constants } from 'fs';
-import path from 'path';
-import { afterAll, beforeAll, describe, test } from 'vitest';
+import crypto from 'node:crypto';
+import { promises as fs, constants } from 'node:fs';
+import path from 'node:path';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { createStorage } from './storage';
 import { type File, StorageType } from '../common';

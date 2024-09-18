@@ -71,14 +71,12 @@
   "devDependencies": {
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
-    "@dxos/test": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.isequal": "^4.5.0",
-    "fast-check": "^3.19.0",
-    "wait-for-expect": "^3.0.2"
+    "fast-check": "^3.19.0"
   },
   "publishConfig": {
     "access": "public"

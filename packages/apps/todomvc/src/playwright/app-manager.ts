@@ -6,7 +6,7 @@ import type { Browser, ConsoleMessage, Page } from '@playwright/test';
 
 import { sleep, Trigger } from '@dxos/async';
 import { ShellManager } from '@dxos/shell/testing';
-import { setupPage } from '@dxos/test/playwright';
+import { setupPage } from '@dxos/test-utils';
 
 import { type FILTER } from '../constants';
 
@@ -39,16 +39,16 @@ export class AppManager {
     return await this.page.getByTestId('new-todo').isVisible();
   }
 
-  async textIsVisible(text: string) {
-    return await this.page.isVisible(`:has-text("${text}")`);
+  hasText(text: string) {
+    return this.page.locator(`:has-text("${text}")`);
   }
 
-  async todoIsVisible(title: string) {
-    return await this.page.getByTestId('todo').locator(`:text("${title}")`).isVisible();
+  todo(title: string) {
+    return this.page.getByTestId('todo').locator(`:text("${title}")`);
   }
 
-  async todoIsCompleted(title: string) {
-    return await this.page.getByTestId('todo').locator(`:has-text("${title}")`).getByTestId('todo-toggle').isChecked();
+  todoToggle(title: string) {
+    return this.page.getByTestId('todo').locator(`:has-text("${title}")`).getByTestId('todo-toggle');
   }
 
   async todoCount() {

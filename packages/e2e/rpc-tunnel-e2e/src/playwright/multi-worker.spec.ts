@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Page, test } from '@playwright/test';
-import { expect } from 'chai';
+import { type Page, expect, test } from '@playwright/test';
 
-import { setupPage } from '@dxos/test/playwright';
+import { setupPage } from '@dxos/test-utils';
 
 const config = {
   baseUrl: 'http://localhost:5173',
@@ -24,8 +23,7 @@ test.describe('multi-worker', () => {
   });
 
   test('loads and connects.', async () => {
-    const isVisible = await page.isVisible(':has-text("value")');
-    expect(isVisible).to.be.true;
+    await expect(page.locator(':text("value")')).toHaveCount(2);
   });
 
   test('communicates over multiple independent rpc ports.', async () => {
@@ -39,6 +37,6 @@ test.describe('multi-worker', () => {
       .textContent();
     const [intA, intB] = [a!, b!].map((str) => parseInt(str.slice(1)));
 
-    expect(Math.abs(intA - intB)).to.be.greaterThanOrEqual(10000);
+    expect(Math.abs(intA - intB)).toBeGreaterThanOrEqual(10000);
   });
 });

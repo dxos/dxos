@@ -4,7 +4,7 @@
 
 import type { Browser, Page } from '@playwright/test';
 
-import { setupPage } from '@dxos/test/playwright';
+import { setupPage } from '@dxos/test-utils';
 
 export class AppManager {
   page!: Page;

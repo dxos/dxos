@@ -6,9 +6,8 @@ import { CompletionContext, type CompletionSource } from '@codemirror/autocomple
 import { EditorState } from '@codemirror/state';
 // @ts-ignore
 import { testTree } from '@lezer/generator/test';
-import { expect } from 'chai';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
-import { describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import { sheetExtension } from './extension';
 import { defaultFunctions } from '../../model/functions';

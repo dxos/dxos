@@ -35,9 +35,6 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*"
   },
-  "devDependencies": {
-    "@dxos/test": "workspace:*"
-  },
   "publishConfig": {
     "access": "public"
   }

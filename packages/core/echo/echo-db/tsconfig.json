@@ -11,9 +11,6 @@
   ],
   "references": [
     {
-      "path": "../../../../tools/executors/test"
-    },
-    {
       "path": "../../../common/async"
     },
     {

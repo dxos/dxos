@@ -2,45 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
+/* eslint-disable no-console */
+
 import {
   type Browser,
   devices,
-  type LaunchOptions,
   type PlaywrightTestConfig,
   type Project,
   type BrowserContext,
   type Page,
 } from '@playwright/test';
-import { v4 } from 'uuid';
 
-import { getBrowser } from './browser';
+import { Lock } from './lock';
 import { type BrowserType, type MobileType } from './types';
-import { Lock } from './util';
-
-export type { BrowserType } from './types';
 
 export type SetupOptions = {
   url?: string;
   /** @deprecated Use native playwright `waitFor` method on a locator. */
   waitFor?: (page: Page) => Promise<boolean>;
   bridgeLogs?: boolean;
-};
-
-// TODO(wittjosiah): Reconcile with getNewBrowserContext.
-export const getPersistentContext = (browserType: BrowserType) => {
-  const options: LaunchOptions = {
-    headless: process.env.HEADLESS !== 'false',
-    args:
-      // NOTE: Playwright does not support extensions in headless mode.
-      process.env.EXTENSION_PATH && process.env.HEADLESS === 'false'
-        ? [
-            `--disable-extensions-except=${process.env.EXTENSION_PATH}`,
-            `--load-extension=${process.env.EXTENSION_PATH}`,
-          ]
-        : undefined,
-  };
-
-  return getBrowser(browserType).launchPersistentContext(`/tmp/playwright/${v4()}`, options);
 };
 
 export const setupPage = async (browser: Browser | BrowserContext, options: SetupOptions = {}) => {
@@ -55,6 +35,7 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
 
     page.on('pageerror', async (error) => {
       await lock.executeSynchronized(async () => {
+        // eslint-disable-next-line no-console
         console.log(error);
       });
     });

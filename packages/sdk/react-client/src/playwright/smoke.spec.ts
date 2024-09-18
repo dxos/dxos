@@ -2,10 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type Page, test } from '@playwright/test';
-import { expect } from 'chai';
+import { type Page, expect, test } from '@playwright/test';
 
-import { setupPage } from '@dxos/test/playwright';
+import { setupPage } from '@dxos/test-utils';
 
 // TODO(wittjosiah): Factor out.
 // TODO(burdon): No hard-coding of ports; reconcile all DXOS tools ports.
@@ -25,7 +24,6 @@ test.describe('Smoke test', () => {
 
   // NOTE: This test depends on connecting to the default production deployed HALO vault.
   test('Renders remote client info', async () => {
-    const isVisible = await page.isVisible(':has-text("initialized")');
-    expect(isVisible).to.be.true;
+    await expect(page.locator(':text("initialized")')).toBeVisible();
   });
 });

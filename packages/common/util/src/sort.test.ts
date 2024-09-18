@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
-import { describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import { compareMulti, compareScalar, compareObject, compareString } from './sort';
 

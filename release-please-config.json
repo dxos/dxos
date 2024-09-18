@@ -869,11 +869,6 @@
         },
         {
           "type": "json",
-          "path": "tools/executors/test/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/executors/toolbox/package.json",
           "jsonpath": "$.version"
         },

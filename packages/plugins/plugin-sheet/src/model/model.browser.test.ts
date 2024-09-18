@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
-import { describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import { SheetModel } from './model';
 import { addressFromA1Notation, rangeFromA1Notation } from './types';

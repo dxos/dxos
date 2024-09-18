@@ -3,12 +3,11 @@
 //
 
 import { diffWords } from 'diff';
-import expect from 'expect';
 import { toMarkdown } from 'mdast-util-to-markdown';
 import { remark } from 'remark';
 import { u } from 'unist-builder';
 import { visit } from 'unist-util-visit';
-import { test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { remarkHeadings } from './remark-headings.js';
 

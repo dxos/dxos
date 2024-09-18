@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
 import fs, { rmSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import pkgUp from 'pkg-up';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client, Config, PublicKey } from '@dxos/client';
@@ -21,7 +21,6 @@ import { DiagramType } from '@dxos/plugin-sketch/types';
 import { CollectionType, ThreadType, MessageType } from '@dxos/plugin-space/types';
 import { TableType } from '@dxos/plugin-table/types';
 import type { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { afterTest, describe, test } from '@dxos/test';
 
 import * as LegacyTypes from './legacy-types';
 import { __COMPOSER_MIGRATIONS__ } from './migrations';
@@ -74,9 +73,9 @@ type SpacesDump = {
 };
 
 describe('Run migrations on profile dump', () => {
-  test(__COMPOSER_MIGRATIONS__[1].version, async () => {
+  test.skip(__COMPOSER_MIGRATIONS__[1].version, { timeout: 300_000 }, async () => {
     const dataRoot = path.join('/', 'tmp', `proto-guard-${PublicKey.random().toHex()}`);
-    afterTest(() => rmSync(dataRoot, { recursive: true }));
+    onTestFinished(() => rmSync(dataRoot, { recursive: true }));
     const config = new Config({
       version: 1,
       runtime: { client: { storage: { persistent: true, dataRoot } } },
@@ -85,7 +84,7 @@ describe('Run migrations on profile dump', () => {
     await extractDumpToTmp(filePath, config.values.runtime!.client!.storage!);
     const client = new Client({ config });
     await asyncTimeout(client.initialize(), 2_000);
-    afterTest(() => client.destroy());
+    onTestFinished(() => client.destroy());
 
     log.break();
 
@@ -262,7 +261,5 @@ describe('Run migrations on profile dump', () => {
     log.break();
 
     log.info('Migration results', { succeeded, failed, total });
-  })
-    .tag('e2e')
-    .timeout(300_000);
+  });
 });

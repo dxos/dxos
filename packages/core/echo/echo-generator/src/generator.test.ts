@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
-import { onTestFinished, describe, test } from 'vitest';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { next as A } from '@dxos/automerge/automerge';
 import { Client } from '@dxos/client';

@@ -16,7 +16,8 @@
         ]
       }
     },
-    "lint": {}
+    "lint": {},
+    "vitest": {}
   },
   "implictDependencies": [
     "esbuild"

@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
-import { describe, test, onTestFinished } from 'vitest';
+import { describe, expect, test, onTestFinished } from 'vitest';
 
 import { asyncChain } from '@dxos/async';
 import { Context } from '@dxos/context';

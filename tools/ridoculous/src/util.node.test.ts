@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
 import { u } from 'unist-builder';
 import { visit } from 'unist-util-visit';
-import { test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { isDirective, visitAndReplace, visitDirectives } from './util.js';
 

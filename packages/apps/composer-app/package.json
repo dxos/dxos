@@ -98,6 +98,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "@sentry/vite-plugin": "^2.14.0",

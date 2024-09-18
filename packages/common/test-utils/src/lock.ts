@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { trigger } from './trigger';
+import { trigger } from '@dxos/async';
 
-// Copied from @dxos/async.
 export class Lock {
   private _lastPromise = Promise.resolve();
 

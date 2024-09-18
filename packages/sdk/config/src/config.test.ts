@@ -6,9 +6,9 @@ import { expect, test } from 'vitest';
 
 import { Config, mapFromKeyValues, mapToKeyValues } from './config';
 // @ts-ignore
-import defaults from './testing/defaults.json';
+import defaults from './testing/defaults.js';
 // @ts-ignore
-import envmap from './testing/envs-map.json';
+import envmap from './testing/envs-map.js';
 
 test('Empty config', () => {
   const config = new Config();

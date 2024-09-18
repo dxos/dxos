@@ -2,9 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
-
-import { test } from '@dxos/test';
+import { expect, test } from 'vitest';
 
 import { FractionUtil } from './fraction';
 import { Vector } from './vector';

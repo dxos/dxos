@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
-import { afterAll, onTestFinished, beforeAll, describe, test } from 'vitest';
+import { afterAll, onTestFinished, beforeAll, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';

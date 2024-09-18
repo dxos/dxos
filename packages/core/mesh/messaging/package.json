@@ -46,9 +46,7 @@
     "@dxos/signal": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@types/node": "^18.11.9",
-    "earljs": "~0.1.10",
-    "typescript": "^5.5.4",
-    "wait-for-expect": "^3.0.2"
+    "typescript": "^5.5.4"
   },
   "publishConfig": {
     "access": "public"

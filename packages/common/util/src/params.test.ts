@@ -3,8 +3,7 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { expect } from 'chai';
-import { describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import { ParamKeyAnnotation, Params } from './params';
 

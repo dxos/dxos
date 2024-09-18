@@ -8,7 +8,6 @@
     "module": "ESNext",
     "outDir": "dist/types",
     "types": [
-      "@dxos/test",
       "node",
       "sharedworker"
     ]
