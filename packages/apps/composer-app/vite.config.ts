@@ -240,9 +240,9 @@ export default defineConfig({
         ]
       : []),
     // Copy post-build assets to dist.
-    // TODO(burdon): Move into vite icons plugin?
     {
       name: 'copy-icons',
+      enforce: 'post',
       buildEnd() {
         cp(join(__dirname, 'public/icons.svg'), join(__dirname, 'out/composer/icons.svg'), (err) => {
           if (err) {
