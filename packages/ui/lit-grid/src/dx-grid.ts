@@ -6,7 +6,14 @@ import { LitElement, html } from 'lit';
 import { customElement, state, property, eventOptions } from 'lit/decorators.js';
 import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 
-import { DxAxisResize, type DxAxisResizeProps, type DxGridAxis } from './types';
+import {
+  type CellIndex,
+  DxAxisResize,
+  type DxAxisResizeProps,
+  DxEditRequest,
+  type DxGridAxis,
+  type DxGridPositionNullable,
+} from './types';
 
 /**
  * The size in pixels of the gap between cells
@@ -53,6 +60,27 @@ const rowToA1Notation = (row: number): string => {
   return `${row + 1}`;
 };
 
+const closestAction = (target: EventTarget | null) => {
+  return (target as HTMLElement | null)?.closest('[data-dx-grid-action]')?.getAttribute('data-dx-grid-action');
+};
+
+const closestCell = (target: EventTarget | null): Record<DxGridAxis, number> | null => {
+  const action = closestAction(target);
+  if (action === 'cell') {
+    const cellElement = target as HTMLElement;
+    const col = parseInt(cellElement.getAttribute('aria-colindex') ?? 'never');
+    const row = parseInt(cellElement.getAttribute('aria-rowindex') ?? 'never');
+    return { col, row };
+  } else {
+    return null;
+  }
+};
+
+const isSameCell = (a: DxGridPositionNullable, b: DxGridPositionNullable) =>
+  a && b && Number.isFinite(a.col) && Number.isFinite(a.row) && a.col === b.col && a.row === b.row;
+
+const toCellIndex = (cellCoords: Record<DxGridAxis, number>): CellIndex => `${cellCoords.col},${cellCoords.row}`;
+
 export type CellValue = {
   /**
    * The content value
@@ -96,7 +124,7 @@ export class DxGrid extends LitElement {
   columns: Record<string, AxisMeta> = {};
 
   @property({ type: Object })
-  cells: Record<string, CellValue> = {};
+  cells: Record<CellIndex, CellValue> = {};
 
   //
   // `pos`, short for ‘position’, is the position in pixels of the viewport from the origin.
@@ -184,8 +212,7 @@ export class DxGrid extends LitElement {
   resizing: null | (DxAxisResizeProps & { page: number }) = null;
 
   handlePointerDown = (event: PointerEvent) => {
-    const actionEl = (event.target as HTMLElement)?.closest('[data-dx-grid-action]');
-    const action = actionEl?.getAttribute('data-dx-grid-action');
+    const action = closestAction(event.target);
     if (action) {
       if (action.startsWith('resize')) {
         const [resize, index] = action.split(',');
@@ -196,6 +223,11 @@ export class DxGrid extends LitElement {
           page: getPage(axis, event),
           index,
         };
+      } else if (action === 'cell') {
+        const cellCoords = closestCell(event.target);
+        if (this.focusActive && isSameCell(this.focusedCell, cellCoords)) {
+          this.dispatchEvent(new DxEditRequest({ cellIndex: toCellIndex(cellCoords!) }));
+        }
       }
     }
   };
@@ -370,12 +402,9 @@ export class DxGrid extends LitElement {
 
   @eventOptions({ capture: true })
   handleFocus(event: FocusEvent) {
-    const target = event.target as HTMLElement;
-    const action = target.getAttribute('data-dx-grid-action');
-    if (action === 'cell') {
-      const c = parseInt(target.getAttribute('aria-colindex') ?? 'never');
-      const r = parseInt(target.getAttribute('aria-rowindex') ?? 'never');
-      this.focusedCell = { col: c, row: r };
+    const cellCoords = closestCell(event.target);
+    if (cellCoords && !isSameCell(this.focusedCell, cellCoords)) {
+      this.focusedCell = cellCoords;
       this.focusActive = true;
     }
   }
@@ -472,6 +501,12 @@ export class DxGrid extends LitElement {
           break;
         case 'ArrowLeft':
           this.focusedCell = { ...this.focusedCell, col: Math.max(0, this.focusedCell.col - 1) };
+          break;
+      }
+      // Emit interactions
+      switch (event.key) {
+        case 'Enter':
+          this.dispatchEvent(new DxEditRequest({ cellIndex: toCellIndex(this.focusedCell) }));
           break;
       }
       // Handle virtualization & focus consequences
