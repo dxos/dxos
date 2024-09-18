@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { scheduleMicroTask } from '@dxos/async';
+import { Mutex, Trigger } from '@dxos/async';
 import * as A from '@dxos/automerge/automerge';
 import { type Message as AutomergeMessage, cbor } from '@dxos/automerge/automerge-repo';
-import { Resource, type Context } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
+import { randomUUID } from '@dxos/crypto';
 import {
   getSpaceIdFromCollectionId,
   type EchoReplicator,
@@ -18,7 +19,7 @@ import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EdgeService } from '@dxos/protocols';
+import { EdgeService, type PeerId } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import {
   type Message as RouterMessage,
@@ -33,7 +34,9 @@ export type EchoEdgeReplicatorParams = {
 
 export class EchoEdgeReplicator implements EchoReplicator {
   private readonly _edgeConnection: EdgeConnection;
+  private readonly _mutex = new Mutex();
 
+  private _ctx?: Context = undefined;
   private _context: EchoReplicatorContext | null = null;
   private _connectedSpaces = new Set<SpaceId>();
   private _connections = new Map<SpaceId, EdgeReplicatorConnection>();
@@ -48,12 +51,31 @@ export class EchoEdgeReplicator implements EchoReplicator {
     log.info('connect', { peerId: context.peerId });
     this._context = context;
 
+    this._ctx = Context.default();
+    this._edgeConnection.reconnect.on(this._ctx, async () => {
+      using _guard = await this._mutex.acquire();
+
+      const spaces = [...this._connectedSpaces];
+      for (const connection of this._connections.values()) {
+        await connection.close();
+      }
+      this._connections.clear();
+
+      if (this._context !== null) {
+        for (const spaceId of spaces) {
+          await this._openConnection(spaceId);
+        }
+      }
+    });
+
     for (const spaceId of this._connectedSpaces) {
       await this._openConnection(spaceId);
     }
   }
 
   async disconnect(): Promise<void> {
+    using _guard = await this._mutex.acquire();
+
     for (const connection of this._connections.values()) {
       await connection.close();
     }
@@ -61,6 +83,8 @@ export class EchoEdgeReplicator implements EchoReplicator {
   }
 
   async connectToSpace(spaceId: SpaceId) {
+    using _guard = await this._mutex.acquire();
+
     this._connectedSpaces.add(spaceId);
 
     // Check if AM-repo requested that we connect to remote peers.
@@ -70,6 +94,8 @@ export class EchoEdgeReplicator implements EchoReplicator {
   }
 
   async disconnectFromSpace(spaceId: SpaceId) {
+    using _guard = await this._mutex.acquire();
+
     this._connectedSpaces.delete(spaceId);
 
     const connection = this._connections.get(spaceId);
@@ -114,12 +140,14 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   private readonly _edgeConnection: EdgeConnection;
   private _remotePeerId: string | null = null;
   private readonly _ownPeerId: string;
+  private readonly _targetServiceId: string;
   private readonly _spaceId: SpaceId;
   private readonly _context: EchoReplicatorContext;
   private readonly _sharedPolicyEnabled: boolean;
   private readonly _onRemoteConnected: () => Promise<void>;
   private readonly _onRemoteDisconnected: () => Promise<void>;
 
+  private _streamStarted = new Trigger();
   private _readableStreamController!: ReadableStreamDefaultController<AutomergeMessage>;
 
   public readable: ReadableStream<AutomergeMessage>;
@@ -139,7 +167,13 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     this._ownPeerId = ownPeerId;
     this._spaceId = spaceId;
     this._context = context;
-    this._remotePeerId = `${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`;
+
+    // Generate a unique peer id for every connection.
+    // This way automerge-repo will have separate sync states for every connection.
+    // This is important because the previous connection might have had some messages that failed to deliver
+    // abd if we don't clear the sync-state, automerge will not attempt to deliver them again.
+    this._remotePeerId = `${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}-${randomUUID()}`;
+    this._targetServiceId = `${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`;
     this._sharedPolicyEnabled = sharedPolicyEnabled;
     this._onRemoteConnected = onRemoteConnected;
     this._onRemoteDisconnected = onRemoteDisconnected;
@@ -148,6 +182,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
       start: (controller) => {
         this._readableStreamController = controller;
         this._ctx.onDispose(() => controller.close());
+        this._streamStarted.wake();
       },
     });
 
@@ -170,7 +205,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   }
 
   protected override async _close(): Promise<void> {
-    // TODO(dmaretskyi): .
+    await this._onRemoteDisconnected();
   }
 
   get peerId(): string {
@@ -199,37 +234,24 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     return spaceId === this._spaceId;
   }
 
-  // When a socket closes, or disconnects, remove it from the array.
-  // TODO(dmaretskyi): Reconnects.
-  private _onClose = () => {
-    log.info('close');
-
-    // TODO(dmaretskyi): Retries.
-    scheduleMicroTask(this._ctx, async () => {
-      await this._onRemoteDisconnected();
-    });
-  };
-
   private _onMessage(message: RouterMessage) {
-    if (!message.serviceId) {
-      return;
-    }
-    const [service, ...rest] = message.serviceId.split(':');
-    if (service !== 'automerge-replicator') {
-      return;
-    }
-
-    const [spaceId] = rest;
-    if (spaceId !== this._spaceId) {
-      log('spaceID mismatch', { spaceId, _spaceId: this._spaceId });
+    if (message.serviceId !== this._targetServiceId) {
+      log.info('service id missmatch', { actual: message.serviceId, expected: this._targetServiceId });
       return;
     }
 
     const payload = cbor.decode(message.payload!.value) as AutomergeMessage;
     log.info('recv', () => {
-      const decodedData = payload.type === 'sync' && payload.data ? A.decodeSyncMessage(payload.data) : undefined;
-      return { from: message.source, type: payload.type, decodedData };
+      const decodedData =
+        payload.type === 'sync' && payload.data
+          ? A.decodeSyncMessage(payload.data)
+          : payload.type === 'collection-state'
+            ? (payload as any).state
+            : payload;
+      return { from: message.serviceId, type: payload.type, decodedData };
     });
+    // Fix the peer id.
+    payload.senderId = this._remotePeerId! as PeerId;
     this._processMessage(payload);
   }
 
@@ -238,6 +260,9 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   }
 
   private async _sendMessage(message: AutomergeMessage) {
+    // Fix the peer id.
+    message.targetId = this._targetServiceId as PeerId;
+
     log.info('send', {
       type: message.type,
       senderId: message.senderId,
@@ -248,7 +273,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 
     await this._edgeConnection.send(
       buf.create(RouterMessageSchema, {
-        serviceId: `automerge-replicator:${this._spaceId}`,
+        serviceId: this._targetServiceId,
         source: {
           identityKey: this._edgeConnection.identityKey,
           peerKey: this._edgeConnection.peerKey,

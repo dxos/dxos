@@ -7,82 +7,35 @@
 import * as d3 from 'd3';
 import versor from 'versor';
 
+export const restrictAxis =
+  (axis: boolean[]) =>
+  (original: number[], current: number[]): number[] =>
+    current.map((d, i) => (axis[i] ? d : original[i]));
+
 /**
- * In simpler terms, a versor is a compact way to describe a rotation in 3D space.
- * It consists of four components [𝑤,x,y,z], where:
- * 𝑤 is the scalar part, representing the angle of rotation.
- * x, y, z are the vector components, representing the axis of rotation.
+ * Applies a drag handler to the specified target element.
  */
-// TODO(burdon): Constrain axis.
-// const restrictAxis = (q: [number, number, number, number]) => {
-//   const [w, x, _y, _z] = q;
-//   return [w, x, 0, 0];
-// };
-
-export const geoInertiaDragHelper = (opt) => {
-  const projection = opt.projection;
-  let v0; // Mouse position in Cartesian coordinates at start of drag gesture.
-  let r0; // Projection rotation as Euler angles at start.
-  let q0; // Projection rotation as versor at start.
-  let v10; // Mouse position in Cartesian coordinates just before end of drag gesture.
-  let v11; // Mouse position in Cartesian coordinates at end.
-  let q10; // Projection rotation as versor at end.
-  const inertia = inertiaHelper({
-    start: () => {
-      v0 = versor.cartesian(projection.invert(inertia.position));
-      r0 = projection.rotate();
-      q0 = versor(r0);
-      opt.start && opt.start();
-    },
-    move: () => {
-      const inv = projection.rotate(r0).invert(inertia.position);
-      if (isNaN(inv[0])) {
-        return;
-      }
-      const v1 = versor.cartesian(inv);
-      const q1 = versor.multiply(q0, versor.delta(v0, v1));
-      const r1 = versor.rotation(q1);
-      opt.render(r1);
-      opt.move && opt.move();
-    },
-    end: () => {
-      // velocity
-      v10 = versor.cartesian(projection.invert(inertia.position.map((d, i) => d - inertia.velocity[i] / 1000)));
-      q10 = versor(projection.rotate());
-      v11 = versor.cartesian(projection.invert(inertia.position));
-      opt.end && opt.end();
-    },
-    stop: opt.stop,
-    finish: opt.finish,
-    render: (t) => {
-      const rotation = versor.rotation(versor.multiply(q10, versor.delta(v10, v11, t * 1000)));
-      opt.render && opt.render(rotation);
-    },
-    time: opt.time,
-  });
-
-  return inertia;
-};
-
+// TODO(burdon): Define type.
 export const geoInertiaDrag = (target, render, projection, options) => {
   if (!options) {
     options = {};
   }
 
-  // target can be an element, a selector, a function, or a selection
-  // but in case of a selection we make sure to reselect it with d3-selection@2
+  // Target can be an element, a selector, a function, or a selection
+  // but in case of a selection we make sure to reselect it with d3-selection.
   if (target.node) {
     target = target.node();
   }
   target = d3.select(target);
 
-  // complete params: (projection, render, startDrag, dragging, endDrag)
+  // Complete params: (projection, render, startDrag, dragging, endDrag).
   const inertia = geoInertiaDragHelper({
     projection,
     render: (rotation) => {
       projection.rotate(rotation);
       render && render();
     },
+    axis: restrictAxis(options.xAxis ? [true, false, false] : [true, true, true]),
     start: options.start,
     move: options.move,
     end: options.end,
@@ -96,13 +49,76 @@ export const geoInertiaDrag = (target, render, projection, options) => {
   return inertia;
 };
 
-export function inertiaHelper(opt) {
-  const A = opt.time || 5_000; // reference time in ms
+/**
+ * A versor is a compact way to describe a rotation in 3D space.
+ * It consists of four components [𝑤,x,y,z], where:
+ * 𝑤 is a scalar representing the angle of rotation.
+ * x, y, z are the vector components, representing the axis of rotation.
+ */
+const geoInertiaDragHelper = (opt) => {
+  const projection = opt.projection;
+
+  let v0; // Mouse position in Cartesian coordinates at start of drag gesture.
+  let r0; // Projection rotation as Euler angles at start.
+  let q0; // Projection rotation as versor at start.
+  let v10; // Mouse position in Cartesian coordinates just before end of drag gesture.
+  let v11; // Mouse position in Cartesian coordinates at end.
+  let q10; // Projection rotation as versor at end.
+
+  const inertia = inertiaHelper({
+    axis: opt.axis,
+
+    start: () => {
+      v0 = versor.cartesian(projection.invert(inertia.position));
+      r0 = projection.rotate();
+      q0 = versor(r0);
+      opt.start && opt.start();
+    },
+
+    move: () => {
+      const inv = projection.rotate(r0).invert(inertia.position);
+      if (isNaN(inv[0])) {
+        return;
+      }
+      const v1 = versor.cartesian(inv);
+      const q1 = versor.multiply(q0, versor.delta(v0, v1));
+      const r1 = versor.rotation(q1);
+      const r2 = opt.axis(r0, r1);
+      opt.render(r2);
+      opt.move && opt.move();
+    },
+
+    end: () => {
+      // Velocity.
+      v10 = versor.cartesian(projection.invert(inertia.position.map((d, i) => d - inertia.velocity[i] / 1_000)));
+      q10 = versor(projection.rotate());
+      v11 = versor.cartesian(projection.invert(inertia.position));
+      opt.end && opt.end();
+    },
+
+    stop: opt.stop,
+
+    finish: opt.finish,
+
+    render: (t) => {
+      const r1 = versor.rotation(versor.multiply(q10, versor.delta(v10, v11, t * 1_000)));
+      const r2 = opt.axis(r0, r1);
+      opt.render && opt.render(r2);
+    },
+
+    time: opt.time,
+  });
+
+  return inertia;
+};
+
+function inertiaHelper(opt) {
+  const A = opt.time || 5_000; // Reference time in ms.
   const limit = 1.0001;
   const B = -Math.log(1 - 1 / limit);
   const inertia = {
     position: [0, 0],
-    velocity: [0, 0], // in pixels/s
+    velocity: [0, 0], // Velocity in pixels/s.
     timer: d3.timer(() => {}),
     time: 0,
     t: 0,
@@ -119,6 +135,7 @@ export function inertiaHelper(opt) {
 
     move: function (ev) {
       const position = [ev.x, ev.y];
+
       const time = performance.now();
       const deltaTime = time - inertia.time;
       const decay = 1 - Math.exp(-deltaTime / 1_000);
@@ -127,6 +144,10 @@ export function inertiaHelper(opt) {
         const deltaTime = time - inertia.time;
         return (1_000 * (1 - decay) * deltaPos) / deltaTime + d * decay;
       });
+
+      // Clamp velocity axis.
+      inertia.velocity = opt.axis([0, 0], inertia.velocity);
+
       inertia.time = time;
       inertia.position = position;
       opt.move && opt.move.call(this, position);
@@ -146,7 +167,7 @@ export function inertiaHelper(opt) {
 
       if (opt.hold === undefined) {
         opt.hold = 100;
-      } // default flick->drag threshold time (0 disables inertia)
+      } // Default flick->drag threshold time (0 disables inertia).
 
       if (deltaTime >= opt.hold) {
         inertia.timer.stop();

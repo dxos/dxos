@@ -25,9 +25,6 @@
       "types": "./dist/types/src/testing/index.d.ts"
     }
   },
-  "browser": {
-    "./testing.js": "./dist/lib/browser/testing/index.mjs"
-  },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {

@@ -12,7 +12,7 @@ import Inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
-// import tsconfigPaths from 'vite-tsconfig-paths';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
@@ -82,9 +82,9 @@ export default defineConfig({
   },
   plugins: [
     // TODO(wittjosiah): Causing issues with bundle.
-    // tsconfigPaths({
-    //   projects: ['../../../tsconfig.paths.json'],
-    // }),
+    tsconfigPaths({
+      projects: ['../../../tsconfig.paths.json'],
+    }),
     ConfigPlugin(),
     ThemePlugin({
       root: __dirname,
@@ -107,7 +107,6 @@ export default defineConfig({
         `${resolve(__dirname, '../../..')}/{packages,tools}/**/dist/**/*.{mjs,html}`,
         `${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}`,
       ],
-      // verbose: true,
     }),
     // https://github.com/antfu-collective/vite-plugin-inspect#readme
     // localhost:5173/__inspect

@@ -779,6 +779,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-grid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-mosaic/package.json",
           "jsonpath": "$.version"
         },

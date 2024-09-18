@@ -20,6 +20,9 @@
       "path": "../../../common/context"
     },
     {
+      "path": "../../../common/crypto"
+    },
+    {
       "path": "../../../common/debug"
     },
     {

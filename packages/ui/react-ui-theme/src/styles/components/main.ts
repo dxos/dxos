@@ -30,8 +30,12 @@ export const mainSidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
     ...etc,
   );
 
-export const mainPadding =
-  'pis-0 scroll-ps-0 lg:data-[sidebar-inline-start-state=open]:pis-[--nav-sidebar-size] lg:data-[sidebar-inline-start-state=open]:scroll-ps-[--nav-sidebar-size] pie-0 scroll-pe-0 lg:data-[sidebar-inline-end-state=open]:pie-[--complementary-sidebar-size] lg:data-[sidebar-inline-end-state=open]:scroll-pe-[--complementary-sidebar-size]';
+export const mainPadding = mx(
+  'pis-0 scroll-ps-0 lg:data-[sidebar-inline-start-state=open]:pis-[--nav-sidebar-size]',
+  'lg:data-[sidebar-inline-start-state=open]:scroll-ps-[--nav-sidebar-size]',
+  'pie-0 scroll-pe-0 lg:data-[sidebar-inline-end-state=open]:pie-[--complementary-sidebar-size]',
+  'lg:data-[sidebar-inline-end-state=open]:scroll-pe-[--complementary-sidebar-size]',
+);
 
 export const mainContent: ComponentFunction<MainStyleProps> = ({ bounce, handlesFocus }, ...etc) =>
   mx(
@@ -42,8 +46,11 @@ export const mainContent: ComponentFunction<MainStyleProps> = ({ bounce, handles
     ...etc,
   );
 
-export const mainIntrinsicSize =
-  'is-dvw lg:data-[sidebar-inline-start-state=open]:is-[calc(100dvw-var(--nav-sidebar-size))] lg:data-[sidebar-inline-end-state=open]:is-[calc(100dvw-var(--complementary-sidebar-size))] lg:data-[sidebar-inline-start-state=open]:data-[sidebar-inline-end-state=open]:is-[calc(100dvw-var(--nav-sidebar-size)-var(--nav-sidebar-size))]';
+export const mainIntrinsicSize = mx(
+  'is-dvw lg:data-[sidebar-inline-start-state=open]:is-[calc(100dvw-var(--nav-sidebar-size))]',
+  'lg:data-[sidebar-inline-end-state=open]:is-[calc(100dvw-var(--complementary-sidebar-size))]',
+  'lg:data-[sidebar-inline-start-state=open]:data-[sidebar-inline-end-state=open]:is-[calc(100dvw-var(--nav-sidebar-size)-var(--complementary-sidebar-size))]',
+);
 
 export const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(

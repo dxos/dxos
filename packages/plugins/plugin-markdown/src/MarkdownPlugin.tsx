@@ -249,9 +249,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     document={doc}
                     extensionProviders={state.values.extensionProviders}
                     settings={settings.values}
+                    scrollPastEnd
                     viewMode={getViewMode(fullyQualifiedId(doc))}
                     onViewModeChange={setViewMode}
-                    scrollPastEnd
                   />
                 );
               } else if (isEditorModel(data.object)) {
@@ -264,9 +264,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     extensionProviders={state.values.extensionProviders}
                     inputMode={settings.values.editorInputMode}
                     toolbar={settings.values.toolbar}
+                    scrollPastEnd
                     viewMode={getViewMode(data.object.id)}
                     onViewModeChange={setViewMode}
-                    scrollPastEnd
                   />
                 );
               }

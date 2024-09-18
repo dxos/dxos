@@ -1,7 +1,7 @@
 //
-// Required notice: Copyright (c) 2024, Will Shown <ch-ui@willshown.com>
-// Based upon @tailwindcss/vite, fetched on 9 April 2024 from <https://github.com/tailwindlabs/tailwindcss/blob/next/packages/%40tailwindcss-vite/package.json>
+// Copyright 2024 Will Shown <ch-ui@willshown.com>
 // Copyright 2024 DXOS.org
+// Based upon @tailwindcss/vite, fetched on 9 April 2024 from <https://github.com/tailwindlabs/tailwindcss/blob/next/packages/%40tailwindcss-vite/package.json>
 //
 
 import { type BundleParams, makeSprite, scanString } from '@ch-ui/icons';
@@ -50,25 +50,28 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
 
         // Process chunks.
         server.middlewares.use((req, res, next) => {
-          const match = req.url?.match(/^(\/@fs)?(.+)\.(\w+)$/);
-          if (match) {
-            const [, prefix, path, ext] = match;
-            const filename = join((prefix ? '' : roodDir) + `${path}.${ext}`);
-            if (!visitedFiles.has(filename)) {
-              visitedFiles.add(filename);
-              // TODO(burdon): Check if matches contentPaths (incl. mjs).
-              const extensions = ['js', 'ts', 'jsx', 'tsx', 'mjs'];
-              if (extensions.some((e) => e === ext) && path.indexOf('node_modules') === -1) {
-                try {
-                  const src = fs.readFileSync(filename, 'utf-8');
-                  status.updated ||= scan(src);
-                } catch (err) {
-                  // eslint-disable-next-line no-console
-                  console.error(`Missing file: ${filename}`);
+          if (!req.url?.startsWith('/virtual:')) {
+            const match = req.url?.match(/^(\/@fs)?(.+)\.(\w+)$/);
+            if (match) {
+              const [, prefix, path, ext] = match;
+              const filename = join((prefix ? '' : roodDir) + `${path}.${ext}`);
+              if (!visitedFiles.has(filename)) {
+                visitedFiles.add(filename);
+                // TODO(burdon): Check if matches contentPaths (incl. mjs).
+                const extensions = ['js', 'ts', 'jsx', 'tsx', 'mjs'];
+                if (extensions.some((e) => e === ext) && path.indexOf('node_modules') === -1) {
+                  try {
+                    const src = fs.readFileSync(filename, 'utf-8');
+                    status.updated ||= scan(src);
+                  } catch (err) {
+                    // eslint-disable-next-line no-console
+                    console.error(`Missing file: ${req.url}`);
+                  }
                 }
               }
             }
           }
+
           next();
         });
       },

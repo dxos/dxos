@@ -10,7 +10,8 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "types": "./dist/types/src/index.d.ts"
-    }
+    },
+    "./dx-grid.pcss": "./src/dx-grid.pcss"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
