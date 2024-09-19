@@ -191,7 +191,7 @@ const main = async () => {
       // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
       SearchMeta,
 
-      ...(isLabs ? [ChainMeta, FunctionMeta, GithubMeta, GridMeta, InboxMeta, KanbanMeta, OutlinerMeta] : []),
+      ...(isLabs ? [ChainMeta, GithubMeta, GridMeta, InboxMeta, KanbanMeta, OutlinerMeta] : []),
     ],
     plugins: {
       [AttentionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-attention')),
