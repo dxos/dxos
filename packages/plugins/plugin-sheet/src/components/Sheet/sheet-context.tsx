@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useContext, useState, useEffect } from 'react';
+import React, { type PropsWithChildren, createContext, useContext, useState, useEffect, useMemo } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { type FunctionType } from '@dxos/plugin-script';
 import { fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 
+import { createDecorations } from './decorations';
 import { FormattingModel } from './formatting';
 import { type CellAddress, type CellRange, defaultFunctions, SheetModel } from '../../model';
 import { type SheetType } from '../../types';
@@ -36,6 +37,9 @@ export type SheetContextType = {
   // Events.
   // TODO(burdon): Generalize.
   onInfo?: () => void;
+
+  // Decorations.
+  decorations: ReturnType<typeof createDecorations>;
 };
 
 const SheetContext = createContext<SheetContextType | null>(null);
@@ -107,6 +111,7 @@ export const SheetContextProvider = ({
   const [cursor, setCursor] = useState<CellAddress>();
   const [range, setRange] = useState<CellRange>();
   const [editing, setEditing] = useState<boolean>(false);
+  const decorations = useMemo(() => createDecorations(), []);
 
   const [[model, formatting] = [], setModels] = useState<[SheetModel, FormattingModel] | undefined>(undefined);
   useEffect(() => {
@@ -142,6 +147,7 @@ export const SheetContextProvider = ({
         setEditing,
         // TODO(burdon): Change to event.
         onInfo,
+        decorations,
       }}
     >
       {children}

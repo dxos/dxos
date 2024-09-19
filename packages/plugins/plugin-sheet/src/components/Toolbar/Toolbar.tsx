@@ -28,18 +28,25 @@ import { ToolbarButton, ToolbarSeparator, ToolbarToggleButton } from './common';
 import { SHEET_PLUGIN } from '../../meta';
 import { type Formatting } from '../../types';
 import { useSheetContext } from '../Sheet/sheet-context';
+import { Anchor } from '../Sheet/threads';
 
 //
 // Root
 //
 
-export type ToolbarActionType = 'clear' | 'highlight' | 'left' | 'center' | 'right' | 'date' | 'currency' | 'comment';
+export type ToolbarAction =
+  | { type: 'clear' }
+  | { type: 'highlight' }
+  | { type: 'left' }
+  | { type: 'center' }
+  | { type: 'right' }
+  | { type: 'date' }
+  | { type: 'currency' }
+  | { type: 'comment'; anchor: string; cellContent?: string };
 
-export type ToolbarAction = {
-  type: ToolbarActionType;
-};
+export type ToolbarActionType = ToolbarAction['type'];
 
-export type ToolbarActionHandler = ({ type }: ToolbarAction) => void;
+export type ToolbarActionHandler = (action: ToolbarAction) => void;
 
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
@@ -97,7 +104,7 @@ const Format = () => {
           Icon={Icon}
           // disabled={state?.blockType === 'codeblock'}
           // onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
-          onClick={() => onAction?.({ type })}
+          onClick={() => onAction?.({ type: type as Exclude<typeof type, 'comment'> })}
         >
           {t(`toolbar ${type} label`)}
         </ToolbarToggleButton>
@@ -128,7 +135,7 @@ const Alignment = () => {
           Icon={Icon}
           // disabled={state?.blockType === 'codeblock'}
           // onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
-          onClick={() => onAction?.({ type })}
+          onClick={() => onAction?.({ type: type as Exclude<typeof type, 'comment'> })}
         >
           {t(`toolbar ${type} label`)}
         </ToolbarToggleButton>
@@ -158,7 +165,7 @@ const Styles = () => {
           Icon={Icon}
           // disabled={state?.blockType === 'codeblock'}
           // onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
-          onClick={() => onAction?.({ type })}
+          onClick={() => onAction?.({ type: type as Exclude<typeof type, 'comment'> })}
         >
           {t(`toolbar ${type} label`)}
         </ToolbarToggleButton>
@@ -174,13 +181,13 @@ const Styles = () => {
 // TODO(Zan): Instead of taking props, can we access the state from sheet context?
 const Actions = () => {
   const { onAction } = useToolbarContext('Actions');
-  const { cursor, range } = useSheetContext();
+  const { cursor, range, model } = useSheetContext();
   const { t } = useTranslation(SHEET_PLUGIN);
 
   // TODO(Zan): Implement overlap detection!
   const overlapsCommentAnchor = false;
   const hasCursor = !!cursor;
-  const cursorOnly = hasCursor && !range;
+  const cursorOnly = hasCursor && !range && !overlapsCommentAnchor;
 
   const tooltipLabelKey = !hasCursor
     ? 'no cursor label'
@@ -195,7 +202,16 @@ const Actions = () => {
       value='comment'
       Icon={ChatText}
       data-testid='editor.toolbar.comment'
-      onClick={() => onAction?.({ type: 'comment' })}
+      onClick={() => {
+        if (!cursor) {
+          return;
+        }
+        return onAction?.({
+          type: 'comment',
+          anchor: Anchor.ofCellAddress(cursor),
+          cellContent: model.getCellText(cursor),
+        });
+      }}
       disabled={!cursorOnly || overlapsCommentAnchor}
     >
       {t(tooltipLabelKey)}

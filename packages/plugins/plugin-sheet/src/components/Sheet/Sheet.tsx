@@ -60,6 +60,7 @@ import {
 } from './grid';
 import { type GridSize, handleArrowNav, handleNav, useRangeSelect } from './nav';
 import { type SheetContextProps, SheetContextProvider, useSheetContext } from './sheet-context';
+import { useThreads } from './threads';
 import { getRectUnion, getRelativeClientRect, scrollIntoView } from './util';
 import {
   type CellIndex,
@@ -77,7 +78,6 @@ import {
   rangeExtension,
   sheetExtension,
 } from '../CellEditor';
-import { useThreads } from './threads';
 
 // TODO(burdon): Virtualization bug.
 // TODO(burdon): Toolbar styles and formatting.
@@ -1014,8 +1014,11 @@ type SheetCellProps = {
 };
 
 const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
-  const { formatting, editing, setRange } = useSheetContext();
+  const { formatting, editing, setRange, decorations } = useSheetContext();
   const { value, classNames } = formatting.getFormatting(cell);
+
+  const decorationsForCell = decorations.getDecorationsForCell(cell);
+  const thread = decorationsForCell?.some((s) => s.type === 'comment');
 
   return (
     <div
@@ -1028,6 +1031,7 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
         fragments.cell,
         fragments.border,
         active && ['z-20', fragments.cellSelected],
+        thread && 'bg-green-200',
         classNames,
       )}
       onClick={() => {

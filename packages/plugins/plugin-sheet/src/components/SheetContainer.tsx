@@ -4,11 +4,11 @@
 
 import React, { useCallback } from 'react';
 
-import { type LayoutPart } from '@dxos/app-framework';
+import { useIntentDispatcher, type LayoutPart } from '@dxos/app-framework';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Sheet, type SheetRootProps } from './Sheet';
-import { Toolbar } from './Toolbar';
+import { Toolbar, type ToolbarAction } from './Toolbar';
 
 const SheetContainer = ({
   sheet,
@@ -16,16 +16,30 @@ const SheetContainer = ({
   role,
   layoutPart,
 }: SheetRootProps & { role?: string; layoutPart?: LayoutPart }) => {
+  const dispatch = useIntentDispatcher();
+
   // TODO(Zan): Sheet section toolbar should display only when the section is directly attended.
   // TODO(Zan): We have a hook useHasAttention, maybe we should have useDirectlyAttended as well?
   // Ask Will why we did it like this in MarkdownPlugin.
-  // const attentionPlugin = useResolvePlugin(parseAttentionPlugin);
-  // const attended = Array.from(attentionPlugin?.provides.attention?.attended ?? []);
-  // const isDirectlyAttended = attended.length === 1 && attended[0] === id;
+  //   const attentionPlugin = useResolvePlugin(parseAttentionPlugin);
+  //   const attended = Array.from(attentionPlugin?.provides.attention?.attended ?? []);
+  //   const isDirectlyAttended = attended.length === 1 && attended[0] === id;
 
   // TODO(Zan): Centralise the toolbar action handler. Current implementation in stories.
-  const handleAction = useCallback((action: any) => {
-    console.log('Sheet Toolbar Action', action);
+  const handleAction = useCallback((action: ToolbarAction) => {
+    switch (action.type) {
+      case 'comment': {
+        // TODO(Zan): Don't hardcode action id
+        void dispatch({
+          action: 'dxos.org/plugin/thread/action/create',
+          data: {
+            cursor: action.anchor,
+            name: action.cellContent,
+            subject: sheet,
+          },
+        });
+      }
+    }
   }, []);
 
   return (
