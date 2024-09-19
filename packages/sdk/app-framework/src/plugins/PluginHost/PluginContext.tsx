@@ -1,12 +1,13 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import { type Context, type Provider, createContext, useContext, useMemo } from 'react';
 
+import { nonNullable } from '@dxos/util';
+
 import { type Plugin } from './plugin';
 import { findPlugin, resolvePlugin } from '../helpers';
-import { nonNullable } from '@dxos/util';
 
 export type PluginContext = {
   /**

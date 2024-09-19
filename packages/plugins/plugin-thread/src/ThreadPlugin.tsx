@@ -22,7 +22,6 @@ import {
   isLayoutParts,
   parseMetadataResolverPlugin,
   type IntentDispatcher,
-  useResolveProvides,
   useResolvePlugins,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
