@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-grid",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "description": "React component which manages a `dx-grid` Lit web component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
