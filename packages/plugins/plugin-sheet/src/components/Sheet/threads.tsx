@@ -129,14 +129,8 @@ const useSelectThreadOnCursorChange = () => {
       );
 
       if (closestThread) {
-        console.log('Closest thread anchor', closestThreadAnchor, closestThread.id);
-        void dispatch([
-          {
-            // TODO(Zan): Don't hardcode action string
-            action: 'dxos.org/plugin/thread/action/select',
-            data: { current: closestThread.id },
-          },
-        ]);
+        // TODO(Zan): Don't hardcode action string
+        void dispatch([{ action: 'dxos.org/plugin/thread/action/select', data: { current: closestThread.id } }]);
       }
     }
   }, [cursor, threads, dispatch]);
@@ -181,9 +175,7 @@ const useDecorateThreads = () => {
         }
       }
     });
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   });
 };
 
