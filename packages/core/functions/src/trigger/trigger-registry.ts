@@ -86,6 +86,7 @@ export class TriggerRegistry extends Resource {
       // Create trigger.
       const options = this._options?.[trigger.spec.type];
       const createTrigger = triggerFactory[trigger.spec.type];
+      invariant(createTrigger, `Trigger factory not found: ${trigger.spec.type}`);
       await createTrigger(activationCtx, space, trigger.spec, callback, options);
     } catch (err) {
       delete registeredTrigger.activationCtx;
