@@ -14,7 +14,7 @@ const reflectiveRelation = {
 
 const gamuts: Gamut[] = ['srgb', 'p3', 'rec2020'];
 
-const huePalettes = {
+export const huePalettes = {
   red: {
     keyPoint: [0.6, 0.241, 20.87],
     lowerCp: 1,
