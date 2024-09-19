@@ -149,8 +149,8 @@ const example = [
   'export default async ({ ',
   '  event: { data: { request } },',
   '  context: { space, ai } ',
-  '}) => {',
-  "  return new Response('Hello World, from ScriptPlugin!');",
+  '}: any) => {',
+  "  return new Response('Hello DXOS!');",
   '};',
   '',
 ].join('\n');
