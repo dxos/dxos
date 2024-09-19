@@ -114,11 +114,11 @@ import {
 
 // TODO(burdon): Factor out fragments.
 const fragments = {
-  axis: 'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-xs select-none',
-  axisSelected: 'bg-neutral-100 dark:bg-neutral-900 text-black dark:text-white',
-  cell: 'dark:bg-neutral-850',
-  cellSelected: 'bg-neutral-50 dark:bg-neutral-900 text-black dark:text-white border !border-primary-500',
-  border: 'border-neutral-200 dark:border-neutral-700',
+  axis: 'bg-axisSurface text-axisText text-xs select-none',
+  axisSelected: 'bg-attention text-baseText',
+  cell: 'bg-gridCell',
+  cellSelected: 'bg-gridCellSelected text-baseText border !border-accentSurface',
+  border: 'border-gridLine',
 };
 
 //
@@ -345,7 +345,7 @@ const GridCorner = (props: { className?: string } & Pick<DOMAttributes<HTMLDivEl
 
 const MovingOverlay = ({ label }: { label: string }) => {
   return (
-    <div className='flex w-full h-full justify-center items-center text-sm p-1 bg-primary-500/50 cursor-pointer'>
+    <div className='flex w-full h-full justify-center items-center text-sm p-1 bg-gridOverlay cursor-pointer'>
       {label}
     </div>
   );
@@ -532,11 +532,11 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
 
         {/* Drop indicator. */}
         {over?.id === idx && !isDragging && (
-          <div className='z-20 absolute top-0 w-full min-h-[4px] border-b-4 border-primary-500' />
+          <div className='z-20 absolute top-0 w-full min-h-[4px] border-b-4 border-accentSurface' />
         )}
 
         {/* Resize indicator. */}
-        {resizing && <div className='z-20 absolute bottom-0 w-full min-h-[4px] border-b-4 border-primary-500' />}
+        {resizing && <div className='z-20 absolute bottom-0 w-full min-h-[4px] border-b-4 border-accentSurface' />}
       </div>
     </Resizable>
   );
@@ -696,11 +696,11 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
 
         {/* Drop indicator. */}
         {over?.id === idx && !isDragging && (
-          <div className='z-20 absolute left-0 h-full min-w-[4px] border-l-4 border-primary-500' />
+          <div className='z-20 absolute left-0 h-full min-w-[4px] border-l-4 border-accentSurface' />
         )}
 
         {/* Resize indicator. */}
-        {resizing && <div className='z-20 absolute right-0 h-full min-h-[4px] border-l-4 border-primary-500' />}
+        {resizing && <div className='z-20 absolute right-0 h-full min-h-[4px] border-l-4 border-accentSurface' />}
       </div>
     </Resizable>
   );
@@ -991,7 +991,7 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
     <div
       role='none'
       style={bounds}
-      className='z-10 absolute pointer-events-none bg-primary-500/20 border border-primary-500/50'
+      className='z-10 absolute pointer-events-none bg-gridSelectionOverlay border border-gridOverlay'
     />
   );
 };
@@ -1099,7 +1099,7 @@ const SheetStatusBar = () => {
           {(range && rangeToA1Notation(range)) || (cursor && addressToA1Notation(cursor))}
         </div>
         <div className='flex gap-2 items-center'>
-          <FunctionIcon className={mx('text-green-500', isFormula ? 'visible' : 'invisible')} />
+          <FunctionIcon className={mx('text-greenText', isFormula ? 'visible' : 'invisible')} />
           <span className='font-mono'>{value}</span>
         </div>
       </div>
