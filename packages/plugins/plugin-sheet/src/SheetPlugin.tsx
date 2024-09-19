@@ -140,7 +140,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
               sheet={data.object}
               space={space}
               role={role}
-              coordinate={data.coordinate as LayoutCoordinate}
+              layoutPart={(data.coordinate as LayoutCoordinate).part}
               remoteFunctionUrl={remoteFunctionUrl}
             />
           ) : null;
