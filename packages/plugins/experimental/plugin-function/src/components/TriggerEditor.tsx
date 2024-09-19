@@ -2,10 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ChangeEventHandler, type FC, useEffect, useMemo } from 'react';
+import React, { type ChangeEventHandler, type FC, useEffect, useMemo, useState } from 'react';
 
+import { Context } from '@dxos/context';
+import { createSubscriptionTrigger } from '@dxos/functions';
 import {
-  type FunctionTrigger,
+  FunctionTrigger,
   type FunctionTriggerType,
   type SubscriptionTrigger,
   type TimerTrigger,
@@ -13,6 +15,7 @@ import {
   type WebhookTrigger,
   type WebsocketTrigger,
 } from '@dxos/functions/types';
+import { log } from '@dxos/log';
 import { ScriptType } from '@dxos/plugin-script/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select } from '@dxos/react-ui';
@@ -26,6 +29,52 @@ const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook',
 export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: FunctionTrigger }) => {
   const scripts = useQuery(space, Filter.schema(ScriptType));
   const script = useMemo(() => scripts.find((script) => script.id === trigger.function), [trigger.function, scripts]);
+
+  // TODO(burdon): Factor out, creating context for plugin (runs outside of component).
+  const [registry] = useState(new Map<string, Context>());
+  const triggers = useQuery(space, Filter.schema(FunctionTrigger));
+  useEffect(() => {
+    log.info('triggers', { triggers });
+
+    // Mark-and-sweep removing disabled triggers.
+    setTimeout(async () => {
+      const deprecated = new Set(Array.from(registry.keys()));
+      for (const trigger of triggers) {
+        if (trigger.enabled) {
+          if (registry.has(trigger.id)) {
+            deprecated.delete(trigger.id);
+            break;
+          }
+
+          const ctx = new Context();
+          registry.set(trigger.id, ctx);
+          await createSubscriptionTrigger(ctx, space, trigger.spec as SubscriptionTrigger, async () => {
+            try {
+              // TODO(burdon): Trigger function.
+              log.info('exec', { trigger });
+              return 200;
+            } catch (err) {
+              return 400;
+            }
+          });
+        }
+      }
+
+      for (const id of deprecated) {
+        const ctx = registry.get(id);
+        if (ctx) {
+          void ctx.dispose();
+          registry.delete(id);
+        }
+      }
+    });
+
+    return () => {
+      for (const ctx of registry.values()) {
+        void ctx.dispose();
+      }
+    };
+  }, [triggers]);
 
   useEffect(() => {
     void space.db.schema
