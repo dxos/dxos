@@ -89,22 +89,6 @@ const isSameCell = (a: DxGridPositionNullable, b: DxGridPositionNullable) =>
 
 const toCellIndex = (cellCoords: Record<DxGridAxis, number>): CellIndex => `${cellCoords.col},${cellCoords.row}`;
 
-const cellTotalOffset = (cellElement: HTMLElement | null): { inline: number; block: number } => {
-  if (!cellElement) {
-    return { inline: NaN, block: NaN };
-  }
-  const contentElement = cellElement.offsetParent as HTMLElement;
-  // Note that storing `offset` in state causes performance issues, so instead the transform is parsed here.
-  const [_translate3d, inlineStr, blockStr] = contentElement.style.transform.split(/[()]|px,?\s?/);
-  const contentOffsetInline = parseFloat(inlineStr);
-  const contentOffsetBlock = parseFloat(blockStr);
-  const offsetParent = (contentElement.offsetParent as HTMLElement).offsetParent as HTMLElement;
-  return {
-    inline: cellElement.offsetLeft + contentOffsetInline + offsetParent.offsetLeft,
-    block: cellElement.offsetTop + contentOffsetBlock + offsetParent.offsetTop,
-  };
-};
-
 const localChId = (c0: number) => `ch--${c0}`;
 const localRhId = (r0: number) => `rh--${r0}`;
 
@@ -200,7 +184,7 @@ export class DxGrid extends LitElement {
   templateRows = `${this.rowSize(0)}px`;
 
   //
-  // Resize state and handlers
+  // Resize state
   //
 
   @state()
@@ -211,6 +195,10 @@ export class DxGrid extends LitElement {
 
   @state()
   resizing: null | (DxAxisResizeProps & { page: number }) = null;
+
+  //
+  // Primary pointer and keyboard handlers
+  //
 
   handlePointerDown = (event: PointerEvent) => {
     const { action, actionEl } = closestAction(event.target);
@@ -230,7 +218,7 @@ export class DxGrid extends LitElement {
           this.dispatchEvent(
             new DxEditRequest({
               cellIndex: toCellIndex(cellCoords!),
-              totalOffset: cellTotalOffset(this.getFocusedCellElement()),
+              cellBox: this.focusedCellBox(),
             }),
           );
         }
@@ -265,6 +253,47 @@ export class DxGrid extends LitElement {
     }
   };
 
+  handleKeydown(event: KeyboardEvent) {
+    if (this.focusActive) {
+      // Adjust state
+      switch (event.key) {
+        case 'ArrowDown':
+          this.focusedCell = { ...this.focusedCell, row: this.focusedCell.row + 1 };
+          break;
+        case 'ArrowUp':
+          this.focusedCell = { ...this.focusedCell, row: Math.max(0, this.focusedCell.row - 1) };
+          break;
+        case 'ArrowRight':
+          this.focusedCell = { ...this.focusedCell, col: this.focusedCell.col + 1 };
+          break;
+        case 'ArrowLeft':
+          this.focusedCell = { ...this.focusedCell, col: Math.max(0, this.focusedCell.col - 1) };
+          break;
+      }
+      // Emit interactions
+      switch (event.key) {
+        case 'Enter':
+          this.dispatchEvent(
+            new DxEditRequest({
+              cellIndex: toCellIndex(this.focusedCell),
+              cellBox: this.focusedCellBox(),
+            }),
+          );
+          break;
+      }
+      // Handle virtualization & focus consequences
+      switch (event.key) {
+        case 'ArrowDown':
+        case 'ArrowUp':
+        case 'ArrowRight':
+        case 'ArrowLeft':
+          event.preventDefault();
+          this.snapPosToFocusedCell();
+          break;
+      }
+    }
+  }
+
   //
   // Accessors
   //
@@ -279,6 +308,25 @@ export class DxGrid extends LitElement {
 
   private getCell(c: number | string, r: number | string) {
     return this.cells[`${c}${separator}${r}`];
+  }
+
+  private focusedCellBox(): DxEditRequest['cellBox'] {
+    const cellElement = this.getFocusedCellElement();
+    const cellSize = { inlineSize: this.colSize(this.focusedCell.col), blockSize: this.rowSize(this.focusedCell.row) };
+    if (!cellElement) {
+      return { insetInlineStart: NaN, insetBlockStart: NaN, ...cellSize };
+    }
+    const contentElement = cellElement.offsetParent as HTMLElement;
+    // Note that storing `offset` in state causes performance issues, so instead the transform is parsed here.
+    const [_translate3d, inlineStr, blockStr] = contentElement.style.transform.split(/[()]|px,?\s?/);
+    const contentOffsetInline = parseFloat(inlineStr);
+    const contentOffsetBlock = parseFloat(blockStr);
+    const offsetParent = (contentElement.offsetParent as HTMLElement).offsetParent as HTMLElement;
+    return {
+      insetInlineStart: cellElement.offsetLeft + contentOffsetInline + offsetParent.offsetLeft,
+      insetBlockStart: cellElement.offsetTop + contentOffsetBlock + offsetParent.offsetTop,
+      ...cellSize,
+    };
   }
 
   //
@@ -491,48 +539,6 @@ export class DxGrid extends LitElement {
         }, 0);
         this.posBlock = this.binBlockMin + sizeSumRow + gap * 2 - this.sizeBlock;
         this.updateVisBlock();
-      }
-    }
-  }
-
-  // Keyboard interactions
-  handleKeydown(event: KeyboardEvent) {
-    if (this.focusActive) {
-      // Adjust state
-      switch (event.key) {
-        case 'ArrowDown':
-          this.focusedCell = { ...this.focusedCell, row: this.focusedCell.row + 1 };
-          break;
-        case 'ArrowUp':
-          this.focusedCell = { ...this.focusedCell, row: Math.max(0, this.focusedCell.row - 1) };
-          break;
-        case 'ArrowRight':
-          this.focusedCell = { ...this.focusedCell, col: this.focusedCell.col + 1 };
-          break;
-        case 'ArrowLeft':
-          this.focusedCell = { ...this.focusedCell, col: Math.max(0, this.focusedCell.col - 1) };
-          break;
-      }
-      // Emit interactions
-      switch (event.key) {
-        case 'Enter':
-          this.dispatchEvent(
-            new DxEditRequest({
-              cellIndex: toCellIndex(this.focusedCell),
-              totalOffset: cellTotalOffset(this.getFocusedCellElement()),
-            }),
-          );
-          break;
-      }
-      // Handle virtualization & focus consequences
-      switch (event.key) {
-        case 'ArrowDown':
-        case 'ArrowUp':
-        case 'ArrowRight':
-        case 'ArrowLeft':
-          event.preventDefault();
-          this.snapPosToFocusedCell();
-          break;
       }
     }
   }

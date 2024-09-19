@@ -48,14 +48,14 @@ export class DxAxisResize extends Event {
   }
 }
 
-export type DxEditRequestProps = Pick<DxEditRequest, 'cellIndex' | 'totalOffset'>;
+export type DxEditRequestProps = Pick<DxEditRequest, 'cellIndex' | 'cellBox'>;
 
 export class DxEditRequest extends Event {
   public readonly cellIndex: CellIndex;
-  public readonly totalOffset: { inline: number; block: number };
+  public readonly cellBox: { insetInlineStart: number; insetBlockStart: number; inlineSize: number; blockSize: number };
   constructor(props: DxEditRequestProps) {
     super('dx-edit-request');
     this.cellIndex = props.cellIndex;
-    this.totalOffset = props.totalOffset;
+    this.cellBox = props.cellBox;
   }
 }

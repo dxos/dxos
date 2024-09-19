@@ -4,7 +4,7 @@
 import '@dxos/lit-grid/dx-grid.pcss';
 
 import { createComponent, type EventName } from '@lit/react';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { type DxAxisResize, type DxEditRequest, DxGrid as NaturalDxGrid, type DxGridProps } from '@dxos/lit-grid';
 
@@ -24,5 +24,20 @@ export type GridProps = DxGridProps & {
 };
 
 export const Grid = (props: GridProps) => {
-  return <DxGrid {...props} />;
+  const [editBox, setEditBox] = useState<DxEditRequest['cellBox']>({
+    insetInlineStart: 0,
+    insetBlockStart: 0,
+    inlineSize: 0,
+    blockSize: 0,
+  });
+  const handleEdit = useCallback((event: DxEditRequest) => {
+    setEditBox(event.cellBox);
+    props?.onEdit?.(event);
+  }, []);
+  return (
+    <>
+      <div className='absolute bg-accentSurface z-[1]' style={editBox} />
+      <DxGrid {...props} onEdit={handleEdit} />
+    </>
+  );
 };
