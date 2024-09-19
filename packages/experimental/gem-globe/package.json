@@ -13,11 +13,22 @@
         "default": "./dist/lib/node/index.cjs"
       },
       "types": "./dist/types/src/index.d.ts"
+    },
+    "./data": {
+      "browser": "./dist/lib/browser/data.mjs",
+      "node": {
+        "default": "./dist/lib/node/data.cjs"
+      },
+      "types": "./dist/types/src/data.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "data": [
+        "dist/types/src/data.d.ts"
+      ]
+    }
   },
   "files": [
     "data",

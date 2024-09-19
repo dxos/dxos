@@ -5901,6 +5901,9 @@ importers:
       '@dxos/plugin-settings':
         specifier: workspace:*
         version: link:../../plugin-settings
+      '@dxos/plugin-sheet':
+        specifier: workspace:*
+        version: link:../../plugin-sheet
       '@dxos/plugin-sketch':
         specifier: workspace:*
         version: link:../../plugin-sketch
@@ -5910,6 +5913,9 @@ importers:
       '@dxos/plugin-status-bar':
         specifier: workspace:*
         version: link:../../plugin-status-bar
+      '@dxos/plugin-table':
+        specifier: workspace:*
+        version: link:../../plugin-table
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../../plugin-theme

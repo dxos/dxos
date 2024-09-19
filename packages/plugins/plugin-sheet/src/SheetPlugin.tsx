@@ -19,7 +19,13 @@ import { FunctionType } from '@dxos/plugin-script/types';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
-import { createComputeGraph, SheetContainer, type ComputeGraph } from './components';
+import {
+  createComputeGraph,
+  CustomPlugin,
+  CustomPluginTranslations,
+  SheetContainer,
+  type ComputeGraph,
+} from './components';
 // TODO(wittjosiah): Refactor. These are not exported from ./components due to depending on ECHO.
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './components/ComputeGraph/edge-function';
 import { ComputeGraphContextProvider } from './components/ComputeGraph/graph-context';
@@ -61,6 +67,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       metadata: {
         records: {
           [SheetType.typename]: {
+            label: (object: any) => (object instanceof SheetType ? object.title : undefined),
             placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
             icon: (props: IconProps) => <GridNine {...props} />,
             iconSymbol: 'ph--grid-nine--regular',
@@ -158,7 +165,11 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
               const graph =
                 graphs[space.id] ??
                 createComputeGraph(
-                  [{ plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations }],
+                  [
+                    { plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations },
+                    // TODO(wittjosiah): Remove. Needed for current test sheet generated data.
+                    { plugin: CustomPlugin, translations: CustomPluginTranslations },
+                  ],
                   space,
                   { remoteFunctionUrl },
                 );

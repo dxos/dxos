@@ -10,10 +10,12 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "types": "./dist/types/src/index.d.ts"
-    },
-    "./dx-grid.pcss": "./src/dx-grid.pcss"
+    }
   },
-  "main": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "files": [
     "src",
     "dist"
