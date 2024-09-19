@@ -64,6 +64,15 @@ export type MarkdownSettingsProps = {
   folding?: boolean;
 };
 
+// TODO(Zan): Move this to the plugin-space plugin or another common location
+// when we implement comments in sheets.
+type ThreadProvides<T> = {
+  thread: {
+    predicate: (obj: any) => obj is T;
+    createSort: (obj: T) => (anchorA: string, anchorB: string) => number;
+  };
+};
+
 export type MarkdownPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
@@ -72,4 +81,5 @@ export type MarkdownPluginProvides = SurfaceProvides &
   SettingsProvides<MarkdownSettingsProps> &
   TranslationsProvides &
   SchemaProvides &
-  StackProvides;
+  StackProvides &
+  ThreadProvides<DocumentType>;
