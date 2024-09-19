@@ -6,16 +6,15 @@
 
 import { type BundleParams, makeSprite, scanString } from '@ch-ui/icons';
 import fs from 'fs';
-import { dirname, join, resolve } from 'path';
+import { join, resolve } from 'path';
 import picomatch from 'picomatch';
 import type { Plugin, ViteDevServer } from 'vite';
 
-export type IconsPluginParams = Omit<BundleParams, 'spritePath'> & { manifestPath?: string; spriteFile: string; verbose?: boolean };
+export type IconsPluginParams = Omit<BundleParams, 'spritePath'> & { spriteFile: string; verbose?: boolean };
 
 export const IconsPlugin = ({
   assetPath,
   symbolPattern,
-  manifestPath,
   spriteFile,
   contentPaths,
   config,
@@ -45,32 +44,6 @@ export const IconsPlugin = ({
     return updated;
   };
 
-  const readManifest = (filepath: string) => {
-    if (fs.existsSync(filepath)) {
-      const icons = fs.readFileSync(filepath, { encoding: 'utf8' }).toString();
-      detectedSymbols.clear();
-      JSON.parse(icons).forEach((icon: string) => detectedSymbols.add(icon));
-      if (verbose) {
-        // eslint-disable-next-line no-console
-        console.log('Cached icons:', detectedSymbols.size);
-      }
-    }
-  };
-
-  const writeManifest = (filepath: string) => {
-    const baseDir = dirname(filepath);
-    if (!fs.existsSync(baseDir)) {
-      fs.mkdirSync(baseDir, { recursive: true });
-    }
-    if (verbose) {
-      // eslint-disable-next-line no-console
-      console.log('Writing manifest:', JSON.stringify({ path: filepath, size: detectedSymbols.size }));
-    }
-    const symbols = Array.from(detectedSymbols.values());
-    symbols.sort();
-    fs.writeFileSync(filepath, JSON.stringify(symbols, null, 2), { encoding: 'utf8' });
-  };
-
   return [
     {
       // Step 1: Scan source files incrementally.
@@ -80,9 +53,6 @@ export const IconsPlugin = ({
       configResolved: (config) => {
         rootDir = resolve(config.root);
         spritePath = resolve(config.publicDir, spriteFile);
-        if (manifestPath) {
-          readManifest(manifestPath);
-        }
       },
 
       configureServer: (_server) => {
@@ -138,9 +108,6 @@ export const IconsPlugin = ({
         if (status.updated) {
           status.updated = false;
           await makeSprite({ assetPath, symbolPattern, spritePath, contentPaths, config }, detectedSymbols);
-          if (manifestPath) {
-            writeManifest(manifestPath);
-          }
 
           if (verbose) {
             const symbols = Array.from(detectedSymbols.values());

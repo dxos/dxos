@@ -239,20 +239,6 @@ export default defineConfig({
           },
         ]
       : []),
-    // Copy post-build assets to dist.
-    {
-      name: 'copy-icons',
-      enforce: 'post',
-      buildEnd() {
-        cp(join(__dirname, 'public/icons.svg'), join(__dirname, 'out/composer/icons.svg'), (err) => {
-          if (err) {
-            console.error('Error copying public assets:', err);
-          } else {
-            console.log('Copied public assets.');
-          }
-        });
-      }
-    }
   ], // Plugins
 });
 
