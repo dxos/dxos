@@ -8,6 +8,7 @@ import { codeMirrorSememes } from './sememes-codemirror';
 import { peerSememes } from './sememes-peer';
 import { sheetSememes } from './sememes-sheet';
 import { systemSememes } from './sememes-system';
+import { valenceSememes } from './sememes-valence';
 
 export const semanticColors = {
   conditions: {
@@ -18,6 +19,7 @@ export const semanticColors = {
     // Please define each set of sememes in its own file.
     ...sheetSememes,
     ...codeMirrorSememes,
+    ...valenceSememes,
     ...peerSememes,
     ...systemSememes,
   },
