@@ -100,6 +100,7 @@ export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindi
       setState('pending');
 
       let data = null;
+      // Detect JSON input.
       if (input.charAt(0) === '{') {
         try {
           const validJsonString = input.replace(/'/g, '"').replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3');
