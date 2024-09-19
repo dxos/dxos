@@ -9,7 +9,7 @@ import { type CellAddress } from '../../model';
 export type Decoration = {
   type: string;
   /* Wrapping render function to wrap cell content */
-  render: (props: { children: React.ReactNode }) => React.ReactNode;
+  decorate: (props: { children: React.ReactNode }) => React.ReactNode;
   /* Class names to be applied to root of SheetCell */
   classNames?: string[];
   cellAddress: CellAddress;

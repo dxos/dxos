@@ -19,9 +19,12 @@ export const Anchor = {
   },
 };
 
-export const CommentWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const CommentWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <div role='none' className='text-black'>
+    <div role='none' className='relative h-full bg-green-200'>
+      <div role='none' className='absolute top-1 right-1 text-xs p-1 text-white rounded bg-green-500'>
+        WIP
+      </div>
       {children}
     </div>
   );
@@ -31,7 +34,7 @@ const createThreadDecoration = (cellAddress: CellAddress): Decoration => {
   return {
     type: 'comment',
     cellAddress,
-    render: (props) => <CommentWrapper {...props} />,
+    decorate: (props) => <CommentWrapper {...props} />,
   };
 };
 
