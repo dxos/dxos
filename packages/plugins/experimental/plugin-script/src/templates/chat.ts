@@ -8,9 +8,8 @@ export default async ({
   },
   context: { space, ai },
 }: any) => {
-  const { objects: docs } = await space.crud.query({ __typename: 'dxos.org/type/Document' }).run();
-
   let context = '';
+  const { objects: docs } = await space.crud.query({ __typename: 'dxos.org/type/Document' }).run();
   for (const doc of docs) {
     const { content } = await space.crud.query({ id: doc.content }).first();
     context += content + '\n\n';
@@ -30,7 +29,6 @@ export default async ({
     stream: true,
   });
 
-  // TODO(burdon): Create wrapper for stream response.
   // Transform event stream into raw text.
   const { readable, writable } = new TransformStream({
     transform: (chunk, controller) => {
