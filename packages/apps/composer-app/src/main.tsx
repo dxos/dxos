@@ -176,6 +176,7 @@ const main = async () => {
       ChessMeta,
       ExcalidrawMeta,
       ExplorerMeta,
+      FunctionMeta,
       MapMeta,
       MarkdownMeta,
       MermaidMeta,
