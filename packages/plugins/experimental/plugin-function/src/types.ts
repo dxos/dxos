@@ -3,6 +3,7 @@
 //
 
 import type {
+  GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
   SurfaceProvides,
@@ -23,5 +24,6 @@ export type FunctionPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
+  GraphBuilderProvides &
   SchemaProvides &
   StackProvides;

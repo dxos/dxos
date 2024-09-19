@@ -3,10 +3,13 @@
 //
 
 import React, { useEffect, useRef, useState } from 'react';
+// @ts-ignore
 // eslint-disable-next-line no-restricted-imports
 import SyntaxHighlighter from 'react-syntax-highlighter';
+// @ts-ignore
 // eslint-disable-next-line no-restricted-imports
 import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
+// @ts-ignore
 // eslint-disable-next-line no-restricted-imports
 import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
