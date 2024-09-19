@@ -5467,6 +5467,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.0(react@18.2.0)
 
+  packages/experimental/script-toolbox: {}
+
   packages/experimental/spyglass:
     dependencies:
       '@dxos/invariant':
