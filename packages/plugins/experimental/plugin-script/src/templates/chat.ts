@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { transformServerSentEvents } from 'https://esm.sh/@dxos/script-toolbox';
+
 export default async ({
   event: {
     data: { request },
@@ -29,14 +31,5 @@ export default async ({
     stream: true,
   });
 
-  // Transform event stream into raw text.
-  const { readable, writable } = new TransformStream({
-    transform: (chunk, controller) => {
-      controller.enqueue(
-        new TextEncoder().encode(JSON.parse(new TextDecoder().decode(chunk).slice('data: '.length)).response),
-      );
-    },
-  });
-  answer.pipeTo(writable);
-  return new Response(readable);
+  return new Response(transformServerSentEvents(answer));
 };
