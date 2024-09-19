@@ -14,6 +14,7 @@ const SheetContainer = ({
   space,
   role,
   coordinate = { part: 'main', entryId: '' },
+  remoteFunctionUrl,
 }: SheetRootProps & { role?: string; coordinate?: LayoutCoordinate }) => {
   return (
     <div
@@ -25,7 +26,7 @@ const SheetContainer = ({
         coordinate.part !== 'solo' && 'border-is border-separator',
       )}
     >
-      <Sheet.Root sheet={sheet} space={space}>
+      <Sheet.Root sheet={sheet} space={space} remoteFunctionUrl={remoteFunctionUrl}>
         <Sheet.Main />
       </Sheet.Root>
     </div>
