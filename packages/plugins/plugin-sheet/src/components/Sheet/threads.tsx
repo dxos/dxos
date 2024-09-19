@@ -3,7 +3,9 @@
 //
 
 import { effect } from '@preact/signals-core';
+import React from 'react';
 
+import { type Decoration } from './decorations';
 import { useSheetContext } from './sheet-context';
 import { type CellAddress } from '../../model';
 
@@ -15,6 +17,22 @@ export const Anchor = {
     const [row, column] = anchor.split(':');
     return { row: parseInt(row), column: parseInt(column) };
   },
+};
+
+export const CommentWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <div role='none' className='text-black'>
+      {children}
+    </div>
+  );
+};
+
+const createThreadDecoration = (cellAddress: CellAddress): Decoration => {
+  return {
+    type: 'comment',
+    cellAddress,
+    render: (props) => <CommentWrapper {...props} />,
+  };
 };
 
 export const useThreads = () => {
@@ -37,10 +55,7 @@ export const useThreads = () => {
       // Add decoration only if it doesn't already exist
       const existingDecorations = decorations.getDecorationsForCell(cellAddress);
       if (!existingDecorations || !existingDecorations.some((d) => d.type === 'comment')) {
-        decorations.addDecoration(cellAddress, {
-          type: 'comment',
-          data: { threadId: thread.id },
-        });
+        decorations.addDecoration(cellAddress, createThreadDecoration(cellAddress));
       }
     }
 

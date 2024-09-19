@@ -6,11 +6,13 @@ import { create } from '@dxos/echo-schema';
 
 import { type CellAddress } from '../../model';
 
-// NOTE(Zan): We should allow this to be extended in the future.
 export type Decoration = {
+  type: string;
+  /* Wrapping render function to wrap cell content */
+  render: (props: { children: React.ReactNode }) => React.ReactNode;
+  /* Class names to be applied to root of SheetCell */
+  classNames?: string[];
   cellAddress: CellAddress;
-  type: 'comment'; // This can be extended as a union in the future.
-  data?: any;
 };
 
 export const createDecorations = () => {
@@ -18,9 +20,9 @@ export const createDecorations = () => {
   // TODO(Zan): Use CELL ID's to key the decoration map
   const { decorations } = create<{ decorations: Record<string, Decoration[]> }>({ decorations: {} });
 
-  const addDecoration = (cellAddress: CellAddress, decoration: Omit<Decoration, 'cellAddress'>) => {
+  const addDecoration = (cellAddress: CellAddress, decorator: Decoration) => {
     const key = `${cellAddress.column},${cellAddress.row}`;
-    decorations[key] = [...(decorations[key] || []), { ...decoration, cellAddress }];
+    decorations[key] = [...(decorations[key] || []), decorator];
   };
 
   const removeDecoration = (cellAddress: CellAddress, type?: string) => {
@@ -41,9 +43,9 @@ export const createDecorations = () => {
 
   const getAllDecorations = (): Decoration[] => {
     const result: Decoration[] = [];
-    for (const decorationArray of Object.values(decorations)) {
-      for (const decoration of decorationArray) {
-        result.push(decoration);
+    for (const decoratorArray of Object.values(decorations)) {
+      for (const decorator of decoratorArray) {
+        result.push(decorator);
       }
     }
     return result;

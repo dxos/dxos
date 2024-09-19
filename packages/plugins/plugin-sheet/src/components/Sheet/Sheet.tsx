@@ -1017,8 +1017,14 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
   const { formatting, editing, setRange, decorations } = useSheetContext();
   const { value, classNames } = formatting.getFormatting(cell);
 
-  const decorationsForCell = decorations.getDecorationsForCell(cell);
-  const thread = decorationsForCell?.some((s) => s.type === 'comment');
+  const decorationsForCell = decorations.getDecorationsForCell(cell) ?? [];
+  const decoratedContent = decorationsForCell.reduce(
+    (children, { render }) => {
+      const DecoratorComponent = render;
+      return <DecoratorComponent>{children}</DecoratorComponent>;
+    },
+    <>{value}</>,
+  );
 
   return (
     <div
@@ -1031,8 +1037,8 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
         fragments.cell,
         fragments.border,
         active && ['z-20', fragments.cellSelected],
-        thread && 'bg-green-200',
         classNames,
+        ...decorationsForCell.flatMap((d) => d.classNames ?? []),
       )}
       onClick={() => {
         if (editing) {
@@ -1043,7 +1049,7 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       }}
       onDoubleClick={() => onSelect?.(cell, true)}
     >
-      {value}
+      {decoratedContent}
     </div>
   );
 };
