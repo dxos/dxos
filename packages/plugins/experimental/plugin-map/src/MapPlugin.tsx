@@ -21,7 +21,7 @@ import { MapAction, type MapPluginProvides, type MapSettingsProps } from './type
 
 export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
   const settings = new LocalStorageStore<MapSettingsProps>(MAP_PLUGIN, {
-    type: 'globe',
+    type: 'map',
   });
 
   return {

@@ -1,12 +1,12 @@
 # Class `Config`
-<sub>Declared in [sdk/config/src/config.ts:125](https://github.com/dxos/dxos/blob/52455dba3/packages/sdk/config/src/config.ts#L125)</sub>
+<sub>Declared in [sdk/config/src/config.ts:126](https://github.com/dxos/dxos/blob/88f322397/packages/sdk/config/src/config.ts#L126)</sub>
 
 
 Global configuration object.
 NOTE: Config objects are immutable.
 
 ## Constructors
-### [constructor(config, objects)](https://github.com/dxos/dxos/blob/52455dba3/packages/sdk/config/src/config.ts#L132)
+### [constructor(config, objects)](https://github.com/dxos/dxos/blob/88f322397/packages/sdk/config/src/config.ts#L133)
 
 
 Creates an immutable instance.
@@ -22,14 +22,14 @@ Arguments:
 
 
 ## Properties
-### [values](https://github.com/dxos/dxos/blob/52455dba3/packages/sdk/config/src/config.ts#L139)
+### [values](https://github.com/dxos/dxos/blob/88f322397/packages/sdk/config/src/config.ts#L140)
 Type: <code>[Config](/api/@dxos/config/interfaces/Config)</code>
 
 Returns an immutable config JSON object.
 
 
 ## Methods
-### [find(path, test)](https://github.com/dxos/dxos/blob/52455dba3/packages/sdk/config/src/config.ts#L160)
+### [find(path, test)](https://github.com/dxos/dxos/blob/88f322397/packages/sdk/config/src/config.ts#L161)
 
 
 Get unique key.
@@ -43,7 +43,7 @@ Arguments:
 `test`: <code>object</code>
 
 
-### [get(key, \[defaultValue\])](https://github.com/dxos/dxos/blob/52455dba3/packages/sdk/config/src/config.ts#L150)
+### [get(key, \[defaultValue\])](https://github.com/dxos/dxos/blob/88f322397/packages/sdk/config/src/config.ts#L151)
 
 
 Returns the given config property.
@@ -57,7 +57,7 @@ Arguments:
 `defaultValue`: <code>[DeepIndex](/api/@dxos/config/types/DeepIndex)&lt;[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)&lt;K&gt;&gt;</code>
 
 
-### [getOrThrow(key)](https://github.com/dxos/dxos/blob/52455dba3/packages/sdk/config/src/config.ts#L174)
+### [getOrThrow(key)](https://github.com/dxos/dxos/blob/88f322397/packages/sdk/config/src/config.ts#L175)
 
 
 Returns the given config property or throw if it doesn't exist.
