@@ -22,7 +22,8 @@ import {
   isLayoutParts,
   parseMetadataResolverPlugin,
   type IntentDispatcher,
-  usePlugins,
+  useResolveProvides,
+  useResolvePlugins,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
@@ -312,12 +313,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             case 'article':
             case 'complementary': {
               const location = navigationPlugin?.provides.location;
-              const { plugins } = usePlugins();
 
-              // TODO(Zan): This feels a bit clunky.
-              const threadProvides: ThreadProvides<any>['thread'][] = plugins
-                .filter((p): p is Plugin<ThreadProvides<any>> => 'thread' in p.provides)
-                .map((p) => p.provides.thread);
+              // TODO(Zan): More robust runtime check.
+              const providesThreadsConfig = (plugin: any): Plugin<ThreadProvides<any>> | undefined =>
+                'thread' in plugin.provides ? (plugin as Plugin<ThreadProvides<any>>) : undefined;
+
+              const threadsIntegrators = useResolvePlugins(providesThreadsConfig);
+              const threadProvides = threadsIntegrators.map((p) => p.provides.thread);
 
               if (data.object instanceof ChannelType && data.object.threads[0]) {
                 const channel = data.object;

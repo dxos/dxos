@@ -6,6 +6,7 @@ import { type Context, type Provider, createContext, useContext } from 'react';
 
 import { type Plugin } from './plugin';
 import { findPlugin, resolvePlugin } from '../helpers';
+import { nonNullable } from '@dxos/util';
 
 export type PluginContext = {
   /**
@@ -69,6 +70,14 @@ export const usePlugin = <T,>(id: string): Plugin<T> | undefined => {
 export const useResolvePlugin = <T,>(predicate: (plugin: Plugin) => Plugin<T> | undefined): Plugin<T> | undefined => {
   const { plugins } = usePlugins();
   return resolvePlugin(plugins, predicate);
+};
+
+/**
+ * Resolve a collection of plugins by predicate.
+ */
+export const useResolvePlugins = <T,>(predicate: (plugin: Plugin) => Plugin<T> | undefined): Plugin<T>[] => {
+  const { plugins } = usePlugins();
+  return plugins.map(predicate).filter(nonNullable);
 };
 
 export const PluginProvider: Provider<PluginContext> = PluginContext.Provider;
