@@ -10,14 +10,23 @@ import { dirname, join, resolve } from 'path';
 import picomatch from 'picomatch';
 import type { Plugin, ViteDevServer } from 'vite';
 
-export const IconsPlugin = (params: BundleParams & { manifestPath?: string; verbose?: boolean }): Plugin[] => {
-  const { manifestPath, spritePath, symbolPattern, contentPaths, verbose } = params;
+export type IconsPluginParams = Omit<BundleParams, 'spritePath'> & { manifestPath?: string; spriteFile: string; verbose?: boolean };
 
+export const IconsPlugin = ({
+  assetPath,
+  symbolPattern,
+  manifestPath,
+  spriteFile,
+  contentPaths,
+  config,
+  verbose,
+}: IconsPluginParams): Plugin[] => {
   const pms = contentPaths.map((contentPath) => picomatch(contentPath));
   const isContent = (filepath: string) => !!pms.find((pm) => pm(filepath));
   const shouldIgnore = (filepath: string) => !isContent(filepath);
 
   let rootDir: string;
+  let spritePath: string;
   let server: ViteDevServer | null = null;
   const detectedSymbols = new Set<string>();
   const visitedFiles = new Set<string>();
@@ -70,6 +79,7 @@ export const IconsPlugin = (params: BundleParams & { manifestPath?: string; verb
 
       configResolved: (config) => {
         rootDir = resolve(config.root);
+        spritePath = resolve(config.publicDir, spriteFile);
         if (manifestPath) {
           readManifest(manifestPath);
         }
@@ -123,12 +133,11 @@ export const IconsPlugin = (params: BundleParams & { manifestPath?: string; verb
       // Step 2: Write sprite.
       // NOTE: This must run before the public directory is copied.
       name: '@ch-ui/icons:write',
-      enforce: 'post',
 
       transform: async () => {
         if (status.updated) {
           status.updated = false;
-          await makeSprite(params, detectedSymbols);
+          await makeSprite({ assetPath, symbolPattern, spritePath, contentPaths, config }, detectedSymbols);
           if (manifestPath) {
             writeManifest(manifestPath);
           }
@@ -145,5 +154,5 @@ export const IconsPlugin = (params: BundleParams & { manifestPath?: string; verb
         }
       },
     },
-  ] as Plugin[];
+  ] satisfies Plugin[];
 };

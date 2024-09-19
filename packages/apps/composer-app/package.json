@@ -1,6 +1,6 @@
 {
   "name": "@dxos/composer-app",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",

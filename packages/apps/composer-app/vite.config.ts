@@ -103,13 +103,13 @@ export default defineConfig({
       symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
       assetPath: (name, variant) =>
         `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
-      spritePath: resolve(__dirname, 'public/icons.svg'),
+      spriteFile: 'icons.svg',
       manifestPath: resolve(__dirname, 'public/icons.json'),
       contentPaths: [
         `${resolve(__dirname, '../../..')}/{packages,tools}/**/dist/**/*.{mjs,html}`,
         `${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}`,
       ],
-      verbose: true,
+      // verbose: true,
     }),
     // https://github.com/antfu-collective/vite-plugin-inspect#readme
     // localhost:5173/__inspect
