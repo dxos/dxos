@@ -4,7 +4,9 @@
 
 import React, { type ChangeEventHandler, type FC, useEffect, useMemo, useState } from 'react';
 
+import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
+import type { AnyObjectData } from '@dxos/echo-schema';
 import { createSubscriptionTrigger } from '@dxos/functions';
 import {
   FunctionTrigger,
@@ -15,9 +17,12 @@ import {
   type WebhookTrigger,
   type WebsocketTrigger,
 } from '@dxos/functions/types';
+import { invariant } from '@dxos/invariant';
+import { DXN, LOCAL_SPACE_TAG } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ScriptType } from '@dxos/plugin-script/types';
-import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { ScriptType, FunctionType } from '@dxos/plugin-script/types';
+import { useClient, type Config } from '@dxos/react-client';
+import { Filter, getObjectCore, type Space, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select } from '@dxos/react-ui';
 import { distinctBy } from '@dxos/util';
 
@@ -26,7 +31,11 @@ import { getMeta, state } from './meta';
 
 const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook', 'websocket'];
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000;
+
 export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: FunctionTrigger }) => {
+  const client = useClient();
   const scripts = useQuery(space, Filter.schema(ScriptType));
   const script = useMemo(() => scripts.find((script) => script.id === trigger.function), [trigger.function, scripts]);
 
@@ -48,11 +57,50 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
 
           const ctx = new Context();
           registry.set(trigger.id, ctx);
-          await createSubscriptionTrigger(ctx, space, trigger.spec as SubscriptionTrigger, async () => {
+          await createSubscriptionTrigger(ctx, space, trigger.spec as SubscriptionTrigger, async (data) => {
             try {
-              // TODO(burdon): Trigger function.
-              log.info('exec', { trigger });
-              return 200;
+              const script = await space.crud.query({ id: trigger.function }).first();
+              const { objects: functions } = await space.crud.query({ __typename: FunctionType.typename }).run();
+              const func = functions.find((fn) => referenceEquals(fn.source, trigger.function)) as
+                | AnyObjectData
+                | undefined;
+              const funcSlug = func?.__meta.keys.find((key) => key.source === USERFUNCTIONS_META_KEY)?.id;
+              if (!funcSlug) {
+                log.warn('function not deployed', { scriptId: script.id, name: script.name });
+                return 404;
+              }
+
+              const funcUrl = getFunctionUrl(client.config, funcSlug, space.id);
+
+              const triggerData: AnyObjectData = getObjectCore(trigger).toPlainObject();
+              const body = {
+                event: 'trigger',
+                trigger: triggerData,
+                data,
+              };
+
+              let retryCount = 0;
+              while (retryCount < MAX_RETRIES) {
+                log.info('exec', { funcUrl, funcSlug, body, retryCount });
+                const response = await fetch(funcUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(body),
+                });
+
+                log.info('response', { status: response.status, body: await response.text() });
+                if (response.status === 409) {
+                  retryCount++;
+                  await sleep(RETRY_DELAY);
+                  continue;
+                }
+
+                return response.status;
+              }
+
+              return 500;
             } catch (err) {
               return 400;
             }
@@ -326,4 +374,40 @@ const triggerRenderers: {
 const TriggerSpec = ({ space, spec }: TriggerSpecProps) => {
   const Component = triggerRenderers[spec.type];
   return Component ? <Component space={space} spec={spec} /> : null;
+};
+
+const USERFUNCTIONS_META_KEY = 'dxos.org/service/function';
+
+const getFunctionUrl = (config: Config, slug: string, spaceId?: string) => {
+  const baseUrl = new URL('functions/', config.values.runtime?.services?.edge?.url);
+
+  // Leading slashes cause the URL to be treated as an absolute path.
+  const relativeUrl = slug.replace(/^\//, '');
+  const url = new URL(`./${relativeUrl}`, baseUrl.toString());
+  spaceId && url.searchParams.set('spaceId', spaceId);
+  url.protocol = 'https';
+  return url.toString();
+};
+
+// TODO(dmaretskyi): Extract.
+
+type ReferenceLike = { '/': string } | string;
+
+const referenceEquals = (a: ReferenceLike, b: ReferenceLike): boolean => {
+  const aDXN = toDXN(a);
+  const bDXN = toDXN(b);
+  return aDXN.toString() === bDXN.toString();
+};
+
+const toDXN = (ref: ReferenceLike): DXN => {
+  if (typeof ref === 'string') {
+    if (ref.startsWith('dxn:')) {
+      return DXN.parse(ref);
+    } else {
+      return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, ref]);
+    }
+  }
+
+  invariant(typeof ref['/'] === 'string');
+  return DXN.parse(ref['/']);
 };

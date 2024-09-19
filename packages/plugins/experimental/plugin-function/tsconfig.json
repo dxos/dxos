@@ -1,95 +1,84 @@
 {
-  "extends": [
-    "../../../../tsconfig.json"
-  ],
+  "extends": ["../../../../tsconfig.json"],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
+    "lib": ["DOM", "ESNext"],
     "outDir": "dist/types",
-    "types": [
-      "node"
-    ]
+    "types": ["node"],
   },
-  "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
-  ],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "exclude": ["*.t.ts", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
-      "path": "../../../common/async"
+      "path": "../../../common/async",
     },
     {
-      "path": "../../../common/context"
+      "path": "../../../common/context",
     },
     {
-      "path": "../../../common/invariant"
+      "path": "../../../common/invariant",
     },
     {
-      "path": "../../../common/log"
+      "path": "../../../common/keys",
     },
     {
-      "path": "../../../common/random"
+      "path": "../../../common/log",
     },
     {
-      "path": "../../../common/util"
+      "path": "../../../common/random",
     },
     {
-      "path": "../../../core/echo/echo-schema"
+      "path": "../../../common/util",
     },
     {
-      "path": "../../../core/functions"
+      "path": "../../../core/echo/echo-schema",
     },
     {
-      "path": "../../../experimental/chess-app"
+      "path": "../../../core/functions",
     },
     {
-      "path": "../../../sdk/app-framework"
+      "path": "../../../experimental/chess-app",
     },
     {
-      "path": "../../../sdk/react-client"
+      "path": "../../../sdk/app-framework",
     },
     {
-      "path": "../../../ui/react-ui"
+      "path": "../../../sdk/react-client",
     },
     {
-      "path": "../../../ui/react-ui-editor"
+      "path": "../../../ui/react-ui",
     },
     {
-      "path": "../../../ui/react-ui-theme"
+      "path": "../../../ui/react-ui-editor",
     },
     {
-      "path": "../../../ui/storybook-utils"
+      "path": "../../../ui/react-ui-theme",
     },
     {
-      "path": "../../plugin-client"
+      "path": "../../../ui/storybook-utils",
     },
     {
-      "path": "../../plugin-markdown"
+      "path": "../../plugin-client",
     },
     {
-      "path": "../../plugin-sketch"
+      "path": "../../plugin-markdown",
     },
     {
-      "path": "../../plugin-space"
+      "path": "../../plugin-sketch",
     },
     {
-      "path": "../../plugin-stack"
+      "path": "../../plugin-space",
     },
     {
-      "path": "../plugin-chain"
+      "path": "../../plugin-stack",
     },
     {
-      "path": "../plugin-ipfs"
+      "path": "../plugin-chain",
     },
     {
-      "path": "../plugin-script"
-    }
-  ]
+      "path": "../plugin-ipfs",
+    },
+    {
+      "path": "../plugin-script",
+    },
+  ],
 }
