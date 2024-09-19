@@ -18,7 +18,6 @@ import { type SyntaxNode } from '@lezer/common';
 import { tags } from '@lezer/highlight';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
-import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type FunctionDefinition } from '../../model';
@@ -208,7 +207,6 @@ export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): E
   let view: EditorView;
   let activeRange: Range | undefined;
   const provider: CellRangeNotifier = (range: string) => {
-    log.info('range', { activeRange, range });
     if (activeRange) {
       view.dispatch(
         view.state.update({
