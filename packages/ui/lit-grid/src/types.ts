@@ -52,7 +52,7 @@ export type DxEditRequestProps = Pick<DxEditRequest, 'cellIndex' | 'cellBox'>;
 
 export class DxEditRequest extends Event {
   public readonly cellIndex: CellIndex;
-  public readonly cellBox: { insetInlineStart: number; insetBlockStart: number; inlineSize: number; blockSize: number };
+  public readonly cellBox: Record<'insetInlineStart' | 'insetBlockStart' | 'inlineSize' | 'blockSize', number>;
   constructor(props: DxEditRequestProps) {
     super('dx-edit-request');
     this.cellIndex = props.cellIndex;
