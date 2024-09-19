@@ -23,13 +23,15 @@ export type GridProps = DxGridProps & {
   onEdit: (event: DxEditRequest) => void;
 };
 
+const initialBox = {
+  insetInlineStart: 0,
+  insetBlockStart: 0,
+  inlineSize: 0,
+  blockSize: 0,
+} satisfies DxEditRequest['cellBox'];
+
 export const Grid = (props: GridProps) => {
-  const [editBox, setEditBox] = useState<DxEditRequest['cellBox']>({
-    insetInlineStart: 0,
-    insetBlockStart: 0,
-    inlineSize: 0,
-    blockSize: 0,
-  });
+  const [editBox, setEditBox] = useState<DxEditRequest['cellBox']>(initialBox);
   const handleEdit = useCallback((event: DxEditRequest) => {
     setEditBox(event.cellBox);
     props?.onEdit?.(event);
