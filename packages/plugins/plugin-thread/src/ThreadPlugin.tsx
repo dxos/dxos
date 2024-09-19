@@ -4,7 +4,7 @@
 
 import { Chat, type IconProps } from '@phosphor-icons/react';
 import { computed, effect } from '@preact/signals-core';
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import {
   type IntentPluginProvides,
@@ -314,9 +314,12 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             case 'complementary': {
               const location = navigationPlugin?.provides.location;
 
-              // TODO(Zan): More robust runtime check.
-              const providesThreadsConfig = (plugin: any): Plugin<ThreadProvides<any>> | undefined =>
-                'thread' in plugin.provides ? (plugin as Plugin<ThreadProvides<any>>) : undefined;
+              const providesThreadsConfig = useCallback(
+                (plugin: any): Plugin<ThreadProvides<any>> | undefined =>
+                  // TODO(Zan): More robust runtime check.
+                  'thread' in plugin.provides ? (plugin as Plugin<ThreadProvides<any>>) : undefined,
+                [],
+              );
 
               const threadsIntegrators = useResolvePlugins(providesThreadsConfig);
               const threadProvides = threadsIntegrators.map((p) => p.provides.thread);

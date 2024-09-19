@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Context, type Provider, createContext, useContext } from 'react';
+import { type Context, type Provider, createContext, useContext, useMemo } from 'react';
 
 import { type Plugin } from './plugin';
 import { findPlugin, resolvePlugin } from '../helpers';
@@ -77,7 +77,7 @@ export const useResolvePlugin = <T,>(predicate: (plugin: Plugin) => Plugin<T> | 
  */
 export const useResolvePlugins = <T,>(predicate: (plugin: Plugin) => Plugin<T> | undefined): Plugin<T>[] => {
   const { plugins } = usePlugins();
-  return plugins.map(predicate).filter(nonNullable);
+  return useMemo(() => plugins.map(predicate).filter(nonNullable), [plugins, predicate]);
 };
 
 export const PluginProvider: Provider<PluginContext> = PluginContext.Provider;
