@@ -179,19 +179,19 @@ const physicalColors: ColorsPhysicalLayer = {
 };
 
 const peerSememes = Object.keys(huePalettes).reduce((acc: SemanticLayer['sememes'], palette) => {
-  acc[`${palette}-cursor`] = {
+  acc[`${palette}Cursor`] = {
     light: [palette, 400],
     dark: [palette, 300],
   };
-  acc[`${palette}-text`] = {
+  acc[`${palette}Text`] = {
     light: [palette, 550],
     dark: [palette, 300],
   };
-  acc[`${palette}-text-hover`] = {
+  acc[`${palette}TextHover`] = {
     light: [palette, 450],
     dark: [palette, 200],
   };
-  acc[`${palette}-fill`] = {
+  acc[`${palette}Fill`] = {
     light: [palette, 500],
     dark: [palette, 500],
   };
