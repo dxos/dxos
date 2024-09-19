@@ -73,6 +73,7 @@ type SubjectId = string;
 const initialViewState = { showResolvedThreads: false };
 type ViewStore = Record<SubjectId, typeof initialViewState>;
 
+// TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
   const state = create<ThreadState>({ staging: {} });
@@ -589,7 +590,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             case ThreadAction.ON_MESSAGE_ADD: {
               const { thread, subject } = intent.data ?? {};
-              if (!(thread instanceof ThreadType) || !(subject instanceof DocumentType)) {
+              if (
+                !(thread instanceof ThreadType) ||
+                !(subject && typeof subject === 'object' && 'threads' in subject)
+              ) {
                 return;
               }
 
