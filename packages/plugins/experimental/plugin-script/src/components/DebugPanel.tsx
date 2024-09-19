@@ -95,16 +95,28 @@ export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindi
   };
 
   const handleRequest = async (input: string) => {
-    setInput('');
-    setResult('');
-    setHistory((history) => [...history, { type: 'request', text: input }]);
-    setTimeout(() => {
-      handleScroll();
-    });
-
     // Returns a promise that resolves when a value has been received.
     try {
       setState('pending');
+
+      let data = null;
+      if (input.charAt(0) === '{') {
+        try {
+          const validJsonString = input.replace(/'/g, '"').replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3');
+          data = JSON.parse(validJsonString);
+          input = JSON.stringify(data, null, 2);
+        } catch (err) {
+          inputRef.current?.focus();
+          return;
+        }
+      }
+
+      setInput('');
+      setResult('');
+      setHistory((history) => [...history, { type: 'request', text: input }]);
+      setTimeout(() => {
+        handleScroll();
+      });
 
       // Throws DOMException when aborted.
       controller.current = new AbortController();
@@ -112,6 +124,9 @@ export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindi
         signal: controller.current.signal,
         method: 'POST',
         body: input,
+        headers: {
+          'Content-Type': data ? 'application/json' : 'text/plain',
+        },
       });
 
       // Check for error.
