@@ -7,7 +7,7 @@ export default async ({
     data: { request },
   },
   context: { space, ai },
-}) => {
+}: any) => {
   const {
     args: [from = 'EUR', to = 'GBP'],
   } = await request.json();
