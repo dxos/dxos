@@ -38,6 +38,18 @@ Type: <code>QueryResult&lt;T&gt;[]</code>
 
 
 ## Methods
+### [first()]()
+
+
+
+
+Returns: <code>Promise&lt;T&gt;</code>
+
+Arguments: none
+
+
+
+
 ### [run(\[timeout\])]()
 
 
