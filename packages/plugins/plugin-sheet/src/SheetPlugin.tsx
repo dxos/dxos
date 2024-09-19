@@ -23,6 +23,7 @@ import { createComputeGraph, SheetContainer, type ComputeGraph } from './compone
 // TODO(wittjosiah): Refactor. These are not exported from ./components due to depending on ECHO.
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './components/ComputeGraph/edge-function';
 import { ComputeGraphContextProvider } from './components/ComputeGraph/graph-context';
+import { Anchor } from './components/Sheet/threads';
 import meta, { SHEET_PLUGIN } from './meta';
 import { SheetModel } from './model';
 import translations from './translations';
@@ -127,6 +128,24 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
             intent: { plugin: SHEET_PLUGIN, action: SheetAction.CREATE },
           },
         ],
+      },
+      thread: {
+        predicate: (data) => data instanceof SheetType,
+        createSort: (_data) => {
+          return (anchorA, anchorB) => {
+            // TODO(Zan): This is a temporary sort function.
+            // Anchors will be the actual cell ID (then we will need _data).
+            const { row: rowA, column: columnA } = Anchor.toCellAddress(anchorA);
+            const { row: rowB, column: columnB } = Anchor.toCellAddress(anchorB);
+
+            // Sort by row first, then by column.
+            if (rowA !== rowB) {
+              return rowA - rowB;
+            } else {
+              return columnA - columnB;
+            }
+          };
+        },
       },
       surface: {
         component: ({ data, role = 'never' }) => {

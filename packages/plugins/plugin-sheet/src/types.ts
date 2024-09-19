@@ -11,8 +11,8 @@ import type {
 } from '@dxos/app-framework';
 import { create, ref, S, TypedObject } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-client';
-import { type StackProvides } from '@dxos/plugin-stack';
 import { ThreadType } from '@dxos/plugin-space/types';
+import { type StackProvides } from '@dxos/plugin-stack';
 
 import { SHEET_PLUGIN } from './meta';
 
@@ -22,13 +22,24 @@ export enum SheetAction {
   CREATE = `${SHEET_ACTION}/create`,
 }
 
+// TODO(Zan): Move this to the plugin-space plugin or another common location
+// when we implement comments in sheets.
+// This is currently duplicated in a few places.
+type ThreadProvides<T> = {
+  thread: {
+    predicate: (obj: any) => obj is T;
+    createSort: (obj: T) => (anchorA: string, anchorB: string) => number;
+  };
+};
+
 export type SheetPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   SchemaProvides &
-  StackProvides;
+  StackProvides &
+  ThreadProvides<SheetType>;
 
 export type CellScalarValue = number | string | boolean | null;
 
