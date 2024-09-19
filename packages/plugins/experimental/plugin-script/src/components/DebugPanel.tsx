@@ -3,6 +3,12 @@
 //
 
 import React, { useEffect, useRef, useState } from 'react';
+// eslint-disable-next-line no-restricted-imports
+import SyntaxHighlighter from 'react-syntax-highlighter';
+// eslint-disable-next-line no-restricted-imports
+import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
+// eslint-disable-next-line no-restricted-imports
+import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 import { log } from '@dxos/log';
 import {
@@ -13,7 +19,7 @@ import {
   type ThemedClassName,
   Toolbar,
   useControlledValue,
-  useDynamicRef,
+  useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -22,7 +28,10 @@ import { SCRIPT_PLUGIN } from '../meta';
 
 type State = 'pending' | 'responding';
 
-type Item = { type: 'request' | 'response'; text: string };
+/**
+ * Request or response.
+ */
+type Message = { type: 'request' | 'response'; text?: string; data?: any; error?: Error };
 
 export type DebugPanelProps = ThemedClassName<{
   functionUrl?: string;
@@ -42,11 +51,10 @@ export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindi
   const inputRef = useRef<HTMLInputElement>(null);
   const [input, setInput] = useState('');
   const [result, setResult] = useState('');
-  const resultRef = useDynamicRef(result);
   const [state, setState] = useState<State | null>(null);
 
   // TODO(burdon): Persistent history (non-space ECHO data?)
-  const [history, setHistory] = useState<Item[]>([]);
+  const [history, setHistory] = useState<Message[]>([]);
 
   const scrollerRef = useRef<HTMLDivElement>(null);
   const handleScroll = () => {
@@ -67,7 +75,6 @@ export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindi
     controller.current = undefined;
   };
 
-  // TODO(burdon): Halt streaming request?
   const handleClear = () => {
     handleStop();
     setInput('');
@@ -76,18 +83,21 @@ export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindi
     inputRef.current?.focus();
   };
 
-  const handleDone = () => {
+  const handleResponse = ({ text, data, error }: { text?: string; data?: any; error?: Error } = {}) => {
     controller.current = undefined;
-    setHistory((history) => [...history, { type: 'response', text: resultRef.current }]);
+    setHistory((history) => [...history, { type: 'response', text, data, error } satisfies Message]);
     setResult('');
     setState(null);
     handleScroll();
   };
 
-  const handleRun = async (input: string) => {
-    setHistory((history) => [...history, { type: 'request', text: input }]);
+  const handleRequest = async (input: string) => {
     setInput('');
     setResult('');
+    setHistory((history) => [...history, { type: 'request', text: input }]);
+    setTimeout(() => {
+      handleScroll();
+    });
 
     // Returns a promise that resolves when a value has been received.
     try {
@@ -101,37 +111,36 @@ export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindi
         body: input,
       });
 
-      console.log(1, response.headers.get('content-type'));
-      console.log(2, response.statusText);
-      console.log(3, response.body);
-
-      // TODO(burdon): Error handling.
+      // Check for error.
       if (!response.ok) {
-        setState(null);
         const text = await response.text();
-        setResult(text + response.status);
+        handleResponse({ error: new Error(text || response.statusText || String(response.status)) });
         return;
       }
 
-      try {
+      // Check for JSON.
+      const contentType = response.headers.get('content-type');
+      if (contentType === 'application/json') {
         const data = await response.json();
-        console.log({ data });
-        const text = await response.text();
-        console.log({ text });
-        console.log(response.body);
-      } catch (err) {
-        log.catch(err);
+        handleResponse({ data });
+        return;
       }
 
+      // Text (including streaming).
       setState('responding');
+      let text = '';
       const reader = response.body!.getReader();
       const pump = async ({ done, value }: ReadableStreamReadResult<Uint8Array>): Promise<void> => {
-        setResult((result) => result + new TextDecoder().decode(value));
-        handleScroll();
+        text = text + new TextDecoder().decode(value);
         if (!controller.current || done) {
-          handleDone();
+          handleResponse({ text });
           return;
         }
+
+        setResult(text);
+        setTimeout(() => {
+          handleScroll();
+        });
 
         return reader.read().then(pump);
       };
@@ -144,10 +153,13 @@ export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindi
             log.catch(err);
           }
         });
-    } catch (err) {
-      setState(null);
+    } catch (err: any) {
       if (err !== 'stop') {
+        const error = err instanceof Error ? err : new Error(err);
+        handleResponse({ error });
         log.catch(err);
+      } else {
+        handleResponse();
       }
     }
   };
@@ -168,7 +180,7 @@ export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindi
               placeholder={t('function request placeholder')}
               value={input}
               onChange={(ev) => setInput(ev.target.value)}
-              onKeyDown={(ev) => ev.key === 'Enter' && handleRun(input)}
+              onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
             />
           </Input.Root>
           <Input.Root>
@@ -181,7 +193,7 @@ export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindi
               onBlur={handleBlur}
             />
           </Input.Root>
-          <Toolbar.Button onClick={() => handleRun(input)}>
+          <Toolbar.Button onClick={() => handleRequest(input)}>
             <Icon icon='ph--play--regular' size={4} />
           </Toolbar.Button>
           <Toolbar.Button onClick={() => (state ? handleStop() : handleClear())}>
@@ -201,19 +213,40 @@ const RobotAvatar = () => (
   </Avatar.Root>
 );
 
+const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
+  const { themeMode } = useThemeContext();
+  const { text, data, error } = message;
+  if (error) {
+    return <span className={mx(classNames, 'whitespace-pre text-error')}>{String(error)}</span>;
+  } else if (data) {
+    return (
+      <SyntaxHighlighter
+        language='json'
+        style={themeMode === 'dark' ? styleDark : styleLight}
+        className={mx('w-full text-xs', classNames)}
+      >
+        {JSON.stringify(data, null, 2)}
+      </SyntaxHighlighter>
+    );
+  }
+
+  return <span className={mx(classNames)}>{text || '\u00D8'}</span>;
+};
+
 // TODO(burdon): Replace with thread?
-// TODO(burdon): Delete individual messages.
-// TODO(burdon): Re-run question.
-const MessageThread = ({ state, result, history }: { state: State | null; result: string; history: Item[] }) => {
+// TODO(burdon): Button to delete individual messages.
+// TODO(burdon): Button to re-run question.
+const MessageThread = ({ state, result, history }: { state: State | null; result: string; history: Message[] }) => {
   return (
     <>
-      {history.map(({ type, text }, i) => (
+      {history.map((message, i) => (
         <div key={i} className='grid grid-cols-[3rem_1fr]'>
-          <div>{type === 'response' && <RobotAvatar />}</div>
-          <div className={mx('flex', type === 'request' && 'justify-end')}>
-            <span className={mx(type === 'request' && 'p-1 px-2 rounded-lg bg-hoverSurface')}>
-              {text.length ? text : '\u00D8'}
-            </span>
+          <div>{message.type === 'response' && <RobotAvatar />}</div>
+          <div className={mx('flex', message.type === 'request' && 'justify-end')}>
+            <MessageItem
+              classNames={[message.type === 'request' && 'p-1 px-2 rounded-lg bg-hoverSurface']}
+              message={message}
+            />
           </div>
         </div>
       ))}

@@ -7060,6 +7060,9 @@ importers:
       prettier:
         specifier: ^3.2.4
         version: 3.2.4
+      react-syntax-highlighter:
+        specifier: ^15.5.0
+        version: 15.5.0(react@18.2.0)
       typescript:
         specifier: ^5.5.4
         version: 5.5.4
