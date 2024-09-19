@@ -21,6 +21,7 @@ dx-grid {
   grid-template-columns: min-content 1fr min-content;
   grid-template-rows: min-content 1fr min-content;
   font-variant-numeric: tabular-nums;
+  --dx-grid-gap: 1px;
 }
 
 .dx-grid__scrollbar__thumb {
@@ -38,8 +39,8 @@ dx-grid {
 .dx-grid__rowheader__content,
 .dx-grid__content {
   display: grid;
-  gap: 1px;
-  background: var(--dx-separator);
+  gap: var(--dx-grid-gap);
+  background: var(--dx-grid-lines, var(--dx-separator));
   inline-size: min-content;
   block-size: min-content;
 }
@@ -48,26 +49,45 @@ dx-grid {
 .dx-grid__rowheader,
 .dx-grid__viewport {
   overflow: hidden;
+  position: relative;
+  &:focus-visible {
+    outline: none;
+  }
+  &:focus-visible::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border: 1px solid var(--dx-accentSurface);
+  }
 }
 
 .dx-grid__columnheader__content {
-  border-block-end: 2px solid var(--dx-separator);
-  grid-template-columns: repeat(99, 64px);
+  border-block-end: 2px solid var(--dx-grid-lines, var(--dx-separator));
 }
 
 .dx-grid__rowheader__content {
-  border-inline-end: 2px solid var(--dx-separator);
+  border-inline-end: 2px solid var(--dx-grid-lines, var(--dx-separator));
   grid-template-columns: min-content;
   text-align: end;
 }
 
 .dx-grid {
   [role='gridcell'], [role='columnheader'], [role='rowheader'] {
-    background: var(--dx-base);
+    background: var(--dx-grid-base, var(--dx-base));
     padding: 2px;
     box-sizing: border-box;
+    cursor: pointer;
+    border: 1px solid transparent;
     &[inert] {
       visibility: hidden;
+    }
+    &:focus, &:focus-visible {
+      cursor: text;
+      position: relative;
+      z-index: 2;
+      border-color: var(--dx-accentSurface);
+      outline: none;
     }
   }
 }
@@ -80,7 +100,7 @@ dx-grid {
       position: absolute;
       background: transparent;
       &:hover {
-        background: var(--dx-hoverSurface)
+        background: var(--dx-grid-resizeHandleHover, var(--dx-hoverSurface));
       }
     }
   }
