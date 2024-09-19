@@ -24,13 +24,13 @@ type State = 'pending' | 'responding';
 
 type Item = { type: 'request' | 'response'; text: string };
 
-export type DetailsPanelProps = ThemedClassName<{
+export type DebugPanelProps = ThemedClassName<{
   functionUrl?: string;
   binding?: string;
   onBindingChange?: (binding: string) => void;
 }>;
 
-export const DetailsPanel = ({ classNames, functionUrl, binding: _binding, onBindingChange }: DetailsPanelProps) => {
+export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindingChange }: DebugPanelProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
 
   const bindingInputRef = useRef<HTMLInputElement>(null);
@@ -85,11 +85,6 @@ export const DetailsPanel = ({ classNames, functionUrl, binding: _binding, onBin
   };
 
   const handleRun = async (input: string) => {
-    if (input.trim().length === 0) {
-      inputRef.current?.focus();
-      return;
-    }
-
     setHistory((history) => [...history, { type: 'request', text: input }]);
     setInput('');
     setResult('');
@@ -106,10 +101,26 @@ export const DetailsPanel = ({ classNames, functionUrl, binding: _binding, onBin
         body: input,
       });
 
+      console.log(1, response.headers.get('content-type'));
+      console.log(2, response.statusText);
+      console.log(3, response.body);
+
       // TODO(burdon): Error handling.
       if (!response.ok) {
         setState(null);
+        const text = await response.text();
+        setResult(text + response.status);
         return;
+      }
+
+      try {
+        const data = await response.json();
+        console.log({ data });
+        const text = await response.text();
+        console.log({ text });
+        console.log(response.body);
+      } catch (err) {
+        log.catch(err);
       }
 
       setState('responding');
@@ -190,7 +201,7 @@ const RobotAvatar = () => (
   </Avatar.Root>
 );
 
-// TODO(burdon): Replace with thread.
+// TODO(burdon): Replace with thread?
 // TODO(burdon): Delete individual messages.
 // TODO(burdon): Re-run question.
 const MessageThread = ({ state, result, history }: { state: State | null; result: string; history: Item[] }) => {
@@ -200,7 +211,9 @@ const MessageThread = ({ state, result, history }: { state: State | null; result
         <div key={i} className='grid grid-cols-[3rem_1fr]'>
           <div>{type === 'response' && <RobotAvatar />}</div>
           <div className={mx('flex', type === 'request' && 'justify-end')}>
-            <span className={mx(type === 'request' && 'p-1 px-2 rounded-lg bg-hoverSurface')}>{text}</span>
+            <span className={mx(type === 'request' && 'p-1 px-2 rounded-lg bg-hoverSurface')}>
+              {text.length ? text : '\u00D8'}
+            </span>
           </div>
         </div>
       ))}

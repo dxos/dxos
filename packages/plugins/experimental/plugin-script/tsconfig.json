@@ -1,114 +1,100 @@
 {
-  "extends": [
-    "../../../../tsconfig.json"
-  ],
+  "extends": ["../../../../tsconfig.json"],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
+    "lib": ["DOM", "ESNext"],
     "module": "ESNext",
     "outDir": "dist/types",
-    "types": [
-      "node"
-    ]
+    "types": ["node"],
   },
-  "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
-  ],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "exclude": ["*.t.ts", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
-      "path": "../../../common/async"
+      "path": "../../../common/async",
     },
     {
-      "path": "../../../common/crypto"
+      "path": "../../../common/crypto",
     },
     {
-      "path": "../../../common/debug"
+      "path": "../../../common/debug",
     },
     {
-      "path": "../../../common/invariant"
+      "path": "../../../common/invariant",
     },
     {
-      "path": "../../../common/keys"
+      "path": "../../../common/keys",
     },
     {
-      "path": "../../../common/log"
+      "path": "../../../common/log",
     },
     {
-      "path": "../../../common/random"
+      "path": "../../../common/random",
     },
     {
-      "path": "../../../common/util"
+      "path": "../../../common/util",
     },
     {
-      "path": "../../../core/echo/echo-generator"
+      "path": "../../../core/echo/echo-generator",
     },
     {
-      "path": "../../../core/echo/echo-schema"
+      "path": "../../../core/echo/echo-schema",
     },
     {
-      "path": "../../../core/mesh/rpc"
+      "path": "../../../core/mesh/rpc",
     },
     {
-      "path": "../../../core/mesh/rpc-tunnel"
+      "path": "../../../core/mesh/rpc-tunnel",
     },
     {
-      "path": "../../../core/protocols"
+      "path": "../../../core/protocols",
     },
     {
-      "path": "../../../sdk/app-framework"
+      "path": "../../../sdk/app-framework",
     },
     {
-      "path": "../../../sdk/client"
+      "path": "../../../sdk/client",
     },
     {
-      "path": "../../../sdk/client-protocol"
+      "path": "../../../sdk/client-protocol",
     },
     {
-      "path": "../../../sdk/react-client"
+      "path": "../../../sdk/react-client",
     },
     {
-      "path": "../../../ui/react-ui"
+      "path": "../../../ui/react-ui",
     },
     {
-      "path": "../../../ui/react-ui-editor"
+      "path": "../../../ui/react-ui-editor",
     },
     {
-      "path": "../../../ui/react-ui-mosaic"
+      "path": "../../../ui/react-ui-mosaic",
     },
     {
-      "path": "../../../ui/react-ui-theme"
+      "path": "../../../ui/react-ui-theme",
     },
     {
-      "path": "../../../ui/storybook-utils"
+      "path": "../../../ui/storybook-utils",
     },
     {
-      "path": "../../plugin-client"
+      "path": "../../plugin-client",
     },
     {
-      "path": "../../plugin-graph"
+      "path": "../../plugin-graph",
     },
     {
-      "path": "../../plugin-markdown"
+      "path": "../../plugin-markdown",
     },
     {
-      "path": "../../plugin-space"
+      "path": "../../plugin-space",
     },
     {
-      "path": "../../plugin-stack"
+      "path": "../../plugin-stack",
     },
     {
-      "path": "../../plugin-theme"
+      "path": "../../plugin-theme",
     },
     {
-      "path": "../plugin-explorer"
-    }
-  ]
+      "path": "../plugin-explorer",
+    },
+  ],
 }

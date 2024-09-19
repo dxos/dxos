@@ -8,8 +8,9 @@ export default async ({
   },
 }: any) => {
   const {
-    args: [from = 'EUR', to = 'GBP'],
+    args: [from = 'EUR', to = 'USD'],
   } = await request.json();
+
   const res = await fetch(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`);
   const {
     data: { rates },

@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Checks, CircleNotch, Link, MagicWand, UploadSimple, WarningCircle } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import {
@@ -14,7 +13,6 @@ import {
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { SCRIPT_PLUGIN } from '../meta';
 
@@ -64,7 +62,7 @@ export const Toolbar = ({
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
                 <NaturalToolbar.Button variant='ghost' onClick={onFormat}>
-                  <MagicWand className={getSize(4)} />
+                  <Icon icon='ph--magic-want--regular' size={4} />
                 </NaturalToolbar.Button>
               </Tooltip.Trigger>
               <Tooltip.Portal>
@@ -78,11 +76,25 @@ export const Toolbar = ({
 
           <div role='separator' className='grow' />
 
-          {functionUrl && (
+          {error ? (
+            <Tooltip.Root>
+              <Tooltip.Trigger>
+                <Icon icon='ph--warning-circle--regular' size={4} />
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content>
+                  <Tooltip.Arrow />
+                  {error}
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          ) : null}
+
+          {functionUrl && deployed && (
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
                 <NaturalToolbar.Button variant='ghost' onClick={handleCopyLink}>
-                  <Link className={getSize(4)} />
+                  <Icon icon='ph--link--regular' size={4} />
                 </NaturalToolbar.Button>
               </Tooltip.Trigger>
               <Tooltip.Portal>
@@ -94,40 +106,13 @@ export const Toolbar = ({
             </Tooltip.Root>
           )}
 
-          {/* TODO(wittjosiah): Better treatment for status indicators in toolbar? */}
-          {error ? (
-            <Tooltip.Root>
-              <Tooltip.Trigger>
-                <WarningCircle className={getSize(4)} />
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content>
-                  <Tooltip.Arrow />
-                  {error}
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
-          ) : deployed ? (
-            <Tooltip.Root>
-              <Tooltip.Trigger>
-                <Checks className={getSize(4)} />
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content>
-                  <Tooltip.Arrow />
-                  {t('deployed label')}
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
-          ) : null}
-
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <NaturalToolbar.Button variant='ghost' onClick={handleDeploy} disabled={pending}>
                 {pending ? (
-                  <CircleNotch className={mx('spinner', getSize(4))} />
+                  <Icon icon='ph--spinner--regular' size={4} classNames='animate-spin-slow' />
                 ) : (
-                  <UploadSimple className={getSize(4)} />
+                  <Icon icon='ph--cloud-arrow-up--regular' size={4} />
                 )}
               </NaturalToolbar.Button>
             </Tooltip.Trigger>
@@ -143,7 +128,7 @@ export const Toolbar = ({
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
                 <NaturalToolbar.Button variant='ghost' onClick={onTogglePanel}>
-                  <Icon icon={showPanel ? 'ph--caret-up--regular' : 'ph--caret-down--regular'} size={4} />
+                  <Icon icon={showPanel ? 'ph--caret-down--regular' : 'ph--caret-up--regular'} size={4} />
                 </NaturalToolbar.Button>
               </Tooltip.Trigger>
               <Tooltip.Portal>

@@ -389,7 +389,7 @@ const getFunctionUrl = (config: Config, slug: string, spaceId?: string) => {
   return url.toString();
 };
 
-// TODO(dmaretskyi): Extract.
+// TODO(dmaretskyi): Factor out.
 
 type ReferenceLike = { '/': string } | string;
 
