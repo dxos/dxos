@@ -321,7 +321,7 @@ export class DxGrid extends LitElement {
     const [_translate3d, inlineStr, blockStr] = contentElement.style.transform.split(/[()]|px,?\s?/);
     const contentOffsetInline = parseFloat(inlineStr);
     const contentOffsetBlock = parseFloat(blockStr);
-    const offsetParent = (contentElement.offsetParent as HTMLElement).offsetParent as HTMLElement;
+    const offsetParent = contentElement.offsetParent as HTMLElement;
     return {
       insetInlineStart: cellElement.offsetLeft + contentOffsetInline + offsetParent.offsetLeft,
       insetBlockStart: cellElement.offsetTop + contentOffsetBlock + offsetParent.offsetTop,
