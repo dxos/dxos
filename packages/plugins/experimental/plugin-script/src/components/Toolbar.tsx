@@ -62,7 +62,7 @@ export const Toolbar = ({
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
                 <NaturalToolbar.Button variant='ghost' onClick={onFormat}>
-                  <Icon icon='ph--magic-want--regular' size={4} />
+                  <Icon icon='ph--magic-wand--regular' size={4} />
                 </NaturalToolbar.Button>
               </Tooltip.Trigger>
               <Tooltip.Portal>
