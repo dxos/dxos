@@ -470,11 +470,20 @@ describe('CoreDatabase', () => {
       const { db, crud } = await testBuilder.createDatabase();
 
       const { id } = await crud.insert({ __typename: Task.typename, title: 'A' });
+      await crud.insert({ data: 'foo' }); // random object
       await crud.flush({ indexes: true });
 
-      const { objects } = await db.query(Filter.schema(Task)).run();
-      expect(objects.length).to.eq(1);
-      expect(objects[0].id).to.eq(id);
+      {
+        const { objects } = await crud.query({ __typename: Task.typename }).run();
+        expect(objects.length).to.eq(1);
+        expect(objects[0].id).to.eq(id);
+      }
+
+      {
+        const { objects } = await db.query(Filter.schema(Task)).run();
+        expect(objects.length).to.eq(1);
+        expect(objects[0].id).to.eq(id);
+      }
     });
 
     test('references in plain object notation', async () => {

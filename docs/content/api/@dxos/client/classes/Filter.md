@@ -1,5 +1,5 @@
 # Class `Filter`
-<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/filter.d.ts:29]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/filter.d.ts:47]()</sub>
 
 
 
@@ -28,6 +28,11 @@ Type: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;any&gt;[]</code>
 
 ### [not]()
 Type: <code>boolean</code>
+
+
+
+### [objectIds]()
+Type: <code>string[]</code>
 
 
 
@@ -73,6 +78,18 @@ Type: <code>undefined | [PublicKey](/api/@dxos/client/classes/PublicKey)[]</code
 
 
 ## Methods
+### [isObjectIdFilter()]()
+
+
+
+
+Returns: <code>boolean</code>
+
+Arguments: none
+
+
+
+
 ### [toBufProto()]()
 
 
@@ -131,6 +148,20 @@ Returns: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;T&gt;</code>
 Arguments: 
 
 `source`: <code>[FilterSource](/api/@dxos/client/types/FilterSource)&lt;T&gt;</code>
+
+`options`: <code>[QueryOptions](/api/@dxos/client/interfaces/QueryOptions)</code>
+
+
+### [fromFilterJson(source, \[options\])]()
+
+
+
+
+Returns: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;T&gt;</code>
+
+Arguments: 
+
+`source`: <code>PropertyFilter</code>
 
 `options`: <code>[QueryOptions](/api/@dxos/client/interfaces/QueryOptions)</code>
 
