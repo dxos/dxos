@@ -33,7 +33,7 @@ export const createDecorations = () => {
   };
 
   // TODO(Zan): Once we have `computed(() => decorations[...])` this could be
-  // a lot more efficient.
+  // a lot more efficient since we could return a reactive slice.
   const getDecorationsForCell = (cellAddress: CellAddress): Decoration[] | undefined => {
     const key = `${cellAddress.column},${cellAddress.row}`;
     return decorations[key];
