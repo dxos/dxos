@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+// @ts-ignore
 import { transformServerSentEvents } from 'https://esm.sh/@dxos/script-toolbox';
 
 export default async ({
@@ -18,6 +19,7 @@ export default async ({
   }
 
   const answer = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+    stream: true,
     prompt: `
      Using the context data only to answer the user's question. 
      If you don't know the answer reply with "I don't know.".
@@ -28,7 +30,6 @@ export default async ({
      QUESTION:
      ${await request.text()}
     `,
-    stream: true,
   });
 
   return new Response(transformServerSentEvents(answer));
