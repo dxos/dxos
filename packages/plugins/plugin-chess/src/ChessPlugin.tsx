@@ -81,7 +81,8 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'article':
-              return isObject(data.object) ? <ChessContainer game={data.object} /> : null;
+            case 'section':
+              return isObject(data.object) ? <ChessContainer game={data.object} role={role} /> : null;
             default:
               return null;
           }

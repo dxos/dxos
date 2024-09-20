@@ -24,7 +24,7 @@
     "@tailwindcss/forms": "^0.5.3",
     "autoprefixer": "^10.4.12",
     "esbuild-style-plugin": "^1.6.1",
-    "glob": "~7.1.6",
+    "glob": "^7.2.3",
     "lodash.get": "^4.4.2",
     "lodash.merge": "^4.6.2",
     "tailwind-merge": "^2.2.1",

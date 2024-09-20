@@ -104,6 +104,9 @@
       "path": "../../plugin-settings"
     },
     {
+      "path": "../../plugin-sheet"
+    },
+    {
       "path": "../../plugin-sketch"
     },
     {
@@ -111,6 +114,9 @@
     },
     {
       "path": "../../plugin-status-bar"
+    },
+    {
+      "path": "../../plugin-table"
     },
     {
       "path": "../../plugin-theme"
