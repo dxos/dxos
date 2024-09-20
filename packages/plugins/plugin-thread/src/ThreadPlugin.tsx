@@ -31,7 +31,6 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
-import { DocumentType } from '@dxos/plugin-markdown/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { SpaceAction } from '@dxos/plugin-space';
 import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';

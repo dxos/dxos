@@ -23,13 +23,13 @@ import {
   type ThemedClassName,
   useTranslation,
 } from '@dxos/react-ui';
+import { nonNullable } from '@dxos/util';
 
 import { ToolbarButton, ToolbarSeparator, ToolbarToggleButton } from './common';
 import { SHEET_PLUGIN } from '../../meta';
 import { type Formatting } from '../../types';
 import { useSheetContext } from '../Sheet/sheet-context';
 import { Anchor } from '../Sheet/threads';
-import { nonNullable } from '@dxos/util';
 
 //
 // Root
