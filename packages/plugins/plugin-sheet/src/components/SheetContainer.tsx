@@ -13,7 +13,6 @@ const SheetContainer = ({
   sheet,
   space,
   role,
-  coordinate = { part: 'main', entryId: '' },
   remoteFunctionUrl,
 }: SheetRootProps & { role?: string; coordinate?: LayoutCoordinate }) => {
   return (
@@ -21,9 +20,8 @@ const SheetContainer = ({
       role='none'
       className={mx(
         'flex',
-        role === 'article' && 'row-span-2', // TODO(burdon): Container with toolbar.
+        role === 'article' && 'row-span-2',
         role === 'section' && 'aspect-square border-y border-is border-separator',
-        coordinate.part !== 'solo' && 'border-is border-separator',
       )}
     >
       <Sheet.Root sheet={sheet} space={space} remoteFunctionUrl={remoteFunctionUrl}>
