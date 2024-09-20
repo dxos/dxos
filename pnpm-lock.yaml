@@ -7088,6 +7088,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-attention
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -36521,7 +36524,7 @@ packages:
   /esbuild-plugin-raw@0.1.8(esbuild@0.23.1):
     resolution: {integrity: sha512-RNLzkR9DZIDW5nLjtWoSHzECsVHwJf/pel8RFw0fF1AE/0Y7rsdayf1s23mJoXYAuw2rUDqm1hF7zXK++ABRMg==}
     peerDependencies:
-      esbuild: ^0.14.36 || ^0.15.0 || ^0.16.0 || ^0.17.0 || ^0.18.0 || ^0.19.0 || ^0.20.0
+      esbuild: ^0.23.1
     dependencies:
       esbuild: 0.23.1
     dev: true

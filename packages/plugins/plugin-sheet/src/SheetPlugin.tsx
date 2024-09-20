@@ -130,20 +130,26 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       },
       surface: {
         component: ({ data, role = 'never' }) => {
-          if (!['article', 'section'].includes(role) || !isEchoObject(data.object)) {
-            return null;
+          // TODO(burdon): Standardize wrapper (with room for toolbar).
+          const space = isEchoObject(data.object) && getSpace(data.object);
+          if (space && data.object instanceof SheetType) {
+            switch (role) {
+              case 'article':
+              case 'section': {
+                return (
+                  <SheetContainer
+                    sheet={data.object}
+                    space={space}
+                    role={role}
+                    coordinate={data.coordinate as LayoutCoordinate}
+                    remoteFunctionUrl={remoteFunctionUrl}
+                  />
+                );
+              }
+            }
           }
 
-          const space = getSpace(data.object);
-          return space && data.object instanceof SheetType ? (
-            <SheetContainer
-              sheet={data.object}
-              space={space}
-              role={role}
-              coordinate={data.coordinate as LayoutCoordinate}
-              remoteFunctionUrl={remoteFunctionUrl}
-            />
-          ) : null;
+          return null;
         },
       },
       intent: {

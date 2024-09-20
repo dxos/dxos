@@ -73,7 +73,7 @@ export const defaultTheme: ThemeStyles = {
    * NOTE: Gutters should have the same top margin as the content.
    */
   '.cm-gutters': {
-    background: 'unset',
+    background: 'var(--surface-bg)',
   },
   '.cm-gutter': {},
   '.cm-gutterElement': {
