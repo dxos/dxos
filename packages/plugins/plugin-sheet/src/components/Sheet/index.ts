@@ -3,3 +3,4 @@
 //
 
 export * from './Sheet';
+export * from './anchor';

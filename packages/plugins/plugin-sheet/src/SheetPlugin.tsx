@@ -23,7 +23,7 @@ import { createComputeGraph, SheetContainer, type ComputeGraph } from './compone
 // TODO(wittjosiah): Refactor. These are not exported from ./components due to depending on ECHO.
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './components/ComputeGraph/edge-function';
 import { ComputeGraphContextProvider } from './components/ComputeGraph/graph-context';
-import { Anchor } from './components/Sheet/threads';
+import { Anchor } from './components/Sheet';
 import meta, { SHEET_PLUGIN } from './meta';
 import { SheetModel } from './model';
 import translations from './translations';

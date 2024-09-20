@@ -25,6 +25,7 @@ export type Decoration = {
 export const createDecorations = () => {
   // Reactive object to hold decorations
   // TODO(Zan): Use CELL ID's to key the decoration map
+  // TODO(Zan): Consider indexing decorations by type instead of by location for efficiency.
   const { decorations } = create<{ decorations: Record<string, Decoration[]> }>({ decorations: {} });
 
   const addDecoration = (cellAddress: CellAddress, decorator: Decoration) => {
