@@ -10,7 +10,8 @@ import nesting from 'tailwindcss/nesting';
 import type { ThemeConfig } from 'tailwindcss/types/config';
 import { type Plugin } from 'vite';
 
-import { tailwindConfig, tokenSet, resolveKnownPeers } from './config';
+import { resolveKnownPeers } from './resolveContent';
+import { tailwindConfig, tokenSet } from '../config';
 
 export interface VitePluginTailwindOptions {
   jit?: boolean;
@@ -28,7 +29,7 @@ export const ThemePlugin = (
 ) => {
   const config: VitePluginTailwindOptions & Pick<typeof options, 'extensions'> = {
     jit: true,
-    cssPath: resolve(__dirname, './theme.css'),
+    cssPath: resolve(__dirname, '../theme.css'),
     virtualFileId: '@dxos-theme',
     ...options,
   };
