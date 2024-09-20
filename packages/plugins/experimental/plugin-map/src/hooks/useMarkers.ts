@@ -43,7 +43,7 @@ export const useMarkers = (map: MapType): MapMarker[] => {
           lng: row.longitude,
         },
       }));
-  }, [objects]);
+  }, [JSON.stringify(objects.map((obj) => obj.id))]); // TODO(seagreen): Hack.
 
   return markers;
 };
