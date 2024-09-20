@@ -21,9 +21,19 @@ export enum ThreadAction {
   CREATE = `${THREAD_ACTION}/create`,
   SELECT = `${THREAD_ACTION}/select`,
   DELETE = `${THREAD_ACTION}/delete`,
+  ON_MESSAGE_ADD = `${THREAD_ACTION}/on-message-add`,
   DELETE_MESSAGE = `${THREAD_ACTION}/delete-message`,
   TOGGLE_RESOLVED = `${THREAD_ACTION}/toggle-resolved`,
 }
+
+// TODO(Zan): Move this to the plugin-space plugin or another common location
+// when we implement threads in sheets.
+export type ThreadProvides<T> = {
+  thread: {
+    predicate: (obj: any) => obj is T;
+    createSort: (obj: T) => (anchorA: string, anchorB: string) => number;
+  };
+};
 
 export type ThreadPluginProvides = SurfaceProvides &
   IntentResolverProvides &

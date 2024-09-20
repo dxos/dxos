@@ -51,7 +51,7 @@ export class FormattingModel {
       case ValueTypeEnum.Boolean: {
         return {
           value: (value as boolean).toLocaleString().toUpperCase(),
-          classNames: [...classNames, value ? '!text-green-500' : '!text-orange-500'],
+          classNames: [...classNames, value ? '!text-greenText' : '!text-orangeText'],
         };
       }
 
