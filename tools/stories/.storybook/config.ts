@@ -99,9 +99,7 @@ export const config = (
             assetPath: (name, variant) =>
               `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
             spriteFile: 'icons.svg',
-            contentPaths: [
-              join(packages, '/**/src/**/*.{ts,tsx}'),
-            ],
+            contentPaths: [join(packages, '/**/src/**/*.{ts,tsx}')],
           }),
           ThemePlugin({
             root: __dirname,
