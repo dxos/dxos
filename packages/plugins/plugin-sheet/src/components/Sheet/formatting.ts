@@ -4,7 +4,7 @@
 
 import { type ClassNameValue } from '@dxos/react-ui-types';
 
-import { type SheetModel, type CellAddress, inRange } from '../../model';
+import { type SheetModel, type CellAddress, inRange, addressToIndex, rangeFromIndex } from '../../model';
 import { ValueTypeEnum } from '../../types';
 
 export class FormattingModel {
@@ -23,7 +23,7 @@ export class FormattingModel {
     const locales = undefined;
 
     // Cell-specific formatting.
-    const idx = this.model.addressToIndex(cell);
+    const idx = addressToIndex(this.model.sheet, cell);
     let formatting = this.model.sheet.formatting?.[idx] ?? {};
     const classNames = [...(formatting?.classNames ?? [])];
 
@@ -31,7 +31,7 @@ export class FormattingModel {
     // TODO(burdon): NOTE: D0 means the D column.
     // TODO(burdon): Cache model formatting (e.g., for ranges). Create class out of this function.
     for (const [idx, _formatting] of Object.entries(this.model.sheet.formatting)) {
-      const range = this.model.rangeFromIndex(idx);
+      const range = rangeFromIndex(this.model.sheet, idx);
       if (inRange(range, cell)) {
         if (_formatting.classNames) {
           classNames.push(..._formatting.classNames);

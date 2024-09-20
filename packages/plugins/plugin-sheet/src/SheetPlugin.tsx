@@ -23,9 +23,8 @@ import { createComputeGraph, SheetContainer, type ComputeGraph } from './compone
 // TODO(wittjosiah): Refactor. These are not exported from ./components due to depending on ECHO.
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './components/ComputeGraph/edge-function';
 import { ComputeGraphContextProvider } from './components/ComputeGraph/graph-context';
-import { Anchor } from './components/Sheet';
 import meta, { SHEET_PLUGIN } from './meta';
-import { SheetModel } from './model';
+import { addressFromIndex, SheetModel } from './model';
 import translations from './translations';
 import { createSheet, SheetAction, type SheetPluginProvides, SheetType } from './types';
 
@@ -131,12 +130,10 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       },
       thread: {
         predicate: (data) => data instanceof SheetType,
-        createSort: (_data) => {
+        createSort: (sheet) => {
           return (anchorA, anchorB) => {
-            // TODO(Zan): This is a temporary sort function.
-            // Anchors will be the actual cell ID (then we will need _data).
-            const { row: rowA, column: columnA } = Anchor.toCellAddress(anchorA);
-            const { row: rowB, column: columnB } = Anchor.toCellAddress(anchorB);
+            const { row: rowA, column: columnA } = addressFromIndex(sheet, anchorA);
+            const { row: rowB, column: columnB } = addressFromIndex(sheet, anchorB);
 
             // Sort by row first, then by column.
             if (rowA !== rowB) {

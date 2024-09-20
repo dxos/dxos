@@ -27,8 +27,8 @@ import { nonNullable } from '@dxos/util';
 
 import { ToolbarButton, ToolbarSeparator, ToolbarToggleButton } from './common';
 import { SHEET_PLUGIN } from '../../meta';
+import { addressToIndex } from '../../model';
 import { type Formatting } from '../../types';
-import { Anchor } from '../Sheet/anchor';
 import { useSheetContext } from '../Sheet/sheet-context';
 
 //
@@ -192,7 +192,7 @@ const Actions = () => {
       if (!cursor) {
         return false;
       }
-      return Anchor.ofCellAddress(cursor) === thread.anchor;
+      return addressToIndex(model.sheet, cursor) === thread.anchor;
     });
 
   const hasCursor = !!cursor;
@@ -217,7 +217,7 @@ const Actions = () => {
         }
         return onAction?.({
           type: 'comment',
-          anchor: Anchor.ofCellAddress(cursor),
+          anchor: addressToIndex(model.sheet, cursor),
           cellContent: model.getCellText(cursor),
         });
       }}

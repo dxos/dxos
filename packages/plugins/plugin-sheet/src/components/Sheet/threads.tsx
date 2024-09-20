@@ -10,14 +10,16 @@ import { create } from '@dxos/echo-schema';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { nonNullable } from '@dxos/util';
 
-import { Anchor } from './anchor';
 import { type Decoration } from './decorations';
 import { useSheetContext } from './sheet-context';
 import { SHEET_PLUGIN } from '../../meta';
-import { type CellAddress, closest } from '../../model';
+import { addressFromIndex, addressToIndex, closest } from '../../model';
 
+/**
+ * A deep signal representing the currently selected thread for each sheet.
+ * The keys are fully qualified sheet IDs, and the values are thread IDs.
+ */
 const currentThreadForSheet = create<Record<string, string>>({});
 
 const CommentWrapper: React.FC<{ sheetId: string; threadId: string; children: React.ReactNode }> = ({
@@ -61,12 +63,12 @@ const CommentWrapper: React.FC<{ sheetId: string; threadId: string; children: Re
   );
 };
 
-const createThreadDecoration = (cellAddress: CellAddress, threadId: string, sheetId: string): Decoration => {
+const createThreadDecoration = (cellIndex: string, threadId: string, sheetId: string): Decoration => {
   return {
     type: 'comment',
-    cellAddress,
+    cellIndex,
     decorate: (props) => <CommentWrapper threadId={threadId} sheetId={sheetId} {...props} />,
-    classNames: ['bg-green-200'],
+    classNames: ['bg-cmCommentSurface'],
   };
 };
 
@@ -77,12 +79,12 @@ const useUpdateCursorOnThreadSelection = () => {
     switch (action) {
       case LayoutAction.SCROLL_INTO_VIEW: {
         if (data?.id && data?.cursor) {
-          const cellAddress = Anchor.toCellAddress(data.cursor);
+          // TODO(Zan): Everywhere we refer to the cursor in a thread context should change to `anchor`.
+          const cellAddress = addressFromIndex(model.sheet, data.cursor);
           const sheetId = fullyQualifiedId(model.sheet);
-          const threadId = fullyQualifiedId(data.id);
 
           setCursor(cellAddress);
-          currentThreadForSheet[sheetId] = threadId;
+          currentThreadForSheet[sheetId] = data.id;
           return { data: true };
         }
         break;
@@ -102,17 +104,19 @@ const useSelectThreadOnCursorChange = () => {
       return;
     }
 
-    const activeThreadAnchors = threads
-      .filter((thread) => thread && thread.anchor && thread.status === 'active')
-      .filter(nonNullable)
-      .filter((thread) => thread.anchor !== undefined)
-      .map((thread) => Anchor.toCellAddress(thread.anchor!));
+    const activeThreads = threads.filter(
+      (thread): thread is NonNullable<typeof thread> => !!thread && thread.status === 'active',
+    );
 
-    const closestThreadAnchor = closest(cursor, activeThreadAnchors);
+    const activeThreadAddresses = activeThreads
+      .map((thread) => thread.anchor)
+      .filter((anchor) => anchor !== undefined)
+      .map((anchor) => addressFromIndex(model.sheet, anchor));
 
+    const closestThreadAnchor = closest(cursor, activeThreadAddresses);
     if (closestThreadAnchor) {
-      const closestThread = threads.find(
-        (thread) => thread && thread.anchor === Anchor.ofCellAddress(closestThreadAnchor),
+      const closestThread = activeThreads.find(
+        (thread) => thread && thread.anchor === addressToIndex(model.sheet, closestThreadAnchor),
       );
       if (closestThread) {
         const isExactMatch = closestThreadAnchor.column === cursor.column && closestThreadAnchor.row === cursor.row;
@@ -128,7 +132,7 @@ const useSelectThreadOnCursorChange = () => {
   }, [cursor, threads, dispatch, model.sheet]);
 };
 
-const useDecorateThreads = () => {
+const useThreadDecorations = () => {
   const { decorations, model } = useSheetContext();
   const sheet = model.sheet;
   const sheetId = useMemo(() => fullyQualifiedId(sheet), [sheet]);
@@ -139,18 +143,17 @@ const useDecorateThreads = () => {
 
       // Process active threads
       for (const thread of sheet.threads) {
-        if (!thread || !thread.anchor || thread.status === 'resolved') {
+        if (!thread || thread.anchor === undefined || thread.status === 'resolved') {
           continue;
         }
 
-        const cellAddress = Anchor.toCellAddress(thread.anchor);
-        const key = Anchor.ofCellAddress(cellAddress);
-        activeThreadAnchors.add(key);
+        activeThreadAnchors.add(thread.anchor);
+        const index = thread.anchor;
 
         // Add decoration only if it doesn't already exist
-        const existingDecorations = decorations.getDecorationsForCell(cellAddress);
+        const existingDecorations = decorations.getDecorationsForCell(index);
         if (!existingDecorations || !existingDecorations.some((d) => d.type === 'comment')) {
-          decorations.addDecoration(cellAddress, createThreadDecoration(cellAddress, thread.id, sheetId));
+          decorations.addDecoration(index, createThreadDecoration(index, thread.id, sheetId));
         }
       }
 
@@ -160,11 +163,8 @@ const useDecorateThreads = () => {
           continue;
         }
 
-        const cellAddress = decoration.cellAddress;
-        const key = Anchor.ofCellAddress(cellAddress);
-
-        if (!activeThreadAnchors.has(key)) {
-          decorations.removeDecoration(cellAddress, 'comment');
+        if (!activeThreadAnchors.has(decoration.cellIndex)) {
+          decorations.removeDecoration(decoration.cellIndex, 'comment');
         }
       }
     });
@@ -175,5 +175,5 @@ const useDecorateThreads = () => {
 export const useThreads = () => {
   useUpdateCursorOnThreadSelection();
   useSelectThreadOnCursorChange();
-  useDecorateThreads();
+  useThreadDecorations();
 };

@@ -17,7 +17,7 @@ import { type FunctionType } from '@dxos/plugin-script/types';
 
 import { defaultFunctions, type FunctionDefinition } from './functions';
 import { addressFromA1Notation, addressToA1Notation, type CellAddress, type CellRange } from './types';
-import { createIndices, RangeException, ReadonlyException } from './util';
+import { addressFromIndex, addressToIndex, createIndices, RangeException, ReadonlyException } from './util';
 import { type ComputeGraph } from '../components';
 import { type CellScalarValue, type CellValue, type SheetType, ValueTypeEnum } from '../types';
 
@@ -187,7 +187,7 @@ export class SheetModel {
   reset() {
     this._graph.hf.clearSheet(this._sheetId);
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
-      const { column, row } = this.addressFromIndex(key);
+      const { column, row } = addressFromIndex(this._sheet, key);
       if (typeof value === 'string' && value.charAt(0) === '=') {
         value = this.mapFormulaBindingToFormula(this.mapFormulaBindingFromId(this.mapFormulaIndicesToRefs(value)));
       }
@@ -221,7 +221,6 @@ export class SheetModel {
   // Undoable actions.
   // TODO(burdon): Group undoable methods; consistently update hf/sheet.
   //
-
   /**
    * Clear range of values.
    */
@@ -230,7 +229,7 @@ export class SheetModel {
     const values = this._iterRange(range, () => null);
     this._graph.hf.setCellContents(toSimpleCellAddress(this._sheetId, topLeft), values);
     this._iterRange(range, (cell) => {
-      const idx = this.addressToIndex(cell);
+      const idx = addressToIndex(this._sheet, cell);
       delete this._sheet.cells[idx];
     });
   }
@@ -238,7 +237,7 @@ export class SheetModel {
   cut(range: CellRange) {
     this._graph.hf.cut(toModelRange(this._sheetId, range));
     this._iterRange(range, (cell) => {
-      const idx = this.addressToIndex(cell);
+      const idx = addressToIndex(this._sheet, cell);
       delete this._sheet.cells[idx];
     });
   }
@@ -253,7 +252,7 @@ export class SheetModel {
       for (const change of changes) {
         if (change instanceof ExportedCellChange) {
           const { address, newValue } = change;
-          const idx = this.addressToIndex({ row: address.row, column: address.col });
+          const idx = addressToIndex(this._sheet, { row: address.row, column: address.col });
           this._sheet.cells[idx] = { value: newValue };
         }
       }
@@ -279,7 +278,7 @@ export class SheetModel {
    * Get value from sheet.
    */
   getCellValue(cell: CellAddress): CellScalarValue {
-    const idx = this.addressToIndex(cell);
+    const idx = addressToIndex(this._sheet, cell);
     return this._sheet.cells[idx]?.value ?? null;
   }
 
@@ -357,7 +356,7 @@ export class SheetModel {
     ]);
 
     // Insert into sheet.
-    const idx = this.addressToIndex(cell);
+    const idx = addressToIndex(this._sheet, cell);
     if (value === undefined || value === null) {
       delete this._sheet.cells[idx];
     } else {
@@ -428,39 +427,6 @@ export class SheetModel {
   //
 
   /**
-   * E.g., "A1" => "x1@y1".
-   */
-  addressToIndex(cell: CellAddress): CellIndex {
-    return `${this._sheet.columns[cell.column]}@${this._sheet.rows[cell.row]}`;
-  }
-
-  /**
-   * E.g., "x1@y1" => "A1".
-   */
-  addressFromIndex(idx: CellIndex): CellAddress {
-    const [column, row] = idx.split('@');
-    return {
-      column: this._sheet.columns.indexOf(column),
-      row: this._sheet.rows.indexOf(row),
-    };
-  }
-
-  /**
-   * E.g., "A1:B2" => "x1@y1:x2@y2".
-   */
-  rangeToIndex(range: CellRange): string {
-    return [range.from, range.to ?? range.from].map((cell) => this.addressToIndex(cell)).join(':');
-  }
-
-  /**
-   * E.g., "x1@y1:x2@y2" => "A1:B2".
-   */
-  rangeFromIndex(idx: string): CellRange {
-    const [from, to] = idx.split(':').map((idx) => this.addressFromIndex(idx));
-    return { from, to };
-  }
-
-  /**
    * E.g., "HELLO()" => "EDGE("HELLO")".
    */
   mapFormulaBindingToFormula(formula: string): string {
@@ -509,7 +475,7 @@ export class SheetModel {
   mapFormulaRefsToIndices(formula: string): string {
     invariant(formula.charAt(0) === '=');
     return formula.replace(/([a-zA-Z]+)([0-9]+)/g, (match) => {
-      return this.addressToIndex(addressFromA1Notation(match));
+      return addressToIndex(this._sheet, addressFromA1Notation(match));
     });
   }
 
@@ -519,7 +485,7 @@ export class SheetModel {
   mapFormulaIndicesToRefs(formula: string): string {
     invariant(formula.charAt(0) === '=');
     return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (idx) => {
-      return addressToA1Notation(this.addressFromIndex(idx));
+      return addressToA1Notation(addressFromIndex(this._sheet, idx));
     });
   }
 

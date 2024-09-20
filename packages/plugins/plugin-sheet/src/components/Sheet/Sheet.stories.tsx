@@ -18,7 +18,7 @@ import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 import { Sheet } from './Sheet';
 import { type SizeMap } from './grid';
 import { useSheetContext } from './sheet-context';
-import { SheetModel } from '../../model';
+import { addressToIndex, rangeToIndex, SheetModel } from '../../model';
 import { ValueTypeEnum, type CellValue, createSheet, SheetType } from '../../types';
 import { type ComputeGraph, createComputeGraph } from '../ComputeGraph';
 // TODO(wittjosiah): Refactor. This is not exported from ./components due to depending on ECHO.
@@ -36,7 +36,7 @@ const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) =
       return;
     }
 
-    const idx = range ? model.rangeToIndex(range) : model.addressToIndex(cursor);
+    const idx = range ? rangeToIndex(model.sheet, range) : addressToIndex(model.sheet, cursor);
     model.sheet.formatting[idx] ??= {};
     const format = model.sheet.formatting[idx];
 

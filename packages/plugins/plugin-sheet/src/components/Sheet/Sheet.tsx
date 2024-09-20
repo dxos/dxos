@@ -69,6 +69,8 @@ import {
   columnLetter,
   posEquals,
   rangeToA1Notation,
+  addressToIndex,
+  addressFromIndex,
 } from '../../model';
 import {
   CellEditor,
@@ -177,21 +179,21 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
   }, [rows, columns]);
 
   const handleMoveRows: SheetRowsProps['onMove'] = (from, to, num = 1) => {
-    const cursorIdx = cursor ? model.addressToIndex(cursor) : undefined;
+    const cursorIdx = cursor ? addressToIndex(model.sheet, cursor) : undefined;
     const [rows] = model.sheet.rows.splice(from, num);
     model.sheet.rows.splice(to, 0, rows);
     if (cursorIdx) {
-      setCursor(model.addressFromIndex(cursorIdx));
+      setCursor(addressFromIndex(model.sheet, cursorIdx));
     }
     setRows([...model.sheet.rows]);
   };
 
   const handleMoveColumns: SheetColumnsProps['onMove'] = (from, to, num = 1) => {
-    const cursorIdx = cursor ? model.addressToIndex(cursor) : undefined;
+    const cursorIdx = cursor ? addressToIndex(model.sheet, cursor) : undefined;
     const columns = model.sheet.columns.splice(from, num);
     model.sheet.columns.splice(to, 0, ...columns);
     if (cursorIdx) {
-      setCursor(model.addressFromIndex(cursorIdx));
+      setCursor(addressFromIndex(model.sheet, cursorIdx));
     }
     setColumns([...model.sheet.columns]);
   };
@@ -893,7 +895,7 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
                 const style: CSSProperties = { position: 'absolute', top, left, width, height };
                 const cell = { row, column };
                 const id = addressToA1Notation(cell);
-                const idx = model.addressToIndex(cell);
+                const idx = addressToIndex(model.sheet, cell);
                 const active = posEquals(cursor, cell);
                 if (active && editing) {
                   const value = initialText.current ?? model.getCellText(cell) ?? '';
@@ -1014,10 +1016,16 @@ type SheetCellProps = {
 };
 
 const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
-  const { formatting, editing, setRange, decorations } = useSheetContext();
+  const {
+    formatting,
+    editing,
+    setRange,
+    decorations,
+    model: { sheet },
+  } = useSheetContext();
   const { value, classNames } = formatting.getFormatting(cell);
 
-  const decorationsForCell = decorations.getDecorationsForCell(cell) ?? [];
+  const decorationsForCell = decorations.getDecorationsForCell(addressToIndex(sheet, cell)) ?? [];
   const decorationAddedClasses = useMemo(
     () => decorationsForCell.flatMap((d) => d.classNames ?? []),
     [decorationsForCell],
@@ -1034,10 +1042,7 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
     // Very happy to rework this system as our needs evolve.
     <div
       role='none'
-      className={mx(
-        'flex is-full bs-full px-2 py-1 truncate items-center border cursor-pointer',
-        ...decorationAddedClasses,
-      )}
+      className={mx('flex is-full bs-full px-2 py-1 truncate items-center cursor-pointer', ...decorationAddedClasses)}
     >
       {value}
     </div>,
@@ -1048,7 +1053,7 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       {...{ [`data-${CELL_DATA_KEY}`]: id }}
       role='cell'
       style={style}
-      className={mx(fragments.cell, fragments.border, active && ['z-20', fragments.cellSelected], classNames)}
+      className={mx('border', fragments.cell, fragments.border, active && ['z-20', fragments.cellSelected], classNames)}
       onClick={() => {
         if (editing) {
           setRange?.({ from: cell });

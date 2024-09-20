@@ -4,8 +4,6 @@
 
 import { create } from '@dxos/echo-schema';
 
-import { type CellAddress } from '../../model';
-
 export type Decoration = {
   type: string;
   /**
@@ -19,7 +17,7 @@ export type Decoration = {
    * These classes can be used to style the cell's content independently of its structure.
    */
   classNames?: string[];
-  cellAddress: CellAddress;
+  cellIndex: string;
 };
 
 export const createDecorations = () => {
@@ -28,24 +26,21 @@ export const createDecorations = () => {
   // TODO(Zan): Consider maintaining an index of decorations by type.
   const { decorations } = create<{ decorations: Record<string, Decoration[]> }>({ decorations: {} });
 
-  const addDecoration = (cellAddress: CellAddress, decorator: Decoration) => {
-    const key = `${cellAddress.column},${cellAddress.row}`;
-    decorations[key] = [...(decorations[key] || []), decorator];
+  const addDecoration = (cellIndex: string, decorator: Decoration) => {
+    decorations[cellIndex] = [...(decorations[cellIndex] || []), decorator];
   };
 
-  const removeDecoration = (cellAddress: CellAddress, type?: string) => {
-    const key = `${cellAddress.column},${cellAddress.row}`;
+  const removeDecoration = (cellIndex: string, type?: string) => {
     if (type) {
-      decorations[key] = (decorations[key] || []).filter((d) => d.type !== type);
+      decorations[cellIndex] = (decorations[cellIndex] || []).filter((d) => d.type !== type);
     } else {
-      delete decorations[key];
+      delete decorations[cellIndex];
     }
   };
 
   // TODO(Zan): I should check if returning the a value from a map in a deep signal is a reactive slice.
-  const getDecorationsForCell = (cellAddress: CellAddress): Decoration[] | undefined => {
-    const key = `${cellAddress.column},${cellAddress.row}`;
-    return decorations[key];
+  const getDecorationsForCell = (cellIndex: string): Decoration[] | undefined => {
+    return decorations[cellIndex];
   };
 
   const getAllDecorations = (): Decoration[] => {

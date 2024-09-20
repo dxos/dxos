@@ -4,7 +4,8 @@
 
 import { randomBytes } from '@dxos/crypto';
 
-import { type CellAddress } from '.';
+import { type CellRange, type CellAddress } from '.';
+import { type SheetType } from '../types';
 
 // TODO(burdon): Factor out from dxos/protocols to new common package.
 export class ApiError extends Error {}
@@ -26,6 +27,39 @@ export const createIndex = (length = 8): string => {
 };
 
 export const createIndices = (length: number): string[] => Array.from({ length }).map(() => createIndex());
+
+/**
+ * E.g., "A1" => "CA2@CB3".
+ */
+export const addressToIndex = (sheet: SheetType, cell: CellAddress): string => {
+  return `${sheet.columns[cell.column]}@${sheet.rows[cell.row]}`;
+};
+
+/**
+ * E.g., "CA2@CB3" => "A1".
+ */
+export const addressFromIndex = (sheet: SheetType, idx: string): CellAddress => {
+  const [column, row] = idx.split('@');
+  return {
+    column: sheet.columns.indexOf(column),
+    row: sheet.rows.indexOf(row),
+  };
+};
+
+/**
+ * E.g., "A1:B2" => "CA2@CB3:CC4@CD5".
+ */
+export const rangeToIndex = (sheet: SheetType, range: CellRange): string => {
+  return [range.from, range.to ?? range.from].map((cell) => addressToIndex(sheet, cell)).join(':');
+};
+
+/**
+ * E.g., "CA2@CB3:CC4@CD5" => "A1:B2".
+ */
+export const rangeFromIndex = (sheet: SheetType, idx: string): CellRange => {
+  const [from, to] = idx.split(':').map((index) => addressFromIndex(sheet, index));
+  return { from, to };
+};
 
 // TODO(burdon): Factor out.
 export const pickOne = <T>(values: T[]): T => values[Math.floor(Math.random() * values.length)];
