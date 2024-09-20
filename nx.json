@@ -194,16 +194,6 @@
         "^production"
       ]
     },
-    "serve-with-vault": {
-      "dependsOn": [
-        "^compile",
-        "prebuild"
-      ],
-      "inputs": [
-        "production",
-        "^production"
-      ]
-    },
     "vitest": {
       "cache": true,
       "dependsOn": [

@@ -43,10 +43,6 @@
       "options": {
         "buildTarget": "tasks:bundle"
       }
-    },
-    "serve-with-vault": {
-      "executor": "@dxos/serve-with-vault:run"
     }
-  },
-  "implicitDependencies": ["serve-with-vault"]
+  }
 }

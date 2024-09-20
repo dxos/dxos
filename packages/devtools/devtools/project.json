@@ -47,9 +47,6 @@
       "options": {
         "buildTarget": "devtools:bundle"
       }
-    },
-    "serve-with-vault": {
-      "executor": "@dxos/serve-with-vault:run"
     }
   },
   "implicitDependencies": [

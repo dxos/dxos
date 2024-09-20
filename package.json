@@ -50,7 +50,6 @@
     "@dxos/nx-protobuf-compiler": "workspace:*",
     "@dxos/plate": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
-    "@dxos/serve-with-vault": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/swc-log-plugin": "workspace:*",
     "@dxos/toolbox": "workspace:*",

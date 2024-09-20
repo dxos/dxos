@@ -1,9 +1,0 @@
-{
-  "executors": {
-    "run": {
-      "implementation": "./dist/src/main",
-      "schema": "./schema.json",
-      "description": "Runs another server alongside the vault dev server."
-    }
-  }
-}

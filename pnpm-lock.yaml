@@ -98,9 +98,6 @@ importers:
       '@dxos/protobuf-compiler':
         specifier: workspace:*
         version: link:packages/common/protobuf-compiler
-      '@dxos/serve-with-vault':
-        specifier: workspace:*
-        version: link:tools/executors/serve-with-vault
       '@dxos/signal':
         specifier: workspace:*
         version: link:packages/core/mesh/signal
@@ -11657,8 +11654,6 @@ importers:
   tools/executors/esbuild: {}
 
   tools/executors/nx-protobuf-compiler: {}
-
-  tools/executors/serve-with-vault: {}
 
   tools/executors/toolbox:
     dependencies:
@@ -31442,8 +31437,13 @@ packages:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  /ajv-formats@2.1.1:
+  /ajv-formats@2.1.1(ajv@8.12.0):
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
     dependencies:
       ajv: 8.12.0
 
@@ -33847,7 +33847,7 @@ packages:
     engines: {node: '>=18'}
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -48520,7 +48520,7 @@ packages:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       ajv-keywords: 5.1.0(ajv@8.12.0)
     dev: true
 

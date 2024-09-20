@@ -869,11 +869,6 @@
         },
         {
           "type": "json",
-          "path": "tools/executors/serve-with-vault/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/executors/toolbox/package.json",
           "jsonpath": "$.version"
         },
