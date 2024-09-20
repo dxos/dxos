@@ -4,12 +4,17 @@
 
 import React from 'react';
 
-import { type LayoutContainerProps } from '@dxos/app-framework';
+import { type LayoutCoordinate } from '@dxos/app-framework';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Sheet, type SheetRootProps } from './Sheet';
 
-const SheetContainer = ({ sheet, space, role }: LayoutContainerProps<SheetRootProps>) => {
+const SheetContainer = ({
+  sheet,
+  space,
+  role,
+  remoteFunctionUrl,
+}: SheetRootProps & { role?: string; coordinate?: LayoutCoordinate }) => {
   return (
     <div
       role='none'
@@ -17,10 +22,9 @@ const SheetContainer = ({ sheet, space, role }: LayoutContainerProps<SheetRootPr
         'flex',
         role === 'article' && 'row-span-2',
         role === 'section' && 'aspect-square border-y border-is border-separator',
-        // coordinate.part !== 'solo' && 'border-is border-separator',
       )}
     >
-      <Sheet.Root sheet={sheet} space={space}>
+      <Sheet.Root sheet={sheet} space={space} remoteFunctionUrl={remoteFunctionUrl}>
         <Sheet.Main />
       </Sheet.Root>
     </div>

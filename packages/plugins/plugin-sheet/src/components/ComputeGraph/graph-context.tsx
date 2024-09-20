@@ -7,6 +7,7 @@ import React, { createContext, type PropsWithChildren, useContext, useEffect } f
 import { type Space } from '@dxos/react-client/echo';
 
 import { type FunctionContextOptions } from './async-function';
+import { CustomPlugin, CustomPluginTranslations } from './custom';
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './edge-function';
 import { createComputeGraph, type ComputeGraph } from './graph';
 
@@ -29,7 +30,15 @@ export const useComputeGraph = (space: Space, options?: Partial<FunctionContextO
   const { graphs, setGraph } = useContext(ComputeGraphContext);
   const graph =
     graphs[space.id] ??
-    createComputeGraph([{ plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations }], space, options);
+    createComputeGraph(
+      [
+        { plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations },
+        // TODO(wittjosiah): Remove. Needed for current test sheet generated data.
+        { plugin: CustomPlugin, translations: CustomPluginTranslations },
+      ],
+      space,
+      options,
+    );
 
   useEffect(() => {
     if (!graphs[space.id]) {

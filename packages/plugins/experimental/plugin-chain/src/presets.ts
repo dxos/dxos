@@ -15,14 +15,14 @@ export const str = (...text: (string | undefined | boolean)[]): string =>
 export type Preset = {
   id: string;
   title: string;
-  prompt: () => ChainPromptType;
+  createPrompt: () => ChainPromptType;
 };
 
-export const chainPresets = [
+export const chainPresets: Preset[] = [
   {
     id: 'dxos.org/prompt/translate',
     title: 'Translate',
-    prompt: () =>
+    createPrompt: () =>
       create(ChainPromptType, {
         command: 'say',
         template: str(
@@ -55,7 +55,7 @@ export const chainPresets = [
   {
     id: 'dxos.org/prompt/chess',
     title: 'Chess',
-    prompt: () =>
+    createPrompt: () =>
       create(ChainPromptType, {
         command: 'hint',
         template: str(
@@ -78,7 +78,7 @@ export const chainPresets = [
   {
     id: 'dxos.org/prompt/mermaid',
     title: 'Mermaid',
-    prompt: () =>
+    createPrompt: () =>
       create(ChainPromptType, {
         command: 'draw',
         template: str(
@@ -101,7 +101,7 @@ export const chainPresets = [
   {
     id: 'dxos.org/prompt/list',
     title: 'List',
-    prompt: () =>
+    createPrompt: () =>
       create(ChainPromptType, {
         command: 'list',
         template: str(
@@ -133,7 +133,7 @@ export const chainPresets = [
   {
     id: 'dxos.org/prompt/base',
     title: 'RAG',
-    prompt: () =>
+    createPrompt: () =>
       create(ChainPromptType, {
         command: 'rag',
         template: str(
@@ -163,7 +163,7 @@ export const chainPresets = [
   {
     id: 'dxos.org/prompt/lookup',
     title: 'Lookup',
-    prompt: () =>
+    createPrompt: () =>
       create(ChainPromptType, {
         command: 'lookup',
         template: str(
@@ -186,7 +186,7 @@ export const chainPresets = [
   {
     id: 'dxos.org/prompt/extract',
     title: 'Extract',
-    prompt: () =>
+    createPrompt: () =>
       create(ChainPromptType, {
         command: 'extract',
         template: str(
@@ -225,7 +225,7 @@ export const chainPresets = [
   {
     id: 'dxos.org/prompt/discord',
     title: 'Summarize',
-    prompt: () =>
+    createPrompt: () =>
       create(ChainPromptType, {
         command: 'summarize',
         template: str(

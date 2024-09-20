@@ -25,7 +25,7 @@ import { useHasAttention } from '@dxos/react-ui-attention';
 import { createDataExtensions, listener } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-import { DetailsPanel } from './DetailsPanel';
+import { DebugPanel } from './DebugPanel';
 import { Toolbar } from './Toolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 import { Bundler } from '../bundler';
@@ -193,7 +193,7 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
       />
 
       {showPanel && (
-        <DetailsPanel functionUrl={functionUrl} binding={fn?.binding} onBindingChange={handleBindingChange} />
+        <DebugPanel functionUrl={functionUrl} binding={fn?.binding} onBindingChange={handleBindingChange} />
       )}
     </div>
   );
