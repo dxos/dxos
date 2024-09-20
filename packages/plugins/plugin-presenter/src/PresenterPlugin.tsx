@@ -125,11 +125,12 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
               }
               return null;
             }
-            case 'slide':
+            case 'slide': {
               return data.slide instanceof DocumentType ? <MarkdownSlide document={data.slide} /> : null;
-
-            case 'settings':
+            }
+            case 'settings': {
               return data.plugin === meta.id ? <PresenterSettings settings={settings.values} /> : null;
+            }
           }
 
           return null;

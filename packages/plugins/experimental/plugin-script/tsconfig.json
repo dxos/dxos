@@ -78,6 +78,9 @@
       "path": "../../../ui/react-ui"
     },
     {
+      "path": "../../../ui/react-ui-attention"
+    },
+    {
       "path": "../../../ui/react-ui-editor"
     },
     {
