@@ -91,6 +91,7 @@
     "@typescript-eslint/parser": "^6.20.0",
     "@vitejs/plugin-react-swc": "^3.6.0",
     "@vitest/browser": "^2.1.1",
+    "@vitest/coverage-v8": "^2.1.1",
     "@vitest/runner": "^2.1.1",
     "@vitest/snapshot": "^2.1.1",
     "@vitest/ui": "^2.1.1",

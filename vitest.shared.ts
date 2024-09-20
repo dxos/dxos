@@ -105,6 +105,9 @@ const resolveReporterConfig = (args: { browserMode: boolean }): VitestConfig['te
       passWithNoTests: true,
       reporters: ['junit', 'verbose'],
       outputFile: join(__dirname, `test-results/${vitestReportDir}/${targetProject}/report.xml`),
+      coverage: {
+        reportsDirectory: join(__dirname, `coverage/${vitestReportDir}/${targetProject}/`),
+      },
     };
   }
 

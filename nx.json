@@ -29,27 +29,32 @@
   },
   "targetDefaults": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "{projectRoot}/src/index.ts",
-        "outputPath": "{projectRoot}/dist/types",
-        "tsConfig": "{projectRoot}/tsconfig.json"
-      },
-      "inputs": [
-        "production",
-        "^production"
-      ],
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "cache": true,
       "dependsOn": [
         "^build",
         "prebuild",
         "compile"
       ],
-      "cache": true
+      "executor": "@nx/js:tsc",
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "options": {
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "{projectRoot}/dist/types",
+        "tsConfig": "{projectRoot}/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "bundle": {
+      "cache": true,
+      "dependsOn": [
+        "^build",
+        "prebuild"
+      ],
       "inputs": [
         "production",
         "^production",
@@ -95,36 +100,33 @@
         {
           "env": "SENTRY_RELEASE_AUTH_TOKEN"
         }
-      ],
-      "dependsOn": [
-        "^build",
-        "prebuild"
-      ],
-      "cache": true
+      ]
     },
     "compile": {
-      "executor": "@dxos/esbuild:build",
-      "options": {
-        "outputPath": "{projectRoot}/dist/lib"
-      },
-      "inputs": [
-        "production",
-        "^production"
-      ],
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "cache": true,
       "dependsOn": [
         "^compile",
         "prebuild"
       ],
-      "cache": true
+      "executor": "@dxos/esbuild:build",
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "options": {
+        "outputPath": "{projectRoot}/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "e2e": {
+      "cache": true,
+      "dependsOn": [
+        "prebuild",
+        "^compile"
+      ],
       "executor": "@nx/playwright:playwright",
-      "options": {
-        "config": "{projectRoot}/src/playwright/playwright.config.ts"
-      },
       "inputs": [
         "default",
         "^production",
@@ -138,13 +140,12 @@
           "env": "LOG_PROCESSOR"
         }
       ],
-      "dependsOn": [
-        "prebuild",
-        "^compile"
-      ],
-      "cache": true
+      "options": {
+        "config": "{projectRoot}/src/playwright/playwright.config.ts"
+      }
     },
     "lint": {
+      "cache": true,
       "executor": "@nx/linter:eslint",
       "inputs": [
         "default"
@@ -155,28 +156,27 @@
           "{projectRoot}/**/*.{ts,tsx,js,jsx}"
         ],
         "quiet": true
-      },
-      "cache": true
+      }
     },
     "prebuild": {
-      "inputs": [
-        "production",
-        "^production"
-      ],
+      "cache": true,
       "dependsOn": [
         "^compile"
       ],
-      "cache": true
+      "inputs": [
+        "production",
+        "^production"
+      ]
     },
     "prerelease": {
-      "inputs": [
-        "default",
-        "^production"
-      ],
+      "cache": true,
       "dependsOn": [
         "^build"
       ],
-      "cache": true
+      "inputs": [
+        "default",
+        "^production"
+      ]
     },
     "preview": {
       "inputs": [
@@ -185,26 +185,31 @@
       ]
     },
     "serve": {
-      "inputs": [
-        "production",
-        "^production"
-      ],
       "dependsOn": [
         "^compile",
         "prebuild"
+      ],
+      "inputs": [
+        "production",
+        "^production"
       ]
     },
     "serve-with-vault": {
-      "inputs": [
-        "production",
-        "^production"
-      ],
       "dependsOn": [
         "^compile",
         "prebuild"
+      ],
+      "inputs": [
+        "production",
+        "^production"
       ]
     },
     "vitest": {
+      "cache": true,
+      "dependsOn": [
+        "prebuild",
+        "^compile"
+      ],
       "executor": "@nx/vite:test",
       "inputs": [
         "default",
@@ -219,12 +224,7 @@
         {
           "env": "VITEST_XML_REPORT"
         }
-      ],
-      "dependsOn": [
-        "prebuild",
-        "^compile"
-      ],
-      "cache": true
+      ]
     },
     "compile-lib": {
       "cache": true
