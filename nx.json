@@ -194,7 +194,7 @@
         "^production"
       ]
     },
-    "vitest": {
+    "test": {
       "cache": true,
       "dependsOn": [
         "prebuild",

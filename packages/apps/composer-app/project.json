@@ -132,6 +132,6 @@
         "configDir": "{projectRoot}/.storybook"
       }
     },
-    "vitest": {}
+    "test": {}
   }
 }

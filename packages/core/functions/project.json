@@ -25,7 +25,7 @@
         "script": "gen-schema"
       }
     },
-    "vitest": {}
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild"

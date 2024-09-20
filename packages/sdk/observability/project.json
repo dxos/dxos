@@ -46,7 +46,7 @@
         "{projectRoot}/src/cli-observability-secrets.json"
       ]
     },
-    "vitest": {}
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild"

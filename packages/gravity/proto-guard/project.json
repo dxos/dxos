@@ -18,6 +18,6 @@
         "script": "storage"
       }
     },
-    "vitest": {}
+    "test": {}
   }
 }

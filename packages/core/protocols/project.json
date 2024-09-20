@@ -83,7 +83,7 @@
         "{projectRoot}/proto"
       ]
     },
-    "vitest": {}
+    "test": {}
   },
   "implicitDependencies": [
     "nx-protobuf-compiler"
