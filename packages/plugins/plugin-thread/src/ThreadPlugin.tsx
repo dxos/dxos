@@ -554,7 +554,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               }
 
               if (!intent.undo) {
-                const index = subject.threads.findIndex((t) => t?.id === thread.id);
+                const index = subject.threads.findIndex((t: any) => t?.id === thread.id);
                 const cursor = subject.threads[index]?.anchor;
                 if (index !== -1) {
                   subject.threads?.splice(index, 1);
@@ -674,7 +674,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         action: ObservabilityAction.SEND_EVENT,
                         data: {
                           name: 'threads.message.delete',
-                          properties: { threadId: thread.id, spaceId: space.id },
+                          properties: { threadId: thread.id, spaceId: space?.id },
                         },
                       },
                     ],
@@ -698,7 +698,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         action: ObservabilityAction.SEND_EVENT,
                         data: {
                           name: 'threads.message.undo-delete',
-                          properties: { threadId: thread.id, spaceId: space.id },
+                          properties: { threadId: thread.id, spaceId: space?.id },
                         },
                       },
                     ],
