@@ -38,7 +38,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
     });
 
   const client = useClient();
-  const space = useSpace(spaceKey ?? spaceId);
+  const space = useSpace(spaceId ?? spaceKey);
 
   const createDeviceInvitationUrl = (invitationCode: string) => {
     const baseUrl = new URL(invitationUrl);
