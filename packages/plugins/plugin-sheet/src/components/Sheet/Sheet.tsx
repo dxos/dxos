@@ -40,7 +40,7 @@ import { debounce } from '@dxos/async';
 import { fullyQualifiedId, createDocAccessor } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { createAttendableAttributes } from '@dxos/react-ui-attention';
+import { createAttendableAttributes, useHasAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
@@ -855,10 +855,9 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
     });
 
     // TODO(burdon): Prevent scroll if not attended.
-    const qualifiedSubjectId = fullyQualifiedId(model.sheet);
-    const attendableAttrs = createAttendableAttributes(qualifiedSubjectId);
-    // const attended = useHasAttention(qualifiedSubjectId);
-    const attended = true;
+    const id = fullyQualifiedId(model.sheet);
+    const attendableAttrs = createAttendableAttributes(id);
+    const hasAttention = useHasAttention(id);
 
     return (
       <div ref={containerRef} role='grid' className='relative flex grow overflow-hidden'>
@@ -866,7 +865,7 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
         <div className={mx('z-20 absolute inset-0 border border-gridLine pointer-events-none')} />
 
         {/* Grid scroll container. */}
-        <div ref={scrollerRef} className={mx('grow', attended && 'overflow-auto scrollbar-thin')}>
+        <div ref={scrollerRef} className={mx('grow', hasAttention && 'overflow-auto scrollbar-thin')}>
           {/* Scroll content. */}
           <div
             className='relative select-none'
