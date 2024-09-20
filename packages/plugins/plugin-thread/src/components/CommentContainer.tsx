@@ -159,7 +159,9 @@ export const CommentContainer = ({
     return true;
   }, [thread, identity]);
 
-  const handleDeleteMessage = (id: string) => onMessageDelete?.(id);
+  const handleDeleteMessage = (id: string) => {
+    return onMessageDelete?.(id);
+  };
 
   return (
     <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={thread.id}>

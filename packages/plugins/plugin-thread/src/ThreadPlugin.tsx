@@ -402,13 +402,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                               });
                             }
                           }}
-                          onThreadDelete={(thread) =>
-                            dispatch?.({
+                          onThreadDelete={(thread) => {
+                            return dispatch?.({
                               plugin: THREAD_PLUGIN,
                               action: ThreadAction.DELETE,
                               data: { subject: data.subject, thread },
-                            })
-                          }
+                            });
+                          }}
                           onMessageDelete={(thread, messageId) =>
                             dispatch?.({
                               plugin: THREAD_PLUGIN,
@@ -530,7 +530,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             case ThreadAction.DELETE: {
               const { subject, thread } = intent.data ?? {};
-              if (!(subject instanceof DocumentType) || !(thread instanceof ThreadType)) {
+              if (
+                !(thread instanceof ThreadType) ||
+                !(subject && typeof subject === 'object' && 'threads' in subject)
+              ) {
                 return;
               }
 
@@ -542,7 +545,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const index = stagingArea.findIndex((t) => t.id === thread.id);
                 if (index !== -1) {
                   stagingArea.splice(index, 1);
-                  return;
+                  return { data: true };
                 }
               }
 
@@ -638,7 +641,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const { subject, thread, messageId } = intent.data ?? {};
               const space = getSpace(subject);
 
-              if (!(subject instanceof DocumentType) || !(thread instanceof ThreadType) || !space) {
+              if (
+                !(thread instanceof ThreadType) ||
+                !(subject && typeof subject === 'object' && 'threads' in subject)
+              ) {
                 return;
               }
 

@@ -91,7 +91,7 @@ export const MessageContainer = ({
                   variant='ghost'
                   data-testid='thread.message.delete'
                   classNames={messageControlClassNames}
-                  onClick={handleDelete}
+                  onClick={() => handleDelete()}
                 >
                   <span className='sr-only'>{deleteLabel}</span>
                   <X className={getSize(4)} />
