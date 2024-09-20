@@ -10,8 +10,8 @@ import { resolve, relative, join, basename } from 'node:path';
 import tailwindcss from 'tailwindcss';
 import type { ThemeConfig } from 'tailwindcss/types/config';
 
-import { tailwindConfig } from './config';
-import { resolveKnownPeers } from './config/resolveContent';
+import { resolveKnownPeers } from './resolveContent';
+import { tailwindConfig } from '../config';
 
 export const ThemePlugins = async (options: {
   content: string[];
