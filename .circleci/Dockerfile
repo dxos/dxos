@@ -1,6 +1,6 @@
 FROM cimg/base:2022.04
 
-ENV NODE_VERSION 18.19.0
+ENV NODE_VERSION 20.12.1
 # https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md#global-npm-dependencies
 ENV NPM_CONFIG_PREFIX=/home/circleci/.npm-global
 ENV PATH=$PATH:/home/circleci/.npm-global/bin
@@ -16,4 +16,4 @@ RUN curl -L -o node.tar.xz "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NOD
 RUN sudo apt-get update \
   && sudo apt-get install -y libxtst-dev libpng++-dev libenchant-2-2 lsof rsync \
   && npx playwright@1.46.0 install-deps \ 
-  && npm install -g pnpm@8.15.8
+  && npm install -g pnpm@9.11.0

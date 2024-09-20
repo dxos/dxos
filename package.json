@@ -154,10 +154,10 @@
     "webdriverio": "^8.32.4",
     "wrangler": "^3.51.2"
   },
-  "packageManager": "pnpm@8.15.8",
+  "packageManager": "pnpm@9.11.0",
   "engines": {
     "node": ">=18.0.0",
-    "pnpm": "^8.0.0"
+    "pnpm": "^9.0.0"
   },
   "pnpm": {
     "overrides": {
