@@ -4,6 +4,8 @@
 
 import { randomBytes } from '@dxos/crypto';
 
+import { type CellAddress } from '.';
+
 // TODO(burdon): Factor out from dxos/protocols to new common package.
 export class ApiError extends Error {}
 export class ReadonlyException extends ApiError {}
@@ -33,4 +35,19 @@ export const pickSome = <T>(values: T[], n = 1): T[] => {
     result.add(pickOne(values));
   }
   return Array.from(result.values());
+};
+
+export const closest = (cursor: CellAddress, cells: CellAddress[]): CellAddress | undefined => {
+  let closestCell: CellAddress | undefined;
+  let closestDistance = Number.MAX_SAFE_INTEGER;
+
+  for (const cell of cells) {
+    const distance = Math.abs(cell.row - cursor.row) + Math.abs(cell.column - cursor.column);
+    if (distance < closestDistance) {
+      closestCell = cell;
+      closestDistance = distance;
+    }
+  }
+
+  return closestCell;
 };

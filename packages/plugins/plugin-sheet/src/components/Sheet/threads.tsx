@@ -9,36 +9,11 @@ import { LayoutAction, useIntentDispatcher, useIntentResolver } from '@dxos/app-
 import { Icon } from '@dxos/react-ui';
 import { nonNullable } from '@dxos/util';
 
+import { Anchor } from './anchor';
 import { type Decoration } from './decorations';
 import { useSheetContext } from './sheet-context';
 import { SHEET_PLUGIN } from '../../meta';
-import { type CellAddress } from '../../model';
-
-// TODO(Zan): The anchor should be a cell ID so that it's durable when
-// cells are moved around.
-export const Anchor = {
-  ofCellAddress: (location: CellAddress): string => `${location.row}:${location.column}`,
-  toCellAddress: (anchor: string): CellAddress => {
-    const [row, column] = anchor.split(':');
-    return { row: parseInt(row), column: parseInt(column) };
-  },
-};
-
-// TODO(Zan): Factor out into a utility.
-const closest = (cursor: CellAddress, cells: CellAddress[]): CellAddress | undefined => {
-  let closestCell: CellAddress | undefined;
-  let closestDistance = Number.MAX_SAFE_INTEGER;
-
-  for (const cell of cells) {
-    const distance = Math.abs(cell.row - cursor.row) + Math.abs(cell.column - cursor.column);
-    if (distance < closestDistance) {
-      closestCell = cell;
-      closestDistance = distance;
-    }
-  }
-
-  return closestCell;
-};
+import { type CellAddress, closest } from '../../model';
 
 const CommentWrapper: React.FC<{ threadId: string; children: React.ReactNode }> = ({ threadId, children }) => {
   const dispatch = useIntentDispatcher();
@@ -93,10 +68,9 @@ const useUpdateCursorOnThreadSelection = () => {
       case LayoutAction.SCROLL_INTO_VIEW: {
         if (data?.id && data?.cursor) {
           const cellAddress = Anchor.toCellAddress(data.cursor);
-          setCursor(cellAddress);
 
           // TODO(Zan): Scroll helper? (Ask Rich).
-          // setCursor(cellAddress);
+          setCursor(cellAddress);
           return { data: true };
         }
         break;
