@@ -16,7 +16,7 @@ export default [
         'toolbar left label': 'Align left',
         'toolbar left center': 'Align center',
         'toolbar left right': 'Align right',
-        'selection overlaps existing comment label': 'Selection overlaps existing comment',
+        'selection overlaps existing comment label': 'Selected cell already has a comment',
         'comment label': 'Add comment',
         'comment ranges not supported label': 'Commenting on ranges is not supported (yet)',
         'no cursor label': 'Select a cell to comment',

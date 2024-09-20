@@ -29,6 +29,7 @@ import { SHEET_PLUGIN } from '../../meta';
 import { type Formatting } from '../../types';
 import { useSheetContext } from '../Sheet/sheet-context';
 import { Anchor } from '../Sheet/threads';
+import { nonNullable } from '@dxos/util';
 
 //
 // Root
@@ -184,8 +185,16 @@ const Actions = () => {
   const { cursor, range, model } = useSheetContext();
   const { t } = useTranslation(SHEET_PLUGIN);
 
-  // TODO(Zan): Implement overlap detection!
-  const overlapsCommentAnchor = false;
+  const overlapsCommentAnchor = model.sheet.threads
+    .filter(nonNullable)
+    .filter((t) => t.status !== 'resolved')
+    .some((thread) => {
+      if (!cursor) {
+        return false;
+      }
+      return Anchor.ofCellAddress(cursor) === thread.anchor;
+    });
+
   const hasCursor = !!cursor;
   const cursorOnly = hasCursor && !range && !overlapsCommentAnchor;
 
