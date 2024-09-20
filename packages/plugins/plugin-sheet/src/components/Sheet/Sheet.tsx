@@ -1018,6 +1018,10 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
   const { value, classNames } = formatting.getFormatting(cell);
 
   const decorationsForCell = decorations.getDecorationsForCell(cell) ?? [];
+  const decorationAddedClasses = useMemo(
+    () => decorationsForCell.flatMap((d) => d.classNames ?? []),
+    [decorationsForCell],
+  );
   const decoratedContent = decorationsForCell.reduce(
     (children, { decorate }) => {
       if (!decorate) {
@@ -1028,14 +1032,15 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
     },
     // Note(Zan): I moved padding and layout styles to the base content div so that decorations can be applied to the entire cell.
     // Very happy to rework this system as our needs evolve.
-    <div role='none' className='flex is-full bs-full px-2 py-1 truncate items-center border cursor-pointer'>
+    <div
+      role='none'
+      className={mx(
+        'flex is-full bs-full px-2 py-1 truncate items-center border cursor-pointer',
+        ...decorationAddedClasses,
+      )}
+    >
       {value}
     </div>,
-  );
-
-  const decorationAddedClasses = useMemo(
-    () => decorationsForCell.flatMap((d) => d.classNames ?? []),
-    [decorationsForCell],
   );
 
   return (
@@ -1043,13 +1048,7 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       {...{ [`data-${CELL_DATA_KEY}`]: id }}
       role='cell'
       style={style}
-      className={mx(
-        fragments.cell,
-        fragments.border,
-        active && ['z-20', fragments.cellSelected],
-        ...decorationAddedClasses,
-        classNames,
-      )}
+      className={mx(fragments.cell, fragments.border, active && ['z-20', fragments.cellSelected], classNames)}
       onClick={() => {
         if (editing) {
           setRange?.({ from: cell });

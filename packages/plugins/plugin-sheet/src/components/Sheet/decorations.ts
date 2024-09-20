@@ -8,9 +8,16 @@ import { type CellAddress } from '../../model';
 
 export type Decoration = {
   type: string;
-  /* Wrapping render function to wrap cell content */
+  /**
+   * A wrapping render function to encapsulate cell content. This function is applied between
+   * the cell's border and its padding/layout/content, allowing for custom rendering or
+   * additional elements to be inserted around the cell's main content.
+   */
   decorate?: (props: { children: React.ReactNode }) => React.ReactNode;
-  /* Class names to be applied to root of SheetCell */
+  /**
+   * An array of CSS class names to be applied to the content of the SheetCell.
+   * These classes can be used to style the cell's content independently of its structure.
+   */
   classNames?: string[];
   cellAddress: CellAddress;
 };
