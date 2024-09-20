@@ -7,6 +7,8 @@ import { createComponent, type EventName } from '@lit/react';
 import React, { useCallback, useState } from 'react';
 
 import { type DxAxisResize, type DxEditRequest, DxGrid as NaturalDxGrid, type DxGridProps } from '@dxos/lit-grid';
+import { listener, useTextEditor } from '@dxos/react-ui-editor';
+import { isNotFalsy } from '@dxos/util';
 
 const DxGrid = createComponent({
   tagName: 'dx-grid',
@@ -19,6 +21,7 @@ const DxGrid = createComponent({
 });
 
 export type GridProps = DxGridProps & {
+  id: string;
   onAxisResize: (event: DxAxisResize) => void;
   onEdit: (event: DxEditRequest) => void;
 };
@@ -32,14 +35,42 @@ const initialBox = {
 
 export const Grid = (props: GridProps) => {
   const [editBox, setEditBox] = useState<DxEditRequest['cellBox']>(initialBox);
+  const [editing, setEditing] = useState(false);
+
+  const { parentRef, focusAttributes } = useTextEditor(
+    () => ({
+      id: props.id,
+      autoFocus: editing,
+      extensions: [
+        listener({
+          onFocus: (focusing) => {
+            if (!focusing && editing) {
+              setEditing(false);
+            }
+          },
+        }),
+      ].filter(isNotFalsy),
+    }),
+    [editing],
+  );
+
   const handleEdit = useCallback((event: DxEditRequest) => {
     setEditBox(event.cellBox);
+    setEditing(true);
     props?.onEdit?.(event);
   }, []);
+
   return (
     <>
-      <div className='absolute bg-accentSurface z-[1]' style={editBox} />
-      <DxGrid {...props} onEdit={handleEdit} />
+      <div
+        className='absolute data-[editing=true]:z-[1]'
+        data-editing={editing}
+        {...focusAttributes}
+        style={editBox}
+        tabIndex={editing ? 0 : -1}
+        ref={parentRef}
+      />
+      <DxGrid {...props} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} />
     </>
   );
 };
