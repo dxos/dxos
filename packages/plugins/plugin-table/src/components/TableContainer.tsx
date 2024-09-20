@@ -18,7 +18,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<Omit<ObjectTablePr
     <Table.Root>
       <Table.Viewport
         classNames={mx(
-          role === 'article' && 'block-start-[--topbar-size] max-bs-full row-span-2 is-full sticky-top-0 -mt-[1px]',
+          role === 'article' && 'block-start-[--topbar-size] max-bs-full row-span-2 is-full sticky-top-0 -mbs-px',
           role === 'section' && 'max-bs-96 is-full sticky-top-0 !bg-[--surface-bg] -mis-px -mbs-px',
           role === 'slide' && 'bs-full overflow-auto grid place-items-center',
         )}
