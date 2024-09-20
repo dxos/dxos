@@ -28,8 +28,8 @@ import { nonNullable } from '@dxos/util';
 import { ToolbarButton, ToolbarSeparator, ToolbarToggleButton } from './common';
 import { SHEET_PLUGIN } from '../../meta';
 import { type Formatting } from '../../types';
+import { Anchor } from '../Sheet/anchor';
 import { useSheetContext } from '../Sheet/sheet-context';
-import { Anchor } from '../Sheet/threads';
 
 //
 // Root
