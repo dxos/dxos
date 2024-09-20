@@ -26,7 +26,13 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/context"
+    },
+    {
       "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../common/keys"
     },
     {
       "path": "../../../common/log"
@@ -68,6 +74,9 @@
       "path": "../../plugin-client"
     },
     {
+      "path": "../../plugin-graph"
+    },
+    {
       "path": "../../plugin-markdown"
     },
     {
@@ -84,6 +93,9 @@
     },
     {
       "path": "../plugin-ipfs"
+    },
+    {
+      "path": "../plugin-script"
     }
   ]
 }

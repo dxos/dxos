@@ -94,6 +94,7 @@ export class FunctionTrigger extends TypedObject({
   typename: 'dxos.org/type/FunctionTrigger',
   version: '0.1.0',
 })({
+  name: S.optional(S.String),
   enabled: S.optional(S.Boolean),
   function: S.String.pipe(S.description('Function URI.')),
   // The `meta` property is merged into the event data passed to the function.
