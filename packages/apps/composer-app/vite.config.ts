@@ -5,7 +5,6 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { cp } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
@@ -21,7 +20,8 @@ import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 import { appKey } from './src/constants';
 
-const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
+const rootDir = resolve(__dirname, '../../..');
+const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
@@ -90,13 +90,13 @@ export default defineConfig({
     ThemePlugin({
       root: __dirname,
       content: [
-        resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../../experimental/*/src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../../plugins/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../../sdk/*/src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../../ui/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(__dirname, './index.html'),
+        join(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/plugins/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/plugins/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/sdk/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
     }),
     IconsPlugin({
@@ -104,10 +104,9 @@ export default defineConfig({
       assetPath: (name, variant) =>
         `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
       spriteFile: 'icons.svg',
-      manifestPath: resolve(__dirname, 'public/icons.json'),
       contentPaths: [
-        `${resolve(__dirname, '../../..')}/{packages,tools}/**/dist/**/*.{mjs,html}`,
-        `${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}`,
+        join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
+        join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
       ],
       // verbose: true,
     }),

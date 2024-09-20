@@ -5,7 +5,7 @@
 import { type StorybookConfig } from '@storybook/react-vite';
 import ReactPlugin from '@vitejs/plugin-react';
 import flatten from 'lodash.flatten';
-import { resolve } from 'path';
+import { join, resolve } from 'path';
 import { type InlineConfig, mergeConfig } from 'vite';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import TurbosnapPlugin from 'vite-plugin-turbosnap';
@@ -99,14 +99,16 @@ export const config = (
             assetPath: (name, variant) =>
               `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
             spriteFile: 'icons.svg',
-            contentPaths: [resolve(__dirname, '../../../packages/**/src/**/*.{ts,tsx}')],
+            contentPaths: [
+              join(packages, '/**/src/**/*.{ts,tsx}'),
+            ],
           }),
           ThemePlugin({
             root: __dirname,
             content: [
-              resolve(__dirname, '../../../packages/*/*/src') + '/**/*.{ts,tsx,js,jsx}',
-              resolve(__dirname, '../../../packages/plugins/*/src') + '/**/*.{ts,tsx,js,jsx}',
-              resolve(__dirname, '../../../packages/plugins/experimental/*/src') + '/**/*.{ts,tsx,js,jsx}',
+              join(packages, '/*/*/src/**/*.{ts,tsx,js,jsx}'),
+              join(packages, '/plugins/*/src/**/*.{ts,tsx,js,jsx}'),
+              join(packages, '/plugins/experimental/*/src/**/*.{ts,tsx,js,jsx}'),
             ],
           }),
           TopLevelAwaitPlugin(),
