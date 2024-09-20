@@ -94,7 +94,8 @@ export const WelcomePlugin = ({
       // If identity already exists, continue with existing identity.
       // If not, only create identity if token is present.
       let identity = client.halo.identity.get();
-      if (!identity && (token || skipAuth)) {
+      const deviceInvitationCode = searchParams.get('deviceInvitationCode');
+      if (!identity && !deviceInvitationCode && (token || skipAuth)) {
         const result = await dispatch({
           plugin: CLIENT_PLUGIN,
           action: ClientAction.CREATE_IDENTITY,

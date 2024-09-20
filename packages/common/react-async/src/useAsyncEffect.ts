@@ -29,8 +29,9 @@ import { useEffect } from 'react';
  * @param callback Receives a getter function that determines if the component is still mounted.
  * @param destructor Receives the value returned from the callback.
  * @param deps
+ *
+ * @deprecated Use `setTimeout` instead.
  */
-// TODO(burdon): Move to @dxos/react-ui.
 export const useAsyncEffect = <T>(
   callback: (isMounted: () => boolean) => Promise<T> | undefined,
   destructor?: ((value?: T) => void) | any[],
