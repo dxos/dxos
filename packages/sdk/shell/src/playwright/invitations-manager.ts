@@ -7,7 +7,7 @@ import { expect, type Browser, type ConsoleMessage } from '@playwright/test';
 import { Trigger } from '@dxos/async';
 import { type Invitation } from '@dxos/react-client/invitations';
 import { ConnectionState } from '@dxos/react-client/mesh';
-import { setupPage } from '@dxos/test-utils';
+import { setupPage } from '@dxos/test-utils/playwright';
 
 import { ScopedShellManager } from '../testing';
 
@@ -33,11 +33,11 @@ export class InvitationsManager extends ScopedShellManager {
 
     const { page } = await setupPage(this._browser, {
       url: storybookUrl('invitations--default'),
-      waitFor: (page) => page.getByTestId('invitations.identity-header').first().isVisible(),
     });
 
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));
+    await this.page.getByTestId('invitations.identity-header').first().waitFor({ state: 'visible' });
     this._initialized = true;
   }
 

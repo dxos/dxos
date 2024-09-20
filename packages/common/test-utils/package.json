@@ -14,11 +14,23 @@
         "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
+    },
+    "./playwright": {
+      "browser": "./dist/lib/browser/playwright.mjs",
+      "node": {
+        "require": "./dist/lib/node/playwright.cjs",
+        "default": "./dist/lib/node-esm/playwright.mjs"
+      },
+      "types": "./dist/types/src/playwright.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "playwright": [
+        "dist/types/src/playwright.d.ts"
+      ]
+    }
   },
   "files": [
     "dist",
@@ -26,7 +38,10 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@nx/devkit": "19.7.2",
     "@playwright/test": "^1.46.0",
+    "pkg-up": "^3.1.0",
     "vitest": "^2.1.1"
   },
   "publishConfig": {

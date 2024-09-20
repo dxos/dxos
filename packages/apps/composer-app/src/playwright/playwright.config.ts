@@ -2,10 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type PlaywrightTestConfig } from '@playwright/test';
+import { nxE2EPreset } from '@nx/playwright/preset';
+import { defineConfig } from '@playwright/test';
 
-import { defaultPlaywrightConfig } from '@dxos/test-utils';
+import { e2ePreset } from '@dxos/test-utils/playwright';
 
-const config: PlaywrightTestConfig = { ...defaultPlaywrightConfig, timeout: 30_000 };
-
-export default config;
+export default defineConfig({
+  ...nxE2EPreset(__filename, { testDir: __dirname }),
+  ...e2ePreset(__dirname),
+  timeout: 30_000,
+  webServer: {
+    command: 'pnpm -w nx preview composer-app',
+    port: 4200,
+    reuseExistingServer: !process.env.CI,
+  },
+});

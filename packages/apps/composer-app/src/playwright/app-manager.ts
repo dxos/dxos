@@ -6,7 +6,7 @@ import type { Browser, Locator, Page } from '@playwright/test';
 import os from 'node:os';
 
 import { ShellManager } from '@dxos/shell/testing';
-import { setupPage } from '@dxos/test-utils';
+import { setupPage } from '@dxos/test-utils/playwright';
 
 import { DeckManager } from './plugins';
 
@@ -15,11 +15,11 @@ import { DeckManager } from './plugins';
 
 const isMac = os.platform() === 'darwin';
 const modifier = isMac ? 'Meta' : 'Control';
+export const INITIAL_URL = 'http://localhost:4200';
 
 export class AppManager {
   page!: Page;
   shell!: ShellManager;
-  initialUrl!: string;
   deck!: DeckManager;
 
   private readonly _inIframe: boolean | undefined = undefined;
@@ -38,9 +38,8 @@ export class AppManager {
       return;
     }
 
-    const { page, initialUrl } = await setupPage(this._browser);
+    const { page } = await setupPage(this._browser, { url: INITIAL_URL });
     this.page = page;
-    this.initialUrl = initialUrl;
 
     await this.isAuthenticated();
 
@@ -220,7 +219,7 @@ export class AppManager {
 
   async enablePlugin(plugin: string) {
     await this.page.getByTestId(`pluginList.${plugin}`).getByRole('switch').click();
-    await this.page.goto(this.initialUrl);
+    await this.page.goto(INITIAL_URL);
     await this.page.getByTestId('treeView.haloButton').waitFor();
   }
 

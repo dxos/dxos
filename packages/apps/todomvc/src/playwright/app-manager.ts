@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Browser, ConsoleMessage, Page } from '@playwright/test';
+import { type Browser, type ConsoleMessage, type Page } from '@playwright/test';
 
 import { sleep, Trigger } from '@dxos/async';
 import { ShellManager } from '@dxos/shell/testing';
-import { setupPage } from '@dxos/test-utils';
+import { setupPage } from '@dxos/test-utils/playwright';
 
 import { type FILTER } from '../constants';
+
+export const INITIAL_URL = 'http://localhost:4200/';
 
 export class AppManager {
   page!: Page;
@@ -24,19 +26,19 @@ export class AppManager {
       return;
     }
 
-    const { page } = await setupPage(this._browser, {
-      waitFor: async (page) => page.getByTestId('new-todo').isVisible(),
-    });
+    const { page } = await setupPage(this._browser, { url: INITIAL_URL });
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));
     this.shell = new ShellManager(this.page);
+    await this.newTodo().waitFor({ state: 'visible' });
+    await this.page.getByTestId('placeholder').waitFor({ state: 'hidden' });
     this._initialized = true;
   }
 
   // Getters
 
-  async isNewTodoVisible() {
-    return await this.page.getByTestId('new-todo').isVisible();
+  newTodo() {
+    return this.page.getByTestId('new-todo');
   }
 
   hasText(text: string) {
@@ -75,12 +77,12 @@ export class AppManager {
   }
 
   async createTodo(title: string) {
-    await this.page.getByTestId('new-todo').type(title);
+    await this.page.getByTestId('new-todo').fill(title);
     await this.page.keyboard.press('Enter');
   }
 
   async toggleTodo(title: string) {
-    await this.page.getByTestId('todo').locator(`:has-text("${title}")`).getByTestId('todo-toggle').click();
+    await this.todoToggle(title).click();
   }
 
   async setTodoEditing(title: string) {
@@ -96,20 +98,23 @@ export class AppManager {
   }
 
   async deleteTodo(title: string) {
-    await this.page.getByTestId('todo').locator(`:has-text("${title}")`).getByTestId('destroy-button').click();
+    await this.todo(title).hover();
+    const destroy = this.page.getByTestId('todo').locator(`:has-text("${title}")`).getByTestId('destroy-button');
+    // NOTE: This input behaves weirdly so eval is necessary to toggle it.
+    await destroy.evaluate((elem: HTMLButtonElement) => elem.click());
   }
 
   async toggleAll() {
     // NOTE: This input behaves weirdly so eval is necessary to toggle it.
     await this.page.$eval('data-testid=toggle-all', (elem: HTMLLabelElement) => elem.click());
     // Allow some time for the page to update when actioning the whole list.
-    await sleep(10);
+    await sleep(500);
   }
 
   async clearCompleted() {
     await this.page.getByTestId('clear-button').click();
     // Allow some time for the page to update when actioning the whole list.
-    await sleep(10);
+    await sleep(500);
   }
 
   async filterTodos(filter: FILTER) {

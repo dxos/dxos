@@ -121,11 +121,9 @@
       "cache": true
     },
     "e2e": {
-      "executor": "@dxos/test:run",
+      "executor": "@nx/playwright:playwright",
       "options": {
-        "coveragePath": "coverage/{projectRoot}",
-        "outputPath": "tmp/playwright/{projectRoot}",
-        "resultsPath": "test-results/{projectRoot}"
+        "config": "{projectRoot}/src/playwright/playwright.config.ts"
       },
       "inputs": [
         "default",

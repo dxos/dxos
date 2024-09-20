@@ -97,18 +97,7 @@
         "{options.outputPath}"
       ]
     },
-    "e2e": {
-      "options": {
-        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
-        "serve": "composer-app:preview",
-        "testPatterns": [
-          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "{projectRoot}/src/**/*"
-        ]
-      }
-    },
+    "e2e": {},
     "lint": {},
     "prebuild": {
       "executor": "nx:run-script",

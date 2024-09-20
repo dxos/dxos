@@ -4,32 +4,39 @@
 
 /* eslint-disable no-console */
 
-import {
-  type Browser,
-  devices,
-  type PlaywrightTestConfig,
-  type Project,
-  type BrowserContext,
-  type Page,
-} from '@playwright/test';
+import { workspaceRoot } from '@nx/devkit';
+import { type Browser, type BrowserContext, type PlaywrightTestConfig } from '@playwright/test';
+import { join, relative } from 'node:path';
+import pkgUp from 'pkg-up';
 
 import { Lock } from './lock';
-import { type BrowserType, type MobileType } from './types';
+
+export const e2ePreset = (cwd: string): PlaywrightTestConfig => {
+  const packageJson = pkgUp.sync({ cwd });
+  const packageDir = packageJson!.split('/').slice(0, -1).join('/');
+  const packageDirRelative = relative(workspaceRoot, packageDir);
+  const testResultsDir = join(workspaceRoot, 'test-results', packageDirRelative, 'results.xml');
+
+  return {
+    reporter: process.env.CI ? [['list'], ['junit', { outputFile: testResultsDir }]] : [['list']],
+    use: {
+      trace: 'retain-on-failure',
+    },
+  };
+};
 
 export type SetupOptions = {
   url?: string;
-  /** @deprecated Use native playwright `waitFor` method on a locator. */
-  waitFor?: (page: Page) => Promise<boolean>;
   bridgeLogs?: boolean;
 };
 
 export const setupPage = async (browser: Browser | BrowserContext, options: SetupOptions = {}) => {
-  const executorResult = JSON.parse(process.env.EXECUTOR_RESULT ?? '{}');
-  const { url = executorResult.baseUrl, waitFor, bridgeLogs } = options;
+  const { url, bridgeLogs } = options;
 
   const context = 'newContext' in browser ? await browser.newContext() : browser;
   const page = await context.newPage();
 
+  // TODO(wittjosiah): Remove?
   if (bridgeLogs) {
     const lock = new Lock();
 
@@ -62,77 +69,5 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
     await page.goto(url);
   }
 
-  if (waitFor) {
-    await new Promise<void>((resolve) => {
-      const interval = setInterval(async () => {
-        const res = await waitFor(page);
-        if (res) {
-          clearInterval(interval);
-          resolve();
-        }
-      }, 1000);
-    });
-  }
-
-  return { context, page, initialUrl: url };
-};
-
-export const extensionId = async (context: BrowserContext) => {
-  let [background] = context.serviceWorkers();
-  if (!background) {
-    background = await context.waitForEvent('serviceworker');
-  }
-
-  const extensionId = background.url().split('/')[2];
-  return extensionId;
-};
-
-const getProject = (browser: BrowserType | MobileType): Project => {
-  switch (browser) {
-    case 'chromium':
-    case 'firefox':
-    case 'webkit':
-      return {
-        name: browser,
-        use: {
-          browserName: browser,
-        },
-      };
-
-    case 'android':
-      return {
-        name: 'android',
-        use: {
-          ...devices['Pixel 5'],
-        },
-      };
-
-    case 'ios':
-      return {
-        name: 'ios',
-        use: {
-          ...devices['iPhone SE'],
-        },
-      };
-  }
-};
-
-export const defaultPlaywrightConfig: PlaywrightTestConfig = {
-  testDir: '.',
-  outputDir: process.env.OUTPUT_PATH,
-  timeout: process.env.TIMEOUT ? Number(process.env.TIMEOUT) : undefined,
-  workers: 6,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  reporter:
-    process.env.WATCH === 'true'
-      ? [['dot']]
-      : process.env.RESULTS_PATH
-        ? [['list'], ['junit', { outputFile: process.env.RESULTS_PATH }]]
-        : [['list']],
-  use: {
-    headless: process.env.HEADLESS !== 'false',
-    trace: 'retain-on-failure',
-  },
-  projects: process.env.BROWSERS?.split(',').map((browser) => getProject(browser as BrowserType)),
+  return { context, page };
 };

@@ -6,12 +6,11 @@ import cx from 'classnames';
 import React, { useCallback } from 'react';
 import { useNavigate, Link, generatePath } from 'react-router-dom';
 
-import { create } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
 
-import { TodoListType } from '../types';
+import { createTodoList } from '../types';
 
 export const SpaceList = ({ current }: { current?: Space }) => {
   const client = useClient();
@@ -20,13 +19,13 @@ export const SpaceList = ({ current }: { current?: Space }) => {
 
   const handleJoin = async () => {
     const { space } = await client.shell.joinSpace();
-    space && navigate(generatePath('/:spaceKey', { spaceKey: space.key.toHex() }));
+    space && navigate(generatePath('/:spaceId', { spaceId: space.id }));
   };
 
   const handleCreateList = useCallback(async () => {
     const space = await client.spaces.create();
-    await space.db.add(create(TodoListType, { todos: [] }));
-    navigate(generatePath('/:spaceKey', { spaceKey: space.key.toHex() }));
+    createTodoList(space);
+    navigate(generatePath('/:spaceId', { spaceId: space.id }));
   }, [client, navigate]);
 
   return (
@@ -37,10 +36,7 @@ export const SpaceList = ({ current }: { current?: Space }) => {
         <button onClick={handleCreateList} data-testid='add-button'>
           +
         </button>
-        <button
-          onClick={() => current && client.shell.shareSpace({ spaceKey: current.key })}
-          data-testid='share-button'
-        >
+        <button onClick={() => current && client.shell.shareSpace({ spaceId: current.id })} data-testid='share-button'>
           ↸
         </button>
         <button id='' onClick={handleJoin} data-testid='join-button'>
@@ -49,8 +45,8 @@ export const SpaceList = ({ current }: { current?: Space }) => {
       </div>
       <ul>
         {spaces.map((space) => {
-          const key = space.key.toHex();
-          const isSelected = current?.key.equals(space.key);
+          const key = space.id;
+          const isSelected = current?.id === space.id;
           return (
             <Link key={key} to={`/${key}`} className={cx(isSelected && 'selected')}>
               <li>{humanize(key)}</li>

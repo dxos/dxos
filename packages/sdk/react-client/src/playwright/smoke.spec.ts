@@ -4,7 +4,7 @@
 
 import { type Page, expect, test } from '@playwright/test';
 
-import { setupPage } from '@dxos/test-utils';
+import { setupPage } from '@dxos/test-utils/playwright';
 
 // TODO(wittjosiah): Factor out.
 // TODO(burdon): No hard-coding of ports; reconcile all DXOS tools ports.
@@ -14,12 +14,9 @@ test.describe('Smoke test', () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {
-    const result = await setupPage(browser, {
-      url: storybookUrl('react-client-clientcontext--default'),
-      waitFor: (page) => page.isVisible(':has-text("initialized")'),
-    });
-
+    const result = await setupPage(browser, { url: storybookUrl('react-client-clientcontext--default') });
     page = result.page;
+    await page.locator(':text("initialized")').waitFor({ state: 'visible' });
   });
 
   // NOTE: This test depends on connecting to the default production deployed HALO vault.

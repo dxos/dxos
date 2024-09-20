@@ -17,30 +17,6 @@
         "{options.outputPath}"
       ]
     },
-    "e2e": {
-      "dependsOn": [
-        "^build",
-        "bundle",
-        "prebuild"
-      ],
-      "options": {
-        "extensionPath": "packages/devtools/devtools-extension/out/devtools-extension",
-        "headless": false,
-        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
-        "testPatterns": [
-          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "{projectRoot}/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.extensionPath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
-    },
     "lint": {}
   }
 }

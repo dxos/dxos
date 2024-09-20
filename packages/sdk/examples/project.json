@@ -17,18 +17,6 @@
         "{options.outputPath}"
       ]
     },
-    "e2e-skipped": {
-      "options": {
-        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
-        "serve": "examples:preview",
-        "testPatterns": [
-          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "{projectRoot}/src/**/*"
-        ]
-      }
-    },
     "lint": {
       "options": {
         "format": "unix",

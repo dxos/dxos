@@ -31,18 +31,7 @@
         "{options.outputPath}"
       ]
     },
-    "e2e": {
-      "options": {
-        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
-        "serve": "todomvc:preview",
-        "testPatterns": [
-          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "{projectRoot}/src/**/*"
-        ]
-      }
-    },
+    "e2e": {},
     "lint": {},
     "preview": {
       "executor": "@nx/web:file-server",

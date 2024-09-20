@@ -4,7 +4,7 @@
 
 import { expect, test } from '@playwright/test';
 
-import { setupPage } from '@dxos/test-utils';
+import { setupPage } from '@dxos/test-utils/playwright';
 
 import { StackManager } from '../testing';
 
@@ -13,10 +13,8 @@ const storybookUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=
 
 test.describe('Stack', () => {
   test('remove', async ({ browser }) => {
-    const { page } = await setupPage(browser, {
-      url: storybookUrl('react-ui-stack-stack--transfer'),
-      waitFor: (page) => page.getByTestId('stack-transfer').isVisible(),
-    });
+    const { page } = await setupPage(browser, { url: storybookUrl('react-ui-stack-stack--transfer') });
+    await page.getByTestId('stack-transfer').waitFor({ state: 'visible' });
 
     const stack = new StackManager(page.getByTestId('stack-1'));
     await expect(stack.sections()).toHaveCount(8);
@@ -28,10 +26,8 @@ test.describe('Stack', () => {
   });
 
   test('rearrange', async ({ browser }) => {
-    const { page } = await setupPage(browser, {
-      url: storybookUrl('react-ui-stack-stack--transfer'),
-      waitFor: (page) => page.getByTestId('stack-transfer').isVisible(),
-    });
+    const { page } = await setupPage(browser, { url: storybookUrl('react-ui-stack-stack--transfer') });
+    await page.getByTestId('stack-transfer').waitFor({ state: 'visible' });
 
     const stack = new StackManager(page.getByTestId('stack-1'));
     const sectionText = await stack.section(0).locator.innerText();
@@ -47,10 +43,8 @@ test.describe('Stack', () => {
       test.skip();
     }
 
-    const { page } = await setupPage(browser, {
-      url: storybookUrl('react-ui-stack-stack--transfer'),
-      waitFor: (page) => page.getByTestId('stack-transfer').isVisible(),
-    });
+    const { page } = await setupPage(browser, { url: storybookUrl('react-ui-stack-stack--transfer') });
+    await page.getByTestId('stack-transfer').waitFor({ state: 'visible' });
 
     const stack1 = new StackManager(page.getByTestId('stack-1'));
     const stack2 = new StackManager(page.getByTestId('stack-2'));
@@ -69,10 +63,8 @@ test.describe('Stack', () => {
   });
 
   test('copy', async ({ browser }) => {
-    const { page } = await setupPage(browser, {
-      url: storybookUrl('react-ui-stack-stack--copy'),
-      waitFor: (page) => page.getByTestId('stack-copy').isVisible(),
-    });
+    const { page } = await setupPage(browser, { url: storybookUrl('react-ui-stack-stack--copy') });
+    await page.getByTestId('stack-copy').waitFor({ state: 'visible' });
 
     const stack1 = new StackManager(page.getByTestId('stack-1'));
     const stack2 = new StackManager(page.getByTestId('stack-2'));

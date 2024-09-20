@@ -4,6 +4,7 @@
 
 import { trigger } from '@dxos/async';
 
+// Copied from @dxos/async.
 export class Lock {
   private _lastPromise = Promise.resolve();
 

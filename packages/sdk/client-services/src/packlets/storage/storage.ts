@@ -14,7 +14,6 @@ import { getRootPath } from './util';
 // TODO(burdon): Factor out.
 export const createStorageObjects = (config: Runtime.Client.Storage) => {
   const { persistent = false, keyStore, dataStore } = config ?? {};
-
   if (persistent && dataStore === StorageDriver.RAM) {
     throw new InvalidConfigError('RAM storage cannot be used in persistent mode.');
   }

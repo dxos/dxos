@@ -15,19 +15,6 @@
         ]
       }
     },
-    "e2e": {
-      "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ],
-        "testPatterns": [
-          "{projectRoot}/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "{projectRoot}/src/**/*"
-        ]
-      }
-    },
     "lint": {},
     "vitest": {}
   }

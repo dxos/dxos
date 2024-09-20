@@ -4,7 +4,7 @@
 
 import type { Browser, Page } from '@playwright/test';
 
-import { setupPage } from '@dxos/test-utils';
+import { setupPage } from '@dxos/test-utils/playwright';
 
 export class AppManager {
   page!: Page;
@@ -17,11 +17,10 @@ export class AppManager {
       return;
     }
 
-    const { page } = await setupPage(this._browser, {
-      waitFor: async (page) =>
-        (await page.getByTestId('client-0').isVisible()) && (await page.getByTestId('client-1').isVisible()),
-    });
+    const { page } = await setupPage(this._browser, {});
     this.page = page;
+    await page.getByTestId('client-0').waitFor({ state: 'visible' });
+    await page.getByTestId('client-1').waitFor({ state: 'visible' });
     this._initialized = true;
   }
 

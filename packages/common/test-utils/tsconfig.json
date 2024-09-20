@@ -16,6 +16,9 @@
   "references": [
     {
       "path": "../async"
+    },
+    {
+      "path": "../node-std"
     }
   ]
 }

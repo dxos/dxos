@@ -19,7 +19,7 @@ test.describe('Basic test', () => {
   let host: AppManager;
   let guest: AppManager;
 
-  test.beforeAll(async ({ browser, browserName }) => {
+  test.beforeEach(async ({ browser, browserName }) => {
     host = new AppManager(browser);
 
     await host.init();
@@ -28,22 +28,6 @@ test.describe('Basic test', () => {
     guest = browserName === 'chromium' ? new AppManager(browser) : host;
     if (browserName === 'chromium') {
       await guest.init();
-    }
-  });
-
-  test.describe('Default space', () => {
-    test('create a task', async () => {
-      await host.createTodo(Groceries.Eggs);
-
-      await expect(host.todo(Groceries.Eggs)).toBeVisible();
-      expect(await host.todoCount()).toEqual(1);
-    });
-
-    test('invite guest', async ({ browserName }) => {
-      if (browserName !== 'chromium') {
-        return;
-      }
-
       await host.openShareSpace();
       const invitationCode = await host.shell.createSpaceInvitation();
       const authCode = await host.shell.getAuthCode();
@@ -54,17 +38,29 @@ test.describe('Basic test', () => {
       await host.shell.closeShell();
 
       await guest.page.waitForURL(await host.page.url());
+    }
+  });
+
+  test.afterEach(async () => {
+    await host.page.close();
+    await guest.page.close();
+  });
+
+  test.describe('Default space', () => {
+    test('create a task', async () => {
+      await host.createTodo(Groceries.Eggs);
+
       await expect(guest.todo(Groceries.Eggs)).toBeVisible();
+      expect(await guest.todoCount()).toEqual(1);
     });
 
     test('toggle a task', async () => {
+      await host.createTodo(Groceries.Eggs);
       await host.toggleTodo(Groceries.Eggs);
 
       await expect(guest.todoToggle(Groceries.Eggs)).toBeChecked();
       expect(await guest.todoCount()).toEqual(0);
-    });
 
-    test('untoggle a task', async () => {
       await host.toggleTodo(Groceries.Eggs);
 
       await expect(guest.todoToggle(Groceries.Eggs)).not.toBeChecked();
@@ -72,24 +68,30 @@ test.describe('Basic test', () => {
     });
 
     test('edit a task', async () => {
+      await host.createTodo(Groceries.Eggs);
       await host.setTodoEditing(Groceries.Eggs);
       await host.page.keyboard.press('Backspace');
       await host.page.keyboard.type('nog');
       await host.submitTodoEdits();
 
-      await expect(guest.todo(Groceries.Eggnog)).toBeVisible;
+      await expect(guest.todo(Groceries.Eggnog)).toBeVisible();
       expect(await guest.todoCount()).toEqual(1);
     });
 
     test('cancel editing a task', async () => {
+      await host.createTodo(Groceries.Eggnog);
       await host.setTodoEditing(Groceries.Eggnog);
       await host.cancelTodoEditing();
 
-      await expect(host.todo(Groceries.Eggnog)).toBeVisible();
-      expect(await host.todoCount()).toEqual(1);
+      await expect(guest.todo(Groceries.Eggnog)).toBeVisible();
+      expect(await guest.todoCount()).toEqual(1);
     });
 
     test('delete a task', async () => {
+      await host.createTodo(Groceries.Eggnog);
+
+      await expect(guest.todo(Groceries.Eggnog)).toBeVisible();
+
       await host.deleteTodo(Groceries.Eggnog);
 
       await expect(guest.hasText(Groceries.Eggnog)).not.toBeVisible();
@@ -103,42 +105,51 @@ test.describe('Basic test', () => {
 
       await host.toggleTodo(Groceries.Milk);
       await host.toggleTodo(Groceries.Butter);
-      await host.filterTodos(FILTER.ACTIVE);
+      await guest.filterTodos(FILTER.ACTIVE);
 
-      await expect(host.hasText(Groceries.Milk)).not.toBeVisible();
-      await expect(host.hasText(Groceries.Butter)).not.toBeVisible();
-      await expect(host.todo(Groceries.Eggs)).toBeVisible();
-      await expect(host.todo(Groceries.Flour)).toBeVisible();
-      expect(await host.todoCount()).toEqual(2);
+      await expect(guest.hasText(Groceries.Milk)).not.toBeVisible();
+      await expect(guest.hasText(Groceries.Butter)).not.toBeVisible();
+      await expect(guest.todo(Groceries.Eggs)).toBeVisible();
+      await expect(guest.todo(Groceries.Flour)).toBeVisible();
+      expect(await guest.todoCount()).toEqual(2);
     });
 
     test('filter completed tasks', async () => {
-      await host.filterTodos(FILTER.COMPLETED);
+      await host.createTodo(Groceries.Eggs);
+      await host.createTodo(Groceries.Milk);
+      await host.createTodo(Groceries.Butter);
+      await host.createTodo(Groceries.Flour);
 
-      await expect(host.hasText(Groceries.Eggs)).not.toBeVisible();
-      await expect(host.hasText(Groceries.Flour)).not.toBeVisible();
-      await expect(host.todo(Groceries.Milk)).toBeVisible();
-      await expect(host.todo(Groceries.Butter)).toBeVisible();
+      await host.toggleTodo(Groceries.Milk);
+      await host.toggleTodo(Groceries.Butter);
+      await guest.filterTodos(FILTER.COMPLETED);
+
+      await expect(guest.hasText(Groceries.Eggs)).not.toBeVisible();
+      await expect(guest.hasText(Groceries.Flour)).not.toBeVisible();
+      await expect(guest.todo(Groceries.Milk)).toBeVisible();
+      await expect(guest.todo(Groceries.Butter)).toBeVisible();
+      expect(await guest.todoCount()).toEqual(2);
     });
 
-    test('toggle all tasks', async () => {
-      await host.filterTodos(FILTER.ALL);
+    test('toggle all tasks & clear completed', async () => {
+      await host.createTodo(Groceries.Eggs);
+      await host.createTodo(Groceries.Milk);
+      await host.createTodo(Groceries.Butter);
+      await host.createTodo(Groceries.Flour);
       await host.toggleAll();
 
-      await expect(host.todoToggle(Groceries.Eggs)).toBeChecked();
-      await expect(host.todoToggle(Groceries.Milk)).toBeChecked();
-      await expect(host.todoToggle(Groceries.Butter)).toBeChecked();
-      await expect(host.todoToggle(Groceries.Flour)).toBeChecked();
-      expect(await host.todoCount()).toEqual(0);
-    });
+      await expect(guest.todoToggle(Groceries.Eggs)).toBeChecked();
+      await expect(guest.todoToggle(Groceries.Milk)).toBeChecked();
+      await expect(guest.todoToggle(Groceries.Butter)).toBeChecked();
+      await expect(guest.todoToggle(Groceries.Flour)).toBeChecked();
+      expect(await guest.todoCount()).toEqual(0);
 
-    test('clear completed tasks', async () => {
       await host.clearCompleted();
 
-      await expect(host.hasText(Groceries.Eggs)).not.toBeVisible();
-      await expect(host.hasText(Groceries.Milk)).not.toBeVisible();
-      await expect(host.hasText(Groceries.Butter)).not.toBeVisible();
-      await expect(host.hasText(Groceries.Flour)).not.toBeVisible();
+      await expect(guest.hasText(Groceries.Eggs)).not.toBeVisible();
+      await expect(guest.hasText(Groceries.Milk)).not.toBeVisible();
+      await expect(guest.hasText(Groceries.Butter)).not.toBeVisible();
+      await expect(guest.hasText(Groceries.Flour)).not.toBeVisible();
     });
   });
 });

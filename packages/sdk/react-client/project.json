@@ -26,18 +26,7 @@
       "dependsOn": [
         "^compile",
         "stories:mkdist"
-      ],
-      "options": {
-        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
-        "serve": "stories:storybook-e2e",
-        "testPatterns": [
-          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "timeout": 60000,
-        "watchPatterns": [
-          "{projectRoot}/src/**/*"
-        ]
-      }
+      ]
     },
     "lint": {},
     "vitest": {}

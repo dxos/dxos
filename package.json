@@ -62,6 +62,7 @@
     "@nx/eslint-plugin": "19.7.2",
     "@nx/js": "19.7.2",
     "@nx/linter": "19.7.2",
+    "@nx/playwright": "19.7.2",
     "@nx/storybook": "19.7.2",
     "@nx/vite": "19.7.2",
     "@nx/web": "19.7.2",

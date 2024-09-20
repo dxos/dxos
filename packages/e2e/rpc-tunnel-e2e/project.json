@@ -27,18 +27,7 @@
         "{options.outputPath}"
       ]
     },
-    "e2e": {
-      "options": {
-        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
-        "serve": "rpc-tunnel-e2e:serve",
-        "testPatterns": [
-          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "{projectRoot}/src/**/*"
-        ]
-      }
-    },
+    "e2e": {},
     "lint": {},
     "serve": {
       "executor": "@nx/vite:dev-server",

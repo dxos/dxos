@@ -23,6 +23,10 @@
         "default": "./dist/lib/node-esm/testing/index.mjs"
       },
       "types": "./dist/types/src/testing/index.d.ts"
+    },
+    "./styles": {
+      "import": "./styles/defaults.css",
+      "require": "./styles/defaults.css"
     }
   },
   "types": "dist/types/src/index.d.ts",
