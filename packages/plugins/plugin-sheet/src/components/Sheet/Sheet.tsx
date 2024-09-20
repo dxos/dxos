@@ -1020,6 +1020,9 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
   const decorationsForCell = decorations.getDecorationsForCell(cell) ?? [];
   const decoratedContent = decorationsForCell.reduce(
     (children, { decorate }) => {
+      if (!decorate) {
+        return children;
+      }
       const DecoratorComponent = decorate;
       return <DecoratorComponent>{children}</DecoratorComponent>;
     },
