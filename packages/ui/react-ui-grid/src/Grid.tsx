@@ -4,7 +4,7 @@
 import '@dxos/lit-grid/dx-grid.pcss';
 
 import { createComponent, type EventName } from '@lit/react';
-import React, { useCallback, useState } from 'react';
+import React, { type KeyboardEvent, useCallback, useRef, useState } from 'react';
 
 import { type DxAxisResize, type DxEditRequest, DxGrid as NaturalDxGrid, type DxGridProps } from '@dxos/lit-grid';
 import { listener, useTextEditor } from '@dxos/react-ui-editor';
@@ -34,18 +34,23 @@ const initialBox = {
 } satisfies DxEditRequest['cellBox'];
 
 export const Grid = (props: GridProps) => {
+  const gridRef = useRef<NaturalDxGrid | null>(null);
   const [editBox, setEditBox] = useState<DxEditRequest['cellBox']>(initialBox);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState<DxEditRequest['cellIndex'] | null>(null);
 
-  const { parentRef, focusAttributes } = useTextEditor(
+  const {
+    parentRef: textboxRef,
+    focusAttributes,
+    view,
+  } = useTextEditor(
     () => ({
       id: props.id,
-      autoFocus: editing,
+      autoFocus: !!editing,
       extensions: [
         listener({
           onFocus: (focusing) => {
             if (!focusing && editing) {
-              setEditing(false);
+              setEditing(null);
             }
           },
         }),
@@ -56,21 +61,41 @@ export const Grid = (props: GridProps) => {
 
   const handleEdit = useCallback((event: DxEditRequest) => {
     setEditBox(event.cellBox);
-    setEditing(true);
+    setEditing(event.cellIndex);
     props?.onEdit?.(event);
   }, []);
+
+  const handleEditorKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (editing) {
+        switch (event.key) {
+          case 'Enter':
+            console.warn('to do: save content');
+            setEditing(null);
+            gridRef.current?.refocus('down');
+            break;
+          case 'Escape':
+            setEditing(null);
+            gridRef.current?.refocus();
+            break;
+        }
+      }
+    },
+    [editing, view],
+  );
 
   return (
     <>
       <div
-        className='absolute data-[editing=true]:z-[1]'
-        data-editing={editing}
+        className='absolute z-[1] hidden data-[editing=true]:block border p-px border-accentSurface'
+        data-editing={!!editing}
         {...focusAttributes}
         style={editBox}
         tabIndex={editing ? 0 : -1}
-        ref={parentRef}
+        onKeyDown={handleEditorKeyDown}
+        ref={textboxRef}
       />
-      <DxGrid {...props} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} />
+      <DxGrid {...props} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={gridRef} />
     </>
   );
 };

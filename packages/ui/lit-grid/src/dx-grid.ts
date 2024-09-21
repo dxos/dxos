@@ -464,7 +464,7 @@ export class DxGrid extends LitElement {
   @eventOptions({ capture: true })
   handleFocus(event: FocusEvent) {
     const cellCoords = closestCell(event.target);
-    if (cellCoords && !isSameCell(this.focusedCell, cellCoords)) {
+    if (cellCoords) {
       this.focusedCell = cellCoords;
       this.focusActive = true;
     }
@@ -490,7 +490,14 @@ export class DxGrid extends LitElement {
   /**
    * Moves focus to the cell with actual focus, otherwise moves focus to the viewport.
    */
-  refocus() {
+  refocus(increment?: 'down' | 'right') {
+    switch (increment) {
+      case 'down':
+        this.focusedCell = { ...this.focusedCell, row: this.focusedCell.row + 1 };
+        break;
+      case 'right':
+        this.focusedCell = { ...this.focusedCell, col: this.focusedCell.col + 1 };
+    }
     (this.focusedCell.row < this.visRowMin ||
     this.focusedCell.row > this.visRowMax ||
     this.focusedCell.col < this.visColMin ||
