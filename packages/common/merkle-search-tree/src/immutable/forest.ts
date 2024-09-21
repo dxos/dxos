@@ -5,8 +5,12 @@ import { arraysEqual } from '@dxos/util';
 export class Forest {
   #nodes = new Map<DigestHex, Node>();
 
+  itemHashOps = 0;
+  nodeHashOps = 0;
+
   async createTree(pairs: Iterable<Pair>): Promise<DigestHex> {
     const items = await Promise.all([...pairs].map(([key, value]) => makeItem(key, value)));
+    this.itemHashOps += items.length;
     items.sort((a, b) => (a.key < b.key ? -1 : 1));
     // Check for repetition.
     for (let i = 0; i < items.length; i++) {
@@ -117,6 +121,7 @@ export class Forest {
             resultItems.push(node1.items[i1]);
           } else {
             resultItems.push(await makeItem(key1!, await mergeFn(key1!, node1.items[i1].value, node2.items[i2].value)));
+            this.itemHashOps++;
           }
           i1++;
           i2++;
@@ -125,12 +130,14 @@ export class Forest {
           invariant(key2 !== null);
 
           resultItems.push(await makeItem(key2, await mergeFn(key2, null, node2.items[i2].value)));
+          this.itemHashOps++;
           i2++;
         } else {
           // Split second.
           invariant(key1 !== null);
 
           resultItems.push(await makeItem(key1, await mergeFn(key1, node1.items[i1].value, null)));
+          this.itemHashOps++;
           i1++;
         }
       }
@@ -139,8 +146,11 @@ export class Forest {
         carry2: DigestHex | null = null;
 
       for (let i1 = 0, i2 = 0; i1 < node1.items.length || i2 < node2.items.length; ) {
+        invariant(i1 <= node1.items.length);
+        invariant(i2 <= node2.items.length);
+
         const key1 = i1 < node1.items.length ? node1.items[i1].key : null;
-        const key2 = i1 < node2.items.length ? node2.items[i2].key : null;
+        const key2 = i2 < node2.items.length ? node2.items[i2].key : null;
         invariant(key1 !== null || key2 !== null);
 
         const child1 = carry1 !== null ? carry1 : node1.children[i1];
@@ -149,11 +159,15 @@ export class Forest {
         invariant(validDigest(child2));
 
         if (key1 === key2) {
+          resultChildren.push(await this.merge(child1, child2, mergeFn));
           if (arraysEqual(node1.items[i1].value, node2.items[i2].value)) {
             resultItems.push(node1.items[i1]);
           } else {
             resultItems.push(await makeItem(key1!, await mergeFn(key1!, node1.items[i1].value, node2.items[i2].value)));
+            this.itemHashOps++;
           }
+          carry1 = null;
+          carry2 = null;
           i1++;
           i2++;
           continue;
@@ -168,7 +182,9 @@ export class Forest {
 
           resultChildren.push(await this.merge(left, child2, mergeFn));
           resultItems.push(await makeItem(key2, await mergeFn(key2, null, node2.items[i2].value)));
+          this.itemHashOps++;
           carry1 = right;
+          carry2 = null;
           i2++;
         } else {
           // Split second.
@@ -177,6 +193,8 @@ export class Forest {
 
           resultChildren.push(await this.merge(left, child1, mergeFn));
           resultItems.push(await makeItem(key1, await mergeFn(key1, node1.items[i1].value, null)));
+          this.itemHashOps++;
+          carry1 = null;
           carry2 = right;
           i1++;
         }
@@ -249,6 +267,7 @@ export class Forest {
   async #makeNode(level: number, items: Item[], children: DigestHex[]): Promise<DigestHex> {
     invariant(level > 0 ? items.length + 1 === children.length : children.length === 0);
     const node = await makeNode(level, items, children);
+    this.nodeHashOps++;
     if (!this.#nodes.has(node.digest)) {
       this.#nodes.set(node.digest, node);
     }
@@ -269,15 +288,26 @@ export class Forest {
 
       if (node.items[i].key > key) {
         splitIndex = i;
+        break;
       }
     }
 
-    const [left, right] = await this.#splitAtKey(node.children[splitIndex], key);
+    if (node.level === 0) {
+      return [
+        await this.#makeNode(node.level, node.items.slice(0, splitIndex), []),
+        await this.#makeNode(node.level, node.items.slice(splitIndex), []),
+      ];
+    } else {
+      const [left, right] = await this.#splitAtKey(node.children[splitIndex], key);
 
-    return [
-      await this.#makeNode(node.level, node.items.slice(0, splitIndex), [...node.children.slice(0, splitIndex), left]),
-      await this.#makeNode(node.level, node.items.slice(splitIndex), [right, ...node.children.slice(splitIndex + 1)]),
-    ];
+      return [
+        await this.#makeNode(node.level, node.items.slice(0, splitIndex), [
+          ...node.children.slice(0, splitIndex),
+          left,
+        ]),
+        await this.#makeNode(node.level, node.items.slice(splitIndex), [right, ...node.children.slice(splitIndex + 1)]),
+      ];
+    }
   }
 }
 
@@ -360,6 +390,8 @@ type NodeSlice = {
 };
 
 const makeNode = async (level: number, items: Item[], children: DigestHex[]): Promise<Node> => {
+  invariant(level > 0 ? items.length + 1 === children.length : children.length === 0);
+
   // TODO(dmaretskyi): Hashing spec.
   const nodeInputData = textEncoder.encode(items.map((item) => item.itemDigest).join('') + children.join(''));
   const digest = await crypto.subtle.digest({ name: 'SHA-256' }, nodeInputData);
@@ -387,6 +419,7 @@ const keyDigest = async (key: string): Promise<DigestHex> => {
 };
 
 const makeItem = async (key: string, value: Uint8Array): Promise<Item> => {
+  invariant(typeof key === 'string');
   invariant(value !== null);
   // TODO(dmaretskyi): Hashing spec.
   const keyBytes = textEncoder.encode(key);

@@ -40,10 +40,12 @@ test('overwrite key', async ({ expect }) => {
   }
 });
 
-test.skip('builds a sorted tree', async ({ expect }) => {
-  const NUM_ITEMS = 1000;
-  const NUM_SAMPLES = 100;
-  const ITERATIVE = false;
+// Passes
+test('builds a sorted tree', { timeout: 60_000 }, async ({ expect }) => {
+  const NUM_ITEMS = 250;
+  const REPEAT_KEYS = 10;
+  const NUM_SAMPLES = 1;
+  const ITERATIVE = true;
 
   const forest = new Forest();
 
@@ -61,6 +63,7 @@ test.skip('builds a sorted tree', async ({ expect }) => {
   };
 
   const pairs = range(NUM_ITEMS).map(() => [randomKey(), createValue(randomKey())] as const);
+  pairs.push(...range(REPEAT_KEYS).map(() => pairs[Math.floor(Math.random() * pairs.length)]));
   for (const _ in range(NUM_SAMPLES)) {
     if (!ITERATIVE) {
       const root = await forest.createTree(pairs.sort(() => Math.random() - 0.5));
@@ -80,6 +83,7 @@ test.skip('builds a sorted tree', async ({ expect }) => {
       }
     }
   }
+  console.log({ itemHashOps: forest.itemHashOps, nodeHashOps: forest.nodeHashOps })
 });
 
 describe('insertion order does not change the root hash', () => {
@@ -97,6 +101,7 @@ describe('insertion order does not change the root hash', () => {
     expect(tree1 === tree2).toBeTruthy();
   });
 
+  // Passes
   test.skip('n items', async ({ expect }) => {
     const NUM_ITEMS = 1000;
     const NUM_SAMPLES = 100;
