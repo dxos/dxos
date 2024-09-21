@@ -6,6 +6,7 @@ import '@dxos-theme';
 
 import React from 'react';
 
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { withClientProvider } from './withClientProvider';
@@ -23,15 +24,19 @@ const Test = () => {
   }
 
   return (
-    <table className='table [&>td:align-top]'>
+    <table className='w-full'>
       <tbody>
         <tr>
           <td>identity</td>
-          <td>{JSON.stringify(identity.profile)}</td>
+          <td>
+            <SyntaxHighlighter language='json'>{JSON.stringify(identity.profile, null, 2)}</SyntaxHighlighter>
+          </td>
         </tr>
         <tr>
           <td>client</td>
-          <td>{JSON.stringify(client.toJSON(), null, 2)}</td>
+          <td>
+            <SyntaxHighlighter language='json'>{JSON.stringify(client.toJSON(), null, 2)}</SyntaxHighlighter>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -41,7 +46,7 @@ const Test = () => {
 export default {
   title: 'react-client/withClient',
   component: Test,
-  decorators: [withTheme, withClientProvider({ createIdentity: true })],
+  decorators: [withTheme, withClientProvider({ createIdentity: { displayName: 'DXOS' } })],
 };
 
 export const Default = {};

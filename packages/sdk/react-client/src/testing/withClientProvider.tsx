@@ -13,7 +13,7 @@ import { useIdentity } from '../halo';
 // TODO(burdon): Factor out.
 type Provider<T> = () => T;
 const maybeProvide = <T,>(provider: Provider<T> | T): T => {
-  return typeof provider === 'function' ? provider() : provider;
+  return typeof provider === 'function' ? (provider as Function)() : provider;
 };
 
 // TODO(burdon): Replace use of setTimeout everywhere? (removes need to cancel).
