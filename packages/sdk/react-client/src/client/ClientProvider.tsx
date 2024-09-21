@@ -8,7 +8,8 @@ import { Client, type ClientOptions, type ClientServicesProvider, SystemStatus }
 import { type Config } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
-import { getAsyncValue, type MaybePromise, type Provider } from '@dxos/util';
+import { useControlledValue } from '@dxos/react-ui';
+import { getAsyncProviderValue, type MaybePromise, type Provider } from '@dxos/util';
 
 import { ClientContext, type ClientContextProps } from './context';
 import { printBanner } from '../banner';
@@ -16,48 +17,49 @@ import { printBanner } from '../banner';
 /**
  * Properties for the ClientProvider.
  */
-export type ClientProviderProps = Omit<ClientOptions, 'config' | 'services'> & {
-  children?: ReactNode;
+export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
+  Omit<ClientOptions, 'config' | 'services'> & {
+    children?: ReactNode;
 
-  /**
-   * Config object or async provider.
-   */
-  config?: Config | Provider<Promise<Config>>;
+    /**
+     * Config object or async provider.
+     */
+    config?: Config | Provider<Promise<Config>>;
 
-  /**
-   * Callback to enable the caller to create a custom ClientServicesProvider.
-   *
-   * Most apps won't need this.
-   */
-  services?: (config?: Config) => MaybePromise<ClientServicesProvider>;
+    /**
+     * Client object or async provider to enable to caller to do custom initialization.
+     *
+     * Most apps won't need this.
+     */
+    // TODO(wittjosiah): Remove async and just use to keeping reference to client?
+    //   (Preferring `onInitialized` for custom initialization.)
+    client?: Client | Provider<Promise<Client>>;
 
-  /**
-   * Client object or async provider to enable to caller to do custom initialization.
-   *
-   * Most apps won't need this.
-   */
-  // TODO(wittjosiah): Remove async and just use to keeping reference to client?
-  //   (Preferring `onInitialized` for custom initialization.)
-  client?: Client | Provider<Promise<Client>>;
+    /**
+     * Callback to enable the caller to create a custom ClientServicesProvider.
+     *
+     * Most apps won't need this.
+     */
+    services?: ClientServicesProvider | ((config?: Config) => MaybePromise<ClientServicesProvider>);
 
-  /**
-   * ReactNode to display until the client is available.
-   */
-  // TODO(wittjosiah): Rename to `placeholder`.
-  fallback?: FunctionComponent<Partial<ClientContextProps>>;
+    /**
+     * ReactNode to display until the client is available.
+     */
+    // TODO(wittjosiah): Rename to `placeholder`.
+    fallback?: FunctionComponent<Partial<ClientContextProps>>;
 
-  /**
-   * Set to false to stop default signal factory from being registered.
-   */
-  registerSignalFactory?: boolean;
+    /**
+     * Set to false to stop default signal factory from being registered.
+     */
+    registerSignalFactory?: boolean;
 
-  /**
-   * Post initialization hook to enable to caller to do custom initialization.
-   *
-   * @param Client
-   */
-  onInitialized?: (client: Client) => MaybePromise<void>;
-};
+    /**
+     * Post initialization hook to enable to caller to do custom initialization.
+     *
+     * @param Client
+     */
+    onInitialized?: (client: Client) => MaybePromise<void>;
+  };
 
 /**
  * Root component that provides the DXOS client instance to child components.
@@ -66,8 +68,9 @@ export type ClientProviderProps = Omit<ClientOptions, 'config' | 'services'> & {
 export const ClientProvider = ({
   children,
   config: configProvider,
-  services: createServices,
   client: clientProvider,
+  services: servicesProvider,
+  status: controlledStatus,
   fallback: Fallback = () => null,
   registerSignalFactory: _registerSignalFactory = true,
   onInitialized,
@@ -80,7 +83,7 @@ export const ClientProvider = ({
   }, []);
 
   const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
-  const [status, setStatus] = useState<SystemStatus | null>(null);
+  const [status, setStatus] = useControlledValue(controlledStatus);
   const [error, setError] = useState();
   if (error) {
     throw error;
@@ -109,13 +112,13 @@ export const ClientProvider = ({
     const timeout = setTimeout(async () => {
       if (clientProvider) {
         // Asynchronously request client.
-        const client = await getAsyncValue(clientProvider);
+        const client = await getAsyncProviderValue(clientProvider);
         await done(client);
       } else {
         // Asynchronously construct client (config may be undefined).
-        const config = await getAsyncValue(configProvider);
+        const config = await getAsyncProviderValue(configProvider);
         log('resolved config', { config });
-        const services = await createServices?.(config);
+        const services = typeof servicesProvider === 'function' ? await servicesProvider?.(config) : servicesProvider;
         log('created services', { services });
         const client = new Client({ config, services, ...options });
         log('created client');
@@ -128,7 +131,7 @@ export const ClientProvider = ({
       clearTimeout(timeout);
       void client?.destroy().catch((err) => log.catch(err));
     };
-  }, [clientProvider, configProvider, createServices]);
+  }, [clientProvider, configProvider, servicesProvider]);
 
   if (!client || status !== SystemStatus.ACTIVE) {
     return <Fallback client={client} status={status} />;

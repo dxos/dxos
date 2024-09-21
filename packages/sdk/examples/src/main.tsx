@@ -13,7 +13,7 @@ import { create } from '@dxos/echo-schema';
 import { registerSignalFactory } from '@dxos/echo-signals';
 import { TextType, DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
-import { Client, ClientContext } from '@dxos/react-client';
+import { Client, ClientProvider } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
@@ -130,9 +130,9 @@ const main = async () => {
             </div>
           </Tooltip.Provider>
           {clients.map((client, index) => (
-            <ClientContext.Provider key={index} value={{ client }}>
+            <ClientProvider key={index} client={client}>
               <TaskList id={index} spaceKey={spaceKey} />
-            </ClientContext.Provider>
+            </ClientProvider>
           ))}
         </div>
       </ThemeProvider>

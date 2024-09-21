@@ -30,7 +30,7 @@ import { useEffect } from 'react';
  * @param destructor Receives the value returned from the callback.
  * @param deps
  *
- * @deprecated Use `setTimeout` instead.
+ * @deprecated Use `doAsync` instead.
  */
 export const useAsyncEffect = <T>(
   callback: (isMounted: () => boolean) => Promise<T> | undefined,

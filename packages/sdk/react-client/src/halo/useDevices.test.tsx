@@ -10,7 +10,7 @@ import { Client, fromHost } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
 import { useDevices } from './useDevices';
-import { ClientContext } from '../client/context';
+import { ClientProvider } from '../client';
 
 describe('useDevices', () => {
   test('lists existing devices', async () => {
@@ -18,9 +18,7 @@ describe('useDevices', () => {
     await client.initialize();
     await client.halo.createIdentity();
     // TODO(wittjosiah): Factor out.
-    const wrapper = ({ children }: any) => (
-      <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>
-    );
+    const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(() => useDevices(), { wrapper });
     expect(result.current?.length).to.eq(1);
   });

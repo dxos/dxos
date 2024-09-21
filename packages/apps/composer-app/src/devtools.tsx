@@ -9,7 +9,7 @@ import { createRoot } from 'react-dom/client';
 
 import { Devtools } from '@dxos/devtools';
 import { initializeAppObservability } from '@dxos/observability';
-import { type Client, type ClientServices } from '@dxos/react-client';
+import { type Client } from '@dxos/react-client';
 import { type Provider } from '@dxos/util';
 
 const namespace = 'devtools';
@@ -30,7 +30,7 @@ const App = ({ clientProvider }: { clientProvider: Provider<Promise<Client>> }) 
     return null;
   }
 
-  return <Devtools client={client} services={client.services.services as ClientServices} namespace={namespace} />;
+  return <Devtools client={client} services={client.services} namespace={namespace} />;
 };
 
 const main = async () => {
