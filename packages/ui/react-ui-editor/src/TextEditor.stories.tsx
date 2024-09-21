@@ -261,9 +261,11 @@ const renderLinkButton = (el: Element, url: string) => {
 // Story
 //
 
+type DebugMode = 'syntax' | 'raw';
+
 type StoryProps = {
   id?: string;
-  debug?: boolean;
+  debug?: DebugMode;
   text?: string;
   readonly?: boolean;
   placeholder?: string;
@@ -318,7 +320,12 @@ const Story = ({
   return (
     <div className='flex w-full'>
       <div role='none' className='flex w-full overflow-hidden' ref={parentRef} {...focusAttributes} />
-      {debug && (
+      {debug === 'raw' && (
+        <div className='w-[800px] border-l border-separator overflow-auto'>
+          <pre className='p-1 font-mono text-xs text-green-800 dark:text-green-200'>{view?.state.doc.toString()}</pre>
+        </div>
+      )}
+      {debug === 'syntax' && (
         <div className='w-[800px] border-l border-separator overflow-auto'>
           <pre className='p-1 font-mono text-xs text-green-800 dark:text-green-200'>
             {JSON.stringify(tree, null, 2)}
@@ -466,7 +473,7 @@ export const OrderedList = {
 };
 
 export const TaskList = {
-  render: () => <Story text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} debug />,
+  render: () => <Story text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} debug='raw' />,
 };
 
 export const Table = {
