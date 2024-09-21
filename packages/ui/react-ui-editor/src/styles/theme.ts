@@ -76,7 +76,12 @@ export const defaultTheme: ThemeStyles = {
     background: 'var(--surface-bg)',
   },
   '.cm-gutter': {},
+  /**
+   * Height is set to match the corresponding line.
+   */
   '.cm-gutterElement': {
+    display: 'flex',
+    alignItems: 'center',
     fontSize: '16px',
     lineHeight: 1.5,
   },
