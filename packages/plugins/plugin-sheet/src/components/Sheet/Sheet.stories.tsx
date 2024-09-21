@@ -18,8 +18,8 @@ import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 import { Sheet } from './Sheet';
 import { type SizeMap } from './grid';
 import { useSheetContext } from './sheet-context';
-import { SheetModel } from '../../model';
-import { ValueTypeEnum, type CellValue, createSheet, SheetType } from '../../types';
+import { createTestSheet, testSheetName } from '../../testing';
+import { ValueTypeEnum, SheetType } from '../../types';
 import { type ComputeGraph, createComputeGraph } from '../ComputeGraph';
 // TODO(wittjosiah): Refactor. This is not exported from ./components due to depending on ECHO.
 import { ComputeGraphContext, ComputeGraphContextProvider, useComputeGraph } from '../ComputeGraph/graph-context';
@@ -98,8 +98,6 @@ const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) =
     </div>
   );
 };
-
-const testSheetName = 'test';
 
 const withGraphDecorator: Decorator = (Story) => {
   const [graphs, setGraphs] = useState<Record<string, ComputeGraph>>({});
@@ -263,34 +261,6 @@ const Cell = ({ className, label }: { className?: string; label: string }) => (
   <div className={mx('flex items-center justify-center border', className)}>{label}</div>
 );
 
-const createCells = (): Record<string, CellValue> => ({
-  B1: { value: 'Qty' },
-  B3: { value: 1 },
-  B4: { value: 2 },
-  B5: { value: 3 },
-  B7: { value: 'Total' },
-
-  C1: { value: 'Price' },
-  C3: { value: 2_000 },
-  C4: { value: 2_500 },
-  C5: { value: 3_000 },
-  C7: { value: '=SUMPRODUCT(B2:B6, C2:C6)' },
-  // C8: { value: '=C7*CRYPTO(D7)' },
-  C8: { value: '=C7*TEST()' },
-
-  D7: { value: 'USD' },
-  D8: { value: 'BTC' },
-
-  E3: { value: '=TODAY()' },
-  E4: { value: '=NOW()' },
-
-  F1: { value: `=${testSheetName}!A1` }, // Ref test sheet.
-  F3: { value: true },
-  F4: { value: false },
-  F5: { value: '8%' },
-  F6: { value: '$10000' },
-});
-
 const useTestSheet = () => {
   const { graphs, setGraph } = useContext(ComputeGraphContext);
   const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
@@ -307,13 +277,7 @@ const useTestSheet = () => {
         setGraph(space.id, graph);
       }
 
-      const sheet = createSheet();
-      const model = new SheetModel(graph, sheet);
-      await model.initialize();
-      model.setValues(createCells());
-      model.sheet.columnMeta[model.sheet.columns[0]] = { size: 100 };
-      await model.destroy();
-
+      const sheet = await createTestSheet({ graph });
       space.db.add(sheet);
       setSheet(sheet);
     });

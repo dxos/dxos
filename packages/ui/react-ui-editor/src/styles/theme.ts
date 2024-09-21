@@ -73,12 +73,15 @@ export const defaultTheme: ThemeStyles = {
    * NOTE: Gutters should have the same top margin as the content.
    */
   '.cm-gutters': {
-    background: 'unset',
+    background: 'var(--surface-bg)',
   },
   '.cm-gutter': {},
+  /**
+   * Height is set to match the corresponding line.
+   */
   '.cm-gutterElement': {
-    fontSize: '16px',
-    lineHeight: 1.5,
+    display: 'flex',
+    alignItems: 'center',
   },
 
   '.cm-lineNumbers': {
@@ -198,13 +201,14 @@ export const defaultTheme: ThemeStyles = {
    *   </div>
    * </div
    */
-  // TODO(burdon): Apply react-ui-theme or replace panel.
+  // TODO(burdon): Implement custom panel (with icon buttons).
   '.cm-panels': {},
   '.cm-panel': {
     fontFamily: fontBody,
-    backgroundColor: 'var(--dx-base)',
+    backgroundColor: 'var(--surface-bg)',
   },
   '.cm-panel input, .cm-panel button, .cm-panel label': {
+    color: 'var(--dx-subdued)',
     fontFamily: fontBody,
     fontSize: '14px',
     all: 'unset',

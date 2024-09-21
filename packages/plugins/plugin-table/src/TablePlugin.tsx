@@ -11,7 +11,7 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 
-import { TableSection, TableSlide, TableArticle } from './components';
+import { TableContainer } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
 import translations from './translations';
 import { TableType } from './types';
@@ -85,11 +85,10 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'slide':
-              return isTable(data.slide) ? <TableSlide table={data.slide} /> : null;
+              return isTable(data.slide) ? <TableContainer table={data.slide} /> : null;
             case 'section':
-              return isTable(data.object) ? <TableSection table={data.object} /> : null;
             case 'article':
-              return isTable(data.object) ? <TableArticle table={data.object} /> : null;
+              return isTable(data.object) ? <TableContainer role={role} table={data.object} /> : null;
             default:
               return null;
           }
@@ -99,11 +98,14 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         creators: [
           {
             id: 'create-stack-section-table',
-            testId: 'tablePlugin.createSectionSpaceSketch',
+            testId: 'tablePlugin.createSection',
             type: ['plugin name', { ns: TABLE_PLUGIN }],
             label: ['create stack section label', { ns: TABLE_PLUGIN }],
             icon: (props: any) => <Table {...props} />,
-            intent: { plugin: TABLE_PLUGIN, action: TableAction.CREATE },
+            intent: {
+              plugin: TABLE_PLUGIN,
+              action: TableAction.CREATE,
+            },
           },
         ],
       },

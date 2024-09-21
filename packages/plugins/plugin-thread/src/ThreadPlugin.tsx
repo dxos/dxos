@@ -4,7 +4,7 @@
 
 import { Chat, type IconProps } from '@phosphor-icons/react';
 import { computed, effect } from '@preact/signals-core';
-import React, { useCallback } from 'react';
+import React from 'react';
 
 import {
   type IntentPluginProvides,
@@ -72,6 +72,10 @@ type ThreadState = {
 type SubjectId = string;
 const initialViewState = { showResolvedThreads: false };
 type ViewStore = Record<SubjectId, typeof initialViewState>;
+
+// TODO(Zan): More robust runtime check.
+const providesThreadsConfig = (plugin: any): Plugin<ThreadProvides<any>> | undefined =>
+  'thread' in plugin.provides ? (plugin as Plugin<ThreadProvides<any>>) : undefined;
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
@@ -199,7 +203,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const [spaceId, objectId] = docId?.split(':') ?? [];
                 const space = client.spaces.get().find((space) => space.id === spaceId);
                 const doc = space?.db.getObjectById(objectId);
-
                 if (!doc || !docId) {
                   return;
                 }
@@ -225,7 +228,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               },
               actions: ({ node }) => {
                 const dataId = node.id.split('~').at(0);
-
                 if (!node.id.endsWith('~comments') || !dataId) {
                   return;
                 }
@@ -312,14 +314,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             case 'article':
             case 'complementary': {
               const location = navigationPlugin?.provides.location;
-
-              const providesThreadsConfig = useCallback(
-                (plugin: any): Plugin<ThreadProvides<any>> | undefined =>
-                  // TODO(Zan): More robust runtime check.
-                  'thread' in plugin.provides ? (plugin as Plugin<ThreadProvides<any>>) : undefined,
-                [],
-              );
-
               const threadsIntegrators = useResolvePlugins(providesThreadsConfig);
               const threadProvides = threadsIntegrators.map((p) => p.provides.thread);
 
@@ -328,9 +322,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 // TODO(zan): Maybe we should have utility for positional main object ids.
                 if (isLayoutParts(location?.active) && location.active.main) {
                   const layoutEntries = location.active.main;
-
                   const currentPosition = layoutEntries.findIndex((entry) => channel.id === entry.id);
-
                   if (currentPosition > 0) {
                     const objectToTheLeft = layoutEntries[currentPosition - 1];
                     const context = getSpace(data.object)?.db.getObjectById(objectToTheLeft.id);
@@ -452,7 +444,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
                 const subjectId = fullyQualifiedId(subject);
                 const thread = create(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
-
                 const stagingArea = state.staging[subjectId];
                 if (stagingArea) {
                   stagingArea.push(thread);

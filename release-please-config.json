@@ -489,11 +489,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-gpt/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/experimental/plugin-grid/package.json",
           "jsonpath": "$.version"
         },
