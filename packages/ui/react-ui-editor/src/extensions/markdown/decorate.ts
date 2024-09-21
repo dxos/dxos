@@ -17,6 +17,19 @@ import { table } from './table';
 import { theme, type HeadingLevel } from '../../styles';
 import { wrapWithCatch } from '../util';
 
+/**
+ * Unicode characters.
+ * NOTE: Depends on font.
+ * https://www.compart.com/en/unicode (nice resource).
+ * https://en.wikipedia.org/wiki/List_of_Unicode_characters
+ */
+const Unicode = {
+  emDash: '\u2014',
+  bullet: '\u2022',
+  bulletSmall: '\u2219',
+  bulletSquare: '\u2b1d',
+};
+
 //
 // Widgets
 //
@@ -246,19 +259,20 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       }
 
       case 'ListItem': {
+        const line = state.doc.lineAt(node.from);
+
         // Set indentation.
         const list = getCurrentListLevel();
         const width = list.type === 'OrderedList' ? orderedListIndentationWidth : bulletListIndentationWidth;
         const offset = ((list.level ?? 0) + 1) * width;
-        const line = state.doc.lineAt(node.from);
         if (node.from === line.to - 1) {
           // Abort if only the hyphen is typed.
           return false;
         }
 
         // Add line decoration for the continuation indent.
-        // TODO(burdon): Causes a gap when folded.
         // TODO(burdon): Bug if indentation is more than one indentation unit (e.g., 4 spaces) from the previous line.
+
         deco.add(
           line.from,
           line.from,
@@ -283,9 +297,8 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           break;
         }
 
-        // Ref: https://en.wikipedia.org/wiki/List_of_Unicode_characters
         // TODO(burdon): Option to make hierarchical; or a), i), etc.
-        const label = list.type === 'OrderedList' ? `${++list.number}.` : '\u2022';
+        const label = list.type === 'OrderedList' ? `${++list.number}.` : Unicode.bulletSmall;
         const line = state.doc.lineAt(node.from);
         const to = state.doc.sliceString(node.to, node.to + 1) === ' ' ? node.to + 1 : node.to;
         atomicDeco.add(
