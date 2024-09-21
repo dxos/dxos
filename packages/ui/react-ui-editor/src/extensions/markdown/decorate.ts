@@ -256,7 +256,9 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           return false;
         }
 
-        // Add line decoration for continuation indent.
+        // Add line decoration for the continuation indent.
+        // TODO(burdon): Causes a gap when folded.
+        // TODO(burdon): Bug if indentation is more than one indentation unit (e.g., 4 spaces) from the previous line.
         deco.add(
           line.from,
           line.from,
@@ -268,32 +270,27 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           }),
         );
 
-        // Remove indentation spaces.
-        const text = state.doc.sliceString(line.from, node.to);
-        const whitespace = text.match(/^ */)?.[0].length ?? 0;
-        if (whitespace) {
-          atomicDeco.add(line.from, line.from + whitespace, hide);
-        }
-
         break;
       }
 
       case 'ListMark': {
+        const list = getCurrentListLevel();
+
         // Look-ahead for task marker.
-        // NOTE: Requires space to exist (otherwise processes as a link).
+        // NOTE: Requires space to exist (otherwise the text is parsed as the start of a link).
         const next = tree.resolve(node.to + 1, 1);
         if (next?.name === 'TaskMarker') {
-          atomicDeco.add(node.from, node.to + 1, hide);
           break;
         }
 
-        const list = getCurrentListLevel();
-
+        // Ref: https://en.wikipedia.org/wiki/List_of_Unicode_characters
         // TODO(burdon): Option to make hierarchical; or a), i), etc.
-        const label = list.type === 'OrderedList' ? `${++list.number}.` : '•';
+        const label = list.type === 'OrderedList' ? `${++list.number}.` : '\u2022';
+        const line = state.doc.lineAt(node.from);
+        const to = state.doc.sliceString(node.to, node.to + 1) === ' ' ? node.to + 1 : node.to;
         atomicDeco.add(
-          node.from,
-          node.to + 1,
+          line.from,
+          to,
           Decoration.replace({
             widget: new TextWidget(
               label,
@@ -305,10 +302,11 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       }
 
       case 'TaskMarker': {
-        if (!editingRange(state, node, focus)) {
-          const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
-          atomicDeco.add(node.from, node.to + 1, checked ? checkedTask : uncheckedTask);
-        }
+        const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
+        // Check if the next character is a space and if so, include it in the replacement.
+        const line = state.doc.lineAt(node.from);
+        const to = state.doc.sliceString(node.to, node.to + 1) === ' ' ? node.to + 1 : node.to;
+        atomicDeco.add(line.from, to, checked ? checkedTask : uncheckedTask);
         break;
       }
 
