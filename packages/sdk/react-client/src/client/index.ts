@@ -3,7 +3,9 @@
 //
 
 export * from './AgentHostingProvider';
-export * from './ClientContext';
+export * from './ClientProvider';
+
+export * from './useClient';
 export * from './useClientServices';
 export * from './useConfig';
 export * from './useShell';

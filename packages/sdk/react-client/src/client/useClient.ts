@@ -1,18 +1,18 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import { useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { ClientContext } from './context';
+import { ClientContext } from '../client/context';
 
 /**
- * Hook returning config object used to initialize the DXOS client instance.
+ * Hook returning instance of DXOS client.
  * Requires ClientContext to be set via ClientProvider.
  */
-export const useConfig = () => {
+export const useClient = () => {
   const { client } = useContext(ClientContext) ?? raise(new Error('Missing ClientContext.'));
-  return client.config;
+  return client;
 };

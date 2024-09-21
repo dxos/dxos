@@ -10,7 +10,7 @@ import { Client, fromHost } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
 import { useDevices } from './useDevices';
-import { ClientContext } from '../client';
+import { ClientContext } from '../client/context';
 
 describe('useDevices', () => {
   test('lists existing devices', async () => {

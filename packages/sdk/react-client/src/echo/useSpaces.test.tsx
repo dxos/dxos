@@ -10,7 +10,7 @@ import { Client, fromHost } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
 import { useSpace, useSpaces } from './useSpaces';
-import { ClientContext } from '../client';
+import { ClientContext } from '../client/context';
 
 describe('useSpaces', () => {
   test('lists existing spaces', async () => {

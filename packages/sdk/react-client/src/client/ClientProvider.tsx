@@ -2,56 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, {
-  type ReactNode,
-  useState,
-  type Context,
-  createContext,
-  useContext,
-  useEffect,
-  type FunctionComponent,
-  useMemo,
-} from 'react';
+import React, { type FunctionComponent, type ReactNode, useEffect, useMemo, useState } from 'react';
 
-import {
-  Client,
-  SystemStatus,
-  type ClientOptions,
-  type ClientServices,
-  type ClientServicesProvider,
-} from '@dxos/client';
+import { Client, type ClientOptions, type ClientServicesProvider, SystemStatus } from '@dxos/client';
 import { type Config } from '@dxos/config';
-import { raise } from '@dxos/debug';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
-import { getAsyncValue, type MaybePromise, type Provider } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
+import { getAsyncValue, type MaybePromise, type Provider } from '@dxos/util';
 
+import { ClientContext, type ClientContextProps } from './context';
 import { printBanner } from '../banner';
-
-// TODO(burdon): Reconcile with ClientOptions.
-export type ClientContextProps = {
-  client: Client;
-
-  // Optionally expose services (e.g., for devtools).
-  // TODO(burdon): Can't this just be accessed via `client.services`?
-  services?: ClientServices;
-
-  status?: SystemStatus | null;
-};
-
-// TODO(burdon): Do not export.
-export const ClientContext: Context<ClientContextProps | undefined> = createContext<ClientContextProps | undefined>(
-  undefined,
-);
-
-/**
- * Hook returning instance of DXOS client.
- * Requires ClientContext to be set via ClientProvider.
- */
-export const useClient = () => {
-  const { client } = useContext(ClientContext) ?? raise(new Error('Missing ClientContext.'));
-  return client;
-};
 
 /**
  * Properties for the ClientProvider.
@@ -77,7 +37,7 @@ export type ClientProviderProps = Omit<ClientOptions, 'config' | 'services'> & {
    * Most apps won't need this.
    */
   // TODO(wittjosiah): Remove async and just use to keeping reference to client?
-  //   (Prefering `onInitialized` for custom initialization.)
+  //   (Preferring `onInitialized` for custom initialization.)
   client?: Client | Provider<Promise<Client>>;
 
   /**
@@ -109,14 +69,14 @@ export const ClientProvider = ({
   services: createServices,
   client: clientProvider,
   fallback: Fallback = () => null,
-  registerSignalFactory: register = true,
+  registerSignalFactory: _registerSignalFactory = true,
   onInitialized,
   ...options
 }: ClientProviderProps) => {
   useMemo(() => {
-    // TODO(wittjosiah): Ideally this should be imported asynchronosly because it is optional.
+    // TODO(wittjosiah): Ideally this should be imported asynchronously because it is optional.
     //   Unfortunately, async import seemed to break signals React instrumentation.
-    register && registerSignalFactory();
+    _registerSignalFactory && registerSignalFactory();
   }, []);
 
   const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
@@ -174,10 +134,5 @@ export const ClientProvider = ({
     return <Fallback client={client} status={status} />;
   }
 
-  // prettier-ignore
-  return (
-    <ClientContext.Provider value={{ client, status }}>
-      {children}
-    </ClientContext.Provider>
-  );
+  return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
 };

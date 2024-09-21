@@ -12,7 +12,7 @@ import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
 import { type MaybePromise } from '@dxos/util';
 
-import { ClientContext } from '../client';
+import { ClientProvider } from '../client';
 
 const testBuilder = new TestBuilder();
 
@@ -37,11 +37,11 @@ export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
  * The `Component` property is rendered n times, once for each peer.
  * @deprecated Use withClientProvider.
  */
+// TODO(burdon): To discuss.
 // NOTE: This is specifically not a storybook decorator because it broke stories as a decorator.
 //   This seems primarily due to the fact that it required top-level await for the clients to initialize.
 //   Storybook seemed to handle it alright, but Chromatic had a lot of trouble with it.
 //   There was also a question of whether or not calling the story function multiple times was a good idea.
-// TODO(wittjosiah): Rename.
 export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRepeaterProps<P>) => {
   const {
     component: Component,
@@ -92,9 +92,9 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
     <>
       {Controls && <Controls clients={clients} />}
       {clients.map((client, index) => (
-        <ClientContext.Provider key={index} value={{ client }}>
+        <ClientProvider key={index} client={client}>
           <Component id={index} count={clients.length} {...{ ...props.args, spaceKey }} />
-        </ClientContext.Provider>
+        </ClientProvider>
       ))}
     </>
   );
