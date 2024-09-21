@@ -29,6 +29,8 @@ export class Node {
   dirty = true;
   digest: Uint8Array | undefined = undefined;
 
+  stub = false;
+
   constructor(level: number) {
     this.level = level;
   }
@@ -76,6 +78,11 @@ export class Node {
     if (this.level > 0) {
       yield* this.lastChild!.entries();
     }
+  }
+
+  *traverse(): Generator<Node, undefined, undefined> {
+    yield this;
+    yield* this.children;
   }
 
   /**

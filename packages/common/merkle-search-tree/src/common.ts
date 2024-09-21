@@ -54,6 +54,18 @@ export const formatDigest = (digest: Uint8Array) => {
   return arrayToHex(digest);
 };
 
+export const getLevelHex = (digest: string): number => {
+  let level = 0;
+  for (let i = 0; i < digest.length; i++) {
+    if (digest[i] === '0') {
+      level++;
+    } else {
+      break;
+    }
+  }
+  return level;
+};
+
 export const digestEquals = (a: Uint8Array, b: Uint8Array) => {
   if (a.length !== b.length) {
     return false;

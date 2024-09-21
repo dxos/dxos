@@ -91,6 +91,18 @@ export class Tree {
     return this.#root.formatToString({ pad: 0 });
   }
 
+  *nodes(): Generator<Node, undefined, undefined> {
+    yield* this.#root.traverse();
+  }
+
+  *missingNodes(): Generator<Node, undefined, undefined> {
+    for (const node of this.nodes()) {
+      if (node.stub) {
+        yield node;
+      }
+    }
+  }
+
   #set(item: Item) {
     const level = getLevel(item.digest);
 

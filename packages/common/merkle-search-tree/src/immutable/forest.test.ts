@@ -1,0 +1,134 @@
+import { range } from '@dxos/util';
+import { describe, test } from 'vitest';
+import { Forest, type DigestHex, type TreeMut } from './forest';
+import { createValue, randomKey } from '../testing';
+
+test('empty', async ({ expect }) => {
+  const forest = new Forest();
+  const root = await forest.createTree([]);
+  expect(await forest.get(root, 'a')).toEqual({ kind: 'missing' });
+});
+
+test('two items', async ({ expect }) => {
+  const forest = new Forest();
+  const root = await forest.createTree([
+    ['a', createValue('a')],
+    ['b', createValue('b')],
+  ]);
+  expect(await forest.get(root, 'a')).toEqual({ kind: 'present', value: createValue('a') });
+  expect(await forest.get(root, 'b')).toEqual({ kind: 'present', value: createValue('b') });
+  expect(await forest.get(root, 'c')).toEqual({ kind: 'missing' });
+});
+
+test('overwrite key', async ({ expect }) => {
+  const forest = new Forest();
+  const tree = forest.treeMut(
+    await forest.createTree([
+      ['a', createValue('a')],
+      ['b', createValue('b')],
+    ]),
+  );
+  try {
+    expect(await tree.get('a')).toEqual({ kind: 'present', value: createValue('a') });
+    expect(await tree.get('b')).toEqual({ kind: 'present', value: createValue('b') });
+
+    await tree.set('b', createValue('new'));
+    expect(await tree.get('b')).toEqual({ kind: 'present', value: createValue('new') });
+  } catch (err) {
+    console.log(forest.formatToString(tree.root));
+    throw err;
+  }
+});
+
+test.skip('builds a sorted tree', async ({ expect }) => {
+  const NUM_ITEMS = 1000;
+  const NUM_SAMPLES = 100;
+  const ITERATIVE = false;
+
+  const forest = new Forest();
+
+  const validate = (root: DigestHex) => {
+    try {
+      let prevKey = '';
+      for (const { key } of forest.items(root)) {
+        expect(prevKey < key).toBeTruthy();
+        prevKey = key;
+      }
+    } catch (err) {
+      console.log(forest.formatToString(root));
+      throw err;
+    }
+  };
+
+  const pairs = range(NUM_ITEMS).map(() => [randomKey(), createValue(randomKey())] as const);
+  for (const _ in range(NUM_SAMPLES)) {
+    if (!ITERATIVE) {
+      const root = await forest.createTree(pairs.sort(() => Math.random() - 0.5));
+      validate(root);
+    } else {
+      const tree = forest.treeMut(await forest.createTree([]));
+      for (const [key, value] of pairs.sort(() => Math.random() - 0.5)) {
+        const treeBefore = forest.formatToString(tree.root);
+        await tree.set(key, value);
+        try {
+          validate(tree.root);
+        } catch (err) {
+          console.log(`\nLast node inserted: ${key}\n\n`);
+          console.log(`\Tree before insertion:\n${treeBefore}\n\n`);
+          throw err;
+        }
+      }
+    }
+  }
+});
+
+describe('insertion order does not change the root hash', () => {
+  test('two items', async ({ expect }) => {
+    const forest = new Forest();
+    const tree1 = await forest.createTree([
+      ['a', createValue('a')],
+      ['b', createValue('b')],
+    ]);
+
+    const tree2 = await forest.createTree([
+      ['b', createValue('b')],
+      ['a', createValue('a')],
+    ]);
+    expect(tree1 === tree2).toBeTruthy();
+  });
+
+  test.skip('n items', async ({ expect }) => {
+    const NUM_ITEMS = 1000;
+    const NUM_SAMPLES = 100;
+
+    const forest = new Forest();
+
+    const pairs = range(NUM_ITEMS).map(() => [randomKey(), createValue(randomKey())] as const);
+    let firstTree: TreeMut | undefined = undefined;
+    for (const _ in range(NUM_SAMPLES)) {
+      const tree = forest.treeMut(await forest.createTree(pairs.sort(() => Math.random() - 0.5)));
+      if (!firstTree) {
+        firstTree = tree;
+      } else {
+        try {
+          expect(firstTree.root === tree.root).toBeTruthy();
+        } catch (err) {
+          console.log('Tree 1:\n');
+          console.log(forest.formatToString(firstTree.root));
+          console.log('\n\nTree 2:\n');
+          console.log(forest.formatToString(tree.root));
+          throw err;
+        }
+      }
+    }
+  });
+});
+
+// test('getLevel', ({ expect }) => {
+//   expect(getLevel(new Uint8Array([0xff, 0xff]))).toEqual(0);
+//   expect(getLevel(new Uint8Array([0x0f, 0xff]))).toEqual(1);
+//   expect(getLevel(new Uint8Array([0x00, 0xff]))).toEqual(2);
+//   expect(getLevel(new Uint8Array([0x00, 0x0f]))).toEqual(3);
+//   expect(getLevel(new Uint8Array([0x00, 0x00]))).toEqual(4);
+//   expect(getLevel(new Uint8Array([0xf0, 0x00]))).toEqual(0);
+// });
