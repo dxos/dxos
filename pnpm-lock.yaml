@@ -10507,9 +10507,6 @@ importers:
       '@codemirror/commands':
         specifier: ^6.6.0
         version: 6.6.0
-      '@codemirror/fold':
-        specifier: ^0.19.4
-        version: 0.19.4
       '@codemirror/lang-javascript':
         specifier: ^6.2.2
         version: 6.2.2
@@ -16275,26 +16272,6 @@ packages:
       '@lezer/common': 1.2.1
     dev: false
 
-  /@codemirror/fold@0.19.4:
-    resolution: {integrity: sha512-0SNSkRSOa6gymD6GauHa3sxiysjPhUC0SRVyTlvL52o0gz9GHdc8kNqNQskm3fBtGGOiSriGwF/kAsajRiGhVw==}
-    deprecated: As of 0.20.0, this package has been merged into @codemirror/language
-    dependencies:
-      '@codemirror/gutter': 0.19.9
-      '@codemirror/language': 0.19.10
-      '@codemirror/rangeset': 0.19.9
-      '@codemirror/state': 0.19.9
-      '@codemirror/view': 0.19.48
-    dev: false
-
-  /@codemirror/gutter@0.19.9:
-    resolution: {integrity: sha512-PFrtmilahin1g6uL27aG5tM/rqR9DZzZYZsIrCXA5Uc2OFTFqx4owuhoU9hqfYxHp5ovfvBwQ+txFzqS4vog6Q==}
-    deprecated: As of 0.20.0, this package has been merged into @codemirror/view
-    dependencies:
-      '@codemirror/rangeset': 0.19.9
-      '@codemirror/state': 0.19.9
-      '@codemirror/view': 0.19.48
-    dev: false
-
   /@codemirror/lang-angular@0.1.2:
     resolution: {integrity: sha512-Nq7lmx9SU+JyoaRcs6SaJs7uAmW2W06HpgJVQYeZptVGNWDzDvzhjwVb/ZuG1rwTlOocY4Y9GwNOBuKCeJbKtw==}
     dependencies:
@@ -16542,16 +16519,6 @@ packages:
       - '@lezer/common'
     dev: false
 
-  /@codemirror/language@0.19.10:
-    resolution: {integrity: sha512-yA0DZ3RYn2CqAAGW62VrU8c4YxscMQn45y/I9sjBlqB1e2OTQLg4CCkMBuMSLXk4xaqjlsgazeOQWaJQOKfV8Q==}
-    dependencies:
-      '@codemirror/state': 0.19.9
-      '@codemirror/text': 0.19.6
-      '@codemirror/view': 0.19.48
-      '@lezer/common': 0.15.12
-      '@lezer/lr': 1.4.2
-    dev: false
-
   /@codemirror/language@6.10.2:
     resolution: {integrity: sha512-kgbTYTo0Au6dCSc/TFy7fK3fpJmgHDv1sG1KNQKJXVi+xBTEeBPY/M30YXiU6mMXeH+YIDLsbrT4ZwNRdtF+SA==}
     dependencies:
@@ -16577,13 +16544,6 @@ packages:
       crelt: 1.0.5
     dev: false
 
-  /@codemirror/rangeset@0.19.9:
-    resolution: {integrity: sha512-V8YUuOvK+ew87Xem+71nKcqu1SXd5QROMRLMS/ljT5/3MCxtgrRie1Cvild0G/Z2f1fpWxzX78V0U4jjXBorBQ==}
-    deprecated: As of 0.20.0, this package has been merged into @codemirror/state
-    dependencies:
-      '@codemirror/state': 0.19.9
-    dev: false
-
   /@codemirror/search@6.5.6:
     resolution: {integrity: sha512-rpMgcsh7o0GuCDUXKPvww+muLA1pDJaFrpq/CCHtpQJYz8xopu4D1hPcKRoDD0YlF8gZaqTNIRa4VRBWyhyy7Q==}
     dependencies:
@@ -16592,19 +16552,8 @@ packages:
       crelt: 1.0.5
     dev: false
 
-  /@codemirror/state@0.19.9:
-    resolution: {integrity: sha512-psOzDolKTZkx4CgUqhBQ8T8gBc0xN5z4gzed109aF6x7D7umpDRoimacI/O6d9UGuyl4eYuDCZmDFr2Rq7aGOw==}
-    dependencies:
-      '@codemirror/text': 0.19.6
-    dev: false
-
   /@codemirror/state@6.4.1:
     resolution: {integrity: sha512-QkEyUiLhsJoZkbumGZlswmAhA7CBU02Wrz7zvH4SrcifbsqwlXShVXg65f3v/ts57W3dqyamEriMhij1Z3Zz4A==}
-    dev: false
-
-  /@codemirror/text@0.19.6:
-    resolution: {integrity: sha512-T9jnREMIygx+TPC1bOuepz18maGq/92q2a+n4qTqObKwvNMg+8cMTslb8yxeEDEq7S3kpgGWxgO1UWbQRij0dA==}
-    deprecated: As of 0.20.0, this package has been merged into @codemirror/state
     dev: false
 
   /@codemirror/theme-one-dark@6.1.2:
@@ -16614,16 +16563,6 @@ packages:
       '@codemirror/state': 6.4.1
       '@codemirror/view': 6.30.0
       '@lezer/highlight': 1.2.0
-    dev: false
-
-  /@codemirror/view@0.19.48:
-    resolution: {integrity: sha512-0eg7D2Nz4S8/caetCTz61rK0tkHI17V/d15Jy0kLOT8dTLGGNJUponDnW28h2B6bERmPlVHKh8MJIr5OCp1nGw==}
-    dependencies:
-      '@codemirror/rangeset': 0.19.9
-      '@codemirror/state': 0.19.9
-      '@codemirror/text': 0.19.6
-      style-mod: 4.1.0
-      w3c-keyname: 2.2.6
     dev: false
 
   /@codemirror/view@6.30.0:
@@ -19617,10 +19556,6 @@ packages:
 
   /@leichtgewicht/ip-codec@2.0.5:
     resolution: {integrity: sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==}
-    dev: false
-
-  /@lezer/common@0.15.12:
-    resolution: {integrity: sha512-edfwCxNLnzq5pBA/yaIhwJ3U3Kz8VAUOTRg0hhxaizaI1N+qxV7EXDv/kLCkLeq2RzSFvxexlaj5Mzfn2kY0Ig==}
     dev: false
 
   /@lezer/common@1.2.1:

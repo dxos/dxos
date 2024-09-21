@@ -193,25 +193,6 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
     return listLevels[listLevels.length - 1];
   };
 
-  // Folded sets.
-  // const isFolded = (from: number, to: number): boolean => {
-  //   const foldableRange = foldable(view.state, from, to);
-  //   if (foldableRange) {
-  //     const decorations = view.state.facet(EditorView.decorations);
-  //     for (const set of decorations) {
-  //       if (typeof set !== 'function') {
-  //         const cursor = set.iter(foldableRange.from);
-  //         // TODO(burdon): Test if folding decoration.
-  //         if (cursor.value) {
-  //           return true;
-  //         }
-  //       }
-  //     }
-  //   }
-  //
-  //   return false;
-  // };
-
   // const count = 0;
   const enterNode = (node: SyntaxNodeRef) => {
     // console.log(`[${count++}]`, { node: node.name, from: node.from, to: node.to });
