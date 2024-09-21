@@ -3,10 +3,8 @@
 //
 
 import React, { type FC, type HTMLAttributes, useState } from 'react';
-import SyntaxHighlighter from 'react-syntax-highlighter';
-// eslint-disable-next-line no-restricted-imports
-// eslint-disable-next-line no-restricted-imports
 
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { arrayToBuffer } from '@dxos/util';
 

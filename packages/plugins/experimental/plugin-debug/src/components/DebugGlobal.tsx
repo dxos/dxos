@@ -71,8 +71,8 @@ const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
       }
     >
       {view === 'graph' && <Tree data={graph.toJSON()} />}
-      {view === 'config' && <Json theme={themeMode} data={data.diagnostics?.config} />}
-      {view === 'diagnostics' && <Json theme={themeMode} data={data} />}
+      {view === 'config' && <Json data={data.diagnostics?.config} />}
+      {view === 'diagnostics' && <Json data={data} />}
     </DebugPanel>
   );
 };
