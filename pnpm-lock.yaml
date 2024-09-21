@@ -9866,6 +9866,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      react-error-boundary:
+        specifier: ^4.0.13
+        version: 4.0.13(react@18.2.0)
     optionalDependencies:
       '@dxos/random':
         specifier: workspace:*

@@ -4,6 +4,8 @@
 
 import { type Decorator } from '@storybook/react';
 import React, { type PropsWithChildren, useEffect, useRef } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
+import { type FallbackProps } from 'react-error-boundary/dist/declarations/src/types';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
@@ -39,16 +41,18 @@ export const withClientProvider = ({
   ...props
 }: WithClientProviderProps = {}): Decorator => {
   return (Story) => (
-    <ClientProvider {...props}>
-      <ClientInitializer
-        createIdentity={createIdentity}
-        createSpace={createSpace}
-        onClientInitialized={onClientInitialized}
-        onSpaceCreated={onSpaceCreated}
-      >
-        <Story />
-      </ClientInitializer>
-    </ClientProvider>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <ClientProvider {...props}>
+        <ClientInitializer
+          createIdentity={createIdentity}
+          createSpace={createSpace}
+          onClientInitialized={onClientInitialized}
+          onSpaceCreated={onSpaceCreated}
+        >
+          <Story />
+        </ClientInitializer>
+      </ClientProvider>
+    </ErrorBoundary>
   );
 };
 
@@ -97,18 +101,25 @@ export const withMultiClientProvider = ({
     return (
       <div role='none' className={mx(classNames)}>
         {Array.from({ length: numClients }).map((_, index) => (
-          <ClientProvider key={index} services={builder.current.createLocalClientServices()} {...props}>
-            <ClientInitializer createIdentity={createIdentity} onClientInitialized={handleClientInitialized}>
-              <Story />
-            </ClientInitializer>
-          </ClientProvider>
+          <ErrorBoundary key={index} FallbackComponent={ErrorFallback}>
+            <ClientProvider services={builder.current.createLocalClientServices()} {...props}>
+              <ClientInitializer createIdentity={createIdentity} onClientInitialized={handleClientInitialized}>
+                <Story />
+              </ClientInitializer>
+            </ClientProvider>
+          </ErrorBoundary>
         ))}
       </div>
     );
   };
 };
 
-// TODO(burdon): ErrorBoundary.
+const ErrorFallback = ({ error }: FallbackProps) => (
+  <div role='alert' className='text-error'>
+    {error.message}
+  </div>
+);
+
 const ClientInitializer = ({
   children,
   createIdentity,

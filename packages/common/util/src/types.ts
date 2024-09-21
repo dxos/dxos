@@ -32,7 +32,7 @@ export const boolGuard = <T>(value: T | null | undefined): value is T => Boolean
 // TODO(burdon): Replace use of setTimeout everywhere?
 //  Would remove the need to cancel (and associated errors), but would change the operation of the code
 //  since the function would call immediately instead of waiting for the next tick.
-//  Could this affect performance?
+//  Could this affect performance? Otherwise replace with queueMicrotask?
 export const doAsync = async (fn: () => Promise<void>) => fn();
 
 /**
