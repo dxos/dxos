@@ -240,8 +240,8 @@ const Button = ({ icon, onAction }: { icon: string; onAction?: () => void }) => 
 );
 
 const GlobeZoomControls = ({ classNames, position = 'bottom-left', onAction }: GlobeControlsProps) => {
+  // TODO(wittjosiah): This is a hack to get the theme to work. Gem isn't getting global theme context.
   return (
-    // TODO(wittjosiah): This is a hack to get the theme to work. Gem isn't getting global theme context.
     <ThemeProvider tx={defaultTx}>
       <DensityProvider density='fine'>
         <Toolbar.Root
@@ -256,8 +256,8 @@ const GlobeZoomControls = ({ classNames, position = 'bottom-left', onAction }: G
 };
 
 const GlobeActionControls = ({ classNames, position = 'bottom-right', onAction }: GlobeControlsProps) => {
+  // TODO(wittjosiah): This is a hack to get the theme to work. Gem isn't getting global theme context.
   return (
-    // TODO(wittjosiah): This is a hack to get the theme to work. Gem isn't getting global theme context.
     <ThemeProvider tx={defaultTx}>
       <DensityProvider density='fine'>
         <Toolbar.Root

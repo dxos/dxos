@@ -21,9 +21,8 @@ import { createIndices, RangeException, ReadonlyException } from './util';
 import { type ComputeGraph } from '../components';
 import { type CellScalarValue, type CellValue, type SheetType, ValueTypeEnum } from '../types';
 
-// TODO(burdon): Defaults or Max?
-const DEFAULT_ROWS = 500;
-const DEFAULT_COLUMNS = 26 * 2;
+const DEFAULT_ROWS = 100;
+const DEFAULT_COLUMNS = 26;
 
 export type CellIndex = string;
 
