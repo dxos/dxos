@@ -110,96 +110,72 @@ export class Forest {
     const resultItems: Item[] = [],
       resultChildren: DigestHex[] = [];
 
-    if (node1.level === 0) {
-      for (let i1 = 0, i2 = 0; i1 < node1.items.length || i2 < node2.items.length; ) {
-        const key1 = i1 < node1.items.length ? node1.items[i1].key : null;
-        const key2 = i2 < node2.items.length ? node2.items[i2].key : null;
-        invariant(key1 !== null || key2 !== null);
+    let carry1: DigestHex | null = null,
+      carry2: DigestHex | null = null;
 
-        if (key1 === key2) {
-          if (arraysEqual(node1.items[i1].value, node2.items[i2].value)) {
-            resultItems.push(node1.items[i1]);
-          } else {
-            resultItems.push(await makeItem(key1!, await mergeFn(key1!, node1.items[i1].value, node2.items[i2].value)));
-            this.itemHashOps++;
-          }
-          i1++;
-          i2++;
-        } else if (!(key2 === null || (key1 !== null ? key1 < key2 : false))) {
-          // Split first.
-          invariant(key2 !== null);
+    for (let i1 = 0, i2 = 0; i1 < node1.items.length || i2 < node2.items.length; ) {
+      invariant(i1 <= node1.items.length);
+      invariant(i2 <= node2.items.length);
 
-          resultItems.push(await makeItem(key2, await mergeFn(key2, null, node2.items[i2].value)));
-          this.itemHashOps++;
-          i2++;
-        } else {
-          // Split second.
-          invariant(key1 !== null);
+      const key1 = i1 < node1.items.length ? node1.items[i1].key : null;
+      const key2 = i2 < node2.items.length ? node2.items[i2].key : null;
+      invariant(key1 !== null || key2 !== null);
 
-          resultItems.push(await makeItem(key1, await mergeFn(key1, node1.items[i1].value, null)));
-          this.itemHashOps++;
-          i1++;
-        }
-      }
-    } else {
-      let carry1: DigestHex | null = null,
-        carry2: DigestHex | null = null;
-
-      for (let i1 = 0, i2 = 0; i1 < node1.items.length || i2 < node2.items.length; ) {
-        invariant(i1 <= node1.items.length);
-        invariant(i2 <= node2.items.length);
-
-        const key1 = i1 < node1.items.length ? node1.items[i1].key : null;
-        const key2 = i2 < node2.items.length ? node2.items[i2].key : null;
-        invariant(key1 !== null || key2 !== null);
-
-        const child1 = carry1 !== null ? carry1 : node1.children[i1];
-        const child2 = carry2 !== null ? carry2 : node2.children[i2];
+      const child1 = carry1 !== null ? carry1 : node1.children[i1];
+      const child2 = carry2 !== null ? carry2 : node2.children[i2];
+      if (node1.level > 0) {
         invariant(validDigest(child1));
         invariant(validDigest(child2));
-
-        if (key1 === key2) {
-          resultChildren.push(await this.merge(child1, child2, mergeFn));
-          if (arraysEqual(node1.items[i1].value, node2.items[i2].value)) {
-            resultItems.push(node1.items[i1]);
-          } else {
-            resultItems.push(await makeItem(key1!, await mergeFn(key1!, node1.items[i1].value, node2.items[i2].value)));
-            this.itemHashOps++;
-          }
-          carry1 = null;
-          carry2 = null;
-          i1++;
-          i2++;
-          continue;
-        }
-
-        const splitSecond = key2 === null || (key1 !== null ? key1 < key2 : false);
-
-        if (!splitSecond) {
-          // Split first.
-          invariant(key2 !== null);
-          const [left, right] = await this.#splitAtKey(child1, key2);
-
-          resultChildren.push(await this.merge(left, child2, mergeFn));
-          resultItems.push(await makeItem(key2, await mergeFn(key2, null, node2.items[i2].value)));
-          this.itemHashOps++;
-          carry1 = right;
-          carry2 = null;
-          i2++;
-        } else {
-          // Split second.
-          invariant(key1 !== null);
-          const [left, right] = await this.#splitAtKey(child2, key1);
-
-          resultChildren.push(await this.merge(left, child1, mergeFn));
-          resultItems.push(await makeItem(key1, await mergeFn(key1, node1.items[i1].value, null)));
-          this.itemHashOps++;
-          carry1 = null;
-          carry2 = right;
-          i1++;
-        }
       }
 
+      if (key1 === key2) {
+        if (node1.level > 0) {
+          resultChildren.push(await this.merge(child1, child2, mergeFn));
+        }
+        if (arraysEqual(node1.items[i1].value, node2.items[i2].value)) {
+          resultItems.push(node1.items[i1]);
+        } else {
+          resultItems.push(await this.#mergeItem(mergeFn, node1.items[i1], node2.items[i2]));
+          this.itemHashOps++;
+        }
+        carry1 = null;
+        carry2 = null;
+        i1++;
+        i2++;
+        continue;
+      }
+
+      const splitSecond = key2 === null || (key1 !== null ? key1 < key2 : false);
+
+      if (!splitSecond) {
+        // Split first.
+        invariant(key2 !== null);
+
+        resultItems.push(await this.#mergeItem(mergeFn, null, node2.items[i2]));
+
+        if (node1.level > 0) {
+          const [left, right] = await this.#splitAtKey(child1, key2);
+          resultChildren.push(await this.merge(left, child2, mergeFn));
+          carry1 = right;
+          carry2 = null;
+        }
+        i2++;
+      } else {
+        // Split second.
+        invariant(key1 !== null);
+
+        resultItems.push(await this.#mergeItem(mergeFn, node1.items[i1], null));
+
+        if (node1.level > 0) {
+          const [left, right] = await this.#splitAtKey(child2, key1);
+          resultChildren.push(await this.merge(left, child1, mergeFn));
+          carry1 = null;
+          carry2 = right;
+        }
+        i1++;
+      }
+    }
+    if (node1.level > 0) {
       const child1 = carry1 !== null ? carry1 : node1.children[node1.items.length];
       const child2 = carry2 !== null ? carry2 : node2.children[node2.items.length];
       resultChildren.push(await this.merge(child1, child2, mergeFn));
@@ -264,10 +240,37 @@ export class Forest {
     return node;
   }
 
+  async #mergeItem(mergeFn: MergeFn, item1: Item | null, item2: Item | null): Promise<Item> {
+    invariant(item1 !== null || item2 !== null);
+    const key = (item1?.key ?? item2?.key)!;
+
+    if (item1 !== null && item2 !== null && arraysEqual(item1.value, item2.value)) {
+      return item1;
+    } else {
+      const mergeResult = await mergeFn(key, item1?.value ?? null, item2?.value ?? null);
+
+      if (item1 !== null && arraysEqual(item1.value, mergeResult)) {
+        return item1;
+      } else if (item2 !== null && arraysEqual(item2.value, mergeResult)) {
+        return item2;
+      } else {
+        this.itemHashOps++;
+        return await makeItem(key, mergeResult);
+      }
+    }
+  }
+
+  #emptyNodeCache?: Promise<Node> = undefined;
   async #makeNode(level: number, items: Item[], children: DigestHex[]): Promise<DigestHex> {
     invariant(level > 0 ? items.length + 1 === children.length : children.length === 0);
-    const node = await makeNode(level, items, children);
-    this.nodeHashOps++;
+
+    let node: Node;
+    if (level === 0 && items.length === 0) {
+      node = await (this.#emptyNodeCache ??= makeNode(0, [], []));
+    } else {
+      node = await makeNode(level, items, children);
+      this.nodeHashOps++;
+    }
     if (!this.#nodes.has(node.digest)) {
       this.#nodes.set(node.digest, node);
     }
@@ -280,6 +283,7 @@ export class Forest {
     let splitIndex = node.items.length;
     for (let i = 0; i < node.items.length; i++) {
       if (node.items[i].key === key) {
+        console.log('fo');
         return [
           await this.#makeNode(node.level, node.items.slice(0, i), node.children.slice(0, i + 1)),
           await this.#makeNode(node.level, node.items.slice(i + 1), node.children.slice(i + 2)),
@@ -293,6 +297,11 @@ export class Forest {
     }
 
     if (node.level === 0) {
+      if (splitIndex === 0) {
+        return [await this.#makeNode(0, [], []), digest];
+      } else if (splitIndex === node.items.length) {
+        return [digest, await this.#makeNode(0, [], [])];
+      }
       return [
         await this.#makeNode(node.level, node.items.slice(0, splitIndex), []),
         await this.#makeNode(node.level, node.items.slice(splitIndex), []),

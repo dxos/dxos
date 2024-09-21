@@ -42,8 +42,8 @@ test('overwrite key', async ({ expect }) => {
 
 // Passes
 test('builds a sorted tree', { timeout: 60_000 }, async ({ expect }) => {
-  const NUM_ITEMS = 250;
-  const REPEAT_KEYS = 10;
+  const NUM_ITEMS = 500;
+  const REPEAT_KEYS = 1;
   const NUM_SAMPLES = 1;
   const ITERATIVE = true;
 
@@ -83,7 +83,7 @@ test('builds a sorted tree', { timeout: 60_000 }, async ({ expect }) => {
       }
     }
   }
-  console.log({ itemHashOps: forest.itemHashOps, nodeHashOps: forest.nodeHashOps })
+  // console.log({ itemHashOps: forest.itemHashOps, nodeHashOps: forest.nodeHashOps })
 });
 
 describe('insertion order does not change the root hash', () => {
@@ -102,8 +102,8 @@ describe('insertion order does not change the root hash', () => {
   });
 
   // Passes
-  test.skip('n items', async ({ expect }) => {
-    const NUM_ITEMS = 1000;
+  test('n items', async ({ expect }) => {
+    const NUM_ITEMS = 500;
     const NUM_SAMPLES = 100;
 
     const forest = new Forest();
