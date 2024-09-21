@@ -39,6 +39,7 @@ export type ClientContextProps = {
   status?: SystemStatus | null;
 };
 
+// TODO(burdon): Do not export.
 export const ClientContext: Context<ClientContextProps | undefined> = createContext<ClientContextProps | undefined>(
   undefined,
 );

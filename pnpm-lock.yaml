@@ -4461,8 +4461,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       '@types/react-syntax-highlighter':
-        specifier: ^15.5.5
-        version: 15.5.5
+        specifier: ^15.5.13
+        version: 15.5.13
       '@types/react-vis':
         specifier: ^1.11.11
         version: 1.11.11
@@ -5984,8 +5984,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       '@types/react-syntax-highlighter':
-        specifier: ^15.5.5
-        version: 15.5.5
+        specifier: ^15.5.13
+        version: 15.5.13
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -9848,6 +9848,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-async':
         specifier: workspace:*
         version: link:../../common/react-async
@@ -11020,6 +11023,40 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^5.3.4
+        version: 5.3.4(@types/node@18.11.9)
+
+  packages/ui/react-ui-syntax-highlighter:
+    dependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+      react-syntax-highlighter:
+        specifier: ^15.5.0
+        version: 15.5.0(react@18.2.0)
+    devDependencies:
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../storybook-utils
+      '@types/react':
+        specifier: ~18.2.0
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: ~18.2.0
+        version: 18.2.25
+      '@types/react-syntax-highlighter':
+        specifier: ^15.5.13
+        version: 15.5.13
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -29886,8 +29923,8 @@ packages:
       '@types/react': 18.2.79
     dev: true
 
-  /@types/react-syntax-highlighter@15.5.5:
-    resolution: {integrity: sha512-QH3JZQXa2usAvJvSsdSUJ4Yu4j8ReuZpgRrEW+XP+Rmosbn425YshW9iGEb/pAARm8496axHhHUPRH3UmTiB6A==}
+  /@types/react-syntax-highlighter@15.5.13:
+    resolution: {integrity: sha512-uLGJ87j6Sz8UaBAooU0T6lWJ0dBmjZgN1PZTrj05TNql2/XpC6+4HhMT5syIdFUUt+FASfCeLLv4kBygNU+8qA==}
     dependencies:
       '@types/react': 18.2.79
     dev: true

@@ -35,6 +35,7 @@ export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
 /**
  * Utility component for Storybook stories which sets up clients for n peers.
  * The `Component` property is rendered n times, once for each peer.
+ * @deprecated Use withClientProvider.
  */
 // NOTE: This is specifically not a storybook decorator because it broke stories as a decorator.
 //   This seems primarily due to the fact that it required top-level await for the clients to initialize.

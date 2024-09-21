@@ -356,6 +356,9 @@
       "@dxos/react-ui-stack/testing": [
         "packages/ui/react-ui-stack/src/testing/index.ts"
       ],
+      "@dxos/react-ui-syntax-highlighter": [
+        "packages/ui/react-ui-syntax-highlighter/src/index.ts"
+      ],
       "@dxos/react-ui-table": [
         "packages/ui/react-ui-table/src/index.ts"
       ],
