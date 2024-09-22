@@ -10,7 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { type EchoReactiveObject, create } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { faker } from '@dxos/random';
-import { Client } from '@dxos/react-client';
+import { type Client, useClient } from '@dxos/react-client';
 import {
   type Space,
   SpaceState,
@@ -20,33 +20,40 @@ import {
   type QueryOptions,
   type Query,
 } from '@dxos/react-client/echo';
-import { ClientRepeater, TestBuilder } from '@dxos/react-client/testing';
-import { Button, DensityProvider, Input, Select } from '@dxos/react-ui';
+import { withClientProvider } from '@dxos/react-client/testing';
+import { Button, DensityProvider, Input, Select, useAsyncEffect } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 import { safeParseInt } from '@dxos/util';
 
 import { Tree } from './Tree';
+import { type Graph } from '../graph';
 import { GraphBuilder, cleanup, createExtension, memoize, toSignal } from '../graph-builder';
 import { type Node } from '../node';
 
-export default {
-  title: 'app-graph/EchoGraph',
-  decorators: [withTheme],
-};
-
 const DEFAULT_PERIOD = 500;
 
-// TODO(burdon): Move out of global scope into decorator.
-registerSignalRuntime();
-const testBuilder = new TestBuilder();
-const client = new Client({ services: testBuilder.createLocalClientServices() });
-await client.initialize();
-await client.halo.createIdentity();
-await client.spaces.create();
-await client.spaces.create();
-
 const EMPTY_ARRAY: never[] = [];
+
+registerSignalRuntime();
+
+enum Action {
+  CREATE_SPACE = 'CREATE_SPACE',
+  CLOSE_SPACE = 'CLOSE_SPACE',
+  RENAME_SPACE = 'RENAME_SPACE',
+  ADD_OBJECT = 'ADD_OBJECT',
+  REMOVE_OBJECT = 'REMOVE_OBJECT',
+  RENAME_OBJECT = 'RENAME_OBJECT',
+}
+
+const actionWeights = {
+  [Action.CREATE_SPACE]: 2,
+  [Action.CLOSE_SPACE]: 1,
+  [Action.RENAME_SPACE]: 2,
+  [Action.ADD_OBJECT]: 4,
+  [Action.REMOVE_OBJECT]: 3,
+  [Action.RENAME_OBJECT]: 4,
+};
 
 // TODO(wittjosiah): Factor out.
 const memoizeQuery = <T extends EchoReactiveObject<any>>(
@@ -68,67 +75,52 @@ const memoizeQuery = <T extends EchoReactiveObject<any>>(
   return query?.objects ?? EMPTY_ARRAY;
 };
 
-const spaceBuilderExtension = createExtension({
-  id: 'space',
-  filter: (node): node is Node<null> => node.id === 'root',
-  connector: ({ node }) => {
-    const spaces = toSignal(
-      (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
-      () => client.spaces.get(),
-    );
-    if (!spaces) {
-      return;
-    }
+const createGraph = async (client: Client): Promise<Graph> => {
+  const spaceBuilderExtension = createExtension({
+    id: 'space',
+    filter: (node): node is Node<null> => node.id === 'root',
+    connector: ({ node }) => {
+      const spaces = toSignal(
+        (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+        () => client.spaces.get(),
+      );
+      if (!spaces) {
+        return;
+      }
 
-    return spaces
-      .filter((space) => space.state.get() === SpaceState.SPACE_READY)
-      .map((space) => ({
-        id: space.id,
-        type: 'dxos.org/type/Space',
-        properties: { label: space.properties.name },
-        data: space,
+      return spaces
+        .filter((space) => space.state.get() === SpaceState.SPACE_READY)
+        .map((space) => ({
+          id: space.id,
+          type: 'dxos.org/type/Space',
+          properties: { label: space.properties.name },
+          data: space,
+        }));
+    },
+  });
+
+  const objectBuilderExtension = createExtension({
+    id: 'object',
+    filter: (node): node is Node<Space> => isSpace(node.data),
+    connector: ({ node }) => {
+      const objects = memoizeQuery(node.data, { type: 'test' });
+      return objects.map((object) => ({
+        id: object.id,
+        type: 'dxos.org/type/test',
+        properties: { label: object.name },
+        data: object,
       }));
-  },
-});
+    },
+  });
 
-const objectBuilderExtension = createExtension({
-  id: 'object',
-  filter: (node): node is Node<Space> => isSpace(node.data),
-  connector: ({ node }) => {
-    const objects = memoizeQuery(node.data, { type: 'test' });
-    return objects.map((object) => ({
-      id: object.id,
-      type: 'dxos.org/type/test',
-      properties: { label: object.name },
-      data: object,
-    }));
-  },
-});
+  const graph = new GraphBuilder().addExtension(spaceBuilderExtension).addExtension(objectBuilderExtension).graph;
+  graph.subscribeTraverse({
+    visitor: (node) => {
+      void graph.expand(node);
+    },
+  });
 
-const graph = new GraphBuilder().addExtension(spaceBuilderExtension).addExtension(objectBuilderExtension).graph;
-
-graph.subscribeTraverse({
-  visitor: (node) => {
-    void graph.expand(node);
-  },
-});
-
-enum Action {
-  CREATE_SPACE = 'CREATE_SPACE',
-  CLOSE_SPACE = 'CLOSE_SPACE',
-  RENAME_SPACE = 'RENAME_SPACE',
-  ADD_OBJECT = 'ADD_OBJECT',
-  REMOVE_OBJECT = 'REMOVE_OBJECT',
-  RENAME_OBJECT = 'RENAME_OBJECT',
-}
-
-const actionWeights = {
-  [Action.CREATE_SPACE]: 2,
-  [Action.CLOSE_SPACE]: 1,
-  [Action.RENAME_SPACE]: 2,
-  [Action.ADD_OBJECT]: 4,
-  [Action.REMOVE_OBJECT]: 3,
-  [Action.RENAME_OBJECT]: 4,
+  return graph;
 };
 
 const randomAction = () => {
@@ -139,30 +131,30 @@ const randomAction = () => {
   return actionDistribution[Math.floor(Math.random() * actionDistribution.length)];
 };
 
-const getRandomSpace = (): Space | undefined => {
+const getRandomSpace = (client: Client): Space | undefined => {
   const spaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.SPACE_READY);
   return spaces[Math.floor(Math.random() * spaces.length)];
 };
 
-const getSpaceWithObjects = async (): Promise<Space | undefined> => {
+const getSpaceWithObjects = async (client: Client): Promise<Space | undefined> => {
   const readySpaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.SPACE_READY);
   const spaceQueries = await Promise.all(readySpaces.map((space) => space.db.query({ type: 'test' }).run()));
   const spaces = readySpaces.filter((space, index) => spaceQueries[index].objects.length > 0);
   return spaces[Math.floor(Math.random() * spaces.length)];
 };
 
-const runAction = async (action: Action) => {
+const runAction = async (client: Client, action: Action) => {
   switch (action) {
     case Action.CREATE_SPACE:
       void client.spaces.create();
       break;
 
     case Action.CLOSE_SPACE:
-      void getRandomSpace()?.close();
+      void getRandomSpace(client)?.close();
       break;
 
     case Action.RENAME_SPACE: {
-      const space = getRandomSpace();
+      const space = getRandomSpace(client);
       if (space) {
         space.properties.name = faker.commerce.productName();
       }
@@ -170,11 +162,11 @@ const runAction = async (action: Action) => {
     }
 
     case Action.ADD_OBJECT:
-      getRandomSpace()?.db.add(create({ type: 'test', name: faker.commerce.productName() }));
+      getRandomSpace(client)?.db.add(create({ type: 'test', name: faker.commerce.productName() }));
       break;
 
     case Action.REMOVE_OBJECT: {
-      const space = await getSpaceWithObjects();
+      const space = await getSpaceWithObjects(client);
       if (space) {
         const { objects } = await space.db.query({ type: 'test' }).run();
         space.db.remove(objects[Math.floor(Math.random() * objects.length)]);
@@ -183,7 +175,7 @@ const runAction = async (action: Action) => {
     }
 
     case Action.RENAME_OBJECT: {
-      const space = await getSpaceWithObjects();
+      const space = await getSpaceWithObjects(client);
       if (space) {
         const { objects } = await space.db.query({ type: 'test' }).run();
         objects[Math.floor(Math.random() * objects.length)].name = faker.commerce.productName();
@@ -193,19 +185,28 @@ const runAction = async (action: Action) => {
   }
 };
 
-const EchoGraphStory = () => {
+const Story = () => {
   const [generating, setGenerating] = useState(false);
   const [actionInterval, setActionInterval] = useState(String(DEFAULT_PERIOD));
   const [action, setAction] = useState<Action>();
+
+  const client = useClient();
+  const [graph, setGraph] = useState<Graph>();
+  useAsyncEffect(async () => {
+    setGraph(await createGraph(client));
+  }, [client]);
 
   useEffect(() => {
     if (!generating) {
       return;
     }
 
-    const interval = setInterval(() => runAction(randomAction()), safeParseInt(actionInterval) ?? DEFAULT_PERIOD);
+    const interval = setInterval(
+      () => runAction(client, randomAction()),
+      safeParseInt(actionInterval) ?? DEFAULT_PERIOD,
+    );
     return () => clearInterval(interval);
-  }, [generating, actionInterval]);
+  }, [client, generating, actionInterval]);
 
   return (
     <>
@@ -227,7 +228,7 @@ const EchoGraphStory = () => {
             </Input.Root>
             <Timer className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
           </div>
-          <Button onClick={() => action && runAction(action)}>
+          <Button onClick={() => action && runAction(client, action)}>
             <Plus />
           </Button>
           <Select.Root value={action?.toString()} onValueChange={(action) => setAction(action as unknown as Action)}>
@@ -249,12 +250,24 @@ const EchoGraphStory = () => {
           </Select.Root>
         </DensityProvider>
       </div>
-      <Tree data={graph.toJSON()} />
+      {graph && <Tree data={graph.toJSON()} />}
     </>
   );
 };
 
-export const Default = {
-  // TODO(burdon): Just use ClientProvider?
-  render: () => <ClientRepeater component={EchoGraphStory} clients={[client]} className='flex flex-col' />,
+export default {
+  title: 'app-graph/EchoGraph',
+  decorators: [
+    withTheme,
+    withClientProvider({
+      createIdentity: true,
+      onInitialized: async (client: Client) => {
+        await client.spaces.create();
+        await client.spaces.create();
+      },
+    }),
+  ],
+  render: Story,
 };
+
+export const Default = {};

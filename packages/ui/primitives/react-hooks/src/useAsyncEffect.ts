@@ -33,10 +33,7 @@ import { log } from '@dxos/log';
  * @param deps
  *
  * NOTE: This effect does not cancel the async operation if the component is unmounted.
- *
- * @deprecated
  */
-// TODO(burdon): Move to react-hooks.
 export const useAsyncEffect = <T>(
   callback: (isMounted: () => boolean) => Promise<T> | undefined,
   destructor?: ((value?: T) => void) | any[],
