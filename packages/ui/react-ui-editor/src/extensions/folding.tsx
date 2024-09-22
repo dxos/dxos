@@ -4,6 +4,7 @@
 
 import { codeFolding, foldGutter } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import React from 'react';
 
 import { Icon } from '@dxos/react-ui';
@@ -29,6 +30,14 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
         document.createElement('span'),
         <Icon icon='ph--caret-right--regular' classNames={[getSize(3), 'mx-3 cursor-pointer', open && 'rotate-90']} />,
       );
+    },
+  }),
+  EditorView.theme({
+    '.cm-foldGutter': {
+      opacity: 0.3,
+    },
+    '.cm-foldGutter:hover': {
+      opacity: 1,
     },
   }),
 ];
