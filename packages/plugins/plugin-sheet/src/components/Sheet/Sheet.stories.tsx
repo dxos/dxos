@@ -11,7 +11,7 @@ import { Client } from '@dxos/client';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { getSpace, type Space } from '@dxos/react-client/echo';
-import { Button, Tooltip } from '@dxos/react-ui';
+import { Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
@@ -122,7 +122,7 @@ const withGraphDecorator: Decorator = (Story) => {
 export default {
   title: 'plugin-sheet/Sheet',
   component: Sheet,
-  decorators: [withGraphDecorator, withTheme, withLayout({ fullscreen: true, classNames: 'inset-4' })],
+  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true, classNames: 'inset-4' }), withGraphDecorator],
 };
 
 export const Default = () => {
@@ -134,11 +134,9 @@ export const Default = () => {
   }
 
   return (
-    <Tooltip.Provider>
-      <Sheet.Root sheet={sheet} space={space} onInfo={() => setDebug((debug) => !debug)}>
-        <SheetWithToolbar debug={debug} space={space} />
-      </Sheet.Root>
-    </Tooltip.Provider>
+    <Sheet.Root sheet={sheet} space={space} onInfo={() => setDebug((debug) => !debug)}>
+      <SheetWithToolbar debug={debug} space={space} />
+    </Sheet.Root>
   );
 };
 

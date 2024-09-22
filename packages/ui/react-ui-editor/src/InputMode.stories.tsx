@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import React, { useState } from 'react';
 
-import { Toolbar as NaturalToolbar, Select, useThemeContext, Tooltip } from '@dxos/react-ui';
+import { Toolbar as NaturalToolbar, Select, useThemeContext } from '@dxos/react-ui';
 import { attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -54,12 +54,10 @@ const Story = ({ autoFocus, initialValue, placeholder, readonly }: StoryProps) =
   //  Also not sure if view is even guaranteed to exist at this point.
   return (
     <div role='none' className={mx('fixed inset-0 flex flex-col')}>
-      <Tooltip.Provider>
-        <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
-          <Toolbar.Markdown />
-          <EditorInputModeToolbar editorInputMode={editorInputMode} setEditorInputMode={setEditorInputMode} />
-        </Toolbar.Root>
-      </Tooltip.Provider>
+      <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
+        <Toolbar.Markdown />
+        <EditorInputModeToolbar editorInputMode={editorInputMode} setEditorInputMode={setEditorInputMode} />
+      </Toolbar.Root>
 
       <div role='none' className='grow overflow-hidden'>
         <div className={attentionSurface} ref={parentRef} />
@@ -100,7 +98,7 @@ const EditorInputModeToolbar = ({
 
 export default {
   title: 'react-ui-editor/InputMode',
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
   parameters: { translations, layout: 'fullscreen' },
   render: Story,
 };
