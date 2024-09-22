@@ -66,12 +66,12 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     this._spacesStream = spacesStream;
   }
 
-  get echoClient() {
-    return this._echoClient;
-  }
-
   [inspect.custom]() {
     return inspectObject(this);
+  }
+
+  get echoClient() {
+    return this._echoClient;
   }
 
   @trace.info({ depth: null })
@@ -341,7 +341,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * @param options
    */
   query<T extends {} = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
-    // TODO(burdon): Types don't match.
     return this._echoClient.graph.query(filter, options);
   }
 
