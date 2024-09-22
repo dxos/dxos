@@ -37,7 +37,7 @@ export default {
 
 const DEFAULT_PERIOD = 500;
 
-// TODO(burdon): Don't have in global scope.
+// TODO(burdon): Move out of global scope into decorator.
 registerSignalRuntime();
 const testBuilder = new TestBuilder();
 const client = new Client({ services: testBuilder.createLocalClientServices() });
@@ -141,8 +141,7 @@ const randomAction = () => {
 
 const getRandomSpace = (): Space | undefined => {
   const spaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.SPACE_READY);
-  const space = spaces[Math.floor(Math.random() * spaces.length)];
-  return space;
+  return spaces[Math.floor(Math.random() * spaces.length)];
 };
 
 const getSpaceWithObjects = async (): Promise<Space | undefined> => {

@@ -45,6 +45,12 @@
       "path": "../../core/echo/echo-signals"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../ui/primitives/react-hooks"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {

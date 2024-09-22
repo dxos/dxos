@@ -20,7 +20,6 @@ const SpaceInfo = ({ space }: { space: Space }) => {
 
 const Test = () => {
   const client = useClient();
-  // TODO(burdon): [SDK]: 'all' property has no effect?
   const spaces = useSpaces();
   if (!client) {
     return null;
