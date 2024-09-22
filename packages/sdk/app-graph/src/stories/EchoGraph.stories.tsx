@@ -37,6 +37,7 @@ export default {
 
 const DEFAULT_PERIOD = 500;
 
+// TODO(burdon): Don't have in global scope.
 registerSignalRuntime();
 const testBuilder = new TestBuilder();
 const client = new Client({ services: testBuilder.createLocalClientServices() });
@@ -255,5 +256,6 @@ const EchoGraphStory = () => {
 };
 
 export const Default = {
+  // TODO(burdon): Just use ClientProvider?
   render: () => <ClientRepeater component={EchoGraphStory} clients={[client]} className='flex flex-col' />,
 };

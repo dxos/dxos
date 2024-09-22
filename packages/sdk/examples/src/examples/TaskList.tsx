@@ -14,7 +14,7 @@ import { getSize } from '@dxos/react-ui-theme';
 
 import { TaskType } from '../types';
 
-const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
+const TaskList = ({ id, spaceKey }: { id: number; spaceKey?: PublicKey }) => {
   const space = useSpace(spaceKey);
   const tasks = useQuery(space, Filter.schema(TaskType));
   const [value, setValue] = useState('');
