@@ -196,9 +196,6 @@ const text = str(
   content.numbered,
 
   '---',
-  content.headings,
-
-  '---',
   '## Misc',
   content.code,
   content.table,
@@ -352,8 +349,25 @@ const defaultExtensions: Extension[] = [
   linkTooltip(renderLinkTooltip),
 ];
 
+const allExtensions: Extension[] = [
+  autocomplete({
+    onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
+  }),
+  decorateMarkdown({ numberedHeadings: { from: 2, to: 4 }, renderLinkButton, selectionChangeDelay: 100 }),
+  formattingKeymap(),
+  linkTooltip(renderLinkTooltip),
+  image(),
+  table(),
+  folding(),
+  editorGutter,
+];
+
 export const Default = {
-  render: () => <Story text={text} extensions={defaultExtensions} selection={{ anchor: 99, head: 110 }} />,
+  render: () => <Story text={text} extensions={defaultExtensions} />,
+};
+
+export const Everything = {
+  render: () => <Story text={text} extensions={allExtensions} selection={{ anchor: 99, head: 110 }} />,
 };
 
 export const Empty = {

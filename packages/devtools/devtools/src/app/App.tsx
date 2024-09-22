@@ -6,8 +6,8 @@ import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type Observability, initializeAppObservability } from '@dxos/observability';
-import { useAsyncEffect } from '@dxos/react-async';
 import { createClientServices, Client, Config, Defaults, Remote } from '@dxos/react-client';
+import { useAsyncEffect } from '@dxos/react-hooks';
 
 import { Devtools } from './Devtools';
 import { namespace } from '../hooks';

@@ -3,6 +3,6 @@
 //
 
 export * from '@dxos/client';
-export { useMulticastObservable } from '@dxos/react-async';
+export { useMulticastObservable } from '@dxos/react-hooks';
 
 export * from './client';

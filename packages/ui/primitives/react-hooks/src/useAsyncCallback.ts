@@ -5,9 +5,8 @@
 import { useEffect, useState } from 'react';
 
 /**
- * @deprecated
+ * NOTE: Use with care and when necessary to be able to cancel an async operation when unmounting.
  */
-// TODO(burdon): Clashes with useAsyncEffect.
 export const useAsyncCallback = <T>(cb: () => Promise<T>): T | undefined => {
   const [value, setValue] = useState<T | undefined>();
   useEffect(() => {

@@ -36,9 +36,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/react-async"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -46,9 +43,6 @@
     },
     {
       "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/protocols"
     },
     {
       "path": "../../ui/react-ui"
