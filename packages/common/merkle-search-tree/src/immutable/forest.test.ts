@@ -1,7 +1,8 @@
 import { range } from '@dxos/util';
 import { describe, test } from 'vitest';
 import { Forest, type DigestHex, type TreeMut } from './forest';
-import { createValue, randomKey } from '../testing';
+import { createValue, randomKey, randomSample } from '../testing';
+import { expect } from 'chai';
 
 test('empty', async ({ expect }) => {
   const forest = new Forest();
@@ -28,12 +29,40 @@ test('overwrite key', async ({ expect }) => {
       ['b', createValue('b')],
     ]),
   );
+  const prevRoot = tree.root;
   try {
     expect(await tree.get('a')).toEqual({ kind: 'present', value: createValue('a') });
     expect(await tree.get('b')).toEqual({ kind: 'present', value: createValue('b') });
 
     await tree.set('b', createValue('new'));
+    expect(tree.root !== prevRoot).to.be.true;
     expect(await tree.get('b')).toEqual({ kind: 'present', value: createValue('new') });
+  } catch (err) {
+    console.log(forest.formatToString(tree.root));
+    throw err;
+  }
+});
+
+test('overwrite 2 keys', async ({ expect }) => {
+  const forest = new Forest();
+  const tree = forest.treeMut(
+    await forest.createTree([
+      ['a', createValue('a')],
+      ['b', createValue('b')],
+    ]),
+  );
+  const prevRoot = tree.root;
+  try {
+    expect(await tree.get('a')).toEqual({ kind: 'present', value: createValue('a') });
+    expect(await tree.get('b')).toEqual({ kind: 'present', value: createValue('b') });
+
+    await tree.setBatch([
+      ['a', createValue('newA')],
+      ['b', createValue('newB')],
+    ]);
+    expect(tree.root !== prevRoot).to.be.true;
+    expect(await tree.get('a')).toEqual({ kind: 'present', value: createValue('newA') });
+    expect(await tree.get('b')).toEqual({ kind: 'present', value: createValue('newB') });
   } catch (err) {
     console.log(forest.formatToString(tree.root));
     throw err;
@@ -127,6 +156,52 @@ describe('insertion order does not change the root hash', () => {
       }
     }
   });
+});
+
+test('sync', async () => {
+  const NUM_ITERS = 1000,
+    NUM_ITEMS = 20,
+    MUTATIONS_PER_ITER = 5;
+
+  const forest1 = new Forest(),
+    forest2 = new Forest();
+
+  const pairs = range(NUM_ITEMS).map(() => [randomKey(), createValue(randomKey())] as const);
+  const tree = forest1.treeMut(await forest1.createTree(pairs));
+  await forest2.createTree(pairs);
+
+  let prevRoot: DigestHex;
+  for (const _ of range(NUM_ITERS)) {
+    prevRoot = tree.root;
+    const update = randomSample(pairs, MUTATIONS_PER_ITER).map((pair) => [pair[0], createValue(randomKey())] as const);
+    try {
+      await tree.setBatch(update);
+      expect(tree.root !== prevRoot).to.be.eq(true);
+    } catch (err) {
+      console.log({ prevRoot, root: tree.root, update });
+      console.log('Before insertion 1:\n');
+      console.log(forest1.formatToString(prevRoot));
+      console.log('\nAfter insertion:\n');
+      console.log(forest1.formatToString(tree.root));
+      console.log('\nMerged tree:\n');
+      console.log(forest1.formatToString(await forest1.createTree(update)));
+      throw err;
+    }
+
+    let numExchanges = 0,
+      numNodes = 0;
+    while (true) {
+      const missing = [...forest2.missingNodes(tree.root)];
+      if (missing.length === 0) {
+        break;
+      }
+      const nodes = await forest1.getNodes(missing);
+      await forest2.insertNodes(nodes);
+      numExchanges++;
+      numNodes += nodes.length;
+    }
+    console.log({ numExchanges, numNodes });
+  }
 });
 
 // test('getLevel', ({ expect }) => {

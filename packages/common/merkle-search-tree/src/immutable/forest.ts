@@ -1,6 +1,6 @@
 import { invariant } from '@dxos/invariant';
 import { formatDigest, getLevelHex } from '../common';
-import { arraysEqual } from '@dxos/util';
+import { arrayToHex, arraysEqual } from '@dxos/util';
 
 export class Forest {
   #nodes = new Map<DigestHex, Node>();
@@ -88,6 +88,7 @@ export class Forest {
   }
 
   async merge(digest1: DigestHex, digest2: DigestHex, mergeFn: MergeFn): Promise<DigestHex> {
+    // console.log(`merge ${digest1.slice(0, 8)} ${digest2.slice(0, 8)}`)
     if (digest1 === digest2) {
       return digest1;
     }
@@ -132,22 +133,12 @@ export class Forest {
         if (node1.level > 0) {
           resultChildren.push(await this.merge(child1, child2, mergeFn));
         }
-        if (arraysEqual(node1.items[i1].value, node2.items[i2].value)) {
-          resultItems.push(node1.items[i1]);
-        } else {
-          resultItems.push(await this.#mergeItem(mergeFn, node1.items[i1], node2.items[i2]));
-          this.itemHashOps++;
-        }
+        resultItems.push(await this.#mergeItem(mergeFn, node1.items[i1], node2.items[i2]));
         carry1 = null;
         carry2 = null;
         i1++;
         i2++;
-        continue;
-      }
-
-      const splitSecond = key2 === null || (key1 !== null ? key1 < key2 : false);
-
-      if (!splitSecond) {
+      } else if (key2 !== null && (key1 === null || key1 > key2)) {
         // Split first.
         invariant(key2 !== null);
 
@@ -168,7 +159,7 @@ export class Forest {
 
         if (node1.level > 0) {
           const [left, right] = await this.#splitAtKey(child2, key1);
-          resultChildren.push(await this.merge(left, child1, mergeFn));
+          resultChildren.push(await this.merge(child1, left, mergeFn));
           carry1 = null;
           carry2 = right;
         }
@@ -193,6 +184,52 @@ export class Forest {
     return this.setBatch(root, [[key, value]]);
   }
 
+  *missingNodes(digest: DigestHex): Iterable<DigestHex> {
+    const node = this.#nodes.get(digest);
+    if (!node) {
+      yield digest;
+    } else {
+      for (const child of node.children) {
+        yield* this.missingNodes(child);
+      }
+    }
+  }
+
+  async insertNodes(nodes: Iterable<NodeData>): Promise<DigestHex[]> {
+    const result: DigestHex[] = [];
+    for (const node of nodes) {
+      // Validation.
+      const { digest } = await makeNode(node.level, node.items, node.children);
+      invariant(digest === node.digest);
+
+      this.#nodes.set(node.digest, {
+        level: node.level,
+        digest: node.digest,
+        items: node.items,
+        children: node.children,
+      });
+      result.push(node.digest);
+    }
+    return result;
+  }
+
+  async getNodes(digests: Iterable<DigestHex>): Promise<NodeData[]> {
+    const result: NodeData[] = [];
+
+    for (let digest of digests) {
+      const node = this.#nodes.get(digest);
+      if (!node) continue;
+      result.push({
+        level: node.level,
+        digest: node.digest,
+        items: node.items,
+        children: node.children,
+      });
+    }
+
+    return result;
+  }
+
   treeMut(root: DigestHex): TreeMut {
     return new TreeMut(this, root);
   }
@@ -210,7 +247,7 @@ export class Forest {
       if (node.level > 0) {
         string += this.formatToString(node.children[i], { pad: pad + 1 });
       }
-      string += `${padStr}   - [${node.items[i].itemDigest.slice(0, 8)}] ${node.items[i].key} level=${node.items[i].level}\n`;
+      string += `${padStr}   - [${node.items[i].itemDigest.slice(0, 8)}] level=${node.items[i].level} ${node.items[i].key.slice(0, 10)} -> ${arrayToHex(node.items[i].value.slice(0, 10))} \n`;
     }
     if (node.level > 0) {
       string += this.formatToString(node.children[node.items.length], { pad: pad + 1 });
@@ -248,6 +285,9 @@ export class Forest {
       return item1;
     } else {
       const mergeResult = await mergeFn(key, item1?.value ?? null, item2?.value ?? null);
+      // console.log(
+      //   `mergeFn ${key.slice(0, 10)} ${String(item1 ? arrayToHex(item1.value).slice(0, 10) : null).padStart(10)} ${String(item2 ? arrayToHex(item2.value).slice(0, 10) : null).padStart(10)} -> ${arrayToHex(mergeResult).slice(0, 10)}`,
+      // );
 
       if (item1 !== null && arraysEqual(item1.value, mergeResult)) {
         return item1;
@@ -337,7 +377,7 @@ export class TreeMut {
     return this.#forest.get(this.#root, key);
   }
 
-  async setBatch(pairs: Iterable<[key: Key, value: Uint8Array]>) {
+  async setBatch(pairs: Iterable<Pair>) {
     this.#root = await this.#forest.setBatch(this.#root, pairs);
   }
 
@@ -356,7 +396,7 @@ export type DigestHex = string & { __digestHex: true };
 
 export type Pair = readonly [key: Key, value: Uint8Array];
 
-type GetResult<T> =
+export type GetResult<T> =
   | {
       kind: 'present';
       value: T;
@@ -368,7 +408,21 @@ type GetResult<T> =
       kind: 'not-available';
     };
 
-type MergeFn = (key: string, value1: Uint8Array | null, value2: Uint8Array | null) => Promise<Uint8Array>;
+export type MergeFn = (key: string, value1: Uint8Array | null, value2: Uint8Array | null) => Promise<Uint8Array>;
+
+export type NodeData = {
+  readonly level: number;
+
+  readonly digest: DigestHex;
+  /**
+   * Sorted by key
+   */
+  readonly items: readonly Item[];
+  /**
+   * {items.length + 1} child digests.
+   */
+  readonly children: readonly DigestHex[];
+};
 
 /**
  * A Merkle-Search Tree node.
@@ -383,6 +437,7 @@ type Node = {
   readonly level: number;
 
   readonly digest: DigestHex;
+
   /**
    * Sorted by key
    */
@@ -398,7 +453,7 @@ type NodeSlice = {
   readonly children: readonly DigestHex[];
 };
 
-const makeNode = async (level: number, items: Item[], children: DigestHex[]): Promise<Node> => {
+const makeNode = async (level: number, items: readonly Item[], children: readonly DigestHex[]): Promise<Node> => {
   invariant(level > 0 ? items.length + 1 === children.length : children.length === 0);
 
   // TODO(dmaretskyi): Hashing spec.
