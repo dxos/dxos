@@ -16,11 +16,11 @@ import { ClientProvider } from '../client';
 
 const testBuilder = new TestBuilder();
 
-export type RepeatedComponentProps = { id: number; count: number; spaceKey?: PublicKey };
+export type ClientRepeatedComponentProps = { id: number; count: number; spaceKey?: PublicKey };
 
-export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
+export type ClientRepeaterProps<P extends ClientRepeatedComponentProps> = {
   className?: string;
-  component: FC<RepeatedComponentProps>;
+  component: FC<ClientRepeatedComponentProps>;
   controls?: FC<{ clients: Client[] }>;
   clients?: Client[];
   count?: number;
@@ -41,7 +41,7 @@ export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
 //   This seems primarily due to the fact that it required top-level await for the clients to initialize.
 //   Storybook seemed to handle it alright, but Chromatic had a lot of trouble with it.
 //   There was also a question of whether or not calling the story function multiple times was a good idea.
-export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRepeaterProps<P>) => {
+export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: ClientRepeaterProps<P>) => {
   const {
     component: Component,
     controls: Controls,

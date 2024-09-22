@@ -6,12 +6,11 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { type PublicKey } from '@dxos/client';
 import { Input } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { ClientRepeater, type RepeatedComponentProps } from './ClientRepeater';
+import { ClientRepeater, type ClientRepeatedComponentProps } from './ClientRepeater';
 import { useClient } from '../client';
 import { useSpace } from '../echo';
 
@@ -29,7 +28,7 @@ const ClientStory = () => {
   return <JsonPanel value={client.toJSON()} />;
 };
 
-const ClientSpace = ({ spaceKey }: { spaceKey?: PublicKey } & RepeatedComponentProps) => {
+const ClientSpace = ({ spaceKey }: ClientRepeatedComponentProps) => {
   const client = useClient();
   const space = useSpace(spaceKey);
   if (!space?.isOpen) {

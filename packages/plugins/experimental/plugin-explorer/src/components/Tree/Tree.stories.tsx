@@ -11,7 +11,7 @@ import { create } from '@dxos/echo-schema';
 import { TreeItemType, TreeType } from '@dxos/plugin-outliner/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { ClientRepeater } from '@dxos/react-client/testing';
+import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Tree, type TreeComponentProps } from './Tree';
@@ -26,7 +26,7 @@ const makeTreeItems = <T extends number>(count: T, items: TreeItemType[] = []) =
   return range(() => create(TreeItemType, { content: '', items }), count);
 };
 
-const Story: FC<{ type?: TreeComponentProps<any>['variant'] }> = ({ type } = {}) => {
+const Story: FC<ClientRepeatedComponentProps & { type?: TreeComponentProps<any>['variant'] }> = ({ type }) => {
   const client = useClient();
   const space = client.spaces.default;
   const [object, setObject] = useState<TreeType>();

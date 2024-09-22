@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React from 'react';
 
 import { faker } from '@dxos/random';
-import { type PublicKey } from '@dxos/react-client';
 import { create } from '@dxos/react-client/echo';
-import { ClientRepeater } from '@dxos/react-client/testing';
+import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Mosaic } from '../../mosaic';
@@ -26,7 +25,7 @@ const columnValues: { [property: string]: any[] } = {
   priority: ['unknown', ...Priority],
 };
 
-const Story: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
+const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
   return (
     <Mosaic.Root debug={debug}>
       <Mosaic.DragOverlay />

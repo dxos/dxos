@@ -8,10 +8,9 @@ import React, { useEffect, useState } from 'react';
 
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
-import { type PublicKey } from '@dxos/react-client';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ClientRepeater } from '@dxos/react-client/testing';
+import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { CommentsContainer } from './CommentsContainer';
@@ -20,7 +19,7 @@ import translations from '../translations';
 
 faker.seed(1);
 
-const Story = ({ spaceKey }: { spaceKey: PublicKey }) => {
+const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
   const identity = useIdentity();
   const space = useSpace(spaceKey);
   const threads = useQuery(space, Filter.schema(ThreadType));
