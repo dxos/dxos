@@ -88,6 +88,8 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
     return null;
   }
 
+  console.log(clients);
+
   return (
     <>
       {Controls && <Controls clients={clients} />}
