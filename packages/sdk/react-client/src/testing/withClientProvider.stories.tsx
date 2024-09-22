@@ -27,7 +27,7 @@ const Test = () => {
   }
 
   return (
-    <div className='flex flex-col w-full min-w-[24rem] divide-y divide-separator border border-separator rounded'>
+    <div className='flex flex-col min-w-[28rem] divide-y divide-separator border border-separator rounded'>
       <SyntaxHighlighter language='json'>{JSON.stringify(client.toJSON(), null, 2)}</SyntaxHighlighter>
       {spaces.map((space) => (
         <SpaceInfo key={space.id} space={space} />
