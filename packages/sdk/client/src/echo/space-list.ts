@@ -200,12 +200,14 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       spaceOpen: defaultSpace?.isOpen,
       spaceId: this._defaultSpaceId,
     });
+
     if (defaultSpace) {
       if (defaultSpace.state.get() === SpaceState.SPACE_CLOSED) {
         this._openSpaceAsync(defaultSpace);
       }
       this._onDefaultSpaceAvailable();
     }
+
     return true;
   }
 
@@ -300,6 +302,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   /**
    * @internal
    */
+  // TODO(burdon): ?
   async clone(snapshot: SpaceSnapshot): Promise<Space> {
     return todo();
     // invariant(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
@@ -337,6 +340,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * @param filter
    * @param options
    */
+  // TODO(burdon): Types don't match.
   query<T extends {} = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
     return this._echoClient.graph.query(filter, options);
   }

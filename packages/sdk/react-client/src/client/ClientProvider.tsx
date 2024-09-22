@@ -120,8 +120,7 @@ export const ClientProvider = ({
       printBanner(client);
     };
 
-    // TODO(burdon): queueMicrotask?
-    const timeout = setTimeout(async () => {
+    const t = setTimeout(async () => {
       if (clientProvider) {
         // Asynchronously request client.
         const client = await getAsyncProviderValue(clientProvider);
@@ -140,7 +139,7 @@ export const ClientProvider = ({
 
     return () => {
       log('clean up');
-      clearTimeout(timeout);
+      clearTimeout(t);
       void client?.destroy().catch((err) => log.catch(err));
     };
   }, [clientProvider, configProvider, servicesProvider]);
