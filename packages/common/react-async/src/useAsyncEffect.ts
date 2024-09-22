@@ -4,6 +4,8 @@
 
 import { useEffect } from 'react';
 
+import { log } from '@dxos/log';
+
 /**
  * Process async event with optional non-async destructor.
  * Inspired by: https://github.com/rauldeheer/use-async-effect/blob/master/index.js
@@ -30,8 +32,11 @@ import { useEffect } from 'react';
  * @param destructor Receives the value returned from the callback.
  * @param deps
  *
- * @deprecated Use `doAsync` instead.
+ * NOTE: This effect does not cancel the async operation if the component is unmounted.
+ *
+ * @deprecated
  */
+// TODO(burdon): Move to react-hooks.
 export const useAsyncEffect = <T>(
   callback: (isMounted: () => boolean) => Promise<T> | undefined,
   destructor?: ((value?: T) => void) | any[],
@@ -45,10 +50,11 @@ export const useAsyncEffect = <T>(
     let value: T | undefined;
     const asyncResult = callback(() => mounted);
 
-    // TODO(burdon): Catch exception.
-    void Promise.resolve(asyncResult).then((result) => {
-      value = result;
-    });
+    void Promise.resolve(asyncResult)
+      .then((result) => {
+        value = result;
+      })
+      .catch(log.catch);
 
     return () => {
       mounted = false;

@@ -2082,6 +2082,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../async
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../log
     devDependencies:
       '@dxos/esbuild-plugins':
         specifier: workspace:*

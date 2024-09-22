@@ -39,9 +39,9 @@ const Test = () => {
 };
 
 export default {
-  title: 'react-client/withClient',
+  title: 'react-client/withClientProvider',
   component: Test,
-  decorators: [withTheme, withClientProvider({ createIdentity: { displayName: 'DXOS' } })],
+  decorators: [withTheme, withClientProvider({ createIdentity: true })],
 };
 
 export const Default = {};
@@ -52,7 +52,7 @@ export const Multiple = {
     withMultiClientProvider({
       numClients: 3,
       classNames: ['flex gap-4'],
-      createIdentity: { displayName: 'DXOS' },
+      createIdentity: true,
       createSpace: true,
     }),
   ],

@@ -6,6 +6,7 @@ import React, { type FunctionComponent, type ReactNode, useEffect, useMemo, useS
 
 import { Client, type ClientOptions, type ClientServicesProvider, SystemStatus } from '@dxos/client';
 import { type Config } from '@dxos/config';
+import { type S } from '@dxos/echo-schema';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { useControlledValue } from '@dxos/react-ui';
@@ -43,14 +44,19 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
     services?: ClientServicesProvider | ((config?: Config) => MaybePromise<ClientServicesProvider>);
 
     /**
+     *
+     */
+    types?: S.Schema<any>[];
+
+    /**
      * ReactNode to display until the client is available.
      */
-    // TODO(wittjosiah): Rename to `placeholder`.
     fallback?: FunctionComponent<Partial<ClientContextProps>>;
 
     /**
      * Set to false to stop default signal factory from being registered.
      */
+    // TODO(burdon): Move to options.
     registerSignalFactory?: boolean;
 
     /**
@@ -70,6 +76,7 @@ export const ClientProvider = ({
   config: configProvider,
   client: clientProvider,
   services: servicesProvider,
+  types,
   status: controlledStatus,
   fallback: Fallback = () => null,
   registerSignalFactory: _registerSignalFactory = true,
@@ -104,11 +111,16 @@ export const ClientProvider = ({
       log('client ready');
       await onInitialized?.(client);
       log('initialization complete');
+      if (types) {
+        client.addTypes(types);
+      }
+
       setClient(client);
       setStatus(client.status.get() ?? SystemStatus.ACTIVE);
       printBanner(client);
     };
 
+    // TODO(burdon): queueMicrotask?
     const timeout = setTimeout(async () => {
       if (clientProvider) {
         // Asynchronously request client.
@@ -118,7 +130,7 @@ export const ClientProvider = ({
         // Asynchronously construct client (config may be undefined).
         const config = await getAsyncProviderValue(configProvider);
         log('resolved config', { config });
-        const services = typeof servicesProvider === 'function' ? await servicesProvider?.(config) : servicesProvider;
+        const services = await getAsyncProviderValue(servicesProvider, config);
         log('created services', { services });
         const client = new Client({ config, services, ...options });
         log('created client');

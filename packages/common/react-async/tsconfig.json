@@ -18,6 +18,9 @@
     },
     {
       "path": "../esbuild-plugins"
+    },
+    {
+      "path": "../log"
     }
   ]
 }

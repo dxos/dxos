@@ -4,9 +4,9 @@
 
 export type AsyncCallback<T> = (param: T) => Promise<void>;
 
-export type Provider<T> = () => T;
+export type Provider<T, V = void> = (arg: V) => T;
 
-export type MaybeProvider<T> = T | (() => T);
+export type MaybeProvider<T, V = void> = T | ((arg: V) => T);
 
 export type MaybePromise<T> = T | Promise<T>;
 
@@ -38,19 +38,18 @@ export const doAsync = async (fn: () => Promise<void>) => fn();
 /**
  * Get value from a provider.
  */
-export const getProviderValue = <T>(value: MaybeProvider<T>): T => {
-  return typeof value === 'function' ? (value as Function)() : value;
+export const getProviderValue = <T, V = void>(provider: MaybeProvider<T, V>, arg?: V): T => {
+  return typeof provider === 'function' ? (provider as Function)(arg) : provider;
 };
 
 /**
  * Get value from a provider, which may be async.
  */
-export const getAsyncProviderValue = <T>(value: MaybeProvider<MaybePromise<T>>): MaybePromise<T> => {
-  if (typeof value === 'function') {
-    return (value as Function)();
-  } else {
-    return value;
-  }
+export const getAsyncProviderValue = <T, V = void>(
+  provider: MaybeProvider<MaybePromise<T>, V>,
+  arg?: V,
+): MaybePromise<T> => {
+  return getProviderValue(provider, arg);
 };
 
 /**

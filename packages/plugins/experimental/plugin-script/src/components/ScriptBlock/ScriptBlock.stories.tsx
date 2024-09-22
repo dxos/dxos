@@ -3,13 +3,12 @@
 //
 
 import '@dxos-theme';
-
 import React, { useEffect, useMemo } from 'react';
 
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { TextType } from '@dxos/plugin-markdown/types';
 import { useClient } from '@dxos/react-client';
-import { create, createEchoObject } from '@dxos/react-client/echo';
+import { create, createEchoObject, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withFullscreen, withTheme, withTooltipProvider } from '@dxos/storybook-utils';
 
@@ -32,11 +31,23 @@ const code = [
 
 const Story = () => {
   const client = useClient();
+  const spaces = useSpaces();
+  console.log(spaces.length);
 
   useEffect(() => {
-    const generator = createSpaceObjectGenerator(client.spaces.default);
-    generator.addSchemas(); // TODO(burdon): Throws.
-    void generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 }).catch();
+    try {
+      // TODO(burdon): Default not set.
+      const generator = createSpaceObjectGenerator(client.spaces.default);
+      generator.addSchemas();
+      void generator
+        .createObjects({
+          [TestSchemaType.organization]: 20,
+          [TestSchemaType.contact]: 50,
+        })
+        .catch();
+    } catch (err) {
+      console.log(err);
+    }
   }, [client]);
 
   // TODO(burdon): Review what's the right way to create automerge-backed objects.

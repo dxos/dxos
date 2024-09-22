@@ -27,7 +27,8 @@
     "book": "esbuild-server book"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*"
+    "@dxos/async": "workspace:*",
+    "@dxos/log": "workspace:*"
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",

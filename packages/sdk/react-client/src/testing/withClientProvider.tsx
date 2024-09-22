@@ -3,31 +3,46 @@
 //
 
 import { type Decorator } from '@storybook/react';
-import React, { type PropsWithChildren, useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { type FallbackProps, ErrorBoundary } from 'react-error-boundary';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { performInvitation, TestBuilder } from '@dxos/client/testing';
-import { type S } from '@dxos/echo-schema';
-import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { doAsync, getProviderValue, type MaybePromise, type Provider } from '@dxos/util';
+import { type MaybePromise } from '@dxos/util';
 
-import { ClientProvider, type ClientProviderProps, useClient } from '../client';
-import { useIdentity } from '../halo';
+import { ClientProvider, type ClientProviderProps } from '../client';
+
+// TODO(burdon): Remove @dxos/react-async => react-hooks
 
 type InitializerProps = {
-  createIdentity?: boolean | ProfileDocument | Provider<ProfileDocument>;
+  createIdentity?: boolean;
   createSpace?: boolean;
-  types?: S.Schema<any>[];
-  onClientInitialized?: (client: Client) => MaybePromise<void>;
-  onSpaceCreated?: (space: Space) => MaybePromise<void>;
+  onSpaceCreated?: (client: Client, space: Space) => MaybePromise<void>;
 };
 
 export type WithClientProviderProps = InitializerProps & ClientProviderProps;
+
+const initialize = async (
+  client: Client,
+  { createIdentity, createSpace, onInitialized, onSpaceCreated }: WithClientProviderProps,
+): Promise<Space | undefined> => {
+  if (createIdentity) {
+    await client.halo.createIdentity();
+  }
+
+  let space: Space | undefined;
+  if (createSpace) {
+    space = await client.spaces.create({ name: 'Test' });
+    await onSpaceCreated?.(client, space);
+  }
+
+  await onInitialized?.(client);
+  return space;
+};
 
 /**
  * Decorator that provides the client context.
@@ -35,21 +50,18 @@ export type WithClientProviderProps = InitializerProps & ClientProviderProps;
 export const withClientProvider = ({
   createIdentity,
   createSpace,
-  onClientInitialized,
+  onInitialized,
   onSpaceCreated,
   ...props
 }: WithClientProviderProps = {}): Decorator => {
+  const handleInitialized = async (client: Client) => {
+    await initialize(client, { createIdentity, createSpace, onSpaceCreated, onInitialized });
+  };
+
   return (Story) => (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <ClientProvider {...props}>
-        <ClientInitializer
-          createIdentity={createIdentity}
-          createSpace={createSpace}
-          onClientInitialized={onClientInitialized}
-          onSpaceCreated={onSpaceCreated}
-        >
-          <Story />
-        </ClientInitializer>
+      <ClientProvider onInitialized={handleInitialized} {...props}>
+        <Story />
       </ClientProvider>
     </ErrorBoundary>
   );
@@ -71,40 +83,42 @@ export const withMultiClientProvider = ({
   classNames,
   createIdentity,
   createSpace,
-  onClientInitialized,
+  onInitialized,
   onSpaceCreated,
   ...props
 }: WithMultiClientProviderProps): Decorator => {
   return (Story) => {
     const builder = useRef(new TestBuilder());
     const hostRef = useRef<Client>();
-    const spaceReady = useRef(new Trigger<Space>());
+    const spaceReady = useRef(new Trigger<Space | undefined>());
 
     // Handle invitations.
     const handleClientInitialized = async (client: Client) => {
       if (createSpace) {
         if (!hostRef.current) {
           hostRef.current = client;
-          const space = await client.spaces.create({ name: 'Test' });
-          await onSpaceCreated?.(space);
+          const space = await initialize(client, { createIdentity, onInitialized, createSpace, onSpaceCreated });
           spaceReady.current.wake(space);
         } else {
+          await initialize(client, { createIdentity, onInitialized });
           const space = await spaceReady.current.wait();
-          await Promise.all(performInvitation({ host: space, guest: client.spaces }));
+          if (space) {
+            await Promise.all(performInvitation({ host: space, guest: client.spaces }));
+          }
         }
       }
-
-      await onClientInitialized?.(client);
     };
 
     return (
       <div role='none' className={mx(classNames)}>
         {Array.from({ length: numClients }).map((_, index) => (
           <ErrorBoundary key={index} FallbackComponent={ErrorFallback}>
-            <ClientProvider services={builder.current.createLocalClientServices()} {...props}>
-              <ClientInitializer createIdentity={createIdentity} onClientInitialized={handleClientInitialized}>
-                <Story />
-              </ClientInitializer>
+            <ClientProvider
+              services={builder.current.createLocalClientServices()}
+              onInitialized={handleClientInitialized}
+              {...props}
+            >
+              <Story />
             </ClientProvider>
           </ErrorBoundary>
         ))}
@@ -123,44 +137,4 @@ const ErrorFallback = ({ error }: FallbackProps) => {
       {stack && <pre className='text-sm text-subdued'>{stack}</pre>}
     </div>
   );
-};
-
-const ClientInitializer = ({
-  children,
-  createIdentity,
-  createSpace,
-  types,
-  onClientInitialized,
-  onSpaceCreated,
-}: PropsWithChildren<InitializerProps>) => {
-  const client = useClient();
-  const identity = useIdentity();
-  useEffect(() => {
-    if ((createIdentity || createSpace) && client) {
-      void doAsync(async () => {
-        await client.initialize();
-        if (types) {
-          client.addTypes(types);
-        }
-
-        if (createIdentity) {
-          // TODO(burdon): [SDK]: If no props provided then profile is null (should be {}).
-          const profile = createIdentity === true ? {} : getProviderValue(createIdentity);
-          await client.halo.createIdentity(profile);
-        }
-        await onClientInitialized?.(client);
-
-        if (createSpace) {
-          const space = await client.spaces.create({ name: 'Test' });
-          await onSpaceCreated?.(space);
-        }
-      });
-    }
-  }, [client]);
-
-  if (createIdentity && !identity) {
-    return null;
-  }
-
-  return children;
 };
