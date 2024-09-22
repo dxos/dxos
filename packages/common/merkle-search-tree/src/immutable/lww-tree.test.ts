@@ -11,14 +11,14 @@ test('sim', async ({ expect }) => {
     for (let i = 0; i < 15; i++) {
       let message1: SyncMessage | null = null,
         message2: SyncMessage | null = null;
-      console.log('state1', state1);
+      // console.log('state1', state1);
       [state1, message1] = await peer1.generateSyncMessage(state1);
       if (message1) {
         console.log('1 -> 2', { ...message1, nodes: message1.nodes.map((node) => ({ ...node, items: undefined })) });
 
         state2 = await peer2.receiveSyncMessage(state2, message1);
       }
-      console.log('state2', state2);
+      // console.log('state2', state2);
 
       [state2, message2] = await peer2.generateSyncMessage(state2);
       if (message2) {
@@ -27,7 +27,7 @@ test('sim', async ({ expect }) => {
       }
 
       if (!message1 && !message2) {
-        console.log(`synced in ${i} iterations`);
+        console.log(`synced in ${i - 1} iterations`);
         return;
       }
     }
