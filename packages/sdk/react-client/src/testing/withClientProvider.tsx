@@ -4,8 +4,7 @@
 
 import { type Decorator } from '@storybook/react';
 import React, { type PropsWithChildren, useEffect, useRef } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
-import { type FallbackProps } from 'react-error-boundary/dist/declarations/src/types';
+import { type FallbackProps, ErrorBoundary } from 'react-error-boundary';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
