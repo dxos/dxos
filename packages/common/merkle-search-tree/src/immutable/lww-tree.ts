@@ -8,8 +8,8 @@ export type LLWTreeParams = {
 };
 
 export class LWWTree<T> {
-  static async new(params: LLWTreeParams) {
-    const tree = new LWWTree(params);
+  static async new<T>(params: LLWTreeParams): Promise<LWWTree<T>> {
+    const tree = new LWWTree<T>(params);
     tree.#currentRoot = await tree.#forest.createTree([]);
 
     return tree;
@@ -34,13 +34,22 @@ export class LWWTree<T> {
     return data?.value;
   }
 
+  async setBatch(pairs: [Key, T][]) {
+    const prevDataBatch = await Promise.all(pairs.map(([key]) => this.#getData(key)));
+    const updates = pairs.map(([key, value], i) => {
+      const prevData = prevDataBatch[i];
+      const newClock: VersionClock = !prevData
+        ? ([this.#actor, 0] as const)
+        : ([this.#actor, prevData.clock[1] + 1] as const);
+      const data = this.#encode({ clock: newClock, value });
+
+      return [key, data] as const;
+    });
+    this.#currentRoot = await this.#forest.setBatch(this.#currentRoot, updates);
+  }
+
   async set(key: Key, value: T) {
-    const prevData = await this.#getData(key);
-    const newClock: VersionClock = !prevData
-      ? ([this.#actor, 0] as const)
-      : ([this.#actor, prevData.clock[1] + 1] as const);
-    const data = this.#encode({ clock: newClock, value });
-    this.#currentRoot = await this.#forest.set(this.#currentRoot, key, data);
+    await this.setBatch([[key, value]]);
   }
 
   async receiveSyncMessage(state: SyncState, message: SyncMessage): Promise<SyncState> {

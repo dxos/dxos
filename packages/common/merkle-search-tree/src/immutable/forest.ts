@@ -62,9 +62,13 @@ export class Forest {
     const keyLevel = await getKeyLevel(key);
 
     let node = this.#nodes.get(root);
-    let level = 0;
+
+    if (node !== undefined && node.level < keyLevel) {
+      return { kind: 'missing' };
+    }
+
     while (node !== undefined) {
-      if (level === keyLevel) {
+      if (node.level === keyLevel) {
         // TODO(dmaretskyi): Binary search.
         for (let i = 0; i < node.items.length; i++) {
           if (node.items[i].key === key) {
@@ -74,13 +78,18 @@ export class Forest {
         return { kind: 'missing' };
       } else {
         // TODO(dmaretskyi): Binary search.
+        let found = false;
         for (let i = 0; i < node.items.length; i++) {
           if (node.items[i].key > key) {
             // Descend down one level.
             node = this.#nodes.get(node.children[i]);
-            level++;
+            found = true;
             break;
           }
+        }
+        if (!found) {
+          invariant(node!.level > 0);
+          node = this.#nodes.get(node!.children[node!.items.length]);
         }
       }
     }
@@ -417,7 +426,7 @@ export type NodeData = {
   /**
    * Sorted by key
    */
-  // TODO(dmaretskyi): Clear hashes.
+  // TODO(dmaretskyi): Send key values only.
   readonly items: readonly Item[];
   /**
    * {items.length + 1} child digests.
