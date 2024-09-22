@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { type PublicKeyLike } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { useMulticastObservable } from '@dxos/react-async';
+import { useMulticastObservable } from '@dxos/react-hooks';
 
 import { useClient } from '../client';
 

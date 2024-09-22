@@ -15,9 +15,9 @@ import {
   type SubscribeToFeedsResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
-import { useAsyncEffect } from '@dxos/react-async';
 import { PublicKey, useClientServices } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
+import { useAsyncEffect } from '@dxos/react-hooks';
 import { DropdownMenu, Tree, TreeItem, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { BitField } from '@dxos/util';
