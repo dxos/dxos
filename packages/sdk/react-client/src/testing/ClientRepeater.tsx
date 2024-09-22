@@ -16,11 +16,11 @@ import { ClientProvider } from '../client';
 
 const testBuilder = new TestBuilder();
 
-export type RepeatedComponentProps = { id: number; count: number };
+export type RepeatedComponentProps = { id: number; count: number; spaceKey?: PublicKey };
 
 export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
   className?: string;
-  component: FC<{ id: number; count: number }>;
+  component: FC<RepeatedComponentProps>;
   controls?: FC<{ clients: Client[] }>;
   clients?: Client[];
   count?: number;
@@ -92,7 +92,7 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
       {Controls && <Controls clients={clients} />}
       {clients.map((client, index) => (
         <ClientProvider key={index} client={client}>
-          <Component id={index} count={clients.length} {...{ ...props.args, spaceKey }} />
+          <Component id={index} count={clients.length} spaceKey={spaceKey} {...{ ...props.args }} />
         </ClientProvider>
       ))}
     </>

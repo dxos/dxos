@@ -8,9 +8,10 @@ import React from 'react';
 
 import { type PublicKey } from '@dxos/client';
 import { Input } from '@dxos/react-ui';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { ClientRepeater } from './ClientRepeater';
+import { ClientRepeater, type RepeatedComponentProps } from './ClientRepeater';
 import { useClient } from '../client';
 import { useSpace } from '../echo';
 
@@ -20,17 +21,7 @@ export default {
 };
 
 const JsonPanel = ({ value }: { value: any }) => (
-  <pre
-    style={{
-      margin: 0,
-      // code whiteSpace: 'pre-wrap',
-      // code wordBreak: 'break-all',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-    }}
-  >
-    {JSON.stringify(value, undefined, 2)}
-  </pre>
+  <SyntaxHighlighter language='json'>{JSON.stringify(value, undefined, 2)}</SyntaxHighlighter>
 );
 
 const ClientStory = () => {
@@ -38,7 +29,7 @@ const ClientStory = () => {
   return <JsonPanel value={client.toJSON()} />;
 };
 
-const ClientSpace = ({ spaceKey }: { spaceKey: PublicKey }) => {
+const ClientSpace = ({ spaceKey }: { spaceKey?: PublicKey } & RepeatedComponentProps) => {
   const client = useClient();
   const space = useSpace(spaceKey);
   if (!space?.isOpen) {

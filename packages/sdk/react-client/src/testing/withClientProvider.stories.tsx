@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React from 'react';
 
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { withClientProvider, withMultiClientProvider } from './withClientProvider';
 import { useClient } from '../client';
@@ -49,9 +49,9 @@ export const Default = {};
 export const Multiple = {
   decorators: [
     withTheme,
+    withLayout({ classNames: ['flex gap-4'] }),
     withMultiClientProvider({
       numClients: 3,
-      classNames: ['flex gap-4'],
       createIdentity: true,
       createSpace: true,
     }),
