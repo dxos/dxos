@@ -340,8 +340,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * @param filter
    * @param options
    */
-  // TODO(burdon): Types don't match.
   query<T extends {} = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
+    // TODO(burdon): Types don't match.
     return this._echoClient.graph.query(filter, options);
   }
 
