@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useState, type FC, useEffect } from 'react';
+import React, { useState, type FC, useEffect, useRef } from 'react';
 
 import { Client, type PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -13,8 +13,6 @@ import { faker } from '@dxos/random';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientProvider } from '../client';
-
-const testBuilder = new TestBuilder();
 
 export type ClientRepeatedComponentProps = { id: number; count: number; spaceKey?: PublicKey };
 
@@ -58,9 +56,12 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
   const [clients, setClients] = useState(props.clients ?? []);
   const [spaceKey, setSpaceKey] = useState<PublicKey>();
 
+  const testBuilder = useRef(new TestBuilder());
   useEffect(() => {
     const timeout = setTimeout(async () => {
-      const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocalClientServices() }));
+      const clients = [...Array(count)].map(
+        (_) => new Client({ services: testBuilder.current.createLocalClientServices() }),
+      );
       await Promise.all(clients.map((client) => client.initialize()));
       types && clients.map((client) => client.addTypes(types));
 
