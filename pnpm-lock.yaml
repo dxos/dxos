@@ -10046,6 +10046,9 @@ importers:
 
   packages/ui/primitives/react-hooks:
     dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log

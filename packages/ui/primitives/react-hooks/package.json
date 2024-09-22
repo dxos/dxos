@@ -24,6 +24,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/log": "workspace:*",
     "alea": "^1.0.1"
   },
