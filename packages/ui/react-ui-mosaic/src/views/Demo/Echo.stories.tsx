@@ -8,7 +8,7 @@ import { faker } from '@dxos/random';
 import { type PublicKey } from '@dxos/react-client';
 import { create } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Mosaic } from '../../mosaic';
 import { TestObjectGenerator, range, Status, Priority } from '../../testing';
@@ -67,7 +67,7 @@ export default {
       createSpace
     />
   ),
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 // TODO(wittjosiah): This currently has a bug where empty over events are fired when dragging from tree onto kanban.

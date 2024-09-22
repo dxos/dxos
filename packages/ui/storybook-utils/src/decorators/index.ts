@@ -2,6 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './withFullscreen';
+export * from './withLayout';
 export * from './withTheme';
-export * from './withTooltipProvider';

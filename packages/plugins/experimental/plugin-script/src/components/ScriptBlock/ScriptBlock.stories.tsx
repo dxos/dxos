@@ -10,7 +10,7 @@ import { TextType } from '@dxos/plugin-markdown/types';
 import { useClient } from '@dxos/react-client';
 import { create, createEchoObject, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withFullscreen, withTheme, withTooltipProvider } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 // @ts-ignore
 import mainUrl from './FrameContainer/frame?url';
@@ -64,7 +64,7 @@ const Story = () => {
 export default {
   title: 'plugin-script/ScriptBlock',
   component: ScriptBlock,
-  decorators: [withTheme, withTooltipProvider, withFullscreen(), withClientProvider({ createSpace: true })],
+  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true }), withClientProvider({ createSpace: true })],
   render: Story,
 };
 

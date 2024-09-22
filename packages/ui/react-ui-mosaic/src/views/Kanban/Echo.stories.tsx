@@ -7,7 +7,7 @@ import React from 'react';
 import { type PublicKey } from '@dxos/react-client';
 // import { Expando } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Kanban } from './Kanban';
 // import { EchoKanban, columnValues } from './testing';
@@ -61,7 +61,7 @@ export default {
       createSpace
     />
   ),
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },

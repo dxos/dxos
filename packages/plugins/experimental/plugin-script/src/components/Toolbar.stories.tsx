@@ -4,14 +4,14 @@
 
 import '@dxos-theme';
 
-import { withTheme, withTooltipProvider } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Toolbar } from './Toolbar';
 
 export default {
   title: 'plugin-script/Toolbar',
   component: Toolbar,
-  decorators: [withTheme, withTooltipProvider],
+  decorators: [withTheme, withLayout({ tooltips: true })],
 };
 
 export const Default = { args: { binding: 'example', deployed: true } };

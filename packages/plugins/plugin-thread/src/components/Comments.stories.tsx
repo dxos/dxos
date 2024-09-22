@@ -13,7 +13,7 @@ import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { Tooltip } from '@dxos/react-ui';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { CommentsContainer } from './CommentsContainer';
 import { createCommentThread } from './testing';
@@ -59,7 +59,7 @@ export default {
   title: 'plugin-thread/Comments',
   // TODO(wittjosiah): Register schemas.
   render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType, MessageType]} />,
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { translations },
 };
 

@@ -12,7 +12,7 @@ import { TreeItemType, TreeType } from '@dxos/plugin-outliner/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Tree, type TreeComponentProps } from './Tree';
 
@@ -72,7 +72,7 @@ export default {
   title: 'plugin-explorer/Tree',
   component: Tree,
   render: () => <ClientRepeater component={Story} types={[TreeType, TreeItemType]} createSpace />,
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },

@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 
 import { Toolbar as NaturalToolbar, Select, useThemeContext, Tooltip } from '@dxos/react-ui';
 import { attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Toolbar } from './components';
 import {
@@ -100,7 +100,7 @@ const EditorInputModeToolbar = ({
 
 export default {
   title: 'react-ui-editor/InputMode',
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { translations, layout: 'fullscreen' },
   render: Story,
 };
