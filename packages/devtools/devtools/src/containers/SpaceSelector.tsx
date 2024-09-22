@@ -5,10 +5,10 @@
 import * as localForage from 'localforage';
 import React from 'react';
 
-import { useAsyncEffect } from '@dxos/react-async';
 import { PublicKey } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { useAsyncEffect } from '@dxos/react-hooks';
 import { humanize } from '@dxos/util';
 
 import { PublicKeySelector } from '../components';

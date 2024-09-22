@@ -101,7 +101,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/react-async": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
