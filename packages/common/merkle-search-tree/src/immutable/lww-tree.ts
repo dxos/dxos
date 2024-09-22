@@ -50,11 +50,19 @@ export class LWWTree<T> {
 
     if (remoteRoot !== null) {
       const missing = [...(await this.#forest.missingNodes(remoteRoot))];
-
-      console.log('missing', remoteRoot, missing);
-
       if (missing.length === 0) {
         this.#currentRoot = await this.#forest.merge(remoteRoot, this.#currentRoot, this.#merge.bind(this));
+      } else if (state.remoteRoot !== null && state.remoteRoot !== remoteRoot) {
+        // If we're missing nodes from the new remote root, but we have the previous remote root, we can try to merge.
+        const missingFromPrevRoot = [...(await this.#forest.missingNodes(state.remoteRoot))];
+        if (missingFromPrevRoot.length === 0) {
+          await this.#forest.merge(state.remoteRoot, this.#currentRoot, this.#merge.bind(this));
+
+          const missing = [...(await this.#forest.missingNodes(remoteRoot))];
+          if (missing.length === 0) {
+            this.#currentRoot = await this.#forest.merge(remoteRoot, this.#currentRoot, this.#merge.bind(this));
+          }
+        }
       }
     }
 
