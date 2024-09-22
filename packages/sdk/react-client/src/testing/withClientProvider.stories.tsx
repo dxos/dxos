@@ -20,20 +20,18 @@ const SpaceInfo = ({ space }: { space: Space }) => {
 
 const Test = () => {
   const client = useClient();
-  // TODO(burdon): [SDK]: 'all' property has no effect.
+  // TODO(burdon): [SDK]: 'all' property has no effect?
   const spaces = useSpaces();
   if (!client) {
     return null;
   }
 
   return (
-    <div className='flex flex-col w-full gap-0.5'>
+    <div className='flex flex-col w-full min-w-[24rem] divide-y divide-separator border border-separator rounded'>
       <SyntaxHighlighter language='json'>{JSON.stringify(client.toJSON(), null, 2)}</SyntaxHighlighter>
-      <div className='flex flex-col gap-0.5'>
-        {spaces.map((space) => (
-          <SpaceInfo key={space.id} space={space} />
-        ))}
-      </div>
+      {spaces.map((space) => (
+        <SpaceInfo key={space.id} space={space} />
+      ))}
     </div>
   );
 };
@@ -48,12 +46,12 @@ export const Default = {};
 
 export const Multiple = {
   decorators: [
-    withTheme,
-    withLayout({ classNames: ['flex gap-4'] }),
     withMultiClientProvider({
       numClients: 3,
       createIdentity: true,
       createSpace: true,
     }),
+    withLayout({ classNames: ['flex gap-2'] }),
+    withTheme,
   ],
 };
