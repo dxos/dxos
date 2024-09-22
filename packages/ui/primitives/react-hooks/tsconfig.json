@@ -15,5 +15,9 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../../common/log"
+    }
+  ]
 }

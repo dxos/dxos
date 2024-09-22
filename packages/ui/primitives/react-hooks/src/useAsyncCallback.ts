@@ -7,7 +7,6 @@ import { useEffect, useState } from 'react';
 /**
  * @deprecated
  */
-// TODO(burdon): Clashes with useAsyncEffect.
 export const useAsyncCallback = <T>(cb: () => Promise<T>): T | undefined => {
   const [value, setValue] = useState<T | undefined>();
   useEffect(() => {

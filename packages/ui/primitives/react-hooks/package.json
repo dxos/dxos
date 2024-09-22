@@ -24,6 +24,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/log": "workspace:*",
     "alea": "^1.0.1"
   },
   "devDependencies": {
