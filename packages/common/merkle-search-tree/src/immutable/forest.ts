@@ -417,6 +417,7 @@ export type NodeData = {
   /**
    * Sorted by key
    */
+  // TODO(dmaretskyi): Clear hashes.
   readonly items: readonly Item[];
   /**
    * {items.length + 1} child digests.

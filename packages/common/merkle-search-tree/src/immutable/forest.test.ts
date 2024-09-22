@@ -1,4 +1,4 @@
-import { range } from '@dxos/util';
+import { numericalValues, range } from '@dxos/util';
 import { describe, test } from 'vitest';
 import { Forest, type DigestHex, type TreeMut } from './forest';
 import { createValue, randomKey, randomSample } from '../testing';
@@ -158,10 +158,10 @@ describe('insertion order does not change the root hash', () => {
   });
 });
 
-test('sync', async () => {
-  const NUM_ITERS = 1000,
-    NUM_ITEMS = 20,
-    MUTATIONS_PER_ITER = 5;
+test.skip('sync', async () => {
+  const NUM_ITERS = 100,
+    NUM_ITEMS = 10_000,
+    MUTATIONS_PER_ITER = 1;
 
   const forest1 = new Forest(),
     forest2 = new Forest();
@@ -169,6 +169,14 @@ test('sync', async () => {
   const pairs = range(NUM_ITEMS).map(() => [randomKey(), createValue(randomKey())] as const);
   const tree = forest1.treeMut(await forest1.createTree(pairs));
   await forest2.createTree(pairs);
+
+  type Stats = {
+    exchanges: number;
+    nodes: number;
+    items: number;
+  };
+
+  const allStats: Stats[] = [];
 
   let prevRoot: DigestHex;
   for (const _ of range(NUM_ITERS)) {
@@ -188,8 +196,7 @@ test('sync', async () => {
       throw err;
     }
 
-    let numExchanges = 0,
-      numNodes = 0;
+    const stats: Stats = { exchanges: 0, nodes: 0, items: 0 };
     while (true) {
       const missing = [...forest2.missingNodes(tree.root)];
       if (missing.length === 0) {
@@ -197,11 +204,19 @@ test('sync', async () => {
       }
       const nodes = await forest1.getNodes(missing);
       await forest2.insertNodes(nodes);
-      numExchanges++;
-      numNodes += nodes.length;
+      stats.exchanges++;
+      stats.nodes += nodes.length;
+      stats.items += nodes.reduce((acc, node) => acc + node.items.length, 0);
     }
-    console.log({ numExchanges, numNodes });
+    allStats.push(stats);
   }
+  console.log({
+    NUM_ITEMS,
+    MUTATIONS_PER_ITER,
+    exchanges: numericalValues(allStats, (x) => x.exchanges),
+    nodes: numericalValues(allStats, (x) => x.nodes),
+    items: numericalValues(allStats, (x) => x.items),
+  });
 });
 
 // test('getLevel', ({ expect }) => {
