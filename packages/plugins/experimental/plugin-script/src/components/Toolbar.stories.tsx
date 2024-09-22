@@ -4,16 +4,14 @@
 
 import '@dxos-theme';
 
-// import React from 'react';
+import { withTheme, withTooltipProvider } from '@dxos/storybook-utils';
 
 import { Toolbar } from './Toolbar';
 
 export default {
   title: 'plugin-script/Toolbar',
   component: Toolbar,
-  parameters: {
-    layout: 'fullscreen',
-  },
+  decorators: [withTheme, withTooltipProvider],
 };
 
 export const Default = { args: { binding: 'example', deployed: true } };

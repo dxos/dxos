@@ -55,9 +55,6 @@ export default {
   title: 'plugin-script/TypescriptEditor',
   component: TypescriptEditor,
   render: Story,
-  parameters: {
-    layout: 'fullscreen',
-  },
 };
 
 export const Default = {};

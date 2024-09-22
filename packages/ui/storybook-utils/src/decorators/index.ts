@@ -4,3 +4,4 @@
 
 export * from './withFullscreen';
 export * from './withTheme';
+export * from './withTooltipProvider';

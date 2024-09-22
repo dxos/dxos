@@ -113,11 +113,17 @@ export const withMultiClientProvider = ({
   };
 };
 
-const ErrorFallback = ({ error }: FallbackProps) => (
-  <div role='alert' className='text-error'>
-    {error.message}
-  </div>
-);
+const ErrorFallback = ({ error }: FallbackProps) => {
+  const { name, message, stack } =
+    error instanceof Error ? error : { name: 'Error', message: String(error), stack: undefined };
+  return (
+    <div role='alert' className='flex flex-col gap-4'>
+      <h1 className='text-xl text-red-500'>{name}</h1>
+      <div className='text-lg'>{message}</div>
+      {stack && <pre className='text-sm text-subdued'>{stack}</pre>}
+    </div>
+  );
+};
 
 const ClientInitializer = ({
   children,
@@ -130,16 +136,18 @@ const ClientInitializer = ({
   const client = useClient();
   const identity = useIdentity();
   useEffect(() => {
-    if (createIdentity && client) {
+    if ((createIdentity || createSpace) && client) {
       void doAsync(async () => {
         await client.initialize();
         if (types) {
           client.addTypes(types);
         }
 
-        // TODO(burdon): [SDK]: If no props provided then profile is null (should be {}).
-        const profile = createIdentity === true ? {} : getProviderValue(createIdentity);
-        await client.halo.createIdentity(profile);
+        if (createIdentity) {
+          // TODO(burdon): [SDK]: If no props provided then profile is null (should be {}).
+          const profile = createIdentity === true ? {} : getProviderValue(createIdentity);
+          await client.halo.createIdentity(profile);
+        }
         await onClientInitialized?.(client);
 
         if (createSpace) {
