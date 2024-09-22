@@ -19,8 +19,8 @@ const testBuilder = new TestBuilder();
 export type RepeatedComponentProps = { id: number; count: number };
 
 export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
-  component: FC<any>;
   className?: string;
+  component: FC<{ id: number; count: number }>;
   controls?: FC<{ clients: Client[] }>;
   clients?: Client[];
   count?: number;
@@ -35,9 +35,8 @@ export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
 /**
  * Utility component for Storybook stories which sets up clients for n peers.
  * The `Component` property is rendered n times, once for each peer.
- * @deprecated Use withClientProvider.
  */
-// TODO(burdon): To discuss.
+// TODO(burdon): To discuss: evolve ClientRepeater with optional decorator that uses it.
 // NOTE: This is specifically not a storybook decorator because it broke stories as a decorator.
 //   This seems primarily due to the fact that it required top-level await for the clients to initialize.
 //   Storybook seemed to handle it alright, but Chromatic had a lot of trouble with it.

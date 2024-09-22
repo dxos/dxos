@@ -10,25 +10,27 @@ import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { performInvitation, TestBuilder } from '@dxos/client/testing';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientProvider, type ClientProviderProps } from '../client';
 
-// TODO(burdon): Remove @dxos/react-async => react-hooks
-
-type InitializerProps = {
+type InitializeProps = {
   createIdentity?: boolean;
   createSpace?: boolean;
   onSpaceCreated?: (client: Client, space: Space) => MaybePromise<void>;
 };
 
-export type WithClientProviderProps = InitializerProps & ClientProviderProps;
-
+/**
+ * Initialize client, identity and first space.
+ */
 const initialize = async (
   client: Client,
-  { createIdentity, createSpace, onInitialized, onSpaceCreated }: WithClientProviderProps,
+  {
+    createIdentity,
+    createSpace,
+    onSpaceCreated,
+    onInitialized,
+  }: InitializeProps & Pick<WithClientProviderProps, 'onInitialized'>,
 ): Promise<Space | undefined> => {
   if (createIdentity) {
     await client.halo.createIdentity();
@@ -36,7 +38,7 @@ const initialize = async (
 
   let space: Space | undefined;
   if (createSpace) {
-    space = await client.spaces.create({ name: 'Test' });
+    space = await client.spaces.create({ name: 'Test Space' });
     await onSpaceCreated?.(client, space);
   }
 
@@ -44,14 +46,16 @@ const initialize = async (
   return space;
 };
 
+export type WithClientProviderProps = InitializeProps & ClientProviderProps;
+
 /**
  * Decorator that provides the client context.
  */
 export const withClientProvider = ({
   createIdentity,
   createSpace,
-  onInitialized,
   onSpaceCreated,
+  onInitialized,
   ...props
 }: WithClientProviderProps = {}): Decorator => {
   const handleInitialized = async (client: Client) => {
@@ -67,24 +71,21 @@ export const withClientProvider = ({
   );
 };
 
-export type WithMultiClientProviderProps = ThemedClassName<
-  InitializerProps & ClientProviderProps & { numClients?: number }
->;
-
-/**
- * Create scaffold for multiple clients.
- * Orchestrates invitations between a randomly selected host and the remaining clients.
- */
 // TODO(burdon): Controls.
 // TODO(burdon): Callback once all invitations have completed.
-// TODO(burdon): Control delay for creation of other clients.
+// TODO(burdon): Control delay/jitter for creation of other clients.
+export type WithMultiClientProviderProps = InitializeProps & ClientProviderProps & { numClients?: number };
+
+/**
+ * Decorator that creates a scaffold for multiple clients.
+ * Orchestrates invitations between a randomly selected host and the remaining clients.
+ */
 export const withMultiClientProvider = ({
   numClients = 2,
-  classNames,
   createIdentity,
   createSpace,
-  onInitialized,
   onSpaceCreated,
+  onInitialized,
   ...props
 }: WithMultiClientProviderProps): Decorator => {
   return (Story) => {
@@ -97,7 +98,7 @@ export const withMultiClientProvider = ({
       if (createSpace) {
         if (!hostRef.current) {
           hostRef.current = client;
-          const space = await initialize(client, { createIdentity, onInitialized, createSpace, onSpaceCreated });
+          const space = await initialize(client, { createIdentity, createSpace, onSpaceCreated, onInitialized });
           spaceReady.current.wake(space);
         } else {
           await initialize(client, { createIdentity, onInitialized });
@@ -110,7 +111,7 @@ export const withMultiClientProvider = ({
     };
 
     return (
-      <div role='none' className={mx(classNames)}>
+      <>
         {Array.from({ length: numClients }).map((_, index) => (
           <ErrorBoundary key={index} FallbackComponent={ErrorFallback}>
             <ClientProvider
@@ -122,7 +123,7 @@ export const withMultiClientProvider = ({
             </ClientProvider>
           </ErrorBoundary>
         ))}
-      </div>
+      </>
     );
   };
 };
