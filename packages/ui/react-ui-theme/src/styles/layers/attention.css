@@ -1,50 +1,24 @@
 @layer utilities {
   .attention-surface {
-    background-color: white;
-    --surface-bg: white;
-  }
-
-  .dark .attention-surface {
-    background-color: theme(colors.neutral.900);
-    --surface-bg: theme(colors.neutral.900);
+    --surface-bg: var(--dx-attention);
+    background-color: var(--surface-bg);
   }
 }
 
 @layer components {
-  .attention {
-    --surface-bg: transparent;
-    --surface-separator: transparent;
-  }
-
   .attention-within:focus-within {
-    --surface-bg: white;
-    --surface-separator: theme(colors.neutral.75);
-  }
-
-  .dark .attention-within:focus-within {
-    --surface-bg: theme(colors.neutral.900);
-    --surface-separator: theme(colors.neutral.750);
+    --surface-bg: var(--dx-attention);
+    --surface-separator: var(--dx-separator);
   }
 
   .group\/attention:not(:focus-within) .attention-current[aria-current] {
-    --surface-bg: white;
-    --surface-separator: theme(colors.neutral.75);
-  }
-
-  .dark .group\/attention:not(:focus-within) .attention-current[aria-current] {
-    --surface-bg: theme(colors.neutral.900);
-    --surface-separator: theme(colors.neutral.750);
+    --surface-bg: var(--dx-attention);
+    --surface-separator: var(--dx-separator);
   }
 
   .attention-static,
   .attention-within.attention-static {
-    --surface-bg: white;
-    --surface-separator: theme(colors.neutral.75);
-  }
-
-  .dark .attention-static,
-  .dark .attention-within.attention-static {
-    --surface-bg: theme(colors.neutral.900);
-    --surface-separator: theme(colors.neutral.750);
+    --surface-bg: var(--dx-attention);
+    --surface-separator: var(--dx-separator);
   }
 }
