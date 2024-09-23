@@ -61,7 +61,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
             registry.set(trigger.id, ctx);
             const triggerSpec = trigger.spec;
 
-            let triggerFactory: TriggerFactory;
+            let triggerFactory: TriggerFactory<any>;
             if (triggerSpec.type === 'subscription') {
               triggerFactory = createSubscriptionTrigger;
             } else if (triggerSpec.type === 'websocket') {
@@ -71,7 +71,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
               continue;
             }
 
-            await triggerFactory(ctx, space, trigger.spec, async (data) => {
+            await triggerFactory(ctx, space, trigger.spec, async (data: any) => {
               try {
                 const script = await space.crud.query({ id: trigger.function }).first();
                 const { objects: functions } = await space.crud.query({ __typename: FunctionType.typename }).run();
