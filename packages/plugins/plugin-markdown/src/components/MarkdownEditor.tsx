@@ -15,8 +15,8 @@ import {
   parseLayoutPlugin,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { useIsDirectlyAttended } from '@dxos/react-ui-attention';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useIsDirectlyAttended } from '@dxos/react-ui-attention';
 import {
   type Action,
   type DNDOptions,
