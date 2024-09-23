@@ -6,13 +6,7 @@ import React, { useState } from 'react';
 
 import { ContactType } from '@dxos/plugin-space/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
-import { Main } from '@dxos/react-ui';
-import {
-  baseSurface,
-  bottombarBlockPaddingEnd,
-  fixedInsetFlexLayout,
-  topbarBlockPaddingStart,
-} from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 import { ContactList } from './ContactList';
 import { type ContactsType } from '../../types';
@@ -36,23 +30,21 @@ const byName =
     return a === undefined || b === undefined || a < b ? -direction : a > b ? direction : 0;
   };
 
-export type ContactsMainProps = {
+export type ContactsContainerProps = {
   contacts: ContactsType;
 };
 
-const ContactsMain = ({ contacts }: ContactsMainProps) => {
+export const ContactsContainer = ({ contacts }: ContactsContainerProps) => {
   const [selected, setSelected] = useState<ContactType>();
   const space = getSpace(contacts);
   const objects = useQuery(space, Filter.schema(ContactType));
   objects.sort(byName());
 
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
+    <div role='none' className={mx('flex row-span-2')}>
       <MasterDetail>
         <ContactList contacts={objects} selected={selected?.id} onSelect={setSelected} />
       </MasterDetail>
-    </Main.Content>
+    </div>
   );
 };
-
-export default ContactsMain;

@@ -12,7 +12,7 @@ import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-g
 import { SpaceAction } from '@dxos/plugin-space';
 import { loadObjectReferences } from '@dxos/react-client/echo';
 
-import { ContactsMain, EventsMain, MailboxMain } from './components';
+import { ContactsContainer, EventsContainer, MailboxContainer } from './components';
 import meta, { INBOX_PLUGIN } from './meta';
 import translations from './translations';
 import { ContactsType, CalendarType, EventType, MailboxType } from './types';
@@ -125,13 +125,13 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
           switch (role) {
             case 'article': {
               if (data.active instanceof MailboxType) {
-                return <MailboxMain mailbox={data.active} />;
+                return <MailboxContainer mailbox={data.active} />;
               }
               if (data.active instanceof ContactsType) {
-                return <ContactsMain contacts={data.active} />;
+                return <ContactsContainer contacts={data.active} />;
               }
               if (data.active instanceof CalendarType) {
-                return <EventsMain calendar={data.active} />;
+                return <EventsContainer calendar={data.active} />;
               }
               return null;
             }
