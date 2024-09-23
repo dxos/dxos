@@ -17,24 +17,24 @@ export const useMarkers = (map: MapType): MapMarker[] => {
   const space = getSpace(map);
 
   // TODO(burdon): Configure to select type.
-  const schemas = useQuery(
+  const latLongSchemas = useQuery(
     space,
     Filter.schema(StoredSchema, (schema) => schema && hasLocation(schema)),
   );
 
-  const objects = useQuery(
+  const rows = useQuery(
     space,
     (obj) => {
-      const schemaNames = schemas.map((schema) => schema.id);
+      const schemaNames = latLongSchemas.map((schema) => schema.id);
       const typename = getTypename(obj);
       return typename ? schemaNames.includes(typename) : false;
     },
     undefined,
-    [schemas],
+    [latLongSchemas],
   );
 
   const markers = useMemo(() => {
-    return objects
+    return rows
       .filter((row) => typeof row.latitude === 'number' && typeof row.longitude === 'number')
       .map((row) => ({
         id: row.id,
@@ -44,7 +44,7 @@ export const useMarkers = (map: MapType): MapMarker[] => {
           lng: row.longitude,
         },
       }));
-  }, [objects]);
+  }, [rows]);
 
   const markersStabilized = useStabilizedObject(markers, (oldMarkers: MapMarker[], newMarkers: MapMarker[]) => {
     if (oldMarkers.length !== newMarkers.length) {
