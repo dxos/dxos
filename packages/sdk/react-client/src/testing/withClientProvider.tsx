@@ -71,9 +71,9 @@ export const withClientProvider = ({
   );
 };
 
-// TODO(burdon): Controls.
+// TODO(burdon): Implement context per client for context.
 // TODO(burdon): Callback once all invitations have completed.
-// TODO(burdon): Control delay/jitter for creation of other clients.
+// TODO(burdon): Delay/jitter for creation of other clients.
 export type WithMultiClientProviderProps = InitializeProps & ClientProviderProps & { numClients?: number };
 
 /**
