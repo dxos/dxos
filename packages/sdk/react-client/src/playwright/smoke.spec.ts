@@ -16,7 +16,7 @@ test.describe('Smoke test', () => {
 
   test.beforeAll(async ({ browser }) => {
     const result = await setupPage(browser, {
-      url: storybookUrl('react-client-clientcontext--default'),
+      url: storybookUrl('react-client-withclientprovider--default'),
       waitFor: (page) => page.isVisible(':has-text("initialized")'),
     });
 
