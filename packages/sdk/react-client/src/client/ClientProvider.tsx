@@ -2,7 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { type FunctionComponent, type ReactNode, useEffect, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  type FunctionComponent,
+  type ReactNode,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 
 import { Client, type ClientOptions, type ClientServicesProvider, SystemStatus } from '@dxos/client';
 import { type Config } from '@dxos/config';
@@ -32,13 +40,11 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
      *
      * Most apps won't need this.
      */
-    // TODO(wittjosiah): Remove async and just use to keep reference to client?
-    //   (Preferring `onInitialized` for custom initialization.)
-    // TODO(burdon): Use useImperativeHandle to expose client.
     client?: Client | Provider<Promise<Client>>;
 
     /**
      * Callback to enable the caller to create a custom ClientServicesProvider.
+     * NOTE: If a `client` is provided then `services` are ignored.
      *
      * Most apps won't need this.
      */
@@ -57,7 +63,7 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
     /**
      * Set to false to stop default signal factory from being registered.
      */
-    // TODO(burdon): Move to options.
+    // TODO(burdon): Requires comment describing why signals are required.
     registerSignalFactory?: boolean;
 
     /**
@@ -72,88 +78,97 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
  * Root component that provides the DXOS client instance to child components.
  * To be used with the `useClient` hook.
  */
-export const ClientProvider = ({
-  children,
-  config: configProvider,
-  client: clientProvider,
-  services: servicesProvider,
-  types,
-  status: controlledStatus,
-  fallback: Fallback = () => null,
-  registerSignalFactory: _registerSignalFactory = true,
-  onInitialized,
-  ...options
-}: ClientProviderProps) => {
-  useRef(() => {
-    // TODO(wittjosiah): Ideally this should be imported asynchronously because it is optional.
-    //   Unfortunately, async import seemed to break signals React instrumentation.
-    _registerSignalFactory && registerSignalFactory();
-  });
-
-  const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
-
-  const [error, setError] = useState();
-  if (error) {
-    throw error;
-  }
-
-  // Status subscription.
-  const [status, setStatus] = useControlledValue(controlledStatus);
-  useEffect(() => {
-    if (!client) {
-      return;
-    }
-
-    const subscription = client.status.subscribe((status) => setStatus(status));
-    return () => subscription.unsubscribe();
-  }, [client, setStatus]);
-
-  // Initialize client.
-  useEffect(() => {
-    const done = async (client: Client) => {
-      if (!client.initialized) {
-        await client.initialize().catch(setError);
-        log('client ready');
-        await onInitialized?.(client);
-        log('initialization complete');
-      }
-
-      if (types) {
-        client.addTypes(types);
-      }
-
-      setClient(client);
-      setStatus(client.status.get() ?? SystemStatus.ACTIVE);
-      printBanner(client);
-    };
-
-    const t = setTimeout(async () => {
-      if (clientProvider) {
-        // Asynchronously request client.
-        const client = await getAsyncProviderValue(clientProvider);
-        await done(client);
-      } else {
-        // Asynchronously construct client (config may be undefined).
-        const config = await getAsyncProviderValue(configProvider);
-        log('resolved config', { config });
-        const services = await getAsyncProviderValue(servicesProvider, config);
-        log('created services', { services });
-        const client = new Client({ config, services, ...options });
-        log('created client');
-        await done(client);
-      }
+export const ClientProvider = forwardRef<Client, ClientProviderProps>(
+  (
+    {
+      children,
+      config: configProvider,
+      client: clientProvider,
+      services: servicesProvider,
+      types,
+      status: controlledStatus,
+      fallback: Fallback = () => null,
+      registerSignalFactory: _registerSignalFactory = true,
+      onInitialized,
+      ...options
+    },
+    forwardedRef,
+  ) => {
+    useRef(() => {
+      // TODO(wittjosiah): Ideally this should be imported asynchronously because it is optional.
+      //   Unfortunately, async import seemed to break signals React instrumentation.
+      _registerSignalFactory && registerSignalFactory();
     });
 
-    return () => {
-      log('clean up');
-      clearTimeout(t);
-      void client?.destroy().catch((err) => log.catch(err));
-    };
-  }, [clientProvider, configProvider, servicesProvider]);
+    // TODO(burdon): Comment about when this happens and how it's caught (ErrorBoundary?)
+    const [error, setError] = useState();
+    if (error) {
+      throw error;
+    }
 
-  if (!client || status !== SystemStatus.ACTIVE) {
-    return <Fallback client={client} status={status} />;
-  }
+    const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
 
-  return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
-};
+    // Provide external access.
+    useImperativeHandle(forwardedRef, () => client, [client]);
+
+    // Client status subscription.
+    const [status, setStatus] = useControlledValue(controlledStatus);
+    useEffect(() => {
+      if (!client) {
+        return;
+      }
+
+      const subscription = client.status.subscribe((status) => setStatus(status));
+      return () => subscription.unsubscribe();
+    }, [client, setStatus]);
+
+    // Create and/or initialize client.
+    useEffect(() => {
+      const done = async (client: Client) => {
+        if (!client.initialized) {
+          await client.initialize().catch(setError);
+          log('client ready');
+          await onInitialized?.(client);
+          log('initialization complete');
+        }
+
+        if (types) {
+          client.addTypes(types);
+        }
+
+        setClient(client);
+        setStatus(client.status.get() ?? SystemStatus.ACTIVE);
+        printBanner(client);
+      };
+
+      const t = setTimeout(async () => {
+        if (clientProvider) {
+          // Asynchronously request client.
+          const client = await getAsyncProviderValue(clientProvider);
+          await done(client);
+        } else {
+          // Asynchronously construct client (config may be undefined).
+          const config = await getAsyncProviderValue(configProvider);
+          log('resolved config', { config });
+          const services = await getAsyncProviderValue(servicesProvider, config);
+          log('created services', { services });
+          const client = new Client({ config, services, ...options });
+          log('created client');
+          await done(client);
+        }
+      });
+
+      return () => {
+        log('clean up');
+        clearTimeout(t);
+        void client?.destroy().catch((err) => log.catch(err));
+      };
+    }, [configProvider, clientProvider, servicesProvider]);
+
+    if (!client || status !== SystemStatus.ACTIVE) {
+      return <Fallback client={client} status={status} />;
+    }
+
+    return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
+  },
+);
