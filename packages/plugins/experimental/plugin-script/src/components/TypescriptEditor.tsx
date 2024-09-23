@@ -3,8 +3,6 @@
 //
 
 import { javascript } from '@codemirror/lang-javascript';
-import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { type VirtualTypeScriptEnvironment } from '@typescript/vfs';
 import { tsSync, tsFacet, tsLinter, tsAutocomplete, tsHover } from '@valtown/codemirror-ts';
 import React from 'react';
@@ -47,7 +45,6 @@ export const TypescriptEditor = ({
       initialValue,
       extensions: [
         extensions,
-        // TODO(wittjosiah): Highlight active line doesn't work.
         createBasicExtensions({
           highlightActiveLine: true,
           indentWithTab: true,
@@ -55,10 +52,9 @@ export const TypescriptEditor = ({
           lineWrapping: false,
           scrollPastEnd,
         }),
-        // TODO(wittjosiah): Factor out syntax highlighting to theme extensions.
-        themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
         createThemeExtensions({
           themeMode,
+          syntaxHighlighting: true,
           slots: {
             content: { className: editorFullWidth },
           },

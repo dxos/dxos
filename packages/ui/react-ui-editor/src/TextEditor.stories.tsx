@@ -68,6 +68,15 @@ const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();
 
 const img = '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)';
 
+const code = str(
+  '// Code',
+  'const Component = () => {',
+  '  const x = 100;',
+  '',
+  '  return () => <div>Test</div>;',
+  '};',
+);
+
 const content = {
   tasks: str(
     //
@@ -111,22 +120,9 @@ const content = {
     '',
   ),
 
-  code: str(
-    '### Code',
-    '',
-    '```bash',
-    '$ ls -las',
-    '```',
-    '',
-    '```tsx',
-    'const Component = () => {',
-    '  const x = 100;',
-    '',
-    '  return () => <div>Test</div>;',
-    '};',
-    '```',
-    '',
-  ),
+  typescript: code,
+
+  codeblocks: str('### Code', '', '```bash', '$ ls -las', '```', '', '```tsx', code, '```', ''),
 
   comment: str('<!--', 'A comment', '-->', '', 'No comment.', 'Partial comment. <!-- comment. -->'),
 
@@ -197,7 +193,7 @@ const text = str(
 
   '---',
   '## Misc',
-  content.code,
+  content.codeblocks,
   content.table,
   content.image,
   content.footer,
@@ -266,6 +262,7 @@ type StoryProps = {
   text?: string;
   readonly?: boolean;
   placeholder?: string;
+  lineNumbers?: boolean;
   onReady?: (view: EditorView) => void;
 } & Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'>;
 
@@ -278,6 +275,7 @@ const Story = ({
   placeholder = 'New document.',
   scrollTo,
   selection,
+  lineNumbers,
   onReady,
 }: StoryProps) => {
   const [object] = useState(createEchoObject(create(Expando, { content: text ?? '' })));
@@ -289,16 +287,18 @@ const Story = ({
       initialValue: text,
       extensions: [
         createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
-        createBasicExtensions({ readonly, placeholder, scrollPastEnd: true }),
+        createBasicExtensions({ readonly, placeholder, lineNumbers, scrollPastEnd: true }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({
           themeMode,
+          syntaxHighlighting: true,
           slots: {
             content: {
               className: editorContent,
             },
           },
         }),
+        editorGutter,
         extensions || [],
         debug ? debugTree(setTree) : [],
       ],
@@ -359,7 +359,6 @@ const allExtensions: Extension[] = [
   image(),
   table(),
   folding(),
-  editorGutter,
 ];
 
 export const Default = {
@@ -466,7 +465,7 @@ export const Image = {
 };
 
 export const Code = {
-  render: () => <Story text={str(content.code, content.footer)} extensions={[decorateMarkdown()]} />,
+  render: () => <Story text={str(content.codeblocks, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 export const Lists = {
@@ -505,6 +504,10 @@ export const CommentedOut = {
       ]}
     />
   ),
+};
+
+export const LineNumbers = {
+  render: () => <Story text={content.typescript} lineNumbers extensions={[editorGutter, decorateMarkdown()]} />,
 };
 
 //
@@ -690,7 +693,7 @@ export const Typewriter = {
 export const Blast = {
   render: () => (
     <Story
-      text={str('# Blast', '', content.paragraphs, content.code, content.paragraphs)}
+      text={str('# Blast', '', content.paragraphs, content.codeblocks, content.paragraphs)}
       extensions={[
         typewriter({ items: typewriterItems }),
         blast(

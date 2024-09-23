@@ -39,7 +39,7 @@ const Story = ({ autoFocus, initialValue, placeholder, readonly }: StoryProps) =
         editorInputMode ? InputModeExtensions[editorInputMode] : [],
         createBasicExtensions({ placeholder, lineWrapping: true, readonly }),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode }),
+        createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         decorateMarkdown(),
         formattingKeymap(),
         trackFormatting,
