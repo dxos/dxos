@@ -47,7 +47,6 @@ export const TypescriptEditor = ({
       initialValue,
       extensions: [
         extensions,
-        // TODO(wittjosiah): Highlight active line doesn't work.
         createBasicExtensions({
           highlightActiveLine: true,
           indentWithTab: true,

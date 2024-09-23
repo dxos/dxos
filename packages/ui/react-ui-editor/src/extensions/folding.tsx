@@ -26,10 +26,12 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
   }),
   foldGutter({
     markerDOM: (open) => {
-      return renderRoot(
-        document.createElement('span'),
+      const el = renderRoot(
+        document.createElement('div'),
         <Icon icon='ph--caret-right--regular' classNames={[getSize(3), 'mx-3 cursor-pointer', open && 'rotate-90']} />,
       );
+      el.className = 'flex h-full items-center';
+      return el;
     },
   }),
   EditorView.theme({

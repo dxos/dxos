@@ -54,6 +54,7 @@ export const createMarkdownExtensions = ({ themeMode }: MarkdownBundleOptions = 
       ],
     }),
 
+    // TODO(burdon): Move to theme (see TypescriptEditor).
     // https://github.com/codemirror/theme-one-dark
     themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
 

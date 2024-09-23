@@ -80,7 +80,6 @@ export const defaultTheme: ThemeStyles = {
    * Height is set to match the corresponding line.
    */
   '.cm-gutterElement': {
-    display: 'flex',
     alignItems: 'center',
   },
 
