@@ -3,6 +3,7 @@
 //
 
 import '@dxos-theme';
+
 import { javascript } from '@codemirror/lang-javascript';
 import { markdown } from '@codemirror/lang-markdown';
 import { openSearchPanel } from '@codemirror/search';
@@ -254,7 +255,7 @@ const renderLinkButton = (el: Element, url: string) => {
 // Story
 //
 
-type DebugMode = 'syntax' | 'raw';
+type DebugMode = 'raw' | 'tree' | 'raw+tree';
 
 type StoryProps = {
   id?: string;
@@ -286,6 +287,7 @@ const Story = ({
       id,
       initialValue: text,
       extensions: [
+        // EditorView.scrollMargins.of(16),
         createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
         createBasicExtensions({ readonly, placeholder, lineNumbers, scrollPastEnd: true }),
         createMarkdownExtensions({ themeMode }),
@@ -317,16 +319,16 @@ const Story = ({
   return (
     <div className='flex w-full'>
       <div role='none' className='flex w-full overflow-hidden' ref={parentRef} {...focusAttributes} />
-      {debug === 'raw' && (
-        <div className='w-[800px] border-l border-separator overflow-auto'>
-          <pre className='p-1 font-mono text-xs text-green-800 dark:text-green-200'>{view?.state.doc.toString()}</pre>
-        </div>
-      )}
-      {debug === 'syntax' && (
-        <div className='w-[800px] border-l border-separator overflow-auto'>
-          <pre className='p-1 font-mono text-xs text-green-800 dark:text-green-200'>
-            {JSON.stringify(tree, null, 2)}
-          </pre>
+      {debug && (
+        <div className='flex flex-col w-[800px] border-l border-separator divide-y divide-separator overflow-auto'>
+          {(debug === 'raw' || debug === 'raw+tree') && (
+            <pre className='p-1 font-mono text-xs text-green-800 dark:text-green-200'>{view?.state.doc.toString()}</pre>
+          )}
+          {(debug === 'tree' || debug === 'raw+tree') && (
+            <pre className='p-1 font-mono text-xs text-green-800 dark:text-green-200'>
+              {JSON.stringify(tree, null, 2)}
+            </pre>
+          )}
         </div>
       )}
     </div>
@@ -486,7 +488,7 @@ export const OrderedList = {
 };
 
 export const TaskList = {
-  render: () => <Story text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} debug='raw' />,
+  render: () => <Story text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} debug='raw+tree' />,
 };
 
 export const Table = {

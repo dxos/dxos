@@ -41,7 +41,8 @@ export const withLayout = ({ classNames, fullscreen, ..._options }: WithFullscre
   return (Story, _context) => {
     const options = defaultsDeep({}, _options, defaultOptions);
     const children = (
-      <div role='none' className={mx(fullscreen && 'fixed inset-0 flex flex-col overflow-hidden', classNames)}>
+      // NOTE: Do not change the flex direction to flex-col by default.
+      <div role='none' className={mx(fullscreen && 'fixed inset-0 flex overflow-hidden', classNames)}>
         <Story />
       </div>
     );

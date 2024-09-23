@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import '@dxos/lit-grid/dx-grid.pcss';
 
 import { createComponent, type EventName } from '@lit/react';
