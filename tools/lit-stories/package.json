@@ -22,6 +22,6 @@
     "@storybook/web-components-vite": "~8.1.11",
     "lit": "^3.2.0",
     "storybook": "^8.2.9",
-    "vite": "^5.3.4"
+    "vite": "^5.3.6"
   }
 }

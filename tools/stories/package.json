@@ -35,7 +35,7 @@
     "react-dom": "~18.2.0",
     "storybook": "^8.2.9",
     "storybook-dark-mode": "^4.0.2",
-    "vite": "^5.3.4",
+    "vite": "^5.3.6",
     "vite-plugin-turbosnap": "^1.0.3"
   },
   "peerDependencies": {
