@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-script",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "Braneframe notebook plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -81,7 +81,9 @@
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -94,6 +96,7 @@
     "iso-did": "^1.6.0",
     "lodash.get": "^4.4.2",
     "prettier": "^3.2.4",
+    "react-syntax-highlighter": "^15.5.0",
     "typescript": "^5.5.4"
   },
   "devDependencies": {

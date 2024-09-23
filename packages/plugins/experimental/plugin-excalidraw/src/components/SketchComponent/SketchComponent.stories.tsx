@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { createEchoObject } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SketchComponent } from './SketchComponent';
 
@@ -33,7 +33,7 @@ export default {
   title: 'plugin-excalidraw/SketchComponent',
   component: SketchComponent,
   render: Story,
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },

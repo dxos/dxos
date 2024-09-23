@@ -10,7 +10,7 @@ import { waitForCondition } from '@dxos/async';
 import { Client, Config, SystemStatus, fromHost } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
-import { ClientProvider } from './ClientContext';
+import { ClientProvider } from './ClientProvider';
 import { useConfig } from './useConfig';
 
 describe('Config hook', () => {

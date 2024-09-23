@@ -6,9 +6,8 @@ import '@dxos-theme';
 import React, { useMemo, type FC } from 'react';
 
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
-import { Tooltip } from '@dxos/react-ui';
 import { automerge } from '@dxos/react-ui-editor';
-import { withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { MainLayout } from './Layout';
 import { MarkdownEditor } from './MarkdownEditor';
@@ -21,18 +20,16 @@ const Story: FC<{
   const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
 
   return (
-    <Tooltip.Provider>
-      <MainLayout toolbar={toolbar}>
-        <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
-      </MainLayout>
-    </Tooltip.Provider>
+    <MainLayout toolbar={toolbar}>
+      <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
+    </MainLayout>
   );
 };
 
 export default {
   title: 'plugin-markdown/EditorMain',
   component: MarkdownEditor,
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ tooltips: true })],
   render: Story,
   parameters: { layout: 'fullscreen' },
 };

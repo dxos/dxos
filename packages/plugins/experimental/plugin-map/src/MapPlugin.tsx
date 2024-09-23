@@ -121,11 +121,14 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         creators: [
           {
             id: 'create-stack-section-map',
-            testId: 'mapPlugin.createSectionSpaceMap',
+            testId: 'mapPlugin.createSection',
             type: ['plugin name', { ns: MAP_PLUGIN }],
             label: ['create stack section label', { ns: MAP_PLUGIN }],
             icon: (props: any) => <Compass {...props} />,
-            intent: { plugin: MAP_PLUGIN, action: MapAction.CREATE },
+            intent: {
+              plugin: MAP_PLUGIN,
+              action: MapAction.CREATE,
+            },
           },
         ],
       },

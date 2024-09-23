@@ -12,7 +12,7 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { Table } from '@dxos/react-ui-table';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ObjectTable } from './ObjectTable';
 import { TableType } from '../../types';
@@ -79,7 +79,7 @@ const MultipleTableStory = () => {
 };
 
 export const MultipleTables = () => <ClientRepeater component={MultipleTableStory} createIdentity createSpace />;
-MultipleTables.decorators = [withTheme, withFullscreen()];
+MultipleTables.decorators = [withTheme, withLayout({ fullscreen: true })];
 MultipleTables.parameters = {
   layout: 'fullscreen',
 };
@@ -88,7 +88,7 @@ export default {
   title: 'plugin-table/ObjectTable',
   component: ObjectTable,
   render: () => <ClientRepeater component={SingleTableStory} createIdentity createSpace />,
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { layout: 'fullscreen' },
 };
 

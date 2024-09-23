@@ -10,13 +10,22 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { create, createDocAccessor, Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
+import {
+  create,
+  createDocAccessor,
+  Filter,
+  fullyQualifiedId,
+  getMeta,
+  getSpace,
+  useQuery,
+} from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
+import { useHasAttention } from '@dxos/react-ui-attention';
 import { createDataExtensions, listener } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-import { DetailsPanel } from './DetailsPanel';
+import { DebugPanel } from './DebugPanel';
 import { Toolbar } from './Toolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 import { Bundler } from '../bundler';
@@ -36,6 +45,7 @@ export type ScriptEditorProps = {
 
 export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
+  const hasAttention = useHasAttention(fullyQualifiedId(script));
   const client = useClient();
   const identity = useIdentity();
   const space = getSpace(script);
@@ -157,17 +167,22 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
   return (
     <div
       role='none'
-      className={mx(role === 'article' && 'row-span-2', 'flex flex-col is-full bs-full overflow-hidden')}
+      className={mx(
+        'flex flex-col is-full bs-full overflow-hidden',
+        role === 'article' && 'row-span-2',
+        hasAttention && 'attention-surface',
+      )}
     >
       <TypescriptEditor
         id={script.id}
         env={env}
         initialValue={initialValue}
         extensions={extensions}
-        className='flex is-full bs-full overflow-hidden border-b border-separator'
+        className='flex is-full bs-full overflow-hidden ch-focus-ring-inset-over-all'
       />
 
       <Toolbar
+        classNames='border-t border-separator'
         deployed={Boolean(existingFunctionUrl) && !script.changed}
         functionUrl={functionUrl}
         error={error}
@@ -178,7 +193,7 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
       />
 
       {showPanel && (
-        <DetailsPanel functionUrl={functionUrl} binding={fn?.binding} onBindingChange={handleBindingChange} />
+        <DebugPanel functionUrl={functionUrl} binding={fn?.binding} onBindingChange={handleBindingChange} />
       )}
     </div>
   );

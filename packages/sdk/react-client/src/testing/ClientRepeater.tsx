@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useState, type FC, useEffect } from 'react';
+import React, { useState, type FC, useEffect, useRef } from 'react';
 
 import { Client, type PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -12,15 +12,13 @@ import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
 import { type MaybePromise } from '@dxos/util';
 
-import { ClientContext } from '../client';
+import { ClientProvider } from '../client';
 
-const testBuilder = new TestBuilder();
+export type ClientRepeatedComponentProps = { id: number; count: number; spaceKey?: PublicKey };
 
-export type RepeatedComponentProps = { id: number; count: number };
-
-export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
-  component: FC<any>;
+export type ClientRepeaterProps<P extends ClientRepeatedComponentProps> = {
   className?: string;
+  component: FC<ClientRepeatedComponentProps>;
   controls?: FC<{ clients: Client[] }>;
   clients?: Client[];
   count?: number;
@@ -36,12 +34,12 @@ export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
  * Utility component for Storybook stories which sets up clients for n peers.
  * The `Component` property is rendered n times, once for each peer.
  */
+// TODO(burdon): To discuss: evolve ClientRepeater with optional decorator that uses it.
 // NOTE: This is specifically not a storybook decorator because it broke stories as a decorator.
 //   This seems primarily due to the fact that it required top-level await for the clients to initialize.
 //   Storybook seemed to handle it alright, but Chromatic had a lot of trouble with it.
 //   There was also a question of whether or not calling the story function multiple times was a good idea.
-// TODO(wittjosiah): Rename.
-export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRepeaterProps<P>) => {
+export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: ClientRepeaterProps<P>) => {
   const {
     component: Component,
     controls: Controls,
@@ -58,9 +56,12 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
   const [clients, setClients] = useState(props.clients ?? []);
   const [spaceKey, setSpaceKey] = useState<PublicKey>();
 
+  const testBuilder = useRef(new TestBuilder());
   useEffect(() => {
     const timeout = setTimeout(async () => {
-      const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocalClientServices() }));
+      const clients = [...Array(count)].map(
+        (_) => new Client({ services: testBuilder.current.createLocalClientServices() }),
+      );
       await Promise.all(clients.map((client) => client.initialize()));
       types && clients.map((client) => client.addTypes(types));
 
@@ -91,9 +92,9 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
     <>
       {Controls && <Controls clients={clients} />}
       {clients.map((client, index) => (
-        <ClientContext.Provider key={index} value={{ client }}>
-          <Component id={index} count={clients.length} {...{ ...props.args, spaceKey }} />
-        </ClientContext.Provider>
+        <ClientProvider key={index} client={client}>
+          <Component id={index} count={clients.length} spaceKey={spaceKey} {...{ ...props.args }} />
+        </ClientProvider>
       ))}
     </>
   );

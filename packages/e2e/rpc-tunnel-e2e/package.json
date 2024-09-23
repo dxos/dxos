@@ -1,6 +1,6 @@
 {
   "name": "@dxos/rpc-tunnel-e2e",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,7 +15,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/react-async": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "react": "~18.2.0",

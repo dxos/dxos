@@ -45,8 +45,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/esbuild-plugin.ts",
-          "{projectRoot}/src/plugin.ts",
+          "{projectRoot}/src/plugins/esbuild-plugin.ts",
+          "{projectRoot}/src/plugins/plugin.ts",
           "{projectRoot}/src/theme.css"
         ],
         "outputPath": "packages/ui/react-ui-theme/dist/plugin",
