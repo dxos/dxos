@@ -27,9 +27,7 @@ const Story = () => {
   const initialValue = useMemo(() => object.content, [object]);
   const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
   const extensions = useMemo(() => [createDataExtensions({ id: object.id, text: accessor })], [object.id, accessor]);
-
-  // TODO(wittjosiah): Scroll past end breaks the editor.
-  return <TypescriptEditor id='test' initialValue={initialValue} extensions={extensions} scrollPastEnd={false} />;
+  return <TypescriptEditor id='test' initialValue={initialValue} extensions={extensions} />;
 };
 
 export default {
