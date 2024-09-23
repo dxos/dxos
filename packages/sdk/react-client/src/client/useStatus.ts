@@ -7,7 +7,7 @@ import { useContext } from 'react';
 import { type SystemStatus } from '@dxos/client';
 import { raise } from '@dxos/debug';
 
-import { ClientContext } from './ClientContext';
+import { ClientContext } from './context';
 
 export const useStatus = (): SystemStatus | null | undefined => {
   const { status } = useContext(ClientContext) ?? raise(new Error('Missing ClientContext.'));

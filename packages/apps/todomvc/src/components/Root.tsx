@@ -24,9 +24,8 @@ export const Root = () => {
       config={getConfig}
       createWorker={createWorker}
       shell='./shell.html'
+      types={[TodoListType, TodoType]}
       onInitialized={async (client) => {
-        client.addTypes([TodoListType, TodoType]);
-
         const searchParams = new URLSearchParams(location.search);
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');
         if (!client.halo.identity.get() && !deviceInvitationCode) {

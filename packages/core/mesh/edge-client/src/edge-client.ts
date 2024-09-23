@@ -83,10 +83,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return this._peerKey;
   }
 
-  public get isOpen() {
-    return this._lifecycleState === LifecycleState.OPEN;
-  }
-
   setIdentity({ peerKey, identityKey }: { peerKey: string; identityKey: string }) {
     this._peerKey = peerKey;
     this._identityKey = identityKey;
