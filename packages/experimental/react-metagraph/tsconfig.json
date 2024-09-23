@@ -29,9 +29,6 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../common/react-async"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -45,6 +42,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../ui/primitives/react-hooks"
     },
     {
       "path": "../metagraph"

@@ -49,6 +49,9 @@ export type LayoutAdjustment = S.Schema.Type<typeof LayoutAdjustmentSchema>;
 export const ActiveParts = z.record(z.string(), z.union([z.string(), z.array(z.string())]));
 export type ActiveParts = z.infer<typeof ActiveParts>;
 
+// TODO(burdon): Where should this go?
+export type LayoutContainerProps<T> = T & { role?: string; coordinate?: LayoutCoordinate };
+
 /**
  * Basic state provided by a navigation plugin.
  */

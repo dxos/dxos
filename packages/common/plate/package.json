@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plate",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -38,7 +38,7 @@
     "@swc/core": "1.5.7",
     "callsite": "^1.0.0",
     "chalk": "^4.1.0",
-    "esbuild": "^0.19.6",
+    "esbuild": "^0.23.1",
     "inquirer": "^8.2.6",
     "lodash.flatten": "^4.4.0",
     "lodash.merge": "^4.6.2",

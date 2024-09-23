@@ -26,6 +26,7 @@ const SheetContainer = ({
   sheet,
   space,
   role,
+  remoteFunctionUrl,
   layoutPart,
 }: SheetRootProps & { role?: string; layoutPart?: LayoutPart }) => {
   const dispatch = useIntentDispatcher();

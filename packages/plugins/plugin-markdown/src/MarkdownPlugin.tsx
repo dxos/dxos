@@ -66,6 +66,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
     defaultViewMode: 'preview',
     toolbar: true,
+    folding: false,
     experimental: false,
   });
 
@@ -232,7 +233,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             type: ['plugin name', { ns: MARKDOWN_PLUGIN }],
             label: ['create stack section label', { ns: MARKDOWN_PLUGIN }],
             icon: (props: any) => <TextAa {...props} />,
-            intent: { plugin: MARKDOWN_PLUGIN, action: MarkdownAction.CREATE },
+            intent: {
+              plugin: MARKDOWN_PLUGIN,
+              action: MarkdownAction.CREATE,
+            },
           },
         ],
       },

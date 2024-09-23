@@ -10,12 +10,11 @@ import React, { useEffect, useState } from 'react';
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@dxos/automerge/automerge-repo-network-broadcastchannel';
 import { Expando, create } from '@dxos/echo-schema';
-import { type PublicKey } from '@dxos/keys';
 import { Filter, DocAccessor, createDocAccessor, useSpace, useQuery, type Space } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
-import { ClientRepeater } from '@dxos/react-client/testing';
+import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { editorContent } from '../../defaults';
 import { useTextEditor } from '../../hooks';
@@ -95,12 +94,12 @@ const Story = () => {
 export default {
   title: 'react-ui-editor/Automerge',
   component: Editor,
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   render: () => <Story />,
-  parameters: { translations, layout: 'fullscreen' },
+  parameters: { translations },
 };
 
-const EchoStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
+const EchoStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
   const identity = useIdentity();
   const space = useSpace(spaceKey);
   const [source, setSource] = useState<DocAccessor>();

@@ -95,6 +95,8 @@ export const RowColumnMeta = S.Struct({
 });
 
 // TODO(burdon): Index to all updates when rows/columns are inserted/deleted.
+// TODO(wittjosiah): Migrate typename to remove `Type` suffix.
+// TODO(wittjosiah): Rename title to name to align with other schemas.
 export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType', version: '0.1.0' })({
   title: S.optional(S.String),
 

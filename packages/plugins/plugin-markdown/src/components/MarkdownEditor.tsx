@@ -153,7 +153,11 @@ export const MarkdownEditor = ({
           scrollPastEnd: role === 'section' ? false : scrollPastEnd,
         }),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode, slots: { content: { className: editorContent } } }),
+        createThemeExtensions({
+          themeMode,
+          syntaxHighlighting: true,
+          slots: { content: { className: editorContent } },
+        }),
         editorGutter,
         role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
         providerExtensions,

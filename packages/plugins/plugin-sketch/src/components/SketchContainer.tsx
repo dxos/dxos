@@ -12,7 +12,7 @@ import { Sketch, type SketchProps } from './Sketch';
 // TODO(burdon): Standardize plugin component containers.
 const SketchContainer = ({ classNames, sketch, ...props }: SketchProps) => {
   const id = fullyQualifiedId(sketch);
-  const attended = useHasAttention(id);
+  const hasAttention = useHasAttention(id);
 
   // NOTE: Min 500px height (for tools palette to be visible).
   return (
@@ -20,9 +20,9 @@ const SketchContainer = ({ classNames, sketch, ...props }: SketchProps) => {
       // Force instance per sketch object. Otherwise, sketch shares the same instance.
       key={id}
       sketch={sketch}
-      hideUi={!attended}
+      hideUi={!hasAttention}
       // TODO(burdon): Factor out fragment.
-      classNames={[classNames, attended && 'bg-[--surface-bg] attention-static']}
+      classNames={[classNames, hasAttention && 'bg-[--surface-bg] attention-static']}
       {...props}
     />
   );
