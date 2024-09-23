@@ -5,11 +5,10 @@
 import { completionKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, indentWithTab } from '@codemirror/commands';
 import { markdownLanguage, markdown } from '@codemirror/lang-markdown';
-import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
 import { lintKeymap } from '@codemirror/lint';
 import { type Extension } from '@codemirror/state';
-import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { keymap } from '@codemirror/view';
 
 import { type ThemeMode } from '@dxos/react-ui';
@@ -53,10 +52,6 @@ export const createMarkdownExtensions = ({ themeMode }: MarkdownBundleOptions = 
         markdownTagsExtensions,
       ],
     }),
-
-    // TODO(burdon): Move to theme (see TypescriptEditor).
-    // https://github.com/codemirror/theme-one-dark
-    themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
 
     // Custom styles.
     syntaxHighlighting(markdownHighlightStyle()),
