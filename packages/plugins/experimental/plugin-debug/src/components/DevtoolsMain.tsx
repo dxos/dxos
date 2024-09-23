@@ -9,7 +9,7 @@ import { useClient } from '@dxos/react-client';
 
 const DevtoolsMain = () => {
   const client = useClient();
-  return <Devtools client={client} services={client.services} />;
+  return <Devtools client={client} />;
 };
 
 export default DevtoolsMain;
