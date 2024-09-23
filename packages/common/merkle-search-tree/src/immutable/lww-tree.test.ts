@@ -25,11 +25,13 @@ test('basic', async ({ expect }) => {
 test.only('sim', { timeout: 60_000 }, async ({ expect }) => {
   const NUM_KEYS = 50_000,
     NUM_ITERS = 10,
-    NUM_MUTATIONS = 1;
+    NUM_MUTATIONS = 5;
   const keys = range(NUM_KEYS).map((i) => `key${i}`);
 
   const peer1 = await LWWTree.new<string>({ actor: 'peer1' as ActorID });
   const peer2 = await LWWTree.new<string>({ actor: 'peer2' as ActorID });
+
+  console.log({ NUM_KEYS, NUM_ITERS, NUM_MUTATIONS });
 
   // Seed.
   await peer1.setBatch(keys.map((key) => [key, '1']));
