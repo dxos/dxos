@@ -58,7 +58,7 @@ export const createWebsocketTrigger: TriggerFactory<WebsocketTrigger, WebsocketT
       },
 
       onerror: (event) => {
-        log.catch(event.error, { url });
+        log.catch((event as any).error ?? new Error('Unspecified ws error.'), { url });
         open.wake(false);
       },
 
@@ -102,6 +102,6 @@ const createNodeWebSocket = async (url: string) => {
   return new WebSocket(url);
 };
 
-export const createWebSocket = async (url: string): WebSocket => {
+export const createWebSocket = async (url: string): Promise<WebSocket> => {
   return typeof (globalThis as any).WebSocket === 'undefined' ? await createNodeWebSocket(url) : new WebSocket(url);
 };
