@@ -8,6 +8,7 @@ import { DynamicSchema, getTypename, StoredSchema } from '@dxos/echo-schema';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 
 import { type MapType, type MapMarker } from '../types';
+import { useStabilizedObject } from './useStabilizedObject';
 
 /**
  * @returns Table rows in the same space as the map with `latitude` and `longitude` fields
@@ -43,9 +44,17 @@ export const useMarkers = (map: MapType): MapMarker[] => {
           lng: row.longitude,
         },
       }));
-  }, [JSON.stringify(objects.map((obj) => obj.id))]); // TODO(seagreen): Hack.
+  }, [objects]);
 
-  return markers;
+  const markersStabilized = useStabilizedObject(markers, (oldMarkers: MapMarker[], newMarkers: MapMarker[]) => {
+    if (oldMarkers.length !== newMarkers.length) {
+      return false;
+    }
+    const newMarkerSet = new Set(newMarkers.map((marker) => marker.id));
+    return oldMarkers.every((marker) => newMarkerSet.has(marker.id));
+  });
+
+  return markersStabilized;
 };
 
 const hasLocation = (schema: StoredSchema): boolean => {
