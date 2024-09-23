@@ -46,7 +46,7 @@ const CommentWrapper: React.FC<{ sheetId: string; threadId: string; children: Re
   return (
     <div
       role='none'
-      className={mx('relative h-full', isCurrentThread && 'underline')}
+      className={mx('relative h-full is-full', isCurrentThread && 'underline')}
       onMouseEnter={() => {
         setIsHovered(true);
       }}

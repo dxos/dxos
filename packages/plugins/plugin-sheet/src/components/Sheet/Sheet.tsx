@@ -1036,7 +1036,10 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
     // Very happy to rework this system as our needs evolve.
     <div
       role='none'
-      className={mx('flex is-full bs-full px-2 py-1 truncate items-center cursor-pointer', ...decorationAddedClasses)}
+      className={mx(
+        'flex flex-grow bs-full is-full px-2 items-center truncate cursor-pointer',
+        ...decorationAddedClasses,
+      )}
     >
       {value}
     </div>,
@@ -1048,7 +1051,7 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       role='cell'
       style={style}
       className={mx(
-        'flex w-full h-full px-2 py-1 truncate items-center border border-gridLine cursor-pointer',
+        'border border-gridLine cursor-pointer',
         fragments.cell,
         active && ['z-20', fragments.cellSelected],
         classNames,

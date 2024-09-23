@@ -159,10 +159,6 @@ export const CommentContainer = ({
     return true;
   }, [thread, identity]);
 
-  const handleDeleteMessage = (id: string) => {
-    return onMessageDelete?.(id);
-  };
-
   return (
     <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={thread.id}>
       <div
@@ -197,7 +193,12 @@ export const CommentContainer = ({
         </div>
       </div>
       {thread.messages.filter(nonNullable).map((message) => (
-        <MessageContainer key={message.id} message={message} members={members} onDelete={handleDeleteMessage} />
+        <MessageContainer
+          key={message.id}
+          message={message}
+          members={members}
+          onDelete={(id: string) => onMessageDelete?.(id)}
+        />
       ))}
       <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
       <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>

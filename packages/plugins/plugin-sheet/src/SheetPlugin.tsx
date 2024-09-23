@@ -175,15 +175,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
             }
           }
 
-          return space && data.object instanceof SheetType ? (
-            <SheetContainer
-              sheet={data.object}
-              space={space}
-              role={role}
-              layoutPart={(data.coordinate as LayoutCoordinate)?.part}
-              remoteFunctionUrl={remoteFunctionUrl}
-            />
-          ) : null;
+          return null;
         },
       },
       intent: {

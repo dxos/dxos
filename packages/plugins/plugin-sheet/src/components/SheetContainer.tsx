@@ -56,14 +56,14 @@ const SheetContainer = ({
 
   return (
     <div role='none' className={role === 'article' ? 'row-span-2 grid grid-rows-subgrid' : undefined}>
-      <Sheet.Root sheet={sheet} space={space}>
+      <Sheet.Root sheet={sheet} space={space} remoteFunctionUrl={remoteFunctionUrl}>
         <div role='none' className={mx('flex flex-0 justify-center overflow-x-auto')}>
           <Toolbar.Root
             onAction={handleAction}
             classNames={mx(
               role === 'section'
                 ? ['z-[2] group-focus-within/section:visible', !isDirectlyAttended && 'invisible', sectionToolbarLayout]
-                : 'group-focus-within/editor:border-separator group-[[aria-current]]/editor:border-separator border-is border-ie border-separator',
+                : 'group-focus-within/editor:border-separator group-[[aria-current]]/editor:border-separator',
             )}
           >
             {/* TODO(Zan): Restore some of this functionality */}
@@ -77,13 +77,11 @@ const SheetContainer = ({
         <div
           role='none'
           className={mx(
-            role === 'section' && 'aspect-square border-y',
+            role === 'section' && 'aspect-square border-is border-bs border-be border-separator',
             role === 'article' &&
-              'flex is-full overflow-hidden focus-visible:ring-inset row-span-1 data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
+              'flex is-full border-bs border-separator overflow-hidden focus-visible:ring-inset row-span-1 data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
             focusRing,
             attentionFragment,
-            layoutPart !== 'solo' && 'border-is ',
-            'border-bs border-separator',
           )}
         >
           <Sheet.Main />
