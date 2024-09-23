@@ -66,12 +66,12 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     this._spacesStream = spacesStream;
   }
 
-  get echoClient() {
-    return this._echoClient;
-  }
-
   [inspect.custom]() {
     return inspectObject(this);
+  }
+
+  get echoClient() {
+    return this._echoClient;
   }
 
   @trace.info({ depth: null })
@@ -200,12 +200,14 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       spaceOpen: defaultSpace?.isOpen,
       spaceId: this._defaultSpaceId,
     });
+
     if (defaultSpace) {
       if (defaultSpace.state.get() === SpaceState.SPACE_CLOSED) {
         this._openSpaceAsync(defaultSpace);
       }
       this._onDefaultSpaceAvailable();
     }
+
     return true;
   }
 
@@ -300,6 +302,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   /**
    * @internal
    */
+  // TODO(burdon): ?
   async clone(snapshot: SpaceSnapshot): Promise<Space> {
     return todo();
     // invariant(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');

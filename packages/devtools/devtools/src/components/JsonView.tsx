@@ -3,25 +3,14 @@
 //
 
 import React, { type FC } from 'react';
-// eslint-disable-next-line no-restricted-imports
-import SyntaxHighlighter from 'react-syntax-highlighter';
-// eslint-disable-next-line no-restricted-imports
-import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
-// eslint-disable-next-line no-restricted-imports
-import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols/proto';
-import { useThemeContext } from '@dxos/react-ui';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { arrayToBuffer } from '@dxos/util';
 
 export const JsonView: FC<{ data?: Object; truncate?: boolean }> = ({ data, truncate = true }) => {
-  const { themeMode } = useThemeContext();
-  return (
-    <SyntaxHighlighter language='json' style={themeMode === 'dark' ? styleDark : styleLight} className='w-full'>
-      {JSON.stringify(data, replacer(truncate), 2)}
-    </SyntaxHighlighter>
-  );
+  return <SyntaxHighlighter language='json'>{JSON.stringify(data, replacer(truncate), 2)}</SyntaxHighlighter>;
 };
 
 // TODO(burdon): Factor out.

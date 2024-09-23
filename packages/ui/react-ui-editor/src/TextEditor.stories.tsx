@@ -22,7 +22,7 @@ import { faker } from '@dxos/random';
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { Button, DensityProvider, Input, useThemeContext } from '@dxos/react-ui';
 import { baseSurface, mx, getSize } from '@dxos/react-ui-theme';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { editorContent, editorGutter, editorMonospace } from './defaults';
 import {
@@ -335,7 +335,7 @@ const Story = ({
 
 export default {
   title: 'react-ui-editor/TextEditor',
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   render: Story,
   parameters: { translations, layout: 'fullscreen' },
 };

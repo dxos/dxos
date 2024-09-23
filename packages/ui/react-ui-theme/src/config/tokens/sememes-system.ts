@@ -60,7 +60,7 @@ export const systemSememes = {
   },
 
   //
-  // Borders (border-)
+  // Borders (border-, divide-)
   //
 
   separator: {
