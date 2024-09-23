@@ -3,7 +3,7 @@
 //
 
 import '@dxos-theme';
-
+import { javascript } from '@codemirror/lang-javascript';
 import { markdown } from '@codemirror/lang-markdown';
 import { openSearchPanel } from '@codemirror/search';
 import { type Extension } from '@codemirror/state';
@@ -24,7 +24,7 @@ import { Button, DensityProvider, Input, useThemeContext } from '@dxos/react-ui'
 import { baseSurface, mx, getSize } from '@dxos/react-ui-theme';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
-import { editorContent, editorGutter } from './defaults';
+import { editorContent, editorGutter, editorMonospace } from './defaults';
 import {
   InputModeExtensions,
   annotations,
@@ -410,7 +410,7 @@ const headings = str(
 const global = new Map<string, EditorSelectionState>();
 
 export const Folding = {
-  render: () => <Story text={text} extensions={[editorGutter, folding()]} />,
+  render: () => <Story text={text} extensions={[folding()]} />,
 };
 
 export const Scrolling = {
@@ -506,8 +506,10 @@ export const CommentedOut = {
   ),
 };
 
-export const LineNumbers = {
-  render: () => <Story text={content.typescript} lineNumbers extensions={[editorGutter, decorateMarkdown()]} />,
+export const Typescript = {
+  render: () => (
+    <Story text={content.typescript} lineNumbers extensions={[editorMonospace, javascript({ typescript: true })]} />
+  ),
 };
 
 //

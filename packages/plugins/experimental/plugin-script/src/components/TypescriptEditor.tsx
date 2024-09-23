@@ -23,20 +23,19 @@ import { nonNullable } from '@dxos/util';
 
 export type TypescriptEditorProps = {
   id: string;
-  env?: VirtualTypeScriptEnvironment;
-  className?: string;
   scrollPastEnd?: boolean;
-} & Pick<UseTextEditorProps, 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>;
+  env?: VirtualTypeScriptEnvironment;
+} & Pick<UseTextEditorProps, 'className' | 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>;
 
 export const TypescriptEditor = ({
   id,
-  extensions,
+  scrollPastEnd,
   env,
+  className,
   initialValue,
+  extensions,
   scrollTo,
   selection,
-  className,
-  scrollPastEnd,
 }: TypescriptEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, focusAttributes } = useTextEditor(
@@ -60,12 +59,15 @@ export const TypescriptEditor = ({
           },
         }),
         editorGutter,
-        editorMonospace,
-        javascript({ typescript: true }),
-        // https://github.com/val-town/codemirror-ts
-        env ? [tsFacet.of({ env, path: `/src/${id}.ts` }), tsSync(), tsLinter(), tsHover()] : [],
-        autocomplete({ override: env ? [tsAutocomplete()] : [] }),
-        InputModeExtensions.vscode,
+        // TODO(burdon): Factor out.
+        [
+          editorMonospace,
+          javascript({ typescript: true }),
+          // https://github.com/val-town/codemirror-ts
+          autocomplete({ override: env ? [tsAutocomplete()] : [] }),
+          env ? [tsFacet.of({ env, path: `/src/${id}.ts` }), tsSync(), tsLinter(), tsHover()] : [],
+          InputModeExtensions.vscode,
+        ],
       ].filter(nonNullable),
       selection,
       scrollTo,
