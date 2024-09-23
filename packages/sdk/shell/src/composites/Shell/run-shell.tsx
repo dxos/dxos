@@ -9,7 +9,7 @@ import { DEFAULT_CLIENT_CHANNEL, DEFAULT_SHELL_CHANNEL } from '@dxos/client-prot
 import {
   AgentHostingProvider,
   Client,
-  ClientProvider,
+  ClientContext,
   ClientServicesProxy,
   Config,
   ShellDisplay,
@@ -37,7 +37,7 @@ export const runShell = async (config: Config = new Config()) => {
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
         <ThemeProvider tx={defaultTx} resourceExtensions={[osTranslations]}>
-          <ClientProvider client={client} status={SystemStatus.ACTIVE}>
+          <ClientContext.Provider values={{ client, status: SystemStatus.ACTIVE }}>
             <ClipboardProvider>
               <Tooltip.Provider>
                 <AgentHostingProvider>
@@ -45,7 +45,7 @@ export const runShell = async (config: Config = new Config()) => {
                 </AgentHostingProvider>
               </Tooltip.Provider>
             </ClipboardProvider>
-          </ClientProvider>
+          </ClientContext.Provider>
         </ThemeProvider>
       </StrictMode>,
     );
