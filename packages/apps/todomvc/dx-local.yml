@@ -1,9 +1,9 @@
 version: 1
 
 runtime:
-  client:
-    storage:
-      persistent: false
+  # client:
+  #   storage:
+  #     persistent: false
 
   # services:
   #   signaling:
