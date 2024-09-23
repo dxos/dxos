@@ -66,8 +66,8 @@ export type FilterParams<T extends {} = any> = {
 
 /**
  * Filter helper types.
+ * Note: Dollar sign suffix notation borrowed from `effect`'s Array$.
  */
-// Dollar sign suffix notation borrowed from `effect`'s Array$.
 export namespace Filter$ {
   export type Any = Filter<any>;
   export type Object<F extends Any> = F extends Filter<infer T> ? T : never;

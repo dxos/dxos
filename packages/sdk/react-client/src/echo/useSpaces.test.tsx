@@ -4,37 +4,23 @@
 
 import { act, renderHook } from '@testing-library/react';
 import { expect } from 'chai';
-import React from 'react';
 
-import { Client, fromHost } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
 import { useSpace, useSpaces } from './useSpaces';
-import { ClientContext } from '../client';
+import { createClient, createContextProvider } from '../testing/util';
 
 describe('useSpaces', () => {
   test('lists existing spaces', async () => {
-    const client = new Client({ services: fromHost() });
-    await client.initialize();
-    await client.halo.createIdentity();
-    await client.spaces.isReady.wait();
-    // TODO(wittjosiah): Factor out.
-    const wrapper = ({ children }: any) => (
-      <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>
-    );
+    const { client } = await createClient({ createIdentity: true });
+    const wrapper = await createContextProvider(client);
     const { result } = renderHook(() => useSpaces(), { wrapper });
     expect(result.current.length).to.eq(1);
   });
 
   test('updates when new spaces are created', async () => {
-    const client = new Client({ services: fromHost() });
-    await client.initialize();
-    await client.halo.createIdentity();
-    await client.spaces.isReady.wait();
-    // TODO(wittjosiah): Factor out.
-    const wrapper = ({ children }: any) => (
-      <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>
-    );
+    const { client } = await createClient({ createIdentity: true });
+    const wrapper = await createContextProvider(client);
     const { result, rerender } = renderHook(() => useSpaces(), { wrapper });
     expect(result.current.length).to.eq(1);
     await act(async () => {
@@ -47,12 +33,8 @@ describe('useSpaces', () => {
 
 describe('useSpace', () => {
   test('gets default space', async () => {
-    const client = new Client({ services: fromHost() });
-    await client.initialize();
-    // TODO(wittjosiah): Factor out.
-    const wrapper = ({ children }: any) => (
-      <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>
-    );
+    const { client } = await createClient();
+    const wrapper = await createContextProvider(client);
     const { result, rerender } = renderHook(() => useSpace(), { wrapper });
     expect(result.current).to.be.undefined;
     await act(async () => {
@@ -64,15 +46,9 @@ describe('useSpace', () => {
   });
 
   test('gets space by key', async () => {
-    const client = new Client({ services: fromHost() });
-    await client.initialize();
-    await client.halo.createIdentity();
-    const space = await client.spaces.create();
-    // TODO(wittjosiah): Factor out.
-    const wrapper = ({ children }: any) => (
-      <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>
-    );
-    const { result } = renderHook(() => useSpace(space.key), { wrapper });
+    const { client, space } = await createClient({ createIdentity: true, createSpace: true });
+    const wrapper = await createContextProvider(client);
+    const { result } = renderHook(() => useSpace(space!.key), { wrapper });
     expect(result.current).to.not.be.undefined;
   });
 });
