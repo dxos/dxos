@@ -87,6 +87,9 @@
       "path": "../../../ui/react-ui-mosaic"
     },
     {
+      "path": "../../../ui/react-ui-syntax-highlighter"
+    },
+    {
       "path": "../../../ui/react-ui-theme"
     },
     {

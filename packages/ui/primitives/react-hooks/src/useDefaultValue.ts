@@ -22,7 +22,9 @@ export const useDefaultValue = <T>(reactiveValue: T | undefined | null, defaultV
   const stableDefaultValue = useMemo(() => defaultValue, []);
   const [value, setValue] = useState(reactiveValue ?? stableDefaultValue);
 
-  useEffect(() => setValue(reactiveValue ?? stableDefaultValue), [reactiveValue, stableDefaultValue]);
+  useEffect(() => {
+    setValue(reactiveValue ?? stableDefaultValue);
+  }, [reactiveValue, stableDefaultValue]);
 
   return value;
 };

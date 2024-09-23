@@ -7,9 +7,8 @@ import React, { useEffect, useState } from 'react';
 import { create } from '@dxos/echo-schema';
 import { FunctionDef, FunctionTrigger } from '@dxos/functions/types';
 import { ChainPromptType } from '@dxos/plugin-chain/types';
-import { type PublicKey } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
-import { ClientRepeater } from '@dxos/react-client/testing';
+import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { DensityProvider } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -30,8 +29,7 @@ const functions: Omit<FunctionDef, 'id'>[] = [
   },
 ];
 
-// TODO(burdon): Get type form ClientRepeater.
-const TriggerEditorStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
+const TriggerEditorStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
   const [trigger, setTrigger] = useState<FunctionTrigger>();
   const space = useSpace(spaceKey);
   useEffect(() => {

@@ -11,7 +11,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import * as topojson from 'topojson-client';
 
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Globe } from './Globe';
 import CitiesData from '../../../data/cities.js';
@@ -23,7 +23,7 @@ import CountriesData from '../../../data/countries-110m.js';
 export default {
   title: 'plugin-explorer/Globe',
   component: Plot,
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export const Default = () => <ClientRepeater component={DefaultStory} createSpace />;

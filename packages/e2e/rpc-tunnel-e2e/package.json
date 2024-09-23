@@ -15,7 +15,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/react-async": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "react": "~18.2.0",

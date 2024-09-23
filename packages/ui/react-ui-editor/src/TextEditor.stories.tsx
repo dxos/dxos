@@ -3,7 +3,7 @@
 //
 
 import '@dxos-theme';
-
+import { javascript } from '@codemirror/lang-javascript';
 import { markdown } from '@codemirror/lang-markdown';
 import { openSearchPanel } from '@codemirror/search';
 import { type Extension } from '@codemirror/state';
@@ -22,9 +22,9 @@ import { faker } from '@dxos/random';
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { Button, DensityProvider, Input, useThemeContext } from '@dxos/react-ui';
 import { baseSurface, mx, getSize } from '@dxos/react-ui-theme';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { editorContent, editorGutter } from './defaults';
+import { editorContent, editorGutter, editorMonospace } from './defaults';
 import {
   InputModeExtensions,
   annotations,
@@ -67,6 +67,15 @@ const str = (...lines: string[]) => lines.join('\n');
 const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();
 
 const img = '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)';
+
+const code = str(
+  '// Code',
+  'const Component = () => {',
+  '  const x = 100;',
+  '',
+  '  return () => <div>Test</div>;',
+  '};',
+);
 
 const content = {
   tasks: str(
@@ -111,22 +120,9 @@ const content = {
     '',
   ),
 
-  code: str(
-    '### Code',
-    '',
-    '```bash',
-    '$ ls -las',
-    '```',
-    '',
-    '```tsx',
-    'const Component = () => {',
-    '  const x = 100;',
-    '',
-    '  return () => <div>Test</div>;',
-    '};',
-    '```',
-    '',
-  ),
+  typescript: code,
+
+  codeblocks: str('### Code', '', '```bash', '$ ls -las', '```', '', '```tsx', code, '```', ''),
 
   comment: str('<!--', 'A comment', '-->', '', 'No comment.', 'Partial comment. <!-- comment. -->'),
 
@@ -196,11 +192,8 @@ const text = str(
   content.numbered,
 
   '---',
-  content.headings,
-
-  '---',
   '## Misc',
-  content.code,
+  content.codeblocks,
   content.table,
   content.image,
   content.footer,
@@ -269,6 +262,7 @@ type StoryProps = {
   text?: string;
   readonly?: boolean;
   placeholder?: string;
+  lineNumbers?: boolean;
   onReady?: (view: EditorView) => void;
 } & Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'>;
 
@@ -281,6 +275,7 @@ const Story = ({
   placeholder = 'New document.',
   scrollTo,
   selection,
+  lineNumbers,
   onReady,
 }: StoryProps) => {
   const [object] = useState(createEchoObject(create(Expando, { content: text ?? '' })));
@@ -292,16 +287,18 @@ const Story = ({
       initialValue: text,
       extensions: [
         createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
-        createBasicExtensions({ readonly, placeholder, scrollPastEnd: true }),
+        createBasicExtensions({ readonly, placeholder, lineNumbers, scrollPastEnd: true }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({
           themeMode,
+          syntaxHighlighting: true,
           slots: {
             content: {
               className: editorContent,
             },
           },
         }),
+        editorGutter,
         extensions || [],
         debug ? debugTree(setTree) : [],
       ],
@@ -338,7 +335,7 @@ const Story = ({
 
 export default {
   title: 'react-ui-editor/TextEditor',
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   render: Story,
   parameters: { translations, layout: 'fullscreen' },
 };
@@ -352,8 +349,24 @@ const defaultExtensions: Extension[] = [
   linkTooltip(renderLinkTooltip),
 ];
 
+const allExtensions: Extension[] = [
+  autocomplete({
+    onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
+  }),
+  decorateMarkdown({ numberedHeadings: { from: 2, to: 4 }, renderLinkButton, selectionChangeDelay: 100 }),
+  formattingKeymap(),
+  linkTooltip(renderLinkTooltip),
+  image(),
+  table(),
+  folding(),
+];
+
 export const Default = {
-  render: () => <Story text={text} extensions={defaultExtensions} selection={{ anchor: 99, head: 110 }} />,
+  render: () => <Story text={text} extensions={defaultExtensions} />,
+};
+
+export const Everything = {
+  render: () => <Story text={text} extensions={allExtensions} selection={{ anchor: 99, head: 110 }} />,
 };
 
 export const Empty = {
@@ -397,7 +410,7 @@ const headings = str(
 const global = new Map<string, EditorSelectionState>();
 
 export const Folding = {
-  render: () => <Story text={text} extensions={[editorGutter, folding()]} />,
+  render: () => <Story text={text} extensions={[folding()]} />,
 };
 
 export const Scrolling = {
@@ -452,7 +465,7 @@ export const Image = {
 };
 
 export const Code = {
-  render: () => <Story text={str(content.code, content.footer)} extensions={[decorateMarkdown()]} />,
+  render: () => <Story text={str(content.codeblocks, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 export const Lists = {
@@ -490,6 +503,12 @@ export const CommentedOut = {
         // commentBlock()
       ]}
     />
+  ),
+};
+
+export const Typescript = {
+  render: () => (
+    <Story text={content.typescript} lineNumbers extensions={[editorMonospace, javascript({ typescript: true })]} />
   ),
 };
 
@@ -676,7 +695,7 @@ export const Typewriter = {
 export const Blast = {
   render: () => (
     <Story
-      text={str('# Blast', '', content.paragraphs, content.code, content.paragraphs)}
+      text={str('# Blast', '', content.paragraphs, content.codeblocks, content.paragraphs)}
       extensions={[
         typewriter({ items: typewriterItems }),
         blast(
