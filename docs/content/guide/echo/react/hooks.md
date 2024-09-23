@@ -6,7 +6,7 @@ order: 3
 The following are react hooks which ensure the reactivity of the underlying data sources and re-render consuming components when the data changes. Use all of these in a `<ClientProvider />` context.
 
 :::apidoc[@dxos/react-client.useClient]
-### [useClient()](https://github.com/dxos/dxos/blob/88f322397/packages/sdk/react-client/src/client/ClientContext.tsx#L50)
+### [useClient()](https://github.com/dxos/dxos/blob/664e23dbe/packages/sdk/react-client/src/client/useClient.ts#L15)
 
 Hook returning instance of DXOS client.
 Requires ClientContext to be set via ClientProvider.
