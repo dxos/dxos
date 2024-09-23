@@ -45,10 +45,16 @@
       "path": "../../core/echo/echo-signals"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../ui/primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/react-ui-theme"

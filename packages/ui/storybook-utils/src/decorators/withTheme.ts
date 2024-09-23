@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Decorator, type StoryContext, type StoryFn } from '@storybook/react';
+import { type Decorator } from '@storybook/react';
 import { useEffect, createElement } from 'react';
 import { useDarkMode } from 'storybook-dark-mode';
 
@@ -12,7 +12,7 @@ import { defaultTx } from '@dxos/react-ui-theme';
 /**
  * Changes theme based on storybook toolbar toggle.
  */
-export const withTheme: Decorator = (Story: StoryFn, context: StoryContext) => {
+export const withTheme: Decorator = (Story, context) => {
   const dark = useDarkMode();
   const themeMode: ThemeMode = dark ? 'dark' : 'light';
 

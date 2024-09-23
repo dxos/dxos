@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type Observability, initializeAppObservability } from '@dxos/observability';
-import { createClientServices, Client, Config, Defaults, Remote, type ClientServices } from '@dxos/react-client';
+import { createClientServices, Client, Config, Defaults, Remote } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
 
 import { Devtools } from './Devtools';
@@ -37,12 +37,5 @@ export const App = () => {
     return null;
   }
 
-  return (
-    <Devtools
-      client={client}
-      services={client.services.services as ClientServices}
-      namespace={namespace}
-      observability={observability}
-    />
-  );
+  return <Devtools client={client} services={client.services} namespace={namespace} observability={observability} />;
 };
