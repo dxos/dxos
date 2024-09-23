@@ -9,11 +9,10 @@ import { DEFAULT_CLIENT_CHANNEL, DEFAULT_SHELL_CHANNEL } from '@dxos/client-prot
 import {
   AgentHostingProvider,
   Client,
-  ClientContext,
+  ClientProvider,
   ClientServicesProxy,
   Config,
   ShellDisplay,
-  SystemStatus,
 } from '@dxos/react-client';
 import { Button, Dialog, ThemeProvider, Tooltip, useTranslation } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
@@ -37,7 +36,7 @@ export const runShell = async (config: Config = new Config()) => {
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
         <ThemeProvider tx={defaultTx} resourceExtensions={[osTranslations]}>
-          <ClientContext.Provider values={{ client, status: SystemStatus.ACTIVE }}>
+          <ClientProvider client={client} services={services}>
             <ClipboardProvider>
               <Tooltip.Provider>
                 <AgentHostingProvider>
@@ -45,7 +44,7 @@ export const runShell = async (config: Config = new Config()) => {
                 </AgentHostingProvider>
               </Tooltip.Provider>
             </ClipboardProvider>
-          </ClientContext.Provider>
+          </ClientProvider>
         </ThemeProvider>
       </StrictMode>,
     );
