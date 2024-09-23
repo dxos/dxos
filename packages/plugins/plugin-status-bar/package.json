@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-status-bar",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "description": "Status bar plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -41,8 +41,6 @@
     "@preact/signals-core": "^1.6.0",
     "@radix-ui/react-slot": "^1.0.1",
     "effect": "^3.2.7",
-    "leaflet": "^1.9.3",
-    "react-leaflet": "^4.2.0",
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
@@ -50,7 +48,6 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "@types/leaflet": "^1.9.0",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",

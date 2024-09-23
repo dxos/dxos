@@ -10,7 +10,8 @@ import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { schema, TimeoutError } from '@dxos/protocols';
+import { TimeoutError } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
 

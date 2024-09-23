@@ -1,8 +1,8 @@
 {
   "name": "@dxos/gem-spore",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "private": true,
-  "description": "Gem spore.",
+  "description": "GEM spore.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -27,9 +27,6 @@
       "require": "./styles/defaults.css"
     }
   },
-  "browser": {
-    "./testing.js": "./dist/lib/browser/testing/index.mjs"
-  },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
@@ -49,7 +46,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "d3": "^7.9.0",
     "d3-force": "~3.0.0",
     "immutability-helper": "^3.0.2"
@@ -58,6 +54,7 @@
     "@babel/core": "^7.18.13",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/d3": "^7.4.3",
     "@types/react": "~18.2.0",
@@ -67,6 +64,8 @@
     "react-dom": "~18.2.0"
   },
   "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

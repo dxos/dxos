@@ -40,7 +40,7 @@ import { debounce } from '@dxos/async';
 import { fullyQualifiedId, createDocAccessor } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { createAttendableAttributes } from '@dxos/react-ui-attention';
+import { createAttendableAttributes, useHasAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
@@ -112,13 +112,11 @@ import {
  *  - Update formula ranges by selection.
  */
 
-// TODO(burdon): Factor out fragments.
 const fragments = {
-  axis: 'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-xs select-none',
-  axisSelected: 'bg-neutral-100 dark:bg-neutral-900 text-black dark:text-white',
-  cell: 'dark:bg-neutral-850',
-  cellSelected: 'bg-neutral-50 dark:bg-neutral-900 text-black dark:text-white border !border-primary-500',
-  border: 'border-neutral-200 dark:border-neutral-700',
+  axis: 'bg-axisSurface text-axisText text-xs select-none',
+  axisSelected: 'bg-attention text-baseText',
+  cell: 'bg-gridCell',
+  cellSelected: 'bg-gridCellSelected text-baseText border !border-accentSurface',
 };
 
 //
@@ -244,7 +242,6 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
       role='none'
       className={mx(
         'grid grid-cols-[calc(var(--rail-size)-2px)_1fr] grid-rows-[32px_1fr_32px] bs-full is-full overflow-hidden',
-        fragments.border,
         classNames,
       )}
     >
@@ -345,7 +342,7 @@ const GridCorner = (props: { className?: string } & Pick<DOMAttributes<HTMLDivEl
 
 const MovingOverlay = ({ label }: { label: string }) => {
   return (
-    <div className='flex w-full h-full justify-center items-center text-sm p-1 bg-primary-500/50 cursor-pointer'>
+    <div className='flex w-full h-full justify-center items-center text-sm p-1 bg-gridOverlay cursor-pointer'>
       {label}
     </div>
   );
@@ -425,7 +422,7 @@ const SheetRows = forwardRef<HTMLDivElement, SheetRowsProps>(
       <div className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
         <div
-          className={mx('z-20 absolute inset-0 border-y pointer-events-none', fragments.border)}
+          className={mx('z-20 absolute inset-0 border-y border-gridLine pointer-events-none')}
           style={{ width: axisWidth }}
         />
 
@@ -520,8 +517,7 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
         {...listeners}
         className={mx(
           'flex h-full items-center justify-center cursor-pointer',
-          'border-t focus-visible:outline-none',
-          fragments.border,
+          'border-t border-gridLine focus-visible:outline-none',
           fragments.axis,
           selected && fragments.axisSelected,
           isDragging && fragments.axisSelected,
@@ -532,11 +528,11 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
 
         {/* Drop indicator. */}
         {over?.id === idx && !isDragging && (
-          <div className='z-20 absolute top-0 w-full min-h-[4px] border-b-4 border-primary-500' />
+          <div className='z-20 absolute top-0 w-full min-h-[4px] border-b-4 border-accentSurface' />
         )}
 
         {/* Resize indicator. */}
-        {resizing && <div className='z-20 absolute bottom-0 w-full min-h-[4px] border-b-4 border-primary-500' />}
+        {resizing && <div className='z-20 absolute bottom-0 w-full min-h-[4px] border-b-4 border-accentSurface' />}
       </div>
     </Resizable>
   );
@@ -588,7 +584,7 @@ const SheetColumns = forwardRef<HTMLDivElement, SheetColumnsProps>(
       <div className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
         <div
-          className={mx('z-20 absolute inset-0 border-x pointer-events-none', fragments.border)}
+          className={mx('z-20 absolute inset-0 border-x border-gridLine pointer-events-none')}
           style={{ height: axisHeight }}
         />
 
@@ -684,8 +680,7 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
         {...listeners}
         className={mx(
           'flex h-full items-center justify-center cursor-pointer',
-          'border-l focus-visible:outline-none',
-          fragments.border,
+          'border-l border-gridLine focus-visible:outline-none',
           fragments.axis,
           selected && fragments.axisSelected,
           isDragging && fragments.axisSelected,
@@ -696,11 +691,11 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
 
         {/* Drop indicator. */}
         {over?.id === idx && !isDragging && (
-          <div className='z-20 absolute left-0 h-full min-w-[4px] border-l-4 border-primary-500' />
+          <div className='z-20 absolute left-0 h-full min-w-[4px] border-l-4 border-accentSurface' />
         )}
 
         {/* Resize indicator. */}
-        {resizing && <div className='z-20 absolute right-0 h-full min-h-[4px] border-l-4 border-primary-500' />}
+        {resizing && <div className='z-20 absolute right-0 h-full min-h-[4px] border-l-4 border-accentSurface' />}
       </div>
     </Resizable>
   );
@@ -859,16 +854,18 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
       columnSizes,
     });
 
-    const qualifiedSubjectId = fullyQualifiedId(model.sheet);
-    const attendableAttrs = createAttendableAttributes(qualifiedSubjectId);
+    // TODO(burdon): Prevent scroll if not attended.
+    const id = fullyQualifiedId(model.sheet);
+    const attendableAttrs = createAttendableAttributes(id);
+    const hasAttention = useHasAttention(id);
 
     return (
       <div ref={containerRef} role='grid' className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
-        <div className={mx('z-20 absolute inset-0 border pointer-events-none', fragments.border)} />
+        <div className={mx('z-20 absolute inset-0 border border-gridLine pointer-events-none')} />
 
         {/* Grid scroll container. */}
-        <div ref={scrollerRef} className='grow overflow-auto scrollbar-thin'>
+        <div ref={scrollerRef} className={mx('grow', hasAttention && 'overflow-auto scrollbar-thin')}>
           {/* Scroll content. */}
           <div
             className='relative select-none'
@@ -988,7 +985,7 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
     <div
       role='none'
       style={bounds}
-      className='z-10 absolute pointer-events-none bg-primary-500/20 border border-primary-500/50'
+      className='z-10 absolute pointer-events-none bg-gridSelectionOverlay border border-gridOverlay'
     />
   );
 };
@@ -1015,10 +1012,8 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       role='cell'
       style={style}
       className={mx(
-        'flex w-full h-full truncate items-center border cursor-pointer',
-        'px-2 py-1',
+        'flex w-full h-full px-2 py-1 truncate items-center border border-gridLine cursor-pointer',
         fragments.cell,
-        fragments.border,
         active && ['z-20', fragments.cellSelected],
         classNames,
       )}
@@ -1090,13 +1085,13 @@ const SheetStatusBar = () => {
   }
 
   return (
-    <div className={mx('flex shrink-0 justify-between items-center px-4 py-1 text-sm border-x', fragments.border)}>
+    <div className={mx('flex shrink-0 justify-between items-center px-4 py-1 text-sm border-x border-gridLine')}>
       <div className='flex gap-4 items-center'>
         <div className='flex w-16 items-center font-mono'>
           {(range && rangeToA1Notation(range)) || (cursor && addressToA1Notation(cursor))}
         </div>
         <div className='flex gap-2 items-center'>
-          <FunctionIcon className={mx('text-green-500', isFormula ? 'visible' : 'invisible')} />
+          <FunctionIcon className={mx('text-greenText', isFormula ? 'visible' : 'invisible')} />
           <span className='font-mono'>{value}</span>
         </div>
       </div>
@@ -1126,8 +1121,7 @@ const SheetDebug = () => {
     <div
       className={mx(
         'z-20 absolute right-0 top-20 bottom-20 w-[30rem] overflow-auto scrollbar-thin',
-        'border text-xs bg-neutral-50 dark:bg-black text-cyan-500 font-mono p-1 opacity-80',
-        fragments.border,
+        'border border-gridLine text-xs bg-neutral-50 dark:bg-black text-cyan-500 font-mono p-1 opacity-80',
       )}
     >
       <pre className='whitespace-pre-wrap'>

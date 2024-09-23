@@ -2,40 +2,74 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 
-import { Globe, type GlobeController, useDrag, useTour } from '@dxos/gem-globe';
+import { Globe, type GlobeController, type GlobeControlsProps, loadTopology, useDrag, useTour } from '@dxos/gem-globe';
+import { type ThemeMode, useThemeContext, useAsyncCallback } from '@dxos/react-ui';
 
-import { type MapControlProps } from './MapControl';
+import { type MapCanvasProps } from './Map';
 
-const globeStyles = {
-  water: {
-    fillStyle: '#000',
-  },
+const globeStyles = (themeMode: ThemeMode) =>
+  themeMode === 'dark'
+    ? {
+        water: {
+          fillStyle: '#000',
+        },
 
-  land: {
-    fillStyle: '#050505',
-    strokeStyle: 'darkgreen',
-  },
+        land: {
+          fillStyle: '#050505',
+          strokeStyle: 'darkgreen',
+        },
 
-  graticule: {
-    strokeStyle: '#111',
-  },
+        graticule: {
+          strokeStyle: '#111',
+        },
 
-  line: {
-    lineWidth: 1.5,
-    lineDash: [4, 16],
-    strokeStyle: 'yellow',
-  },
+        line: {
+          lineWidth: 1.5,
+          lineDash: [4, 16],
+          strokeStyle: 'yellow',
+        },
 
-  point: {
-    radius: 0.2,
-    fillStyle: 'red',
-  },
-};
+        point: {
+          radius: 0.2,
+          fillStyle: 'red',
+        },
+      }
+    : {
+        water: {
+          fillStyle: '#fff',
+        },
 
-export const GlobeControl = ({ classNames, markers = [] }: MapControlProps) => {
-  const ref = useRef<GlobeController>(null);
+        land: {
+          fillStyle: '#f5f5f5',
+          strokeStyle: '#ccc',
+        },
+
+        graticule: {
+          strokeStyle: '#ddd',
+        },
+
+        line: {
+          lineWidth: 1.5,
+          lineDash: [4, 16],
+          strokeStyle: '#333',
+        },
+
+        point: {
+          radius: 0.2,
+          fillStyle: 'red',
+        },
+      };
+
+export type GlobeControlProps = MapCanvasProps & { onToggle: () => void };
+
+export const GlobeControl = ({ classNames, markers = [], center, zoom, onToggle }: GlobeControlProps) => {
+  const topology = useAsyncCallback(loadTopology);
+  const { themeMode } = useThemeContext();
+  const styles = globeStyles(themeMode);
+
+  const [controller, setController] = useState<GlobeController | null>();
   const features = useMemo(
     () => ({
       points: markers?.map(({ location: { lat, lng } }) => ({ lat, lng })),
@@ -43,13 +77,29 @@ export const GlobeControl = ({ classNames, markers = [] }: MapControlProps) => {
     }),
     [markers],
   );
-  useDrag(ref.current);
-  const [start] = useTour(ref.current, features);
+
+  // Control hooks.
+  useDrag(controller);
+  const [start] = useTour(controller, features, { styles });
+
+  const handleAction: GlobeControlsProps['onAction'] = (action) => {
+    switch (action) {
+      case 'toggle': {
+        onToggle();
+        break;
+      }
+      case 'start': {
+        start();
+        break;
+      }
+    }
+  };
 
   return (
-    <Globe.Root classNames={classNames} scale={2}>
-      <Globe.Canvas ref={ref} styles={globeStyles} projection='mercator' features={features} />
-      <Globe.Controls onAction={() => start()} />
+    <Globe.Root classNames={classNames} center={center} scale={zoom}>
+      <Globe.Canvas ref={setController} topology={topology} projection='mercator' styles={styles} features={features} />
+      <Globe.ActionControls onAction={handleAction} />
+      <Globe.ZoomControls />
     </Globe.Root>
   );
 };

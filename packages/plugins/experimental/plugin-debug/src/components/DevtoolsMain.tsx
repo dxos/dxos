@@ -5,12 +5,11 @@
 import React from 'react';
 
 import { Devtools } from '@dxos/devtools';
-import { useClient, type ClientServices } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 
 const DevtoolsMain = () => {
   const client = useClient();
-
-  return <Devtools client={client} services={client.services.services as ClientServices} />;
+  return <Devtools client={client} services={client.services} />;
 };
 
 export default DevtoolsMain;

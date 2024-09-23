@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import React, { type FC, useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -12,7 +12,7 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 
 import DebugSpace from './DebugSpace';
 
-const Story: FC = () => {
+const Story = () => {
   const [space] = useSpaces();
   useEffect(() => {
     if (space) {

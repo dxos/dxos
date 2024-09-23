@@ -26,7 +26,7 @@ export const selectContent: ComponentFunction<SelectStyleProps> = ({ elevation =
 export const selectItem: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx(
     'relative flex items-center pis-6 pie-3 plb-1',
-    'text-base leading-none rounded-sm select-none outline-none',
+    'text-baseText leading-none rounded-sm select-none outline-none',
     ghostHighlighted,
     ...etc,
   );

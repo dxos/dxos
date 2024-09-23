@@ -8,7 +8,7 @@ import { expect } from 'earljs';
 import { asyncTimeout, waitForCondition } from '@dxos/async';
 import { type Any, type TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
-import { type TYPES } from '@dxos/protocols';
+import { type TYPES } from '@dxos/protocols/proto';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 import { ComplexSet, range } from '@dxos/util';

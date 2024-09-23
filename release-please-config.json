@@ -179,11 +179,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/react-async/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/timeframe/package.json",
           "jsonpath": "$.version"
         },
@@ -489,11 +484,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-gpt/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/experimental/plugin-grid/package.json",
           "jsonpath": "$.version"
         },
@@ -729,6 +719,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/lit-grid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/primitives/react-hooks/package.json",
           "jsonpath": "$.version"
         },
@@ -769,6 +764,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-grid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-mosaic/package.json",
           "jsonpath": "$.version"
         },
@@ -785,6 +785,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-stack/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-syntax-highlighter/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -869,6 +874,11 @@
         },
         {
           "type": "json",
+          "path": "tools/lit-stories/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/log-hook/package.json",
           "jsonpath": "$.version"
         },
@@ -890,6 +900,11 @@
         {
           "type": "json",
           "path": "tools/swc-log-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/vite-plugin-icons/package.json",
           "jsonpath": "$.version"
         },
         {

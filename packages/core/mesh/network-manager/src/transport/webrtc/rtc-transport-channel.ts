@@ -174,10 +174,6 @@ export class RtcTransportChannel extends Resource implements Transport {
   async getStats(): Promise<TransportStats> {
     return createRtcTransportStats(this._connection.currentConnection, this._options.topic);
   }
-
-  public get isOpen(): boolean {
-    return this._isOpen;
-  }
 }
 
 type PendingStreamFlushedCallback = () => void;

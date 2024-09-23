@@ -3,12 +3,15 @@
 //
 
 import '@dxos-theme';
-
+import { javascript } from '@codemirror/lang-javascript';
 import { markdown } from '@codemirror/lang-markdown';
+import { openSearchPanel } from '@codemirror/search';
+import { type Extension } from '@codemirror/state';
+import { type EditorView } from '@codemirror/view';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, type KeyboardEvent, StrictMode, useState } from 'react';
+import React, { type FC, type KeyboardEvent, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { create, Expando } from '@dxos/echo-schema';
@@ -19,9 +22,9 @@ import { faker } from '@dxos/random';
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { Button, DensityProvider, Input, useThemeContext } from '@dxos/react-ui';
 import { baseSurface, mx, getSize } from '@dxos/react-ui-theme';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { editorContent, editorGutter } from './defaults';
+import { editorContent, editorGutter, editorMonospace } from './defaults';
 import {
   InputModeExtensions,
   annotations,
@@ -50,6 +53,8 @@ import {
   type Comment,
   type CommentsOptions,
   type EditorSelectionState,
+  debugTree,
+  type DebugNode,
 } from './extensions';
 import { renderRoot } from './extensions/util';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
@@ -63,10 +68,19 @@ const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();
 
 const img = '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)';
 
+const code = str(
+  '// Code',
+  'const Component = () => {',
+  '  const x = 100;',
+  '',
+  '  return () => <div>Test</div>;',
+  '};',
+);
+
 const content = {
   tasks: str(
     //
-    '### Task List',
+    '### TaskList',
     '',
     `- [x] ${faker.lorem.sentences()}`,
     `- [ ] ${faker.lorem.sentences()}`,
@@ -106,22 +120,9 @@ const content = {
     '',
   ),
 
-  code: str(
-    '### Code',
-    '',
-    '```',
-    '$ ls -las',
-    '```',
-    '',
-    '```tsx',
-    'const Component = () => {',
-    '  const x = 100;',
-    '',
-    '  return () => <div>Test</div>;',
-    '};',
-    '```',
-    '',
-  ),
+  typescript: code,
+
+  codeblocks: str('### Code', '', '```bash', '$ ls -las', '```', '', '```tsx', code, '```', ''),
 
   comment: str('<!--', 'A comment', '-->', '', 'No comment.', 'Partial comment. <!-- comment. -->'),
 
@@ -191,14 +192,12 @@ const text = str(
   content.numbered,
 
   '---',
-  content.headings,
-
-  '---',
   '## Misc',
-  content.code,
+  content.codeblocks,
   content.table,
   content.image,
   content.footer,
+  '=== LAST LINE ===',
 );
 
 const links = [
@@ -212,17 +211,15 @@ const links = [
 const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', 'shoko'];
 
 const hover =
-  'rounded-sm text-base text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
+  'rounded-sm text-baseText text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
 const renderLinkTooltip = (el: Element, url: string) => {
   const web = new URL(url);
   createRoot(el).render(
-    <StrictMode>
-      <a href={url} target='_blank' rel='noreferrer' className={hover}>
-        {web.origin}
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1')} />
-      </a>
-    </StrictMode>,
+    <a href={url} target='_blank' rel='noreferrer' className={hover}>
+      {web.origin}
+      <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1')} />
+    </a>,
   );
 };
 
@@ -234,26 +231,22 @@ const Key: FC<{ char: string }> = ({ char }) => (
 
 const onCommentsHover: CommentsOptions['onHover'] = (el, shortcut) => {
   createRoot(el).render(
-    <StrictMode>
-      <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
-        <div>Create comment</div>
-        <div className='flex gap-1'>
-          {keySymbols(parseShortcut(shortcut)).map((char) => (
-            <Key key={char} char={char} />
-          ))}
-        </div>
+    <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
+      <div>Create comment</div>
+      <div className='flex gap-1'>
+        {keySymbols(parseShortcut(shortcut)).map((char) => (
+          <Key key={char} char={char} />
+        ))}
       </div>
-    </StrictMode>,
+    </div>,
   );
 };
 
 const renderLinkButton = (el: Element, url: string) => {
   createRoot(el).render(
-    <StrictMode>
-      <a href={url} target='_blank' rel='noreferrer' className={hover}>
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-[2px]')} />
-      </a>
-    </StrictMode>,
+    <a href={url} target='_blank' rel='noreferrer' className={hover}>
+      <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-[2px]')} />
+    </a>,
   );
 };
 
@@ -261,41 +254,53 @@ const renderLinkButton = (el: Element, url: string) => {
 // Story
 //
 
+type DebugMode = 'syntax' | 'raw';
+
 type StoryProps = {
   id?: string;
+  debug?: DebugMode;
   text?: string;
   readonly?: boolean;
   placeholder?: string;
+  lineNumbers?: boolean;
+  onReady?: (view: EditorView) => void;
 } & Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'>;
 
 const Story = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
+  debug,
   text,
   extensions,
   readonly,
   placeholder = 'New document.',
   scrollTo,
   selection,
+  lineNumbers,
+  onReady,
 }: StoryProps) => {
   const [object] = useState(createEchoObject(create(Expando, { content: text ?? '' })));
   const { themeMode } = useThemeContext();
-  const { parentRef, focusAttributes } = useTextEditor(
+  const [tree, setTree] = useState<DebugNode>();
+  const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
       id,
       initialValue: text,
       extensions: [
         createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
-        createBasicExtensions({ readonly, placeholder }),
+        createBasicExtensions({ readonly, placeholder, lineNumbers, scrollPastEnd: true }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({
           themeMode,
+          syntaxHighlighting: true,
           slots: {
             content: {
               className: editorContent,
             },
           },
         }),
+        editorGutter,
         extensions || [],
+        debug ? debugTree(setTree) : [],
       ],
       scrollTo,
       selection,
@@ -303,17 +308,39 @@ const Story = ({
     [object, extensions, themeMode],
   );
 
-  return <div role='none' className='flex w-full overflow-hidden' ref={parentRef} {...focusAttributes} />;
+  useEffect(() => {
+    if (view) {
+      onReady?.(view);
+    }
+  }, [view]);
+
+  return (
+    <div className='flex w-full'>
+      <div role='none' className='flex w-full overflow-hidden' ref={parentRef} {...focusAttributes} />
+      {debug === 'raw' && (
+        <div className='w-[800px] border-l border-separator overflow-auto'>
+          <pre className='p-1 font-mono text-xs text-green-800 dark:text-green-200'>{view?.state.doc.toString()}</pre>
+        </div>
+      )}
+      {debug === 'syntax' && (
+        <div className='w-[800px] border-l border-separator overflow-auto'>
+          <pre className='p-1 font-mono text-xs text-green-800 dark:text-green-200'>
+            {JSON.stringify(tree, null, 2)}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default {
   title: 'react-ui-editor/TextEditor',
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   render: Story,
   parameters: { translations, layout: 'fullscreen' },
 };
 
-const defaults = [
+const defaultExtensions: Extension[] = [
   autocomplete({
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
@@ -322,37 +349,50 @@ const defaults = [
   linkTooltip(renderLinkTooltip),
 ];
 
+const allExtensions: Extension[] = [
+  autocomplete({
+    onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
+  }),
+  decorateMarkdown({ numberedHeadings: { from: 2, to: 4 }, renderLinkButton, selectionChangeDelay: 100 }),
+  formattingKeymap(),
+  linkTooltip(renderLinkTooltip),
+  image(),
+  table(),
+  folding(),
+];
+
 export const Default = {
-  render: () => <Story text={text} extensions={defaults} selection={{ anchor: 99, head: 110 }} />,
+  render: () => <Story text={text} extensions={defaultExtensions} />,
 };
 
-export const ScrollTo = {
-  render: () => {
-    // NOTE: Selection won't appear if text is reformatted.
-    const word = 'Scroll to here...';
-    const text = str('# Scroll To', longText, '', word, '', longText);
-    const idx = text.indexOf(word);
-    return (
-      <Story text={text} extensions={defaults} scrollTo={idx} selection={{ anchor: idx, head: idx + word.length }} />
-    );
-  },
-};
-
-export const Readonly = {
-  render: () => <Story text={text} extensions={defaults} readonly />,
+export const Everything = {
+  render: () => <Story text={text} extensions={allExtensions} selection={{ anchor: 99, head: 110 }} />,
 };
 
 export const Empty = {
-  render: () => <Story extensions={defaults} />,
+  render: () => <Story extensions={defaultExtensions} />,
+};
+
+export const Readonly = {
+  render: () => <Story text={text} extensions={defaultExtensions} readonly />,
 };
 
 export const NoExtensions = {
   render: () => <Story text={text} />,
 };
 
-export const Folding = {
-  render: () => <Story text={text} extensions={[editorGutter, folding()]} />,
+export const Vim = {
+  render: () => (
+    <Story
+      text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', content.paragraphs)}
+      extensions={[defaultExtensions, InputModeExtensions.vim]}
+    />
+  ),
 };
+
+//
+// Scrolling
+//
 
 const longText = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
 
@@ -367,11 +407,11 @@ const headings = str(
     .flat(),
 );
 
-export const Headings = {
-  render: () => <Story text={headings} extensions={decorateMarkdown({ numberedHeadings: { from: 2, to: 4 } })} />,
-};
-
 const global = new Map<string, EditorSelectionState>();
+
+export const Folding = {
+  render: () => <Story text={text} extensions={[folding()]} />,
+};
 
 export const Scrolling = {
   render: () => (
@@ -386,7 +426,34 @@ export const Scrolling = {
 };
 
 export const ScrollingWithImages = {
-  render: () => <Story text={str('# Large Document', '', largeWithImages)} extensions={[image()]} />,
+  render: () => (
+    <Story text={str('# Large Document', '', largeWithImages)} extensions={[decorateMarkdown(), image()]} />
+  ),
+};
+
+export const ScrollTo = {
+  render: () => {
+    // NOTE: Selection won't appear if text is reformatted.
+    const word = 'Scroll to here...';
+    const text = str('# Scroll To', longText, '', word, '', longText);
+    const idx = text.indexOf(word);
+    return (
+      <Story
+        text={text}
+        extensions={defaultExtensions}
+        scrollTo={idx}
+        selection={{ anchor: idx, head: idx + word.length }}
+      />
+    );
+  },
+};
+
+//
+// Markdown
+//
+
+export const Headings = {
+  render: () => <Story text={headings} extensions={decorateMarkdown({ numberedHeadings: { from: 2, to: 4 } })} />,
 };
 
 export const Links = {
@@ -398,7 +465,7 @@ export const Image = {
 };
 
 export const Code = {
-  render: () => <Story text={str(content.code, content.footer)} extensions={[decorateMarkdown()]} />,
+  render: () => <Story text={str(content.codeblocks, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 export const Lists = {
@@ -419,25 +486,11 @@ export const OrderedList = {
 };
 
 export const TaskList = {
-  render: () => <Story text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} />,
+  render: () => <Story text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} debug='raw' />,
 };
 
 export const Table = {
-  render: () => <Story text={str(content.table, content.footer)} extensions={[table()]} />,
-};
-
-export const Autocomplete = {
-  render: () => (
-    <Story
-      text={str('# Autocomplete', '', 'Press Ctrl-Space...', content.footer)}
-      extensions={[
-        decorateMarkdown({ renderLinkButton }),
-        autocomplete({
-          onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
-        }),
-      ]}
-    />
-  ),
+  render: () => <Story text={str(content.table, content.footer)} extensions={[decorateMarkdown(), table()]} />,
 };
 
 export const CommentedOut = {
@@ -448,6 +501,30 @@ export const CommentedOut = {
         decorateMarkdown(),
         markdown(),
         // commentBlock()
+      ]}
+    />
+  ),
+};
+
+export const Typescript = {
+  render: () => (
+    <Story text={content.typescript} lineNumbers extensions={[editorMonospace, javascript({ typescript: true })]} />
+  ),
+};
+
+//
+// Custom
+//
+
+export const Autocomplete = {
+  render: () => (
+    <Story
+      text={str('# Autocomplete', '', 'Press Ctrl-Space...', content.footer)}
+      extensions={[
+        decorateMarkdown({ renderLinkButton }),
+        autocomplete({
+          onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
+        }),
       ]}
     />
   ),
@@ -466,7 +543,13 @@ export const Mention = {
   ),
 };
 
-const CommandDialog: FC<{ onClose: (action?: CommandAction) => void }> = ({ onClose }) => {
+export const Search = {
+  render: () => (
+    <Story text={str('# Search', text)} extensions={defaultExtensions} onReady={(view) => openSearchPanel(view)} />
+  ),
+};
+
+const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void }) => {
   const [text, setText] = useState('');
   const handleInsert = () => {
     onClose(text.length ? { insert: text + '\n' } : undefined);
@@ -561,15 +644,6 @@ export const Comments = {
   },
 };
 
-export const Vim = {
-  render: () => (
-    <Story
-      text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', content.paragraphs)}
-      extensions={[defaults, InputModeExtensions.vim]}
-    />
-  ),
-};
-
 export const Annotations = {
   render: () => <Story text={str('# Annotations', '', longText)} extensions={[annotations({ match: /volup/gi })]} />,
 };
@@ -589,8 +663,6 @@ export const DND = {
   ),
 };
 
-const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
-
 export const Listener = {
   render: () => (
     <Story
@@ -609,6 +681,8 @@ export const Listener = {
   ),
 };
 
+const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
+
 export const Typewriter = {
   render: () => (
     <Story
@@ -621,7 +695,7 @@ export const Typewriter = {
 export const Blast = {
   render: () => (
     <Story
-      text={str('# Blast', '', content.paragraphs, content.code, content.paragraphs)}
+      text={str('# Blast', '', content.paragraphs, content.codeblocks, content.paragraphs)}
       extensions={[
         typewriter({ items: typewriterItems }),
         blast(

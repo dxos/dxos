@@ -48,37 +48,7 @@ export const createBaseExtensions = ({
   query,
   dispatch,
 }: ExtensionsOptions): Extension[] => {
-  const extensions: Extension[] = [
-    //
-    // Common.
-    //
-    ...(viewMode === 'source'
-      ? []
-      : [
-          decorateMarkdown({
-            selectionChangeDelay: 100,
-            numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
-            // TODO(wittjosiah): For internal links, consider ignoring the link text and rendering the label of the object being linked to.
-            renderLinkButton:
-              dispatch && document
-                ? onRenderLink((id: string) => {
-                    void dispatch({
-                      action: NavigationAction.ADD_TO_ACTIVE,
-                      data: {
-                        id,
-                        part: 'main',
-                        pivotId: fullyQualifiedId(document),
-                        scrollIntoView: true,
-                      },
-                    });
-                  })
-                : undefined,
-          }),
-          settings?.folding && folding(),
-        ].filter(isNotFalsy)),
-    formattingKeymap(),
-    linkTooltip(renderLinkTooltip),
-  ];
+  const extensions: Extension[] = [];
 
   //
   // Editor mode.
@@ -88,6 +58,37 @@ export const createBaseExtensions = ({
     if (extension) {
       extensions.push(extension);
     }
+  }
+
+  //
+  // Markdown
+  //
+  if (viewMode !== 'source') {
+    extensions.push(
+      ...[
+        formattingKeymap(),
+        decorateMarkdown({
+          selectionChangeDelay: 100,
+          numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
+          // TODO(wittjosiah): For internal links, consider ignoring the link text and rendering the label of the object being linked to.
+          renderLinkButton:
+            dispatch && document
+              ? onRenderLink((id: string) => {
+                  void dispatch({
+                    action: NavigationAction.ADD_TO_ACTIVE,
+                    data: {
+                      id,
+                      part: 'main',
+                      pivotId: fullyQualifiedId(document),
+                      scrollIntoView: true,
+                    },
+                  });
+                })
+              : undefined,
+        }),
+        linkTooltip(renderLinkTooltip),
+      ],
+    );
   }
 
   //
@@ -115,13 +116,16 @@ export const createBaseExtensions = ({
     );
   }
 
+  extensions.push(
+    ...[
+      //
+      settings?.folding && folding(),
+    ].filter(isNotFalsy),
+  );
+
   if (settings?.debug) {
     const items = settings.typewriter ?? '';
     extensions.push(...[items ? typewriter({ items: items.split(/[,\n]/) }) : undefined].filter(nonNullable));
-  }
-
-  if (settings?.experimental) {
-    extensions.push(...[].filter(nonNullable));
   }
 
   return extensions;

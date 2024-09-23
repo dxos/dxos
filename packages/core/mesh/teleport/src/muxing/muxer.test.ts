@@ -7,7 +7,7 @@ import { pipeline, Transform } from 'node:stream';
 import waitForExpect from 'wait-for-expect';
 
 import { latch, asyncTimeout } from '@dxos/async';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { afterTest, describe, test } from '@dxos/test';

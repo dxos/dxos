@@ -16,11 +16,15 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 import { appKey } from './src/constants';
-import IconsPlugin from "@ch-ui/vite-plugin-icons";
 
-const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets')
+const rootDir = resolve(__dirname, '../../..');
+const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
+
+const isTrue = (str?: string) => str === 'true' || str === '1';
+const isFalse = (str?: string) => str === 'false' || str === '0';
 
 // https://vitejs.dev/config
 export default defineConfig({
@@ -45,8 +49,10 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
-    minify: process.env.DX_MINIFY !== 'false',
+    minify: !isFalse(process.env.DX_MINIFY),
     rollupOptions: {
+      // NOTE: Set cache to fix to help debug flaky builds.
+      // cache: false,
       input: {
         internal: resolve(__dirname, './internal.html'),
         main: resolve(__dirname, './index.html'),
@@ -58,9 +64,6 @@ export default defineConfig({
         chunkFileNames,
         manualChunks: {
           react: ['react', 'react-dom'],
-          dxos: ['@dxos/react-client'],
-          ui: ['@dxos/react-ui', '@dxos/react-ui-theme'],
-          editor: ['@dxos/react-ui-editor'],
         },
       },
       external: [
@@ -79,6 +82,7 @@ export default defineConfig({
     plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
   },
   plugins: [
+    // TODO(wittjosiah): Causing issues with bundle.
     tsconfigPaths({
       projects: ['../../../tsconfig.paths.json'],
     }),
@@ -86,27 +90,29 @@ export default defineConfig({
     ThemePlugin({
       root: __dirname,
       content: [
-        resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(__dirname, './index.html'),
+        join(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/plugins/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/plugins/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/sdk/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
     }),
     IconsPlugin({
-      symbolPattern:
-        'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+      symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
       assetPath: (name, variant) =>
-        `${phosphorIconsCore}/${variant}/${name}${
-          variant === 'regular' ? '' : `-${variant}`
-        }.svg`,
-      spritePath: resolve(__dirname, 'public/icons.svg'),
+        `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+      spriteFile: 'icons.svg',
       contentPaths: [
-        `${resolve(__dirname, '../../..')}/{packages,tools}/**/dist/**/*.{mjs,html}`,
-        `${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}`
+        join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
+        join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
       ],
+      // verbose: true,
     }),
     // https://github.com/antfu-collective/vite-plugin-inspect#readme
     // localhost:5173/__inspect
-    process.env.DX_INSPECT && Inspect(),
+    isTrue(process.env.DX_INSPECT) && Inspect(),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
@@ -150,6 +156,8 @@ export default defineConfig({
       // No PWA in dev to make it easier to ensure the latest version is being used.
       // May be mitigated in the future by https://github.com/dxos/dxos/issues/4939.
       // https://vite-pwa-org.netlify.app/guide/unregister-service-worker.html#unregister-service-worker
+      // NOTE: Check cached resources (on CF, and in the PWA).
+      // curl -I --header "Cache-Control: no-cache" https://staging.composer.space/icons.svg
       selfDestroying: process.env.DX_PWA === 'false',
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,
@@ -210,7 +218,9 @@ export default defineConfig({
             name: 'bundle-buddy',
             buildEnd() {
               const deps: { source: string; target: string }[] = [];
+              // @ts-ignore
               for (const id of this.getModuleIds()) {
+                // @ts-ignore
                 const m = this.getModuleInfo(id);
                 if (m != null && !m.isExternal) {
                   for (const target of m.importedIds) {
@@ -228,7 +238,7 @@ export default defineConfig({
           },
         ]
       : []),
-  ],
+  ], // Plugins
 });
 
 /**

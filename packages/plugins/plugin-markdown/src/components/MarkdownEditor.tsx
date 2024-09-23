@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { openSearchPanel } from '@codemirror/search';
 import { EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 
@@ -106,7 +107,7 @@ export const MarkdownEditor = ({
         if (editorView && data?.id === id && data?.cursor) {
           // TODO(burdon): We need typed intents.
           const range = Cursor.getRangeFromCursor(editorView.state, data.cursor);
-          if (range?.from) {
+          if (range) {
             const selection = editorView.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
             const effects = [
               // NOTE: This does not use the DOM scrollIntoView function.
@@ -154,7 +155,11 @@ export const MarkdownEditor = ({
           scrollPastEnd: role === 'section' ? false : scrollPastEnd,
         }),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode, slots: { content: { className: editorContent } } }),
+        createThemeExtensions({
+          themeMode,
+          syntaxHighlighting: true,
+          slots: { content: { className: editorContent } },
+        }),
         editorGutter,
         role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
         providerExtensions,
@@ -164,7 +169,7 @@ export const MarkdownEditor = ({
         id,
         scrollTo,
         selection,
-        // TODO(wittjosiah): Autofocus based on layout is racey.
+        // TODO(wittjosiah): Autofocus based on layout is racy.
         autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
         moveToEndOfLine: true,
       }),
@@ -177,8 +182,17 @@ export const MarkdownEditor = ({
   // Toolbar handler.
   const handleToolbarAction = useActionHandler(editorView);
   const handleAction = (action: Action) => {
-    if (action.type === 'view-mode') {
-      onViewModeChange?.(id, action.data);
+    switch (action.type) {
+      case 'search': {
+        if (editorView) {
+          openSearchPanel(editorView);
+        }
+        return;
+      }
+      case 'view-mode': {
+        onViewModeChange?.(id, action.data);
+        return;
+      }
     }
 
     handleToolbarAction?.(action);

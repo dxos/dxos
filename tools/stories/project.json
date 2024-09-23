@@ -1,7 +1,6 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "stories",
-  "sourceRoot": "tools/stories/src",
   "projectType": "library",
   "targets": {
     "chromatic": {
@@ -60,8 +59,8 @@
       "options": {
         "lintFilePatterns": [
           "tools/stories/*-stories/*.mts",
-          "tools/stories/.storybook-shared/*.ts",
-          "tools/stories/src/**/*.{ts,tsx,js,jsx}"
+          "tools/stories/.storybook/*.ts",
+          "tools/stories/config/**/*.{ts,tsx,js,jsx}"
         ]
       }
     },
@@ -90,6 +89,7 @@
         "react-shell:compile",
         "react-ui-card:compile",
         "react-ui-editor:compile",
+        "react-ui-grid:compile",
         "react-ui-mosaic:compile",
         "react-ui-navtree:compile",
         "react-ui-searchlist:compile",
@@ -99,7 +99,7 @@
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "tools/stories/all-stories"
+        "configDir": "tools/stories/config/all"
       }
     },
     "storybook-build-examples": {
@@ -113,7 +113,7 @@
       ],
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "tools/stories/examples-stories",
+        "configDir": "tools/stories/config/examples",
         "outputDir": "tools/stories/out/examples"
       },
       "outputs": [
@@ -131,7 +131,7 @@
       ],
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "tools/stories/shell-stories",
+        "configDir": "tools/stories/config/shell",
         "outputDir": "tools/stories/out/shell"
       },
       "outputs": [
@@ -149,7 +149,7 @@
       ],
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "tools/stories/ui-stories",
+        "configDir": "tools/stories/config/ui",
         "outputDir": "tools/stories/out/ui"
       },
       "outputs": [
@@ -170,7 +170,8 @@
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "tools/stories/e2e-stories"
+        "configDir": "tools/stories/config/e2e",
+        "outputDir": "tools/stories/out/e2e"
       }
     },
     "storybook-examples": {
@@ -184,7 +185,8 @@
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "tools/stories/examples-stories"
+        "configDir": "tools/stories/config/examples",
+        "outputDir": "tools/stories/out/examples"
       }
     }
   }

@@ -34,8 +34,7 @@ package dxos.client.services;
 //
 
 enum SystemStatus {
-  // TODO(burdon): INACTIVE SHOULD BE ZERO!
-  ACTIVE = 0;
+  ACTIVE = 0; // TODO(burdon): INACTIVE should be 0.
   INACTIVE = 1;
 }
 

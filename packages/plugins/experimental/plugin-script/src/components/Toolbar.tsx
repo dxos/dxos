@@ -2,64 +2,42 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Check, Checks, CircleNotch, Link, PencilSimple, UploadSimple, WarningCircle, X } from '@phosphor-icons/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 
 import {
-  Button,
   DensityProvider,
   ElevationProvider,
-  Input,
+  Icon,
+  type ThemedClassName,
   Toolbar as NaturalToolbar,
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { SCRIPT_PLUGIN } from '../meta';
 
-export type ToolbarProps = {
-  binding: string;
-  onBindingChange: (binding: string) => void;
+export type ToolbarProps = ThemedClassName<{
   deployed?: boolean;
-  onDeploy?: () => Promise<void>;
-  functionUrl?: string;
   error?: string;
-};
+  functionUrl?: string;
+  showPanel?: boolean;
+  onDeploy?: () => Promise<void>;
+  onFormat?: () => Promise<void>;
+  onTogglePanel?: () => Promise<void>;
+}>;
 
 export const Toolbar = ({
-  binding: _binding,
-  onBindingChange,
+  classNames,
   deployed,
-  onDeploy,
-  functionUrl,
   error,
+  functionUrl,
+  showPanel,
+  onDeploy,
+  onFormat,
+  onTogglePanel,
 }: ToolbarProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const [pending, setPending] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [binding, setBinding] = useState(_binding);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!editing && _binding !== binding) {
-      setBinding(_binding);
-    }
-  }, [_binding]);
-
-  const handleEdit = () => {
-    setEditing(true);
-    inputRef.current?.focus();
-  };
-
-  const handleSave = () => {
-    setEditing(false);
-    onBindingChange(binding);
-  };
-
-  const handleCancel = () => {
-    setEditing(false);
-  };
 
   const handleCopyLink = async () => {
     if (!functionUrl) {
@@ -75,54 +53,34 @@ export const Toolbar = ({
     setPending(false);
   };
 
+  // TODO(burdon): Simplify tooltips.
+  // TODO(burdon): Factor out common toolbar components with sheet/editor?
   return (
     <DensityProvider density='fine'>
       <ElevationProvider elevation='chrome'>
-        <NaturalToolbar.Root
-          classNames='p-1 is-full shrink-0 overflow-x-auto overflow-y-hidden'
-          style={{ contain: 'layout' }}
-        >
-          {/* TODO(wittjosiah): Binding input shouldn't be in the toolbar. */}
-          <Input.Root>
-            <Input.Label>{t('binding label')}</Input.Label>
-            <Input.TextInput
-              ref={inputRef}
-              classNames='!is-auto'
-              disabled={!editing}
-              value={binding}
-              onChange={(event) => setBinding(event.target.value.toUpperCase())}
-            />
-            {editing ? (
-              <>
-                <Button variant='ghost' onClick={handleCancel}>
-                  <X className={getSize(4)} />
-                </Button>
-                <Button variant='ghost' onClick={handleSave}>
-                  <Check className={getSize(4)} />
-                </Button>
-              </>
-            ) : (
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <Button variant='ghost' onClick={handleEdit}>
-                    <PencilSimple className={getSize(4)} />
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Portal>
-                  <Tooltip.Content>
-                    <Tooltip.Arrow />
-                    {t('edit binding label')}
-                  </Tooltip.Content>
-                </Tooltip.Portal>
-              </Tooltip.Root>
-            )}
-          </Input.Root>
+        <NaturalToolbar.Root classNames={['p-1', classNames]} style={{ contain: 'layout' }}>
+          {onFormat && (
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <NaturalToolbar.Button variant='ghost' onClick={onFormat}>
+                  <Icon icon='ph--magic-wand--regular' size={4} />
+                </NaturalToolbar.Button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content>
+                  <Tooltip.Arrow />
+                  {t('format label')}
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          )}
+
           <div role='separator' className='grow' />
-          {/* TODO(wittjosiah): Better treatment for status indicators in toolbar? */}
+
           {error ? (
             <Tooltip.Root>
               <Tooltip.Trigger>
-                <WarningCircle className={getSize(4)} />
+                <Icon icon='ph--warning-circle--regular' size={4} />
               </Tooltip.Trigger>
               <Tooltip.Portal>
                 <Tooltip.Content>
@@ -131,24 +89,13 @@ export const Toolbar = ({
                 </Tooltip.Content>
               </Tooltip.Portal>
             </Tooltip.Root>
-          ) : deployed ? (
-            <Tooltip.Root>
-              <Tooltip.Trigger>
-                <Checks className={getSize(4)} />
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content>
-                  <Tooltip.Arrow />
-                  {t('deployed label')}
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
           ) : null}
-          {functionUrl && (
+
+          {functionUrl && deployed && (
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
                 <NaturalToolbar.Button variant='ghost' onClick={handleCopyLink}>
-                  <Link className={getSize(4)} />
+                  <Icon icon='ph--link--regular' size={4} />
                 </NaturalToolbar.Button>
               </Tooltip.Trigger>
               <Tooltip.Portal>
@@ -159,13 +106,14 @@ export const Toolbar = ({
               </Tooltip.Portal>
             </Tooltip.Root>
           )}
+
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <NaturalToolbar.Button variant='ghost' onClick={handleDeploy} disabled={pending}>
                 {pending ? (
-                  <CircleNotch className={mx('spinner', getSize(4))} />
+                  <Icon icon='ph--spinner--regular' size={4} classNames='animate-spin-slow' />
                 ) : (
-                  <UploadSimple className={getSize(4)} />
+                  <Icon icon='ph--cloud-arrow-up--regular' size={4} />
                 )}
               </NaturalToolbar.Button>
             </Tooltip.Trigger>
@@ -176,6 +124,22 @@ export const Toolbar = ({
               </Tooltip.Content>
             </Tooltip.Portal>
           </Tooltip.Root>
+
+          {onTogglePanel && (
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <NaturalToolbar.Button variant='ghost' onClick={onTogglePanel}>
+                  <Icon icon={showPanel ? 'ph--caret-down--regular' : 'ph--caret-up--regular'} size={4} />
+                </NaturalToolbar.Button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content>
+                  <Tooltip.Arrow />
+                  {t('toggle details label')}
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          )}
         </NaturalToolbar.Root>
       </ElevationProvider>
     </DensityProvider>

@@ -27,6 +27,9 @@
   ],
   "references": [
     {
+      "path": "../../../tools/vite-plugin-icons"
+    },
+    {
       "path": "../../common/debug"
     },
     {
@@ -76,9 +79,6 @@
     },
     {
       "path": "../../plugins/experimental/plugin-github"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-gpt"
     },
     {
       "path": "../../plugins/experimental/plugin-grid"

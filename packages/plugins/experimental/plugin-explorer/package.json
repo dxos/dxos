@@ -1,15 +1,11 @@
 {
   "name": "@dxos/plugin-explorer",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "description": "Braneframe data visualization plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "imports": {
-    "#data_cities.json": "./data/cities.json",
-    "#data_countries-110m.json": "./data/countries-110m.json"
-  },
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",

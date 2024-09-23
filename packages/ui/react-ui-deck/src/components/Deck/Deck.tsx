@@ -8,7 +8,13 @@ import { createContext } from '@radix-ui/react-context';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
-import { type ClassNameValue, type ThemedClassName, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import {
+  type ClassNameValue,
+  type ThemedClassName,
+  useForwardedRef,
+  useMediaQuery,
+  useTranslation,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { resizeHandle, resizeHandleVertical } from '../../fragments';
@@ -57,8 +63,7 @@ const resizeButtonStyles = (...etc: ClassNameValue[]) =>
 const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
   ({ classNames, children, asChild, solo, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
-    const rootElement = useRef<HTMLDivElement | null>(null);
-    const ref = useComposedRefs(rootElement, forwardedRef);
+    const rootElement = useForwardedRef(forwardedRef);
     const arrowGroupAttrs = useArrowNavigationGroup({
       axis: 'horizontal',
       memorizeCurrent: true,
@@ -82,7 +87,7 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
           {...props}
           className={mx(solo ? soloLayout : deckLayout, classNames)}
           onScrollCapture={handleScroll}
-          ref={ref}
+          ref={rootElement}
         >
           {children}
         </Root>
@@ -122,7 +127,7 @@ const DeckPlankRoot = forwardRef<HTMLDivElement, DeckPlankRootProps>(
           {...focusGroupAttrs}
           {...props}
           className={mx(
-            'grid col-span-2 row-span-3 grid-cols-subgrid grid-rows-subgrid relative ch-focus-ring-inset-over-all',
+            'grid col-span-2 row-span-3 grid-cols-subgrid grid-rows-subgrid relative ch-focus-ring-inset-over-all overflow-hidden',
             classNames,
           )}
           ref={forwardedRef}
@@ -164,6 +169,7 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
         className={mx(
           'grid row-span-3 grid-rows-subgrid group ch-focus-ring-inset-over-all',
           'opacity-0 transition duration-200',
+          !solo && 'border-li border-separator',
           visible,
           classNames,
         )}

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/stories",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "private": true,
   "description": "Storybook config package for the DXOS monorepo.",
   "homepage": "https://dxos.org",
@@ -12,11 +12,9 @@
     "chromatic-shell": "chromatic --only-changed --storybook-base-dir packages/sdk/react-shell --project-token=\"chpt_c4421639d5edcc4\" --storybook-build-dir out/shell --exit-zero-on-changes",
     "chromatic-ui": "chromatic --only-changed --storybook-base-dir packages/ui --project-token=\"chpt_54d88c077f59534\" --storybook-build-dir out/ui --exit-zero-on-changes"
   },
-  "dependencies": {
-    "@ch-ui/vite-plugin-icons": "^0.5.1"
-  },
   "devDependencies": {
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/vite-plugin-icons": "workspace:*",
     "@storybook/addon-essentials": "~8.1.11",
     "@storybook/addon-interactions": "~8.1.11",
     "@storybook/addon-links": "~8.1.11",

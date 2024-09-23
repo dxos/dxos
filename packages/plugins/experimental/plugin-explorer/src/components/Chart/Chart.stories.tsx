@@ -8,11 +8,10 @@ import * as Plot from '@observablehq/plot';
 import React from 'react';
 
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-// @ts-ignore
-import CitiesData from '#data_cities.json';
 import { Chart } from './Chart';
+import CitiesData from '../../../data/cities.js';
 
 // @ts-ignore
 
@@ -22,7 +21,7 @@ import { Chart } from './Chart';
 export default {
   title: 'plugin-explorer/Chart',
   component: Plot,
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export const Default = () => <ClientRepeater component={DefaultStory} />;

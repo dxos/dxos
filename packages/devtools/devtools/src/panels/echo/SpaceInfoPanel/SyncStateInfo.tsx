@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { useAsyncEffect } from '@dxos/react-async';
+import { useAsyncEffect } from '@dxos/react-hooks';
 
 import { JsonView } from '../../../components';
 import { useDevtoolsState } from '../../../hooks';

@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { nonNullable } from '@dxos/util';
 
 import { MessageList, type MessageListProps } from './MessageList';
@@ -35,7 +35,7 @@ export default {
   title: 'plugin-inbox/MessageList',
   component: MessageList,
   render: Story,
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export const Default = {};

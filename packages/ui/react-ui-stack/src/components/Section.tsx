@@ -157,8 +157,8 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       mover: { cyclic: true, direction: 1, memorizeCurrent: false },
     });
     const sectionContentGroup = useFocusableGroup({});
-    const attendableProps = createAttendableAttributes(id);
-    const attended = useHasAttention(id);
+    const attendableAttrs = createAttendableAttributes(id);
+    const hasAttention = useHasAttention(id);
 
     return (
       <CollapsiblePrimitive.Root
@@ -169,7 +169,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
         <ListItem.Root
           ref={forwardedRef}
           id={id}
-          {...attendableProps}
+          {...attendableAttrs}
           classNames={[
             'grid col-span-2 group/section',
             active === 'overlay' ? stackColumns : 'grid-cols-subgrid snap-start',
@@ -183,7 +183,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               'bg-base focus-within:border-separator focus-within:bg-attention',
               hoverableControls,
               hoverableFocusedWithinControls,
-              (active || attended) && 'bg-attention border-separator',
+              (active || hasAttention) && 'bg-attention border-separator',
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
           >

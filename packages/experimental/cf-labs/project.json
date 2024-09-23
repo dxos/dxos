@@ -8,11 +8,6 @@
   "projectType": "library",
   "targets": {
     "build": {},
-    "lint": {},
-    "vitest": {}
-  },
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ]
+    "lint": {}
+  }
 }

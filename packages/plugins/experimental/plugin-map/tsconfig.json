@@ -3,6 +3,7 @@
     "../../../../tsconfig.json"
   ],
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "lib": [
       "DOM",
       "ESNext"
@@ -24,6 +25,12 @@
   "references": [
     {
       "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/local-storage"
+    },
+    {
+      "path": "../../../common/util"
     },
     {
       "path": "../../../core/echo/echo-schema"

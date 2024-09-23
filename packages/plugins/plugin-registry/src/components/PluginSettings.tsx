@@ -30,6 +30,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
         .sort(sort),
     [],
   );
+
   const available = useMemo(() => pluginContext.available.filter(({ id }) => !enabled.includes(id)).sort(sort), []);
   const recommended = available.filter((meta) => !meta.tags?.includes('experimental'));
   const experimental = available.filter((meta) => meta.tags?.includes('experimental'));

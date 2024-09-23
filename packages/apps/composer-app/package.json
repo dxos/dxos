@@ -1,6 +1,6 @@
 {
   "name": "@dxos/composer-app",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
@@ -35,7 +35,6 @@
     "@dxos/plugin-files": "workspace:*",
     "@dxos/plugin-function": "workspace:*",
     "@dxos/plugin-github": "workspace:*",
-    "@dxos/plugin-gpt": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-grid": "workspace:*",
     "@dxos/plugin-help": "workspace:*",
@@ -85,7 +84,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@ch-ui/vite-plugin-icons": "^0.5.1",
     "@cloudflare/workers-types": "^4.20240821.1",
     "@dxos/app-graph": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -99,6 +97,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/vite-plugin-icons": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "@sentry/vite-plugin": "^2.14.0",
     "@socketsupply/socket": "^0.5.4",

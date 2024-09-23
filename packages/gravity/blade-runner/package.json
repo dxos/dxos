@@ -1,6 +1,6 @@
 {
   "name": "@dxos/blade-runner",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "private": true,
   "description": "DXOS simulation tests runner.",
   "homepage": "https://dxos.org",
@@ -67,7 +67,7 @@
     "chartjs-node-canvas": "^4.1.6",
     "danfojs-node": "^1.1.2",
     "debug": "^4.3.4",
-    "esbuild": "^0.19.6",
+    "esbuild": "^0.23.1",
     "esbuild-plugin-wasm": "^1.1.0",
     "ioredis": "^5.3.2",
     "isomorphic-ws": "^5.0.0",

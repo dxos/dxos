@@ -16,42 +16,40 @@ export type GlobeDragEvent = {
 export type DragOptions = {
   disabled?: boolean;
   duration?: number;
+  xAxis?: boolean; // TODO(burdon): Generalize.
   onUpdate?: (event: GlobeDragEvent) => void;
 };
 
+/**
+ * Allows user to drag globe.
+ */
 export const useDrag = (controller?: GlobeController | null, options: DragOptions = {}) => {
   useEffect(() => {
-    if (!controller) {
+    const canvas = controller?.canvas;
+    if (!canvas || options.disabled) {
       return;
     }
 
-    const { getCanvas, projection, setRotation } = controller;
-    const canvas = getCanvas();
-    if (options.disabled) {
-      cancelDrag(d3.select(canvas));
-      return;
-    }
-
-    // TODO(burdon): Constrain by East/west.
     geoInertiaDrag(
       d3.select(canvas),
       () => {
-        setRotation(projection.rotate());
+        controller.setRotation(controller.projection.rotate());
         options.onUpdate?.({ type: 'move', controller });
       },
-      projection,
+      controller.projection,
       {
+        xAxis: options.xAxis,
+        time: 3_000,
         start: () => options.onUpdate?.({ type: 'start', controller }),
         finish: () => options.onUpdate?.({ type: 'end', controller }),
-        time: 3_000,
       },
     );
 
+    // TODO(burdon): Cancel drag timer.
     return () => {
       cancelDrag(d3.select(canvas));
     };
   }, [controller, options]);
 };
 
-// TODO(burdon): Factor out.
 const cancelDrag = (node) => node.on('.drag', null);

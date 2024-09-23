@@ -10,7 +10,7 @@ import { createIceProvider } from '@dxos/network-manager';
 import { RemoteServiceConnectionError } from '@dxos/protocols';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
-import { getAsyncValue, type MaybePromise, type Provider } from '@dxos/util';
+import { getAsyncProviderValue, type MaybePromise, type Provider } from '@dxos/util';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
 export type SharedWorkerConnectionOptions = {
@@ -42,7 +42,7 @@ export class SharedWorkerConnection {
   async open(params: { origin: string; observabilityGroup?: string; signalTelemetryEnabled?: boolean }) {
     const { RtcTransportService } = await import('@dxos/network-manager');
 
-    this._config = await getAsyncValue(this._configProvider);
+    this._config = await getAsyncProviderValue(this._configProvider);
 
     this._transportService = new RtcTransportService(
       { iceServers: [...(this._config.get('runtime.services.ice') ?? [])] },

@@ -3,10 +3,11 @@
 //
 
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
-import { defaultKeymap, history, historyKeymap, standardKeymap } from '@codemirror/commands';
-import { bracketMatching } from '@codemirror/language';
+import { defaultKeymap, history, historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
+import { bracketMatching, defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
+import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import {
   EditorView,
   type KeyBinding,
@@ -19,6 +20,7 @@ import {
   scrollPastEnd,
 } from '@codemirror/view';
 import defaultsDeep from 'lodash.defaultsdeep';
+import merge from 'lodash.merge';
 
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
@@ -95,7 +97,7 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.bracketMatching && bracketMatching(),
     props.closeBrackets && closeBrackets(),
     props.dropCursor && dropCursor(),
-    props.drawSelection && drawSelection(),
+    props.drawSelection && drawSelection({ cursorBlinkRate: 1_200 }),
     props.highlightActiveLine && highlightActiveLine(),
     props.history && history(),
     props.lineNumbers && lineNumbers(),
@@ -109,9 +111,9 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     keymap.of(
       [
         ...((props.keymap && keymaps[props.keymap]) ?? []),
-        // NOTE: Tab configured by markdown extension.
+        // NOTE: Tabs are also configured by markdown extension.
         // https://codemirror.net/docs/ref/#commands.indentWithTab
-        // ...(props.indentWithTab ? [indentWithTab] : []),
+        ...(props.indentWithTab ? [indentWithTab] : []),
         // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
         ...(props.closeBrackets ? closeBracketsKeymap : []),
         // https://codemirror.net/docs/ref/#commands.historyKeymap
@@ -128,8 +130,9 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
 //
 
 export type ThemeExtensionsOptions = {
-  theme?: ThemeStyles;
   themeMode?: ThemeMode;
+  styles?: ThemeStyles;
+  syntaxHighlighting?: boolean;
   slots?: {
     editor?: {
       className?: string;
@@ -146,14 +149,22 @@ const defaultThemeSlots = {
   },
 };
 
-// TODO(burdon): Should only have one baseTheme?
-// https://codemirror.net/examples/styling
-export const createThemeExtensions = ({ theme, themeMode, slots: _slots }: ThemeExtensionsOptions = {}): Extension => {
+/**
+ * https://codemirror.net/examples/styling
+ */
+export const createThemeExtensions = ({
+  themeMode,
+  styles,
+  syntaxHighlighting: _syntaxHighlighting,
+  slots: _slots,
+}: ThemeExtensionsOptions = {}): Extension => {
   const slots = defaultsDeep({}, _slots, defaultThemeSlots);
   return [
-    EditorView.baseTheme(defaultTheme),
     EditorView.darkTheme.of(themeMode === 'dark'),
-    theme && EditorView.theme(theme),
+    EditorView.baseTheme(styles ? merge({}, defaultTheme, styles) : defaultTheme),
+    // https://github.com/codemirror/theme-one-dark
+    _syntaxHighlighting &&
+      (themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle)),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
   ].filter(isNotFalsy);

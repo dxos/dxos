@@ -211,6 +211,7 @@ export class HaloProxy implements Halo {
    */
   async createIdentity(profile: ProfileDocument = {}, deviceProfile?: DeviceProfileDocument): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
+    invariant(!this.identity.get(), 'Identity already exists');
     const deviceProfileWithDefaults = {
       ...deviceProfile,
       ...(deviceProfile?.label ? { label: deviceProfile.label } : { label: 'initial identity device' }),

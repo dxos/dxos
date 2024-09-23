@@ -6,8 +6,8 @@ import React, { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { JSONTree } from 'react-json-tree';
 
-import { schema } from '@dxos/protocols';
-import { useAsyncEffect } from '@dxos/react-async';
+import { schema } from '@dxos/protocols/proto';
+import { useAsyncEffect } from '@dxos/react-hooks';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 

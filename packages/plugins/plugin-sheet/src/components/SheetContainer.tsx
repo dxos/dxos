@@ -13,15 +13,19 @@ const SheetContainer = ({
   sheet,
   space,
   role,
-  coordinate = { part: 'main', entryId: '' },
+  remoteFunctionUrl,
 }: SheetRootProps & { role?: string; coordinate?: LayoutCoordinate }) => {
   return (
-    <div role='none' className={mx(role === 'section' && 'aspect-square', role === 'article' && 'row-span-2')}>
-      <Sheet.Root sheet={sheet} space={space}>
-        <Sheet.Main
-          // TODO(burdon): Standardize for other components (e.g., table).
-          classNames={[coordinate.part !== 'solo' && 'border-is', role === 'section' && 'border-y border-is']}
-        />
+    <div
+      role='none'
+      className={mx(
+        'flex',
+        role === 'article' && 'row-span-2',
+        role === 'section' && 'aspect-square border-y border-is border-separator',
+      )}
+    >
+      <Sheet.Root sheet={sheet} space={space} remoteFunctionUrl={remoteFunctionUrl}>
+        <Sheet.Main />
       </Sheet.Root>
     </div>
   );

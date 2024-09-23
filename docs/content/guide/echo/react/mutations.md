@@ -13,7 +13,7 @@ When an object comes out of an [ECHO](../) query, it is tracked by framework and
 
 In the example below, clicking a task sets `completed = true`.
 
-```tsx{17,26,27} file=./snippets/mutations.tsx#L5-
+```tsx{18,27-28} file=./snippets/mutations.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -74,7 +74,7 @@ The following example uses the same [schema](./queries.md#typed-queries) definit
 
 In the example below, clicking a task sets `completed = true` in the same way as the untyped API.
 
-```tsx{19,28} file=./snippets/mutations-typed.tsx#L5-
+```tsx{20,29-30} file=./snippets/mutations-typed.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 

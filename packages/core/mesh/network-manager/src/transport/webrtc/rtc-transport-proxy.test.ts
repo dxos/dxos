@@ -8,7 +8,7 @@ import { Duplex } from 'stream';
 
 import { TestStream } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createLinkedPorts, createProtoRpcPeer, type RpcPort } from '@dxos/rpc';
 import { afterTest, describe, test } from '@dxos/test';

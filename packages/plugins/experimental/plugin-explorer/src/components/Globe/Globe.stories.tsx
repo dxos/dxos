@@ -11,13 +11,11 @@ import { useResizeDetector } from 'react-resize-detector';
 import * as topojson from 'topojson-client';
 
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-// @ts-ignore
-import CitiesData from '#data_cities.json';
-// @ts-ignore
-import CountriesData from '#data_countries-110m.json';
 import { Globe } from './Globe';
+import CitiesData from '../../../data/cities.js';
+import CountriesData from '../../../data/countries-110m.js';
 
 // TODO(burdon): Generate data with geo lat/lng.
 // TODO(burdon): How to provide geo service via agent?
@@ -25,7 +23,7 @@ import { Globe } from './Globe';
 export default {
   title: 'plugin-explorer/Globe',
   component: Plot,
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export const Default = () => <ClientRepeater component={DefaultStory} createSpace />;

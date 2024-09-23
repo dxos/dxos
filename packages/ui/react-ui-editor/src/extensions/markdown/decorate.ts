@@ -10,11 +10,25 @@ import { type SyntaxNodeRef } from '@lezer/common';
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
+import { adjustChanges } from './changes';
 import { image } from './image';
-import { linkPastePlugin } from './link-paste';
+import { formattingStyles, bulletListIndentationWidth, orderedListIndentationWidth } from './styles';
 import { table } from './table';
-import { getToken, theme, type HeadingLevel } from '../../styles';
+import { theme, type HeadingLevel } from '../../styles';
 import { wrapWithCatch } from '../util';
+
+/**
+ * Unicode characters.
+ * NOTE: Depends on font.
+ * https://www.compart.com/en/unicode (nice resource).
+ * https://en.wikipedia.org/wiki/List_of_Unicode_characters
+ */
+const Unicode = {
+  emDash: '\u2014',
+  bullet: '\u2022',
+  bulletSmall: '\u2219',
+  bulletSquare: '\u2b1d',
+};
 
 //
 // Widgets
@@ -144,9 +158,6 @@ const autoHideTags = new Set([
  */
 type NumberingLevel = { type: string; from: number; to: number; level: number; number: number };
 
-const bulletListIndentationWidth = 24;
-const orderedListIndentationWidth = 32; // TODO(burdon): Make variable length based on number of digits.
-
 const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boolean) => {
   const deco = new RangeSetBuilder<Decoration>();
   const atomicDeco = new RangeSetBuilder<Decoration>();
@@ -177,19 +188,18 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
   const leaveList = () => {
     listLevels.pop();
   };
-  const getCurrentList = (): NumberingLevel => {
+  const getCurrentListLevel = (): NumberingLevel => {
     invariant(listLevels.length);
     return listLevels[listLevels.length - 1];
   };
 
+  // const count = 0;
   const enterNode = (node: SyntaxNodeRef) => {
-    // console.log('##', { node: node.name, from: node.from, to: node.to });
+    // console.log(`[${count++}]`, { node: node.name, from: node.from, to: node.to });
     switch (node.name) {
       // ATXHeading > HeaderMark > Paragraph
       // NOTE: Numbering requires processing the entire document since otherwise only the visible range will be
       // processed and the numbering will be incorrect.
-      // TODO(burdon): Code folding (via gutter).
-      //  Modify parser to create foldable sections that can be skipped (or pre-processed).
       case 'ATXHeading1':
       case 'ATXHeading2':
       case 'ATXHeading3':
@@ -249,54 +259,51 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       }
 
       case 'ListItem': {
+        const line = state.doc.lineAt(node.from);
+
         // Set indentation.
-        const list = getCurrentList();
+        const list = getCurrentListLevel();
         const width = list.type === 'OrderedList' ? orderedListIndentationWidth : bulletListIndentationWidth;
         const offset = ((list.level ?? 0) + 1) * width;
-        const start = state.doc.lineAt(node.from);
+        if (node.from === line.to - 1) {
+          // Abort if only the hyphen is typed.
+          return false;
+        }
+
+        // Add line decoration for the continuation indent.
+        // TODO(burdon): Bug if indentation is more than one indentation unit (e.g., 4 spaces) from the previous line.
 
         deco.add(
-          start.from,
-          start.from,
+          line.from,
+          line.from,
           Decoration.line({
             class: 'cm-list-item',
             attributes: {
-              // Subtract 0.25em to account for the space CM adds to Paragraph nodes following the ListItem.
-              // Note: This makes the cursor appear to be left of the margin.
-              style: `padding-left: ${offset}px; text-indent: calc(-${width}px - 0.25em);`,
+              style: `padding-left: ${offset}px; text-indent: -${width}px;`,
             },
           }),
         );
 
-        // Remove indentation spaces.
-        // TODO(burdon): Replace whitespace with atomic block. Parse ListMark inline.
-        const line = state.doc.sliceString(start.from, node.to);
-        const whitespace = line.match(/^ */)?.[0].length ?? 0;
-        if (whitespace) {
-          atomicDeco.add(start.from, start.from + whitespace, hide);
-        }
-
-        // const mark = node.node.firstChild!;
-        // console.log(mark?.name);
-        // if (mark?.name === 'ListMark') {}
         break;
       }
 
       case 'ListMark': {
+        const list = getCurrentListLevel();
+
         // Look-ahead for task marker.
-        const task = tree.resolve(node.to + 1, 1).name === 'TaskMarker';
-        if (task) {
-          atomicDeco.add(node.from, node.to, hide);
+        // NOTE: Requires space to exist (otherwise the text is parsed as the start of a link).
+        const next = tree.resolve(node.to + 1, 1);
+        if (next?.name === 'TaskMarker') {
           break;
         }
 
-        // TODO(burdon): Cursor stops for 1 character when moving back into number (but not dashes).
-        // TODO(burdon): Option to make hierarchical; or a, b, c. etc.
-        const list = getCurrentList();
-        const label = list.type === 'OrderedList' ? `${++list.number}.` : '-';
+        // TODO(burdon): Option to make hierarchical; or a), i), etc.
+        const label = list.type === 'OrderedList' ? `${++list.number}.` : Unicode.bulletSmall;
+        const line = state.doc.lineAt(node.from);
+        const to = state.doc.sliceString(node.to, node.to + 1) === ' ' ? node.to + 1 : node.to;
         atomicDeco.add(
-          node.from,
-          node.to,
+          line.from,
+          to,
           Decoration.replace({
             widget: new TextWidget(
               label,
@@ -308,11 +315,11 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       }
 
       case 'TaskMarker': {
-        if (!editingRange(state, node, focus)) {
-          const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
-          atomicDeco.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task-checkbox' }));
-          atomicDeco.add(node.from, node.to, checked ? checkedTask : uncheckedTask);
-        }
+        const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
+        // Check if the next character is a space and if so, include it in the replacement.
+        const line = state.doc.lineAt(node.from);
+        const to = state.doc.sliceString(node.to, node.to + 1) === ' ' ? node.to + 1 : node.to;
+        atomicDeco.add(line.from, to, checked ? checkedTask : uncheckedTask);
         break;
       }
 
@@ -439,7 +446,6 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
     }
   } else {
     // NOTE: If line numbering then we must iterate from the start of document.
-    // TODO(burdon): Same for lists?
     tree.iterate({
       enter: wrapWithCatch(enterNode),
       leave: wrapWithCatch(leaveNode),
@@ -452,6 +458,8 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
   };
 };
 
+const forceUpdate = StateEffect.define<null>();
+
 export interface DecorateOptions {
   /**
    * Prevents triggering decorations as the cursor moves through the document.
@@ -460,8 +468,6 @@ export interface DecorateOptions {
   numberedHeadings?: { from: number; to?: number };
   renderLinkButton?: (el: Element, url: string) => void;
 }
-
-const forceUpdate = StateEffect.define<null>();
 
 export const decorateMarkdown = (options: DecorateOptions = {}) => {
   return [
@@ -480,7 +486,7 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
             update.docChanged ||
             update.viewportChanged ||
             update.focusChanged ||
-            update.transactions.some((tr) => tr.effects.some((e) => e.is(forceUpdate))) ||
+            update.transactions.some((tr) => tr.effects.some((effect) => effect.is(forceUpdate))) ||
             (update.selectionSet && !options.selectionChangeDelay)
           ) {
             ({ deco: this.deco, atomicDeco: this.atomicDeco } = buildDecorations(
@@ -495,6 +501,7 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
           }
         }
 
+        // Defer update in case moving through the document.
         scheduleUpdate(view: EditorView) {
           this.clearUpdate();
           this.pendingUpdate = setTimeout(() => {
@@ -521,78 +528,9 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
         ],
       },
     ),
-    formattingStyles,
-    linkPastePlugin,
     image(),
     table(),
+    adjustChanges(),
+    formattingStyles,
   ];
 };
-
-const formattingStyles = EditorView.baseTheme({
-  '& .cm-code': {
-    fontFamily: getToken('fontFamily.mono'),
-  },
-
-  '& .cm-codeblock-line': {
-    paddingInline: '1rem !important',
-  },
-  '& .cm-codeblock-end': {
-    display: 'inline-block',
-    width: '100%',
-    position: 'relative',
-    '&::after': {
-      position: 'absolute',
-      inset: 0,
-      content: '""',
-    },
-  },
-  '& .cm-codeblock-first': {
-    borderTopLeftRadius: '.25rem',
-    borderTopRightRadius: '.25rem',
-  },
-  '& .cm-codeblock-last': {
-    borderBottomLeftRadius: '.25rem',
-    borderBottomRightRadius: '.25rem',
-  },
-  '&light .cm-codeblock-line, &light .cm-activeLine.cm-codeblock-line': {
-    background: getToken('extend.semanticColors.input.light'),
-    mixBlendMode: 'darken',
-  },
-  '&dark .cm-codeblock-line, &dark .cm-activeLine.cm-codeblock-line': {
-    background: getToken('extend.semanticColors.input.dark'), // TODO(burdon): Make darker.
-    mixBlendMode: 'lighten',
-  },
-
-  '& .cm-hr': {
-    display: 'inline-block',
-    width: '100%',
-    height: '0',
-    verticalAlign: 'middle',
-    borderTop: `1px solid ${getToken('extend.colors.primary.500')}`,
-    opacity: 0.5,
-  },
-
-  '& .cm-task': {
-    display: 'inline-block',
-    width: `calc(${bulletListIndentationWidth}px - 0.25em)`,
-    color: getToken('extend.colors.blue.500'),
-  },
-  '& .cm-task-checkbox': {
-    display: 'grid',
-    margin: '0',
-    transform: 'translateY(2px)',
-  },
-
-  '& .cm-list-item': {},
-  '& .cm-list-mark': {
-    display: 'inline-block',
-    textAlign: 'right',
-    fontVariant: 'tabular-nums',
-  },
-  '& .cm-list-mark-bullet': {
-    width: `${bulletListIndentationWidth}px`,
-  },
-  '& .cm-list-mark-ordered': {
-    width: `${orderedListIndentationWidth}px`,
-  },
-});

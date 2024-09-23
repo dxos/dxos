@@ -18,6 +18,9 @@
       "path": "../../core/echo/echo-typegen"
     },
     {
+      "path": "../../ui/react-ui"
+    },
+    {
       "path": "../../ui/react-ui-theme"
     },
     {

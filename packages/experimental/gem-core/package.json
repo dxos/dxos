@@ -1,7 +1,7 @@
 {
   "name": "@dxos/gem-core",
-  "version": "0.6.9",
-  "description": "Gem core components and utils.",
+  "version": "0.6.10",
+  "description": "GEM core components and utils.",
   "homepage": "https://github.com/dxos",
   "bugs": "https://github.com/dxos/issues",
   "license": "MIT",
@@ -27,14 +27,14 @@
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "d3": "^7.9.0",
     "lodash.defaultsdeep": "^4.6.1",
     "react-resize-detector": "^11.0.1",
     "topojson-client": "^3.1.0"
   },
   "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/d3": "^7.4.3",
     "@types/lodash.defaultsdeep": "^4.6.6",
@@ -46,6 +46,8 @@
     "react-dom": "~18.2.0"
   },
   "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },
