@@ -80,12 +80,18 @@ class CheckboxWidget extends WidgetType {
       input.setAttribute('disabled', 'true');
     } else {
       input.onmousedown = (event: Event) => {
-        const pos = view.posAtDOM(span);
-        const text = view.state.sliceDoc(pos, pos + 3);
-        if (text === (this._checked ? '[x]' : '[ ]')) {
+        // Could be beginning of line.
+        const line = view.state.doc.lineAt(view.posAtDOM(span));
+        const text = view.state.sliceDoc(line.from, line.to);
+        const match = text.match(/^\s*- (\[[xX ]]).*/);
+        if (match) {
+          const [, checked] = match;
+          const pos = line.from + text.indexOf(checked);
+          this._checked = checked !== '[ ]';
           view.dispatch({
             changes: { from: pos + 1, to: pos + 2, insert: this._checked ? ' ' : 'x' },
           });
+
           event.preventDefault();
         }
       };
