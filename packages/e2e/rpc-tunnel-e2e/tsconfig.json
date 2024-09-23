@@ -26,9 +26,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/react-async"
-    },
-    {
       "path": "../../core/mesh/rpc"
     },
     {
@@ -36,6 +33,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../ui/primitives/react-hooks"
     }
   ]
 }

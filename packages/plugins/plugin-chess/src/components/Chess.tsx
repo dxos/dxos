@@ -38,7 +38,7 @@ const useChessModel = (game: GameType) => {
   return { model, handleUpdate };
 };
 
-export const Chess = ({ space, game }: { space: Space; game: GameType }) => {
+export const Chess = ({ space, game, playerSelector }: { space: Space; game: GameType; playerSelector?: boolean }) => {
   const { model, handleUpdate } = useChessModel(game);
   if (!model) {
     return null;
@@ -52,7 +52,7 @@ export const Chess = ({ space, game }: { space: Space; game: GameType }) => {
           <Chessboard model={model} onUpdate={handleUpdate} />
         </div>
       </div>
-      <PlayerSelector game={game} space={space} />
+      {playerSelector && <PlayerSelector game={game} space={space} />}
     </div>
   );
 };

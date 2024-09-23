@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-markdown",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "DXOS Surface plugin for interacting with Markdown",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -60,8 +60,8 @@
     "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
-    "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-deck": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",

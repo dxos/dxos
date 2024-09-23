@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-chain",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "Prompt chain plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -65,6 +65,7 @@
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

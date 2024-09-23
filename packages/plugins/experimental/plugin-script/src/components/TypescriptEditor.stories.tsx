@@ -2,6 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxos-theme';
+
+import React, { useMemo } from 'react';
+
+import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
+import { createDataExtensions } from '@dxos/react-ui-editor';
+
+import { TypescriptEditor } from './TypescriptEditor';
+
 // TODO(burdon): Typescript.
 // TODO(burdon): Effect schema.
 // TODO(burdon): JSX.
@@ -12,15 +21,6 @@
 // - hierarchical editor (DND)
 // - virtual document image rendering
 // - mobile rendering error
-
-import '@dxos-theme';
-
-import React, { useMemo } from 'react';
-
-import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
-import { createDataExtensions } from '@dxos/react-ui-editor';
-
-import { TypescriptEditor } from './TypescriptEditor';
 
 const examples: string[] = [
   [
@@ -55,9 +55,6 @@ export default {
   title: 'plugin-script/TypescriptEditor',
   component: TypescriptEditor,
   render: Story,
-  parameters: {
-    layout: 'fullscreen',
-  },
 };
 
 export const Default = {};

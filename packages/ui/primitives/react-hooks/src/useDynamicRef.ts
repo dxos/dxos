@@ -9,5 +9,6 @@ export const useDynamicRef = <T>(value: T) => {
   useEffect(() => {
     ref.current = value;
   }, [value]);
+
   return ref;
 };

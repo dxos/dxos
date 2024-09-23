@@ -6,15 +6,7 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { DEFAULT_CLIENT_CHANNEL, DEFAULT_SHELL_CHANNEL } from '@dxos/client-protocol';
-import {
-  AgentHostingProvider,
-  Client,
-  ClientContext,
-  ClientServicesProxy,
-  Config,
-  ShellDisplay,
-  SystemStatus,
-} from '@dxos/react-client';
+import { AgentHostingProvider, ClientProvider, ClientServicesProxy, Config, ShellDisplay } from '@dxos/react-client';
 import { Button, Dialog, ThemeProvider, Tooltip, useTranslation } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { createIFramePort } from '@dxos/rpc-tunnel';
@@ -31,13 +23,11 @@ export const runShell = async (config: Config = new Config()) => {
 
   try {
     const services = new ClientServicesProxy(createIFramePort({ channel: DEFAULT_CLIENT_CHANNEL }));
-    const client = new Client({ config, services });
-    await client.initialize();
 
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
         <ThemeProvider tx={defaultTx} resourceExtensions={[osTranslations]}>
-          <ClientContext.Provider value={{ client, status: SystemStatus.ACTIVE }}>
+          <ClientProvider config={config} services={services}>
             <ClipboardProvider>
               <Tooltip.Provider>
                 <AgentHostingProvider>
@@ -45,7 +35,7 @@ export const runShell = async (config: Config = new Config()) => {
                 </AgentHostingProvider>
               </Tooltip.Provider>
             </ClipboardProvider>
-          </ClientContext.Provider>
+          </ClientProvider>
         </ThemeProvider>
       </StrictMode>,
     );
