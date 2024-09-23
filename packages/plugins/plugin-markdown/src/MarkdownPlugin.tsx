@@ -66,7 +66,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
     defaultViewMode: 'preview',
     toolbar: true,
-    folding: true,
+    folding: false,
     experimental: false,
   });
 

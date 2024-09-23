@@ -26,7 +26,7 @@ export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLa
     '@container is-dvw sm:is-[95vw] max-is-full md:max-is-[24rem] p-4 sm:border sm:rounded-lg sm:border-separator',
     dialogMotion,
     surfaceElevation({ elevation }),
-    'bg-dialogSurface backdrop-blur',
+    'bg-modalSurface backdrop-blur',
     focusRing,
     ...etc,
   );
