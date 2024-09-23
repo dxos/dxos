@@ -7,8 +7,8 @@ import { useMemo } from 'react';
 import { DynamicSchema, getTypename, StoredSchema } from '@dxos/echo-schema';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 
-import { type MapType, type MapMarker } from '../types';
 import { useStabilizedObject } from './useStabilizedObject';
+import { type MapType, type MapMarker } from '../types';
 
 /**
  * @returns Table rows in the same space as the map with `latitude` and `longitude` fields
