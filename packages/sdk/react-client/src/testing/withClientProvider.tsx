@@ -23,7 +23,7 @@ type InitializeProps = {
 /**
  * Initialize client, identity and first space.
  */
-const initialize = async (
+const initializeClient = async (
   client: Client,
   {
     createIdentity,
@@ -59,7 +59,7 @@ export const withClientProvider = ({
   ...props
 }: WithClientProviderProps = {}): Decorator => {
   const handleInitialized = async (client: Client) => {
-    await initialize(client, { createIdentity, createSpace, onSpaceCreated, onInitialized });
+    await initializeClient(client, { createIdentity, createSpace, onSpaceCreated, onInitialized });
   };
 
   return (Story) => (
@@ -99,10 +99,10 @@ export const withMultiClientProvider = ({
       if (createSpace) {
         if (!hostRef.current) {
           hostRef.current = client;
-          const space = await initialize(client, { createIdentity, createSpace, onSpaceCreated, onInitialized });
+          const space = await initializeClient(client, { createIdentity, createSpace, onSpaceCreated, onInitialized });
           spaceReady.current.wake(space);
         } else {
-          await initialize(client, { createIdentity, onInitialized });
+          await initializeClient(client, { createIdentity, onInitialized });
           const space = await spaceReady.current.wait();
           if (space) {
             await Promise.all(performInvitation({ host: space, guest: client.spaces }));

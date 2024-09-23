@@ -4,21 +4,16 @@
 
 import { renderHook } from '@testing-library/react';
 import { expect } from 'chai';
-import React from 'react';
 
-import { Client, fromHost } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
 import { useDevices } from './useDevices';
-import { ClientProvider } from '../client';
+import { createClient, createWrapper } from '../testing/util';
 
 describe('useDevices', () => {
   test('lists existing devices', async () => {
-    const client = new Client({ services: fromHost() });
-    await client.initialize();
-    await client.halo.createIdentity();
-    // TODO(wittjosiah): Factor out.
-    const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
+    const { client } = await createClient({ createIdentity: true });
+    const wrapper = await createWrapper(client);
     const { result } = renderHook(() => useDevices(), { wrapper });
     expect(result.current?.length).to.eq(1);
   });
