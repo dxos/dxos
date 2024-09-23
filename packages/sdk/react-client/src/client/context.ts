@@ -12,6 +12,7 @@ export type ClientContextProps = {
   // Optionally expose services (e.g., for devtools).
   services?: ClientServices;
 
+  // TODO(burdon): Why is this set externally?
   status?: SystemStatus | null;
 };
 

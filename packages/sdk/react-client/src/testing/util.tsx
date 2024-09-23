@@ -7,8 +7,9 @@ import React from 'react';
 import { Client, fromHost } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 
-import { ClientContext } from '../client';
+import { ClientContext, ClientProvider } from '../client';
 
+// TODO(burdon): Reconcile with initializeClient.
 export const createClient = async ({
   createIdentity,
   createSpace,
@@ -28,7 +29,10 @@ export const createClient = async ({
   return { client, space };
 };
 
-// TODO(burdon): Change to ClientProvider.
-export const createContextProvider = async (client: Client) => {
+export const createClientContextProvider = async (client: Client) => {
   return ({ children }: any) => <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>;
+};
+
+export const createClientProvider = async (client: Client) => {
+  return ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
 };

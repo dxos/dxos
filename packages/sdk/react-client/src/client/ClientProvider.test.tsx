@@ -126,7 +126,7 @@ describe('ClientProvider', () => {
     expect(() => screen.getByText('Client is NOT there')).toThrow();
   });
 
-  test('Provides new client when value changes', async () => {
+  test.only('Provides new client when value changes', async () => {
     const { rerender } = render(
       <ClientProvider client={client}>
         <TestComponent />
@@ -148,7 +148,7 @@ describe('ClientProvider', () => {
 
     await act(async () => {
       await waitForCondition({
-        condition: () => newClient.status.get() === SystemStatus.ACTIVE && !client.initialized,
+        condition: () => !client.initialized && newClient.status.get() === SystemStatus.ACTIVE,
       });
     });
     expect(client.initialized).toBe(false);

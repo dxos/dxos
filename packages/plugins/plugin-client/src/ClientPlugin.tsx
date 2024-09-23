@@ -20,7 +20,7 @@ import { type S } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { createExtension, type Node } from '@dxos/plugin-graph';
-import { Client, type ClientOptions, ClientContext, useClientStatus } from '@dxos/react-client';
+import { Client, type ClientOptions, ClientProvider } from '@dxos/react-client';
 
 import meta, { CLIENT_PLUGIN, ClientAction } from './meta';
 import translations from './translations';
@@ -100,10 +100,9 @@ export const ClientPlugin = ({
       return {
         client,
         context: ({ children }) => {
-          // TODO(burdon): Use ClientProvider?
-          const status = useClientStatus(client);
-          return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
-          // return <ClientProvider client={client}>{children}</ClientProvider>;
+          // const status = useClientStatus(client);
+          // return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
+          return <ClientProvider client={client}>{children}</ClientProvider>;
         },
       };
     },

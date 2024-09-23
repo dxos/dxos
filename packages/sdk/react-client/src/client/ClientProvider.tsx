@@ -78,7 +78,7 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
  * Root component that provides the DXOS client instance to child components.
  * To be used with the `useClient` hook.
  */
-export const ClientProvider = forwardRef<Client, ClientProviderProps>(
+export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps>(
   (
     {
       children,
@@ -106,7 +106,8 @@ export const ClientProvider = forwardRef<Client, ClientProviderProps>(
       throw error;
     }
 
-    const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
+    const [client, setClient] = useState<Client>();
+    // const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
 
     // Provide external access.
     useImperativeHandle(forwardedRef, () => client, [client]);
@@ -124,7 +125,7 @@ export const ClientProvider = forwardRef<Client, ClientProviderProps>(
 
     // Create and/or initialize client.
     useEffect(() => {
-      const done = async (client: Client) => {
+      const initialize = async (client: Client) => {
         if (!client.initialized) {
           await client.initialize().catch(setError);
           log('client ready');
@@ -132,40 +133,52 @@ export const ClientProvider = forwardRef<Client, ClientProviderProps>(
           log('initialization complete');
         }
 
+        // TODO(burdon): Types might not be set yet.
         if (types) {
           client.addTypes(types);
         }
 
         setClient(client);
         setStatus(client.status.get() ?? SystemStatus.ACTIVE);
-        printBanner(client);
+
+        // TODO(burdon): Make dynamic.
+        const showBanner = false;
+        if (showBanner) {
+          printBanner(client);
+        }
       };
 
+      let client: Client;
       const t = setTimeout(async () => {
         if (clientProvider) {
           // Asynchronously request client.
-          const client = await getAsyncProviderValue(clientProvider);
-          await done(client);
+          client = await getAsyncProviderValue(clientProvider);
+          await initialize(client);
         } else {
           // Asynchronously construct client (config may be undefined).
           const config = await getAsyncProviderValue(configProvider);
           log('resolved config', { config });
           const services = await getAsyncProviderValue(servicesProvider, config);
           log('created services', { services });
-          const client = new Client({ config, services, ...options });
+          client = new Client({ config, services, ...options });
           log('created client');
-          await done(client);
+          await initialize(client);
         }
       });
 
       return () => {
         log('clean up');
         clearTimeout(t);
-        void client?.destroy().catch((err) => log.catch(err));
+        void client
+          ?.destroy()
+          .then(() => {
+            log('destroyed');
+          })
+          .catch((err) => log.catch(err));
       };
     }, [configProvider, clientProvider, servicesProvider]);
 
-    if (!client || status !== SystemStatus.ACTIVE) {
+    if (!client?.initialized || status !== SystemStatus.ACTIVE) {
       return <Fallback client={client} status={status} />;
     }
 
