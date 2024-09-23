@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 
 import { type FunctionRegistry } from '../function';
 import { type FunctionEventMeta } from '../handler';
-import { type TriggerRegistry } from '../trigger';
+import { type TriggerCallback, type TriggerRegistry } from '../trigger';
 import { type FunctionDef, type FunctionManifest, type FunctionTrigger } from '../types';
 
 export type Callback = (data: any) => Promise<void | number>;
@@ -71,12 +71,14 @@ export class Scheduler {
     const mountTasks = triggers.map((trigger) => {
       return this.activate(space, functions, trigger);
     });
+
     await Promise.all(mountTasks).catch(log.catch);
   }
 
   /**
    * Activate trigger.
    */
+  // TODO(burdon): How are triggers deactivated?
   private async activate(space: Space, functions: FunctionDef[], trigger: FunctionTrigger) {
     const definition = functions.find((def) => def.uri === trigger.function);
     if (!definition) {
@@ -84,7 +86,7 @@ export class Scheduler {
       return;
     }
 
-    await this.triggers.activate(space, trigger, async (args) => {
+    const execFunction: TriggerCallback = async (args) => {
       const mutex = this._functionUriToCallMutex.get(definition.uri) ?? new Mutex();
       this._functionUriToCallMutex.set(definition.uri, mutex);
 
@@ -111,8 +113,9 @@ export class Scheduler {
           data: { ...args, spaceKey: space.key },
         });
       });
-    });
+    };
 
+    await this.triggers.activate(space, trigger, execFunction);
     log('activated trigger', { space: space.key, trigger });
   }
 

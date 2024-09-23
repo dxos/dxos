@@ -3,3 +3,4 @@
 //
 
 export * from './trigger-registry';
+export * from './type';

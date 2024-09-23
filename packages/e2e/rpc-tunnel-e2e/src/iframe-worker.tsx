@@ -8,7 +8,7 @@ import { JSONTree } from 'react-json-tree';
 
 import { Trigger } from '@dxos/async';
 import { schema } from '@dxos/protocols/proto';
-import { useAsyncEffect } from '@dxos/react-async';
+import { useAsyncEffect } from '@dxos/react-hooks';
 import { createProtoRpcPeer, type RpcPort } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 

@@ -1,7 +1,7 @@
 {
   "name": "@dxos/lit-grid",
-  "version": "0.6.10",
-  "description": "A grid webcomponent using Lit",
+  "version": "0.6.11",
+  "description": "A grid Web Component using Lit",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -13,7 +13,10 @@
     },
     "./dx-grid.pcss": "./src/dx-grid.pcss"
   },
-  "main": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "files": [
     "src",
     "dist"

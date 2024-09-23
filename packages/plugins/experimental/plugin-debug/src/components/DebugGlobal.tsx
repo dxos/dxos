@@ -7,14 +7,13 @@ import React, { type FC, useEffect, useState } from 'react';
 
 import { type Graph } from '@dxos/plugin-graph';
 import { useClient, useConfig } from '@dxos/react-client';
-import { Button, ToggleGroup, ToggleGroupItem, useThemeContext } from '@dxos/react-ui';
+import { Button, ToggleGroup, ToggleGroupItem } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { DebugPanel } from './DebugPanel';
 import { Json, Tree } from './Tree';
 
 const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
-  const { themeMode } = useThemeContext();
   const [view, setView] = useState<'config' | 'diagnostics' | 'graph'>('graph');
   const [data, setData] = useState<any>({});
   const client = useClient();
@@ -71,8 +70,8 @@ const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
       }
     >
       {view === 'graph' && <Tree data={graph.toJSON()} />}
-      {view === 'config' && <Json theme={themeMode} data={data.diagnostics?.config} />}
-      {view === 'diagnostics' && <Json theme={themeMode} data={data} />}
+      {view === 'config' && <Json data={data.diagnostics?.config} />}
+      {view === 'diagnostics' && <Json data={data} />}
     </DebugPanel>
   );
 };

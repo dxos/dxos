@@ -11,8 +11,8 @@ import { asyncTimeout } from '@dxos/async';
 import { Devtools } from '@dxos/devtools';
 import { log } from '@dxos/log';
 import * as Sentry from '@dxos/observability/sentry';
-import { useAsyncEffect } from '@dxos/react-async';
-import { Client, Defaults, Config, ClientServicesProxy, type ClientServices } from '@dxos/react-client';
+import { Client, Defaults, Config, ClientServicesProxy } from '@dxos/react-client';
+import { useAsyncEffect } from '@dxos/react-hooks';
 import { type RpcPort } from '@dxos/rpc';
 
 // NOTE: Sandbox runs in an iframe which is sandboxed from the web extension.
@@ -78,7 +78,7 @@ const waitForRpc = async () =>
 const App = () => {
   log('initializing...');
 
-  const [context, setContext] = useState<{ client: Client; services: ClientServices }>();
+  const [client, setClient] = useState<Client>();
 
   useAsyncEffect(async () => {
     log('waiting for rpc...');
@@ -91,15 +91,15 @@ const App = () => {
     await asyncTimeout(client.initialize(), INIT_TIMEOUT, new Error('Client initialization error')).catch((err) => {
       log.catch(err);
     });
-    setContext({ client, services: servicesProvider.services });
+    setClient(client);
     log('client initialized');
   }, []);
 
-  if (!context) {
+  if (!client) {
     return null;
   }
 
-  return <Devtools services={context.services} client={context.client} namespace={namespace} />;
+  return <Devtools client={client} namespace={namespace} />;
 };
 
 const init = async () => {

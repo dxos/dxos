@@ -225,6 +225,7 @@ export const DeckLayout = ({
               <Deck.Root
                 style={padding}
                 classNames={[!flatDeck && 'bg-deck', 'absolute inset-0', slots?.wallpaper?.classNames]}
+                solo={layoutMode === 'solo'}
                 onScroll={handleScroll}
                 ref={deckRef}
               >

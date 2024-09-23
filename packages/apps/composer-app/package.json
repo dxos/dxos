@@ -1,6 +1,6 @@
 {
   "name": "@dxos/composer-app",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
@@ -35,7 +35,6 @@
     "@dxos/plugin-files": "workspace:*",
     "@dxos/plugin-function": "workspace:*",
     "@dxos/plugin-github": "workspace:*",
-    "@dxos/plugin-gpt": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-grid": "workspace:*",
     "@dxos/plugin-help": "workspace:*",

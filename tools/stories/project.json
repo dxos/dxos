@@ -89,6 +89,7 @@
         "react-shell:compile",
         "react-ui-card:compile",
         "react-ui-editor:compile",
+        "react-ui-grid:compile",
         "react-ui-mosaic:compile",
         "react-ui-navtree:compile",
         "react-ui-searchlist:compile",

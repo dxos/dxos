@@ -20,7 +20,8 @@ import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 import { appKey } from './src/constants';
 
-const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
+const rootDir = resolve(__dirname, '../../..');
+const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
@@ -50,6 +51,8 @@ export default defineConfig({
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
     rollupOptions: {
+      // NOTE: Set cache to fix to help debug flaky builds.
+      // cache: false,
       input: {
         internal: resolve(__dirname, './internal.html'),
         main: resolve(__dirname, './index.html'),
@@ -87,13 +90,13 @@ export default defineConfig({
     ThemePlugin({
       root: __dirname,
       content: [
-        resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../../experimental/*/src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../../plugins/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../../sdk/*/src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../../ui/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(__dirname, './index.html'),
+        join(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/plugins/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/plugins/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/sdk/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
     }),
     IconsPlugin({
@@ -102,9 +105,10 @@ export default defineConfig({
         `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
       spriteFile: 'icons.svg',
       contentPaths: [
-        `${resolve(__dirname, '../../..')}/{packages,tools}/**/dist/**/*.{mjs,html}`,
-        `${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}`,
+        join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
+        join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
       ],
+      // verbose: true,
     }),
     // https://github.com/antfu-collective/vite-plugin-inspect#readme
     // localhost:5173/__inspect
@@ -152,6 +156,8 @@ export default defineConfig({
       // No PWA in dev to make it easier to ensure the latest version is being used.
       // May be mitigated in the future by https://github.com/dxos/dxos/issues/4939.
       // https://vite-pwa-org.netlify.app/guide/unregister-service-worker.html#unregister-service-worker
+      // NOTE: Check cached resources (on CF, and in the PWA).
+      // curl -I --header "Cache-Control: no-cache" https://staging.composer.space/icons.svg
       selfDestroying: process.env.DX_PWA === 'false',
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,
@@ -232,7 +238,7 @@ export default defineConfig({
           },
         ]
       : []),
-  ],
+  ], // Plugins
 });
 
 /**

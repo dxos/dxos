@@ -7,9 +7,8 @@ import '@dxos-theme';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { Tooltip } from '@dxos/react-ui';
 import { Mosaic } from '@dxos/react-ui-mosaic';
-import { withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import type { StackSectionContent, StackSectionItem } from './Section';
 import { Stack, type StackProps } from './Stack';
@@ -30,24 +29,22 @@ const ContentTypeDelegator: StackProps['SectionContent'] = (section: { data: Sta
 
 const ContentTypesStoryStack = ({ items }: { items: StackSectionItem[] }) => {
   return (
-    <Tooltip.Provider>
-      <Mosaic.Root>
-        <Mosaic.DragOverlay />
-        <Stack
-          id='stack-editors'
-          SectionContent={ContentTypeDelegator}
-          items={items}
-          classNames='max-is-[min(100dvw,60rem)]'
-        />
-      </Mosaic.Root>
-    </Tooltip.Provider>
+    <Mosaic.Root>
+      <Mosaic.DragOverlay />
+      <Stack
+        id='stack-editors'
+        SectionContent={ContentTypeDelegator}
+        items={items}
+        classNames='max-is-[min(100dvw,60rem)]'
+      />
+    </Mosaic.Root>
   );
 };
 
 export default {
   title: 'react-ui-stack/ContentTypes',
   component: ContentTypesStoryStack,
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ tooltips: true })],
 };
 
 export const Editors = {
