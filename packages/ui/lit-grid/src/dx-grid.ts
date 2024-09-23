@@ -6,7 +6,17 @@ import { LitElement, html } from 'lit';
 import { customElement, state, property, eventOptions } from 'lit/decorators.js';
 import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 
-import { DxAxisResize, type DxAxisResizeProps, type DxGridAxis } from './types';
+import {
+  type AxisMeta,
+  type CellIndex,
+  type CellValue,
+  DxAxisResize,
+  type DxAxisResizeProps,
+  DxEditRequest,
+  type DxGridAxis,
+  type DxGridMode,
+  type DxGridPositionNullable,
+} from './types';
 
 /**
  * The size in pixels of the gap between cells
@@ -53,28 +63,33 @@ const rowToA1Notation = (row: number): string => {
   return `${row + 1}`;
 };
 
-export type CellValue = {
-  /**
-   * The content value
-   */
-  value: string;
-  /**
-   * If this is a merged cell, the bottomright-most of the range in numeric notation, otherwise undefined.
-   */
-  end?: string;
-  /**
-   * CSS inline styles to apply to the gridcell element
-   */
-  style?: string;
+const closestAction = (target: EventTarget | null): { action: string | null; actionEl: HTMLElement | null } => {
+  const actionEl: HTMLElement | null = (target as HTMLElement | null)?.closest('[data-dx-grid-action]') ?? null;
+  return { actionEl, action: actionEl?.getAttribute('data-dx-grid-action') ?? null };
 };
 
-type AxisMeta = {
-  size: number;
-  description?: string;
-  resizeable?: boolean;
+const closestCell = (target: EventTarget | null, actionEl?: HTMLElement | null): Record<DxGridAxis, number> | null => {
+  let cellElement = actionEl;
+  if (!cellElement) {
+    const { action, actionEl } = closestAction(target);
+    if (action === 'cell') {
+      cellElement = actionEl as HTMLElement;
+    }
+  }
+  if (cellElement) {
+    const col = parseInt(cellElement.getAttribute('aria-colindex') ?? 'never');
+    const row = parseInt(cellElement.getAttribute('aria-rowindex') ?? 'never');
+    return { col, row };
+  } else {
+    return null;
+  }
 };
 
-export type DxGridProps = Partial<Pick<DxGrid, 'cells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault'>>;
+const isSameCell = (a: DxGridPositionNullable, b: DxGridPositionNullable) =>
+  a && b && Number.isFinite(a.col) && Number.isFinite(a.row) && a.col === b.col && a.row === b.row;
+
+const toCellIndex = (cellCoords: Record<DxGridAxis, number>): CellIndex =>
+  `${cellCoords.col}${separator}${cellCoords.row}`;
 
 const localChId = (c0: number) => `ch--${c0}`;
 const localRhId = (r0: number) => `rh--${r0}`;
@@ -96,7 +111,10 @@ export class DxGrid extends LitElement {
   columns: Record<string, AxisMeta> = {};
 
   @property({ type: Object })
-  cells: Record<string, CellValue> = {};
+  cells: Record<CellIndex, CellValue> = {};
+
+  @property({ type: String })
+  mode: DxGridMode = 'browse';
 
   //
   // `pos`, short for ‘position’, is the position in pixels of the viewport from the origin.
@@ -171,7 +189,7 @@ export class DxGrid extends LitElement {
   templateRows = `${this.rowSize(0)}px`;
 
   //
-  // Resize state and handlers
+  // Resize state
   //
 
   @state()
@@ -183,11 +201,14 @@ export class DxGrid extends LitElement {
   @state()
   resizing: null | (DxAxisResizeProps & { page: number }) = null;
 
+  //
+  // Primary pointer and keyboard handlers
+  //
+
   handlePointerDown = (event: PointerEvent) => {
-    const actionEl = (event.target as HTMLElement)?.closest('[data-dx-grid-action]');
-    const action = actionEl?.getAttribute('data-dx-grid-action');
+    const { action, actionEl } = closestAction(event.target);
     if (action) {
-      if (action.startsWith('resize')) {
+      if (action.startsWith('resize') && this.mode === 'browse') {
         const [resize, index] = action.split(',');
         const [_, axis] = resize.split('-');
         this.resizing = {
@@ -196,6 +217,16 @@ export class DxGrid extends LitElement {
           page: getPage(axis, event),
           index,
         };
+      } else if (action === 'cell') {
+        const cellCoords = closestCell(event.target, actionEl);
+        if (this.focusActive && isSameCell(this.focusedCell, cellCoords)) {
+          this.dispatchEvent(
+            new DxEditRequest({
+              cellIndex: toCellIndex(cellCoords!),
+              cellBox: this.focusedCellBox(),
+            }),
+          );
+        }
       }
     }
   };
@@ -227,6 +258,47 @@ export class DxGrid extends LitElement {
     }
   };
 
+  handleKeydown(event: KeyboardEvent) {
+    if (this.focusActive && this.mode === 'browse') {
+      // Adjust state
+      switch (event.key) {
+        case 'ArrowDown':
+          this.focusedCell = { ...this.focusedCell, row: this.focusedCell.row + 1 };
+          break;
+        case 'ArrowUp':
+          this.focusedCell = { ...this.focusedCell, row: Math.max(0, this.focusedCell.row - 1) };
+          break;
+        case 'ArrowRight':
+          this.focusedCell = { ...this.focusedCell, col: this.focusedCell.col + 1 };
+          break;
+        case 'ArrowLeft':
+          this.focusedCell = { ...this.focusedCell, col: Math.max(0, this.focusedCell.col - 1) };
+          break;
+      }
+      // Emit interactions
+      switch (event.key) {
+        case 'Enter':
+          this.dispatchEvent(
+            new DxEditRequest({
+              cellIndex: toCellIndex(this.focusedCell),
+              cellBox: this.focusedCellBox(),
+            }),
+          );
+          break;
+      }
+      // Handle virtualization & focus consequences
+      switch (event.key) {
+        case 'ArrowDown':
+        case 'ArrowUp':
+        case 'ArrowRight':
+        case 'ArrowLeft':
+          event.preventDefault();
+          this.snapPosToFocusedCell();
+          break;
+      }
+    }
+  }
+
   //
   // Accessors
   //
@@ -239,8 +311,27 @@ export class DxGrid extends LitElement {
     return this.rowSizes?.[r] ?? this.rowDefault.size;
   }
 
-  private getCell(c: number | string, r: number | string) {
+  private cell(c: number | string, r: number | string) {
     return this.cells[`${c}${separator}${r}`];
+  }
+
+  private focusedCellBox(): DxEditRequest['cellBox'] {
+    const cellElement = this.focusedCellElement();
+    const cellSize = { inlineSize: this.colSize(this.focusedCell.col), blockSize: this.rowSize(this.focusedCell.row) };
+    if (!cellElement) {
+      return { insetInlineStart: NaN, insetBlockStart: NaN, ...cellSize };
+    }
+    const contentElement = cellElement.offsetParent as HTMLElement;
+    // Note that storing `offset` in state causes performance issues, so instead the transform is parsed here.
+    const [_translate3d, inlineStr, blockStr] = contentElement.style.transform.split(/[()]|px,?\s?/);
+    const contentOffsetInline = parseFloat(inlineStr);
+    const contentOffsetBlock = parseFloat(blockStr);
+    const offsetParent = contentElement.offsetParent as HTMLElement;
+    return {
+      insetInlineStart: cellElement.offsetLeft + contentOffsetInline + offsetParent.offsetLeft,
+      insetBlockStart: cellElement.offsetTop + contentOffsetBlock + offsetParent.offsetTop,
+      ...cellSize,
+    };
   }
 
   //
@@ -267,23 +358,25 @@ export class DxGrid extends LitElement {
   viewportRef: Ref<HTMLDivElement> = createRef();
 
   handleWheel = ({ deltaX, deltaY }: WheelEvent) => {
-    this.posInline = Math.max(0, this.posInline + deltaX);
-    this.posBlock = Math.max(0, this.posBlock + deltaY);
-    if (
-      this.posInline >= this.binInlineMin &&
-      this.posInline < this.binInlineMax &&
-      this.posBlock >= this.binBlockMin &&
-      this.posBlock < this.binBlockMax
-    ) {
-      // do nothing
-    } else {
-      // console.info(
-      //   '[updating bounds]',
-      //   'wheel',
-      //   [this.binInlineMin, this.posInline, this.binInlineMax],
-      //   [this.binBlockMin, this.posBlock, this.binBlockMax],
-      // );
-      this.updateVis();
+    if (this.mode === 'browse') {
+      this.posInline = Math.max(0, this.posInline + deltaX);
+      this.posBlock = Math.max(0, this.posBlock + deltaY);
+      if (
+        this.posInline >= this.binInlineMin &&
+        this.posInline < this.binInlineMax &&
+        this.posBlock >= this.binBlockMin &&
+        this.posBlock < this.binBlockMax
+      ) {
+        // do nothing
+      } else {
+        // console.info(
+        //   '[updating bounds]',
+        //   'wheel',
+        //   [this.binInlineMin, this.posInline, this.binInlineMax],
+        //   [this.binBlockMin, this.posBlock, this.binBlockMax],
+        // );
+        this.updateVis();
+      }
     }
   };
 
@@ -370,12 +463,9 @@ export class DxGrid extends LitElement {
 
   @eventOptions({ capture: true })
   handleFocus(event: FocusEvent) {
-    const target = event.target as HTMLElement;
-    const action = target.getAttribute('data-dx-grid-action');
-    if (action === 'cell') {
-      const c = parseInt(target.getAttribute('aria-colindex') ?? 'never');
-      const r = parseInt(target.getAttribute('aria-rowindex') ?? 'never');
-      this.focusedCell = { col: c, row: r };
+    const cellCoords = closestCell(event.target);
+    if (cellCoords) {
+      this.focusedCell = cellCoords;
       this.focusActive = true;
     }
   }
@@ -391,18 +481,29 @@ export class DxGrid extends LitElement {
     }
   }
 
+  focusedCellElement() {
+    return this.viewportRef.value?.querySelector(
+      `[aria-colindex="${this.focusedCell.col}"][aria-rowindex="${this.focusedCell.row}"]`,
+    ) as HTMLElement | null;
+  }
+
   /**
    * Moves focus to the cell with actual focus, otherwise moves focus to the viewport.
    */
-  refocus() {
+  refocus(increment?: 'down' | 'right') {
+    switch (increment) {
+      case 'down':
+        this.focusedCell = { ...this.focusedCell, row: this.focusedCell.row + 1 };
+        break;
+      case 'right':
+        this.focusedCell = { ...this.focusedCell, col: this.focusedCell.col + 1 };
+    }
     (this.focusedCell.row < this.visRowMin ||
     this.focusedCell.row > this.visRowMax ||
     this.focusedCell.col < this.visColMin ||
     this.focusedCell.col > this.visColMax
       ? this.viewportRef.value
-      : (this.viewportRef.value?.querySelector(
-          `[aria-colindex="${this.focusedCell.col}"][aria-rowindex="${this.focusedCell.row}"]`,
-        ) as HTMLElement | null)
+      : this.focusedCellElement()
     )?.focus({ preventScroll: true });
   }
 
@@ -452,37 +553,6 @@ export class DxGrid extends LitElement {
         }, 0);
         this.posBlock = this.binBlockMin + sizeSumRow + gap * 2 - this.sizeBlock;
         this.updateVisBlock();
-      }
-    }
-  }
-
-  // Keyboard interactions
-  handleKeydown(event: KeyboardEvent) {
-    if (this.focusActive) {
-      // Adjust state
-      switch (event.key) {
-        case 'ArrowDown':
-          this.focusedCell = { ...this.focusedCell, row: this.focusedCell.row + 1 };
-          break;
-        case 'ArrowUp':
-          this.focusedCell = { ...this.focusedCell, row: Math.max(0, this.focusedCell.row - 1) };
-          break;
-        case 'ArrowRight':
-          this.focusedCell = { ...this.focusedCell, col: this.focusedCell.col + 1 };
-          break;
-        case 'ArrowLeft':
-          this.focusedCell = { ...this.focusedCell, col: Math.max(0, this.focusedCell.col - 1) };
-          break;
-      }
-      // Handle virtualization & focus consequences
-      switch (event.key) {
-        case 'ArrowDown':
-        case 'ArrowUp':
-        case 'ArrowRight':
-        case 'ArrowLeft':
-          event.preventDefault();
-          this.snapPosToFocusedCell();
-          break;
       }
     }
   }
@@ -560,7 +630,7 @@ export class DxGrid extends LitElement {
             return [...Array(visibleRows)].map((_, r0) => {
               const c = c0 + this.visColMin;
               const r = r0 + this.visRowMin;
-              const cell = this.getCell(c, r);
+              const cell = this.cell(c, r);
               return html`<div
                 role="gridcell"
                 tabindex="0"
