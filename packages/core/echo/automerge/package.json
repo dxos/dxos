@@ -150,7 +150,7 @@
     "fast-sha256": "^1.3.0",
     "isomorphic-ws": "^5.0.0",
     "uuid": "^9.0.0",
-    "ws": "^8.14.2",
+    "ws": "^8.18.0",
     "xstate": "^5.9.1"
   },
   "devDependencies": {
