@@ -16,6 +16,9 @@ export type ClientContextProps = {
   status?: SystemStatus | null;
 };
 
+/**
+ * @internal Use ClientProvider to create or initialize the Client.
+ */
 export const ClientContext: Context<ClientContextProps | undefined> = createContext<ClientContextProps | undefined>(
   undefined,
 );
