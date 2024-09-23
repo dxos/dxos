@@ -42,6 +42,9 @@ patchedDependencies:
   uuid@8.3.2:
     hash: rxfbstxgb7ip2ka7npjixuqpye
     path: patches/uuid@8.3.2.patch
+  vite@5.4.7:
+    hash: i2cyw7vpoo7fbe7qgy5pwsznyq
+    path: patches/vite@5.4.7.patch
 
 importers:
 
@@ -344,7 +347,7 @@ importers:
         version: 9.0.1
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       vite-plugin-inspect:
         specifier: ^0.8.1
         version: 0.8.3(rollup@3.23.0)(vite@5.4.7)
@@ -512,7 +515,7 @@ importers:
         version: 5.5.4
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       vue:
         specifier: ^3.3.12
         version: 3.4.15(typescript@5.5.4)
@@ -804,7 +807,7 @@ importers:
         version: 5.12.0(rollup@3.23.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       vite-plugin-pwa:
         specifier: ^0.18.2
         version: 0.18.2(vite@5.4.7)(workbox-window@7.0.0)
@@ -880,7 +883,7 @@ importers:
         version: 5.5.4
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
         version: 1.4.1(rollup@3.23.0)(vite@5.4.7)
@@ -1106,7 +1109,7 @@ importers:
         version: 0.0.103
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
         version: 1.4.1(rollup@3.23.0)(vite@5.4.7)
@@ -1182,7 +1185,7 @@ importers:
         version: 4.2.1(vite@5.4.7)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
         version: 1.4.1(rollup@3.23.0)(vite@5.4.7)
@@ -4474,7 +4477,7 @@ importers:
         version: 5.5.4
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       vite-plugin-fonts:
         specifier: ^0.7.0
         version: 0.7.0(vite@5.4.7)
@@ -4610,7 +4613,7 @@ importers:
         version: 3.4.1(ts-node@10.9.1)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       vite-plugin-fonts:
         specifier: ^0.7.0
         version: 0.7.0(vite@5.4.7)
@@ -4716,7 +4719,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/experimental/agent-functions:
     dependencies:
@@ -5032,7 +5035,7 @@ importers:
         version: 5.5.4
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/experimental/discord-bot:
     dependencies:
@@ -5377,7 +5380,7 @@ importers:
         version: 5.5.4
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       vite-plugin-fonts:
         specifier: ^0.7.0
         version: 0.7.0(vite@5.4.7)
@@ -5846,7 +5849,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/experimental/plugin-debug:
     dependencies:
@@ -5988,7 +5991,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/experimental/plugin-excalidraw:
     dependencies:
@@ -6088,7 +6091,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/experimental/plugin-explorer:
     dependencies:
@@ -6204,7 +6207,7 @@ importers:
         version: 1.0.5
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/experimental/plugin-function:
     dependencies:
@@ -6310,7 +6313,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/experimental/plugin-github:
     dependencies:
@@ -6407,7 +6410,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/experimental/plugin-gpt:
     dependencies:
@@ -6486,7 +6489,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/experimental/plugin-grid:
     dependencies:
@@ -6587,7 +6590,7 @@ importers:
         version: 1.8.8
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/experimental/plugin-inbox:
     dependencies:
@@ -6670,7 +6673,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/experimental/plugin-ipfs:
     dependencies:
@@ -6738,7 +6741,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/experimental/plugin-kanban:
     dependencies:
@@ -6815,7 +6818,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/experimental/plugin-map:
     dependencies:
@@ -6901,7 +6904,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/experimental/plugin-native:
     dependencies:
@@ -6923,7 +6926,7 @@ importers:
     devDependencies:
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/experimental/plugin-outliner:
     dependencies:
@@ -7003,7 +7006,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/experimental/plugin-script:
     dependencies:
@@ -7167,7 +7170,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/experimental/plugin-search:
     dependencies:
@@ -7234,7 +7237,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/experimental/plugin-template:
     dependencies:
@@ -7287,7 +7290,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-attention:
     dependencies:
@@ -7386,7 +7389,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-client:
     dependencies:
@@ -7441,7 +7444,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-deck:
     dependencies:
@@ -7541,7 +7544,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-files:
     dependencies:
@@ -7612,7 +7615,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-graph:
     dependencies:
@@ -7646,7 +7649,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-help:
     dependencies:
@@ -7728,7 +7731,7 @@ importers:
         version: 4.10.1
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-markdown:
     dependencies:
@@ -7835,7 +7838,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-mermaid:
     dependencies:
@@ -7896,7 +7899,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-metadata:
     dependencies:
@@ -7918,7 +7921,7 @@ importers:
         version: 18.2.0
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-navtree:
     dependencies:
@@ -8018,7 +8021,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-observability:
     dependencies:
@@ -8085,7 +8088,7 @@ importers:
         version: 18.2.0
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-presenter:
     dependencies:
@@ -8194,7 +8197,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-pwa:
     dependencies:
@@ -8234,7 +8237,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       vite-plugin-pwa:
         specifier: ^0.18.2
         version: 0.18.2(vite@5.4.7)(workbox-window@7.0.0)
@@ -8292,7 +8295,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-settings:
     dependencies:
@@ -8332,7 +8335,7 @@ importers:
         version: 18.2.0
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-sheet:
     dependencies:
@@ -8505,7 +8508,7 @@ importers:
         version: 1.8.8
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-sketch:
     dependencies:
@@ -8624,7 +8627,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-space:
     dependencies:
@@ -8746,7 +8749,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-stack:
     dependencies:
@@ -8838,7 +8841,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-status-bar:
     dependencies:
@@ -8908,7 +8911,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-table:
     dependencies:
@@ -8985,7 +8988,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-theme:
     dependencies:
@@ -9025,7 +9028,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-thread:
     dependencies:
@@ -9144,7 +9147,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/plugins/plugin-wildcard:
     dependencies:
@@ -9190,7 +9193,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/sdk/app-framework:
     dependencies:
@@ -9300,7 +9303,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/sdk/client:
     dependencies:
@@ -9718,7 +9721,7 @@ importers:
         version: 5.5.4
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
         version: 1.4.1(rollup@3.23.0)(vite@5.4.7)
@@ -10082,7 +10085,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/ui/brand:
     dependencies:
@@ -10378,7 +10381,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/ui/react-ui-attention:
     dependencies:
@@ -10439,7 +10442,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/ui/react-ui-card:
     dependencies:
@@ -10488,7 +10491,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/ui/react-ui-deck:
     dependencies:
@@ -10567,7 +10570,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/ui/react-ui-editor:
     dependencies:
@@ -10781,7 +10784,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
         version: 1.4.1(rollup@3.23.0)(vite@5.4.7)
@@ -10824,7 +10827,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/ui/react-ui-mosaic:
     dependencies:
@@ -10924,7 +10927,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/ui/react-ui-navtree:
     dependencies:
@@ -10991,7 +10994,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/ui/react-ui-searchlist:
     dependencies:
@@ -11034,7 +11037,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/ui/react-ui-stack:
     dependencies:
@@ -11119,7 +11122,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/ui/react-ui-table:
     dependencies:
@@ -11213,7 +11216,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/ui/react-ui-tabs:
     dependencies:
@@ -11268,7 +11271,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/ui/react-ui-text-tooltip:
     dependencies:
@@ -11299,7 +11302,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/ui/react-ui-theme:
     dependencies:
@@ -11372,7 +11375,7 @@ importers:
         version: 8.4.41
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/ui/react-ui-thread:
     dependencies:
@@ -11433,7 +11436,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   packages/ui/react-ui-types: {}
 
@@ -11748,7 +11751,7 @@ importers:
         version: 8.2.9
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   tools/log-hook:
     dependencies:
@@ -11941,7 +11944,7 @@ importers:
         version: 4.0.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0)(react@18.2.0)
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       vite-plugin-turbosnap:
         specifier: ^1.0.3
         version: 1.0.3
@@ -11958,7 +11961,7 @@ importers:
         version: 2.3.1
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(@types/node@18.11.10)
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
     devDependencies:
       '@types/node':
         specifier: 18.11.10
@@ -16650,7 +16653,7 @@ packages:
       react-refresh: 0.13.0
       rollup: 2.78.1
       rxjs: 7.5.7
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -18574,7 +18577,7 @@ packages:
       magic-string: 0.27.0
       react-docgen-typescript: 2.2.2(typescript@5.5.4)
       typescript: 5.5.4
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
     dev: true
 
   /@jridgewell/gen-mapping@0.1.1:
@@ -20559,7 +20562,7 @@ packages:
       enquirer: 2.3.6
       minimatch: 9.0.3
       tsconfig-paths: 4.2.0
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       vitest: 2.1.1(@types/node@18.11.10)(@vitest/browser@2.1.1)(@vitest/ui@2.1.1)(jsdom@24.0.0)
     transitivePeerDependencies:
       - '@babel/traverse'
@@ -26864,7 +26867,7 @@ packages:
       magic-string: 0.30.5
       ts-dedent: 2.2.0
       typescript: 5.5.4
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
     transitivePeerDependencies:
       - encoding
       - prettier
@@ -27359,7 +27362,7 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
       resolve: 1.22.8
       tsconfig-paths: 4.2.0
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
     transitivePeerDependencies:
       - '@preact/preset-vite'
       - encoding
@@ -30384,7 +30387,7 @@ packages:
       vite: ^4 || ^5
     dependencies:
       '@swc/core': 1.4.0
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
     transitivePeerDependencies:
       - '@swc/helpers'
     dev: true
@@ -30400,7 +30403,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.23.3(@babel/core@7.23.9)
       '@types/babel__core': 7.20.5
       react-refresh: 0.14.0
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
     transitivePeerDependencies:
       - supports-color
 
@@ -30535,7 +30538,7 @@ packages:
       estree-walker: 3.0.3
       magic-string: 0.30.11
       msw: 2.4.5(typescript@5.5.4)
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   /@vitest/pretty-format@2.1.1:
     resolution: {integrity: sha512-SjxPFOtuINDUW8/UkElJYQSFtnWX7tMksSGW0vfjxMneFqxVr8YJ979QpMbDW7g+BIiq88RAGDjf7en6rvLPPQ==}
@@ -31543,13 +31546,8 @@ packages:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  /ajv-formats@2.1.1(ajv@8.12.0):
+  /ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
     dependencies:
       ajv: 8.12.0
 
@@ -33953,7 +33951,7 @@ packages:
     engines: {node: '>=18'}
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv-formats: 2.1.1
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -48655,7 +48653,7 @@ packages:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv-formats: 2.1.1
       ajv-keywords: 5.1.0(ajv@8.12.0)
     dev: true
 
@@ -52120,7 +52118,7 @@ packages:
       debug: 4.3.7(supports-color@5.5.0)
       pathe: 1.1.2
       picocolors: 1.0.1
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -52141,7 +52139,7 @@ packages:
       cac: 6.7.14
       debug: 4.3.7(supports-color@5.5.0)
       pathe: 1.1.2
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -52160,7 +52158,7 @@ packages:
       vite: ^5.0.0
     dependencies:
       fast-glob: 3.2.12
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
     dev: true
 
   /vite-plugin-inspect@0.8.3(rollup@3.23.0)(vite@5.4.7):
@@ -52182,7 +52180,7 @@ packages:
       perfect-debounce: 1.0.0
       picocolors: 1.0.0
       sirv: 2.0.4
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -52198,7 +52196,7 @@ packages:
       debug: 4.3.4
       fast-glob: 3.3.2
       pretty-bytes: 6.1.1
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       workbox-build: 7.0.0
       workbox-window: 7.0.0
     transitivePeerDependencies:
@@ -52214,7 +52212,7 @@ packages:
       '@rollup/plugin-virtual': 3.0.2(rollup@3.23.0)
       '@swc/core': 1.3.104
       uuid: 9.0.1
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
     transitivePeerDependencies:
       - '@swc/helpers'
       - rollup
@@ -52228,7 +52226,7 @@ packages:
     peerDependencies:
       vite: ^2 || ^3 || ^4 || ^5
     dependencies:
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
 
   /vite-tsconfig-paths@4.3.1(typescript@5.5.4)(vite@5.4.7):
     resolution: {integrity: sha512-cfgJwcGOsIxXOLU/nELPny2/LUD/lcf1IbfyeKTv2bsupVbTH/xpFtdQlBmIP1GEK2CjjLxYhFfB+QODFAx5aw==}
@@ -52241,7 +52239,7 @@ packages:
       debug: 4.3.4
       globrex: 0.1.2
       tsconfck: 3.0.2(typescript@5.5.4)
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -52283,7 +52281,7 @@ packages:
       fsevents: 2.3.3
     dev: true
 
-  /vite@5.4.7(@types/node@18.11.10):
+  /vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10):
     resolution: {integrity: sha512-5l2zxqMEPVENgvzTuBpHer2awaetimj2BGkhBPdnwKbPNOlHsODU+oiazEZzLK7KhAnOrO+XGYJYn4ZlUhDtDQ==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
@@ -52320,6 +52318,7 @@ packages:
       rollup: 4.22.4
     optionalDependencies:
       fsevents: 2.3.3
+    patched: true
 
   /vitest@1.5.3(@types/node@18.11.10)(@vitest/browser@1.5.3)(@vitest/ui@1.5.3)(jsdom@24.0.0):
     resolution: {integrity: sha512-2oM7nLXylw3mQlW6GXnRriw+7YvZFk/YNV8AxIC3Z3MfFbuziLGWP9GPxxu/7nRlXhqyxBikpamr+lEEj1sUEw==}
@@ -52367,7 +52366,7 @@ packages:
       strip-literal: 2.0.0
       tinybench: 2.9.0
       tinypool: 0.8.4
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       vite-node: 1.5.3(@types/node@18.11.10)
       why-is-node-running: 2.3.0
     transitivePeerDependencies:
@@ -52426,7 +52425,7 @@ packages:
       tinyexec: 0.3.0
       tinypool: 1.0.1
       tinyrainbow: 1.2.0
-      vite: 5.4.7(@types/node@18.11.10)
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@18.11.10)
       vite-node: 2.1.1(@types/node@18.11.10)
       why-is-node-running: 2.3.0
     transitivePeerDependencies:
