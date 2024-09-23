@@ -86,12 +86,6 @@
         {
           "env": "SENTRY_RELEASE_AUTH_TOKEN"
         },
-        {
-          "env": "DX_LOKI_AUTHORIZATION"
-        },
-        {
-          "env": "DX_LOKI_ENDPOINT"
-        },
         "^production",
         "production"
       ],
