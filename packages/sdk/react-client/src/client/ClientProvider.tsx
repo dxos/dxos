@@ -111,10 +111,13 @@ export const ClientProvider = ({
   // Initialize client.
   useEffect(() => {
     const done = async (client: Client) => {
-      await client.initialize().catch(setError);
-      log('client ready');
-      await onInitialized?.(client);
-      log('initialization complete');
+      if (!client.initialized) {
+        await client.initialize().catch(setError);
+        log('client ready');
+        await onInitialized?.(client);
+        log('initialization complete');
+      }
+
       if (types) {
         client.addTypes(types);
       }
