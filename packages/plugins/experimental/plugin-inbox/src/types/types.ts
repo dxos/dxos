@@ -16,7 +16,7 @@ import { INBOX_PLUGIN } from '../meta';
 const INBOX_ACTION = `${INBOX_PLUGIN}/action`;
 export enum InboxAction {
   CREATE_MAILBOX = `${INBOX_ACTION}/create-mailbox`,
-  CREATE_ADDRESSBOOK = `${INBOX_ACTION}/create-addressbook`,
+  CREATE_CONTACTS = `${INBOX_ACTION}/create-contacts`,
   CREATE_CALENDAR = `${INBOX_ACTION}/create-calendar`,
 }
 

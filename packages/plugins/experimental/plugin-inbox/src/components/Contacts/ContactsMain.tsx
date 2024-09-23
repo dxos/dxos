@@ -15,7 +15,7 @@ import {
 } from '@dxos/react-ui-theme';
 
 import { ContactList } from './ContactList';
-import { type AddressBookType } from '../../types';
+import { type ContactsType } from '../../types';
 import { MasterDetail } from '../MasterDetail';
 
 // TODO(burdon): Master detail (same as Inbox); incl. selection, cursor navigation, scrolling.
@@ -33,11 +33,11 @@ const byName =
   ({ name: _a }: ContactType, { name: _b }: ContactType) => {
     const a = _a?.toLowerCase().replace(/\W/g, '');
     const b = _b?.toLowerCase().replace(/\W/g, '');
-    return a === undefined || b === undefined || a < b ? -direction : b === undefined || a > b ? direction : 0;
+    return a === undefined || b === undefined || a < b ? -direction : a > b ? direction : 0;
   };
 
 export type ContactsMainProps = {
-  contacts: AddressBookType;
+  contacts: ContactsType;
 };
 
 const ContactsMain = ({ contacts }: ContactsMainProps) => {
