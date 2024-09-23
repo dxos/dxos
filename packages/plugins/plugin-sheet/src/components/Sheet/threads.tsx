@@ -22,6 +22,12 @@ import { addressFromIndex, addressToIndex, closest } from '../../model';
  */
 const currentThreadForSheet = create<Record<string, string>>({});
 
+const CommentIndicator = () => {
+  return (
+    <div className='absolute top-0 right-0 w-0 h-0 border-t-8 border-l-8 border-t-cmCommentSurface border-l-transparent'></div>
+  );
+};
+
 const CommentWrapper: React.FC<{ sheetId: string; threadId: string; children: React.ReactNode }> = ({
   sheetId,
   threadId,
@@ -48,6 +54,7 @@ const CommentWrapper: React.FC<{ sheetId: string; threadId: string; children: Re
         setIsHovered(false);
       }}
     >
+      <CommentIndicator />
       {isHovered && (
         <div className='absolute inset-0 flex items-center justify-end pr-1'>
           <button
@@ -68,7 +75,6 @@ const createThreadDecoration = (cellIndex: string, threadId: string, sheetId: st
     type: 'comment',
     cellIndex,
     decorate: (props) => <CommentWrapper threadId={threadId} sheetId={sheetId} {...props} />,
-    classNames: ['bg-cmCommentSurface'],
   };
 };
 

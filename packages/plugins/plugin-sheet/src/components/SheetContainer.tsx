@@ -5,10 +5,22 @@
 import React, { useCallback } from 'react';
 
 import { useIntentDispatcher, type LayoutPart } from '@dxos/app-framework';
-import { mx } from '@dxos/react-ui-theme';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { useIsDirectlyAttended } from '@dxos/react-ui-attention';
+import { focusRing, mx } from '@dxos/react-ui-theme';
 
 import { Sheet, type SheetRootProps } from './Sheet';
 import { Toolbar, type ToolbarAction } from './Toolbar';
+
+// TODO(Zan): Factor out, copied this from MarkdownPlugin.
+const attentionFragment = mx(
+  'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
+  'group-focus-within/editor:border-separator',
+);
+
+// TODO(Zan): Factor out, copied this from MarkdownPlugin.
+export const sectionToolbarLayout =
+  'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 __-block-start-px transition-opacity';
 
 const SheetContainer = ({
   sheet,
@@ -18,12 +30,8 @@ const SheetContainer = ({
 }: SheetRootProps & { role?: string; layoutPart?: LayoutPart }) => {
   const dispatch = useIntentDispatcher();
 
-  // TODO(Zan): Sheet section toolbar should display only when the section is directly attended.
-  // TODO(Zan): We have a hook useHasAttention, maybe we should have useDirectlyAttended as well?
-  // Ask Will why we did it like this in MarkdownPlugin.
-  //   const attentionPlugin = useResolvePlugin(parseAttentionPlugin);
-  //   const attended = Array.from(attentionPlugin?.provides.attention?.attended ?? []);
-  //   const isDirectlyAttended = attended.length === 1 && attended[0] === id;
+  const id = fullyQualifiedId(sheet);
+  const isDirectlyAttended = useIsDirectlyAttended(id);
 
   // TODO(Zan): Centralise the toolbar action handler. Current implementation in stories.
   const handleAction = useCallback((action: ToolbarAction) => {
@@ -43,29 +51,39 @@ const SheetContainer = ({
   }, []);
 
   return (
-    <div
-      role='none'
-      className={mx(
-        role === 'article' && 'row-span-2', // TODO(burdon): Container with toolbar.
-        role === 'section' && 'aspect-square border-y border-is border-separator',
-        layoutPart !== 'solo' && 'border-is border-separator',
-      )}
-    >
+    <div role='none' className={role === 'article' ? 'row-span-2 grid grid-rows-subgrid' : undefined}>
       <Sheet.Root sheet={sheet} space={space}>
-        {toolbar && (
-          <div role='none' className={mx('flex shrink-0 justify-center overflow-x-auto')}>
-            <Toolbar.Root onAction={handleAction}>
-              {/* TODO(Zan): Restore some of this functionality */}
-              {/* <Toolbar.Styles /> */}
-              {/* <Toolbar.Format /> */}
-              {/* <Toolbar.Alignment /> */}
-              <Toolbar.Separator />
-              {/* TODO(Zan): Don't hard code selection. */}
-              <Toolbar.Actions />
-            </Toolbar.Root>
-          </div>
-        )}
-        <Sheet.Main />
+        <div role='none' className={mx('flex flex-0 justify-center overflow-x-auto')}>
+          <Toolbar.Root
+            onAction={handleAction}
+            classNames={
+              role === 'section'
+                ? ['z-[2] group-focus-within/section:visible', !isDirectlyAttended && 'invisible', sectionToolbarLayout]
+                : ['group-focus-within/editor:border-separator group-[[aria-current]]/editor:border-separator']
+            }
+          >
+            {/* TODO(Zan): Restore some of this functionality */}
+            {/* <Toolbar.Styles /> */}
+            {/* <Toolbar.Format /> */}
+            {/* <Toolbar.Alignment /> */}
+            <Toolbar.Separator />
+            <Toolbar.Actions />
+          </Toolbar.Root>
+        </div>
+        <div
+          role='none'
+          className={mx(
+            role === 'section' && 'aspect-square border-y',
+            role === 'article' &&
+              'flex is-full overflow-hidden focus-visible:ring-inset row-span-1 data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
+            focusRing,
+            attentionFragment,
+            layoutPart !== 'solo' && 'border-is ',
+            'border-bs border-separator',
+          )}
+        >
+          <Sheet.Main />
+        </div>
       </Sheet.Root>
     </div>
   );

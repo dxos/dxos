@@ -15,7 +15,7 @@ import {
   parseLayoutPlugin,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { parseAttentionPlugin } from '@dxos/plugin-attention';
+import { useIsDirectlyAttended } from '@dxos/react-ui-attention';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type Action,
@@ -83,11 +83,9 @@ export const MarkdownEditor = ({
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
   const dispatch = useIntentDispatcher();
-  const attentionPlugin = useResolvePlugin(parseAttentionPlugin);
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
-  const attended = Array.from(attentionPlugin?.provides.attention?.attended ?? []);
-  const isDirectlyAttended = attended.length === 1 && attended[0] === id;
   const [formattingState, formattingObserver] = useFormattingState();
+  const isDirectlyAttended = useIsDirectlyAttended(id);
 
   // Extensions from other plugins.
   const providerExtensions = useMemo(() => extensionProviders?.map((provider) => provider({})), [extensionProviders]);
