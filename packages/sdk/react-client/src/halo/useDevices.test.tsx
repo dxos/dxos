@@ -8,12 +8,12 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { useDevices } from './useDevices';
-import { createClient, createWrapper } from '../testing/util';
+import { createClient, createContextProvider } from '../testing/util';
 
 describe('useDevices', () => {
   test('lists existing devices', async () => {
     const { client } = await createClient({ createIdentity: true });
-    const wrapper = await createWrapper(client);
+    const wrapper = await createContextProvider(client);
     const { result } = renderHook(() => useDevices(), { wrapper });
     expect(result.current?.length).to.eq(1);
   });

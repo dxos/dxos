@@ -18,15 +18,17 @@ export const createClient = async ({
   if (createIdentity) {
     await client.halo.createIdentity();
   }
+
   let space: Space | undefined;
   if (createSpace) {
     space = await client.spaces.create();
     await client.spaces.isReady.wait();
   }
+
   return { client, space };
 };
 
 // TODO(burdon): Change to ClientProvider.
-export const createWrapper = async (client: Client) => {
+export const createContextProvider = async (client: Client) => {
   return ({ children }: any) => <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>;
 };
