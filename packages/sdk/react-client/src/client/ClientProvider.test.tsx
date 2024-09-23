@@ -126,7 +126,7 @@ describe('ClientProvider', () => {
     expect(() => screen.getByText('Client is NOT there')).toThrow();
   });
 
-  test.only('Provides new client when value changes', async () => {
+  test('Provides new client when value changes', async () => {
     const { rerender } = render(
       <ClientProvider client={client}>
         <TestComponent />

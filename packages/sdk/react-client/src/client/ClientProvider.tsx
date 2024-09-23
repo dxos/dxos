@@ -106,8 +106,8 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
       throw error;
     }
 
-    const [client, setClient] = useState<Client>();
-    // const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
+    // TODO(burdon): If already initialized then adding types may happen after rendering.
+    const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
 
     // Provide external access.
     useImperativeHandle(forwardedRef, () => client, [client]);
@@ -121,7 +121,7 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
 
       const subscription = client.status.subscribe((status) => setStatus(status));
       return () => subscription.unsubscribe();
-    }, [client, setStatus]);
+    }, [client]);
 
     // Create and/or initialize client.
     useEffect(() => {
@@ -133,12 +133,14 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
           log('initialization complete');
         }
 
-        // TODO(burdon): Types might not be set yet.
+        // TODO(burdon): This might get skipped if client set directly.
         if (types) {
           client.addTypes(types);
         }
 
         setClient(client);
+
+        // TODO(burdon): Remove since set by hook above?
         setStatus(client.status.get() ?? SystemStatus.ACTIVE);
 
         // TODO(burdon): Make dynamic.
