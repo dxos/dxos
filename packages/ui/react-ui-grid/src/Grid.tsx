@@ -48,7 +48,7 @@ export const Grid = (props: GridProps) => {
       autoFocus: !!editing,
       extensions: [
         listener({
-          onFocus: (focusing) => {
+          onFocus: (focusing: boolean) => {
             if (!focusing && editing) {
               setEditing(null);
             }
@@ -70,7 +70,7 @@ export const Grid = (props: GridProps) => {
       if (editing) {
         switch (event.key) {
           case 'Enter':
-            console.warn('to do: save content');
+            // console.warn('to do: save content');
             setEditing(null);
             gridRef.current?.refocus('down');
             break;

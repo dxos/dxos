@@ -15,6 +15,7 @@ export default {
 
 export const Basic = {
   args: {
+    id: 'story',
     cells: {
       '1,1': {
         // end: '8,1',
