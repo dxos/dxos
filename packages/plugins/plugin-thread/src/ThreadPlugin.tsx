@@ -28,6 +28,7 @@ import { type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { log } from '@dxos/log';
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -255,6 +256,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                       menuItemType: 'toggle',
                       isChecked: viewState.showResolvedThreads,
                       testId: 'threadPlugin.toggleShowResolved',
+                      iconSymbol: viewState.showResolvedThreads ? 'ph--eye-slash--regular' : 'ph--eye--regular',
                     },
                   },
                 ];
@@ -451,6 +453,17 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               if (intent.data && intent.data.cursor !== undefined) {
                 const { cursor, name, subject } = intent.data;
 
+                // Seed the threads array if it does not exist.
+                if (subject?.threads === undefined) {
+                  try {
+                    // Static schema will throw an error if subject does not support threads array property.
+                    subject.threads = [];
+                  } catch (e) {
+                    log.error('Subject does not support threads array', subject?.typename);
+                    return;
+                  }
+                }
+
                 const subjectId = fullyQualifiedId(subject);
                 const thread = create(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
 
@@ -600,7 +613,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const { thread, subject } = intent.data ?? {};
               if (
                 !(thread instanceof ThreadType) ||
-                !(subject && typeof subject === 'object' && 'threads' in subject)
+                !(subject && typeof subject === 'object' && 'threads' in subject && Array.isArray(subject.threads))
               ) {
                 return;
               }

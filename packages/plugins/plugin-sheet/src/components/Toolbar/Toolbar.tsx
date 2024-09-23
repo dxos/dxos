@@ -185,7 +185,7 @@ const Actions = () => {
   const { cursor, range, model } = useSheetContext();
   const { t } = useTranslation(SHEET_PLUGIN);
 
-  const overlapsCommentAnchor = model.sheet.threads
+  const overlapsCommentAnchor = (model.sheet.threads ?? [])
     .filter(nonNullable)
     .filter((t) => t.status !== 'resolved')
     .some((thread) => {

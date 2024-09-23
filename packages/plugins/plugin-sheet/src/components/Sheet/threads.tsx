@@ -106,7 +106,7 @@ const useSelectThreadOnCursorChange = () => {
   const sheetId = fullyQualifiedId(model.sheet);
 
   useEffect(() => {
-    if (!cursor) {
+    if (!cursor || !threads) {
       return;
     }
 
@@ -146,6 +146,9 @@ const useThreadDecorations = () => {
   useEffect(() => {
     const unsubscribe = effect(() => {
       const activeThreadAnchors = new Set<string>();
+      if (!sheet.threads) {
+        return;
+      }
 
       // Process active threads
       for (const thread of sheet.threads) {

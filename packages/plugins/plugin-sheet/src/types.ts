@@ -117,7 +117,7 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
   formatting: S.mutable(S.Record(S.String, S.mutable(Formatting))),
 
   // Threads associated with the sheet
-  threads: S.mutable(S.Array(ref(ThreadType))),
+  threads: S.optional(S.mutable(S.Array(ref(ThreadType)))),
 }) {}
 
 // TODO(burdon): Fix defaults.
@@ -130,5 +130,4 @@ export const createSheet = (title?: string): SheetType =>
     rowMeta: {},
     columnMeta: {},
     formatting: {},
-    threads: [],
   });
