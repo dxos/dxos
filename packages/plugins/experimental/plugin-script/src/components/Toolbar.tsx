@@ -53,6 +53,7 @@ export const Toolbar = ({
     setPending(false);
   };
 
+  // TODO(burdon): Simplify tooltips.
   // TODO(burdon): Factor out common toolbar components with sheet/editor?
   return (
     <DensityProvider density='fine'>

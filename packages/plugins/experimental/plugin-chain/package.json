@@ -65,6 +65,7 @@
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

@@ -179,11 +179,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/react-async/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/timeframe/package.json",
           "jsonpath": "$.version"
         },
@@ -790,6 +785,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-stack/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-syntax-highlighter/package.json",
           "jsonpath": "$.version"
         },
         {

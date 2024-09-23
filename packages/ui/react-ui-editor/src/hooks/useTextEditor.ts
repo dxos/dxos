@@ -17,7 +17,7 @@ import {
 } from 'react';
 
 import { log } from '@dxos/log';
-import { isNotFalsy, type MaybeFunction } from '@dxos/util';
+import { getProviderValue, isNotFalsy, type MaybeProvider } from '@dxos/util';
 
 import { createEditorStateTransaction, documentId, editorInputMode, type EditorSelection } from '../extensions';
 import { logChanges } from '../util';
@@ -57,13 +57,11 @@ let instanceCount = 0;
  * Hook for creating editor.
  */
 export const useTextEditor = (
-  props: MaybeFunction<UseTextEditorProps> = {},
+  props: MaybeProvider<UseTextEditorProps> = {},
   deps: DependencyList = [],
 ): UseTextEditor => {
   const { id, initialValue, extensions, autoFocus, scrollTo, selection, moveToEndOfLine, debug } =
-    useMemo<UseTextEditorProps>(() => {
-      return typeof props === 'function' ? props() : props;
-    }, deps ?? []);
+    useMemo<UseTextEditorProps>(() => getProviderValue(props), deps ?? []);
 
   // NOTE: Increments by 2 in strict mode.
   const [instanceId] = useState(() => `text-editor-${++instanceCount}`);

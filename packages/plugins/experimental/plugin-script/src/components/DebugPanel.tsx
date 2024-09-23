@@ -3,15 +3,6 @@
 //
 
 import React, { useEffect, useRef, useState } from 'react';
-// @ts-ignore
-// eslint-disable-next-line no-restricted-imports
-import SyntaxHighlighter from 'react-syntax-highlighter';
-// @ts-ignore
-// eslint-disable-next-line no-restricted-imports
-import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
-// @ts-ignore
-// eslint-disable-next-line no-restricted-imports
-import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 import { log } from '@dxos/log';
 import {
@@ -22,9 +13,9 @@ import {
   type ThemedClassName,
   Toolbar,
   useControlledValue,
-  useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
 import { SCRIPT_PLUGIN } from '../meta';
@@ -233,17 +224,12 @@ const RobotAvatar = () => (
 );
 
 const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
-  const { themeMode } = useThemeContext();
   const { text, data, error } = message;
   if (error) {
     return <span className={mx(classNames, 'whitespace-pre text-error')}>{String(error)}</span>;
   } else if (data) {
     return (
-      <SyntaxHighlighter
-        language='json'
-        style={themeMode === 'dark' ? styleDark : styleLight}
-        className={mx('w-full text-xs', classNames)}
-      >
+      <SyntaxHighlighter language='json' className={mx('text-xs', classNames)}>
         {JSON.stringify(data, null, 2)}
       </SyntaxHighlighter>
     );

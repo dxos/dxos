@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { MessageRoot } from './Message';
 import { threadLayout } from '../Thread';
@@ -39,7 +39,7 @@ export default {
   title: 'react-ui-thread/Message',
   component: MessageRoot,
   render: Story,
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { translations },
 };
 

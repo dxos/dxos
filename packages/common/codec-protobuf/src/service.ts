@@ -5,7 +5,7 @@
 import type pb from 'protobufjs';
 
 import { invariant } from '@dxos/invariant';
-import { getAsyncValue } from '@dxos/util';
+import { getAsyncProviderValue } from '@dxos/util';
 
 import { type Any, type EncodingOptions } from './common';
 import { type RequestOptions } from './request-options';
@@ -158,7 +158,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
   }
 
   private async _getHandler(method: string): Promise<(request: unknown, options?: RequestOptions) => unknown> {
-    const service: S = await getAsyncValue(this._serviceProvider);
+    const service: S = await getAsyncProviderValue(this._serviceProvider);
     const handler = service[method as keyof S];
     invariant(handler, `Handler is missing: ${method}`);
     return (handler as any).bind(service);

@@ -7,7 +7,7 @@ import React, { type FC, useState } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { useMulticastObservable } from '@dxos/react-async';
+import { useMulticastObservable } from '@dxos/react-hooks';
 import { Toolbar } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
