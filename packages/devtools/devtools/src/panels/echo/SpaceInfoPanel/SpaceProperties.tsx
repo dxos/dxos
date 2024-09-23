@@ -8,7 +8,7 @@ import { MulticastObservable } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { useMulticastObservable } from '@dxos/react-async';
+import { useMulticastObservable } from '@dxos/react-hooks';
 import { Timeframe } from '@dxos/timeframe';
 
 import { PropertiesTable, PropertySchemaFormat } from '../../../components';

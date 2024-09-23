@@ -9,7 +9,7 @@ import React, { type JSX, type PropsWithChildren, useEffect, useState } from 're
 
 import { faker } from '@dxos/random';
 import { modalSurface, mx } from '@dxos/react-ui-theme';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes, visitor } from './Tree';
 
@@ -18,7 +18,7 @@ faker.seed(1234);
 export default {
   title: 'plugin-navtree/Tree',
   component: Tree,
-  decorators: [withTheme, withFullscreen({ classNames: modalSurface })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: modalSurface })],
 };
 
 /**

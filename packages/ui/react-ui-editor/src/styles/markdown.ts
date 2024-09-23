@@ -16,8 +16,6 @@ const headings: Record<HeadingLevel, string> = {
   6: 'text-md',
 };
 
-// TODO(burdon): Define theme as facet (used in multiple extensions).
-// TODO(burdon): Organize theme styles for widgets.
 export const theme = {
   mark: 'opacity-50',
   code: 'font-mono !no-underline text-neutral-700 dark:text-neutral-300',

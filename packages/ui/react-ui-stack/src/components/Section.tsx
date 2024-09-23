@@ -158,7 +158,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
     });
     const sectionContentGroup = useFocusableGroup({});
     const attendableAttrs = createAttendableAttributes(id);
-    const attended = useHasAttention(id);
+    const hasAttention = useHasAttention(id);
 
     return (
       <CollapsiblePrimitive.Root
@@ -183,7 +183,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               'bg-base focus-within:border-separator focus-within:bg-attention',
               hoverableControls,
               hoverableFocusedWithinControls,
-              (active || attended) && 'bg-attention border-separator',
+              (active || hasAttention) && 'bg-attention border-separator',
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
           >

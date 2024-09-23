@@ -10,7 +10,7 @@ import { create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
-import { Tooltip, useThemeContext } from '@dxos/react-ui';
+import { useThemeContext } from '@dxos/react-ui';
 import {
   type Action,
   type Comment,
@@ -31,7 +31,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { textBlockWidth } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { TextType } from '../types';
 
@@ -50,7 +50,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
         formattingObserver,
         createBasicExtensions({ readonly: viewMode === 'readonly' }),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode, slots: { editor: { className: editorContent } } }),
+        createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: { editor: { className: editorContent } } }),
         createDataExtensions({ id: text.id, text: createDocAccessor(text, ['content']) }),
         comments({
           onCreate: ({ cursor }) => {
@@ -78,25 +78,23 @@ const Story: FC<{ content: string }> = ({ content }) => {
   useComments(view, text.id, _comments);
 
   return (
-    <Tooltip.Provider>
-      <div role='none' className='fixed inset-0 flex flex-col'>
-        <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
-          <Toolbar.View mode={viewMode} />
-          <Toolbar.Markdown />
-          <Toolbar.Custom onUpload={async (file) => ({ url: file.name })} />
-          <Toolbar.Separator />
-          <Toolbar.Actions />
-        </Toolbar.Root>
-        <div ref={parentRef} />
-      </div>
-    </Tooltip.Provider>
+    <div role='none' className='fixed inset-0 flex flex-col'>
+      <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
+        <Toolbar.View mode={viewMode} />
+        <Toolbar.Markdown />
+        <Toolbar.Custom onUpload={async (file) => ({ url: file.name })} />
+        <Toolbar.Separator />
+        <Toolbar.Actions />
+      </Toolbar.Root>
+      <div ref={parentRef} />
+    </div>
   );
 };
 
 export default {
   title: 'react-ui-editor/Toolbar',
   component: Toolbar,
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ tooltips: true })],
   parameters: { translations, layout: 'fullscreen' },
   render: (args: any) => <Story {...args} />,
 } as any;

@@ -8,7 +8,7 @@ import React, { type FC, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { DensityProvider } from '@dxos/react-ui';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SearchResults, type SearchResultsProps } from './SearchResults';
 import { filterObjectsSync } from '../../search-sync';
@@ -33,7 +33,7 @@ export default {
   title: 'plugin-search/SearchResults',
   component: SearchResults,
   render: Story,
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },

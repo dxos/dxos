@@ -101,7 +101,8 @@ describe('trigger registry', () => {
     });
   });
 
-  describe('activate', () => {
+  // TODO(burdon): Server-only.
+  describe.skip('activate', () => {
     test('invokes the provided callback', async () => {
       const [client] = await createInitializedClients(testBuilder);
       const space = await client.spaces.create();

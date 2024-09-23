@@ -7,11 +7,11 @@ import '@dxos-theme';
 import React, { useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 export default {
   title: 'gem-globe/canvas',
-  decorators: [withTheme, withFullscreen({ classNames: 'bg-[#111]' })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#111]' })],
 };
 
 export const Default = () => {
