@@ -8,7 +8,8 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { fontMono } from './styles';
 
-// TODO(burdon): Define scrollMargins for fixed gutter.
+// TODO(burdon): Define scrollMargins for fixed gutter?
+//  https://codemirror.net/docs/ref/#view.EditorView^scrollMargins
 const margin = '!mt-[1rem]';
 
 /**
@@ -31,7 +32,6 @@ export const editorGutter = EditorView.theme({
   '.cm-gutters': {
     marginTop: '16px',
     paddingRight: '1rem',
-    she,
   },
 });
 
