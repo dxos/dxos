@@ -287,7 +287,6 @@ const Story = ({
       id,
       initialValue: text,
       extensions: [
-        // EditorView.scrollMargins.of(16),
         createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
         createBasicExtensions({ readonly, placeholder, lineNumbers, scrollPastEnd: true }),
         createMarkdownExtensions({ themeMode }),

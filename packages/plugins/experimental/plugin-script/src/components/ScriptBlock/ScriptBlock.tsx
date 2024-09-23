@@ -11,11 +11,11 @@ import { createDocAccessor, DocAccessor } from '@dxos/react-client/echo';
 import { DensityProvider, Toolbar, Button } from '@dxos/react-ui';
 import { mx, getSize } from '@dxos/react-ui-theme';
 
-import { FrameContainer } from './FrameContainer';
-import { Splitter, SplitterSelector, type View } from './Splitter';
 import { Bundler, type BundlerResult, initializeBundler } from '../../bundler';
 import { type ScriptType } from '../../types';
+import { FrameContainer } from '../FrameContainer';
 import { ScriptEditor } from '../ScriptEditor';
+import { Splitter, SplitterSelector, type View } from '../Splitter';
 
 // Keep in sync with packages/apps/composer-app/script-frame/main.tsx .
 const PROVIDED_MODULES = [

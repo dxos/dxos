@@ -14,4 +14,11 @@ export default {
   decorators: [withTheme, withLayout({ tooltips: true })],
 };
 
-export const Default = { args: { binding: 'example', deployed: true } };
+export const Default = {
+  args: {
+    binding: 'example',
+    deployed: true,
+    onFormat: () => console.log('Format'),
+    onTogglePanel: () => {},
+  },
+};

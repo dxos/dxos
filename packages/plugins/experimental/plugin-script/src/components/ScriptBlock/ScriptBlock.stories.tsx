@@ -64,7 +64,7 @@ const Story = () => {
 export default {
   title: 'plugin-script/ScriptBlock',
   component: ScriptBlock,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true }), withClientProvider({ createSpace: true })],
+  decorators: [withClientProvider({ createSpace: true }), withTheme, withLayout({ fullscreen: true, tooltips: true })],
   render: Story,
 };
 
