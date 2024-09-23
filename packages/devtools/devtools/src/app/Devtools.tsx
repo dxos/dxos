@@ -6,7 +6,7 @@ import React, { useEffect, type FC, useState } from 'react';
 import { HashRouter } from 'react-router-dom';
 
 import { type Observability } from '@dxos/observability';
-import { type Client, ClientProvider, type ClientServicesProvider } from '@dxos/react-client';
+import { type Client, ClientProvider } from '@dxos/react-client';
 import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
@@ -46,16 +46,15 @@ const Telemetry = ({ namespace, observability }: { namespace: string; observabil
  */
 export const Devtools: FC<{
   client: Client;
-  services: ClientServicesProvider;
   observability?: Observability;
   namespace?: string;
-}> = ({ client, services, observability, namespace = observabilityNamespace }) => {
+}> = ({ client, observability, namespace = observabilityNamespace }) => {
   const themeMode = useThemeWatcher();
   return (
     <ThemeProvider {...{ tx: defaultTx, themeMode }}>
       <DensityProvider density='fine'>
         <ErrorBoundary>
-          <ClientProvider client={client} services={services}>
+          <ClientProvider client={client}>
             <DevtoolsContextProvider>
               <HashRouter>
                 <Telemetry namespace={namespace} observability={observability} />

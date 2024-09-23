@@ -30,7 +30,7 @@ const App = ({ clientProvider }: { clientProvider: Provider<Promise<Client>> }) 
     return null;
   }
 
-  return <Devtools client={client} services={client.services} namespace={namespace} />;
+  return <Devtools client={client} namespace={namespace} />;
 };
 
 const main = async () => {
