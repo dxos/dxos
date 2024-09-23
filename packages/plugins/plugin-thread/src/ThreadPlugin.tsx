@@ -357,6 +357,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
                 const createSort = threadProvides.find((p) => p.predicate(data.subject))?.createSort;
                 if (createSort) {
+                  // TODO(Zan): This is causing perf issues when there are multiple instances of subject.
+                  // We should memoize the sort function, it can hold a reference to the subject.
+                  // Can't memoize it here because it would break the rules of hooks.
                   const sort = createSort(data.subject);
                   threads.sort((a, b) => sort(a.anchor, b.anchor));
                 }
