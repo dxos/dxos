@@ -17,8 +17,9 @@ import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { initializeBundler } from './bundler';
 import { Compiler } from './compiler';
-import { ScriptEditor } from './components';
+import { ScriptContainer } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
+import { templates } from './templates';
 import translations from './translations';
 import { FunctionType, ScriptType } from './types';
 import { ScriptAction, type ScriptPluginProvides } from './types';
@@ -103,29 +104,10 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
           });
         },
       },
-      stack: {
-        creators: [
-          {
-            id: 'create-stack-section-script',
-            testId: 'scriptPlugin.createSection',
-            type: ['plugin name', { ns: SCRIPT_PLUGIN }],
-            label: ['create stack section label', { ns: SCRIPT_PLUGIN }],
-            icon: (props: any) => <Code {...props} />,
-            intent: {
-              plugin: SCRIPT_PLUGIN,
-              action: ScriptAction.CREATE,
-            },
-          },
-        ],
-      },
       surface: {
         component: ({ data, role }) => {
-          if (role && !['article', 'section'].includes(role)) {
-            return null;
-          }
-
-          if (data.object instanceof ScriptType) {
-            return <ScriptEditor env={compiler.environment} script={data.object} role={role} />;
+          if (role === 'article' && data.object instanceof ScriptType) {
+            return <ScriptContainer script={data.object} env={compiler.environment} />;
           }
 
           return null;
@@ -135,7 +117,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ScriptAction.CREATE: {
-              return { data: create(ScriptType, { source: create(TextType, { content: example }) }) };
+              return { data: create(ScriptType, { source: create(TextType, { content: templates.echo }) }) };
             }
           }
         },
@@ -143,14 +125,3 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
     },
   };
 };
-
-// TODO(burdon): Import.
-const example = [
-  'export default async ({ ',
-  '  event: { data: { request } },',
-  '  context: { space, ai } ',
-  '}: any) => {',
-  "  return new Response('Hello DXOS!');",
-  '};',
-  '',
-].join('\n');

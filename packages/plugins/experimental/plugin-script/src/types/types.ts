@@ -10,7 +10,6 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-client';
-import { type StackProvides } from '@dxos/plugin-stack';
 
 import { SCRIPT_PLUGIN } from '../meta';
 
@@ -23,5 +22,4 @@ export type ScriptPluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
-  SchemaProvides &
-  StackProvides;
+  SchemaProvides;

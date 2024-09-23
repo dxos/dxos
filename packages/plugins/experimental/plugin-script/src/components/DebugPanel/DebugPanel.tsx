@@ -18,7 +18,7 @@ import {
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
-import { SCRIPT_PLUGIN } from '../meta';
+import { SCRIPT_PLUGIN } from '../../meta';
 
 type State = 'pending' | 'responding';
 

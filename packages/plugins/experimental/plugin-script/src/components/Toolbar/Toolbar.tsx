@@ -9,32 +9,34 @@ import {
   ElevationProvider,
   Icon,
   type ThemedClassName,
+  ToggleGroup,
+  ToggleGroupItem,
   Toolbar as NaturalToolbar,
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
 
-import { SCRIPT_PLUGIN } from '../meta';
+import { SCRIPT_PLUGIN } from '../../meta';
 
-export type ToolbarProps = ThemedClassName<{
-  deployed?: boolean;
-  error?: string;
-  functionUrl?: string;
-  showPanel?: boolean;
-  onDeploy?: () => Promise<void>;
-  onFormat?: () => Promise<void>;
-  onTogglePanel?: () => Promise<void>;
-}>;
+export type ToolbarProps = ThemedClassName<
+  {
+    deployed?: boolean;
+    error?: string;
+    functionUrl?: string;
+    onDeploy?: () => Promise<void>;
+    onFormat?: () => Promise<void>;
+  } & ViewSelectorProps
+>;
 
 export const Toolbar = ({
   classNames,
   deployed,
   error,
   functionUrl,
-  showPanel,
+  view,
   onDeploy,
   onFormat,
-  onTogglePanel,
+  onViewChange,
 }: ToolbarProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const [pending, setPending] = useState(false);
@@ -125,23 +127,32 @@ export const Toolbar = ({
             </Tooltip.Portal>
           </Tooltip.Root>
 
-          {onTogglePanel && (
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <NaturalToolbar.Button variant='ghost' onClick={onTogglePanel}>
-                  <Icon icon={showPanel ? 'ph--caret-down--regular' : 'ph--caret-up--regular'} size={4} />
-                </NaturalToolbar.Button>
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content>
-                  <Tooltip.Arrow />
-                  {t('toggle details label')}
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
-          )}
+          <ViewSelector view={view} onViewChange={onViewChange} />
         </NaturalToolbar.Root>
       </ElevationProvider>
     </DensityProvider>
+  );
+};
+
+export type ViewType = 'editor' | 'split' | 'preview';
+
+export type ViewSelectorProps = {
+  view?: ViewType;
+  onViewChange?: (view: ViewType) => void;
+};
+
+export const ViewSelector = ({ view, onViewChange }: ViewSelectorProps) => {
+  return (
+    <ToggleGroup type='single' value={view} onValueChange={(value) => onViewChange?.(value as ViewType)}>
+      <ToggleGroupItem value='editor'>
+        <Icon icon='ph--code--regular' size={4} />
+      </ToggleGroupItem>
+      <ToggleGroupItem value='split'>
+        <Icon icon='ph--square-split-vertical--regular' size={4} />
+      </ToggleGroupItem>
+      <ToggleGroupItem value='preview'>
+        <Icon icon='ph--eye--regular' size={4} />
+      </ToggleGroupItem>
+    </ToggleGroup>
   );
 };

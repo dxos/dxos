@@ -8,5 +8,5 @@ export default async ({
   },
 }: any) => {
   const data = await request.json();
-  return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' }});
+  return new Response(JSON.stringify(data ?? {}), { headers: { 'Content-Type': 'application/json' }});
 };

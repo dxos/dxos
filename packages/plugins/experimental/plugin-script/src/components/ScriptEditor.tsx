@@ -10,23 +10,14 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import {
-  create,
-  createDocAccessor,
-  Filter,
-  fullyQualifiedId,
-  getMeta,
-  getSpace,
-  useQuery,
-} from '@dxos/react-client/echo';
+import { create, createDocAccessor, Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTranslation } from '@dxos/react-ui';
-import { useHasAttention } from '@dxos/react-ui-attention';
+import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { createDataExtensions, listener } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
 import { DebugPanel } from './DebugPanel';
-import { Toolbar } from './Toolbar';
+import { Toolbar, type ViewType } from './Toolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 import { Bundler } from '../bundler';
 import {
@@ -38,14 +29,13 @@ import {
 import { SCRIPT_PLUGIN } from '../meta';
 import { FunctionType, type ScriptType } from '../types';
 
-export type ScriptEditorProps = {
+export type ScriptEditorProps = ThemedClassName<{
   script: ScriptType;
-  role?: string;
-} & Pick<TypescriptEditorProps, 'env'>;
+}> &
+  Pick<TypescriptEditorProps, 'env'>;
 
-export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
+export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
-  const hasAttention = useHasAttention(fullyQualifiedId(script));
   const client = useClient();
   const identity = useIdentity();
   const space = getSpace(script);
@@ -73,7 +63,7 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
     [script, script.source, space, identity],
   );
 
-  const [showPanel, setShowPanel] = useState(false);
+  const [view, setView] = useState<ViewType>('editor');
   const initialValue = useMemo(() => script.source?.content, [script.source]);
   const existingFunctionUrl = fn && getUserFunctionUrlInMetadata(getMeta(fn));
   const [error, setError] = useState<string>();
@@ -114,11 +104,7 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
       const existingFunctionId = existingFunctionUrl?.split('/').at(-1);
       const ownerDid = (existingFunctionUrl?.split('/').at(-2) as DID) ?? publicKeyToDid(identity.identityKey);
 
-      const bundler = new Bundler({
-        platform: 'browser',
-        sandboxedModules: [],
-        remoteModules: {},
-      });
+      const bundler = new Bundler({ platform: 'browser', sandboxedModules: [], remoteModules: {} });
       const buildResult = await bundler.bundle(script.source.content);
       if (buildResult.error || !buildResult.bundle) {
         throw buildResult.error;
@@ -134,15 +120,18 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
       if (result !== 'success' || functionId === undefined || functionVersionNumber === undefined) {
         throw new Error(errorMessage);
       }
+
       log.info('function uploaded', { functionId, functionVersionNumber });
       if (fn) {
         fn.version = functionVersionNumber;
       }
+
       const deployedFunction =
         fn ?? space.db.add(create(FunctionType, { version: functionVersionNumber, source: script }));
       const meta = getMeta(deployedFunction);
-      setUserFunctionUrlInMetadata(meta, `/${ownerDid}/${functionId}`);
       script.changed = false;
+      setUserFunctionUrlInMetadata(meta, `/${ownerDid}/${functionId}`);
+      setView('split');
     } catch (err: any) {
       log.catch(err);
       setError(t('upload failed label'));
@@ -165,38 +154,30 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
   }, [existingFunctionUrl, space]);
 
   return (
-    <div
-      role='none'
-      className={mx(
-        'flex flex-col is-full bs-full overflow-hidden',
-        role === 'article' && 'row-span-2',
-        hasAttention && 'attention-surface',
-      )}
-    >
-      <TypescriptEditor
-        id={script.id}
-        env={env}
-        initialValue={initialValue}
-        extensions={extensions}
-        className='flex is-full bs-full overflow-hidden ch-focus-ring-inset-over-all'
-      />
-
+    <div role='none' className={mx('flex flex-col w-full overflow-hidden divide-y divide-separator', classNames)}>
       <Toolbar
-        classNames='border-t border-separator'
         deployed={Boolean(existingFunctionUrl) && !script.changed}
         functionUrl={functionUrl}
         error={error}
-        showPanel={showPanel}
+        view={view}
         onDeploy={handleDeploy}
         onFormat={handleFormat}
-        onTogglePanel={async () => setShowPanel((showDetails) => !showDetails)}
+        onViewChange={setView}
       />
 
-      {showPanel && (
+      {view !== 'preview' && (
+        <TypescriptEditor
+          id={script.id}
+          env={env}
+          initialValue={initialValue}
+          extensions={extensions}
+          className='flex is-full bs-full overflow-hidden ch-focus-ring-inset-over-all'
+        />
+      )}
+
+      {view !== 'editor' && (
         <DebugPanel functionUrl={functionUrl} binding={fn?.binding} onBindingChange={handleBindingChange} />
       )}
     </div>
   );
 };
-
-export default ScriptEditor;

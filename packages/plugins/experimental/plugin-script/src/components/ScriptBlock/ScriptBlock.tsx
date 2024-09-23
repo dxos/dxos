@@ -15,7 +15,6 @@ import { Bundler, type BundlerResult, initializeBundler } from '../../bundler';
 import { type ScriptType } from '../../types';
 import { FrameContainer } from '../FrameContainer';
 import { ScriptEditor } from '../ScriptEditor';
-import { Splitter, SplitterSelector, type View } from '../Splitter';
 
 // Keep in sync with packages/apps/composer-app/script-frame/main.tsx .
 const PROVIDED_MODULES = [
@@ -29,7 +28,6 @@ const PROVIDED_MODULES = [
 
 export type ScriptBlockProps = {
   script: ScriptType;
-  view?: View;
   hideSelector?: boolean;
   classes?: {
     root?: string;
@@ -44,17 +42,8 @@ export type ScriptBlockProps = {
  * @deprecated
  */
 // TODO(burdon): Cache compiled results in context.
-export const ScriptBlock = ({
-  script,
-  view: controlledView,
-  hideSelector,
-  classes,
-  containerUrl,
-}: ScriptBlockProps) => {
+export const ScriptBlock = ({ script, hideSelector, classes, containerUrl }: ScriptBlockProps) => {
   const source = useMemo(() => script.source && createDocAccessor(script.source, ['content']), [script.source]);
-  const [view, setView] = useState<View>(controlledView ?? 'editor');
-  useEffect(() => handleSetView(controlledView ?? 'editor'), [controlledView]);
-
   const [result, setResult] = useState<BundlerResult>();
   const bundler = useMemo(
     () => new Bundler({ platform: 'browser', sandboxedModules: PROVIDED_MODULES, remoteModules: {} }),
@@ -78,16 +67,6 @@ export const ScriptBlock = ({
     return () => clearTimeout(t);
   }, [source]);
 
-  const handleSetView = useCallback(
-    (view: View) => {
-      setView(view);
-      if (!result && view !== 'editor') {
-        void handleExec(false);
-      }
-    },
-    [result],
-  );
-
   const handleExec = useCallback(
     async (auto = true) => {
       if (!source) {
@@ -95,11 +74,8 @@ export const ScriptBlock = ({
       }
       const result = await bundler.bundle(DocAccessor.getValue(source));
       setResult(result);
-      if (auto && view === 'editor') {
-        setView('preview');
-      }
     },
-    [source, view],
+    [source],
   );
 
   return (
@@ -107,7 +83,6 @@ export const ScriptBlock = ({
       {!hideSelector && (
         <DensityProvider density='fine'>
           <Toolbar.Root classNames={mx('mb-2', classes?.toolbar)}>
-            <SplitterSelector view={view} onChange={handleSetView} />
             <div className='grow' />
             {result?.bundle && !result?.error && (
               <div title={String(result.error)}>
@@ -126,10 +101,10 @@ export const ScriptBlock = ({
         </DensityProvider>
       )}
 
-      <Splitter view={view}>
+      <div className='flex'>
         <ScriptEditor script={script} />
         {result && <FrameContainer key={script.id} result={result} containerUrl={containerUrl} />}
-      </Splitter>
+      </div>
     </div>
   );
 };

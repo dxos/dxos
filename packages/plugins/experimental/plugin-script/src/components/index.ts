@@ -4,5 +4,4 @@
 
 import React from 'react';
 
-export const ScriptEditor = React.lazy(() => import('./ScriptEditor'));
-export const TypescriptEditor = React.lazy(() => import('./TypescriptEditor'));
+export const ScriptContainer = React.lazy(() => import('./ScriptContainer'));
