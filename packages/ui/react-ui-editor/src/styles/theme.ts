@@ -76,16 +76,16 @@ export const defaultTheme: ThemeStyles = {
     background: 'var(--surface-bg)',
   },
   '.cm-gutter': {},
+  '.cm-gutter.cm-lineNumbers .cm-gutterElement': {
+    minWidth: '40px',
+    alignContent: 'center',
+  },
   /**
    * Height is set to match the corresponding line.
    */
   '.cm-gutterElement': {
-    display: 'flex',
     alignItems: 'center',
-  },
-
-  '.cm-lineNumbers': {
-    minWidth: '36px',
+    fontSize: '16px',
   },
 
   /**
