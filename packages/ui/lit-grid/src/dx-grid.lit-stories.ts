@@ -7,19 +7,22 @@ import './dx-grid.pcss';
 
 import { html, nothing } from 'lit';
 
-import { type DxGridProps } from './dx-grid';
+import { type DxGridProps } from './types';
 
 export default {
   title: 'dx-grid',
+  parameters: { layout: 'fullscreen' },
 };
 
 export const Basic = (props: DxGridProps) => {
-  return html`<dx-grid
-    cells=${props.cells ?? nothing}
-    columnDefault=${props.columnDefault ?? nothing}
-    rowDefault=${props.rowDefault ?? nothing}
-    columns=${props.columns ?? nothing}
-  ></dx-grid>`;
+  return html`<div style="position:fixed;inset:0;">
+    <dx-grid
+      cells=${props.cells ?? nothing}
+      columnDefault=${props.columnDefault ?? nothing}
+      rowDefault=${props.rowDefault ?? nothing}
+      columns=${props.columns ?? nothing}
+    ></dx-grid>
+  </div>`;
 };
 
 Basic.args = {
