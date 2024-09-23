@@ -23,8 +23,7 @@
     }
   },
   "browser": {
-    "./src/transport/tcp-transport.ts": "./src/transport/tcp-transport.browser.ts",
-    "./src/transport/datachannel/index.ts": "./src/transport/datachannel/index.browser.ts"
+    "./src/transport/tcp-transport.ts": "./src/transport/tcp-transport.browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
