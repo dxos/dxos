@@ -12,7 +12,7 @@ import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-g
 import { SpaceAction } from '@dxos/plugin-space';
 import { loadObjectReferences } from '@dxos/react-client/echo';
 
-import { ContactsMain, EventsMain } from './components';
+import { ContactsMain, EventsMain, MailboxMain } from './components';
 import meta, { INBOX_PLUGIN } from './meta';
 import translations from './translations';
 import { ContactsType, CalendarType, EventType, MailboxType } from './types';
@@ -24,7 +24,6 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          // TODO(wittjosiah): Reconcile with ChannelType.
           [MailboxType.typename]: {
             placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
             icon: (props: IconProps) => <Envelope {...props} />,
@@ -124,21 +123,16 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           switch (role) {
-            case 'main':
-              // if (data.active instanceof MailboxType) {
-              //   return <MailboxMain mailbox={data.active} />;
-              // }
+            case 'article': {
+              if (data.active instanceof MailboxType) {
+                return <MailboxMain mailbox={data.active} />;
+              }
               if (data.active instanceof ContactsType) {
                 return <ContactsMain contacts={data.active} />;
               }
               if (data.active instanceof CalendarType) {
                 return <EventsMain calendar={data.active} />;
               }
-              return null;
-            case 'article': {
-              // if (data.object instanceof MailboxType) {
-              //   return <MailboxArticle mailbox={data.object} />;
-              // }
               return null;
             }
 
