@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { type FunctionComponent, type ReactNode, useEffect, useMemo, useState } from 'react';
+import React, { type FunctionComponent, type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { Client, type ClientOptions, type ClientServicesProvider, SystemStatus } from '@dxos/client';
 import { type Config } from '@dxos/config';
@@ -32,8 +32,9 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
      *
      * Most apps won't need this.
      */
-    // TODO(wittjosiah): Remove async and just use to keeping reference to client?
+    // TODO(wittjosiah): Remove async and just use to keep reference to client?
     //   (Preferring `onInitialized` for custom initialization.)
+    // TODO(burdon): Use useImperativeHandle to expose client.
     client?: Client | Provider<Promise<Client>>;
 
     /**
@@ -44,7 +45,7 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
     services?: ClientServicesProvider | ((config?: Config) => MaybePromise<ClientServicesProvider>);
 
     /**
-     *
+     * List of schema to register.
      */
     types?: S.Schema<any>[];
 
@@ -83,19 +84,21 @@ export const ClientProvider = ({
   onInitialized,
   ...options
 }: ClientProviderProps) => {
-  useMemo(() => {
+  useRef(() => {
     // TODO(wittjosiah): Ideally this should be imported asynchronously because it is optional.
     //   Unfortunately, async import seemed to break signals React instrumentation.
     _registerSignalFactory && registerSignalFactory();
-  }, []);
+  });
 
   const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
-  const [status, setStatus] = useControlledValue(controlledStatus);
+
   const [error, setError] = useState();
   if (error) {
     throw error;
   }
 
+  // Status subscription.
+  const [status, setStatus] = useControlledValue(controlledStatus);
   useEffect(() => {
     if (!client) {
       return;
@@ -105,6 +108,7 @@ export const ClientProvider = ({
     return () => subscription.unsubscribe();
   }, [client, setStatus]);
 
+  // Initialize client.
   useEffect(() => {
     const done = async (client: Client) => {
       await client.initialize().catch(setError);
