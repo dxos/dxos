@@ -25,10 +25,10 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
       metadata: {
         records: {
           // TODO(wittjosiah): Reconcile with ChannelType.
-          // [MailboxType.typename]: {
-          //   placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
-          //   icon: (props: IconProps) => <Envelope {...props} />,
-          // },
+          [MailboxType.typename]: {
+            placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
+            icon: (props: IconProps) => <Envelope {...props} />,
+          },
           [AddressBookType.typename]: {
             placeholder: ['addressbook title placeholder', { ns: INBOX_PLUGIN }],
             icon: (props: IconProps) => <AddressBook {...props} />,

@@ -31,6 +31,7 @@ export const editorGutter = EditorView.theme({
   '.cm-gutters': {
     marginTop: '16px',
     paddingRight: '1rem',
+    she,
   },
 });
 
