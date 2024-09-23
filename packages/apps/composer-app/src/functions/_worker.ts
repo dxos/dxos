@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-const sendTelemetryEvent = async (env, event: string) => {
+const sendTelemetryEvent = async (env, event: string, url) => {
   let timeoutId: NodeJS.Timeout;
   const timeoutPromise = new Promise((resolve, reject) => {
     timeoutId = setTimeout(() => {
@@ -25,7 +25,8 @@ const sendTelemetryEvent = async (env, event: string) => {
         {
           stream: {
             "service_name": "composer",
-            "environment": env.ENVIRONMENT ?? undefined
+            "environment": env.ENVIRONMENT ?? undefined,
+            url: url ?? undefined
           },
           values: [[String(Date.now() * 1e6), event]]
         }
@@ -54,7 +55,7 @@ const handler: ExportedHandler<{ ASSETS: Fetcher }> = {
 
     // Emit telemetry log to Grafana Loki cloud.
     if (env.DX_LOKI_ENDPOINT && env.DX_LOKI_AUTHORIZATION && request.url && request.url.includes('site.webmanifest')) {
-      telemetryPromise = sendTelemetryEvent(env, 'Fetch app');
+      telemetryPromise = sendTelemetryEvent(env, 'Fetch app', request.url);
     }
 
     // Note: Telemetry promise should be awaited. Otherwise, it will be cancelled when the function returns.
