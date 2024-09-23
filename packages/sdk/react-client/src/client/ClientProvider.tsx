@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { type FunctionComponent, type ReactNode, useEffect, useRef, useState } from 'react';
+import React, { type FunctionComponent, type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { Client, type ClientOptions, type ClientServicesProvider, SystemStatus } from '@dxos/client';
 import { type Config } from '@dxos/config';
@@ -84,11 +84,11 @@ export const ClientProvider = ({
   onInitialized,
   ...options
 }: ClientProviderProps) => {
-  useRef(() => {
+  useMemo(() => {
     // TODO(wittjosiah): Ideally this should be imported asynchronously because it is optional.
     //   Unfortunately, async import seemed to break signals React instrumentation.
     _registerSignalFactory && registerSignalFactory();
-  });
+  }, []);
 
   const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
 
