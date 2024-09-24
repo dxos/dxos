@@ -2,16 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
-import { test, describe } from 'vitest';
-import waitForExpect from 'wait-for-expect';
+import { test, expect, describe } from 'vitest';
 
 import { WeakDictionary } from './weak';
 
 describe('WeakDictionary', () => {
   // Skipped because it takes a long time for garbage collection to kick in (~8 sec)
   // but it works otherwise.
-  test.skip('unref item gets garbage collected', async () => {
+  test.skip('unref item gets garbage collected', { timeout: 20_000 }, async () => {
     const map = new WeakDictionary<string, any>();
     const key = 'key';
 
@@ -32,10 +30,8 @@ describe('WeakDictionary', () => {
 
     setValue();
     // Garbage collection should remove the item because no references exist.
-    await waitForExpect(() => {
-      expect(map.size).to.equal(0);
-    }, 20000);
+    await expect.poll(() => map.size, { timeout: 20_000 }).toEqual(0);
 
     expect(map.has(key)).to.equal(false);
-  }, 20_000);
+  });
 });

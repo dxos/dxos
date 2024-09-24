@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 import * as orama from '@orama/orama';
-import { expect } from 'chai';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 describe('Orama', () => {
   const typename = '@example.org/schema/product';
