@@ -4,10 +4,10 @@
 
 import React, { type ChangeEventHandler, type FC, useEffect, useMemo, useState } from 'react';
 
-import { sleep } from '@dxos/async';
+import { Mutex, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import type { AnyObjectData } from '@dxos/echo-schema';
-import { createSubscriptionTrigger } from '@dxos/functions';
+import { createSubscriptionTrigger, createWebsocketTrigger, type TriggerFactory } from '@dxos/functions';
 import {
   FunctionTrigger,
   type FunctionTriggerType,
@@ -34,6 +34,8 @@ const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook',
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
 
+const registerTriggersMutex = new Mutex();
+
 export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: FunctionTrigger }) => {
   const client = useClient();
   const scripts = useQuery(space, Filter.schema(ScriptType));
@@ -43,86 +45,101 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   const [registry] = useState(new Map<string, Context>());
   const triggers = useQuery(space, Filter.schema(FunctionTrigger));
   useEffect(() => {
-    log.info('triggers', { triggers });
-
-    // Mark-and-sweep removing disabled triggers.
     setTimeout(async () => {
-      const deprecated = new Set(Array.from(registry.keys()));
-      for (const trigger of triggers) {
-        if (trigger.enabled) {
-          if (registry.has(trigger.id)) {
-            deprecated.delete(trigger.id);
-            break;
-          }
+      // Mark-and-sweep removing disabled triggers.
+      await registerTriggersMutex.executeSynchronized(async () => {
+        log.info('triggers', { triggers });
+        const deprecated = new Set(Array.from(registry.keys()));
+        for (const trigger of triggers) {
+          if (trigger.enabled) {
+            if (registry.has(trigger.id)) {
+              deprecated.delete(trigger.id);
+              break;
+            }
 
-          const ctx = new Context();
-          registry.set(trigger.id, ctx);
-          await createSubscriptionTrigger(ctx, space, trigger.spec as SubscriptionTrigger, async (data) => {
-            try {
-              const script = await space.crud.query({ id: trigger.function }).first();
-              const { objects: functions } = await space.crud.query({ __typename: FunctionType.typename }).run();
-              const func = functions.find((fn) => referenceEquals(fn.source, trigger.function)) as
-                | AnyObjectData
-                | undefined;
-              const funcSlug = func?.__meta.keys.find((key) => key.source === USERFUNCTIONS_META_KEY)?.id;
-              if (!funcSlug) {
-                log.warn('function not deployed', { scriptId: script.id, name: script.name });
-                return 404;
-              }
+            const ctx = new Context();
+            registry.set(trigger.id, ctx);
+            const triggerSpec = trigger.spec;
 
-              const funcUrl = getFunctionUrl(client.config, funcSlug, space.id);
+            let triggerFactory: TriggerFactory<any>;
+            if (triggerSpec.type === 'subscription') {
+              triggerFactory = createSubscriptionTrigger;
+            } else if (triggerSpec.type === 'websocket') {
+              triggerFactory = createWebsocketTrigger;
+            } else {
+              log.info('unsupported trigger', { type: triggerSpec.type });
+              continue;
+            }
 
-              const triggerData: AnyObjectData = getObjectCore(trigger).toPlainObject();
-              const body = {
-                event: 'trigger',
-                trigger: triggerData,
-                data,
-              };
-
-              let retryCount = 0;
-              while (retryCount < MAX_RETRIES) {
-                log.info('exec', { funcUrl, funcSlug, body, retryCount });
-                const response = await fetch(funcUrl, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify(body),
-                });
-
-                log.info('response', { status: response.status, body: await response.text() });
-                if (response.status === 409) {
-                  retryCount++;
-                  await sleep(RETRY_DELAY);
-                  continue;
+            await triggerFactory(ctx, space, trigger.spec, async (data: any) => {
+              try {
+                const script = await space.crud.query({ id: trigger.function }).first();
+                const { objects: functions } = await space.crud.query({ __typename: FunctionType.typename }).run();
+                const func = functions.find((fn) => referenceEquals(fn.source, trigger.function)) as
+                  | AnyObjectData
+                  | undefined;
+                const funcSlug = func?.__meta.keys.find((key) => key.source === USERFUNCTIONS_META_KEY)?.id;
+                if (!funcSlug) {
+                  log.warn('function not deployed', { scriptId: script.id, name: script.name });
+                  return 404;
                 }
 
-                return response.status;
+                const funcUrl = getFunctionUrl(client.config, funcSlug, space.id);
+
+                const triggerData: AnyObjectData = getObjectCore(trigger).toPlainObject();
+                const body = {
+                  event: 'trigger',
+                  trigger: triggerData,
+                  data,
+                };
+
+                let retryCount = 0;
+                while (retryCount < MAX_RETRIES) {
+                  log.info('exec', { funcUrl, funcSlug, body, retryCount });
+                  const response = await fetch(funcUrl, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body),
+                  });
+
+                  log.info('response', { status: response.status, body: await response.text() });
+                  if (response.status === 409) {
+                    retryCount++;
+                    await sleep(RETRY_DELAY);
+                    continue;
+                  }
+
+                  return response.status;
+                }
+
+                return 500;
+              } catch (err) {
+                return 400;
               }
-
-              return 500;
-            } catch (err) {
-              return 400;
-            }
-          });
+            });
+          }
         }
-      }
 
-      for (const id of deprecated) {
-        const ctx = registry.get(id);
-        if (ctx) {
-          void ctx.dispose();
-          registry.delete(id);
+        for (const id of deprecated) {
+          const ctx = registry.get(id);
+          if (ctx) {
+            void ctx.dispose();
+            registry.delete(id);
+          }
         }
-      }
+      });
     });
+  }, [triggers]);
 
+  useEffect(() => {
     return () => {
       for (const ctx of registry.values()) {
         void ctx.dispose();
       }
     };
-  }, [triggers]);
+  }, []);
 
   useEffect(() => {
     void space.db.schema

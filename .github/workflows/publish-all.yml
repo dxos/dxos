@@ -6,12 +6,10 @@ on:
         default: false
   push:
     branches:
-      - staging
-      - nf/publish-apps
+      - labs
       - main
       - production
-      - rc-*
-      - hotfix-*
+      - staging
   release:
     types:
       - published

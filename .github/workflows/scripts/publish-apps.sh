@@ -34,7 +34,7 @@ function notifyStart() {
   curl -H "Content-Type: application/json" -d "${MESSAGE-}" "$DX_DISCORD_WEBHOOK_URL"
 }
 
-if [[ $BRANCH = "production" || $BRANCH = "staging" ]]; then
+if [[ $BRANCH = "production" || $BRANCH = "staging" || $BRANCH = "labs" ]]; then
   notifyStart
 fi
 
