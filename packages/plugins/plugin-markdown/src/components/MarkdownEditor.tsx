@@ -45,6 +45,7 @@ import { nonNullable } from '@dxos/util';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownPluginState } from '../types';
+import { fullyQualifiedId } from 'packages/sdk/client/src/echo';
 
 const attentionFragment = mx(
   'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
@@ -97,36 +98,6 @@ export const MarkdownEditor = ({
   }, [dispatch]);
   const commentClickObserver = useCommentClickListener(onCommentClick);
 
-  // Focus the space that references the comment.
-  useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
-    switch (action) {
-      // TODO(burdon): Use fully qualified ids everywhere.
-      case LayoutAction.SCROLL_INTO_VIEW: {
-        if (editorView && data?.id === id && data?.cursor) {
-          // TODO(burdon): We need typed intents.
-          const range = Cursor.getRangeFromCursor(editorView.state, data.cursor);
-          if (range) {
-            const selection = editorView.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
-            const effects = [
-              // NOTE: This does not use the DOM scrollIntoView function.
-              EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 }),
-            ];
-            if (selection) {
-              // Update the editor selection to get bi-directional highlighting.
-              effects.push(setSelection.of({ current: id }));
-            }
-
-            editorView.dispatch({
-              effects,
-              selection: selection ? { anchor: range.from } : undefined,
-            });
-          }
-        }
-        break;
-      }
-    }
-  });
-
   // Drag files.
   const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
     const file = files[0];
@@ -174,6 +145,37 @@ export const MarkdownEditor = ({
     }),
     [id, initialValue, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
   );
+
+  // Focus the space that references the comment.
+  const handleScrollIntoView = useCallback(
+    ({ action, data }: { action: string; data?: any }) => {
+      if (action === LayoutAction.SCROLL_INTO_VIEW) {
+        if (editorView && data?.id === id && data?.cursor) {
+          // TODO(burdon): We need typed intents.
+          const range = Cursor.getRangeFromCursor(editorView.state, data.cursor);
+          if (range) {
+            const selection = editorView.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
+            const effects = [
+              // NOTE: This does not use the DOM scrollIntoView function.
+              EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 }),
+            ];
+            if (selection) {
+              // Update the editor selection to get bi-directional highlighting.
+              effects.push(setSelection.of({ current: id }));
+            }
+
+            editorView.dispatch({
+              effects,
+              selection: selection ? { anchor: range.from } : undefined,
+            });
+          }
+        }
+      }
+    },
+    [id, editorView],
+  );
+
+  useIntentResolver(MARKDOWN_PLUGIN, handleScrollIntoView);
 
   useTest(editorView);
 
