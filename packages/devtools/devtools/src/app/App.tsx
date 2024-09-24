@@ -37,5 +37,5 @@ export const App = () => {
     return null;
   }
 
-  return <Devtools client={client} services={client.services} namespace={namespace} observability={observability} />;
+  return <Devtools client={client} namespace={namespace} observability={observability} />;
 };

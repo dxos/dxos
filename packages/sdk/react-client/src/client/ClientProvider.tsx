@@ -8,7 +8,7 @@ import React, {
   type ReactNode,
   useEffect,
   useImperativeHandle,
-  useRef,
+  useMemo,
   useState,
 } from 'react';
 
@@ -94,11 +94,11 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
     },
     forwardedRef,
   ) => {
-    useRef(() => {
+    useMemo(() => {
       // TODO(wittjosiah): Ideally this should be imported asynchronously because it is optional.
       //   Unfortunately, async import seemed to break signals React instrumentation.
       _registerSignalFactory && registerSignalFactory();
-    });
+    }, []);
 
     // TODO(burdon): Comment about when this happens and how it's caught (ErrorBoundary?)
     const [error, setError] = useState();

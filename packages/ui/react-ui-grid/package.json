@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-grid",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "React component which manages a `dx-grid` Lit web component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,6 +23,7 @@
   "dependencies": {
     "@dxos/lit-grid": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@lit/react": "^1.0.5"
