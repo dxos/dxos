@@ -6,9 +6,9 @@ import { Event } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import type { SpaceDoc } from '@dxos/echo-protocol';
+import { isEncodedReference, type SpaceDoc } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { PublicKey, SpaceId } from '@dxos/keys';
+import { DXN, LOCAL_SPACE_TAG, PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   QueryReactivity,
@@ -19,7 +19,8 @@ import { nonNullable } from '@dxos/util';
 
 import type { CoreDatabase } from './core-database';
 import type { ObjectCore } from './object-core';
-import { filterMatch, type Filter, type QueryContext, type QueryResult } from '../query';
+import { filterMatch, type Filter, type QueryContext, type QueryJoinSpec, type QueryResult } from '../query';
+import type { AnyObjectData, ObjectData } from '@dxos/echo-schema';
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
@@ -62,7 +63,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
         return [];
       }
 
-      return [this._filterMapCore(filter, core, start, undefined)].filter(nonNullable);
+      return (await Promise.all([this._filterMapCore(filter, core, start, undefined)])).filter(nonNullable);
     }
 
     const response = await Stream.first(
@@ -163,24 +164,52 @@ export class CoreDatabaseQueryContext implements QueryContext {
     }
   }
 
-  private _filterMapCore(
+  private async _filterMapCore(
     filter: Filter,
     core: ObjectCore,
     queryStartTimestamp: number,
     result: RemoteQueryResult | undefined,
-  ): QueryResult | null {
+  ): Promise<QueryResult | null> {
     if (!filterMatch(filter, core)) {
       return null;
     }
+
+    const data = await this._recursivelyJoinFields(core.toPlainObject(), filter.options.include);
 
     return {
       id: core.id,
       spaceId: core.database!.spaceId,
       spaceKey: core.database!.spaceKey,
-      object: core.toPlainObject(),
+      object: data,
       match: result && { rank: result.rank },
       resolution: { source: 'remote', time: Date.now() - queryStartTimestamp },
     } satisfies QueryResult;
+  }
+
+  private async _recursivelyJoinFields(
+    data: AnyObjectData,
+    joinSpec: QueryJoinSpec | undefined,
+  ): Promise<AnyObjectData> {
+    if (!joinSpec) {
+      return data;
+    }
+
+    const newData = { ...data };
+    for (const [key, spec] of Object.entries(joinSpec)) {
+      if (spec === true || (typeof spec === 'object' && spec !== null)) {
+        if (isEncodedReference(newData[key])) {
+          const dxn = DXN.parse(newData[key]['/']);
+          invariant(dxn.isLocalEchoObjectDXN());
+          const core = await this._coreDatabase.loadObjectCoreById(dxn.parts[1]);
+          newData[key] = core
+            ? await this._recursivelyJoinFields(core.toPlainObject(), spec !== true ? spec : undefined)
+            : null;
+        } else {
+          throw new Error(`Invalid join spec: ${spec}`);
+        }
+      }
+    }
+    return newData;
   }
 }
 

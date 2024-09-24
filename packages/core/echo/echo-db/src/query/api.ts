@@ -51,7 +51,7 @@ export type QueryOptions = {
   spaces?: PublicKey[];
 };
 
-interface QueryJoinSpec extends Record<string, true | QueryJoinSpec> {}
+export interface QueryJoinSpec extends Record<string, true | QueryJoinSpec> {}
 
 export const optionsToProto = (options: QueryOptions): QueryOptionsProto => {
   return {

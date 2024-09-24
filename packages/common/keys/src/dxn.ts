@@ -77,6 +77,10 @@ export class DXN {
     return this.#kind === DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
   }
 
+  isLocalEchoObjectDXN() {
+    return this.#kind === DXN.kind.ECHO && this.#parts[0] === LOCAL_SPACE_TAG && this.#parts.length === 2;
+  }
+
   toString() {
     return `dxn:${this.#kind}:${this.#parts.join(':')}`;
   }
