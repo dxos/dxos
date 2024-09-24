@@ -2,16 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-// @dxos/test platform=browser
-
-import expect from 'expect';
-import waitForExpect from 'wait-for-expect';
+import { describe, expect, test } from 'vitest';
 
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage } from '@dxos/random-access-storage';
-import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
 import { valueEncoding } from '../common';
@@ -57,8 +53,6 @@ describe('replication', () => {
       timeframe: new Timeframe([[feed1.key, 123]]),
     });
 
-    await waitForExpect(() => {
-      expect(feed2.properties.length).toEqual(1);
-    });
+    await expect.poll(() => feed2.properties.length).toEqual(1);
   });
 });

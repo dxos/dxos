@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
 import {
@@ -34,7 +33,7 @@ import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
-import { afterTest, describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 import { nonNullable, range } from '@dxos/util';
 
 import { EchoNetworkAdapter } from './echo-network-adapter';
@@ -377,10 +376,8 @@ describe('AutomergeRepo', () => {
       const hostHandle = peer1.find(url as AutomergeUrl);
 
       // Doc should be pushed to peer2
-      await waitForExpect(() => {
-        expect(hostHandle.docSync().text).not.to.be.undefined;
-        expect(peer2.handles[hostHandle.documentId].docSync()).to.deep.eq(hostHandle.docSync());
-      });
+      await expect.poll(() => hostHandle.docSync().text).not.toBeUndefined();
+      await expect.poll(() => peer2.handles[hostHandle.documentId].docSync()).toEqual(hostHandle.docSync());
     });
 
     test('client cold-starts and syncs doc from a Repo', async () => {
@@ -480,7 +477,7 @@ describe('AutomergeRepo', () => {
       const [spaceKey] = PublicKey.randomSequence();
 
       const teleportBuilder = new TeleportBuilder();
-      afterTest(() => teleportBuilder.destroy());
+      onTestFinished(() => teleportBuilder.destroy());
 
       const peer1 = await createTeleportTestPeer(teleportBuilder, spaceKey);
       const peer2 = await createTeleportTestPeer(teleportBuilder, spaceKey);
@@ -493,11 +490,16 @@ describe('AutomergeRepo', () => {
         handle.change((doc: any) => {
           doc.text = text;
         });
-        await waitForExpect(async () => {
-          const docOnPeer2 = peer2.repo.find(handle.url);
-          const doc = await asyncTimeout(docOnPeer2.doc(), 1000);
-          expect(doc.text).to.eq(text);
-        }, 1000);
+        await expect
+          .poll(
+            async () => {
+              const docOnPeer2 = peer2.repo.find(handle.url);
+              const doc = await asyncTimeout(docOnPeer2.doc(), 1000);
+              return doc.text;
+            },
+            { timeout: 1_000 },
+          )
+          .toEqual(text);
       }
 
       const offlineText = 'This has been written while the connection was off';
@@ -536,7 +538,7 @@ describe('AutomergeRepo', () => {
       const [spaceKey] = PublicKey.randomSequence();
 
       const teleportBuilder = new TeleportBuilder();
-      afterTest(() => teleportBuilder.destroy());
+      onTestFinished(() => teleportBuilder.destroy());
 
       const peerWithDocs = await createTeleportPeerWithStoredDocs(teleportBuilder, spaceKey, async (repo) => {
         return range(2, (idx) => {
@@ -569,7 +571,7 @@ describe('AutomergeRepo', () => {
       const [spaceKey, anotherSpaceKey] = PublicKey.randomSequence();
 
       const teleportBuilder = new TeleportBuilder();
-      afterTest(() => teleportBuilder.destroy());
+      onTestFinished(() => teleportBuilder.destroy());
 
       const peerWithDocs = await createTeleportPeerWithStoredDocs(teleportBuilder, spaceKey, async (repo) => {
         const document = repo.create();
@@ -600,7 +602,7 @@ describe('AutomergeRepo', () => {
       const [spaceKey] = PublicKey.randomSequence();
 
       const teleportBuilder = new TeleportBuilder();
-      afterTest(() => teleportBuilder.destroy());
+      onTestFinished(() => teleportBuilder.destroy());
 
       const peerWithDocs = await createTeleportPeerWithStoredDocs(teleportBuilder, spaceKey, async (repo) => {
         const document = repo.create();

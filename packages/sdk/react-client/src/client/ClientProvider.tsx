@@ -113,11 +113,11 @@ export const ClientProvider = ({
     const done = async (client: Client) => {
       await client.initialize().catch(setError);
       log('client ready');
-      await onInitialized?.(client);
-      log('initialization complete');
       if (types) {
         client.addTypes(types);
       }
+      await onInitialized?.(client);
+      log('initialization complete');
 
       setClient(client);
       setStatus(client.status.get() ?? SystemStatus.ACTIVE);

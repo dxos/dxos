@@ -2,24 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { test, expect, describe } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 import { TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { test, describe, openAndClose } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { protocol } from './defs';
 import { EdgeClient } from './edge-client';
 import { createTestWsServer } from './test-utils';
 
-chai.use(chaiAsPromised);
-
 describe('EdgeClient', () => {
   const textMessage = (message: string) => protocol.createMessage(TextMessageSchema, { payload: { message } });
 
   test('reconnects on error', async () => {
-    const { error: serverError, endpoint } = await createTestWsServer();
+    const { error: serverError, endpoint } = await createTestWsServer(8001);
     const id = PublicKey.random().toHex();
     const client = new EdgeClient(id, id, { socketEndpoint: endpoint });
     await openAndClose(client);
@@ -29,11 +26,11 @@ describe('EdgeClient', () => {
     const reconnected = client.reconnect.waitForCount(1);
     await serverError();
     await reconnected;
-    await expect(client.send(textMessage('Hello world 2'))).to.be.fulfilled;
+    await expect(client.send(textMessage('Hello world 2'))).resolves.not.toThrow();
   });
 
   test('set identity reconnects', async () => {
-    const { endpoint } = await createTestWsServer();
+    const { endpoint } = await createTestWsServer(8002);
 
     const id = PublicKey.random().toHex();
     const client = new EdgeClient(id, id, { socketEndpoint: endpoint });
@@ -45,6 +42,6 @@ describe('EdgeClient', () => {
     const reconnected = client.reconnect.waitForCount(1);
     client.setIdentity({ peerKey: newId, identityKey: newId });
     await reconnected;
-    await expect(client.send(textMessage('Hello world 2'))).to.be.fulfilled;
+    await expect(client.send(textMessage('Hello world 2'))).resolves.not.toThrow();
   });
 });

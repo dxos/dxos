@@ -4,6 +4,9 @@
   "sourceRoot": "tools/executors/esbuild/src",
   "targets": {
     "compile": {
+      "dependsOn": [
+        "^compile"
+      ],
       "executor": "@nx/js:tsc",
       "options": {
         "main": "tools/executors/esbuild/src/index.ts",
@@ -17,6 +20,7 @@
     "lint": {}
   },
   "implicitDependencies": [
+    "esbuild-plugins",
     "log-hook"
   ]
 }
