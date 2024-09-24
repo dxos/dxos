@@ -73,7 +73,7 @@ export class LibDataChannelTransport implements Transport {
 
     // TODO(burdon): Move to factory?
     /* eslint-disable @typescript-eslint/consistent-type-imports */
-    const { RTCPeerConnection } = await import('node-datachannel/polyfill');
+    const { RTCPeerConnection } = await import('#node-datachannel/polyfill');
 
     const providedIceServers = await this._options.iceProvider?.getIceServers();
 
@@ -173,7 +173,7 @@ export class LibDataChannelTransport implements Transport {
   async close() {
     await this._close();
     if (--LibDataChannelTransport._instanceCount === 0) {
-      (await import('node-datachannel')).cleanup();
+      (await import('#node-datachannel')).cleanup();
     }
   }
 
