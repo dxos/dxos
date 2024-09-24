@@ -4,7 +4,7 @@
 
 import { beforeEach, onTestFinished, describe, expect, test } from 'vitest';
 
-import { asyncChain, asyncTimeout, sleep, Trigger, waitForCondition } from '@dxos/async';
+import { asyncChain, sleep, Trigger, waitForCondition } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import {
   createAdmissionKeypair,
@@ -214,27 +214,26 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
   test('max auth code retries', async () => {
     const params = getParams();
     let attempt = 0;
-    const [hostPromise, guestPromise] = performInvitation({
-      ...params,
-      options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
-      hooks: {
-        guest: {
-          onReady: (invitation) => {
-            // Force retry.
-            void invitation.authenticate('000000');
-            attempt++;
-            return true;
+    const [hostResult, guestResult] = await Promise.all(
+      performInvitation({
+        ...params,
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        hooks: {
+          guest: {
+            onReady: (invitation) => {
+              // Force retry.
+              void invitation.authenticate('000000');
+              attempt++;
+              return true;
+            },
           },
         },
-      },
-    });
-    const guestResult = await guestPromise;
+      }),
+    );
 
     expect(attempt).to.eq(3);
-    expect(guestResult.error).to.exist;
-    expect(await hostPromise).toEqual({
-      error: expect.any(Error),
-    });
+    expect(guestResult).toEqual({ error: expect.any(Error) });
+    expect(hostResult).toEqual({ error: expect.any(Error) });
   });
 
   test('invitation timeout', async () => {
@@ -273,22 +272,23 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
 
   test('guest cancels invitation', async () => {
     const params = getParams();
-    const [hostPromise, guestPromise] = performInvitation({
-      ...params,
-      options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
-      hooks: {
-        guest: {
-          onConnected: (invitation) => {
-            void invitation.cancel();
-            return true;
+    const [hostResult, guestResult] = await Promise.all(
+      performInvitation({
+        ...params,
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        hooks: {
+          guest: {
+            onConnected: (invitation) => {
+              void invitation.cancel();
+              return true;
+            },
           },
         },
-      },
-    });
-    const guestResult = await guestPromise;
+      }),
+    );
 
     expect(guestResult.invitation?.state).to.eq(Invitation.State.CANCELLED);
-    await expect(asyncTimeout(hostPromise, 100)).rejects.toBeInstanceOf(Error);
+    expect(hostResult).toEqual({ error: expect.any(Error) });
   });
 
   test('network error', async () => {
