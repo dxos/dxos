@@ -8223,6 +8223,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-grid':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-grid
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -10621,9 +10624,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../react-ui-editor
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -10633,6 +10633,12 @@ importers:
       '@lit/react':
         specifier: ^1.0.5
         version: 1.0.5(@types/react@18.2.79)
+      '@radix-ui/react-context':
+        specifier: ^1.0.0
+        version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
+      '@radix-ui/react-use-controllable-state':
+        specifier: ^1.0.0
+        version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
     devDependencies:
       '@dxos/storybook-utils':
         specifier: workspace:*
@@ -31661,6 +31667,9 @@ packages:
 
   /ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependenciesMeta:
+      ajv:
+        optional: true
     dependencies:
       ajv: 8.12.0
 
@@ -42171,6 +42180,8 @@ packages:
       webpack: '*'
     peerDependenciesMeta:
       webpack:
+        optional: true
+      webpack-sources:
         optional: true
     dependencies:
       webpack: 5.88.2(@swc/core@1.5.7)(esbuild@0.23.1)
