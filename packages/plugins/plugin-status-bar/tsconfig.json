@@ -32,9 +32,6 @@
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/react-client"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
@@ -42,15 +39,6 @@
     },
     {
       "path": "../../ui/storybook-utils"
-    },
-    {
-      "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-stack"
     }
   ]
 }
