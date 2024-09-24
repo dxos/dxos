@@ -1,29 +1,33 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "cli-base",
-  "tags": [
-    "scope:devtools"
-  ],
+  "tags": ["scope:devtools"],
   "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
   "targets": {
     "bin": {
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "executor": "nx:run-script",
       "options": {
         "script": "bin"
       }
     },
-    "build": {
+    "compile": {
+      "executor": "@nx/js:tsc",
+      "cache": true,
+      "dependsOn": ["^build"],
       "options": {
-        "outputPath": "{projectRoot}/dist"
-      }
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "{projectRoot}/dist",
+        "tsConfig": "{projectRoot}/tsconfig.json"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "nx:noop",
+      "dependsOn": ["compile"]
     },
     "lint": {}
   },
-  "implicitDependencies": [
-    "esbuild"
-  ]
+  "implicitDependencies": ["esbuild"]
 }
