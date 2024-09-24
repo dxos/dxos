@@ -164,7 +164,9 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
     });
 
     expect((await guestResult).error).to.exist;
-    await expect(asyncTimeout(hostResult, 100)).rejects.toBeInstanceOf(Error);
+    expect(await hostResult).toEqual({
+      error: expect.any(Error),
+    });
   });
 
   test('with target', async () => {
@@ -230,7 +232,9 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
 
     expect(attempt).to.eq(3);
     expect(guestResult.error).to.exist;
-    await expect(asyncTimeout(hostPromise, 100)).rejects.toBeInstanceOf(Error);
+    expect(await hostPromise).toEqual({
+      error: expect.any(Error),
+    });
   });
 
   test('invitation timeout', async () => {
