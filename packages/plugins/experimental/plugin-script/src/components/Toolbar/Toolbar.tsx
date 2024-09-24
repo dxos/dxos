@@ -68,8 +68,9 @@ export const Toolbar = ({
     <DensityProvider density='fine'>
       <ElevationProvider elevation='chrome'>
         <NaturalToolbar.Root classNames={['p-1', classNames]} style={{ contain: 'layout' }}>
-          {onFormat && <ToolbarButton icon='ph--magic-wand--regular' text={t('format label')} onClick={onFormat} />}
           {templates && <TemplateSelect templates={templates} onTemplateSelect={onTemplateSelect} />}
+          {onFormat && <ToolbarButton icon='ph--magic-wand--regular' text={t('format label')} onClick={onFormat} />}
+
           <div role='separator' className='grow' />
 
           {error ? (

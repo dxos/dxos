@@ -6,6 +6,7 @@ import type {
   GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -17,9 +18,12 @@ export enum ScriptAction {
   CREATE = `${SCRIPT_PLUGIN}/create`,
 }
 
+export type ScriptSettingsProps = {};
+
 export type ScriptPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
+  SettingsProvides<ScriptSettingsProps> &
   SchemaProvides;

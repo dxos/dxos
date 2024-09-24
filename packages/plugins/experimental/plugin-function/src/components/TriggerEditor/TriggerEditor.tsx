@@ -32,7 +32,7 @@ import { getMeta, state } from './meta';
 const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook', 'websocket'];
 
 const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000;
+const RETRY_DELAY = 1_000;
 
 const registerTriggersMutex = new Mutex();
 

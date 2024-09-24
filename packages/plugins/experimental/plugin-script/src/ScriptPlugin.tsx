@@ -17,7 +17,7 @@ import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { initializeBundler } from './bundler';
 import { Compiler } from './compiler';
-import { ScriptContainer } from './components';
+import { ScriptContainer, ScriptSettings } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import { templates } from './templates';
 import translations from './translations';
@@ -46,6 +46,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
       await initializeBundler({ wasmUrl });
     },
     provides: {
+      settings: {},
       metadata: {
         records: {
           [ScriptType.typename]: {
@@ -106,8 +107,17 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          if (role === 'article' && data.object instanceof ScriptType) {
-            return <ScriptContainer script={data.object} env={compiler.environment} />;
+          switch (role) {
+            case 'settings': {
+              return data.plugin === meta.id ? <ScriptSettings settings={{}} /> : null;
+            }
+
+            case 'article': {
+              if (data.object instanceof ScriptType) {
+                return <ScriptContainer script={data.object} env={compiler.environment} />;
+              }
+              break;
+            }
           }
 
           return null;
