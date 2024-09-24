@@ -45,8 +45,7 @@
   "devDependencies": {
     "@dxos/signal": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@types/node": "^18.11.10",
-    "typescript": "^5.5.4"
+    "@types/node": "^22.6.1"
   },
   "publishConfig": {
     "access": "public"
