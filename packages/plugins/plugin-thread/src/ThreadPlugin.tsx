@@ -22,7 +22,6 @@ import {
   isLayoutParts,
   parseMetadataResolverPlugin,
   type IntentDispatcher,
-  useResolvePlugins,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
@@ -43,24 +42,15 @@ import {
   fullyQualifiedId,
   loadObjectReferences,
 } from '@dxos/react-client/echo';
-import { ScrollArea } from '@dxos/react-ui';
-import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { comments, createExternalCommentSync, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
-import {
-  ThreadMain,
-  ThreadSettings,
-  CommentsContainer,
-  CommentsHeading,
-  ChatContainer,
-  ChatHeading,
-  ThreadArticle,
-} from './components';
+import { ThreadMain, ThreadSettings, ChatContainer, ChatHeading, ThreadArticle } from './components';
+import { ThreadComplementary } from './components/ThreadComplementary';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
-import { ThreadAction, type ThreadProvides, type ThreadPluginProvides, type ThreadSettingsProps } from './types';
+import { ThreadAction, type ThreadPluginProvides, type ThreadSettingsProps } from './types';
 
 type ThreadState = {
   /** An in-memory staging area for threads that are being drafted. */
@@ -74,8 +64,6 @@ const initialViewState = { showResolvedThreads: false };
 type ViewStore = Record<SubjectId, typeof initialViewState>;
 
 // TODO(Zan): More robust runtime check.
-const providesThreadsConfig = (plugin: any): Plugin<ThreadProvides<any>> | undefined =>
-  'thread' in plugin.provides ? (plugin as Plugin<ThreadProvides<any>>) : undefined;
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
@@ -93,7 +81,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
-  let dispatch: IntentDispatcher | undefined;
 
   const unsubscribeCallbacks = [] as UnsubscribeCallback[];
 
@@ -105,7 +92,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
-      dispatch = intentPlugin?.provides.intent.dispatch;
 
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -317,8 +303,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             case 'article':
             case 'complementary': {
               const location = navigationPlugin?.provides.location;
-              const threadsIntegrators = useResolvePlugins(providesThreadsConfig);
-              const threadProvides = threadsIntegrators.map((p) => p.provides.thread);
 
               if (data.object instanceof ChannelType && data.object.threads[0]) {
                 const channel = data.object;
@@ -351,88 +335,17 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 'threads' in data.subject &&
                 Array.isArray(data.subject.threads)
               ) {
-                const threads = data.subject.threads
-                  .concat(state.staging[fullyQualifiedId(data.subject)])
-                  .filter(nonNullable);
-
-                const createSort = threadProvides.find((p) => p.predicate(data.subject))?.createSort;
-                if (createSort) {
-                  // TODO(Zan): This is causing perf issues when there are multiple instances of subject.
-                  // We should memoize the sort function, it can hold a reference to the subject.
-                  // Can't memoize it here because it would break the rules of hooks.
-                  const sort = createSort(data.subject);
-                  threads.sort((a, b) => sort(a.anchor, b.anchor));
-                }
-
-                const detached = data.subject.threads
-                  .filter(nonNullable)
-                  .filter(({ anchor }) => !anchor)
-                  .map((thread) => thread.id);
-
-                const qualifiedSubjectId = fullyQualifiedId(data.subject);
-                const attention = attentionPlugin?.provides.attention?.attended ?? new Set([qualifiedSubjectId]);
-                const attendableAttrs = createAttendableAttributes(qualifiedSubjectId);
-                const { showResolvedThreads } = getViewState(qualifiedSubjectId);
+                const { showResolvedThreads } = getViewState(fullyQualifiedId(data.subject));
 
                 return (
-                  <div role='none' className='contents group/attention' {...attendableAttrs}>
-                    {role === 'complementary' && <CommentsHeading attendableId={qualifiedSubjectId} />}
-                    <ScrollArea.Root classNames='row-span-2'>
-                      <ScrollArea.Viewport>
-                        <CommentsContainer
-                          threads={threads}
-                          detached={detached}
-                          currentId={attention.has(qualifiedSubjectId) ? state.current : undefined}
-                          autoFocusCurrentTextbox={state.focus}
-                          showResolvedThreads={showResolvedThreads}
-                          onThreadAttend={(thread) => {
-                            if (state.current !== thread.id) {
-                              state.current = thread.id;
-                              void dispatch?.({
-                                action: LayoutAction.SCROLL_INTO_VIEW,
-                                data: {
-                                  id: fullyQualifiedId(data.subject!),
-                                  thread: fullyQualifiedId(thread),
-                                  cursor: thread.anchor,
-                                },
-                              });
-                            }
-                          }}
-                          onThreadDelete={(thread) => {
-                            return dispatch?.({
-                              plugin: THREAD_PLUGIN,
-                              action: ThreadAction.DELETE,
-                              data: { subject: data.subject, thread },
-                            });
-                          }}
-                          onMessageDelete={(thread, messageId) =>
-                            dispatch?.({
-                              plugin: THREAD_PLUGIN,
-                              action: ThreadAction.DELETE_MESSAGE,
-                              data: { subject: data.subject, thread, messageId },
-                            })
-                          }
-                          onThreadToggleResolved={(thread) =>
-                            dispatch?.({
-                              plugin: THREAD_PLUGIN,
-                              action: ThreadAction.TOGGLE_RESOLVED,
-                              data: { thread },
-                            })
-                          }
-                          onComment={(thread) => {
-                            void intentPlugin?.provides.intent.dispatch({
-                              action: ThreadAction.ON_MESSAGE_ADD,
-                              data: { thread, subject: data.subject },
-                            });
-                          }}
-                        />
-                        <div role='none' className='bs-10' />
-                        <ScrollArea.Scrollbar>
-                          <ScrollArea.Thumb />
-                        </ScrollArea.Scrollbar>
-                      </ScrollArea.Viewport>
-                    </ScrollArea.Root>
-                  </div>
+                  <ThreadComplementary
+                    role={role}
+                    subject={data.subject}
+                    stagedThreads={state.staging[fullyQualifiedId(data.subject)]}
+                    current={state.current}
+                    focus
+                    showResolvedThreads={showResolvedThreads}
+                  />
                 );
               }
             }

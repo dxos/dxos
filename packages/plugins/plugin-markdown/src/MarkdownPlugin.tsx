@@ -256,7 +256,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             return range?.start ?? Number.MAX_SAFE_INTEGER;
           };
 
-          return (anchorA: string, anchorB: string) => getStartPosition(anchorA) - getStartPosition(anchorB);
+          return (anchorA: string | undefined, anchorB: string | undefined): number => {
+            if (anchorA === undefined || anchorB === undefined) {
+              return 0;
+            }
+            const posA = getStartPosition(anchorA);
+            const posB = getStartPosition(anchorB);
+            return posA - posB;
+          };
         },
       },
       surface: {

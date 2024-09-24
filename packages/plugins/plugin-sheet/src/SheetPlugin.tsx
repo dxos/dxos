@@ -142,6 +142,9 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         predicate: (data) => data instanceof SheetType,
         createSort: (sheet) => {
           return (anchorA, anchorB) => {
+            if (!anchorA || !anchorB) {
+              return 0;
+            }
             const { row: rowA, column: columnA } = addressFromIndex(sheet, anchorA);
             const { row: rowB, column: columnB } = addressFromIndex(sheet, anchorB);
 
