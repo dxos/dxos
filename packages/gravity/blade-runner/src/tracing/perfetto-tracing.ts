@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import fs from 'node:fs';
 
 import { log } from '@dxos/log';
