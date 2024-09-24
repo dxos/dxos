@@ -87,7 +87,7 @@ export const WelcomePlugin = ({
       }
 
       // TODO(burdon): Factor out credentials helpers to hub-client.
-      const skipAuth = client.config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'main' || !hubUrl;
+      const skipAuth = ['main', 'labs'].includes(client.config.values.runtime?.app?.env?.DX_ENVIRONMENT) || !hubUrl;
       const searchParams = new URLSearchParams(window.location.search);
       const token = searchParams.get('token') ?? undefined;
 

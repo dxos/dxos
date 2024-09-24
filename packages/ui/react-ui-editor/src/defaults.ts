@@ -8,7 +8,8 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { fontMono } from './styles';
 
-// TODO(burdon): Define scrollMargins for fixed gutter.
+// TODO(burdon): Define scrollMargins for fixed gutter?
+//  https://codemirror.net/docs/ref/#view.EditorView^scrollMargins
 const margin = '!mt-[1rem]';
 
 /**
@@ -16,7 +17,7 @@ const margin = '!mt-[1rem]';
  * 40rem = 640px. Corresponds to initial plank width (Google docs, Stashpad, etc.)
  * 50rem = 800px. Maximum content width for solo mode.
  */
-export const editorContent = mx(margin, '!mli-auto w-full max-w-[min(50rem,100%-4rem)]');
+export const editorContent = mx(margin, '!mli-auto w-full max-w-[min(50rem,100%-2rem)]');
 
 /**
  * Margin for numbers.
@@ -30,7 +31,7 @@ export const editorGutter = EditorView.theme({
   // Match margin from content.
   '.cm-gutters': {
     marginTop: '16px',
-    paddingRight: '2rem',
+    paddingRight: '1rem',
   },
 });
 

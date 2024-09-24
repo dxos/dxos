@@ -3,13 +3,8 @@
 //
 
 import React, { type FC, type HTMLAttributes, useState } from 'react';
-import SyntaxHighlighter from 'react-syntax-highlighter';
-// eslint-disable-next-line no-restricted-imports
-import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
-// eslint-disable-next-line no-restricted-imports
-import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
-import { type ThemeMode } from '@dxos/react-ui';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { arrayToBuffer } from '@dxos/util';
 
@@ -33,13 +28,8 @@ export const replacer = (key: any, value: any) => {
   return value;
 };
 
-export const Json: FC<{ data?: object; theme: ThemeMode }> = ({ data, theme }) => {
-  const style = theme === 'dark' ? styleDark : styleLight;
-  return (
-    <SyntaxHighlighter language='json' style={style} className='w-full'>
-      {JSON.stringify(data, replacer, 2)}
-    </SyntaxHighlighter>
-  );
+export const Json: FC<{ data?: object }> = ({ data }) => {
+  return <SyntaxHighlighter language='json'>{JSON.stringify(data, replacer, 2)}</SyntaxHighlighter>;
 };
 
 export const Tree: FC<{ data?: object }> = ({ data }) => {

@@ -7,7 +7,9 @@ import '@dxos-theme';
 import React, { useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
-import { withTheme } from '@dxos/storybook-utils';
+import { useClient } from '@dxos/react-client';
+import { withClientProvider } from '@dxos/react-client/testing';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { PromptTemplate } from './PromptTemplate';
 import { ChainPromptType, ChainType } from '../../types';
@@ -25,11 +27,15 @@ const template = [
 ].join('\n');
 
 const Story = () => {
-  const [chain] = useState(
-    create(ChainType, {
-      prompts: [create(ChainPromptType, { command: 'test', template, inputs: [] })],
-    }),
-  );
+  const client = useClient();
+  const [chain] = useState(() => {
+    const space = client.spaces.default;
+    return space.db.add(
+      create(ChainType, {
+        prompts: [create(ChainPromptType, { command: 'test', template, inputs: [] })],
+      }),
+    );
+  });
 
   return (
     <div className='flex justify-center'>
@@ -43,7 +49,11 @@ const Story = () => {
 export default {
   title: 'plugin-chain/PromptTemplate',
   render: Story,
-  decorators: [withTheme],
+  decorators: [
+    withClientProvider({ createIdentity: true, createSpace: true, types: [ChainType, ChainPromptType] }),
+    withTheme,
+    withLayout(),
+  ],
 };
 
 export const Default = {};

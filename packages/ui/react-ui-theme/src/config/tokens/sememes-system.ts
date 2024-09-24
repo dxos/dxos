@@ -58,9 +58,12 @@ export const systemSememes = {
     light: ['primary', 600],
     dark: ['primary', 475],
   },
-
+  hoverOverlay: {
+    light: ['neutral', '450/.1'],
+    dark: ['neutral', '450/.1'],
+  },
   //
-  // Borders (border-)
+  // Borders (border-, divide-)
   //
 
   separator: {

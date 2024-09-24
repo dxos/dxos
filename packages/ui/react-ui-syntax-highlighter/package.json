@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/react-async",
-  "version": "0.6.10",
-  "description": "Async utils",
+  "name": "@dxos/react-ui-syntax-highlighter",
+  "version": "0.6.11",
+  "description": "A syntax highlighter wrapper.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -9,9 +9,6 @@
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "default": "./dist/lib/node/index.cjs"
-      },
       "types": "./dist/types/src/index.d.ts"
     }
   },
@@ -23,23 +20,24 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "book": "esbuild-server book"
-  },
   "dependencies": {
-    "@dxos/async": "workspace:*"
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "react-syntax-highlighter": "^15.5.0"
   },
   "devDependencies": {
-    "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~2.29.0",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react-dom": "~18.2.0",
+    "vite": "^5.3.4"
   },
   "peerDependencies": {
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   },
   "publishConfig": {
     "access": "public"
