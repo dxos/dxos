@@ -3,7 +3,7 @@
 //
 
 import { Event, scheduleMicroTask, synchronized, trackLeaks } from '@dxos/async';
-import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { type DelegateInvitationCredential, type FeedInfo, type MemberInfo } from '@dxos/credentials';
 import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -125,10 +125,6 @@ export class Space extends Resource {
   @trace.info()
   get key() {
     return this._key;
-  }
-
-  get isOpen() {
-    return this._lifecycleState === LifecycleState.OPEN;
   }
 
   get genesisFeedKey(): PublicKey {

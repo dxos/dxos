@@ -4,6 +4,6 @@
 
 import { type PublicKey } from '@dxos/react-client';
 
-const Demo = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => null;
+const Demo = ({ id, spaceKey }: { id: number; spaceKey?: PublicKey }) => null;
 
 export default Demo;

@@ -16,11 +16,18 @@ import {
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { fullyQualifiedId, isSpace, loadObjectReferences } from '@dxos/react-client/echo';
+import {
+  createDocAccessor,
+  fullyQualifiedId,
+  getRangeFromCursor,
+  isSpace,
+  loadObjectReferences,
+} from '@dxos/react-client/echo';
 import {
   type EditorInputMode,
   type EditorViewMode,
@@ -59,6 +66,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
     defaultViewMode: 'preview',
     toolbar: true,
+    folding: false,
     experimental: false,
   });
 
@@ -225,9 +233,31 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             type: ['plugin name', { ns: MARKDOWN_PLUGIN }],
             label: ['create stack section label', { ns: MARKDOWN_PLUGIN }],
             icon: (props: any) => <TextAa {...props} />,
-            intent: { plugin: MARKDOWN_PLUGIN, action: MarkdownAction.CREATE },
+            intent: {
+              plugin: MARKDOWN_PLUGIN,
+              action: MarkdownAction.CREATE,
+            },
           },
         ],
+      },
+      thread: {
+        // TODO(Zan): How to better handle the type predicate?
+        predicate: (obj) => obj instanceof DocumentType,
+        createSort: (doc: DocumentType) => {
+          const accessor = doc.content ? createDocAccessor(doc.content, ['content']) : undefined;
+
+          if (!accessor) {
+            log.warn('No accessor found for document content.');
+            return (_) => 0;
+          }
+
+          const getStartPosition = (cursor: string | undefined) => {
+            const range = cursor ? getRangeFromCursor(accessor, cursor) : undefined;
+            return range?.start ?? Number.MAX_SAFE_INTEGER;
+          };
+
+          return (anchorA: string, anchorB: string) => getStartPosition(anchorA) - getStartPosition(anchorB);
+        },
       },
       surface: {
         component: ({ data, role, ...props }, forwardedRef) => {

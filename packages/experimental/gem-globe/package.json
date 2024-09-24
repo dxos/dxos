@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-globe",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "GEM globe.",
   "homepage": "https://github.com/dxos",
   "bugs": "https://github.com/dxos/issues",
@@ -14,11 +14,22 @@
         "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
+    },
+    "./data": {
+      "browser": "./dist/lib/browser/data.mjs",
+      "node": {
+        "default": "./dist/lib/node/data.cjs"
+      },
+      "types": "./dist/types/src/data.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "data": [
+        "dist/types/src/data.d.ts"
+      ]
+    }
   },
   "files": [
     "data",

@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SVGRoot } from './SVGRoot';
 import { useGrid, useZoom, createSvgContext, useSvgContext } from '../hooks';
@@ -47,7 +47,7 @@ export default {
   title: 'gem-core/SVGRoot',
   component: SVGRoot,
   render: (props: ComponentProps) => <Story {...props} />,
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export const Default = {

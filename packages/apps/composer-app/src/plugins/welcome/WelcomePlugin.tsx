@@ -87,14 +87,15 @@ export const WelcomePlugin = ({
       }
 
       // TODO(burdon): Factor out credentials helpers to hub-client.
-      const skipAuth = client.config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'main' || !hubUrl;
+      const skipAuth = ['main', 'labs'].includes(client.config.values.runtime?.app?.env?.DX_ENVIRONMENT) || !hubUrl;
       const searchParams = new URLSearchParams(window.location.search);
       const token = searchParams.get('token') ?? undefined;
 
       // If identity already exists, continue with existing identity.
       // If not, only create identity if token is present.
       let identity = client.halo.identity.get();
-      if (!identity && (token || skipAuth)) {
+      const deviceInvitationCode = searchParams.get('deviceInvitationCode');
+      if (!identity && !deviceInvitationCode && (token || skipAuth)) {
         const result = await dispatch({
           plugin: CLIENT_PLUGIN,
           action: ClientAction.CREATE_IDENTITY,

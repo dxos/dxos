@@ -9,7 +9,7 @@ import { describe, expect, test } from 'vitest';
 import { waitForCondition } from '@dxos/async';
 import { Client, Config, SystemStatus, fromHost } from '@dxos/client';
 
-import { ClientProvider } from './ClientContext';
+import { ClientProvider } from './ClientProvider';
 import { useConfig } from './useConfig';
 
 describe('Config hook', () => {

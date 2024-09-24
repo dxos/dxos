@@ -27,9 +27,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/react-async"
-    },
-    {
       "path": "../../common/test-utils"
     },
     {
@@ -40,6 +37,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../ui/primitives/react-hooks"
     }
   ]
 }

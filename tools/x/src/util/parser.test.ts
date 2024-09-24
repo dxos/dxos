@@ -20,7 +20,7 @@ Done compiling TypeScript files for project "signal".
 Compiling TypeScript files for project "react-appkit"...
 packages/ui/react-appkit/src/hooks/useTelemetry.ts:8:32 - error TS2307: Cannot find module '@dxos/react-async' or its corresponding type declarations.
 
-8 import { useAsyncEffect } from '@dxos/react-async';
+8 import { useAsyncEffect } from '@dxos/react-hooks';
                                  ~~~~~~~~~~~~~~~~~~~
 packages/ui/react-appkit/src/hooks/useSafeSpaceKey.ts:13:90 - error TS2307: Cannot find module './base-properties' or its corresponding type declarations.
 

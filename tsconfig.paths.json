@@ -44,12 +44,6 @@
       "@dxos/plugin-github/meta": [
         "packages/plugins/experimental/plugin-github/src/meta.tsx"
       ],
-      "@dxos/plugin-gpt": [
-        "packages/plugins/experimental/plugin-gpt/src/index.ts"
-      ],
-      "@dxos/plugin-gpt/meta": [
-        "packages/plugins/experimental/plugin-gpt/src/meta.tsx"
-      ],
       "@dxos/plugin-grid": [
         "packages/plugins/experimental/plugin-grid/src/index.ts"
       ],
@@ -239,6 +233,9 @@
       "@dxos/plugin-sheet/meta": [
         "packages/plugins/plugin-sheet/src/meta.tsx"
       ],
+      "@dxos/plugin-sheet/testing": [
+        "packages/plugins/plugin-sheet/src/testing.ts"
+      ],
       "@dxos/plugin-sheet/types": [
         "packages/plugins/plugin-sheet/src/types.ts"
       ],
@@ -358,6 +355,9 @@
       ],
       "@dxos/react-ui-stack/testing": [
         "packages/ui/react-ui-stack/src/testing/index.ts"
+      ],
+      "@dxos/react-ui-syntax-highlighter": [
+        "packages/ui/react-ui-syntax-highlighter/src/index.ts"
       ],
       "@dxos/react-ui-table": [
         "packages/ui/react-ui-table/src/index.ts"

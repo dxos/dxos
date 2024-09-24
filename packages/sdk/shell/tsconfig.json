@@ -40,9 +40,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/react-async"
-    },
-    {
       "path": "../../common/test-utils"
     },
     {
@@ -56,6 +53,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../ui/primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"

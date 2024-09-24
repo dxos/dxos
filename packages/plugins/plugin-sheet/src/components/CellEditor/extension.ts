@@ -32,30 +32,30 @@ const highlightStyles = HighlightStyle.define([
   // Function.
   {
     tag: tags.name,
-    class: 'text-primary-500',
+    class: 'text-accentText',
   },
   // Range.
   {
     tag: tags.tagName,
-    class: 'text-pink-500',
+    class: 'text-pinkText',
   },
   // Values.
   {
     tag: tags.number,
-    class: 'text-teal-500',
+    class: 'text-tealText',
   },
   {
     tag: tags.bool,
-    class: 'text-teal-500',
+    class: 'text-tealText',
   },
   {
     tag: tags.string,
-    class: 'text-teal-500',
+    class: 'text-tealText',
   },
   // Error.
   {
     tag: tags.invalid,
-    class: 'text-neutral-500',
+    class: 'text-unAccent',
   },
 ]);
 
@@ -92,7 +92,7 @@ export const sheetExtension = ({ functions = [] }: SheetExtensionOptions): Exten
 
         const title = document.createElement('h2');
         title.innerText = name;
-        title.className = 'text-lg font-mono text-primary-500';
+        title.className = 'text-lg font-mono text-accentText';
         root.appendChild(title);
 
         if (description) {
@@ -105,7 +105,7 @@ export const sheetExtension = ({ functions = [] }: SheetExtensionOptions): Exten
         if (syntax) {
           const detail = document.createElement('pre');
           detail.innerText = syntax;
-          detail.className = 'whitespace-pre-wrap text-green-500';
+          detail.className = 'whitespace-pre-wrap text-greenText';
           root.appendChild(detail);
         }
 
@@ -168,8 +168,8 @@ export const sheetExtension = ({ functions = [] }: SheetExtensionOptions): Exten
           // TODO(burdon): Factor out fragments.
           // TODO(burdon): Size to make width same as column.
           '!-left-[1px] !top-[33px] !-m-0 border !border-t-0 [&>ul]:!min-w-[198px]',
-          '[&>ul>li[aria-selected]]:!bg-primary-700',
-          'border-neutral-200 dark:border-neutral-700',
+          '[&>ul>li[aria-selected]]:!bg-accentSurface',
+          'border-separator',
         ),
     }),
     keymap.of([
@@ -239,6 +239,12 @@ export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): E
               case 'Function': {
                 // Mark but keep looking.
                 activeRange = { from: to, to };
+                break;
+              }
+
+              case 'CloseParen': {
+                // Mark but keep looking.
+                activeRange = { from, to: from };
                 break;
               }
 

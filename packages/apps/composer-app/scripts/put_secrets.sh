@@ -19,3 +19,5 @@ put_secret production composer.space JWT_SECRET
 put_secret production composer.space SENTRY_RELEASE_AUTH_TOKEN
 put_secret production composer.space DX_OTEL_ENDPOINT
 put_secret production composer.space DX_OTEL_AUTHORIZATION
+put_secret production composer.space DX_LOKI_ENDPOINT
+put_secret production composer.space DX_LOKI_AUTHORIZATION

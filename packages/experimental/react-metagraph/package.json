@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-metagraph",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "React Metagraph API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,8 +30,8 @@
     "@dxos/metagraph": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "use-subscription": "^1.8.0"
