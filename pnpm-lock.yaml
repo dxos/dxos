@@ -6222,6 +6222,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-db
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
@@ -31684,6 +31687,9 @@ packages:
 
   /ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependenciesMeta:
+      ajv:
+        optional: true
     dependencies:
       ajv: 8.12.0
     dev: false
