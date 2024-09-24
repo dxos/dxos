@@ -25,6 +25,7 @@ import {
   publicKeyToDid,
   setUserFunctionUrlInMetadata,
   uploadWorkerFunction,
+  USERFUNCTIONS_PRESET_META_KEY,
 } from '../edge';
 import { SCRIPT_PLUGIN } from '../meta';
 import { templates } from '../templates';
@@ -99,7 +100,14 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
     if (template) {
       script.name = template.name;
       script.source!.content = template.source;
-      getMeta(script).keys = template.meta?.keys ?? [];
+      const metaKeys = getMeta(script).keys;
+      const oldPresetIndex = metaKeys.findIndex((key) => key.source === USERFUNCTIONS_PRESET_META_KEY);
+      if (oldPresetIndex >= 0) {
+        metaKeys.splice(oldPresetIndex, 1);
+      }
+      if (template.presetId) {
+        metaKeys.push({ source: USERFUNCTIONS_PRESET_META_KEY, id: template.presetId });
+      }
     }
   };
 

@@ -7,7 +7,6 @@ import React, { type FC } from 'react';
 import { GameType } from '@dxos/chess-app';
 import { create, getMeta as getEchoMeta } from '@dxos/echo-schema';
 import { type FunctionTrigger } from '@dxos/functions/types';
-import { log } from '@dxos/log';
 import { ChainPresets, chainPresets, PromptTemplate } from '@dxos/plugin-chain';
 import { type ChainPromptType } from '@dxos/plugin-chain/types';
 import { FileType } from '@dxos/plugin-ipfs/types';
@@ -50,14 +49,19 @@ type MetaExtension<T> = {
   component: FC<MetaProps<T>>;
 };
 
+const USERFUNCTIONS_PRESET_META_KEY = 'dxos.org/service/function-preset';
+
 /**
  * Create meta type from function.
  * @param trigger - function trigger.
  * @param script - function script.
  */
-export const getMeta = (trigger: FunctionTrigger, script?: ScriptType): MetaExtension<any> | undefined => {
+export const getFunctionMetaExtension = (
+  trigger: FunctionTrigger,
+  script?: ScriptType,
+): MetaExtension<any> | undefined => {
   if (script) {
-    const meta = getEchoMeta(script).keys[0];
+    const meta = getEchoMeta(script).keys.find((key) => key.source === USERFUNCTIONS_PRESET_META_KEY);
     const extension = meta && metaExtensions[meta.id];
     if (extension) {
       return extension;
@@ -144,7 +148,6 @@ const ChainPromptMetaProps = ({ meta, triggerId }: MetaProps<ChainPromptMeta>) =
       <InputRow label='Model'>
         <Input.TextInput
           value={meta.model ?? ''}
-          // TODO(burdon): This throws.
           onChange={(event) => (meta.model = event.target.value)}
           placeholder='llama2'
         />
@@ -153,18 +156,7 @@ const ChainPromptMetaProps = ({ meta, triggerId }: MetaProps<ChainPromptMeta>) =
         <ChainPresets
           presets={chainPresets}
           onSelect={(preset) => {
-            try {
-              const prompt = preset.createPrompt();
-              console.log({ meta, preset, prompt });
-              meta.model = 'xxx'; // TODO(burdon): This throws also.
-              meta.prompt = prompt;
-            } catch (err) {
-              // TODO(burdon): Throws: "unknown property: prompt, path: meta,prompt"
-              //  Did something change where a metq property now cannot be a reference to an object.
-              //  FunctionTrigger
-              //    meta: S.optional(S.mutable(S.Record(S.String, S.Any))),
-              log.catch(err);
-            }
+            meta.prompt = preset.createPrompt();
           }}
         />
       </InputRow>

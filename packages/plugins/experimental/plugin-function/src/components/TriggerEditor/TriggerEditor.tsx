@@ -27,7 +27,7 @@ import { DensityProvider, Input, Select } from '@dxos/react-ui';
 import { distinctBy } from '@dxos/util';
 
 import { InputRow } from './Form';
-import { getMeta, state } from './meta';
+import { getFunctionMetaExtension, state } from './meta';
 
 const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook', 'websocket'];
 
@@ -169,7 +169,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
 
   useEffect(() => {
     if (!trigger.meta) {
-      const extension = getMeta(trigger, script);
+      const extension = getFunctionMetaExtension(trigger, script);
       trigger.meta = extension?.initialValue?.();
     }
   }, [trigger.function, trigger.meta]);
@@ -203,7 +203,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
     }
   };
 
-  const TriggerMeta = getMeta(trigger, script)?.component;
+  const TriggerMeta = getFunctionMetaExtension(trigger, script)?.component;
 
   return (
     <DensityProvider density='fine'>
