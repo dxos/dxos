@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { IntentResolver, LayoutAction, useIntentDispatcher, useIntentResolver } from '@dxos/app-framework';
+import { type IntentResolver, LayoutAction, useIntentDispatcher, useIntentResolver } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Icon } from '@dxos/react-ui';
