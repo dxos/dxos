@@ -230,7 +230,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
 
     expect(attempt).to.eq(3);
     expect(guestResult.error).to.exist;
-    await expect(asyncTimeout(hostPromise, 100)).rejects.toBeDefined();
+    await expect(asyncTimeout(hostPromise, 100)).rejects.toBeInstanceOf(Error);
   });
 
   test('invitation timeout', async () => {
