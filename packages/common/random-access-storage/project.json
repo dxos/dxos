@@ -20,10 +20,9 @@
       }
     },
     "lint": {},
-    "vitest": {}
+    "test": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "test"
+    "esbuild"
   ]
 }

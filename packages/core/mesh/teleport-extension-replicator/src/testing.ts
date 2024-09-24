@@ -3,6 +3,7 @@
 //
 
 import { pipeline } from 'stream';
+import { onTestFinished } from 'vitest';
 
 import { FeedFactory, type FeedOptions, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -10,7 +11,6 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { Teleport } from '@dxos/teleport';
-import { afterTest } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { ReplicatorExtension } from './replicator-extension';
@@ -64,8 +64,8 @@ export const createStreamPair = async () => {
       log.catch(err);
     }
   });
-  afterTest(() => peer1.close());
-  afterTest(() => peer2.close());
+  onTestFinished(() => peer1.close());
+  onTestFinished(() => peer2.close());
 
   await Promise.all([peer1.open(), peer2.open()]);
 

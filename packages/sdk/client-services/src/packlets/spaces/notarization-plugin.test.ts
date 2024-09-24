@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { CredentialGenerator } from '@dxos/credentials';
@@ -11,7 +11,6 @@ import { Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { TestBuilder, type TestConnection, TestPeer } from '@dxos/teleport/testing';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { NotarizationPlugin } from './notarization-plugin';
 
@@ -49,7 +48,7 @@ class TestAgent extends TestPeer {
 describe('NotarizationPlugin', () => {
   test('notarize single credential', async () => {
     const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
 
     // peer0 is there to test retries.
     const [_peer0, peer1, peer2] = await testBuilder.createPeers({ factory: () => new TestAgent() });

@@ -17,6 +17,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { baseConfig } from '../../../vitest.shared';
 
 import { appKey } from './src/constants';
 
@@ -28,6 +29,7 @@ const isFalse = (str?: string) => str === 'false' || str === '0';
 
 // https://vitejs.dev/config
 export default defineConfig({
+  test: baseConfig()['test'],
   server: {
     host: true,
     https:

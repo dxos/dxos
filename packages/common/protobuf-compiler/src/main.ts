@@ -5,7 +5,7 @@
 //
 
 import { ArgumentParser } from 'argparse';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
 import readPkg from 'read-pkg';
 
 import { preconfigureProtobufjs } from './configure';

@@ -22,16 +22,9 @@
       "options": {
         "buildTarget": "kai:bundle"
       }
-    },
-    "test": {
-      "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ]
-      }
     }
   },
   "implicitDependencies": [
-    "test"
+    "esbuild"
   ]
 }

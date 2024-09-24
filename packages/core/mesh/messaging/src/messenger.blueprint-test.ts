@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'earljs';
+import { describe, expect, test, onTestFinished } from 'vitest';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
-import { describe, test, afterTest } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { type SignalManager, WebsocketSignalManager } from './signal-manager';
@@ -20,7 +19,7 @@ export const messengerTests = (
     const builder = new TestBuilder({
       signalManagerFactory,
     });
-    afterTest(() => builder.close());
+    onTestFinished(() => builder.close());
     const peer1 = await builder.createPeer();
     const peer2 = await builder.createPeer();
 
@@ -39,11 +38,11 @@ export const messengerTests = (
     await promise;
   });
 
-  test('Message 3 peers', async () => {
+  test('Message 3 peers', { timeout: 1_000 }, async () => {
     const builder = new TestBuilder({
       signalManagerFactory,
     });
-    afterTest(() => builder.close());
+    onTestFinished(() => builder.close());
     const peer1 = await builder.createPeer();
     const peer2 = await builder.createPeer();
     const peer3 = await builder.createPeer();
@@ -83,13 +82,13 @@ export const messengerTests = (
       await peer2.messenger.sendMessage(message);
       await asyncTimeout(promise, 1_000);
     }
-  }).timeout(1_000);
+  });
 
-  test('Message routing', async () => {
+  test('Message routing', { timeout: 4_000 }, async () => {
     const builder = new TestBuilder({
       signalManagerFactory,
     });
-    afterTest(() => builder.close());
+    onTestFinished(() => builder.close());
     const peer1 = await builder.createPeer();
     const peer2 = await builder.createPeer();
 
@@ -140,13 +139,13 @@ export const messengerTests = (
       expect(messageEqual(message, onMessage2[0])).toEqual(true);
       expect(onMessage3.length === 0);
     }
-  }).timeout(4_000);
+  });
 
-  test('Unsubscribe listener', async () => {
+  test.skip('Unsubscribe listener', { timeout: 1_000 }, async () => {
     const builder = new TestBuilder({
       signalManagerFactory,
     });
-    afterTest(() => builder.close());
+    onTestFinished(() => builder.close());
     const peer1 = await builder.createPeer();
     const peer2 = await builder.createPeer();
 
@@ -207,15 +206,13 @@ export const messengerTests = (
       expect(messages1.length).toEqual(2);
       expect(messages2.length).toEqual(1);
     }
-  })
-    .tag('flaky')
-    .timeout(1_000);
+  });
 
-  test('re-entrant message', async () => {
+  test('re-entrant message', { timeout: 1_000 }, async () => {
     const builder = new TestBuilder({
       signalManagerFactory,
     });
-    afterTest(() => builder.close());
+    onTestFinished(() => builder.close());
     const peer1 = await builder.createPeer();
     const peer2 = await builder.createPeer();
 
@@ -245,9 +242,9 @@ export const messengerTests = (
       await peer1.messenger.sendMessage(message);
       await asyncTimeout(receivePromise, 1_000);
     }
-  }).timeout(1_000);
+  });
 
-  describe('Reliability', () => {
+  describe('Reliability', { timeout: 5_000 }, () => {
     test('message with non reliable connection', async () => {
       // Simulate unreliable connection.
       // Only each 3rd message is sent.
@@ -264,7 +261,7 @@ export const messengerTests = (
         signalManagerFactory,
         messageDisruption: unreliableConnection,
       });
-      afterTest(() => builder.close());
+      onTestFinished(() => builder.close());
       const peer1 = await builder.createPeer();
       await peer1.open();
       const peer2 = await builder.createPeer();
@@ -286,9 +283,9 @@ export const messengerTests = (
 
       // expect to receive 3 messages.
       await receivePromise;
-    }).timeout(5_000);
+    });
 
-    test('ignoring doubled messages', async () => {
+    test('ignoring doubled messages', { timeout: 5_000 }, async () => {
       // Message got doubled going through signal network.
       const doublingMessage = (data: Message) => [data, data];
 
@@ -296,7 +293,7 @@ export const messengerTests = (
         signalManagerFactory,
         messageDisruption: doublingMessage,
       });
-      afterTest(() => builder.close());
+      onTestFinished(() => builder.close());
       const peer1 = await builder.createPeer();
       await peer1.open();
       const peer2 = await builder.createPeer();
@@ -317,10 +314,10 @@ export const messengerTests = (
       await asyncTimeout(promise(), 1000);
       expect(count).toEqual(1);
     });
-  }).timeout(5_000);
+  });
 
-  describe('load', () => {
-    test('many connections to KUBE', async () => {
+  describe.skip('load', () => {
+    test('many connections to KUBE', { timeout: 5_000 }, async () => {
       const builder = new TestBuilder({
         signalManagerFactory: async () =>
           new WebsocketSignalManager([{ server: 'wss://dev.kube.dxos.org/.well-known/dx/signal' }]),
@@ -339,8 +336,6 @@ export const messengerTests = (
       });
 
       await sleep(1000000);
-    })
-      .tag('stress')
-      .timeout(5_000);
+    });
   });
 };
