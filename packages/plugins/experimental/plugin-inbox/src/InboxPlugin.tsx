@@ -12,10 +12,10 @@ import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-g
 import { SpaceAction } from '@dxos/plugin-space';
 import { loadObjectReferences } from '@dxos/react-client/echo';
 
-import { ContactsMain, EventsMain /*, MailboxArticle, MailboxMain */ } from './components';
+import { ContactsContainer, EventsContainer, MailboxContainer } from './components';
 import meta, { INBOX_PLUGIN } from './meta';
 import translations from './translations';
-import { AddressBookType, CalendarType /*, MailboxType */, EventType } from './types';
+import { ContactsType, CalendarType, EventType, MailboxType } from './types';
 import { InboxAction, type InboxPluginProvides } from './types';
 
 export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
@@ -24,13 +24,12 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          // TODO(wittjosiah): Reconcile with ChannelType.
-          // [MailboxType.typename]: {
-          //   placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
-          //   icon: (props: IconProps) => <Envelope {...props} />,
-          // },
-          [AddressBookType.typename]: {
-            placeholder: ['addressbook title placeholder', { ns: INBOX_PLUGIN }],
+          [MailboxType.typename]: {
+            placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
+            icon: (props: IconProps) => <Envelope {...props} />,
+          },
+          [ContactsType.typename]: {
+            placeholder: ['contacts title placeholder', { ns: INBOX_PLUGIN }],
             icon: (props: IconProps) => <AddressBook {...props} />,
             iconSymbol: 'ph--address-book--regular',
           },
@@ -47,7 +46,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [AddressBookType, CalendarType],
+        schema: [ContactsType, CalendarType],
       },
       graph: {
         builder: (plugins) => {
@@ -87,16 +86,16 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                   },
                 },
                 {
-                  id: `${INBOX_PLUGIN}/create-addressbook/${node.id}`,
+                  id: `${INBOX_PLUGIN}/create-contacts/${node.id}`,
                   data: async () => {
                     await dispatch([
-                      { plugin: INBOX_PLUGIN, action: InboxAction.CREATE_ADDRESSBOOK },
+                      { plugin: INBOX_PLUGIN, action: InboxAction.CREATE_CONTACTS },
                       { action: SpaceAction.ADD_OBJECT, data: { target } },
                       { action: NavigationAction.OPEN },
                     ]);
                   },
                   properties: {
-                    label: ['create addressbook label', { ns: INBOX_PLUGIN }],
+                    label: ['create contacts label', { ns: INBOX_PLUGIN }],
                     icon: (props: IconProps) => <AddressBook {...props} />,
                     iconSymbol: 'ph--address-book--regular',
                   },
@@ -124,21 +123,16 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           switch (role) {
-            case 'main':
-              // if (data.active instanceof MailboxType) {
-              //   return <MailboxMain mailbox={data.active} />;
-              // }
-              if (data.active instanceof AddressBookType) {
-                return <ContactsMain contacts={data.active} />;
+            case 'article': {
+              if (data.active instanceof MailboxType) {
+                return <MailboxContainer mailbox={data.active} />;
+              }
+              if (data.active instanceof ContactsType) {
+                return <ContactsContainer contacts={data.active} />;
               }
               if (data.active instanceof CalendarType) {
-                return <EventsMain calendar={data.active} />;
+                return <EventsContainer calendar={data.active} />;
               }
-              return null;
-            case 'article': {
-              // if (data.object instanceof MailboxType) {
-              //   return <MailboxArticle mailbox={data.object} />;
-              // }
               return null;
             }
 
@@ -150,11 +144,11 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
-            // case InboxAction.CREATE_MAILBOX: {
-            //   return { data: create(MailboxType, { messages: [] }) };
-            // }
-            case InboxAction.CREATE_ADDRESSBOOK: {
-              return { data: create(AddressBookType, {}) };
+            case InboxAction.CREATE_MAILBOX: {
+              return { data: create(MailboxType, { messages: [] }) };
+            }
+            case InboxAction.CREATE_CONTACTS: {
+              return { data: create(ContactsType, {}) };
             }
             case InboxAction.CREATE_CALENDAR: {
               return { data: create(CalendarType, {}) };

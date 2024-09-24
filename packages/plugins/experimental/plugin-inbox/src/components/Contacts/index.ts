@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { ContactsContainer } from './ContactsContainer';
 
-// Lazily load components for content surfaces.
-export const ContactsMain = React.lazy(() => import('./ContactsMain'));
+export default ContactsContainer;

@@ -4,11 +4,11 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { type ChannelType, type MessageType } from '@dxos/plugin-space/types';
+import { MessageState, type MessageType } from '@dxos/plugin-space/types';
 import { nonNullable } from '@dxos/util';
 
 import { type ActionType, MessageList } from './MessageList';
-import { EmailState } from '../../types';
+import { type MailboxType } from '../../types';
 
 const DEFAULT_READ_TIMEOUT = 3_000;
 
@@ -33,7 +33,7 @@ export type MailboxOptions = { readTimout?: number };
 // TODO(burdon): Create outline/kanban.
 // TODO(burdon): Address book/cards.
 
-export type MailboxProps = { mailbox: ChannelType; options?: MailboxOptions };
+export type MailboxProps = { mailbox: MailboxType; options?: MailboxOptions };
 
 export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
   const [selected, setSelected] = useState<string>();
@@ -42,7 +42,7 @@ export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
     clearTimeout(tRef.current);
     if (selected) {
       tRef.current = setTimeout(() => {
-        const object = mailbox?.threads[0]?.messages?.filter(nonNullable).find((message) => message.id === selected);
+        const object = mailbox?.messages?.filter(nonNullable).find((message) => message.id === selected);
         if (object?.properties) {
           setMessageProperty(object, 'read', true);
         }
@@ -52,23 +52,23 @@ export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
     return () => clearTimeout(tRef.current);
   }, [selected]);
 
-  const messages = [...(mailbox.threads[0]?.messages ?? [])]
-    .filter(nonNullable) // TODO(burdon): API issue.
+  const messages = [...(mailbox.messages ?? [])]
+    .filter(nonNullable) // TODO(burdon): [SDK] Why is filter needed?
     .filter(
       (message) =>
-        message.properties?.state !== EmailState.ARCHIVED && message.properties?.state !== EmailState.DELETED,
+        message.properties?.state !== MessageState.ARCHIVED && message.properties?.state !== MessageState.DELETED,
     )
     .sort(byDate());
 
   const handleAction = (message: MessageType, action: ActionType) => {
     switch (action) {
       case 'archive': {
-        setMessageProperty(message, 'state', EmailState.ARCHIVED);
+        setMessageProperty(message, 'state', MessageState.ARCHIVED);
         setSelected(undefined);
         break;
       }
       case 'delete': {
-        setMessageProperty(message, 'state', EmailState.DELETED);
+        setMessageProperty(message, 'state', MessageState.DELETED);
         setSelected(undefined);
         break;
       }

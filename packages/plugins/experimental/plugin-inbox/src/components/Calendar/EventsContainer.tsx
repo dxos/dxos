@@ -5,13 +5,7 @@
 import React, { useState } from 'react';
 
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
-import { Main } from '@dxos/react-ui';
-import {
-  baseSurface,
-  bottombarBlockPaddingEnd,
-  fixedInsetFlexLayout,
-  topbarBlockPaddingStart,
-} from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 import { EventList } from './EventtList';
 import { type CalendarType, EventType } from '../../types';
@@ -22,23 +16,21 @@ const byDate =
   ({ startDate: a }: EventType, { startDate: b }: EventType) =>
     a < b ? -direction : a > b ? direction : 0;
 
-export type EventsMainProps = {
+export type EventsContainerProps = {
   calendar: CalendarType;
 };
 
-const EventsMain = ({ calendar }: EventsMainProps) => {
+export const EventsContainer = ({ calendar }: EventsContainerProps) => {
   const [selected, setSelected] = useState<EventType>();
   const space = getSpace(calendar);
   const objects = useQuery(space, Filter.schema(EventType));
   objects.sort(byDate());
 
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
+    <div role='none' className={mx('flex row-span-2')}>
       <MasterDetail>
         <EventList events={objects} selected={selected?.id} onSelect={setSelected} />
       </MasterDetail>
-    </Main.Content>
+    </div>
   );
 };
-
-export default EventsMain;

@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { EventsContainer } from './EventsContainer';
 
-// Lazily load components for content surfaces.
-export const EventsMain = React.lazy(() => import('./EventsMain'));
+export default EventsContainer;

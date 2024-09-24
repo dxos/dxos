@@ -23,13 +23,11 @@ import { nonNullable } from '@dxos/util';
 
 export type TypescriptEditorProps = {
   id: string;
-  scrollPastEnd?: boolean;
   env?: VirtualTypeScriptEnvironment;
 } & Pick<UseTextEditorProps, 'className' | 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>;
 
 export const TypescriptEditor = ({
   id,
-  scrollPastEnd,
   env,
   className,
   initialValue,
@@ -49,7 +47,7 @@ export const TypescriptEditor = ({
           indentWithTab: true,
           lineNumbers: true,
           lineWrapping: false,
-          scrollPastEnd,
+          scrollPastEnd: true,
         }),
         createThemeExtensions({
           themeMode,

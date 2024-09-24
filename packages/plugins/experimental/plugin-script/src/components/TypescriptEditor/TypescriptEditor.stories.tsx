@@ -10,45 +10,24 @@ import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { createDataExtensions } from '@dxos/react-ui-editor';
 
 import { TypescriptEditor } from './TypescriptEditor';
+import { templates } from '../../templates';
 
-// TODO(burdon): Typescript.
-// TODO(burdon): Effect schema.
-// TODO(burdon): JSX.
-// TODO(burdon): react-buddy for storybook?
-
-// Marijn
+// TODO(burdon): Features:
 // - language support for S
 // - hierarchical editor (DND)
 // - virtual document image rendering
 // - mobile rendering error
 
-const examples: string[] = [
-  [
-    '// Example function.',
-    'export default function() {',
-    '  const value = 100',
-    '  return <div>{value}</div>;',
-    '}',
-  ].join('\n'),
-  [
-    '// Example schema.',
-    'S.Struct({',
-    '  timestamp: S.Date,',
-    '  title: S.String,',
-    '  content: R.Text,',
-    "}).pipe(S.identifier('dxos.org/schema/Test'))",
-    '',
-  ].join('\n'),
-];
+// TODO(burdon): JSX.
+// TODO(burdon): Effect schema.
+// TODO(burdon): react-buddy for storybook?
 
 const Story = () => {
-  const object = useMemo(() => createEchoObject({ content: examples[0] }), []);
+  const object = useMemo(() => createEchoObject({ content: templates[0].source }), []);
   const initialValue = useMemo(() => object.content, [object]);
   const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
   const extensions = useMemo(() => [createDataExtensions({ id: object.id, text: accessor })], [object.id, accessor]);
-
-  // TODO(wittjosiah): Scroll past end breaks the editor.
-  return <TypescriptEditor id='test' initialValue={initialValue} extensions={extensions} scrollPastEnd={false} />;
+  return <TypescriptEditor id='test' initialValue={initialValue} extensions={extensions} />;
 };
 
 export default {

@@ -32,8 +32,10 @@ const initializeClient = async (
     onInitialized,
   }: InitializeProps & Pick<WithClientProviderProps, 'onInitialized'>,
 ): Promise<Space | undefined> => {
-  if (createIdentity) {
-    await client.halo.createIdentity();
+  if (createIdentity || createSpace) {
+    if (!client.halo.identity.get()) {
+      await client.halo.createIdentity();
+    }
   }
 
   let space: Space | undefined;

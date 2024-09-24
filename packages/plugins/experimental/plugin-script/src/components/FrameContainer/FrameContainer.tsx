@@ -11,7 +11,7 @@ import { baseSurface, mx } from '@dxos/react-ui-theme';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-import { type BundlerResult } from '../../../bundler';
+import { type BundlerResult } from '../../bundler';
 
 export type FrameContainerProps = {
   containerUrl: string;

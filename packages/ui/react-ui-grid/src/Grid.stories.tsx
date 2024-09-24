@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@dxos-theme';
+
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Grid, type GridProps } from './Grid';

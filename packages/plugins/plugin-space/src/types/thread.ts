@@ -34,9 +34,18 @@ export const ActorSchema = S.mutable(
 
 export type ActorType = S.Schema.Type<typeof ActorSchema>;
 
+export enum MessageState {
+  NONE = 0,
+  ARCHIVED = 1,
+  DELETED = 2,
+  SPAM = 3,
+}
+
 export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message', version: '0.1.0' })({
   /** ISO date string when the message was sent. */
   timestamp: S.String,
+  /** Message state. */
+  state: S.optional(S.Enums(MessageState)),
   /** Identity of the message sender. */
   sender: ActorSchema,
   /** Text content of the message. */
