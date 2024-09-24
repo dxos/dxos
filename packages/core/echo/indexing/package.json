@@ -10,7 +10,8 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     }
@@ -44,10 +45,10 @@
     "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {
+    "@dxos/test-utils": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
-    "@types/node": "^18.11.9",
-    "fast-check": "^3.19.0",
-    "wait-for-expect": "^3.0.2"
+    "@types/node": "^18.11.10",
+    "fast-check": "^3.19.0"
   },
   "publishConfig": {
     "access": "public"

@@ -2,15 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-//
-// Copyright 2023 DXOS.org
-//
-
-import expect from 'expect';
+import { describe, expect, test } from 'vitest';
 
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { describe, test } from '@dxos/test';
 
 import { BlobStore } from './blob-store';
 

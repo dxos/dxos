@@ -2,15 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
 import { pipeline, Transform } from 'node:stream';
-import waitForExpect from 'wait-for-expect';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { latch, asyncTimeout } from '@dxos/async';
 import { schema } from '@dxos/protocols/proto';
 import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { createProtoRpcPeer } from '@dxos/rpc';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { Muxer } from './muxer';
 import { type RpcPort } from './rpc-port';
@@ -25,7 +23,7 @@ const setupPeers = () => {
     peer1.stream.unpipe(peer2.stream);
     peer2.stream.unpipe(peer1.stream);
   };
-  afterTest(async () => {
+  onTestFinished(async () => {
     unpipe();
     await peer1.destroy();
     await peer2.destroy();
@@ -158,9 +156,7 @@ describe('Muxer', () => {
 
     stream2.write(' world!');
 
-    await waitForExpect(() => {
-      expect(received).to.eq('HELLO WORLD!');
-    });
+    await expect.poll(() => received).toEqual('HELLO WORLD!');
   });
 
   test('destroying muxers destroys open streams', async () => {

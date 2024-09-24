@@ -3,7 +3,6 @@
   "compilerOptions": {
     "outDir": "dist/types",
     "types": [
-      "@dxos/test",
       "@dxos/typings",
       "node"
     ]
@@ -12,9 +11,6 @@
     "src"
   ],
   "references": [
-    {
-      "path": "../../../tools/executors/test"
-    },
     {
       "path": "../../core/protocols"
     },

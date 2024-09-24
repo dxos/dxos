@@ -3,11 +3,10 @@
 //
 
 import { dirname, join } from 'node:path';
+import { describe, test } from 'vitest';
 
-import { describe, test } from '@dxos/test';
-
-describe('Search', () => {
-  test.skip('search', async () => {
+describe.skip('Search', () => {
+  test('search', async () => {
     // eslint-disable-next-line no-eval
     const { TextEmbedder, FilesetResolver } = await eval("import('@mediapipe/tasks-text')");
 
