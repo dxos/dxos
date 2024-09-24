@@ -11,6 +11,7 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
@@ -30,7 +31,6 @@ import {
   type QueryRunOptions,
 } from './query';
 import { RuntimeSchemaRegistry } from './runtime-schema-registry';
-import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 /**
  * Manages cross-space database interactions.

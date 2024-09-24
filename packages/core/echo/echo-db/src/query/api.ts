@@ -3,11 +3,11 @@
 //
 
 import type { EchoReactiveObject } from '@dxos/echo-schema';
+import type { PublicKey } from '@dxos/keys';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type { Filter$, FilterSource } from './filter';
 import { type Query } from './query';
-import type { PublicKey } from '@dxos/keys';
 
 /**
  * `query` API function declaration.

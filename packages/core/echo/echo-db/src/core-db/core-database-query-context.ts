@@ -7,8 +7,9 @@ import { next as A } from '@dxos/automerge/automerge';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { isEncodedReference, type SpaceDoc } from '@dxos/echo-protocol';
+import type { AnyObjectData } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { DXN, LOCAL_SPACE_TAG, PublicKey, SpaceId } from '@dxos/keys';
+import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   QueryReactivity,
@@ -20,7 +21,6 @@ import { nonNullable } from '@dxos/util';
 import type { CoreDatabase } from './core-database';
 import type { ObjectCore } from './object-core';
 import { filterMatch, type Filter, type QueryContext, type QueryJoinSpec, type QueryResult } from '../query';
-import type { AnyObjectData, ObjectData } from '@dxos/echo-schema';
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
