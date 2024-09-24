@@ -97,7 +97,7 @@ const useSelectThreadOnCursorChange = () => {
       model.sheet.threads?.filter(
         (thread): thread is NonNullable<typeof thread> => !!thread && thread.status === 'active',
       ) ?? [],
-    [model.sheet.threads],
+    [JSON.stringify(model.sheet.threads)],
   );
 
   const activeThreadAddresses = useMemo(
@@ -110,12 +110,12 @@ const useSelectThreadOnCursorChange = () => {
   );
 
   const selectClosestThread = useCallback(
-    (cursor: CellAddress) => {
-      if (!cursor || !activeThreads) {
+    (cellAddress: CellAddress) => {
+      if (!cellAddress || !activeThreads) {
         return;
       }
 
-      const closestThreadAnchor = closest(cursor, activeThreadAddresses);
+      const closestThreadAnchor = closest(cellAddress, activeThreadAddresses);
       if (closestThreadAnchor) {
         const closestThread = activeThreads.find(
           (thread) => thread && thread.anchor === addressToIndex(model.sheet, closestThreadAnchor),
