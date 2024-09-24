@@ -86,7 +86,6 @@
     "test": {}
   },
   "implicitDependencies": [
-    "nx-protobuf-compiler",
-    "test"
+    "nx-protobuf-compiler"
   ]
 }

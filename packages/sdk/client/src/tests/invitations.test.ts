@@ -2,11 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import waitForExpect from 'wait-for-expect';
+import { beforeEach, onTestFinished, describe, expect, test } from 'vitest';
 
-import { asyncChain, asyncTimeout, sleep, Trigger, waitForCondition } from '@dxos/async';
+import { asyncChain, sleep, Trigger, waitForCondition } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import {
   createAdmissionKeypair,
@@ -33,16 +31,16 @@ import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manag
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { afterTest, describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { Client } from '../client';
 import { InvitationsProxy } from '../invitations';
 import { TestBuilder } from '../testing';
 
-chai.use(chaiAsPromised);
-
 const closeAfterTest = async (peer: ServiceContext) => {
-  afterTest(() => peer.close());
+  onTestFinished(async () => {
+    await peer.close();
+  });
   return peer;
 };
 
@@ -81,10 +79,9 @@ const successfulInvitation = async ({
 
       // Check devices.
       // TODO(burdon): Incorrect number of devices.
-      await waitForExpect(() => {
-        expect(host.identityManager.identity!.authorizedDeviceKeys.size).to.eq(2);
-        expect(guest.identityManager.identity!.authorizedDeviceKeys.size).to.eq(2);
-      });
+      await expect.poll(() => host.identityManager.identity!.authorizedDeviceKeys.size).toEqual(2);
+      await expect.poll(() => guest.identityManager.identity!.authorizedDeviceKeys.size).toEqual(2);
+
       // console.log(host.identityManager.identity!.authorizedDeviceKeys.size);
       // console.log(guest.identityManager.identity!.authorizedDeviceKeys.size);
       break;
@@ -167,7 +164,9 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
     });
 
     expect((await guestResult).error).to.exist;
-    await expect(asyncTimeout(hostResult, 100)).to.be.rejected;
+    expect(await hostResult).toEqual({
+      error: expect.any(Error),
+    });
   });
 
   test('with target', async () => {
@@ -215,25 +214,26 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
   test('max auth code retries', async () => {
     const params = getParams();
     let attempt = 0;
-    const [hostPromise, guestPromise] = performInvitation({
-      ...params,
-      options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
-      hooks: {
-        guest: {
-          onReady: (invitation) => {
-            // Force retry.
-            void invitation.authenticate('000000');
-            attempt++;
-            return true;
+    const [hostResult, guestResult] = await Promise.all(
+      performInvitation({
+        ...params,
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        hooks: {
+          guest: {
+            onReady: (invitation) => {
+              // Force retry.
+              void invitation.authenticate('000000');
+              attempt++;
+              return true;
+            },
           },
         },
-      },
-    });
-    const guestResult = await guestPromise;
+      }),
+    );
 
     expect(attempt).to.eq(3);
-    expect(guestResult.error).to.exist;
-    await expect(asyncTimeout(hostPromise, 100)).to.be.rejected;
+    expect(guestResult).toEqual({ error: expect.any(Error) });
+    expect(hostResult).toEqual({ error: expect.any(Error) });
   });
 
   test('invitation timeout', async () => {
@@ -272,22 +272,23 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
 
   test('guest cancels invitation', async () => {
     const params = getParams();
-    const [hostPromise, guestPromise] = performInvitation({
-      ...params,
-      options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
-      hooks: {
-        guest: {
-          onConnected: (invitation) => {
-            void invitation.cancel();
-            return true;
+    const [hostResult, guestResult] = await Promise.all(
+      performInvitation({
+        ...params,
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        hooks: {
+          guest: {
+            onConnected: (invitation) => {
+              void invitation.cancel();
+              return true;
+            },
           },
         },
-      },
-    });
-    const guestResult = await guestPromise;
+      }),
+    );
 
     expect(guestResult.invitation?.state).to.eq(Invitation.State.CANCELLED);
-    await expect(asyncTimeout(hostPromise, 100)).to.be.rejected;
+    expect(hostResult).toEqual({ error: expect.any(Error) });
   });
 
   test('network error', async () => {
@@ -453,7 +454,7 @@ describe('Invitations', () => {
           spaceKey: space.key,
         }));
 
-        afterTest(() => space.close());
+        onTestFinished(() => space.close());
       });
       test('invitations expire', async () => {
         const expired = new Trigger();
@@ -498,7 +499,7 @@ describe('Invitations', () => {
         await guestManager.loadPersistentInvitations();
 
         const space = await hostContext?.dataSpaceManager.createSpace();
-        afterTest(() => space.close());
+        onTestFinished(() => space.close());
 
         const guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation.Kind.SPACE }));
         let persistentInvitationId: string;
@@ -591,7 +592,7 @@ describe('Invitations', () => {
         const hostApi = createInvitationsApi(hostContext);
 
         const space = await hostContext?.dataSpaceManager.createSpace();
-        afterTest(() => space.close());
+        onTestFinished(() => space.close());
 
         {
           const tempHost = new InvitationsProxy(hostApi.service, undefined, () => ({
@@ -655,7 +656,7 @@ describe('Invitations', () => {
         }));
         guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation.Kind.SPACE }));
 
-        afterTest(() => space.close());
+        onTestFinished(() => space.close());
       });
 
       testSuite(
@@ -705,8 +706,12 @@ describe('Invitations', () => {
 
       await host.halo.createIdentity({ displayName: 'Peer' });
 
-      afterTest(() => Promise.all([host.destroy()]));
-      afterTest(() => Promise.all([guest.destroy()]));
+      onTestFinished(async () => {
+        await Promise.all([host.destroy()]);
+      });
+      onTestFinished(async () => {
+        await Promise.all([guest.destroy()]);
+      });
     });
 
     testSuite(
@@ -729,8 +734,12 @@ describe('Invitations', () => {
       await host.halo.createIdentity({ displayName: 'Peer 1' });
       await guest.halo.createIdentity({ displayName: 'Peer 2' });
 
-      afterTest(() => Promise.all([host.destroy()]));
-      afterTest(() => Promise.all([guest.destroy()]));
+      onTestFinished(async () => {
+        await Promise.all([host.destroy()]);
+      });
+      onTestFinished(async () => {
+        await Promise.all([guest.destroy()]);
+      });
 
       space = await host.spaces.create();
     });

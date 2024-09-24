@@ -6,14 +6,6 @@ import { type EchoReactiveObject, type S } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { type Space, useQuery, Filter } from '@dxos/react-client/echo';
 
-// TODO(Zan): Consolidate.
-const Stable = {
-  empty: {
-    object: Object.freeze({}),
-    array: Object.freeze([] as any[]),
-  },
-};
-
 /**
  * Retrieves objects for a given schema and filters them using a global filter.
  *
@@ -26,7 +18,7 @@ export const useTableObjects = (space?: Space, schema?: S.Schema<any>) => {
   const objects = useQuery<EchoReactiveObject<any>>(
     space,
     schema ? Filter.schema(schema) : () => false,
-    Stable.empty.object,
+    undefined,
     // TODO(burdon): Toggle deleted.
     [schema],
   );

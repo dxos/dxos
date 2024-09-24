@@ -36,7 +36,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "vite": "^5.3.4"
+    "vite": "^5.4.7"
   },
   "publishConfig": {
     "access": "public"

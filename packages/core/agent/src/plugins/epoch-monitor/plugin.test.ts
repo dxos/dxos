@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Client, Config, fromHost } from '@dxos/client';
 import { Context } from '@dxos/context';
-import { describe, test } from '@dxos/test';
 
 import { EpochMonitorPlugin } from './plugin';
 
@@ -40,7 +39,8 @@ describe('EpochMonitor', () => {
     await ctx.dispose();
   });
 
-  test('open and close', async () => {
+  // TODO(wittjosiah): Flaky.
+  test.skip('open and close', async () => {
     await plugin.open();
 
     {
@@ -53,7 +53,7 @@ describe('EpochMonitor', () => {
     }
 
     await plugin.close();
-  }).tag('flaky');
+  });
 
   test('id', async () => {
     expect(plugin.id).to.equal('dxos.org/agent/plugin/epoch-monitor');

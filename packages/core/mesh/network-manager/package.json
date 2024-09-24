@@ -6,25 +6,38 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "imports": {
+    "#node-datachannel": {
+      "browser": "./module-stub.js",
+      "workerd": "./module-stub.js",
+      "default": "node-datachannel"
+    },
+    "#node-datachannel/*": {
+      "browser": "./module-stub.js",
+      "workerd": "./module-stub.js",
+      "default": "node-datachannel/*"
+    }
+  },
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
     "./testing": {
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": {
-        "default": "./dist/lib/node/testing/index.cjs"
+        "require": "./dist/lib/node/testing/index.cjs",
+        "default": "./dist/lib/node-esm/testing/index.mjs"
       },
       "types": "./dist/types/src/testing/index.d.ts"
     }
   },
   "browser": {
-    "./src/transport/tcp-transport.ts": "./src/transport/tcp-transport.browser.ts",
-    "./src/transport/datachannel/index.ts": "./src/transport/datachannel/index.browser.ts"
+    "./src/transport/tcp-transport.ts": "./src/transport/tcp-transport.browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -64,7 +77,7 @@
     "node-datachannel": "^0.5.5",
     "p-defer": "^3.0.0",
     "simple-peer": "9.11.1",
-    "stream": "^0.0.2",
+    "stream": "^0.0.3",
     "tiny-invariant": "^1.3.1",
     "ws": "^8.14.2",
     "xor-distance": "^2.0.0"
@@ -74,7 +87,6 @@
     "@swc-node/register": "1.9.1",
     "@types/simple-peer": "9.11.3",
     "@types/ws": "^7.4.0",
-    "earljs": "~0.1.10",
     "fast-check": "^3.19.0",
     "fetch-mock": "^11.0.0"
   },

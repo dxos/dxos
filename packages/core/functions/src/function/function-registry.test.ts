@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
@@ -10,7 +10,6 @@ import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { Filter } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
-import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { FunctionRegistry } from './function-registry';
@@ -30,10 +29,12 @@ const testManifest: FunctionManifest = {
 describe('function registry', () => {
   let ctx: Context;
   let testBuilder: TestBuilder;
+
   beforeEach(async () => {
     ctx = new Context();
     testBuilder = new TestBuilder();
   });
+
   afterEach(async () => {
     await ctx.dispose();
     await testBuilder.destroy();

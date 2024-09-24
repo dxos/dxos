@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { test } from '@playwright/test';
-import { expect } from 'chai';
+import { expect, test } from '@playwright/test';
 
 import { ExtensionManager } from './extension-manager';
 
@@ -19,8 +18,6 @@ test.describe.skip('Basic test', () => {
 
   test('our extension loads', async () => {
     await extensionManager.init();
-    expect(await extensionManager.page.locator('body').textContent()).to.include(
-      'Open the DXOS Developer Tools extension.',
-    );
+    await expect(extensionManager.page.locator('body')).toHaveText('Open the DXOS Developer Tools extension.');
   });
 });
