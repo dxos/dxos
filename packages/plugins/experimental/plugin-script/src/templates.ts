@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type ObjectMeta } from '@dxos/echo-schema';
+
 // @ts-ignore
 import chat from './templates/chat.ts?raw';
 // @ts-ignore
@@ -17,6 +19,7 @@ export type Template = {
   id: string;
   name: string;
   source: string;
+  meta?: ObjectMeta;
 };
 
 export const templates: Template[] = [
@@ -34,10 +37,12 @@ export const templates: Template[] = [
     id: 'dxos.org/script/chat',
     name: 'Chat',
     source: removeHeader(chat),
+    meta: { keys: [{ source: 'dxos.org/script', id: 'dxos.org/function/gpt' }] },
   },
   {
     id: 'dxos.org/script/chess',
     name: 'Chess',
     source: removeHeader(chess),
+    meta: { keys: [{ source: 'dxos.org/script', id: 'dxos.org/function/chess' }] },
   },
 ];

@@ -5,13 +5,14 @@
 import React, { type FC } from 'react';
 
 import { GameType } from '@dxos/chess-app';
-import { create } from '@dxos/echo-schema';
+import { create, getMeta as getEchoMeta } from '@dxos/echo-schema';
 import { type FunctionTrigger } from '@dxos/functions/types';
 import { log } from '@dxos/log';
 import { ChainPresets, chainPresets, PromptTemplate } from '@dxos/plugin-chain';
 import { type ChainPromptType } from '@dxos/plugin-chain/types';
 import { FileType } from '@dxos/plugin-ipfs/types';
 import { DocumentType } from '@dxos/plugin-markdown';
+import { type ScriptType } from '@dxos/plugin-script';
 import { DiagramType } from '@dxos/plugin-sketch/types';
 import { CollectionType, MessageType } from '@dxos/plugin-space';
 import { Input } from '@dxos/react-ui';
@@ -51,10 +52,18 @@ type MetaExtension<T> = {
 
 /**
  * Create meta type from function.
- * @param trigger
+ * @param trigger - function trigger.
+ * @param script - function script.
  */
-export const getMeta = (trigger: FunctionTrigger): MetaExtension<any> | undefined => {
-  // TODO(burdon): Currently matches hardcoded function uri.
+export const getMeta = (trigger: FunctionTrigger, script?: ScriptType): MetaExtension<any> | undefined => {
+  if (script) {
+    const meta = getEchoMeta(script).keys[0];
+    const extension = meta && metaExtensions[meta.id];
+    if (extension) {
+      return extension;
+    }
+  }
+  // TODO: try to infer by spec type?
   return trigger?.function ? metaExtensions[trigger.function] : metaExtensions['dxos.org/function/gpt'];
 };
 
@@ -148,7 +157,7 @@ const ChainPromptMetaProps = ({ meta, triggerId }: MetaProps<ChainPromptMeta>) =
               const prompt = preset.createPrompt();
               console.log({ meta, preset, prompt });
               meta.model = 'xxx'; // TODO(burdon): This throws also.
-              // meta.prompt = prompt;
+              meta.prompt = prompt;
             } catch (err) {
               // TODO(burdon): Throws: "unknown property: prompt, path: meta,prompt"
               //  Did something change where a metq property now cannot be a reference to an object.

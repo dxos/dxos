@@ -169,7 +169,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
 
   useEffect(() => {
     if (!trigger.meta) {
-      const extension = getMeta(trigger);
+      const extension = getMeta(trigger, script);
       trigger.meta = extension?.initialValue?.();
     }
   }, [trigger.function, trigger.meta]);
@@ -203,7 +203,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
     }
   };
 
-  const TriggerMeta = getMeta(trigger)?.component;
+  const TriggerMeta = getMeta(trigger, script)?.component;
 
   return (
     <DensityProvider density='fine'>

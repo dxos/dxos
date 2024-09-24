@@ -68,7 +68,7 @@ export const createWebsocketTrigger: TriggerFactory<WebsocketTrigger, WebsocketT
           const data = JSON.parse(new TextDecoder().decode(event.data as Uint8Array));
           await callback({ data });
         } catch (err) {
-          log.catch(err, { url });
+          log.catch(err, { url, data: event.data });
         }
       },
     } satisfies Partial<WebSocket>);

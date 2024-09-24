@@ -97,7 +97,9 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
   const handleTemplateChange: TemplateSelectProps['onTemplateSelect'] = (id) => {
     const template = templates.find((template) => template.id === id);
     if (template) {
+      script.name = template.name;
       script.source!.content = template.source;
+      getMeta(script).keys = template.meta?.keys ?? [];
     }
   };
 
