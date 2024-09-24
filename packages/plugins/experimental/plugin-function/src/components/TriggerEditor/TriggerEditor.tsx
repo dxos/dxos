@@ -44,7 +44,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
       // Mark-and-sweep removing disabled triggers.
       await registerTriggersMutex.executeSynchronized(async () => {
         const deprecated = new Set(Array.from(registry.keys()));
-        console.log('triggers', {
+        log.info('triggers', {
           deprecated,
           all: triggers.map((t) => t.id),
           enabled: triggers.filter((t) => t.enabled).map((t) => t.id),
@@ -55,7 +55,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
               deprecated.delete(trigger.id);
               continue;
             }
-            console.log('activating trigger', trigger.id);
+            log.info('activating trigger', trigger.id);
 
             const ctx = new Context();
             registry.set(trigger.id, ctx);
