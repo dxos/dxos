@@ -6249,6 +6249,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../../plugin-graph
+      '@dxos/plugin-inbox':
+        specifier: workspace:*
+        version: link:../plugin-inbox
       '@dxos/plugin-ipfs':
         specifier: workspace:*
         version: link:../plugin-ipfs

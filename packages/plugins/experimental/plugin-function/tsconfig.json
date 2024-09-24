@@ -95,6 +95,9 @@
       "path": "../plugin-chain"
     },
     {
+      "path": "../plugin-inbox"
+    },
+    {
       "path": "../plugin-ipfs"
     },
     {

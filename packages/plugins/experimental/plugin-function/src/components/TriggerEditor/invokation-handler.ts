@@ -13,8 +13,37 @@ import { FunctionType } from '@dxos/plugin-script';
 import { type Client, type Config } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 
+import { handleEmail } from './email';
+
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1_000;
+
+const callFunction = async (funcUrl: string, trigger: any, data: any) => {
+  const body = { event: 'trigger', trigger, data };
+
+  let retryCount = 0;
+  while (retryCount < MAX_RETRIES) {
+    log.info('exec', { funcUrl, body, retryCount });
+    const response = await fetch(funcUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.text();
+    log.info('response', { status: response.status, body: data });
+    if (response.status === 409) {
+      retryCount++;
+      await sleep(RETRY_DELAY);
+      continue;
+    }
+
+    return { status: response.status, data };
+  }
+  return { status: 500 };
+};
 
 export const invokeFunction = async (client: Client, space: Space, trigger: FunctionTrigger, data: any) => {
   try {
@@ -26,38 +55,15 @@ export const invokeFunction = async (client: Client, space: Space, trigger: Func
       log.warn('function not deployed', { scriptId: script.id, name: script.name });
       return 404;
     }
-
     const funcUrl = getFunctionUrl(client.config, funcSlug, space.id);
-
     const triggerData: AnyObjectData = getObjectCore(trigger).toPlainObject();
-    const body = {
-      event: 'trigger',
-      trigger: triggerData,
-      data,
-    };
-
-    let retryCount = 0;
-    while (retryCount < MAX_RETRIES) {
-      log.info('exec', { funcUrl, funcSlug, body, retryCount });
-      const response = await fetch(funcUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
+    if (trigger.spec.type === 'websocket') {
+      return handleEmail(space, data.data, async (body) => {
+        return (await callFunction(funcUrl, triggerData, body)).data;
       });
-
-      log.info('response', { status: response.status, body: await response.text() });
-      if (response.status === 409) {
-        retryCount++;
-        await sleep(RETRY_DELAY);
-        continue;
-      }
-
-      return response.status;
+    } else {
+      return (await callFunction(funcUrl, triggerData, data)).status;
     }
-
-    return 500;
   } catch (err) {
     return 400;
   }
