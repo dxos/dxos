@@ -15,5 +15,6 @@ export default defineConfig({
     command: 'pnpm -w nx preview composer-app',
     port: 4200,
     reuseExistingServer: !process.env.CI,
+    timeout: 300_000,
   },
 });

@@ -11,8 +11,8 @@ export default defineConfig({
   ...nxE2EPreset(__filename, { testDir: __dirname }),
   ...e2ePreset(__dirname),
   webServer: {
-    command: 'pnpm -w nx serve testbench-app',
-    port: 5173,
+    command: 'pnpm -w nx preview testbench-app',
+    port: 4200,
     reuseExistingServer: !process.env.CI,
   },
 });

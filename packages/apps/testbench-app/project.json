@@ -31,7 +31,6 @@
         "{options.outputPath}"
       ]
     },
-    "e2e": {},
     "lint": {},
     "preview": {
       "executor": "@nx/web:file-server",
