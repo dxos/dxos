@@ -20,6 +20,12 @@ export const SECRET_KEY_LENGTH = 64;
 export type PublicKeyLike = PublicKey | Buffer | Uint8Array | ArrayBuffer | string;
 
 /**
+ * Vitest with JSDom causes instanceof ArrayBuffer check to fail
+ */
+const isLikeArrayBuffer = (value: any): value is ArrayBuffer =>
+  typeof value === 'object' && value !== null && Object.getPrototypeOf(value).constructor.name === 'ArrayBuffer';
+
+/**
  * The purpose of this class is to assure consistent use of keys throughout the project.
  * Keys should be maintained as buffers in objects and proto definitions, and converted to hex
  * strings as late as possible (eg, to log/display).
@@ -40,7 +46,7 @@ export class PublicKey implements Equatable {
       return new PublicKey(new Uint8Array(source.buffer, source.byteOffset, source.byteLength));
     } else if (source instanceof Uint8Array) {
       return new PublicKey(source);
-    } else if (source instanceof ArrayBuffer) {
+    } else if (source instanceof ArrayBuffer || isLikeArrayBuffer(source)) {
       return new PublicKey(new Uint8Array(source));
     } else if (typeof source === 'string') {
       // TODO(burdon): Check length.
