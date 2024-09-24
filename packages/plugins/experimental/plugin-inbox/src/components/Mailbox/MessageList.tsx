@@ -91,7 +91,7 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
           >
             <div className='grow overflow-hidden truncate py-2'>{from}</div>
             {onAction && (
-              <div className='hidden group-hover:flex flex shrink-0'>
+              <div className='hidden group-hover:flex shrink-0'>
                 {message.properties?.read && (
                   <Button
                     variant='ghost'

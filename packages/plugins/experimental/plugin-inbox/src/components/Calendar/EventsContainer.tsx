@@ -27,7 +27,7 @@ export const EventsContainer = ({ calendar }: EventsContainerProps) => {
   objects.sort(byDate());
 
   return (
-    <div role='none' className={mx('flex row-span-2')}>
+    <div role='none' className={mx('flex row-span-2 overflow-hidden')}>
       <MasterDetail>
         <EventList events={objects} selected={selected?.id} onSelect={setSelected} />
       </MasterDetail>

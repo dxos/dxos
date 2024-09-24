@@ -41,7 +41,7 @@ export const ContactsContainer = ({ contacts }: ContactsContainerProps) => {
   objects.sort(byName());
 
   return (
-    <div role='none' className={mx('flex row-span-2')}>
+    <div role='none' className={mx('flex row-span-2 overflow-hidden')}>
       <MasterDetail>
         <ContactList contacts={objects} selected={selected?.id} onSelect={setSelected} />
       </MasterDetail>
