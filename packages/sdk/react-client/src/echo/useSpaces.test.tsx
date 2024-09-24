@@ -6,19 +6,19 @@ import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 import { useSpace, useSpaces } from './useSpaces';
-import { createClient, createContextProvider } from '../testing/util';
+import { createClient, createClientContextProvider } from '../testing/util';
 
 describe('useSpaces', () => {
   test('lists existing spaces', async () => {
     const { client } = await createClient({ createIdentity: true });
-    const wrapper = await createContextProvider(client);
+    const wrapper = await createClientContextProvider(client);
     const { result } = renderHook(() => useSpaces(), { wrapper });
     expect(result.current.length).to.eq(1);
   });
 
   test('updates when new spaces are created', async () => {
     const { client } = await createClient({ createIdentity: true });
-    const wrapper = await createContextProvider(client);
+    const wrapper = await createClientContextProvider(client);
     const { result, rerender } = renderHook(() => useSpaces(), { wrapper });
     expect(result.current.length).to.eq(1);
     await act(async () => {
@@ -32,7 +32,7 @@ describe('useSpaces', () => {
 describe('useSpace', () => {
   test('gets default space', async () => {
     const { client } = await createClient();
-    const wrapper = await createContextProvider(client);
+    const wrapper = await createClientContextProvider(client);
     const { result, rerender } = renderHook(() => useSpace(), { wrapper });
     expect(result.current).to.be.undefined;
     await act(async () => {
@@ -45,7 +45,7 @@ describe('useSpace', () => {
 
   test('gets space by key', async () => {
     const { client, space } = await createClient({ createIdentity: true, createSpace: true });
-    const wrapper = await createContextProvider(client);
+    const wrapper = await createClientContextProvider(client);
     const { result } = renderHook(() => useSpace(space!.key), { wrapper });
     expect(result.current).to.not.be.undefined;
   });

@@ -151,7 +151,7 @@ describe('ClientProvider', () => {
 
     await act(async () => {
       await waitForCondition({
-        condition: () => newClient.status.get() === SystemStatus.ACTIVE && !client.initialized,
+        condition: () => !client.initialized && newClient.status.get() === SystemStatus.ACTIVE,
       });
     });
     expect(client.initialized).toBe(false);
