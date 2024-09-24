@@ -6,6 +6,18 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "imports": {
+    "#node-datachannel": {
+      "browser": "./module-stub.js",
+      "workerd": "./module-stub.js",
+      "default": "node-datachannel"
+    },
+    "#node-datachannel/*": {
+      "browser": "./module-stub.js",
+      "workerd": "./module-stub.js",
+      "default": "node-datachannel/*"
+    }
+  },
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -22,18 +34,6 @@
         "default": "./dist/lib/node-esm/testing/index.mjs"
       },
       "types": "./dist/types/src/testing/index.d.ts"
-    }
-  },
-  "imports": {
-    "#node-datachannel": {
-      "browser": "./module-stub.js",
-      "workerd": "./module-stub.js",
-      "default": "node-datachannel"
-    },
-    "#node-datachannel/*": {
-      "browser": "./module-stub.js",
-      "workerd": "./module-stub.js",
-      "default": "node-datachannel/*"
     }
   },
   "browser": {
