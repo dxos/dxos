@@ -86,7 +86,7 @@
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
     "@types/js-yaml": "^4.0.5",
-    "@types/node": "^18.11.9",
+    "@types/node": "^18.11.10",
     "@types/seedrandom": "^3.0.5",
     "@types/yargs": "~16.0.1",
     "chart.js": "^3.9.1",

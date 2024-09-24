@@ -31,7 +31,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@types/node": "^18.11.9"
+    "@types/node": "^18.11.10"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*"

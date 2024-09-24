@@ -62,7 +62,7 @@
     "@types/lodash.zip": "^4.2.6",
     "@types/minimatch": "^5.1.2",
     "@types/mkdirp": "^1.0.2",
-    "@types/node": "^18.11.9",
+    "@types/node": "^18.11.10",
     "@types/prettier": "^2.7.3",
     "@types/recursive-readdir": "^2.2.1",
     "@types/yargs": "~16.0.1",

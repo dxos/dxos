@@ -33,7 +33,7 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.pick": "^4.4.7",
     "@types/lodash.sortby": "^4.7.7",
-    "@types/node": "^18.11.9",
+    "@types/node": "^18.11.10",
     "typescript": "^5.5.4"
   },
   "executors": "./executors.json"

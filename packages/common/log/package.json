@@ -41,7 +41,7 @@
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.omit": "^4.5.7",
-    "@types/node": "^18.11.9",
+    "@types/node": "^18.11.10",
     "pirates": "~4.0.5",
     "sorcery": "^0.10.0",
     "typescript": "^5.5.4"

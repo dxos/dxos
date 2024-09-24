@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@types/crypto-js": "~4.0.2",
-    "@types/node": "^18.11.9"
+    "@types/node": "^18.11.10"
   },
   "publishConfig": {
     "access": "public"

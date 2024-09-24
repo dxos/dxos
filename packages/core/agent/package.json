@@ -68,7 +68,7 @@
     "@types/express": "^4.17.17",
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/node": "^18.11.9",
+    "@types/node": "^18.11.10",
     "nodemon": "^2.0.22",
     "ts-node": "10.9.1",
     "typescript": "^5.5.4"

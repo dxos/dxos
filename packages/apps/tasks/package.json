@@ -23,7 +23,7 @@
   "devDependencies": {
     "@dxos/cli": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
-    "@types/node": "^18.11.9",
+    "@types/node": "^18.11.10",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "@vitejs/plugin-react": "^4.2.1",

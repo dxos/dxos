@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@types/lodash.merge": "^4.6.6",
-    "@types/node": "^18.11.9",
+    "@types/node": "^18.11.10",
     "tmp-promise": "^3.0.3",
     "ts-node": "10.9.1",
     "types-package-json": "^2.0.39",
