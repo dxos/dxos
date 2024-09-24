@@ -12,7 +12,7 @@ export const SCRIPT_PLUGIN = 'dxos.org/plugin/script';
 export default pluginMeta({
   id: SCRIPT_PLUGIN,
   name: 'Scripts',
-  description: 'Live code notebooks.',
+  description: 'Distributed functions.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <Code {...props} />,
   iconSymbol: 'ph--code--regular',
