@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { renderHook, screen, render, act } from '@testing-library/react';
+import { renderHook, screen, render, act, cleanup } from '@testing-library/react';
 import React, { Component, type PropsWithChildren } from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import { Client, Config, SystemStatus, fromHost } from '@dxos/client';
@@ -93,6 +93,10 @@ describe('ClientProvider', () => {
     client = new Client({ services: fromHost() });
     await client.initialize();
     await client.halo.createIdentity({ displayName: 'test-user' });
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   test('Renders with children', async () => {
