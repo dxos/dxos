@@ -87,6 +87,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-grid": "workspace:*",
     "@dxos/util": "workspace:*",
     "@lezer/common": "^1.2.1",
     "@lezer/highlight": "^1.2.0",

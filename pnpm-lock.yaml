@@ -8336,6 +8336,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-grid':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-grid
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -10737,9 +10740,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../react-ui-editor
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -10749,6 +10749,12 @@ importers:
       '@lit/react':
         specifier: ^1.0.5
         version: 1.0.5(@types/react@18.2.79)
+      '@radix-ui/react-context':
+        specifier: ^1.0.0
+        version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
+      '@radix-ui/react-use-controllable-state':
+        specifier: ^1.0.0
+        version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
     devDependencies:
       '@dxos/storybook-utils':
         specifier: workspace:*
@@ -31756,10 +31762,8 @@ packages:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  /ajv-formats@2.1.1(ajv@8.12.0):
+  /ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
     peerDependenciesMeta:
       ajv:
         optional: true
@@ -34171,7 +34175,7 @@ packages:
     engines: {node: '>=18'}
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv-formats: 2.1.1
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -42251,6 +42255,8 @@ packages:
     peerDependenciesMeta:
       webpack:
         optional: true
+      webpack-sources:
+        optional: true
     dependencies:
       webpack: 5.88.2(@swc/core@1.5.7)(esbuild@0.23.1)
       webpack-sources: 3.2.3
@@ -48882,7 +48888,7 @@ packages:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv-formats: 2.1.1
       ajv-keywords: 5.1.0(ajv@8.12.0)
     dev: true
 

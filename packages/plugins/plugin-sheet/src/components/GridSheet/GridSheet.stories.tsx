@@ -6,21 +6,15 @@ import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Grid, type GridContentProps, type GridRootProps } from './Grid';
+import { GridSheet, type GridSheetProps } from './GridSheet';
 
-type StoryGridProps = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
-
-const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
-  return (
-    <Grid.Root id='story' onEditingChange={onEditingChange}>
-      <Grid.Content {...props} />
-    </Grid.Root>
-  );
+const StorySheetGrid = (props: GridSheetProps) => {
+  return <GridSheet {...props} />;
 };
 
 export default {
-  title: 'react-ui-grid/Grid',
-  component: StoryGrid,
+  title: 'plugin-sheet/GridSheet',
+  component: StorySheetGrid,
   decorators: [withTheme],
   parameters: { layout: 'fullscreen' },
 };
@@ -55,5 +49,5 @@ export const Basic = {
     onEditingChange: (event) => {
       console.log('[edit]', event);
     },
-  } satisfies StoryGridProps,
+  } satisfies GridSheetProps,
 };

@@ -74,10 +74,24 @@ export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
 export type CellEditorProps = {
   value?: string;
   extension?: Extension;
+  variant?: 'legacy' | 'grid';
 } & Pick<UseTextEditorProps, 'autoFocus'> &
   Pick<DOMAttributes<HTMLInputElement>, 'onBlur' | 'onKeyDown'>;
 
-export const CellEditor = ({ value, extension, autoFocus, onBlur }: CellEditorProps) => {
+const editorVariants = {
+  legacy: {
+    root: 'flex w-full',
+    editor: 'flex w-full [&>.cm-scroller]:scrollbar-none',
+    content: '!px-2 !py-1',
+  },
+  grid: {
+    root: '',
+    editor: '[&>.cm-scroller]:scrollbar-none',
+    content: '!px-2 !py-1',
+  },
+};
+
+export const CellEditor = ({ value, extension, autoFocus, onBlur, variant = 'legacy' }: CellEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
@@ -98,16 +112,16 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur }: CellEditorPr
           themeMode,
           slots: {
             editor: {
-              className: 'flex w-full [&>.cm-scroller]:scrollbar-none',
+              className: editorVariants[variant].editor,
             },
             content: {
-              className: '!px-2 !py-1',
+              className: editorVariants[variant].content,
             },
           },
         }),
       ],
     };
-  }, [extension]);
+  }, [extension, autoFocus, value, variant, onBlur]);
 
-  return <div ref={parentRef} className='flex w-full' />;
+  return <div ref={parentRef} className={editorVariants[variant].root} />;
 };

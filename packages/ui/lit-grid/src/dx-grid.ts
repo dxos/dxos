@@ -121,46 +121,46 @@ export class DxGrid extends LitElement {
   //
 
   @state()
-  posInline = 0;
+  private posInline = 0;
 
   @state()
-  posBlock = 0;
+  private posBlock = 0;
 
   //
   // `size` (when not suffixed with ‘row’ or ‘col’, see above) is the size in pixels of the viewport.
   //
 
   @state()
-  sizeInline = 0;
+  private sizeInline = 0;
 
   @state()
-  sizeBlock = 0;
+  private sizeBlock = 0;
 
   //
   // `overscan` is the amount in pixels to offset the grid content due to the number of overscanned columns or rows.
   //
 
   @state()
-  overscanInline = 0;
+  private overscanInline = 0;
 
   @state()
-  overscanBlock = 0;
+  private overscanBlock = 0;
 
   //
   // `bin`, not short for anything, is the range in pixels within which virtualization does not need to reassess.
   //
 
   @state()
-  binInlineMin = 0;
+  private binInlineMin = 0;
 
   @state()
-  binInlineMax = this.colSize(0);
+  private binInlineMax = this.colSize(0);
 
   @state()
-  binBlockMin = 0;
+  private binBlockMin = 0;
 
   @state()
-  binBlockMax = this.rowSize(0);
+  private binBlockMax = this.rowSize(0);
 
   //
   // `vis`, short for ‘visible’, is the range in numeric index of the columns or rows which should be rendered within
@@ -168,44 +168,44 @@ export class DxGrid extends LitElement {
   //
 
   @state()
-  visColMin = 0;
+  private visColMin = 0;
 
   @state()
-  visColMax = 1;
+  private visColMax = 1;
 
   @state()
-  visRowMin = 0;
+  private visRowMin = 0;
 
   @state()
-  visRowMax = 1;
+  private visRowMax = 1;
 
   //
   // `template` is the rendered value of `grid-{axis}-template`.
   //
   @state()
-  templateColumns = `${this.colSize(0)}px`;
+  private templateColumns = `${this.colSize(0)}px`;
 
   @state()
-  templateRows = `${this.rowSize(0)}px`;
+  private templateRows = `${this.rowSize(0)}px`;
 
   //
   // Resize state
   //
 
   @state()
-  colSizes: Record<string, number> = {};
+  private colSizes: Record<string, number> = {};
 
   @state()
-  rowSizes: Record<string, number> = {};
+  private rowSizes: Record<string, number> = {};
 
   @state()
-  resizing: null | (DxAxisResizeProps & { page: number }) = null;
+  private resizing: null | (DxAxisResizeProps & { page: number }) = null;
 
   //
   // Primary pointer and keyboard handlers
   //
 
-  handlePointerDown = (event: PointerEvent) => {
+  private handlePointerDown = (event: PointerEvent) => {
     const { action, actionEl } = closestAction(event.target);
     if (action) {
       if (action.startsWith('resize') && this.mode === 'browse') {
@@ -231,7 +231,7 @@ export class DxGrid extends LitElement {
     }
   };
 
-  handlePointerUp = (_event: PointerEvent) => {
+  private handlePointerUp = (_event: PointerEvent) => {
     if (this.resizing) {
       const resizeEvent = new DxAxisResize({
         axis: this.resizing.axis,
@@ -243,7 +243,7 @@ export class DxGrid extends LitElement {
     }
   };
 
-  handlePointerMove = (event: PointerEvent) => {
+  private handlePointerMove = (event: PointerEvent) => {
     if (this.resizing) {
       const delta = getPage(this.resizing.axis, event) - this.resizing.page;
       if (this.resizing.axis === 'col') {
@@ -258,7 +258,7 @@ export class DxGrid extends LitElement {
     }
   };
 
-  handleKeydown(event: KeyboardEvent) {
+  private handleKeydown(event: KeyboardEvent) {
     if (this.focusActive && this.mode === 'browse') {
       // Adjust state
       switch (event.key) {
@@ -339,7 +339,7 @@ export class DxGrid extends LitElement {
   //
 
   @state()
-  observer = new ResizeObserver((entries) => {
+  private observer = new ResizeObserver((entries) => {
     const { inlineSize, blockSize } = entries?.[0]?.contentBoxSize?.[0] ?? {
       inlineSize: 0,
       blockSize: 0,
@@ -355,9 +355,9 @@ export class DxGrid extends LitElement {
     }
   });
 
-  viewportRef: Ref<HTMLDivElement> = createRef();
+  private viewportRef: Ref<HTMLDivElement> = createRef();
 
-  handleWheel = ({ deltaX, deltaY }: WheelEvent) => {
+  private handleWheel = ({ deltaX, deltaY }: WheelEvent) => {
     if (this.mode === 'browse') {
       this.posInline = Math.max(0, this.posInline + deltaX);
       this.posBlock = Math.max(0, this.posBlock + deltaY);
@@ -456,13 +456,13 @@ export class DxGrid extends LitElement {
   // Focus handlers
 
   @state()
-  focusedCell: Record<DxGridAxis, number> = { col: 0, row: 0 };
+  private focusedCell: Record<DxGridAxis, number> = { col: 0, row: 0 };
 
   @state()
-  focusActive: boolean = false;
+  private focusActive: boolean = false;
 
   @eventOptions({ capture: true })
-  handleFocus(event: FocusEvent) {
+  private handleFocus(event: FocusEvent) {
     const cellCoords = closestCell(event.target);
     if (cellCoords) {
       this.focusedCell = cellCoords;
@@ -471,7 +471,7 @@ export class DxGrid extends LitElement {
   }
 
   @eventOptions({ capture: true })
-  handleBlur(event: FocusEvent) {
+  private handleBlur(event: FocusEvent) {
     // Only unset `focusActive` if focus is not moving to an element within the grid.
     if (
       !event.relatedTarget ||
@@ -481,7 +481,7 @@ export class DxGrid extends LitElement {
     }
   }
 
-  focusedCellElement() {
+  private focusedCellElement() {
     return this.viewportRef.value?.querySelector(
       `[aria-colindex="${this.focusedCell.col}"][aria-rowindex="${this.focusedCell.row}"]`,
     ) as HTMLElement | null;

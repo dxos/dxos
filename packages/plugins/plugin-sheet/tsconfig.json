@@ -74,6 +74,9 @@
       "path": "../../ui/react-ui-editor"
     },
     {
+      "path": "../../ui/react-ui-grid"
+    },
+    {
       "path": "../../ui/react-ui-theme"
     },
     {

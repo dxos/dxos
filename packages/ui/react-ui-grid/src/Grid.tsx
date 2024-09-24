@@ -4,11 +4,11 @@
 import '@dxos/lit-grid/dx-grid.pcss';
 
 import { createComponent, type EventName } from '@lit/react';
-import React, { type KeyboardEvent, useCallback, useRef, useState } from 'react';
+import { createContextScope, type Scope } from '@radix-ui/react-context';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
+import React, { type ComponentProps, forwardRef, type PropsWithChildren, useCallback, useState } from 'react';
 
-import { type DxAxisResize, type DxEditRequest, DxGrid as NaturalDxGrid, type DxGridProps } from '@dxos/lit-grid';
-import { listener, useTextEditor } from '@dxos/react-ui-editor';
-import { isNotFalsy } from '@dxos/util';
+import { type DxAxisResize, type DxEditRequest, DxGrid as NaturalDxGrid } from '@dxos/lit-grid';
 
 const DxGrid = createComponent({
   tagName: 'dx-grid',
@@ -20,12 +20,6 @@ const DxGrid = createComponent({
   },
 });
 
-export type GridProps = DxGridProps & {
-  id: string;
-  onAxisResize: (event: DxAxisResize) => void;
-  onEdit: (event: DxEditRequest) => void;
-};
-
 const initialBox = {
   insetInlineStart: 0,
   insetBlockStart: 0,
@@ -33,69 +27,84 @@ const initialBox = {
   blockSize: 0,
 } satisfies DxEditRequest['cellBox'];
 
-export const Grid = (props: GridProps) => {
-  const gridRef = useRef<NaturalDxGrid | null>(null);
-  const [editBox, setEditBox] = useState<DxEditRequest['cellBox']>(initialBox);
-  const [editing, setEditing] = useState<DxEditRequest['cellIndex'] | null>(null);
+type GridEditing = DxEditRequest['cellIndex'] | null;
 
-  const {
-    parentRef: textboxRef,
-    focusAttributes,
-    view,
-  } = useTextEditor(
-    () => ({
-      id: props.id,
-      autoFocus: !!editing,
-      extensions: [
-        listener({
-          onFocus: (focusing: boolean) => {
-            if (!focusing && editing) {
-              setEditing(null);
-            }
-          },
-        }),
-      ].filter(isNotFalsy),
-    }),
-    [editing],
+type GridContextValue = {
+  id: string;
+  editing: GridEditing;
+  setEditing: (nextEditing: GridEditing) => void;
+  editBox: DxEditRequest['cellBox'];
+  setEditBox: (nextEditBox: DxEditRequest['cellBox']) => void;
+};
+
+type GridScopedProps<P> = P & { __gridScope?: Scope };
+
+const GRID_NAME = 'Grid';
+
+const [createGridContext, createGridScope] = createContextScope(GRID_NAME, []);
+
+const [GridProvider, useGridContext] = createGridContext<GridContextValue>(GRID_NAME);
+
+type GridRootProps = PropsWithChildren<
+  { id: string } & Partial<{
+    editing: GridEditing;
+    defaultEditing: GridEditing;
+    onEditingChange: (nextEditing?: GridEditing) => void;
+  }>
+>;
+
+const GridRoot = ({
+  id,
+  editing: propsEditing,
+  defaultEditing,
+  onEditingChange,
+  children,
+  __gridScope,
+}: GridScopedProps<GridRootProps>) => {
+  const [editing = null, setEditing] = useControllableState({
+    prop: propsEditing,
+    defaultProp: defaultEditing,
+    onChange: onEditingChange,
+  });
+  const [editBox, setEditBox] = useState<DxEditRequest['cellBox']>(initialBox);
+  return (
+    <GridProvider
+      id={id}
+      editing={editing}
+      setEditing={setEditing}
+      editBox={editBox}
+      setEditBox={setEditBox}
+      scope={__gridScope}
+    >
+      {children}
+    </GridProvider>
   );
+};
+
+GridRoot.displayName = GRID_NAME;
+
+type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'onEdit'>;
+
+const GRID_CONTENT_NAME = 'GridContent';
+
+const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>((props, forwardedRef) => {
+  const { editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME, props.__gridScope);
 
   const handleEdit = useCallback((event: DxEditRequest) => {
     setEditBox(event.cellBox);
     setEditing(event.cellIndex);
-    props?.onEdit?.(event);
   }, []);
 
-  const handleEditorKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      if (editing) {
-        switch (event.key) {
-          case 'Enter':
-            // console.warn('to do: save content');
-            setEditing(null);
-            gridRef.current?.refocus('down');
-            break;
-          case 'Escape':
-            setEditing(null);
-            gridRef.current?.refocus();
-            break;
-        }
-      }
-    },
-    [editing, view],
-  );
+  return <DxGrid {...props} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={forwardedRef} />;
+});
 
-  return (
-    <>
-      <div
-        className='absolute z-[1] hidden data-[editing=true]:block border p-px border-accentSurface'
-        data-editing={!!editing}
-        {...focusAttributes}
-        style={editBox}
-        tabIndex={editing ? 0 : -1}
-        onKeyDown={handleEditorKeyDown}
-        ref={textboxRef}
-      />
-      <DxGrid {...props} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={gridRef} />
-    </>
-  );
+GridContent.displayName = GRID_CONTENT_NAME;
+
+export const Grid = {
+  Root: GridRoot,
+  Content: GridContent,
 };
+
+export { GridRoot, GridContent, useGridContext, createGridScope };
+
+export type { GridRootProps, GridContentProps, GridEditing };
