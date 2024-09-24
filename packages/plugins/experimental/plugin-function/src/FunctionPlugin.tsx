@@ -8,6 +8,7 @@ import React from 'react';
 import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { FunctionDef, FunctionTrigger } from '@dxos/functions/types';
+import { ChainPromptType, ChainType } from '@dxos/plugin-chain';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, isActionGroup, type ActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
@@ -33,7 +34,7 @@ export const FunctionPlugin = (): PluginDefinition<FunctionPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [FunctionDef, FunctionTrigger],
+        schema: [FunctionDef, FunctionTrigger, ChainPromptType, ChainType],
       },
       graph: {
         builder: (plugins) => {
