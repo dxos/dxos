@@ -22,7 +22,7 @@ describe('LockFile', () => {
     const filename = join('/tmp', `lock-${Math.random()}.lock`);
 
     const handle = await LockFile.acquire(filename);
-    await expect(LockFile.acquire(filename)).rejects.toThrow();
+    await expect(LockFile.acquire(filename)).rejects.toBeInstanceOf(Error);
     await LockFile.release(handle);
 
     const handle2 = await LockFile.acquire(filename);
@@ -53,7 +53,7 @@ describe('LockFile', () => {
 
     await trigger.wait({ timeout: 1_000 });
 
-    await expect(LockFile.acquire(filename)).rejects.toThrow();
+    await expect(LockFile.acquire(filename)).rejects.toBeInstanceOf(Error);
 
     processHandle.stdin.write('close');
     processHandle.kill();

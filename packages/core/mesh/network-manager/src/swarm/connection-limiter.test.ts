@@ -34,7 +34,7 @@ describe('ConnectionLimiter', () => {
   test('rejects if done is called', async () => {
     const limiter = new ConnectionLimiter({ maxConcurrentInitConnections: 1 });
     const [first] = setupPeers(limiter);
-    const testPromise = expect(first.connecting()).rejects.toThrow();
+    const testPromise = expect(first.connecting()).rejects.toBeInstanceOf(Error);
     first.doneConnecting();
     await testPromise;
   });

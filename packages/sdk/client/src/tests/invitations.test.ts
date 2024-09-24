@@ -164,7 +164,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
     });
 
     expect((await guestResult).error).to.exist;
-    await expect(asyncTimeout(hostResult, 100)).rejects.toThrow();
+    await expect(asyncTimeout(hostResult, 100)).rejects.toBeInstanceOf(Error);
   });
 
   test('with target', async () => {
@@ -284,7 +284,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
     const guestResult = await guestPromise;
 
     expect(guestResult.invitation?.state).to.eq(Invitation.State.CANCELLED);
-    await expect(asyncTimeout(hostPromise, 100)).rejects.toThrow();
+    await expect(asyncTimeout(hostPromise, 100)).rejects.toBeInstanceOf(Error);
   });
 
   test('network error', async () => {

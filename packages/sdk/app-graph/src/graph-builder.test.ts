@@ -254,7 +254,7 @@ describe('GraphBuilder', () => {
       expect(actions?.[0].id).to.equal('action');
       expect(actions?.[0].type).to.equal(ACTION_TYPE);
 
-      await expect(graph.waitForNode('not-action', 10)).rejects.toThrow();
+      await expect(graph.waitForNode('not-action', 10)).rejects.toBeInstanceOf(Error);
 
       await graph.expand(graph.root);
       const nodes = graph.nodes(graph.root);

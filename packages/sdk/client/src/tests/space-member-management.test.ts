@@ -78,7 +78,7 @@ describe('Spaces/member-management', () => {
     await client2.mesh.updateConfig(ConnectionState.ONLINE);
     await expect(
       waitHasStatus([space1, space3], client2, SpaceMember.PresenceState.ONLINE, { timeout: 500 }),
-    ).rejects.toThrow();
+    ).rejects.toBeInstanceOf(Error);
   });
 
   test('removed member can rejoin with new role', async () => {

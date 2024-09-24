@@ -32,7 +32,7 @@ describe('SpacesService', () => {
 
   describe('createSpace', () => {
     test('fails if no identity is available', async () => {
-      await expect(spacesService.createSpace()).rejects.toThrow();
+      await expect(spacesService.createSpace()).rejects.toBeInstanceOf(Error);
     });
 
     test('creates a new space', async () => {

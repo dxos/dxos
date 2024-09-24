@@ -74,7 +74,7 @@ describe('FeedStore', () => {
 
     // Attempt to reopen as writable (fail).
     {
-      await expect(feedStore.openFeed(feedKey, { writable: true })).rejects.toThrow();
+      await expect(feedStore.openFeed(feedKey, { writable: true })).rejects.toBeInstanceOf(Error);
     }
   });
 });

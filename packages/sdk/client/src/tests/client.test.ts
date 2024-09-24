@@ -108,7 +108,7 @@ describe('Client', () => {
       await client.initialize();
       expect(client.halo.identity).to.exist;
       // TODO(burdon): Error type.
-      await expect(client.halo.createIdentity({ displayName })).rejects.toThrow();
+      await expect(client.halo.createIdentity({ displayName })).rejects.toBeInstanceOf(Error);
       await client.spaces.isReady.wait();
     }
     {

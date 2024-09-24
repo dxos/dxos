@@ -291,7 +291,7 @@ describe('Queries', () => {
     const obj2Core = getObjectCore(obj1);
     obj2Core.docHandle!.delete(); // Deleted handle access throws an exception.
 
-    await expect(db.query().run()).rejects.toThrow();
+    await expect(db.query().run()).rejects.toBeInstanceOf(Error);
   });
 });
 

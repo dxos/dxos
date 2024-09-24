@@ -174,7 +174,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: (name: s
       }
 
       await firstHandle.destroy();
-      await expect(secondHandle.destroy()).rejects.toThrow();
+      await expect(secondHandle.destroy()).rejects.toBeInstanceOf(Error);
     });
 
     test('sub-directories', async () => {
@@ -285,12 +285,12 @@ export const storageTests = (testGroupName: StorageType, createStorage: (name: s
 
       expect(file.destroyed).toBeTruthy();
       await expect(file.destroy()).resolves.toBeUndefined();
-      await expect(file.read(0, 1)).rejects.toThrow();
-      await expect(file.write(0, buffer)).rejects.toThrow();
-      await expect(file.del(0, 1)).rejects.toThrow();
-      await expect(file.stat()).rejects.toThrow();
+      await expect(file.read(0, 1)).rejects.toBeInstanceOf(Error);
+      await expect(file.write(0, buffer)).rejects.toBeInstanceOf(Error);
+      await expect(file.del(0, 1)).rejects.toBeInstanceOf(Error);
+      await expect(file.stat()).rejects.toBeInstanceOf(Error);
       if (file.truncate) {
-        await expect(file.truncate(0)).rejects.toThrow();
+        await expect(file.truncate(0)).rejects.toBeInstanceOf(Error);
       }
     });
 
@@ -305,7 +305,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: (name: s
       await writeAndCheck(file, buffer);
 
       await directory.delete();
-      await expect(file.read(0, buffer.length)).rejects.toThrow();
+      await expect(file.read(0, buffer.length)).rejects.toBeInstanceOf(Error);
     });
 
     test('del method', async (t) => {

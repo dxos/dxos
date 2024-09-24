@@ -143,7 +143,7 @@ describe('ClientServicesHost', () => {
           trigger.wake(identity.identity);
         }
       });
-      await expect(asyncTimeout(trigger.wait(), 200)).rejects.toThrow();
+      await expect(asyncTimeout(trigger.wait(), 200)).rejects.toBeInstanceOf(Error);
       await stream?.close();
       await host.close();
     }

@@ -234,7 +234,7 @@ describe('RpcPeer', () => {
 
       await expect(await parallel1).toEqual(createPayload('p1'));
       await expect(await parallel2).toEqual(createPayload('p2'));
-      await expect(error).rejects.toThrow();
+      await expect(error).rejects.toBeInstanceOf(Error);
     });
 
     test('errors get serialized', async () => {
@@ -294,7 +294,7 @@ describe('RpcPeer', () => {
       const req = bob.call('method', createPayload('request'));
       await bob.close();
 
-      await expect(req).rejects.toThrow();
+      await expect(req).rejects.toBeInstanceOf(Error);
     });
 
     test('closing remote endpoint stops pending requests on timeout', async () => {
@@ -320,7 +320,7 @@ describe('RpcPeer', () => {
       await alice.close();
       const req = bob.call('method', createPayload('request'));
 
-      await expect(req).rejects.toThrow();
+      await expect(req).rejects.toBeInstanceOf(Error);
     });
 
     test('requests failing on timeout', async () => {
@@ -344,7 +344,7 @@ describe('RpcPeer', () => {
       await Promise.all([alice.open(), bob.open()]);
 
       const req = bob.call('method', createPayload('request'));
-      await expect(req).rejects.toThrow();
+      await expect(req).rejects.toBeInstanceOf(Error);
     });
   });
 
