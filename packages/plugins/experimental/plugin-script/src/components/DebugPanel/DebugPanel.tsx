@@ -215,6 +215,58 @@ export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindi
   );
 };
 
+// TODO(burdon): Replace with thread?
+// TODO(burdon): Button to delete individual messages.
+// TODO(burdon): Button to edit/re-run question.
+const MessageThread = ({ state, result, history }: { state: State | null; result: string; history: Message[] }) => {
+  return (
+    <>
+      {history.map((message, i) => (
+        <div key={i} className='grid grid-cols-[3rem_1fr_3rem]'>
+          <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
+          <div className='overflow-auto'>
+            <MessageItem message={message} />
+          </div>
+        </div>
+      ))}
+      {result?.length > 0 && (
+        <div className='grid grid-cols-[3rem_1fr_3rem]'>
+          <div className='p-1'>
+            {(state === 'pending' && <Icon icon='ph--spinner--regular' size={6} classNames='animate-spin' />) || (
+              <Icon icon='ph--robot--regular' size={6} classNames='animate-[pulse_1s_ease-in-out_infinite]' />
+            )}
+          </div>
+          <div className='overflow-auto'>
+            <MessageItem message={{ type: 'response', text: result }} />
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
+  const { type, text, data, error } = message;
+  const wrapper = 'p-1 px-2 rounded-lg bg-hoverSurface overflow-auto';
+  return (
+    <div className={mx('flex', type === 'request' ? 'ml-[8rem] justify-end' : 'mr-[8rem]', classNames)}>
+      {error && <div className={mx(wrapper, 'whitespace-pre text-error')}>{String(error)}</div>}
+
+      {text !== undefined && (
+        <div className={mx(wrapper, type === 'request' && 'bg-primary-400 dark:bg-primary-600')}>
+          {text || '\u00D8'}
+        </div>
+      )}
+
+      {data && (
+        <SyntaxHighlighter language='json' className={mx(wrapper, 'px-8 py-2 text-xs')}>
+          {JSON.stringify(data, null, 2)}
+        </SyntaxHighlighter>
+      )}
+    </div>
+  );
+};
+
 const RobotAvatar = () => (
   <Avatar.Root size={6} variant='circle'>
     <Avatar.Frame>
@@ -222,48 +274,3 @@ const RobotAvatar = () => (
     </Avatar.Frame>
   </Avatar.Root>
 );
-
-const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
-  const { text, data, error } = message;
-  if (error) {
-    return <span className={mx(classNames, 'whitespace-pre text-error')}>{String(error)}</span>;
-  } else if (data) {
-    return (
-      <SyntaxHighlighter language='json' className={mx('px-8 py-2 text-xs rounded', classNames)}>
-        {JSON.stringify(data, null, 2)}
-      </SyntaxHighlighter>
-    );
-  }
-
-  return <span className={mx(classNames)}>{text || '\u00D8'}</span>;
-};
-
-// TODO(burdon): Replace with thread?
-// TODO(burdon): Button to delete individual messages.
-// TODO(burdon): Button to re-run question.
-const MessageThread = ({ state, result, history }: { state: State | null; result: string; history: Message[] }) => {
-  return (
-    <>
-      {history.map((message, i) => (
-        <div key={i} className='grid grid-cols-[3rem_1fr]'>
-          <div>{message.type === 'response' && <RobotAvatar />}</div>
-          <div className={mx('flex', message.type === 'request' && 'justify-end')}>
-            <MessageItem
-              classNames={['p-1 px-2 rounded-lg bg-hoverSurface', message.type === 'response' && 'mr-[8rem]']}
-              message={message}
-            />
-          </div>
-        </div>
-      ))}
-      <div className='grid grid-cols-[3rem_1fr]'>
-        <div>
-          {(state === 'pending' && <Icon icon='ph--spinner--regular' size={6} classNames='animate-spin-slow' />) ||
-            (result.length > 0 && <RobotAvatar />)}
-        </div>
-        <div>
-          <span>{result}</span>
-        </div>
-      </div>
-    </>
-  );
-};

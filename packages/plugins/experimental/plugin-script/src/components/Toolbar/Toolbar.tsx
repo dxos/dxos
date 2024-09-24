@@ -69,7 +69,7 @@ export const Toolbar = ({
       <ElevationProvider elevation='chrome'>
         <NaturalToolbar.Root classNames={['p-1', classNames]} style={{ contain: 'layout' }}>
           {templates && <TemplateSelect templates={templates} onTemplateSelect={onTemplateSelect} />}
-          {onFormat && <ToolbarButton icon='ph--magic-wand--regular' text={t('format label')} onClick={onFormat} />}
+          {onFormat && <ToolbarIconButton icon='ph--magic-wand--regular' text={t('format label')} onClick={onFormat} />}
 
           <div role='separator' className='grow' />
 
@@ -88,12 +88,12 @@ export const Toolbar = ({
           ) : null}
 
           {functionUrl && deployed && (
-            <ToolbarButton icon='ph--link--regular' text={t('copy link label')} onClick={handleCopyLink} />
+            <ToolbarIconButton icon='ph--link--regular' text={t('copy link label')} onClick={handleCopyLink} />
           )}
 
           {onDeploy && (
-            <ToolbarButton
-              icon={pending ? 'ph--spinner-ball--regular' : 'ph--cloud-arrow-up--regular'}
+            <ToolbarIconButton
+              icon={pending ? 'ph--spinner-gap--regular' : 'ph--cloud-arrow-up--regular'}
               classNames={[pending && 'animate-spin']}
               text={pending ? t('pending label') : t('deploy label')}
               onClick={handleDeploy}
@@ -107,7 +107,7 @@ export const Toolbar = ({
   );
 };
 
-const ToolbarButton = ({
+const ToolbarIconButton = ({
   icon,
   text,
   classNames,
@@ -117,8 +117,8 @@ const ToolbarButton = ({
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <NaturalToolbar.Button variant='ghost' classNames={classNames} disabled={disabled} onClick={onClick}>
-          <Icon icon={icon} size={4} />
+        <NaturalToolbar.Button variant='ghost' disabled={disabled} onClick={onClick}>
+          <Icon icon={icon} size={4} classNames={classNames} />
         </NaturalToolbar.Button>
       </Tooltip.Trigger>
       <Tooltip.Portal>
