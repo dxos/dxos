@@ -3,7 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { LayoutAction, useIntentDispatcher, useIntentResolver } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
@@ -14,7 +14,8 @@ import { mx } from '@dxos/react-ui-theme';
 import { type Decoration } from './decorations';
 import { useSheetContext } from './sheet-context';
 import { SHEET_PLUGIN } from '../../meta';
-import { addressFromIndex, addressToIndex, closest } from '../../model';
+import { addressFromIndex, addressToIndex, CellAddress, closest } from '../../model';
+import { debounce } from '@dxos/async';
 
 /**
  * A deep signal representing the currently selected thread for each sheet.
@@ -105,37 +106,59 @@ const useSelectThreadOnCursorChange = () => {
   const threads = model.sheet.threads;
   const sheetId = fullyQualifiedId(model.sheet);
 
+  const activeThreads = useMemo(
+    () =>
+      threads?.filter((thread): thread is NonNullable<typeof thread> => !!thread && thread.status === 'active') ?? [],
+    [threads],
+  );
+
+  const activeThreadAddresses = useMemo(
+    () =>
+      activeThreads
+        .map((thread) => thread.anchor)
+        .filter((anchor): anchor is NonNullable<typeof anchor> => anchor !== undefined)
+        .map((anchor) => addressFromIndex(model.sheet, anchor)),
+    [activeThreads, model.sheet],
+  );
+
+  const selectClosestThread = useCallback(
+    (cursor: CellAddress) => {
+      if (!cursor || !threads) {
+        return;
+      }
+
+      const closestThreadAnchor = closest(cursor, activeThreadAddresses);
+
+      if (closestThreadAnchor) {
+        const closestThread = activeThreads.find(
+          (thread) => thread && thread.anchor === addressToIndex(model.sheet, closestThreadAnchor),
+        );
+
+        if (closestThread) {
+          const isExactMatch = closestThreadAnchor.column === cursor.column && closestThreadAnchor.row === cursor.row;
+          if (isExactMatch) {
+            currentThreadForSheet[sheetId] = closestThread.id;
+          } else {
+            delete currentThreadForSheet[sheetId];
+          }
+
+          void dispatch([{ action: 'dxos.org/plugin/thread/action/select', data: { current: closestThread.id } }]);
+        }
+      }
+    },
+    [dispatch, activeThreads, activeThreadAddresses, model.sheet, sheetId],
+  );
+
+  const debounced = useMemo(() => {
+    return debounce((cursor: CellAddress) => requestAnimationFrame(() => selectClosestThread(cursor)), 50);
+  }, [selectClosestThread]);
+
   useEffect(() => {
-    if (!cursor || !threads) {
+    if (!cursor) {
       return;
     }
-
-    const activeThreads = threads.filter(
-      (thread): thread is NonNullable<typeof thread> => !!thread && thread.status === 'active',
-    );
-
-    const activeThreadAddresses = activeThreads
-      .map((thread) => thread.anchor)
-      .filter((anchor) => anchor !== undefined)
-      .map((anchor) => addressFromIndex(model.sheet, anchor));
-
-    const closestThreadAnchor = closest(cursor, activeThreadAddresses);
-    if (closestThreadAnchor) {
-      const closestThread = activeThreads.find(
-        (thread) => thread && thread.anchor === addressToIndex(model.sheet, closestThreadAnchor),
-      );
-      if (closestThread) {
-        const isExactMatch = closestThreadAnchor.column === cursor.column && closestThreadAnchor.row === cursor.row;
-        if (isExactMatch) {
-          currentThreadForSheet[sheetId] = closestThread.id;
-        } else {
-          delete currentThreadForSheet[sheetId];
-        }
-
-        void dispatch([{ action: 'dxos.org/plugin/thread/action/select', data: { current: closestThread.id } }]);
-      }
-    }
-  }, [cursor, threads, dispatch, model.sheet]);
+    debounced(cursor);
+  }, [cursor, selectClosestThread]);
 };
 
 const useThreadDecorations = () => {

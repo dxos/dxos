@@ -32,7 +32,6 @@ export const ThreadComplementary = ({
   focus?: boolean;
   showResolvedThreads?: boolean;
 }) => {
-  console.log('ThreadComplementary rendered');
   const dispatch = useIntentDispatcher();
 
   const threadsIntegrators = useResolvePlugins(providesThreadsConfig);
@@ -55,15 +54,7 @@ export const ThreadComplementary = ({
     if (!sort) {
       return;
     }
-
-    const timeoutId = setTimeout(() => {
-      console.log('Sorting threads setTimeout');
-      threads.sort((a, b) => sort(a?.anchor, b?.anchor));
-    }, 0);
-
-    return () => {
-      clearTimeout(timeoutId);
-    };
+    threads.sort((a, b) => sort(a?.anchor, b?.anchor));
   }, [sort, threads]);
 
   // TODO(Zan): Maybe we should have a hook for this?
