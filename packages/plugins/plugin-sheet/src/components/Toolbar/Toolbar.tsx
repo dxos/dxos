@@ -187,7 +187,7 @@ const Actions = () => {
 
   const overlapsCommentAnchor = (model.sheet.threads ?? [])
     .filter(nonNullable)
-    .filter((t) => t.status !== 'resolved')
+    .filter((thread) => thread.status !== 'resolved')
     .some((thread) => {
       if (!cursor) {
         return false;

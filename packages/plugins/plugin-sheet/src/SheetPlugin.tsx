@@ -24,7 +24,7 @@ import {
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './components/ComputeGraph/edge-function';
 import { ComputeGraphContextProvider } from './components/ComputeGraph/graph-context';
 import meta, { SHEET_PLUGIN } from './meta';
-import { addressFromIndex, SheetModel } from './model';
+import { compareIndexPositions, SheetModel } from './model';
 import translations from './translations';
 import { createSheet, SheetAction, type SheetPluginProvides, SheetType } from './types';
 
@@ -134,22 +134,8 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       },
       thread: {
         predicate: (data) => data instanceof SheetType,
-        createSort: (sheet) => {
-          return (anchorA, anchorB) => {
-            if (!anchorA || !anchorB) {
-              return 0;
-            }
-            const { row: rowA, column: columnA } = addressFromIndex(sheet, anchorA);
-            const { row: rowB, column: columnB } = addressFromIndex(sheet, anchorB);
-
-            // Sort by row first, then by column.
-            if (rowA !== rowB) {
-              return rowA - rowB;
-            } else {
-              return columnA - columnB;
-            }
-          };
-        },
+        createSort: (sheet) => (anchorA, anchorB) =>
+          !anchorA || !anchorB ? 0 : compareIndexPositions(sheet, anchorA, anchorB),
       },
       surface: {
         component: ({ data, role = 'never' }) => {

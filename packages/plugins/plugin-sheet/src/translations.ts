@@ -18,7 +18,7 @@ export default [
         'toolbar left right': 'Align right',
         'selection overlaps existing comment label': 'Selected cell already has a comment',
         'comment label': 'Add comment',
-        'comment ranges not supported label': 'Commenting on ranges is not supported (yet)',
+        'comment ranges not supported label': 'Commenting on ranges is not yet supported',
         'no cursor label': 'Select a cell to comment',
         'open comment for sheet cell': 'View comments for cell',
       },

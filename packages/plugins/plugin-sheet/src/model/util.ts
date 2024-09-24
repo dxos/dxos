@@ -85,3 +85,19 @@ export const closest = (cursor: CellAddress, cells: CellAddress[]): CellAddress 
 
   return closestCell;
 };
+
+/**
+ * Compares the positions of two cell indexes in a sheet.
+ * Sorts primarily by row, then by column if rows are equal.
+ */
+export const compareIndexPositions = (sheet: SheetType, indexA: string, indexB: string): number => {
+  const { row: rowA, column: columnA } = addressFromIndex(sheet, indexA);
+  const { row: rowB, column: columnB } = addressFromIndex(sheet, indexB);
+
+  // Sort by row first, then by column.
+  if (rowA !== rowB) {
+    return rowA - rowB;
+  } else {
+    return columnA - columnB;
+  }
+};
