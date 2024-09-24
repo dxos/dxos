@@ -41,6 +41,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   const triggers = useQuery(space, Filter.schema(FunctionTrigger));
   useEffect(() => {
     setTimeout(async () => {
+      console.log('triggers', triggers);
       // Mark-and-sweep removing disabled triggers.
       await registerTriggersMutex.executeSynchronized(async () => {
         const deprecated = new Set(Array.from(registry.keys()));
@@ -80,7 +81,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
         }
       });
     });
-  }, [triggers]);
+  }, [JSON.stringify(triggers)]);
 
   useEffect(() => {
     return () => {
