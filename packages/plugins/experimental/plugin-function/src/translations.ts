@@ -11,9 +11,9 @@ export default [
     'en-US': {
       [FUNCTION_PLUGIN]: {
         'plugin name': 'Rule',
-        'object placeholder': 'New tule',
-        'create object label': 'Create tule',
-        'create stack section label': 'Create tule',
+        'object placeholder': 'New rule',
+        'create object label': 'Create rule',
+        'create stack section label': 'Create rule',
         'command placeholder': 'Enter command...',
         'template placeholder': 'Enter template...',
         'value placeholder': 'Enter value...',

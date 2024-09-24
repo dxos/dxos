@@ -27,6 +27,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
           [MailboxType.typename]: {
             placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
             icon: (props: IconProps) => <Envelope {...props} />,
+            iconSymbol: 'ph--envelope--regular',
           },
           [ContactsType.typename]: {
             placeholder: ['contacts title placeholder', { ns: INBOX_PLUGIN }],

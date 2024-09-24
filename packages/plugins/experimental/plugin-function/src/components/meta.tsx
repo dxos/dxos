@@ -7,6 +7,7 @@ import React, { type FC } from 'react';
 import { GameType } from '@dxos/chess-app';
 import { create } from '@dxos/echo-schema';
 import { type FunctionTrigger } from '@dxos/functions/types';
+import { log } from '@dxos/log';
 import { ChainPresets, chainPresets, PromptTemplate } from '@dxos/plugin-chain';
 import { type ChainPromptType } from '@dxos/plugin-chain/types';
 import { FileType } from '@dxos/plugin-ipfs/types';
@@ -33,7 +34,7 @@ const stateInitialValues = {
   selectedSchema: {} as Record<TriggerId, any>,
 };
 
-// TODO(burdon): ???
+// TODO(burdon): What is this for?
 export const state = create<typeof stateInitialValues>(stateInitialValues);
 
 //
@@ -42,6 +43,7 @@ export const state = create<typeof stateInitialValues>(stateInitialValues);
 //
 
 type MetaProps<T> = { meta: T } & { triggerId?: string };
+
 type MetaExtension<T> = {
   initialValue?: () => T;
   component: FC<MetaProps<T>>;
@@ -53,7 +55,7 @@ type MetaExtension<T> = {
  */
 export const getMeta = (trigger: FunctionTrigger): MetaExtension<any> | undefined => {
   // TODO(burdon): Currently matches hardcoded function uri.
-  return trigger?.function ? metaExtensions[trigger.function] : undefined;
+  return trigger?.function ? metaExtensions[trigger.function] : metaExtensions['dxos.org/function/gpt'];
 };
 
 //
@@ -74,6 +76,10 @@ const DefaultMetaProps = ({ meta }: MetaProps<DefaultMeta>) => {
 type ChessMeta = { level?: number };
 
 const ChessMetaProps = ({ meta }: MetaProps<ChessMeta>) => {
+  if (!meta) {
+    return null;
+  }
+
   return (
     <>
       <InputRow label='Level'>
@@ -95,6 +101,10 @@ const ChessMetaProps = ({ meta }: MetaProps<ChessMeta>) => {
 type EmailWorkerMeta = { account?: string };
 
 const EmailWorkerMetaProps = ({ meta }: MetaProps<EmailWorkerMeta>) => {
+  if (!meta) {
+    return null;
+  }
+
   return (
     <>
       <InputRow label='Account'>
@@ -116,11 +126,16 @@ type ChainPromptMeta = { model?: string; prompt?: ChainPromptType };
 
 const ChainPromptMetaProps = ({ meta, triggerId }: MetaProps<ChainPromptMeta>) => {
   const schema = triggerId ? state.selectedSchema[triggerId] : undefined;
+  if (!meta) {
+    return null;
+  }
+
   return (
     <>
       <InputRow label='Model'>
         <Input.TextInput
           value={meta.model ?? ''}
+          // TODO(burdon): This throws.
           onChange={(event) => (meta.model = event.target.value)}
           placeholder='llama2'
         />
@@ -129,8 +144,18 @@ const ChainPromptMetaProps = ({ meta, triggerId }: MetaProps<ChainPromptMeta>) =
         <ChainPresets
           presets={chainPresets}
           onSelect={(preset) => {
-            // TODO(burdon): Throws.
-            meta.prompt = preset.createPrompt();
+            try {
+              const prompt = preset.createPrompt();
+              console.log({ meta, preset, prompt });
+              meta.model = 'xxx'; // TODO(burdon): This throws also.
+              // meta.prompt = prompt;
+            } catch (err) {
+              // TODO(burdon): Throws: "unknown property: prompt, path: meta,prompt"
+              //  Did something change where a metq property now cannot be a reference to an object.
+              //  FunctionTrigger
+              //    meta: S.optional(S.mutable(S.Record(S.String, S.Any))),
+              log.catch(err);
+            }
           }}
         />
       </InputRow>
@@ -150,6 +175,10 @@ const ChainPromptMetaProps = ({ meta, triggerId }: MetaProps<ChainPromptMeta>) =
 type EmbeddingMeta = { model?: string; prompt?: ChainPromptType };
 
 const EmbeddingMetaProps = ({ meta }: MetaProps<EmbeddingMeta>) => {
+  if (!meta) {
+    return null;
+  }
+
   return (
     <>
       <InputRow label='Model'>

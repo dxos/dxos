@@ -9,7 +9,7 @@ import { getSpace } from '@dxos/react-client/echo';
 
 import { TriggerEditor } from './TriggerEditor';
 
-const TriggerArticle: FC<{ trigger: FunctionTrigger }> = ({ trigger }) => {
+const TriggerContainer: FC<{ trigger: FunctionTrigger }> = ({ trigger }) => {
   const space = getSpace(trigger);
   if (!space) {
     return null;
@@ -22,4 +22,4 @@ const TriggerArticle: FC<{ trigger: FunctionTrigger }> = ({ trigger }) => {
   );
 };
 
-export default TriggerArticle;
+export default TriggerContainer;

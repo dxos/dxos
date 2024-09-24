@@ -48,7 +48,6 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
     setTimeout(async () => {
       // Mark-and-sweep removing disabled triggers.
       await registerTriggersMutex.executeSynchronized(async () => {
-        log.info('triggers', { triggers });
         const deprecated = new Set(Array.from(registry.keys()));
         for (const trigger of triggers) {
           if (trigger.enabled) {
@@ -171,9 +170,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   useEffect(() => {
     if (!trigger.meta) {
       const extension = getMeta(trigger);
-      if (extension?.initialValue) {
-        trigger.meta = extension.initialValue();
-      }
+      trigger.meta = extension?.initialValue?.();
     }
   }, [trigger.function, trigger.meta]);
 
@@ -206,7 +203,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
     }
   };
 
-  const TriggerMeta = trigger.meta?.component;
+  const TriggerMeta = getMeta(trigger)?.component;
 
   return (
     <DensityProvider density='fine'>
@@ -270,7 +267,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
                   <div className='border-b border-separator' />
                 </td>
               </tr>
-              <TriggerMeta trigger={trigger} />
+              <TriggerMeta meta={trigger.meta} />
             </tbody>
           )}
         </table>
