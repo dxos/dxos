@@ -37,7 +37,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^18.11.9"
+    "@types/node": "^22.6.1"
   },
   "publishConfig": {
     "access": "public"

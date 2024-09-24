@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",
-    "@types/node": "^18.11.9",
+    "@types/node": "^22.6.1",
     "earljs": "~0.1.10",
     "wait-for-expect": "^3.0.2"
   },

@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@types/fs-ext": "^2.0.0",
-    "@types/node": "^18.11.9",
+    "@types/node": "^22.6.1",
     "ts-node": "10.9.1"
   },
   "publishConfig": {

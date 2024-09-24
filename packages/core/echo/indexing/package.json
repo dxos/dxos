@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "@types/lodash.isequal": "^4.5.0",
-    "@types/node": "^18.11.9",
+    "@types/node": "^22.6.1",
     "fast-check": "^3.19.0",
     "wait-for-expect": "^3.0.2"
   },
