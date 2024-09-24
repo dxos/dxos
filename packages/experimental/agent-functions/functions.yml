@@ -77,7 +77,7 @@ triggers:
 #      account: 'hello@dxos.network'
 #    spec:
 #      type: 'websocket'
-#      url: 'https://hub.dxos.network/api/mailbox/hello@dxos.network'
+#      url: 'https://hub.dxos.network/mailbox/hello@dxos.network'
 #      init:
 #        type: 'sync'
 #

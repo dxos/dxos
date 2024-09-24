@@ -47,7 +47,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [ContactsType, CalendarType],
+        schema: [MailboxType, ContactsType, CalendarType],
       },
       graph: {
         builder: (plugins) => {
@@ -125,14 +125,14 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'article': {
-              if (data.active instanceof MailboxType) {
-                return <MailboxContainer mailbox={data.active} />;
+              if (data.object instanceof MailboxType) {
+                return <MailboxContainer mailbox={data.object} />;
               }
-              if (data.active instanceof ContactsType) {
-                return <ContactsContainer contacts={data.active} />;
+              if (data.object instanceof ContactsType) {
+                return <ContactsContainer contacts={data.object} />;
               }
-              if (data.active instanceof CalendarType) {
-                return <EventsContainer calendar={data.active} />;
+              if (data.object instanceof CalendarType) {
+                return <EventsContainer calendar={data.object} />;
               }
               return null;
             }

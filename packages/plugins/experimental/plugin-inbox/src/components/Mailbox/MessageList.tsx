@@ -122,7 +122,7 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
           {expanded && (
             <div className='flex flex-col gap-2 pbs-2 pb-4 mt-2 border-bs-2 border-separator'>
               <div className='grid grid-cols-[1fr,9rem] gap-2 text-description'>
-                <div>{message.text}</div>
+                <div className='whitespace-pre-line'>{message.text}</div>
                 <div className='px-2 text-right text-sm'>{formatDate(now, new Date(message.timestamp))}</div>
               </div>
             </div>
