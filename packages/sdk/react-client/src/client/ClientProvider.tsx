@@ -63,9 +63,10 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
     fallback?: FunctionComponent<Partial<ClientContextProps>>;
 
     /**
-     * Set to false to stop default signal factory from being registered.
+     * Set to false to stop default signal runtime from being registered.
+     *
+     * The signals runtime is used to provide reactive updates to ECHO objects.
      */
-    // TODO(burdon): Requires comment describing why signals are required.
     registerSignalRuntime?: boolean;
 
     /**
@@ -140,7 +141,9 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
         if (!client.initialized) {
           await client.initialize().catch(setError);
           log('client ready');
-          types && client.addTypes(types);
+          if (types) {
+            client.addTypes(types);
+          }
           await onInitialized?.(client);
           log('initialization complete');
         } else if (types) {
@@ -148,9 +151,6 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
         }
 
         setClient(client);
-
-        // TODO(burdon): Remove since set by hook above?
-        setStatus(client.status.get() ?? SystemStatus.ACTIVE);
 
         if (!disableBanner) {
           printBanner(client);
