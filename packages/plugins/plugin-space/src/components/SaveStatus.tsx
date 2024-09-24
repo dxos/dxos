@@ -5,15 +5,15 @@
 import { ArrowsClockwise, CheckCircle } from '@phosphor-icons/react';
 import React, { useEffect } from 'react';
 
-import { StatusBar } from '@dxos/plugin-status-bar';
-import { useTranslation } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
-
 import type { UnsubscribeCallback } from '@dxos/async';
 import type { Client } from '@dxos/client';
 import { type Space, type SpaceId } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
+import { StatusBar } from '@dxos/plugin-status-bar';
 import { useClient } from '@dxos/react-client';
+import { useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
+
 import { SPACE_PLUGIN } from '../meta';
 
 export const SaveStatus = () => {
@@ -38,7 +38,7 @@ const createClientSaveTracker = (client: Client, cb: (state: 'saved' | 'saving')
   const unsubscribeCallbacks: Record<SpaceId, UnsubscribeCallback> = {};
   const state: Record<SpaceId, 'saved' | 'saving'> = {};
 
-  function install(spaces: Space[]) {
+  const install = (spaces: Space[]) => {
     for (const space of spaces) {
       if (state[space.id]) {
         continue;
@@ -50,7 +50,7 @@ const createClientSaveTracker = (client: Client, cb: (state: 'saved' | 'saving')
         cb(Object.values(state).some((s) => s === 'saving') ? 'saving' : 'saved');
       });
     }
-  }
+  };
   client.spaces.subscribe((spaces) => {
     install(spaces);
   });
@@ -66,13 +66,13 @@ const createClientSaveTracker = (client: Client, cb: (state: 'saved' | 'saving')
 const createSpaceSaveTracker = (space: Space, cb: (state: 'saved' | 'saving') => void): UnsubscribeCallback => {
   const ctx = new Context();
 
-  space.waitUntilReady().then(() => {
+  void space.waitUntilReady().then(() => {
     if (ctx.disposed) {
       return;
     }
 
-    let hasUnsavedChanges = false,
-      lastFlushPromise: Promise<void> | undefined;
+    let hasUnsavedChanges = false;
+    let lastFlushPromise: Promise<void> | undefined;
     space.crud.saveStateChanged.on(ctx, ({ unsavedDocuments }) => {
       hasUnsavedChanges = unsavedDocuments.length > 0;
     });
@@ -83,7 +83,7 @@ const createSpaceSaveTracker = (space: Space, cb: (state: 'saved' | 'saving') =>
       } else {
         const flushPromise = space.crud.flush();
         lastFlushPromise = flushPromise;
-        flushPromise.then(() => {
+        void flushPromise.then(() => {
           if (lastFlushPromise === flushPromise) {
             cb('saved');
           }
