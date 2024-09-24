@@ -16,7 +16,7 @@ describe('EdgeClient', () => {
   const textMessage = (message: string) => protocol.createMessage(TextMessageSchema, { payload: { message } });
 
   test('reconnects on error', async () => {
-    const { error: serverError, endpoint } = await createTestWsServer();
+    const { error: serverError, endpoint } = await createTestWsServer(8001);
     const id = PublicKey.random().toHex();
     const client = new EdgeClient(id, id, { socketEndpoint: endpoint });
     await openAndClose(client);
@@ -30,7 +30,7 @@ describe('EdgeClient', () => {
   });
 
   test('set identity reconnects', async () => {
-    const { endpoint } = await createTestWsServer();
+    const { endpoint } = await createTestWsServer(8002);
 
     const id = PublicKey.random().toHex();
     const client = new EdgeClient(id, id, { socketEndpoint: endpoint });

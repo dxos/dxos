@@ -12,7 +12,7 @@ import { createTestWsServer } from './test-utils';
 // TODO(wittjosiah): Doesn't work in vitest.
 describe.skip('WebSocket', () => {
   test('swap `onclose` handler ', async () => {
-    const { endpoint } = await createTestWsServer();
+    const { endpoint } = await createTestWsServer(8003);
     const ws = new WebSocket(endpoint);
     const opened = new Trigger();
     ws.onopen = () => {
