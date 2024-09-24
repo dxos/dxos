@@ -28,7 +28,12 @@ export const MessageList = ({ messages = [], selected, onSelect, onAction }: Mes
   const { t } = useTranslation(INBOX_PLUGIN);
 
   return (
-    <div className={mx('flex flex-col is-full py-2 pr-2', baseSurface)}>
+    <div
+      className={mx(
+        'flex flex-col is-full overflow-x-hidden overflow-y-auto divide-y divide-separator scrollbar-thin',
+        baseSurface,
+      )}
+    >
       {!messages?.length && <div className='flex items-center justify-center p-4 font-thin'>{t('no messages')}</div>}
       {messages?.map((message) => (
         <MessageItem
@@ -120,7 +125,7 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
           </div>
 
           {expanded && (
-            <div className='flex flex-col gap-2 pbs-2 pb-4 mt-2 border-bs-2 border-separator'>
+            <div className='flex flex-col gap-2 pbs-2 pb-4 mt-2'>
               <div className='grid grid-cols-[1fr,9rem] gap-2 text-description'>
                 <div className='whitespace-pre-line'>{message.text}</div>
                 <div className='px-2 text-right text-sm'>{formatDate(now, new Date(message.timestamp))}</div>
