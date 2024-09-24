@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import { EditorView } from '@codemirror/view';
 import { Check, PencilSimple, X } from '@phosphor-icons/react';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';

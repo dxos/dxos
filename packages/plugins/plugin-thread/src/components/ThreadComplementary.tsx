@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import React, { useEffect, useMemo } from 'react';
 
 import { LayoutAction, type Plugin, useIntentDispatcher, useResolvePlugins } from '@dxos/app-framework';
