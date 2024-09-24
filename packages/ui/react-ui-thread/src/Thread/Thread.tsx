@@ -3,7 +3,7 @@
 //
 
 import { CaretDoubleRight, Spinner } from '@phosphor-icons/react';
-import React, { type ComponentProps, type ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { hoverableControlItem, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
