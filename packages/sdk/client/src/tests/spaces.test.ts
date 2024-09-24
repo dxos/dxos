@@ -439,6 +439,7 @@ describe('Spaces', () => {
       const done = new Trigger();
       await waitForObject(guestSpace, hostRoot);
       const guestRoot: Expando = guestSpace.db.getObjectById(hostRoot.id)!;
+      expect(guestRoot).toBeDefined();
 
       const unsub = getObjectCore(guestRoot).updates.on(() => {
         if (guestRoot.entries.length === 2) {
@@ -502,7 +503,7 @@ describe('Spaces', () => {
   };
 
   const waitForObject = async (space: Space, object: Identifiable) => {
-    await expect.poll(() => space.db.getObjectById(object.id)).toBeDefined();
+    await expect.poll(() => space.db.getObjectById(object.id)).not.toEqual(undefined);
   };
 
   const waitForSpaceState = async (space: Space, state: SpaceState, timeout: number) => {
