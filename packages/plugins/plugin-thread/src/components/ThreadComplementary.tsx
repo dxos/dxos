@@ -44,11 +44,11 @@ export const ThreadComplementary = ({
 
   const threads = useMemo(() => {
     return subject.threads.concat(stagedThreads ?? []).filter(nonNullable) as ThreadType[];
-  }, [subject.threads, stagedThreads]);
+  }, [JSON.stringify(subject.threads), JSON.stringify(stagedThreads)]);
 
   const detachedIds = useMemo(() => {
-    return threads.filter(({ anchor }) => !anchor).map((thread) => thread.id); // TODO(Zan): Fully qualified ids.
-  }, [subject.threads]);
+    return threads.filter(({ anchor }) => !anchor).map((thread) => fullyQualifiedId(thread));
+  }, [threads]);
 
   useEffect(() => {
     if (!sort) {
@@ -75,16 +75,20 @@ export const ThreadComplementary = ({
             autoFocusCurrentTextbox={focus}
             showResolvedThreads={showResolvedThreads}
             onThreadAttend={(thread) => {
-              if (current !== thread.id) {
-                current = thread.id;
-                void dispatch?.({
-                  action: LayoutAction.SCROLL_INTO_VIEW,
-                  data: {
-                    id: fullyQualifiedId(subject),
-                    thread: fullyQualifiedId(thread),
-                    cursor: thread.anchor,
+              const threadId = fullyQualifiedId(thread);
+              if (current !== threadId) {
+                current = threadId;
+
+                void dispatch?.([
+                  {
+                    action: LayoutAction.SCROLL_INTO_VIEW,
+                    data: {
+                      id: fullyQualifiedId(subject),
+                      thread: threadId,
+                      cursor: thread.anchor,
+                    },
                   },
-                });
+                ]);
               }
             }}
             onThreadDelete={(thread) => {

@@ -5,8 +5,8 @@
 import { effect } from '@preact/signals-core';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { LayoutAction, useIntentDispatcher, useIntentResolver } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { IntentResolver, LayoutAction, useIntentDispatcher, useIntentResolver } from '@dxos/app-framework';
+import { debounce } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -14,14 +14,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { type Decoration } from './decorations';
 import { useSheetContext } from './sheet-context';
 import { SHEET_PLUGIN } from '../../meta';
-import { addressFromIndex, addressToIndex, CellAddress, closest } from '../../model';
-import { debounce } from '@dxos/async';
-
-/**
- * A deep signal representing the currently selected thread for each sheet.
- * The keys are fully qualified sheet IDs, and the values are thread IDs.
- */
-const currentThreadForSheet = create<Record<string, string>>({});
+import { addressFromIndex, addressToIndex, type CellAddress, closest } from '../../model';
 
 const CommentIndicator = () => {
   return (
@@ -29,11 +22,7 @@ const CommentIndicator = () => {
   );
 };
 
-const CommentWrapper: React.FC<{ sheetId: string; threadId: string; children: React.ReactNode }> = ({
-  sheetId,
-  threadId,
-  children,
-}) => {
+const CommentWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useIntentDispatcher();
   const [isHovered, setIsHovered] = React.useState(false);
 
@@ -42,12 +31,10 @@ const CommentWrapper: React.FC<{ sheetId: string; threadId: string; children: Re
     void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
   }, []);
 
-  const isCurrentThread = currentThreadForSheet[sheetId] === threadId;
-
   return (
     <div
       role='none'
-      className={mx('relative h-full is-full', isCurrentThread && 'underline')}
+      className={mx('relative h-full is-full')}
       onMouseEnter={() => {
         setIsHovered(true);
       }}
@@ -75,41 +62,43 @@ const createThreadDecoration = (cellIndex: string, threadId: string, sheetId: st
   return {
     type: 'comment',
     cellIndex,
-    decorate: (props) => <CommentWrapper threadId={threadId} sheetId={sheetId} {...props} />,
+    decorate: (props) => <CommentWrapper {...props} />,
   };
 };
 
 const useUpdateCursorOnThreadSelection = () => {
   const { setCursor, model } = useSheetContext();
 
-  useIntentResolver(SHEET_PLUGIN, ({ action, data }) => {
-    switch (action) {
-      case LayoutAction.SCROLL_INTO_VIEW: {
-        if (data?.id && data?.cursor) {
+  const handleScrollIntoView: IntentResolver = useCallback(
+    ({ action, data }) => {
+      switch (action) {
+        case LayoutAction.SCROLL_INTO_VIEW: {
+          if (!data?.id || data?.cursor === undefined || data?.id !== fullyQualifiedId(model.sheet)) {
+            return;
+          }
+
           // TODO(Zan): Everywhere we refer to the cursor in a thread context should change to `anchor`.
           const cellAddress = addressFromIndex(model.sheet, data.cursor);
-          const sheetId = fullyQualifiedId(model.sheet);
-
           setCursor(cellAddress);
-          currentThreadForSheet[sheetId] = data.id;
-          return { data: true };
         }
-        break;
       }
-    }
-  });
+    },
+    [model.sheet, setCursor],
+  );
+
+  useIntentResolver(SHEET_PLUGIN, handleScrollIntoView);
 };
 
 const useSelectThreadOnCursorChange = () => {
   const { cursor, model } = useSheetContext();
   const dispatch = useIntentDispatcher();
-  const threads = model.sheet.threads;
-  const sheetId = fullyQualifiedId(model.sheet);
 
   const activeThreads = useMemo(
     () =>
-      threads?.filter((thread): thread is NonNullable<typeof thread> => !!thread && thread.status === 'active') ?? [],
-    [threads],
+      model.sheet.threads?.filter(
+        (thread): thread is NonNullable<typeof thread> => !!thread && thread.status === 'active',
+      ) ?? [],
+    [model.sheet.threads],
   );
 
   const activeThreadAddresses = useMemo(
@@ -123,30 +112,24 @@ const useSelectThreadOnCursorChange = () => {
 
   const selectClosestThread = useCallback(
     (cursor: CellAddress) => {
-      if (!cursor || !threads) {
+      if (!cursor || !activeThreads) {
         return;
       }
 
       const closestThreadAnchor = closest(cursor, activeThreadAddresses);
-
       if (closestThreadAnchor) {
         const closestThread = activeThreads.find(
           (thread) => thread && thread.anchor === addressToIndex(model.sheet, closestThreadAnchor),
         );
 
         if (closestThread) {
-          const isExactMatch = closestThreadAnchor.column === cursor.column && closestThreadAnchor.row === cursor.row;
-          if (isExactMatch) {
-            currentThreadForSheet[sheetId] = closestThread.id;
-          } else {
-            delete currentThreadForSheet[sheetId];
-          }
-
-          void dispatch([{ action: 'dxos.org/plugin/thread/action/select', data: { current: closestThread.id } }]);
+          void dispatch([
+            { action: 'dxos.org/plugin/thread/action/select', data: { current: fullyQualifiedId(closestThread) } },
+          ]);
         }
       }
     },
-    [dispatch, activeThreads, activeThreadAddresses, model.sheet, sheetId],
+    [dispatch, activeThreads, activeThreadAddresses, model.sheet],
   );
 
   const debounced = useMemo(() => {
@@ -163,7 +146,7 @@ const useSelectThreadOnCursorChange = () => {
 
 const useThreadDecorations = () => {
   const { decorations, model } = useSheetContext();
-  const sheet = model.sheet;
+  const sheet = useMemo(() => model.sheet, [model.sheet]);
   const sheetId = useMemo(() => fullyQualifiedId(sheet), [sheet]);
 
   useEffect(() => {

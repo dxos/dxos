@@ -11,8 +11,7 @@ import { hoverableControlItem, hoverableFocusedWithinControls, mx } from '@dxos/
 import { translationKey } from '../translations';
 import type { ThreadEntity } from '../types';
 
-export type ThreadProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
-  ThreadEntity & { current?: boolean | ComponentProps<'div'>['aria-current'] };
+export type ThreadProps = ThemedClassName<ComponentPropsWithRef<'div'>> & ThreadEntity & { current?: boolean };
 
 export const threadLayout = 'is-full place-self-start grid grid-cols-[var(--rail-size)_1fr]';
 

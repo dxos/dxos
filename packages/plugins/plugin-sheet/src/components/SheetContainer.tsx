@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { useIntentDispatcher, type LayoutPart } from '@dxos/app-framework';
+import { useIntentDispatcher } from '@dxos/app-framework';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useIsDirectlyAttended } from '@dxos/react-ui-attention';
 import { focusRing, mx } from '@dxos/react-ui-theme';
@@ -22,13 +22,7 @@ const attentionFragment = mx(
 export const sectionToolbarLayout =
   'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 __-block-start-px transition-opacity';
 
-const SheetContainer = ({
-  sheet,
-  space,
-  role,
-  remoteFunctionUrl,
-  layoutPart,
-}: SheetRootProps & { role?: string; layoutPart?: LayoutPart }) => {
+const SheetContainer = ({ sheet, space, role, remoteFunctionUrl }: SheetRootProps & { role?: string }) => {
   const dispatch = useIntentDispatcher();
 
   const id = fullyQualifiedId(sheet);
@@ -79,7 +73,7 @@ const SheetContainer = ({
           className={mx(
             role === 'section' && 'aspect-square border-is border-bs border-be border-separator',
             role === 'article' &&
-              'flex is-full border-bs border-separator overflow-hidden focus-visible:ring-inset row-span-1 data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
+              'flex is-full overflow-hidden focus-visible:ring-inset row-span-1 data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2 border-bs border-separator',
             focusRing,
             attentionFragment,
           )}

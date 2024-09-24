@@ -5,13 +5,7 @@
 import { type IconProps, GridNine } from '@phosphor-icons/react';
 import React from 'react';
 
-import {
-  NavigationAction,
-  parseIntentPlugin,
-  resolvePlugin,
-  type PluginDefinition,
-  type LayoutCoordinate,
-} from '@dxos/app-framework';
+import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -166,13 +160,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
               case 'article':
               case 'section': {
                 return (
-                  <SheetContainer
-                    sheet={data.object}
-                    space={space}
-                    role={role}
-                    layoutPart={(data.coordinate as LayoutCoordinate)?.part}
-                    remoteFunctionUrl={remoteFunctionUrl}
-                  />
+                  <SheetContainer sheet={data.object} space={space} role={role} remoteFunctionUrl={remoteFunctionUrl} />
                 );
               }
             }

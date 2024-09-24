@@ -21,7 +21,6 @@ import {
   SLUG_COLLECTION_INDICATOR,
   isLayoutParts,
   parseMetadataResolverPlugin,
-  type IntentDispatcher,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
@@ -395,7 +394,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                       },
                       {
                         action: ThreadAction.SELECT,
-                        data: { current: thread.id, focus: true },
+                        data: { current: fullyQualifiedId(thread), focus: true },
                       },
                       {
                         action: LayoutAction.SET_LAYOUT,
@@ -669,7 +668,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               () =>
                 threads.value
                   .filter((thread) => thread?.anchor)
-                  .map((thread) => ({ id: thread.id, cursor: thread.anchor! })),
+                  .map((thread) => ({ id: fullyQualifiedId(thread), cursor: thread.anchor! })),
             ),
             comments({
               id: doc.id,
@@ -690,7 +689,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 // If the thread is in the staging area, remove it.
                 const stagingArea = state.staging[fullyQualifiedId(doc)];
                 if (stagingArea) {
-                  const index = stagingArea.findIndex((thread) => thread.id === id);
+                  const index = stagingArea.findIndex((thread) => fullyQualifiedId(thread) === id);
                   if (index !== -1) {
                     stagingArea.splice(index, 1);
                   }
@@ -703,7 +702,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               },
               onUpdate: ({ id, cursor }) => {
                 const thread =
-                  state.staging[fullyQualifiedId(doc)]?.find((thread) => thread.id === id) ??
+                  state.staging[fullyQualifiedId(doc)]?.find((thread) => fullyQualifiedId(thread) === id) ??
                   doc.threads.find((thread) => thread?.id === id);
 
                 if (thread instanceof ThreadType && thread.anchor) {
