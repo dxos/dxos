@@ -1032,8 +1032,6 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       const DecoratorComponent = decorate;
       return <DecoratorComponent>{children}</DecoratorComponent>;
     },
-    // Note(Zan): I moved padding and layout styles to the base content div so that decorations can be applied to the entire cell.
-    // Very happy to rework this system as our needs evolve.
     <div
       role='none'
       className={mx(
