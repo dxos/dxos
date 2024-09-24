@@ -46,7 +46,6 @@
     "@types/minimatch": "^5.1.2",
     "@types/node": "^18.11.9",
     "@types/react": "~18.2.0",
-    "@types/yargs": "~16.0.1",
-    "typescript": "^5.5.4"
+    "@types/yargs": "~16.0.1"
   }
 }

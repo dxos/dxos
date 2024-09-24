@@ -39,8 +39,6 @@
   "devDependencies": {
     "@swc-node/register": "1.9.1",
     "@types/node": "^18.11.9",
-    "ts-node": "10.9.1",
-    "typescript": "^5.5.4",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {

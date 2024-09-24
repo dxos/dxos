@@ -24,7 +24,6 @@
     "source-map": "^0.6.1"
   },
   "devDependencies": {
-    "@types/node": "^18.11.9",
-    "typescript": "^5.5.4"
+    "@types/node": "^18.11.9"
   }
 }

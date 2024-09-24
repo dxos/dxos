@@ -62,7 +62,6 @@
     "react-router-dom": "^6.4.0",
     "ts-node": "10.9.1",
     "typedoc": "^0.25.10",
-    "typescript": "^5.5.4",
     "vite": "^5.3.4",
     "vue": "^3.3.12",
     "vue-router": "^4.2.5",

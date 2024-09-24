@@ -20,8 +20,7 @@
     "@types/node": "^18.11.9",
     "postcss": "^8.4.41",
     "tmp-promise": "^3.0.3",
-    "ts-node": "10.9.1",
-    "typescript": "^5.5.4"
+    "ts-node": "10.9.1"
   },
   "publishConfig": {
     "access": "public"

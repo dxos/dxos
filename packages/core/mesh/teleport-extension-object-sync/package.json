@@ -41,9 +41,6 @@
     "@dxos/teleport": "workspace:*",
     "@dxos/util": "workspace:*"
   },
-  "devDependencies": {
-    "typescript": "^5.5.4"
-  },
   "publishConfig": {
     "access": "public"
   }

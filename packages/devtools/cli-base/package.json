@@ -74,8 +74,7 @@
     "fast-check": "^3.19.0",
     "oclif": "^4.13.0",
     "prettier": "^3.2.4",
-    "shx": "^0.3.3",
-    "typescript": "^5.5.4"
+    "shx": "^0.3.3"
   },
   "engines": {
     "node": ">=18.0.0"

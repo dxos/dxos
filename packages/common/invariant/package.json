@@ -27,8 +27,7 @@
     "@dxos/node-std": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^18.11.9",
-    "typescript": "^5.5.4"
+    "@types/node": "^18.11.9"
   },
   "publishConfig": {
     "access": "public"

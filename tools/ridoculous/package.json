@@ -49,8 +49,6 @@
     "@types/node": "^18.11.9",
     "@types/protocol-buffers-schema": "^3.4.1",
     "@types/yargs": "~16.0.1",
-    "diff": "~5.1.0",
-    "ts-node": "10.9.1",
-    "typescript": "^5.5.4"
+    "diff": "~5.1.0"
   }
 }
