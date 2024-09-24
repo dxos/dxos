@@ -10,7 +10,7 @@ import { ScrollArea } from '@dxos/react-ui';
 import { createAttendableAttributes, useAttentionContext } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
 
-import { CommentsContainer, CommentsHeading } from './';
+import { CommentsContainer, CommentsHeading } from '../components';
 import { THREAD_PLUGIN } from '../meta';
 import { ThreadAction, type ThreadProvides } from '../types';
 
