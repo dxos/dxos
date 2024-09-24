@@ -9,6 +9,8 @@ import chess from './templates/chess.ts?raw';
 // @ts-ignore
 import echo from './templates/echo.ts?raw';
 // @ts-ignore
+import email from './templates/email.ts?raw';
+// @ts-ignore
 import forex from './templates/forex.ts?raw';
 
 const removeHeader = (str: string) => str.split('\n').slice(4).join('\n');
@@ -32,8 +34,8 @@ export const templates: Template[] = [
     source: removeHeader(forex),
   },
   {
-    id: 'dxos.org/script/chat',
-    name: 'Chat',
+    id: 'dxos.org/script/gpt',
+    name: 'Gpt',
     source: removeHeader(chat),
     presetId: 'dxos.org/function/gpt',
   },
@@ -42,5 +44,11 @@ export const templates: Template[] = [
     name: 'Chess',
     source: removeHeader(chess),
     presetId: 'dxos.org/function/chess',
+  },
+  {
+    id: 'dxos.org/script/email',
+    name: 'Email',
+    source: removeHeader(email),
+    presetId: 'dxos.org/function/email',
   },
 ];

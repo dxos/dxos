@@ -47,6 +47,10 @@ const callFunction = async (funcUrl: string, trigger: any, data: any) => {
 
 export const invokeFunction = async (client: Client, space: Space, trigger: FunctionTrigger, data: any) => {
   try {
+    if (trigger.spec.type === 'websocket') {
+      return handleEmail(space, data.data);
+    }
+
     const script = await space.crud.query({ id: trigger.function }).first();
     const { objects: functions } = await space.crud.query({ __typename: FunctionType.typename }).run();
     const func = functions.find((fn) => referenceEquals(fn.source, trigger.function)) as AnyObjectData | undefined;
@@ -63,9 +67,7 @@ export const invokeFunction = async (client: Client, space: Space, trigger: Func
       promptId: trigger.meta?.prompt?.id,
     };
     // TODO: Remove when functions can add objects and easily modify collections (push, splice).
-    return trigger.spec.type === 'websocket'
-      ? handleEmail(space, data.data)
-      : (await callFunction(funcUrl, triggerData, data)).status;
+    return (await callFunction(funcUrl, triggerData, data)).status;
   } catch (err) {
     return 400;
   }
