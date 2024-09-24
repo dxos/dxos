@@ -45,7 +45,6 @@ import { nonNullable } from '@dxos/util';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownPluginState } from '../types';
-import { fullyQualifiedId } from 'packages/sdk/client/src/echo';
 
 const attentionFragment = mx(
   'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
