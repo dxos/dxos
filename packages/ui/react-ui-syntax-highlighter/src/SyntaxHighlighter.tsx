@@ -33,7 +33,7 @@ export const SyntaxHighlighter = ({
 }: SyntaxHighlighterProps) => {
   const { themeMode } = useThemeContext();
   return (
-    <div role='none' className={mx('w-full', classNames)}>
+    <div role='none' className={mx(classNames)}>
       <NativeSyntaxHighlighter {...props} style={themeMode === 'dark' ? styleDark : styleLight}>
         {/* Non-empty fallback prevents collapse. */}
         {children || fallback}

@@ -47,7 +47,7 @@ export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindi
   const [result, setResult] = useState('');
   const [state, setState] = useState<State | null>(null);
 
-  // TODO(burdon): Persistent history (non-space ECHO data?)
+  // TODO(burdon): Persistent history -- at least for session (non-space ECHO data?)
   const [history, setHistory] = useState<Message[]>([]);
 
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -229,7 +229,7 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
     return <span className={mx(classNames, 'whitespace-pre text-error')}>{String(error)}</span>;
   } else if (data) {
     return (
-      <SyntaxHighlighter language='json' className={mx('text-xs', classNames)}>
+      <SyntaxHighlighter language='json' className={mx('px-8 py-2 text-xs rounded', classNames)}>
         {JSON.stringify(data, null, 2)}
       </SyntaxHighlighter>
     );
@@ -249,7 +249,7 @@ const MessageThread = ({ state, result, history }: { state: State | null; result
           <div>{message.type === 'response' && <RobotAvatar />}</div>
           <div className={mx('flex', message.type === 'request' && 'justify-end')}>
             <MessageItem
-              classNames={[message.type === 'request' && 'p-1 px-2 rounded-lg bg-hoverSurface']}
+              classNames={['p-1 px-2 rounded-lg bg-hoverSurface', message.type === 'response' && 'mr-[8rem]']}
               message={message}
             />
           </div>
