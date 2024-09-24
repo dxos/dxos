@@ -11,7 +11,6 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
@@ -22,13 +21,16 @@ import {
   Filter,
   filterMatch,
   type FilterSource,
+  optionsToProto,
   Query,
   type QueryContext,
   type QueryFn,
+  type QueryOptions,
   type QueryResult,
   type QueryRunOptions,
 } from './query';
 import { RuntimeSchemaRegistry } from './runtime-schema-registry';
+import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 /**
  * Manages cross-space database interactions.
@@ -109,7 +111,7 @@ export class Hypergraph {
   private _query(filter?: FilterSource, options?: QueryOptions) {
     const spaces = options?.spaces;
     invariant(!spaces || spaces.every((space) => space instanceof PublicKey), 'Invalid spaces filter');
-    return new Query(this._createQueryContext(), Filter.from(filter, options));
+    return new Query(this._createQueryContext(), Filter.from(filter, optionsToProto(options ?? {})));
   }
 
   /**
@@ -472,7 +474,7 @@ class SpaceQuerySource implements QuerySource {
       return false;
     }
     // Disabled by dataLocation filter.
-    if (filter.options.dataLocation && filter.options.dataLocation === QueryOptions.DataLocation.REMOTE) {
+    if (filter.options.dataLocation && filter.options.dataLocation === QueryOptionsProto.DataLocation.REMOTE) {
       return false;
     }
     return true;

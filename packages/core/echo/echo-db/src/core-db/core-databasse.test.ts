@@ -517,6 +517,35 @@ describe('CoreDatabase', () => {
         });
       }
     });
+
+    test('query with join', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { crud } = await testBuilder.createDatabase();
+
+      const { id: id1 } = await crud.insert({ title: 'Inner' });
+      const { id: id2 } = await crud.insert({ title: 'Outer', inner: { '/': id1 } });
+      await crud.flush({ indexes: true });
+
+      {
+        const object = await crud.query({ id: id2 }, { include: { inner: true } }).first();
+        expect(object).to.deep.eq({
+          id: id2,
+          __typename: null,
+          __meta: {
+            keys: [],
+          },
+          title: 'Outer',
+          inner: {
+            id: id1,
+            __typename: null,
+            __meta: {
+              keys: [],
+            },
+            title: 'Inner',
+          },
+        });
+      }
+    });
   });
 });
 

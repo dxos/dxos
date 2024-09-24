@@ -396,25 +396,6 @@ describe('Query reactivity', () => {
   });
 });
 
-test.skip('query with model filters', async () => {
-  const testBuilder = new EchoTestBuilder();
-  await openAndClose(testBuilder);
-
-  const { db } = await testBuilder.createDatabase();
-
-  const obj = db.add(
-    create(Expando, {
-      title: 'title',
-      description: create(Expando, { content: 'description' }),
-    }),
-  );
-
-  expect(db.query().objects).to.have.length(1);
-  expect(db.query().objects[0]).to.eq(obj);
-
-  expect(db.query(undefined, { models: ['*'] }).objects).to.have.length(2);
-});
-
 describe('Queries with types', () => {
   test('query by typename receives updates', async () => {
     const testBuilder = new EchoTestBuilder();

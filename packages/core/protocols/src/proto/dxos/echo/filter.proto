@@ -44,6 +44,9 @@ message QueryOptions {
     */
   optional DataLocation data_location = 4;
 
+  /// References to inline when querying.
+  optional google.protobuf.Struct include = 3;
+
   //
   // Deprecated
   //
@@ -52,7 +55,7 @@ message QueryOptions {
    * Query only in specific spaces.
    * @deprecated Use `spaceIds` instead.
    */
-  repeated dxos.keys.PublicKey spaces = 3;
+  repeated dxos.keys.PublicKey spaces = 6;
 
   /**
    * Filter by model.

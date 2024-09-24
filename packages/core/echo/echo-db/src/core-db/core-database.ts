@@ -39,7 +39,7 @@ import { getInlineAndLinkChanges } from './utils';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy } from '../client';
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { Filter, Query, type FilterSource, type PropertyFilter, type QueryFn } from '../query';
+import { Filter, optionsToProto, Query, type FilterSource, type PropertyFilter, type QueryFn } from '../query';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -327,7 +327,7 @@ export class CoreDatabase {
   private _query(filter?: FilterSource, options?: QueryOptions) {
     return new Query(
       new CoreDatabaseQueryContext(this, this._queryService),
-      Filter.from(filter, { ...options, spaceIds: [this.spaceId] }),
+      Filter.from(filter, optionsToProto({ ...options, spaceIds: [this.spaceId] })),
     );
   }
 
