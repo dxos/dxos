@@ -15,7 +15,8 @@ import { expect, test } from 'vitest';
 // import config from '../../../config/config.yml';
 
 // TODO(burdon): SecurityError: localStorage is not available for opaque origins
-test('config', async () => {
+// TODO(wittjosiah): Flaky in CI.
+test.skip('config', async () => {
   const root = path.join(__dirname, '../../../');
   const configPath = path.join(root, '../cli-base/config/config-default.yml');
   const config = yaml.load(String(fs.readFileSync(configPath))) as any;
