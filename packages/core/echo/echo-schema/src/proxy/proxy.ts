@@ -8,7 +8,7 @@ import { ReactiveArray } from './reactive-array';
 import { type ReactiveHandler } from './types';
 import { type ReactiveObject } from '../types';
 
-export const symbolIsProxy = Symbol('isProxy');
+export const symbolIsProxy = Symbol.for('@dxos/echo-schema/isProxy');
 
 export const isValidProxyTarget = (value: any): value is object => {
   if (value == null || value[symbolIsProxy]) {
