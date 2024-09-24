@@ -15,16 +15,17 @@
   "devDependencies": {
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
-    "@storybook/addon-essentials": "~8.1.11",
-    "@storybook/addon-interactions": "~8.1.11",
-    "@storybook/addon-links": "~8.1.11",
-    "@storybook/builder-vite": "~8.1.11",
-    "@storybook/core-server": "~8.1.11",
-    "@storybook/html": "~8.1.11",
-    "@storybook/html-vite": "~8.1.11",
+    "@storybook/addon-essentials": "~8.3.3",
+    "@storybook/addon-interactions": "~8.3.3",
+    "@storybook/addon-links": "~8.3.3",
+    "@storybook/builder-vite": "~8.3.3",
+    "@storybook/core-server": "~8.3.3",
+    "@storybook/html": "~8.3.3",
+    "@storybook/html-vite": "~8.3.3",
     "@storybook/mdx2-csf": "^1.1.0",
-    "@storybook/react": "~8.1.11",
-    "@storybook/react-vite": "~8.1.11",
+    "@storybook/react": "~8.3.3",
+    "@storybook/react-vite": "~8.3.3",
+    "@storybook/theming": "^8.3.3",
     "@types/lodash.flatten": "^4.4.6",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
@@ -33,14 +34,14 @@
     "lodash.flatten": "^4.4.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
-    "storybook": "^8.2.9",
+    "storybook": "^8.3.3",
     "storybook-dark-mode": "^4.0.2",
     "vite": "^5.4.7",
     "vite-plugin-turbosnap": "^1.0.3"
   },
   "peerDependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   },
   "publishConfig": {
     "access": "public"

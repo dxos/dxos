@@ -102,6 +102,24 @@
         "configDir": "tools/stories/config/all"
       }
     },
+    "storybook-build": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "dependsOn": [
+        "examples:prebuild"
+      ],
+      "executor": "@nx/storybook:build",
+      "options": {
+        "configDir": "tools/stories/config/all",
+        "outputDir": "tools/stories/out/all"
+      },
+      "outputs": [
+        "{options.outputDir}"
+      ]
+    },
     "storybook-build-examples": {
       "configurations": {
         "ci": {
