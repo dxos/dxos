@@ -8,15 +8,18 @@ import {
   DensityProvider,
   ElevationProvider,
   Icon,
+  Select,
   type ThemedClassName,
   ToggleGroup,
   ToggleGroupItem,
+  type ToolbarButtonProps,
   Toolbar as NaturalToolbar,
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
 
 import { SCRIPT_PLUGIN } from '../../meta';
+import { type Template } from '../../templates';
 
 export type ToolbarProps = ThemedClassName<
   {
@@ -25,7 +28,8 @@ export type ToolbarProps = ThemedClassName<
     functionUrl?: string;
     onDeploy?: () => Promise<void>;
     onFormat?: () => Promise<void>;
-  } & ViewSelectorProps
+  } & TemplateSelectProps &
+    ViewSelectorProps
 >;
 
 export const Toolbar = ({
@@ -34,9 +38,11 @@ export const Toolbar = ({
   error,
   functionUrl,
   view,
+  templates,
   onDeploy,
   onFormat,
   onViewChange,
+  onTemplateSelect,
 }: ToolbarProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const [pending, setPending] = useState(false);
@@ -50,33 +56,20 @@ export const Toolbar = ({
   };
 
   const handleDeploy = async () => {
-    setPending(true);
-    await onDeploy?.();
-    setPending(false);
+    if (!pending) {
+      setPending(true);
+      await onDeploy?.();
+      setPending(false);
+    }
   };
 
-  // TODO(burdon): Simplify tooltips.
   // TODO(burdon): Factor out common toolbar components with sheet/editor?
   return (
     <DensityProvider density='fine'>
       <ElevationProvider elevation='chrome'>
         <NaturalToolbar.Root classNames={['p-1', classNames]} style={{ contain: 'layout' }}>
-          {onFormat && (
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <NaturalToolbar.Button variant='ghost' onClick={onFormat}>
-                  <Icon icon='ph--magic-wand--regular' size={4} />
-                </NaturalToolbar.Button>
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content>
-                  <Tooltip.Arrow />
-                  {t('format label')}
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
-          )}
-
+          {onFormat && <ToolbarButton icon='ph--magic-wand--regular' text={t('format label')} onClick={onFormat} />}
+          {templates && <TemplateSelect templates={templates} onTemplateSelect={onTemplateSelect} />}
           <div role='separator' className='grow' />
 
           {error ? (
@@ -94,38 +87,17 @@ export const Toolbar = ({
           ) : null}
 
           {functionUrl && deployed && (
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <NaturalToolbar.Button variant='ghost' onClick={handleCopyLink}>
-                  <Icon icon='ph--link--regular' size={4} />
-                </NaturalToolbar.Button>
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content>
-                  <Tooltip.Arrow />
-                  {t('copy link label')}
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
+            <ToolbarButton icon='ph--link--regular' text={t('copy link label')} onClick={handleCopyLink} />
           )}
 
-          <Tooltip.Root>
-            <Tooltip.Trigger asChild>
-              <NaturalToolbar.Button variant='ghost' onClick={handleDeploy} disabled={pending}>
-                {pending ? (
-                  <Icon icon='ph--spinner--regular' size={4} classNames='animate-spin-slow' />
-                ) : (
-                  <Icon icon='ph--cloud-arrow-up--regular' size={4} />
-                )}
-              </NaturalToolbar.Button>
-            </Tooltip.Trigger>
-            <Tooltip.Portal>
-              <Tooltip.Content>
-                <Tooltip.Arrow />
-                {pending ? t('pending label') : t('deploy label')}
-              </Tooltip.Content>
-            </Tooltip.Portal>
-          </Tooltip.Root>
+          {onDeploy && (
+            <ToolbarButton
+              icon={pending ? 'ph--spinner-ball--regular' : 'ph--cloud-arrow-up--regular'}
+              classNames={[pending && 'animate-spin']}
+              text={pending ? t('pending label') : t('deploy label')}
+              onClick={handleDeploy}
+            />
+          )}
 
           <ViewSelector view={view} onViewChange={onViewChange} />
         </NaturalToolbar.Root>
@@ -134,7 +106,56 @@ export const Toolbar = ({
   );
 };
 
+const ToolbarButton = ({
+  icon,
+  text,
+  classNames,
+  disabled,
+  onClick,
+}: { icon: string; text: string } & Pick<ToolbarButtonProps, 'classNames' | 'disabled' | 'onClick'>) => {
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>
+        <NaturalToolbar.Button variant='ghost' classNames={classNames} disabled={disabled} onClick={onClick}>
+          <Icon icon={icon} size={4} />
+        </NaturalToolbar.Button>
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content>
+          <Tooltip.Arrow />
+          {text}
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  );
+};
+
 export type ViewType = 'editor' | 'split' | 'preview';
+
+export type TemplateSelectProps = {
+  templates?: Template[];
+  onTemplateSelect?: (id: string) => void;
+};
+
+export const TemplateSelect = ({ templates = [], onTemplateSelect }: TemplateSelectProps) => {
+  return (
+    <Select.Root value={''} onValueChange={onTemplateSelect}>
+      <Select.TriggerButton />
+      <Select.Portal>
+        <Select.Content>
+          <Select.Viewport>
+            <Select.Option value={''}>Template</Select.Option>
+            {templates.map(({ id, name }) => (
+              <Select.Option key={id} value={id}>
+                {name}
+              </Select.Option>
+            ))}
+          </Select.Viewport>
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
+  );
+};
 
 export type ViewSelectorProps = {
   view?: ViewType;
@@ -144,13 +165,13 @@ export type ViewSelectorProps = {
 export const ViewSelector = ({ view, onViewChange }: ViewSelectorProps) => {
   return (
     <ToggleGroup type='single' value={view} onValueChange={(value) => onViewChange?.(value as ViewType)}>
-      <ToggleGroupItem value='editor'>
+      <ToggleGroupItem value='editor' classNames='bg-transparent text-subdued'>
         <Icon icon='ph--code--regular' size={4} />
       </ToggleGroupItem>
-      <ToggleGroupItem value='split'>
+      <ToggleGroupItem value='split' classNames='bg-transparent text-subdued'>
         <Icon icon='ph--square-split-vertical--regular' size={4} />
       </ToggleGroupItem>
-      <ToggleGroupItem value='preview'>
+      <ToggleGroupItem value='preview' classNames='bg-transparent text-subdued'>
         <Icon icon='ph--eye--regular' size={4} />
       </ToggleGroupItem>
     </ToggleGroup>

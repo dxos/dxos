@@ -117,7 +117,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ScriptAction.CREATE: {
-              return { data: create(ScriptType, { source: create(TextType, { content: templates.echo }) }) };
+              return { data: create(ScriptType, { source: create(TextType, { content: templates[0].source }) }) };
             }
           }
         },

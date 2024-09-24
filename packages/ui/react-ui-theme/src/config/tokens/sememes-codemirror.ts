@@ -21,6 +21,10 @@ export const codeMirrorSememes = {
     light: ['primary', 400],
     dark: ['primary', 600],
   },
+  cmActiveLine: {
+    light: ['neutral', 200],
+    dark: ['neutral', 800],
+  },
   cmHighlight: {
     light: ['neutral', 950],
     dark: ['neutral', 50],

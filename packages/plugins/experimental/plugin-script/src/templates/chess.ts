@@ -5,6 +5,9 @@
 // @ts-ignore
 import { Chess } from 'https://esm.sh/chess.js@0.13.1';
 
+/**
+ * Plays a random move in a chess game.
+ */
 export default async ({
   event: {
     data: { request },

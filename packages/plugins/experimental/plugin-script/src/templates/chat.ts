@@ -5,6 +5,9 @@
 // @ts-ignore
 import { transformServerSentEvents } from 'https://esm.sh/@dxos/script-toolbox';
 
+/**
+ * Chatbot that answers questions based on the context data.
+ */
 export default async ({
   event: {
     data: { request },
@@ -21,9 +24,9 @@ export default async ({
   const answer = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
     stream: true,
     prompt: `
-     Using the context data only to answer the user's question. 
-     If you don't know the answer reply with "I don't know.".
-     
+     Using only the context data below to answer the user's question.
+     If you cannot answer the question from the provided content, then reply with "I don't know."
+
      CONTEXT:
      ${context}
 

@@ -95,7 +95,7 @@ export const defaultTheme: ThemeStyles = {
     paddingInline: 0,
   },
   '.cm-activeLine': {
-    background: 'var(--dx-hoverSurface)',
+    background: 'var(--dx-cmActiveLine)',
   },
 
   /**

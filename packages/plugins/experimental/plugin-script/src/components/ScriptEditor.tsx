@@ -17,7 +17,7 @@ import { createDataExtensions, listener } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
 import { DebugPanel } from './DebugPanel';
-import { Toolbar, type ViewType } from './Toolbar';
+import { type TemplateSelectProps, Toolbar, type ViewType } from './Toolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 import { Bundler } from '../bundler';
 import {
@@ -27,6 +27,7 @@ import {
   uploadWorkerFunction,
 } from '../edge';
 import { SCRIPT_PLUGIN } from '../meta';
+import { templates } from '../templates';
 import { FunctionType, type ScriptType } from '../types';
 
 export type ScriptEditorProps = ThemedClassName<{
@@ -92,6 +93,13 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
       log.catch(err);
     }
   }, [script.source]);
+
+  const handleTemplateChange: TemplateSelectProps['onTemplateSelect'] = (id) => {
+    const template = templates.find((template) => template.id === id);
+    if (template) {
+      script.source!.content = template.source;
+    }
+  };
 
   const handleDeploy = useCallback(async () => {
     if (!script.source || !identity || !space) {
@@ -160,9 +168,11 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
         functionUrl={functionUrl}
         error={error}
         view={view}
+        templates={templates}
         onDeploy={handleDeploy}
         onFormat={handleFormat}
         onViewChange={setView}
+        onTemplateSelect={handleTemplateChange}
       />
 
       {view !== 'preview' && (

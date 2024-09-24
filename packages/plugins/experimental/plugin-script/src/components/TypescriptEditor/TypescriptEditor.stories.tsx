@@ -23,7 +23,7 @@ import { templates } from '../../templates';
 // TODO(burdon): react-buddy for storybook?
 
 const Story = () => {
-  const object = useMemo(() => createEchoObject({ content: templates.echo }), []);
+  const object = useMemo(() => createEchoObject({ content: templates[0].source }), []);
   const initialValue = useMemo(() => object.content, [object]);
   const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
   const extensions = useMemo(() => [createDataExtensions({ id: object.id, text: accessor })], [object.id, accessor]);
