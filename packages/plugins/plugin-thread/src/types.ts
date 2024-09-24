@@ -31,7 +31,7 @@ export enum ThreadAction {
 export type ThreadProvides<T> = {
   thread: {
     predicate: (obj: any) => obj is T;
-    createSort: (obj: T) => (anchorA: string, anchorB: string) => number;
+    createSort: (obj: T) => (anchorA: string | undefined, anchorB: string | undefined) => number;
   };
 };
 

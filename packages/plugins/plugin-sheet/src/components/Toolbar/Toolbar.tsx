@@ -23,22 +23,31 @@ import {
   type ThemedClassName,
   useTranslation,
 } from '@dxos/react-ui';
+import { nonNullable } from '@dxos/util';
 
 import { ToolbarButton, ToolbarSeparator, ToolbarToggleButton } from './common';
 import { SHEET_PLUGIN } from '../../meta';
+import { addressToIndex } from '../../model';
 import { type Formatting } from '../../types';
+import { useSheetContext } from '../Sheet/sheet-context';
 
 //
 // Root
 //
 
-export type ToolbarActionType = 'clear' | 'highlight' | 'left' | 'center' | 'right' | 'date' | 'currency';
+export type ToolbarAction =
+  | { type: 'clear' }
+  | { type: 'highlight' }
+  | { type: 'left' }
+  | { type: 'center' }
+  | { type: 'right' }
+  | { type: 'date' }
+  | { type: 'currency' }
+  | { type: 'comment'; anchor: string; cellContent?: string };
 
-export type ToolbarAction = {
-  type: ToolbarActionType;
-};
+export type ToolbarActionType = ToolbarAction['type'];
 
-export type ToolbarActionHandler = ({ type }: ToolbarAction) => void;
+export type ToolbarActionHandler = (action: ToolbarAction) => void;
 
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
@@ -96,7 +105,7 @@ const Format = () => {
           Icon={Icon}
           // disabled={state?.blockType === 'codeblock'}
           // onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
-          onClick={() => onAction?.({ type })}
+          onClick={() => onAction?.({ type: type as Exclude<typeof type, 'comment'> })}
         >
           {t(`toolbar ${type} label`)}
         </ToolbarToggleButton>
@@ -127,7 +136,7 @@ const Alignment = () => {
           Icon={Icon}
           // disabled={state?.blockType === 'codeblock'}
           // onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
-          onClick={() => onAction?.({ type })}
+          onClick={() => onAction?.({ type: type as Exclude<typeof type, 'comment'> })}
         >
           {t(`toolbar ${type} label`)}
         </ToolbarToggleButton>
@@ -157,7 +166,7 @@ const Styles = () => {
           Icon={Icon}
           // disabled={state?.blockType === 'codeblock'}
           // onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
-          onClick={() => onAction?.({ type })}
+          onClick={() => onAction?.({ type: type as Exclude<typeof type, 'comment'> })}
         >
           {t(`toolbar ${type} label`)}
         </ToolbarToggleButton>
@@ -170,18 +179,51 @@ const Styles = () => {
 // Actions
 //
 
+// TODO(Zan): Instead of taking props, can we access the state from sheet context?
 const Actions = () => {
-  // const { onAction } = useToolbarContext('Actions');
+  const { onAction } = useToolbarContext('Actions');
+  const { cursor, range, model } = useSheetContext();
   const { t } = useTranslation(SHEET_PLUGIN);
+
+  const overlapsCommentAnchor = (model.sheet.threads ?? [])
+    .filter(nonNullable)
+    .filter((thread) => thread.status !== 'resolved')
+    .some((thread) => {
+      if (!cursor) {
+        return false;
+      }
+      return addressToIndex(model.sheet, cursor) === thread.anchor;
+    });
+
+  const hasCursor = !!cursor;
+  const cursorOnly = hasCursor && !range && !overlapsCommentAnchor;
+
+  const tooltipLabelKey = !hasCursor
+    ? 'no cursor label'
+    : overlapsCommentAnchor
+      ? 'selection overlaps existing comment label'
+      : range
+        ? 'comment ranges not supported label'
+        : 'comment label';
+
   return (
     <ToolbarButton
       value='comment'
       Icon={ChatText}
       data-testid='editor.toolbar.comment'
-      // onClick={() => onAction?.({ type: 'comment' })}
-      // disabled={!state || state.comment || !state.selection}
+      onClick={() => {
+        if (!cursor) {
+          return;
+        }
+        return onAction?.({
+          type: 'comment',
+          anchor: addressToIndex(model.sheet, cursor),
+          cellContent: model.getCellText(cursor),
+        });
+      }}
+      disabled={!cursorOnly || overlapsCommentAnchor}
     >
-      {t('comment label')}
+      {t(tooltipLabelKey)}
     </ToolbarButton>
   );
 };

@@ -5,13 +5,7 @@
 import { type IconProps, GridNine } from '@phosphor-icons/react';
 import React from 'react';
 
-import {
-  NavigationAction,
-  parseIntentPlugin,
-  resolvePlugin,
-  type PluginDefinition,
-  type LayoutCoordinate,
-} from '@dxos/app-framework';
+import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -30,7 +24,7 @@ import {
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './components/ComputeGraph/edge-function';
 import { ComputeGraphContextProvider } from './components/ComputeGraph/graph-context';
 import meta, { SHEET_PLUGIN } from './meta';
-import { SheetModel } from './model';
+import { compareIndexPositions, SheetModel } from './model';
 import translations from './translations';
 import { createSheet, SheetAction, type SheetPluginProvides, SheetType } from './types';
 
@@ -138,6 +132,11 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
           },
         ],
       },
+      thread: {
+        predicate: (data) => data instanceof SheetType,
+        createSort: (sheet) => (anchorA, anchorB) =>
+          !anchorA || !anchorB ? 0 : compareIndexPositions(sheet, anchorA, anchorB),
+      },
       surface: {
         component: ({ data, role = 'never' }) => {
           // TODO(burdon): Standardize wrapper (with room for toolbar).
@@ -147,13 +146,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
               case 'article':
               case 'section': {
                 return (
-                  <SheetContainer
-                    sheet={data.object}
-                    space={space}
-                    role={role}
-                    coordinate={data.coordinate as LayoutCoordinate}
-                    remoteFunctionUrl={remoteFunctionUrl}
-                  />
+                  <SheetContainer sheet={data.object} space={space} role={role} remoteFunctionUrl={remoteFunctionUrl} />
                 );
               }
             }

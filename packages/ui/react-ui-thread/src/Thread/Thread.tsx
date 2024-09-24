@@ -3,7 +3,7 @@
 //
 
 import { CaretDoubleRight, Spinner } from '@phosphor-icons/react';
-import React, { type ComponentProps, type ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { hoverableControlItem, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
@@ -11,8 +11,7 @@ import { hoverableControlItem, hoverableFocusedWithinControls, mx } from '@dxos/
 import { translationKey } from '../translations';
 import type { ThreadEntity } from '../types';
 
-export type ThreadProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
-  ThreadEntity & { current?: boolean | ComponentProps<'div'>['aria-current'] };
+export type ThreadProps = ThemedClassName<ComponentPropsWithRef<'div'>> & ThreadEntity & { current?: boolean };
 
 export const threadLayout = 'is-full place-self-start grid grid-cols-[var(--rail-size)_1fr]';
 
@@ -27,7 +26,7 @@ export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
         className={mx(
           threadLayout,
           hoverableFocusedWithinControls,
-          'plb-1.5 bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs first:border-bs-0 border-be',
+          'plb-1.5 bg-[var(--surface-bg)] border-separator first:border-bs-0 border-be',
           'attention attention-within attention-current [--controls-opacity:0]',
           classNames,
         )}
