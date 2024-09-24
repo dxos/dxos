@@ -41,16 +41,21 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   const triggers = useQuery(space, Filter.schema(FunctionTrigger));
   useEffect(() => {
     setTimeout(async () => {
-      console.log('triggers', triggers);
       // Mark-and-sweep removing disabled triggers.
       await registerTriggersMutex.executeSynchronized(async () => {
         const deprecated = new Set(Array.from(registry.keys()));
+        console.log('triggers', {
+          deprecated,
+          all: triggers.map((t) => t.id),
+          enabled: triggers.filter((t) => t.enabled).map((t) => t.id),
+        });
         for (const trigger of triggers) {
           if (trigger.enabled) {
             if (registry.has(trigger.id)) {
               deprecated.delete(trigger.id);
-              break;
+              continue;
             }
+            console.log('activating trigger', trigger.id);
 
             const ctx = new Context();
             registry.set(trigger.id, ctx);
@@ -75,7 +80,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
         for (const id of deprecated) {
           const ctx = registry.get(id);
           if (ctx) {
-            void ctx.dispose();
+            await ctx.dispose();
             registry.delete(id);
           }
         }
