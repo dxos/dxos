@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 import { DynamicSchema, getTypename, StoredSchema } from '@dxos/echo-schema';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 
+import { useStabilizedObject } from './useStabilizedObject';
 import { type MapType, type MapMarker } from '../types';
 
 /**
@@ -16,24 +17,24 @@ export const useMarkers = (map: MapType): MapMarker[] => {
   const space = getSpace(map);
 
   // TODO(burdon): Configure to select type.
-  const schemas = useQuery(
+  const latLongSchemas = useQuery(
     space,
     Filter.schema(StoredSchema, (schema) => schema && hasLocation(schema)),
   );
 
-  const objects = useQuery(
+  const rows = useQuery(
     space,
     (obj) => {
-      const schemaNames = schemas.map((schema) => schema.id);
+      const schemaNames = latLongSchemas.map((schema) => schema.id);
       const typename = getTypename(obj);
       return typename ? schemaNames.includes(typename) : false;
     },
     undefined,
-    [schemas],
+    [latLongSchemas],
   );
 
   const markers = useMemo(() => {
-    return objects
+    return rows
       .filter((row) => typeof row.latitude === 'number' && typeof row.longitude === 'number')
       .map((row) => ({
         id: row.id,
@@ -43,9 +44,17 @@ export const useMarkers = (map: MapType): MapMarker[] => {
           lng: row.longitude,
         },
       }));
-  }, [JSON.stringify(objects.map((obj) => obj.id))]); // TODO(seagreen): Hack.
+  }, [rows]);
 
-  return markers;
+  const markersStabilized = useStabilizedObject(markers, (oldMarkers: MapMarker[], newMarkers: MapMarker[]) => {
+    if (oldMarkers.length !== newMarkers.length) {
+      return false;
+    }
+    const newMarkerSet = new Set(newMarkers.map((marker) => marker.id));
+    return oldMarkers.every((marker) => newMarkerSet.has(marker.id));
+  });
+
+  return markersStabilized;
 };
 
 const hasLocation = (schema: StoredSchema): boolean => {
