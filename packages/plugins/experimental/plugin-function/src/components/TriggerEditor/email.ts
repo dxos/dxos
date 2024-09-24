@@ -11,11 +11,7 @@ import { type Space, Filter } from '@dxos/react-client/echo';
 
 export const SOURCE_ID = 'hub.dxos.network/mailbox';
 
-export const handleEmail = async (
-  space: Space,
-  data: any,
-  bodyFooterProvider: (body: string) => Promise<string | undefined>,
-) => {
+export const handleEmail = async (space: Space, data: any) => {
   const { messages } = data;
 
   // Create mailbox if doesn't exist.
@@ -28,20 +24,13 @@ export const handleEmail = async (
   for (const message of messages) {
     let object = findObjectWithForeignKey(objects, { source: SOURCE_ID, id: String(message.id) });
     if (!object) {
-      let footer = '';
-      try {
-        const text = await bodyFooterProvider(message.body);
-        footer = text ? `\n-----------\n\n${text}` : '';
-      } catch (err: any) {
-        log.catch(err);
-      }
       object = space.db.add(
         create(
           MessageType,
           {
             sender: { email: message.from },
             timestamp: new Date(message.created).toISOString(),
-            text: `${message.body}${footer}`,
+            text: message.body,
             properties: {
               subject: message.subject,
               to: [{ email: message.to }],

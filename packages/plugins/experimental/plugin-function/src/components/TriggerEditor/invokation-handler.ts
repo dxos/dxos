@@ -36,7 +36,7 @@ const callFunction = async (funcUrl: string, trigger: any, data: any) => {
     log.info('response', { status: response.status, body: data });
     if (response.status === 409) {
       retryCount++;
-      await sleep(RETRY_DELAY);
+      await sleep(RETRY_DELAY * Math.min(retryCount, 2));
       continue;
     }
 
@@ -55,15 +55,17 @@ export const invokeFunction = async (client: Client, space: Space, trigger: Func
       log.warn('function not deployed', { scriptId: script.id, name: script.name });
       return 404;
     }
+
     const funcUrl = getFunctionUrl(client.config, funcSlug, space.id);
-    const triggerData: AnyObjectData = getObjectCore(trigger).toPlainObject();
-    if (trigger.spec.type === 'websocket') {
-      return handleEmail(space, data.data, async (body) => {
-        return (await callFunction(funcUrl, triggerData, body)).data;
-      });
-    } else {
-      return (await callFunction(funcUrl, triggerData, data)).status;
-    }
+    const triggerData: AnyObjectData = {
+      ...getObjectCore(trigger).toPlainObject(),
+      // TODO: Remove when functions can query by DXN.
+      promptId: trigger.meta?.prompt?.id,
+    };
+    // TODO: Remove when functions can add objects and easily modify collections (push, splice).
+    return trigger.spec.type === 'websocket'
+      ? handleEmail(space, data.data)
+      : (await callFunction(funcUrl, triggerData, data)).status;
   } catch (err) {
     return 400;
   }
