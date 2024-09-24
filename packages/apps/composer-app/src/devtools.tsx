@@ -4,34 +4,13 @@
 
 import '@dxos-theme';
 
-import React, { StrictMode, useEffect, useState } from 'react';
+import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Devtools } from '@dxos/devtools';
+import { DevtoolsApp } from '@dxos/devtools';
 import { initializeAppObservability } from '@dxos/observability';
-import { type Client } from '@dxos/react-client';
-import { type Provider } from '@dxos/util';
 
 const namespace = 'devtools';
-
-const App = ({ clientProvider }: { clientProvider: Provider<Promise<Client>> }) => {
-  const [client, setClient] = useState<Client>();
-
-  useEffect(() => {
-    const timeout = setTimeout(async () => {
-      const client = await clientProvider();
-      setClient(client);
-    });
-
-    return () => clearTimeout(timeout);
-  }, []);
-
-  if (!client) {
-    return null;
-  }
-
-  return <Devtools client={client} namespace={namespace} />;
-};
 
 const main = async () => {
   const enter =
@@ -42,23 +21,16 @@ const main = async () => {
     return;
   }
 
-  const { createClientServices, Client, Remote, Config, Defaults } = await import('@dxos/react-client');
+  const { Remote, Config, Defaults } = await import('@dxos/react-client');
 
-  void initializeAppObservability({ namespace, config: new Config(Defaults()) });
-
-  const clientProvider = async () => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const target = searchParams.get('target');
-    const config = new Config(target ? Remote(target) : {}, Defaults());
-    const services = await createClientServices(config);
-    const client = new Client({ config, services });
-    await client.initialize();
-    return client;
-  };
+  const searchParams = new URLSearchParams(window.location.search);
+  const target = searchParams.get('target');
+  const config = new Config(target ? Remote(target) : {}, Defaults());
+  void initializeAppObservability({ namespace, config });
 
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <App clientProvider={clientProvider} />
+      <DevtoolsApp config={config} />
     </StrictMode>,
   );
 };

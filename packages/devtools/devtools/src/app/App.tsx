@@ -2,40 +2,47 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { log } from '@dxos/log';
-import { type Observability, initializeAppObservability } from '@dxos/observability';
-import { createClientServices, Client, Config, Defaults, Remote } from '@dxos/react-client';
-import { useAsyncEffect } from '@dxos/react-hooks';
+import { ClientProvider, type ClientProviderProps } from '@dxos/react-client';
+import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 
 import { Devtools } from './Devtools';
-import { namespace } from '../hooks';
+import { ErrorBoundary } from '../components';
 
-export const App = () => {
-  const [client, setClient] = useState<Client>();
-  const [observability, setObservability] = useState<Observability>();
-  useAsyncEffect(async () => {
-    try {
-      const searchParams = new URLSearchParams(window.location.search);
-      const target = searchParams.get('target') ?? undefined;
-      // TODO(nf): read wsAuthToken from localStorage?
-      const config = new Config(Remote(target, searchParams.get('wsAuthToken') ?? undefined), Defaults());
-      const services = await createClientServices(config);
-      const client = new Client({ config, services });
-      await client.initialize();
-      setClient(client);
-      const observability = await initializeAppObservability({ namespace, config: new Config(Defaults()) });
-      setObservability(observability);
-    } catch (err: any) {
-      // TODO(burdon): Global error handler (e.g., if socket error).
-      log.catch(err);
-    }
+// TODO(burdon): Factor out. See copy paste in testbench-app.
+const useThemeWatcher = () => {
+  const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
+  const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
+    document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');
+    setThemeMode(prefersDark ? 'dark' : 'light');
+  };
+
+  useEffect(() => {
+    const modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setTheme({ matches: modeQuery.matches });
+    modeQuery.addEventListener('change', setTheme);
+    return () => modeQuery.removeEventListener('change', setTheme);
   }, []);
 
-  if (!client) {
-    return null;
-  }
-
-  return <Devtools client={client} namespace={namespace} observability={observability} />;
+  return themeMode;
 };
+
+export const App = (props: ClientProviderProps) => {
+  const themeMode = useThemeWatcher();
+
+  return (
+    <ThemeProvider {...{ tx: defaultTx, themeMode }}>
+      <DensityProvider density='fine'>
+        <ErrorBoundary>
+          <ClientProvider {...props}>
+            <Devtools />
+          </ClientProvider>
+        </ErrorBoundary>
+      </DensityProvider>
+    </ThemeProvider>
+  );
+};
+
+export default App;

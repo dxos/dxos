@@ -15,7 +15,7 @@ import React, {
 import { Client, type ClientOptions, type ClientServicesProvider, SystemStatus } from '@dxos/client';
 import { type Config } from '@dxos/config';
 import { type S } from '@dxos/echo-schema';
-import { registerSignalFactory } from '@dxos/echo-signals/react';
+import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { useControlledValue } from '@dxos/react-hooks';
 import { getAsyncProviderValue, type MaybePromise, type Provider } from '@dxos/util';
@@ -31,11 +31,6 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
     children?: ReactNode;
 
     /**
-     * Config object or async provider.
-     */
-    config?: Config | Provider<Promise<Config>>;
-
-    /**
      * Client object or async provider to enable to caller to do custom initialization.
      *
      * Most apps won't need this.
@@ -43,8 +38,14 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
     client?: Client | Provider<Promise<Client>>;
 
     /**
+     * Config object or async provider.
+     * NOTE: If a `client` is provided then `config` is ignored.
+     */
+    config?: Config | Provider<Promise<Config>>;
+
+    /**
      * Callback to enable the caller to create a custom ClientServicesProvider.
-     * NOTE: If a `client` is provided then `services` are ignored.
+     * NOTE: If a `client` is provided then `services` is ignored.
      *
      * Most apps won't need this.
      */
@@ -64,7 +65,7 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
      * Set to false to stop default signal factory from being registered.
      */
     // TODO(burdon): Requires comment describing why signals are required.
-    registerSignalFactory?: boolean;
+    registerSignalRuntime?: boolean;
 
     /**
      * Post initialization hook to enable to caller to do custom initialization.
@@ -88,7 +89,7 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
       types,
       status: controlledStatus,
       fallback: Fallback = () => null,
-      registerSignalFactory: _registerSignalFactory = true,
+      registerSignalRuntime: _registerSignalRuntime = true,
       onInitialized,
       ...options
     },
@@ -97,7 +98,7 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
     useMemo(() => {
       // TODO(wittjosiah): Ideally this should be imported asynchronously because it is optional.
       //   Unfortunately, async import seemed to break signals React instrumentation.
-      _registerSignalFactory && registerSignalFactory();
+      _registerSignalRuntime && registerSignalRuntime();
     }, []);
 
     // TODO(burdon): Comment about when this happens and how it's caught (ErrorBoundary?)

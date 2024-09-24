@@ -4,14 +4,13 @@
 
 import { act, renderHook } from '@testing-library/react';
 import expect from 'expect';
-import React from 'react';
 
 import { waitForCondition } from '@dxos/async';
-import { Client, Config, SystemStatus, fromHost } from '@dxos/client';
+import { Config, SystemStatus } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
-import { ClientProvider } from './ClientProvider';
 import { useConfig } from './useConfig';
+import { createClient, createClientContextProvider } from '../testing/util';
 
 describe('Config hook', () => {
   const render = () => useConfig();
@@ -22,9 +21,8 @@ describe('Config hook', () => {
   });
 
   test('should return default client config when no config is passed in a context', async () => {
-    const client = new Client({ services: fromHost() });
-    await client.initialize();
-    const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
+    const { client } = await createClient();
+    const wrapper = await createClientContextProvider(client);
     const { result } = renderHook(render, { wrapper });
     await act(async () => {
       await waitForCondition({ condition: () => client.status.get() === SystemStatus.ACTIVE });
@@ -43,9 +41,8 @@ describe('Config hook', () => {
         },
       },
     });
-    const client = new Client({ config, services: fromHost(config) });
-    await client.initialize();
-    const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
+    const { client } = await createClient({ config });
+    const wrapper = await createClientContextProvider(client);
     const { result } = renderHook(render, { wrapper });
     await act(async () => {
       await waitForCondition({ condition: () => client.status.get() === SystemStatus.ACTIVE });

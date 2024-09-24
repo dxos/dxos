@@ -99,11 +99,7 @@ export const ClientPlugin = ({
 
       return {
         client,
-        context: ({ children }) => {
-          // const status = useClientStatus(client);
-          // return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
-          return <ClientProvider client={client}>{children}</ClientProvider>;
-        },
+        context: ({ children }) => <ClientProvider client={client}>{children}</ClientProvider>,
       };
     },
     ready: async (plugins) => {

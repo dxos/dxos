@@ -4,17 +4,18 @@
 
 import React from 'react';
 
-import { Client, fromHost } from '@dxos/client';
+import { Client, type Config, fromHost } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 
 import { ClientContext, ClientProvider } from '../client';
 
 // TODO(burdon): Reconcile with initializeClient.
 export const createClient = async ({
+  config,
   createIdentity,
   createSpace,
-}: { createIdentity?: boolean; createSpace?: boolean } = {}) => {
-  const client = new Client({ services: fromHost() });
+}: { config?: Config; createIdentity?: boolean; createSpace?: boolean } = {}) => {
+  const client = new Client({ config, services: fromHost(config) });
   await client.initialize();
   if (createIdentity) {
     await client.halo.createIdentity();
