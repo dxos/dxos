@@ -8,7 +8,6 @@ import React, {
   type ReactNode,
   useEffect,
   useImperativeHandle,
-  useMemo,
   useState,
 } from 'react';
 
@@ -33,26 +32,28 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
     /**
      * Client object or async provider to enable to caller to do custom initialization.
      *
-     * Most apps won't need this.
+     * NOTE: For advanced use cases only.
      */
     client?: Client | Provider<Promise<Client>>;
 
     /**
      * Config object or async provider.
+     *
      * NOTE: If a `client` is provided then `config` is ignored.
      */
     config?: Config | Provider<Promise<Config>>;
 
     /**
      * Callback to enable the caller to create a custom ClientServicesProvider.
-     * NOTE: If a `client` is provided then `services` is ignored.
      *
-     * Most apps won't need this.
+     * NOTE: If a `client` is provided then `services` is ignored.
      */
     services?: ClientServicesProvider | ((config?: Config) => MaybePromise<ClientServicesProvider>);
 
     /**
      * List of schema to register.
+     *
+     * NOTE: If a `client` is provided then `types` will not be added until after the children are first rendered.
      */
     types?: S.Schema<any>[];
 
@@ -66,6 +67,11 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
      */
     // TODO(burdon): Requires comment describing why signals are required.
     registerSignalRuntime?: boolean;
+
+    /**
+     * Skip the DXOS banner print.
+     */
+    disableBanner?: boolean;
 
     /**
      * Post initialization hook to enable to caller to do custom initialization.
@@ -90,24 +96,28 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
       status: controlledStatus,
       fallback: Fallback = () => null,
       registerSignalRuntime: _registerSignalRuntime = true,
+      disableBanner,
       onInitialized,
       ...options
     },
     forwardedRef,
   ) => {
-    useMemo(() => {
+    useEffect(() => {
       // TODO(wittjosiah): Ideally this should be imported asynchronously because it is optional.
       //   Unfortunately, async import seemed to break signals React instrumentation.
       _registerSignalRuntime && registerSignalRuntime();
-    }, []);
+    }, [_registerSignalRuntime]);
 
-    // TODO(burdon): Comment about when this happens and how it's caught (ErrorBoundary?)
+    // The client is initialized asynchronously.
+    // If an error occurs during initialization, it is caught and the state is set.
+    // This allows the error to be thrown in the render method.
+    // The assumption is that a client initialization error is fatal to the app.
+    // This error will be caught by the nearest error boundary.
     const [error, setError] = useState();
     if (error) {
       throw error;
     }
 
-    // TODO(burdon): If already initialized then adding types may happen after rendering.
     const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
 
     // Provide external access.
@@ -130,12 +140,10 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
         if (!client.initialized) {
           await client.initialize().catch(setError);
           log('client ready');
+          types && client.addTypes(types);
           await onInitialized?.(client);
           log('initialization complete');
-        }
-
-        // TODO(burdon): This might get skipped if client set directly.
-        if (types) {
+        } else if (types) {
           client.addTypes(types);
         }
 
@@ -144,9 +152,7 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
         // TODO(burdon): Remove since set by hook above?
         setStatus(client.status.get() ?? SystemStatus.ACTIVE);
 
-        // TODO(burdon): Make dynamic.
-        const showBanner = false;
-        if (showBanner) {
+        if (!disableBanner) {
           printBanner(client);
         }
       };
@@ -179,7 +185,7 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
           })
           .catch((err) => log.catch(err));
       };
-    }, [configProvider, clientProvider, servicesProvider]);
+    }, [configProvider, clientProvider, servicesProvider, disableBanner]);
 
     if (!client?.initialized || status !== SystemStatus.ACTIVE) {
       return <Fallback client={client} status={status} />;
