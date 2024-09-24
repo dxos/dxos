@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline/light';
@@ -14,12 +13,14 @@ import {
 } from '@dxos/echo-pipeline/testing';
 import { create, Expando } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
+import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
-import { describe, test } from '@dxos/test';
 import { deferAsync } from '@dxos/util';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
+
+registerSignalRuntime();
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -125,7 +126,7 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
-  test('references are loaded lazily nad receive signal notifications', async () => {
+  test('references are loaded lazily and receive signal notifications', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using peer = await builder.createPeer();
 
@@ -310,12 +311,19 @@ describe('Integration tests', () => {
 
       await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
 
-      await waitForExpect(async () => {
-        const state = await db2.coreDatabase.getSyncState();
+      await expect
+        .poll(async () => {
+          const state = await db2.coreDatabase.getSyncState();
+          return state.peers!.length;
+        })
+        .toBe(1);
 
-        expect(state.peers!.length).to.eq(1);
-        expect(state.peers![0].documentsToReconcile).to.eq(0);
-      });
+      await expect
+        .poll(async () => {
+          const state = await db2.coreDatabase.getSyncState();
+          return state.peers![0].documentsToReconcile;
+        })
+        .toEqual(0);
     }
   });
 });

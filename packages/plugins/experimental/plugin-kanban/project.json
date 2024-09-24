@@ -34,8 +34,7 @@
         "configDir": "tools/stories/.storybook",
         "stories": []
       }
-    },
-    "test": {}
+    }
   },
   "implicitDependencies": [
     "esbuild"

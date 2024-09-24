@@ -17,7 +17,7 @@
       }
     },
     "lint": {},
-    "vitest": {
+    "test": {
       "dependsOn": [
         "build"
       ]

@@ -3,12 +3,12 @@
 //
 
 import { ulid } from 'ulidx';
+import { describe, test } from 'vitest';
 
 import { log } from '@dxos/log';
-import { describe, test } from '@dxos/test';
 
 describe('Object', () => {
-  test('Ulid stress test', () => {
+  test.skip('Ulid stress test', () => {
     const amountToGenerate = 10_000;
 
     const generators = [ulid];
@@ -21,5 +21,5 @@ describe('Object', () => {
       const end = Date.now();
       log.info(`Generated ${amountToGenerate} ULIDs in ${end - start}ms`);
     }
-  }).tag('stress');
+  });
 });

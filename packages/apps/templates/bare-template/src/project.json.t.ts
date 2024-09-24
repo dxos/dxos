@@ -43,21 +43,6 @@ export default template.define.text({
             buildTarget: `${name}:bundle`,
           },
         },
-        'serve-with-vault': {
-          dependsOn: ['^build'],
-          executor: 'nx:run-commands',
-          options: {
-            commands: [
-              {
-                command: 'nx serve halo-app',
-              },
-              {
-                command: `nx serve ${name}`,
-              },
-            ],
-            parallel: true,
-          },
-        },
         ...(storybook
           ? {
               storybook: {

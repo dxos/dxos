@@ -13,6 +13,9 @@
     },
     {
       "path": "../node-std"
+    },
+    {
+      "path": "../test-utils"
     }
   ]
 }

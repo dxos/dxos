@@ -566,7 +566,8 @@ export class Toolbox {
         }
         if (isNode) {
           (packageJson.exports[exportName] as any).node = {
-            default: `./dist/lib/node/${distSlug}.cjs`,
+            require: `./dist/lib/node/${distSlug}.cjs`,
+            default: `./dist/lib/node-esm/${distSlug}.mjs`,
           };
         }
         (packageJson.exports[exportName] as any).types = `./dist/types/src/${distSlug}.d.ts`;
@@ -577,7 +578,7 @@ export class Toolbox {
         }
       }
 
-      packageJson.exports = sortJson(packageJson.exports, { depth: -1 });
+      packageJson.exports = sortJson(packageJson.exports, { depth: 1 });
       packageJson.typesVersions['*'] = sortJson(packageJson.typesVersions['*'], { depth: -1 });
 
       if (typeof packageJson.browser === 'object' && packageJson.browser !== null) {

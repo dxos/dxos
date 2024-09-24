@@ -5,8 +5,7 @@
 // @ts-ignore
 import { testTree } from '@lezer/generator/test';
 import { parser } from '@lezer/markdown';
-
-import { describe, test } from '@dxos/test';
+import { describe, test } from 'vitest';
 
 describe('parser', () => {
   // test.only('list-mark', () => {

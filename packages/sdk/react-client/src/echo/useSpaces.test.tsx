@@ -3,9 +3,7 @@
 //
 
 import { act, renderHook } from '@testing-library/react';
-import { expect } from 'chai';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 import { useSpace, useSpaces } from './useSpaces';
 import { createClient, createClientContextProvider } from '../testing/util';
