@@ -318,8 +318,12 @@ describe('Integration tests', () => {
         })
         .toBe(1);
 
-      const state = await db2.coreDatabase.getSyncState();
-      expect(state.peers![0].documentsToReconcile).toBe(0);
+      await expect
+        .poll(async () => {
+          const state = await db2.coreDatabase.getSyncState();
+          return state.peers![0].documentsToReconcile;
+        })
+        .toEqual(0);
     }
   });
 });
