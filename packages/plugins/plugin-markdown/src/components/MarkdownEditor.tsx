@@ -3,7 +3,7 @@
 //
 
 import { openSearchPanel } from '@codemirror/search';
-import { EditorView } from '@codemirror/view';
+import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 
 import {
@@ -11,7 +11,6 @@ import {
   LayoutAction,
   type LayoutCoordinate,
   useResolvePlugin,
-  useIntentResolver,
   parseLayoutPlugin,
   useIntentDispatcher,
 } from '@dxos/app-framework';
@@ -36,16 +35,16 @@ import {
   useTextEditor,
   editorContent,
   editorGutter,
-  Cursor,
-  setSelection,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
+import { useSelectCurrentThread } from '../hooks';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownPluginState } from '../types';
 
+// TODO(Zan): Factor into a shared location.
 const attentionFragment = mx(
   'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
   'group-focus-within/editor:border-separator',
@@ -145,38 +144,8 @@ export const MarkdownEditor = ({
     [id, initialValue, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
   );
 
-  // Focus the space that references the comment.
-  const handleScrollIntoView = useCallback(
-    ({ action, data }: { action: string; data?: any }) => {
-      if (action === LayoutAction.SCROLL_INTO_VIEW) {
-        if (editorView && data?.id === id && data?.cursor) {
-          // TODO(burdon): We need typed intents.
-          const range = Cursor.getRangeFromCursor(editorView.state, data.cursor);
-          if (range) {
-            const selection = editorView.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
-            const effects = [
-              // NOTE: This does not use the DOM scrollIntoView function.
-              EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 }),
-            ];
-            if (selection) {
-              // Update the editor selection to get bi-directional highlighting.
-              effects.push(setSelection.of({ current: id }));
-            }
-
-            editorView.dispatch({
-              effects,
-              selection: selection ? { anchor: range.from } : undefined,
-            });
-          }
-        }
-      }
-    },
-    [id, editorView],
-  );
-
-  useIntentResolver(MARKDOWN_PLUGIN, handleScrollIntoView);
-
   useTest(editorView);
+  useSelectCurrentThread(editorView, id);
 
   // Toolbar handler.
   const handleToolbarAction = useActionHandler(editorView);
