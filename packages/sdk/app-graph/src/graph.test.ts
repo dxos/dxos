@@ -3,14 +3,15 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalRuntime } from '@dxos/echo-signals';
-import { describe, test } from '@dxos/test';
 
 import { Graph, ROOT_ID, ROOT_TYPE, getGraph } from './graph';
 import { type Node, type NodeFilter } from './node';
+
+registerSignalRuntime();
 
 const longestPaths = new Map<string, string[]>();
 
@@ -249,7 +250,6 @@ describe('Graph', () => {
   });
 
   test('waitForNode', async () => {
-    registerSignalRuntime();
     const graph = new Graph();
     const promise = graph.waitForNode('test1');
     graph._addNodes([{ id: 'test1', type: 'test', data: 1 }]);
@@ -259,7 +259,6 @@ describe('Graph', () => {
   });
 
   test('updates are constrained on data', () => {
-    registerSignalRuntime();
     const graph = new Graph();
     const [node1] = graph._addNodes([{ id: 'test1', type: 'test', data: 1 }]);
     using updates = updateCounter(() => {
@@ -275,7 +274,6 @@ describe('Graph', () => {
   });
 
   test('updates are constrained on properties', () => {
-    registerSignalRuntime();
     const graph = new Graph();
     const [node1] = graph._addNodes([{ id: 'test1', type: 'test', properties: { value: 1 } }]);
     using updates = updateCounter(() => {
@@ -289,7 +287,6 @@ describe('Graph', () => {
   });
 
   test('updates are constrained on connected nodes', () => {
-    registerSignalRuntime();
     const graph = new Graph();
     const [node1] = graph._addNodes([{ id: 'test1', type: 'test', properties: { value: 1 } }]);
     using updates = updateCounter(() => {
@@ -469,7 +466,6 @@ describe('Graph', () => {
     });
 
     test('traversing the graph subscribes to changes', () => {
-      registerSignalRuntime();
       const graph = new Graph();
 
       graph._addNodes([
@@ -542,7 +538,6 @@ describe('Graph', () => {
     });
 
     test('traversal can be reactive', async () => {
-      registerSignalRuntime();
       const graph = new Graph();
       const latest: Record<string, any> = {};
       const updates: Record<string, number> = {};

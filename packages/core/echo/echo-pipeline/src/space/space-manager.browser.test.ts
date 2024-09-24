@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-// @dxos/test platform=browser
+import { describe, test, onTestFinished } from 'vitest';
 
 import { createStorage } from '@dxos/random-access-storage';
-import { describe, test, afterTest } from '@dxos/test';
 
 import { TestAgentBuilder, WebsocketNetworkManagerProvider } from '../testing';
 
@@ -20,7 +19,9 @@ describe('space-manager', () => {
       storage: createStorage(),
       networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL),
     });
-    afterTest(async () => await builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     const peer1 = await builder.createPeer();
     const spaceManager1 = peer1.spaceManager;
@@ -30,8 +31,8 @@ describe('space-manager', () => {
     const spaceManager2 = peer2.spaceManager;
     await spaceManager2.open();
 
-    afterTest(() => spaceManager1.close());
-    afterTest(() => spaceManager2.close());
+    onTestFinished(() => spaceManager1.close());
+    onTestFinished(() => spaceManager2.close());
 
     // const space1 = await spaceManager1.createSpace();
     // expect(space1.isOpen).to.be.true;

@@ -20,14 +20,9 @@
       }
     },
     "lint": {},
-    "test": {
-      "ciEnvironments": [
-        "nodejs"
-      ]
-    }
+    "test": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "test"
+    "esbuild"
   ]
 }

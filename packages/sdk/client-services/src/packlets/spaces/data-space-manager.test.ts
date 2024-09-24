@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, latch } from '@dxos/async';
 import { createAdmissionCredentials } from '@dxos/credentials';
@@ -10,7 +10,7 @@ import { AuthStatus } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { TestBuilder, type TestPeer } from '../testing';
 
