@@ -16,7 +16,7 @@ describe('useMulticastObservable', () => {
     const { result } = renderHook(() => useMulticastObservable(observable));
     expect(result.current).toEqual(0);
 
-    act(() => event.emit(1));
+    await act(() => event.emit(1));
 
     await expect.poll(() => result.current).toEqual(1);
   });

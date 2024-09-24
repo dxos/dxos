@@ -1,7 +1,12 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { test } from 'vitest';
+
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { test } from 'vitest';
 
 registerSignalRuntime();
 
