@@ -20,6 +20,7 @@ export default [
         'comment label': 'Add comment',
         'comment ranges not supported label': 'Commenting on ranges is not supported (yet)',
         'no cursor label': 'Select a cell to comment',
+        'open comment for sheet cell': 'View comments for cell',
       },
     },
   },

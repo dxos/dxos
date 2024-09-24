@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { type IntentResolver, LayoutAction, useIntentDispatcher, useIntentResolver } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { Icon } from '@dxos/react-ui';
+import { Icon, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type Decoration } from './decorations';
@@ -18,17 +18,24 @@ import { addressFromIndex, addressToIndex, type CellAddress, closest } from '../
 
 const CommentIndicator = () => {
   return (
-    <div className='absolute top-0 right-0 w-0 h-0 border-t-8 border-l-8 border-t-cmCommentSurface border-l-transparent'></div>
+    <div
+      role='none'
+      className='absolute top-0 right-0 w-0 h-0 border-t-8 border-l-8 border-t-cmCommentSurface border-l-transparent'
+    />
   );
 };
 
 const ThreadedCellWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useIntentDispatcher();
-  const [isHovered, setIsHovered] = React.useState(false);
+  const [isHovered, setIsHovered] = React.useState(true);
+  const { t } = useTranslation(SHEET_PLUGIN);
 
-  const handleClick = React.useCallback((event: React.MouseEvent) => {
-    void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
-  }, []);
+  const handleClick = React.useCallback(
+    (_event: React.MouseEvent) => {
+      void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
+    },
+    [dispatch],
+  );
 
   return (
     <div
@@ -45,10 +52,11 @@ const ThreadedCellWrapper: React.FC<{ children: React.ReactNode }> = ({ children
       {isHovered && (
         <div className='absolute inset-0 flex items-center justify-end pr-1'>
           <button
-            className='text-xs p-1 text-white rounded bg-neutral-500 hover:bg-neutral-600 active:bg-neutral-700 transition-opacity'
+            className='ch-button text-xs min-bs-0 p-1'
             onClick={handleClick}
+            aria-label={t('open comment for sheet cell')}
           >
-            <Icon icon='ph--chat--regular' />
+            <Icon icon='ph--chat--regular' aria-hidden={true} />
           </button>
         </div>
       )}
