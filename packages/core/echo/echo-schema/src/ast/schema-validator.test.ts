@@ -187,6 +187,18 @@ describe('schema-validator', () => {
       }
     });
 
+    test('index signature from optional record', () => {
+      for (const value of [42, '42']) {
+        validateValueToAssign({
+          schema: S.Struct({ field: S.optional(S.Record(S.String, S.Number)) }),
+          target: {},
+          path: ['field', 'unknownField'],
+          valueToAssign: value,
+          expectToThrow: typeof value !== 'number',
+        });
+      }
+    });
+
     test('suspend', () => {
       const schemaWithSuspend = S.Struct({
         array: S.optional(S.suspend(() => S.Array(S.Union(S.Null, S.Number)))),

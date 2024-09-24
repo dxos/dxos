@@ -8,6 +8,8 @@ import { isTypeLiteral } from '@effect/schema/AST';
 
 import { invariant } from '@dxos/invariant';
 
+import { getEchoObjectTypename } from '../annotations';
+
 export const symbolSchema = Symbol.for('@dxos/schema');
 
 export class SchemaValidator {
@@ -60,7 +62,10 @@ export class SchemaValidator {
         const propertyType = getPropertyType(schema.ast, propertyName.toString(), (propertyName) =>
           getPropertyFn([...propertyPath.slice(0, i), propertyName]),
         );
-        invariant(propertyType, `unknown property: ${String(propertyName)}, path: ${propertyPath}`);
+        if (!propertyType) {
+          const type = getEchoObjectTypename(rootObjectSchema);
+          invariant(propertyType, `unknown property: ${String(propertyName)} on ${type}. Path: ${propertyPath}`);
+        }
         schema = S.make(propertyType).annotations(propertyType.annotations);
       }
     }
@@ -133,19 +138,22 @@ const getPropertyType = (
   if (anyOrObject != null) {
     return ast;
   }
-  const typeAst = unwrapAst(ast, (t) => {
+  const typeOrDiscriminatedUnion = unwrapAst(ast, (t) => {
     return AST.isTypeLiteral(t) || (AST.isUnion(t) && t.types.some((t) => AST.isTypeLiteral(t)));
   });
-  if (typeAst == null) {
+  if (typeOrDiscriminatedUnion == null) {
     return null;
   }
-
-  const targetProperty = getProperties(typeAst, getTargetPropertyFn).find((p) => p.name === propertyName);
+  const targetProperty = getProperties(typeOrDiscriminatedUnion, getTargetPropertyFn).find(
+    (p) => p.name === propertyName,
+  );
   if (targetProperty != null) {
     return unwrapAst(targetProperty.type);
   }
-  if (AST.isTypeLiteral(typeAst) && typeAst.indexSignatures.length > 0) {
-    return unwrapAst(typeAst.indexSignatures[0].type);
+
+  const indexSignatureType = unwrapAst(ast, AST.isTypeLiteral);
+  if (indexSignatureType && AST.isTypeLiteral(indexSignatureType) && indexSignatureType.indexSignatures.length > 0) {
+    return unwrapAst(indexSignatureType.indexSignatures[0].type);
   }
 
   return null;
