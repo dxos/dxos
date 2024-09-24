@@ -13,6 +13,7 @@ import { ComplexSet, range } from '@dxos/util';
 
 import { SignalClient } from './signal-client';
 import { type Message, type PeerInfo } from '../signal-methods';
+import { log } from '@dxos/log';
 
 const PAYLOAD: TaggedType<TYPES, 'google.protobuf.Any'> = {
   '@type': 'google.protobuf.Any',
@@ -28,7 +29,9 @@ describe('SignalClient', () => {
   });
 
   afterAll(async () => {
+    log.info('begin stop');
     await broker1.stop();
+    log.info('end stop');
   });
 
   test('message between 2 clients', async () => {
@@ -77,7 +80,7 @@ describe('SignalClient', () => {
     const message = createMessage(peer2, peer1);
 
     {
-      const receivedMessage = peer1.waitForNextMessage();
+      const receivedMessage = peer1.waitForNextMessage({ timeout: 1_000 });
       await peer2.client.sendMessage(message);
       expect(await receivedMessage).toEqual(message);
     }
@@ -88,7 +91,7 @@ describe('SignalClient', () => {
     {
       const receivedMessage = peer1.waitForNextMessage({ timeout: 200 });
       await peer2.client.sendMessage(message);
-      await expect(receivedMessage).rejects.toThrow();
+      await expect(receivedMessage).rejects.toBeDefined();
     }
   });
 
@@ -144,10 +147,10 @@ describe('SignalClient', () => {
         identityKey,
         client,
         peerInfo: { peerKey: peerKey.toHex(), identityKey: identityKey.toHex() },
-        waitForNextMessage: async () => {
+        waitForNextMessage: async ({ timeout = 5_000 } = {}) => {
           return asyncTimeout(
             client.onMessage.waitFor(() => true),
-            5000,
+            timeout,
           );
         },
         waitForPeer: (peerId: PublicKey) => waitForCondition({ condition: () => peers.has(peerId) }),

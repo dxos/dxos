@@ -9,8 +9,8 @@ import { baseConfig } from '../../../../vitest.shared';
 export default mergeConfig(
   baseConfig(),
   defineConfig({
-    test: {
-      retry: 2,
-    },
+    // test: {
+    //   retry: 2,
+    // },
   }),
 );
