@@ -86,6 +86,9 @@
       "path": "../experimental/plugin-script"
     },
     {
+      "path": "../plugin-attention"
+    },
+    {
       "path": "../plugin-client"
     },
     {

@@ -18,6 +18,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { Sheet } from './Sheet';
 import { type SizeMap } from './grid';
 import { useSheetContext } from './sheet-context';
+import { addressToIndex, rangeToIndex } from '../../model';
 import { createTestSheet, testSheetName } from '../../testing';
 import { ValueTypeEnum, SheetType } from '../../types';
 import { type ComputeGraph, createComputeGraph } from '../ComputeGraph';
@@ -36,7 +37,7 @@ const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) =
       return;
     }
 
-    const idx = range ? model.rangeToIndex(range) : model.addressToIndex(cursor);
+    const idx = range ? rangeToIndex(model.sheet, range) : addressToIndex(model.sheet, cursor);
     model.sheet.formatting[idx] ??= {};
     const format = model.sheet.formatting[idx];
 
@@ -73,6 +74,9 @@ const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) =
       case 'currency': {
         format.type = ValueTypeEnum.Currency;
         format.precision = 2;
+        break;
+      }
+      case 'comment': {
         break;
       }
     }
