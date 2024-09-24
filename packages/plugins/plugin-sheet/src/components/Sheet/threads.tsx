@@ -22,12 +22,11 @@ const CommentIndicator = () => {
   );
 };
 
-const CommentWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const ThreadedCellWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useIntentDispatcher();
   const [isHovered, setIsHovered] = React.useState(false);
 
   const handleClick = React.useCallback((event: React.MouseEvent) => {
-    event.stopPropagation();
     void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
   }, []);
 
@@ -62,7 +61,7 @@ const createThreadDecoration = (cellIndex: string, threadId: string, sheetId: st
   return {
     type: 'comment',
     cellIndex,
-    decorate: (props) => <CommentWrapper {...props} />,
+    decorate: (props) => <ThreadedCellWrapper {...props} />,
   };
 };
 
