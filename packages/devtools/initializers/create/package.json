@@ -16,8 +16,7 @@
     "minimist": "^1.2.7"
   },
   "devDependencies": {
-    "@types/minimist": "^1.2.2",
-    "typescript": "^5.5.4"
+    "@types/minimist": "^1.2.2"
   },
   "publishConfig": {
     "access": "public"
