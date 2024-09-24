@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import { onTestFinished, describe, test } from 'vitest';
 
 import { EdgeClient } from '@dxos/edge-client';

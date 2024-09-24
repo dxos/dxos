@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import { EditorView } from '@codemirror/view';
 import { Check, PencilSimple, X } from '@phosphor-icons/react';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
@@ -91,7 +92,7 @@ export const MessageContainer = ({
                   variant='ghost'
                   data-testid='thread.message.delete'
                   classNames={messageControlClassNames}
-                  onClick={handleDelete}
+                  onClick={() => handleDelete()}
                 >
                   <span className='sr-only'>{deleteLabel}</span>
                   <X className={getSize(4)} />
