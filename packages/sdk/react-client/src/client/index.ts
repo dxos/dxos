@@ -7,7 +7,6 @@ export * from './ClientProvider';
 export * from './context';
 
 export * from './useClient';
-export * from './useClientServices';
 export * from './useClientStatus';
 export * from './useConfig';
 export * from './useShell';
