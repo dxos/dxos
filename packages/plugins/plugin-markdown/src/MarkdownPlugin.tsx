@@ -245,7 +245,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         predicate: (obj) => obj instanceof DocumentType,
         createSort: (doc: DocumentType) => {
           const accessor = doc.content ? createDocAccessor(doc.content, ['content']) : undefined;
-
           if (!accessor) {
             log.warn('No accessor found for document content.');
             return (_) => 0;

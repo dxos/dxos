@@ -71,8 +71,8 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
     });
 
     // NOTE(thure): because `overflow-x-auto` causes this to become a scroll container, the clip value on the y-axis becomes a `hidden`
-    //  value per the spec and does not prevent programmatic vertical scrolling even though it should be prevented; this is
-    //  a quirk of this overflowing on the horizontal axis, per the spec of `scrollTop`,
+    //  value per the spec and does not prevent programmatic vertical scrolling even though it should be prevented;
+    //  this is a quirk of this overflowing on the horizontal axis, per the spec of `scrollTop`,
     //  see: https://developer.mozilla.org/en-US/docs/Web/CSS/overflow#description
     const handleScroll = useCallback(() => {
       if (rootElement.current && rootElement.current.scrollTop !== 0) {
@@ -107,12 +107,12 @@ const DeckPlankRoot = forwardRef<HTMLDivElement, DeckPlankRootProps>(
     const [internalSize, setInternalSize] = useState(size);
     const focusGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
 
-    // Update internal size when external size changes
+    // Update internal size when external size changes.
     useEffect(() => {
       setInternalSize(size);
     }, [size]);
 
-    // Handle size changes
+    // Handle size changes.
     const handleSetSize = (newSize: number) => {
       setInternalSize(newSize);
       if (setSize) {
