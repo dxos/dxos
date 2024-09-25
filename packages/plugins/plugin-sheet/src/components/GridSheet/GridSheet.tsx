@@ -3,17 +3,12 @@
 //
 import React from 'react';
 
-import {
-  Grid,
-  type GridRootProps,
-  type GridContentProps,
-  useGridContext,
-  type GridScopedProps,
-} from '@dxos/react-ui-grid';
+import { Grid, useGridContext, type GridScopedProps } from '@dxos/react-ui-grid';
 
+import { type SheetModel } from '../../model';
 import { CellEditor } from '../CellEditor';
-
-export type GridSheetProps = Omit<GridRootProps, 'editing' | 'defaultEditing'> & GridContentProps;
+import { type FormattingModel } from '../Sheet/formatting';
+import { useSheetModel, type UseSheetModelProps } from '../Sheet/util';
 
 const GridSheetCellEditor = ({ __gridScope }: GridScopedProps<{}>) => {
   const { id, editing, editBox, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
@@ -22,11 +17,18 @@ const GridSheetCellEditor = ({ __gridScope }: GridScopedProps<{}>) => {
   ) : null;
 };
 
-export const GridSheet = ({ id, onEditingChange, ...props }: GridSheetProps) => {
+export type GridSheetProps = UseSheetModelProps;
+
+const GridSheetImpl = ({ model }: { model: SheetModel; formatting: FormattingModel }) => {
   return (
-    <Grid.Root id={id}>
+    <Grid.Root id={model.id}>
       <GridSheetCellEditor />
-      <Grid.Content {...props} />
+      <Grid.Content />
     </Grid.Root>
   );
+};
+
+export const GridSheet = (props: GridSheetProps) => {
+  const { model, formatting } = useSheetModel(props);
+  return !model || !formatting ? null : <GridSheetImpl model={model} formatting={formatting} />;
 };

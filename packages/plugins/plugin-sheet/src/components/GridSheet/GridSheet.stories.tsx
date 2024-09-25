@@ -4,50 +4,21 @@
 
 import React from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
+import { getSpace } from '@dxos/client/echo';
+import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { GridSheet, type GridSheetProps } from './GridSheet';
-
-const StorySheetGrid = (props: GridSheetProps) => {
-  return <GridSheet {...props} />;
-};
+import { GridSheet } from './GridSheet';
+import { useTestSheet, withGraphDecorator } from '../../testing';
 
 export default {
   title: 'plugin-sheet/GridSheet',
-  component: StorySheetGrid,
-  decorators: [withTheme],
+  component: GridSheet,
+  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true, classNames: 'inset-4' }), withGraphDecorator],
   parameters: { layout: 'fullscreen' },
 };
 
-export const Basic = {
-  args: {
-    id: 'story-grid',
-    cells: {
-      '1,1': {
-        // end: '8,1',
-        value: 'Weekly sales report',
-      },
-    },
-    columnDefault: {
-      size: 180,
-      resizeable: true,
-    },
-    rowDefault: {
-      size: 32,
-      resizeable: true,
-    },
-    columns: {
-      0: { size: 200 },
-      1: { size: 210 },
-      2: { size: 230 },
-      3: { size: 250 },
-      4: { size: 270 },
-    },
-    onAxisResize: (event) => {
-      console.log('[axis resize]', event);
-    },
-    onEditingChange: (event) => {
-      console.log('[edit]', event);
-    },
-  } satisfies GridSheetProps,
+export const Basic = () => {
+  const sheet = useTestSheet();
+  const space = getSpace(sheet);
+  return !sheet || !space ? null : <GridSheet sheet={sheet} space={space} />;
 };

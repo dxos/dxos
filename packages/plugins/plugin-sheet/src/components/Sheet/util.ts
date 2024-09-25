@@ -2,6 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useEffect, useState } from 'react';
+
+import { type Space } from '@dxos/react-client/echo';
+
+import { FormattingModel } from './formatting';
+import { mapFormulaBindingFromId, mapFormulaBindingToId, SheetModel } from '../../model';
+import type { SheetType } from '../../types';
+import type { FunctionContextOptions } from '../ComputeGraph';
+import { useComputeGraph } from '../ComputeGraph/graph-context';
+
 /**
  * Gets the relative client rect of an element within a parent container.
  * NOTE: This is stable even when the parent is scrolling.
@@ -53,4 +63,35 @@ export const scrollIntoView = (scrollContainer: HTMLElement, el: HTMLElement) =>
   } else if (cellBounds.right >= scrollerBounds.right) {
     scrollContainer.scrollLeft += 2 + scrollerBounds.right - cellBounds.right;
   }
+};
+
+export type UseSheetModelProps = {
+  sheet: SheetType;
+  space: Space;
+  options?: Partial<FunctionContextOptions>;
+  readonly?: boolean;
+};
+
+export const useSheetModel = ({ space, sheet, options, readonly }: UseSheetModelProps) => {
+  const graph = useComputeGraph(space, options);
+
+  const [[model, formatting] = [], setModels] = useState<[SheetModel, FormattingModel] | undefined>(undefined);
+
+  useEffect(() => {
+    let model: SheetModel | undefined;
+    let formatting;
+    const t = setTimeout(async () => {
+      model = new SheetModel(graph, sheet, space, { readonly, mapFormulaBindingToId, mapFormulaBindingFromId });
+      await model.initialize();
+      formatting = new FormattingModel(model);
+      setModels([model, formatting]);
+    });
+
+    return () => {
+      clearTimeout(t);
+      void model?.destroy();
+    };
+  }, [graph, readonly]);
+
+  return { model, formatting };
 };
