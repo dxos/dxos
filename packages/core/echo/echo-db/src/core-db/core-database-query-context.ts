@@ -174,6 +174,10 @@ export class CoreDatabaseQueryContext implements QueryContext {
       return null;
     }
 
+    if (filter.options.include) {
+      validateJoinSpec(filter.options.include);
+    }
+
     const data = await this._recursivelyJoinFields(core.toPlainObject(), filter.options.include);
 
     return {
@@ -212,6 +216,15 @@ export class CoreDatabaseQueryContext implements QueryContext {
     return newData;
   }
 }
+
+const validateJoinSpec = (joinSpec: QueryJoinSpec) => {
+  try {
+    // This will throw if the join spec is a recursive object.
+    JSON.stringify(joinSpec);
+  } catch {
+    throw new Error(`Invalid join spec`);
+  }
+};
 
 /**
  * Used for logging.
