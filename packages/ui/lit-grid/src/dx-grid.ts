@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { LitElement, html } from 'lit';
+import { LitElement, html, nothing } from 'lit';
 import { customElement, state, property, eventOptions } from 'lit/decorators.js';
 import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 
@@ -98,6 +98,9 @@ const getPage = (axis: string, event: PointerEvent) => (axis === 'col' ? event.p
 
 @customElement('dx-grid')
 export class DxGrid extends LitElement {
+  @property({ type: String })
+  gridId: string = 'default-grid-id';
+
   @property({ type: Object })
   rowDefault: AxisMeta = { size: 32 };
 
@@ -473,10 +476,7 @@ export class DxGrid extends LitElement {
   @eventOptions({ capture: true })
   private handleBlur(event: FocusEvent) {
     // Only unset `focusActive` if focus is not moving to an element within the grid.
-    if (
-      !event.relatedTarget ||
-      (event.relatedTarget as HTMLElement).closest('.dx-grid__viewport') !== this.viewportRef.value
-    ) {
+    if (!event.relatedTarget || !(event.relatedTarget as HTMLElement).closest(`[data-grid="${this.gridId}"]`)) {
       this.focusActive = false;
     }
   }
@@ -570,6 +570,7 @@ export class DxGrid extends LitElement {
     return html`<div
       role="none"
       class="dx-grid"
+      data-grid=${this.gridId}
       @pointerdown=${this.handlePointerDown}
       @pointerup=${this.handlePointerUp}
       @pointermove=${this.handlePointerMove}
@@ -631,10 +632,12 @@ export class DxGrid extends LitElement {
               const c = c0 + this.visColMin;
               const r = r0 + this.visRowMin;
               const cell = this.cell(c, r);
+              const active = this.focusActive && this.focusedCell.col === c && this.focusedCell.row === r;
               return html`<div
                 role="gridcell"
                 tabindex="0"
                 ?inert=${c < 0 || r < 0}
+                class=${active ? 'dx-grid__cell--active' : nothing}
                 aria-rowindex=${r}
                 aria-colindex=${c}
                 data-dx-grid-action="cell"

@@ -77,6 +77,7 @@ export type CellEditorProps = {
   extension?: Extension;
   variant?: 'legacy' | 'grid';
   box?: GridEditBox;
+  gridId?: string;
 } & Pick<UseTextEditorProps, 'autoFocus'> &
   Pick<DOMAttributes<HTMLInputElement>, 'onBlur' | 'onKeyDown'>;
 
@@ -93,7 +94,15 @@ const editorVariants = {
   },
 };
 
-export const CellEditor = ({ value, extension, autoFocus, onBlur, variant = 'legacy', box }: CellEditorProps) => {
+export const CellEditor = ({
+  value,
+  extension,
+  autoFocus,
+  onBlur,
+  variant = 'legacy',
+  box,
+  gridId,
+}: CellEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
@@ -125,5 +134,12 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, variant = 'leg
     };
   }, [extension, autoFocus, value, variant, onBlur]);
 
-  return <div ref={parentRef} className={editorVariants[variant].root} style={box} />;
+  return (
+    <div
+      ref={parentRef}
+      className={editorVariants[variant].root}
+      style={box}
+      {...(gridId && { 'data-grid': gridId })}
+    />
+  );
 };

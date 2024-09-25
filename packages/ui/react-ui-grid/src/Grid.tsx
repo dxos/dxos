@@ -91,14 +91,14 @@ type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'onEdit'>;
 const GRID_CONTENT_NAME = 'GridContent';
 
 const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>((props, forwardedRef) => {
-  const { editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME, props.__gridScope);
+  const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME, props.__gridScope);
 
   const handleEdit = useCallback((event: DxEditRequest) => {
     setEditBox(event.cellBox);
     setEditing(event.cellIndex);
   }, []);
 
-  return <DxGrid {...props} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={forwardedRef} />;
+  return <DxGrid {...props} gridId={id} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={forwardedRef} />;
 });
 
 GridContent.displayName = GRID_CONTENT_NAME;

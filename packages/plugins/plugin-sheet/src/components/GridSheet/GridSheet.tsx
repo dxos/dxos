@@ -16,8 +16,10 @@ import { CellEditor } from '../CellEditor';
 export type GridSheetProps = Omit<GridRootProps, 'editing' | 'defaultEditing'> & GridContentProps;
 
 const GridSheetCellEditor = ({ __gridScope }: GridScopedProps<{}>) => {
-  const { editing, editBox, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
-  return editing ? <CellEditor variant='grid' autoFocus box={editBox} onBlur={() => setEditing(null)} /> : null;
+  const { id, editing, editBox, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
+  return editing ? (
+    <CellEditor variant='grid' autoFocus box={editBox} onBlur={() => setEditing(null)} gridId={id} />
+  ) : null;
 };
 
 export const GridSheet = ({ id, onEditingChange, ...props }: GridSheetProps) => {

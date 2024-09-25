@@ -21,7 +21,7 @@ export default {
 
 export const Basic = {
   args: {
-    id: 'story',
+    id: 'story-grid',
     cells: {
       '1,1': {
         // end: '8,1',
