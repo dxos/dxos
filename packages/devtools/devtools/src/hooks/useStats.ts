@@ -10,8 +10,8 @@ import { type NetworkStatus } from '@dxos/client/mesh';
 import { type EchoStatsDiagnostic, type EchoDataStats, type FilterParams, type QueryMetrics } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
-import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
+import { useAsyncEffect } from '@dxos/react-hooks';
 import { type Diagnostics, TRACE_PROCESSOR, type DiagnosticsRequest } from '@dxos/tracing';
 import { DiagnosticsChannel } from '@dxos/tracing';
 

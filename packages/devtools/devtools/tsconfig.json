@@ -6,9 +6,7 @@
     "lib": [
       "DOM"
     ],
-    "outDir": "dist/types",
     "types": [
-      "@dxos/test",
       "@dxos/typings",
       "node"
     ]
@@ -35,9 +33,6 @@
     },
     {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/react-async"
     },
     {
       "path": "../../common/timeframe"
@@ -88,7 +83,13 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../ui/primitives/react-hooks"
+    },
+    {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/react-ui-table"

@@ -11,15 +11,16 @@ import { log } from '@dxos/log';
 
 import { useClient } from '../client';
 
-/*
- * Interface for invoking the agent hosting provider client.
- * @experimental
- */
-
 export type AgentHostingProviderProps = { config: Config; halo: Halo };
 
 export const AgentHostingContext = createContext<AgentHostingProviderClient | null>(null);
 
+/**
+ * Experimental agent hosting provider.
+ * @param props
+ * @constructor
+ * @deprecated
+ */
 export const AgentHostingProvider = (props: PropsWithChildren<{}>) => {
   const client = useClient();
   const [agentHostingProviderClient] = useState(makeClient(client));
@@ -52,7 +53,7 @@ const makeClient = ({ config, halo }: AgentHostingProviderProps) => {
       if (agentHostingProviderClient.init()) {
         return agentHostingProviderClient;
       } else {
-        // Not authorized or error initializing
+        // Not authorized or error initializing.
         return null;
       }
     }

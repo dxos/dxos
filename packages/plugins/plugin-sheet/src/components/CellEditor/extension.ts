@@ -242,6 +242,12 @@ export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): E
                 break;
               }
 
+              case 'CloseParen': {
+                // Mark but keep looking.
+                activeRange = { from, to: from };
+                break;
+              }
+
               case 'RangeToken':
               case 'CellToken':
                 activeRange = { from, to };

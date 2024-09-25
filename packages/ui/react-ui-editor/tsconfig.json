@@ -6,7 +6,6 @@
       "ESNext"
     ],
     "module": "ESNext",
-    "outDir": "dist/types",
     "types": [
       "node"
     ]
@@ -45,9 +44,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/react-async"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -70,6 +66,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../primitives/react-hooks"
     },
     {
       "path": "../react-ui"

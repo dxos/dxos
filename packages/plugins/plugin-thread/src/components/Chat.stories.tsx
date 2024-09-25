@@ -15,7 +15,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { Thread } from '@dxos/react-ui-thread';
-import { withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ChatContainer } from './ChatContainer';
 import { createChatThread } from './testing';
@@ -69,8 +69,8 @@ export default {
   component: Thread,
   // TODO(wittjosiah): Register schemas.
   render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType]} />,
-  decorators: [withTheme],
-  parameters: { translations, layout: 'fullscreen' },
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: { translations },
 };
 
 export const Default = {};

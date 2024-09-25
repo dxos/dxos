@@ -8,6 +8,7 @@ import { type InterpreterState } from 'hyperformula/typings/interpreter/Interpre
 import { type ProcedureAst } from 'hyperformula/typings/parser';
 
 import { Filter, getMeta } from '@dxos/client/echo';
+import { log } from '@dxos/log';
 import { getUserFunctionUrlInMetadata } from '@dxos/plugin-script/edge';
 import { FunctionType } from '@dxos/plugin-script/types';
 import { nonNullable } from '@dxos/util';
@@ -35,15 +36,18 @@ export class EdgeFunctionPlugin extends FunctionPluginAsync {
           objects: [fn],
         } = await space.db.query(Filter.schema(FunctionType, { binding })).run();
         if (!fn) {
+          log.info('Function not found', { binding });
           return new CellError(ErrorType.REF, 'Function not found');
         }
 
         if (subscribe) {
           const unsubscribe = effect(() => {
+            log.info('function changed', { fn });
             const _ = fn?.version;
 
-            // If the function changes, force a recalculation.
-            this.runAsyncFunction(ast, state, handler(false), { ttl: 0 });
+            // TODO(wittjosiah): `ttl` should be 0 to force a recalculation when a new version is deployed.
+            //  This needs a ttl to prevent a binding change from causing the function not to be found.
+            this.runAsyncFunction(ast, state, handler(false), { ttl: EDGE_FUNCTION_TTL });
           });
 
           this.context.createSubscription(ast.procedureName, unsubscribe);

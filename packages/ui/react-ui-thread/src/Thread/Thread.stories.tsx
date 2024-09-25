@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, ThreadFooter } from './Thread';
 import { MessageRoot, MessageTextbox } from '../Message';
@@ -83,7 +83,7 @@ export default {
   title: 'react-ui-thread/Thread',
   component: Thread,
   render: Story,
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { translations },
 };
 

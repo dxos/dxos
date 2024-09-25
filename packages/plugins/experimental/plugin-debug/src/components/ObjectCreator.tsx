@@ -45,6 +45,14 @@ export const ObjectCreator: FC<{
       mutationSize: 10,
       maxContentLength: 1000,
     },
+    {
+      enabled: true,
+      schema: SchemasNames.sheet,
+      objectsCount: 10,
+      mutationsCount: 10,
+      mutationSize: 10,
+      maxContentLength: 1000,
+    },
   ]);
 
   const handleCreate = async () => {

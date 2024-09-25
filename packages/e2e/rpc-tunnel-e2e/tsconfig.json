@@ -9,6 +9,7 @@
     "noEmit": true,
     "outDir": "dist",
     "types": [
+      "node",
       "sharedworker"
     ]
   },
@@ -26,7 +27,7 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/react-async"
+      "path": "../../common/test-utils"
     },
     {
       "path": "../../core/mesh/rpc"
@@ -36,6 +37,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../ui/primitives/react-hooks"
     }
   ]
 }

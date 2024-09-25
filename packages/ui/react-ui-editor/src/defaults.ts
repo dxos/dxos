@@ -8,7 +8,9 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { fontMono } from './styles';
 
-const margin = '!mt-[16px]';
+// TODO(burdon): Define scrollMargins for fixed gutter?
+//  https://codemirror.net/docs/ref/#view.EditorView^scrollMargins
+const margin = '!mt-[1rem]';
 
 /**
  * CodeMirror content width.
@@ -20,16 +22,16 @@ export const editorContent = mx(margin, '!mli-auto w-full max-w-[min(50rem,100%-
 /**
  * Margin for numbers.
  */
-export const editorFullWidth = mx(margin, '!ml-[3rem]');
+export const editorFullWidth = mx(margin);
 
 export const editorWithToolbarLayout =
   'grid grid-cols-1 grid-rows-[min-content_1fr] data-[toolbar=disabled]:grid-rows-[1fr] justify-center content-start overflow-hidden';
 
-// TODO(burdon): Define scrollMargins for fixed gutter.
 export const editorGutter = EditorView.theme({
   // Match margin from content.
   '.cm-gutters': {
     marginTop: '16px',
+    paddingRight: '1rem',
   },
 });
 

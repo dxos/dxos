@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import { BaselimeRum } from '@baselime/react-rum';
 import { withProfiler } from '@sentry/react';
-import React, { useEffect, useState } from 'react';
+import React, { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
@@ -110,18 +110,18 @@ const main = async () => {
   const root = createRoot(document.getElementById('root')!);
   root.render(
     // NOTE: StrictMode will cause the entire stack to render twice.
-    // <StrictMode>
-    <BaselimeRum apiKey={config.values.runtime?.app?.env?.BASELIME_API_KEY} enableWebVitals>
-      <ClientProvider
-        config={config}
-        createWorker={createWorker}
-        shell='./shell.html'
-        onInitialized={handleInitialized}
-      >
-        <App />
-      </ClientProvider>
-    </BaselimeRum>,
-    // </StrictMode>,
+    <StrictMode>
+      <BaselimeRum apiKey={config.values.runtime?.app?.env?.BASELIME_API_KEY} enableWebVitals>
+        <ClientProvider
+          config={config}
+          createWorker={createWorker}
+          shell='./shell.html'
+          onInitialized={handleInitialized}
+        >
+          <App />
+        </ClientProvider>
+      </BaselimeRum>
+    </StrictMode>,
   );
 };
 

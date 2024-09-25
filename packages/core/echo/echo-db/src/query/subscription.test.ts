@@ -3,13 +3,12 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 import { Expando, create, type ReactiveObject } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
-import { describe, test } from '@dxos/test';
 
 import { createSubscription } from './subscription';
 import { EchoTestBuilder } from '../testing';

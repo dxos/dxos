@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { create, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { getObjectCore } from './core-db';
 import { EchoTestBuilder } from './testing';

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/phoenix",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "Basic node daemon.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,7 +9,8 @@
   "exports": {
     ".": {
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     }
@@ -35,7 +36,7 @@
     "pkg-up": "^3.1.0"
   },
   "devDependencies": {
-    "@types/node": "^18.11.9",
+    "@types/node": "^22.6.1",
     "@types/ps-tree": "^1.1.2"
   },
   "publishConfig": {

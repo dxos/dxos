@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-pipeline",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,21 +10,24 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
     "./light": {
       "browser": "./dist/lib/browser/light.mjs",
       "node": {
-        "default": "./dist/lib/node/light.cjs"
+        "require": "./dist/lib/node/light.cjs",
+        "default": "./dist/lib/node-esm/light.mjs"
       },
       "types": "./dist/types/src/light.d.ts"
     },
     "./testing": {
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": {
-        "default": "./dist/lib/node/testing/index.cjs"
+        "require": "./dist/lib/node/testing/index.cjs",
+        "default": "./dist/lib/node-esm/testing/index.mjs"
       },
       "types": "./dist/types/src/testing/index.d.ts"
     }
@@ -85,10 +88,10 @@
     "level-transcoder": "^1.0.1"
   },
   "devDependencies": {
+    "@dxos/test-utils": "workspace:*",
     "fast-check": "^3.19.0",
     "hypercore-protocol": "^8.0.7",
-    "source-map-support": "^0.5.12",
-    "wait-for-expect": "^3.0.2"
+    "source-map-support": "^0.5.12"
   },
   "publishConfig": {
     "access": "public"

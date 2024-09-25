@@ -8,7 +8,7 @@ import { getSpace } from '@dxos/react-client/echo';
 
 import { Chess } from './Chess';
 
-const ChessContainer = ({ game }: Pick<ComponentProps<typeof Chess>, 'game'>) => {
+const ChessContainer = ({ game, role }: Pick<ComponentProps<typeof Chess>, 'game'> & { role?: string }) => {
   const space = getSpace(game);
   if (!space) {
     return null;
@@ -16,7 +16,7 @@ const ChessContainer = ({ game }: Pick<ComponentProps<typeof Chess>, 'game'>) =>
 
   return (
     <div role='none' className='flex flex-col row-span-2 is-full overflow-hidden'>
-      <Chess game={game} space={space} />
+      <Chess game={game} space={space} playerSelector={role === 'article'} />
     </div>
   );
 };

@@ -6,7 +6,6 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist/types",
     "types": [
       "node"
     ]
@@ -40,7 +39,7 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/react-async"
+      "path": "../../common/test-utils"
     },
     {
       "path": "../../common/util"
@@ -53,6 +52,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../ui/primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"

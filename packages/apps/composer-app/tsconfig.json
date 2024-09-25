@@ -42,6 +42,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/test-utils"
+    },
+    {
       "path": "../../common/tracing"
     },
     {
@@ -79,9 +82,6 @@
     },
     {
       "path": "../../plugins/experimental/plugin-github"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-gpt"
     },
     {
       "path": "../../plugins/experimental/plugin-grid"

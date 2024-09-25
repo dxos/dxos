@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
-import { test, describe } from 'vitest';
+import { test, expect, describe } from 'vitest';
 
 import { arrayToBuffer, arrayToString, bufferToArray, stringToArray } from './uint8array';
 

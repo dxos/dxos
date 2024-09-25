@@ -266,7 +266,7 @@ type TestStream = {
   bytesReceived: number;
   sendErrors: number;
   receiveErrors: number;
-  timer?: NodeJS.Timer;
+  timer?: NodeJS.Timeout;
   startTimestamp?: number;
-  reportingTimer?: NodeJS.Timer;
+  reportingTimer?: NodeJS.Timeout;
 };

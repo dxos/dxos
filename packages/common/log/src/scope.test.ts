@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { describe, test } from '@dxos/test';
+import { describe, test } from 'vitest';
 
 import { log } from './log';
 import { logInfo } from './scope';

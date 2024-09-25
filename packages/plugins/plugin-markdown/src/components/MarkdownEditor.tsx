@@ -3,7 +3,7 @@
 //
 
 import { openSearchPanel } from '@codemirror/search';
-import { EditorView } from '@codemirror/view';
+import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 
 import {
@@ -11,12 +11,11 @@ import {
   LayoutAction,
   type LayoutCoordinate,
   useResolvePlugin,
-  useIntentResolver,
   parseLayoutPlugin,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { parseAttentionPlugin } from '@dxos/plugin-attention';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useIsDirectlyAttended } from '@dxos/react-ui-attention';
 import {
   type Action,
   type DNDOptions,
@@ -36,16 +35,16 @@ import {
   useTextEditor,
   editorContent,
   editorGutter,
-  Cursor,
-  setSelection,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
+import { useSelectCurrentThread } from '../hooks';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownPluginState } from '../types';
 
+// TODO(Zan): Factor into a shared location.
 const attentionFragment = mx(
   'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
   'group-focus-within/editor:border-separator',
@@ -83,11 +82,9 @@ export const MarkdownEditor = ({
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
   const dispatch = useIntentDispatcher();
-  const attentionPlugin = useResolvePlugin(parseAttentionPlugin);
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
-  const attended = Array.from(attentionPlugin?.provides.attention?.attended ?? []);
-  const isDirectlyAttended = attended.length === 1 && attended[0] === id;
   const [formattingState, formattingObserver] = useFormattingState();
+  const isDirectlyAttended = useIsDirectlyAttended(id);
 
   // Extensions from other plugins.
   const providerExtensions = useMemo(() => extensionProviders?.map((provider) => provider({})), [extensionProviders]);
@@ -98,36 +95,6 @@ export const MarkdownEditor = ({
     void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
   }, [dispatch]);
   const commentClickObserver = useCommentClickListener(onCommentClick);
-
-  // Focus the space that references the comment.
-  useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
-    switch (action) {
-      // TODO(burdon): Use fully qualified ids everywhere.
-      case LayoutAction.SCROLL_INTO_VIEW: {
-        if (editorView && data?.id === id && data?.cursor) {
-          // TODO(burdon): We need typed intents.
-          const range = Cursor.getRangeFromCursor(editorView.state, data.cursor);
-          if (range) {
-            const selection = editorView.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
-            const effects = [
-              // NOTE: This does not use the DOM scrollIntoView function.
-              EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 }),
-            ];
-            if (selection) {
-              // Update the editor selection to get bi-directional highlighting.
-              effects.push(setSelection.of({ current: id }));
-            }
-
-            editorView.dispatch({
-              effects,
-              selection: selection ? { anchor: range.from } : undefined,
-            });
-          }
-        }
-        break;
-      }
-    }
-  });
 
   // Drag files.
   const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
@@ -155,7 +122,11 @@ export const MarkdownEditor = ({
           scrollPastEnd: role === 'section' ? false : scrollPastEnd,
         }),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode, slots: { content: { className: editorContent } } }),
+        createThemeExtensions({
+          themeMode,
+          syntaxHighlighting: true,
+          slots: { content: { className: editorContent } },
+        }),
         editorGutter,
         role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
         providerExtensions,
@@ -174,6 +145,7 @@ export const MarkdownEditor = ({
   );
 
   useTest(editorView);
+  useSelectCurrentThread(editorView, id);
 
   // Toolbar handler.
   const handleToolbarAction = useActionHandler(editorView);

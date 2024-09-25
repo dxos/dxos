@@ -179,7 +179,7 @@
         },
         {
           "type": "json",
-          "path": "packages/common/react-async/package.json",
+          "path": "packages/common/test-utils/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -489,11 +489,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-gpt/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/experimental/plugin-grid/package.json",
           "jsonpath": "$.version"
         },
@@ -799,6 +794,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-syntax-highlighter/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-table/package.json",
           "jsonpath": "$.version"
         },
@@ -860,16 +860,6 @@
         {
           "type": "json",
           "path": "tools/executors/nx-protobuf-compiler/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/executors/serve-with-vault/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/executors/test/package.json",
           "jsonpath": "$.version"
         },
         {

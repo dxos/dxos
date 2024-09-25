@@ -5,13 +5,7 @@
 import { type IconProps, GridNine } from '@phosphor-icons/react';
 import React from 'react';
 
-import {
-  NavigationAction,
-  parseIntentPlugin,
-  resolvePlugin,
-  type PluginDefinition,
-  type LayoutCoordinate,
-} from '@dxos/app-framework';
+import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -19,12 +13,18 @@ import { FunctionType } from '@dxos/plugin-script/types';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
-import { createComputeGraph, SheetContainer, type ComputeGraph } from './components';
+import {
+  createComputeGraph,
+  CustomPlugin,
+  CustomPluginTranslations,
+  SheetContainer,
+  type ComputeGraph,
+} from './components';
 // TODO(wittjosiah): Refactor. These are not exported from ./components due to depending on ECHO.
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './components/ComputeGraph/edge-function';
 import { ComputeGraphContextProvider } from './components/ComputeGraph/graph-context';
 import meta, { SHEET_PLUGIN } from './meta';
-import { SheetModel } from './model';
+import { compareIndexPositions, SheetModel } from './model';
 import translations from './translations';
 import { createSheet, SheetAction, type SheetPluginProvides, SheetType } from './types';
 
@@ -61,6 +61,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       metadata: {
         records: {
           [SheetType.typename]: {
+            label: (object: any) => (object instanceof SheetType ? object.title : undefined),
             placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
             icon: (props: IconProps) => <GridNine {...props} />,
             iconSymbol: 'ph--grid-nine--regular',
@@ -120,30 +121,38 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         creators: [
           {
             id: 'create-stack-section-sheet',
-            testId: 'sheetPlugin.createSectionSpaceSheet',
+            testId: 'sheetPlugin.createSection',
             type: ['plugin name', { ns: SHEET_PLUGIN }],
             label: ['create sheet section label', { ns: SHEET_PLUGIN }],
             icon: (props: any) => <GridNine {...props} />,
-            intent: { plugin: SHEET_PLUGIN, action: SheetAction.CREATE },
+            intent: {
+              plugin: SHEET_PLUGIN,
+              action: SheetAction.CREATE,
+            },
           },
         ],
       },
+      thread: {
+        predicate: (data) => data instanceof SheetType,
+        createSort: (sheet) => (anchorA, anchorB) =>
+          !anchorA || !anchorB ? 0 : compareIndexPositions(sheet, anchorA, anchorB),
+      },
       surface: {
         component: ({ data, role = 'never' }) => {
-          if (!['article', 'section'].includes(role) || !isEchoObject(data.object)) {
-            return null;
+          // TODO(burdon): Standardize wrapper (with room for toolbar).
+          const space = isEchoObject(data.object) && getSpace(data.object);
+          if (space && data.object instanceof SheetType) {
+            switch (role) {
+              case 'article':
+              case 'section': {
+                return (
+                  <SheetContainer sheet={data.object} space={space} role={role} remoteFunctionUrl={remoteFunctionUrl} />
+                );
+              }
+            }
           }
 
-          const space = getSpace(data.object);
-          return space && data.object instanceof SheetType ? (
-            <SheetContainer
-              sheet={data.object}
-              space={space}
-              role={role}
-              coordinate={data.coordinate as LayoutCoordinate}
-              remoteFunctionUrl={remoteFunctionUrl}
-            />
-          ) : null;
+          return null;
         },
       },
       intent: {
@@ -155,7 +164,11 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
               const graph =
                 graphs[space.id] ??
                 createComputeGraph(
-                  [{ plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations }],
+                  [
+                    { plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations },
+                    // TODO(wittjosiah): Remove. Needed for current test sheet generated data.
+                    { plugin: CustomPlugin, translations: CustomPluginTranslations },
+                  ],
                   space,
                   { remoteFunctionUrl },
                 );

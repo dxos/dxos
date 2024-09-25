@@ -10,7 +10,7 @@ import React, { useMemo, useState } from 'react';
 import { type Topology } from 'topojson-specification';
 
 import { useAsyncCallback } from '@dxos/react-ui';
-import { withTheme, withFullscreen } from '@dxos/storybook-utils';
+import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import {
   Globe,
@@ -231,7 +231,7 @@ const initialRotation: Vector = [0, -40, 0];
 
 export default {
   title: 'gem-globe/Globe',
-  decorators: [withTheme, withFullscreen({ classNames: 'bg-[#000]' })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#000]' })],
 };
 
 export const Earth1 = () => {

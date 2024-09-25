@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { expectToThrow } from '@dxos/debug';
-import { describe, test } from '@dxos/test';
 
 import { waitForCondition } from './testing';
 

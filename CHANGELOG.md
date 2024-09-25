@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.6.11](https://github.com/dxos/dxos/compare/v0.6.10...v0.6.11) (2024-09-23)
+
+
+### Features
+
+* Function triggers ([#7760](https://github.com/dxos/dxos/issues/7760)) ([d3bd765](https://github.com/dxos/dxos/commit/d3bd7657b2724c9c635a1c45e8f948c1a231fa66))
+* **lit-grid:** Arrow navigation ([#7748](https://github.com/dxos/dxos/issues/7748)) ([18cee6d](https://github.com/dxos/dxos/commit/18cee6db9ea689af3f20a9da57b29ff8a51b505b))
+* **map:** get locations from throughout the space, not just neighboring plugins ([#7771](https://github.com/dxos/dxos/issues/7771)) ([0a68e1c](https://github.com/dxos/dxos/commit/0a68e1c360392937965de75a0a97bc0bdbafbe9c))
+
+
+### Bug Fixes
+
+* attention styles ([#7796](https://github.com/dxos/dxos/issues/7796)) ([f127970](https://github.com/dxos/dxos/commit/f127970d58e5104660e0793df16790795ac1c09a))
+* Codemirror folding styles. ([#7780](https://github.com/dxos/dxos/issues/7780)) ([8b6597c](https://github.com/dxos/dxos/commit/8b6597c0c26c5a26ba61683bfcc3a02a46860a94))
+* Codemirror task list indentation ([#7775](https://github.com/dxos/dxos/issues/7775)) ([8644830](https://github.com/dxos/dxos/commit/864483061bd4d1bdb50e9a4b51e0b0f4a29be86e))
+* editor styles ([#7785](https://github.com/dxos/dxos/issues/7785)) ([5c5b713](https://github.com/dxos/dxos/commit/5c5b713d88a35fd039b643657017fb91a1d51016))
+* Fix editor code folding ([#7776](https://github.com/dxos/dxos/issues/7776)) ([03a8ce9](https://github.com/dxos/dxos/commit/03a8ce917a610ddf9c200b7bfac45061a3cfe38b))
+* Plank borders and misc styles ([#7747](https://github.com/dxos/dxos/issues/7747)) ([f1f4e41](https://github.com/dxos/dxos/commit/f1f4e410737a70e6a08fe0e000561e2fd7acd6b9))
+* **plugin-space:** ensure isReady before accessing default space ([#7788](https://github.com/dxos/dxos/issues/7788)) ([bb58511](https://github.com/dxos/dxos/commit/bb58511d163a8d1d3df393021c48691ff0c47eb3))
+* remove react-async ([#7781](https://github.com/dxos/dxos/issues/7781)) ([243bba3](https://github.com/dxos/dxos/commit/243bba35a45a3099c18567b9bb8bf7adf3e8a316))
+* SearchList colors ([#7797](https://github.com/dxos/dxos/issues/7797)) ([66fb9aa](https://github.com/dxos/dxos/commit/66fb9aadb9ea455efc6842654a406820bacb7a55))
+* Use semantic tokens for SheetPlugin, fix other color tokens ([#7767](https://github.com/dxos/dxos/issues/7767)) ([6c1eeb4](https://github.com/dxos/dxos/commit/6c1eeb498b7c12538b19af4374b04fac5fe44647))
+
 ## [0.6.10](https://github.com/dxos/dxos/compare/v0.6.9...v0.6.10) (2024-09-18)
 
 

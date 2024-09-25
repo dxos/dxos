@@ -11,6 +11,11 @@ const surfaceCadence = {
 
 export const systemSememes = {
   // TODO(burdon): Organize by category (e.g., surface, text, etc.)
+
+  //
+  // Surfaces (bg-)
+  //
+
   attention: {
     light: ['neutral', surfaceCadence.light[0]],
     dark: ['neutral', surfaceCadence.dark[0]],
@@ -22,10 +27,6 @@ export const systemSememes = {
   scrim: {
     light: ['neutral', `${surfaceCadence.light[4]}/.65`],
     dark: ['neutral', `${surfaceCadence.dark[1]}/.65`],
-  },
-  baseGlass: {
-    light: ['neutral', `${surfaceCadence.light[1]}/.88`],
-    dark: ['neutral', `${surfaceCadence.dark[2]}/.88`],
   },
   base: {
     light: ['neutral', surfaceCadence.light[1]],
@@ -43,13 +44,11 @@ export const systemSememes = {
     light: ['neutral', surfaceCadence.light[3]],
     dark: ['neutral', surfaceCadence.dark[4]],
   },
-  modal: {
-    light: ['neutral', surfaceCadence.light[0]],
-    dark: ['neutral', surfaceCadence.dark[5]],
-  },
-  separator: {
-    light: ['neutral', surfaceCadence.light[4]],
-    dark: ['neutral', surfaceCadence.dark[6]],
+  modalSurface: {
+    light: ['neutral', `${surfaceCadence.light[1]}/.88`],
+    dark: ['neutral', `${surfaceCadence.dark[2]}/.88`],
+    // light: ['neutral', surfaceCadence.light[0]],
+    // dark: ['neutral', surfaceCadence.dark[5]],
   },
   accentSurface: {
     light: ['primary', 500],
@@ -58,6 +57,43 @@ export const systemSememes = {
   accentSurfaceHover: {
     light: ['primary', 600],
     dark: ['primary', 475],
+  },
+  hoverOverlay: {
+    light: ['neutral', '450/.1'],
+    dark: ['neutral', '450/.1'],
+  },
+  //
+  // Borders (border-, divide-)
+  //
+
+  separator: {
+    light: ['neutral', surfaceCadence.light[4]],
+    dark: ['neutral', surfaceCadence.dark[6]],
+  },
+
+  //
+  // Text (text-)
+  //
+
+  baseText: {
+    light: ['neutral', 1000],
+    dark: ['neutral', 50],
+  },
+  description: {
+    light: ['neutral', 500],
+    dark: ['neutral', 400],
+  },
+  subdued: {
+    light: ['neutral', 700],
+    dark: ['neutral', 300],
+  },
+  accentText: {
+    light: ['primary', 550],
+    dark: ['primary', 400],
+  },
+  accentTextHover: {
+    light: ['primary', 500],
+    dark: ['primary', 350],
   },
   accentFocusIndicator: {
     light: ['primary', 350],
@@ -74,25 +110,5 @@ export const systemSememes = {
   inverse: {
     light: ['neutral', 0],
     dark: ['neutral', 0],
-  },
-  accentText: {
-    light: ['primary', 550],
-    dark: ['primary', 400],
-  },
-  accentTextHover: {
-    light: ['primary', 500],
-    dark: ['primary', 350],
-  },
-  baseText: {
-    light: ['neutral', 1000],
-    dark: ['neutral', 50],
-  },
-  description: {
-    light: ['neutral', 500],
-    dark: ['neutral', 400],
-  },
-  subdued: {
-    light: ['neutral', 700],
-    dark: ['neutral', 300],
   },
 } satisfies ColorSememes;

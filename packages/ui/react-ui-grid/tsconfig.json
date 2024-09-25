@@ -5,7 +5,6 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist/types",
     "types": [
       "node"
     ]
@@ -24,6 +23,9 @@
     },
     {
       "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-editor"
     },
     {
       "path": "../react-ui-theme"

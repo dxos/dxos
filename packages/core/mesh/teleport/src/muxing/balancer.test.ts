@@ -2,14 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
 import { Duplex, pipeline } from 'node:stream';
 import randomBytes from 'randombytes';
 import * as varint from 'varint';
-import waitForExpect from 'wait-for-expect';
+import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
-import { describe, test } from '@dxos/test';
 
 import { encodeChunk, decodeChunk, Balancer } from './balancer';
 
@@ -71,7 +69,7 @@ describe('Balancer', () => {
     }
   });
 
-  it('should correctly encode and decode a chunk without dataLength', () => {
+  test('should correctly encode and decode a chunk without dataLength', () => {
     const channelId = 1;
     const chunk = Uint8Array.from([0x11, 0x22, 0x33]);
 
@@ -83,7 +81,7 @@ describe('Balancer', () => {
     expect(decoded.chunk).to.deep.equal(chunk);
   });
 
-  it('should correctly encode and decode a chunk with dataLength', () => {
+  test('should correctly encode and decode a chunk with dataLength', () => {
     const channelId = 2;
     const chunk = Uint8Array.from([0x44, 0x55, 0x66]);
     const dataLength = chunk.length;
@@ -107,9 +105,7 @@ describe('Balancer', () => {
 
     stream.unstuck?.();
 
-    await waitForExpect(() => {
-      expect(balancer.buffersCount).to.equal(0);
-    });
+    await expect.poll(() => balancer.buffersCount).toEqual(0);
   });
 
   test('should not buffer when backpressure is not applied', async () => {

@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { defaultGridStyles, useGrid, useSvgContext, useZoom, SVGRoot } from '@dxos/gem-core';
 import { useThemeContext } from '@dxos/react-ui';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { defaultStyles } from './styles';
 import {
@@ -27,7 +27,7 @@ import '../../styles/defaults.css';
 
 export default {
   title: 'gem-spore/hooks',
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 // TODO(burdon): Dynamic classname for nodes (e.g., based on selection).

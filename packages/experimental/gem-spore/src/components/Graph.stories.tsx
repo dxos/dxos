@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 
 import { createSvgContext, defaultGridStyles, Grid, SVG, SVGRoot, Zoom } from '@dxos/gem-core';
 import { useThemeContext } from '@dxos/react-ui';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Graph } from './Graph';
 import { Markers } from './Markers';
@@ -19,7 +19,7 @@ import '../../styles/defaults.css';
 
 export default {
   title: 'gem-spore/Graph',
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 seed(1);

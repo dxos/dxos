@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { sleep, Trigger, waitForCondition } from '@dxos/async';
 import { type Client } from '@dxos/client';
@@ -12,7 +11,6 @@ import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { Filter } from '@dxos/echo-db';
 import { create, splitMeta } from '@dxos/echo-schema';
-import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { TriggerRegistry } from './trigger-registry';
@@ -60,15 +58,15 @@ const manifest: FunctionManifest = {
   ],
 };
 
-chai.use(chaiAsPromised);
-
 describe('trigger registry', () => {
   let ctx: Context;
   let testBuilder: TestBuilder;
+
   beforeEach(async () => {
     ctx = new Context();
     testBuilder = new TestBuilder();
   });
+
   afterEach(async () => {
     await ctx.dispose();
     await testBuilder.destroy();
@@ -101,7 +99,8 @@ describe('trigger registry', () => {
     });
   });
 
-  describe('activate', () => {
+  // TODO(burdon): Server-only.
+  describe.skip('activate', () => {
     test('invokes the provided callback', async () => {
       const [client] = await createInitializedClients(testBuilder);
       const space = await client.spaces.create();

@@ -30,7 +30,7 @@ const Story = ({ text }: StoryProps) => {
     () => [
       createBasicExtensions(),
       createMarkdownExtensions({ themeMode }),
-      createThemeExtensions({ themeMode }),
+      createThemeExtensions({ themeMode, syntaxHighlighting: true }),
       // TODO(burdon): Bug if mermaid extension is provided after decorateMarkdown.
       mermaid(),
       decorateMarkdown(),

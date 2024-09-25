@@ -15,9 +15,9 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { Button, ButtonGroup, List, Tooltip } from '@dxos/react-ui';
+import { Button, ButtonGroup, List } from '@dxos/react-ui';
 import { getSize, groupSurface } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ClipboardProvider, IdentityListItem, SpaceListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
@@ -222,12 +222,10 @@ const Invitations = (args: { id: number; count: number }) => {
 export const Default = {
   render: (args: { id: number }) => (
     <ClipboardProvider>
-      <Tooltip.Provider>
-        <ClientRepeater component={Invitations} count={3} />
-      </Tooltip.Provider>
+      <ClientRepeater component={Invitations} count={3} />
     </ClipboardProvider>
   ),
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ tooltips: true })],
   parameters: {
     chromatic: { disableSnapshot: true },
     translations: [osTranslations],

@@ -45,6 +45,10 @@ export abstract class Resource implements Lifecycle {
     return Object.getPrototypeOf(this).constructor.name;
   }
 
+  get isOpen() {
+    return this.#lifecycleState === LifecycleState.OPEN;
+  }
+
   protected get _lifecycleState() {
     return this.#lifecycleState;
   }

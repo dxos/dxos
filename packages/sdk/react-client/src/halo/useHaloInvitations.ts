@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { useMulticastObservable } from '@dxos/react-async';
+import { useMulticastObservable } from '@dxos/react-hooks';
 
 import { useClient } from '../client';
 import { useInvitationStatus, type CancellableInvitationObservable } from '../invitations';
