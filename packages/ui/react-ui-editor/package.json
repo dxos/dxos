@@ -69,7 +69,6 @@
     "@dxos/automerge": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
-    "@dxos/echo-typegen": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",

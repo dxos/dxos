@@ -41,7 +41,6 @@
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/echo-typegen": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",

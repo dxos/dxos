@@ -24,9 +24,6 @@
       "path": "../async"
     },
     {
-      "path": "../context"
-    },
-    {
       "path": "../debug"
     },
     {

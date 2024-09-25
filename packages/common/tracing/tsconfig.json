@@ -23,9 +23,6 @@
       "path": "../context"
     },
     {
-      "path": "../debug"
-    },
-    {
       "path": "../invariant"
     },
     {
