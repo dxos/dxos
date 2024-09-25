@@ -4,11 +4,10 @@
 
 import React from 'react';
 
-import { type LayoutParts, SLUG_PATH_SEPARATOR, Surface, useResolvePlugin } from '@dxos/app-framework';
-import { parseAttentionPlugin } from '@dxos/plugin-attention';
+import { type LayoutParts, SLUG_PATH_SEPARATOR, Surface } from '@dxos/app-framework';
 import { useGraph } from '@dxos/plugin-graph';
 import { Main } from '@dxos/react-ui';
-import { createAttendableAttributes } from '@dxos/react-ui-attention';
+import { createAttendableAttributes, useAttendedIds } from '@dxos/react-ui-attention';
 import { deckGrid } from '@dxos/react-ui-deck';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -26,9 +25,7 @@ export type ComplementarySidebarProps = {
 
 export const ComplementarySidebar = ({ context, layoutParts, flatDeck }: ComplementarySidebarProps) => {
   const { popoverAnchorId } = useLayout();
-  const attentionPlugin = useResolvePlugin(parseAttentionPlugin);
-  const attention = attentionPlugin?.provides.attention;
-  const attended = attention?.attended ? Array.from(attention.attended) : [];
+  const attended = useAttendedIds();
   const id = attended[0] ? `${attended[0]}${SLUG_PATH_SEPARATOR}${context}` : undefined;
   const { graph } = useGraph();
   const node = useNode(graph, id);
