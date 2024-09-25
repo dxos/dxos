@@ -5,6 +5,7 @@
 import {
   asyncTimeout,
   Event,
+  runInContextAsync,
   synchronized,
   TimeoutError,
   Trigger,
@@ -556,6 +557,22 @@ export class CoreDatabase {
       this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT }),
     );
     return value ?? raise(new Error('Failed to get sync state'));
+  }
+
+  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): UnsubscribeCallback {
+    const stream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
+    stream.subscribe(
+      (data) => {
+        runInContextAsync(ctx, () => callback(data));
+      },
+      (err) => {
+        if (err) {
+          ctx.raise(err);
+        }
+      },
+    );
+    ctx.onDispose(() => stream.close());
+    return () => stream.close();
   }
 
   getLoadedDocumentHandles(): DocHandleProxy<any>[] {
