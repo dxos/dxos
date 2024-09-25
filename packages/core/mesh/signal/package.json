@@ -28,7 +28,6 @@
     "pkg-up": "^3.1.0"
   },
   "devDependencies": {
-    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/node": "^22.6.1",
     "@types/node-fetch": "^2.5.10"

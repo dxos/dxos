@@ -1,7 +1,6 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/types",
     "types": [
       "@dxos/typings"
     ]
@@ -77,9 +76,6 @@
       "path": "../../mesh/network-manager"
     },
     {
-      "path": "../../mesh/rpc"
-    },
-    {
       "path": "../../mesh/teleport"
     },
     {
@@ -102,9 +98,6 @@
     },
     {
       "path": "../echo-protocol"
-    },
-    {
-      "path": "../echo-schema"
     },
     {
       "path": "../indexing"

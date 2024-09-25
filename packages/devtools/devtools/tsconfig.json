@@ -6,7 +6,6 @@
     "lib": [
       "DOM"
     ],
-    "outDir": "dist/types",
     "types": [
       "@dxos/typings",
       "node"

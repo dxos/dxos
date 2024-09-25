@@ -25,6 +25,12 @@ const useHasAttention = (attendableId?: string) => {
   return attendableId ? attended.has(attendableId) : false;
 };
 
+const useIsDirectlyAttended = (attendableId?: string) => {
+  const { attended } = useAttentionContext(ATTENTION_NAME);
+  const attendedArray = Array.from(attended);
+  return attendedArray.length === 1 && attendedArray[0] === attendableId;
+};
+
 /**
  * Computes HTML element attributes to apply so the attention system can detect changes
  * @param attendableId
@@ -97,6 +103,13 @@ const AttentionProvider = ({
   );
 };
 
-export { AttentionProvider, useAttentionContext, useHasAttention, createAttendableAttributes, ATTENTION_NAME };
+export {
+  AttentionProvider,
+  useAttentionContext,
+  useHasAttention,
+  useIsDirectlyAttended,
+  createAttendableAttributes,
+  ATTENTION_NAME,
+};
 
 export type { AttentionContextValue };

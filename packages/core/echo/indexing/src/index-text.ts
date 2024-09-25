@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import * as orama from '@orama/orama';
 
 import { Event } from '@dxos/async';

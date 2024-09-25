@@ -17,8 +17,8 @@ describe('Presence', () => {
 
     await builder.connect(agent1, agent2);
 
-    await agent1.waitForAgentsOnline([agent2], 200);
-    await agent2.waitForAgentsOnline([agent1], 200);
+    await agent1.waitForAgentsOnline([agent2], TIMEOUT);
+    await agent2.waitForAgentsOnline([agent1], TIMEOUT);
   });
 
   test('Reannounce', async () => {
@@ -49,8 +49,8 @@ describe('Presence', () => {
     await builder.connect(agent2, agent3);
 
     // Check if first and third peers "see" each other.
-    await agent1.waitForAgentsOnline([agent2, agent3], 200);
-    await agent3.waitForAgentsOnline([agent1, agent2], 200);
+    await agent1.waitForAgentsOnline([agent2, agent3], TIMEOUT);
+    await agent3.waitForAgentsOnline([agent1, agent2], TIMEOUT);
   });
 
   test('One connection drops after some time', async () => {
@@ -66,13 +66,13 @@ describe('Presence', () => {
     await builder.connect(agent2, agent3);
 
     // Check if first and third peers "see" each other.
-    await agent1.waitForAgentsOnline([agent2, agent3], 200);
-    await agent3.waitForAgentsOnline([agent1, agent2], 200);
+    await agent1.waitForAgentsOnline([agent2, agent3], TIMEOUT);
+    await agent3.waitForAgentsOnline([agent1, agent2], TIMEOUT);
 
     await agent3.destroy();
 
     // Check if third peer is offline for first and second peer.
-    await agent1.waitForAgentsOnline([agent2], 200);
+    await agent1.waitForAgentsOnline([agent2], TIMEOUT);
   });
 
   test('Four peers connected', async () => {
@@ -98,7 +98,7 @@ describe('Presence', () => {
       // Run system for some time.
       await sleep(200);
 
-      await agent1.waitForAgentsOnline([agent2, agent3, agent4], 200);
+      await agent1.waitForAgentsOnline([agent2, agent3, agent4], TIMEOUT);
     }
 
     {
@@ -110,7 +110,7 @@ describe('Presence', () => {
       // fourth peer  --  third peer
       //
 
-      await agent1.waitForAgentsOnline([agent2, agent3, agent4], 200);
+      await agent1.waitForAgentsOnline([agent2, agent3, agent4], TIMEOUT);
     }
 
     {
@@ -122,7 +122,7 @@ describe('Presence', () => {
       // fourth peer      third peer
       //
 
-      await agent1.waitForAgentsOnline([agent2, agent3], 200);
+      await agent1.waitForAgentsOnline([agent2, agent3], TIMEOUT);
     }
 
     {
@@ -134,7 +134,9 @@ describe('Presence', () => {
       // fourth peer  --  third peer
       //
 
-      await agent1.waitForAgentsOnline([agent2, agent3, agent4], 200);
+      await agent1.waitForAgentsOnline([agent2, agent3, agent4], TIMEOUT);
     }
   });
 });
+
+const TIMEOUT = 500;

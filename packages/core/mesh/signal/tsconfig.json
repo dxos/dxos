@@ -1,8 +1,6 @@
 {
   "extends": "../../../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "dist/types"
-  },
+  "compilerOptions": {},
   "include": [
     "src/**/*"
   ],
@@ -15,9 +13,6 @@
     },
     {
       "path": "../../../common/util"
-    },
-    {
-      "path": "../../protocols"
     }
   ]
 }
