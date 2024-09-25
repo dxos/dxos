@@ -74,7 +74,7 @@ export const DeckLayout = ({
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
 
   const scrollLeftRef = useRef<number | null>();
-  const deckRef = useRef<HTMLDivElement | null>();
+  const deckRef = useRef<HTMLDivElement>(null);
 
   /**
    * Clear scroll restoration state if the window is resized
