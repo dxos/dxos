@@ -15,7 +15,9 @@ import {
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
+import { Stream } from '@dxos/codec-protobuf';
 import { Context, ContextDisposedError } from '@dxos/context';
+import { raise } from '@dxos/debug';
 import { isEncodedReference, Reference, type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES, type AnyObjectData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -42,8 +44,6 @@ import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChanged
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { Filter, optionsToProto, Query, type FilterSource, type PropertyFilter, type QueryFn } from '../query';
-import { Stream } from '@dxos/codec-protobuf';
-import { raise } from '@dxos/debug';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -563,7 +563,7 @@ export class CoreDatabase {
     const stream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
     stream.subscribe(
       (data) => {
-        runInContextAsync(ctx, () => callback(data));
+        void runInContextAsync(ctx, () => callback(data));
       },
       (err) => {
         if (err) {

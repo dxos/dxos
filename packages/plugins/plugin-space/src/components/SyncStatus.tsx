@@ -10,21 +10,16 @@ import type { Client } from '@dxos/client';
 import { type Space, type SpaceId, type SpaceSyncState } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { StatusBar } from '@dxos/plugin-status-bar';
+import { EdgeService } from '@dxos/protocols';
 import { useClient } from '@dxos/react-client';
-import { useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { EdgeService } from '@dxos/protocols';
-import { SPACE_PLUGIN } from '../meta';
-
 export const SyncStatus = () => {
-  const { t } = useTranslation(SPACE_PLUGIN);
   const client = useClient();
   const [state, setState] = React.useState<EdgeSyncState>(initialEdgeSyncState);
 
   useEffect(() => {
     return createClientSyncTracker(client, (state) => {
-      console.log('new state', state);
       setState(state);
     });
   }, []);
@@ -97,14 +92,13 @@ const initialEdgeSyncState: EdgeSyncState = {
 };
 
 const extractEdgeSyncSate = (state: Record<SpaceId, SpaceSyncState>): EdgeSyncState => {
-  console.log('extractEdgeSyncSate', state);
   const unsyncedSpaces = new Set<SpaceId>();
   const spacesNotConnectedToEdge = new Set<SpaceId>();
-  let missingOnRemote = 0,
-    missingOnLocal = 0,
-    differentDocuments = 0,
-    localDocumentCount = 0,
-    remoteDocumentCount = 0;
+  let missingOnRemote = 0;
+  let missingOnLocal = 0;
+  let differentDocuments = 0;
+  let localDocumentCount = 0;
+  let remoteDocumentCount = 0;
 
   for (const [spaceId, syncState] of Object.entries(state)) {
     let hasEdgePeer = false;

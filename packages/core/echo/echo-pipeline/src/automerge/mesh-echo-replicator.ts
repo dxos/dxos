@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { CollectionId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -15,7 +16,6 @@ import { type EchoReplicator, type EchoReplicatorContext, type ShouldAdvertisePa
 import { MeshReplicatorConnection } from './mesh-echo-replicator-connection';
 import { getSpaceIdFromCollectionId } from './space-collection';
 import { createIdFromSpaceKey } from '../common/space-id';
-import type { CollectionId } from '@dxos/echo-protocol';
 
 // TODO(dmaretskyi): Move out of @dxos/echo-pipeline.
 

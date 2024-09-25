@@ -195,9 +195,9 @@ export type CollectionStateDiff = {
 export const diffCollectionState = (local: CollectionState, remote: CollectionState): CollectionStateDiff => {
   const allDocuments = new Set<DocumentId>([...Object.keys(local.documents), ...Object.keys(remote.documents)] as any);
 
-  const missingOnRemote: DocumentId[] = [],
-    missingOnLocal: DocumentId[] = [],
-    different: DocumentId[] = [];
+  const missingOnRemote: DocumentId[] = [];
+  const missingOnLocal: DocumentId[] = [];
+  const different: DocumentId[] = [];
   for (const documentId of allDocuments) {
     if (!local.documents[documentId]) {
       missingOnLocal.push(documentId as DocumentId);

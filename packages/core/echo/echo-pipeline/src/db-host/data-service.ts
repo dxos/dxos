@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { UpdateScheduler } from '@dxos/async';
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream } from '@dxos/codec-protobuf/stream';
@@ -25,7 +26,6 @@ import {
 
 import { DocumentsSynchronizer } from './documents-synchronizer';
 import { deriveCollectionIdFromSpaceId, type AutomergeHost } from '../automerge';
-import { UpdateScheduler } from '@dxos/async';
 
 export type DataServiceParams = {
   automergeHost: AutomergeHost;
