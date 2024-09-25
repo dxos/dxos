@@ -27,15 +27,7 @@
   ],
   "dependencies": {
     "@dxos/node-std": "workspace:*",
-<<<<<<< HEAD
-    "@dxos/protocols": "workspace:*",
     "@types/node": "^22.6.1"
-  },
-  "devDependencies": {
-    "@dxos/random": "workspace:*"
-=======
-    "@types/node": "^22.6.1"
->>>>>>> origin/main
   },
   "devDependencies": {},
   "publishConfig": {

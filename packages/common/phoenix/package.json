@@ -32,12 +32,7 @@
     "pkg-up": "^3.1.0"
   },
   "devDependencies": {
-<<<<<<< HEAD
-    "@types/node": "^22.6.1",
-    "@types/ps-tree": "^1.1.2"
-=======
     "@types/node": "^22.6.1"
->>>>>>> origin/main
   },
   "publishConfig": {
     "access": "public"
