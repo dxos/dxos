@@ -2,13 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
 import { pipeline } from 'node:stream';
 import randomBytes from 'randombytes';
-import waitForExpect from 'wait-for-expect';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { Framer, decodeFrame, encodeFrame } from './framer';
 
@@ -66,7 +64,7 @@ describe('Framer', () => {
     const peer2 = new Framer();
 
     const clean = pipe(peer1.stream, peer2.stream);
-    afterTest(clean);
+    onTestFinished(clean);
 
     // Peer 1 loops messages back to peer 2.
     peer1.port.subscribe((message) => {
@@ -137,11 +135,9 @@ describe('Framer', () => {
       framesSent.push(frame);
     }
 
-    await waitForExpect(() => {
-      expect(framesReceived.length).to.deep.eq(framesSent.length);
-      for (const i in framesSent) {
-        expect(framesReceived[i]).to.deep.eq(framesSent[i], `Frame ${i} does not match`);
-      }
-    });
+    await expect.poll(() => framesReceived.length).toEqual(framesSent.length);
+    for (const i in framesSent) {
+      expect(framesReceived[i]).to.deep.eq(framesSent[i], `Frame ${i} does not match`);
+    }
   });
 });

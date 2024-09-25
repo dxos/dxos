@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { S } from '@dxos/echo-schema';
-import { describe, test } from '@dxos/test';
 
 import { classifySchemaProperties } from './schema';
 

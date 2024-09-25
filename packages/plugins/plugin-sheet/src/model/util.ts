@@ -4,6 +4,9 @@
 
 import { randomBytes } from '@dxos/crypto';
 
+import { type CellRange, type CellAddress } from '.';
+import { type SheetType } from '../types';
+
 // TODO(burdon): Factor out from dxos/protocols to new common package.
 export class ApiError extends Error {}
 export class ReadonlyException extends ApiError {}
@@ -25,6 +28,39 @@ export const createIndex = (length = 8): string => {
 
 export const createIndices = (length: number): string[] => Array.from({ length }).map(() => createIndex());
 
+/**
+ * E.g., "A1" => "CA2@CB3".
+ */
+export const addressToIndex = (sheet: SheetType, cell: CellAddress): string => {
+  return `${sheet.columns[cell.column]}@${sheet.rows[cell.row]}`;
+};
+
+/**
+ * E.g., "CA2@CB3" => "A1".
+ */
+export const addressFromIndex = (sheet: SheetType, idx: string): CellAddress => {
+  const [column, row] = idx.split('@');
+  return {
+    column: sheet.columns.indexOf(column),
+    row: sheet.rows.indexOf(row),
+  };
+};
+
+/**
+ * E.g., "A1:B2" => "CA2@CB3:CC4@CD5".
+ */
+export const rangeToIndex = (sheet: SheetType, range: CellRange): string => {
+  return [range.from, range.to ?? range.from].map((cell) => addressToIndex(sheet, cell)).join(':');
+};
+
+/**
+ * E.g., "CA2@CB3:CC4@CD5" => "A1:B2".
+ */
+export const rangeFromIndex = (sheet: SheetType, idx: string): CellRange => {
+  const [from, to] = idx.split(':').map((index) => addressFromIndex(sheet, index));
+  return { from, to };
+};
+
 // TODO(burdon): Factor out.
 export const pickOne = <T>(values: T[]): T => values[Math.floor(Math.random() * values.length)];
 export const pickSome = <T>(values: T[], n = 1): T[] => {
@@ -33,4 +69,35 @@ export const pickSome = <T>(values: T[], n = 1): T[] => {
     result.add(pickOne(values));
   }
   return Array.from(result.values());
+};
+
+export const closest = (cursor: CellAddress, cells: CellAddress[]): CellAddress | undefined => {
+  let closestCell: CellAddress | undefined;
+  let closestDistance = Number.MAX_SAFE_INTEGER;
+
+  for (const cell of cells) {
+    const distance = Math.abs(cell.row - cursor.row) + Math.abs(cell.column - cursor.column);
+    if (distance < closestDistance) {
+      closestCell = cell;
+      closestDistance = distance;
+    }
+  }
+
+  return closestCell;
+};
+
+/**
+ * Compares the positions of two cell indexes in a sheet.
+ * Sorts primarily by row, then by column if rows are equal.
+ */
+export const compareIndexPositions = (sheet: SheetType, indexA: string, indexB: string): number => {
+  const { row: rowA, column: columnA } = addressFromIndex(sheet, indexA);
+  const { row: rowB, column: columnB } = addressFromIndex(sheet, indexB);
+
+  // Sort by row first, then by column.
+  if (rowA !== rowB) {
+    return rowA - rowB;
+  } else {
+    return columnA - columnB;
+  }
 };

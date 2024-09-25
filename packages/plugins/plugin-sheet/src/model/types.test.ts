@@ -3,8 +3,7 @@
 //
 
 import { getIndices, sortByIndex, getIndicesBelow, getIndicesAbove, getIndicesBetween } from '@tldraw/indices';
-import { expect } from 'chai';
-import { describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import { inRange, addressFromA1Notation, addressToA1Notation, rangeFromA1Notation, rangeToA1Notation } from './types';
 

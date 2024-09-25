@@ -81,6 +81,7 @@ export type WithMultiClientProviderProps = InitializeProps & ClientProviderProps
  * Orchestrates invitations between a randomly selected host and the remaining clients.
  * NOTE: Should come before withLayout.
  */
+// TODO(burdon): Create test.
 export const withMultiClientProvider = ({
   numClients = 2,
   createIdentity,

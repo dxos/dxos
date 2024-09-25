@@ -4,9 +4,7 @@
 
 import { markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState, type StateCommand } from '@codemirror/state';
-import { expect } from 'chai';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 import {
   addBlockquote,

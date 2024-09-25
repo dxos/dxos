@@ -15,7 +15,7 @@ import {
   type SubscribeToFeedsResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
-import { PublicKey, useClientServices } from '@dxos/react-client';
+import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { DropdownMenu, Tree, TreeItem, Toolbar } from '@dxos/react-ui';
@@ -119,7 +119,8 @@ export const StoragePanel = () => {
   const [snapshotInfo, setSnapshotInfo] = useState<GetSnapshotsResponse | undefined>();
   const [blobsInfo, setBlobsInfo] = useState<GetBlobsResponse | undefined>();
   const feeds = useStream(() => devtoolsHost.subscribeToFeeds({}), {}, []);
-  const services = useClientServices();
+  const client = useClient();
+  const services = client.services.services;
   if (!services) {
     return null;
   }
@@ -253,7 +254,7 @@ export const StoragePanel = () => {
                 <DropdownMenu.Viewport>
                   <DropdownMenu.Item
                     onClick={async () => {
-                      await services?.SystemService.reset();
+                      await services?.SystemService?.reset();
                       location.reload();
                     }}
                   >

@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
-import { describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import { diff, intersection, distinctBy } from './array';
 
