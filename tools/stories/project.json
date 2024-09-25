@@ -67,7 +67,7 @@
     "mkdist": {
       "command": "mkdir -p tools/stories/static"
     },
-    "build-all": {
+    "compile-all": {
       "executor": "nx:run-commands",
       "options": {
         "command": "nx run-many --target=build --all"
@@ -117,7 +117,7 @@
         }
       },
       "dependsOn": [
-        "build-all"
+        "compile-all"
       ],
       "executor": "@nx/storybook:build",
       "options": {
