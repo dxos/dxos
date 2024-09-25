@@ -13,13 +13,16 @@ export const SyncStateInfo = () => {
   const { space } = useDevtoolsState();
   const [syncState, setSyncState] = useState({});
 
-  useAsyncEffect(async () => {
+  const refresh = async () => {
     space && setSyncState(await space.db.coreDatabase.getSyncState());
-  }, [space]);
+  };
+  useAsyncEffect(refresh, [space]);
 
   return (
     <div>
-      <div className='flex w-full bg-gray-50 p-2'>Sync state</div>
+      <div className='flex w-full bg-gray-50 p-2'>
+        Sync state <button onClick={refresh}>Refresh</button>
+      </div>
       <JsonView data={syncState} />
     </div>
   );

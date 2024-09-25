@@ -236,12 +236,11 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 
   private _onMessage(message: RouterMessage) {
     if (message.serviceId !== this._targetServiceId) {
-      log.info('service id missmatch', { actual: message.serviceId, expected: this._targetServiceId });
       return;
     }
 
     const payload = cbor.decode(message.payload!.value) as AutomergeMessage;
-    log.info('recv', () => {
+    log('recv', () => {
       const decodedData =
         payload.type === 'sync' && payload.data
           ? A.decodeSyncMessage(payload.data)
@@ -263,7 +262,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     // Fix the peer id.
     message.targetId = this._targetServiceId as PeerId;
 
-    log.info('send', {
+    log('send', {
       type: message.type,
       senderId: message.senderId,
       targetId: message.targetId,
