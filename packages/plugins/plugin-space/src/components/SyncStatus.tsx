@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CloudArrowDown, CloudArrowUp, CloudCheck, CloudSlash } from '@phosphor-icons/react';
 import React, { useEffect } from 'react';
 
 import type { UnsubscribeCallback } from '@dxos/async';
@@ -12,7 +11,7 @@ import { Context } from '@dxos/context';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { EdgeService } from '@dxos/protocols';
 import { useClient } from '@dxos/react-client';
-import { getSize } from '@dxos/react-ui-theme';
+import { Icon } from '@dxos/react-ui';
 
 export const SyncStatus = () => {
   const client = useClient();
@@ -28,17 +27,21 @@ export const SyncStatus = () => {
   const needsToDownload = state.missingOnLocal > 0 || state.differentDocuments > 0;
   const notConnectedToEdge = state.spacesNotConnectedToEdge.size > 0;
 
+  // TODO(burdon): Click for popup status.
   return (
     <StatusBar.Item title={JSON.stringify(state, null, 2)}>
-      {notConnectedToEdge ? (
-        <CloudSlash className={getSize(5)} />
-      ) : needsToUpload ? (
-        <CloudArrowUp className={getSize(5)} />
-      ) : needsToDownload ? (
-        <CloudArrowDown className={getSize(5)} />
-      ) : (
-        <CloudCheck className={getSize(5)} />
-      )}
+      <Icon
+        icon={
+          notConnectedToEdge
+            ? 'ph--cloud-slash--regular'
+            : needsToUpload
+              ? 'ph--cloud-arrow-up--regular'
+              : needsToDownload
+                ? 'ph--cloud-arrow-down--regular'
+                : 'ph--cloud-check--regular'
+        }
+        size={5}
+      />
     </StatusBar.Item>
   );
 };
