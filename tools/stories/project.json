@@ -110,7 +110,25 @@
         "configDir": "tools/stories/config/all"
       }
     },
-    "storybook-build": {
+    "bundle": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "dependsOn": [
+        "compile-all"
+      ],
+      "executor": "@nx/storybook:build",
+      "options": {
+        "configDir": "tools/stories/config/all",
+        "outputDir": "tools/stories/out/stories"
+      },
+      "outputs": [
+        "{options.outputDir}"
+      ]
+    },
+    "storybook-build-all": {
       "configurations": {
         "ci": {
           "quiet": true
