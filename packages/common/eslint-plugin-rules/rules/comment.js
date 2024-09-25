@@ -152,7 +152,7 @@ module.exports = {
         return true;
       }
 
-      // 6. Check TODO format.
+      // 6. Check "TODO" format.
       const containsTodo = TODO_PATTERN.test(comment.value);
       const startsWithTodo = TODO_START_PATTERN.test(comment.value);
       const isTodoFormatted = FORMATTED_TODO_PATTERN.test(comment.value);

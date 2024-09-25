@@ -127,9 +127,14 @@ export const huePalettes = {
   } satisfies PhysicalPalette,
 };
 
+/**
+ * LCH
+ * https://oklch.com/#47,0,86.52,100
+ */
 const systemPalettes = {
   neutral: {
-    keyPoint: [0.47, 0.004, 86.52],
+    keyPoint: [0, 0, 0],
+    // keyPoint: [0.47, 0.004, 86.52],
     lowerCp: 0,
     upperCp: 0,
     torsion: 0,
