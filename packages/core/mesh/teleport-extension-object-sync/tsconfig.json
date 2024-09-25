@@ -1,7 +1,6 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/types",
     "types": [
       "@dxos/typings",
       "node"
@@ -25,9 +24,6 @@
       "path": "../../../common/crypto"
     },
     {
-      "path": "../../../common/debug"
-    },
-    {
       "path": "../../../common/invariant"
     },
     {
@@ -47,9 +43,6 @@
     },
     {
       "path": "../../protocols"
-    },
-    {
-      "path": "../rpc"
     },
     {
       "path": "../teleport"

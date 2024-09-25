@@ -24,12 +24,8 @@
     "dist",
     "src"
   ],
-  "dependencies": {
-    "@dxos/node-std": "workspace:*"
-  },
-  "devDependencies": {
-    "@types/node": "^22.6.1"
-  },
+  "dependencies": {},
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

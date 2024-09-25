@@ -5,7 +5,6 @@
 declare module 'random-access-file';
 declare module 'random-access-idb';
 declare module 'random-access-memory';
-declare module 'random-access-web/mutable-file-wrapper';
 
 /**
  * Interface for `random-access-*` implementations.
