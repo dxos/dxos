@@ -6,7 +6,6 @@
       "ESNext"
     ],
     "module": "ESNext",
-    "outDir": "dist/types",
     "types": [
       "node"
     ]
