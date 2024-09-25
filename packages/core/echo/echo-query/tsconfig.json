@@ -1,9 +1,7 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/types",
     "types": [
-      "@dxos/test",
       "@dxos/typings"
     ]
   },
@@ -16,9 +14,6 @@
     },
     {
       "path": "../../../common/random"
-    },
-    {
-      "path": "../echo-db"
     },
     {
       "path": "../echo-generator"

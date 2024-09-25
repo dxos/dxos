@@ -5,5 +5,5 @@
 import React from 'react';
 
 // Lazily load components for content surfaces.
-export const TriggerArticle = React.lazy(() => import('./TriggerArticle'));
+export const TriggerArticle = React.lazy(() => import('./TriggerContainer'));
 export const TriggerSection = React.lazy(() => import('./TriggerSection'));

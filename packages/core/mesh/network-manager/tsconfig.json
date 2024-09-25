@@ -4,8 +4,7 @@
     "lib": [
       "DOM",
       "ESNext"
-    ],
-    "outDir": "dist/types"
+    ]
   },
   "include": [
     "src",
@@ -20,9 +19,6 @@
     },
     {
       "path": "../../../common/context"
-    },
-    {
-      "path": "../../../common/crypto"
     },
     {
       "path": "../../../common/debug"
@@ -43,16 +39,7 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../../../sdk/config"
-    },
-    {
-      "path": "../../halo/credentials"
-    },
-    {
       "path": "../../protocols"
-    },
-    {
-      "path": "../edge-client"
     },
     {
       "path": "../messaging"

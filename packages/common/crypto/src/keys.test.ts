@@ -2,9 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
-
-import { test } from '@dxos/test';
+import { describe, test, expect } from 'vitest';
 
 import { createId, createKeyPair, randomBytes, sign, verify } from './keys';
 

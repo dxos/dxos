@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
-import { describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import { createBucketReducer, numericalValues, reduceGroupBy, reduceSeries, reduceSet } from './reducers';
 import { Tracer } from './tracer';

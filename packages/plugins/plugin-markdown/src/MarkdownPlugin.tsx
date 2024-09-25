@@ -16,7 +16,6 @@ import {
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
@@ -134,6 +133,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       echo: {
         schema: [DocumentType, TextType],
       },
+      space: {
+        onSpaceCreate: {
+          label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+          action: MarkdownAction.CREATE,
+        },
+      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -241,13 +246,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         ],
       },
       thread: {
-        // TODO(Zan): How to better handle the type predicate?
         predicate: (obj) => obj instanceof DocumentType,
         createSort: (doc: DocumentType) => {
           const accessor = doc.content ? createDocAccessor(doc.content, ['content']) : undefined;
-
           if (!accessor) {
-            log.warn('No accessor found for document content.');
             return (_) => 0;
           }
 
@@ -256,7 +258,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             return range?.start ?? Number.MAX_SAFE_INTEGER;
           };
 
-          return (anchorA: string, anchorB: string) => getStartPosition(anchorA) - getStartPosition(anchorB);
+          return (anchorA: string | undefined, anchorB: string | undefined): number => {
+            if (anchorA === undefined || anchorB === undefined) {
+              return 0;
+            }
+            const posA = getStartPosition(anchorA);
+            const posB = getStartPosition(anchorB);
+            return posA - posB;
+          };
         },
       },
       surface: {

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/crypto",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "Basic cross-platform crypto utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,7 +16,8 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     }
@@ -40,8 +41,7 @@
     "hypercore-crypto": "^2.3.0"
   },
   "devDependencies": {
-    "@types/crypto-js": "~4.0.2",
-    "@types/node": "^18.11.9"
+    "@types/node": "^22.6.1"
   },
   "publishConfig": {
     "access": "public"

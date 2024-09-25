@@ -3,10 +3,9 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { expect } from 'chai';
-import get from 'lodash.get';
+import { describe, expect, test } from 'vitest';
 
-import { describe, test } from '@dxos/test';
+import { getDeep } from '@dxos/util';
 
 import { SchemaValidator } from './schema-validator';
 import { create } from '../handler';
@@ -59,7 +58,7 @@ describe('schema-validator', () => {
     }) => {
       const expectation = expect(() => {
         const nestedSchema = SchemaValidator.getPropertySchema(args.schema, args.path, (path) => {
-          return get(args.target, path);
+          return getDeep(args.target, path);
         });
         S.validateSync(nestedSchema)(args.valueToAssign);
       });
@@ -181,6 +180,18 @@ describe('schema-validator', () => {
           schema: S.Struct({ field: S.String }, { key: S.String, value: S.Number }),
           target: {},
           path: ['unknownField'],
+          valueToAssign: value,
+          expectToThrow: typeof value !== 'number',
+        });
+      }
+    });
+
+    test('index signature from optional record', () => {
+      for (const value of [42, '42']) {
+        validateValueToAssign({
+          schema: S.Struct({ field: S.optional(S.Record(S.String, S.Number)) }),
+          target: {},
+          path: ['field', 'unknownField'],
           valueToAssign: value,
           expectToThrow: typeof value !== 'number',
         });

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-debug",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "DXOS Surface plugin for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -80,14 +80,14 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
-    "vite": "^5.3.4"
+    "vite": "5.4.7"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   },
   "publishConfig": {
     "access": "public"

@@ -17,6 +17,7 @@ import { matchServiceCredential } from './hub-protocol';
 
 // TODO: use URL scheme for source?
 const USERFUNCTIONS_META_KEY = 'dxos.org/service/function';
+export const USERFUNCTIONS_PRESET_META_KEY = 'dxos.org/service/function-preset';
 const USERFUNCTIONS_CREDENTIAL_CAPABILITY = 'composer:beta';
 
 // TODO: Synchronize API types with server

@@ -1,8 +1,6 @@
 {
   "extends": "../../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "dist/types"
-  },
+  "compilerOptions": {},
   "include": [
     "src",
     "test"
@@ -13,6 +11,9 @@
     },
     {
       "path": "../node-std"
+    },
+    {
+      "path": "../test-utils"
     }
   ]
 }

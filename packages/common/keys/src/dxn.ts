@@ -31,6 +31,9 @@ export class DXN {
   });
 
   static parse(dxn: string): DXN {
+    if (typeof dxn !== 'string') {
+      throw new Error('Invalid DXN');
+    }
     const [prefix, kind, ...parts] = dxn.split(':');
     if (!(prefix === 'dxn')) {
       throw new Error('Invalid DXN');
@@ -75,6 +78,10 @@ export class DXN {
 
   isTypeDXNOf(typename: string) {
     return this.#kind === DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
+  }
+
+  isLocalEchoObjectDXN() {
+    return this.#kind === DXN.kind.ECHO && this.#parts[0] === LOCAL_SPACE_TAG && this.#parts.length === 2;
   }
 
   toString() {

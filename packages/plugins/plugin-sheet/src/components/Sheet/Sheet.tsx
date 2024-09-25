@@ -60,6 +60,7 @@ import {
 } from './grid';
 import { type GridSize, handleArrowNav, handleNav, useRangeSelect } from './nav';
 import { type SheetContextProps, SheetContextProvider, useSheetContext } from './sheet-context';
+import { useThreads } from './threads';
 import { getRectUnion, getRelativeClientRect, scrollIntoView } from './util';
 import {
   type CellIndex,
@@ -68,6 +69,8 @@ import {
   columnLetter,
   posEquals,
   rangeToA1Notation,
+  addressToIndex,
+  addressFromIndex,
 } from '../../model';
 import {
   CellEditor,
@@ -141,6 +144,10 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
   // Scrolling.
   const { rowsRef, columnsRef, contentRef } = useScrollHandlers();
 
+  // Threads.
+  // TODO(Zan): Move this to an extension once we have an extension model.
+  useThreads();
+
   //
   // Order of Row/columns.
   //
@@ -170,21 +177,21 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
   }, [rows, columns]);
 
   const handleMoveRows: SheetRowsProps['onMove'] = (from, to, num = 1) => {
-    const cursorIdx = cursor ? model.addressToIndex(cursor) : undefined;
+    const cursorIdx = cursor ? addressToIndex(model.sheet, cursor) : undefined;
     const [rows] = model.sheet.rows.splice(from, num);
     model.sheet.rows.splice(to, 0, rows);
     if (cursorIdx) {
-      setCursor(model.addressFromIndex(cursorIdx));
+      setCursor(addressFromIndex(model.sheet, cursorIdx));
     }
     setRows([...model.sheet.rows]);
   };
 
   const handleMoveColumns: SheetColumnsProps['onMove'] = (from, to, num = 1) => {
-    const cursorIdx = cursor ? model.addressToIndex(cursor) : undefined;
+    const cursorIdx = cursor ? addressToIndex(model.sheet, cursor) : undefined;
     const columns = model.sheet.columns.splice(from, num);
     model.sheet.columns.splice(to, 0, ...columns);
     if (cursorIdx) {
-      setCursor(model.addressFromIndex(cursorIdx));
+      setCursor(addressFromIndex(model.sheet, cursorIdx));
     }
     setColumns([...model.sheet.columns]);
   };
@@ -882,7 +889,7 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
                 const style: CSSProperties = { position: 'absolute', top, left, width, height };
                 const cell = { row, column };
                 const id = addressToA1Notation(cell);
-                const idx = model.addressToIndex(cell);
+                const idx = addressToIndex(model.sheet, cell);
                 const active = posEquals(cursor, cell);
                 if (active && editing) {
                   const value = initialText.current ?? model.getCellText(cell) ?? '';
@@ -1003,8 +1010,38 @@ type SheetCellProps = {
 };
 
 const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
-  const { formatting, editing, setRange } = useSheetContext();
+  const {
+    formatting,
+    editing,
+    setRange,
+    decorations,
+    model: { sheet },
+  } = useSheetContext();
   const { value, classNames } = formatting.getFormatting(cell);
+
+  const decorationsForCell = decorations.getDecorationsForCell(addressToIndex(sheet, cell)) ?? [];
+  const decorationAddedClasses = useMemo(
+    () => decorationsForCell.flatMap((d) => d.classNames ?? []),
+    [decorationsForCell],
+  );
+  const decoratedContent = decorationsForCell.reduce(
+    (children, { decorate }) => {
+      if (!decorate) {
+        return children;
+      }
+      const DecoratorComponent = decorate;
+      return <DecoratorComponent>{children}</DecoratorComponent>;
+    },
+    <div
+      role='none'
+      className={mx(
+        'flex flex-grow bs-full is-full px-2 items-center truncate cursor-pointer',
+        ...decorationAddedClasses,
+      )}
+    >
+      {value}
+    </div>,
+  );
 
   return (
     <div
@@ -1012,7 +1049,7 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       role='cell'
       style={style}
       className={mx(
-        'flex w-full h-full px-2 py-1 truncate items-center border border-gridLine cursor-pointer',
+        'border border-gridLine cursor-pointer',
         fragments.cell,
         active && ['z-20', fragments.cellSelected],
         classNames,
@@ -1026,7 +1063,7 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       }}
       onDoubleClick={() => onSelect?.(cell, true)}
     >
-      {value}
+      {decoratedContent}
     </div>
   );
 };

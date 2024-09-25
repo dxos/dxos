@@ -2,11 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+// @ts-ignore
+import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
+import { beforeAll, describe, expect, test } from 'vitest';
 
-import { Bundler } from './bundler';
+import { isNode } from '@dxos/util';
+
+import { Bundler, initializeBundler } from './bundler';
 
 describe('Bundler', () => {
+  beforeAll(async () => {
+    if (!isNode()) {
+      await initializeBundler({ wasmUrl });
+    }
+  });
+
   test('Basic', async () => {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
     const result = await bundler.bundle('const x = 100'); // TODO(burdon): Test import.

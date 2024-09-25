@@ -30,6 +30,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/test-utils"
+    },
+    {
       "path": "../../common/tracing"
     },
     {
@@ -43,9 +46,6 @@
     },
     {
       "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-typegen"
     },
     {
       "path": "../../core/protocols"

@@ -9,6 +9,8 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import { type SchemaProvides } from '@dxos/plugin-client';
+import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { type StackProvides } from '@dxos/plugin-stack';
 
 import { TableType } from './table';
@@ -26,6 +28,8 @@ export type TablePluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
+  SchemaProvides &
+  SpaceInitProvides &
   StackProvides &
   TranslationsProvides;
 

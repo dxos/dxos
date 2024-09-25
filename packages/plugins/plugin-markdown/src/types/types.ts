@@ -12,6 +12,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-client';
+import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { type Extension, type EditorInputMode, type EditorViewMode } from '@dxos/react-ui-editor';
 
 import { type DocumentType } from './document';
@@ -64,12 +65,11 @@ export type MarkdownSettingsProps = {
   folding?: boolean;
 };
 
-// TODO(Zan): Move this to the plugin-space plugin or another common location
-// when we implement comments in sheets.
+// TODO(Zan): Move this to the plugin-space plugin or another common location when we implement comments in sheets.
 type ThreadProvides<T> = {
   thread: {
     predicate: (obj: any) => obj is T;
-    createSort: (obj: T) => (anchorA: string, anchorB: string) => number;
+    createSort: (obj: T) => (anchorA: string | undefined, anchorB: string | undefined) => number;
   };
 };
 
@@ -81,5 +81,6 @@ export type MarkdownPluginProvides = SurfaceProvides &
   SettingsProvides<MarkdownSettingsProps> &
   TranslationsProvides &
   SchemaProvides &
+  SpaceInitProvides &
   StackProvides &
   ThreadProvides<DocumentType>;

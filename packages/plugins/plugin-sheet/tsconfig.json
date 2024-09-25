@@ -8,7 +8,6 @@
       "ESNext"
     ],
     "module": "ESNext",
-    "outDir": "dist/types",
     "types": [
       "node"
     ]
@@ -84,6 +83,9 @@
     },
     {
       "path": "../experimental/plugin-script"
+    },
+    {
+      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-client"

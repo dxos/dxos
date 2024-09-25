@@ -17,8 +17,21 @@
       }
     },
     "build": {
+      "dependsOn": [
+        "compile"
+      ],
+      "executor": "nx:noop"
+    },
+    "compile": {
+      "cache": true,
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "@nx/js:tsc",
       "options": {
-        "outputPath": "{projectRoot}/dist"
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "{projectRoot}/dist",
+        "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
     "lint": {}
