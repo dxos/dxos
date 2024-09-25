@@ -32,7 +32,6 @@
   },
   "dependencies": {
     "@dxos/conform": "workspace:*",
-    "execa": "^5.1.0",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
@@ -97,11 +96,13 @@
     "@vitest/utils": "^2.1.1",
     "@vuepress/client": "2.0.0-rc.0",
     "chalk": "^4.1.0",
+    "depcheck": "^1.4.7",
     "effect": "^3.2.7",
     "esbuild": "^0.23.1",
     "esbuild-plugin-raw": "^0.1.8",
     "esbuild-plugin-yaml": "^0.0.1",
     "eslint": "^8.56.0",
+    "execa": "^5.1.1",
     "fast-check": "^3.19.0",
     "fast-xml-parser": "^4.3.2",
     "glob": "^7.2.3",
