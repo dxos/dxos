@@ -3,7 +3,7 @@
 //
 
 import { addons } from '@storybook/manager-api';
-import { create } from '@storybook/theming'
+import { create } from '@storybook/theming';
 
 /**
  * https://storybook.js.org/docs/configure/features-and-behavior
@@ -18,5 +18,5 @@ addons.setConfig({
     brandImage: '/dxos-horizontal-white.svg',
     brandTarget: '_self',
     brandUrl: 'https://github.com/dxos',
-  })
+  }),
 });
