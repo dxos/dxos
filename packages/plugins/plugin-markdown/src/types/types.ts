@@ -65,8 +65,7 @@ export type MarkdownSettingsProps = {
   folding?: boolean;
 };
 
-// TODO(Zan): Move this to the plugin-space plugin or another common location
-// when we implement comments in sheets.
+// TODO(Zan): Move this to the plugin-space plugin or another common location when we implement comments in sheets.
 type ThreadProvides<T> = {
   thread: {
     predicate: (obj: any) => obj is T;

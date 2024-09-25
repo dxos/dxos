@@ -6,12 +6,12 @@ import type {
   GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-client';
 import { type SpaceInitProvides } from '@dxos/plugin-space';
-import { type StackProvides } from '@dxos/plugin-stack';
 
 import { SCRIPT_PLUGIN } from '../meta';
 
@@ -19,11 +19,13 @@ export enum ScriptAction {
   CREATE = `${SCRIPT_PLUGIN}/create`,
 }
 
-export type ScriptPluginProvides = SurfaceProvides &
+export type ScriptSettingsProps = {};
+
+export type ScriptPluginProvides = GraphBuilderProvides &
   IntentResolverProvides &
-  GraphBuilderProvides &
   MetadataRecordsProvides &
-  TranslationsProvides &
   SchemaProvides &
+  SettingsProvides<ScriptSettingsProps> &
   SpaceInitProvides &
-  StackProvides;
+  SurfaceProvides &
+  TranslationsProvides;
