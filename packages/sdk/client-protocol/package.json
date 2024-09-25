@@ -39,9 +39,6 @@
     "@dxos/rpc": "workspace:*",
     "base-x": "~3.0.9"
   },
-  "devDependencies": {
-    "@dxos/echo-typegen": "workspace:*"
-  },
   "publishConfig": {
     "access": "public"
   }

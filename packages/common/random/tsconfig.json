@@ -1,10 +1,13 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {},
-  "include": ["src", "test"],
+  "include": [
+    "src",
+    "test"
+  ],
   "references": [
     {
-      "path": "../node-std",
-    },
-  ],
+      "path": "../node-std"
+    }
+  ]
 }

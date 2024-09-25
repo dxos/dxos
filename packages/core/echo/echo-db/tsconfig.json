@@ -79,9 +79,6 @@
       "path": "../echo-signals"
     },
     {
-      "path": "../echo-typegen"
-    },
-    {
       "path": "../indexing"
     }
   ]

@@ -46,7 +46,6 @@
     "react-router-dom": "^6.4.0"
   },
   "devDependencies": {
-    "@dxos/echo-typegen": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

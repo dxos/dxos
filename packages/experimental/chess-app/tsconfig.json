@@ -1,24 +1,26 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "lib": ["DOM", "ESNext"],
+    "lib": [
+      "DOM",
+      "ESNext"
+    ]
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
-      "path": "../../core/echo/echo-schema",
+      "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../core/echo/echo-typegen",
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui",
+      "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../../ui/react-ui-theme",
-    },
-    {
-      "path": "../../ui/storybook-utils",
-    },
-  ],
+      "path": "../../ui/storybook-utils"
+    }
+  ]
 }
