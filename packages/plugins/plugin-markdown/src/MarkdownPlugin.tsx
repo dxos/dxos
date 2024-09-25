@@ -133,6 +133,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       echo: {
         schema: [DocumentType, TextType],
       },
+      space: {
+        onSpaceCreate: {
+          label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+          action: MarkdownAction.CREATE,
+        },
+      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
