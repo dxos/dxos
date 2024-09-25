@@ -60,6 +60,9 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
       echo: {
         schema: [ScriptType, FunctionType],
       },
+      space: {
+        onSpaceCreate: ScriptAction.CREATE,
+      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
