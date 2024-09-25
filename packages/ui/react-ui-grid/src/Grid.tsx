@@ -11,6 +11,8 @@ import React, { type ComponentProps, forwardRef, type PropsWithChildren, useCall
 
 import { type DxAxisResize, type DxEditRequest, DxGrid as NaturalDxGrid } from '@dxos/lit-grid';
 
+type DxGridElement = NaturalDxGrid;
+
 const DxGrid = createComponent({
   tagName: 'dx-grid',
   elementClass: NaturalDxGrid,
@@ -110,4 +112,4 @@ export const Grid = {
 
 export { GridRoot, GridContent, useGridContext, createGridScope };
 
-export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps };
+export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps, DxGridElement };
