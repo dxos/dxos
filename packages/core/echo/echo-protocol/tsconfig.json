@@ -1,17 +1,13 @@
 {
   "extends": "../../../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "dist/types"
-  },
-  "include": [
-    "src"
-  ],
+  "compilerOptions": {},
+  "include": ["src"],
   "references": [
     {
-      "path": "../../../common/keys"
+      "path": "../../../common/keys",
     },
     {
-      "path": "../../protocols"
-    }
-  ]
+      "path": "../../protocols",
+    },
+  ],
 }
