@@ -31,13 +31,13 @@ export const SyncStatus = () => {
   return (
     <StatusBar.Item title={JSON.stringify(state, null, 2)}>
       {notConnectedToEdge ? (
-        <CloudSlash className={getSize(3)} />
+        <CloudSlash className={getSize(4)} />
       ) : needsToUpload ? (
-        <CloudArrowUp className={getSize(3)} />
+        <CloudArrowUp className={getSize(4)} />
       ) : needsToDownload ? (
-        <CloudArrowDown className={getSize(3)} />
+        <CloudArrowDown className={getSize(4)} />
       ) : (
-        <CloudCheck className={getSize(3)} />
+        <CloudCheck className={getSize(4)} />
       )}
     </StatusBar.Item>
   );
