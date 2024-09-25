@@ -14,6 +14,7 @@ import {
   preventNewline,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import { type GridEditBox } from '@dxos/react-ui-grid';
 
 export type EditorKeysProps = {
   onClose: (value: string | undefined) => void;
@@ -75,6 +76,7 @@ export type CellEditorProps = {
   value?: string;
   extension?: Extension;
   variant?: 'legacy' | 'grid';
+  box?: GridEditBox;
 } & Pick<UseTextEditorProps, 'autoFocus'> &
   Pick<DOMAttributes<HTMLInputElement>, 'onBlur' | 'onKeyDown'>;
 
@@ -85,13 +87,13 @@ const editorVariants = {
     content: '!px-2 !py-1',
   },
   grid: {
-    root: '',
+    root: 'absolute z-[1]',
     editor: '[&>.cm-scroller]:scrollbar-none',
     content: '!px-2 !py-1',
   },
 };
 
-export const CellEditor = ({ value, extension, autoFocus, onBlur, variant = 'legacy' }: CellEditorProps) => {
+export const CellEditor = ({ value, extension, autoFocus, onBlur, variant = 'legacy', box }: CellEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
@@ -123,5 +125,5 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, variant = 'leg
     };
   }, [extension, autoFocus, value, variant, onBlur]);
 
-  return <div ref={parentRef} className={editorVariants[variant].root} />;
+  return <div ref={parentRef} className={editorVariants[variant].root} style={box} />;
 };

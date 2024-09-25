@@ -21,12 +21,14 @@ const DxGrid = createComponent({
   },
 });
 
+type GridEditBox = DxEditRequest['cellBox'];
+
 const initialBox = {
   insetInlineStart: 0,
   insetBlockStart: 0,
   inlineSize: 0,
   blockSize: 0,
-} satisfies DxEditRequest['cellBox'];
+} satisfies GridEditBox;
 
 type GridEditing = DxEditRequest['cellIndex'] | null;
 
@@ -34,8 +36,8 @@ type GridContextValue = {
   id: string;
   editing: GridEditing;
   setEditing: (nextEditing: GridEditing) => void;
-  editBox: DxEditRequest['cellBox'];
-  setEditBox: (nextEditBox: DxEditRequest['cellBox']) => void;
+  editBox: GridEditBox;
+  setEditBox: (nextEditBox: GridEditBox) => void;
 };
 
 type GridScopedProps<P> = P & { __gridScope?: Scope };
@@ -67,7 +69,7 @@ const GridRoot = ({
     defaultProp: defaultEditing,
     onChange: onEditingChange,
   });
-  const [editBox, setEditBox] = useState<DxEditRequest['cellBox']>(initialBox);
+  const [editBox, setEditBox] = useState<GridEditBox>(initialBox);
   return (
     <GridProvider
       id={id}
@@ -108,4 +110,4 @@ export const Grid = {
 
 export { GridRoot, GridContent, useGridContext, createGridScope };
 
-export type { GridRootProps, GridContentProps, GridEditing };
+export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps };
