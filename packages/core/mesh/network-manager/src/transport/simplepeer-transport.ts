@@ -4,10 +4,10 @@
 //
 
 import SimplePeerConstructor, { type Instance as SimplePeer } from 'simple-peer';
-import invariant from 'tiny-invariant';
 
 import { Event, synchronized } from '@dxos/async';
 import { ErrorStream, raise } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ConnectionResetError, ConnectivityError, ProtocolError, UnknownProtocolError, trace } from '@dxos/protocols';

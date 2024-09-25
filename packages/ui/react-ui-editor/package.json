@@ -69,7 +69,6 @@
     "@dxos/automerge": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
-    "@dxos/echo-typegen": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -104,8 +103,8 @@
   "peerDependencies": {
     "@dxos/react-client": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   },
   "publishConfig": {
     "access": "public"
