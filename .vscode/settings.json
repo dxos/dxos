@@ -50,5 +50,6 @@
   },
   "debug.javascript.terminalOptions": {},
   "circleci.persistedProjectSelection": [],
-  "vitest.disableWorkspaceWarning": true
+  "vitest.disableWorkspaceWarning": true,
+  "typescript.tsserver.maxTsServerMemory": 8192,
 }

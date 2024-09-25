@@ -25,10 +25,8 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/echo-db": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@orama/orama": "^2.0.8",
-    "lodash.get": "^4.4.2"
+    "@orama/orama": "^2.0.8"
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",

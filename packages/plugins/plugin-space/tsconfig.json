@@ -25,6 +25,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/display-name"
     },
     {
@@ -95,6 +98,9 @@
     },
     {
       "path": "../plugin-settings"
+    },
+    {
+      "path": "../plugin-status-bar"
     }
   ]
 }

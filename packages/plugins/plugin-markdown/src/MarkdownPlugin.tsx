@@ -16,7 +16,6 @@ import {
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
@@ -252,7 +251,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           const accessor = doc.content ? createDocAccessor(doc.content, ['content']) : undefined;
 
           if (!accessor) {
-            log.warn('No accessor found for document content.');
             return (_) => 0;
           }
 

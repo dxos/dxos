@@ -5,12 +5,7 @@
 import { type Plugin } from 'esbuild';
 import wasm from 'esbuild-plugin-wasm';
 
-import {
-  FixGracefulFsPlugin,
-  FixMemdownPlugin,
-  NodeGlobalsPolyfillPlugin,
-  NodeModulesPlugin,
-} from '@dxos/esbuild-plugins';
+import { FixGracefulFsPlugin, NodeGlobalsPolyfillPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
 export const buildBrowserBundle = async (outfile: string) => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -25,7 +20,6 @@ export const buildBrowserBundle = async (outfile: string) => {
     outfile,
     plugins: [
       FixGracefulFsPlugin(),
-      FixMemdownPlugin(),
       NodeGlobalsPolyfillPlugin(),
       NodeModulesPlugin(),
       wasmCompat(),
