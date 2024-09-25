@@ -2,25 +2,32 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "allowJs": true,
-    "lib": ["DOM", "ESNext"],
+    "lib": [
+      "DOM",
+      "ESNext"
+    ]
   },
-  "exclude": ["src/testing"],
-  "include": ["src"],
+  "exclude": [
+    "src/testing"
+  ],
+  "include": [
+    "src"
+  ],
   "references": [
     {
-      "path": "../../common/log",
+      "path": "../../common/log"
     },
     {
-      "path": "../../common/node-std",
+      "path": "../../common/node-std"
     },
     {
-      "path": "../../common/tracing",
+      "path": "../../common/tracing"
     },
     {
-      "path": "../../common/util",
+      "path": "../../common/util"
     },
     {
-      "path": "../../core/protocols",
-    },
-  ],
+      "path": "../../core/protocols"
+    }
+  ]
 }

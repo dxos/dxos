@@ -1,13 +1,15 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {},
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
-      "path": "../../../common/keys",
+      "path": "../../../common/keys"
     },
     {
-      "path": "../../protocols",
-    },
-  ],
+      "path": "../../protocols"
+    }
+  ]
 }
