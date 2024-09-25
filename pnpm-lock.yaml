@@ -1265,9 +1265,6 @@ importers:
         specifier: ^2.3.0
         version: 2.3.2
     devDependencies:
-      '@types/crypto-js':
-        specifier: ~4.0.2
-        version: 4.0.2
       '@types/node':
         specifier: ^22.6.1
         version: 22.6.1
@@ -1550,15 +1547,7 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
 
-  packages/common/invariant:
-    dependencies:
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../node-std
-    devDependencies:
-      '@types/node':
-        specifier: ^22.6.1
-        version: 22.6.1
+  packages/common/invariant: {}
 
   packages/common/keyboard:
     dependencies:
@@ -1656,9 +1645,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../async
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
@@ -1694,9 +1680,6 @@ importers:
         specifier: ^4.5.0
         version: 4.5.0
     devDependencies:
-      '@swc-node/sourcemap-support':
-        specifier: ^0.2.0
-        version: 0.2.2
       '@types/js-yaml':
         specifier: ^4.0.5
         version: 4.0.5
@@ -1709,12 +1692,6 @@ importers:
       '@types/node':
         specifier: ^22.6.1
         version: 22.6.1
-      pirates:
-        specifier: ~4.0.5
-        version: 4.0.5
-      sorcery:
-        specifier: ^0.10.0
-        version: 0.10.0
 
   packages/common/node-std:
     dependencies:
@@ -1743,27 +1720,15 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../async
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../context
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../keys
-      '@dxos/lock-file':
-        specifier: workspace:*
-        version: link:../lock-file
       '@dxos/log':
         specifier: workspace:*
         version: link:../log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../util
       pkg-up:
         specifier: ^3.1.0
         version: 3.1.0
@@ -1771,9 +1736,6 @@ importers:
       '@types/node':
         specifier: ^22.6.1
         version: 22.6.1
-      '@types/ps-tree':
-        specifier: ^1.1.2
-        version: 1.1.2
 
   packages/common/plate:
     dependencies:
@@ -1786,9 +1748,6 @@ importers:
       chalk:
         specifier: ^4.1.0
         version: 4.1.2
-      esbuild:
-        specifier: ^0.23.1
-        version: 0.23.1
       inquirer:
         specifier: ^8.2.6
         version: 8.2.6
@@ -1937,28 +1896,12 @@ importers:
       '@ngneat/falso':
         specifier: ^7.1.1
         version: 7.1.1
-      seedrandom:
-        specifier: ^3.0.5
-        version: 3.0.5
-      uuid:
-        specifier: ^9.0.0
-        version: 9.0.1
-    devDependencies:
-      '@types/seedrandom':
-        specifier: ^3.0.5
-        version: 3.0.5
-      '@types/uuid':
-        specifier: ^9.0.0
-        version: 9.0.7
 
   packages/common/random-access-storage:
     dependencies:
       '@dxos/async':
         specifier: workspace:*
         version: link:../async
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../debug
@@ -2007,9 +1950,6 @@ importers:
       random-access-storage:
         specifier: ^1.3.0
         version: 1.4.3
-      random-access-web:
-        specifier: ^2.0.3
-        version: 2.0.3
     devDependencies:
       '@types/pify':
         specifier: ^3.0.2
@@ -2074,9 +2014,6 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../context
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../debug
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
@@ -18104,9 +18041,6 @@ packages:
   '@rushstack/tree-pattern@0.2.4':
     resolution: {integrity: sha512-H8i0OinWsdKM1TKEKPeRRTw85e+/7AIFpxm7q1blceZJhuxRBjCGAUZvQXZK4CMLx75xPqh/h1t5WHwFmElAPA==}
 
-  '@sammacbeth/random-access-idb-mutable-file@0.1.1':
-    resolution: {integrity: sha512-jHnpuu2qtFgwCmhgrpCCk3/hU3XqXTqhidh4XmcTijkVsGwh1c2T0+r2hkHs1PRfsxeimx8qDAotphpRoYB2eg==}
-
   '@sapphire/async-queue@1.5.2':
     resolution: {integrity: sha512-7X7FFAA4DngXUl95+hYbUF19bp1LGiffjJtu7ygrZrbdCSsdDDBaSjB7Akw0ZbOu6k0xpXyljnJ6/RZUvLfRdg==}
     engines: {node: '>=v14.0.0', npm: '>=7.0.0'}
@@ -19490,9 +19424,6 @@ packages:
   '@types/cross-spawn@6.0.6':
     resolution: {integrity: sha512-fXRhhUkG4H3TQk5dBhQ7m/JDdSNHKwR2BBia62lhwEIq9xGiQKLxd6LymNhn47SjXhsUEPmxi+PKw2OkW4LLjA==}
 
-  '@types/crypto-js@4.0.2':
-    resolution: {integrity: sha512-sCVniU+h3GcGqxOmng11BRvf9TfN9yIs8KKjB8C8d75W69cpTfZG80gau9yTx5SxF3gvHGbJhdESzzvnjtf3Og==}
-
   '@types/d3-array@3.0.3':
     resolution: {integrity: sha512-Reoy+pKnvsksN0lQUlcH6dOGjRZ/3WRwXR//m+/8lt1BXeI4xyaUZoqULNjyXXRuh0Mj4LNpkCvhUpQlY3X5xQ==}
 
@@ -19999,9 +19930,6 @@ packages:
 
   '@types/protocol-buffers-schema@3.4.1':
     resolution: {integrity: sha512-CBpqIDa1+/F3Z5EL8Uz/t+1eygIinJiMS37KP8O9TN+n38OlckYQhU+t/vYpsF7XhSDuiZS0zAJyfRrAeDKDUw==}
-
-  '@types/ps-tree@1.1.2':
-    resolution: {integrity: sha512-ZREFYlpUmPQJ0esjxoG1fMvB2HNaD3z+mjqdSosZvd3RalncI9NEur73P8ZJz4YQdL64CmV1w0RuqoRUlhQRBw==}
 
   '@types/qs@6.9.7':
     resolution: {integrity: sha512-FGa1F62FT09qcrueBA6qYTrJPVDzah9a+493+o2PCXsesWHIn27G98TsSMs3WPNbZIEj4+VJf6saSFpvD+3Zsw==}
@@ -29096,32 +29024,17 @@ packages:
   ramda@0.29.0:
     resolution: {integrity: sha512-BBea6L67bYLtdbOqfp8f58fPMqEwx0doL+pAi8TZyp2YWz8R9G8z9x75CZI8W+ftqhFHCpEX2cRnUUXK130iKA==}
 
-  random-access-chrome-file@1.2.0:
-    resolution: {integrity: sha512-M1NOdkHEcjRB+acKrdQkwf8aMTnZUIGboiH6i2PMNkjfChBIJiB4j4MuhpOn+u+XU2n7GqpocPN4bzfv0jrBsg==}
-
   random-access-file@2.2.1:
     resolution: {integrity: sha512-RGU0xmDqdOyEiynob1KYSeh8+9c9Td1MJ74GT1viMEYAn8SJ9oBtWCXLsYZukCF46yududHOdM449uRYbzBrZQ==}
-
-  random-access-idb-mutable-file@0.3.0:
-    resolution: {integrity: sha512-CdVAoFNNDn5uAgYOJ8J3ICSaFzaMOa95XnYcX+taj4jirJuRASiTyQSOGR+Z0K8ZkBGuj0A8ivyeRAWuxRCgQA==}
 
   random-access-idb@1.2.2:
     resolution: {integrity: sha512-NroFuBNVh5wVIHKN/jEYrgkkffppkfxNWFX9OEwC2VP7dYc3sa+Qxv7tMa1Gi9Jp/ObVfLeCZBt/8Sbn1WU1Xg==}
 
-  random-access-memory@3.1.4:
-    resolution: {integrity: sha512-rqgqd/8ec65gbpKaYHnDOW391OR39d+eXn8NI87G+f3sUKrtGib9jC+/5/9MBFBwwHAZIS8RLJ8yyB4etzbYTA==}
-
   random-access-memory@4.1.0:
     resolution: {integrity: sha512-vVt75UQpWcaZWlysSmk7isqdhiV10WCovxuKZmBKg5zSsiEXIclJmAlIsMr8usYqfFmXzOGIonWOAyR5u3jhXQ==}
 
-  random-access-storage@1.3.0:
-    resolution: {integrity: sha512-pdS9Mcb9TB7oICypPRALlheaSuszuAKmLVEPKJMuYor7R/zDuHh5ALuQoS+ox31XRwQUL+tDwWH2GPdyspwelA==}
-
   random-access-storage@1.4.3:
     resolution: {integrity: sha512-D5e2iIC5dNENWyBxsjhEnNOMCwZZ64TARK6dyMN+3g4OTC4MJxyjh9hKLjTGoNhDOPrgjI+YlFEHFnrp/cSnzQ==}
-
-  random-access-web@2.0.3:
-    resolution: {integrity: sha512-nN3AAgl4/lTOYMk5Qm44SzFsglOmaG2d0Kh0603umh35+rk9QXYLFf0nFJ0GOv9INBsP9iT1lub24r8PjyCtvA==}
 
   randombytes@2.1.0:
     resolution: {integrity: sha512-vYl3iOX+4CKUWuxGi9Ukhie6fsqXqS9FE2Zaic4tNFD2N2QQaXOMFbuKK4QmDHC0JO6B1Zp41J0LpT0oR68amQ==}
@@ -41689,11 +41602,6 @@ snapshots:
 
   '@rushstack/tree-pattern@0.2.4': {}
 
-  '@sammacbeth/random-access-idb-mutable-file@0.1.1':
-    dependencies:
-      buffer: 6.0.3
-      random-access-storage: 1.3.0
-
   '@sapphire/async-queue@1.5.2': {}
 
   '@sapphire/shapeshift@3.9.6':
@@ -43858,8 +43766,6 @@ snapshots:
     dependencies:
       '@types/node': 22.6.1
 
-  '@types/crypto-js@4.0.2': {}
-
   '@types/d3-array@3.0.3': {}
 
   '@types/d3-axis@3.0.1':
@@ -44430,8 +44336,6 @@ snapshots:
   '@types/protocol-buffers-schema@3.4.1':
     dependencies:
       '@types/node': 22.6.1
-
-  '@types/ps-tree@1.1.2': {}
 
   '@types/qs@6.9.7': {}
 
@@ -55609,19 +55513,10 @@ snapshots:
 
   ramda@0.29.0: {}
 
-  random-access-chrome-file@1.2.0:
-    dependencies:
-      random-access-storage: 1.4.3
-
   random-access-file@2.2.1:
     dependencies:
       mkdirp-classic: 0.5.3
       random-access-storage: 1.4.3
-
-  random-access-idb-mutable-file@0.3.0:
-    dependencies:
-      buffer: 6.0.3
-      random-access-storage: 1.3.0
 
   random-access-idb@1.2.2(patch_hash=mqfhtwnltd5kq5s4kb4gk7k2k4):
     dependencies:
@@ -55632,12 +55527,6 @@ snapshots:
       once: 1.4.0
       random-access-storage: 1.4.3
 
-  random-access-memory@3.1.4:
-    dependencies:
-      inherits: 2.0.4
-      is-options: 1.0.2
-      random-access-storage: 1.4.3
-
   random-access-memory@4.1.0:
     dependencies:
       b4a: 1.6.0
@@ -55645,24 +55534,11 @@ snapshots:
       is-options: 1.0.2
       random-access-storage: 1.4.3
 
-  random-access-storage@1.3.0:
-    dependencies:
-      inherits: 2.0.4
-
   random-access-storage@1.4.3:
     dependencies:
       events: 3.3.0
       inherits: 2.0.4
       queue-tick: 1.0.1
-
-  random-access-web@2.0.3:
-    dependencies:
-      '@sammacbeth/random-access-idb-mutable-file': 0.1.1
-      random-access-chrome-file: 1.2.0
-      random-access-idb: 1.2.2(patch_hash=mqfhtwnltd5kq5s4kb4gk7k2k4)
-      random-access-idb-mutable-file: 0.3.0
-      random-access-memory: 3.1.4
-      random-access-storage: 1.4.3
 
   randombytes@2.1.0:
     dependencies:
