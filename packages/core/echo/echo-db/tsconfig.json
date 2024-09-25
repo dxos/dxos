@@ -40,9 +40,6 @@
       "path": "../../../common/node-std"
     },
     {
-      "path": "../../../common/random-access-storage"
-    },
-    {
       "path": "../../../common/test-utils"
     },
     {
@@ -56,9 +53,6 @@
     },
     {
       "path": "../../mesh/teleport"
-    },
-    {
-      "path": "../../mesh/teleport-extension-automerge-replicator"
     },
     {
       "path": "../../protocols"

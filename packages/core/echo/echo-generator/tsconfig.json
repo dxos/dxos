@@ -19,9 +19,6 @@
       "path": "../../../common/random"
     },
     {
-      "path": "../../../common/util"
-    },
-    {
       "path": "../../../sdk/client"
     },
     {
