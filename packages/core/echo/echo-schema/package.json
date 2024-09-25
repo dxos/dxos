@@ -37,17 +37,13 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "lodash.get": "^4.4.2",
     "ulidx": "^2.3.0"
   },
   "devDependencies": {
