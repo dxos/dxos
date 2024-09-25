@@ -16,3 +16,4 @@ export * from './client';
 export * from './host';
 export * from './serialized-space';
 export * from './edge';
+export type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
