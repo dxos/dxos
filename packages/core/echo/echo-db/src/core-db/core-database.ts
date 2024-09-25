@@ -9,6 +9,7 @@ import {
   TimeoutError,
   Trigger,
   UpdateScheduler,
+  type ReadOnlyEvent,
   type UnsubscribeCallback,
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
@@ -36,7 +37,7 @@ import { CoreDatabaseQueryContext } from './core-database-query-context';
 import { type UpdateOperation, type InsertBatch, type InsertData } from './crud-api';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
-import { RepoProxy, type ChangeEvent, type DocHandleProxy } from '../client';
+import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { Filter, Query, type FilterSource, type PropertyFilter, type QueryFn } from '../query';
@@ -83,6 +84,8 @@ export class CoreDatabase {
 
   readonly rootChanged = new Event<void>();
 
+  readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+
   constructor(params: CoreDatabaseParams) {
     this._hypergraph = params.graph;
     this._dataService = params.dataService;
@@ -90,6 +93,7 @@ export class CoreDatabase {
     this._spaceId = params.spaceId;
     this._spaceKey = params.spaceKey;
     this._repoProxy = new RepoProxy(this._dataService, this._spaceId);
+    this.saveStateChanged = this._repoProxy.saveStateChanged;
     this._automergeDocLoader = new AutomergeDocumentLoaderImpl(params.spaceId, this._repoProxy, params.spaceKey);
   }
 
