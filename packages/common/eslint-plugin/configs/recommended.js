@@ -34,7 +34,7 @@ module.exports = {
     ],
     // TODO(burdon): Cycles.
     //  https://github.com/import-js/eslint-plugin-import/blob/main/docs/rules/no-cycle.md
-    'import/no-cycle': 1,
+    // 'import/no-cycle': 1,
     'import/no-self-import': 2,
     'import/order': [
       'error',
