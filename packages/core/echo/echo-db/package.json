@@ -55,29 +55,21 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/random-access-storage": "workspace:*",
     "@dxos/teleport": "workspace:*",
-    "@dxos/teleport-extension-automerge-replicator": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.67.16",
-    "@orama/orama": "^2.0.8",
     "effect": "^3.2.7",
     "eventemitter3": "^5.0.1",
-    "level": "^8.0.1",
-    "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
     "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {
     "@dxos/echo-pipeline": "workspace:*",
-    "@dxos/echo-typegen": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.get": "^4.4.7",
-    "@types/lodash.isequal": "^4.5.0",
-    "fast-check": "^3.19.0"
+    "@types/lodash.isequal": "^4.5.0"
   },
   "publishConfig": {
     "access": "public"

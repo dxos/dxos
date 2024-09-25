@@ -11,7 +11,6 @@
   "dependencies": {
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
-    "@dxos/echo-typegen": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -28,7 +27,7 @@
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "tailwindcss": "~3.4.1",
-    "vite": "^5.4.7",
+    "vite": "5.4.7",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0"
   }

@@ -4,15 +4,14 @@
 
 import '@dxos-theme';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { asyncTimeout } from '@dxos/async';
-import { Devtools } from '@dxos/devtools';
+import { DevtoolsApp } from '@dxos/devtools';
 import { log } from '@dxos/log';
+import { initializeAppObservability } from '@dxos/observability';
 import * as Sentry from '@dxos/observability/sentry';
-import { Client, Defaults, Config, ClientServicesProxy } from '@dxos/react-client';
-import { useAsyncEffect } from '@dxos/react-hooks';
+import { Defaults, Config, ClientServicesProxy } from '@dxos/react-client';
 import { type RpcPort } from '@dxos/rpc';
 
 // NOTE: Sandbox runs in an iframe which is sandboxed from the web extension.
@@ -22,7 +21,6 @@ import { type RpcPort } from '@dxos/rpc';
 // log.config({ filter: 'debug' });
 log('Init Sandbox script.');
 
-const INIT_TIMEOUT = 10000;
 const namespace = 'devtools-extension';
 const config = new Config(Defaults());
 const release = `${namespace}@${config.get('runtime.app.build.version')}`;
@@ -76,33 +74,29 @@ const waitForRpc = async () =>
   });
 
 const App = () => {
-  log('initializing...');
+  const [services, setServices] = useState<ClientServicesProxy>();
 
-  const [client, setClient] = useState<Client>();
-
-  useAsyncEffect(async () => {
-    log('waiting for rpc...');
-    const rpcPort = windowPort();
-    const servicesProvider = new ClientServicesProxy(rpcPort);
-    await waitForRpc();
-
-    const client = new Client({ services: servicesProvider });
-    log('initializing client...');
-    await asyncTimeout(client.initialize(), INIT_TIMEOUT, new Error('Client initialization error')).catch((err) => {
-      log.catch(err);
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      log('waiting for rpc...');
+      await waitForRpc();
+      const rpcPort = windowPort();
+      const servicesProvider = new ClientServicesProxy(rpcPort);
+      setServices(servicesProvider);
     });
-    setClient(client);
-    log('client initialized');
+
+    return () => clearTimeout(timeout);
   }, []);
 
-  if (!client) {
+  if (!services) {
     return null;
   }
 
-  return <Devtools client={client} namespace={namespace} />;
+  return <DevtoolsApp services={services} />;
 };
 
 const init = async () => {
+  void initializeAppObservability({ namespace, config: new Config(Defaults()) });
   createRoot(document.getElementById('root')!).render(<App />);
 };
 

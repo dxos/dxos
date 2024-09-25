@@ -1,7 +1,6 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/types",
     "types": [
       "@dxos/typings",
       "node"
@@ -22,9 +21,6 @@
     },
     {
       "path": "../context"
-    },
-    {
-      "path": "../debug"
     },
     {
       "path": "../invariant"

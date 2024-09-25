@@ -1,7 +1,6 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/types",
     "types": [
       "@dxos/typings"
     ]
@@ -11,13 +10,7 @@
   ],
   "references": [
     {
-      "path": "../../../common/debug"
-    },
-    {
       "path": "../../../common/invariant"
-    },
-    {
-      "path": "../../../common/keys"
     },
     {
       "path": "../../../common/log"
@@ -27,9 +20,6 @@
     },
     {
       "path": "../../../common/util"
-    },
-    {
-      "path": "../../protocols"
     },
     {
       "path": "../echo-protocol"
