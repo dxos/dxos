@@ -1,4 +1,4 @@
-name: Build and Publish Docker Container for CircleCI
+name: CircleCI Docker Container
 
 permissions:
   contents: read
@@ -8,10 +8,11 @@ on:
   push:
     branches:
       - main
-      - nf/circleci-docker
+      - circleci-docker
     paths:
       - .circleci/Dockerfile
-      - .github/workflows/circleci_docker_image.yml #shouldn't be needed, but it seems to be?
+      # TODO(nf): shouldn't be needed, but it seems to be?
+      - .github/workflows/circleci_docker_image.yml
   workflow_dispatch:
 
 env:
