@@ -18,7 +18,6 @@ import {
   resolvePlugin,
   parseGraphPlugin,
   SLUG_PATH_SEPARATOR,
-  SLUG_COLLECTION_INDICATOR,
   isLayoutParts,
   parseMetadataResolverPlugin,
 } from '@dxos/app-framework';
@@ -384,14 +383,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   data: thread,
                   intents: [
                     [
-                      {
-                        action: NavigationAction.OPEN,
-                        data: {
-                          activeParts: {
-                            complementary: `${subjectId}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
-                          },
-                        },
-                      },
                       {
                         action: ThreadAction.SELECT,
                         data: { current: fullyQualifiedId(thread), focus: true },
