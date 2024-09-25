@@ -6,7 +6,7 @@ import { Schema as S } from '@effect/schema';
 
 import type { EncodedReference } from '@dxos/echo-protocol';
 
-import { type EchoObjectAnnotation, getEchoObjectAnnotation, ReferenceAnnotationId } from './annotations';
+import { type EchoObjectAnnotation, getEchoObjectAnnotation, ReferenceAnnotationId } from './ast';
 import { DynamicSchema, StoredSchema } from './dynamic';
 import { EXPANDO_TYPENAME } from './expando';
 import { getTypename } from './getter';

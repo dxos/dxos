@@ -25,9 +25,11 @@ const _ForeignKeySchema = S.Struct({
 export type ForeignKey = S.Schema.Type<typeof _ForeignKeySchema>;
 export const ForeignKeySchema: S.Schema<ForeignKey> = _ForeignKeySchema;
 
-export const ObjectMetaSchema = S.Struct({
-  keys: S.mutable(S.Array(ForeignKeySchema)),
-});
+export const ObjectMetaSchema = S.mutable(
+  S.Struct({
+    keys: S.mutable(S.Array(ForeignKeySchema)),
+  }),
+);
 export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
 
 export type ExcludeId<T> = Simplify<Omit<T, 'id'>>;

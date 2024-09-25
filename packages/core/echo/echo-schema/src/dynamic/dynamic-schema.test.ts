@@ -11,7 +11,7 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 
 import { DynamicSchema } from './dynamic-schema';
 import { StoredSchema } from './stored-schema';
-import { FieldMeta, getEchoObjectAnnotation, getFieldMetaAnnotation } from '../annotations';
+import { FieldMeta, getEchoObjectAnnotation, getFieldMetaAnnotation } from '../ast';
 import { getTypeReference } from '../getter';
 import { create } from '../handler';
 import { effectToJsonSchema } from '../json';
