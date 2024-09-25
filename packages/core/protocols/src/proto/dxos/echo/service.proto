@@ -101,7 +101,11 @@ message GetSpaceSyncStateRequest {
 message SpaceSyncState {
   message PeerState {
     string peer_id = 1;
-    int32 documents_to_reconcile = 2;
+    int32 missing_on_remote = 10;
+    int32 missing_on_local = 11;
+    int32 different_documents = 12;
+    int32 local_document_count = 13;
+    int32 remote_document_count = 14;
   }
 
   repeated PeerState peers = 1;

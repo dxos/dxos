@@ -133,7 +133,11 @@ export class DataServiceImpl implements DataService {
         next({
           peers: state.peers.map((peer) => ({
             peerId: peer.peerId,
-            documentsToReconcile: peer.differentDocuments,
+            missingOnRemote: peer.missingOnRemote,
+            missingOnLocal: peer.missingOnLocal,
+            differentDocuments: peer.differentDocuments,
+            localDocumentCount: peer.localDocumentCount,
+            remoteDocumentCount: peer.remoteDocumentCount,
           })),
         });
       });

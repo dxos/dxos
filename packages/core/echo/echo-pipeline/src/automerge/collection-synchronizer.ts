@@ -187,24 +187,32 @@ export type CollectionState = {
 };
 
 export type CollectionStateDiff = {
+  missingOnRemote: DocumentId[];
+  missingOnLocal: DocumentId[];
   different: DocumentId[];
 };
 
 export const diffCollectionState = (local: CollectionState, remote: CollectionState): CollectionStateDiff => {
   const allDocuments = new Set<DocumentId>([...Object.keys(local.documents), ...Object.keys(remote.documents)] as any);
 
-  const different: DocumentId[] = [];
+  const missingOnRemote: DocumentId[] = [],
+    missingOnLocal: DocumentId[] = [],
+    different: DocumentId[] = [];
   for (const documentId of allDocuments) {
-    if (
-      !local.documents[documentId] ||
-      !remote.documents[documentId] ||
-      !am.equals(local.documents[documentId], remote.documents[documentId])
-    ) {
+    if (!local.documents[documentId]) {
+      missingOnLocal.push(documentId as DocumentId);
+    } else if (!remote.documents[documentId]) {
+      missingOnRemote.push(documentId as DocumentId);
+    } else if (!am.equals(local.documents[documentId], remote.documents[documentId])) {
       different.push(documentId as DocumentId);
     }
   }
 
-  return { different };
+  return {
+    missingOnRemote,
+    missingOnLocal,
+    different,
+  };
 };
 
 const validateCollectionState = (state: CollectionState) => {

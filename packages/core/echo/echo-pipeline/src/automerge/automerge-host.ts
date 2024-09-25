@@ -419,7 +419,11 @@ export class AutomergeHost extends Resource {
       const diff = diffCollectionState(localState, state);
       result.peers.push({
         peerId,
+        missingOnRemote: diff.missingOnRemote.length,
+        missingOnLocal: diff.missingOnLocal.length,
         differentDocuments: diff.different.length,
+        localDocumentCount: Object.keys(localState.documents).length,
+        remoteDocumentCount: Object.keys(state.documents).length,
       });
     }
 
@@ -548,5 +552,28 @@ export type CollectionSyncState = {
 
 export type PeerSyncState = {
   peerId: PeerId;
+  /**
+   * Documents that are present locally but not on the remote peer.
+   */
+  missingOnRemote: number;
+
+  /**
+   * Documents that are present on the remote peer but not locally.
+   */
+  missingOnLocal: number;
+
+  /**
+   * Documents that are present on both peers but have different heads.
+   */
   differentDocuments: number;
+
+  /**
+   * Total number of documents locally.
+   */
+  localDocumentCount: number;
+
+  /**
+   * Total number of documents on the remote peer.
+   */
+  remoteDocumentCount: number;
 };
