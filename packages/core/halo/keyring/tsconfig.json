@@ -1,40 +1,42 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {},
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
-      "path": "../../../common/async",
+      "path": "../../../common/async"
     },
     {
-      "path": "../../../common/codec-protobuf",
+      "path": "../../../common/codec-protobuf"
     },
     {
-      "path": "../../../common/crypto",
+      "path": "../../../common/crypto"
     },
     {
-      "path": "../../../common/debug",
+      "path": "../../../common/debug"
     },
     {
-      "path": "../../../common/invariant",
+      "path": "../../../common/invariant"
     },
     {
-      "path": "../../../common/keys",
+      "path": "../../../common/keys"
     },
     {
-      "path": "../../../common/log",
+      "path": "../../../common/log"
     },
     {
-      "path": "../../../common/node-std",
+      "path": "../../../common/node-std"
     },
     {
-      "path": "../../../common/random-access-storage",
+      "path": "../../../common/random-access-storage"
     },
     {
-      "path": "../../../common/util",
+      "path": "../../../common/util"
     },
     {
-      "path": "../../protocols",
-    },
-  ],
+      "path": "../../protocols"
+    }
+  ]
 }
