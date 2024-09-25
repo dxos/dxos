@@ -144,9 +144,9 @@ export class Graph {
    * If a node is not found within the graph and an `onInitialNode` callback is provided,
    * it is called with the id and type of the node, potentially initializing the node.
    */
-  findNode(id: string): Node | undefined {
+  findNode(id: string, expansion = true): Node | undefined {
     const existingNode = this._nodes[id];
-    if (!existingNode) {
+    if (!existingNode && expansion) {
       void this._onInitialNode?.(id);
     }
 

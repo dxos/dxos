@@ -1119,7 +1119,6 @@ export const SpacePlugin = ({
                       activeParts: {
                         main: deletionData.wasActive,
                         sidebar: deletionData.wasActive,
-                        complementary: deletionData.wasActive,
                       },
                     },
                   });

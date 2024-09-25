@@ -6,7 +6,6 @@ import { Sidebar as MenuIcon } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useRef, type UIEvent } from 'react';
 
 import {
-  SLUG_PATH_SEPARATOR,
   type Attention,
   type LayoutEntry,
   type LayoutParts,
@@ -108,13 +107,6 @@ export const DeckLayout = ({
     [layoutMode],
   );
 
-  const complementarySlug = useMemo(() => {
-    const entry = layoutParts.complementary?.at(0);
-    if (entry) {
-      return entry.path ? `${entry.id}${SLUG_PATH_SEPARATOR}${entry.path}` : entry.id;
-    }
-  }, [layoutParts]);
-
   const firstAttendedId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
 
   useEffect(() => {
@@ -169,25 +161,17 @@ export const DeckLayout = ({
       <Main.Root
         navigationSidebarOpen={context.sidebarOpen}
         onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
-        {...(complementarySidebarOpen !== null && {
-          complementarySidebarOpen: /* complementaryAvailable && */ context.complementarySidebarOpen as boolean,
-          onComplementarySidebarOpenChange: (next) => (context.complementarySidebarOpen = next),
-        })}
+        complementarySidebarOpen={context.complementarySidebarOpen}
+        onComplementarySidebarOpenChange={(next) => (context.complementarySidebarOpen = next)}
       >
         {/* Notch */}
         <Main.Notch classNames='z-[21]'>
           <Surface role='notch-start' />
-          <Button
-            // disabled={!sidebarAvailable}
-            onClick={() => (context.sidebarOpen = !context.sidebarOpen)}
-            variant='ghost'
-            classNames='p-1'
-          >
+          <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost' classNames='p-1'>
             <span className='sr-only'>{t('open navigation sidebar label')}</span>
             <MenuIcon weight='light' className={getSize(5)} />
           </Button>
           <Button
-            // disabled={!complementaryAvailable}
             onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
             variant='ghost'
             classNames='p-1'
@@ -202,7 +186,8 @@ export const DeckLayout = ({
         <Sidebar attention={attention} layoutParts={layoutParts} />
 
         {/* Right sidebar. */}
-        <ComplementarySidebar id={complementarySlug} layoutParts={layoutParts} flatDeck={flatDeck} />
+        {/* TODO(wittjosiah): Get context from layout parts. */}
+        <ComplementarySidebar context='comments' layoutParts={layoutParts} flatDeck={flatDeck} />
 
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />
