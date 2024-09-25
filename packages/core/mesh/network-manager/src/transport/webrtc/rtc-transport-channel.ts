@@ -5,7 +5,7 @@
 import { Duplex } from 'node:stream';
 
 import { Event as AsyncEvent } from '@dxos/async';
-import { LifecycleState, Resource } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { ConnectivityError } from '@dxos/protocols';
@@ -32,7 +32,6 @@ export class RtcTransportChannel extends Resource implements Transport {
   private _channel: RTCDataChannel | undefined;
   private _stream: Duplex | undefined;
   private _streamDataFlushedCallback: PendingStreamFlushedCallback | null = null;
-  private _isOpen = false;
 
   constructor(
     private readonly _connection: RtcPeerConnection,
@@ -49,7 +48,7 @@ export class RtcTransportChannel extends Resource implements Transport {
     this._connection
       .createDataChannel(this._options.topic)
       .then((channel) => {
-        if (this._lifecycleState === LifecycleState.OPEN) {
+        if (this.isOpen) {
           this._channel = channel;
           this._initChannel(this._channel);
         } else {
@@ -57,18 +56,17 @@ export class RtcTransportChannel extends Resource implements Transport {
         }
       })
       .catch((err) => {
-        if (this._lifecycleState === LifecycleState.OPEN) {
+        if (this.isOpen) {
           this.errors.raise(new ConnectivityError(`Failed to create a channel: ${err?.message ?? 'unknown reason'}.`));
         }
       });
   }
 
   protected override async _close() {
-    this._isOpen = false;
-
     if (this._channel) {
       this._safeCloseChannel(this._channel);
       this._channel = undefined;
+      this._stream = undefined;
     }
     this.closed.emit();
 
@@ -78,27 +76,27 @@ export class RtcTransportChannel extends Resource implements Transport {
   private _initChannel(channel: RTCDataChannel) {
     Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(channel, {
       onopen: () => {
-        log('onopen');
+        if (!this.isOpen) {
+          log.warn('channel opened in a closed transport', { topic: this._options.topic });
+          this._safeCloseChannel(channel);
+          return;
+        }
 
+        log('onopen');
         const duplex = new Duplex({
           read: () => {},
-          write: async (chunk, encoding, callback) => {
+          write: (chunk, encoding, callback) => {
             return this._handleChannelWrite(chunk, callback);
           },
         });
         duplex.pipe(this._options.stream).pipe(duplex);
-
         this._stream = duplex;
-        this._isOpen = true;
         this.connected.emit();
       },
 
       onclose: async () => {
         log('onclose');
-
-        if (this._isOpen) {
-          await this.close();
-        }
+        await this.close();
       },
 
       onmessage: (event: MessageEvent) => {
@@ -115,8 +113,10 @@ export class RtcTransportChannel extends Resource implements Transport {
       },
 
       onerror: (event: Event & any) => {
-        const err = event.error instanceof Error ? event.error : new Error(`Datachannel error: ${event.type}.`);
-        this.errors.raise(err);
+        if (this.isOpen) {
+          const err = event.error instanceof Error ? event.error : new Error(`Datachannel error: ${event.type}.`);
+          this.errors.raise(err);
+        }
       },
 
       onbufferedamountlow: () => {
@@ -129,12 +129,14 @@ export class RtcTransportChannel extends Resource implements Transport {
 
   private async _handleChannelWrite(chunk: any, callback: PendingStreamFlushedCallback) {
     if (!this._channel) {
-      log.warn('writing to a channel after connection was closed');
+      log.warn('writing to a channel after a connection was closed');
       return;
     }
 
     if (chunk.length > MAX_MESSAGE_SIZE) {
-      this.errors.raise(new Error(`Message too large: ${chunk.length} > ${MAX_MESSAGE_SIZE}.`));
+      const error = new Error(`Message too large: ${chunk.length} > ${MAX_MESSAGE_SIZE}.`);
+      this.errors.raise(error);
+      callback();
       return;
     }
 
@@ -142,6 +144,7 @@ export class RtcTransportChannel extends Resource implements Transport {
       this._channel.send(chunk);
     } catch (err: any) {
       this.errors.raise(err);
+      callback();
       return;
     }
 
