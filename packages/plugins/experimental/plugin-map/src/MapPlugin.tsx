@@ -47,7 +47,10 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         schema: [MapType],
       },
       space: {
-        onSpaceCreate: MapAction.CREATE,
+        onSpaceCreate: {
+          label: ['create object label', { ns: MAP_PLUGIN }],
+          action: MapAction.CREATE,
+        },
       },
       graph: {
         builder: (plugins) => {
