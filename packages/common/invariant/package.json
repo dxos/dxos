@@ -24,12 +24,17 @@
     "dist",
     "src"
   ],
+<<<<<<< HEAD
   "dependencies": {
     "@dxos/node-std": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.6.1"
   },
+=======
+  "dependencies": {},
+  "devDependencies": {},
+>>>>>>> origin/main
   "publishConfig": {
     "access": "public"
   }

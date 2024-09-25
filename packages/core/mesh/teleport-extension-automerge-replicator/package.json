@@ -29,16 +29,18 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/context": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
+<<<<<<< HEAD
     "@dxos/teleport": "workspace:*",
     "@dxos/util": "workspace:*"
+=======
+    "@dxos/teleport": "workspace:*"
+>>>>>>> origin/main
   },
   "publishConfig": {
     "access": "public",

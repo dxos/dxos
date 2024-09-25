@@ -37,13 +37,16 @@
     "lodash.omit": "^4.5.0"
   },
   "devDependencies": {
-    "@swc-node/sourcemap-support": "^0.2.0",
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.omit": "^4.5.7",
+<<<<<<< HEAD
     "@types/node": "^22.6.1",
     "pirates": "~4.0.5",
     "sorcery": "^0.10.0"
+=======
+    "@types/node": "^22.6.1"
+>>>>>>> origin/main
   },
   "publishConfig": {
     "access": "public"

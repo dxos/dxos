@@ -47,8 +47,12 @@
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
+<<<<<<< HEAD
     "@types/node": "^22.6.1",
     "fast-check": "^3.19.0"
+=======
+    "@types/node": "^22.6.1"
+>>>>>>> origin/main
   },
   "publishConfig": {
     "access": "public"

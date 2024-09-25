@@ -41,7 +41,10 @@
     "hypercore-crypto": "^2.3.0"
   },
   "devDependencies": {
+<<<<<<< HEAD
     "@types/crypto-js": "~4.0.2",
+=======
+>>>>>>> origin/main
     "@types/node": "^22.6.1"
   },
   "publishConfig": {

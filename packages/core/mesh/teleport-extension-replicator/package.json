@@ -44,7 +44,10 @@
   "devDependencies": {
     "@dxos/keyring": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
+<<<<<<< HEAD
     "add": "^2.0.6",
+=======
+>>>>>>> origin/main
     "fast-check": "^3.19.0"
   },
   "publishConfig": {
