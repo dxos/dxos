@@ -86,6 +86,7 @@ export default [
         'remove deleted objects label': 'Cleanup',
         'remove deleted objects alt': 'Permanently remove deleted objects to free up space.',
         'copy link label': 'Copy link',
+        'default on space create label': 'On space create',
       },
     },
   },

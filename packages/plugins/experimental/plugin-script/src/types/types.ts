@@ -10,6 +10,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-client';
+import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { type StackProvides } from '@dxos/plugin-stack';
 
 import { SCRIPT_PLUGIN } from '../meta';
@@ -24,4 +25,5 @@ export type ScriptPluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   SchemaProvides &
+  SpaceInitProvides &
   StackProvides;

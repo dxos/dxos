@@ -74,6 +74,12 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         //   FunctionType is currently registered here in case script plugin isn't enabled.
         schema: [SheetType, FunctionType],
       },
+      space: {
+        onSpaceCreate: {
+          label: ['create sheet label', { ns: SHEET_PLUGIN }],
+          action: SheetAction.CREATE,
+        },
+      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
