@@ -9,6 +9,7 @@
     "noEmit": true,
     "outDir": "dist",
     "types": [
+      "node",
       "sharedworker"
     ]
   },
@@ -24,6 +25,9 @@
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/test-utils"
     },
     {
       "path": "../../core/mesh/rpc"

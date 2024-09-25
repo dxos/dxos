@@ -2,12 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
-import jestExpect from 'expect';
-import { inspect } from 'util';
+import { inspect } from 'node:util';
+import { describe, expect, test } from 'vitest';
 
 import { registerSignalRuntime } from '@dxos/echo-signals';
-import { describe, test } from '@dxos/test';
+import { isNode } from '@dxos/util';
 
 import { create } from './object';
 import { TestClass, type TestSchema, TestSchemaWithClass, updateCounter } from '../testing';
@@ -30,7 +29,7 @@ for (const schema of [undefined, TestSchemaWithClass]) {
   };
 
   describe(`Non-echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
-    test('inspect', () => {
+    test.skipIf(!isNode())('inspect', () => {
       const obj = createObject({ string: 'bar' });
       const str = inspect(obj, { colors: false });
       expect(str).to.eq(`${schema == null ? '' : 'Typed '}{ string: 'bar' }`);
@@ -78,8 +77,8 @@ for (const schema of [undefined, TestSchemaWithClass]) {
         const original = { classInstance: new TestClass() };
         const reactive = createObject(original);
 
-        jestExpect(reactive).toEqual(original);
-        jestExpect(reactive).not.toEqual({ ...original, number: 11 });
+        expect(reactive).toEqual(original);
+        expect(reactive).not.toEqual({ ...original, number: 11 });
       });
     });
 

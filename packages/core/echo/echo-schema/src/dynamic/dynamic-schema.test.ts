@@ -5,10 +5,9 @@
 import { Schema as S } from '@effect/schema';
 import * as AST from '@effect/schema/AST';
 import { effect } from '@preact/signals-core';
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { registerSignalRuntime } from '@dxos/echo-signals';
-import { describe, test } from '@dxos/test';
 
 import { DynamicSchema } from './dynamic-schema';
 import { StoredSchema } from './stored-schema';

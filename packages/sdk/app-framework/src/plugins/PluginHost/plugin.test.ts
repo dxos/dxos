@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
 import { type FC } from 'react';
+import { describe, expect, test } from 'vitest';
 
 import { log } from '@dxos/log';
-import { describe, test } from '@dxos/test';
 
 import { type Plugin } from './plugin';
 

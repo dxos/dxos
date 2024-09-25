@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { describe, test } from '@dxos/test';
 
 import { Timeframe } from './timeframe';
 

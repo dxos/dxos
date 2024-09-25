@@ -115,7 +115,14 @@ const config: UserConfig = defineUserConfig({
       },
       // Do not try to resolve DXOS deps in ssr mode or bundling fails currently.
       ssr: {
-        external: ['@dxos/client', '@dxos/client-services/testing', '@dxos/react-client', '@dxos/echo-schema'],
+        external: [
+          '@dxos/client',
+          '@dxos/client-services/testing',
+          '@dxos/react-client',
+          '@dxos/echo-schema',
+          // TODO(wittjosiah): Why is this needed?
+          'node-domexception',
+        ],
       },
     },
   }),

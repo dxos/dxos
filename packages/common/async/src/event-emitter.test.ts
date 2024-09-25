@@ -2,10 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
 import { EventEmitter } from 'node:events';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 import { onEvent, waitForEvent } from './event-emitter';
 import { latch } from './latch';

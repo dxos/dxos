@@ -6,6 +6,7 @@ import { ChatText, Quotes } from '@phosphor-icons/react';
 import React, { useEffect } from 'react';
 
 import { type ThreadType } from '@dxos/plugin-space/types';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useTranslation, Trans } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
@@ -73,20 +74,23 @@ export const CommentsContainer = ({
   return (
     <>
       {filteredThreads.length > 0 ? (
-        filteredThreads.map((thread) => (
-          <CommentContainer
-            key={thread.id}
-            thread={thread}
-            current={currentId === thread.id}
-            detached={detached.includes(thread.id)}
-            autoFocusTextbox={autoFocusCurrentTextbox && currentId === thread.id}
-            {...(onThreadAttend && { onAttend: () => onThreadAttend(thread) })}
-            {...(onThreadDelete && { onThreadDelete: () => onThreadDelete(thread) })}
-            {...(onMessageDelete && { onMessageDelete: (messageId: string) => onMessageDelete(thread, messageId) })}
-            {...(onThreadToggleResolved && { onResolve: () => onThreadToggleResolved(thread) })}
-            {...props}
-          />
-        ))
+        filteredThreads.map((thread) => {
+          const threadId = fullyQualifiedId(thread);
+          return (
+            <CommentContainer
+              key={threadId}
+              thread={thread}
+              current={currentId === threadId}
+              detached={detached.includes(threadId)}
+              autoFocusTextbox={autoFocusCurrentTextbox && currentId === threadId}
+              {...(onThreadAttend && { onAttend: () => onThreadAttend(thread) })}
+              {...(onThreadDelete && { onThreadDelete: () => onThreadDelete(thread) })}
+              {...(onMessageDelete && { onMessageDelete: (messageId: string) => onMessageDelete(thread, messageId) })}
+              {...(onThreadToggleResolved && { onResolve: () => onThreadToggleResolved(thread) })}
+              {...props}
+            />
+          );
+        })
       ) : (
         <div
           role='alert'

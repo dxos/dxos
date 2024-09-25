@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { describe, test } from 'vitest';
+
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { createServiceContext, performInvitation } from '../testing';
 

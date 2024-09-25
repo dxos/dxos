@@ -10,14 +10,16 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
     "./testing": {
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": {
-        "default": "./dist/lib/node/testing/index.cjs"
+        "require": "./dist/lib/node/testing/index.cjs",
+        "default": "./dist/lib/node-esm/testing/index.mjs"
       },
       "types": "./dist/types/src/testing/index.d.ts"
     }
@@ -56,9 +58,7 @@
   "devDependencies": {
     "@dxos/async": "workspace:*",
     "@types/randombytes": "^2.0.0",
-    "@types/varint": "6.0.0",
-    "typescript": "^5.5.4",
-    "wait-for-expect": "^3.0.2"
+    "@types/varint": "6.0.0"
   },
   "publishConfig": {
     "access": "public"

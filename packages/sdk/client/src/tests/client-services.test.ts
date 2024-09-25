@@ -2,8 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
@@ -13,7 +12,6 @@ import { invariant } from '@dxos/invariant';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { Device, DeviceKind, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
 import { syncItemsAutomerge, TestBuilder } from '../testing';
@@ -24,50 +22,50 @@ import { syncItemsAutomerge, TestBuilder } from '../testing';
 describe('Client services', () => {
   test('creates client with local host', async () => {
     const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
 
     const servicesProvider = testBuilder.createLocalClientServices();
     await servicesProvider.open();
-    afterTest(() => servicesProvider.close());
+    onTestFinished(() => servicesProvider.close());
 
     const client = new Client({ services: servicesProvider });
     await client.initialize();
-    afterTest(() => client.destroy());
+    onTestFinished(() => client.destroy());
     expect(client.initialized).to.be.true;
   });
 
   test('creates client with remote server', async () => {
     const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
 
     const peer = testBuilder.createClientServicesHost();
     await peer.open(new Context());
-    afterTest(() => peer.close());
+    onTestFinished(() => peer.close());
 
     const [client, server] = testBuilder.createClientServer(peer);
     void server.open();
-    afterTest(() => server.close());
+    onTestFinished(() => server.close());
 
     await client.initialize();
-    afterTest(() => client.destroy());
+    onTestFinished(() => client.destroy());
     expect(client.initialized).to.be.true;
   });
 
   test('creates clients with multiple peers connected via memory transport', async () => {
     const testBuilder = new TestBuilder();
     testBuilder.level = () => createTestLevel();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
 
     {
       const peer1 = testBuilder.createClientServicesHost();
       await peer1.open(new Context());
-      afterTest(() => peer1.close());
+      onTestFinished(() => peer1.close());
 
       {
         const [client1a, server1a] = testBuilder.createClientServer(peer1);
         void server1a.open();
         await client1a.initialize();
-        afterTest(async () => {
+        onTestFinished(async () => {
           await client1a.destroy();
           await server1a.close();
         });
@@ -79,7 +77,7 @@ describe('Client services', () => {
         const [client1b, server1b] = testBuilder.createClientServer(peer1);
         void server1b.open();
         await client1b.initialize();
-        afterTest(async () => {
+        onTestFinished(async () => {
           await client1b.destroy();
           await server1b.close();
         });
@@ -92,13 +90,13 @@ describe('Client services', () => {
     {
       const peer2 = testBuilder.createClientServicesHost();
       await peer2.open(new Context());
-      afterTest(() => peer2.close());
+      onTestFinished(() => peer2.close());
 
       {
         const [client2a, server2a] = testBuilder.createClientServer(peer2);
         void server2a.open();
         await client2a.initialize();
-        afterTest(async () => {
+        onTestFinished(async () => {
           await client2a.destroy();
           await server2a.close();
         });
@@ -111,7 +109,7 @@ describe('Client services', () => {
 
   test('creates identity and invites peer', async () => {
     const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
 
     const peer1 = testBuilder.createClientServicesHost({
       devicePresenceAnnounceInterval: 1_000,
@@ -156,35 +154,29 @@ describe('Client services', () => {
 
     // Check devices.
     // TODO(burdon): Incorrect number of devices.
-    await waitForExpect(async () => {
-      expect(client1.halo.devices.get()).to.have.lengthOf(2);
-      expect(client2.halo.devices.get()).to.have.lengthOf(2);
-    });
+    await expect.poll(() => client1.halo.devices.get()).toHaveLength(2);
+    await expect.poll(() => client2.halo.devices.get()).toHaveLength(2);
 
-    await waitForExpect(async () => {
-      expect(client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence).to.eq(
-        Device.PresenceState.ONLINE,
-      );
-      expect(client2.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence).to.eq(
-        Device.PresenceState.ONLINE,
-      );
-    });
+    await expect
+      .poll(() => client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence)
+      .toEqual(Device.PresenceState.ONLINE);
+    await expect
+      .poll(() => client2.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence)
+      .toEqual(Device.PresenceState.ONLINE);
 
     // Ensure peer2 shows up as offline to peer1.
     await client2.destroy();
     await server2.close();
     await peer2.close();
 
-    await waitForExpect(async () => {
-      expect(client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence).to.eq(
-        Device.PresenceState.OFFLINE,
-      );
-    });
+    await expect
+      .poll(() => client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence)
+      .toEqual(Device.PresenceState.OFFLINE);
   });
 
-  test('synchronizes data between two spaces after completing invitation', async () => {
+  test('synchronizes data between two spaces after completing invitation', { timeout: 20_000 }, async () => {
     const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
 
     const peer1 = testBuilder.createClientServicesHost();
     const peer2 = testBuilder.createClientServicesHost();
@@ -207,12 +199,12 @@ describe('Client services', () => {
     }
     log('initialized');
 
-    afterTest(async () => {
+    onTestFinished(async () => {
       await client1.destroy();
       await server1.close();
       await peer1.close();
     });
-    afterTest(async () => {
+    onTestFinished(async () => {
       await client2.destroy();
       await server2.close();
       await peer2.close();
@@ -237,41 +229,53 @@ describe('Client services', () => {
 
     // TODO(burdon): Space should now be available?
     const trigger = new Trigger<Space>();
-    await waitForExpect(() => {
-      const guestSpace = client2.spaces.get(guestInvitation!.spaceKey!);
-      invariant(guestSpace);
-      expect(guestSpace).to.exist;
-      trigger.wake(guestSpace);
-    });
+    await expect
+      .poll(() => {
+        const guestSpace = client2.spaces.get(guestInvitation!.spaceKey!);
+        invariant(guestSpace);
+        trigger.wake(guestSpace);
+        return guestSpace;
+      })
+      .toBeTruthy();
 
     const guestSpace = await trigger.wait();
 
     for (const space of [hostSpace, guestSpace]) {
-      await waitForExpect(() => {
+      const getMembers = () => {
         const members = space.members.get();
-        expect(members).to.have.length(2);
         members.sort((m1, m2) => (m1.identity.identityKey.equals(client1.halo.identity.get()!.identityKey) ? -1 : 1));
-        expect(members[0]).to.deep.include({
-          identity: {
-            identityKey: client1.halo.identity.get()!.identityKey,
-            profile: {
-              displayName: 'Peer 1',
+        return members;
+      };
+
+      await expect.poll(() => getMembers()).toHaveLength(2);
+      await expect
+        .poll(() => getMembers()[0])
+        .toEqual(
+          expect.objectContaining({
+            identity: {
+              identityKey: client1.halo.identity.get()!.identityKey,
+              profile: {
+                displayName: 'Peer 1',
+              },
             },
-          },
-          presence: SpaceMember.PresenceState.ONLINE,
-        });
-        expect(members[1]).to.deep.include({
-          identity: {
-            identityKey: client2.halo.identity.get()!.identityKey,
-            profile: {
-              displayName: 'Peer 2',
+            presence: SpaceMember.PresenceState.ONLINE,
+          }),
+        );
+      await expect
+        .poll(() => getMembers()[1], { timeout: 15_000 })
+        .toEqual(
+          expect.objectContaining({
+            identity: {
+              identityKey: client2.halo.identity.get()!.identityKey,
+              profile: {
+                displayName: 'Peer 2',
+              },
             },
-          },
-          presence: SpaceMember.PresenceState.ONLINE,
-        });
-      }, 20_000);
+            presence: SpaceMember.PresenceState.ONLINE,
+          }),
+        );
     }
 
     await syncItemsAutomerge(hostSpace.db, guestSpace.db);
-  }).timeout(20_000);
+  });
 });
