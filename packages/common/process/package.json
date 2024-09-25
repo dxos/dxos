@@ -1,6 +1,6 @@
 {
   "name": "@dxos/process",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -8,9 +8,6 @@
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc"
-  },
-  "devDependencies": {
-    "typescript": "^5.5.4"
   },
   "publishConfig": {
     "access": "public"

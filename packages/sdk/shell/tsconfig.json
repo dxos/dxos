@@ -6,7 +6,6 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist/types",
     "types": [
       "node"
     ]
@@ -38,6 +37,9 @@
     },
     {
       "path": "../../common/random"
+    },
+    {
+      "path": "../../common/test-utils"
     },
     {
       "path": "../../common/util"

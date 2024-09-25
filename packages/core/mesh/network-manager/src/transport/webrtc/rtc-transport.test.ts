@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { sleep, TestStream } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { getRtcConnectionFactory } from './rtc-connection-factory';
 import { RtcPeerConnection } from './rtc-peer-connection';
@@ -71,7 +70,7 @@ describe('RtcPeerConnection', () => {
 
   const createChannel = (args: TestSetup) => {
     const channel = args.connection.createTransportChannel(args.options);
-    afterTest(async () => {
+    onTestFinished(async () => {
       if (channel.isOpen) {
         await channel.close();
       }

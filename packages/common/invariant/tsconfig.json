@@ -1,18 +1,12 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "lib": [
-      "DOM"
-    ],
-    "outDir": "dist/types"
+    "lib": ["DOM"],
   },
-  "include": [
-    "src",
-    "test"
-  ],
+  "include": ["src", "test"],
   "references": [
     {
-      "path": "../node-std"
-    }
-  ]
+      "path": "../node-std",
+    },
+  ],
 }

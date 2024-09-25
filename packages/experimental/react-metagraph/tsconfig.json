@@ -2,52 +2,45 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "jsx": "react",
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "outDir": "dist/types"
+    "lib": ["DOM", "ESNext"],
   },
-  "include": [
-    "playwright",
-    "src"
-  ],
+  "include": ["playwright", "src"],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/async",
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/debug",
     },
     {
-      "path": "../../common/keys"
+      "path": "../../common/keys",
     },
     {
-      "path": "../../common/log"
+      "path": "../../common/log",
     },
     {
-      "path": "../../common/node-std"
+      "path": "../../common/node-std",
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/util",
     },
     {
-      "path": "../../core/protocols"
+      "path": "../../core/protocols",
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../sdk/client",
     },
     {
-      "path": "../../sdk/config"
+      "path": "../../sdk/config",
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../sdk/react-client",
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../ui/primitives/react-hooks",
     },
     {
-      "path": "../metagraph"
-    }
-  ]
+      "path": "../metagraph",
+    },
+  ],
 }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/messaging",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "Messaging",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,8 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     }
@@ -43,10 +44,8 @@
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",
-    "@types/node": "^18.11.9",
-    "earljs": "~0.1.10",
-    "typescript": "^5.5.4",
-    "wait-for-expect": "^3.0.2"
+    "@dxos/test-utils": "workspace:*",
+    "@types/node": "^22.6.1"
   },
   "publishConfig": {
     "access": "public"

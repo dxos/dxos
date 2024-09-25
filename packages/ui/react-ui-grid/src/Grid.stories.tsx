@@ -10,10 +10,12 @@ export default {
   title: 'react-ui-grid/Grid',
   component: Grid,
   decorators: [withTheme],
+  parameters: { layout: 'fullscreen' },
 };
 
 export const Basic = {
   args: {
+    id: 'story',
     cells: {
       '1,1': {
         // end: '8,1',
@@ -37,6 +39,9 @@ export const Basic = {
     },
     onAxisResize: (event) => {
       console.log('[axis resize]', event);
+    },
+    onEdit: (event) => {
+      console.log('[edit]', event);
     },
   } satisfies GridProps,
 };

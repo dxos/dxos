@@ -2,71 +2,67 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "jsx": "react",
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
+    "lib": ["DOM", "ESNext"],
     "module": "ESNext",
-    "outDir": "dist/types"
   },
-  "include": [
-    "playwright",
-    "src"
-  ],
+  "include": ["playwright", "src"],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/async",
     },
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/codec-protobuf",
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/debug",
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/invariant",
     },
     {
-      "path": "../../common/log"
+      "path": "../../common/log",
     },
     {
-      "path": "../../common/node-std"
+      "path": "../../common/node-std",
     },
     {
-      "path": "../../common/random"
+      "path": "../../common/random",
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/test-utils",
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../common/util",
     },
     {
-      "path": "../../core/echo/echo-signals"
+      "path": "../../core/echo/echo-schema",
     },
     {
-      "path": "../../core/protocols"
+      "path": "../../core/echo/echo-signals",
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../core/protocols",
     },
     {
-      "path": "../../ui/react-ui"
+      "path": "../../ui/primitives/react-hooks",
     },
     {
-      "path": "../../ui/react-ui-syntax-highlighter"
+      "path": "../../ui/react-ui",
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/react-ui-syntax-highlighter",
     },
     {
-      "path": "../../ui/storybook-utils"
+      "path": "../../ui/react-ui-theme",
     },
     {
-      "path": "../client"
+      "path": "../../ui/storybook-utils",
     },
     {
-      "path": "../config"
-    }
-  ]
+      "path": "../client",
+    },
+    {
+      "path": "../config",
+    },
+  ],
 }

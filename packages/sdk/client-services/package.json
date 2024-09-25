@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-services",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "DXOS client services implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,14 +10,16 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
     "./testing": {
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": {
-        "default": "./dist/lib/node/testing/index.cjs"
+        "require": "./dist/lib/node/testing/index.cjs",
+        "default": "./dist/lib/node-esm/testing/index.mjs"
       },
       "types": "./dist/types/src/testing/index.d.ts"
     }
@@ -83,6 +85,7 @@
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@types/platform": "^1.3.4",
     "@types/readable-stream": "^2.3.9"
   },

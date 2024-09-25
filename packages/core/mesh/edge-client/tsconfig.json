@@ -1,38 +1,37 @@
 {
   "extends": "../../../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "dist/types"
-  },
-  "include": [
-    "src"
-  ],
+  "compilerOptions": {},
+  "include": ["src"],
   "references": [
     {
-      "path": "../../../common/async"
+      "path": "../../../common/async",
     },
     {
-      "path": "../../../common/context"
+      "path": "../../../common/context",
     },
     {
-      "path": "../../../common/debug"
+      "path": "../../../common/debug",
     },
     {
-      "path": "../../../common/invariant"
+      "path": "../../../common/invariant",
     },
     {
-      "path": "../../../common/keys"
+      "path": "../../../common/keys",
     },
     {
-      "path": "../../../common/log"
+      "path": "../../../common/log",
     },
     {
-      "path": "../../../common/node-std"
+      "path": "../../../common/node-std",
     },
     {
-      "path": "../../../common/util"
+      "path": "../../../common/test-utils",
     },
     {
-      "path": "../../protocols"
-    }
-  ]
+      "path": "../../../common/util",
+    },
+    {
+      "path": "../../protocols",
+    },
+  ],
 }

@@ -2,16 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-// @dxos/test platform=nodejs
-
 import { Duplex } from 'stream';
+import { onTestFinished, describe, test } from 'vitest';
 
 import { TestStream } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols/proto';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createLinkedPorts, createProtoRpcPeer, type RpcPort } from '@dxos/rpc';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { RtcTransportProxy } from './rtc-transport-proxy';
 import { RtcTransportService } from './rtc-transport-service';
@@ -91,7 +89,9 @@ describe('RtcPeerTransportProxy', () => {
     const options = createTransportOptions({ stream, ...overrides });
     const proxy = new RtcTransportProxy({ ...options, bridgeService: client.rpc.BridgeService });
     await proxy.open();
-    afterTest(async () => await proxy.close());
+    onTestFinished(async () => {
+      await proxy.close();
+    });
     return { proxy, options, stream };
   };
 
@@ -110,7 +110,7 @@ describe('RtcPeerTransportProxy', () => {
       },
     });
     await service.open();
-    afterTest(() => service.close());
+    onTestFinished(() => service.close());
     return service;
   };
 
@@ -126,12 +126,16 @@ describe('RtcPeerTransportProxy', () => {
       },
     });
     await rpcClient.open();
-    afterTest(() => rpcClient.close());
+    onTestFinished(() => {
+      rpcClient.close();
+    });
     return rpcClient;
   };
 
   const assertNoErrorsAfterTest = (args: { proxy: Transport }) => {
-    afterTest(() => args.proxy.errors.assertNoUnhandledErrors());
+    onTestFinished(() => {
+      args.proxy.errors.assertNoUnhandledErrors();
+    });
   };
 });
 

@@ -2,15 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 import { sleep } from './timeout';
 import { Trigger, TriggerState, trigger } from './trigger';
-
-chai.use(chaiAsPromised);
 
 describe('trigger', () => {
   test('trigger', async () => {
@@ -52,7 +47,7 @@ describe('trigger', () => {
       const error = new Error('Test error');
       const promise = trigger.wait();
       trigger.throw(error);
-      await expect(promise).to.be.rejectedWith(error);
+      await expect(promise).rejects.toThrowError(error);
       expect(trigger.state).to.equal(TriggerState.REJECTED);
       trigger.reset();
       expect(trigger.state).to.equal(TriggerState.WAITING);

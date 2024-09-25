@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { create } from '@dxos/echo-schema';
 import { MessageType } from '@dxos/plugin-space/types';
-import { getSpace, useMembers } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
@@ -103,13 +103,13 @@ export const CommentContainer = ({
   const identity = useIdentity()!;
   const space = getSpace(thread);
   const members = useMembers(space?.key);
-  const activity = useStatus(space, thread.id);
+  const activity = useStatus(space, fullyQualifiedId(thread));
   const { t } = useTranslation(THREAD_PLUGIN);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
   const [autoFocus, setAutoFocus] = useState(!!autoFocusTextbox);
   const { themeMode } = useThemeContext();
 
-  const textboxMetadata = getMessageMetadata(thread.id, identity);
+  const textboxMetadata = getMessageMetadata(fullyQualifiedId(thread), identity);
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
   const [_count, _setCount] = useState(0);
   const rerenderEditor = () => _setCount((count) => count + 1);
@@ -159,10 +159,8 @@ export const CommentContainer = ({
     return true;
   }, [thread, identity]);
 
-  const handleDeleteMessage = (id: string) => onMessageDelete?.(id);
-
   return (
-    <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={thread.id}>
+    <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={fullyQualifiedId(thread)}>
       <div
         role='none'
         className={mx(
@@ -195,7 +193,12 @@ export const CommentContainer = ({
         </div>
       </div>
       {thread.messages.filter(nonNullable).map((message) => (
-        <MessageContainer key={message.id} message={message} members={members} onDelete={handleDeleteMessage} />
+        <MessageContainer
+          key={message.id}
+          message={message}
+          members={members}
+          onDelete={(id: string) => onMessageDelete?.(id)}
+        />
       ))}
       <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
       <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>

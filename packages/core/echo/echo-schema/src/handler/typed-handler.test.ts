@@ -3,9 +3,7 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { expect } from 'chai';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 import { create } from './object';
 import { getMeta } from '../getter';

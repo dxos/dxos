@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { describe, test } from 'vitest';
+
 import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { describe, test } from '@dxos/test';
 
 import { Connection } from './connection';
 import { TestWireProtocol } from '../testing/test-wire-protocol';

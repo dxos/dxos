@@ -2,13 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { randomBytes } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { type Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { describe, test } from '@dxos/test';
 
 import { signPresentation } from './presentation';
 import { verifyPresentation, verifyPresentationSignature } from './verifier';

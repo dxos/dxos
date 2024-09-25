@@ -2,11 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type PlaywrightTestConfig } from '@playwright/test';
+import { nxE2EPreset } from '@nx/playwright/preset';
+import { defineConfig } from '@playwright/test';
 
-import { defaultPlaywrightConfig } from '@dxos/test/playwright';
+import { e2ePreset } from '@dxos/test-utils/playwright';
 
-// TODO(wittjosiah): Sometimes seems to take a long time to hit this in CI. Can we disable PWA in CI?
-const config: PlaywrightTestConfig = { ...defaultPlaywrightConfig, timeout: 30_000 };
-
-export default config;
+export default defineConfig({
+  ...nxE2EPreset(__filename, { testDir: __dirname }),
+  ...e2ePreset(__dirname),
+  webServer: {
+    command: 'pnpm -w nx preview testbench-app',
+    port: 4200,
+    reuseExistingServer: !process.env.CI,
+  },
+});

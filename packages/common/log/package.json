@@ -1,6 +1,6 @@
 {
   "name": "@dxos/log",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "Logger",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,8 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     }
@@ -40,10 +41,9 @@
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.omit": "^4.5.7",
-    "@types/node": "^18.11.9",
+    "@types/node": "^22.6.1",
     "pirates": "~4.0.5",
-    "sorcery": "^0.10.0",
-    "typescript": "^5.5.4"
+    "sorcery": "^0.10.0"
   },
   "publishConfig": {
     "access": "public"

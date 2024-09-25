@@ -1,18 +1,10 @@
 {
   "extends": "../../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "dist/types",
-    "types": [
-      "@dxos/test"
-    ]
-  },
-  "include": [
-    "src",
-    "test"
-  ],
+  "compilerOptions": {},
+  "include": ["src", "test"],
   "references": [
     {
-      "path": "../node-std"
-    }
-  ]
+      "path": "../node-std",
+    },
+  ],
 }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-spore",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "private": true,
   "description": "GEM spore.",
   "homepage": "https://dxos.org",
@@ -11,14 +11,16 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
     "./testing": {
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": {
-        "default": "./dist/lib/node/testing/index.cjs"
+        "require": "./dist/lib/node/testing/index.cjs",
+        "default": "./dist/lib/node-esm/testing/index.mjs"
       },
       "types": "./dist/types/src/testing/index.d.ts"
     },

@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { test } from '@playwright/test';
-import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
+import { expect, test } from '@playwright/test';
 
 import { sleep } from '@dxos/async';
 
@@ -20,15 +18,13 @@ test.describe('Demo', () => {
   });
 
   test('peers can see cursors', async () => {
-    expect(await app.getCollaboratorCursors().count()).to.equal(0);
+    expect(await app.getCollaboratorCursors().count()).toEqual(0);
 
     await app.getMarkdownTextbox(0).focus();
     await app.getMarkdownTextbox(1).focus();
 
-    await waitForExpect(async () => {
-      expect(await app.getCollaboratorCursors().first().textContent()).to.have.lengthOf.above(0);
-      expect(await app.getCollaboratorCursors().first().textContent()).to.have.lengthOf.above(0);
-    });
+    await expect(app.getCollaboratorCursors().first()).not.toBeEmpty();
+    await expect(app.getCollaboratorCursors().first()).not.toBeEmpty();
   });
 
   test('peers can see changes', async () => {
@@ -40,12 +36,10 @@ test.describe('Demo', () => {
 
     // Wait for the cursor to disappear in order for text content to not include the cursor.
     await app.getMarkdownTextbox(0).blur();
-    await waitForExpect(async () => {
-      expect(await app.getCollaboratorCursors().count()).to.equal(0);
-    });
+    await expect(app.getCollaboratorCursors()).toHaveCount(0);
     const content0 = await app.getMarkdownTextbox(0).textContent();
     const content1 = await app.getMarkdownTextbox(1).textContent();
-    expect(content0).to.equal(content1);
+    expect(content0).toEqual(content1);
   });
 
   test.skip('airplane mode', async () => {
@@ -59,19 +53,17 @@ test.describe('Demo', () => {
 
     // Wait for the cursor to disappear in order for text content to not include the cursor.
     await app.getMarkdownTextbox(0).blur();
-    await waitForExpect(async () => {
-      expect(await app.getCollaboratorCursors().count()).to.equal(0);
-    });
+    await expect(app.getCollaboratorCursors()).toHaveCount(0);
     const offline0 = await app.getMarkdownTextbox(0).textContent();
     const offline1 = await app.getMarkdownTextbox(1).textContent();
-    expect(offline0).not.to.equal(offline1);
+    expect(offline0).not.toEqual(offline1);
 
     await app.toggleAirplaneMode();
     // TODO(wittjosiah): Works when inspecting, but text does not replicate when running headless for some reason.
     await app.getMarkdownTextbox(1).getByText('hello').waitFor({ timeout: 5_000 });
     const online0 = await app.getMarkdownTextbox(0).textContent();
     const online1 = await app.getMarkdownTextbox(1).textContent();
-    expect(online0).to.equal(online1);
+    expect(online0).toEqual(online1);
   });
 
   test.skip('batching', async () => {

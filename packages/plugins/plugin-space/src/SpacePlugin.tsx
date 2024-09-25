@@ -573,7 +573,12 @@ export const SpacePlugin = ({
                   () => client.spaces.get(),
                 );
 
-                if (!spaces) {
+                const isReady = toSignal(
+                  (onChange) => client.spaces.isReady.subscribe(() => onChange()).unsubscribe,
+                  () => client.spaces.isReady.get(),
+                );
+
+                if (!spaces || !isReady) {
                   return;
                 }
 

@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import WebSocket from 'ws';
-
 import { sleep, Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
@@ -35,7 +33,7 @@ export const createWebsocketTrigger: TriggerFactory<WebsocketTrigger, WebsocketT
   for (let attempt = 1; attempt <= options.maxAttempts; attempt++) {
     const open = new Trigger<boolean>();
 
-    ws = new WebSocket(url);
+    ws = await createWebSocket(url);
     Object.assign(ws, {
       onopen: () => {
         log.info('opened', { url });
@@ -60,7 +58,7 @@ export const createWebsocketTrigger: TriggerFactory<WebsocketTrigger, WebsocketT
       },
 
       onerror: (event) => {
-        log.catch(event.error, { url });
+        log.catch((event as any).error ?? new Error('Unspecified ws error.'), { url });
         open.wake(false);
       },
 
@@ -93,4 +91,17 @@ export const createWebsocketTrigger: TriggerFactory<WebsocketTrigger, WebsocketT
   ctx.onDispose(() => {
     ws?.close();
   });
+};
+
+const createNodeWebSocket = async (url: string) => {
+  // eslint-disable-next-line no-new-func
+  const importESM = Function('path', 'return import(path)');
+  const {
+    default: { WebSocket },
+  } = await importESM('ws');
+  return new WebSocket(url);
+};
+
+export const createWebSocket = async (url: string): Promise<WebSocket> => {
+  return typeof (globalThis as any).WebSocket === 'undefined' ? await createNodeWebSocket(url) : new WebSocket(url);
 };
