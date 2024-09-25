@@ -8,7 +8,7 @@ import { isTypeLiteral } from '@effect/schema/AST';
 
 import { invariant } from '@dxos/invariant';
 
-import { getEchoObjectTypename } from '../annotations';
+import { getEchoObjectTypename } from './annotations';
 
 export const symbolSchema = Symbol.for('@dxos/schema');
 
@@ -201,6 +201,7 @@ const unwrapAst = (rootAst: AST.AST, predicate?: (ast: AST.AST) => boolean): AST
       return predicate == null ? ast : null;
     }
   }
+
   return null;
 };
 

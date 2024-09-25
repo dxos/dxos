@@ -29,20 +29,17 @@ module.exports = {
       'error',
       {
         count: 1,
-        // TODO(wittjosiah): This option exists but seems unreleased.
-        //   https://github.com/import-js/eslint-plugin-import/pull/2399#issuecomment-1103636483
-        // considerComments: true
+        considerComments: true,
       },
     ],
+    // TODO(burdon): Cycles.
+    //  https://github.com/import-js/eslint-plugin-import/blob/main/docs/rules/no-cycle.md
+    'import/no-cycle': 1,
+    'import/no-self-import': 2,
     'import/order': [
       'error',
       {
         pathGroups: [
-          {
-            pattern: '@{mui,material-ui}/**',
-            group: 'external',
-            position: 'after',
-          },
           {
             pattern: '@{dxos,braneframe}/**',
             group: 'internal',
@@ -79,9 +76,9 @@ module.exports = {
         allowAsStatement: true,
       },
     ],
+    'quote-props': 'off',
     'padded-blocks': 'off',
     'prettier/prettier': 'error',
-    'quote-props': 'off',
     'space-before-function-paren': 'off',
     'standard/no-callback-literal': 'off',
     'unused-imports/no-unused-imports': 'error',

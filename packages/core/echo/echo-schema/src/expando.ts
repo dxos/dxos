@@ -4,7 +4,7 @@
 
 import { Schema as S } from '@effect/schema';
 
-import { EchoObject } from './annotations';
+import { EchoObject } from './ast';
 
 export const EXPANDO_TYPENAME = 'dxos.org/type/Expando';
 

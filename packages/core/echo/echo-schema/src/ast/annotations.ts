@@ -8,8 +8,8 @@ import { pipe } from 'effect';
 import * as Option from 'effect/Option';
 import { type Simplify } from 'effect/Types';
 
-import { checkIdNotPresentOnSchema } from './ast';
-import { type Identifiable } from './types';
+import { checkIdNotPresentOnSchema } from './schema-validator';
+import { type Identifiable } from '../types';
 
 export type ToMutable<T> = T extends {}
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
@@ -38,7 +38,6 @@ export const EchoObject =
       throw new Error('EchoObject can only be applied to an S.Struct type.');
     }
 
-    console.log(typeof checkIdNotPresentOnSchema);
     checkIdNotPresentOnSchema(self);
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?

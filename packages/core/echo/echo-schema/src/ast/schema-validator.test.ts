@@ -12,7 +12,7 @@ import { create } from '../handler';
 import { TypedObject } from '../typed-object-class';
 
 describe('schema-validator', () => {
-  describe('validateSchema', () => {
+  describe.only('validateSchema', () => {
     test('throws on ambiguous discriminated type union', () => {
       const schema = S.Struct({
         union: S.Union(S.Struct({ a: S.Number }), S.Struct({ b: S.String })),

@@ -7,7 +7,7 @@ import type * as S from '@effect/schema/Schema';
 import { Reference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
-import { getEchoObjectAnnotation } from './annotations';
+import { getEchoObjectAnnotation } from './ast';
 import { getProxyHandlerSlot, isReactiveObject } from './proxy';
 import { type ObjectMeta } from './types';
 
