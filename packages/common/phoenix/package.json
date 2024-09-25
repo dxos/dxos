@@ -26,18 +26,13 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/context": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/lock-file": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/util": "workspace:*",
     "pkg-up": "^3.1.0"
   },
   "devDependencies": {
-    "@types/node": "^22.6.1",
-    "@types/ps-tree": "^1.1.2"
+    "@types/node": "^22.6.1"
   },
   "publishConfig": {
     "access": "public"
