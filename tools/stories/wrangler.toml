@@ -10,6 +10,10 @@ pages_build_output_dir = "./out/stories"
 #
 # Dev
 # http://localhost:8788
-# pnpm -w nx storybook-build stories
+# pnpm -w nx bundle stories
 # wrangler pages dev
+#
+# Prod is pushed via GH Actions CI.
+# wrangler pages deploy out/stories
+# https://dxos-storybook.pages.dev/
 #
