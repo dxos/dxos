@@ -39,14 +39,11 @@ class NodeRtcConnectionFactory implements RtcConnectionFactory {
   // TODO(burdon): Do imports here?
   async initialize() {}
   async destroy() {
-    const { cleanup } = await this.importESM('node-datachannel');
-    cleanup();
+    (await import('#node-datachannel')).cleanup();
   }
 
   async createConnection(config: RTCConfiguration) {
-    const {
-      default: { RTCPeerConnection },
-    } = await this.importESM('node-datachannel/polyfill');
+    const { RTCPeerConnection } = await import('#node-datachannel/polyfill');
     return new RTCPeerConnection(config);
   }
 
