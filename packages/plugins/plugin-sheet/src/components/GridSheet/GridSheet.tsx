@@ -9,12 +9,13 @@ export type GridSheetProps = Omit<GridRootProps, 'editing' | 'defaultEditing'> &
 
 export const GridSheet = ({ id, onEditingChange, ...props }: GridSheetProps) => {
   const [editing, setEditing] = useState<GridEditing>(null);
+  console.log('[editing]', editing);
   return (
     <Grid.Root
       id={id}
       editing={editing}
-      onEditingChange={(next?: GridEditing) => {
-        setEditing(next ?? null);
+      onEditingChange={(next: GridEditing) => {
+        setEditing(next);
         onEditingChange?.(next);
       }}
     >

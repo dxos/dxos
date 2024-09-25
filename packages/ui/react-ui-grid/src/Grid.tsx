@@ -50,7 +50,7 @@ type GridRootProps = PropsWithChildren<
   { id: string } & Partial<{
     editing: GridEditing;
     defaultEditing: GridEditing;
-    onEditingChange: (nextEditing?: GridEditing) => void;
+    onEditingChange: (nextEditing: GridEditing) => void;
   }>
 >;
 
