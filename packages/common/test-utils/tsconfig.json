@@ -5,7 +5,6 @@
     "lib": [
       "DOM"
     ],
-    "outDir": "dist/types",
     "types": [
       "node"
     ]
