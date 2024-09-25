@@ -38,6 +38,7 @@ export const EchoObject =
       throw new Error('EchoObject can only be applied to an S.Struct type.');
     }
 
+    console.log(typeof checkIdNotPresentOnSchema);
     checkIdNotPresentOnSchema(self);
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?

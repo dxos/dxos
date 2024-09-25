@@ -55,6 +55,12 @@
         "script": "chromatic-ui"
       }
     },
+    "compile-all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run-many --target=build --all"
+      }
+    },
     "lint": {
       "options": {
         "lintFilePatterns": [
@@ -66,12 +72,6 @@
     },
     "mkdist": {
       "command": "mkdir -p tools/stories/static"
-    },
-    "compile-all": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "nx run-many --target=build --all"
-      }
     },
     "storybook": {
       "configurations": {
@@ -94,7 +94,6 @@
         "react-client:compile",
         "react-icons:compile",
         "react-shell:compile",
-        "react-ui:compile",
         "react-ui-card:compile",
         "react-ui-editor:compile",
         "react-ui-grid:compile",
@@ -103,6 +102,7 @@
         "react-ui-searchlist:compile",
         "react-ui-stack:compile",
         "react-ui-table:compile",
+        "react-ui:compile",
         "vite-plugin-icons:compile"
       ],
       "executor": "@nx/storybook:storybook",
