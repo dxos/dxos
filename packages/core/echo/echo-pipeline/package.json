@@ -58,7 +58,6 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/hypercore": "workspace:*",
     "@dxos/indexing": "workspace:*",
@@ -72,7 +71,6 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
-    "@dxos/rpc": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/teleport-extension-automerge-replicator": "workspace:*",
     "@dxos/teleport-extension-gossip": "workspace:*",
@@ -82,16 +80,12 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
-    "abstract-level": "^1.0.2",
     "crc-32": "^1.2.2",
-    "level": "^8.0.1",
     "level-transcoder": "^1.0.1"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
-    "fast-check": "^3.19.0",
-    "hypercore-protocol": "^8.0.7",
-    "source-map-support": "^0.5.12"
+    "fast-check": "^3.19.0"
   },
   "publishConfig": {
     "access": "public"
