@@ -20,7 +20,7 @@ import { AttentionProvider } from '@dxos/react-ui-attention';
 import meta from './meta';
 
 type AttentionProvides = {
-  attention: Attention;
+  attention: Readonly<Attention>;
 };
 
 export type AttentionPluginProvides = AttentionProvides;

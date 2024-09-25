@@ -8,7 +8,7 @@
 import { createContext, type Scope, type CreateScope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 // eslint-disable-next-line unused-imports/no-unused-imports
-import React, { ComponentProps, type FocusEvent, type HTMLAttributes, type PropsWithChildren, useState } from 'react';
+import React, { type FocusEvent, type PropsWithChildren, useMemo } from 'react';
 
 const ATTENTION_NAME = 'Attention';
 
@@ -29,6 +29,11 @@ const useIsDirectlyAttended = (attendableId?: string) => {
   const { attended } = useAttentionContext(ATTENTION_NAME);
   const attendedArray = Array.from(attended);
   return attendedArray.length === 1 && attendedArray[0] === attendableId;
+};
+
+const useAttendedIds = () => {
+  const { attended } = useAttentionContext(ATTENTION_NAME);
+  return useMemo(() => Array.from(attended), [attended]);
 };
 
 /**
@@ -108,6 +113,7 @@ export {
   useAttentionContext,
   useHasAttention,
   useIsDirectlyAttended,
+  useAttendedIds,
   createAttendableAttributes,
   ATTENTION_NAME,
 };

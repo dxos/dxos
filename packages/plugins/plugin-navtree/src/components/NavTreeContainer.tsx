@@ -4,14 +4,7 @@
 
 import React, { type ReactNode, useCallback, useMemo } from 'react';
 
-import {
-  NavigationAction,
-  LayoutAction,
-  Surface,
-  SLUG_PATH_SEPARATOR,
-  SLUG_COLLECTION_INDICATOR,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { NavigationAction, LayoutAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { getGraph, isAction, isActionLike } from '@dxos/app-graph';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/react-ui-mosaic';
@@ -96,14 +89,9 @@ export const NavTreeContainer = ({
     await dispatch({
       action: NavigationAction.OPEN,
       data: {
-        activeParts: node.data?.comments
-          ? {
-              main: [node.id],
-              complementary: [`${node.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`],
-            }
-          : {
-              main: [node.id],
-            },
+        activeParts: {
+          main: [node.id],
+        },
       },
     });
 
