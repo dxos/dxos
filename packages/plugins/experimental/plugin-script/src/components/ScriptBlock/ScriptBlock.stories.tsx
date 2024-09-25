@@ -3,6 +3,7 @@
 //
 
 import '@dxos-theme';
+
 import React, { useEffect, useMemo } from 'react';
 
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';

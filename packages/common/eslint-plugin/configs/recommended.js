@@ -29,7 +29,6 @@ module.exports = {
       'error',
       {
         count: 1,
-        considerComments: true,
       },
     ],
     // TODO(burdon): Cycles.
