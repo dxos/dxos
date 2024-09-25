@@ -18,7 +18,7 @@ export class CanvasType extends TypedObject({ typename: 'dxos.org/type/Canvas', 
 export class DiagramType extends TypedObject({ typename: 'dxos.org/type/Diagram', version: '0.1.0' })({
   name: S.optional(S.String),
   canvas: ref(CanvasType),
-  // Threads associated with the sheet
+  // Associated threads.
   threads: S.optional(S.mutable(S.Array(ref(ThreadType)))),
 }) {}
 
