@@ -7,7 +7,6 @@ import React from 'react';
 // Lazily load components for content surfaces.
 export const DebugGlobal = React.lazy(() => import('./DebugGlobal'));
 export const DebugSpace = React.lazy(() => import('./DebugSpace'));
-export const DevtoolsMain = React.lazy(() => import('./DevtoolsMain'));
 
 export * from './DebugSettings';
 export * from './DebugStatus';
