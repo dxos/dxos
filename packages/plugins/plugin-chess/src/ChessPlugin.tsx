@@ -33,6 +33,12 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
       echo: {
         schema: [GameType],
       },
+      space: {
+        onSpaceCreate: {
+          label: ['create game label', { ns: CHESS_PLUGIN }],
+          action: ChessAction.CREATE,
+        },
+      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
