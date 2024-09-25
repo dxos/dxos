@@ -31,13 +31,13 @@ export const SyncStatus = () => {
   return (
     <StatusBar.Item title={JSON.stringify(state, null, 2)}>
       {notConnectedToEdge ? (
-        <CloudSlash className={getSize(4)} />
+        <CloudSlash className={getSize(5)} />
       ) : needsToUpload ? (
-        <CloudArrowUp className={getSize(4)} />
+        <CloudArrowUp className={getSize(5)} />
       ) : needsToDownload ? (
-        <CloudArrowDown className={getSize(4)} />
+        <CloudArrowDown className={getSize(5)} />
       ) : (
-        <CloudCheck className={getSize(4)} />
+        <CloudCheck className={getSize(5)} />
       )}
     </StatusBar.Item>
   );
@@ -79,6 +79,7 @@ type EdgeSyncState = {
   differentDocuments: number;
   localDocumentCount: number;
   remoteDocumentCount: number;
+  totalDocumentCount: number;
 };
 
 const initialEdgeSyncState: EdgeSyncState = {
@@ -89,6 +90,7 @@ const initialEdgeSyncState: EdgeSyncState = {
   differentDocuments: 0,
   localDocumentCount: 0,
   remoteDocumentCount: 0,
+  totalDocumentCount: 0,
 };
 
 const extractEdgeSyncSate = (state: Record<SpaceId, SpaceSyncState>): EdgeSyncState => {
@@ -99,6 +101,7 @@ const extractEdgeSyncSate = (state: Record<SpaceId, SpaceSyncState>): EdgeSyncSt
   let differentDocuments = 0;
   let localDocumentCount = 0;
   let remoteDocumentCount = 0;
+  let totalDocumentCount = 0;
 
   for (const [spaceId, syncState] of Object.entries(state)) {
     let hasEdgePeer = false;
@@ -110,6 +113,7 @@ const extractEdgeSyncSate = (state: Record<SpaceId, SpaceSyncState>): EdgeSyncSt
         differentDocuments += peerState.differentDocuments;
         localDocumentCount += peerState.localDocumentCount;
         remoteDocumentCount += peerState.remoteDocumentCount;
+        totalDocumentCount += Math.max(peerState.localDocumentCount, peerState.remoteDocumentCount);
         if (peerState.missingOnRemote > 0 || peerState.missingOnLocal > 0 || peerState.differentDocuments > 0) {
           unsyncedSpaces.add(spaceId as SpaceId);
         }
@@ -129,6 +133,7 @@ const extractEdgeSyncSate = (state: Record<SpaceId, SpaceSyncState>): EdgeSyncSt
     differentDocuments,
     localDocumentCount,
     remoteDocumentCount,
+    totalDocumentCount,
   };
 };
 

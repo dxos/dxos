@@ -29,7 +29,7 @@ export const SaveStatus = () => {
 
   return (
     <StatusBar.Item title={state === 'saving' ? t('saving label') : t('saved label')}>
-      {state === 'saving' ? <ArrowsClockwise className={getSize(4)} /> : <CheckCircle className={getSize(4)} />}
+      {state === 'saving' ? <ArrowsClockwise className={getSize(5)} /> : <CheckCircle className={getSize(5)} />}
     </StatusBar.Item>
   );
 };
