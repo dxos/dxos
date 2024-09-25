@@ -1,12 +1,12 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import '@tldraw/tldraw/tldraw.css';
 
 import { getAssetUrls } from '@tldraw/assets/selfHosted';
 import { type TLEventInfo, type TLGridProps } from '@tldraw/editor';
-import { type Editor, Tldraw } from '@tldraw/tldraw';
+import { type Editor, Tldraw, DefaultToolbar, type TLUiAssetUrlOverrides } from '@tldraw/tldraw';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
@@ -20,8 +20,10 @@ import { useStoreAdapter } from '../../hooks';
 import { type SketchGridType, type DiagramType } from '../../types';
 import { handleSnap } from '../actions';
 import { CustomMenu, CustomStylePanel, DottedGrid, MeshGrid } from '../custom';
-
 import './theme.css';
+import { DefaultToolbarContent } from '../custom/CustomToolbar';
+
+const threadToolId = 'thread';
 
 const gridComponents: Record<SketchGridType, FC<TLGridProps>> = {
   mesh: MeshGrid,
@@ -73,7 +75,7 @@ export const Sketch = ({
 
   // NOTE: Currently copying assets to composer-app public/assets/tldraw.
   // https://tldraw.dev/installation#Self-hosting-static-assets
-  const assetUrls = useMemo(() => {
+  const assetUrls: TLUiAssetUrlOverrides = useMemo(() => {
     if (!assetsBaseUrl) {
       return undefined;
     }
@@ -82,8 +84,9 @@ export const Sketch = ({
       {
         // Change default draw font.
         // TODO(burdon): Change icon to match font.
-        fonts: {
-          draw: `${assetsBaseUrl}/fonts/Montserrat-Regular.woff2`,
+        fonts: { draw: `${assetsBaseUrl}/fonts/Montserrat-Regular.woff2` },
+        icons: {
+          'thread-icon': `${assetsBaseUrl}/icons/icon/chat-teardrop-text.svg`,
         },
       },
       getAssetUrls({ baseUrl: assetsBaseUrl }),
@@ -170,6 +173,20 @@ export const Sketch = ({
               },
             };
           },
+          tools: (_editor, tools) => {
+            tools[threadToolId] = {
+              id: threadToolId,
+              icon: 'thread-icon',
+              label: 'Comment', // TODO(Zan): Use translation here.
+              kbd: 't',
+              onSelect: () => {
+                // eslint-disable-next-line no-console
+                console.log('COMMENT');
+              },
+            };
+
+            return tools;
+          },
         }}
         // tools={customTools}
         // https://tldraw.dev/installation#Customize-the-default-components
@@ -183,6 +200,13 @@ export const Sketch = ({
           // Toolbar: CustomToolbar,
           TopPanel: null,
           ZoomMenu: null,
+          Toolbar: (props) => {
+            return (
+              <DefaultToolbar {...props}>
+                <DefaultToolbarContent toolsToSplice={[{ toolId: 'thread', position: 8 }]} />
+              </DefaultToolbar>
+            );
+          },
         }}
         // https://tldraw.dev/reference/editor/defaultTldrawOptions
         // options={{
