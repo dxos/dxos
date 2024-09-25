@@ -2,18 +2,24 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "jsx": "react",
-    "lib": ["DOM", "ESNext"],
+    "lib": [
+      "DOM",
+      "ESNext"
+    ]
   },
-  "include": ["src", "stories"],
+  "include": [
+    "src",
+    "stories"
+  ],
   "references": [
     {
-      "path": "../../common/log",
+      "path": "../../common/log"
     },
     {
-      "path": "../../common/node-std",
+      "path": "../../common/node-std"
     },
     {
-      "path": "../../sdk/config",
-    },
-  ],
+      "path": "../../sdk/config"
+    }
+  ]
 }

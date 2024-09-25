@@ -1,16 +1,19 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {},
-  "include": ["src", "test"],
+  "include": [
+    "src",
+    "test"
+  ],
   "references": [
     {
-      "path": "../keys",
+      "path": "../keys"
     },
     {
-      "path": "../node-std",
+      "path": "../node-std"
     },
     {
-      "path": "../test-utils",
-    },
-  ],
+      "path": "../test-utils"
+    }
+  ]
 }
