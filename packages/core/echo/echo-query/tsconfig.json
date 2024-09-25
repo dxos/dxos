@@ -16,9 +16,6 @@
       "path": "../../../common/random"
     },
     {
-      "path": "../echo-db"
-    },
-    {
       "path": "../echo-generator"
     }
   ]

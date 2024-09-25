@@ -56,12 +56,8 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
-    "@dxos/credentials": "workspace:*",
-    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -72,21 +68,13 @@
     "@dxos/teleport": "workspace:*",
     "@dxos/util": "workspace:*",
     "@koush/wrtc": "^0.5.3",
-    "isomorphic-ws": "^5.0.0",
-    "nanomessage-rpc": "^3.0.0",
     "node-datachannel": "^0.5.5",
-    "p-defer": "^3.0.0",
     "simple-peer": "9.11.1",
-    "stream": "^0.0.3",
-    "tiny-invariant": "^1.3.1",
-    "ws": "^8.14.2",
-    "xor-distance": "^2.0.0"
+    "stream": "^0.0.3"
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",
-    "@swc-node/register": "1.9.1",
     "@types/simple-peer": "9.11.3",
-    "@types/ws": "^7.4.0",
     "fast-check": "^3.19.0",
     "fetch-mock": "^11.0.0"
   },

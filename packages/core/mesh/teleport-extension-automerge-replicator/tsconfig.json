@@ -18,12 +18,6 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/codec-protobuf"
-    },
-    {
-      "path": "../../../common/context"
-    },
-    {
       "path": "../../../common/invariant"
     },
     {
@@ -34,9 +28,6 @@
     },
     {
       "path": "../../../common/node-std"
-    },
-    {
-      "path": "../../../common/util"
     },
     {
       "path": "../../protocols"
