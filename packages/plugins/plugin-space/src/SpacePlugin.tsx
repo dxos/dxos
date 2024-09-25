@@ -816,6 +816,7 @@ export const SpacePlugin = ({
                         [
                           { action: settings.values.onSpaceCreate, data: { space } },
                           { action: SpaceAction.ADD_OBJECT, data: { target: space } },
+                          { action: NavigationAction.EXPOSE },
                         ],
                       ]
                     : []),
@@ -1074,7 +1075,7 @@ export const SpacePlugin = ({
               }
 
               return {
-                data: { id: object.id, object, activeParts: { main: [fullyQualifiedId(object)] } },
+                data: { id: fullyQualifiedId(object), object, activeParts: { main: [fullyQualifiedId(object)] } },
                 intents: [
                   [
                     {
