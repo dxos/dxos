@@ -11,6 +11,7 @@ import type {
 } from '@dxos/app-framework';
 import { create, ref, S, TypedObject } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-client';
+import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { type StackProvides } from '@dxos/plugin-stack';
 
@@ -38,6 +39,7 @@ export type SheetPluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   SchemaProvides &
+  SpaceInitProvides &
   StackProvides &
   ThreadProvides<SheetType>;
 
