@@ -23,9 +23,6 @@
       "path": "../async"
     },
     {
-      "path": "../log"
-    },
-    {
       "path": "../node-std"
     }
   ]

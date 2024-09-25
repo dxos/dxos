@@ -40,8 +40,7 @@
   },
   "devDependencies": {
     "@dxos/keys": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
-    "jest-websocket-mock": "^2.5.0"
+    "@dxos/test-utils": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
