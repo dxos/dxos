@@ -3,6 +3,7 @@
 //
 
 import { create, ref, S, TypedObject } from '@dxos/echo-schema';
+import { ThreadType } from '@dxos/plugin-space';
 
 // TODO(burdon): Move defs to plugin.
 export const EXCALIDRAW_SCHEMA = 'excalidraw.com/2';
@@ -17,6 +18,8 @@ export class CanvasType extends TypedObject({ typename: 'dxos.org/type/Canvas', 
 export class DiagramType extends TypedObject({ typename: 'dxos.org/type/Diagram', version: '0.1.0' })({
   name: S.optional(S.String),
   canvas: ref(CanvasType),
+  // Threads associated with the sheet
+  threads: S.optional(S.mutable(S.Array(ref(ThreadType)))),
 }) {}
 
 export const isDiagramType = (object: any, schema: string): object is DiagramType =>
