@@ -91,7 +91,7 @@ class CheckboxWidget extends WidgetType {
           view.dispatch({
             changes: { from: pos + 1, to: pos + 2, insert: this._checked ? ' ' : 'x' },
           });
-          5645;
+
           event.preventDefault();
         }
       };
