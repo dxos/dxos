@@ -108,9 +108,7 @@
           "quiet": true
         }
       },
-      "dependsOn": [
-        "storybook"
-      ],
+      "dependsOn": [],
       "executor": "@nx/storybook:build",
       "options": {
         "configDir": "tools/stories/config/all",
