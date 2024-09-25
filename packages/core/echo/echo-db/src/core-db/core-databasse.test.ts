@@ -523,25 +523,34 @@ describe('CoreDatabase', () => {
       const { crud } = await testBuilder.createDatabase();
 
       const { id: id1 } = await crud.insert({ title: 'Inner' });
-      const { id: id2 } = await crud.insert({ title: 'Outer', inner: { '/': id1 } });
+      const { id: id2 } = await crud.insert({ title: 'Inner', nested: { '/': id1 } });
+      const { id: id3 } = await crud.insert({ title: 'Outer', inner: { '/': id2 } });
       await crud.flush({ indexes: true });
 
       {
-        const object = await crud.query({ id: id2 }, { include: { inner: true } }).first();
+        const object = await crud.query({ id: id3 }, { include: { inner: { nested: true } } }).first();
         expect(object).to.deep.eq({
-          id: id2,
+          id: id3,
           __typename: null,
           __meta: {
             keys: [],
           },
           title: 'Outer',
           inner: {
-            id: id1,
+            id: id2,
             __typename: null,
             __meta: {
               keys: [],
             },
             title: 'Inner',
+            nested: {
+              id: id1,
+              __typename: null,
+              __meta: {
+                keys: [],
+              },
+              title: 'Inner',
+            },
           },
         });
       }
