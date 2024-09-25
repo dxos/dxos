@@ -222,7 +222,7 @@ const validateJoinSpec = (joinSpec: QueryJoinSpec) => {
     // This will throw if the join spec is a recursive object.
     JSON.stringify(joinSpec);
   } catch {
-    throw new Error(`Invalid join spec`);
+    throw new Error('Invalid join spec');
   }
 };
 
