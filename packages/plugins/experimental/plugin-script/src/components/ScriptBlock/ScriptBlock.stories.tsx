@@ -12,10 +12,10 @@ import { create, createEchoObject, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-// @ts-ignore
-import mainUrl from './FrameContainer/frame?url';
 import { ScriptBlock } from './ScriptBlock';
 import { ScriptType } from '../../types';
+// @ts-ignore
+import mainUrl from '../FrameContainer/frame?url';
 
 const code = [
   "import { Filter, useQuery, useSpaces} from '@dxos/react-client/echo';",

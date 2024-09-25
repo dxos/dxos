@@ -5,7 +5,7 @@
 import { findObjectWithForeignKey } from '@dxos/echo-db';
 import { create, foreignKey } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { MailboxType } from '@dxos/plugin-inbox';
+import { MailboxType } from '@dxos/plugin-inbox/types';
 import { MessageType } from '@dxos/plugin-space/types';
 import { type Space, Filter } from '@dxos/react-client/echo';
 
@@ -44,5 +44,6 @@ export const handleEmail = async (space: Space, data: any) => {
       mailbox.messages?.push(object);
     }
   }
+
   return 200;
 };
