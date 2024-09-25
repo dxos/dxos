@@ -3,7 +3,8 @@
 //
 
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
-import { type RequestOptions, Stream } from '@dxos/codec-protobuf';
+import { type RequestOptions } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -24,6 +25,7 @@ import {
 
 import { DocumentsSynchronizer } from './documents-synchronizer';
 import { deriveCollectionIdFromSpaceId, type AutomergeHost } from '../automerge';
+import { UpdateScheduler } from '@dxos/async';
 
 export type DataServiceParams = {
   automergeHost: AutomergeHost;
@@ -120,19 +122,28 @@ export class DataServiceImpl implements DataService {
     await this._updateIndexes();
   }
 
-  async getSpaceSyncState(
-    request: GetSpaceSyncStateRequest,
-    options?: RequestOptions | undefined,
-  ): Promise<SpaceSyncState> {
-    invariant(SpaceId.isValid(request.spaceId));
-    const collectionId = deriveCollectionIdFromSpaceId(request.spaceId);
-    const state = await this._automergeHost.getCollectionSyncState(collectionId);
+  subscribeSpaceSyncState(request: GetSpaceSyncStateRequest): Stream<SpaceSyncState> {
+    return new Stream<SpaceSyncState>(({ ctx, next, ready }) => {
+      invariant(SpaceId.isValid(request.spaceId));
+      const collectionId = deriveCollectionIdFromSpaceId(request.spaceId);
 
-    return {
-      peers: state.peers.map((peer) => ({
-        peerId: peer.peerId,
-        documentsToReconcile: peer.differentDocuments,
-      })),
-    };
+      const scheduler = new UpdateScheduler(ctx, async () => {
+        const state = await this._automergeHost.getCollectionSyncState(collectionId);
+
+        next({
+          peers: state.peers.map((peer) => ({
+            peerId: peer.peerId,
+            documentsToReconcile: peer.differentDocuments,
+          })),
+        });
+      });
+
+      this._automergeHost.collectionStateUpdated.on(ctx, (e) => {
+        if (e.collectionId === collectionId) {
+          scheduler.trigger();
+        }
+      });
+      scheduler.trigger();
+    });
   }
 }

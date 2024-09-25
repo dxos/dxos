@@ -15,6 +15,7 @@ import {
   type ShouldAdvertiseParams,
   type ShouldSyncCollectionParams,
 } from '@dxos/echo-pipeline/light';
+import type { CollectionId } from '@dxos/echo-protocol';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
@@ -230,7 +231,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     if (!this._sharedPolicyEnabled) {
       return true;
     }
-    const spaceId = getSpaceIdFromCollectionId(params.collectionId);
+    const spaceId = getSpaceIdFromCollectionId(params.collectionId as CollectionId);
     return spaceId === this._spaceId;
   }
 

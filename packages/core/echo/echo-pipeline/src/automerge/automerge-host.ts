@@ -25,7 +25,7 @@ import {
   type StorageKey,
 } from '@dxos/automerge/automerge-repo';
 import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import { type CollectionId, type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -82,6 +82,8 @@ export class AutomergeHost extends Resource {
   @trace.info()
   private _peerId!: PeerId;
 
+  public readonly collectionStateUpdated = new Event<{ collectionId: CollectionId }>();
+
   constructor({ db, indexMetadataStore, dataMonitor }: AutomergeHostParams) {
     super();
     this._db = db;
@@ -128,6 +130,7 @@ export class AutomergeHost extends Resource {
 
     this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId }) => {
       this._onRemoteCollectionStateUpdated(collectionId, peerId);
+      this.collectionStateUpdated.emit({ collectionId: collectionId as CollectionId });
     });
 
     await this._echoNetworkAdapter.open();
@@ -483,13 +486,18 @@ export class AutomergeHost extends Resource {
   }
 
   private _onHeadsChanged(documentId: DocumentId, heads: Heads) {
+    const collectionsChanged = new Set<CollectionId>();
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
       const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);
       if (state?.documents[documentId]) {
         const newState = structuredClone(state);
         newState.documents[documentId] = heads;
         this._collectionSynchronizer.setLocalCollectionState(collectionId, newState);
+        collectionsChanged.add(collectionId as CollectionId);
       }
+    }
+    for (const collectionId of collectionsChanged) {
+      this.collectionStateUpdated.emit({ collectionId });
     }
   }
 }

@@ -41,6 +41,8 @@ import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChanged
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { Filter, optionsToProto, Query, type FilterSource, type PropertyFilter, type QueryFn } from '../query';
+import { Stream } from '@dxos/codec-protobuf';
+import { raise } from '@dxos/debug';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -550,7 +552,10 @@ export class CoreDatabase {
   }
 
   async getSyncState(): Promise<SpaceSyncState> {
-    return this._dataService.getSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
+    const value = await Stream.first(
+      this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT }),
+    );
+    return value ?? raise(new Error('Failed to get sync state'));
   }
 
   getLoadedDocumentHandles(): DocHandleProxy<any>[] {

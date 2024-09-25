@@ -15,6 +15,7 @@ import { type EchoReplicator, type EchoReplicatorContext, type ShouldAdvertisePa
 import { MeshReplicatorConnection } from './mesh-echo-replicator-connection';
 import { getSpaceIdFromCollectionId } from './space-collection';
 import { createIdFromSpaceKey } from '../common/space-id';
+import type { CollectionId } from '@dxos/echo-protocol';
 
 // TODO(dmaretskyi): Move out of @dxos/echo-pipeline.
 
@@ -126,7 +127,7 @@ export class MeshEchoReplicator implements EchoReplicator {
         }
       },
       shouldSyncCollection: ({ collectionId }) => {
-        const spaceId = getSpaceIdFromCollectionId(collectionId);
+        const spaceId = getSpaceIdFromCollectionId(collectionId as CollectionId);
 
         const authorizedDevices = this._authorizedDevices.get(spaceId);
 

@@ -139,5 +139,5 @@ service DataService {
   rpc UpdateIndexes(google.protobuf.Empty) returns (google.protobuf.Empty);
 
   // TODO(dmaretskyi): Stream subscription.
-  rpc GetSpaceSyncState(GetSpaceSyncStateRequest) returns (SpaceSyncState);
+  rpc SubscribeSpaceSyncState(GetSpaceSyncStateRequest) returns (stream SpaceSyncState);
 }
