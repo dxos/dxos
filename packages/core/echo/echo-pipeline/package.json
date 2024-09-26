@@ -15,14 +15,6 @@
       },
       "types": "./dist/types/src/index.d.ts"
     },
-    "./light": {
-      "browser": "./dist/lib/browser/light.mjs",
-      "node": {
-        "require": "./dist/lib/node/light.cjs",
-        "default": "./dist/lib/node-esm/light.mjs"
-      },
-      "types": "./dist/types/src/light.d.ts"
-    },
     "./testing": {
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": {
@@ -35,9 +27,6 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "light": [
-        "dist/types/src/light.d.ts"
-      ],
       "testing": [
         "dist/types/src/testing/index.d.ts"
       ]
@@ -58,6 +47,8 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/hypercore": "workspace:*",
     "@dxos/indexing": "workspace:*",
@@ -81,10 +72,12 @@
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
     "crc-32": "^1.2.2",
-    "level-transcoder": "^1.0.1"
+    "level-transcoder": "^1.0.1",
+    "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
+    "@types/lodash.isequal": "^4.5.0",
     "fast-check": "^3.19.0"
   },
   "publishConfig": {

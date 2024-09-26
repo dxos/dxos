@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { MeshEchoReplicator } from '@dxos/echo-pipeline/light';
+import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,

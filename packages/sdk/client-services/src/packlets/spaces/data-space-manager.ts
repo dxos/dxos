@@ -14,8 +14,11 @@ import {
   type DelegateInvitationCredential,
   type MemberInfo,
 } from '@dxos/credentials';
-import { convertLegacyReferences, findInlineObjectOfType, type EchoEdgeReplicator, type EchoHost } from '@dxos/echo-db';
 import {
+  convertLegacyReferences,
+  findInlineObjectOfType,
+  type EchoEdgeReplicator,
+  type EchoHost,
   AuthStatus,
   CredentialServerExtension,
   type MeshEchoReplicator,

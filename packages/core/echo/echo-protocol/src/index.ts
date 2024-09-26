@@ -7,3 +7,4 @@ export * from './reference';
 export * from './space-doc-version';
 export * from './legacy';
 export * from './collection-sync';
+export * from './space-id';
