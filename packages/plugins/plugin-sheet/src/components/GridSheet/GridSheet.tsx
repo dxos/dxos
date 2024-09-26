@@ -8,9 +8,8 @@ import { Grid, useGridContext, type GridScopedProps } from '@dxos/react-ui-grid'
 import { type DxGridElement } from '@dxos/react-ui-grid/src';
 
 import { dxGridCellIndexToSheetCellAddress, useSheetModelDxGridCells } from './util';
-import { type SheetModel } from '../../model';
+import { type SheetModel, type FormattingModel } from '../../model';
 import { CellEditor, editorKeys, type EditorKeysProps, sheetExtension } from '../CellEditor';
-import { type FormattingModel } from '../Sheet/formatting';
 import { useSheetModel, type UseSheetModelProps } from '../Sheet/util';
 
 const GridSheetCellEditor = ({
@@ -62,7 +61,7 @@ const GridSheetImpl = ({
     [model, editing, setEditing],
   );
 
-  const cells = useSheetModelDxGridCells(model);
+  const cells = useSheetModelDxGridCells(model, formatting);
 
   return (
     <>

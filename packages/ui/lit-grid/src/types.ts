@@ -25,9 +25,9 @@ export type CellValue = {
    */
   end?: string;
   /**
-   * CSS inline styles to apply to the gridcell element
+   * `class` attribute value to apply to the gridcell element
    */
-  style?: string;
+  className?: string;
 };
 
 export type AxisMeta = {

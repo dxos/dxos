@@ -6,8 +6,9 @@ import { useEffect, useState } from 'react';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { type GridEditing, type GridContentProps } from '@dxos/react-ui-grid';
+import { mx } from '@dxos/react-ui-theme';
 
-import { addressFromIndex, type CellAddress, type SheetModel } from '../../model';
+import { addressFromIndex, type CellAddress, type SheetModel, type FormattingModel } from '../../model';
 
 export const dxGridCellIndexToSheetCellAddress = (gridIndex: GridEditing): CellAddress | null => {
   if (!gridIndex) {
@@ -20,28 +21,28 @@ export const dxGridCellIndexToSheetCellAddress = (gridIndex: GridEditing): CellA
   };
 };
 
-const renderDxGridCells = (model: SheetModel) => {
+const renderDxGridCells = (model: SheetModel, formatting: FormattingModel) => {
   return Object.keys(model.sheet.cells).reduce((acc: NonNullable<GridContentProps['cells']>, sheetCellIndex) => {
     const address = addressFromIndex(model.sheet, sheetCellIndex);
-    const text = model.getCellText(address);
-    if (text) {
-      acc[`${address.column},${address.row}`] = { value: text };
+    const cell = formatting.getFormatting(address);
+    if (cell.value) {
+      acc[`${address.column},${address.row}`] = { value: cell.value, className: mx(cell.classNames) };
     }
     return acc;
   }, {});
 };
 
-export const useSheetModelDxGridCells = (model: SheetModel): GridContentProps['cells'] => {
-  const [dxGridCells, setDxGridCells] = useState<GridContentProps['cells']>(renderDxGridCells(model));
+export const useSheetModelDxGridCells = (model: SheetModel, formatting: FormattingModel): GridContentProps['cells'] => {
+  const [dxGridCells, setDxGridCells] = useState<GridContentProps['cells']>(renderDxGridCells(model, formatting));
 
   useEffect(() => {
     const accessor = createDocAccessor(model.sheet, ['cells']);
     const handleUpdate = () => {
-      setDxGridCells(renderDxGridCells(model));
+      setDxGridCells(renderDxGridCells(model, formatting));
     };
     accessor.handle.addListener('change', handleUpdate);
     return () => accessor.handle.removeListener('change', handleUpdate);
-  }, [model]);
+  }, [model, formatting]);
 
   return dxGridCells;
 };

@@ -643,7 +643,9 @@ export class DxGrid extends LitElement {
                 role="gridcell"
                 tabindex="0"
                 ?inert=${c < 0 || r < 0}
-                class=${active ? 'dx-grid__cell--active' : nothing}
+                class=${cell || active
+                  ? (cell?.className ? cell.className + ' ' : '') + (active ? 'dx-grid__cell--active' : '')
+                  : nothing}
                 aria-rowindex=${r}
                 aria-colindex=${c}
                 data-dx-grid-action="cell"

@@ -6,8 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
 
-import { FormattingModel } from './formatting';
-import { mapFormulaBindingFromId, mapFormulaBindingToId, SheetModel } from '../../model';
+import { mapFormulaBindingFromId, mapFormulaBindingToId, SheetModel, FormattingModel } from '../../model';
 import type { SheetType } from '../../types';
 import type { FunctionContextOptions } from '../ComputeGraph';
 import { useComputeGraph } from '../ComputeGraph/graph-context';
