@@ -6,7 +6,7 @@ import { Writable } from 'node:stream';
 
 import { Event, scheduleTask } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf';
-import { LifecycleState, Resource } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -110,10 +110,10 @@ export class RtcTransportProxy extends Resource implements Transport {
   }
 
   protected override async _close() {
-    await this._serviceStream?.close();
-    this._serviceStream = undefined;
-
     try {
+      await this._serviceStream?.close();
+      this._serviceStream = undefined;
+
       await this._options.bridgeService.close({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT });
     } catch (err: any) {
       log.catch(err);
@@ -194,7 +194,7 @@ export class RtcTransportProxy extends Resource implements Transport {
   }
 
   private _raiseIfOpen(error: any) {
-    if (this._lifecycleState === LifecycleState.OPEN) {
+    if (this.isOpen) {
       this.errors.raise(error);
     } else {
       log.info('error swallowed because transport was closed', { message: error.message });

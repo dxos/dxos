@@ -126,8 +126,8 @@ describe('RtcPeerTransportProxy', () => {
       },
     });
     await rpcClient.open();
-    onTestFinished(() => {
-      rpcClient.close();
+    onTestFinished(async () => {
+      await rpcClient.close();
     });
     return rpcClient;
   };

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { synchronized, Trigger } from '@dxos/async';
+import { synchronized, Trigger, Mutex } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { ConnectivityError } from '@dxos/protocols';
@@ -11,7 +11,7 @@ import { trace } from '@dxos/tracing';
 
 import { type RtcConnectionFactory } from './rtc-connection-factory';
 import { RtcTransportChannel } from './rtc-transport-channel';
-import { chooseInitiatorPeer } from './utils';
+import { areSdpEqual, chooseInitiatorPeer } from './utils';
 import type { IceProvider } from '../../signal';
 import { type TransportOptions } from '../transport';
 
@@ -42,6 +42,8 @@ export class RtcPeerConnection {
   private readonly _dataChannels = new Map<string, RTCDataChannel>();
   // A peer is ready to receive ICE candidates when local and remote description were set.
   private readonly _readyForCandidates = new Trigger();
+
+  private readonly _offerProcessingMutex = new Mutex();
 
   /**
    * Can't use peer.connection.initiator, because if two connections to the same peer are created in
@@ -92,7 +94,7 @@ export class RtcPeerConnection {
     channel.closed.on(() => {
       this._transportChannels.delete(options.topic);
       if (this._transportChannels.size === 0) {
-        void this._closeConnection();
+        this._lockAndCloseConnection();
       }
     });
     return channel;
@@ -122,13 +124,15 @@ export class RtcPeerConnection {
         invariant(this._initiator);
 
         if (connection !== this._connection) {
+          this._onConnectionCallbackAfterClose('onnegotiationneeded', connection);
           return;
         }
+
         log('onnegotiationneeded');
         try {
           const offer = await connection.createOffer();
           await connection.setLocalDescription(offer);
-          await this._sendDescription(offer);
+          await this._sendDescription(connection, offer);
         } catch (err: any) {
           this._lockAndAbort(connection, err);
         }
@@ -138,12 +142,10 @@ export class RtcPeerConnection {
       // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/icecandidate_event
       onicecandidate: async (event) => {
         if (connection !== this._connection) {
-          log.warn('onicecandidate called after a connection was destroyed', {
-            connectionState: connection.connectionState,
-          });
-          this._safeCloseConnection(connection);
+          this._onConnectionCallbackAfterClose('onicecandidate', connection);
           return;
         }
+
         if (event.candidate) {
           log('onicecandidate', { candidate: event.candidate.candidate });
           await this._sendIceCandidate(event.candidate);
@@ -164,11 +166,12 @@ export class RtcPeerConnection {
       // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/iceconnectionstatechange_event
       oniceconnectionstatechange: () => {
         if (connection !== this._connection) {
-          log.warn('oniceconnectionstatechange called after a connection was destroyed');
+          this._onConnectionCallbackAfterClose('oniceconnectionstatechange', connection);
           return;
         }
+
         log('oniceconnectionstatechange', { state: connection.iceConnectionState });
-        if (this._connection.iceConnectionState === 'failed') {
+        if (connection.iceConnectionState === 'failed') {
           this._lockAndAbort(connection, createIceFailureError(iceCandidateErrors));
         }
       },
@@ -179,13 +182,11 @@ export class RtcPeerConnection {
       onconnectionstatechange: () => {
         if (connection !== this._connection) {
           if (connection.connectionState !== 'closed' && connection.connectionState !== 'failed') {
-            log.warn('onconnectionstatechange called after a connection was destroyed', {
-              state: connection.connectionState,
-            });
-            this._safeCloseConnection(connection);
+            this._onConnectionCallbackAfterClose('onconnectionstatechange', connection);
           }
           return;
         }
+
         log('onconnectionstatechange', { state: connection.connectionState });
         if (connection.connectionState === 'failed') {
           this._lockAndAbort(connection, new Error('Connection failed.'));
@@ -202,7 +203,7 @@ export class RtcPeerConnection {
         invariant(!this._initiator, 'Initiator is expected to create data channels.');
 
         if (connection !== this._connection) {
-          log.warn('ondatachannel called after a connection was destroyed');
+          this._onConnectionCallbackAfterClose('ondatachannel', connection);
           return;
         }
 
@@ -245,11 +246,11 @@ export class RtcPeerConnection {
     }
     this._transportChannels.clear();
     this._safeCloseConnection();
-    log('connection aborted');
+    log.info('connection aborted', { reason: error.message });
   }
 
   @synchronized
-  private _closeConnection() {
+  private _lockAndCloseConnection() {
     invariant(this._transportChannels.size === 0);
     if (this._connection) {
       this._safeCloseConnection();
@@ -268,40 +269,47 @@ export class RtcPeerConnection {
     const data = signal.payload.data;
     switch (data.type) {
       case 'offer': {
-        if (isRemoteDescriptionSet(connection, data)) {
-          break;
-        }
-        if (connection.connectionState !== 'new') {
-          this._abortConnection(connection, new Error(`Received an offer in ${connection.connectionState}.`));
-          break;
-        }
+        await this._offerProcessingMutex.executeSynchronized(async () => {
+          if (isRemoteDescriptionSet(connection, data)) {
+            return;
+          }
+          if (connection.connectionState !== 'new') {
+            this._abortConnection(connection, new Error(`Received an offer in ${connection.connectionState}.`));
+            return;
+          }
 
-        try {
-          await connection.setRemoteDescription({ type: data.type, sdp: data.sdp });
-          const answer = await connection.createAnswer();
-          await connection.setLocalDescription(answer);
-          await this._sendDescription(answer);
-          this._onSessionNegotiated(connection);
-        } catch (err) {
-          this._abortConnection(connection, new Error('Error handling a remote offer.', { cause: err }));
-        }
+          try {
+            await connection.setRemoteDescription({ type: data.type, sdp: data.sdp });
+            const answer = await connection.createAnswer();
+            await connection.setLocalDescription(answer);
+            await this._sendDescription(connection, answer);
+            this._onSessionNegotiated(connection);
+          } catch (err) {
+            this._abortConnection(connection, new Error('Error handling a remote offer.', { cause: err }));
+          }
+        });
         break;
       }
 
       case 'answer':
-        try {
-          if (isRemoteDescriptionSet(connection, data)) {
-            break;
+        await this._offerProcessingMutex.executeSynchronized(async () => {
+          try {
+            if (isRemoteDescriptionSet(connection, data)) {
+              return;
+            }
+            if (connection.signalingState !== 'have-local-offer') {
+              this._abortConnection(
+                connection,
+                new Error(`Unexpected answer from remote peer, signalingState was ${connection.signalingState}.`),
+              );
+              return;
+            }
+            await connection.setRemoteDescription({ type: data.type, sdp: data.sdp });
+            this._onSessionNegotiated(connection);
+          } catch (err) {
+            this._abortConnection(connection, new Error('Error handling a remote answer.', { cause: err }));
           }
-          if (connection.signalingState !== 'have-local-offer') {
-            this._abortConnection(connection, new Error('Unexpected answer from remote peer.'));
-            break;
-          }
-          await connection.setRemoteDescription({ type: data.type, sdp: data.sdp });
-          this._onSessionNegotiated(connection);
-        } catch (err) {
-          this._abortConnection(connection, new Error('Error handling a remote answer.', { cause: err }));
-        }
+        });
         break;
 
       case 'candidate':
@@ -338,8 +346,16 @@ export class RtcPeerConnection {
     }
   }
 
+  private _onConnectionCallbackAfterClose(callback: string, connection: RTCPeerConnection) {
+    log.warn('callback invoked after a connection was destroyed, this is probably a bug', {
+      callback,
+      state: connection.connectionState,
+    });
+    this._safeCloseConnection(connection);
+  }
+
   private _safeCloseConnection(connection: RTCPeerConnection | undefined = this._connection) {
-    const resetFields = connection === this._connection;
+    const resetFields = this._connection && connection === this._connection;
     try {
       connection?.close();
     } catch (err) {
@@ -349,14 +365,23 @@ export class RtcPeerConnection {
       this._connection = undefined;
       this._dataChannels.clear();
       this._readyForCandidates.wake();
+      void this._factory.onConnectionDestroyed().catch((err) => log.catch(err));
+      for (const [_, pendingCallback] of this._channelCreatedCallbacks.entries()) {
+        pendingCallback.reject('Connection closed.');
+      }
+      this._channelCreatedCallbacks.clear();
     }
   }
 
   private async _loadConnectionConfig() {
     const config = { ...this._options.webrtcConfig };
-    const providedIceServers = (await this._options.iceProvider?.getIceServers()) ?? [];
-    if (providedIceServers.length > 0) {
-      config.iceServers = [...(config.iceServers ?? []), ...providedIceServers];
+    try {
+      const providedIceServers = (await this._options.iceProvider?.getIceServers()) ?? [];
+      if (providedIceServers.length > 0) {
+        config.iceServers = [...(config.iceServers ?? []), ...providedIceServers];
+      }
+    } catch (error) {
+      log.catch(error);
     }
     return config;
   }
@@ -381,7 +406,11 @@ export class RtcPeerConnection {
     }
   }
 
-  private async _sendDescription(description: RTCSessionDescriptionInit) {
+  private async _sendDescription(connection: RTCPeerConnection, description: RTCSessionDescriptionInit) {
+    if (connection !== this._connection) {
+      // Connection was closed while description was being created.
+      return;
+    }
     // Type is 'offer' | 'answer'.
     const data = { type: description.type, sdp: description.sdp };
     await this._options.sendSignal({ payload: { data } });
@@ -418,7 +447,10 @@ export class RtcPeerConnection {
 }
 
 const isRemoteDescriptionSet = (connection: RTCPeerConnection, data: { type: string; sdp: string }) => {
-  return connection.remoteDescription?.type === data.type && connection.remoteDescription.sdp === data.sdp;
+  if (!connection.remoteDescription?.type || connection.remoteDescription?.type !== data.type) {
+    return false;
+  }
+  return areSdpEqual(connection.remoteDescription.sdp, data.sdp);
 };
 
 type IceCandidateErrorDetails = { url: string; errorCode: number; errorText: string };

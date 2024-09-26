@@ -7,6 +7,7 @@ import { Duplex } from 'node:stream';
 import { Event as AsyncEvent } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ConnectivityError } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -32,6 +33,7 @@ export class RtcTransportChannel extends Resource implements Transport {
   private _channel: RTCDataChannel | undefined;
   private _stream: Duplex | undefined;
   private _streamDataFlushedCallback: PendingStreamFlushedCallback | null = null;
+  private _isChannelCreationInProgress = false;
 
   constructor(
     private readonly _connection: RtcPeerConnection,
@@ -40,11 +42,19 @@ export class RtcTransportChannel extends Resource implements Transport {
     super();
   }
 
+  public get isRtcChannelCreationInProgress() {
+    return this._isChannelCreationInProgress;
+  }
+
   public onConnectionError(error: Error) {
-    this.errors.raise(error);
+    if (this.isOpen) {
+      this.errors.raise(error);
+    }
   }
 
   protected override async _open() {
+    invariant(!this._isChannelCreationInProgress);
+    this._isChannelCreationInProgress = true;
     this._connection
       .createDataChannel(this._options.topic)
       .then((channel) => {
@@ -59,6 +69,9 @@ export class RtcTransportChannel extends Resource implements Transport {
         if (this.isOpen) {
           this.errors.raise(new ConnectivityError(`Failed to create a channel: ${err?.message ?? 'unknown reason'}.`));
         }
+      })
+      .finally(() => {
+        this._isChannelCreationInProgress = false;
       });
   }
 

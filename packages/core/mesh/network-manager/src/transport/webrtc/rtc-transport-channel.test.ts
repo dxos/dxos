@@ -9,13 +9,14 @@ import { sleep } from '@dxos/async';
 
 import { type RtcPeerConnection } from './rtc-peer-connection';
 import { RtcTransportChannel } from './rtc-transport-channel';
+import { handleChannelErrors } from './test-utils';
 import { type TransportOptions } from '../transport';
 
 describe('RtcTransportChannel', () => {
   test('transport error raised if channel creation fails', async () => {
     const controller = createChannelController();
     const { transport } = createTransport(controller.connection);
-    const transportErrors = handleErrors(transport);
+    const transportErrors = handleChannelErrors(transport);
     await transport.open();
     controller.onChannelCreationFailed();
     await transportErrors.expectErrorRaised();
@@ -104,7 +105,7 @@ describe('RtcTransportChannel', () => {
     const { transport, stream } = createTransport(controller.connection);
     await transport.open();
     await controller.onChannelCreated();
-    const transportClosedEvent = handleErrors(transport);
+    const transportClosedEvent = handleChannelErrors(transport);
     controller.channel.onopen();
     controller.setFailSending(true);
     stream.push('hello');
@@ -122,17 +123,6 @@ describe('RtcTransportChannel', () => {
     });
     const options = { topic: 'test', stream } as any as TransportOptions;
     return { deliveredMessages, stream, transport: new RtcTransportChannel(connection, options) };
-  };
-
-  const handleErrors = (channel: RtcTransportChannel) => {
-    let handled = false;
-    channel.errors.handle(() => (handled = true));
-    return {
-      expectErrorRaised: async () => {
-        await sleep(5);
-        expect(handled).toBeTruthy();
-      },
-    };
   };
 
   const handleClose = (channel: RtcTransportChannel) => {

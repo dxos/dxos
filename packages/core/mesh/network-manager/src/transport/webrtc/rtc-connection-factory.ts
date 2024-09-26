@@ -8,7 +8,7 @@ export type ConnectionInfo = {
 
 export interface RtcConnectionFactory {
   initialize(): Promise<void>;
-  destroy(): Promise<void>;
+  onConnectionDestroyed(): Promise<void>;
   createConnection(config: RTCConfiguration): Promise<RTCPeerConnection>;
   initConnection(connection: RTCPeerConnection, info: ConnectionInfo): Promise<void>;
 }
@@ -18,7 +18,7 @@ export interface RtcConnectionFactory {
  */
 class BrowserRtcConnectionFactory implements RtcConnectionFactory {
   async initialize() {}
-  async destroy() {}
+  async onConnectionDestroyed() {}
 
   async createConnection(config: RTCConfiguration) {
     return new RTCPeerConnection(config);
@@ -32,18 +32,22 @@ class BrowserRtcConnectionFactory implements RtcConnectionFactory {
  * https://github.com/paullouisageneau/libdatachannel
  */
 class NodeRtcConnectionFactory implements RtcConnectionFactory {
+  static createdConnections = 0;
+
   // This should be inside the function to avoid triggering `eval` in the global scope.
   // eslint-disable-next-line no-new-func
-  private readonly importESM = Function('path', 'return import(path)');
 
   // TODO(burdon): Do imports here?
   async initialize() {}
-  async destroy() {
-    (await import('#node-datachannel')).cleanup();
+  async onConnectionDestroyed() {
+    if (--NodeRtcConnectionFactory.createdConnections === 0) {
+      (await import('#node-datachannel')).cleanup();
+    }
   }
 
   async createConnection(config: RTCConfiguration) {
     const { RTCPeerConnection } = await import('#node-datachannel/polyfill');
+    NodeRtcConnectionFactory.createdConnections++;
     return new RTCPeerConnection(config);
   }
 

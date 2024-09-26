@@ -171,7 +171,7 @@ export class RtcTransportService implements BridgeService {
       log.catch(error);
     }
     try {
-      await transport.connectorStream.end();
+      transport.connectorStream.end();
     } catch (error) {
       log.catch(error);
     }
