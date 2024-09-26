@@ -61,7 +61,7 @@ export const SyncStatusDetail = ({
   return (
     <div className='flex flex-col text-xs'>
       <h1 className='p-2'>Progress</h1>
-      <div className='flex flex-col gap-0.5'>
+      <div className='flex flex-col gap-[2px] my-[2px]'>
         {Object.entries(state).map(
           ([spaceId, { localDocumentCount, remoteDocumentCount, missingOnLocal, missingOnRemote }]) => (
             <Candle
@@ -83,9 +83,10 @@ type CandleProps = ThemedClassName<Pick<HTMLAttributes<HTMLDivElement>, 'title'>
 
 export const Candle = ({ classNames, up, down }: CandleProps) => {
   return (
-    <div className={mx('flex divide-x-2 divide-separator', classNames)}>
-      <Bar classNames='flex w-1/2 justify-end' {...up} />
-      <Bar classNames='flex w-1/2' {...down} />
+    <div className={mx('grid grid-cols-[1fr_2px_1fr] mx-[2px]', classNames)}>
+      <Bar classNames='justify-end' {...up} />
+      <div />
+      <Bar {...down} />
     </div>
   );
 };
@@ -93,7 +94,7 @@ export const Candle = ({ classNames, up, down }: CandleProps) => {
 export const Bar = ({ classNames, count, total }: ThemedClassName<Progress>) => {
   const p = (count / total) * 100;
   return (
-    <div className={mx('flex w-full bg-green-900', classNames)}>
+    <div className={mx('flex w-full bg-neutral-50 dark:bg-green-900', classNames)}>
       <div className='shrink-0 bg-green-500' style={{ width: `${p}%` }}></div>
     </div>
   );

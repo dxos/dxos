@@ -36,18 +36,12 @@ export const getSyncSummary = (syncMap: SpaceSyncStateMap): SyncStateSummary => 
     summary.localDocumentCount += peerState.localDocumentCount;
     summary.remoteDocumentCount += peerState.remoteDocumentCount;
     summary.totalDocumentCount += Math.max(peerState.localDocumentCount, peerState.remoteDocumentCount);
-
-    // if (peerState.missingOnRemote > 0 || peerState.missingOnLocal > 0 || peerState.differentDocuments > 0) {
-    //   state.unsyncedSpaces.add(spaceId as SpaceId);
-    // }
-
-    // if (!hasEdgePeer) {
-    //   state.spacesNotConnectedToEdge.add(spaceId as SpaceId);
-    // }
-
     return summary;
   }, createEmptyEdgeSyncState());
 };
+
+const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
+  peerId.startsWith(`${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`);
 
 /**
  * Hook Subscribes to sync state for each space.
@@ -67,8 +61,9 @@ export const useSyncState = (): SpaceSyncStateMap => {
         ctx.onDispose(
           space.crud.subscribeToSyncState(ctx, ({ peers = [] }) => {
             const syncState = peers.find((state) => isEdgePeerId(state.peerId, space.id));
-            // TODO(burdon): Get info from other peers.
-            setSpaceState((spaceState) => ({ ...spaceState, [space.id]: syncState ?? {} }));
+            if (syncState) {
+              setSpaceState((spaceState) => ({ ...spaceState, [space.id]: syncState }));
+            }
           }),
         );
       }
@@ -86,6 +81,3 @@ export const useSyncState = (): SpaceSyncStateMap => {
 
   return spaceState;
 };
-
-const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
-  peerId.startsWith(`${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`);
