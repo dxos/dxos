@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "composer-crx",
+  "tags": [
+    "scope:devtools"
+  ],
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "application",
+  "targets": {
+    "build": {},
+    "bundle": {
+      "executor": "@nx/vite:build",
+      "options": {
+        "generatePackageJson": false,
+        "outputPath": "{projectRoot}/out/composer-crx"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {}
+  }
+}
