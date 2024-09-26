@@ -156,7 +156,6 @@ export const Sketch = ({
           id: threadToolId,
           icon: 'thread-icon',
           label: 'Comment', // TODO(Zan): Use translation lookup here.
-          kbd: 't',
           onSelect: () => onThreadCreate?.(),
         };
         return newTools;
