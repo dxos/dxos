@@ -7,6 +7,4 @@ export { Filter, hasType, type FilterParams, type FilterSource, type PropertyFil
 export * from './filter-match';
 export * from './query';
 export * from './subscription';
-export * from './query-state';
-export * from './query-service';
 export * from './api';

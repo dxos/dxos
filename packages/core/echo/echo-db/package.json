@@ -48,7 +48,6 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/edge-client": "workspace:*",
-    "@dxos/indexing": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/kv-store": "workspace:*",
@@ -65,7 +64,7 @@
     "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {
-    "@dxos/echo-pipeline": "workspace:*",
+    "@dxos/indexing": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "@types/lodash.get": "^4.4.7",

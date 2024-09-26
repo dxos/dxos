@@ -7,7 +7,6 @@ import { getHeads, type Doc } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context, Resource } from '@dxos/context';
-import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline/light';
 import type { SpaceDoc } from '@dxos/echo-protocol';
 import { type ObjectSnapshot, type Indexer, type IdToHeads } from '@dxos/indexing';
 import { log } from '@dxos/log';
@@ -22,6 +21,7 @@ import {
 import { trace } from '@dxos/tracing';
 
 import { QueryState } from './query-state';
+import { type AutomergeHost, getSpaceKeyFromDoc } from '../automerge';
 
 export type QueryServiceParams = {
   indexer: Indexer;

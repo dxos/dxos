@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
-import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline/light';
+import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
 import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { SpaceId } from '@dxos/keys';
