@@ -245,6 +245,10 @@ export class CoreDatabase {
   }
 
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
+    if (!this._automergeDocLoader.hasRootHandle) {
+      throw new Error('Database is not ready.');
+    }
+
     const objCore = this._objects.get(id);
     if (load && !objCore) {
       this._automergeDocLoader.loadObjectDocument(id);
@@ -273,6 +277,10 @@ export class CoreDatabase {
     objectIds: string[],
     { inactivityTimeout = 30000, returnDeleted = false }: { inactivityTimeout?: number; returnDeleted?: boolean } = {},
   ): Promise<(ObjectCore | undefined)[]> {
+    if (!this._automergeDocLoader.hasRootHandle) {
+      throw new Error('Database is not ready.');
+    }
+
     const result: (ObjectCore | undefined)[] = new Array(objectIds.length);
     const objectsToLoad: Array<{ id: string; resultIndex: number }> = [];
     for (let i = 0; i < objectIds.length; i++) {
