@@ -11,7 +11,7 @@ import {
   interpretAsDocumentId,
   type AnyDocumentId,
 } from '@dxos/automerge/automerge-repo';
-import { type Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf/stream';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';

@@ -133,6 +133,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       echo: {
         schema: [DocumentType, TextType],
       },
+      space: {
+        onSpaceCreate: {
+          label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+          action: MarkdownAction.CREATE,
+        },
+      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -243,7 +249,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         predicate: (obj) => obj instanceof DocumentType,
         createSort: (doc: DocumentType) => {
           const accessor = doc.content ? createDocAccessor(doc.content, ['content']) : undefined;
-
           if (!accessor) {
             return (_) => 0;
           }

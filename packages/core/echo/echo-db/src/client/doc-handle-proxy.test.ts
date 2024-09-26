@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { generateAutomergeUrl, parseAutomergeUrl, Repo } from '@dxos/automerge/automerge-repo';
-import { DocumentsSynchronizer } from '@dxos/echo-pipeline/light';
+import { DocumentsSynchronizer } from '@dxos/echo-pipeline';
 import { openAndClose } from '@dxos/test-utils';
 
 import { DocHandleProxy } from './doc-handle-proxy';

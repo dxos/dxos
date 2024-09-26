@@ -72,7 +72,9 @@ describe('CollectionSynchronizer', () => {
     const diff = diffCollectionState(STATE_1, STATE_2);
 
     expect(diff).to.deep.equal({
-      different: ['b', 'c', 'd'],
+      missingOnLocal: ['d'],
+      missingOnRemote: ['c'],
+      different: ['b'],
     });
   });
 });

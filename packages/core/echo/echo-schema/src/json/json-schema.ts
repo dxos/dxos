@@ -16,7 +16,7 @@ import {
   type FieldMetaAnnotation,
   FieldMetaAnnotationId,
   ReferenceAnnotationId,
-} from '../annotations';
+} from '../ast';
 import { createEchoReferenceSchema } from '../ref-annotation';
 
 const ECHO_REFINEMENT_KEY = '$echo';
