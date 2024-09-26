@@ -4,10 +4,10 @@
 
 // import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
-import { join, resolve } from 'node:path';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import sourceMaps from 'rollup-plugin-sourcemaps';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
-import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -42,9 +42,13 @@ export default defineConfig({
       ],
     },
   },
+  esbuild: {
+    keepNames: true,
+  },
   build: {
     sourcemap: true,
     minify: false,
+    target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
     rollupOptions: {
       input: {
         main: resolve(__dirname, './index.html'),
@@ -62,9 +66,10 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
-    plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
+    plugins: () => [WasmPlugin(), sourceMaps()],
   },
   plugins: [
+    sourceMaps(),
     tsconfigPaths({
       projects: ['../../../tsconfig.paths.json'],
     }),
@@ -75,7 +80,6 @@ export default defineConfig({
       root: __dirname,
       content: [resolve(__dirname, './index.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
     }),
-    TopLevelAwaitPlugin(),
     WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),
@@ -103,7 +107,6 @@ export default defineConfig({
             }
           }
         }
-
         const outDir = join(__dirname, 'out');
         if (!existsSync(outDir)) {
           mkdirSync(outDir);
