@@ -52,6 +52,7 @@ for APP_PATH in "${APPS[@]}"; do
   PACKAGE_CAPS=${PACKAGE^^}
   PACKAGE_ENV=${PACKAGE_CAPS//-/_}
 
+  APP=$(basename "$APP_PATH")
   if [[ $APP == *-app ]]; then
     set +e
     eval "export DX_SENTRY_DESTINATION=$""${PACKAGE_ENV}"_SENTRY_DESTINATION""
@@ -59,7 +60,6 @@ for APP_PATH in "${APPS[@]}"; do
     export LOG_FILTER="error"
   fi
 
-  APP=$(basename "$APP_PATH")
   pnpm -w nx bundle "$APP"
 
   # TODO(???): extract outdir from project.json?
