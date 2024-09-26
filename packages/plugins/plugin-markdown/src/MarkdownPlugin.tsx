@@ -16,7 +16,6 @@ import {
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
@@ -134,6 +133,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       echo: {
         schema: [DocumentType, TextType],
       },
+      space: {
+        onSpaceCreate: {
+          label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+          action: MarkdownAction.CREATE,
+        },
+      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -244,9 +249,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         predicate: (obj) => obj instanceof DocumentType,
         createSort: (doc: DocumentType) => {
           const accessor = doc.content ? createDocAccessor(doc.content, ['content']) : undefined;
-
           if (!accessor) {
-            log.warn('No accessor found for document content.');
             return (_) => 0;
           }
 

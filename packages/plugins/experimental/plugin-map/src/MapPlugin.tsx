@@ -46,6 +46,12 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
       echo: {
         schema: [MapType],
       },
+      space: {
+        onSpaceCreate: {
+          label: ['create object label', { ns: MAP_PLUGIN }],
+          action: MapAction.CREATE,
+        },
+      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;

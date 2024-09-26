@@ -8,7 +8,6 @@ import React, { Fragment, useEffect } from 'react';
 import {
   LayoutAction,
   NavigationAction,
-  SLUG_COLLECTION_INDICATOR,
   SLUG_PATH_SEPARATOR,
   Surface,
   useIntentDispatcher,
@@ -143,7 +142,6 @@ export const NodePlankHeading = ({
                     action: NavigationAction.CLOSE,
                     data: {
                       activeParts: {
-                        complementary: [`${id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`],
                         [layoutPart]: [id],
                       },
                     },
@@ -151,7 +149,7 @@ export const NodePlankHeading = ({
               : { action: NavigationAction.ADJUST, data: { type: eventType, layoutCoordinate } },
           );
         }}
-        close={layoutCoordinate?.part === 'complementary' ? 'minify-end' : true}
+        close={layoutPart === 'complementary' ? 'minify-end' : true}
       />
     </PlankHeading.Root>
   );

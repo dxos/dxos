@@ -12,6 +12,7 @@ import type {
   MetadataRecordsProvides,
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-client';
+import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { type StackProvides } from '@dxos/plugin-stack';
 
 import { type MapControlType } from '../components';
@@ -38,6 +39,7 @@ export type MapPluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   SchemaProvides &
+  SpaceInitProvides &
   StackProvides;
 
 export type MapMarker = {

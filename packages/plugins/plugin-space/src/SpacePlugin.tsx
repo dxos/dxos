@@ -120,7 +120,9 @@ export const SpacePlugin = ({
   firstRun,
   onFirstRun,
 }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
-  const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
+  const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN, {
+    onSpaceCreate: 'dxos.org/plugin/markdown/action/create',
+  });
   const state = new LocalStorageStore<PluginState>(SPACE_PLUGIN, {
     awaiting: undefined,
     spaceNames: {},
@@ -815,6 +817,15 @@ export const SpacePlugin = ({
                 data: { space, id: space.id, activeParts: { main: [space.id] } },
 
                 intents: [
+                  ...(settings.values.onSpaceCreate
+                    ? [
+                        [
+                          { action: settings.values.onSpaceCreate, data: { space } },
+                          { action: SpaceAction.ADD_OBJECT, data: { target: space } },
+                          { action: NavigationAction.EXPOSE },
+                        ],
+                      ]
+                    : []),
                   [
                     {
                       action: ObservabilityAction.SEND_EVENT,
@@ -1070,7 +1081,7 @@ export const SpacePlugin = ({
               }
 
               return {
-                data: { id: object.id, object, activeParts: { main: [fullyQualifiedId(object)] } },
+                data: { id: fullyQualifiedId(object), object, activeParts: { main: [fullyQualifiedId(object)] } },
                 intents: [
                   [
                     {
@@ -1125,7 +1136,6 @@ export const SpacePlugin = ({
                       activeParts: {
                         main: deletionData.wasActive,
                         sidebar: deletionData.wasActive,
-                        complementary: deletionData.wasActive,
                       },
                     },
                   });

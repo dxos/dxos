@@ -10,10 +10,12 @@ import type {
   SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
+  Plugin,
 } from '@dxos/app-framework';
 import { type Expando } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-client';
 import { type PublicKey } from '@dxos/react-client';
+import { type Label } from '@dxos/react-ui';
 import { type ComplexMap } from '@dxos/util';
 
 export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
@@ -53,7 +55,29 @@ export type PluginState = {
   sdkMigrationRunning: Record<string, boolean>;
 };
 
-export type SpaceSettingsProps = { showHidden?: boolean };
+export type SpaceSettingsProps = {
+  /**
+   * Show closed spaces.
+   */
+  showHidden?: boolean;
+
+  /**
+   * Action to perform when a space is created.
+   */
+  onSpaceCreate?: string;
+};
+
+export type SpaceInitProvides = {
+  space: {
+    onSpaceCreate: {
+      label: Label;
+      action: string;
+    };
+  };
+};
+
+export const parseSpaceInitPlugin = (plugin: Plugin) =>
+  typeof (plugin.provides as any).space?.onSpaceCreate === 'object' ? (plugin as Plugin<SpaceInitProvides>) : undefined;
 
 export type SpacePluginProvides = SurfaceProvides &
   IntentResolverProvides &
