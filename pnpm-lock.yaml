@@ -3879,6 +3879,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/echo-pipeline':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-pipeline
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol

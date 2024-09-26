@@ -5,7 +5,7 @@
 import { Database } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type EchoDataStats } from '@dxos/echo-db';
+import { type EchoDataStats } from '@dxos/echo-pipeline';
 
 import { type DatabaseInfo } from '../../../hooks';
 import { type CustomPanelProps, Panel } from '../Panel';
