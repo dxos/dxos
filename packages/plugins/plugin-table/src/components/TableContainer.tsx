@@ -12,15 +12,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 import { Toolbar, type ToolbarAction } from '../components/Toolbar';
 
-// TODO(burdon): Slide
-// <div role='none' className='flex-1 min-bs-0 pli-16 plb-24'>
-
-// TODO(Zan): Factor out, copied this from MarkdownPlugin.
-const attentionFragment = mx(
-  'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
-  'group-focus-within/editor:border-separator',
-);
-
 // TODO(Zan): Factor out, copied this from MarkdownPlugin.
 export const sectionToolbarLayout =
   'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 __-block-start-px transition-opacity';
