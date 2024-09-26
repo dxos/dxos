@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { useAsyncEffect } from '@dxos/react-hooks';
+import { Context } from '@dxos/context';
 
 import { JsonView } from '../../../components';
 import { useDevtoolsState } from '../../../hooks';
@@ -13,8 +13,12 @@ export const SyncStateInfo = () => {
   const { space } = useDevtoolsState();
   const [syncState, setSyncState] = useState({});
 
-  useAsyncEffect(async () => {
-    space && setSyncState(await space.db.coreDatabase.getSyncState());
+  useEffect(() => {
+    if (space) {
+      return space.db.coreDatabase.subscribeToSyncState(Context.default(), (syncState) => {
+        setSyncState(syncState);
+      });
+    }
   }, [space]);
 
   return (

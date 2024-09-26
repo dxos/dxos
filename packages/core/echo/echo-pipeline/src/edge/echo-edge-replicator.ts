@@ -7,7 +7,8 @@ import * as A from '@dxos/automerge/automerge';
 import { type Message as AutomergeMessage, cbor } from '@dxos/automerge/automerge-repo';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
-import type { EdgeConnection } from '@dxos/edge-client';
+import type { CollectionId } from '@dxos/echo-protocol';
+import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -20,12 +21,12 @@ import {
 import { bufferToArray } from '@dxos/util';
 
 import {
+  getSpaceIdFromCollectionId,
   type EchoReplicator,
   type EchoReplicatorContext,
   type ReplicatorConnection,
   type ShouldAdvertiseParams,
   type ShouldSyncCollectionParams,
-  getSpaceIdFromCollectionId,
 } from '../automerge';
 
 export type EchoEdgeReplicatorParams = {
@@ -231,18 +232,17 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     if (!this._sharedPolicyEnabled) {
       return true;
     }
-    const spaceId = getSpaceIdFromCollectionId(params.collectionId);
+    const spaceId = getSpaceIdFromCollectionId(params.collectionId as CollectionId);
     return spaceId === this._spaceId;
   }
 
   private _onMessage(message: RouterMessage) {
     if (message.serviceId !== this._targetServiceId) {
-      log.info('service id missmatch', { actual: message.serviceId, expected: this._targetServiceId });
       return;
     }
 
     const payload = cbor.decode(message.payload!.value) as AutomergeMessage;
-    log.info('recv', () => {
+    log('recv', () => {
       const decodedData =
         payload.type === 'sync' && payload.data
           ? A.decodeSyncMessage(payload.data)
@@ -264,7 +264,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     // Fix the peer id.
     message.targetId = this._targetServiceId as PeerId;
 
-    log.info('send', {
+    log('send', {
       type: message.type,
       senderId: message.senderId,
       targetId: message.targetId,

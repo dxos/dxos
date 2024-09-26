@@ -14,3 +14,4 @@ export * from './text';
 export * from './echo-handler';
 export * from './client';
 export * from './serialized-space';
+export type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
