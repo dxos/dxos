@@ -159,7 +159,7 @@ export const useStats = (): [Stats, () => void] => {
           .map((space) => space.db.coreDatabase.getSyncState()),
       );
       const documentsToReconcile = syncStates
-        .flatMap((s) => s.peers?.map((p) => p.documentsToReconcile) ?? [])
+        .flatMap((s) => s.peers?.map((p) => p.differentDocuments + p.missingOnLocal + p.missingOnRemote) ?? [])
         .reduce((acc, x) => acc + x, 0);
 
       log('collected stats', { elapsed: performance.now() - begin });
