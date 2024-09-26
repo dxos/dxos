@@ -5,7 +5,7 @@
 import { useIsDirectlyAttended } from 'packages/ui/react-ui-attention/src';
 import React, { useCallback } from 'react';
 
-import { useIntentDispatcher, useIntentResolver, type LayoutContainerProps } from '@dxos/app-framework';
+import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
 import { Table } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
