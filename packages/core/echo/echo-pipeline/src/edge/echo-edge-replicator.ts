@@ -19,6 +19,7 @@ import {
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
+
 import {
   getSpaceIdFromCollectionId,
   type EchoReplicator,
