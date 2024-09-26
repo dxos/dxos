@@ -123,6 +123,7 @@
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "rollup": "^3.20.4",
+    "rollup-plugin-sourcemaps": "^0.6.3",
     "semver": "^7.3.8",
     "serve": "^14.1.2",
     "syncpack": "^8.2.4",
