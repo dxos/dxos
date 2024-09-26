@@ -208,6 +208,16 @@ export class DxGrid extends LitElement {
   // Primary pointer and keyboard handlers
   //
 
+  private dispatchEditRequest() {
+    this.snapPosToFocusedCell();
+    this.dispatchEvent(
+      new DxEditRequest({
+        cellIndex: toCellIndex(this.focusedCell),
+        cellBox: this.focusedCellBox(),
+      }),
+    );
+  }
+
   private handlePointerDown = (event: PointerEvent) => {
     const { action, actionEl } = closestAction(event.target);
     if (action) {
@@ -223,12 +233,7 @@ export class DxGrid extends LitElement {
       } else if (action === 'cell') {
         const cellCoords = closestCell(event.target, actionEl);
         if (this.focusActive && isSameCell(this.focusedCell, cellCoords)) {
-          this.dispatchEvent(
-            new DxEditRequest({
-              cellIndex: toCellIndex(cellCoords!),
-              cellBox: this.focusedCellBox(),
-            }),
-          );
+          this.dispatchEditRequest();
         }
       }
     }
@@ -281,12 +286,7 @@ export class DxGrid extends LitElement {
       // Emit interactions
       switch (event.key) {
         case 'Enter':
-          this.dispatchEvent(
-            new DxEditRequest({
-              cellIndex: toCellIndex(this.focusedCell),
-              cellBox: this.focusedCellBox(),
-            }),
-          );
+          this.dispatchEditRequest();
           break;
       }
       // Handle virtualization & focus consequences
@@ -490,13 +490,13 @@ export class DxGrid extends LitElement {
   /**
    * Moves focus to the cell with actual focus, otherwise moves focus to the viewport.
    */
-  refocus(increment?: 'down' | 'right') {
+  refocus(increment?: 'col' | 'row', delta: 1 | -1 = 1) {
     switch (increment) {
-      case 'down':
-        this.focusedCell = { ...this.focusedCell, row: this.focusedCell.row + 1 };
+      case 'row':
+        this.focusedCell = { ...this.focusedCell, row: this.focusedCell.row + delta };
         break;
-      case 'right':
-        this.focusedCell = { ...this.focusedCell, col: this.focusedCell.col + 1 };
+      case 'col':
+        this.focusedCell = { ...this.focusedCell, col: this.focusedCell.col + delta };
     }
     (this.focusedCell.row < this.visRowMin ||
     this.focusedCell.row > this.visRowMax ||

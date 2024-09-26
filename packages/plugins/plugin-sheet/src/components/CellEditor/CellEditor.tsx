@@ -17,8 +17,8 @@ import {
 import { type GridEditBox } from '@dxos/react-ui-grid';
 
 export type EditorKeysProps = {
-  onClose: (value: string | undefined) => void;
-  onNav?: (value: string | undefined, ev: Pick<KeyboardEvent<HTMLInputElement>, 'key'>) => void;
+  onClose: (value: string | undefined, event: Pick<KeyboardEvent<HTMLInputElement>, 'key'>) => void;
+  onNav?: (value: string | undefined, event: Pick<KeyboardEvent<HTMLInputElement>, 'key'>) => void;
 };
 
 export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
@@ -58,14 +58,21 @@ export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
     {
       key: 'Enter',
       run: (editor) => {
-        onClose(editor.state.doc.toString());
+        onClose(editor.state.doc.toString(), { key: 'Enter' });
+        return true;
+      },
+    },
+    {
+      key: 'Tab',
+      run: (editor) => {
+        onClose(editor.state.doc.toString(), { key: 'Tab' });
         return true;
       },
     },
     {
       key: 'Escape',
       run: () => {
-        onClose(undefined);
+        onClose(undefined, { key: 'Escape' });
         return true;
       },
     },
@@ -75,7 +82,7 @@ export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
 export type CellEditorProps = {
   value?: string;
   extension?: Extension;
-  variant?: 'legacy' | 'grid';
+  variant?: keyof typeof editorVariants;
   box?: GridEditBox;
   gridId?: string;
 } & Pick<UseTextEditorProps, 'autoFocus'> &
@@ -90,7 +97,7 @@ const editorVariants = {
   grid: {
     root: 'absolute z-[1]',
     editor: '[&>.cm-scroller]:scrollbar-none tabular-nums',
-    content: '!p-[3px]',
+    content: '!border !border-transparent !p-0.5',
   },
 };
 

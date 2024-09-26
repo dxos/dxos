@@ -52,36 +52,12 @@ const GridSheetImpl = ({
 
   // TODO(burdon): Validate formula before closing: hf.validateFormula();
   const handleClose = useCallback<EditorKeysProps['onClose']>(
-    (value) => {
-      // initialText.current = undefined;
-      // quickEdit.current = false;
+    (value, { key }) => {
       if (value !== undefined) {
         model.setValue(dxGridCellIndexToSheetCellAddress(editing)!, value);
-        // Auto-advance to next cell.
-        // const next = handleArrowNav({ key: 'ArrowDown', metaKey: false }, cursor, size);
-        // if (next) {
-        //   setCursor(next);
-        // }
       }
       setEditing(null);
-      dxGrid.current?.refocus();
-    },
-    [model, editing, setEditing],
-  );
-
-  // Quick entry mode: i.e., typing to enter cell.
-  const handleNav = useCallback<NonNullable<EditorKeysProps['onNav']>>(
-    (value, { key }) => {
-      // initialText.current = undefined;
-      if (editing) {
-        model.setValue(dxGridCellIndexToSheetCellAddress(editing)!, value ?? null);
-        // const next = handleArrowNav({ key, metaKey: false }, cursor, size);
-        // if (next) {
-        //   setCursor(next);
-        // }
-      }
-      setEditing(null);
-      dxGrid.current?.refocus();
+      dxGrid.current?.refocus(key === 'Enter' ? 'row' : key === 'Tab' ? 'col' : undefined, 1);
     },
     [model, editing, setEditing],
   );
@@ -90,7 +66,7 @@ const GridSheetImpl = ({
 
   return (
     <>
-      <GridSheetCellEditor model={model} onNav={handleNav} onClose={handleClose} />
+      <GridSheetCellEditor model={model} onClose={handleClose} />
       <Grid.Content cells={cells} ref={dxGrid} />
     </>
   );
