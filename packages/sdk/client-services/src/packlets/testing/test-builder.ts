@@ -6,7 +6,7 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { EchoHost } from '@dxos/echo-db';
+import { EchoHost } from '@dxos/echo-pipeline';
 import { MetadataStore, SpaceManager, valueEncoding, MeshEchoReplicator } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';

@@ -5,7 +5,7 @@
 import { type EncodedReference, isLegacyReference, type LegacyEncodedReferenceObject } from '@dxos/echo-protocol';
 import { deepMapValuesAsync } from '@dxos/util';
 
-import { convertLegacyReference } from './host';
+import { convertLegacyReference } from '@dxos/echo-protocol';
 
 /**
  * Archive of echo objects.

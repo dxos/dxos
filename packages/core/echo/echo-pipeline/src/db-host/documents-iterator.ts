@@ -5,12 +5,12 @@
 import * as A from '@dxos/automerge/automerge';
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context } from '@dxos/context';
-import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline/light';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { type ObjectSnapshot, type IdToHeads } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ObjectPointerVersion, objectPointerCodec } from '@dxos/protocols';
+import { type AutomergeHost, getSpaceKeyFromDoc } from '../automerge';
 
 const LOG_VIEW_OPERATION_THRESHOLD = 300;
 

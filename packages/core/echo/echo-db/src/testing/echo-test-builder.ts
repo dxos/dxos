@@ -16,7 +16,7 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
-import { EchoHost } from '../host';
+import { EchoHost } from '@dxos/echo-pipeline';
 import { type EchoDatabase } from '../proxy-db';
 
 export class EchoTestBuilder extends Resource {

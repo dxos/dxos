@@ -2262,9 +2262,6 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../mesh/edge-client
-      '@dxos/indexing':
-        specifier: workspace:*
-        version: link:../indexing
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -2308,6 +2305,9 @@ importers:
         specifier: ^4.5.0
         version: 4.5.0
     devDependencies:
+      '@dxos/indexing':
+        specifier: workspace:*
+        version: link:../indexing
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../../common/test-utils
@@ -2371,6 +2371,12 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo-schema
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../mesh/edge-client
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../../common/feed-store
@@ -2443,10 +2449,16 @@ importers:
       level-transcoder:
         specifier: ^1.0.1
         version: 1.0.1
+      lodash.isequal:
+        specifier: ^4.5.0
+        version: 4.5.0
     devDependencies:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../../common/test-utils
+      '@types/lodash.isequal':
+        specifier: ^4.5.0
+        version: 4.5.6
       fast-check:
         specifier: ^3.19.0
         version: 3.19.0
@@ -43469,7 +43481,7 @@ snapshots:
 
   '@types/lodash.isequal@4.5.6':
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
 
   '@types/lodash.isequalwith@4.4.7':
     dependencies:

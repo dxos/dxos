@@ -70,6 +70,9 @@
       "path": "../../halo/keyring"
     },
     {
+      "path": "../../mesh/edge-client"
+    },
+    {
       "path": "../../mesh/messaging"
     },
     {
@@ -98,6 +101,9 @@
     },
     {
       "path": "../echo-protocol"
+    },
+    {
+      "path": "../echo-schema"
     },
     {
       "path": "../indexing"

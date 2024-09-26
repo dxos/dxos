@@ -7,7 +7,6 @@ import { getHeads, type Doc } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context, Resource } from '@dxos/context';
-import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline/light';
 import type { SpaceDoc } from '@dxos/echo-protocol';
 import { type ObjectSnapshot, type Indexer, type IdToHeads } from '@dxos/indexing';
 import { log } from '@dxos/log';
@@ -20,7 +19,7 @@ import {
   type QueryResult,
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { trace } from '@dxos/tracing';
-
+import { type AutomergeHost, getSpaceKeyFromDoc } from '../automerge';
 import { QueryState } from './query-state';
 
 export type QueryServiceParams = {
