@@ -89,7 +89,7 @@ const editorVariants = {
   },
   grid: {
     root: 'absolute z-[1]',
-    editor: '[&>.cm-scroller]:scrollbar-none',
+    editor: '[&>.cm-scroller]:scrollbar-none tabular-nums',
     content: '!p-[3px]',
   },
 };

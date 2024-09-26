@@ -13,8 +13,7 @@ import { useTestSheet, withGraphDecorator } from '../../testing';
 export default {
   title: 'plugin-sheet/GridSheet',
   component: GridSheet,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true, classNames: 'inset-4' }), withGraphDecorator],
-  parameters: { layout: 'fullscreen' },
+  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true }), withGraphDecorator],
 };
 
 export const Basic = () => {

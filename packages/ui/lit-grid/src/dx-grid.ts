@@ -564,8 +564,8 @@ export class DxGrid extends LitElement {
   override render() {
     const visibleCols = this.visColMax - this.visColMin;
     const visibleRows = this.visRowMax - this.visRowMin;
-    const offsetInline = gap + this.binInlineMin - this.posInline - this.overscanInline;
-    const offsetBlock = gap + this.binBlockMin - this.posBlock - this.overscanBlock;
+    const offsetInline = this.binInlineMin - this.posInline - this.overscanInline;
+    const offsetBlock = this.binBlockMin - this.posBlock - this.overscanBlock;
 
     return html`<div
       role="none"
