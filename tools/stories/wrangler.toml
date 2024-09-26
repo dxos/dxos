@@ -15,5 +15,5 @@ pages_build_output_dir = "./out/stories"
 #
 # Prod is pushed via GH Actions CI.
 # wrangler pages deploy out/stories
-# https://dxos-storybook.pages.dev/
+# https://dxos-storybook.pages.dev
 #
