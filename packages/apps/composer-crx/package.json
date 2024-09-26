@@ -8,7 +8,7 @@
   "author": "DXOS.org",
   "type": "module",
   "scripts": {
-    "pack:crx": "crx pack out/composer-crx -o dxos-devtools.crx",
+    "pack:crx": "crx pack out/composer-crx -o composer.crx",
     "pack:webext": "web-ext build --source-dir out/composer-crx"
   },
   "dependencies": {

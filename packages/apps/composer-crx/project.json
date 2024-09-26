@@ -2,7 +2,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "composer-crx",
   "tags": [
-    "scope:devtools"
+    "scope:apps"
   ],
   "sourceRoot": "{projectRoot}/src",
   "projectType": "application",

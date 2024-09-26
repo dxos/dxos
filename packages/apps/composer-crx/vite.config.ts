@@ -37,7 +37,6 @@ export default defineConfig({
   },
   plugins: [
     ConfigPlugin(),
-
     ThemePlugin({
       root: __dirname,
       content: [resolve(__dirname, './*.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
@@ -54,16 +53,16 @@ export default defineConfig({
         manifest_version: 3,
         version: packageJson.version,
         author: 'DXOS.org',
-        name: 'DXOS Client Developer Tools',
-        short_name: 'DXOS DevTools',
-        description: 'Debugging tools for DXOS Client in the Chrome developer console.',
+        name: 'Composer',
+        short_name: 'Composer',
+        description: '',
         icons: {
           '48': 'assets/img/icon-dxos-48.png',
           '128': 'assets/img/icon-dxos-128.png',
         },
         action: {
           default_icon: 'assets/img/icon-dxos-48.png',
-          default_title: 'DXOS',
+          default_title: 'Composer',
           default_popup: '/popup.html',
         },
         content_security_policy: {
@@ -72,7 +71,7 @@ export default defineConfig({
         sandbox: {
           pages: ['/sandbox.html'],
         },
-        devtools_page: '/main.html',
+        options_page: '/options.html',
         background: {
           service_worker: '/src/background.ts',
         },
@@ -94,7 +93,7 @@ export default defineConfig({
     //   org: 'dxos',
     //   project: 'composer-crx',
     //   sourcemaps: {
-    //     assets: './packages/devtools/composer-crx/out/composer-crx/**'
+    //     assets: './packages/apps/composer-crx/out/composer-crx/**'
     //   },
     //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
     //   disable: process.env.DX_ENVIRONMENT !== 'production'
