@@ -28,6 +28,7 @@ import { type IceProvider } from '../../signal';
 import { type Transport, type TransportFactory } from '../transport';
 
 type TransportState = {
+  proxyId: PublicKey;
   transport: Transport;
   connectorStream: Duplex;
   writeProcessedCallbacks: (() => void)[];
@@ -35,32 +36,27 @@ type TransportState = {
 
 export class RtcTransportService implements BridgeService {
   private readonly _openTransports = new ComplexMap<PublicKey, TransportState>(PublicKey.hash);
-  private readonly _transportFactory: TransportFactory;
 
   constructor(
-    private readonly _webrtcConfig?: RTCConfiguration,
-    private readonly _iceProvider?: IceProvider,
-  ) {
-    this._transportFactory = createRtcTransportFactory(this._webrtcConfig, this._iceProvider);
+    webrtcConfig?: RTCConfiguration,
+    iceProvider?: IceProvider,
+    private readonly _transportFactory: TransportFactory = createRtcTransportFactory(webrtcConfig, iceProvider),
+  ) {}
+
+  public hasOpenTransports() {
+    return this._openTransports.size > 0;
   }
 
   open(request: ConnectionRequest): Stream<BridgeEvent> {
     const existingTransport = this._openTransports.get(request.proxyId);
     if (existingTransport) {
       log.error('requesting a new transport bridge for an existing proxy');
-      void this._closeTransport(existingTransport);
+      void this._safeCloseTransport(existingTransport);
       this._openTransports.delete(request.proxyId);
     }
 
     return new Stream<BridgeEvent>(({ ready, next, close }) => {
-      const pushNewState = (state: ConnectionState, err?: Error) => {
-        next({
-          connection: {
-            state,
-            ...(err ? { error: err.message } : undefined),
-          },
-        });
-      };
+      const pushNewState = createStateUpdater(next);
 
       const transportStream: Duplex = new Duplex({
         read: () => {
@@ -86,6 +82,7 @@ export class RtcTransportService implements BridgeService {
       });
 
       const transportState: TransportState = {
+        proxyId: request.proxyId,
         transport,
         connectorStream: transportStream,
         writeProcessedCallbacks: [],
@@ -95,25 +92,25 @@ export class RtcTransportService implements BridgeService {
 
       transport.connected.on(() => pushNewState(ConnectionState.CONNECTED));
 
-      transport.errors.handle((err) => {
+      transport.errors.handle(async (err) => {
         pushNewState(ConnectionState.CLOSED, err);
+        void this._safeCloseTransport(transportState);
         close(err);
       });
 
-      transport.closed.on(() => {
+      transport.closed.on(async () => {
         pushNewState(ConnectionState.CLOSED);
+        void this._safeCloseTransport(transportState);
         close();
       });
 
-      transport.open().catch(async (err) => {
-        if (this._openTransports.get(request.proxyId) === transportState) {
-          this._openTransports.delete(request.proxyId);
-        }
-        pushNewState(ConnectionState.CLOSED, err);
-        await this._closeTransport(transportState);
-      });
-
       this._openTransports.set(request.proxyId, transportState);
+
+      transport.open().catch(async (err) => {
+        pushNewState(ConnectionState.CLOSED, err);
+        void this._safeCloseTransport(transportState);
+        close(err);
+      });
 
       ready();
     });
@@ -159,10 +156,14 @@ export class RtcTransportService implements BridgeService {
     }
 
     this._openTransports.delete(proxyId);
-    await this._closeTransport(transport);
+    await this._safeCloseTransport(transport);
   }
 
-  private async _closeTransport(transport: TransportState) {
+  private async _safeCloseTransport(transport: TransportState) {
+    if (this._openTransports.get(transport.proxyId) === transport) {
+      this._openTransports.delete(transport.proxyId);
+    }
+
     transport.writeProcessedCallbacks.forEach((cb) => cb());
 
     try {
@@ -178,3 +179,14 @@ export class RtcTransportService implements BridgeService {
     log('closed');
   }
 }
+
+const createStateUpdater = (next: (event: BridgeEvent) => void) => {
+  return (state: ConnectionState, err?: Error) => {
+    next({
+      connection: {
+        state,
+        ...(err ? { error: err.message } : undefined),
+      },
+    });
+  };
+};

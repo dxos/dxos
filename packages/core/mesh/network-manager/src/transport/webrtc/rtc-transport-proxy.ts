@@ -19,6 +19,7 @@ import { arrayToBuffer } from '@dxos/util';
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';
 
 const RPC_TIMEOUT = 10_000;
+const CLOSE_RPC_TIMEOUT = 3000;
 const RESP_MIN_THRESHOLD = 500;
 
 export type RtcTransportProxyOptions = TransportOptions & {
@@ -55,6 +56,7 @@ export class RtcTransportProxy extends Resource implements Transport {
       this.errors.raise(error);
       return;
     }
+
     this._serviceStream = stream;
 
     stream.waitUntilReady().then(
@@ -94,7 +96,10 @@ export class RtcTransportProxy extends Resource implements Transport {
                     callback();
                   }
                 },
-                (err: any) => this._raiseIfOpen(err),
+                (err: any) => {
+                  callback();
+                  this._raiseIfOpen(err);
+                },
               );
           },
         });
@@ -105,7 +110,13 @@ export class RtcTransportProxy extends Resource implements Transport {
 
         this._options.stream.pipe(connectorStream);
       },
-      (error) => this._raiseIfOpen(error),
+      (error) => {
+        if (error) {
+          this._raiseIfOpen(error);
+        } else {
+          void this.close();
+        }
+      },
     );
   }
 
@@ -113,8 +124,12 @@ export class RtcTransportProxy extends Resource implements Transport {
     try {
       await this._serviceStream?.close();
       this._serviceStream = undefined;
+    } catch (err: any) {
+      log.catch(err);
+    }
 
-      await this._options.bridgeService.close({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT });
+    try {
+      await this._options.bridgeService.close({ proxyId: this._proxyId }, { timeout: CLOSE_RPC_TIMEOUT });
     } catch (err: any) {
       log.catch(err);
     }

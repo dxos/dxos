@@ -6,14 +6,16 @@ import { expect } from 'vitest';
 
 import { sleep } from '@dxos/async';
 
-import { type RtcTransportChannel } from './rtc-transport-channel';
+import { type Transport } from '../transport';
 
-export const handleChannelErrors = (channel: RtcTransportChannel) => {
+export const handleChannelErrors = (channel: Transport) => {
   let handled = false;
   channel.errors.handle(() => (handled = true));
   return {
     expectErrorRaised: async () => {
-      await sleep(5);
+      if (!handled) {
+        await sleep(5);
+      }
       expect(handled).toBeTruthy();
     },
   };

@@ -5,5 +5,5 @@
 import { describe, test } from 'vitest';
 
 describe('RtcPeerConnection', () => {
-  test('callbacks invoked after connection was closed', async () => {});
+  test('callbacks invoked after the connection was closed', async () => {});
 });
