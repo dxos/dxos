@@ -4,13 +4,13 @@
 
 import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type Context } from '@dxos/context';
+import { migrateDocument } from '@dxos/echo-db';
 import {
   convertLegacyReferences,
   convertLegacySpaceRootDoc,
   findInlineObjectOfType,
-  migrateDocument,
   type EchoHost,
-} from '@dxos/echo-db';
+} from '@dxos/echo-pipeline';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
