@@ -52,12 +52,12 @@ const GridSheetImpl = ({
 
   // TODO(burdon): Validate formula before closing: hf.validateFormula();
   const handleClose = useCallback<EditorKeysProps['onClose']>(
-    (value, { key }) => {
+    (value, { key, shift }) => {
       if (value !== undefined) {
         model.setValue(dxGridCellIndexToSheetCellAddress(editing)!, value);
       }
       setEditing(null);
-      dxGrid.current?.refocus(key === 'Enter' ? 'row' : key === 'Tab' ? 'col' : undefined, 1);
+      dxGrid.current?.refocus(key === 'Enter' ? 'row' : key === 'Tab' ? 'col' : undefined, shift ? -1 : 1);
     },
     [model, editing, setEditing],
   );

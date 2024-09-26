@@ -16,9 +16,11 @@ import {
 } from '@dxos/react-ui-editor';
 import { type GridEditBox } from '@dxos/react-ui-grid';
 
+type EditorKeyEvent = Pick<KeyboardEvent<HTMLInputElement>, 'key'> & { shift?: boolean };
+
 export type EditorKeysProps = {
-  onClose: (value: string | undefined, event: Pick<KeyboardEvent<HTMLInputElement>, 'key'>) => void;
-  onNav?: (value: string | undefined, event: Pick<KeyboardEvent<HTMLInputElement>, 'key'>) => void;
+  onClose: (value: string | undefined, event: EditorKeyEvent) => void;
+  onNav?: (value: string | undefined, event: EditorKeyEvent) => void;
 };
 
 export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
@@ -61,11 +63,19 @@ export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
         onClose(editor.state.doc.toString(), { key: 'Enter' });
         return true;
       },
+      shift: (editor) => {
+        onClose(editor.state.doc.toString(), { key: 'Enter', shift: true });
+        return true;
+      },
     },
     {
       key: 'Tab',
       run: (editor) => {
         onClose(editor.state.doc.toString(), { key: 'Tab' });
+        return true;
+      },
+      shift: (editor) => {
+        onClose(editor.state.doc.toString(), { key: 'Tab', shift: true });
         return true;
       },
     },
