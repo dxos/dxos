@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { type Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';

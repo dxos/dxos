@@ -7,7 +7,8 @@ import { useEffect, useState } from 'react';
 
 import { SpaceState } from '@dxos/client/echo';
 import { type NetworkStatus } from '@dxos/client/mesh';
-import { type EchoStatsDiagnostic, type EchoDataStats, type FilterParams, type QueryMetrics } from '@dxos/echo-db';
+import { type FilterParams } from '@dxos/echo-db';
+import { type EchoStatsDiagnostic, type EchoDataStats, type QueryMetrics } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';

@@ -7,15 +7,7 @@ import * as A from '@dxos/automerge/automerge';
 import { type Message as AutomergeMessage, cbor } from '@dxos/automerge/automerge-repo';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
-import {
-  getSpaceIdFromCollectionId,
-  type EchoReplicator,
-  type EchoReplicatorContext,
-  type ReplicatorConnection,
-  type ShouldAdvertiseParams,
-  type ShouldSyncCollectionParams,
-} from '@dxos/echo-pipeline/light';
-import { type EdgeConnection } from '@dxos/edge-client';
+import type { EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -26,6 +18,15 @@ import {
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
+
+import {
+  type EchoReplicator,
+  type EchoReplicatorContext,
+  type ReplicatorConnection,
+  type ShouldAdvertiseParams,
+  type ShouldSyncCollectionParams,
+  getSpaceIdFromCollectionId,
+} from '../automerge';
 
 export type EchoEdgeReplicatorParams = {
   edgeConnection: EdgeConnection;
