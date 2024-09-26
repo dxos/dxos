@@ -1,12 +1,13 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { Grid, useGridContext, type GridScopedProps } from '@dxos/react-ui-grid';
 import { type DxGridElement } from '@dxos/react-ui-grid/src';
 
-import { gridIndexToCellAddress } from './util';
+import { dxGridCellIndexToSheetCellAddress, useSheetModelDxGridCells } from './util';
 import { type SheetModel } from '../../model';
 import { CellEditor, editorKeys, type EditorKeysProps, sheetExtension } from '../CellEditor';
 import { type FormattingModel } from '../Sheet/formatting';
@@ -18,16 +19,18 @@ const GridSheetCellEditor = ({
   model,
   __gridScope,
 }: GridScopedProps<EditorKeysProps & { model: SheetModel }>) => {
-  const { id, editing, editBox, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
+  const { id, editing, setEditing, editBox } = useGridContext('GridSheetCellEditor', __gridScope);
+  const cell = dxGridCellIndexToSheetCellAddress(editing);
 
   const extension = useMemo(
     () => [editorKeys({ onNav, onClose }), sheetExtension({ functions: model.functions })],
-    [model],
+    [model, onNav, onClose],
   );
 
   return editing ? (
     <CellEditor
       variant='grid'
+      value={cell ? model.getCellText(cell) : undefined}
       autoFocus
       box={editBox}
       onBlur={() => setEditing(null)}
@@ -45,7 +48,6 @@ const GridSheetImpl = ({
   __gridScope,
 }: GridScopedProps<{ model: SheetModel; formatting: FormattingModel }>) => {
   const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
-  const cell = gridIndexToCellAddress(editing);
   const dxGrid = useRef<DxGridElement | null>(null);
 
   // TODO(burdon): Validate formula before closing: hf.validateFormula();
@@ -53,8 +55,8 @@ const GridSheetImpl = ({
     (value) => {
       // initialText.current = undefined;
       // quickEdit.current = false;
-      if (cell && value !== undefined) {
-        model.setValue(cell, value);
+      if (value !== undefined) {
+        model.setValue(dxGridCellIndexToSheetCellAddress(editing)!, value);
         // Auto-advance to next cell.
         // const next = handleArrowNav({ key: 'ArrowDown', metaKey: false }, cursor, size);
         // if (next) {
@@ -64,15 +66,15 @@ const GridSheetImpl = ({
       setEditing(null);
       dxGrid.current?.refocus();
     },
-    [model, cell, setEditing],
+    [model, editing, setEditing],
   );
 
   // Quick entry mode: i.e., typing to enter cell.
   const handleNav = useCallback<NonNullable<EditorKeysProps['onNav']>>(
     (value, { key }) => {
       // initialText.current = undefined;
-      if (cell) {
-        model.setValue(cell, value ?? null);
+      if (editing) {
+        model.setValue(dxGridCellIndexToSheetCellAddress(editing)!, value ?? null);
         // const next = handleArrowNav({ key, metaKey: false }, cursor, size);
         // if (next) {
         //   setCursor(next);
@@ -81,13 +83,15 @@ const GridSheetImpl = ({
       setEditing(null);
       dxGrid.current?.refocus();
     },
-    [model, cell, setEditing],
+    [model, editing, setEditing],
   );
+
+  const cells = useSheetModelDxGridCells(model);
 
   return (
     <>
       <GridSheetCellEditor model={model} onNav={handleNav} onClose={handleClose} />
-      <Grid.Content ref={dxGrid} />
+      <Grid.Content cells={cells} ref={dxGrid} />
     </>
   );
 };

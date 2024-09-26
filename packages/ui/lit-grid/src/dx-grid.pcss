@@ -95,6 +95,13 @@ dx-grid {
       outline: none;
     }
   }
+  &[data-grid-mode="edit"] {
+    [role='gridcell'], [role='columnheader'], [role='rowheader']{
+      &.dx-grid__cell--active {
+        color: transparent;
+      }
+    }
+  }
 }
 
 .dx-grid__columnheader__content,

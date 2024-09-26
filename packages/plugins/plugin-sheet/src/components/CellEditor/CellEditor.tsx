@@ -90,7 +90,7 @@ const editorVariants = {
   grid: {
     root: 'absolute z-[1]',
     editor: '[&>.cm-scroller]:scrollbar-none',
-    content: '!px-2 !py-1',
+    content: '!p-[3px]',
   },
 };
 

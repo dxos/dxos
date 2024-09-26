@@ -571,6 +571,7 @@ export class DxGrid extends LitElement {
       role="none"
       class="dx-grid"
       data-grid=${this.gridId}
+      data-grid-mode=${this.mode}
       @pointerdown=${this.handlePointerDown}
       @pointerup=${this.handlePointerUp}
       @pointermove=${this.handlePointerMove}
