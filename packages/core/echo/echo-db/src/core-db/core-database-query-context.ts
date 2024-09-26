@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { isEncodedReference, type SpaceDoc } from '@dxos/echo-protocol';
 import type { AnyObjectData } from '@dxos/echo-schema';
