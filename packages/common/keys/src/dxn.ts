@@ -58,7 +58,7 @@ export class DXN {
     switch (kind) {
       case DXN.kind.ECHO:
         if (parts.length !== 2) {
-          throw new Error(`Invalid "echo" DXN`);
+          throw new Error('Invalid "echo" DXN');
         }
         break;
       case DXN.kind.TYPE:
