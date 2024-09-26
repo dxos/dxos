@@ -13,9 +13,13 @@ import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 import packageJson from './package.json';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+
+const rootDir = resolve(__dirname, '../../..');
+const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 
 // https://vitejs.dev/config
 export default defineConfig({
@@ -39,7 +43,20 @@ export default defineConfig({
     ConfigPlugin(),
     ThemePlugin({
       root: __dirname,
-      content: [resolve(__dirname, './*.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
+      content: [
+        resolve(__dirname, './*.html'),
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+      ],
+    }),
+    IconsPlugin({
+      symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+      assetPath: (name, variant) =>
+        `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+      spriteFile: 'icons.svg',
+      contentPaths: [
+        join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
+        join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
+      ],
     }),
 
     TopLevelAwaitPlugin(),

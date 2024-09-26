@@ -37,6 +37,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/vite-plugin-icons": "workspace:*",
     "@sentry/vite-plugin": "^2.14.0",
     "@types/chrome": "^0.0.125",
     "@types/react": "~18.2.0",

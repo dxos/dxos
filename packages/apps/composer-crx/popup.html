@@ -3,6 +3,15 @@
   <head>
     <meta charset="utf-8" />
     <script async type="module" crossorigin src="src/popup.tsx"></script>
+    <script>
+      function setTheme(darkMode) {
+        document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
+      }
+      setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (event) {
+        setTheme(event.matches);
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

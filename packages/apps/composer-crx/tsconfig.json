@@ -17,6 +17,9 @@
   ],
   "references": [
     {
+      "path": "../../../tools/vite-plugin-icons"
+    },
+    {
       "path": "../../common/async"
     },
     {
