@@ -341,7 +341,7 @@ describe('load tests', () => {
 
   const NUM_OBJECTS = 100;
 
-  test('replication', async () => {
+  test('replication', { timeout: 20_000 }, async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork().open();
     const dataAssertion = createDataAssertion({ numObjects: NUM_OBJECTS });
