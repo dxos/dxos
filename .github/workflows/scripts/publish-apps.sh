@@ -6,8 +6,8 @@ set -euo pipefail
 # https://dash.cloudflare.com/950816f3f59b079880a1ae33fb0ec320/dxos.org/dns/records
 
 APPS=(
-  './packages/apps/composer-app'
-  './tools/stories'
+  "./packages/apps/composer-app"
+  "./tools/stories"
 )
 
 # Do not use remote cache
@@ -52,10 +52,12 @@ for APP_PATH in "${APPS[@]}"; do
   PACKAGE_CAPS=${PACKAGE^^}
   PACKAGE_ENV=${PACKAGE_CAPS//-/_}
 
-  set +e
-  eval "export DX_SENTRY_DESTINATION=$""${PACKAGE_ENV}"_SENTRY_DESTINATION""
-  eval "export DX_TELEMETRY_API_KEY=$""${PACKAGE_ENV}"_SEGMENT_API_KEY""
-  export LOG_FILTER=error
+  if [[ $APP == *-app ]]; then
+    set +e
+    eval "export DX_SENTRY_DESTINATION=$""${PACKAGE_ENV}"_SENTRY_DESTINATION""
+    eval "export DX_TELEMETRY_API_KEY=$""${PACKAGE_ENV}"_SEGMENT_API_KEY""
+    export LOG_FILTER="error"
+  fi
 
   APP=$(basename "$APP_PATH")
   pnpm -w nx bundle "$APP"
