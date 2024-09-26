@@ -67,7 +67,7 @@ export class RtcTransportChannel extends Resource implements Transport {
       })
       .catch((err) => {
         if (this.isOpen) {
-          this.errors.raise(new ConnectivityError(`Failed to create a channel: ${err?.message ?? 'unknown reason'}.`));
+          this.errors.raise(new ConnectivityError(`Failed to create a channel: ${err?.message ?? 'unknown reason.'}`));
         }
       })
       .finally(() => {

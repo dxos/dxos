@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Mutex } from '@dxos/async';
+
 export type ConnectionInfo = {
   initiator: boolean;
 };
@@ -32,7 +34,8 @@ class BrowserRtcConnectionFactory implements RtcConnectionFactory {
  * https://github.com/paullouisageneau/libdatachannel
  */
 class NodeRtcConnectionFactory implements RtcConnectionFactory {
-  static createdConnections = 0;
+  private static _createdConnections = 0;
+  private static _cleanupMutex = new Mutex();
 
   // This should be inside the function to avoid triggering `eval` in the global scope.
   // eslint-disable-next-line no-new-func
@@ -40,15 +43,19 @@ class NodeRtcConnectionFactory implements RtcConnectionFactory {
   // TODO(burdon): Do imports here?
   async initialize() {}
   async onConnectionDestroyed() {
-    if (--NodeRtcConnectionFactory.createdConnections === 0) {
-      (await import('#node-datachannel')).cleanup();
-    }
+    return NodeRtcConnectionFactory._cleanupMutex.executeSynchronized(async () => {
+      if (--NodeRtcConnectionFactory._createdConnections === 0) {
+        (await import('#node-datachannel')).cleanup();
+      }
+    });
   }
 
   async createConnection(config: RTCConfiguration) {
-    const { RTCPeerConnection } = await import('#node-datachannel/polyfill');
-    NodeRtcConnectionFactory.createdConnections++;
-    return new RTCPeerConnection(config);
+    return NodeRtcConnectionFactory._cleanupMutex.executeSynchronized(async () => {
+      const { RTCPeerConnection } = await import('#node-datachannel/polyfill');
+      NodeRtcConnectionFactory._createdConnections++;
+      return new RTCPeerConnection(config);
+    });
   }
 
   async initConnection(connection: RTCPeerConnection, info: ConnectionInfo): Promise<void> {

@@ -10,7 +10,6 @@ import { PublicKey } from '@dxos/keys';
 import { getRtcConnectionFactory } from './rtc-connection-factory';
 import { RtcPeerConnection } from './rtc-peer-connection';
 import { type RtcTransportChannel } from './rtc-transport-channel';
-import { handleChannelErrors } from './test-utils';
 import { chooseInitiatorPeer } from './utils';
 import { type TransportOptions } from '../transport';
 
@@ -82,8 +81,6 @@ describe('RtcTransport', () => {
     const { initiator, another } = await createConnectedPeers();
     const initiatorChannel = createChannel(initiator);
     const anotherChannel = createChannel(another);
-
-    const errors = handleChannelErrors(anotherChannel);
 
     await initiatorChannel.open();
     await sleep(20);
@@ -188,9 +185,7 @@ describe('RtcTransport', () => {
       args.onChannelOpen(channel);
     };
     onTestFinished(async () => {
-      if (channel.isOpen) {
-        await channel.close();
-      }
+      await channel.close();
     });
     return channel;
   };

@@ -70,6 +70,11 @@ const createBrowserConfig = ({ browserName, nodeExternal = false, injectGlobals 
     test: {
       ...resolveReporterConfig({ browserMode: true }),
       name: targetProject,
+
+      env: {
+        LOG_CONFIG: 'log-config.yaml',
+      },
+
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
