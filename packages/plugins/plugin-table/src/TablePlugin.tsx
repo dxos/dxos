@@ -38,6 +38,15 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         },
       },
       translations,
+      echo: {
+        schema: [TableType],
+      },
+      space: {
+        onSpaceCreate: {
+          label: ['create object label', { ns: TABLE_PLUGIN }],
+          action: TableAction.CREATE,
+        },
+      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;

@@ -308,7 +308,6 @@ workflows:
       - dead_links_check:
           context:
             - Github
-
       # Only run e2e and browser tests on pushes to main & release branches.
       - e2e:
           filters:
@@ -320,13 +319,14 @@ workflows:
                 - /^release-please-.*/
           context:
             - Github
-      - vitest-browser:
-          filters:
-            branches:
-              only:
-                - main
-          context:
-            - Github
+      # TODO(wittjosiah): Disable until properly configured.
+      # - vitest-browser:
+      #     filters:
+      #       branches:
+      #         only:
+      #           - main
+      #     context:
+      #       - Github
 
   e2e:
     when:

@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@dxos-theme';
+
 import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';

@@ -43,6 +43,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../core/echo/echo-db"
+    },
+    {
       "path": "../../../core/echo/echo-schema"
     },
     {
@@ -89,6 +92,9 @@
     },
     {
       "path": "../plugin-chain"
+    },
+    {
+      "path": "../plugin-inbox"
     },
     {
       "path": "../plugin-ipfs"

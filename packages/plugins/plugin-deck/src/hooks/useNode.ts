@@ -16,9 +16,13 @@ import { type Graph, type Node } from '@dxos/plugin-graph';
  */
 // TODO(wittjosiah): Factor out.
 export const useNode = <T = any>(graph: Graph, id?: string, timeout?: number): Node<T> | undefined => {
-  const [nodeState, setNodeState] = useState<Node<T> | undefined>(id ? graph.findNode(id) : undefined);
+  const [nodeState, setNodeState] = useState<Node<T> | undefined>(id ? graph.findNode(id, false) : undefined);
 
   useEffect(() => {
+    if (!id && nodeState) {
+      setNodeState(undefined);
+    }
+
     if (nodeState?.id === id || !id) {
       return;
     }

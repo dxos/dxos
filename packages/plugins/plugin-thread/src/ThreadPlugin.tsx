@@ -16,9 +16,6 @@ import {
   parseIntentPlugin,
   parseNavigationPlugin,
   resolvePlugin,
-  parseGraphPlugin,
-  SLUG_PATH_SEPARATOR,
-  SLUG_COLLECTION_INDICATOR,
   isLayoutParts,
   parseMetadataResolverPlugin,
 } from '@dxos/app-framework';
@@ -27,7 +24,6 @@ import { type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
-import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
@@ -36,7 +32,6 @@ import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
 import {
   getSpace,
   getTextInRange,
-  Filter,
   createDocAccessor,
   fullyQualifiedId,
   loadObjectReferences,
@@ -77,7 +72,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
     return viewStore[subjectId];
   };
 
-  let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
@@ -88,47 +82,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
     ready: async (plugins) => {
       settings.prop({ key: 'standalone', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
-      attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
-
-      const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-      if (!client) {
-        return;
-      }
-
-      // TODO(wittjosiah): This is a hack to make standalone threads work in the c11y sidebar.
-      //  This should have a better solution when deck is introduced.
-      const channelsQuery = client.spaces.query(Filter.schema(ChannelType));
-      const queryUnsubscribe = channelsQuery.subscribe();
-      const unsubscribe = effect(() => {
-        const attention = attentionPlugin?.provides.attention;
-        if (!attention?.attended) {
-          return;
-        }
-
-        const firstAttendedNodeWithComments = Array.from(attention.attended)
-          .map((id) => graphPlugin?.provides.graph.findNode(id))
-          .find((node) => {
-            const data = node?.data as { threads?: unknown };
-            return Array.isArray(data?.threads) && data.threads.length > 0;
-          });
-
-        if (firstAttendedNodeWithComments) {
-          void intentPlugin?.provides.intent.dispatch({
-            action: NavigationAction.OPEN,
-            data: {
-              activeParts: {
-                complementary: `${firstAttendedNodeWithComments.id}${SLUG_PATH_SEPARATOR}comments`,
-              },
-            },
-          });
-        }
-      });
-
-      unsubscribeCallbacks.push(queryUnsubscribe);
-      unsubscribeCallbacks.push(unsubscribe);
     },
     unload: async () => {
       unsubscribeCallbacks.forEach((unsubscribe) => unsubscribe());
@@ -384,14 +339,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   data: thread,
                   intents: [
                     [
-                      {
-                        action: NavigationAction.OPEN,
-                        data: {
-                          activeParts: {
-                            complementary: `${subjectId}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
-                          },
-                        },
-                      },
                       {
                         action: ThreadAction.SELECT,
                         data: { current: fullyQualifiedId(thread), focus: true },
