@@ -11,7 +11,6 @@ import {
 } from '@dxos/automerge/automerge-repo';
 import { LifecycleState, Resource, type Context } from '@dxos/context';
 import { todo } from '@dxos/debug';
-
 import { createIdFromSpaceKey, SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -20,12 +19,21 @@ import { type LevelDB } from '@dxos/kv-store';
 import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
+import { DataServiceImpl } from './data-service';
 import { type DatabaseRoot } from './database-root';
 import { createSelectedDocumentsIterator } from './documents-iterator';
-import { SpaceStateManager } from './space-state-manager';
-import { AutomergeHost, EchoDataMonitor, deriveCollectionIdFromSpaceId, type LoadDocOptions, type CreateDocOptions, type EchoReplicator, type CollectionSyncState, type EchoDataStats } from '../automerge';
-import { DataServiceImpl } from './data-service';
 import { QueryServiceImpl } from './query-service';
+import { SpaceStateManager } from './space-state-manager';
+import {
+  AutomergeHost,
+  EchoDataMonitor,
+  deriveCollectionIdFromSpaceId,
+  type LoadDocOptions,
+  type CreateDocOptions,
+  type EchoReplicator,
+  type CollectionSyncState,
+  type EchoDataStats,
+} from '../automerge';
 
 const INDEXER_CONFIG: IndexConfig = {
   enabled: true,

@@ -4,6 +4,7 @@
 
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, LifecycleState, Resource } from '@dxos/context';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -13,7 +14,6 @@ import { type QueryRequest, type QueryResult } from '@dxos/protocols/proto/dxos/
 import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
-import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { type AutomergeHost, getSpaceKeyFromDoc } from '../automerge';
 
 type QueryStateParams = {

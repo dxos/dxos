@@ -10,6 +10,7 @@ import { type ObjectSnapshot, type IdToHeads } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ObjectPointerVersion, objectPointerCodec } from '@dxos/protocols';
+
 import { type AutomergeHost, getSpaceKeyFromDoc } from '../automerge';
 
 const LOG_VIEW_OPERATION_THRESHOLD = 300;

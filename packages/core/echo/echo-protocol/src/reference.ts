@@ -5,6 +5,7 @@
 import { DXN, LOCAL_SPACE_TAG, PublicKey } from '@dxos/keys';
 import { type ObjectId } from '@dxos/protocols';
 import { type Reference as ReferenceProto } from '@dxos/protocols/proto/dxos/echo/model/document';
+
 import type { LegacyEncodedReferenceObject } from './legacy';
 import { createIdFromSpaceKey } from './space-id';
 

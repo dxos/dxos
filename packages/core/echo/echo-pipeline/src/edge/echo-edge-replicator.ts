@@ -8,7 +8,6 @@ import { type Message as AutomergeMessage, cbor } from '@dxos/automerge/automerg
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
 import type { EdgeConnection } from '@dxos/edge-client';
-
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -19,6 +18,7 @@ import {
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
+
 import {
   type EchoReplicator,
   type EchoReplicatorContext,

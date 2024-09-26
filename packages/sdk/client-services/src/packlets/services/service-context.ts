@@ -6,8 +6,14 @@ import { Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { EchoEdgeReplicator, EchoHost } from '@dxos/echo-pipeline';
-import { MeshEchoReplicator, MetadataStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import {
+  EchoEdgeReplicator,
+  EchoHost,
+  MeshEchoReplicator,
+  MetadataStore,
+  SpaceManager,
+  valueEncoding,
+} from '@dxos/echo-pipeline';
 import type { EdgeConnection } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';

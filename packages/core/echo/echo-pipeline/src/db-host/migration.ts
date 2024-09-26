@@ -2,21 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { convertLegacyReference, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { convertLegacyReference } from '@dxos/echo-protocol';
 import {
   decodeReference,
-  type EncodedReference,
   encodeReference,
   isLegacyReference,
   LEGACY_TYPE_PROPERTIES,
-  type LegacyEncodedReferenceObject,
   type ObjectStructure,
   Reference,
   type SpaceDoc,
   SpaceDocVersion,
 } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
 import { deepMapValuesAsync } from '@dxos/util';
 
 export const convertLegacyReferences = async (doc: SpaceDoc): Promise<SpaceDoc> => {

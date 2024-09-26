@@ -7,8 +7,13 @@ import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import type { SpecificCredential } from '@dxos/credentials';
 import { timed, warnAfterTimeout } from '@dxos/debug';
-import { type EchoHost, type DatabaseRoot } from '@dxos/echo-pipeline';
-import { createMappedFeedWriter, type MetadataStore, type Space } from '@dxos/echo-pipeline';
+import {
+  type EchoHost,
+  type DatabaseRoot,
+  createMappedFeedWriter,
+  type MetadataStore,
+  type Space,
+} from '@dxos/echo-pipeline';
 import { SpaceDocVersion } from '@dxos/echo-protocol';
 import type { EdgeConnection } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';

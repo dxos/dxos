@@ -19,8 +19,6 @@ import {
   findInlineObjectOfType,
   type EchoEdgeReplicator,
   type EchoHost,
-} from '@dxos/echo-pipeline';
-import {
   AuthStatus,
   CredentialServerExtension,
   type MeshEchoReplicator,
