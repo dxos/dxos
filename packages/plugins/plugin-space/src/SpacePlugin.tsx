@@ -67,6 +67,7 @@ import {
   SmallPresenceLive,
   SpacePresence,
   SpaceSettings,
+  SyncStatus,
 } from './components';
 import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
 import translations from './translations';
@@ -445,7 +446,12 @@ export const SpacePlugin = ({
                 return <MenuFooter object={data.object} />;
               }
             case 'status': {
-              return <SaveStatus />;
+              return (
+                <>
+                  <SyncStatus />
+                  <SaveStatus />
+                </>
+              );
             }
             default:
               return null;
