@@ -16,16 +16,12 @@ import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
+import { TcpTransportFactory } from '#tcp-transport';
 import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol';
 import { SwarmNetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
 import { MemoryTransportFactory, type TransportFactory, TransportKind } from '../transport';
-import {
-  TcpTransportFactory,
-  createRtcTransportFactory,
-  RtcTransportProxyFactory,
-  RtcTransportService,
-} from '../transport';
+import { createRtcTransportFactory, RtcTransportProxyFactory, RtcTransportService } from '../transport';
 
 // Signal server will be started by the setup script.
 const port = process.env.SIGNAL_PORT ?? 4000;

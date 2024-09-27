@@ -19,10 +19,10 @@ import {
   createIceProvider,
   createRtcTransportFactory,
   MemoryTransportFactory,
-  TcpTransportFactory,
   type TransportFactory,
   TransportKind,
 } from '@dxos/network-manager';
+import { TcpTransportFactory } from '@dxos/network-manager/tcp';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';

@@ -8,7 +8,8 @@
   },
   "include": [
     "src",
-    "tests-setup.js"
+    "tests-setup.js",
+    "network-manager.d.ts"
   ],
   "references": [
     {

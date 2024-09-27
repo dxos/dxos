@@ -16,6 +16,13 @@
       "browser": "./module-stub.js",
       "workerd": "./module-stub.js",
       "default": "node-datachannel/*"
+    },
+    "#tcp-transport": {
+      "browser": "./dist/lib/browser/transport/tcp/index.mjs",
+      "node": "./dist/lib/node/transport/tcp/index.cjs",
+      "import": "./dist/lib/browser/transport/tcp/index.mjs",
+      "require": "./dist/lib/node/transport/tcp/index.cjs",
+      "types": "./dist/types/src/transport/tcp/index.d.ts"
     }
   },
   "exports": {
@@ -34,16 +41,27 @@
         "default": "./dist/lib/node-esm/testing/index.mjs"
       },
       "types": "./dist/types/src/testing/index.d.ts"
+    },
+    "./tcp": {
+      "browser": "./dist/lib/browser/tcp/index.mjs",
+      "node": {
+        "require": "./dist/lib/node/tcp/index.cjs",
+        "default": "./dist/lib/node-esm/tcp/index.mjs"
+      },
+      "types": "./dist/types/src/tcp/index.d.ts"
     }
   },
   "browser": {
-    "./src/transport/tcp-transport.ts": "./src/transport/tcp-transport.browser.ts"
+    "./src/transport/tcp/tcp-transport.ts": "./src/transport/tcp/tcp-transport.browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "testing": [
         "dist/types/src/testing/index.d.ts"
+      ],
+      "tcp": [
+        "dist/types/src/transport/tcp/index.d.ts"
       ]
     }
   },
