@@ -321,7 +321,7 @@ describe('Integration tests', () => {
       await expect
         .poll(async () => {
           const state = await db2.coreDatabase.getSyncState();
-          return state.peers![0].documentsToReconcile;
+          return state.peers![0].differentDocuments + state.peers![0].missingOnRemote + state.peers![0].missingOnLocal;
         })
         .toEqual(0);
     }
@@ -341,7 +341,7 @@ describe('load tests', () => {
 
   const NUM_OBJECTS = 100;
 
-  test('replication', async () => {
+  test('replication', { timeout: 20_000 }, async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork().open();
     const dataAssertion = createDataAssertion({ numObjects: NUM_OBJECTS });

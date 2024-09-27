@@ -5,6 +5,7 @@
 import {
   asyncTimeout,
   Event,
+  runInContextAsync,
   synchronized,
   TimeoutError,
   Trigger,
@@ -14,7 +15,9 @@ import {
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
+import { Stream } from '@dxos/codec-protobuf';
 import { Context, ContextDisposedError } from '@dxos/context';
+import { raise } from '@dxos/debug';
 import { isEncodedReference, Reference, type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES, type AnyObjectData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -242,6 +245,10 @@ export class CoreDatabase {
   }
 
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
+    if (!this._automergeDocLoader.hasRootHandle) {
+      throw new Error('Database is not ready.');
+    }
+
     const objCore = this._objects.get(id);
     if (load && !objCore) {
       this._automergeDocLoader.loadObjectDocument(id);
@@ -270,6 +277,10 @@ export class CoreDatabase {
     objectIds: string[],
     { inactivityTimeout = 30000, returnDeleted = false }: { inactivityTimeout?: number; returnDeleted?: boolean } = {},
   ): Promise<(ObjectCore | undefined)[]> {
+    if (!this._automergeDocLoader.hasRootHandle) {
+      throw new Error('Database is not ready.');
+    }
+
     const result: (ObjectCore | undefined)[] = new Array(objectIds.length);
     const objectsToLoad: Array<{ id: string; resultIndex: number }> = [];
     for (let i = 0; i < objectIds.length; i++) {
@@ -550,7 +561,26 @@ export class CoreDatabase {
   }
 
   async getSyncState(): Promise<SpaceSyncState> {
-    return this._dataService.getSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
+    const value = await Stream.first(
+      this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT }),
+    );
+    return value ?? raise(new Error('Failed to get sync state'));
+  }
+
+  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): UnsubscribeCallback {
+    const stream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
+    stream.subscribe(
+      (data) => {
+        void runInContextAsync(ctx, () => callback(data));
+      },
+      (err) => {
+        if (err) {
+          ctx.raise(err);
+        }
+      },
+    );
+    ctx.onDispose(() => stream.close());
+    return () => stream.close();
   }
 
   getLoadedDocumentHandles(): DocHandleProxy<any>[] {

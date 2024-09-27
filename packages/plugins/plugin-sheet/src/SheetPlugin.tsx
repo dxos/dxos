@@ -2,31 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, GridNine } from '@phosphor-icons/react';
+import { GridNine, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
+import { createExtension, isActionGroup, type ActionGroup } from '@dxos/plugin-graph';
 import { FunctionType } from '@dxos/plugin-script/types';
 import { SpaceAction } from '@dxos/plugin-space';
-import { getSpace, isEchoObject } from '@dxos/react-client/echo';
+import { getSpace, isEchoObject, type Space } from '@dxos/react-client/echo';
 
-import {
-  createComputeGraph,
-  CustomPlugin,
-  CustomPluginTranslations,
-  SheetContainer,
-  type ComputeGraph,
-} from './components';
+import { SheetContainer, type ComputeGraph } from './components';
 // TODO(wittjosiah): Refactor. These are not exported from ./components due to depending on ECHO.
-import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './components/ComputeGraph/edge-function';
 import { ComputeGraphContextProvider } from './components/ComputeGraph/graph-context';
 import meta, { SHEET_PLUGIN } from './meta';
-import { compareIndexPositions, SheetModel } from './model';
+import { compareIndexPositions } from './model/util';
 import translations from './translations';
-import { createSheet, SheetAction, type SheetPluginProvides, SheetType } from './types';
+import { createSheet, SheetAction, SheetType, type SheetPluginProvides } from './types';
 
 export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
   let remoteFunctionUrl: string | undefined;
@@ -166,21 +159,8 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
           switch (intent.action) {
             case SheetAction.CREATE: {
               const space = intent.data?.space;
-              const sheet = createSheet();
-              const graph =
-                graphs[space.id] ??
-                createComputeGraph(
-                  [
-                    { plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations },
-                    // TODO(wittjosiah): Remove. Needed for current test sheet generated data.
-                    { plugin: CustomPlugin, translations: CustomPluginTranslations },
-                  ],
-                  space,
-                  { remoteFunctionUrl },
-                );
-              const model = new SheetModel(graph, sheet);
-              await model.initialize();
-              await model.destroy();
+              const sheet = await createAndInitializeSheet(space, graphs, remoteFunctionUrl);
+
               return { data: sheet };
             }
           }
@@ -188,4 +168,37 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       },
     },
   };
+};
+
+const createAndInitializeSheet = async (
+  space: Space,
+  graphCache: Record<string, ComputeGraph>,
+  remoteFunctionUrl: string | undefined,
+) => {
+  // NOTE: Async imports not to load hyperformula.
+
+  const { createComputeGraph, CustomPlugin, CustomPluginTranslations } = await import('./components/ComputeGraph');
+
+  // TODO(wittjosiah): Refactor. These are not exported from ./components due to depending on ECHO.
+  const { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } = await import(
+    './components/ComputeGraph/edge-function'
+  );
+  const { SheetModel } = await import('./model');
+
+  const sheet = createSheet();
+  const graph =
+    graphCache[space.id] ??
+    createComputeGraph(
+      [
+        { plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations },
+        // TODO(wittjosiah): Remove. Needed for current test sheet generated data.
+        { plugin: CustomPlugin, translations: CustomPluginTranslations },
+      ],
+      space,
+      { remoteFunctionUrl },
+    );
+  const model = new SheetModel(graph, sheet);
+  await model.initialize();
+  await model.destroy();
+  return sheet;
 };

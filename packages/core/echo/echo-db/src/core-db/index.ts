@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './automerge-context';
 export * from './core-database';
 export * from './object-core';
 // TODO(wittjosiah): Vitest fails without explicit exports here.

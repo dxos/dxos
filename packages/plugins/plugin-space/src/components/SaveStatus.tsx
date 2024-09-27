@@ -2,25 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ArrowsClockwise, CheckCircle } from '@phosphor-icons/react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import type { UnsubscribeCallback } from '@dxos/async';
-import type { Client } from '@dxos/client';
+import { type UnsubscribeCallback } from '@dxos/async';
+import { type Client } from '@dxos/client';
 import { type Space, type SpaceId } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { useClient } from '@dxos/react-client';
-import { useTranslation } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import { Icon, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 
 export const SaveStatus = () => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const client = useClient();
-  const [state, setState] = React.useState<'saved' | 'saving'>('saved');
-
+  const [state, setState] = useState<'saved' | 'saving'>('saved');
   useEffect(() => {
     return createClientSaveTracker(client, (state) => {
       setState(state);
@@ -29,7 +26,7 @@ export const SaveStatus = () => {
 
   return (
     <StatusBar.Item title={state === 'saving' ? t('saving label') : t('saved label')}>
-      {state === 'saving' ? <ArrowsClockwise className={getSize(3)} /> : <CheckCircle className={getSize(3)} />}
+      <Icon icon={state === 'saving' ? 'ph--arrows-clockwise--regular' : 'ph--check-circle--regular'} size={4} />
     </StatusBar.Item>
   );
 };

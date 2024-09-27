@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { CollectionId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -126,7 +127,7 @@ export class MeshEchoReplicator implements EchoReplicator {
         }
       },
       shouldSyncCollection: ({ collectionId }) => {
-        const spaceId = getSpaceIdFromCollectionId(collectionId);
+        const spaceId = getSpaceIdFromCollectionId(collectionId as CollectionId);
 
         const authorizedDevices = this._authorizedDevices.get(spaceId);
 
