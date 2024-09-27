@@ -23,7 +23,8 @@ import { createTestSheet, testSheetName } from '../../testing';
 import { ValueTypeEnum, SheetType } from '../../types';
 import { type ComputeGraph, createComputeGraph } from '../ComputeGraph';
 // TODO(wittjosiah): Refactor. This is not exported from ./components due to depending on ECHO.
-import { ComputeGraphContext, ComputeGraphContextProvider, useComputeGraph } from '../ComputeGraph/graph-context';
+import { ComputeGraphContext, ComputeGraphContextProvider } from '../ComputeGraph/graph-context';
+import { useComputeGraph } from '../ComputeGraph/useComputeGraph';
 import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
 
 // TODO(burdon): Allow toolbar to access sheet context; provide state for current cursor/range.

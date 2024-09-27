@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ComputeGraph, createComputeGraph } from './components';
+import { type ComputeGraph, createComputeGraph } from './components/ComputeGraph';
 import { SheetModel } from './model';
 import { createSheet, type CellValue } from './types';
 
