@@ -15,6 +15,7 @@ import { createSheet, type CellValue, SheetType } from './types';
 
 export const testSheetName = 'test';
 
+// TODO(thure): Remove this from the `/testing` entrypoint.
 export const createCells = (): Record<string, CellValue> => ({
   B1: { value: 'Qty' },
   B3: { value: 1 },
