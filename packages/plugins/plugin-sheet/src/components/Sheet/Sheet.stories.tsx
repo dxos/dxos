@@ -4,29 +4,23 @@
 
 import '@dxos-theme';
 
-import { type Decorator } from '@storybook/react';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
-import { Client } from '@dxos/client';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { getSpace, type Space } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { addressToIndex, rangeToIndex } from '../../model';
+import { useTestSheet, withGraphDecorator } from '../../testing';
+import { ValueTypeEnum } from '../../types';
 import { Sheet } from './Sheet';
 import { type SizeMap } from './grid';
 import { useSheetContext } from './sheet-context';
-import { addressToIndex, rangeToIndex } from '../../model';
-import { createTestSheet, testSheetName } from '../../testing';
-import { ValueTypeEnum, SheetType } from '../../types';
-import { type ComputeGraph, createComputeGraph } from '../ComputeGraph';
 // TODO(wittjosiah): Refactor. This is not exported from ./components due to depending on ECHO.
-import { ComputeGraphContext, ComputeGraphContextProvider } from '../ComputeGraph/graph-context';
 import { useComputeGraph } from '../ComputeGraph/useComputeGraph';
 import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
-
 // TODO(burdon): Allow toolbar to access sheet context; provide state for current cursor/range.
 const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) => {
   const { model, cursor, range } = useSheetContext();
@@ -101,26 +95,6 @@ const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) =
       <Sheet.Main />
       {debug && <Sheet.Debug />}
     </div>
-  );
-};
-
-const withGraphDecorator: Decorator = (Story) => {
-  const [graphs, setGraphs] = useState<Record<string, ComputeGraph>>({});
-
-  const setGraph = (key: string, graph: ComputeGraph) => {
-    if (!graph.hf.doesSheetExist(testSheetName)) {
-      const sheetName = graph.hf.addSheet(testSheetName);
-      const sheet = graph.hf.getSheetId(sheetName)!;
-      graph.hf.setCellContents({ sheet, col: 0, row: 0 }, Math.random());
-    }
-
-    setGraphs((graphs) => ({ ...graphs, [key]: graph }));
-  };
-
-  return (
-    <ComputeGraphContextProvider graphs={graphs} setGraph={setGraph}>
-      <Story />
-    </ComputeGraphContextProvider>
   );
 };
 
@@ -263,30 +237,3 @@ export const GridLayout = () => {
 const Cell = ({ className, label }: { className?: string; label: string }) => (
   <div className={mx('flex items-center justify-center border', className)}>{label}</div>
 );
-
-const useTestSheet = () => {
-  const { graphs, setGraph } = useContext(ComputeGraphContext);
-  const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
-  useEffect(() => {
-    const t = setTimeout(async () => {
-      const client = new Client();
-      await client.initialize();
-      await client.halo.createIdentity();
-      const space = await client.spaces.create();
-      client.addTypes([SheetType]);
-
-      const graph = graphs[space.id] ?? createComputeGraph();
-      if (!graphs[space.id]) {
-        setGraph(space.id, graph);
-      }
-
-      const sheet = await createTestSheet({ graph });
-      space.db.add(sheet);
-      setSheet(sheet);
-    });
-
-    return () => clearTimeout(t);
-  }, []);
-
-  return sheet;
-};

@@ -23,10 +23,11 @@
   "dependencies": {
     "@dxos/lit-grid": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@lit/react": "^1.0.5"
+    "@lit/react": "^1.0.5",
+    "@radix-ui/react-context": "^1.0.0",
+    "@radix-ui/react-use-controllable-state": "^1.0.0"
   },
   "devDependencies": {
     "@dxos/storybook-utils": "workspace:*",
