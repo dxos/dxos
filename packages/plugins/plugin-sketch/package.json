@@ -30,6 +30,14 @@
         "default": "./dist/lib/node-esm/types/index.mjs"
       },
       "types": "./dist/types/src/types/index.d.ts"
+    },
+    "./sdk": {
+      "browser": "./dist/lib/browser/sdk.mjs",
+      "node": {
+        "require": "./dist/lib/node/sdk.cjs",
+        "default": "./dist/lib/node-esm/sdk.mjs"
+      },
+      "types": "./dist/types/src/sdk.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -40,6 +48,9 @@
       ],
       "types": [
         "dist/types/src/types/index.d.ts"
+      ],
+      "sdk": [
+        "dist/types/src/sdk.d.ts"
       ]
     }
   },
