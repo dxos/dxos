@@ -3,6 +3,24 @@
   "name": "stories",
   "projectType": "library",
   "targets": {
+    "bundle": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "dependsOn": [
+        "compile-all"
+      ],
+      "executor": "@nx/storybook:build",
+      "options": {
+        "configDir": "tools/stories/config/all",
+        "outputDir": "tools/stories/out/stories"
+      },
+      "outputs": [
+        "{options.outputDir}"
+      ]
+    },
     "chromatic": {
       "dependsOn": [
         "chromatic-examples",
@@ -110,7 +128,7 @@
         "configDir": "tools/stories/config/all"
       }
     },
-    "storybook-build": {
+    "storybook-build-all": {
       "configurations": {
         "ci": {
           "quiet": true
