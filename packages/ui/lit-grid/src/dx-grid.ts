@@ -514,6 +514,9 @@ export class DxGrid extends LitElement {
       ? this.viewportRef.value
       : this.focusedCellElement()
     )?.focus({ preventScroll: true });
+    if (increment) {
+      this.snapPosToFocusedCell();
+    }
   }
 
   /**
