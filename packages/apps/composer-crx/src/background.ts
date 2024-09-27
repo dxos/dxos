@@ -5,6 +5,7 @@
 import browser from 'webextension-polyfill';
 
 const main = async () => {
+  // eslint-disable-next-line no-console
   console.log(browser);
 };
 
