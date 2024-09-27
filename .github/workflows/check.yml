@@ -9,6 +9,12 @@ on:
         required: false
         default: false
 
+      e2e:
+        type: boolean
+        description: 'Run the e2e tests'
+        required: false
+        default: false
+
 name: Check
 
 env:
@@ -33,47 +39,95 @@ jobs:
         with:
           detached: true
 
+      - name: Continue?
+        id: continue
+        run: |
+          if [[ "${{ matrix.node-version }}" == "20.12.1" || "${{ matrix.target }}" == "test" ]]; then
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install system dependencies
-        if: ${{ matrix.node-version == '20.12.1' || matrix.target == 'test' }}
+        if: ${{ steps.continue.outputs.proceed == 'true' }}
         run: sudo apt-get install libxtst-dev libpng++-dev
 
       - name: Checkout
         uses: actions/checkout@v4
-        if: ${{ matrix.node-version == '20.12.1' || matrix.target == 'test' }}
+        if: ${{ steps.continue.outputs.proceed == 'true' }}
         with:
           lfs: true
 
       - uses: pnpm/action-setup@v4
-        if: ${{ matrix.node-version == '20.12.1' || matrix.target == 'test' }}
+        if: ${{ steps.continue.outputs.proceed == 'true' }}
 
       - run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-extra-large-js" --stop-agents-after="test"
-        if: ${{ matrix.node-version == '20.12.1' || matrix.target == 'test' }}
+        if: ${{ steps.continue.outputs.proceed == 'true' }}
 
       - uses: actions/setup-node@v3
-        if: ${{ matrix.node-version == '20.12.1' || matrix.target == 'test' }}
+        if: ${{ steps.continue.outputs.proceed == 'true' }}
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        if: ${{ matrix.node-version == '20.12.1' || matrix.target == 'test' }}
+        if: ${{ steps.continue.outputs.proceed == 'true' }}
 
       - uses: nrwl/nx-set-shas@v4
-        if: ${{ matrix.node-version == '20.12.1' || matrix.target == 'test' }}
+        if: ${{ steps.continue.outputs.proceed == 'true' }}
 
-      - name: Check affected
+      - name: Check
         run: pnpm exec nx affected -t ${{ matrix.target }}
-        if: ${{ matrix.node-version == '20.12.1' && matrix.target != 'test' }}
+        if: ${{ matrix.node-version == '20.12.1' && matrix.target != 'test' && matrix.target != 'e2e' }}
 
-      - name: Test affected
+      - name: Test
         run: pnpm exec nx affected -t test --coverage
         if: ${{ matrix.target == 'test' }}
 
       - uses: codecov/codecov-action@v4
         if: ${{ matrix.target == 'test' }}
         with:
-          fail_ci_if_error: true # optional (default = false)
           directory: ./coverage
+          fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
-          verbose: true # optional (default = false)
+          verbose: true
+
+  e2e:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || ${{ inputs.e2e == true }}
+    steps:
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        with:
+          detached: true
+
+      - name: Install system dependencies
+        run: sudo apt-get install libxtst-dev libpng++-dev
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: pnpm/action-setup@v4
+
+      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-extra-large-js" --stop-agents-after="test"
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20.12.1
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - name: Test
+        run: pnpm exec nx affected -t e2e --browser=all --parallel=1
+        env:
+          DX_ENVIRONMENT: ci
+          DX_PWA: false
+          NODE_OPTIONS: --max-old-space-size=8192
