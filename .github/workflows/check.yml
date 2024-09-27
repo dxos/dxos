@@ -1,6 +1,14 @@
 on:
   push:
 
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+
 name: Check
 
 env:
@@ -13,6 +21,12 @@ jobs:
         node-version: ["18.20.1", "20.12.1", "21.7.2"]
     runs-on: ubuntu-latest
     steps:
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        with:
+          detached: true
+
       - name: Install system dependencies
         run: sudo apt-get install libxtst-dev libpng++-dev
 
