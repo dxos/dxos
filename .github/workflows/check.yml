@@ -13,7 +13,7 @@ on:
         type: boolean
         description: 'Run the e2e tests'
         required: false
-        default: true
+        default: false
 
 name: Check
 
@@ -95,7 +95,7 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
+    if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || true }}
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
