@@ -103,13 +103,31 @@ message SpaceSyncState {
     string peer_id = 1;
 
     // TODO(burdon): Standardize: have_local, want:local, have_remote, want_remote.
-    int32 missing_on_remote = 10;
-    int32 missing_on_local = 11;
-    int32 local_document_count = 13;
-    int32 remote_document_count = 14;
 
-    // TODO(burdon): Document.
+    /**
+     * Documents that are present locally but not on the remote peer.
+     */
+    int32 missing_on_remote = 10;
+
+    /**
+     * Documents that are present on the remote peer but not locally.
+     */
+    int32 missing_on_local = 11;
+    
+    /**
+     * Documents that are present on both peers but have different heads.
+     */
     int32 different_documents = 12;
+
+    /**
+     * Total number of documents locally.
+     */
+    int32 local_document_count = 13;
+
+    /**
+     * Total number of documents on the remote peer.
+     */
+    int32 remote_document_count = 14;
   }
 
   repeated PeerState peers = 1;
