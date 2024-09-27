@@ -5,12 +5,13 @@
 import React, { type HTMLAttributes } from 'react';
 
 import { StatusBar } from '@dxos/plugin-status-bar';
-import { Icon, Popover } from '@dxos/react-ui';
+import { Icon, Popover, useTranslation } from '@dxos/react-ui';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type Progress, type SpaceSyncStateMap, type SyncStateSummary, getSyncSummary, useSyncState } from './types';
+import { SPACE_PLUGIN } from '../../meta';
 
 export const SyncStatus = () => {
   const state = useSyncState();
@@ -49,18 +50,21 @@ export const SyncStatusIndicator = ({ state }: { state: SpaceSyncStateMap }) => 
 };
 
 export const SyncStatusDetail = ({
+  classNames,
   state,
   summary,
   debug,
-}: {
+}: ThemedClassName<{
   state: SpaceSyncStateMap;
   summary: SyncStateSummary;
   debug?: boolean;
-}) => {
+}>) => {
+  const { t } = useTranslation(SPACE_PLUGIN);
+
   // TODO(burdon): Normalize to max document count.
   return (
-    <div className='flex flex-col text-xs'>
-      <h1 className='p-2'>Progress</h1>
+    <div className={mx('flex flex-col text-xs', classNames)}>
+      <h1 className='p-2'>{t('sync status title')}</h1>
       <div className='flex flex-col gap-[2px] my-[2px]'>
         {Object.entries(state).map(
           ([spaceId, { localDocumentCount, remoteDocumentCount, missingOnLocal, missingOnRemote }]) => (

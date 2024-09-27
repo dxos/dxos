@@ -9,8 +9,8 @@ import React from 'react';
 import { SpaceId } from '@dxos/keys';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { Bar as BarComponent, SyncStatusIndicator } from './SyncStatus';
-import { type SpaceSyncStateMap } from './types';
+import { SyncStatusDetail, SyncStatusIndicator } from './SyncStatus';
+import { getSyncSummary, type SpaceSyncStateMap } from './types';
 import translations from '../../translations';
 
 const Story = (props: any) => {
@@ -52,10 +52,11 @@ export const Default = {
   },
 };
 
-export const Bar = {
-  render: BarComponent,
+export const Detail = {
+  render: SyncStatusDetail,
   args: {
-    count: 10,
-    total: 100,
+    state,
+    summary: getSyncSummary(state),
+    classNames: 'm-2 w-[200px] border border-separator rounded-md',
   },
 };
