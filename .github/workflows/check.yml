@@ -101,7 +101,7 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || true }}
+    if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || startsWith(github.ref, 'refs/heads/jdw') }}
     env:
       DX_ENVIRONMENT: ci
       DX_PWA: false
@@ -123,7 +123,8 @@ jobs:
 
       - uses: pnpm/action-setup@v4
 
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-extra-large-js" --stop-agents-after="test"
+      # TODO(wittjosiah): Distribution fails because of bundling memeory usage.
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-extra-large-js" --stop-agents-after="e2e"
 
       - uses: actions/setup-node@v3
         with:
