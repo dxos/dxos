@@ -2,15 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { createContext, type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
+import { createContext } from 'react';
 
-import { type ComputeGraph } from './graph';
+import { type SpaceId } from '@dxos/keys';
+
+import { type ComputeGraph } from '../../graph';
 
 export type ComputeGraphContextType = {
-  graphs: Record<string, ComputeGraph>;
+  graphs: Record<SpaceId, ComputeGraph>;
   setGraph: (key: string, graph: ComputeGraph) => void;
 };
 
+/**
+ * The compute graph context manages a ComputeGraph for each space.
+ */
 export const ComputeGraphContext = createContext<ComputeGraphContextType>({ graphs: {}, setGraph: () => {} });
 
 export const ComputeGraphContextProvider = ({

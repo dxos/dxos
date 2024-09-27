@@ -6,10 +6,10 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 
-import { CustomPlugin, CustomPluginTranslations } from './custom';
+import { CustomPlugin, CustomPluginTranslations } from './custom-function';
 import { createComputeGraph } from './graph';
-import { addressFromA1Notation, SheetModel } from '../../model';
-import { type CellScalarValue, createSheet } from '../../types';
+import { addressFromA1Notation, SheetModel } from '../model';
+import { type CellScalarValue, createSheet } from '../types';
 
 /**
  * VITEST_ENV=chrome p vitest --watch

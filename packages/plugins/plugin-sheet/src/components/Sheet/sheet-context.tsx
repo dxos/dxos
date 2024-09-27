@@ -8,10 +8,10 @@ import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
 
 import { createDecorations } from './decorations';
-import { useSheetModel } from './util';
+import { type FunctionContextOptions } from '../../graph';
+import { useSheetModel, useFormattingModel } from '../../hooks';
 import { type CellAddress, type CellRange, type FormattingModel, type SheetModel } from '../../model';
 import { type SheetType } from '../../types';
-import { type FunctionContextOptions } from '../ComputeGraph';
 
 export type SheetContextType = {
   model: SheetModel;
@@ -59,7 +59,9 @@ export const SheetContextProvider = ({
   onInfo,
   ...options
 }: PropsWithChildren<SheetContextProps>) => {
-  const { model, formatting } = useSheetModel({ sheet, space, readonly, options });
+  const model = useSheetModel({ sheet, space, readonly, options });
+  const formatting = useFormattingModel(model);
+
   // TODO(Zan): We should offer a version of set range and set cursor that scrolls to
   //  that cell or range if it is not visible.
   const [cursor, setCursor] = useState<CellAddress>();

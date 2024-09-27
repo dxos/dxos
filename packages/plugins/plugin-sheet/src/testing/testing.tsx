@@ -3,15 +3,14 @@
 //
 
 import type { Decorator } from '@storybook/react';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Client } from '@dxos/client';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 
-import { type ComputeGraph, createComputeGraph } from './components/ComputeGraph';
-import { ComputeGraphContext, ComputeGraphContextProvider } from './components/ComputeGraph/graph-context';
-import { SheetModel } from './model';
-import { createSheet, type CellValue, SheetType } from './types';
+import { type ComputeGraph, ComputeGraphContextProvider, createComputeGraph, useComputeGraph } from '../components';
+import { SheetModel } from '../model';
+import { createSheet, type CellValue, SheetType } from '../types';
 
 export const testSheetName = 'test';
 
@@ -58,7 +57,7 @@ export const createTestSheet = async ({
 };
 
 export const useTestSheet = () => {
-  const { graphs, setGraph } = useContext(ComputeGraphContext);
+  const graph = useComputeGraph();
   const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
   useEffect(() => {
     const t = setTimeout(async () => {
@@ -86,7 +85,6 @@ export const useTestSheet = () => {
 
 export const withGraphDecorator: Decorator = (Story) => {
   const [graphs, setGraphs] = useState<Record<string, ComputeGraph>>({});
-
   const setGraph = (key: string, graph: ComputeGraph) => {
     if (!graph.hf.doesSheetExist(testSheetName)) {
       const sheetName = graph.hf.addSheet(testSheetName);

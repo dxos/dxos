@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-export type * from './ComputeGraph';
+export * from './ComputeGraph';
 
 // Lazily load components for content surfaces.
 export const SheetContainer = React.lazy(() => import('./SheetContainer'));

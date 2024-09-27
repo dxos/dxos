@@ -16,7 +16,10 @@ import {
 } from '@dxos/react-ui-editor';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { mermaid } from './mermaid';
+import { compute } from './compute';
+import { withGraphDecorator } from '../testing';
+
+// import { useComputeGraph } from '../components';
 
 const str = (...lines: string[]) => lines.join('\n');
 
@@ -26,6 +29,7 @@ type StoryProps = {
 
 const Story = ({ text }: StoryProps) => {
   const { themeMode } = useThemeContext();
+  // const graph = useComputeGraph();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       initialValue: text,
@@ -33,8 +37,7 @@ const Story = ({ text }: StoryProps) => {
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-        // TODO(burdon): Bug if mermaid extension is provided after decorateMarkdown.
-        mermaid(),
+        compute(),
         decorateMarkdown(),
       ],
     }),
@@ -45,48 +48,13 @@ const Story = ({ text }: StoryProps) => {
 };
 
 export default {
-  title: 'plugin-mermaid/extensions',
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
+  title: 'plugin-sheet/extensions',
+  decorators: [withGraphDecorator, withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
   render: Story,
 };
 
 export const Mermaid = {
   args: {
-    text: str(
-      '# Mermaid',
-      '',
-      'This is a mermaid diagram:',
-      '',
-      '```mermaid',
-      'graph LR;',
-      'A-->B;',
-      'B-->C;',
-      'B-->D;',
-      'B-->E;',
-      'D-->E;',
-      'C-->D;',
-      '```',
-      '',
-      'Inside a markdown document.',
-      '',
-    ),
-  },
-};
-
-export const Error = {
-  args: {
-    text: str(
-      '# Mermaid',
-      '',
-      'This is a broken mermaid diagram:',
-      '',
-      '```mermaid',
-      'graph TD;',
-      'A- ->B;',
-      '```',
-      '',
-      '',
-      '',
-    ),
+    text: str('# Compute', '', '```dx', '=FOO()', '```', ''),
   },
 };
