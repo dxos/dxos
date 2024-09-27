@@ -9,7 +9,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { mapFormulaBindingFromId, mapFormulaBindingToId, SheetModel, FormattingModel } from '../../model';
 import type { SheetType } from '../../types';
 import type { FunctionContextOptions } from '../ComputeGraph';
-import { useComputeGraph } from '../ComputeGraph/graph-context';
+import { useComputeGraph } from '../ComputeGraph/useComputeGraph';
 
 /**
  * Gets the relative client rect of an element within a parent container.

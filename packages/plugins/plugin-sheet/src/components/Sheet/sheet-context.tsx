@@ -2,17 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useContext, useState, useMemo } from 'react';
+import React, { type PropsWithChildren, createContext, useContext, useMemo, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
 
 import { createDecorations } from './decorations';
 import { useSheetModel } from './util';
-import { type CellAddress, type CellRange, type SheetModel, type FormattingModel } from '../../model';
+import { type CellAddress, type CellRange, type FormattingModel, type SheetModel } from '../../model';
 import { type SheetType } from '../../types';
 import { type FunctionContextOptions } from '../ComputeGraph';
-// TODO(wittjosiah): Refactor. This is not exported from ./components due to depending on ECHO.
 
 export type SheetContextType = {
   model: SheetModel;

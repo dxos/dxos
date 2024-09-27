@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { getSpace, type Space } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Sheet } from './Sheet';
 import { type SizeMap } from './grid';
@@ -19,9 +19,8 @@ import { addressToIndex, rangeToIndex } from '../../model';
 import { useTestSheet, withGraphDecorator } from '../../testing';
 import { ValueTypeEnum } from '../../types';
 // TODO(wittjosiah): Refactor. This is not exported from ./components due to depending on ECHO.
-import { useComputeGraph } from '../ComputeGraph/graph-context';
+import { useComputeGraph } from '../ComputeGraph/useComputeGraph';
 import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
-
 // TODO(burdon): Allow toolbar to access sheet context; provide state for current cursor/range.
 const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) => {
   const { model, cursor, range } = useSheetContext();

@@ -8,7 +8,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Client } from '@dxos/client';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 
-import { type ComputeGraph, createComputeGraph } from './components';
+import { type ComputeGraph, createComputeGraph } from './components/ComputeGraph';
 import { ComputeGraphContext, ComputeGraphContextProvider } from './components/ComputeGraph/graph-context';
 import { SheetModel } from './model';
 import { createSheet, type CellValue, SheetType } from './types';
