@@ -123,7 +123,6 @@ const SpaceRow = ({
 }) => {
   const downActive = useActive(localDocumentCount);
   const upActive = useActive(remoteDocumentCount);
-  console.log(spaceId, downActive, localDocumentCount);
 
   return (
     <div
