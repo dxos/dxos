@@ -101,10 +101,32 @@ message GetSpaceSyncStateRequest {
 message SpaceSyncState {
   message PeerState {
     string peer_id = 1;
+
+    // TODO(burdon): Standardize: have_local, want:local, have_remote, want_remote.
+
+    /**
+     * Documents that are present locally but not on the remote peer.
+     */
     int32 missing_on_remote = 10;
+
+    /**
+     * Documents that are present on the remote peer but not locally.
+     */
     int32 missing_on_local = 11;
+    
+    /**
+     * Documents that are present on both peers but have different heads.
+     */
     int32 different_documents = 12;
+
+    /**
+     * Total number of documents locally.
+     */
     int32 local_document_count = 13;
+
+    /**
+     * Total number of documents on the remote peer.
+     */
     int32 remote_document_count = 14;
   }
 
@@ -113,7 +135,7 @@ message SpaceSyncState {
 
 service DataService {
   /**
-   * Subscribe to incremental updates of multiple automerge socuments. 
+   * Subscribe to incremental updates of multiple automerge socuments.
    * Which documents are subscribed to is defined in the `UpdateSubscription`.
    * Used to propagate changes from services to client.
    */
@@ -130,7 +152,7 @@ service DataService {
    */
   rpc Update(UpdateRequest) returns (google.protobuf.Empty);
   rpc Flush(FlushRequest) returns (google.protobuf.Empty);
-  
+
   rpc GetDocumentHeads(GetDocumentHeadsRequest) returns (GetDocumentHeadsResponse);
 
   /// Wait until the we have the specified changes on the worker locally. Does not take into account the index or client.

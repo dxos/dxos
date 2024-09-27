@@ -57,6 +57,7 @@ const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(
     </div>
   ),
 );
+
 type StatusBarContainerProps = ThemedClassName<{ children: ReactNode }>;
 
 // TODO(zan): tabable group with tabster

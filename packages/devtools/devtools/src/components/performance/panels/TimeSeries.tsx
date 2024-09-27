@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ClockCountdown } from '@phosphor-icons/react';
 import { Chart, registerables } from 'chart.js';
 import ChartStreaming from 'chartjs-plugin-streaming';
 import React, { createRef, useEffect, useState } from 'react';
@@ -124,7 +123,7 @@ export const TimeSeries = (props: CustomPanelProps<{}>) => {
   }, [chart]);
 
   return (
-    <Panel {...props} icon={ClockCountdown} title='Time Series' padding={false}>
+    <Panel {...props} icon='ph--clock-countdown--regular' title='Time Series' padding={false}>
       <div className='relative w-full h-[160px]'>
         <canvas ref={canvasRef} />
       </div>

@@ -11,8 +11,7 @@ import { Popover } from '@dxos/react-ui';
 import { FeedbackForm } from './FeedbackForm';
 import { StatusBar } from './StatusBar';
 
-// TODO(wittjosiah): Rename.
-export const StatusBarImpl = () => {
+export const StatusBarPanel = () => {
   const [open, setOpen] = useState(false);
 
   // TODO(wittjosiah): Factor out feedback and discord buttons.
