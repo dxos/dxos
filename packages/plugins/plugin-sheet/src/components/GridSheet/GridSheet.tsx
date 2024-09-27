@@ -18,7 +18,7 @@ const GridSheetCellEditor = ({
   model,
   __gridScope,
 }: GridScopedProps<EditorKeysProps & { model: SheetModel }>) => {
-  const { id, editing, setEditing, editBox } = useGridContext('GridSheetCellEditor', __gridScope);
+  const { id, editing, setEditing, editBox, initialEditContent } = useGridContext('GridSheetCellEditor', __gridScope);
   const cell = dxGridCellIndexToSheetCellAddress(editing);
 
   const extension = useMemo(
@@ -29,7 +29,7 @@ const GridSheetCellEditor = ({
   return editing ? (
     <CellEditor
       variant='grid'
-      value={cell ? model.getCellText(cell) : undefined}
+      value={initialEditContent ?? (cell ? model.getCellText(cell) : undefined)}
       autoFocus
       box={editBox}
       onBlur={() => setEditing(null)}

@@ -208,7 +208,7 @@ export class DxGrid extends LitElement {
   // Primary pointer and keyboard handlers
   //
 
-  private dispatchEditRequest() {
+  private dispatchEditRequest(initialContent?: string) {
     this.snapPosToFocusedCell();
     // Without deferring, the event dispatches before `focusedCellBox` can get updated bounds of the cell, hence:
     queueMicrotask(() =>
@@ -216,6 +216,7 @@ export class DxGrid extends LitElement {
         new DxEditRequest({
           cellIndex: toCellIndex(this.focusedCell),
           cellBox: this.focusedCellBox(),
+          initialContent,
         }),
       ),
     );
@@ -286,10 +287,15 @@ export class DxGrid extends LitElement {
           this.focusedCell = { ...this.focusedCell, col: Math.max(0, this.focusedCell.col - 1) };
           break;
       }
-      // Emit interactions
+      // Emit edit request if relevant
       switch (event.key) {
         case 'Enter':
           this.dispatchEditRequest();
+          break;
+        default:
+          if (event.key.length === 1 && event.key.match(/\P{Cc}/u)) {
+            this.dispatchEditRequest(event.key);
+          }
           break;
       }
       // Handle virtualization & focus consequences
