@@ -19,10 +19,10 @@ export const Options = () => {
     <div className='flex flex-col w-full p-4'>
       <div className='flex w-full gap-2 items-center'>
         <DXOS className='w-[32px] h-[32px]' />
-        <h1 className='text-2xl'>Composer</h1>
+        <h1 className='text-2xl font-thin'>Composer</h1>
       </div>
 
-      <div className='flex flex-col w-full gap-2 divide-y divide-separator'>
+      <div className='flex flex-col w-full my-4 gap-2 divide-y divide-separator'>
         <div className='flex w-full gap-2 items-center'>
           <Input.Root>
             <Input.TextInput
