@@ -7,4 +7,3 @@ import { SketchPlugin } from './SketchPlugin';
 export default SketchPlugin;
 
 export * from './SketchPlugin';
-
