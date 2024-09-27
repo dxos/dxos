@@ -75,6 +75,15 @@ export const DeckLayout = ({
   const scrollLeftRef = useRef<number | null>();
   const deckRef = useRef<HTMLDivElement>(null);
 
+  // Ensure the first plank is attended when the deck is first rendered.
+  useEffect(() => {
+    const firstId = layoutMode === 'solo' ? firstIdInPart(layoutParts, 'solo') : firstIdInPart(layoutParts, 'main');
+    if (attention.attended.size === 0 && firstId) {
+      // TODO(wittjosiah): This is resulting in a focus ring around the plank.
+      document.querySelector<HTMLElement>(`article[data-attendable-id="${firstId}"]`)?.focus();
+    }
+  }, []);
+
   /**
    * Clear scroll restoration state if the window is resized
    */
