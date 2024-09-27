@@ -59,9 +59,9 @@ const setupNetworking = async (
 
   const signals = config.get('runtime.services.signaling');
   const edgeFeatures = config.get('runtime.client.edgeFeatures');
-  if (signals) {
+  if (signals || edgeFeatures?.signaling) {
     const {
-      signalManager = edgeFeatures?.signaling ? undefined : new WebsocketSignalManager(signals, signalMetadata),
+      signalManager = signals && new WebsocketSignalManager(signals, signalMetadata),
       // TODO(nf): configure better
       transportFactory = process.env.MOCHA_ENV === 'nodejs'
         ? createLibDataChannelTransportFactory(
