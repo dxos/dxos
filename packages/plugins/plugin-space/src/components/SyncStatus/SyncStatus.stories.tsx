@@ -15,7 +15,7 @@ import translations from '../../translations';
 
 const Story = (props: any) => {
   return (
-    <div className='flex flex-col-reverse p-4'>
+    <div className='flex flex-col-reverse p-4 '>
       <SyncStatusIndicator {...props} />
     </div>
   );
