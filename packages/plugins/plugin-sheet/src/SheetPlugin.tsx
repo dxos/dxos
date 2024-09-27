@@ -13,11 +13,10 @@ import { FunctionType } from '@dxos/plugin-script/types';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject, type Space } from '@dxos/react-client/echo';
 
-import { SheetContainer, type ComputeGraph } from './components';
-// TODO(wittjosiah): Refactor. These are not exported from ./components due to depending on ECHO.
-import { ComputeGraphContextProvider } from './components/ComputeGraph/graph-context';
+import { SheetContainer, ComputeGraphContextProvider } from './components';
+import { type ComputeGraph } from './graph';
 import meta, { SHEET_PLUGIN } from './meta';
-import { compareIndexPositions } from './model/util';
+import { compareIndexPositions } from './model';
 import translations from './translations';
 import { createSheet, SheetAction, SheetType, type SheetPluginProvides } from './types';
 
@@ -176,16 +175,18 @@ const createAndInitializeSheet = async (
   remoteFunctionUrl: string | undefined,
 ) => {
   // NOTE: Async imports not to load hyperformula.
-
-  const { createComputeGraph, CustomPlugin, CustomPluginTranslations } = await import('./components/ComputeGraph');
-
-  // TODO(wittjosiah): Refactor. These are not exported from ./components due to depending on ECHO.
-  const { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } = await import(
-    './components/ComputeGraph/edge-function'
-  );
+  const {
+    createComputeGraph,
+    CustomPlugin,
+    CustomPluginTranslations,
+    EdgeFunctionPlugin,
+    EdgeFunctionPluginTranslations,
+  } = await import('./graph');
   const { SheetModel } = await import('./model');
 
   const sheet = createSheet();
+
+  // TODO(burdon): ???
   const graph =
     graphCache[space.id] ??
     createComputeGraph(
@@ -197,8 +198,12 @@ const createAndInitializeSheet = async (
       space,
       { remoteFunctionUrl },
     );
-  const model = new SheetModel(graph, sheet);
-  await model.initialize();
-  await model.destroy();
+
+  {
+    const model = new SheetModel(graph, sheet);
+    await model.initialize();
+    await model.destroy();
+  }
+
   return sheet;
 };
