@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Database } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type DatabaseInfo } from '../../../hooks';
@@ -34,7 +33,7 @@ export const ReplicatorPanel = ({ database, ...props }: CustomPanelProps<{ datab
   return (
     <Panel
       {...props}
-      icon={Database}
+      icon='ph--database--regular'
       title='Database replicator'
       info={
         <div className='flex gap-1'>
