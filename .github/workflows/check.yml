@@ -7,7 +7,7 @@ env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
 jobs:
-  check:
+  setup:
     strategy:
       matrix:
         node-version: ["18.20.1", "20.12.1", "21.7.2"]
@@ -35,8 +35,19 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
 
-      - name: Run checks
-        run: pnpm exec nx affected -t lint test build
+  lint:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lint
+        run: pnpm exec nx affected -t lint
+
+  test:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test
+        run: pnpm exec nx affected -t test --coverage
 
       - uses: codecov/codecov-action@v4
         with:
@@ -44,3 +55,11 @@ jobs:
           directory: ./coverage
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true # optional (default = false)
+
+  build:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build
+        run: pnpm exec nx affected -t build
+
