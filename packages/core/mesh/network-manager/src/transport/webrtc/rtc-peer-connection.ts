@@ -72,6 +72,12 @@ export class RtcPeerConnection {
 
   public async createDataChannel(topic: string): Promise<RTCDataChannel> {
     const connection = await this._openConnection();
+    if (!this._transportChannels.has(topic)) {
+      if (!this._transportChannels.size) {
+        this._lockAndCloseConnection();
+      }
+      throw new Error('Transport closed while connection was being open');
+    }
     if (this._initiator) {
       const channel = connection.createDataChannel(topic);
       this._dataChannels.set(topic, channel);
@@ -246,7 +252,7 @@ export class RtcPeerConnection {
     }
     this._transportChannels.clear();
     this._safeCloseConnection();
-    log.info('connection aborted', { reason: error.message });
+    log('connection aborted', { reason: error.message });
   }
 
   @synchronized

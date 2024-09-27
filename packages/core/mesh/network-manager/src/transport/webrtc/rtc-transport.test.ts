@@ -26,8 +26,7 @@ describe('RtcTransport', () => {
     await wait;
 
     expect(peer.connection.transportChannelCount).to.eq(0);
-    await sleep(5);
-    expect(channel.isRtcChannelCreationInProgress).toBeFalsy();
+    await expect.poll(() => channel.isRtcChannelCreationInProgress).toBeFalsy();
   });
 
   test('establish connection and send data through with protocol', async () => {
@@ -102,7 +101,7 @@ describe('RtcTransport', () => {
     await initiatorChannel.open();
     await initiatorChannel.close();
 
-    expect(anotherChannel.isRtcChannelCreationInProgress).toBeFalsy();
+    await expect.poll(() => anotherChannel.isRtcChannelCreationInProgress).toBeFalsy();
     initiatorChannel.errors.assertNoUnhandledErrors();
     anotherChannel.errors.assertNoUnhandledErrors();
   });

@@ -168,13 +168,13 @@ export class RtcTransportService implements BridgeService {
 
     try {
       await transport.transport.close();
-    } catch (error) {
-      log.catch(error);
+    } catch (error: any) {
+      log.warn('transport close error', { message: error?.message });
     }
     try {
       transport.connectorStream.end();
-    } catch (error) {
-      log.catch(error);
+    } catch (error: any) {
+      log.warn('connectorStream close error', { message: error?.message });
     }
     log('closed');
   }
