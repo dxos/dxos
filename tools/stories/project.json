@@ -71,7 +71,11 @@
       }
     },
     "mkdist": {
-      "command": "mkdir -p tools/stories/static"
+      "cache": true,
+      "command": "mkdir -p tools/stories/static",
+      "outputs": [
+        "tools/stories/static"
+      ]
     },
     "storybook": {
       "configurations": {
