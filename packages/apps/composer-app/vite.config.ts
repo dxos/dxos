@@ -29,7 +29,7 @@ const isFalse = (str?: string) => str === 'false' || str === '0';
 
 // https://vitejs.dev/config
 export default defineConfig({
-  test: baseConfig()['test'],
+  test: baseConfig({ cwd: __dirname })['test'],
   server: {
     host: true,
     https:
