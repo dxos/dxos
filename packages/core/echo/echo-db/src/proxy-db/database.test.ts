@@ -22,6 +22,9 @@ import { getObjectCore } from '../core-db';
 import { clone } from '../echo-handler';
 import { Filter } from '../query';
 import { Contact, Container, EchoTestBuilder, RecordType, Task, Todo } from '../testing';
+import { registerSignalRuntime } from '@dxos/echo-signals';
+import { updateCounter } from '@dxos/echo-schema/testing';
+import { Trigger } from '@dxos/async';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
@@ -58,7 +61,7 @@ describe('Database', () => {
     inspect(task);
   });
 
-  test('query by id', async () => {
+  test('query all', async () => {
     const { db } = await builder.createDatabase();
 
     const n = 10;
@@ -79,6 +82,62 @@ describe('Database', () => {
     {
       const { objects } = await db.query().run();
       expect(objects.length).to.eq(n - 1);
+    }
+  });
+
+  test('query by ID', async () => {
+    const { db } = await builder.createDatabase();
+
+    const obj1 = db.add({ name: 'Object 1' });
+    const obj2 = db.add({ name: 'Object 2' });
+    await db.flush({ indexes: true });
+
+    {
+      const { objects } = await db.query({ id: obj1.id }).run();
+      expect(objects).toEqual([obj1]);
+    }
+
+    {
+      const { objects } = await db.query({ id: obj2.id }).run();
+      expect(objects).toEqual([obj2]);
+    }
+  });
+
+  test('query by ID async loading with signals', async () => {
+    registerSignalRuntime();
+    const peer = await builder.createPeer();
+    let id: string, rootUrl: string;
+    const spaceKey = PublicKey.random();
+
+    {
+      const db = await peer.createDatabase(spaceKey);
+      rootUrl = db.rootUrl!;
+
+      ({ id } = db.add({ name: 'Object 1' }));
+      await db.flush();
+    }
+
+    await peer.reload();
+
+    {
+      const db = await peer.openDatabase(spaceKey, rootUrl);
+
+      const query = db.query({ id });
+      const loaded = new Trigger();
+      using updates = updateCounter(() => {
+        if (query.objects.length > 0) {
+          loaded.wake();
+        }
+      });
+      query.subscribe();
+
+      expect(query.objects).toHaveLength(0);
+      expect(updates.count).toEqual(0);
+
+      await loaded.wait();
+      expect(updates.count).toEqual(1);
+      expect(query.objects).toHaveLength(1);
+      expect(query.objects[0].name).toEqual('Object 1');
     }
   });
 
