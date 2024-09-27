@@ -11,7 +11,7 @@
       "browser": "./dist/lib/browser/devtools/index.mjs",
       "node": {
         "require": "./dist/lib/node/devtools/index.cjs",
-        "default": "./dist/lib/node-esm/devtools/index.mjs"
+        "default": "./dist/lib/node/devtools/index.cjs"
       },
       "types": "./dist/types/src/devtools/index.d.ts"
     },
@@ -19,7 +19,7 @@
       "browser": "./dist/lib/browser/echo/index.mjs",
       "node": {
         "require": "./dist/lib/node/echo/index.cjs",
-        "default": "./dist/lib/node-esm/echo/index.mjs"
+        "default": "./dist/lib/node/echo/index.cjs"
       },
       "types": "./dist/types/src/echo/index.d.ts"
     },
@@ -27,7 +27,7 @@
       "browser": "./dist/lib/browser/halo/index.mjs",
       "node": {
         "require": "./dist/lib/node/halo/index.cjs",
-        "default": "./dist/lib/node-esm/halo/index.mjs"
+        "default": "./dist/lib/node/halo/index.cjs"
       },
       "types": "./dist/types/src/halo/index.d.ts"
     },
@@ -35,7 +35,7 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
         "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
+        "default": "./dist/lib/node/index.cjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
@@ -43,7 +43,7 @@
       "browser": "./dist/lib/browser/invitations/index.mjs",
       "node": {
         "require": "./dist/lib/node/invitations/index.cjs",
-        "default": "./dist/lib/node-esm/invitations/index.mjs"
+        "default": "./dist/lib/node/invitations/index.cjs"
       },
       "types": "./dist/types/src/invitations/index.d.ts"
     },
@@ -51,7 +51,7 @@
       "browser": "./dist/lib/browser/mesh/index.mjs",
       "node": {
         "require": "./dist/lib/node/mesh/index.cjs",
-        "default": "./dist/lib/node-esm/mesh/index.mjs"
+        "default": "./dist/lib/node/mesh/index.cjs"
       },
       "types": "./dist/types/src/mesh/index.d.ts"
     },
@@ -59,7 +59,7 @@
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": {
         "require": "./dist/lib/node/testing/index.cjs",
-        "default": "./dist/lib/node-esm/testing/index.mjs"
+        "default": "./dist/lib/node/testing/index.cjs"
       },
       "types": "./dist/types/src/testing/index.d.ts"
     },
@@ -67,7 +67,7 @@
       "browser": "./dist/lib/browser/worker.mjs",
       "node": {
         "require": "./dist/lib/node/worker.cjs",
-        "default": "./dist/lib/node-esm/worker.mjs"
+        "default": "./dist/lib/node/worker.cjs"
       },
       "types": "./dist/types/src/worker.d.ts"
     }

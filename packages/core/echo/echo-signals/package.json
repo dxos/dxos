@@ -12,7 +12,7 @@
       "browser": "./dist/lib/browser/core.mjs",
       "node": {
         "require": "./dist/lib/node/core.cjs",
-        "default": "./dist/lib/node-esm/core.mjs"
+        "default": "./dist/lib/node/core.cjs"
       },
       "types": "./dist/types/src/core.d.ts"
     },
@@ -20,7 +20,7 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
         "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
+        "default": "./dist/lib/node/index.cjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
@@ -28,7 +28,7 @@
       "browser": "./dist/lib/browser/react.mjs",
       "node": {
         "require": "./dist/lib/node/react.cjs",
-        "default": "./dist/lib/node-esm/react.mjs"
+        "default": "./dist/lib/node/react.cjs"
       },
       "types": "./dist/types/src/react.d.ts"
     },
@@ -36,7 +36,7 @@
       "browser": "./dist/lib/browser/runtime/index.mjs",
       "node": {
         "require": "./dist/lib/node/runtime/index.cjs",
-        "default": "./dist/lib/node-esm/runtime/index.mjs"
+        "default": "./dist/lib/node/runtime/index.cjs"
       },
       "types": "./dist/types/src/runtime/index.d.ts"
     }

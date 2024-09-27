@@ -5,15 +5,14 @@ runtime:
     mode: local
     storage:
       persistent: true
+    edgeFeatures:
+      signaling: true
   services:
-    signaling:
-      - server: wss://kube.dxos.org/.well-known/dx/signal
+    edge:
+      url: wss://edge-main.dxos.workers.dev/
     ice:
-      - urls: stun:dev.kube.dxos.org:3478
       - urls: turn:dev.kube.dxos.org:3478
         username: dxos
         credential: dxos
-      - urls: stun:kube.dxos.org:3478
-      - urls: turn:kube.dxos.org:3478
-        username: dxos
-        credential: dxos
+    iceProviders:
+      - urls: https://edge-main.dxos.workers.dev/ice
