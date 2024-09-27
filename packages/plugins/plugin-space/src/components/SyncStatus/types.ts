@@ -15,27 +15,21 @@ export type PeerSyncState = Omit<SpaceSyncState.PeerState, 'peerId'>;
 
 export type SpaceSyncStateMap = Record<SpaceId, PeerSyncState>;
 
-export type SyncStateSummary = PeerSyncState & {
-  totalDocumentCount: number;
-};
-
-export const createEmptyEdgeSyncState = (): SyncStateSummary => ({
+export const createEmptyEdgeSyncState = (): PeerSyncState => ({
   missingOnLocal: 0,
   missingOnRemote: 0,
   localDocumentCount: 0,
   remoteDocumentCount: 0,
   differentDocuments: 0,
-  totalDocumentCount: 0,
 });
 
-export const getSyncSummary = (syncMap: SpaceSyncStateMap): SyncStateSummary => {
-  return Object.entries(syncMap).reduce<SyncStateSummary>((summary, [_spaceId, peerState]) => {
-    summary.missingOnRemote += peerState.missingOnRemote;
+export const getSyncSummary = (syncMap: SpaceSyncStateMap): PeerSyncState => {
+  return Object.entries(syncMap).reduce<PeerSyncState>((summary, [_spaceId, peerState]) => {
     summary.missingOnLocal += peerState.missingOnLocal;
-    summary.differentDocuments += peerState.differentDocuments;
+    summary.missingOnRemote += peerState.missingOnRemote;
     summary.localDocumentCount += peerState.localDocumentCount;
     summary.remoteDocumentCount += peerState.remoteDocumentCount;
-    summary.totalDocumentCount += Math.max(peerState.localDocumentCount, peerState.remoteDocumentCount);
+    summary.differentDocuments += peerState.differentDocuments;
     return summary;
   }, createEmptyEdgeSyncState());
 };

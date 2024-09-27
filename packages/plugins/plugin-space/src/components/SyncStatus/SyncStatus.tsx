@@ -10,14 +10,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
-import {
-  type Progress,
-  type SpaceSyncStateMap,
-  type SyncStateSummary,
-  getSyncSummary,
-  useSyncState,
-  type PeerSyncState,
-} from './types';
+import { type Progress, type PeerSyncState, type SpaceSyncStateMap, getSyncSummary, useSyncState } from './types';
 import { SPACE_PLUGIN } from '../../meta';
 
 const SYNC_STALLED_TIMEOUT = 5_000;
@@ -79,13 +72,13 @@ export const SyncStatusDetail = ({
   debug,
 }: ThemedClassName<{
   state: SpaceSyncStateMap;
-  summary: SyncStateSummary;
+  summary: PeerSyncState;
   debug?: boolean;
 }>) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const entries = Object.entries(state).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
 
-  // TODO(burdon): Normalize to max document count.
+  // TODO(burdon): Normalize to max document count?
   return (
     <div className={mx('flex flex-col text-xs min-w-[16rem]', classNames)}>
       <h1 className='p-2'>{t('sync status title')}</h1>
@@ -113,7 +106,10 @@ const useActive = (count: number) => {
       }, SYNC_STALLED_TIMEOUT);
     }
 
-    return () => clearTimeout(t);
+    return () => {
+      setActive(false);
+      clearTimeout(t);
+    };
   }, [count, current]);
   return active;
 };
@@ -127,6 +123,8 @@ const SpaceRow = ({
 }) => {
   const downActive = useActive(localDocumentCount);
   const upActive = useActive(remoteDocumentCount);
+  console.log(spaceId, downActive, localDocumentCount);
+
   return (
     <div
       className={mx('flex items-center mx-[2px] gap-[2px] hover:text-green-500 cursor-pointer')}
@@ -148,7 +146,7 @@ const SpaceRow = ({
       <Icon
         icon='ph--arrow-fat-line-right--regular'
         size={3}
-        classNames={mx(upActive && 'animate-[pulse_1s_infinite]')}
+        classNames={mx(upActive && 'animate-[pulse_1s_step-start_infinite]')}
       />
     </div>
   );
