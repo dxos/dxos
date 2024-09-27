@@ -6,28 +6,25 @@ import React, { useRef, useState } from 'react';
 
 import { Button, Icon, Input } from '@dxos/react-ui';
 
-export const Popup = () => {
+// TODO(burdon): Factor out SettingsDialog.
+export const Options = () => {
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const handleSearch = () => {
     inputRef.current?.focus();
   };
 
-  const handleLaunch = () => {
-    window.open('https://composer.space');
-  };
-
   return (
-    <div className='flex flex-col w-[300px] p-2 gap-2 bg-base'>
-      <div className='flex gap-2 items-center'>
-        <Button onClick={handleLaunch}>
-          <Icon icon='ph--copyright--thin' size={5} />
-        </Button>
+    <div className='flex flex-col w-full p-2 gap-2'>
+      <div>
+        <h1>Composer</h1>
+      </div>
+      <div className='flex w-full gap-2 items-center'>
         <Input.Root>
           <Input.TextInput
             ref={inputRef}
             autoFocus
-            placeholder='Enter!!!'
+            placeholder='Enter'
             value={text}
             onChange={(ev) => setText(ev.target.value)}
             onKeyDown={(ev) => ev.key === 'Enter' && handleSearch()}

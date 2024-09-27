@@ -6,7 +6,6 @@
 import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
-// import { VitePluginFonts } from 'vite-plugin-fonts';
 import { crx as ChromeExtensionPlugin } from '@crxjs/vite-plugin';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
@@ -24,6 +23,7 @@ const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/asse
 // https://vitejs.dev/config
 export default defineConfig({
   build: {
+    // TODO(burdon): What is this for?
     rollupOptions: {
       input: {
         // Everything mentioned in manifest.json will be bundled.
@@ -35,6 +35,7 @@ export default defineConfig({
       },
     },
   },
+  // TODO(burdon): Is this required?
   worker: {
     format: 'es',
     plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
@@ -65,6 +66,8 @@ export default defineConfig({
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),
 
+    // https://crxjs.dev/vite-plugin
+    // TODO(burdon): Dev server with HMR instructions.
     ChromeExtensionPlugin({
       manifest: {
         manifest_version: 3,
@@ -72,7 +75,7 @@ export default defineConfig({
         author: 'DXOS.org',
         name: 'Composer',
         short_name: 'Composer',
-        description: '',
+        description: 'Composer browser extension.',
         icons: {
           '48': 'assets/img/icon-dxos-48.png',
           '128': 'assets/img/icon-dxos-128.png',
@@ -80,23 +83,23 @@ export default defineConfig({
         action: {
           default_icon: 'assets/img/icon-dxos-48.png',
           default_title: 'Composer',
-          default_popup: '/popup.html',
+          default_popup: 'popup.html',
         },
         content_security_policy: {
           extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
         },
         sandbox: {
-          pages: ['/sandbox.html'],
+          pages: ['sandbox.html'],
         },
-        options_page: '/options.html',
+        options_page: 'options.html',
         background: {
-          service_worker: '/src/background.ts',
+          service_worker: 'src/background.ts',
         },
         content_scripts: [
           {
             matches: ['http://*/*', 'https://*/*'],
-            js: ['/src/content.ts'],
             run_at: 'document_start',
+            js: ['src/content.ts'],
           },
         ],
       },
@@ -114,37 +117,6 @@ export default defineConfig({
     //   },
     //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
     //   disable: process.env.DX_ENVIRONMENT !== 'production'
-    // })
-
-    // Add "style-src 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'unsafe-inline' https://fonts.googleapis.com" in content_security_policy in manifest.json when uncommenting this.
-    /**
-     * Bundle fonts.
-     * https://fonts.google.com
-     * https://www.npmjs.com/package/vite-plugin-fonts
-     */
-    // VitePluginFonts({
-    //   google: {
-    //     injectTo: 'head-prepend',
-    //     // prettier-ignore
-    //     families: [
-    //       'Roboto',
-    //       'Roboto Mono',
-    //       'DM Sans',
-    //       'DM Mono',
-    //       'Montserrat'
-    //     ]
-    //   },
-
-    //   custom: {
-    //     preload: false,
-    //     injectTo: 'head-prepend',
-    //     families: [
-    //       {
-    //         name: 'Sharp Sans',
-    //         src: 'node_modules/@dxos/brand/assets/fonts/sharp-sans/*.ttf'
-    //       }
-    //     ]
-    //   }
     // })
 
     // https://www.bundle-buddy.com/rollup
