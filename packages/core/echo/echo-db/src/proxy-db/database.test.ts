@@ -5,6 +5,7 @@
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Trigger } from '@dxos/async';
 import {
   create,
   dangerouslyAssignProxyId,
@@ -14,6 +15,8 @@ import {
   getType,
   type ReactiveObject,
 } from '@dxos/echo-schema';
+import { updateCounter } from '@dxos/echo-schema/testing';
+import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -22,9 +25,6 @@ import { getObjectCore } from '../core-db';
 import { clone } from '../echo-handler';
 import { Filter } from '../query';
 import { Contact, Container, EchoTestBuilder, RecordType, Task, Todo } from '../testing';
-import { registerSignalRuntime } from '@dxos/echo-signals';
-import { updateCounter } from '@dxos/echo-schema/testing';
-import { Trigger } from '@dxos/async';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
