@@ -1,3 +1,5 @@
+name: Check
+
 on:
   push:
 
@@ -15,7 +17,10 @@ on:
         required: false
         default: false
 
-name: Check
+# Needed for nx-set-shas when run on the main branch
+permissions:
+  actions: read
+  contents: read
 
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
@@ -25,6 +30,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# https://nx.dev/ci/intro/tutorials/github-actions
 jobs:
   check:
     strategy:
@@ -61,7 +67,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         if: ${{ steps.continue.outputs.proceed == 'true' }}
 
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-extra-large-js" --stop-agents-after="test"
+      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-extra-large-js" --stop-agents-after="test"
         if: ${{ steps.continue.outputs.proceed == 'true' }}
 
       - uses: actions/setup-node@v3
@@ -96,6 +102,10 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || true }}
+    env:
+      DX_ENVIRONMENT: ci
+      DX_PWA: false
+      NODE_OPTIONS: --max-old-space-size=8192
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -124,10 +134,19 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - uses: nrwl/nx-set-shas@v4
+      
+      - name: Bundle
+        run: pnpm exec nx affected -t bundle --parallel=2
 
       - name: Test
         run: pnpm exec nx affected -t e2e --browser=all --parallel=1
-        env:
-          DX_ENVIRONMENT: ci
-          DX_PWA: false
-          NODE_OPTIONS: --max-old-space-size=8192
+
+  dead-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Link Checker
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: --offline ./docs/content/composer ./docs/content/guide
