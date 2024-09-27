@@ -37,3 +37,10 @@ jobs:
 
       - name: Run checks
         run: pnpm exec nx affected -t lint test build
+
+      - uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true # optional (default = false)
+          directory: ./coverage
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true # optional (default = false)
