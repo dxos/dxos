@@ -319,6 +319,9 @@ importers:
       rollup:
         specifier: ^3.20.4
         version: 3.23.0
+      rollup-plugin-sourcemaps:
+        specifier: ^0.6.3
+        version: 0.6.3(@types/node@22.6.1)(rollup@3.23.0)
       semver:
         specifier: ^7.3.8
         version: 7.5.4
@@ -2262,9 +2265,6 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../mesh/edge-client
-      '@dxos/indexing':
-        specifier: workspace:*
-        version: link:../indexing
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -2308,6 +2308,9 @@ importers:
         specifier: ^4.5.0
         version: 4.5.0
     devDependencies:
+      '@dxos/indexing':
+        specifier: workspace:*
+        version: link:../indexing
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../../common/test-utils
@@ -2371,6 +2374,12 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo-schema
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../mesh/edge-client
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../../common/feed-store
@@ -2443,22 +2452,34 @@ importers:
       level-transcoder:
         specifier: ^1.0.1
         version: 1.0.1
+      lodash.isequal:
+        specifier: ^4.5.0
+        version: 4.5.0
     devDependencies:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../../common/test-utils
+      '@types/lodash.isequal':
+        specifier: ^4.5.0
+        version: 4.5.6
       fast-check:
         specifier: ^3.19.0
         version: 3.19.0
 
   packages/core/echo/echo-protocol:
     dependencies:
+      '@dxos/crypto':
+        specifier: workspace:*
+        version: link:../../../common/crypto
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
 
   packages/core/echo/echo-query:
     dependencies:
@@ -3861,6 +3882,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/echo-pipeline':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-pipeline
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
@@ -3971,7 +3995,7 @@ importers:
         version: 18.2.0
       react-charts:
         specifier: beta
-        version: 3.0.0-beta.55(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        version: 3.0.0-beta.57(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react-dom:
         specifier: ~18.2.0
         version: 18.2.0(react@18.2.0)
@@ -7908,6 +7932,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-grid':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-grid
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8179,6 +8206,9 @@ importers:
       '@dxos/plugin-status-bar':
         specifier: workspace:*
         version: link:../plugin-status-bar
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -10275,9 +10305,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../react-ui-editor
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -10287,6 +10314,12 @@ importers:
       '@lit/react':
         specifier: ^1.0.5
         version: 1.0.5(@types/react@18.2.79)
+      '@radix-ui/react-context':
+        specifier: ^1.0.0
+        version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
+      '@radix-ui/react-use-controllable-state':
+        specifier: ^1.0.0
+        version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
     devDependencies:
       '@dxos/storybook-utils':
         specifier: workspace:*
@@ -20667,11 +20700,6 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -20803,6 +20831,7 @@ packages:
   are-we-there-yet@2.0.0:
     resolution: {integrity: sha512-Ci/qENmwHnsYo9xKIcUJN5LeDKdJ6R1Z1j9V/J5wyq8nh/mYPEpIKJbBZXtZjG04HiK7zV/p6Vs9952MrMeUIw==}
     engines: {node: '>=10'}
+    deprecated: This package is no longer supported.
 
   arg@4.1.3:
     resolution: {integrity: sha512-58S9QDqG0Xx27YwPSt9fJxivjYl432YCwfDMfZ+71RAqUrZef7LrKQZ3LHLOwCS4FLNBplP533Zx895SeOCHvA==}
@@ -20967,6 +20996,11 @@ packages:
   at-least-node@1.0.0:
     resolution: {integrity: sha512-+q/t7Ekv1EDY2l6Gda6LLiX14rU9TV20Wa3ofeQmwPFZbOMo9DXrLbOjFaaclkXKWidIaopwAObQDqwWtGUjqg==}
     engines: {node: '>= 4.0.0'}
+
+  atob@2.1.2:
+    resolution: {integrity: sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==}
+    engines: {node: '>= 4.5.0'}
+    hasBin: true
 
   atomic-batcher@1.0.2:
     resolution: {integrity: sha512-EFGCRj4kLX1dHv1cDzTk+xbjBFj1GnJDpui52YmEcxxHHEWjYyT6l51U7n6WQ28osZH4S9gSybxe56Vm7vB61Q==}
@@ -22741,6 +22775,10 @@ packages:
   decode-named-character-reference@1.0.2:
     resolution: {integrity: sha512-O8x12RzrUF8xyVcY0KJowWsmaJxQbmy0/EtnNtHRpsOcT7dFk5W598coHqBVpmWo1oQQfsCqfCmkZN5DJrZVdg==}
 
+  decode-uri-component@0.2.2:
+    resolution: {integrity: sha512-FqUYQ+8o158GyGTrMFJms9qh3CqTKvAqgqsTnkLI8sKu0028orqBhxNMFkFen0zGyg6epACD32pjVk58ngIErQ==}
+    engines: {node: '>=0.10'}
+
   decompress-response@4.2.1:
     resolution: {integrity: sha512-jOSne2qbyE+/r8G1VU+G/82LBs2Fs4LAsTiLSHOCOMZQl2OKZ6i8i4IyHemTe+/yIXOtTcRQMzPcgyhoFlqPkw==}
     engines: {node: '>=8'}
@@ -24281,6 +24319,7 @@ packages:
   gauge@3.0.2:
     resolution: {integrity: sha512-+5J6MS/5XksCuXq++uFRsnUd7Ovu1XenbeuIuNRJxYWjgQbPuFhT14lAvsWfqfAmnwluf1OwMjz39HjfLPci0Q==}
     engines: {node: '>=10'}
+    deprecated: This package is no longer supported.
 
   gaxios@5.1.3:
     resolution: {integrity: sha512-95hVgBRgEIRQQQHIbnxBXeHbW4TqFk4ZDJW7wmVtvYar72FdhRIo1UGOLS2eRAKCPEdPBWu+M7+A33D9CdX9rA==}
@@ -27624,6 +27663,7 @@ packages:
 
   npmlog@5.0.1:
     resolution: {integrity: sha512-AqZtDUWOMKs1G/8lwylVjrdYgqA4d9nu8hc+0gzRxlDb1I10+FHBGMXs6aiQHFdCUUlqH99MUMuLfzWDNDtfxw==}
+    deprecated: This package is no longer supported.
 
   nth-check@1.0.2:
     resolution: {integrity: sha512-WeBOdju8SnzPN5vTUJYxYUxLeXpCaVP5i5e0LF8fg7WORF2Wd7wFX/pk0tYZk7s8T+J7VLy0Da6J1+wCT0AtHg==}
@@ -28885,8 +28925,8 @@ packages:
   react-base16-styling@0.9.1:
     resolution: {integrity: sha512-1s0CY1zRBOQ5M3T61wetEpvQmsYSNtWEcdYzyZNxKa8t7oDvaOn9d21xrGezGAHFWLM7SHcktPuPTrvoqxSfKw==}
 
-  react-charts@3.0.0-beta.55:
-    resolution: {integrity: sha512-PuPGoK/3B4SgmnANqh1+biuJAN/iYAvLO/juLKJ2dtF0+Wzfa0KarGbgAij2o8P83bAn9bZnu46RCevNvYwOjQ==}
+  react-charts@3.0.0-beta.57:
+    resolution: {integrity: sha512-vqas7IQhsnDGcMxreGaWXvSIL3poEMoUBNltJrslz/+m0pI3QejBCszL1QrLNYQfOWXrbZADfedi/a+yWOQ7Hw==}
     peerDependencies:
       react: ~18.2.0
       react-dom: ~18.2.0
@@ -29535,6 +29575,7 @@ packages:
 
   rimraf@3.0.2:
     resolution: {integrity: sha512-JZkJMZkAGFFPP2YqXZXPbMlMBgsxzE8ILs4lMIX/2o0L9UBw9O/Y3o6wFw/i9YLapcUJWwqbi3kdxIPdC62TIA==}
+    deprecated: Rimraf versions prior to v4 are no longer supported
     hasBin: true
 
   ripemd160@2.0.2:
@@ -29553,6 +29594,16 @@ packages:
 
   rollup-plugin-node-polyfills@0.2.1:
     resolution: {integrity: sha512-4kCrKPTJ6sK4/gLL/U5QzVT8cxJcofO0OU74tnB19F40cmuAKSzH5/siithxlofFEjwvw1YAhPmbvGNA6jEroA==}
+
+  rollup-plugin-sourcemaps@0.6.3:
+    resolution: {integrity: sha512-paFu+nT1xvuO1tPFYXGe+XnQvg4Hjqv/eIhG8i5EspfYYPBKL57X7iVbfv55aNVASg3dzWvES9dmWsL2KhfByw==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      '@types/node': '>=10.0.0'
+      rollup: '>=0.31.2'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
 
   rollup-plugin-terser@7.0.2:
     resolution: {integrity: sha512-w3iIaU4OxcF52UUXiZNsNeuXIMDvFrr+ZXK6bFZ0Q60qyVfq4uLptoS4bbq3paG3x216eQllFZX7zt6TIImguQ==}
@@ -30072,6 +30123,10 @@ packages:
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       webpack: ^5.72.1
+
+  source-map-resolve@0.6.0:
+    resolution: {integrity: sha512-KXBr9d/fO/bWo97NXsPIAW1bFSBOuCnjbNTBMO7N59hsv5i9yzRDfcYwwt0l04+VqnKC+EwzvJZIP/qkuMgR/w==}
+    deprecated: See https://github.com/lydell/source-map-resolve#deprecated
 
   source-map-support@0.5.19:
     resolution: {integrity: sha512-Wonm7zOCIJzBGQdB+thsPar0kYuCIzYvxZwlBa87yi/Mdjv7Tip2cyVbLj5o0cFPN4EVkuTwb3GDDyUx2DGnGw==}
@@ -30652,6 +30707,7 @@ packages:
 
   three-mesh-bvh@0.7.8:
     resolution: {integrity: sha512-BGEZTOIC14U0XIRw3tO4jY7IjP7n7v24nv9JXS1CyeVRWOCkcOMhRnmENUjuV39gktAw4Ofhr0OvIAiTspQrrw==}
+    deprecated: Deprecated due to three.js version incompatibility. Please use v0.8.0, instead.
     peerDependencies:
       three: '>= 0.151.0'
 
@@ -41147,6 +41203,13 @@ snapshots:
       picomatch: 2.3.1
       rollup: 2.79.1
 
+  '@rollup/pluginutils@3.1.0(rollup@3.23.0)':
+    dependencies:
+      '@types/estree': 0.0.39
+      estree-walker: 1.0.1
+      picomatch: 2.3.1
+      rollup: 3.23.0
+
   '@rollup/pluginutils@4.2.1':
     dependencies:
       estree-walker: 2.0.2
@@ -43468,7 +43531,7 @@ snapshots:
 
   '@types/lodash.isequal@4.5.6':
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
 
   '@types/lodash.isequalwith@4.4.7':
     dependencies:
@@ -44936,8 +44999,8 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1(ajv@8.12.0):
-    optionalDependencies:
+  ajv-formats@2.1.1:
+    dependencies:
       ajv: 8.12.0
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -45258,6 +45321,8 @@ snapshots:
   asynckit@0.4.0: {}
 
   at-least-node@1.0.0: {}
+
+  atob@2.1.2: {}
 
   atomic-batcher@1.0.2: {}
 
@@ -46477,7 +46542,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv-formats: 2.1.1
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -47295,6 +47360,8 @@ snapshots:
   decode-named-character-reference@1.0.2:
     dependencies:
       character-entities: 2.0.2
+
+  decode-uri-component@0.2.2: {}
 
   decompress-response@4.2.1:
     dependencies:
@@ -54788,7 +54855,7 @@ snapshots:
       csstype: 3.1.3
       lodash.curry: 4.1.1
 
-  react-charts@3.0.0-beta.55(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
+  react-charts@3.0.0-beta.57(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
       '@babel/runtime': 7.22.15
       '@types/d3-array': 3.0.3
@@ -55698,6 +55765,14 @@ snapshots:
     dependencies:
       rollup-plugin-inject: 3.0.2
 
+  rollup-plugin-sourcemaps@0.6.3(@types/node@22.6.1)(rollup@3.23.0):
+    dependencies:
+      '@rollup/pluginutils': 3.1.0(rollup@3.23.0)
+      rollup: 3.23.0
+      source-map-resolve: 0.6.0
+    optionalDependencies:
+      '@types/node': 22.6.1
+
   rollup-plugin-terser@7.0.2(rollup@2.79.1):
     dependencies:
       '@babel/code-frame': 7.24.7
@@ -55910,7 +55985,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv-formats: 2.1.1
       ajv-keywords: 5.1.0(ajv@8.12.0)
 
   scroll@3.0.1: {}
@@ -56369,6 +56444,11 @@ snapshots:
       iconv-lite: 0.6.3
       source-map-js: 1.2.1
       webpack: 5.88.2(@swc/core@1.5.7(@swc/helpers@0.5.1))(esbuild@0.23.1)
+
+  source-map-resolve@0.6.0:
+    dependencies:
+      atob: 2.1.2
+      decode-uri-component: 0.2.2
 
   source-map-support@0.5.19:
     dependencies:

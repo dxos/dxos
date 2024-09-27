@@ -4,11 +4,11 @@
 
 import type * as A from '@dxos/automerge/automerge';
 import type { AutomergeUrl, DocHandle, DocumentId } from '@dxos/automerge/automerge-repo';
-import { getSpaceKeyFromDoc } from '@dxos/echo-pipeline/light';
 import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
 import { measureDocMetrics, type DocMetrics } from './automerge-metrics';
+import { getSpaceKeyFromDoc } from '../automerge';
 
 export class DatabaseRoot {
   constructor(private readonly _rootHandle: DocHandle<SpaceDoc>) {}
