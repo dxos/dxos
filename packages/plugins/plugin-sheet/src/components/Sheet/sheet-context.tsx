@@ -61,7 +61,7 @@ export const SheetContextProvider = ({
 }: PropsWithChildren<SheetContextProps>) => {
   const { model, formatting } = useSheetModel({ sheet, space, readonly, options });
   // TODO(Zan): We should offer a version of set range and set cursor that scrolls to
-  // that cell or range if it is not visible.
+  //  that cell or range if it is not visible.
   const [cursor, setCursor] = useState<CellAddress>();
   const [range, setRange] = useState<CellRange>();
   const [editing, setEditing] = useState<boolean>(false);
