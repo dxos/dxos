@@ -14,17 +14,22 @@ name: Check
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
+# https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     strategy:
       matrix:
         node-version: ["18.20.1", "20.12.1", "21.7.2"]
+        target: ["lint", "build", "test"]
     runs-on: ubuntu-latest
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-        # TODO: Uncomment before merging.
-        # if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
         with:
           detached: true
 
@@ -50,18 +55,16 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
 
-      - name: Lint
-        run: pnpm exec nx affected -t lint
-        if: ${{ matrix.node-version == '20.12.1' }}
+      - name: Check affected
+        run: pnpm exec nx affected -t ${{ matrix.target }}
+        if: ${{ matrix.node-version == '20.12.1' && matrix.target != 'test' }}
 
-      - name: Build
-        run: pnpm exec nx affected -t build
-        if: ${{ matrix.node-version == '20.12.1' }}
-
-      - name: Test
+      - name: Test affected
         run: pnpm exec nx affected -t test --coverage
+        if: ${{ matrix.target == 'test' }}
 
       - uses: codecov/codecov-action@v4
+        if: ${{ matrix.target == 'test' }}
         with:
           fail_ci_if_error: true # optional (default = false)
           directory: ./coverage
