@@ -210,16 +210,14 @@ export class DxGrid extends LitElement {
 
   private dispatchEditRequest() {
     this.snapPosToFocusedCell();
-    // Without deferring, the event dispatches before `focusedCellBox` can get an updated position of the cell, hence:
-    setTimeout(
-      () =>
-        this.dispatchEvent(
-          new DxEditRequest({
-            cellIndex: toCellIndex(this.focusedCell),
-            cellBox: this.focusedCellBox(),
-          }),
-        ),
-      0,
+    // Without deferring, the event dispatches before `focusedCellBox` can get updated bounds of the cell, hence:
+    queueMicrotask(() =>
+      this.dispatchEvent(
+        new DxEditRequest({
+          cellIndex: toCellIndex(this.focusedCell),
+          cellBox: this.focusedCellBox(),
+        }),
+      ),
     );
   }
 

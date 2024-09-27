@@ -21,7 +21,7 @@ export const dxGridCellIndexToSheetCellAddress = (gridIndex: GridEditing): CellA
   };
 };
 
-const renderDxGridCells = (model: SheetModel, formatting: FormattingModel) => {
+const createDxGridCells = (model: SheetModel, formatting: FormattingModel) => {
   return Object.keys(model.sheet.cells).reduce((acc: NonNullable<GridContentProps['cells']>, sheetCellIndex) => {
     const address = addressFromIndex(model.sheet, sheetCellIndex);
     const cell = formatting.getFormatting(address);
@@ -33,12 +33,12 @@ const renderDxGridCells = (model: SheetModel, formatting: FormattingModel) => {
 };
 
 export const useSheetModelDxGridCells = (model: SheetModel, formatting: FormattingModel): GridContentProps['cells'] => {
-  const [dxGridCells, setDxGridCells] = useState<GridContentProps['cells']>(renderDxGridCells(model, formatting));
+  const [dxGridCells, setDxGridCells] = useState<GridContentProps['cells']>(createDxGridCells(model, formatting));
 
   useEffect(() => {
     const accessor = createDocAccessor(model.sheet, ['cells']);
     const handleUpdate = () => {
-      setDxGridCells(renderDxGridCells(model, formatting));
+      setDxGridCells(createDxGridCells(model, formatting));
     };
     accessor.handle.addListener('change', handleUpdate);
     return () => accessor.handle.removeListener('change', handleUpdate);

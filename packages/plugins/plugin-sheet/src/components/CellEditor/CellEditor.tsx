@@ -99,6 +99,7 @@ export type CellEditorProps = {
   Pick<DOMAttributes<HTMLInputElement>, 'onBlur' | 'onKeyDown'>;
 
 const editorVariants = {
+  // TODO(thure): remove when legacy is no longer used.
   legacy: {
     root: 'flex w-full',
     editor: 'flex w-full [&>.cm-scroller]:scrollbar-none',

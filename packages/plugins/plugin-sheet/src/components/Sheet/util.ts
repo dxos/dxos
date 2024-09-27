@@ -78,12 +78,10 @@ export const useSheetModel = ({ space, sheet, options, readonly }: UseSheetModel
 
   useEffect(() => {
     let model: SheetModel | undefined;
-    let formatting;
     const t = setTimeout(async () => {
       model = new SheetModel(graph, sheet, space, { readonly, mapFormulaBindingToId, mapFormulaBindingFromId });
       await model.initialize();
-      formatting = new FormattingModel(model);
-      setModels([model, formatting]);
+      setModels([model, new FormattingModel(model)]);
     });
 
     return () => {
