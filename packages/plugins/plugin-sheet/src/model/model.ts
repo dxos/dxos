@@ -154,6 +154,7 @@ export class SheetModel {
     const unsubscribe = this._graph.update.on(() => this.update.emit());
     this._ctx.onDispose(unsubscribe);
 
+    // Subscribe to function objects.
     if (this._space) {
       const { Filter } = await import('@dxos/client/echo');
       const { FunctionType } = await import('@dxos/plugin-script/types');
