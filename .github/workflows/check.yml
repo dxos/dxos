@@ -23,7 +23,7 @@ jobs:
 
       - uses: pnpm/action-setup@v4
 
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-extra-large-js" --stop-agents-after="build"
+      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-extra-large-js" --stop-agents-after="test"
 
       - uses: actions/setup-node@v3
         with:
@@ -37,12 +37,14 @@ jobs:
 
       - name: Lint
         run: pnpm exec nx affected -t lint
-
-      - name: Test
-        run: pnpm exec nx affected -t test --coverage
+        if: ${{ matrix.node-version == '20.12.1' }}
 
       - name: Build
         run: pnpm exec nx affected -t build
+        if: ${{ matrix.node-version == '20.12.1' }}
+
+      - name: Test
+        run: pnpm exec nx affected -t test --coverage
 
       - uses: codecov/codecov-action@v4
         with:
