@@ -65,7 +65,6 @@ export class CollectionSynchronizer extends Resource {
   }
 
   setLocalCollectionState(collectionId: string, state: CollectionState) {
-    log.info('setLocalCollectionState', { collectionId, state });
     this._getPerCollectionState(collectionId).localState = state;
 
     queueMicrotask(async () => {
@@ -145,7 +144,6 @@ export class CollectionSynchronizer extends Resource {
    * Callback when a peer sends the state of a collection.
    */
   onRemoteStateReceived(collectionId: string, peerId: PeerId, state: CollectionState) {
-    log.info('onRemoteStateReceived', { collectionId, peerId, state });
     validateCollectionState(state);
     const perCollectionState = this._getPerCollectionState(collectionId);
     perCollectionState.remoteStates.set(peerId, state);
