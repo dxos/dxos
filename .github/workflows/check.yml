@@ -45,6 +45,7 @@ jobs:
         with:
           detached: true
 
+      # The lint & build targets only need to run once, test will run on all node versions.
       - name: Continue?
         id: continue
         run: |
@@ -101,7 +102,7 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || startsWith(github.ref, 'refs/heads/jdw') }}
+    if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || startsWith(github.ref, 'refs/heads/jdw') || inputs.e2e }}
     env:
       DX_ENVIRONMENT: ci
       DX_PWA: false
@@ -114,7 +115,7 @@ jobs:
           detached: true
 
       - name: Install system dependencies
-        run: sudo apt-get install libxtst-dev libpng++-dev
+        run: sudo apt-get install libxtst-dev libpng++-dev && npx playwright@1.46.0 install-deps
 
       - name: Checkout
         uses: actions/checkout@v4
