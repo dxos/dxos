@@ -11,7 +11,7 @@ import { useClient } from '@dxos/react-client';
 
 export type Progress = { count: number; total: number };
 
-type PeerSyncState = Omit<SpaceSyncState.PeerState, 'peerId'>;
+export type PeerSyncState = Omit<SpaceSyncState.PeerState, 'peerId'>;
 
 export type SpaceSyncStateMap = Record<SpaceId, PeerSyncState>;
 
