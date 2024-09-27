@@ -3,6 +3,9 @@ name: Check
 on:
   push:
 
+  schedule:
+    - cron: '0 4 * * 1-5'
+
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -100,6 +103,14 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
+      - name: Send failure report
+        run: ./.github/scripts/send-test-report.sh $GITHUB_JOB failure
+        if: ${{ github.event_name == 'schedule' && failure() }}
+
+      - name: Send success report
+        run: ./.github/scripts/send-test-report.sh $GITHUB_JOB success
+        if: ${{ github.event_name == 'schedule' && success() }}
+
   e2e:
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || startsWith(github.ref, 'refs/heads/jdw') || inputs.e2e }}
@@ -142,6 +153,14 @@ jobs:
 
       - name: Test
         run: pnpm exec nx affected -t e2e --browser=all --parallel=1
+
+      - name: Send failure report
+        run: ./.github/scripts/send-test-report.sh $GITHUB_JOB failure
+        if: ${{ github.event_name == 'schedule' && failure() }}
+
+      - name: Send success report
+        run: ./.github/scripts/send-test-report.sh $GITHUB_JOB success
+        if: ${{ github.event_name == 'schedule' && success() }}
 
   dead-links:
     runs-on: ubuntu-latest
