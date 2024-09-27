@@ -25,9 +25,9 @@ export type CellValue = {
    */
   end?: string;
   /**
-   * CSS inline styles to apply to the gridcell element
+   * `class` attribute value to apply to the gridcell element
    */
-  style?: string;
+  className?: string;
 };
 
 export type AxisMeta = {
@@ -50,14 +50,16 @@ export class DxAxisResize extends Event {
   }
 }
 
-export type DxEditRequestProps = Pick<DxEditRequest, 'cellIndex' | 'cellBox'>;
+export type DxEditRequestProps = Pick<DxEditRequest, 'cellIndex' | 'cellBox' | 'initialContent'>;
 
 export class DxEditRequest extends Event {
   public readonly cellIndex: CellIndex;
   public readonly cellBox: Record<'insetInlineStart' | 'insetBlockStart' | 'inlineSize' | 'blockSize', number>;
+  public readonly initialContent?: string;
   constructor(props: DxEditRequestProps) {
     super('dx-edit-request');
     this.cellIndex = props.cellIndex;
     this.cellBox = props.cellBox;
+    this.initialContent = props.initialContent;
   }
 }
