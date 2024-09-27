@@ -13,7 +13,7 @@ import { defaultTx } from '@dxos/react-ui-theme';
 const Root = () => {
   // TODO(burdon): Fix dark mode.
   const inputRef = useRef<HTMLInputElement>(null);
-  const handleExec = () => {
+  const handleSearch = () => {
     inputRef.current?.focus();
   };
 
@@ -26,8 +26,8 @@ const Root = () => {
               <Input.Root>
                 <Input.TextInput ref={inputRef} autoFocus placeholder='Enter' />
               </Input.Root>
-              <Button onClick={handleExec}>
-                <Icon icon='ph--play--regular' size={5} />
+              <Button onClick={handleSearch}>
+                <Icon icon='ph--magnifying-glass--regular' size={5} />
               </Button>
             </div>
           </div>
