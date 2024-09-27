@@ -34,26 +34,33 @@ jobs:
           detached: true
 
       - name: Install system dependencies
+        if: ${{ matrix.node-version == '20.12.1' || matrix.target == 'test' }}
         run: sudo apt-get install libxtst-dev libpng++-dev
 
       - name: Checkout
         uses: actions/checkout@v4
+        if: ${{ matrix.node-version == '20.12.1' || matrix.target == 'test' }}
         with:
           lfs: true
 
       - uses: pnpm/action-setup@v4
+        if: ${{ matrix.node-version == '20.12.1' || matrix.target == 'test' }}
 
       - run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-extra-large-js" --stop-agents-after="test"
+        if: ${{ matrix.node-version == '20.12.1' || matrix.target == 'test' }}
 
       - uses: actions/setup-node@v3
+        if: ${{ matrix.node-version == '20.12.1' || matrix.target == 'test' }}
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        if: ${{ matrix.node-version == '20.12.1' || matrix.target == 'test' }}
 
       - uses: nrwl/nx-set-shas@v4
+        if: ${{ matrix.node-version == '20.12.1' || matrix.target == 'test' }}
 
       - name: Check affected
         run: pnpm exec nx affected -t ${{ matrix.target }}
