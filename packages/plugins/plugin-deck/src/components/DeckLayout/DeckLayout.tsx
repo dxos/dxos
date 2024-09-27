@@ -79,8 +79,9 @@ export const DeckLayout = ({
   useEffect(() => {
     const firstId = layoutMode === 'solo' ? firstIdInPart(layoutParts, 'solo') : firstIdInPart(layoutParts, 'main');
     if (attention.attended.size === 0 && firstId) {
-      // TODO(wittjosiah): This is resulting in a focus ring around the plank.
-      document.querySelector<HTMLElement>(`article[data-attendable-id="${firstId}"]`)?.focus();
+      // TODO(wittjosiah): Focusing the type button is a workaround.
+      //   If the plank is directly focused on first load the focus ring appears.
+      document.querySelector<HTMLElement>(`article[data-attendable-id="${firstId}"] button`)?.focus();
     }
   }, []);
 
