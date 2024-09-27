@@ -245,6 +245,9 @@
       "@dxos/plugin-sketch/meta": [
         "packages/plugins/plugin-sketch/src/meta.tsx"
       ],
+      "@dxos/plugin-sketch/sdk": [
+        "packages/plugins/plugin-sketch/src/sdk.ts"
+      ],
       "@dxos/plugin-sketch/types": [
         "packages/plugins/plugin-sketch/src/types/index.ts"
       ],

@@ -24,19 +24,19 @@ test.describe('Stack tests', () => {
     await host.createCollection(1);
     const stack = Stack.getStack(host.page);
     await expect(stack.empty()).toBeInViewport();
-    await expect(host.getObjectLinks()).toHaveCount(1);
+    await expect(host.getObjectLinks()).toHaveCount(2);
   });
 
   test('create new document section', async () => {
     await host.createSpace();
     await host.createCollection(1);
-    await host.toggleCollectionCollapsed(0);
+    await host.toggleCollectionCollapsed(1);
     await Stack.createSection(host.page, 'markdownPlugin');
     const stack = Stack.getStack(host.page);
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    await expect(host.getObjectLinks()).toHaveCount(2);
+    await expect(host.getObjectLinks()).toHaveCount(3);
     await expect(stack.sections()).toHaveCount(1);
     await expect(textBox).toBeEditable();
   });
@@ -66,11 +66,11 @@ test.describe('Stack tests', () => {
   test('reorder sections', async () => {
     await host.createSpace();
     await host.createCollection(1);
-    await host.toggleCollectionCollapsed(0);
+    await host.toggleCollectionCollapsed(1);
     await Stack.createSection(host.page, 'markdownPlugin');
     await Stack.createSection(host.page, 'markdownPlugin');
     const stack = Stack.getStack(host.page);
-    await expect(host.getObjectLinks()).toHaveCount(3);
+    await expect(host.getObjectLinks()).toHaveCount(4);
     await expect(stack.sections()).toHaveCount(2);
 
     const originalOrder = await stack.order();
