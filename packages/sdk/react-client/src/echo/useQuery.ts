@@ -5,6 +5,7 @@
 import { useMemo, useSyncExternalStore } from 'react';
 
 import {
+  Filter,
   isSpace,
   type Echo,
   type EchoReactiveObject,
@@ -41,18 +42,14 @@ export const useQuery = <T extends EchoReactiveObject<any>>(
       },
       getObjects: () => (subscribed && query ? query.objects : EMPTY_ARRAY),
     };
-  }, [spaceOrEcho, ...(typeof filter === 'function' ? [] : filterToDepsArray(filter)), ...(deps ?? [])]);
+  }, [spaceOrEcho, ...filterToDepsArray(filter), ...(deps ?? [])]);
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore
   // NOTE: This hook will resubscribe whenever the callback passed to the first argument changes -- make sure it is stable.
   return useSyncExternalStore<T[] | undefined>(subscribe, getObjects) ?? [];
 };
 
-// TODO(dmaretskyi): Serialize the filter here instead.
-const filterToDepsArray = (filter?: FilterSource<any>) =>
-  Object.entries(filter ?? {})
-    .flat(10)
-    .map((x) => (typeof x === 'function' || typeof x === 'object' ? null : x));
+const filterToDepsArray = (filter?: FilterSource<any>) => [JSON.stringify(Filter.from(filter).toProto())];
 
 const noop = () => {};
 

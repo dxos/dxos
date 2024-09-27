@@ -4,8 +4,8 @@
 
 import { type ClassNameValue } from '@dxos/react-ui-types';
 
-import { type SheetModel, type CellAddress, inRange, addressToIndex, rangeFromIndex } from '../../model';
-import { ValueTypeEnum } from '../../types';
+import { type SheetModel, type CellAddress, inRange, addressToIndex, rangeFromIndex } from './';
+import { ValueTypeEnum } from '../types';
 
 export class FormattingModel {
   constructor(private readonly model: SheetModel) {}

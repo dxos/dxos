@@ -14,10 +14,13 @@ import {
   preventNewline,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import { type GridEditBox } from '@dxos/react-ui-grid';
+
+type EditorKeyEvent = Pick<KeyboardEvent<HTMLInputElement>, 'key'> & { shift?: boolean };
 
 export type EditorKeysProps = {
-  onClose: (value: string | undefined) => void;
-  onNav?: (value: string | undefined, ev: Pick<KeyboardEvent<HTMLInputElement>, 'key'>) => void;
+  onClose: (value: string | undefined, event: EditorKeyEvent) => void;
+  onNav?: (value: string | undefined, event: EditorKeyEvent) => void;
 };
 
 export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
@@ -57,14 +60,29 @@ export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
     {
       key: 'Enter',
       run: (editor) => {
-        onClose(editor.state.doc.toString());
+        onClose(editor.state.doc.toString(), { key: 'Enter' });
+        return true;
+      },
+      shift: (editor) => {
+        onClose(editor.state.doc.toString(), { key: 'Enter', shift: true });
+        return true;
+      },
+    },
+    {
+      key: 'Tab',
+      run: (editor) => {
+        onClose(editor.state.doc.toString(), { key: 'Tab' });
+        return true;
+      },
+      shift: (editor) => {
+        onClose(editor.state.doc.toString(), { key: 'Tab', shift: true });
         return true;
       },
     },
     {
       key: 'Escape',
       run: () => {
-        onClose(undefined);
+        onClose(undefined, { key: 'Escape' });
         return true;
       },
     },
@@ -74,10 +92,35 @@ export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
 export type CellEditorProps = {
   value?: string;
   extension?: Extension;
+  variant?: keyof typeof editorVariants;
+  box?: GridEditBox;
+  gridId?: string;
 } & Pick<UseTextEditorProps, 'autoFocus'> &
   Pick<DOMAttributes<HTMLInputElement>, 'onBlur' | 'onKeyDown'>;
 
-export const CellEditor = ({ value, extension, autoFocus, onBlur }: CellEditorProps) => {
+const editorVariants = {
+  // TODO(thure): remove when legacy is no longer used.
+  legacy: {
+    root: 'flex w-full',
+    editor: 'flex w-full [&>.cm-scroller]:scrollbar-none',
+    content: '!px-2 !py-1',
+  },
+  grid: {
+    root: 'absolute z-[1]',
+    editor: '[&>.cm-scroller]:scrollbar-none tabular-nums',
+    content: '!border !border-transparent !p-0.5',
+  },
+};
+
+export const CellEditor = ({
+  value,
+  extension,
+  autoFocus,
+  onBlur,
+  variant = 'legacy',
+  box,
+  gridId,
+}: CellEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
@@ -98,16 +141,23 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur }: CellEditorPr
           themeMode,
           slots: {
             editor: {
-              className: 'flex w-full [&>.cm-scroller]:scrollbar-none',
+              className: editorVariants[variant].editor,
             },
             content: {
-              className: '!px-2 !py-1',
+              className: editorVariants[variant].content,
             },
           },
         }),
       ],
     };
-  }, [extension]);
+  }, [extension, autoFocus, value, variant, onBlur]);
 
-  return <div ref={parentRef} className='flex w-full' />;
+  return (
+    <div
+      ref={parentRef}
+      className={editorVariants[variant].root}
+      style={box}
+      {...(gridId && { 'data-grid': gridId })}
+    />
+  );
 };

@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { HourglassSimpleLow } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type CustomPanelProps, Panel } from '../Panel';
@@ -16,7 +15,7 @@ export const PerformancePanel = ({ entries, ...props }: CustomPanelProps<{ entri
   return (
     <Panel
       {...props}
-      icon={HourglassSimpleLow}
+      icon='ph--hourglass-simple-low--regular'
       title='Performance'
       info={<span>{entries?.length.toLocaleString()}</span>}
     >

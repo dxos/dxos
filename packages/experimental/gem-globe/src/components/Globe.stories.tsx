@@ -87,8 +87,9 @@ const dotStyles: StyleSet = {
 };
 
 const routes: Record<string, string[]> = {
-  JFK: ['SFO', 'LAX', 'SEA', 'CXH', 'YYZ', 'TPA'],
-  CDG: ['BHX', 'BCN', 'VIE', 'WAW', 'CPH', 'ATH', 'IST', 'TXL'],
+  LAX: ['SFO', 'SEA'],
+  JFK: ['LAX', 'YYZ', 'TPA', 'CXH'],
+  CDG: ['BHX', 'BCN', 'VIE', 'WAW', 'CPH', 'ATH', 'IST', 'TXL', 'KBP', 'TLL'],
   DXB: ['IKA'],
   SIN: ['HND', 'SYD', 'HKG', 'BKK'],
 };
