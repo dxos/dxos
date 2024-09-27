@@ -2,16 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Icon } from '@phosphor-icons/react';
-import React, { type PropsWithChildren } from 'react';
+import React, { type JSX, type PropsWithChildren } from 'react';
 
+import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { styles } from '../../styles';
 
 export type PanelProps = {
   id: string;
-  icon: Icon;
+  icon: string;
   title: string;
   info?: JSX.Element;
   padding?: boolean;
@@ -24,7 +24,7 @@ export type CustomPanelProps<T> = Pick<PanelProps, 'id' | 'open' | 'onToggle'> &
 
 export const Panel = ({
   id,
-  icon: Icon,
+  icon,
   title,
   info,
   padding = true,
@@ -40,7 +40,7 @@ export const Panel = ({
         onClick={() => onToggle?.(id, !open)}
       >
         <div className='flex items-center gap-2 py-1'>
-          <Icon size={4} />
+          <Icon icon={icon} size={4} />
           <span>{title}</span>
         </div>
         {info}
