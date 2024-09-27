@@ -4490,6 +4490,9 @@ importers:
       '@dxos/agent':
         specifier: workspace:*
         version: link:../../core/agent
+      '@dxos/plate':
+        specifier: workspace:*
+        version: link:../../common/plate
       '@mediapipe/tasks-text':
         specifier: ^0.10.7
         version: 0.10.8
