@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { LitElement, html } from 'lit';
+import { LitElement, html, nothing } from 'lit';
 import { customElement, state, property, eventOptions } from 'lit/decorators.js';
 import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 
@@ -98,6 +98,9 @@ const getPage = (axis: string, event: PointerEvent) => (axis === 'col' ? event.p
 
 @customElement('dx-grid')
 export class DxGrid extends LitElement {
+  @property({ type: String })
+  gridId: string = 'default-grid-id';
+
   @property({ type: Object })
   rowDefault: AxisMeta = { size: 32 };
 
@@ -121,46 +124,46 @@ export class DxGrid extends LitElement {
   //
 
   @state()
-  posInline = 0;
+  private posInline = 0;
 
   @state()
-  posBlock = 0;
+  private posBlock = 0;
 
   //
   // `size` (when not suffixed with ‘row’ or ‘col’, see above) is the size in pixels of the viewport.
   //
 
   @state()
-  sizeInline = 0;
+  private sizeInline = 0;
 
   @state()
-  sizeBlock = 0;
+  private sizeBlock = 0;
 
   //
   // `overscan` is the amount in pixels to offset the grid content due to the number of overscanned columns or rows.
   //
 
   @state()
-  overscanInline = 0;
+  private overscanInline = 0;
 
   @state()
-  overscanBlock = 0;
+  private overscanBlock = 0;
 
   //
   // `bin`, not short for anything, is the range in pixels within which virtualization does not need to reassess.
   //
 
   @state()
-  binInlineMin = 0;
+  private binInlineMin = 0;
 
   @state()
-  binInlineMax = this.colSize(0);
+  private binInlineMax = this.colSize(0);
 
   @state()
-  binBlockMin = 0;
+  private binBlockMin = 0;
 
   @state()
-  binBlockMax = this.rowSize(0);
+  private binBlockMax = this.rowSize(0);
 
   //
   // `vis`, short for ‘visible’, is the range in numeric index of the columns or rows which should be rendered within
@@ -168,44 +171,58 @@ export class DxGrid extends LitElement {
   //
 
   @state()
-  visColMin = 0;
+  private visColMin = 0;
 
   @state()
-  visColMax = 1;
+  private visColMax = 1;
 
   @state()
-  visRowMin = 0;
+  private visRowMin = 0;
 
   @state()
-  visRowMax = 1;
+  private visRowMax = 1;
 
   //
   // `template` is the rendered value of `grid-{axis}-template`.
   //
   @state()
-  templateColumns = `${this.colSize(0)}px`;
+  private templateColumns = `${this.colSize(0)}px`;
 
   @state()
-  templateRows = `${this.rowSize(0)}px`;
+  private templateRows = `${this.rowSize(0)}px`;
 
   //
   // Resize state
   //
 
   @state()
-  colSizes: Record<string, number> = {};
+  private colSizes: Record<string, number> = {};
 
   @state()
-  rowSizes: Record<string, number> = {};
+  private rowSizes: Record<string, number> = {};
 
   @state()
-  resizing: null | (DxAxisResizeProps & { page: number }) = null;
+  private resizing: null | (DxAxisResizeProps & { page: number }) = null;
 
   //
   // Primary pointer and keyboard handlers
   //
 
-  handlePointerDown = (event: PointerEvent) => {
+  private dispatchEditRequest(initialContent?: string) {
+    this.snapPosToFocusedCell();
+    // Without deferring, the event dispatches before `focusedCellBox` can get updated bounds of the cell, hence:
+    queueMicrotask(() =>
+      this.dispatchEvent(
+        new DxEditRequest({
+          cellIndex: toCellIndex(this.focusedCell),
+          cellBox: this.focusedCellBox(),
+          initialContent,
+        }),
+      ),
+    );
+  }
+
+  private handlePointerDown = (event: PointerEvent) => {
     const { action, actionEl } = closestAction(event.target);
     if (action) {
       if (action.startsWith('resize') && this.mode === 'browse') {
@@ -220,18 +237,13 @@ export class DxGrid extends LitElement {
       } else if (action === 'cell') {
         const cellCoords = closestCell(event.target, actionEl);
         if (this.focusActive && isSameCell(this.focusedCell, cellCoords)) {
-          this.dispatchEvent(
-            new DxEditRequest({
-              cellIndex: toCellIndex(cellCoords!),
-              cellBox: this.focusedCellBox(),
-            }),
-          );
+          this.dispatchEditRequest();
         }
       }
     }
   };
 
-  handlePointerUp = (_event: PointerEvent) => {
+  private handlePointerUp = (_event: PointerEvent) => {
     if (this.resizing) {
       const resizeEvent = new DxAxisResize({
         axis: this.resizing.axis,
@@ -243,7 +255,7 @@ export class DxGrid extends LitElement {
     }
   };
 
-  handlePointerMove = (event: PointerEvent) => {
+  private handlePointerMove = (event: PointerEvent) => {
     if (this.resizing) {
       const delta = getPage(this.resizing.axis, event) - this.resizing.page;
       if (this.resizing.axis === 'col') {
@@ -258,7 +270,7 @@ export class DxGrid extends LitElement {
     }
   };
 
-  handleKeydown(event: KeyboardEvent) {
+  private handleKeydown(event: KeyboardEvent) {
     if (this.focusActive && this.mode === 'browse') {
       // Adjust state
       switch (event.key) {
@@ -275,15 +287,15 @@ export class DxGrid extends LitElement {
           this.focusedCell = { ...this.focusedCell, col: Math.max(0, this.focusedCell.col - 1) };
           break;
       }
-      // Emit interactions
+      // Emit edit request if relevant
       switch (event.key) {
         case 'Enter':
-          this.dispatchEvent(
-            new DxEditRequest({
-              cellIndex: toCellIndex(this.focusedCell),
-              cellBox: this.focusedCellBox(),
-            }),
-          );
+          this.dispatchEditRequest();
+          break;
+        default:
+          if (event.key.length === 1 && event.key.match(/\P{Cc}/u)) {
+            this.dispatchEditRequest(event.key);
+          }
           break;
       }
       // Handle virtualization & focus consequences
@@ -339,7 +351,7 @@ export class DxGrid extends LitElement {
   //
 
   @state()
-  observer = new ResizeObserver((entries) => {
+  private observer = new ResizeObserver((entries) => {
     const { inlineSize, blockSize } = entries?.[0]?.contentBoxSize?.[0] ?? {
       inlineSize: 0,
       blockSize: 0,
@@ -355,9 +367,9 @@ export class DxGrid extends LitElement {
     }
   });
 
-  viewportRef: Ref<HTMLDivElement> = createRef();
+  private viewportRef: Ref<HTMLDivElement> = createRef();
 
-  handleWheel = ({ deltaX, deltaY }: WheelEvent) => {
+  private handleWheel = ({ deltaX, deltaY }: WheelEvent) => {
     if (this.mode === 'browse') {
       this.posInline = Math.max(0, this.posInline + deltaX);
       this.posBlock = Math.max(0, this.posBlock + deltaY);
@@ -456,13 +468,13 @@ export class DxGrid extends LitElement {
   // Focus handlers
 
   @state()
-  focusedCell: Record<DxGridAxis, number> = { col: 0, row: 0 };
+  private focusedCell: Record<DxGridAxis, number> = { col: 0, row: 0 };
 
   @state()
-  focusActive: boolean = false;
+  private focusActive: boolean = false;
 
   @eventOptions({ capture: true })
-  handleFocus(event: FocusEvent) {
+  private handleFocus(event: FocusEvent) {
     const cellCoords = closestCell(event.target);
     if (cellCoords) {
       this.focusedCell = cellCoords;
@@ -471,17 +483,14 @@ export class DxGrid extends LitElement {
   }
 
   @eventOptions({ capture: true })
-  handleBlur(event: FocusEvent) {
+  private handleBlur(event: FocusEvent) {
     // Only unset `focusActive` if focus is not moving to an element within the grid.
-    if (
-      !event.relatedTarget ||
-      (event.relatedTarget as HTMLElement).closest('.dx-grid__viewport') !== this.viewportRef.value
-    ) {
+    if (!event.relatedTarget || !(event.relatedTarget as HTMLElement).closest(`[data-grid="${this.gridId}"]`)) {
       this.focusActive = false;
     }
   }
 
-  focusedCellElement() {
+  private focusedCellElement() {
     return this.viewportRef.value?.querySelector(
       `[aria-colindex="${this.focusedCell.col}"][aria-rowindex="${this.focusedCell.row}"]`,
     ) as HTMLElement | null;
@@ -490,13 +499,13 @@ export class DxGrid extends LitElement {
   /**
    * Moves focus to the cell with actual focus, otherwise moves focus to the viewport.
    */
-  refocus(increment?: 'down' | 'right') {
+  refocus(increment?: 'col' | 'row', delta: 1 | -1 = 1) {
     switch (increment) {
-      case 'down':
-        this.focusedCell = { ...this.focusedCell, row: this.focusedCell.row + 1 };
+      case 'row':
+        this.focusedCell = { ...this.focusedCell, row: this.focusedCell.row + delta };
         break;
-      case 'right':
-        this.focusedCell = { ...this.focusedCell, col: this.focusedCell.col + 1 };
+      case 'col':
+        this.focusedCell = { ...this.focusedCell, col: this.focusedCell.col + delta };
     }
     (this.focusedCell.row < this.visRowMin ||
     this.focusedCell.row > this.visRowMax ||
@@ -505,6 +514,9 @@ export class DxGrid extends LitElement {
       ? this.viewportRef.value
       : this.focusedCellElement()
     )?.focus({ preventScroll: true });
+    if (increment) {
+      this.snapPosToFocusedCell();
+    }
   }
 
   /**
@@ -564,12 +576,14 @@ export class DxGrid extends LitElement {
   override render() {
     const visibleCols = this.visColMax - this.visColMin;
     const visibleRows = this.visRowMax - this.visRowMin;
-    const offsetInline = gap + this.binInlineMin - this.posInline - this.overscanInline;
-    const offsetBlock = gap + this.binBlockMin - this.posBlock - this.overscanBlock;
+    const offsetInline = this.binInlineMin - this.posInline - this.overscanInline;
+    const offsetBlock = this.binBlockMin - this.posBlock - this.overscanBlock;
 
     return html`<div
       role="none"
       class="dx-grid"
+      data-grid=${this.gridId}
+      data-grid-mode=${this.mode}
       @pointerdown=${this.handlePointerDown}
       @pointerup=${this.handlePointerUp}
       @pointermove=${this.handlePointerMove}
@@ -631,10 +645,14 @@ export class DxGrid extends LitElement {
               const c = c0 + this.visColMin;
               const r = r0 + this.visRowMin;
               const cell = this.cell(c, r);
+              const active = this.focusActive && this.focusedCell.col === c && this.focusedCell.row === r;
               return html`<div
                 role="gridcell"
                 tabindex="0"
                 ?inert=${c < 0 || r < 0}
+                class=${cell || active
+                  ? (cell?.className ? cell.className + ' ' : '') + (active ? 'dx-grid__cell--active' : '')
+                  : nothing}
                 aria-rowindex=${r}
                 aria-colindex=${c}
                 data-dx-grid-action="cell"
