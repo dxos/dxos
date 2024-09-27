@@ -84,15 +84,25 @@ dx-grid {
     box-sizing: border-box;
     cursor: pointer;
     border: 1px solid transparent;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     &[inert] {
       visibility: hidden;
     }
-    &:focus, &:focus-visible {
+    &:focus, &:focus-visible, &.dx-grid__cell--active {
       cursor: text;
       position: relative;
       z-index: 2;
       border-color: var(--dx-accentSurface);
       outline: none;
+    }
+  }
+  &[data-grid-mode="edit"] {
+    [role='gridcell'], [role='columnheader'], [role='rowheader']{
+      &.dx-grid__cell--active {
+        color: transparent !important;
+      }
     }
   }
 }

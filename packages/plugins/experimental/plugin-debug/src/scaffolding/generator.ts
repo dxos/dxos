@@ -24,7 +24,7 @@ import { log } from '@dxos/log';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { createTestSheet } from '@dxos/plugin-sheet/testing';
 import { SheetType } from '@dxos/plugin-sheet/types';
-import { TLDrawStoreAdapter } from '@dxos/plugin-sketch';
+import { TLDrawStoreAdapter } from '@dxos/plugin-sketch/sdk';
 import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';
 import { createDocAccessor, type Space } from '@dxos/react-client/echo';
