@@ -6,7 +6,8 @@ import { randomBytes } from '@dxos/crypto';
 import { type FunctionType } from '@dxos/plugin-script';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { type CellRange, type CellAddress, defaultFunctions } from '.';
+import { defaultFunctions } from './functions';
+import { type CellAddress, type CellRange } from './types';
 import { type SheetType } from '../types';
 
 // TODO(wittjosiah): Factor out.
