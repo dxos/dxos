@@ -131,7 +131,6 @@ const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd
 export type ConfigOptions = Omit<BrowserOptions, 'browserName'>;
 
 export const baseConfig = (options: ConfigOptions = {}): ViteConfig => {
-  console.log(options);
   switch (environment) {
     case 'chromium':
       return createBrowserConfig({ browserName: environment, ...options });
