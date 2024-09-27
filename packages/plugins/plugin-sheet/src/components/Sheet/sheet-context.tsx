@@ -7,15 +7,11 @@ import React, { type PropsWithChildren, createContext, useContext, useMemo, useS
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
 
+import { createDecorations } from './decorations';
+import { useSheetModel } from './util';
 import { type CellAddress, type CellRange, type FormattingModel, type SheetModel } from '../../model';
 import { type SheetType } from '../../types';
 import { type FunctionContextOptions } from '../ComputeGraph';
-import { createDecorations } from './decorations';
-import { useSheetModel } from './util';
-// TODO(wittjosiah): Refactor. This is not exported from ./components due to depending on ECHO.
-
-// TODO(wittjosiah): Factor out.
-const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
 
 export type SheetContextType = {
   model: SheetModel;

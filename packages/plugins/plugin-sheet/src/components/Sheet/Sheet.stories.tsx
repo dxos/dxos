@@ -12,12 +12,12 @@ import { Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { addressToIndex, rangeToIndex } from '../../model';
-import { useTestSheet, withGraphDecorator } from '../../testing';
-import { ValueTypeEnum } from '../../types';
 import { Sheet } from './Sheet';
 import { type SizeMap } from './grid';
 import { useSheetContext } from './sheet-context';
+import { addressToIndex, rangeToIndex } from '../../model';
+import { useTestSheet, withGraphDecorator } from '../../testing';
+import { ValueTypeEnum } from '../../types';
 // TODO(wittjosiah): Refactor. This is not exported from ./components due to depending on ECHO.
 import { useComputeGraph } from '../ComputeGraph/useComputeGraph';
 import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
