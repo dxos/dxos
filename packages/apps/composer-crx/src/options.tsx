@@ -17,7 +17,7 @@ const Root = () => {
     <ThemeProvider tx={defaultTx} themeMode='dark'>
       <DensityProvider density='fine'>
         <div className='absolute inset-0 flex justify-center overflow-hidden dark bg-base'>
-          <div className='flex flex-col overflow-y-auto max-w-[600px] w-full'>
+          <div className='flex flex-col overflow-y-auto max-w-[640px] w-full'>
             <Options />
           </div>
         </div>

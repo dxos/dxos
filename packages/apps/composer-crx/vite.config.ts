@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-// import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
@@ -14,6 +13,7 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
+// @ts-ignore
 import packageJson from './package.json';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 
@@ -23,8 +23,8 @@ const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/asse
 // https://vitejs.dev/config
 export default defineConfig({
   build: {
-    // TODO(burdon): What is this for?
     rollupOptions: {
+      // https://crxjs.dev/vite-plugin/concepts/pages
       input: {
         // Everything mentioned in manifest.json will be bundled.
         // We need to specify the 'panel' entry point here because it's not mentioned in manifest.json.
@@ -67,7 +67,7 @@ export default defineConfig({
     ReactPlugin({ jsxRuntime: 'classic' }),
 
     // https://crxjs.dev/vite-plugin
-    // TODO(burdon): Dev server with HMR instructions.
+    // TODO(burdon): HMR works if installing from ./dist (via `p serve`) but styles don't work.
     ChromeExtensionPlugin({
       manifest: {
         manifest_version: 3,
@@ -104,20 +104,6 @@ export default defineConfig({
         ],
       },
     }),
-
-    // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    // https://www.npmjs.com/package/@sentry/vite-plugin
-    // TODO(wittjosiah): Seems to have some conflict with the chrome extension plugin.
-    //   If only one is included it builds but fails with both.
-    // sentryVitePlugin({
-    //   org: 'dxos',
-    //   project: 'composer-crx',
-    //   sourcemaps: {
-    //     assets: './packages/apps/composer-crx/out/composer-crx/**'
-    //   },
-    //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-    //   disable: process.env.DX_ENVIRONMENT !== 'production'
-    // })
 
     // https://www.bundle-buddy.com/rollup
     {

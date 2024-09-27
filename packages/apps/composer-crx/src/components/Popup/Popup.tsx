@@ -27,7 +27,7 @@ export const Popup = () => {
           <Input.TextInput
             ref={inputRef}
             autoFocus
-            placeholder='Enter!!!'
+            placeholder='Enter'
             value={text}
             onChange={(ev) => setText(ev.target.value)}
             onKeyDown={(ev) => ev.key === 'Enter' && handleSearch()}

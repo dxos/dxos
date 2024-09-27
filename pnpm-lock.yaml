@@ -830,6 +830,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/brand':
+        specifier: workspace:*
+        version: link:../../ui/brand
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
