@@ -74,7 +74,7 @@
       "cache": true,
       "command": "mkdir -p tools/stories/static",
       "outputs": [
-        "tools/stories/static"
+        "{workspaceRoot}/tools/stories/static"
       ]
     },
     "storybook": {
