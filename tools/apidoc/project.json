@@ -1,16 +1,16 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "apidoc",
-  "sourceRoot": "tools/apidoc/src",
+  "sourceRoot": "{projectRoot}/src",
   "targets": {
     "build": {
       "options": {
-        "main": "tools/apidoc/src/index.ts",
-        "outputPath": "tools/apidoc/dist",
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "{projectRoot}/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "tools/apidoc/tsconfig.json"
+        "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
     "dev": {

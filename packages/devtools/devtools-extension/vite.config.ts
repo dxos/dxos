@@ -37,7 +37,6 @@ export default defineConfig({
   },
   plugins: [
     ConfigPlugin(),
-
     ThemePlugin({
       root: __dirname,
       content: [resolve(__dirname, './*.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
