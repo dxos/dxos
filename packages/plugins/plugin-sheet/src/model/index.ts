@@ -3,7 +3,6 @@
 //
 
 export * from './formatting-model';
-export * from './function-defs';
 export * from './functions';
 export * from './model';
 export * from './types';
