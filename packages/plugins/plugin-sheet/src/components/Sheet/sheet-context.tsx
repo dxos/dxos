@@ -8,8 +8,9 @@ import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
 
 import { createDecorations } from './decorations';
+import { type CellAddress, type CellRange } from '../../defs';
 import { useSheetModel, useFormattingModel } from '../../hooks';
-import { type CellAddress, type CellRange, type FormattingModel, type SheetModel } from '../../model';
+import { type FormattingModel, type SheetModel } from '../../model';
 import { type SheetType } from '../../types';
 
 export type SheetContextType = {

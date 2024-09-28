@@ -13,8 +13,8 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type Decoration } from './decorations';
 import { useSheetContext } from './sheet-context';
+import { addressFromIndex, addressToIndex, type CellAddress, closest } from '../../defs';
 import { SHEET_PLUGIN } from '../../meta';
-import { addressFromIndex, addressToIndex, type CellAddress, closest } from '../../model';
 
 const CommentIndicator = () => {
   return (

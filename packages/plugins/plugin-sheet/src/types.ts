@@ -15,8 +15,8 @@ import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { type StackProvides } from '@dxos/plugin-stack';
 
+import { initialize } from './defs';
 import { SHEET_PLUGIN } from './meta';
-import { initialize } from './model';
 
 const SHEET_ACTION = `${SHEET_PLUGIN}/action`;
 

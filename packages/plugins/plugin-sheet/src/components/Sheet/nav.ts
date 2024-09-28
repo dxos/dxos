@@ -5,7 +5,7 @@
 import { type KeyboardEvent, type MouseEventHandler, useState } from 'react';
 
 import { getCellAtPointer } from './grid';
-import { type CellAddress, type CellRange, posEquals } from '../../model';
+import { type CellAddress, type CellRange, posEquals } from '../../defs';
 
 export type GridSize = {
   numRows: number;

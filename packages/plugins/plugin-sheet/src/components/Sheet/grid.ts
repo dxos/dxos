@@ -4,7 +4,7 @@
 
 import { type MouseEvent, useEffect, useState } from 'react';
 
-import { type CellAddress, type CellIndex, addressFromA1Notation, addressToA1Notation } from '../../model';
+import { type CellAddress, type CellIndex, addressFromA1Notation, addressToA1Notation } from '../../defs';
 
 // export type Bounds = Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
 // export type Dimension = Pick<DOMRect, 'width' | 'height'>;

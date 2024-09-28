@@ -5,7 +5,7 @@
 import { type FunctionType } from '@dxos/plugin-script';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { defaultFunctions } from './function-defs';
+import { defaultFunctions } from '../defs';
 
 // TODO(wittjosiah): Factor out.
 const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).

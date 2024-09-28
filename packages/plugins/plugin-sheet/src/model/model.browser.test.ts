@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Client } from '@dxos/client';
 
 import { SheetModel } from './model';
-import { addressFromA1Notation, rangeFromA1Notation } from './types';
+import { addressFromA1Notation, rangeFromA1Notation } from '../defs';
 import { ComputeGraphRegistry } from '../graph';
 import { createSheet, ValueTypeEnum } from '../types';
 

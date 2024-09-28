@@ -11,7 +11,12 @@ export const MAX_ROWS = 500;
 export const MAX_COLUMNS = 26 * 2;
 
 export type CellAddress = { column: number; row: number };
+
 export type CellRange = { from: CellAddress; to?: CellAddress };
+
+export type CellIndex = string;
+
+export type CellContentValue = number | string | boolean | null;
 
 export const posEquals = (a: CellAddress | undefined, b: CellAddress | undefined) => {
   return a?.column === b?.column && a?.row === b?.row;

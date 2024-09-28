@@ -8,7 +8,8 @@ import { createDocAccessor } from '@dxos/react-client/echo';
 import { type GridEditing, type GridContentProps } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
-import { addressFromIndex, type CellAddress, type SheetModel, type FormattingModel } from '../../model';
+import { addressFromIndex, type CellAddress } from '../../defs';
+import { type SheetModel, type FormattingModel } from '../../model';
 
 export const dxGridCellIndexToSheetCellAddress = (gridIndex: GridEditing): CellAddress | null => {
   if (!gridIndex) {

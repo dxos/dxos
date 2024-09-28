@@ -71,7 +71,7 @@ import {
   rangeToA1Notation,
   addressToIndex,
   addressFromIndex,
-} from '../../model';
+} from '../../defs';
 import {
   CellEditor,
   type CellRangeNotifier,

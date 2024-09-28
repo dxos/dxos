@@ -14,9 +14,9 @@ import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
 import { SheetContainer, ComputeGraphContextProvider } from './components';
+import { compareIndexPositions } from './defs';
 import { type ComputeGraphRegistry, createGraphRegistry } from './graph';
 import meta, { SHEET_PLUGIN } from './meta';
-import { compareIndexPositions } from './model';
 import translations from './translations';
 import { SheetAction, SheetType, type SheetPluginProvides, createSheet } from './types';
 

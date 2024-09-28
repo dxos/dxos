@@ -14,7 +14,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { CellEditor, type CellEditorProps } from './CellEditor';
 import { sheetExtension } from './extension';
-import { defaultFunctions } from '../../model';
+import { defaultFunctions } from '../../defs';
 import { createSheet, SheetType } from '../../types';
 
 export default {

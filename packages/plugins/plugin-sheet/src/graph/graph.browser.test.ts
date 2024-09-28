@@ -9,7 +9,8 @@ import { Client } from '@dxos/client';
 
 import { CustomPlugin, CustomPluginTranslations } from './custom-function';
 import { ComputeGraphRegistry } from './graph';
-import { addressFromA1Notation, SheetModel } from '../model';
+import { addressFromA1Notation } from '../defs';
+import { SheetModel } from '../model';
 import { type CellScalarValue, createSheet } from '../types';
 
 /**

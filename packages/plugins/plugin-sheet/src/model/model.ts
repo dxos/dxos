@@ -15,7 +15,6 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FunctionType } from '@dxos/plugin-script/types';
 
-import { defaultFunctions, type FunctionDefinition } from './function-defs';
 import {
   addressFromA1Notation,
   addressToA1Notation,
@@ -23,14 +22,12 @@ import {
   type CellRange,
   MAX_COLUMNS,
   MAX_ROWS,
-} from './types';
-import { addressFromIndex, addressToIndex, initialize, insertIndices, ReadonlyException } from './util';
+  defaultFunctions,
+  type FunctionDefinition,
+} from '../defs';
+import { addressFromIndex, addressToIndex, initialize, insertIndices, ReadonlyException } from '../defs';
 import { type ComputeGraph } from '../graph';
 import { type CellScalarValue, type CellValue, type SheetType, ValueTypeEnum } from '../types';
-
-export type CellIndex = string;
-
-export type CellContentValue = number | string | boolean | null;
 
 export type SheetModelOptions = {
   readonly?: boolean;

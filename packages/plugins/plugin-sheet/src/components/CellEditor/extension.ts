@@ -20,7 +20,7 @@ import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { type FunctionDefinition } from '../../model';
+import { type FunctionDefinition } from '../../defs';
 
 /**
  * https://codemirror.net/examples/styling

@@ -26,8 +26,8 @@ import {
 import { nonNullable } from '@dxos/util';
 
 import { ToolbarButton, ToolbarSeparator, ToolbarToggleButton } from './common';
+import { addressToIndex } from '../../defs';
 import { SHEET_PLUGIN } from '../../meta';
-import { addressToIndex } from '../../model';
 import { type Formatting } from '../../types';
 import { useSheetContext } from '../Sheet/sheet-context';
 
