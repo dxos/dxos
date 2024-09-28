@@ -10,8 +10,8 @@
     "build": {
       "options": {
         "main": "{projectRoot}/src/index.ts",
-        "outputPath": "packages/common/process/dist",
-        "tsConfig": "packages/common/process/tsconfig.json"
+        "outputPath": "{projectRoot}/dist",
+        "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
     "lint": {
