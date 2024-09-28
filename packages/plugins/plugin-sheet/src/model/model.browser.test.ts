@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { SheetModel } from './model';
 import { addressFromA1Notation, rangeFromA1Notation } from './types';
-import { createComputeGraph } from '../components/ComputeGraph';
+import { createComputeGraph } from '../graph';
 import { createSheet, ValueTypeEnum } from '../types';
 
 // TODO(burdon): Test undo (e.g., clear cells).

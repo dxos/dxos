@@ -6,27 +6,26 @@ import { GridNine, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, isActionGroup, type ActionGroup } from '@dxos/plugin-graph';
 import { FunctionType } from '@dxos/plugin-script/types';
 import { SpaceAction } from '@dxos/plugin-space';
-import { getSpace, isEchoObject, type Space } from '@dxos/react-client/echo';
+import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
 import { SheetContainer, ComputeGraphContextProvider } from './components';
-import { type ComputeGraph } from './graph';
+import { type ComputeGraphRegistry } from './graph';
+import { createGraphRegistry } from './graph/factory';
 import meta, { SHEET_PLUGIN } from './meta';
-import { compareIndexPositions } from './model';
+import { compareIndexPositions, SheetModel } from './model';
 import translations from './translations';
-import { createSheet, SheetAction, SheetType, type SheetPluginProvides } from './types';
+import { SheetAction, SheetType, type SheetPluginProvides, createSheet } from './types';
 
 export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
   let remoteFunctionUrl: string | undefined;
 
-  const graphs = create<Record<string, ComputeGraph>>({});
-  const setGraph = (key: string, graph: ComputeGraph) => {
-    graphs[key] = graph;
-  };
+  // TODO(burdon): Move into separate plugin.
+  let graphRegistry: ComputeGraphRegistry | undefined;
 
   return {
     meta,
@@ -36,6 +35,8 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         return;
       }
 
+      graphRegistry = await createGraphRegistry();
+
       if (client.config.values.runtime?.services?.edge?.url) {
         const url = new URL('/functions', client.config.values.runtime?.services?.edge?.url);
         url.protocol = 'https';
@@ -44,11 +45,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
     },
     provides: {
       context: ({ children }) => {
-        return (
-          <ComputeGraphContextProvider graphs={graphs} setGraph={setGraph}>
-            {children}
-          </ComputeGraphContextProvider>
-        );
+        return <ComputeGraphContextProvider registry={graphRegistry}>{children}</ComputeGraphContextProvider>;
       },
       metadata: {
         records: {
@@ -63,7 +60,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       translations,
       echo: {
         // TODO(wittjosiah): Factor out to common package/plugin.
-        //   FunctionType is currently registered here in case script plugin isn't enabled.
+        //  FunctionType is currently registered here in case script plugin isn't enabled.
         schema: [SheetType, FunctionType],
       },
       space: {
@@ -157,9 +154,19 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         resolver: async (intent) => {
           switch (intent.action) {
             case SheetAction.CREATE: {
+              invariant(graphRegistry);
               const space = intent.data?.space;
-              const sheet = await createAndInitializeSheet(space, graphs, remoteFunctionUrl);
+              invariant(space);
+              let graph = graphRegistry.getGraph(space.id);
+              if (!graph) {
+                graph = await graphRegistry.createGraph(space);
+              }
 
+              // TODO(burdon): Factor out dependency.
+              const sheet = createSheet();
+              const model = new SheetModel(graph, sheet);
+              await model.initialize();
+              await model.destroy();
               return { data: sheet };
             }
           }
@@ -167,43 +174,4 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       },
     },
   };
-};
-
-const createAndInitializeSheet = async (
-  space: Space,
-  graphCache: Record<string, ComputeGraph>,
-  remoteFunctionUrl: string | undefined,
-) => {
-  // NOTE: Async imports not to load hyperformula.
-  const {
-    createComputeGraph,
-    CustomPlugin,
-    CustomPluginTranslations,
-    EdgeFunctionPlugin,
-    EdgeFunctionPluginTranslations,
-  } = await import('./graph');
-  const { SheetModel } = await import('./model');
-
-  const sheet = createSheet();
-
-  // TODO(burdon): ???
-  const graph =
-    graphCache[space.id] ??
-    createComputeGraph(
-      [
-        { plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations },
-        // TODO(wittjosiah): Remove. Needed for current test sheet generated data.
-        { plugin: CustomPlugin, translations: CustomPluginTranslations },
-      ],
-      space,
-      { remoteFunctionUrl },
-    );
-
-  {
-    const model = new SheetModel(graph, sheet);
-    await model.initialize();
-    await model.destroy();
-  }
-
-  return sheet;
 };

@@ -18,7 +18,7 @@ import { type FunctionType } from '@dxos/plugin-script/types';
 import { defaultFunctions, type FunctionDefinition } from './functions';
 import { addressFromA1Notation, addressToA1Notation, type CellAddress, type CellRange } from './types';
 import { addressFromIndex, addressToIndex, createIndices, RangeException, ReadonlyException } from './util';
-import { type ComputeGraph } from '../components';
+import { type ComputeGraph } from '../graph';
 import { type CellScalarValue, type CellValue, type SheetType, ValueTypeEnum } from '../types';
 
 const DEFAULT_ROWS = 100;

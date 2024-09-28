@@ -2,44 +2,32 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
+import { raise } from '@dxos/debug';
 import { type Space } from '@dxos/react-client/echo';
 
 import { ComputeGraphContext } from '../components';
-import {
-  type ComputeGraph,
-  CustomPlugin,
-  CustomPluginTranslations,
-  EdgeFunctionPlugin,
-  EdgeFunctionPluginTranslations,
-  type FunctionContextOptions,
-  createComputeGraph,
-} from '../graph';
+import { type ComputeGraph } from '../graph';
 
-//
-// NOTE: Separate file so that using `ComputeGraphContextProvider` does not require loading hyperformula.
-//
-
-export const useComputeGraph = (space: Space, options?: Partial<FunctionContextOptions>): ComputeGraph => {
-  const { graphs, setGraph } = useContext(ComputeGraphContext);
-  const graph =
-    graphs[space.id] ??
-    createComputeGraph(
-      [
-        { plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations },
-        // TODO(wittjosiah): Remove. Needed for current test sheet generated data.
-        { plugin: CustomPlugin, translations: CustomPluginTranslations },
-      ],
-      space,
-      options,
-    );
-
+/**
+ * Get existing or create new compute graph for the given space.
+ */
+export const useComputeGraph = (space?: Space): ComputeGraph | undefined => {
+  const { registry } = useContext(ComputeGraphContext) ?? raise(new Error('Missing ComputeGraphContext'));
+  const [graph, setGraph] = useState<ComputeGraph | undefined>(space && registry.getGraph(space.id));
   useEffect(() => {
-    if (!graphs[space.id]) {
-      setGraph(space.id, graph);
+    if (graph || !space) {
+      return;
     }
-  }, [space]);
+
+    const t = setTimeout(async () => {
+      const graph = await registry.createGraph(space);
+      setGraph(graph);
+    });
+
+    return () => clearTimeout(t);
+  }, [space, graph]);
 
   return graph;
 };

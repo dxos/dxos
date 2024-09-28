@@ -5,24 +5,17 @@
 import React, { type PropsWithChildren } from 'react';
 import { createContext } from 'react';
 
-import { type SpaceId } from '@dxos/keys';
-
-import { type ComputeGraph } from '../../graph';
+import { type ComputeGraphRegistry } from '../../graph';
 
 export type ComputeGraphContextType = {
-  graphs: Record<SpaceId, ComputeGraph>;
-  setGraph: (key: string, graph: ComputeGraph) => void;
+  registry: ComputeGraphRegistry;
 };
 
 /**
  * The compute graph context manages a ComputeGraph for each space.
  */
-export const ComputeGraphContext = createContext<ComputeGraphContextType>({ graphs: {}, setGraph: () => {} });
+export const ComputeGraphContext = createContext<ComputeGraphContextType | undefined>(undefined);
 
-export const ComputeGraphContextProvider = ({
-  children,
-  graphs,
-  setGraph,
-}: PropsWithChildren<ComputeGraphContextType>) => {
-  return <ComputeGraphContext.Provider value={{ graphs, setGraph }}>{children}</ComputeGraphContext.Provider>;
+export const ComputeGraphContextProvider = ({ registry, children }: PropsWithChildren<ComputeGraphContextType>) => {
+  return <ComputeGraphContext.Provider value={{ registry }}>{children}</ComputeGraphContext.Provider>;
 };

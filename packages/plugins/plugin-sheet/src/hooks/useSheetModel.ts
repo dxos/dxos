@@ -20,6 +20,7 @@ export type UseSheetModelProps = {
 
 export const useSheetModel = ({ space, sheet, options, readonly }: UseSheetModelProps): SheetModel | undefined => {
   const graph = useComputeGraph(space, options);
+
   const [model, setModel] = useState<SheetModel>();
   useEffect(() => {
     if (!graph) {

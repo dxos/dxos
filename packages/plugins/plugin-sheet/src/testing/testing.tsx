@@ -5,12 +5,13 @@
 import type { Decorator } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
-import { Client } from '@dxos/client';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type Space } from '@dxos/react-client/echo';
 
-import { type ComputeGraph, ComputeGraphContextProvider, createComputeGraph, useComputeGraph } from '../components';
+import { ComputeGraphContextProvider } from '../components';
+import { type ComputeGraph, ComputeGraphRegistry } from '../graph';
 import { SheetModel } from '../model';
-import { createSheet, type CellValue, SheetType } from '../types';
+import { createSheet, type CellValue, type SheetType } from '../types';
 
 export const testSheetName = 'test';
 
@@ -43,48 +44,41 @@ export const createCells = (): Record<string, CellValue> => ({
   F6: { value: '$10000' },
 });
 
-export const createTestSheet = async ({
-  name,
-  graph = createComputeGraph(),
-}: { name?: string; graph?: ComputeGraph } = {}) => {
+export const createTestSheet = async ({ graph, name }: { graph: ComputeGraph; name?: string }) => {
   const sheet = createSheet(name);
-  const model = new SheetModel(graph, sheet);
-  await model.initialize();
-  model.setValues(createCells());
-  model.sheet.columnMeta[model.sheet.columns[0]] = { size: 100 };
-  await model.destroy();
+
+  {
+    const model = new SheetModel(graph, sheet);
+    await model.initialize();
+    model.setValues(createCells());
+    model.sheet.columnMeta[model.sheet.columns[0]] = { size: 100 };
+    await model.destroy();
+  }
+
   return sheet;
 };
 
-export const useTestSheet = () => {
-  const graph = useComputeGraph();
+export const useTestSheet = (space?: Space, graph?: ComputeGraph) => {
   const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
   useEffect(() => {
+    if (!space || !graph) {
+      return () => {};
+    }
+
     const t = setTimeout(async () => {
-      const client = new Client();
-      await client.initialize();
-      await client.halo.createIdentity();
-      const space = await client.spaces.create();
-      client.addTypes([SheetType]);
-
-      const graph = graphs[space.id] ?? createComputeGraph();
-      if (!graphs[space.id]) {
-        setGraph(space.id, graph);
-      }
-
       const sheet = await createTestSheet({ graph });
       space.db.add(sheet);
       setSheet(sheet);
     });
 
     return () => clearTimeout(t);
-  }, []);
+  }, [space]);
 
   return sheet;
 };
 
 export const withGraphDecorator: Decorator = (Story) => {
-  const [graphs, setGraphs] = useState<Record<string, ComputeGraph>>({});
+  const [registry] = useState(new ComputeGraphRegistry());
   const setGraph = (key: string, graph: ComputeGraph) => {
     if (!graph.hf.doesSheetExist(testSheetName)) {
       const sheetName = graph.hf.addSheet(testSheetName);
@@ -96,7 +90,7 @@ export const withGraphDecorator: Decorator = (Story) => {
   };
 
   return (
-    <ComputeGraphContextProvider graphs={graphs} setGraph={setGraph}>
+    <ComputeGraphContextProvider registry={registry} setGraph={setGraph}>
       <Story />
     </ComputeGraphContextProvider>
   );
