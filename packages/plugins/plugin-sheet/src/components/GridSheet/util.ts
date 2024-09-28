@@ -59,12 +59,12 @@ export const useSheetModelDxGridProps = (
   const [dxGridRows, setDxGridRows] = useState<GridContentProps['rows']>(createDxGridColumnns(model));
 
   useEffect(() => {
-    const cellAccessor = createDocAccessor(model.sheet, ['cells']);
-    const handleUpdate = () => {
+    const cellsAccessor = createDocAccessor(model.sheet, ['cells']);
+    const handleCellsUpdate = () => {
       setDxGridCells(createDxGridCells(model, formatting));
     };
-    cellAccessor.handle.addListener('change', handleUpdate);
-    return () => cellAccessor.handle.removeListener('change', handleUpdate);
+    cellsAccessor.handle.addListener('change', handleCellsUpdate);
+    return () => cellsAccessor.handle.removeListener('change', handleCellsUpdate);
   }, [model, formatting]);
 
   useEffect(() => {
