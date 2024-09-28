@@ -13,6 +13,16 @@ import { type SpaceId } from '@dxos/keys/src';
 import { log } from '@dxos/log';
 
 import { FunctionContext, type FunctionContextOptions } from './async-function';
+import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './edge-function';
+
+/**
+ * NOTE: Async imports to decouple hyperformula deps.
+ */
+export const createComputeGraphRegistry = async (options: Partial<FunctionContextOptions>) => {
+  const registry = new ComputeGraphRegistry(options);
+  await registry.initialize([{ plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations }]);
+  return registry;
+};
 
 export type ComputeGraphPlugin = {
   plugin: FunctionPluginDefinition;

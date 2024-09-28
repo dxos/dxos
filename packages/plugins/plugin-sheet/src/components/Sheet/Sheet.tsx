@@ -1086,7 +1086,7 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
   const extension = useMemo(
     () => [
       editorKeys({ onNav, onClose }),
-      sheetExtension({ functions: model.functions.functions }),
+      sheetExtension({ functions: model.functions.getFunctions() }),
       rangeExtension((fn) => (notifier.current = fn)),
     ],
     [model],

@@ -4,12 +4,14 @@
 
 import React, { useCallback, useMemo, useRef } from 'react';
 
+import { type Space } from '@dxos/react-client/echo';
 import { Grid, useGridContext, type GridScopedProps } from '@dxos/react-ui-grid';
-import { type DxGridElement } from '@dxos/react-ui-grid/src';
+import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid/src';
 
-import { dxGridCellIndexToSheetCellAddress, useSheetModelDxGridCells } from './util';
+import { dxGridCellIndexToSheetCellAddress, useSheetModelDxGridProps } from './util';
 import { useFormattingModel, useSheetModel, type UseSheetModelOptions } from '../../hooks';
 import { type SheetModel, type FormattingModel } from '../../model';
+import { type SheetType } from '../../types';
 import { CellEditor, editorKeys, type EditorKeysProps, sheetExtension } from '../CellEditor';
 
 const GridSheetCellEditor = ({
@@ -22,7 +24,7 @@ const GridSheetCellEditor = ({
   const cell = dxGridCellIndexToSheetCellAddress(editing);
 
   const extension = useMemo(
-    () => [editorKeys({ onNav, onClose }), sheetExtension({ functions: model.functions.functions })],
+    () => [editorKeys({ onNav, onClose }), sheetExtension({ functions: model.functions.getFunctions() })],
     [model, onNav, onClose],
   );
 
@@ -39,7 +41,8 @@ const GridSheetCellEditor = ({
   ) : null;
 };
 
-export type GridSheetProps = UseSheetModelOptions;
+const sheetRowDefault = { size: 32, resizeable: true };
+const sheetColDefault = { size: 180, resizeable: true };
 
 const GridSheetImpl = ({
   model,
@@ -61,18 +64,43 @@ const GridSheetImpl = ({
     [model, editing, setEditing],
   );
 
-  const cells = useSheetModelDxGridCells(model, formatting);
+  const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
+    ({ axis, size, index: numericIndex }) => {
+      if (axis === 'row') {
+        const rowId = model.sheet.rows[parseInt(numericIndex)];
+        model.sheet.rowMeta[rowId] ??= {};
+        model.sheet.rowMeta[rowId].size = size;
+      } else {
+        const columnId = model.sheet.columns[parseInt(numericIndex)];
+        model.sheet.columnMeta[columnId] ??= {};
+        model.sheet.columnMeta[columnId].size = size;
+      }
+    },
+    [model],
+  );
+
+  const { cells, columns, rows } = useSheetModelDxGridProps(model, formatting);
 
   return (
     <>
       <GridSheetCellEditor model={model} onClose={handleClose} />
-      <Grid.Content cells={cells} ref={dxGrid} />
+      <Grid.Content
+        cells={cells}
+        columns={columns}
+        rows={rows}
+        onAxisResize={handleAxisResize}
+        rowDefault={sheetRowDefault}
+        columnDefault={sheetColDefault}
+        ref={dxGrid}
+      />
     </>
   );
 };
 
-export const GridSheet = (props: GridSheetProps) => {
-  const model = useSheetModel(props);
+export type GridSheetProps = { space?: Space; sheet?: SheetType } & UseSheetModelOptions;
+
+export const GridSheet = ({ space, sheet, ...options }: GridSheetProps) => {
+  const model = useSheetModel(space, sheet, options);
   const formatting = useFormattingModel(model);
   if (!model || !formatting) {
     return null;
