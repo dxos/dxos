@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './formatting';
+export * from './formatting-model';
 export * from './function-defs';
 export * from './functions';
 export * from './model';

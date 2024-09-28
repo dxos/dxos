@@ -82,6 +82,9 @@ export const rangeFromIndex = (sheet: SheetType, idx: string): CellRange => {
   return { from, to };
 };
 
+/**
+ * Find closest cell to cursor.
+ */
 export const closest = (cursor: CellAddress, cells: CellAddress[]): CellAddress | undefined => {
   let closestCell: CellAddress | undefined;
   let closestDistance = Number.MAX_SAFE_INTEGER;

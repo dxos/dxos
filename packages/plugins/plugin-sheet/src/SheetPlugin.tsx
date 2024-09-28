@@ -38,6 +38,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         remoteFunctionUrl = url.toString();
       }
 
+      // TODO(burdon): Async import.
       graphRegistry = await createGraphRegistry({ remoteFunctionUrl });
     },
     provides: {
