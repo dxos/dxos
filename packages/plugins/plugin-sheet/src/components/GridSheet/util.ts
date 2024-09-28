@@ -32,7 +32,7 @@ const createDxGridCells = (model: SheetModel, formatting: FormattingModel) => {
   }, {});
 };
 
-const createDxGridColumnns = (model: SheetModel): GridContentProps['columns'] => {
+const createDxGridColumns = (model: SheetModel): GridContentProps['columns'] => {
   return model.sheet.columns.reduce((acc: NonNullable<GridContentProps['columns']>, columnId, numericIndex) => {
     if (model.sheet.columnMeta[columnId] && model.sheet.columnMeta[columnId].size) {
       acc[numericIndex] = { size: model.sheet.columnMeta[columnId].size, resizeable: true };
@@ -55,8 +55,8 @@ export const useSheetModelDxGridProps = (
   formatting: FormattingModel,
 ): Pick<GridContentProps, 'cells' | 'columns' | 'rows'> => {
   const [dxGridCells, setDxGridCells] = useState<GridContentProps['cells']>(createDxGridCells(model, formatting));
-  const [dxGridColumns, setDxGridColumns] = useState<GridContentProps['columns']>(createDxGridColumnns(model));
-  const [dxGridRows, setDxGridRows] = useState<GridContentProps['rows']>(createDxGridColumnns(model));
+  const [dxGridColumns, setDxGridColumns] = useState<GridContentProps['columns']>(createDxGridColumns(model));
+  const [dxGridRows, setDxGridRows] = useState<GridContentProps['rows']>(createDxGridColumns(model));
 
   useEffect(() => {
     const cellsAccessor = createDocAccessor(model.sheet, ['cells']);
@@ -71,7 +71,7 @@ export const useSheetModelDxGridProps = (
     const columnMetaAccessor = createDocAccessor(model.sheet, ['columnMeta']);
     const rowMetaAccessor = createDocAccessor(model.sheet, ['rowMeta']);
     const handleColumnMetaUpdate = () => {
-      setDxGridColumns(createDxGridColumnns(model));
+      setDxGridColumns(createDxGridColumns(model));
     };
     const handleRowMetaUpdate = () => {
       setDxGridRows(createDxGridRows(model));
