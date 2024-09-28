@@ -30,5 +30,8 @@ describe('FunctionManager', () => {
 
     const id = functionManager.mapFunctionBindingToId('HELLO()');
     expect(id).to.eq(`${fn.id}()`);
+
+    // TODO(burdon): Test invocation.
+    // TODO(burdon): Test storage.
   });
 });
