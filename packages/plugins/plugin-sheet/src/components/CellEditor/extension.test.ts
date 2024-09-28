@@ -10,7 +10,7 @@ import { spreadsheet } from 'codemirror-lang-spreadsheet';
 import { describe, expect, test } from 'vitest';
 
 import { sheetExtension } from './extension';
-import { defaultFunctions } from '../../model/functions';
+import { defaultFunctions } from '../../model';
 
 describe('formula parser', () => {
   const {

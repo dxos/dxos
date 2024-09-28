@@ -3,16 +3,9 @@
 //
 
 import { randomBytes } from '@dxos/crypto';
-import { type FunctionType } from '@dxos/plugin-script';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { defaultFunctions } from './functions';
-import { type SheetSize } from './model';
 import { type CellAddress, type CellRange, DEFAULT_COLUMNS, DEFAULT_ROWS, MAX_COLUMNS, MAX_ROWS } from './types';
-import { type SheetType } from '../types';
-
-// TODO(wittjosiah): Factor out.
-const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
+import { type SheetSize, type SheetType } from '../types';
 
 // TODO(burdon): Factor out from dxos/protocols to new common package.
 export class ApiError extends Error {}
@@ -89,16 +82,6 @@ export const rangeFromIndex = (sheet: SheetType, idx: string): CellRange => {
   return { from, to };
 };
 
-// TODO(burdon): Factor out.
-export const pickOne = <T>(values: T[]): T => values[Math.floor(Math.random() * values.length)];
-export const pickSome = <T>(values: T[], n = 1): T[] => {
-  const result = new Set<T>();
-  while (result.size < n) {
-    result.add(pickOne(values));
-  }
-  return Array.from(result.values());
-};
-
 export const closest = (cursor: CellAddress, cells: CellAddress[]): CellAddress | undefined => {
   let closestCell: CellAddress | undefined;
   let closestDistance = Number.MAX_SAFE_INTEGER;
@@ -129,44 +112,3 @@ export const compareIndexPositions = (sheet: SheetType, indexA: string, indexB: 
     return columnA - columnB;
   }
 };
-
-/**
- * Map from binding to fully qualified ECHO ID.
- */
-export const mapFormulaBindingToId =
-  (functions: FunctionType[]) =>
-  (formula: string): string => {
-    return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
-      if (defaultFunctions.find((fn) => fn.name === binding) || binding === 'EDGE') {
-        return match;
-      }
-
-      const fn = functions.find((fn) => fn.binding === binding);
-      if (fn) {
-        return `${fullyQualifiedId(fn)}(${args})`;
-      } else {
-        return match;
-      }
-    });
-  };
-
-/**
- * Map from fully qualified ECHO ID to binding.
- */
-export const mapFormulaBindingFromId =
-  (functions: FunctionType[]) =>
-  (formula: string): string => {
-    return formula.replace(/([a-zA-Z0-9]+):([a-zA-Z0-9]+)\((.*)\)/g, (match, spaceId, objectId, args) => {
-      const id = `${spaceId}:${objectId}`;
-      if (id.length !== OBJECT_ID_LENGTH) {
-        return match;
-      }
-
-      const fn = functions.find((fn) => fullyQualifiedId(fn) === id);
-      if (fn?.binding) {
-        return `${fn.binding}(${args})`;
-      } else {
-        return match;
-      }
-    });
-  };

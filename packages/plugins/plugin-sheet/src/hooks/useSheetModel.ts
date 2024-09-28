@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { type Space } from '@dxos/react-client/echo';
 
 import { useComputeGraph } from './useComputeGraph';
-import { mapFormulaBindingFromId, mapFormulaBindingToId, SheetModel, FormattingModel } from '../model';
+import { mapFunctionBindingFromId, mapFunctionBindingToId, SheetModel, FormattingModel } from '../model';
 import { type SheetType } from '../types';
 
 export type UseSheetModelProps = {
@@ -26,7 +26,11 @@ export const useSheetModel = ({ space, sheet, readonly }: UseSheetModelProps): S
 
     let model: SheetModel | undefined;
     const t = setTimeout(async () => {
-      model = new SheetModel(graph, sheet, space, { readonly, mapFormulaBindingToId, mapFormulaBindingFromId });
+      model = new SheetModel(graph, sheet, space, {
+        readonly,
+        mapFormulaBindingToId: mapFunctionBindingToId,
+        mapFormulaBindingFromId: mapFunctionBindingFromId,
+      });
       await model.initialize();
       setModel(model);
     });

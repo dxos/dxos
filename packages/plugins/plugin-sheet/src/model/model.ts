@@ -15,7 +15,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FunctionType } from '@dxos/plugin-script/types';
 
-import { defaultFunctions, type FunctionDefinition } from './functions';
+import { defaultFunctions, type FunctionDefinition } from './function-defs';
 import {
   addressFromA1Notation,
   addressToA1Notation,
@@ -31,11 +31,6 @@ import { type CellScalarValue, type CellValue, type SheetType, ValueTypeEnum } f
 export type CellIndex = string;
 
 export type CellContentValue = number | string | boolean | null;
-
-export type SheetSize = {
-  rows: number;
-  columns: number;
-};
 
 export type SheetModelOptions = {
   readonly?: boolean;
