@@ -52,7 +52,7 @@ export class ComputeGraphRegistry {
 
   async createGraph(space: Space): Promise<ComputeGraph> {
     invariant(this._hf, 'Not initialized.');
-    invariant(this._registry.has(space.id));
+    invariant(!this._registry.has(space.id));
     const graph = new ComputeGraph(this._hf, space, this._options);
     this._registry.set(space.id, graph);
     return graph;
