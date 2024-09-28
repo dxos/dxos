@@ -59,15 +59,30 @@ export const useSheetModelDxGridProps = (
   const [dxGridRows, setDxGridRows] = useState<GridContentProps['rows']>(createDxGridColumnns(model));
 
   useEffect(() => {
-    const accessor = createDocAccessor(model.sheet, ['cells']);
+    const cellAccessor = createDocAccessor(model.sheet, ['cells']);
     const handleUpdate = () => {
       setDxGridCells(createDxGridCells(model, formatting));
+    };
+    cellAccessor.handle.addListener('change', handleUpdate);
+    return () => cellAccessor.handle.removeListener('change', handleUpdate);
+  }, [model, formatting]);
+
+  useEffect(() => {
+    const columnMetaAccessor = createDocAccessor(model.sheet, ['columnMeta']);
+    const rowMetaAccessor = createDocAccessor(model.sheet, ['rowMeta']);
+    const handleColumnMetaUpdate = () => {
       setDxGridColumns(createDxGridColumnns(model));
+    };
+    const handleRowMetaUpdate = () => {
       setDxGridRows(createDxGridRows(model));
     };
-    accessor.handle.addListener('change', handleUpdate);
-    return () => accessor.handle.removeListener('change', handleUpdate);
-  }, [model, formatting]);
+    columnMetaAccessor.handle.addListener('change', handleColumnMetaUpdate);
+    rowMetaAccessor.handle.addListener('change', handleRowMetaUpdate);
+    return () => {
+      columnMetaAccessor.handle.removeListener('change', handleColumnMetaUpdate);
+      rowMetaAccessor.handle.removeListener('change', handleRowMetaUpdate);
+    };
+  }, [model]);
 
   return { cells: dxGridCells, columns: dxGridColumns, rows: dxGridRows };
 };
