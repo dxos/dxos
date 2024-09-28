@@ -9,7 +9,9 @@ import { type SheetSize, type SheetType } from '../types';
 
 // TODO(burdon): Factor out from dxos/protocols to new common package.
 export class ApiError extends Error {}
+
 export class ReadonlyException extends ApiError {}
+
 export class RangeException extends ApiError {
   constructor(n: number) {
     super();

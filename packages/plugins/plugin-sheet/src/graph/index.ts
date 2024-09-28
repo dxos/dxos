@@ -3,4 +3,5 @@
 //
 
 export * from './async-function';
+export * from './factory';
 export * from './graph';
