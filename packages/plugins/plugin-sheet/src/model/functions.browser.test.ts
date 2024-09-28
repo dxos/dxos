@@ -6,7 +6,6 @@ import { describe, test, expect } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { FunctionType } from '@dxos/plugin-script/types';
-import { create } from '@dxos/react-client/echo';
 
 // import { FunctionManager } from './functions';
 // import { ComputeGraphRegistry } from '../graph';
@@ -26,16 +25,8 @@ describe('FunctionManager', () => {
 
     // Create script.
     // TODO(burdon): Test after initialize.
-    const space = await client.spaces.create();
-    const fn = space.db.add(create(FunctionType, { version: 1, binding: 'HELLO' }));
-
-    try {
-      const HyperFormula = await import('hyperformula');
-      HyperFormula.registerLanguage('enUS', enUS);
-      console.log(HyperFormula);
-    } catch (err) {
-      console.log(err);
-    }
+    // const space = await client.spaces.create();
+    // const fn = space.db.add(create(FunctionType, { version: 1, binding: 'HELLO' }));
 
     // const registry = new ComputeGraphRegistry();
     // await registry.initialize();
