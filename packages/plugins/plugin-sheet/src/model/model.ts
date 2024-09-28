@@ -155,19 +155,19 @@ export class SheetModel {
     this._ctx.onDispose(unsubscribe);
 
     // Subscribe to function objects.
-    // TODO(burdon): Factor out space dependency.
+    // TODO(burdon): Factor out space dependency; inject functions provider.
     if (this._space) {
       const { Filter } = await import('@dxos/client/echo');
       const { FunctionType } = await import('@dxos/plugin-script/types');
 
       // Listen for function changes.
-      const query = this._space?.db.query(Filter.schema(FunctionType));
-      this._ctx.onDispose(
-        query.subscribe(({ objects }) => {
-          this._functions = objects.filter((fn) => fn.binding);
-          this.update.emit();
-        }),
-      );
+      const query = this._space.db.query(Filter.schema(FunctionType));
+      const subscription = query.subscribe(({ objects }) => {
+        this._functions = objects.filter(({ binding }) => binding);
+        this.update.emit();
+      });
+
+      this._ctx.onDispose(subscription);
     }
 
     return this;
@@ -441,6 +441,7 @@ export class SheetModel {
       if (args.trim() === '') {
         return `EDGE("${binding}")`;
       }
+
       return `EDGE("${binding}", ${args})`;
     });
   }
@@ -453,6 +454,7 @@ export class SheetModel {
       if (args.trim() === '') {
         return `${binding}()`;
       }
+
       return `${binding}(${args.slice(2)})`;
     });
   }
@@ -461,16 +463,16 @@ export class SheetModel {
    * Map from binding to fully qualified ECHO ID.
    */
   mapFormulaBindingToId(formula: string): string {
-    const f = this._options.mapFormulaBindingToId(this._functions);
-    return f(formula);
+    const fn = this._options.mapFormulaBindingToId(this._functions);
+    return fn(formula);
   }
 
   /**
    * Map from fully qualified ECHO ID to binding.
    */
   mapFormulaBindingFromId(formula: string): string {
-    const f = this._options.mapFormulaBindingToId(this._functions);
-    return f(formula);
+    const fn = this._options.mapFormulaBindingToId(this._functions);
+    return fn(formula);
   }
 
   /**

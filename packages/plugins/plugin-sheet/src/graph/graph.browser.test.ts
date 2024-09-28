@@ -5,6 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { Client } from '@dxos/client';
 
 import { CustomPlugin, CustomPluginTranslations } from './custom-function';
 import { ComputeGraphRegistry } from './graph';
@@ -17,6 +18,10 @@ import { type CellScalarValue, createSheet } from '../types';
  */
 describe('compute graph', () => {
   const createModel = async () => {
+    const client = new Client();
+    await client.initialize();
+    await client.halo.createIdentity();
+    const space = await client.spaces.create();
     const registry = new ComputeGraphRegistry();
     await registry.initialize([{ plugin: CustomPlugin, translations: CustomPluginTranslations }]);
     const graph = await registry.createGraph(space);

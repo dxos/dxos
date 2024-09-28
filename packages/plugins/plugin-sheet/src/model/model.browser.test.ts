@@ -4,6 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { Client } from '@dxos/client';
+
 import { SheetModel } from './model';
 import { addressFromA1Notation, rangeFromA1Notation } from './types';
 import { ComputeGraphRegistry } from '../graph';
@@ -17,6 +19,10 @@ import { createSheet, ValueTypeEnum } from '../types';
  */
 describe('sheet model', () => {
   const createModel = async () => {
+    const client = new Client();
+    await client.initialize();
+    await client.halo.createIdentity();
+    const space = await client.spaces.create();
     const registry = new ComputeGraphRegistry();
     await registry.initialize();
     const graph = await registry.createGraph(space);
