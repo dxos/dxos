@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useSpace } from '@dxos/react-client/src/echo';
+import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 

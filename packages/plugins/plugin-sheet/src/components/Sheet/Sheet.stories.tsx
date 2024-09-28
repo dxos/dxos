@@ -7,8 +7,7 @@ import '@dxos-theme';
 import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
-import { getSpace, type Space } from '@dxos/react-client/echo';
-import { useSpace } from '@dxos/react-client/src/echo';
+import { type Space, getSpace, useSpace } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
