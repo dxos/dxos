@@ -32,17 +32,42 @@ const createDxGridCells = (model: SheetModel, formatting: FormattingModel) => {
   }, {});
 };
 
-export const useSheetModelDxGridCells = (model: SheetModel, formatting: FormattingModel): GridContentProps['cells'] => {
+const createDxGridColumnns = (model: SheetModel): GridContentProps['columns'] => {
+  return model.sheet.columns.reduce((acc: NonNullable<GridContentProps['columns']>, columnId, numericIndex) => {
+    if (model.sheet.columnMeta[columnId] && model.sheet.columnMeta[columnId].size) {
+      acc[numericIndex] = { size: model.sheet.columnMeta[columnId].size, resizeable: true };
+    }
+    return acc;
+  }, {});
+};
+
+const createDxGridRows = (model: SheetModel): GridContentProps['rows'] => {
+  return model.sheet.rows.reduce((acc: NonNullable<GridContentProps['rows']>, rowId, numericIndex) => {
+    if (model.sheet.rowMeta[rowId] && model.sheet.rowMeta[rowId].size) {
+      acc[numericIndex] = { size: model.sheet.rowMeta[rowId].size, resizeable: true };
+    }
+    return acc;
+  }, {});
+};
+
+export const useSheetModelDxGridProps = (
+  model: SheetModel,
+  formatting: FormattingModel,
+): Pick<GridContentProps, 'cells' | 'columns' | 'rows'> => {
   const [dxGridCells, setDxGridCells] = useState<GridContentProps['cells']>(createDxGridCells(model, formatting));
+  const [dxGridColumns, setDxGridColumns] = useState<GridContentProps['columns']>(createDxGridColumnns(model));
+  const [dxGridRows, setDxGridRows] = useState<GridContentProps['rows']>(createDxGridColumnns(model));
 
   useEffect(() => {
     const accessor = createDocAccessor(model.sheet, ['cells']);
     const handleUpdate = () => {
       setDxGridCells(createDxGridCells(model, formatting));
+      setDxGridColumns(createDxGridColumnns(model));
+      setDxGridRows(createDxGridRows(model));
     };
     accessor.handle.addListener('change', handleUpdate);
     return () => accessor.handle.removeListener('change', handleUpdate);
   }, [model, formatting]);
 
-  return dxGridCells;
+  return { cells: dxGridCells, columns: dxGridColumns, rows: dxGridRows };
 };
