@@ -4,7 +4,7 @@
 
 import { type ClassNameValue } from '@dxos/react-ui-types';
 
-import { type SheetModel } from './model';
+import { type SheetModel } from './sheet-model';
 import { type CellAddress, inRange } from '../defs';
 import { addressToIndex, rangeFromIndex } from '../defs';
 import { ValueTypeEnum } from '../types';

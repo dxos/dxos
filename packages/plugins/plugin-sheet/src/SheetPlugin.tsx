@@ -13,7 +13,7 @@ import { FunctionType } from '@dxos/plugin-script/types';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
-import { SheetContainer, ComputeGraphContextProvider } from './components';
+import { ComputeGraphContextProvider, SheetContainer } from './components';
 import { compareIndexPositions, createSheet } from './defs';
 import { type ComputeGraphRegistry } from './graph';
 import meta, { SHEET_PLUGIN } from './meta';
@@ -130,8 +130,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
           !indexA || !indexB ? 0 : compareIndexPositions(sheet, indexA, indexB),
       },
       surface: {
-        component: ({ data, role = 'never' }) => {
-          // TODO(burdon): Standardize wrapper (with room for toolbar).
+        component: ({ data, role }) => {
           const space = isEchoObject(data.object) && getSpace(data.object);
           if (space && data.object instanceof SheetType) {
             switch (role) {

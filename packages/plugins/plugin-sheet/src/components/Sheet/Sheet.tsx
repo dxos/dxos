@@ -1082,6 +1082,7 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
       notifier.current?.(rangeToA1Notation(range));
     }
   }, [range]);
+
   const extension = useMemo(
     () => [
       editorKeys({ onNav, onClose }),

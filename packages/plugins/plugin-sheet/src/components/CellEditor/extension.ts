@@ -165,8 +165,6 @@ export const sheetExtension = ({ functions = [] }: SheetExtensionOptions): Exten
       icons: false,
       tooltipClass: () =>
         mx(
-          // TODO(burdon): Factor out fragments.
-          // TODO(burdon): Size to make width same as column.
           '!-left-[1px] !top-[33px] !-m-0 border !border-t-0 [&>ul]:!min-w-[198px]',
           '[&>ul>li[aria-selected]]:!bg-accentSurface',
           'border-separator',

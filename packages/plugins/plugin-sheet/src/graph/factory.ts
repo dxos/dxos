@@ -3,8 +3,8 @@
 //
 
 import { type FunctionContextOptions } from './async-function';
+import { ComputeGraphRegistry } from './compute-graph';
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './edge-function';
-import { ComputeGraphRegistry } from './graph';
 
 /**
  * NOTE: Async imports to decouple hyperformula deps.

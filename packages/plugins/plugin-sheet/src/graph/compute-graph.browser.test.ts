@@ -7,8 +7,8 @@ import { describe, expect, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
 
+import { ComputeGraphRegistry } from './compute-graph';
 import { CustomPlugin, CustomPluginTranslations } from './custom-function';
-import { ComputeGraphRegistry } from './graph';
 import { addressFromA1Notation, createSheet } from '../defs';
 import { SheetModel } from '../model';
 import { type CellScalarValue } from '../types';

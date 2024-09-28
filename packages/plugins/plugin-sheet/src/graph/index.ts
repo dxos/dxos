@@ -5,6 +5,5 @@
 // TODO(burdon): Factor out.
 // NOTE: Async import to limit dependency on HF.
 
-export * from './async-function';
+export * from './compute-graph';
 export * from './factory';
-export * from './graph';

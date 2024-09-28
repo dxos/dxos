@@ -8,22 +8,22 @@ import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateTimeHelper';
 
 import { Event } from '@dxos/async';
-import { type Space } from '@dxos/client/echo';
+import { Filter, type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FunctionType } from '@dxos/plugin-script/types';
+import { FunctionType } from '@dxos/plugin-script/types';
 
 import {
   addressFromA1Notation,
   addressToA1Notation,
   type CellAddress,
   type CellRange,
+  type FunctionDefinition,
   MAX_COLUMNS,
   MAX_ROWS,
   defaultFunctions,
-  type FunctionDefinition,
 } from '../defs';
 import { addressFromIndex, addressToIndex, initialize, insertIndices, ReadonlyException } from '../defs';
 import { type ComputeGraph } from '../graph';
@@ -73,7 +73,8 @@ const toModelRange = (sheet: number, range: CellRange): SimpleCellRange => ({
  */
 export class SheetModel {
   public readonly id = `model-${PublicKey.random().truncate()}`;
-  private _ctx?: Context = undefined;
+
+  public readonly update = new Event();
 
   /**
    * Formula engine.
@@ -81,9 +82,9 @@ export class SheetModel {
    */
   private readonly _sheetId: number;
   private readonly _options: SheetModelOptions;
-  private _functions: FunctionType[] = [];
 
-  public readonly update = new Event();
+  private _ctx?: Context = undefined;
+  private _functions: FunctionType[] = [];
 
   constructor(
     private readonly _graph: ComputeGraph,
@@ -91,13 +92,14 @@ export class SheetModel {
     private readonly _space?: Space,
     options: Partial<SheetModelOptions> = {},
   ) {
+    this._options = { ...defaultOptions, ...options };
+
     // Sheet for this object.
     const name = this._sheet.id;
     if (!this._graph.hf.doesSheetExist(name)) {
       this._graph.hf.addSheet(name);
     }
     this._sheetId = this._graph.hf.getSheetId(name)!;
-    this._options = { ...defaultOptions, ...options };
     this.reset();
   }
 
@@ -149,17 +151,14 @@ export class SheetModel {
     // Subscribe to function objects.
     // TODO(burdon): Factor out space dependency; inject functions provider.
     if (this._space) {
-      const { Filter } = await import('@dxos/client/echo');
-      const { FunctionType } = await import('@dxos/plugin-script/types');
-
       // Listen for function changes.
       const query = this._space.db.query(Filter.schema(FunctionType));
-      const subscription = query.subscribe(({ objects }) => {
+      const unsubscribe = query.subscribe(({ objects }) => {
         this._functions = objects.filter(({ binding }) => binding);
         this.update.emit();
       });
 
-      this._ctx.onDispose(subscription);
+      this._ctx.onDispose(unsubscribe);
     }
 
     return this;
