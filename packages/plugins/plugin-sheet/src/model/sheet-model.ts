@@ -155,7 +155,7 @@ export class SheetModel {
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
       const { column, row } = addressFromIndex(this._sheet, key);
       if (typeof value === 'string' && value.charAt(0) === '=') {
-        value = this._functions.mapFunctionBindingToFormula(
+        value = this._functions.mapFunctionBindingToCustomFunction(
           this._functions.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value)),
         );
       }
@@ -323,7 +323,7 @@ export class SheetModel {
     this._graph.hf.setCellContents({ sheet: this._sheetId, row: cell.row, col: cell.column }, [
       [
         typeof value === 'string' && value.charAt(0) === '='
-          ? this._functions.mapFunctionBindingToFormula(value)
+          ? this._functions.mapFunctionBindingToCustomFunction(value)
           : value,
       ],
     ]);

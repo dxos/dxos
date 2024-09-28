@@ -19,7 +19,6 @@ const CUSTOM_FUNCTION = 'ECHO';
 /**
  * Manages mapping between function bindings and their definitions.
  */
-// TODO(burdon): Tests.
 export class FunctionManager {
   private readonly _ctx = new Context();
 
@@ -34,6 +33,7 @@ export class FunctionManager {
 
   get functions(): FunctionDefinition[] {
     const echoFunctions = this._functions.map((fn) => ({ name: fn.binding! }));
+    // TODO(burdon): Factor out.
     const hfFunctions = this._graph.hf
       .getRegisteredFunctionNames()
       .map((name) => defaultFunctions.find((fn) => fn.name === name) ?? { name });
@@ -60,7 +60,7 @@ export class FunctionManager {
    * Map bound value to custom function invocation.
    * E.g., "HELLO(...args)" => "EDGE("HELLO", ...args)".
    */
-  mapFunctionBindingToFormula(formula: string): string {
+  mapFunctionBindingToCustomFunction(formula: string): string {
     return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
       const fn = this._functions.find((fn) => fn.binding === binding);
       if (!fn) {
@@ -77,6 +77,7 @@ export class FunctionManager {
 
   /**
    * Map from binding to fully qualified ECHO ID (to store).
+   * E.g., HELLO() => spaceId:objectId()
    */
   mapFunctionBindingToId(formula: string) {
     return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
@@ -96,6 +97,7 @@ export class FunctionManager {
 
   /**
    * Map from fully qualified ECHO ID to binding (from store).
+   * E.g., spaceId:objectId() => HELLO()
    */
   mapFunctionBindingFromId(formula: string) {
     return formula.replace(/([a-zA-Z0-9]+):([a-zA-Z0-9]+)\((.*)\)/g, (match, spaceId, objectId, args) => {

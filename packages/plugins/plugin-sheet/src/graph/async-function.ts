@@ -83,6 +83,7 @@ export class FunctionContext {
     }, this._options.recalculationDelay);
   }
 
+  // TODO(burdon): Remove?
   get space() {
     return this._space;
   }

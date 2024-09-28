@@ -83,10 +83,6 @@ export class ComputeGraph {
     this.hf.updateConfig({ context: this.context });
   }
 
-  get space() {
-    return this._space;
-  }
-
   refresh() {
     log('refresh', { id: this.id });
     this.update.emit();
