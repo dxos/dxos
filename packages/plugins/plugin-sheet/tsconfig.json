@@ -76,6 +76,9 @@
       "path": "../../ui/react-ui-grid"
     },
     {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
       "path": "../../ui/react-ui-theme"
     },
     {

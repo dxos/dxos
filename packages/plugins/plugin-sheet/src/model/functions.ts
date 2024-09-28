@@ -31,15 +31,6 @@ export class FunctionManager {
     private readonly _space?: Space,
   ) {}
 
-  get functions(): FunctionDefinition[] {
-    const echoFunctions = this._functions.map((fn) => ({ name: fn.binding! }));
-    // TODO(burdon): Factor out.
-    const hfFunctions = this._graph.hf
-      .getRegisteredFunctionNames()
-      .map((name) => defaultFunctions.find((fn) => fn.name === name) ?? { name });
-    return [...echoFunctions, ...hfFunctions];
-  }
-
   async initialize() {
     if (this._space) {
       const query = this._space.db.query(Filter.schema(FunctionType));
@@ -54,6 +45,17 @@ export class FunctionManager {
 
   async destroy() {
     await this._ctx.dispose();
+  }
+
+  getFunctions({ standard = true, echo = true }: { standard?: boolean; echo?: boolean } = {}): FunctionDefinition[] {
+    return [
+      ...(standard
+        ? this._graph.hf
+            .getRegisteredFunctionNames()
+            .map((name) => defaultFunctions.find((fn) => fn.name === name) ?? { name })
+        : []),
+      ...(echo ? this._functions.map((fn) => ({ name: fn.binding! })) : []),
+    ];
   }
 
   /**

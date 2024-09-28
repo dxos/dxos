@@ -22,7 +22,10 @@ export const useComputeGraph = (space?: Space): ComputeGraph | undefined => {
     }
 
     const t = setTimeout(async () => {
-      const graph = await registry.createGraph(space);
+      let graph = registry.getGraph(space.id);
+      if (!graph) {
+        graph = await registry.createGraph(space);
+      }
       setGraph(graph);
     });
 

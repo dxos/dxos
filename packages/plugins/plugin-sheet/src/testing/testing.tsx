@@ -63,19 +63,20 @@ export const useTestSheet = (space?: Space, graph?: ComputeGraph) => {
   return sheet;
 };
 
-// TODO(burdon): ???
 export const withGraphDecorator: Decorator = (Story) => {
-  const [registry] = useState(new ComputeGraphRegistry());
+  const [registry, setRegistry] = useState<ComputeGraphRegistry>();
+  useEffect(() => {
+    const t = setTimeout(async () => {
+      const registry = new ComputeGraphRegistry();
+      await registry.initialize();
+      setRegistry(registry);
+    });
+    return () => clearTimeout(t);
+  }, []);
 
-  // const setGraph = (key: string, graph: ComputeGraph) => {
-  //   if (!graph.hf.doesSheetExist(testSheetName)) {
-  //     const sheetName = graph.hf.addSheet(testSheetName);
-  //     const sheet = graph.hf.getSheetId(sheetName)!;
-  //     graph.hf.setCellContents({ sheet, col: 0, row: 0 }, Math.random());
-  //   }
-  //
-  //   setGraphs((graphs) => ({ ...graphs, [key]: graph }));
-  // };
+  if (!registry) {
+    return <div />;
+  }
 
   return (
     <ComputeGraphContextProvider registry={registry}>

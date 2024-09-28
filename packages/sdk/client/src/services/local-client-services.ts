@@ -84,7 +84,7 @@ const setupNetworking = async (
 
   // TODO(burdon): Should not provide a memory signal manager since no shared context.
   //  Use TestClientBuilder for shared memory tests.
-  log.warn('P2P network is not configured.');
+  log('P2P network is not configured.');
   const signalManager = new MemorySignalManager(new MemorySignalManagerContext());
   const transportFactory = MemoryTransportFactory;
   return {

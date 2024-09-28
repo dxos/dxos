@@ -29,7 +29,7 @@ export class ComputeGraphRegistry {
 
   constructor(private readonly _options?: Partial<FunctionContextOptions>) {}
 
-  get isInitialized() {
+  get initialized() {
     return !!this._hf;
   }
 
@@ -51,7 +51,7 @@ export class ComputeGraphRegistry {
 
   async createGraph(space: Space): Promise<ComputeGraph> {
     invariant(this._hf, 'Not initialized.');
-    invariant(!this._registry.has(space.id));
+    invariant(!this._registry.has(space.id), `Already exists: ${space.id}`);
     const graph = new ComputeGraph(this._hf, space, this._options);
     this._registry.set(space.id, graph);
     return graph;

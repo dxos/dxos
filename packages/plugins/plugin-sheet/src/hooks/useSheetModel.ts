@@ -10,17 +10,20 @@ import { useComputeGraph } from './useComputeGraph';
 import { FunctionManager, SheetModel } from '../model';
 import { type SheetType } from '../types';
 
-export type UseSheetModelProps = {
-  space: Space;
-  sheet: SheetType;
+export type UseSheetModelOptions = {
   readonly?: boolean;
 };
 
-export const useSheetModel = ({ space, sheet, readonly }: UseSheetModelProps): SheetModel | undefined => {
+// TODO(burdon): Convert to props; readonly options.
+export const useSheetModel = (
+  space?: Space,
+  sheet?: SheetType,
+  { readonly }: UseSheetModelOptions = {},
+): SheetModel | undefined => {
   const graph = useComputeGraph(space);
   const [model, setModel] = useState<SheetModel>();
   useEffect(() => {
-    if (!graph) {
+    if (!space || !graph || !sheet) {
       return;
     }
 
@@ -35,7 +38,7 @@ export const useSheetModel = ({ space, sheet, readonly }: UseSheetModelProps): S
       clearTimeout(t);
       void model?.destroy();
     };
-  }, [graph, readonly]);
+  }, [space, sheet, graph, readonly]);
 
   return model;
 };
