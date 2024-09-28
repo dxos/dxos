@@ -4,21 +4,22 @@
 
 import { describe, test, expect } from 'vitest';
 
+// Part 2.
+// TODO(burdon): Cannot test outside of browser.
+//  - Cannot test Hyperformula
+//    - throws "Cannot convert undefined or null to object" in vitest (no browser).
+//    - throws "process.nextTick is not a function" (if browser)
+// import Hyperformula from 'hyperformula';
+
 import { Client } from '@dxos/client';
 import { create } from '@dxos/client/echo';
 import { FunctionType } from '@dxos/plugin-script/types';
 
-// import { FunctionManager } from './functions';
-// import { ComputeGraphRegistry } from '../graph';
-
-// TODO(burdon): Failing test infrastructure
-//  - no docs? esp. needed for config. need pristine example package?
-//    - for non browser tests, import types from x-plugin/types (otherwise will bring in react deps).
-//  - can't add flags to our tools?
+// TODO(burdon): Fix test infrastructure:
+//  - Need docs? esp. needed for config. need pristine example package?
+//    - NOTE for non browser tests, import types from x-plugin/types (otherwise will bring in react deps).
+//  - Can't add flags to our tools?
 //  - .only / .skip ignored (have to comment out tests)
-//  - Cannot test Hyperformula
-//    - throws "Cannot convert undefined or null to object" in vitest (no browser).
-//    - throws "process.nextTick is not a function" (if browser)
 
 describe('test', () => {
   test.only('test', async () => {
@@ -27,23 +28,14 @@ describe('test', () => {
     await client.initialize();
     await client.halo.createIdentity();
 
+    // Part 1.
     // Create script.
+    // VITEST_ENV=chromium p test
     // TODO(burdon): Test after initialize.
+    //  - ERROR "process.nextTick is not a function"
+    //  - ERROR "Identifier 'Buffer' has already been declared" if { nodeExternal: true }
     const space = await client.spaces.create();
     const fn = space.db.add(create(FunctionType, { version: 1, binding: 'HELLO' }));
-
-    // const registry = new ComputeGraphRegistry();
-    // await registry.initialize();
-
-    // const graph = await registry.createGraph(space);
-    // const functionManager = new FunctionManager(graph, space);
-
-    // const id = functionManager.mapFunctionBindingToId('HELLO()');
-    // expect(id).to.eq(`${fn.id}()`);
-
-    // TODO(burdon): Test invocation.
-    // TODO(burdon): Test storage.
-    console.log('###############################');
-    expect(true).toBe(true);
+    expect(fn).to.exist;
   });
 });
