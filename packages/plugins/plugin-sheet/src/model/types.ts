@@ -4,7 +4,11 @@
 
 import { invariant } from '@dxos/invariant';
 
-export const MAX_COLUMNS = 26 * 26;
+export const DEFAULT_ROWS = 50;
+export const DEFAULT_COLUMNS = 26;
+
+export const MAX_ROWS = 500;
+export const MAX_COLUMNS = 26 * 2;
 
 export type CellAddress = { column: number; row: number };
 export type CellRange = { from: CellAddress; to?: CellAddress };

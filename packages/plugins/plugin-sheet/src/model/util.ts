@@ -7,7 +7,8 @@ import { type FunctionType } from '@dxos/plugin-script';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { defaultFunctions } from './functions';
-import { type CellAddress, type CellRange } from './types';
+import { type SheetSize } from './model';
+import { type CellAddress, type CellRange, DEFAULT_COLUMNS, DEFAULT_ROWS, MAX_COLUMNS, MAX_ROWS } from './types';
 import { type SheetType } from '../types';
 
 // TODO(wittjosiah): Factor out.
@@ -33,6 +34,27 @@ export const createIndex = (length = 8): string => {
 };
 
 export const createIndices = (length: number): string[] => Array.from({ length }).map(() => createIndex());
+
+export const insertIndices = (indices: string[], i: number, n: number, max: number) => {
+  if (i + n > max) {
+    throw new RangeException(i + n);
+  }
+
+  const idx = createIndices(n);
+  indices.splice(i, 0, ...idx);
+};
+
+export const initialize = (
+  sheet: SheetType,
+  { rows = DEFAULT_ROWS, columns = DEFAULT_COLUMNS }: Partial<SheetSize> = {},
+) => {
+  if (!sheet.rows.length) {
+    insertIndices(sheet.rows, 0, rows, MAX_ROWS);
+  }
+  if (!sheet.columns.length) {
+    insertIndices(sheet.columns, 0, columns, MAX_COLUMNS);
+  }
+};
 
 /**
  * E.g., "A1" => "CA2@CB3".

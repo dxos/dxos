@@ -16,6 +16,7 @@ import { ThreadType } from '@dxos/plugin-space/types';
 import { type StackProvides } from '@dxos/plugin-stack';
 
 import { SHEET_PLUGIN } from './meta';
+import { initialize, type SheetSize } from './model';
 
 const SHEET_ACTION = `${SHEET_PLUGIN}/action`;
 
@@ -124,9 +125,12 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
   threads: S.optional(S.mutable(S.Array(ref(ThreadType)))),
 }) {}
 
-// TODO(burdon): Fix defaults.
-export const createSheet = (title?: string): SheetType =>
-  create(SheetType, {
+type CreateSheetOptions = {
+  title?: string;
+} & Partial<SheetSize>;
+
+export const createSheet = ({ title, ...size }: CreateSheetOptions = {}): SheetType => {
+  const sheet = create(SheetType, {
     title,
     cells: {},
     rows: [],
@@ -135,3 +139,7 @@ export const createSheet = (title?: string): SheetType =>
     columnMeta: {},
     formatting: {},
   });
+
+  initialize(sheet, size);
+  return sheet;
+};

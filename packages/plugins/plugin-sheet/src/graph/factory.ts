@@ -3,7 +3,6 @@
 //
 
 import { type FunctionContextOptions } from './async-function';
-import { CustomPlugin, CustomPluginTranslations } from './custom-function';
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './edge-function';
 import { ComputeGraphRegistry } from './graph';
 
@@ -12,11 +11,6 @@ import { ComputeGraphRegistry } from './graph';
  */
 export const createGraphRegistry = async (options: Partial<FunctionContextOptions>) => {
   const registry = new ComputeGraphRegistry(options);
-  await registry.initialize([
-    { plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations },
-    // TODO(wittjosiah): Remove. Needed for current test sheet generated data.
-    { plugin: CustomPlugin, translations: CustomPluginTranslations },
-  ]);
-
+  await registry.initialize([{ plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations }]);
   return registry;
 };

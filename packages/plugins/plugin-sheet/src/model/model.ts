@@ -16,24 +16,36 @@ import { log } from '@dxos/log';
 import { type FunctionType } from '@dxos/plugin-script/types';
 
 import { defaultFunctions, type FunctionDefinition } from './functions';
-import { addressFromA1Notation, addressToA1Notation, type CellAddress, type CellRange } from './types';
-import { addressFromIndex, addressToIndex, createIndices, RangeException, ReadonlyException } from './util';
+import {
+  addressFromA1Notation,
+  addressToA1Notation,
+  type CellAddress,
+  type CellRange,
+  MAX_COLUMNS,
+  MAX_ROWS,
+} from './types';
+import { addressFromIndex, addressToIndex, initialize, insertIndices, ReadonlyException } from './util';
 import { type ComputeGraph } from '../graph';
 import { type CellScalarValue, type CellValue, type SheetType, ValueTypeEnum } from '../types';
-
-const DEFAULT_ROWS = 100;
-const DEFAULT_COLUMNS = 26;
 
 export type CellIndex = string;
 
 export type CellContentValue = number | string | boolean | null;
 
-export type SheetModelOptions = {
-  readonly?: boolean;
+export type SheetSize = {
   rows: number;
   columns: number;
+};
+
+export type SheetModelOptions = {
+  readonly?: boolean;
   mapFormulaBindingToId: (functions: FunctionType[]) => (formula: string) => string;
   mapFormulaBindingFromId: (functions: FunctionType[]) => (formula: string) => string;
+};
+
+export const defaultOptions: SheetModelOptions = {
+  mapFormulaBindingFromId: () => (formula) => formula,
+  mapFormulaBindingToId: () => (formula) => formula,
 };
 
 const typeMap: Record<string, ValueTypeEnum> = {
@@ -44,13 +56,6 @@ const typeMap: Record<string, ValueTypeEnum> = {
   NUMBER_DATETIME: ValueTypeEnum.DateTime,
   NUMBER_DATE: ValueTypeEnum.Date,
   NUMBER_TIME: ValueTypeEnum.Time,
-};
-
-export const defaultOptions: SheetModelOptions = {
-  rows: 50,
-  columns: 26,
-  mapFormulaBindingFromId: () => (formula) => formula,
-  mapFormulaBindingToId: () => (formula) => formula,
 };
 
 const getTopLeft = (range: CellRange) => {
@@ -142,12 +147,7 @@ export class SheetModel {
     log('initialize', { id: this.id });
     invariant(!this.initialized, 'Already initialized.');
     this._ctx = new Context();
-    if (!this._sheet.rows.length) {
-      this._insertIndices(this._sheet.rows, 0, this._options.rows, DEFAULT_ROWS);
-    }
-    if (!this._sheet.columns.length) {
-      this._insertIndices(this._sheet.columns, 0, this._options.columns, DEFAULT_COLUMNS);
-    }
+    initialize(this._sheet);
     this.reset();
 
     // Listen for model updates (e.g., async calculations).
@@ -210,12 +210,12 @@ export class SheetModel {
   }
 
   insertRows(i: number, n = 1) {
-    this._insertIndices(this._sheet.rows, i, n, DEFAULT_ROWS);
+    insertIndices(this._sheet.rows, i, n, MAX_ROWS);
     this.reset();
   }
 
   insertColumns(i: number, n = 1) {
-    this._insertIndices(this._sheet.columns, i, n, DEFAULT_COLUMNS);
+    insertIndices(this._sheet.columns, i, n, MAX_COLUMNS);
     this.reset();
   }
 
@@ -340,13 +340,14 @@ export class SheetModel {
     // Reallocate if > current bounds.
     let refresh = false;
     if (cell.row >= this._sheet.rows.length) {
-      this._insertIndices(this._sheet.rows, cell.row, 1, DEFAULT_ROWS);
+      insertIndices(this._sheet.rows, cell.row, 1, MAX_ROWS);
       refresh = true;
     }
     if (cell.column >= this._sheet.columns.length) {
-      this._insertIndices(this._sheet.columns, cell.column, 1, DEFAULT_COLUMNS);
+      insertIndices(this._sheet.columns, cell.column, 1, MAX_COLUMNS);
       refresh = true;
     }
+
     if (refresh) {
       // TODO(burdon): Remove.
       this.reset();
@@ -399,19 +400,6 @@ export class SheetModel {
     }
 
     return rows;
-  }
-
-  /**
-   *
-   */
-  // TODO(burdon): Insert indices into sheet.
-  private _insertIndices(indices: string[], i: number, n: number, max: number) {
-    if (i + n > max) {
-      throw new RangeException(i + n);
-    }
-
-    const idx = createIndices(n);
-    indices.splice(i, 0, ...idx);
   }
 
   // TODO(burdon): Delete index.

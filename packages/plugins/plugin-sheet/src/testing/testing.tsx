@@ -10,7 +10,6 @@ import { type Space } from '@dxos/react-client/echo';
 
 import { ComputeGraphContextProvider } from '../components';
 import { type ComputeGraph, ComputeGraphRegistry } from '../graph';
-import { SheetModel } from '../model';
 import { createSheet, type CellValue, type SheetType } from '../types';
 
 export const testSheetName = 'test';
@@ -44,20 +43,6 @@ export const createCells = (): Record<string, CellValue> => ({
   F6: { value: '$10000' },
 });
 
-export const createTestSheet = async ({ graph, name }: { graph: ComputeGraph; name?: string }) => {
-  const sheet = createSheet(name);
-
-  {
-    const model = new SheetModel(graph, sheet);
-    await model.initialize();
-    model.setValues(createCells());
-    model.sheet.columnMeta[model.sheet.columns[0]] = { size: 100 };
-    await model.destroy();
-  }
-
-  return sheet;
-};
-
 export const useTestSheet = (space?: Space, graph?: ComputeGraph) => {
   const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
   useEffect(() => {
@@ -66,7 +51,7 @@ export const useTestSheet = (space?: Space, graph?: ComputeGraph) => {
     }
 
     const t = setTimeout(async () => {
-      const sheet = await createTestSheet({ graph });
+      const sheet = createSheet();
       space.db.add(sheet);
       setSheet(sheet);
     });

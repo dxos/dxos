@@ -15,9 +15,9 @@ import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
 import { SheetContainer, ComputeGraphContextProvider } from './components';
 import { type ComputeGraphRegistry } from './graph';
-import { createGraphRegistry } from './graph/factory';
+import { createGraphRegistry } from './graph/factory'; // TODO(burdon): Async.
 import meta, { SHEET_PLUGIN } from './meta';
-import { compareIndexPositions, SheetModel } from './model';
+import { compareIndexPositions } from './model';
 import translations from './translations';
 import { SheetAction, SheetType, type SheetPluginProvides, createSheet } from './types';
 
@@ -127,8 +127,8 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       },
       thread: {
         predicate: (data) => data instanceof SheetType,
-        createSort: (sheet) => (anchorA, anchorB) =>
-          !anchorA || !anchorB ? 0 : compareIndexPositions(sheet, anchorA, anchorB),
+        createSort: (sheet) => (indexA, indexB) =>
+          !indexA || !indexB ? 0 : compareIndexPositions(sheet, indexA, indexB),
       },
       surface: {
         component: ({ data, role = 'never' }) => {
@@ -158,11 +158,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
                 graph = await graphRegistry.createGraph(space);
               }
 
-              // TODO(burdon): Factor out HF dependency.
               const sheet = createSheet();
-              const model = new SheetModel(graph, sheet);
-              await model.initialize();
-              await model.destroy();
               return { data: sheet };
             }
           }

@@ -23,7 +23,6 @@ export type ComputeGraphPlugin = {
  * Registry of compute graphs for each space.
  */
 // TODO(burdon): Factor graph into separate plugin.
-// TODO(burdon): Options.
 export class ComputeGraphRegistry {
   private readonly _registry = new Map<SpaceId, ComputeGraph>();
   private _hf?: HyperFormula;

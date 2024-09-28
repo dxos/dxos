@@ -26,8 +26,8 @@ describe('sheet model', () => {
     const registry = new ComputeGraphRegistry();
     await registry.initialize();
     const graph = await registry.createGraph(space);
-    const sheet = createSheet();
-    const model = new SheetModel(graph, sheet, space, { rows: 5, columns: 5 });
+    const sheet = createSheet({ rows: 5, columns: 5 });
+    const model = new SheetModel(graph, sheet, space);
     await model.initialize();
     return { graph, model };
   };
