@@ -7,9 +7,9 @@ import { describe, expect, test } from 'vitest';
 import { Client } from '@dxos/client';
 
 import { SheetModel } from './model';
-import { addressFromA1Notation, rangeFromA1Notation } from '../defs';
+import { addressFromA1Notation, createSheet, rangeFromA1Notation } from '../defs';
 import { ComputeGraphRegistry } from '../graph';
-import { createSheet, ValueTypeEnum } from '../types';
+import { ValueTypeEnum } from '../types';
 
 // TODO(burdon): Test undo (e.g., clear cells).
 

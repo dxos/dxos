@@ -9,13 +9,12 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { create, ref, S, TypedObject } from '@dxos/echo-schema';
+import { ref, S, TypedObject } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-client';
 import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { type StackProvides } from '@dxos/plugin-stack';
 
-import { initialize } from './defs';
 import { SHEET_PLUGIN } from './meta';
 
 const SHEET_ACTION = `${SHEET_PLUGIN}/action`;
@@ -133,18 +132,3 @@ export type SheetSize = {
 export type CreateSheetOptions = {
   title?: string;
 } & Partial<SheetSize>;
-
-export const createSheet = ({ title, ...size }: CreateSheetOptions = {}): SheetType => {
-  const sheet = create(SheetType, {
-    title,
-    cells: {},
-    rows: [],
-    columns: [],
-    rowMeta: {},
-    columnMeta: {},
-    formatting: {},
-  });
-
-  initialize(sheet, size);
-  return sheet;
-};

@@ -9,8 +9,9 @@ import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type Space } from '@dxos/react-client/echo';
 
 import { ComputeGraphContextProvider } from '../components';
+import { createSheet } from '../defs';
 import { type ComputeGraph, ComputeGraphRegistry } from '../graph';
-import { createSheet, type CellValue, type SheetType } from '../types';
+import { type CellValue, type SheetType } from '../types';
 
 export const testSheetName = 'test';
 

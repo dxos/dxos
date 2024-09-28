@@ -3,9 +3,10 @@
 //
 
 import { randomBytes } from '@dxos/crypto';
+import { create } from '@dxos/echo-schema';
 
 import { type CellAddress, type CellRange, DEFAULT_COLUMNS, DEFAULT_ROWS, MAX_COLUMNS, MAX_ROWS } from './types';
-import { type SheetSize, type SheetType } from '../types';
+import { type CreateSheetOptions, type SheetSize, SheetType } from '../types';
 
 // TODO(burdon): Factor out from dxos/protocols to new common package.
 export class ApiError extends Error {}
@@ -49,6 +50,21 @@ export const initialize = (
   if (!sheet.columns.length) {
     insertIndices(sheet.columns, 0, columns, MAX_COLUMNS);
   }
+};
+
+export const createSheet = ({ title, ...size }: CreateSheetOptions = {}): SheetType => {
+  const sheet = create(SheetType, {
+    title,
+    cells: {},
+    rows: [],
+    columns: [],
+    rowMeta: {},
+    columnMeta: {},
+    formatting: {},
+  });
+
+  initialize(sheet, size);
+  return sheet;
 };
 
 /**

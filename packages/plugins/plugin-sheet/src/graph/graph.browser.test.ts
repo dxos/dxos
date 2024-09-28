@@ -9,9 +9,9 @@ import { Client } from '@dxos/client';
 
 import { CustomPlugin, CustomPluginTranslations } from './custom-function';
 import { ComputeGraphRegistry } from './graph';
-import { addressFromA1Notation } from '../defs';
+import { addressFromA1Notation, createSheet } from '../defs';
 import { SheetModel } from '../model';
-import { type CellScalarValue, createSheet } from '../types';
+import { type CellScalarValue } from '../types';
 
 /**
  * VITEST_ENV=chrome p vitest --watch

@@ -14,16 +14,13 @@ import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
 import { SheetContainer, ComputeGraphContextProvider } from './components';
-import { compareIndexPositions } from './defs';
-import { type ComputeGraphRegistry, createGraphRegistry } from './graph';
+import { compareIndexPositions, createSheet } from './defs';
+import { type ComputeGraphRegistry } from './graph';
 import meta, { SHEET_PLUGIN } from './meta';
 import translations from './translations';
-import { SheetAction, SheetType, type SheetPluginProvides, createSheet } from './types';
+import { SheetAction, SheetType, type SheetPluginProvides } from './types';
 
 export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
-  let remoteFunctionUrl: string | undefined;
-
-  // TODO(burdon): Move into separate plugin.
   let graphRegistry: ComputeGraphRegistry | undefined;
 
   return {
@@ -31,13 +28,15 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
     ready: async (plugins) => {
       const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
       invariant(client);
+      let remoteFunctionUrl: string | undefined;
       if (client.config.values.runtime?.services?.edge?.url) {
         const url = new URL('/functions', client.config.values.runtime?.services?.edge?.url);
         url.protocol = 'https';
         remoteFunctionUrl = url.toString();
       }
 
-      // TODO(burdon): Async import.
+      // Async import removes direct dependency on hyperformula.
+      const { createGraphRegistry } = await import('./graph');
       graphRegistry = await createGraphRegistry({ remoteFunctionUrl });
     },
     provides: {
@@ -150,16 +149,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         resolver: async (intent) => {
           switch (intent.action) {
             case SheetAction.CREATE: {
-              invariant(graphRegistry);
-              const space = intent.data?.space;
-              invariant(space);
-              let graph = graphRegistry.getGraph(space.id);
-              if (!graph) {
-                graph = await graphRegistry.createGraph(space);
-              }
-
-              const sheet = createSheet();
-              return { data: sheet };
+              return { data: createSheet() };
             }
           }
         },
