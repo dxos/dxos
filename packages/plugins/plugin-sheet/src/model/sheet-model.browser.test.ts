@@ -6,6 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 
+import { FunctionManager } from './functions';
 import { SheetModel } from './sheet-model';
 import { addressFromA1Notation, createSheet, rangeFromA1Notation } from '../defs';
 import { ComputeGraphRegistry } from '../graph';
@@ -27,7 +28,7 @@ describe('sheet model', () => {
     await registry.initialize();
     const graph = await registry.createGraph(space);
     const sheet = createSheet({ rows: 5, columns: 5 });
-    const model = new SheetModel(graph, sheet, space);
+    const model = new SheetModel(graph, sheet, new FunctionManager(graph, space));
     await model.initialize();
     return { graph, model };
   };

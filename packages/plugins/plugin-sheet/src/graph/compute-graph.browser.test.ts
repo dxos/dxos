@@ -10,7 +10,7 @@ import { Client } from '@dxos/client';
 import { ComputeGraphRegistry } from './compute-graph';
 import { CustomPlugin, CustomPluginTranslations } from './custom-function';
 import { addressFromA1Notation, createSheet } from '../defs';
-import { SheetModel } from '../model';
+import { FunctionManager, SheetModel } from '../model';
 import { type CellScalarValue } from '../types';
 
 /**
@@ -27,7 +27,7 @@ describe('compute graph', () => {
     await registry.initialize([{ plugin: CustomPlugin, translations: CustomPluginTranslations }]);
     const graph = await registry.createGraph(space);
     const sheet = createSheet({ rows: 5, columns: 5 });
-    const model = new SheetModel(graph, sheet, space);
+    const model = new SheetModel(graph, sheet, new FunctionManager(graph, space));
     graph.update.on(() => model.update.emit());
     return { graph, model };
   };

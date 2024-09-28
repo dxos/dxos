@@ -8,37 +8,23 @@ import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateTimeHelper';
 
 import { Event } from '@dxos/async';
-import { Filter, type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FunctionType } from '@dxos/plugin-script/types';
 
+import { type FunctionManager } from './functions';
 import {
   addressFromA1Notation,
   addressToA1Notation,
   type CellAddress,
   type CellRange,
-  type FunctionDefinition,
   MAX_COLUMNS,
   MAX_ROWS,
-  defaultFunctions,
 } from '../defs';
 import { addressFromIndex, addressToIndex, initialize, insertIndices, ReadonlyException } from '../defs';
 import { type ComputeGraph } from '../graph';
 import { type CellScalarValue, type CellValue, type SheetType, ValueTypeEnum } from '../types';
-
-export type SheetModelOptions = {
-  readonly?: boolean;
-  mapFormulaBindingToId: (functions: FunctionType[]) => (formula: string) => string;
-  mapFormulaBindingFromId: (functions: FunctionType[]) => (formula: string) => string;
-};
-
-export const defaultOptions: SheetModelOptions = {
-  mapFormulaBindingFromId: () => (formula) => formula,
-  mapFormulaBindingToId: () => (formula) => formula,
-};
 
 const typeMap: Record<string, ValueTypeEnum> = {
   BOOLEAN: ValueTypeEnum.Boolean,
@@ -66,6 +52,10 @@ const toModelRange = (sheet: number, range: CellRange): SimpleCellRange => ({
   end: toSimpleCellAddress(sheet, range.to ?? range.from),
 });
 
+export type SheetModelOptions = {
+  readonly?: boolean;
+};
+
 /**
  * Spreadsheet data model.
  *
@@ -81,19 +71,15 @@ export class SheetModel {
    * Acts as a write through cache for scalar and computed values.
    */
   private readonly _sheetId: number;
-  private readonly _options: SheetModelOptions;
 
   private _ctx?: Context = undefined;
-  private _functions: FunctionType[] = [];
 
   constructor(
     private readonly _graph: ComputeGraph,
     private readonly _sheet: SheetType,
-    private readonly _space?: Space,
-    options: Partial<SheetModelOptions> = {},
+    private readonly _functions: FunctionManager,
+    private readonly _options: SheetModelOptions = {},
   ) {
-    this._options = { ...defaultOptions, ...options };
-
     // Sheet for this object.
     const name = this._sheet.id;
     if (!this._graph.hf.doesSheetExist(name)) {
@@ -122,12 +108,8 @@ export class SheetModel {
     };
   }
 
-  get functions(): FunctionDefinition[] {
-    const hfFunctions = this._graph.hf
-      .getRegisteredFunctionNames()
-      .map((name) => defaultFunctions.find((fn) => fn.name === name) ?? { name });
-    const echoFunctions = this._functions.map((fn) => ({ name: fn.binding! }));
-    return [...hfFunctions, ...echoFunctions];
+  get functions() {
+    return this._functions;
   }
 
   get initialized(): boolean {
@@ -140,32 +122,23 @@ export class SheetModel {
   async initialize() {
     log('initialize', { id: this.id });
     invariant(!this.initialized, 'Already initialized.');
-    this._ctx = new Context();
+    this._ctx = new Context(); // TODO(burdon): Chain functions context.
     initialize(this._sheet);
-    this.reset();
+
+    // Listen for function updates.
+    await this._functions.initialize();
+    this._ctx.onDispose(this._functions.update.on(() => this.update.emit()));
 
     // Listen for model updates (e.g., async calculations).
-    const unsubscribe = this._graph.update.on(() => this.update.emit());
-    this._ctx.onDispose(unsubscribe);
+    this._ctx.onDispose(this._graph.update.on(() => this.update.emit()));
 
-    // Subscribe to function objects.
-    // TODO(burdon): Factor out space dependency; inject functions provider.
-    if (this._space) {
-      // Listen for function changes.
-      const query = this._space.db.query(Filter.schema(FunctionType));
-      const unsubscribe = query.subscribe(({ objects }) => {
-        this._functions = objects.filter(({ binding }) => binding);
-        this.update.emit();
-      });
-
-      this._ctx.onDispose(unsubscribe);
-    }
-
+    this.reset();
     return this;
   }
 
   async destroy() {
     log('destroy', { id: this.id });
+    await this._functions.destroy();
     if (this._ctx) {
       await this._ctx.dispose();
       this._ctx = undefined;
@@ -182,7 +155,9 @@ export class SheetModel {
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
       const { column, row } = addressFromIndex(this._sheet, key);
       if (typeof value === 'string' && value.charAt(0) === '=') {
-        value = this.mapFormulaBindingToFormula(this.mapFormulaBindingFromId(this.mapFormulaIndicesToRefs(value)));
+        value = this._functions.mapFunctionBindingToFormula(
+          this._functions.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value)),
+        );
       }
 
       this._graph.hf.setCellContents({ sheet: this._sheetId, row, col: column }, value);
@@ -285,7 +260,7 @@ export class SheetModel {
     }
 
     if (typeof value === 'string' && value.charAt(0) === '=') {
-      return this.mapFormulaBindingFromId(this.mapFormulaIndicesToRefs(value));
+      return this._functions.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value));
     } else {
       return String(value);
     }
@@ -346,7 +321,11 @@ export class SheetModel {
 
     // Insert into engine.
     this._graph.hf.setCellContents({ sheet: this._sheetId, row: cell.row, col: cell.column }, [
-      [typeof value === 'string' && value.charAt(0) === '=' ? this.mapFormulaBindingToFormula(value) : value],
+      [
+        typeof value === 'string' && value.charAt(0) === '='
+          ? this._functions.mapFunctionBindingToFormula(value)
+          : value,
+      ],
     ]);
 
     // Insert into sheet.
@@ -355,7 +334,7 @@ export class SheetModel {
       delete this._sheet.cells[idx];
     } else {
       if (typeof value === 'string' && value.charAt(0) === '=') {
-        value = this.mapFormulaBindingToId(this.mapFormulaRefsToIndices(value));
+        value = this._functions.mapFunctionBindingToId(this.mapFormulaRefsToIndices(value));
       }
 
       this._sheet.cells[idx] = { value };
@@ -387,6 +366,7 @@ export class SheetModel {
           rowCells.push(value);
         }
       }
+
       rows.push(rowCells);
     }
 
@@ -406,53 +386,6 @@ export class SheetModel {
   //
   // Indices.
   //
-
-  /**
-   * E.g., "HELLO()" => "EDGE("HELLO")".
-   */
-  mapFormulaBindingToFormula(formula: string): string {
-    return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
-      const fn = this._functions.find((fn) => fn.binding === binding);
-      if (!fn) {
-        return match;
-      }
-
-      if (args.trim() === '') {
-        return `EDGE("${binding}")`;
-      }
-
-      return `EDGE("${binding}", ${args})`;
-    });
-  }
-
-  /**
-   * E.g., "EDGE("HELLO")" => "HELLO()".
-   */
-  mapFormulaBindingFromFormula(formula: string): string {
-    return formula.replace(/EDGE\("([a-zA-Z0-9]+)"(.*)\)/, (_match, binding, args) => {
-      if (args.trim() === '') {
-        return `${binding}()`;
-      }
-
-      return `${binding}(${args.slice(2)})`;
-    });
-  }
-
-  /**
-   * Map from binding to fully qualified ECHO ID.
-   */
-  mapFormulaBindingToId(formula: string): string {
-    const fn = this._options.mapFormulaBindingToId(this._functions);
-    return fn(formula);
-  }
-
-  /**
-   * Map from fully qualified ECHO ID to binding.
-   */
-  mapFormulaBindingFromId(formula: string): string {
-    const fn = this._options.mapFormulaBindingToId(this._functions);
-    return fn(formula);
-  }
 
   /**
    * Map from A1 notation to indices.

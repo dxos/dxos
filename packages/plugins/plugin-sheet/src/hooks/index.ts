@@ -3,4 +3,5 @@
 //
 
 export * from './useComputeGraph';
+export * from './useFormattingModel';
 export * from './useSheetModel';

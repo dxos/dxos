@@ -1086,7 +1086,7 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
   const extension = useMemo(
     () => [
       editorKeys({ onNav, onClose }),
-      sheetExtension({ functions: model.functions }),
+      sheetExtension({ functions: model.functions.functions }),
       rangeExtension((fn) => (notifier.current = fn)),
     ],
     [model],
@@ -1110,12 +1110,13 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
 
 const SheetStatusBar = () => {
   const { model, cursor, range } = useSheetContext();
+
   let value;
   let isFormula = false;
   if (cursor) {
     value = model.getCellValue(cursor);
     if (typeof value === 'string' && value.charAt(0) === '=') {
-      value = model.mapFormulaBindingFromId(model.mapFormulaIndicesToRefs(value));
+      value = model.functions.mapFunctionBindingFromId(model.mapFormulaIndicesToRefs(value));
       isFormula = true;
     } else if (value != null) {
       value = String(value);

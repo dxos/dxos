@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
 
 import { useComputeGraph } from './useComputeGraph';
-import { mapFunctionBindingFromId, mapFunctionBindingToId, SheetModel, FormattingModel } from '../model';
+import { FunctionManager, SheetModel } from '../model';
 import { type SheetType } from '../types';
 
 export type UseSheetModelProps = {
@@ -26,11 +26,7 @@ export const useSheetModel = ({ space, sheet, readonly }: UseSheetModelProps): S
 
     let model: SheetModel | undefined;
     const t = setTimeout(async () => {
-      model = new SheetModel(graph, sheet, space, {
-        readonly,
-        mapFormulaBindingToId: mapFunctionBindingToId,
-        mapFormulaBindingFromId: mapFunctionBindingFromId,
-      });
+      model = new SheetModel(graph, sheet, new FunctionManager(graph, space), { readonly });
       await model.initialize();
       setModel(model);
     });
@@ -42,8 +38,4 @@ export const useSheetModel = ({ space, sheet, readonly }: UseSheetModelProps): S
   }, [graph, readonly]);
 
   return model;
-};
-
-export const useFormattingModel = (model: SheetModel | undefined): FormattingModel | undefined => {
-  return useMemo(() => model && new FormattingModel(model), [model]);
 };
