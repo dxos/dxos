@@ -155,17 +155,19 @@ export class SheetModel {
     this._ctx.onDispose(unsubscribe);
 
     // Subscribe to function objects.
+    // TODO(burdon): Factor out space dependency.
     if (this._space) {
       const { Filter } = await import('@dxos/client/echo');
       const { FunctionType } = await import('@dxos/plugin-script/types');
 
       // Listen for function changes.
       const query = this._space?.db.query(Filter.schema(FunctionType));
-      const unsubscribe = query.subscribe(({ objects }) => {
-        this._functions = objects.filter((fn) => fn.binding);
-        this.update.emit();
-      });
-      this._ctx.onDispose(unsubscribe);
+      this._ctx.onDispose(
+        query.subscribe(({ objects }) => {
+          this._functions = objects.filter((fn) => fn.binding);
+          this.update.emit();
+        }),
+      );
     }
 
     return this;
@@ -459,14 +461,16 @@ export class SheetModel {
    * Map from binding to fully qualified ECHO ID.
    */
   mapFormulaBindingToId(formula: string): string {
-    return this._options.mapFormulaBindingToId(this._functions)(formula);
+    const f = this._options.mapFormulaBindingToId(this._functions);
+    return f(formula);
   }
 
   /**
    * Map from fully qualified ECHO ID to binding.
    */
   mapFormulaBindingFromId(formula: string): string {
-    return this._options.mapFormulaBindingFromId(this._functions)(formula);
+    const f = this._options.mapFormulaBindingToId(this._functions);
+    return f(formula);
   }
 
   /**

@@ -59,6 +59,7 @@ export class EdgeFunctionPlugin extends FunctionPluginAsync {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ args: args.filter(nonNullable) }),
         });
+
         return await result.text();
       };
 

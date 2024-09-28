@@ -31,17 +31,14 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
     meta,
     ready: async (plugins) => {
       const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-      if (!client) {
-        return;
-      }
-
-      graphRegistry = await createGraphRegistry();
-
+      invariant(client);
       if (client.config.values.runtime?.services?.edge?.url) {
         const url = new URL('/functions', client.config.values.runtime?.services?.edge?.url);
         url.protocol = 'https';
         remoteFunctionUrl = url.toString();
       }
+
+      graphRegistry = await createGraphRegistry({ remoteFunctionUrl });
     },
     provides: {
       context: ({ children }) => {
@@ -141,9 +138,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
             switch (role) {
               case 'article':
               case 'section': {
-                return (
-                  <SheetContainer sheet={data.object} space={space} role={role} remoteFunctionUrl={remoteFunctionUrl} />
-                );
+                return <SheetContainer sheet={data.object} space={space} role={role} />;
               }
             }
           }
@@ -163,7 +158,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
                 graph = await graphRegistry.createGraph(space);
               }
 
-              // TODO(burdon): Factor out dependency.
+              // TODO(burdon): Factor out HF dependency.
               const sheet = createSheet();
               const model = new SheetModel(graph, sheet);
               await model.initialize();

@@ -15,7 +15,7 @@ import { createSheet, ValueTypeEnum } from '../types';
  * VITEST_ENV=chrome p vitest --watch
  * NOTE: Browser test required for hyperformula due to raw translation files.
  */
-describe('model', () => {
+describe('sheet model', () => {
   const createModel = async () => {
     const registry = new ComputeGraphRegistry();
     await registry.initialize();
@@ -23,11 +23,11 @@ describe('model', () => {
     const sheet = createSheet();
     const model = new SheetModel(graph, sheet, space, { rows: 5, columns: 5 });
     await model.initialize();
-    return model;
+    return { graph, model };
   };
 
   test('create', async () => {
-    const model = await createModel();
+    const { model } = await createModel();
     expect(model.bounds).to.deep.eq({ rows: 5, columns: 5 });
     model.setValue(addressFromA1Notation('A1'), 100);
     const value = model.getValue(addressFromA1Notation('A1'));
@@ -35,14 +35,14 @@ describe('model', () => {
   });
 
   test('map formula', async () => {
-    const model = await createModel();
+    const { model } = await createModel();
     const x1 = model.mapFormulaRefsToIndices('=SUM(A1:A3)');
     const x2 = model.mapFormulaIndicesToRefs(x1);
     expect(x2).to.eq('=SUM(A1:A3)');
   });
 
   test('dates', async () => {
-    const model = await createModel();
+    const { model } = await createModel();
     const cell = addressFromA1Notation('A1');
     model.setValue(cell, '=NOW()');
     const type = model.getValueType(cell);
@@ -56,7 +56,7 @@ describe('model', () => {
   });
 
   test('formula', async () => {
-    const model = await createModel();
+    const { model } = await createModel();
 
     // Nested formula.
     {

@@ -19,9 +19,9 @@ describe('compute graph', () => {
   const createModel = async () => {
     const registry = new ComputeGraphRegistry();
     await registry.initialize([{ plugin: CustomPlugin, translations: CustomPluginTranslations }]);
-    const graph = await registry.createGraph();
+    const graph = await registry.createGraph(space);
     const sheet = createSheet();
-    const model = new SheetModel(graph, sheet, undefined, { rows: 5, columns: 5 });
+    const model = new SheetModel(graph, sheet, space, { rows: 5, columns: 5 });
     graph.update.on(() => model.update.emit());
     return { graph, model };
   };
