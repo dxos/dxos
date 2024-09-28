@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
-import { createContext } from 'react';
+import React, { createContext, type PropsWithChildren } from 'react';
 
 import { type ComputeGraphRegistry } from '../../graph';
 
