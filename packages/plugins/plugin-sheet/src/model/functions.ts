@@ -13,8 +13,11 @@ import type { ComputeGraph } from '../graph';
 // TODO(wittjosiah): Factor out.
 const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
 
+// TODO(burdon): Change to "DX".
+const CUSTOM_FUNCTION = 'ECHO';
+
 /**
- *
+ * Manages mapping between function bindings and their definitions.
  */
 // TODO(burdon): Tests.
 export class FunctionManager {
@@ -54,7 +57,8 @@ export class FunctionManager {
   }
 
   /**
-   * E.g., "HELLO()" => "EDGE("HELLO")".
+   * Map bound value to custom function invocation.
+   * E.g., "HELLO(...args)" => "EDGE("HELLO", ...args)".
    */
   mapFunctionBindingToFormula(formula: string): string {
     return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
@@ -64,10 +68,10 @@ export class FunctionManager {
       }
 
       if (args.trim() === '') {
-        return `EDGE("${binding}")`;
+        return `${CUSTOM_FUNCTION}("${binding}")`;
+      } else {
+        return `${CUSTOM_FUNCTION}("${binding}", ${args})`;
       }
-
-      return `EDGE("${binding}", ${args})`;
     });
   }
 
@@ -76,7 +80,7 @@ export class FunctionManager {
    */
   mapFunctionBindingToId(formula: string) {
     return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
-      if (binding === 'EDGE' || defaultFunctions.find((fn) => fn.name === binding)) {
+      if (binding === CUSTOM_FUNCTION || defaultFunctions.find((fn) => fn.name === binding)) {
         return match;
       }
 
