@@ -11,7 +11,7 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
         "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
+        "default": "./dist/lib/node/index.cjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
@@ -19,7 +19,7 @@
       "browser": "./dist/lib/browser/meta.mjs",
       "node": {
         "require": "./dist/lib/node/meta.cjs",
-        "default": "./dist/lib/node-esm/meta.mjs"
+        "default": "./dist/lib/node/meta.cjs"
       },
       "types": "./dist/types/src/meta.d.ts"
     }

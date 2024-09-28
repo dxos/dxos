@@ -11,7 +11,7 @@
       "browser": "./dist/lib/browser/edge/index.mjs",
       "node": {
         "require": "./dist/lib/node/edge/index.cjs",
-        "default": "./dist/lib/node-esm/edge/index.mjs"
+        "default": "./dist/lib/node/edge/index.cjs"
       },
       "types": "./dist/types/src/edge/index.d.ts"
     },
@@ -19,7 +19,7 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
         "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
+        "default": "./dist/lib/node/index.cjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
@@ -27,7 +27,7 @@
       "browser": "./dist/lib/browser/meta.mjs",
       "node": {
         "require": "./dist/lib/node/meta.cjs",
-        "default": "./dist/lib/node-esm/meta.mjs"
+        "default": "./dist/lib/node/meta.cjs"
       },
       "types": "./dist/types/src/meta.d.ts"
     },
@@ -35,7 +35,7 @@
       "browser": "./dist/lib/browser/types/index.mjs",
       "node": {
         "require": "./dist/lib/node/types/index.cjs",
-        "default": "./dist/lib/node-esm/types/index.mjs"
+        "default": "./dist/lib/node/types/index.cjs"
       },
       "types": "./dist/types/src/types/index.d.ts"
     }

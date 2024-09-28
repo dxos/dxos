@@ -289,7 +289,7 @@ export class Observability {
     const updateSignalMetrics = new Event<NetworkStatus>().debounce(NETWORK_METRICS_MIN_INTERVAL);
     updateSignalMetrics.on(this._ctx, async () => {
       log('send signal metrics');
-      (this._lastNetworkStatus?.signaling as NetworkStatus.Signal[]).forEach(({ server, state }) => {
+      (this._lastNetworkStatus?.signaling as NetworkStatus.Signal[])?.forEach(({ server, state }) => {
         this.gauge('dxos.client.network.signal.connectionState', state, { server });
       });
 

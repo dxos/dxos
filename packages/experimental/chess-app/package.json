@@ -12,7 +12,7 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
         "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
+        "default": "./dist/lib/node/index.cjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
@@ -20,7 +20,7 @@
       "browser": "./dist/lib/browser/types.mjs",
       "node": {
         "require": "./dist/lib/node/types.cjs",
-        "default": "./dist/lib/node-esm/types.mjs"
+        "default": "./dist/lib/node/types.cjs"
       },
       "types": "./dist/types/src/types.d.ts"
     }

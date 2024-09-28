@@ -11,7 +11,7 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
         "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
+        "default": "./dist/lib/node/index.cjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
@@ -19,7 +19,7 @@
       "browser": "./dist/lib/browser/segment/index.mjs",
       "node": {
         "require": "./dist/lib/node/segment/index.cjs",
-        "default": "./dist/lib/node-esm/segment/index.mjs"
+        "default": "./dist/lib/node/segment/index.cjs"
       },
       "types": "./dist/types/src/segment/index.d.ts"
     },
@@ -27,7 +27,7 @@
       "browser": "./dist/lib/browser/sentry/index.mjs",
       "node": {
         "require": "./dist/lib/node/sentry/index.cjs",
-        "default": "./dist/lib/node-esm/sentry/index.mjs"
+        "default": "./dist/lib/node/sentry/index.cjs"
       },
       "types": "./dist/types/src/sentry/index.d.ts"
     }
