@@ -7,20 +7,17 @@ import { useEffect, useMemo, useState } from 'react';
 import { type Space } from '@dxos/react-client/echo';
 
 import { useComputeGraph } from './useComputeGraph';
-import { type FunctionContextOptions } from '../graph';
 import { mapFormulaBindingFromId, mapFormulaBindingToId, SheetModel, FormattingModel } from '../model';
 import { type SheetType } from '../types';
 
 export type UseSheetModelProps = {
-  sheet: SheetType;
   space: Space;
-  options?: Partial<FunctionContextOptions>;
+  sheet: SheetType;
   readonly?: boolean;
 };
 
-export const useSheetModel = ({ space, sheet, options, readonly }: UseSheetModelProps): SheetModel | undefined => {
-  const graph = useComputeGraph(space, options);
-
+export const useSheetModel = ({ space, sheet, readonly }: UseSheetModelProps): SheetModel | undefined => {
+  const graph = useComputeGraph(space);
   const [model, setModel] = useState<SheetModel>();
   useEffect(() => {
     if (!graph) {

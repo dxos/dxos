@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { SheetModel } from './model';
 import { addressFromA1Notation, rangeFromA1Notation } from './types';
-import { createComputeGraph } from '../graph';
+import { ComputeGraphRegistry } from '../graph';
 import { createSheet, ValueTypeEnum } from '../types';
 
 // TODO(burdon): Test undo (e.g., clear cells).
@@ -17,9 +17,11 @@ import { createSheet, ValueTypeEnum } from '../types';
  */
 describe('model', () => {
   const createModel = async () => {
-    const graph = createComputeGraph();
+    const registry = new ComputeGraphRegistry();
+    await registry.initialize();
+    const graph = await registry.createGraph(space);
     const sheet = createSheet();
-    const model = new SheetModel(graph, sheet, undefined, { rows: 5, columns: 5 });
+    const model = new SheetModel(graph, sheet, space, { rows: 5, columns: 5 });
     await model.initialize();
     return model;
   };

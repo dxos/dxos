@@ -8,7 +8,6 @@ import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
 
 import { createDecorations } from './decorations';
-import { type FunctionContextOptions } from '../../graph';
 import { useSheetModel, useFormattingModel } from '../../hooks';
 import { type CellAddress, type CellRange, type FormattingModel, type SheetModel } from '../../model';
 import { type SheetType } from '../../types';
@@ -48,8 +47,7 @@ export type SheetContextProps = {
   sheet: SheetType;
   space: Space;
   readonly?: boolean;
-} & Pick<SheetContextType, 'onInfo'> &
-  Partial<FunctionContextOptions>;
+} & Pick<SheetContextType, 'onInfo'>;
 
 export const SheetContextProvider = ({
   children,
@@ -57,9 +55,8 @@ export const SheetContextProvider = ({
   space,
   readonly,
   onInfo,
-  ...options
 }: PropsWithChildren<SheetContextProps>) => {
-  const model = useSheetModel({ sheet, space, readonly, options });
+  const model = useSheetModel({ sheet, space, readonly });
   const formatting = useFormattingModel(model);
 
   // TODO(Zan): We should offer a version of set range and set cursor that scrolls to

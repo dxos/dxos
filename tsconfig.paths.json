@@ -234,7 +234,7 @@
         "packages/plugins/plugin-sheet/src/meta.tsx"
       ],
       "@dxos/plugin-sheet/testing": [
-        "packages/plugins/plugin-sheet/src/testing.ts"
+        "packages/plugins/plugin-sheet/src/testing/index.ts"
       ],
       "@dxos/plugin-sheet/types": [
         "packages/plugins/plugin-sheet/src/types.ts"

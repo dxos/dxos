@@ -114,7 +114,7 @@ export const Default = () => {
   }
 
   return (
-    <Sheet.Root sheet={sheet} space={space} onInfo={() => setDebug((debug) => !debug)}>
+    <Sheet.Root space={space} sheet={sheet} onInfo={() => setDebug((debug) => !debug)}>
       <SheetWithToolbar debug={debug} space={space} />
     </Sheet.Root>
   );
@@ -128,7 +128,7 @@ export const Debug = () => {
   }
 
   return (
-    <Sheet.Root sheet={sheet} space={space}>
+    <Sheet.Root space={space} sheet={sheet}>
       <Sheet.Main />
       <Sheet.Debug />
     </Sheet.Root>
@@ -144,7 +144,7 @@ export const Rows = () => {
   }
 
   return (
-    <Sheet.Root sheet={sheet} space={space}>
+    <Sheet.Root space={space} sheet={sheet}>
       <Sheet.Rows
         rows={sheet.rows}
         sizes={rowSizes}
@@ -181,7 +181,7 @@ export const Main = () => {
   }
 
   return (
-    <Sheet.Root sheet={sheet} space={space}>
+    <Sheet.Root space={space} sheet={sheet}>
       <Sheet.Grid
         size={{
           numRows: 50,

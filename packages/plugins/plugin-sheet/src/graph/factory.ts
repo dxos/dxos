@@ -2,18 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import { CustomPlugin, CustomPluginTranslations } from './custom-function';
+import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './edge-function';
+import { ComputeGraphRegistry } from './graph';
+
 /**
  * NOTE: Async imports to decouple hyperformula deps.
  */
 export const createGraphRegistry = async () => {
-  const {
-    ComputeGraphRegistry,
-    CustomPlugin,
-    CustomPluginTranslations,
-    EdgeFunctionPlugin,
-    EdgeFunctionPluginTranslations,
-  } = await import('./graph');
-
   const registry = new ComputeGraphRegistry();
   await registry.initialize([
     { plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations },

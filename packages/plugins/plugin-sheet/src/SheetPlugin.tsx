@@ -45,6 +45,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
     },
     provides: {
       context: ({ children }) => {
+        invariant(graphRegistry);
         return <ComputeGraphContextProvider registry={graphRegistry}>{children}</ComputeGraphContextProvider>;
       },
       metadata: {
