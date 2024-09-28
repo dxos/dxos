@@ -15,7 +15,6 @@ import { ValueTypeEnum } from '../types';
 // TODO(burdon): Test undo (e.g., clear cells).
 
 /**
- * VITEST_ENV=chrome p vitest --watch
  * NOTE: Browser test required for hyperformula due to raw translation files.
  */
 describe('sheet model', () => {
@@ -33,8 +32,9 @@ describe('sheet model', () => {
     return { graph, model };
   };
 
-  test('create', async () => {
+  test.only('create', async () => {
     const { model } = await createModel();
+    console.log(model);
     expect(model.bounds).to.deep.eq({ rows: 5, columns: 5 });
     model.setValue(addressFromA1Notation('A1'), 100);
     const value = model.getValue(addressFromA1Notation('A1'));

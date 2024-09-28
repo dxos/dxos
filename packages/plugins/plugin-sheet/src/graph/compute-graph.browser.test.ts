@@ -14,7 +14,6 @@ import { FunctionManager, SheetModel } from '../model';
 import { type CellScalarValue } from '../types';
 
 /**
- * VITEST_ENV=chrome p vitest --watch
  * NOTE: Browser test required for hyperformula due to raw translation files.
  */
 describe('compute graph', () => {
