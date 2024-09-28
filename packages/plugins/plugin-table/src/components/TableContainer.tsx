@@ -10,9 +10,6 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 
-// TODO(burdon): Slide
-// <div role='none' className='flex-1 min-bs-0 pli-16 plb-24'>
-
 const TableContainer = ({ role, table }: LayoutContainerProps<Omit<ObjectTableProps, 'role' | 'getScrollElement'>>) => {
   return (
     <Table.Root>

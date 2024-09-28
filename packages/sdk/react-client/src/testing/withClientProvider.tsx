@@ -17,7 +17,7 @@ import { ClientProvider, type ClientProviderProps } from '../client';
 type InitializeProps = {
   createIdentity?: boolean;
   createSpace?: boolean;
-  onSpaceCreated?: (client: Client, space: Space) => MaybePromise<void>;
+  onSpaceCreated?: (props: { client: Client; space: Space }) => MaybePromise<void>;
 };
 
 /**
@@ -41,7 +41,7 @@ const initializeClient = async (
   let space: Space | undefined;
   if (createSpace) {
     space = await client.spaces.create({ name: 'Test Space' });
-    await onSpaceCreated?.(client, space);
+    await onSpaceCreated?.({ client, space });
   }
 
   await onInitialized?.(client);
@@ -83,7 +83,6 @@ export type WithMultiClientProviderProps = InitializeProps & ClientProviderProps
  * Orchestrates invitations between a randomly selected host and the remaining clients.
  * NOTE: Should come before withLayout.
  */
-// TODO(burdon): Create test.
 export const withMultiClientProvider = ({
   numClients = 2,
   createIdentity,

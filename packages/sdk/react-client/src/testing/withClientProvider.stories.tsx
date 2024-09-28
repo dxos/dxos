@@ -37,11 +37,16 @@ const Test = () => {
 
 export default {
   title: 'react-client/withClientProvider',
-  component: Test,
-  decorators: [withTheme, withClientProvider({ createIdentity: true })],
+  render: Test,
 };
 
-export const Default = {};
+export const Default = {
+  decorators: [
+    withClientProvider({ createIdentity: true, createSpace: true }),
+    withTheme,
+    withLayout({ classNames: ['flex gap-2'] }),
+  ],
+};
 
 export const Multiple = {
   decorators: [
@@ -50,7 +55,7 @@ export const Multiple = {
       createIdentity: true,
       createSpace: true,
     }),
-    withLayout({ classNames: ['flex gap-2'] }),
     withTheme,
+    withLayout({ classNames: ['flex gap-2'] }),
   ],
 };
