@@ -22,8 +22,10 @@ describe('compute graph', () => {
     await client.initialize();
     await client.halo.createIdentity();
     const space = await client.spaces.create();
+
     const registry = new ComputeGraphRegistry();
     await registry.initialize([{ plugin: CustomPlugin, translations: CustomPluginTranslations }]);
+
     const graph = await registry.createGraph(space);
     const sheet = createSheet({ rows: 5, columns: 5 });
     const model = new SheetModel(graph, sheet, new FunctionManager(graph, space));

@@ -65,7 +65,7 @@ export class CollectionSynchronizer extends Resource {
   }
 
   setLocalCollectionState(collectionId: string, state: CollectionState) {
-    log.info('setLocalCollectionState', { collectionId, state });
+    log('setLocalCollectionState', { collectionId, state });
     this._getPerCollectionState(collectionId).localState = state;
 
     queueMicrotask(async () => {
