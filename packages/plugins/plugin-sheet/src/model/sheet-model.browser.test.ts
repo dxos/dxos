@@ -6,7 +6,6 @@ import { describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 
-import { FunctionManager } from './functions';
 import { SheetModel } from './sheet-model';
 import { addressFromA1Notation, createSheet, rangeFromA1Notation } from '../defs';
 import { ComputeGraphRegistry } from '../graph';
@@ -24,9 +23,9 @@ describe('sheet model', () => {
     await client.halo.createIdentity();
     const space = await client.spaces.create();
     const registry = new ComputeGraphRegistry();
-    const graph = registry.createGraph(space);
+    const graph = await registry.createGraph(space);
     const sheet = createSheet({ rows: 5, columns: 5 });
-    const model = new SheetModel(graph, sheet, new FunctionManager(graph, space));
+    const model = new SheetModel(graph, sheet);
     await model.initialize();
     return { graph, model };
   };

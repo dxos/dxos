@@ -9,7 +9,7 @@ import { Client } from '@dxos/client';
 
 import { createComputeGraphRegistry } from './compute-graph';
 import { addressFromA1Notation, createSheet } from '../defs';
-import { FunctionManager, SheetModel } from '../model';
+import { SheetModel } from '../model';
 import { type CellScalarValue } from '../types';
 
 /**
@@ -22,9 +22,9 @@ describe('compute graph', () => {
     await client.halo.createIdentity();
     const space = await client.spaces.create();
     const registry = createComputeGraphRegistry();
-    const graph = registry.createGraph(space);
+    const graph = await registry.createGraph(space);
     const sheet = createSheet({ rows: 5, columns: 5 });
-    const model = new SheetModel(graph, sheet, new FunctionManager(graph, space));
+    const model = new SheetModel(graph, sheet);
     graph.update.on(() => model.update.emit());
     return { graph, model };
   };

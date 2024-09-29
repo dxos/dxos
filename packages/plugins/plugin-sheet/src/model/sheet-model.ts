@@ -13,7 +13,6 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type FunctionManager } from './functions';
 import {
   addressFromA1Notation,
   addressToA1Notation,
@@ -73,7 +72,6 @@ export class SheetModel {
   constructor(
     private readonly _graph: ComputeGraph,
     private readonly _sheet: SheetType,
-    private readonly _functions: FunctionManager,
     private readonly _options: SheetModelOptions = {},
   ) {
     this._node = this._graph.getNode(this._sheet.id);
@@ -100,7 +98,7 @@ export class SheetModel {
   }
 
   get functions() {
-    return this._functions;
+    return this._graph.functions;
   }
 
   get initialized(): boolean {
@@ -113,27 +111,19 @@ export class SheetModel {
   async initialize() {
     log('initialize', { id: this.id });
     invariant(!this.initialized, 'Already initialized.');
-    this._ctx = new Context(); // TODO(burdon): Chain functions context.
     initialize(this._sheet);
 
-    // Listen for function updates.
-    await this._functions.initialize();
-    this._ctx.onDispose(this._functions.update.on(() => this.update.emit()));
-
     // Listen for model updates (e.g., async calculations).
+    this._ctx = new Context();
     this._ctx.onDispose(this._graph.update.on(() => this.update.emit()));
-
     this.reset();
     return this;
   }
 
   async destroy() {
     log('destroy', { id: this.id });
-    await this._functions.destroy();
-    if (this._ctx) {
-      await this._ctx.dispose();
-      this._ctx = undefined;
-    }
+    await this._ctx?.dispose();
+    this._ctx = undefined;
   }
 
   /**
@@ -146,8 +136,8 @@ export class SheetModel {
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
       const { column, row } = addressFromIndex(this._sheet, key);
       if (typeof value === 'string' && value.charAt(0) === '=') {
-        value = this._functions.mapFunctionBindingToCustomFunction(
-          this._functions.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value)),
+        value = this._graph.functions.mapFunctionBindingToCustomFunction(
+          this._graph.functions.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value)),
         );
       }
 
@@ -252,7 +242,7 @@ export class SheetModel {
     }
 
     if (typeof value === 'string' && value.charAt(0) === '=') {
-      return this._functions.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value));
+      return this._graph.functions.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value));
     } else {
       return String(value);
     }
@@ -315,7 +305,7 @@ export class SheetModel {
     this._node.hf.setCellContents({ sheet: this._node.sheetId, row: cell.row, col: cell.column }, [
       [
         typeof value === 'string' && value.charAt(0) === '='
-          ? this._functions.mapFunctionBindingToCustomFunction(value)
+          ? this._graph.functions.mapFunctionBindingToCustomFunction(value)
           : value,
       ],
     ]);
@@ -326,7 +316,7 @@ export class SheetModel {
       delete this._sheet.cells[idx];
     } else {
       if (typeof value === 'string' && value.charAt(0) === '=') {
-        value = this._functions.mapFunctionBindingToId(this.mapFormulaRefsToIndices(value));
+        value = this._graph.functions.mapFunctionBindingToId(this.mapFormulaRefsToIndices(value));
       }
 
       this._sheet.cells[idx] = { value };

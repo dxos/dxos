@@ -79,6 +79,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-grid": "workspace:*",

@@ -64,6 +64,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../ui/primitives/react-hooks"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {

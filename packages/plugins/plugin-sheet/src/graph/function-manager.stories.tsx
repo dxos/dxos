@@ -13,7 +13,7 @@ import { Toolbar, Button, Input } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { FunctionManager } from './functions';
+import { FunctionManager } from './function-manager';
 import { createSheet } from '../defs';
 import { useComputeGraph, useSheetModel } from '../hooks';
 import { withGraphDecorator } from '../testing';

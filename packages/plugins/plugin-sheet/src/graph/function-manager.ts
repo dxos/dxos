@@ -19,6 +19,7 @@ const CUSTOM_FUNCTION = 'ECHO';
 /**
  * Manages mapping between function bindings and their definitions.
  */
+// TODO(burdon): Move into ComputeGraph.
 export class FunctionManager {
   private readonly _ctx = new Context();
 

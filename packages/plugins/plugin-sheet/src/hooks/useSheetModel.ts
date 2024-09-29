@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { type Space } from '@dxos/react-client/echo';
 
 import { useComputeGraph } from './useComputeGraph';
-import { FunctionManager, SheetModel } from '../model';
+import { SheetModel } from '../model';
 import { type SheetType } from '../types';
 
 export type UseSheetModelOptions = {
@@ -29,7 +29,7 @@ export const useSheetModel = (
 
     let model: SheetModel | undefined;
     const t = setTimeout(async () => {
-      model = new SheetModel(graph, sheet, new FunctionManager(graph, space), { readonly });
+      model = new SheetModel(graph, sheet, { readonly });
       await model.initialize();
       setModel(model);
     });

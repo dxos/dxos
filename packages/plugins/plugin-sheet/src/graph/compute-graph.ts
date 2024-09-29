@@ -8,12 +8,14 @@ import { type FunctionTranslationsPackage } from 'hyperformula/typings/interpret
 
 import { Event } from '@dxos/async';
 import { type SpaceId, type Space } from '@dxos/client/echo';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { FunctionContext, type FunctionContextOptions } from './async-function';
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './edge-function';
+import { FunctionManager } from './function-manager';
 
 export type ComputeGraphPlugin = {
   plugin: FunctionPluginDefinition;
@@ -52,26 +54,43 @@ export const createComputeGraphRegistry = (options: Partial<FunctionContextOptio
 export class ComputeGraphRegistry {
   private readonly _registry = new Map<SpaceId, ComputeGraph>();
 
+  // TODO(burdon): Base class for initialize/destroy.
+  private _ctx?: Context;
+
   constructor(private readonly _options: ComputeGraphOptions = defaultOptions) {
     this._options.plugins?.forEach(({ plugin, translations }) => {
       HyperFormula.registerFunctionPlugin(plugin, translations);
     });
   }
 
+  get initialized() {
+    return !!this._ctx;
+  }
+
+  async initialize() {
+    invariant(!this.initialized);
+    this._ctx = new Context();
+  }
+
+  async destroy() {
+    await this._ctx?.dispose();
+  }
+
   getGraph(spaceId: SpaceId): ComputeGraph | undefined {
     return this._registry.get(spaceId);
   }
 
-  getOrCreateGraph(space: Space): ComputeGraph {
+  async getOrCreateGraph(space: Space): Promise<ComputeGraph> {
     let graph = this.getGraph(space.id);
     if (!graph) {
-      graph = this.createGraph(space);
+      graph = await this.createGraph(space);
     }
 
     return graph;
   }
 
-  createGraph(space: Space): ComputeGraph {
+  // TODO(burdon): Async.
+  async createGraph(space: Space): Promise<ComputeGraph> {
     const hf = HyperFormula.buildEmpty(this._options);
     invariant(!this._registry.has(space.id), `Already exists: ${space.id}`);
     const graph = new ComputeGraph(hf, space, this._options);
@@ -92,6 +111,10 @@ export class ComputeGraph {
   // The context is passed to all functions.
   public readonly context = new FunctionContext(this._hf, this._space, this.refresh.bind(this), this._options);
 
+  private readonly _functions: FunctionManager;
+
+  private _ctx?: Context;
+
   constructor(
     private readonly _hf: HyperFormula,
     private readonly _space?: Space,
@@ -99,10 +122,32 @@ export class ComputeGraph {
   ) {
     // TODO(burdon): Create separate instance per graph (i.e., per space).
     this._hf.updateConfig({ context: this.context });
+    this._functions = new FunctionManager(this, _space);
   }
 
   get hf() {
     return this._hf;
+  }
+
+  get functions() {
+    return this._functions;
+  }
+
+  get initialized() {
+    return !!this._ctx;
+  }
+
+  async initialize() {
+    invariant(!this.initialized);
+    this._ctx = new Context();
+
+    // Listen for function updates.
+    await this._functions.initialize();
+    this._ctx.onDispose(this._functions.update.on(() => this.update.emit()));
+  }
+
+  async destroy() {
+    await this._ctx?.dispose();
   }
 
   /**

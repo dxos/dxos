@@ -3,5 +3,4 @@
 //
 
 export * from './formatting-model';
-export * from './functions';
 export * from './sheet-model';
