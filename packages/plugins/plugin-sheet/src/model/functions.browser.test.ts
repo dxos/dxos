@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create } from 'ts-node';
 import { describe, test, expect } from 'vitest';
 
 import { Client } from '@dxos/client';
+import { create } from '@dxos/client/echo';
 import { FunctionType } from '@dxos/plugin-script/types';
 
 import { FunctionManager } from './functions';
@@ -28,7 +28,6 @@ describe('FunctionManager', () => {
     await client.halo.createIdentity();
 
     // Create script.
-    // TODO(burdon): Test after initialize.
     const space = await client.spaces.create();
     const fn = space.db.add(create(FunctionType, { version: 1, binding: 'HELLO' }));
 
@@ -38,9 +37,5 @@ describe('FunctionManager', () => {
 
     const id = functionManager.mapFunctionBindingToId('HELLO()');
     expect(id).to.eq(`${fn.id}()`);
-
-    // TODO(burdon): Test invocation.
-    // TODO(burdon): Test storage.
-    expect(true).toBe(true);
   });
 });
