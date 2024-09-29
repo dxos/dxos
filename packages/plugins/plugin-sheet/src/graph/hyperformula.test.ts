@@ -2,20 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, test } from 'vitest';
+import { HyperFormula } from 'hyperformula';
+import { describe, test, expect } from 'vitest';
 
-import { Client } from '@dxos/client';
-import { TestBuilder } from '@dxos/client/testing';
-
-/**
- * VITEST_ENV=chromium npx vitest --ui
- */
 describe('hyperformula', () => {
   test('sanity', async () => {
-    const testBuilder = new TestBuilder();
-    const client = new Client({ services: testBuilder.createLocalClientServices() });
-    await client.initialize();
-    await client.halo.createIdentity({ displayName: 'test' });
-    await client.spaces.create();
+    // TODO(burdon): Throws "Cannot convert undefined or null to object" in vitest (without browser).
+    const hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
+    expect(hf).to.exist;
   });
 });

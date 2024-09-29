@@ -13,7 +13,6 @@ import { Toolbar, Button, Input } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { FunctionRegistry } from './function-registry';
 import { createSheet } from '../defs';
 import { useComputeGraph, useSheetModel } from '../hooks';
 import { withGraphDecorator } from '../testing';
@@ -25,7 +24,6 @@ const Story = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
   const [sheet, setSheet] = useState<SheetType>();
-  const [functionManager, setFunctionManager] = useState<FunctionRegistry>();
   const [text, setText] = useState(`${FUNCTION_NAME}(100)`);
   const [result, setResult] = useState<any>();
   const model = useSheetModel(space, sheet);
@@ -37,32 +35,24 @@ const Story = () => {
   }, [space]);
 
   useEffect(() => {
-    let t: NodeJS.Timeout | undefined;
     if (space && graph) {
-      t = setTimeout(async () => {
-        const functions = new FunctionRegistry(graph, space);
-        await functions.open();
-        setFunctionManager(functions);
-        functions.update.on(() => {
-          const f1 = functions.getFunctions({ standard: true, echo: false });
-          const f2 = functions.getFunctions({ standard: false, echo: true });
-          setResult({ functions: { standard: f1.length, echo: f2.length } });
-        });
-
-        space.db.add(create(FunctionType, { version: 1, binding: FUNCTION_NAME }));
+      graph.update.on(() => {
+        const f1 = graph.getFunctions({ standard: true, echo: false });
+        const f2 = graph.getFunctions({ standard: false, echo: true });
+        setResult({ functions: { standard: f1.length, echo: f2.length } });
       });
-    }
 
-    return () => clearTimeout(t);
+      space.db.add(create(FunctionType, { version: 1, binding: FUNCTION_NAME }));
+    }
   }, [space, graph]);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const handleTest = async () => {
-    if (space && functionManager) {
+    if (space && graph) {
       const { objects } = await space.db.query(Filter.schema(FunctionType)).run();
-      const mapped = functionManager.mapFunctionBindingToId(text);
-      const unmapped = functionManager.mapFunctionBindingFromId(mapped);
-      const internal = functionManager.mapFormulaToNative(text);
+      const mapped = graph.mapFunctionBindingToId(text);
+      const unmapped = graph.mapFunctionBindingFromId(mapped);
+      const internal = graph.mapFormulaToNative(text);
       setResult({ mapped, unmapped, internal, functions: objects.map((object) => object.id) });
     }
 
