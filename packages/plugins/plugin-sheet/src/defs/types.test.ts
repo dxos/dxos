@@ -9,8 +9,8 @@ import { inRange, addressFromA1Notation, addressToA1Notation, rangeFromA1Notatio
 
 describe('cell', () => {
   test('posToA1Notation', () => {
-    expect(addressToA1Notation({ column: 0, row: 0 })).to.eq('A1');
-    expect(addressFromA1Notation('C2')).to.deep.eq({ column: 2, row: 1 });
+    expect(addressToA1Notation({ col: 0, row: 0 })).to.eq('A1');
+    expect(addressFromA1Notation('C2')).to.deep.eq({ col: 2, row: 1 });
   });
 
   test('rangeToA1Notation', () => {
@@ -55,19 +55,19 @@ describe('cell', () => {
     // Values.
     const cells: Record<string, any> = {};
     const setCell = (cell: string, value: any) => {
-      const { column, row } = addressFromA1Notation(cell);
+      const { col, row } = addressFromA1Notation(cell);
       // Reallocate if > current bounds.
-      if (column >= columns.length) {
-        insertIndex(columns, column);
+      if (col >= columns.length) {
+        insertIndex(columns, col);
       }
       if (row >= rows.length) {
         insertIndex(rows, row);
       }
-      const index = `${columns[column]}@${rows[row]}`;
+      const index = `${columns[col]}@${rows[row]}`;
       cells[index] = value;
     };
 
-    expect(addressFromA1Notation('A1')).to.deep.eq({ column: 0, row: 0 });
+    expect(addressFromA1Notation('A1')).to.deep.eq({ col: 0, row: 0 });
 
     expect(columns).to.deep.eq(['a1', 'a2', 'a3', 'a4', 'a5']);
     insertIndex(columns, 7);

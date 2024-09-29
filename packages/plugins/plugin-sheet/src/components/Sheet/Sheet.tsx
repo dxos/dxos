@@ -138,7 +138,7 @@ const SheetRoot = ({ children, ...props }: PropsWithChildren<SheetContextProps>)
 
 type SheetMainProps = ThemedClassName<Partial<GridSize>>;
 
-const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numRows, numColumns }, forwardRef) => {
+const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numRows, numCols }, forwardRef) => {
   const { model, cursor, setCursor, setRange, setEditing } = useSheetContext();
 
   // Scrolling.
@@ -263,8 +263,8 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
         ref={columnsRef}
         columns={columns}
         sizes={columnSizes}
-        selected={cursor?.column}
-        onSelect={(column) => setCursor(cursor?.column === column ? undefined : { row: -1, column })}
+        selected={cursor?.col}
+        onSelect={(col) => setCursor(cursor?.col === col ? undefined : { row: -1, col })}
         onResize={handleResizeColumn}
         onMove={handleMoveColumns}
       />
@@ -274,13 +274,13 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
         rows={rows}
         sizes={rowSizes}
         selected={cursor?.row}
-        onSelect={(row) => setCursor(cursor?.row === row ? undefined : { row, column: -1 })}
+        onSelect={(row) => setCursor(cursor?.row === row ? undefined : { row, col: -1 })}
         onResize={handleResizeRow}
         onMove={handleMoveRows}
       />
       <SheetGrid
         ref={contentRef}
-        size={{ numRows: numRows ?? rows.length, numColumns: numColumns ?? columns.length }}
+        size={{ numRows: numRows ?? rows.length, numCols: numCols ?? columns.length }}
         rows={rows}
         columns={columns}
         rowSizes={rowSizes}
@@ -885,9 +885,9 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
 
             {/* Grid cells. */}
             {rowRange.map(({ row, top, height }) => {
-              return columnRange.map(({ column, left, width }) => {
+              return columnRange.map(({ col, left, width }) => {
                 const style: CSSProperties = { position: 'absolute', top, left, width, height };
-                const cell = { row, column };
+                const cell: CellAddress = { row, col };
                 const id = addressToA1Notation(cell);
                 const idx = addressToIndex(model.sheet, cell);
                 const active = posEquals(cursor, cell);

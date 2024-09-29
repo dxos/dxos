@@ -71,7 +71,7 @@ export const createSheet = ({ title, ...size }: CreateSheetOptions = {}): SheetT
  * E.g., "A1" => "CA2@CB3".
  */
 export const addressToIndex = (sheet: SheetType, cell: CellAddress): string => {
-  return `${sheet.columns[cell.column]}@${sheet.rows[cell.row]}`;
+  return `${sheet.columns[cell.col]}@${sheet.rows[cell.row]}`;
 };
 
 /**
@@ -80,7 +80,7 @@ export const addressToIndex = (sheet: SheetType, cell: CellAddress): string => {
 export const addressFromIndex = (sheet: SheetType, idx: string): CellAddress => {
   const [column, row] = idx.split('@');
   return {
-    column: sheet.columns.indexOf(column),
+    col: sheet.columns.indexOf(column),
     row: sheet.rows.indexOf(row),
   };
 };
@@ -108,7 +108,7 @@ export const closest = (cursor: CellAddress, cells: CellAddress[]): CellAddress 
   let closestDistance = Number.MAX_SAFE_INTEGER;
 
   for (const cell of cells) {
-    const distance = Math.abs(cell.row - cursor.row) + Math.abs(cell.column - cursor.column);
+    const distance = Math.abs(cell.row - cursor.row) + Math.abs(cell.col - cursor.col);
     if (distance < closestDistance) {
       closestCell = cell;
       closestDistance = distance;
@@ -123,8 +123,8 @@ export const closest = (cursor: CellAddress, cells: CellAddress[]): CellAddress 
  * Sorts primarily by row, then by column if rows are equal.
  */
 export const compareIndexPositions = (sheet: SheetType, indexA: string, indexB: string): number => {
-  const { row: rowA, column: columnA } = addressFromIndex(sheet, indexA);
-  const { row: rowB, column: columnB } = addressFromIndex(sheet, indexB);
+  const { row: rowA, col: columnA } = addressFromIndex(sheet, indexA);
+  const { row: rowB, col: columnB } = addressFromIndex(sheet, indexB);
 
   // Sort by row first, then by column.
   if (rowA !== rowB) {

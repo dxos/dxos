@@ -195,7 +195,7 @@ export const Main = () => {
       <Sheet.Grid
         size={{
           numRows: 50,
-          numColumns: 26,
+          numCols: 26,
         }}
         rows={sheet.rows}
         columns={sheet.columns}

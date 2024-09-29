@@ -16,6 +16,8 @@ import { log } from '@dxos/log';
 import { FunctionContext, type FunctionContextOptions } from './async-function';
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './edge-function';
 import { FunctionRegistry } from './function-registry';
+import { type CellAddress } from '../defs';
+import { type CellScalarValue } from '../types';
 
 export type ComputeGraphPlugin = {
   plugin: FunctionPluginDefinition;
@@ -146,13 +148,28 @@ export class ComputeGraph extends Resource {
 /**
  * Individual sheet (typically corresponds to an ECHO object).
  */
+// TODO(burdon): Factor out from SheetModel.
 export class ComputeNode {
   constructor(
-    public readonly graph: ComputeGraph,
+    private readonly _graph: ComputeGraph,
     public readonly sheetId: number,
   ) {}
 
   get hf() {
-    return this.graph.hf;
+    return this._graph.hf;
+  }
+
+  getValue(cell: CellAddress): CellScalarValue {
+    return null;
+  }
+
+  setValue(cell: CellAddress, value: CellScalarValue) {
+    this.hf.setCellContents({ sheet: this.sheetId, row: cell.row, col: cell.col }, [
+      [
+        typeof value === 'string' && value.charAt(0) === '='
+          ? this._graph.functions.mapFunctionBindingToCustomFunction(value)
+          : value,
+      ],
+    ]);
   }
 }

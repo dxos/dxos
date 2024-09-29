@@ -35,15 +35,15 @@ const typeMap: Record<string, ValueTypeEnum> = {
   NUMBER_TIME: ValueTypeEnum.Time,
 };
 
-const getTopLeft = (range: CellRange) => {
+const getTopLeft = (range: CellRange): CellAddress => {
   const to = range.to ?? range.from;
-  return { row: Math.min(range.from.row, to.row), column: Math.min(range.from.column, to.column) };
+  return { row: Math.min(range.from.row, to.row), col: Math.min(range.from.col, to.col) };
 };
 
 const toSimpleCellAddress = (sheet: number, cell: CellAddress): SimpleCellAddress => ({
   sheet,
   row: cell.row,
-  col: cell.column,
+  col: cell.col,
 });
 
 const toModelRange = (sheet: number, range: CellRange): SimpleCellRange => ({
@@ -68,6 +68,7 @@ export class SheetModel extends Resource {
   private readonly _node: ComputeNode;
 
   constructor(
+    // TODO(burdon): Remove graph property.
     private readonly _graph: ComputeGraph,
     private readonly _sheet: SheetType,
     private readonly _options: SheetModelOptions = {},
@@ -77,6 +78,7 @@ export class SheetModel extends Resource {
     this.reset();
   }
 
+  // TODO(burdon): Remove.
   get graph() {
     return this._graph;
   }
@@ -121,14 +123,14 @@ export class SheetModel extends Resource {
   reset() {
     this._node.hf.clearSheet(this._node.sheetId);
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
-      const { column, row } = addressFromIndex(this._sheet, key);
+      const { col, row } = addressFromIndex(this._sheet, key);
       if (typeof value === 'string' && value.charAt(0) === '=') {
         value = this._graph.functions.mapFunctionBindingToCustomFunction(
           this._graph.functions.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value)),
         );
       }
 
-      this._node.hf.setCellContents({ sheet: this._node.sheetId, row, col: column }, value);
+      this._node.hf.setCellContents({ sheet: this._node.sheetId, row, col }, value);
     });
   }
 
@@ -189,7 +191,7 @@ export class SheetModel extends Resource {
       for (const change of changes) {
         if (change instanceof ExportedCellChange) {
           const { address, newValue } = change;
-          const idx = addressToIndex(this._sheet, { row: address.row, column: address.col });
+          const idx = addressToIndex(this._sheet, { row: address.row, col: address.col });
           this._sheet.cells[idx] = { value: newValue };
         }
       }
@@ -278,8 +280,8 @@ export class SheetModel extends Resource {
       insertIndices(this._sheet.rows, cell.row, 1, MAX_ROWS);
       refresh = true;
     }
-    if (cell.column >= this._sheet.columns.length) {
-      insertIndices(this._sheet.columns, cell.column, 1, MAX_COLUMNS);
+    if (cell.col >= this._sheet.columns.length) {
+      insertIndices(this._sheet.columns, cell.col, 1, MAX_COLUMNS);
       refresh = true;
     }
 
@@ -289,7 +291,7 @@ export class SheetModel extends Resource {
     }
 
     // Insert into engine.
-    this._node.hf.setCellContents({ sheet: this._node.sheetId, row: cell.row, col: cell.column }, [
+    this._node.hf.setCellContents({ sheet: this._node.sheetId, row: cell.row, col: cell.col }, [
       [
         typeof value === 'string' && value.charAt(0) === '='
           ? this._graph.functions.mapFunctionBindingToCustomFunction(value)
@@ -325,12 +327,12 @@ export class SheetModel extends Resource {
   private _iterRange(range: CellRange, cb: (cell: CellAddress) => CellScalarValue | void): CellScalarValue[][] {
     const to = range.to ?? range.from;
     const rowRange = [Math.min(range.from.row, to.row), Math.max(range.from.row, to.row)];
-    const columnRange = [Math.min(range.from.column, to.column), Math.max(range.from.column, to.column)];
+    const columnRange = [Math.min(range.from.col, to.col), Math.max(range.from.col, to.col)];
     const rows: CellScalarValue[][] = [];
     for (let row = rowRange[0]; row <= rowRange[1]; row++) {
       const rowCells: CellScalarValue[] = [];
       for (let column = columnRange[0]; column <= columnRange[1]; column++) {
-        const value = cb({ row, column });
+        const value = cb({ row, col: column });
         if (value !== undefined) {
           rowCells.push(value);
         }

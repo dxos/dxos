@@ -3,15 +3,15 @@
 //
 
 import type { Decorator } from '@storybook/react';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
-import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type Space } from '@dxos/react-client/echo';
+import { useAsyncState } from '@dxos/react-hooks';
 
 import { ComputeGraphContextProvider } from '../components';
 import { createSheet } from '../defs';
 import { type ComputeGraph, ComputeGraphRegistry } from '../graph';
-import { type CellValue, type SheetType } from '../types';
+import { type CellValue, type CreateSheetOptions } from '../types';
 
 export const testSheetName = 'test';
 
@@ -44,23 +44,16 @@ export const createCells = (): Record<string, CellValue> => ({
   F6: { value: '$10000' },
 });
 
-export const useTestSheet = (space?: Space, graph?: ComputeGraph) => {
-  const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
-  useEffect(() => {
+export const useTestSheet = (space?: Space, graph?: ComputeGraph, options?: CreateSheetOptions) => {
+  return useAsyncState(async () => {
     if (!space || !graph) {
       return;
     }
 
-    const t = setTimeout(async () => {
-      const sheet = createSheet();
-      space.db.add(sheet);
-      setSheet(sheet);
-    });
-
-    return () => clearTimeout(t);
-  }, [space]);
-
-  return sheet;
+    const sheet = createSheet(options);
+    space.db.add(sheet);
+    return sheet;
+  }, [space, graph]);
 };
 
 export const withGraphDecorator: Decorator = (Story) => {

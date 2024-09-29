@@ -130,5 +130,6 @@ export type SheetSize = {
 };
 
 export type CreateSheetOptions = {
+  // TODO(burdon): Standardize as name.
   title?: string;
 } & Partial<SheetSize>;

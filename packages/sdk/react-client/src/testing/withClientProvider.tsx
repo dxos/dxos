@@ -140,10 +140,10 @@ const ErrorFallback = ({ error }: FallbackProps) => {
   const { name, message, stack } =
     error instanceof Error ? error : { name: 'Error', message: String(error), stack: undefined };
   return (
-    <div role='alert' className='flex flex-col gap-4'>
+    <div role='alert' className='flex flex-col overflow-hidden p-4 gap-4'>
       <h1 className='text-xl text-red-500'>{name}</h1>
       <div className='text-lg'>{message}</div>
-      {stack && <pre className='text-sm text-subdued'>{stack}</pre>}
+      {stack && <pre className='whitespace-pre-wrap text-sm text-subdued'>{stack}</pre>}
     </div>
   );
 };

@@ -17,7 +17,7 @@ export const dxGridCellIndexToSheetCellAddress = (gridIndex: GridEditing): CellA
   }
   const [colStr, rowStr] = gridIndex.split(',');
   return {
-    column: parseInt(colStr),
+    col: parseInt(colStr),
     row: parseInt(rowStr),
   };
 };
@@ -27,7 +27,7 @@ const createDxGridCells = (model: SheetModel, formatting: FormattingModel) => {
     const address = addressFromIndex(model.sheet, sheetCellIndex);
     const cell = formatting.getFormatting(address);
     if (cell.value) {
-      acc[`${address.column},${address.row}`] = { value: cell.value, className: mx(cell.classNames) };
+      acc[`${address.col},${address.row}`] = { value: cell.value, className: mx(cell.classNames) };
     }
     return acc;
   }, {});

@@ -35,8 +35,8 @@ export const compute = (computeNode: ComputeNode, options: ComputeOptions = {}):
                 const content = state.sliceDoc(text.from, text.to);
                 // TODO(burdon): Dynamic update.
                 // TODO(burdon): Map unique reference onto cell; e.g., track ordered list?
-                computeNode.hf.setCellContents({ sheet: computeNode.sheetId, col: 0, row: 0 }, [[content]]);
-                const value = computeNode.hf.getCellValue({ sheet: computeNode.sheetId, col: 0, row: 0 });
+                computeNode.setValue({ col: 0, row: 0 }, content);
+                const value = computeNode.getValue({ col: 0, row: 0 });
                 builder.add(
                   node.from,
                   node.to,
