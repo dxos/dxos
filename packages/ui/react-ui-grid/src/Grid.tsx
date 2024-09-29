@@ -9,7 +9,7 @@ import { createContextScope, type Scope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type ComponentProps, forwardRef, type PropsWithChildren, useCallback, useState } from 'react';
 
-import { type DxAxisResize, type DxEditRequest, DxGrid as NaturalDxGrid } from '@dxos/lit-grid';
+import { type DxAxisResize, type DxEditRequest, type DxGridCellsSelect, DxGrid as NaturalDxGrid } from '@dxos/lit-grid';
 
 type DxGridElement = NaturalDxGrid;
 
@@ -20,6 +20,7 @@ const DxGrid = createComponent({
   events: {
     onAxisResize: 'dx-axis-resize' as EventName<DxAxisResize>,
     onEdit: 'dx-edit-request' as EventName<DxEditRequest>,
+    onSelect: 'dx-grid-cells-select' as EventName<DxGridCellsSelect>,
   },
 });
 

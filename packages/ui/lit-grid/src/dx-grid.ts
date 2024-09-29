@@ -255,8 +255,12 @@ export class DxGrid extends LitElement {
             this.selecting = true;
             this.selectionStart = cellCoords;
           }
-          if (this.focusActive && isSameCell(this.focusedCell, cellCoords)) {
-            this.dispatchEditRequest();
+          if (this.mode === 'edit') {
+            event.preventDefault();
+          } else {
+            if (this.focusActive && isSameCell(this.focusedCell, cellCoords)) {
+              this.dispatchEditRequest();
+            }
           }
         }
       }

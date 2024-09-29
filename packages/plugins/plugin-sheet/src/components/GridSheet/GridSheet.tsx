@@ -8,23 +8,25 @@ import { Grid, useGridContext, type GridScopedProps } from '@dxos/react-ui-grid'
 import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid/src';
 
 import { dxGridCellIndexToSheetCellAddress, useSheetModelDxGridProps } from './util';
-import { type SheetModel, type FormattingModel } from '../../model';
-import { CellEditor, editorKeys, type EditorKeysProps, sheetExtension } from '../CellEditor';
+import { type SheetModel, type FormattingModel, rangeToA1Notation, type CellRange } from '../../model';
+import {
+  CellEditor,
+  type CellEditorProps,
+  type CellRangeNotifier,
+  editorKeys,
+  type EditorKeysProps,
+  rangeExtension,
+  sheetExtension,
+} from '../CellEditor';
 import { useSheetModel, type UseSheetModelProps } from '../Sheet/util';
 
 const GridSheetCellEditor = ({
-  onNav,
-  onClose,
   model,
+  extension,
   __gridScope,
-}: GridScopedProps<EditorKeysProps & { model: SheetModel }>) => {
+}: GridScopedProps<Pick<CellEditorProps, 'extension'> & { model: SheetModel }>) => {
   const { id, editing, setEditing, editBox, initialEditContent } = useGridContext('GridSheetCellEditor', __gridScope);
   const cell = dxGridCellIndexToSheetCellAddress(editing);
-
-  const extension = useMemo(
-    () => [editorKeys({ onNav, onClose }), sheetExtension({ functions: model.functions })],
-    [model, onNav, onClose],
-  );
 
   return editing ? (
     <CellEditor
@@ -51,6 +53,7 @@ const GridSheetImpl = ({
 }: GridScopedProps<{ model: SheetModel; formatting: FormattingModel }>) => {
   const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
   const dxGrid = useRef<DxGridElement | null>(null);
+  const rangeNotifier = useRef<CellRangeNotifier>();
 
   // TODO(burdon): Validate formula before closing: hf.validateFormula();
   const handleClose = useCallback<EditorKeysProps['onClose']>(
@@ -79,16 +82,40 @@ const GridSheetImpl = ({
     [model],
   );
 
+  const handleSelect = useCallback<NonNullable<GridContentProps['onSelect']>>(
+    ({ minCol, maxCol, minRow, maxRow }) => {
+      if (editing) {
+        const range: CellRange = { from: { column: minCol, row: minRow } };
+        if (minCol !== maxCol || minRow !== maxRow) {
+          range.to = { column: maxCol, row: maxRow };
+        }
+        // Update range selection in formula.
+        rangeNotifier.current?.(rangeToA1Notation(range));
+      }
+    },
+    [editing],
+  );
+
   const { cells, columns, rows } = useSheetModelDxGridProps(model, formatting);
+
+  const extension = useMemo(
+    () => [
+      editorKeys({ onClose: handleClose }),
+      sheetExtension({ functions: model.functions }),
+      rangeExtension((fn) => (rangeNotifier.current = fn)),
+    ],
+    [model, handleClose],
+  );
 
   return (
     <>
-      <GridSheetCellEditor model={model} onClose={handleClose} />
+      <GridSheetCellEditor model={model} extension={extension} />
       <Grid.Content
         cells={cells}
         columns={columns}
         rows={rows}
         onAxisResize={handleAxisResize}
+        onSelect={handleSelect}
         rowDefault={sheetRowDefault}
         columnDefault={sheetColDefault}
         ref={dxGrid}
