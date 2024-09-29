@@ -27,6 +27,8 @@ dx-grid {
   block-size: 100%;
   max-inline-size: 100dvw;
   max-block-size: 100dvh;
+
+  user-select: none;
 }
 
 .dx-grid__scrollbar__thumb {
@@ -96,6 +98,9 @@ dx-grid {
       z-index: 2;
       border-color: var(--dx-accentSurface);
       outline: none;
+    }
+    &[aria-selected] {
+      background: var(--dx-gridSelectionOverlay);
     }
   }
   &[data-grid-mode="edit"] {
