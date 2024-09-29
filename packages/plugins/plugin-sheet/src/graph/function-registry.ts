@@ -7,8 +7,8 @@ import { Filter, type Space, fullyQualifiedId } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { FunctionType } from '@dxos/plugin-script/types';
 
-import { defaultFunctions, type FunctionDefinition } from '../defs';
-import type { ComputeGraph } from '../graph';
+import { defaultFunctions, type FunctionDefinition } from './function-defs';
+import { type ComputeGraph } from '../graph';
 
 // TODO(wittjosiah): Factor out.
 const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
@@ -19,7 +19,7 @@ const CUSTOM_FUNCTION = 'ECHO';
 /**
  * Manages mapping between function bindings and their definitions.
  */
-export class FunctionManager extends Resource {
+export class FunctionRegistry extends Resource {
   private _functions: FunctionType[] = [];
 
   public readonly update = new Event();

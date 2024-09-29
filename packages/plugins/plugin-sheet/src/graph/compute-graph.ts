@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 
 import { FunctionContext, type FunctionContextOptions } from './async-function';
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './edge-function';
-import { FunctionManager } from './function-manager';
+import { FunctionRegistry } from './function-registry';
 
 export type ComputeGraphPlugin = {
   plugin: FunctionPluginDefinition;
@@ -48,9 +48,10 @@ export const createComputeGraphRegistry = (options: Partial<FunctionContextOptio
 };
 
 /**
- * Registry of compute graphs for each space.
+ * Registry of compute graphs.
+ * A separate ComputeGraph instance is created for each space.
  */
-// TODO(burdon): Move graph into separate plugin.
+// TODO(burdon): Move graph into separate plugin; isolate HF deps.
 export class ComputeGraphRegistry extends Resource {
   private readonly _registry = new Map<SpaceId, ComputeGraph>();
 
@@ -75,8 +76,8 @@ export class ComputeGraphRegistry extends Resource {
   }
 
   async createGraph(space: Space): Promise<ComputeGraph> {
+    invariant(!this._registry.has(space.id), `ComputeGraph already exists for space: ${space.id}`);
     const hf = HyperFormula.buildEmpty(this._options);
-    invariant(!this._registry.has(space.id), `Already exists: ${space.id}`);
     const graph = new ComputeGraph(hf, space, this._options);
     await graph.open(this._ctx);
     this._registry.set(space.id, graph);
@@ -96,7 +97,8 @@ export class ComputeGraph extends Resource {
   // The context is passed to all functions.
   public readonly context = new FunctionContext(this._hf, this._space, this.refresh.bind(this), this._options);
 
-  private readonly _functions: FunctionManager;
+  // Dynamic functions registry.
+  private readonly _functions: FunctionRegistry;
 
   constructor(
     private readonly _hf: HyperFormula,
@@ -105,9 +107,8 @@ export class ComputeGraph extends Resource {
   ) {
     super();
 
-    // TODO(burdon): Create separate instance per graph (i.e., per space).
     this._hf.updateConfig({ context: this.context });
-    this._functions = new FunctionManager(this, _space);
+    this._functions = new FunctionRegistry(this, _space);
   }
 
   get hf() {

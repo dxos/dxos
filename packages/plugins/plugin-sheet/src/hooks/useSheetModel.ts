@@ -14,7 +14,6 @@ export type UseSheetModelOptions = {
   readonly?: boolean;
 };
 
-// TODO(burdon): Convert to props; readonly options.
 export const useSheetModel = (
   space?: Space,
   sheet?: SheetType,
@@ -30,13 +29,13 @@ export const useSheetModel = (
     let model: SheetModel | undefined;
     const t = setTimeout(async () => {
       model = new SheetModel(graph, sheet, { readonly });
-      await model.initialize();
+      await model.open();
       setModel(model);
     });
 
     return () => {
       clearTimeout(t);
-      void model?.destroy();
+      void model?.close();
     };
   }, [space, sheet, graph, readonly]);
 

@@ -25,6 +25,7 @@ describe('compute graph', () => {
     const graph = await registry.createGraph(space);
     const sheet = createSheet({ rows: 5, columns: 5 });
     const model = new SheetModel(graph, sheet);
+    await model.open();
     graph.update.on(() => model.update.emit());
     return { graph, model };
   };

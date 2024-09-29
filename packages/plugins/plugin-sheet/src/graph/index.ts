@@ -3,4 +3,4 @@
 //
 
 export * from './compute-graph';
-export * from './function-manager';
+export * from './function-defs';

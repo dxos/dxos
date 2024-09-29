@@ -8,7 +8,7 @@ import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateTimeHelper';
 
 import { Event } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -60,20 +60,19 @@ export type SheetModelOptions = {
  *
  * [ComputeGraphContext] > [SheetContext]:[SheetModel] > [Sheet.Root]
  */
-export class SheetModel {
+export class SheetModel extends Resource {
   public readonly id = `model-${PublicKey.random().truncate()}`;
 
   public readonly update = new Event();
 
   private readonly _node: ComputeNode;
 
-  private _ctx?: Context = undefined;
-
   constructor(
     private readonly _graph: ComputeGraph,
     private readonly _sheet: SheetType,
     private readonly _options: SheetModelOptions = {},
   ) {
+    super();
     this._node = this._graph.getNode(this._sheet.id);
     this.reset();
   }
@@ -101,29 +100,17 @@ export class SheetModel {
     return this._graph.functions;
   }
 
-  get initialized(): boolean {
-    return !!this._ctx;
-  }
-
   /**
    * Initialize sheet and engine.
    */
-  async initialize() {
+  protected override async _open() {
     log('initialize', { id: this.id });
-    invariant(!this.initialized, 'Already initialized.');
     initialize(this._sheet);
+    this.reset();
 
     // Listen for model updates (e.g., async calculations).
-    this._ctx = new Context();
-    this._ctx.onDispose(this._graph.update.on(() => this.update.emit()));
-    this.reset();
-    return this;
-  }
-
-  async destroy() {
-    log('destroy', { id: this.id });
-    await this._ctx?.dispose();
-    this._ctx = undefined;
+    const unsubscribe = this._graph.update.on(() => this.update.emit());
+    this._ctx.onDispose(unsubscribe);
   }
 
   /**

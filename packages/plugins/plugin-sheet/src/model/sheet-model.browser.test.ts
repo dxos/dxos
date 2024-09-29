@@ -26,7 +26,7 @@ describe('sheet model', () => {
     const graph = await registry.createGraph(space);
     const sheet = createSheet({ rows: 5, columns: 5 });
     const model = new SheetModel(graph, sheet);
-    await model.initialize();
+    await model.open();
     return { graph, model };
   };
 

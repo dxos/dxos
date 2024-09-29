@@ -8,7 +8,7 @@ import { Client } from '@dxos/client';
 import { create } from '@dxos/client/echo';
 import { FunctionType } from '@dxos/plugin-script/types';
 
-import { FunctionManager } from './function-manager';
+import { FunctionRegistry } from './function-registry';
 import { ComputeGraphRegistry } from '../graph';
 
 // TODO(burdon): Failing test infrastructure
@@ -20,7 +20,7 @@ import { ComputeGraphRegistry } from '../graph';
 //    - throws "Cannot convert undefined or null to object" in vitest (no browser).
 //    - throws "process.nextTick is not a function" (if browser)
 
-describe('FunctionManager', () => {
+describe('FunctionsRegistry', () => {
   test.only('map functions', async () => {
     const client = new Client();
     client.addTypes([FunctionType]);
@@ -33,8 +33,8 @@ describe('FunctionManager', () => {
 
     const registry = new ComputeGraphRegistry();
     const graph = await registry.createGraph(space);
-    const functionManager = new FunctionManager(graph, space);
-    const id = functionManager.mapFunctionBindingToId('TEST()');
+    const functions = new FunctionRegistry(graph, space);
+    const id = functions.mapFunctionBindingToId('TEST()');
     expect(id).to.eq(`${fn.id}()`);
   });
 });
