@@ -34,7 +34,8 @@ type EditorProps = {
 // TODO(burdon): Implement named expressions.
 //  https://hyperformula.handsontable.com/guide/cell-references.html
 
-const SHEET_NAME = 'Test';
+const DOC_NAME = 'Test Doc';
+const SHEET_NAME = 'Test Sheet';
 
 const Editor = ({ text }: EditorProps) => {
   const { themeMode } = useThemeContext();
@@ -44,7 +45,7 @@ const Editor = ({ text }: EditorProps) => {
   // TODO(burdon): Virtualize SheetModel.
   useEffect(() => {
     if (graph) {
-      setNode(graph.getNode('test'));
+      setNode(graph.getOrCreateNode(DOC_NAME));
     }
   }, [graph]);
   const { parentRef, focusAttributes } = useTextEditor(

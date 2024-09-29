@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type FunctionPluginDefinition, HyperFormula } from 'hyperformula';
+import { type FunctionPluginDefinition, DetailedCellError, HyperFormula } from 'hyperformula';
 import { type ConfigParams } from 'hyperformula/typings/ConfigParams';
 import { type FunctionTranslationsPackage } from 'hyperformula/typings/interpreter';
 
@@ -39,6 +39,9 @@ export const defaultOptions: ComputeGraphOptions = {
   ],
 };
 
+export const createSheetName = (id: string) => `__${id}`;
+export const getSheetId = (name: string): string | undefined => (name.startsWith('__') ? name.slice(2) : undefined);
+
 /**
  * NOTE: Async imports to decouple hyperformula deps.
  */
@@ -71,6 +74,7 @@ export class ComputeGraphRegistry extends Resource {
   async getOrCreateGraph(space: Space): Promise<ComputeGraph> {
     let graph = this.getGraph(space.id);
     if (!graph) {
+      log.info('create graph', { space: space.id });
       graph = await this.createGraph(space);
     }
 
@@ -94,6 +98,7 @@ export class ComputeGraphRegistry extends Resource {
 export class ComputeGraph extends Resource {
   public readonly id = `graph-${PublicKey.random().truncate()}`;
 
+  // TODO(burdon): Typed events.
   public readonly update = new Event();
 
   // The context is passed to all functions.
@@ -128,13 +133,15 @@ export class ComputeGraph extends Resource {
   /**
    * Get or create cell representing a sheet.
    */
-  getNode(id: string): ComputeNode {
-    invariant(id.length);
-    if (!this._hf.doesSheetExist(id)) {
-      this._hf.addSheet(id);
+  getOrCreateNode(name: string): ComputeNode {
+    invariant(name.length);
+    if (!this._hf.doesSheetExist(name)) {
+      log.info('created node', { space: this._space?.id, name });
+      this._hf.addSheet(name);
+      this.update.emit();
     }
 
-    const sheetId = this._hf.getSheetId(id);
+    const sheetId = this._hf.getSheetId(name);
     invariant(sheetId !== undefined);
     return new ComputeNode(this, sheetId);
   }
@@ -148,28 +155,35 @@ export class ComputeGraph extends Resource {
 /**
  * Individual sheet (typically corresponds to an ECHO object).
  */
-// TODO(burdon): Factor out from SheetModel.
+// TODO(burdon): Factor out common HF wrapper from from SheetModel.
 export class ComputeNode {
+  public readonly update = new Event();
+
   constructor(
     private readonly _graph: ComputeGraph,
     public readonly sheetId: number,
   ) {}
+
+  get graph() {
+    return this._graph;
+  }
 
   get hf() {
     return this._graph.hf;
   }
 
   getValue(cell: CellAddress): CellScalarValue {
-    return null;
+    const value = this.hf.getCellValue({ sheet: this.sheetId, row: cell.row, col: cell.col });
+    if (value instanceof DetailedCellError) {
+      return null;
+    }
+
+    return value;
   }
 
   setValue(cell: CellAddress, value: CellScalarValue) {
-    this.hf.setCellContents({ sheet: this.sheetId, row: cell.row, col: cell.col }, [
-      [
-        typeof value === 'string' && value.charAt(0) === '='
-          ? this._graph.functions.mapFunctionBindingToCustomFunction(value)
-          : value,
-      ],
-    ]);
+    const mappedValue =
+      typeof value === 'string' && value.charAt(0) === '=' ? this._graph.functions.mapFormulaToNative(value) : value;
+    this.hf.setCellContents({ sheet: this.sheetId, row: cell.row, col: cell.col }, [[mappedValue]]);
   }
 }

@@ -8,14 +8,18 @@ import {
   type Extension,
   type RangeSet,
   RangeSetBuilder,
+  StateEffect,
   StateField,
   type Transaction,
 } from '@codemirror/state';
-import { Decoration, EditorView, WidgetType } from '@codemirror/view';
+import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
 import { type ComputeNode } from '../graph';
 
 const LANGUAGE_TAG = 'dx';
+
+// TODO(burdon): Create marker just for our decorator?
+const updateAllDecorations = StateEffect.define<void>();
 
 export type ComputeOptions = {};
 
@@ -33,7 +37,6 @@ export const compute = (computeNode: ComputeNode, options: ComputeOptions = {}):
               const text = node.node.getChild('CodeText');
               if (type === LANGUAGE_TAG && text) {
                 const content = state.sliceDoc(text.from, text.to);
-                // TODO(burdon): Dynamic update.
                 // TODO(burdon): Map unique reference onto cell; e.g., track ordered list?
                 computeNode.setValue({ col: 0, row: 0 }, content);
                 const value = computeNode.getValue({ col: 0, row: 0 });
@@ -55,6 +58,25 @@ export const compute = (computeNode: ComputeNode, options: ComputeOptions = {}):
   };
 
   return [
+    // Graph subscription.
+    ViewPlugin.fromClass(
+      class {
+        private readonly _subscription: any;
+        constructor(view: EditorView) {
+          this._subscription = computeNode.graph.update.on(() => {
+            view.dispatch({
+              effects: updateAllDecorations.of(),
+            });
+          });
+        }
+
+        destroy() {
+          this._subscription();
+        }
+      },
+    ),
+
+    // Decorations.
     StateField.define<RangeSet<any>>({
       create: (state) => update(state),
       update: (_: RangeSet<any>, tr: Transaction) => update(tr.state),

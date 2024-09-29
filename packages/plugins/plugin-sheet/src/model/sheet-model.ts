@@ -22,7 +22,7 @@ import {
   MAX_ROWS,
 } from '../defs';
 import { addressFromIndex, addressToIndex, initialize, insertIndices, ReadonlyException } from '../defs';
-import { type ComputeNode, type ComputeGraph } from '../graph';
+import { type ComputeNode, type ComputeGraph, createSheetName } from '../graph';
 import { type CellScalarValue, type CellValue, type SheetType, ValueTypeEnum } from '../types';
 
 const typeMap: Record<string, ValueTypeEnum> = {
@@ -60,6 +60,7 @@ export type SheetModelOptions = {
  *
  * [ComputeGraphContext] > [SheetContext]:[SheetModel] > [Sheet.Root]
  */
+// TODO(burdon): Factor out commonality with ComputeNode.
 export class SheetModel extends Resource {
   public readonly id = `model-${PublicKey.random().truncate()}`;
 
@@ -74,7 +75,7 @@ export class SheetModel extends Resource {
     private readonly _options: SheetModelOptions = {},
   ) {
     super();
-    this._node = this._graph.getNode(this._sheet.id);
+    this._node = this._graph.getOrCreateNode(createSheetName(this._sheet.id));
     this.reset();
   }
 
@@ -110,6 +111,7 @@ export class SheetModel extends Resource {
     initialize(this._sheet);
     this.reset();
 
+    // TODO(burdon): Event hierarchy?
     // Listen for model updates (e.g., async calculations).
     const unsubscribe = this._graph.update.on(() => this.update.emit());
     this._ctx.onDispose(unsubscribe);
@@ -125,7 +127,7 @@ export class SheetModel extends Resource {
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
       const { col, row } = addressFromIndex(this._sheet, key);
       if (typeof value === 'string' && value.charAt(0) === '=') {
-        value = this._graph.functions.mapFunctionBindingToCustomFunction(
+        value = this._graph.functions.mapFormulaToNative(
           this._graph.functions.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value)),
         );
       }
@@ -292,11 +294,7 @@ export class SheetModel extends Resource {
 
     // Insert into engine.
     this._node.hf.setCellContents({ sheet: this._node.sheetId, row: cell.row, col: cell.col }, [
-      [
-        typeof value === 'string' && value.charAt(0) === '='
-          ? this._graph.functions.mapFunctionBindingToCustomFunction(value)
-          : value,
-      ],
+      [typeof value === 'string' && value.charAt(0) === '=' ? this._graph.functions.mapFormulaToNative(value) : value],
     ]);
 
     // Insert into sheet.

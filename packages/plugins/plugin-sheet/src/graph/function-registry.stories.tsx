@@ -62,7 +62,7 @@ const Story = () => {
       const { objects } = await space.db.query(Filter.schema(FunctionType)).run();
       const mapped = functionManager.mapFunctionBindingToId(text);
       const unmapped = functionManager.mapFunctionBindingFromId(mapped);
-      const internal = functionManager.mapFunctionBindingToCustomFunction(text);
+      const internal = functionManager.mapFormulaToNative(text);
       setResult({ mapped, unmapped, internal, functions: objects.map((object) => object.id) });
     }
 

@@ -6,9 +6,10 @@ import { Event } from '@dxos/async';
 import { Filter, type Space, fullyQualifiedId } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { FunctionType } from '@dxos/plugin-script/types';
+import { nonNullable } from '@dxos/util';
 
 import { defaultFunctions, type FunctionDefinition } from './function-defs';
-import { type ComputeGraph } from '../graph';
+import { type ComputeGraph, createSheetName, getSheetId } from '../graph';
 
 // TODO(wittjosiah): Factor out.
 const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
@@ -19,6 +20,7 @@ const CUSTOM_FUNCTION = 'ECHO';
 /**
  * Manages mapping between function bindings and their definitions.
  */
+// TODO(burdon): Rename (not just functions; also cross-sheet references).
 export class FunctionRegistry extends Resource {
   private _functions: FunctionType[] = [];
 
@@ -58,19 +60,47 @@ export class FunctionRegistry extends Resource {
    * Map bound value to custom function invocation.
    * E.g., "HELLO(...args)" => "EDGE("HELLO", ...args)".
    */
-  mapFunctionBindingToCustomFunction(formula: string): string {
-    return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
-      const fn = this._functions.find((fn) => fn.binding === binding);
-      if (!fn) {
-        return match;
-      }
+  // TODO(burdon): Implement tests.
+  mapFormulaToNative(formula: string): string {
+    return (
+      formula
+        // Sheet references.
+        // https://hyperformula.handsontable.com/guide/cell-references.html#cell-references
+        .replace(/['"]?([ \w]+)['"]?!/, (_match, name) => {
+          if (name) {
+            // TODO(burdon): What if not loaded?
+            const objects = this._graph.hf
+              .getSheetNames()
+              .map((name) => {
+                const id = getSheetId(name);
+                return id ? this._space?.db.getObjectById(id) : undefined;
+              })
+              .filter(nonNullable);
 
-      if (args.trim() === '') {
-        return `${CUSTOM_FUNCTION}("${binding}")`;
-      } else {
-        return `${CUSTOM_FUNCTION}("${binding}", ${args})`;
-      }
-    });
+            for (const obj of objects) {
+              if (obj.name === name || obj.title === name) {
+                return `${createSheetName(obj.id)}!`;
+              }
+            }
+          }
+
+          return `${name}!`;
+        })
+
+        // Functions.
+        .replace(/(\w+)\((.*)\)/g, (match, binding, args) => {
+          const fn = this._functions.find((fn) => fn.binding === binding);
+          if (!fn) {
+            return match;
+          }
+
+          if (args.trim() === '') {
+            return `${CUSTOM_FUNCTION}("${binding}")`;
+          } else {
+            return `${CUSTOM_FUNCTION}("${binding}", ${args})`;
+          }
+        })
+    );
   }
 
   /**
@@ -78,7 +108,7 @@ export class FunctionRegistry extends Resource {
    * E.g., HELLO() => spaceId:objectId()
    */
   mapFunctionBindingToId(formula: string) {
-    return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
+    return formula.replace(/(\w+)\((.*)\)/g, (match, binding, args) => {
       if (binding === CUSTOM_FUNCTION || defaultFunctions.find((fn) => fn.name === binding)) {
         return match;
       }
@@ -98,7 +128,7 @@ export class FunctionRegistry extends Resource {
    * E.g., spaceId:objectId() => HELLO()
    */
   mapFunctionBindingFromId(formula: string) {
-    return formula.replace(/([a-zA-Z0-9]+):([a-zA-Z0-9]+)\((.*)\)/g, (match, spaceId, objectId, args) => {
+    return formula.replace(/(\w+):([a-zA-Z0-9]+)\((.*)\)/g, (match, spaceId, objectId, args) => {
       const id = `${spaceId}:${objectId}`;
       if (id.length !== OBJECT_ID_LENGTH) {
         return match;
