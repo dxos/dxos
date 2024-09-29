@@ -46,8 +46,13 @@ export const defaultOptions: ComputeGraphOptions = {
   ],
 };
 
-export const createSheetName = (id: string) => `__${id}`;
-export const getSheetId = (name: string): string | undefined => (name.startsWith('__') ? name.slice(2) : undefined);
+/**
+ * Marker for sheets that are managed by an ECHO object.
+ */
+const PREFIX = '__';
+export const createSheetName = (id: string) => `${PREFIX}${id}`;
+export const getSheetId = (name: string): string | undefined =>
+  name.startsWith(PREFIX) ? name.slice(PREFIX.length) : undefined;
 
 /**
  * NOTE: Async imports to decouple hyperformula deps.
@@ -156,7 +161,10 @@ export class ComputeGraph extends Resource {
    * Get or create cell representing a sheet.
    */
   // TODO(burdon): Async (open node).
-  //  Should the called creat and open the instance then register it, or should the graph by a factory?
+  //  The graph should be an extensible factory that plugins extend with model constructors.
+  //  This would enable on-the-fly instantiation of new models when then are referenced.
+  //  E.g., Cross-object reference would be stored as "ObjectId!A1"
+  //  The graph would then load the object and create a ComputeNode (model) of the appropriate type.
   getOrCreateNode(name: string): ComputeNode {
     invariant(name.length);
     if (!this._hf.doesSheetExist(name)) {
