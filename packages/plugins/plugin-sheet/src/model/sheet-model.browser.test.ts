@@ -30,7 +30,7 @@ describe('sheet model', () => {
     return { graph, model };
   };
 
-  test.only('create', async () => {
+  test('create', async () => {
     const { model } = await createModel();
     console.log(model);
     expect(model.bounds).to.deep.eq({ rows: 5, columns: 5 });

@@ -11,14 +11,15 @@ import { FunctionType } from '@dxos/plugin-script/types';
 import { FunctionRegistry } from './function-registry';
 import { ComputeGraphRegistry } from '../graph';
 
-// TODO(burdon): Failing test infrastructure
-//  - no docs? esp. needed for config. need pristine example package?
-//    - for non browser tests, import types from x-plugin/types (otherwise will bring in react deps).
-//  - can't add flags to our tools?
-//  - .only / .skip ignored (have to comment out tests)
+// TODO(burdon): Vitest issues:
 //  - Cannot test Hyperformula
-//    - throws "Cannot convert undefined or null to object" in vitest (no browser).
-//    - throws "process.nextTick is not a function" (if browser)
+//    - throws "Cannot convert undefined or null to object" in vitest (without browser).
+//    - throws "process.nextTick is not a function" (with browser)
+//    - throws "Buffer already defined" (if nodeExternal: true in config)
+//  - Need better docs; esp. vitest config.
+//    - NOTE: For non-browser tests, import types from x-plugin/types (otherwise will bring in react deps).
+//  - Can't add flags to our tools?
+//  - test.only / test.skip ignored?
 
 describe('FunctionsRegistry', () => {
   test.only('map functions', async () => {
