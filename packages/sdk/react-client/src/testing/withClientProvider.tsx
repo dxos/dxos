@@ -3,14 +3,13 @@
 //
 
 import { type Decorator } from '@storybook/react';
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { type FallbackProps, ErrorBoundary } from 'react-error-boundary';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { performInvitation, TestBuilder } from '@dxos/client/testing';
-import { type SpaceId } from '@dxos/keys/src';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientProvider, type ClientProviderProps } from '../client';
@@ -62,10 +61,8 @@ export const withClientProvider = ({
   ...props
 }: WithClientProviderProps = {}): Decorator => {
   return (Story) => {
-    const [spaceId, setSpaceId] = useState<SpaceId>();
     const handleInitialized = async (client: Client) => {
-      const space = await initializeClient(client, { createIdentity, createSpace, onSpaceCreated, onInitialized });
-      setSpaceId(space?.id);
+      await initializeClient(client, { createIdentity, createSpace, onSpaceCreated, onInitialized });
     };
 
     return (
