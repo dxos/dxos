@@ -69,6 +69,7 @@ export class ComputeGraphRegistry {
 
 /**
  * Per-space compute and dependency graph.
+ * Consists of multiple ComputeCells (sheets).
  */
 export class ComputeGraph {
   public readonly id = `graph-${PublicKey.random().truncate()}`;
@@ -100,7 +101,7 @@ export class ComputeGraph {
   /**
    * Get or create cell representing a sheet.
    */
-  getCell(id: string): ComputeCell {
+  getNode(id: string): ComputeNode {
     invariant(id.length);
     if (!this._hf.doesSheetExist(id)) {
       this._hf.addSheet(id);
@@ -108,7 +109,7 @@ export class ComputeGraph {
 
     const sheetId = this._hf.getSheetId(id);
     invariant(sheetId !== undefined);
-    return new ComputeCell(this, sheetId);
+    return new ComputeNode(this, sheetId);
   }
 
   refresh() {
@@ -117,7 +118,10 @@ export class ComputeGraph {
   }
 }
 
-export class ComputeCell {
+/**
+ * Individual sheet (typically corresponds to an ECHO object).
+ */
+export class ComputeNode {
   constructor(
     public readonly graph: ComputeGraph,
     public readonly sheetId: number,

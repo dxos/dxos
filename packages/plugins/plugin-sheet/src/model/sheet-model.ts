@@ -23,7 +23,7 @@ import {
   MAX_ROWS,
 } from '../defs';
 import { addressFromIndex, addressToIndex, initialize, insertIndices, ReadonlyException } from '../defs';
-import { type ComputeCell, type ComputeGraph } from '../graph';
+import { type ComputeNode, type ComputeGraph } from '../graph';
 import { type CellScalarValue, type CellValue, type SheetType, ValueTypeEnum } from '../types';
 
 const typeMap: Record<string, ValueTypeEnum> = {
@@ -66,7 +66,7 @@ export class SheetModel {
 
   public readonly update = new Event();
 
-  private readonly _cell: ComputeCell;
+  private readonly _node: ComputeNode;
 
   private _ctx?: Context = undefined;
 
@@ -76,8 +76,7 @@ export class SheetModel {
     private readonly _functions: FunctionManager,
     private readonly _options: SheetModelOptions = {},
   ) {
-    // TODO(burdon): Move to initialize.
-    this._cell = this._graph.getCell(this._sheet.id);
+    this._node = this._graph.getNode(this._sheet.id);
     this.reset();
   }
 
@@ -143,7 +142,7 @@ export class SheetModel {
    * @deprecated
    */
   reset() {
-    this._cell.hf.clearSheet(this._cell.sheetId);
+    this._node.hf.clearSheet(this._node.sheetId);
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
       const { column, row } = addressFromIndex(this._sheet, key);
       if (typeof value === 'string' && value.charAt(0) === '=') {
@@ -152,7 +151,7 @@ export class SheetModel {
         );
       }
 
-      this._cell.hf.setCellContents({ sheet: this._cell.sheetId, row, col: column }, value);
+      this._node.hf.setCellContents({ sheet: this._node.sheetId, row, col: column }, value);
     });
   }
 
@@ -164,7 +163,7 @@ export class SheetModel {
    */
   // TODO(burdon): Remove.
   recalculate() {
-    this._cell.hf.rebuildAndRecalculate();
+    this._node.hf.rebuildAndRecalculate();
   }
 
   insertRows(i: number, n = 1) {
@@ -181,13 +180,14 @@ export class SheetModel {
   // Undoable actions.
   // TODO(burdon): Group undoable methods; consistently update hf/sheet.
   //
+
   /**
    * Clear range of values.
    */
   clear(range: CellRange) {
     const topLeft = getTopLeft(range);
     const values = this._iterRange(range, () => null);
-    this._cell.hf.setCellContents(toSimpleCellAddress(this._cell.sheetId, topLeft), values);
+    this._node.hf.setCellContents(toSimpleCellAddress(this._node.sheetId, topLeft), values);
     this._iterRange(range, (cell) => {
       const idx = addressToIndex(this._sheet, cell);
       delete this._sheet.cells[idx];
@@ -195,7 +195,7 @@ export class SheetModel {
   }
 
   cut(range: CellRange) {
-    this._cell.hf.cut(toModelRange(this._cell.sheetId, range));
+    this._node.hf.cut(toModelRange(this._node.sheetId, range));
     this._iterRange(range, (cell) => {
       const idx = addressToIndex(this._sheet, cell);
       delete this._sheet.cells[idx];
@@ -203,12 +203,12 @@ export class SheetModel {
   }
 
   copy(range: CellRange) {
-    this._cell.hf.copy(toModelRange(this._cell.sheetId, range));
+    this._node.hf.copy(toModelRange(this._node.sheetId, range));
   }
 
   paste(cell: CellAddress) {
-    if (!this._cell.hf.isClipboardEmpty()) {
-      const changes = this._cell.hf.paste(toSimpleCellAddress(this._cell.sheetId, cell));
+    if (!this._node.hf.isClipboardEmpty()) {
+      const changes = this._node.hf.paste(toSimpleCellAddress(this._node.sheetId, cell));
       for (const change of changes) {
         if (change instanceof ExportedCellChange) {
           const { address, newValue } = change;
@@ -221,15 +221,15 @@ export class SheetModel {
 
   // TODO(burdon): Display undo/redo state.
   undo() {
-    if (this._cell.hf.isThereSomethingToUndo()) {
-      this._cell.hf.undo();
+    if (this._node.hf.isThereSomethingToUndo()) {
+      this._node.hf.undo();
       this.update.emit();
     }
   }
 
   redo() {
-    if (this._cell.hf.isThereSomethingToRedo()) {
-      this._cell.hf.redo();
+    if (this._node.hf.isThereSomethingToRedo()) {
+      this._node.hf.redo();
       this.update.emit();
     }
   }
@@ -270,7 +270,7 @@ export class SheetModel {
    */
   getValue(cell: CellAddress): CellScalarValue {
     // Applies rounding and post-processing.
-    const value = this._cell.hf.getCellValue(toSimpleCellAddress(this._cell.sheetId, cell));
+    const value = this._node.hf.getCellValue(toSimpleCellAddress(this._node.sheetId, cell));
     if (value instanceof DetailedCellError) {
       return value.toString();
     }
@@ -282,8 +282,8 @@ export class SheetModel {
    * Get value type.
    */
   getValueType(cell: CellAddress): ValueTypeEnum {
-    const addr = toSimpleCellAddress(this._cell.sheetId, cell);
-    const type = this._cell.hf.getCellValueDetailedType(addr);
+    const addr = toSimpleCellAddress(this._node.sheetId, cell);
+    const type = this._node.hf.getCellValueDetailedType(addr);
     return typeMap[type];
   }
 
@@ -312,7 +312,7 @@ export class SheetModel {
     }
 
     // Insert into engine.
-    this._cell.hf.setCellContents({ sheet: this._cell.sheetId, row: cell.row, col: cell.column }, [
+    this._node.hf.setCellContents({ sheet: this._node.sheetId, row: cell.row, col: cell.column }, [
       [
         typeof value === 'string' && value.charAt(0) === '='
           ? this._functions.mapFunctionBindingToCustomFunction(value)
@@ -414,14 +414,14 @@ export class SheetModel {
   }
 
   toDateTime(num: number): SimpleDateTime {
-    return this._cell.hf.numberToDateTime(num) as SimpleDateTime;
+    return this._node.hf.numberToDateTime(num) as SimpleDateTime;
   }
 
   toDate(num: number): SimpleDate {
-    return this._cell.hf.numberToDate(num) as SimpleDate;
+    return this._node.hf.numberToDate(num) as SimpleDate;
   }
 
   toTime(num: number): SimpleDate {
-    return this._cell.hf.numberToTime(num) as SimpleDate;
+    return this._node.hf.numberToTime(num) as SimpleDate;
   }
 }

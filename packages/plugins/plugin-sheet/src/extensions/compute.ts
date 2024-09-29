@@ -13,11 +13,13 @@ import {
 } from '@codemirror/state';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 
-import { type ComputeCell } from '../graph';
+import { type ComputeNode } from '../graph';
+
+const LANGUAGE_TAG = 'dx';
 
 export type ComputeOptions = {};
 
-export const compute = (cell: ComputeCell, options: ComputeOptions = {}): Extension => {
+export const compute = (computeNode: ComputeNode, options: ComputeOptions = {}): Extension => {
   const update = (state: EditorState) => {
     const builder = new RangeSetBuilder();
     syntaxTree(state).iterate({
@@ -29,12 +31,12 @@ export const compute = (cell: ComputeCell, options: ComputeOptions = {}): Extens
             if (info) {
               const type = state.sliceDoc(info.from, info.to);
               const text = node.node.getChild('CodeText');
-              if (type === 'dx' && text) {
+              if (type === LANGUAGE_TAG && text) {
                 const content = state.sliceDoc(text.from, text.to);
-                // TODO(burdon): Make dynamic.
-                // TODO(burdon): Unique col.
-                cell.hf.setCellContents({ sheet: cell.sheetId, col: 0, row: 0 }, [[content]]);
-                const value = cell.hf.getCellValue({ sheet: cell.sheetId, col: 0, row: 0 });
+                // TODO(burdon): Dynamic update.
+                // TODO(burdon): Map unique reference onto cell; e.g., track ordered list?
+                node.hf.setCellContents({ sheet: computeNode.sheetId, col: 0, row: 0 }, [[content]]);
+                const value = node.hf.getCellValue({ sheet: computeNode.sheetId, col: 0, row: 0 });
                 builder.add(
                   node.from,
                   node.to,

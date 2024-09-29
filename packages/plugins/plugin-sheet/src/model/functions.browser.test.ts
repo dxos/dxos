@@ -29,13 +29,13 @@ describe('FunctionManager', () => {
 
     // Create script.
     const space = await client.spaces.create();
-    const fn = space.db.add(create(FunctionType, { version: 1, binding: 'HELLO' }));
+    const fn = space.db.add(create(FunctionType, { version: 1, binding: 'TEST' }));
 
     const registry = new ComputeGraphRegistry();
     const graph = registry.createGraph(space);
     const functionManager = new FunctionManager(graph, space);
 
-    const id = functionManager.mapFunctionBindingToId('HELLO()');
+    const id = functionManager.mapFunctionBindingToId('TEST()');
     expect(id).to.eq(`${fn.id}()`);
   });
 });

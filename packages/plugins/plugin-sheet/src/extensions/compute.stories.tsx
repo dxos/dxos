@@ -19,7 +19,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { nonNullable } from '@dxos/util';
 
 import { compute } from './compute';
-import { type ComputeCell } from '../graph';
+import { type ComputeNode } from '../graph';
 import { useComputeGraph } from '../hooks';
 import { withGraphDecorator } from '../testing';
 
@@ -33,11 +33,10 @@ const Story = ({ text }: StoryProps) => {
   const { themeMode } = useThemeContext();
   const space = useSpace();
   const graph = useComputeGraph(space);
-  const [cell, setCell] = useState<ComputeCell>();
+  const [node, setNode] = useState<ComputeNode>();
   useEffect(() => {
     if (graph) {
-      const cell = graph.getCell('test');
-      setCell(cell);
+      setNode(graph.getNode('test'));
     }
   }, [graph]);
   const { parentRef, focusAttributes } = useTextEditor(
@@ -47,11 +46,11 @@ const Story = ({ text }: StoryProps) => {
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-        cell && compute(cell),
+        node && compute(node),
         decorateMarkdown(),
       ].filter(nonNullable),
     }),
-    [cell, themeMode],
+    [node, themeMode],
   );
 
   return <div className='w-[40rem]' ref={parentRef} {...focusAttributes} />;
