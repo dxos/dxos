@@ -101,13 +101,13 @@ export class ComputeGraphRegistry extends Resource {
 /**
  * Per-space compute and dependency graph.
  * Consists of multiple ComputeNode (sheets).
+ * The HyperFormula manages the dependency graph.
  */
 // TODO(burdon): Tests.
-// TODO(burdon): Event propagation.
 export class ComputeGraph extends Resource {
   public readonly id = `graph-${PublicKey.random().truncate()}`;
 
-  // Map of nodes.
+  // Map of nodes indexed by sheet number.
   private readonly _nodes = new Map<number, ComputeNode>();
 
   // Cached function objects.
@@ -117,6 +117,8 @@ export class ComputeGraph extends Resource {
   public readonly context = new FunctionContext(this._hf, this._space, this.refresh.bind(this), this._options);
 
   // TODO(burdon): Typed events.
+  // TODO(burdon): Tie into HyperFormula dependency graph.
+  // TODO(burdon): Event propagation.
   public readonly update = new Event();
 
   constructor(
@@ -134,43 +136,9 @@ export class ComputeGraph extends Resource {
     return this._hf;
   }
 
-  protected override async _open() {
-    if (this._space) {
-      const query = this._space.db.query(Filter.schema(FunctionType));
-      const unsubscribe = query.subscribe(({ objects }) => {
-        this._functions = objects.filter(({ binding }) => binding);
-        this.update.emit();
-      });
-
-      this._ctx.onDispose(unsubscribe);
-    }
-  }
-
   refresh() {
     log('refresh', { id: this.id });
     this.update.emit();
-  }
-
-  /**
-   * Get or create cell representing a sheet.
-   */
-  // TODO(burdon): Async (open node).
-  getOrCreateNode(name: string): ComputeNode {
-    invariant(name.length);
-    if (!this._hf.doesSheetExist(name)) {
-      log.info('created node', { space: this._space?.id, name });
-      this._hf.addSheet(name);
-      this.update.emit();
-    }
-
-    const sheetId = this._hf.getSheetId(name);
-    invariant(sheetId !== undefined);
-
-    // TODO(burdon): Open.
-    // TODO(burdon): Chain context?
-    const node = new ComputeNode(this, sheetId);
-    this._nodes.set(sheetId, node);
-    return node;
   }
 
   getFunctions({ standard = true, echo = true }: { standard?: boolean; echo?: boolean } = {}): FunctionDefinition[] {
@@ -182,6 +150,28 @@ export class ComputeGraph extends Resource {
         : []),
       ...(echo ? this._functions.map((fn) => ({ name: fn.binding! })) : []),
     ];
+  }
+
+  /**
+   * Get or create cell representing a sheet.
+   */
+  // TODO(burdon): Async (open node).
+  //  Should the called creat and open the instance then register it, or should the graph by a factory?
+  getOrCreateNode(name: string): ComputeNode {
+    invariant(name.length);
+    if (!this._hf.doesSheetExist(name)) {
+      log.info('created node', { space: this._space?.id, name });
+      this._hf.addSheet(name);
+      this.update.emit();
+    }
+
+    const sheetId = this._hf.getSheetId(name);
+    invariant(sheetId !== undefined);
+
+    // TODO(burdon): Chain context?
+    const node = new ComputeNode(this, sheetId);
+    this._nodes.set(sheetId, node);
+    return node;
   }
 
   /**
@@ -268,5 +258,18 @@ export class ComputeGraph extends Resource {
         return match;
       }
     });
+  }
+
+  protected override async _open() {
+    if (this._space) {
+      // Subscribe to remote function definitions.
+      const query = this._space.db.query(Filter.schema(FunctionType));
+      const unsubscribe = query.subscribe(({ objects }) => {
+        this._functions = objects.filter(({ binding }) => binding);
+        this.update.emit();
+      });
+
+      this._ctx.onDispose(unsubscribe);
+    }
   }
 }

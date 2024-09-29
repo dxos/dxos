@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+// TODO(burdon): Remove HF dependencies (move into ComputeNode).
 import { DetailedCellError, ExportedCellChange } from 'hyperformula';
 import { type SimpleCellRange } from 'hyperformula/typings/AbsoluteCellRange';
 import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
