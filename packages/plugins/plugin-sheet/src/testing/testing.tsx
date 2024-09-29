@@ -48,7 +48,7 @@ export const useTestSheet = (space?: Space, graph?: ComputeGraph) => {
   const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
   useEffect(() => {
     if (!space || !graph) {
-      return () => {};
+      return;
     }
 
     const t = setTimeout(async () => {

@@ -6,10 +6,9 @@ import { type FunctionPluginDefinition, HyperFormula } from 'hyperformula';
 import { type FunctionTranslationsPackage } from 'hyperformula/typings/interpreter';
 
 import { Event } from '@dxos/async';
-import { type Space } from '@dxos/client/echo';
+import { type SpaceId, type Space } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { type SpaceId } from '@dxos/keys/src';
 import { log } from '@dxos/log';
 
 import { FunctionContext, type FunctionContextOptions } from './async-function';
@@ -48,6 +47,7 @@ export class ComputeGraphRegistry {
       HyperFormula.registerFunctionPlugin(plugin, translations);
     });
 
+    // TODO(burdon): Build instance per space.
     this._hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
   }
 
@@ -59,7 +59,16 @@ export class ComputeGraphRegistry {
     return this._registry.get(spaceId);
   }
 
-  async createGraph(space: Space): Promise<ComputeGraph> {
+  getOrCreateGraph(space: Space): ComputeGraph {
+    let graph = this.getGraph(space.id);
+    if (!graph) {
+      graph = this.createGraph(space);
+    }
+
+    return graph;
+  }
+
+  createGraph(space: Space): ComputeGraph {
     invariant(this._hf, 'Not initialized.');
     invariant(!this._registry.has(space.id), `Already exists: ${space.id}`);
     const graph = new ComputeGraph(this._hf, space, this._options);
@@ -77,7 +86,7 @@ export class ComputeGraph {
 
   // The context is passed to all functions.
   public readonly context = new FunctionContext(
-    this.hf,
+    this._hf,
     this._space,
     () => {
       this.refresh();
@@ -86,15 +95,45 @@ export class ComputeGraph {
   );
 
   constructor(
-    public readonly hf: HyperFormula,
+    private readonly _hf: HyperFormula,
     private readonly _space?: Space,
     private readonly _options?: Partial<FunctionContextOptions>,
   ) {
-    this.hf.updateConfig({ context: this.context });
+    // TODO(burdon): Create separate instance per graph (i.e., per space).
+    this._hf.updateConfig({ context: this.context });
+  }
+
+  get hf() {
+    return this._hf;
+  }
+
+  /**
+   * Get or create cell representing a sheet.
+   */
+  getCell(id: string): ComputeCell {
+    invariant(id.length);
+    if (!this._hf.doesSheetExist(id)) {
+      this._hf.addSheet(id);
+    }
+
+    const sheetId = this._hf.getSheetId(id);
+    invariant(sheetId !== undefined);
+    return new ComputeCell(this, sheetId);
   }
 
   refresh() {
     log('refresh', { id: this.id });
     this.update.emit();
+  }
+}
+
+export class ComputeCell {
+  constructor(
+    public readonly graph: ComputeGraph,
+    public readonly sheetId: number,
+  ) {}
+
+  get hf() {
+    return this.graph.hf;
   }
 }

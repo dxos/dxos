@@ -41,7 +41,7 @@ const Story = ({ text }: StoryProps) => {
     [themeMode],
   );
 
-  return <div className='w-[800px]' ref={parentRef} {...focusAttributes} />;
+  return <div className='w-[50rem]' ref={parentRef} {...focusAttributes} />;
 };
 
 export default {
@@ -50,7 +50,7 @@ export default {
   render: Story,
 };
 
-export const Mermaid = {
+export const Default = {
   args: {
     text: str(
       '# Mermaid',

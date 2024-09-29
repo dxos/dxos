@@ -25,7 +25,7 @@ describe('sheet model', () => {
     const space = await client.spaces.create();
     const registry = new ComputeGraphRegistry();
     await registry.initialize();
-    const graph = await registry.createGraph(space);
+    const graph = registry.createGraph(space);
     const sheet = createSheet({ rows: 5, columns: 5 });
     const model = new SheetModel(graph, sheet, new FunctionManager(graph, space));
     await model.initialize();

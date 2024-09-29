@@ -3,9 +3,10 @@
 //
 
 import '@dxos-theme';
+import React, { useEffect, useState } from 'react';
 
-import React from 'react';
-
+import { useSpace } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
@@ -15,11 +16,12 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { nonNullable } from '@dxos/util';
 
 import { compute } from './compute';
+import { type ComputeCell } from '../graph';
+import { useComputeGraph } from '../hooks';
 import { withGraphDecorator } from '../testing';
-
-// import { useComputeGraph } from '../components';
 
 const str = (...lines: string[]) => lines.join('\n');
 
@@ -29,7 +31,15 @@ type StoryProps = {
 
 const Story = ({ text }: StoryProps) => {
   const { themeMode } = useThemeContext();
-  // const graph = useComputeGraph();
+  const space = useSpace();
+  const graph = useComputeGraph(space);
+  const [cell, setCell] = useState<ComputeCell>();
+  useEffect(() => {
+    if (graph) {
+      const cell = graph.getCell('test');
+      setCell(cell);
+    }
+  }, [graph]);
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       initialValue: text,
@@ -37,24 +47,45 @@ const Story = ({ text }: StoryProps) => {
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-        compute(),
+        cell && compute(cell),
         decorateMarkdown(),
-      ],
+      ].filter(nonNullable),
     }),
-    [themeMode],
+    [cell, themeMode],
   );
 
-  return <div className='w-[800px]' ref={parentRef} {...focusAttributes} />;
+  return <div className='w-[40rem]' ref={parentRef} {...focusAttributes} />;
 };
 
 export default {
   title: 'plugin-sheet/extensions',
-  decorators: [withGraphDecorator, withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
+  decorators: [
+    withClientProvider({ createIdentity: true, createSpace: true }),
+    withGraphDecorator,
+    withTheme,
+    withLayout({ fullscreen: true, classNames: 'justify-center' }),
+  ],
   render: Story,
 };
 
-export const Mermaid = {
+export const Default = {
   args: {
-    text: str('# Compute', '', '```dx', '=FOO()', '```', ''),
+    text: str(
+      '# Compute',
+      '',
+      'This is a compute expression:',
+      '',
+      '```dx',
+      '=SUM(1, 2)',
+      '```',
+      '',
+      'It should change in realtime.',
+      '',
+      '```dx',
+      '=SUM(3, 5)',
+      '```',
+      '',
+      '',
+    ),
   },
 };

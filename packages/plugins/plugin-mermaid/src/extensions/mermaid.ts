@@ -29,7 +29,6 @@ export const mermaid = (options: MermaidOptions = {}): Extension => {
 
 const update = (state: EditorState, options: MermaidOptions) => {
   const builder = new RangeSetBuilder();
-
   syntaxTree(state).iterate({
     enter: (node) => {
       if (node.name === 'FencedCode') {
@@ -78,7 +77,6 @@ class MermaidWidget extends WidgetType {
 
   override toDOM(view: EditorView) {
     const wrapper = document.createElement('div');
-
     setTimeout(async () => {
       // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/config.type.ts
       _mermaid.initialize({

@@ -26,7 +26,7 @@ describe('compute graph', () => {
     const registry = new ComputeGraphRegistry();
     await registry.initialize([{ plugin: CustomPlugin, translations: CustomPluginTranslations }]);
 
-    const graph = await registry.createGraph(space);
+    const graph = registry.createGraph(space);
     const sheet = createSheet({ rows: 5, columns: 5 });
     const model = new SheetModel(graph, sheet, new FunctionManager(graph, space));
     graph.update.on(() => model.update.emit());

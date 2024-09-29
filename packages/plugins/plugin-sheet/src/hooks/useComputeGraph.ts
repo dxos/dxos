@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useMemo } from 'react';
 
 import { raise } from '@dxos/debug';
 import { type Space } from '@dxos/react-client/echo';
@@ -15,22 +15,5 @@ import { type ComputeGraph } from '../graph';
  */
 export const useComputeGraph = (space?: Space): ComputeGraph | undefined => {
   const { registry } = useContext(ComputeGraphContext) ?? raise(new Error('Missing ComputeGraphContext'));
-  const [graph, setGraph] = useState<ComputeGraph | undefined>(space && registry.getGraph(space.id));
-  useEffect(() => {
-    if (graph || !space) {
-      return;
-    }
-
-    const t = setTimeout(async () => {
-      let graph = registry.getGraph(space.id);
-      if (!graph) {
-        graph = await registry.createGraph(space);
-      }
-      setGraph(graph);
-    });
-
-    return () => clearTimeout(t);
-  }, [space, graph]);
-
-  return graph;
+  return useMemo(() => space && registry.getOrCreateGraph(space), [space, registry]);
 };

@@ -5,8 +5,13 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
-import { Grid, useGridContext, type GridScopedProps } from '@dxos/react-ui-grid';
-import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid/src';
+import {
+  Grid,
+  useGridContext,
+  type GridScopedProps,
+  type DxGridElement,
+  type GridContentProps,
+} from '@dxos/react-ui-grid';
 
 import { dxGridCellIndexToSheetCellAddress, useSheetModelDxGridProps } from './util';
 import { useFormattingModel, useSheetModel, type UseSheetModelOptions } from '../../hooks';

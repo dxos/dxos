@@ -7,7 +7,8 @@ import '@dxos-theme';
 import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
-import { type Space, getSpace, useSpace } from '@dxos/react-client/echo';
+import { type Space, useSpace } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -18,7 +19,7 @@ import { useSheetContext } from './sheet-context';
 import { addressToIndex, rangeToIndex } from '../../defs';
 import { useComputeGraph } from '../../hooks';
 import { useTestSheet, withGraphDecorator } from '../../testing';
-import { ValueTypeEnum } from '../../types';
+import { SheetType, ValueTypeEnum } from '../../types';
 import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
 
 // TODO(burdon): Allow toolbar to access sheet context; provide state for current cursor/range.
@@ -101,14 +102,20 @@ const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) =
 export default {
   title: 'plugin-sheet/Sheet',
   component: Sheet,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true, classNames: 'inset-4' }), withGraphDecorator],
+  decorators: [
+    withClientProvider({ types: [SheetType], createIdentity: true }),
+    withGraphDecorator,
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true, classNames: 'inset-4' }),
+  ],
 };
 
 export const Default = () => {
   const [debug, setDebug] = useState(false);
-  const sheet = useTestSheet();
-  const space = getSpace(sheet);
-  if (!sheet || !space) {
+  const space = useSpace();
+  const graph = useComputeGraph(space);
+  const sheet = useTestSheet(space, graph);
+  if (!space || !sheet) {
     return null;
   }
 
@@ -120,8 +127,9 @@ export const Default = () => {
 };
 
 export const Debug = () => {
-  const sheet = useTestSheet();
-  const space = getSpace(sheet);
+  const space = useSpace();
+  const graph = useComputeGraph(space);
+  const sheet = useTestSheet(space, graph);
   if (!sheet || !space) {
     return null;
   }
@@ -136,8 +144,9 @@ export const Debug = () => {
 
 export const Rows = () => {
   const [rowSizes, setRowSizes] = useState<SizeMap>({});
-  const sheet = useTestSheet();
-  const space = getSpace(sheet);
+  const space = useSpace();
+  const graph = useComputeGraph(space);
+  const sheet = useTestSheet(space, graph);
   if (!sheet || !space) {
     return null;
   }
@@ -154,9 +163,10 @@ export const Rows = () => {
 };
 
 export const Columns = () => {
-  const space = useSpace();
-  const sheet = useTestSheet(space);
   const [columnSizes, setColumnSizes] = useState<SizeMap>({});
+  const space = useSpace();
+  const graph = useComputeGraph(space);
+  const sheet = useTestSheet(space, graph);
   if (!sheet || !space) {
     return null;
   }
@@ -173,8 +183,9 @@ export const Columns = () => {
 };
 
 export const Main = () => {
-  const sheet = useTestSheet();
-  const space = getSpace(sheet);
+  const space = useSpace();
+  const graph = useComputeGraph(space);
+  const sheet = useTestSheet(space, graph);
   if (!sheet || !space) {
     return null;
   }
