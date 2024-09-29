@@ -8,7 +8,7 @@ import { type FunctionTranslationsPackage } from 'hyperformula/typings/interpret
 
 import { Event } from '@dxos/async';
 import { type SpaceId, type Space } from '@dxos/client/echo';
-import { Context } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -51,29 +51,14 @@ export const createComputeGraphRegistry = (options: Partial<FunctionContextOptio
  * Registry of compute graphs for each space.
  */
 // TODO(burdon): Move graph into separate plugin.
-export class ComputeGraphRegistry {
+export class ComputeGraphRegistry extends Resource {
   private readonly _registry = new Map<SpaceId, ComputeGraph>();
 
-  // TODO(burdon): Base class for initialize/destroy.
-  private _ctx?: Context;
-
   constructor(private readonly _options: ComputeGraphOptions = defaultOptions) {
+    super();
     this._options.plugins?.forEach(({ plugin, translations }) => {
       HyperFormula.registerFunctionPlugin(plugin, translations);
     });
-  }
-
-  get initialized() {
-    return !!this._ctx;
-  }
-
-  async initialize() {
-    invariant(!this.initialized);
-    this._ctx = new Context();
-  }
-
-  async destroy() {
-    await this._ctx?.dispose();
   }
 
   getGraph(spaceId: SpaceId): ComputeGraph | undefined {
@@ -89,11 +74,11 @@ export class ComputeGraphRegistry {
     return graph;
   }
 
-  // TODO(burdon): Async.
   async createGraph(space: Space): Promise<ComputeGraph> {
     const hf = HyperFormula.buildEmpty(this._options);
     invariant(!this._registry.has(space.id), `Already exists: ${space.id}`);
     const graph = new ComputeGraph(hf, space, this._options);
+    await graph.open(this._ctx);
     this._registry.set(space.id, graph);
     return graph;
   }
@@ -103,7 +88,7 @@ export class ComputeGraphRegistry {
  * Per-space compute and dependency graph.
  * Consists of multiple ComputeNode (sheets).
  */
-export class ComputeGraph {
+export class ComputeGraph extends Resource {
   public readonly id = `graph-${PublicKey.random().truncate()}`;
 
   public readonly update = new Event();
@@ -113,13 +98,13 @@ export class ComputeGraph {
 
   private readonly _functions: FunctionManager;
 
-  private _ctx?: Context;
-
   constructor(
     private readonly _hf: HyperFormula,
     private readonly _space?: Space,
     private readonly _options?: Partial<FunctionContextOptions>,
   ) {
+    super();
+
     // TODO(burdon): Create separate instance per graph (i.e., per space).
     this._hf.updateConfig({ context: this.context });
     this._functions = new FunctionManager(this, _space);
@@ -133,21 +118,8 @@ export class ComputeGraph {
     return this._functions;
   }
 
-  get initialized() {
-    return !!this._ctx;
-  }
-
-  async initialize() {
-    invariant(!this.initialized);
-    this._ctx = new Context();
-
-    // Listen for function updates.
-    await this._functions.initialize();
-    this._ctx.onDispose(this._functions.update.on(() => this.update.emit()));
-  }
-
-  async destroy() {
-    await this._ctx?.dispose();
+  protected override async _open() {
+    await this._functions.open(this._ctx);
   }
 
   /**

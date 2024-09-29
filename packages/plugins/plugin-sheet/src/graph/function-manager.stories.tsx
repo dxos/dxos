@@ -41,7 +41,7 @@ const Story = () => {
     if (space && graph) {
       t = setTimeout(async () => {
         const functionManager = new FunctionManager(graph, space);
-        await functionManager.initialize();
+        await functionManager.open();
         setFunctionManager(functionManager);
         functionManager.update.on(() => {
           const f1 = functionManager.getFunctions({ standard: true, echo: false });

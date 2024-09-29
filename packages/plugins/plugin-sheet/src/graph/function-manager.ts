@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Filter, type Space, fullyQualifiedId } from '@dxos/client/echo';
-import { Context } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { FunctionType } from '@dxos/plugin-script/types';
 
 import { defaultFunctions, type FunctionDefinition } from '../defs';
@@ -19,10 +19,7 @@ const CUSTOM_FUNCTION = 'ECHO';
 /**
  * Manages mapping between function bindings and their definitions.
  */
-// TODO(burdon): Move into ComputeGraph.
-export class FunctionManager {
-  private readonly _ctx = new Context();
-
+export class FunctionManager extends Resource {
   private _functions: FunctionType[] = [];
 
   public readonly update = new Event();
@@ -30,9 +27,11 @@ export class FunctionManager {
   constructor(
     private readonly _graph: ComputeGraph,
     private readonly _space?: Space,
-  ) {}
+  ) {
+    super();
+  }
 
-  async initialize() {
+  protected override async _open() {
     if (this._space) {
       const query = this._space.db.query(Filter.schema(FunctionType));
       const unsubscribe = query.subscribe(({ objects }) => {
@@ -42,10 +41,6 @@ export class FunctionManager {
 
       this._ctx.onDispose(unsubscribe);
     }
-  }
-
-  async destroy() {
-    await this._ctx.dispose();
   }
 
   getFunctions({ standard = true, echo = true }: { standard?: boolean; echo?: boolean } = {}): FunctionDefinition[] {
