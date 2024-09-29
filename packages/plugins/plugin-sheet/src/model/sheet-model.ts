@@ -69,12 +69,12 @@ export class SheetModel extends Resource {
   private readonly _node: ComputeNode;
 
   constructor(
-    // TODO(burdon): Remove graph property.
     private readonly _graph: ComputeGraph,
     private readonly _sheet: SheetType,
     private readonly _options: SheetModelOptions = {},
   ) {
     super();
+    // TODO(burdon): SheetModel should extend ComputeNode and be constructed via the graph.
     this._node = this._graph.getOrCreateNode(createSheetName(this._sheet.id));
     this.reset();
   }

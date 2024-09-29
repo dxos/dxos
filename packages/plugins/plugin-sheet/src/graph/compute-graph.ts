@@ -103,17 +103,21 @@ export class ComputeGraphRegistry extends Resource {
  * Consists of multiple ComputeNode (sheets).
  */
 // TODO(burdon): Tests.
+// TODO(burdon): Event propagation.
 export class ComputeGraph extends Resource {
   public readonly id = `graph-${PublicKey.random().truncate()}`;
 
-  // TODO(burdon): Typed events.
-  public readonly update = new Event();
+  // Map of nodes.
+  private readonly _nodes = new Map<number, ComputeNode>();
+
+  // Cached function objects.
+  private _functions: FunctionType[] = [];
 
   // The context is passed to all functions.
   public readonly context = new FunctionContext(this._hf, this._space, this.refresh.bind(this), this._options);
 
-  // Cached function objects.
-  private _functions: FunctionType[] = [];
+  // TODO(burdon): Typed events.
+  public readonly update = new Event();
 
   constructor(
     private readonly _hf: HyperFormula,
@@ -142,9 +146,15 @@ export class ComputeGraph extends Resource {
     }
   }
 
+  refresh() {
+    log('refresh', { id: this.id });
+    this.update.emit();
+  }
+
   /**
    * Get or create cell representing a sheet.
    */
+  // TODO(burdon): Async (open node).
   getOrCreateNode(name: string): ComputeNode {
     invariant(name.length);
     if (!this._hf.doesSheetExist(name)) {
@@ -155,7 +165,12 @@ export class ComputeGraph extends Resource {
 
     const sheetId = this._hf.getSheetId(name);
     invariant(sheetId !== undefined);
-    return new ComputeNode(this, sheetId);
+
+    // TODO(burdon): Open.
+    // TODO(burdon): Chain context?
+    const node = new ComputeNode(this, sheetId);
+    this._nodes.set(sheetId, node);
+    return node;
   }
 
   getFunctions({ standard = true, echo = true }: { standard?: boolean; echo?: boolean } = {}): FunctionDefinition[] {
@@ -253,10 +268,5 @@ export class ComputeGraph extends Resource {
         return match;
       }
     });
-  }
-
-  refresh() {
-    log('refresh', { id: this.id });
-    this.update.emit();
   }
 }

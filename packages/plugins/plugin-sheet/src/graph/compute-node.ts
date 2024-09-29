@@ -12,11 +12,11 @@ import { type CellAddress } from '../defs';
 import { type CellScalarValue } from '../types';
 
 /**
- * Individual sheet (typically corresponds to an ECHO object).
+ * Individual "sheet" (typically corresponds to an ECHO object).
  */
 // TODO(burdon): Factor out common HF wrapper from from SheetModel.
-// TODO(burdon): Resource.
 export class ComputeNode extends Resource {
+  // TODO(burdon): Chaing events.
   public readonly update = new Event();
 
   constructor(
