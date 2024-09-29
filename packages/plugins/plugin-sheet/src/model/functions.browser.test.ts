@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { create } from 'ts-node';
 import { describe, test, expect } from 'vitest';
 
 import { Client } from '@dxos/client';
-import { create } from '@dxos/client/echo';
 import { FunctionType } from '@dxos/plugin-script/types';
 
-// import { FunctionManager } from './functions';
+import { FunctionManager } from './functions';
 import { ComputeGraphRegistry } from '../graph';
 
 // TODO(burdon): Failing test infrastructure
@@ -33,17 +33,14 @@ describe('FunctionManager', () => {
     const fn = space.db.add(create(FunctionType, { version: 1, binding: 'HELLO' }));
 
     const registry = new ComputeGraphRegistry();
-    // await registry.initialize();
+    const graph = registry.createGraph(space);
+    const functionManager = new FunctionManager(graph, space);
 
-    // const graph = await registry.createGraph(space);
-    // const functionManager = new FunctionManager(graph, space);
-
-    // const id = functionManager.mapFunctionBindingToId('HELLO()');
-    // expect(id).to.eq(`${fn.id}()`);
+    const id = functionManager.mapFunctionBindingToId('HELLO()');
+    expect(id).to.eq(`${fn.id}()`);
 
     // TODO(burdon): Test invocation.
     // TODO(burdon): Test storage.
-    console.log('###############################');
     expect(true).toBe(true);
   });
 });
