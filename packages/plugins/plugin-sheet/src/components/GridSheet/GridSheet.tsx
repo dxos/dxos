@@ -29,7 +29,7 @@ const GridSheetCellEditor = ({
   const cell = dxGridCellIndexToSheetCellAddress(editing);
 
   const extension = useMemo(
-    () => [editorKeys({ onNav, onClose }), sheetExtension({ functions: model.functions.getFunctions() })],
+    () => [editorKeys({ onNav, onClose }), sheetExtension({ functions: model.graph.getFunctions() })],
     [model, onNav, onClose],
   );
 

@@ -2,22 +2,29 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type FunctionPluginDefinition, DetailedCellError, HyperFormula } from 'hyperformula';
+import { type FunctionPluginDefinition, HyperFormula } from 'hyperformula';
 import { type ConfigParams } from 'hyperformula/typings/ConfigParams';
 import { type FunctionTranslationsPackage } from 'hyperformula/typings/interpreter';
 
 import { Event } from '@dxos/async';
-import { type SpaceId, type Space } from '@dxos/client/echo';
+import { type SpaceId, type Space, Filter, fullyQualifiedId } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { FunctionType } from '@dxos/plugin-script/types';
+import { nonNullable } from '@dxos/util';
 
 import { FunctionContext, type FunctionContextOptions } from './async-function';
+import { ComputeNode } from './compute-node';
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './edge-function';
-import { FunctionRegistry } from './function-registry';
-import { type CellAddress } from '../defs';
-import { type CellScalarValue } from '../types';
+import { defaultFunctions, type FunctionDefinition } from './function-defs';
+
+// TODO(wittjosiah): Factor out.
+const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
+
+// TODO(burdon): Change to "DX".
+const CUSTOM_FUNCTION = 'ECHO';
 
 export type ComputeGraphPlugin = {
   plugin: FunctionPluginDefinition;
@@ -95,6 +102,7 @@ export class ComputeGraphRegistry extends Resource {
  * Per-space compute and dependency graph.
  * Consists of multiple ComputeNode (sheets).
  */
+// TODO(burdon): Tests.
 export class ComputeGraph extends Resource {
   public readonly id = `graph-${PublicKey.random().truncate()}`;
 
@@ -104,8 +112,8 @@ export class ComputeGraph extends Resource {
   // The context is passed to all functions.
   public readonly context = new FunctionContext(this._hf, this._space, this.refresh.bind(this), this._options);
 
-  // Dynamic functions registry.
-  private readonly _functions: FunctionRegistry;
+  // Cached function objects.
+  private _functions: FunctionType[] = [];
 
   constructor(
     private readonly _hf: HyperFormula,
@@ -115,19 +123,23 @@ export class ComputeGraph extends Resource {
     super();
 
     this._hf.updateConfig({ context: this.context });
-    this._functions = new FunctionRegistry(this, _space);
   }
 
+  // TODO(burdon): Remove.
   get hf() {
     return this._hf;
   }
 
-  get functions() {
-    return this._functions;
-  }
-
   protected override async _open() {
-    await this._functions.open(this._ctx);
+    if (this._space) {
+      const query = this._space.db.query(Filter.schema(FunctionType));
+      const unsubscribe = query.subscribe(({ objects }) => {
+        this._functions = objects.filter(({ binding }) => binding);
+        this.update.emit();
+      });
+
+      this._ctx.onDispose(unsubscribe);
+    }
   }
 
   /**
@@ -146,44 +158,105 @@ export class ComputeGraph extends Resource {
     return new ComputeNode(this, sheetId);
   }
 
+  getFunctions({ standard = true, echo = true }: { standard?: boolean; echo?: boolean } = {}): FunctionDefinition[] {
+    return [
+      ...(standard
+        ? this._hf
+            .getRegisteredFunctionNames()
+            .map((name) => defaultFunctions.find((fn) => fn.name === name) ?? { name })
+        : []),
+      ...(echo ? this._functions.map((fn) => ({ name: fn.binding! })) : []),
+    ];
+  }
+
+  /**
+   * Map bound value to custom function invocation.
+   * E.g., "HELLO(...args)" => "EDGE("HELLO", ...args)".
+   */
+  mapFormulaToNative(formula: string): string {
+    return (
+      formula
+        // Sheet references.
+        // https://hyperformula.handsontable.com/guide/cell-references.html#cell-references
+        .replace(/['"]?([ \w]+)['"]?!/, (_match, name) => {
+          if (name) {
+            // TODO(burdon): What if not loaded?
+            const objects = this._hf
+              .getSheetNames()
+              .map((name) => {
+                const id = getSheetId(name);
+                return id ? this._space?.db.getObjectById(id) : undefined;
+              })
+              .filter(nonNullable);
+
+            for (const obj of objects) {
+              if (obj.name === name || obj.title === name) {
+                return `${createSheetName(obj.id)}!`;
+              }
+            }
+          }
+
+          return `${name}!`;
+        })
+
+        // Functions.
+        .replace(/(\w+)\((.*)\)/g, (match, binding, args) => {
+          const fn = this._functions.find((fn) => fn.binding === binding);
+          if (!fn) {
+            return match;
+          }
+
+          if (args.trim() === '') {
+            return `${CUSTOM_FUNCTION}("${binding}")`;
+          } else {
+            return `${CUSTOM_FUNCTION}("${binding}", ${args})`;
+          }
+        })
+    );
+  }
+
+  /**
+   * Map from binding to fully qualified ECHO ID (to store).
+   * E.g., HELLO() => spaceId:objectId()
+   */
+  mapFunctionBindingToId(formula: string) {
+    return formula.replace(/(\w+)\((.*)\)/g, (match, binding, args) => {
+      if (binding === CUSTOM_FUNCTION || defaultFunctions.find((fn) => fn.name === binding)) {
+        return match;
+      }
+
+      const fn = this._functions.find((fn) => fn.binding === binding);
+      if (fn) {
+        const id = fullyQualifiedId(fn);
+        return `${id}(${args})`;
+      } else {
+        return match;
+      }
+    });
+  }
+
+  /**
+   * Map from fully qualified ECHO ID to binding (from store).
+   * E.g., spaceId:objectId() => HELLO()
+   */
+  mapFunctionBindingFromId(formula: string) {
+    return formula.replace(/(\w+):([a-zA-Z0-9]+)\((.*)\)/g, (match, spaceId, objectId, args) => {
+      const id = `${spaceId}:${objectId}`;
+      if (id.length !== OBJECT_ID_LENGTH) {
+        return match;
+      }
+
+      const fn = this._functions.find((fn) => fullyQualifiedId(fn) === id);
+      if (fn?.binding) {
+        return `${fn.binding}(${args})`;
+      } else {
+        return match;
+      }
+    });
+  }
+
   refresh() {
     log('refresh', { id: this.id });
     this.update.emit();
-  }
-}
-
-/**
- * Individual sheet (typically corresponds to an ECHO object).
- */
-// TODO(burdon): Factor out common HF wrapper from from SheetModel.
-export class ComputeNode {
-  public readonly update = new Event();
-
-  constructor(
-    private readonly _graph: ComputeGraph,
-    public readonly sheetId: number,
-  ) {}
-
-  get graph() {
-    return this._graph;
-  }
-
-  get hf() {
-    return this._graph.hf;
-  }
-
-  getValue(cell: CellAddress): CellScalarValue {
-    const value = this.hf.getCellValue({ sheet: this.sheetId, row: cell.row, col: cell.col });
-    if (value instanceof DetailedCellError) {
-      return null;
-    }
-
-    return value;
-  }
-
-  setValue(cell: CellAddress, value: CellScalarValue) {
-    const mappedValue =
-      typeof value === 'string' && value.charAt(0) === '=' ? this._graph.functions.mapFormulaToNative(value) : value;
-    this.hf.setCellContents({ sheet: this.sheetId, row: cell.row, col: cell.col }, [[mappedValue]]);
   }
 }

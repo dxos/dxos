@@ -79,7 +79,6 @@ export class SheetModel extends Resource {
     this.reset();
   }
 
-  // TODO(burdon): Remove.
   get graph() {
     return this._graph;
   }
@@ -97,10 +96,6 @@ export class SheetModel extends Resource {
       rows: this._sheet.rows.length,
       columns: this._sheet.columns.length,
     };
-  }
-
-  get functions() {
-    return this._graph.functions;
   }
 
   /**
@@ -127,8 +122,8 @@ export class SheetModel extends Resource {
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
       const { col, row } = addressFromIndex(this._sheet, key);
       if (typeof value === 'string' && value.charAt(0) === '=') {
-        value = this._graph.functions.mapFormulaToNative(
-          this._graph.functions.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value)),
+        value = this._graph.mapFormulaToNative(
+          this._graph.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value)),
         );
       }
 
@@ -233,7 +228,7 @@ export class SheetModel extends Resource {
     }
 
     if (typeof value === 'string' && value.charAt(0) === '=') {
-      return this._graph.functions.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value));
+      return this._graph.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value));
     } else {
       return String(value);
     }
@@ -294,7 +289,7 @@ export class SheetModel extends Resource {
 
     // Insert into engine.
     this._node.hf.setCellContents({ sheet: this._node.sheetId, row: cell.row, col: cell.col }, [
-      [typeof value === 'string' && value.charAt(0) === '=' ? this._graph.functions.mapFormulaToNative(value) : value],
+      [typeof value === 'string' && value.charAt(0) === '=' ? this._graph.mapFormulaToNative(value) : value],
     ]);
 
     // Insert into sheet.
@@ -303,7 +298,7 @@ export class SheetModel extends Resource {
       delete this._sheet.cells[idx];
     } else {
       if (typeof value === 'string' && value.charAt(0) === '=') {
-        value = this._graph.functions.mapFunctionBindingToId(this.mapFormulaRefsToIndices(value));
+        value = this._graph.mapFunctionBindingToId(this.mapFormulaRefsToIndices(value));
       }
 
       this._sheet.cells[idx] = { value };

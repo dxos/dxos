@@ -20,7 +20,7 @@ const CUSTOM_FUNCTION = 'ECHO';
 /**
  * Manages mapping between function bindings and their definitions.
  */
-// TODO(burdon): Rename (not just functions; also cross-sheet references).
+// TODO(burdon): Move into ComputeGraph.
 export class FunctionRegistry extends Resource {
   private _functions: FunctionType[] = [];
 
