@@ -3,6 +3,7 @@
 //
 
 import { type FunctionPluginDefinition, HyperFormula } from 'hyperformula';
+import { type ConfigParams } from 'hyperformula/typings/ConfigParams';
 import { type FunctionTranslationsPackage } from 'hyperformula/typings/interpreter';
 
 import { Event } from '@dxos/async';
@@ -14,33 +15,45 @@ import { log } from '@dxos/log';
 import { FunctionContext, type FunctionContextOptions } from './async-function';
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './edge-function';
 
-/**
- * NOTE: Async imports to decouple hyperformula deps.
- */
-export const createComputeGraphRegistry = (options: Partial<FunctionContextOptions> = {}) => {
-  return new ComputeGraphRegistry(
-    [{ plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations }],
-    options,
-  );
-};
-
 export type ComputeGraphPlugin = {
   plugin: FunctionPluginDefinition;
   translations: FunctionTranslationsPackage;
 };
 
+export type ComputeGraphOptions = {
+  plugins?: ComputeGraphPlugin[];
+} & Partial<FunctionContextOptions> &
+  Partial<ConfigParams>;
+
+export const defaultOptions: ComputeGraphOptions = {
+  licenseKey: 'gpl-v3',
+  plugins: [
+    {
+      plugin: EdgeFunctionPlugin,
+      translations: EdgeFunctionPluginTranslations,
+    },
+  ],
+};
+
+/**
+ * NOTE: Async imports to decouple hyperformula deps.
+ */
+export const createComputeGraphRegistry = (options: Partial<FunctionContextOptions> = {}) => {
+  return new ComputeGraphRegistry({
+    ...defaultOptions,
+    ...options,
+  });
+};
+
 /**
  * Registry of compute graphs for each space.
  */
-// TODO(burdon): Factor graph into separate plugin.
+// TODO(burdon): Move graph into separate plugin.
 export class ComputeGraphRegistry {
   private readonly _registry = new Map<SpaceId, ComputeGraph>();
 
-  constructor(
-    plugins: ComputeGraphPlugin[] = [],
-    private readonly _options?: Partial<FunctionContextOptions>,
-  ) {
-    plugins.forEach(({ plugin, translations }) => {
+  constructor(private readonly _options: ComputeGraphOptions = defaultOptions) {
+    this._options.plugins?.forEach(({ plugin, translations }) => {
       HyperFormula.registerFunctionPlugin(plugin, translations);
     });
   }
@@ -59,7 +72,7 @@ export class ComputeGraphRegistry {
   }
 
   createGraph(space: Space): ComputeGraph {
-    const hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
+    const hf = HyperFormula.buildEmpty(this._options);
     invariant(!this._registry.has(space.id), `Already exists: ${space.id}`);
     const graph = new ComputeGraph(hf, space, this._options);
     this._registry.set(space.id, graph);
@@ -69,21 +82,15 @@ export class ComputeGraphRegistry {
 
 /**
  * Per-space compute and dependency graph.
- * Consists of multiple ComputeCells (sheets).
+ * Consists of multiple ComputeNode (sheets).
  */
 export class ComputeGraph {
   public readonly id = `graph-${PublicKey.random().truncate()}`;
+
   public readonly update = new Event();
 
   // The context is passed to all functions.
-  public readonly context = new FunctionContext(
-    this._hf,
-    this._space,
-    () => {
-      this.refresh();
-    },
-    this._options,
-  );
+  public readonly context = new FunctionContext(this._hf, this._space, this.refresh.bind(this), this._options);
 
   constructor(
     private readonly _hf: HyperFormula,

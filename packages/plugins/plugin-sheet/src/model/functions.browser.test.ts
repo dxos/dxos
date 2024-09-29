@@ -34,7 +34,6 @@ describe('FunctionManager', () => {
     const registry = new ComputeGraphRegistry();
     const graph = registry.createGraph(space);
     const functionManager = new FunctionManager(graph, space);
-
     const id = functionManager.mapFunctionBindingToId('TEST()');
     expect(id).to.eq(`${fn.id}()`);
   });
