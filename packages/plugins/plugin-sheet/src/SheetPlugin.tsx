@@ -37,7 +37,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
 
       // Async import removes direct dependency on hyperformula.
       const { createComputeGraphRegistry } = await import('./graph');
-      graphRegistry = await createComputeGraphRegistry({ remoteFunctionUrl });
+      graphRegistry = createComputeGraphRegistry({ remoteFunctionUrl });
     },
     provides: {
       context: ({ children }) => {

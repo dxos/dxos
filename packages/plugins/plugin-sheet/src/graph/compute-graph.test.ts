@@ -7,8 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
 
-import { ComputeGraphRegistry } from './compute-graph';
-import { CustomPlugin, CustomPluginTranslations } from './custom-function';
+import { createComputeGraphRegistry } from './compute-graph';
 import { addressFromA1Notation, createSheet } from '../defs';
 import { FunctionManager, SheetModel } from '../model';
 import { type CellScalarValue } from '../types';
@@ -23,9 +22,7 @@ describe('compute graph', () => {
     await client.halo.createIdentity();
     const space = await client.spaces.create();
 
-    const registry = new ComputeGraphRegistry();
-    await registry.initialize([{ plugin: CustomPlugin, translations: CustomPluginTranslations }]);
-
+    const registry = createComputeGraphRegistry();
     const graph = registry.createGraph(space);
     const sheet = createSheet({ rows: 5, columns: 5 });
     const model = new SheetModel(graph, sheet, new FunctionManager(graph, space));

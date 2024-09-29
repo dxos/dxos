@@ -64,20 +64,7 @@ export const useTestSheet = (space?: Space, graph?: ComputeGraph) => {
 };
 
 export const withGraphDecorator: Decorator = (Story) => {
-  const [registry, setRegistry] = useState<ComputeGraphRegistry>();
-  useEffect(() => {
-    const t = setTimeout(async () => {
-      const registry = new ComputeGraphRegistry();
-      await registry.initialize();
-      setRegistry(registry);
-    });
-    return () => clearTimeout(t);
-  }, []);
-
-  if (!registry) {
-    return <div />;
-  }
-
+  const [registry] = useState(new ComputeGraphRegistry());
   return (
     <ComputeGraphContextProvider registry={registry}>
       <Story />

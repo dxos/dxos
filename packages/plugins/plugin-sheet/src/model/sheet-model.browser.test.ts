@@ -24,7 +24,6 @@ describe('sheet model', () => {
     await client.halo.createIdentity();
     const space = await client.spaces.create();
     const registry = new ComputeGraphRegistry();
-    await registry.initialize();
     const graph = registry.createGraph(space);
     const sheet = createSheet({ rows: 5, columns: 5 });
     const model = new SheetModel(graph, sheet, new FunctionManager(graph, space));
