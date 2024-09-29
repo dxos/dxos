@@ -65,8 +65,9 @@ export const createComputeGraphRegistry = (options: Partial<FunctionContextOptio
 };
 
 /**
- * Registry of compute graphs.
- * A separate ComputeGraph instance is created for each space.
+ * Manages a collection of ComputeGraph instances for each space.
+ *
+ * [ComputePlugin] => [ComputeGraphRegistry] => [ComputeGraph(Space)] => [ComputeNode(Object)]
  */
 // TODO(burdon): Move graph into separate plugin; isolate HF deps.
 export class ComputeGraphRegistry extends Resource {
@@ -105,8 +106,9 @@ export class ComputeGraphRegistry extends Resource {
 
 /**
  * Per-space compute and dependency graph.
- * Consists of multiple ComputeNode (sheets).
- * The HyperFormula manages the dependency graph.
+ * Consists of multiple ComputeNode (corresponding to a HyperFormula sheet).
+ * Manages the set of custom functions.
+ * HyperFormula manages the dependency graph.
  */
 // TODO(burdon): Tests.
 export class ComputeGraph extends Resource {
