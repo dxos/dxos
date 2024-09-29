@@ -6,10 +6,11 @@ import '@dxos-theme';
 
 import React from 'react';
 
+import { log } from '@dxos/log';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { withClientProvider, withMultiClientProvider } from './withClientProvider';
+import { withClientProvider, type WithClientProviderProps, withMultiClientProvider } from './withClientProvider';
 import { useClient } from '../client';
 import { type Space, useSpaces } from '../echo';
 
@@ -40,21 +41,24 @@ export default {
   render: Test,
 };
 
+const clientProps: WithClientProviderProps = {
+  createIdentity: true,
+  createSpace: true,
+  onInitialized: async (client) => {
+    log.info('onInitialized', { client });
+  },
+  onSpaceCreated: async ({ client, space }) => {
+    log.info('onSpaceCreated', { client, space });
+  },
+};
+
 export const Default = {
-  decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true }),
-    withTheme,
-    withLayout({ classNames: ['flex gap-2'] }),
-  ],
+  decorators: [withClientProvider(clientProps), withTheme, withLayout({ classNames: ['flex gap-2'] })],
 };
 
 export const Multiple = {
   decorators: [
-    withMultiClientProvider({
-      numClients: 3,
-      createIdentity: true,
-      createSpace: true,
-    }),
+    withMultiClientProvider({ ...clientProps, numClients: 3 }),
     withTheme,
     withLayout({ classNames: ['flex gap-2'] }),
   ],

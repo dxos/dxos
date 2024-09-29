@@ -7,9 +7,8 @@ import '@dxos-theme';
 import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { Filter, create, useSpaces } from '@dxos/react-client/echo';
-import { type WithClientProviderProps } from '@dxos/react-client/src/testing';
-import { withClientProvider, withMultiClientProvider } from '@dxos/react-client/testing';
+import { Filter, create, useSpaces, useQuery } from '@dxos/react-client/echo';
+import { type WithClientProviderProps, withClientProvider, withMultiClientProvider } from '@dxos/react-client/testing';
 import { Table } from '@dxos/react-ui-table';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -21,20 +20,12 @@ faker.seed(1);
 const useTable = () => {
   const spaces = useSpaces();
   const [table, setTable] = useState<TableType>();
+  const objects = useQuery(spaces[spaces.length - 1], Filter.schema(TableType));
   useEffect(() => {
-    const t = setTimeout(async () => {
-      if (spaces.length > 1) {
-        const space = spaces[1];
-        const { objects } = await space.db.query(Filter.schema(TableType)).run();
-        if (objects.length) {
-          setTable(objects[0]);
-        }
-      }
-    });
-
-    return () => clearTimeout(t);
-  }, [spaces]);
-
+    if (objects.length) {
+      setTable(objects[0]);
+    }
+  }, [objects]);
   return table;
 };
 
@@ -56,7 +47,8 @@ const Story = () => {
 export default {
   title: 'plugin-table/ObjectTable',
   component: ObjectTable,
-  render: Story,
+  // render: () => <div>s</div>,
+  render: () => <Story />,
 };
 
 const clientProps: WithClientProviderProps = {
@@ -74,5 +66,9 @@ export const Default = {
 };
 
 export const Multiple = {
-  decorators: [withMultiClientProvider({ ...clientProps, numClients: 3 }), withTheme, withLayout({ fullscreen: true })],
+  decorators: [
+    withMultiClientProvider({ ...clientProps, numClients: 3 }),
+    withTheme,
+    withLayout({ fullscreen: true, classNames: 'grid grid-cols-3' }),
+  ],
 };
