@@ -9,7 +9,7 @@ import { ErrorStream } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from './transport';
+import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';
 
 export const TcpTransportFactory: TransportFactory = {
   createTransport: (options) => new TcpTransport(options),
@@ -72,6 +72,7 @@ export class TcpTransport implements Transport {
         this._server.listen(0);
       });
     }
+    return this;
   }
 
   async close() {
@@ -79,6 +80,7 @@ export class TcpTransport implements Transport {
     this._socket?.destroy();
     this._server?.close();
     this._closed = true;
+    return this;
   }
 
   async onSignal({ payload }: Signal) {
