@@ -71,7 +71,7 @@
   ],
   "scripts": {
     "compile:buf": "buf generate",
-    "tsc:cjs": "rm -rf dist/cjs; tsc --module commonjs --moduleResolution node --target es2018 --outdir ./dist/cjs"
+    "tsc:cjs": "rm -rf dist/cjs; tsc --module commonjs --moduleResolution node --target es2018 --outdir ./dist/cjs && echo '{\"type\": \"commonjs\"}' > dist/cjs/package.json"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.0.0",
