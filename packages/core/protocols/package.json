@@ -6,6 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "type": "module",
   "exports": {
     ".": {
       "browser": "./dist/esm/src/index.js",
@@ -82,8 +83,8 @@
     "@effect/schema": "^0.67.16"
   },
   "devDependencies": {
-    "@bufbuild/buf": "^1.35.0",
-    "@bufbuild/protoc-gen-es": "^2.0.0"
+    "@bufbuild/buf": "^1.42.0",
+    "@bufbuild/protoc-gen-es": "^2.1.0"
   },
   "publishConfig": {
     "access": "public"
