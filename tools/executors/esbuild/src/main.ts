@@ -136,4 +136,5 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   return { success: errors.flat().length === 0 };
 };
 
-const CREATE_REQUIRE_BANNER = `import { createRequire } from 'node:module';const require = createRequire(import.meta.url);`;
+const CREATE_REQUIRE_BANNER =
+  "import { createRequire } from 'node:module';const require = createRequire(import.meta.url);";
