@@ -6,6 +6,12 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "imports": {
+    "#hyperformula": {
+      "types": "hyperformula",
+      "default": "./dist/vendor/hyperformula.mjs"
+    }
+  },
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -51,12 +57,6 @@
       "types": [
         "dist/types/src/types.d.ts"
       ]
-    }
-  },
-  "imports": {
-    "#hyperformula": {
-      "types": "hyperformula",
-      "default": "./dist/vendor/hyperformula.mjs"
     }
   },
   "files": [
