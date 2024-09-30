@@ -1,4 +1,3 @@
-/** eslint-disable react/jsx-key */
 //
 // Copyright 2024 DXOS.org
 //

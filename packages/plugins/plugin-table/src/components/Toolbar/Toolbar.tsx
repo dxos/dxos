@@ -39,13 +39,9 @@ const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>(
 const ToolbarRoot = ({ children, onAction, classNames }: ToolbarProps) => {
   return (
     <ToolbarContextProvider onAction={onAction}>
-      <DensityProvider density='fine'>
-        <ElevationProvider elevation='chrome'>
-          <NaturalToolbar.Root classNames={['is-full shrink-0 overflow-x-auto overflow-y-hidden p-1', classNames]}>
-            {children}
-          </NaturalToolbar.Root>
-        </ElevationProvider>
-      </DensityProvider>
+      <NaturalToolbar.Root classNames={['is-full shrink-0 overflow-x-auto overflow-y-hidden p-1', classNames]}>
+        {children}
+      </NaturalToolbar.Root>
     </ToolbarContextProvider>
   );
 };

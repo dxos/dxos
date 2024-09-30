@@ -13,8 +13,7 @@ import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 import { Toolbar, type ToolbarAction } from '../components/Toolbar';
 
 // TODO(Zan): Factor out, copied this from MarkdownPlugin.
-export const sectionToolbarLayout =
-  'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 __-block-start-px transition-opacity';
+export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
 
 const TableContainer = ({ role, table }: LayoutContainerProps<Omit<ObjectTableProps, 'role' | 'getScrollElement'>>) => {
   const isDirectlyAttended = useIsDirectlyAttended();
