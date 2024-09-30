@@ -53,6 +53,12 @@
       ]
     }
   },
+  "imports": {
+    "#hyperformula": {
+      "types": "hyperformula",
+      "default": "./dist/vendor/hyperformula.mjs"
+    }
+  },
   "files": [
     "dist",
     "src"

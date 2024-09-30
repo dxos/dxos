@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CellError, ErrorType, EmptyValue, FunctionPlugin, type HyperFormula } from 'hyperformula';
+import { CellError, ErrorType, EmptyValue, FunctionPlugin, type HyperFormula } from '#hyperformula';
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type InterpreterValue } from 'hyperformula/typings/interpreter/InterpreterValue';
 import { type ProcedureAst } from 'hyperformula/typings/parser';

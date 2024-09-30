@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FunctionArgumentType } from 'hyperformula';
+import { FunctionArgumentType } from '#hyperformula';
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type ProcedureAst } from 'hyperformula/typings/parser';
 

@@ -1,9 +1,7 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "plugin-sheet",
-  "tags": [
-    "scope:plugins"
-  ],
+  "tags": ["scope:plugins"],
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
@@ -16,16 +14,18 @@
           "{projectRoot}/src/testing.tsx",
           "{projectRoot}/src/types.ts"
         ],
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "platforms": ["browser", "node"]
+      }
+    },
+    "prebuild": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "./scripts/vendor.mjs"
       }
     },
     "lint": {},
     "test": {}
   },
-  "implicitDependencies": [
-    "esbuild"
-  ]
+  "implicitDependencies": ["esbuild"]
 }

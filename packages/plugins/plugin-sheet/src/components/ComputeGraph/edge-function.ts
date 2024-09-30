@@ -3,7 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { CellError, ErrorType, FunctionArgumentType } from 'hyperformula';
+import { CellError, ErrorType, FunctionArgumentType } from '#hyperformula';
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type ProcedureAst } from 'hyperformula/typings/parser';
 

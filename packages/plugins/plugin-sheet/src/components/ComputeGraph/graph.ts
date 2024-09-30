@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type FunctionPluginDefinition, HyperFormula } from 'hyperformula';
+import { type FunctionPluginDefinition, HyperFormula } from '#hyperformula';
 import { type FunctionTranslationsPackage } from 'hyperformula/typings/interpreter';
 
 import { Event } from '@dxos/async';

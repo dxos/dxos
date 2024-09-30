@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { HyperFormula } from 'hyperformula';
+import { HyperFormula } from '#hyperformula';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Client } from '@dxos/client';

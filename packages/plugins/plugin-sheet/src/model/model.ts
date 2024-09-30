@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DetailedCellError, ExportedCellChange } from 'hyperformula';
+import { DetailedCellError, ExportedCellChange } from '#hyperformula';
 import { type SimpleCellRange } from 'hyperformula/typings/AbsoluteCellRange';
 import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateTimeHelper';
