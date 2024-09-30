@@ -45,7 +45,7 @@ export class TestPeer extends Resource {
 
   protected override async _open() {
     this.signalManager = await this.testBuilder.createSignalManager(this.identityKey, this.peerId);
-    this.messenger = new Messenger({ signalManager: this.signalManager });
+    this.messenger = new Messenger({ signalManager: this.signalManager, retryDelay: 300 });
 
     await this.signalManager.open();
     this.messenger.open();

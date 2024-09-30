@@ -8,7 +8,7 @@ import { type FeedStore } from '@dxos/feed-store';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { MemoryTransportFactory, SwarmNetworkManager, createSimplePeerTransportFactory } from '@dxos/network-manager';
+import { MemoryTransportFactory, SwarmNetworkManager, createRtcTransportFactory } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -36,7 +36,7 @@ export const WebsocketNetworkManagerProvider =
   () =>
     new SwarmNetworkManager({
       signalManager: new WebsocketSignalManager([{ server: signalUrl }]),
-      transportFactory: createSimplePeerTransportFactory(),
+      transportFactory: createRtcTransportFactory(),
     });
 
 export type TestAgentBuilderOptions = {
