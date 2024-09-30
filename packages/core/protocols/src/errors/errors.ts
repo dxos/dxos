@@ -4,9 +4,9 @@
 
 import { PublicKey } from '@dxos/keys';
 
-import { ApiError, BaseError, DatabaseError, SystemError } from './base-errors';
-import { registerError, registerErrorMessageContext, registerErrorNoArgs } from './helpers';
-import type { ObjectId } from '../types';
+import { ApiError, BaseError, DatabaseError, SystemError } from './base-errors.js';
+import { registerError, registerErrorMessageContext, registerErrorNoArgs } from './helpers.js';
+import type { ObjectId } from '../types.js';
 
 /**
  * Thrown when request was terminated because the RPC endpoint has been closed.

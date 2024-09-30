@@ -6,5 +6,5 @@ inputs:
   - directory: src/proto
 plugins:
   - local: protoc-gen-es
-    opt: target=ts
+    opt: target=ts,import_extension=js
     out: src/buf/proto/gen
