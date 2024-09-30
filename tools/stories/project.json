@@ -95,6 +95,7 @@
     "gem-globe",
     "plexus",
     "react-client",
+    "react-ui",
     "react-ui-card",
     "react-ui-editor",
     "react-ui-grid",
@@ -103,7 +104,6 @@
     "react-ui-searchlist",
     "react-ui-stack",
     "react-ui-table",
-    "react-ui",
     "shell",
     "vite-plugin-icons"
   ]

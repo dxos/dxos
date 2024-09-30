@@ -29,7 +29,7 @@
         "entryPoints": [
           "{projectRoot}/src/index.ts"
         ],
-        "outputPath": "packages/ui/react-ui-theme/dist/lib",
+        "outputPath": "{projectRoot}/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -49,7 +49,7 @@
           "{projectRoot}/src/plugins/plugin.ts",
           "{projectRoot}/src/theme.css"
         ],
-        "outputPath": "packages/ui/react-ui-theme/dist/plugin",
+        "outputPath": "{projectRoot}/dist/plugin",
         "platforms": [
           "node"
         ]

@@ -1,7 +1,7 @@
 {
   "name": "messaging-monitor",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "tools/monitors/messaging-monitor/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "monitor": {

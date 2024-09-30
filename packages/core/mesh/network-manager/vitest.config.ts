@@ -6,11 +6,4 @@ import { defineConfig, mergeConfig } from 'vitest/config';
 
 import { baseConfig } from '../../../../vitest.shared';
 
-export default mergeConfig(
-  baseConfig({ cwd: __dirname, nodeExternal: true }),
-  defineConfig({
-    test: {
-      retry: 3,
-    },
-  }),
-);
+export default mergeConfig(baseConfig({ cwd: __dirname, nodeExternal: true }), defineConfig({}));

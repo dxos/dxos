@@ -12,7 +12,7 @@
         "^build"
       ],
       "options": {
-        "outputPath": "packages/devtools/initializers/create-tasks/dist"
+        "outputPath": "{projectRoot}/dist"
       }
     },
     "lint": {}

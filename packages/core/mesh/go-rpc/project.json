@@ -4,7 +4,7 @@
   "tags": [
     "scope:mesh"
   ],
-  "sourceRoot": "packages/core/mesh/go-rpc",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "go-test": {

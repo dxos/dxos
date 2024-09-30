@@ -70,6 +70,11 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
     test: {
       ...resolveReporterConfig({ browserMode: true, cwd }),
       name: targetProject,
+
+      env: {
+        LOG_CONFIG: 'log-config.yaml',
+      },
+
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
