@@ -622,6 +622,7 @@ export class DxGrid extends LitElement {
       @pointerdown=${this.handlePointerDown}
       @pointerup=${this.handlePointerUp}
       @pointermove=${this.handlePointerMove}
+      @pointerleave=${this.handlePointerUp}
       @focus=${this.handleFocus}
       @blur=${this.handleBlur}
       @keydown=${this.handleKeydown}
