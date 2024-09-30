@@ -3,7 +3,7 @@
 //
 
 import merge from 'lodash.merge';
-import protobufjs, { Root } from 'protobufjs';
+import pb from 'protobufjs';
 
 import { ProtoCodec } from './codec';
 import { type Substitutions } from './common';
@@ -15,7 +15,7 @@ export class Schema<T, S extends {} = {}> {
     schema: any,
     substitutions: Substitutions = {},
   ): Schema<T, S> {
-    const root = protobufjs.Root.fromJSON(schema);
+    const root = pb.Root.fromJSON(schema);
     return new Schema(root, substitutions);
   }
 
@@ -25,7 +25,7 @@ export class Schema<T, S extends {} = {}> {
 
   // prettier-ignore
   constructor(
-    private _typesRoot: protobufjs.Root,
+    private _typesRoot: pb.Root,
     substitutions: Substitutions,
   ) {
     this._mapping = createMappingDescriptors(substitutions);
@@ -109,6 +109,6 @@ export class Schema<T, S extends {} = {}> {
       throw new Error('Invalid schema: missing nested object');
     }
 
-    this._typesRoot = Root.fromJSON(merge(this._typesRoot.toJSON(), schema));
+    this._typesRoot = pb.Root.fromJSON(merge(this._typesRoot.toJSON(), schema));
   }
 }
