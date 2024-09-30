@@ -11,11 +11,11 @@ import {
   type CellIndex,
   type CellValue,
   DxAxisResize,
-  type DxAxisResizeProps,
   DxEditRequest,
   type DxGridAxis,
   DxGridCellsSelect,
   type DxGridMode,
+  type DxGridPointer,
   type DxGridPosition,
   type DxGridPositionNullable,
 } from './types';
@@ -187,8 +187,11 @@ export class DxGrid extends LitElement {
   private templateRows = `${this.rowSize(0)}px`;
 
   //
-  // Resize state
+  // Focus, selection, and resize states
   //
+
+  @state()
+  private pointer: DxGridPointer = null;
 
   @state()
   private colSizes: Record<string, number> = {};
@@ -197,20 +200,10 @@ export class DxGrid extends LitElement {
   private rowSizes: Record<string, number> = {};
 
   @state()
-  private resizing: null | (DxAxisResizeProps & { page: number }) = null;
-
-  //
-  // Focus & selection states
-  //
-
-  @state()
   private focusActive: boolean = false;
 
   @state()
   private focusedCell: DxGridPosition = { col: 0, row: 0 };
-
-  @state()
-  private selecting: boolean = false;
 
   @state()
   private selectionStart: DxGridPosition = { col: 0, row: 0 };
@@ -243,7 +236,8 @@ export class DxGrid extends LitElement {
         if (action.startsWith('resize') && this.mode === 'browse') {
           const [resize, index] = action.split(',');
           const [_, axis] = resize.split('-');
-          this.resizing = {
+          this.pointer = {
+            state: 'resizing',
             axis: axis as DxGridAxis,
             size: axis === 'col' ? this.colSize(index) : this.rowSize(index),
             page: getPage(axis, event),
@@ -252,7 +246,7 @@ export class DxGrid extends LitElement {
         } else if (action === 'cell') {
           const cellCoords = closestCell(event.target, actionEl);
           if (cellCoords) {
-            this.selecting = true;
+            this.pointer = { state: 'selecting' };
             this.selectionStart = cellCoords;
           }
           if (this.mode === 'edit') {
@@ -268,14 +262,13 @@ export class DxGrid extends LitElement {
   };
 
   private handlePointerUp = (event: PointerEvent) => {
-    if (this.resizing) {
+    if (this.pointer?.state === 'resizing') {
       const resizeEvent = new DxAxisResize({
-        axis: this.resizing.axis,
-        index: this.resizing.index,
-        size: this[this.resizing.axis === 'col' ? 'colSize' : 'rowSize'](this.resizing.index),
+        axis: this.pointer.axis,
+        index: this.pointer.index,
+        size: this[this.pointer.axis === 'col' ? 'colSize' : 'rowSize'](this.pointer.index),
       });
       this.dispatchEvent(resizeEvent);
-      this.resizing = null;
     } else {
       const cell = closestCell(event.target);
       if (cell) {
@@ -287,23 +280,23 @@ export class DxGrid extends LitElement {
           }),
         );
       }
-      this.selecting = false;
     }
+    this.pointer = null;
   };
 
   private handlePointerMove = (event: PointerEvent) => {
-    if (this.resizing) {
-      const delta = getPage(this.resizing.axis, event) - this.resizing.page;
-      if (this.resizing.axis === 'col') {
-        const nextSize = Math.max(sizeColMin, Math.min(sizeColMax, this.resizing.size + delta));
-        this.colSizes = { ...this.colSizes, [this.resizing.index]: nextSize };
+    if (this.pointer?.state === 'resizing') {
+      const delta = getPage(this.pointer.axis, event) - this.pointer.page;
+      if (this.pointer.axis === 'col') {
+        const nextSize = Math.max(sizeColMin, Math.min(sizeColMax, this.pointer.size + delta));
+        this.colSizes = { ...this.colSizes, [this.pointer.index]: nextSize };
         this.updateVisInline();
       } else {
-        const nextSize = Math.max(sizeRowMin, Math.min(sizeRowMax, this.resizing.size + delta));
-        this.rowSizes = { ...this.rowSizes, [this.resizing.index]: nextSize };
+        const nextSize = Math.max(sizeRowMin, Math.min(sizeRowMax, this.pointer.size + delta));
+        this.rowSizes = { ...this.rowSizes, [this.pointer.index]: nextSize };
         this.updateVisBlock();
       }
-    } else if (this.selecting) {
+    } else if (this.pointer?.state === 'selecting') {
       const cell = closestCell(event.target);
       if (cell && (cell.col !== this.selectionEnd.col || cell.row !== this.selectionEnd.row)) {
         this.selectionEnd = cell;

@@ -12,6 +12,8 @@ export type DxGridAxis = 'row' | 'col';
 export type DxGridPosition = Record<DxGridAxis, number>;
 export type DxGridPositionNullable = DxGridPosition | null;
 
+export type DxGridPointer = null | ({ state: 'resizing'; page: number } & DxAxisResizeProps) | { state: 'selecting' };
+
 export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'index' | 'size'>;
 
 export type DxGridMode = 'browse' | 'edit';
