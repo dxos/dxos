@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Database } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type EchoDataStats } from '@dxos/echo-pipeline';
@@ -42,7 +41,7 @@ export const ReplicatorMessagesPanel = ({ database, ...props }: CustomPanelProps
   return (
     <Panel
       {...props}
-      icon={Database}
+      icon='ph--database--regular'
       title='Database replicator messages'
       info={
         <span>

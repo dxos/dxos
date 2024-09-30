@@ -10,8 +10,8 @@
     "build": {
       "options": {
         "main": "{projectRoot}/src/index.d.ts",
-        "outputPath": "packages/common/typings/dist/types",
-        "tsConfig": "packages/common/typings/tsconfig.json"
+        "outputPath": "{projectRoot}/dist/types",
+        "tsConfig": "{projectRoot}/tsconfig.json"
       }
     }
   },
