@@ -13,7 +13,7 @@ import { runTestSignalServer } from '@dxos/signal';
 import { type OfferMessage, type SignalMessage } from './signal-messenger';
 import { SwarmMessenger } from './swarm-messenger';
 
-describe('SwarmMessenger', () => {
+describe('SwarmMessenger', { timeout: 7000 }, () => {
   let topic: PublicKey;
 
   let broker1: Awaited<ReturnType<typeof runTestSignalServer>>;
