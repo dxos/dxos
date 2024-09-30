@@ -142,11 +142,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 }
 
                 // TODO(Zan): Find util (or make one)
-                const docId = id.split('~').at(0);
-                const [spaceId, objectId] = docId?.split(':') ?? [];
+                const subjectId = id.split('~').at(0);
+                const [spaceId, objectId] = subjectId?.split(':') ?? [];
                 const space = client.spaces.get().find((space) => space.id === spaceId);
                 const doc = space?.db.getObjectById(objectId);
-                if (!doc || !docId) {
+                if (!doc || !subjectId) {
                   return;
                 }
 
@@ -155,7 +155,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   doc.name ||
                   docMeta.placeholder || ['unnamed object threads label', { ns: THREAD_PLUGIN }];
 
-                const viewState = getViewState(docId);
+                const viewState = getViewState(subjectId);
 
                 return {
                   id,
