@@ -43,12 +43,12 @@
       "types": "./dist/types/src/testing/index.d.ts"
     },
     "./tcp": {
-      "browser": "./dist/lib/browser/tcp/index.mjs",
+      "browser": "./dist/lib/browser/transport/tcp/index.mjs",
       "node": {
-        "require": "./dist/lib/node/tcp/index.cjs",
-        "default": "./dist/lib/node-esm/tcp/index.mjs"
+        "require": "./dist/lib/node/transport/tcp/index.cjs",
+        "default": "./dist/lib/node-esm/transport/tcp/index.mjs"
       },
-      "types": "./dist/types/src/tcp/index.d.ts"
+      "types": "./dist/types/src/transport/tcp/index.d.ts"
     }
   },
   "browser": {
