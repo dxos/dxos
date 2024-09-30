@@ -25,13 +25,13 @@ const GridSheetCellEditor = ({
   extension,
   __gridScope,
 }: GridScopedProps<Pick<CellEditorProps, 'extension'> & { model: SheetModel }>) => {
-  const { id, editing, setEditing, editBox, initialEditContent } = useGridContext('GridSheetCellEditor', __gridScope);
+  const { id, editing, setEditing, editBox } = useGridContext('GridSheetCellEditor', __gridScope);
   const cell = dxGridCellIndexToSheetCellAddress(editing);
 
   return editing ? (
     <CellEditor
       variant='grid'
-      value={initialEditContent ?? (cell ? model.getCellText(cell) : undefined)}
+      value={editing.initialContent ?? (cell ? model.getCellText(cell) : undefined)}
       autoFocus
       box={editBox}
       onBlur={() => setEditing(null)}
@@ -56,13 +56,19 @@ const GridSheetImpl = ({
   const rangeNotifier = useRef<CellRangeNotifier>();
 
   // TODO(burdon): Validate formula before closing: hf.validateFormula();
-  const handleClose = useCallback<EditorKeysProps['onClose']>(
+  const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
     (value, { key, shift }) => {
       if (value !== undefined) {
         model.setValue(dxGridCellIndexToSheetCellAddress(editing)!, value);
       }
       setEditing(null);
-      dxGrid.current?.refocus(key === 'Enter' ? 'row' : key === 'Tab' ? 'col' : undefined, shift ? -1 : 1);
+      const axis = ['Enter', 'ArrowUp', 'ArrowDown'].includes(key)
+        ? 'row'
+        : ['Tab', 'ArrowLeft', 'ArrowRight'].includes(key)
+          ? 'col'
+          : undefined;
+      const delta = key.startsWith('Arrow') ? (['ArrowUp', 'ArrowLeft'].includes(key) ? -1 : 1) : shift ? -1 : 1;
+      dxGrid.current?.refocus(axis, delta);
     },
     [model, editing, setEditing],
   );
@@ -100,11 +106,11 @@ const GridSheetImpl = ({
 
   const extension = useMemo(
     () => [
-      editorKeys({ onClose: handleClose }),
+      editorKeys({ onClose: handleClose, ...(editing?.initialContent && { onNav: handleClose }) }),
       sheetExtension({ functions: model.functions }),
       rangeExtension((fn) => (rangeNotifier.current = fn)),
     ],
-    [model, handleClose],
+    [model, handleClose, editing],
   );
 
   return (

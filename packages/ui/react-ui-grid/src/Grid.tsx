@@ -33,9 +33,7 @@ const initialBox = {
   blockSize: 0,
 } satisfies GridEditBox;
 
-type GridEditing = DxEditRequest['cellIndex'] | null;
-
-type GridInitialEditContent = DxEditRequest['initialContent'];
+type GridEditing = { index: DxEditRequest['cellIndex']; initialContent: DxEditRequest['initialContent'] } | null;
 
 type GridContextValue = {
   id: string;
@@ -43,8 +41,6 @@ type GridContextValue = {
   setEditing: (nextEditing: GridEditing) => void;
   editBox: GridEditBox;
   setEditBox: (nextEditBox: GridEditBox) => void;
-  initialEditContent: GridInitialEditContent;
-  setInitialEditContent: (nextInitialContent: GridInitialEditContent) => void;
 };
 
 type GridScopedProps<P> = P & { __gridScope?: Scope };
@@ -77,7 +73,6 @@ const GridRoot = ({
     onChange: onEditingChange,
   });
   const [editBox, setEditBox] = useState<GridEditBox>(initialBox);
-  const [initialContent, setInitialContent] = useState<GridInitialEditContent>();
   return (
     <GridProvider
       id={id}
@@ -85,8 +80,6 @@ const GridRoot = ({
       setEditing={setEditing}
       editBox={editBox}
       setEditBox={setEditBox}
-      initialEditContent={initialContent}
-      setInitialEditContent={setInitialContent}
       scope={__gridScope}
     >
       {children}
@@ -101,15 +94,11 @@ type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'onEdit'>;
 const GRID_CONTENT_NAME = 'GridContent';
 
 const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>((props, forwardedRef) => {
-  const { id, editing, setEditBox, setEditing, setInitialEditContent } = useGridContext(
-    GRID_CONTENT_NAME,
-    props.__gridScope,
-  );
+  const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME, props.__gridScope);
 
   const handleEdit = useCallback((event: DxEditRequest) => {
     setEditBox(event.cellBox);
-    setEditing(event.cellIndex);
-    setInitialEditContent(event.initialContent);
+    setEditing({ index: event.cellIndex, initialContent: event.initialContent });
   }, []);
 
   return <DxGrid {...props} gridId={id} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={forwardedRef} />;
@@ -124,12 +113,4 @@ export const Grid = {
 
 export { GridRoot, GridContent, useGridContext, createGridScope };
 
-export type {
-  GridRootProps,
-  GridContentProps,
-  GridEditing,
-  GridEditBox,
-  GridScopedProps,
-  DxGridElement,
-  GridInitialEditContent,
-};
+export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps, DxGridElement };
