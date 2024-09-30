@@ -3,7 +3,7 @@
 //
 
 import type { ExecutorContext } from '@nx/devkit';
-import { build, type Format, type Platform } from 'esbuild';
+import { build, type Format, type Platform, type Plugin } from 'esbuild';
 import RawPlugin from 'esbuild-plugin-raw';
 import { yamlPlugin } from 'esbuild-plugin-yaml';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
@@ -51,14 +51,14 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   const configurations = options.platforms.flatMap((platform) => {
     return platform === 'node'
       ? [
-          { platform: 'node', format: 'esm', slug: 'node-esm' },
-          { platform: 'node', format: 'cjs', slug: 'node' },
+          { platform: 'node', format: 'esm', slug: 'node-esm', replaceRequire: false },
+          { platform: 'node', format: 'cjs', slug: 'node', replaceRequire: false },
         ]
-      : [{ platform: 'browser', format: 'esm', slug: 'browser' }];
+      : [{ platform: 'browser', format: 'esm', slug: 'browser', replaceRequire: true }];
   });
 
   const errors = await Promise.all(
-    configurations.map(async ({ platform, format, slug }) => {
+    configurations.map(async ({ platform, format, slug, replaceRequire }) => {
       const extension = format === 'esm' ? '.mjs' : '.cjs';
       const outdir = `${options.outputPath}/${slug}`;
 
@@ -81,12 +81,15 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
           // The log transform was generating this warning.
           'this-is-undefined-in-esm': 'info',
         },
+        banner: {
+          js: format === 'esm' && platform === 'node' ? CREATE_REQUIRE_BANNER : '',
+        },
         plugins: [
           NodeExternalPlugin({
             injectGlobals: options.injectGlobals,
             nodeStd: Boolean(packageJson.dependencies?.['@dxos/node-std']),
           }),
-          fixRequirePlugin(),
+          replaceRequire ? fixRequirePlugin() : undefined,
           bundleDepsPlugin({
             packages: options.bundlePackages,
             packageDir: dirname(packagePath),
@@ -110,10 +113,10 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
                 return { contents: 'export default ""' };
               });
             },
-          },
+          } satisfies Plugin,
           yamlPlugin({}),
           ...(format === 'cjs' ? [esmOutputToCjs()] : []),
-        ],
+        ].filter((x) => x !== undefined),
       });
 
       await writeFile(`${outdir}/meta.json`, JSON.stringify(result.metafile), 'utf-8');
@@ -132,3 +135,6 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
 
   return { success: errors.flat().length === 0 };
 };
+
+const CREATE_REQUIRE_BANNER =
+  "import { createRequire } from 'node:module';const require = createRequire(import.meta.url);";

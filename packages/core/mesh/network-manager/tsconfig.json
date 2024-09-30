@@ -7,6 +7,7 @@
     ]
   },
   "include": [
+    "network-manager.d.ts",
     "src",
     "tests-setup.js"
   ],
@@ -34,6 +35,9 @@
     },
     {
       "path": "../../../common/node-std"
+    },
+    {
+      "path": "../../../common/tracing"
     },
     {
       "path": "../../../common/util"
