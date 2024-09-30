@@ -179,7 +179,6 @@ const Styles = () => {
 // Actions
 //
 
-// TODO(Zan): Instead of taking props, can we access the state from sheet context?
 const Actions = () => {
   const { onAction } = useToolbarContext('Actions');
   const { cursor, range, model } = useSheetContext();

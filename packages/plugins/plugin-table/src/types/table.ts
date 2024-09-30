@@ -3,6 +3,7 @@
 //
 
 import { DynamicSchema, ref, S, TypedObject } from '@dxos/echo-schema';
+import { ThreadType } from '@dxos/plugin-space';
 
 const TablePropSchema = S.partial(
   S.mutable(
@@ -23,4 +24,6 @@ export class TableType extends TypedObject({ typename: 'dxos.org/type/Table', ve
   name: S.optional(S.String),
   schema: S.optional(ref(DynamicSchema)),
   props: S.mutable(S.Array(TablePropSchema)),
+  // Associated threads.
+  threads: S.optional(S.mutable(S.Array(ref(ThreadType)))),
 }) {}
