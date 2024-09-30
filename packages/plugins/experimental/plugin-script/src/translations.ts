@@ -20,6 +20,8 @@ export default [
         'copy link label': 'Copy function link',
         'format label': 'Format',
         'toggle details label': 'Toggle details panel',
+        'authenticate action label': 'Authenticate functions service',
+        'authenticate button label': 'Authenticate',
       },
     },
   },

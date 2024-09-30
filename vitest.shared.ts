@@ -7,7 +7,6 @@ import inject from '@rollup/plugin-inject';
 import { type Plugin, UserConfig as ViteConfig } from 'vite';
 import { defineConfig, type UserConfig as VitestConfig } from 'vitest/config';
 // import Inspect from 'vite-plugin-inspect';
-import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 import Inspect from 'vite-plugin-inspect';
 
@@ -50,7 +49,6 @@ const createBrowserConfig = ({ browserName, nodeExternal = false, injectGlobals 
   defineConfig({
     plugins: [
       nodeStdPlugin(),
-      TopLevelAwaitPlugin(),
       WasmPlugin(),
       // Inspect()
     ],

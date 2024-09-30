@@ -32,9 +32,6 @@
       "path": "../../core/echo/echo-signals"
     },
     {
-      "path": "../../core/echo/echo-typegen"
-    },
-    {
       "path": "../../plugins/plugin-markdown"
     },
     {

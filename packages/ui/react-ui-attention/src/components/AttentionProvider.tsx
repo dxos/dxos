@@ -8,7 +8,7 @@
 import { createContext, type Scope, type CreateScope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 // eslint-disable-next-line unused-imports/no-unused-imports
-import React, { ComponentProps, type FocusEvent, type HTMLAttributes, type PropsWithChildren, useState } from 'react';
+import React, { type FocusEvent, type PropsWithChildren, useMemo } from 'react';
 
 const ATTENTION_NAME = 'Attention';
 
@@ -29,6 +29,11 @@ const useIsDirectlyAttended = (attendableId?: string) => {
   const { attended } = useAttentionContext(ATTENTION_NAME);
   const attendedArray = Array.from(attended);
   return attendedArray.length === 1 && attendedArray[0] === attendableId;
+};
+
+const useAttendedIds = () => {
+  const { attended } = useAttentionContext(ATTENTION_NAME);
+  return useMemo(() => Array.from(attended), [attended]);
 };
 
 /**
@@ -91,8 +96,12 @@ const AttentionProvider = ({
     ].join(',');
     const nextAttended = new Set(getAttendables(selector, event.target));
     const [prev, next] = [Array.from(attended), Array.from(nextAttended)];
-    // Only update state if the result is different.
-    (prev.length !== next.length || !!prev.find((id, index) => next[index] !== id)) && setAttended(nextAttended);
+    // TODO(wittjosiah): Not allowing empty state means that the attended item is not strictly guaranteed to be in the DOM.
+    //   Currently this depends on the deck in order to ensure that when the attended item is removed something else is attended.
+    // Only update state if the result is different and not empty.
+    if (next.length > 0 && (prev.length !== next.length || !!prev.find((id, index) => next[index] !== id))) {
+      setAttended(nextAttended);
+    }
   };
   return (
     <AttentionContextProvider attended={attended}>
@@ -108,6 +117,7 @@ export {
   useAttentionContext,
   useHasAttention,
   useIsDirectlyAttended,
+  useAttendedIds,
   createAttendableAttributes,
   ATTENTION_NAME,
 };

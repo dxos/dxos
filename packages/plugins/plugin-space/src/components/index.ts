@@ -16,3 +16,5 @@ export * from './ShareSpaceButton';
 export * from './SpaceMain';
 export * from './SpacePresence';
 export * from './SpaceSettings';
+export * from './SaveStatus';
+export * from './SyncStatus';

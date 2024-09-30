@@ -70,13 +70,13 @@
       "path": "../../halo/keyring"
     },
     {
+      "path": "../../mesh/edge-client"
+    },
+    {
       "path": "../../mesh/messaging"
     },
     {
       "path": "../../mesh/network-manager"
-    },
-    {
-      "path": "../../mesh/rpc"
     },
     {
       "path": "../../mesh/teleport"

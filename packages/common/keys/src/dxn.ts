@@ -57,10 +57,14 @@ export class DXN {
     // Per-type validation.
     switch (kind) {
       case DXN.kind.ECHO:
-        invariant(parts.length === 2);
+        if (parts.length !== 2) {
+          throw new Error('Invalid "echo" DXN');
+        }
         break;
       case DXN.kind.TYPE:
-        invariant(parts.length === 1);
+        if (parts.length !== 1) {
+          throw new Error('Invalid "type" DXN');
+        }
         break;
     }
 
@@ -78,6 +82,10 @@ export class DXN {
 
   isTypeDXNOf(typename: string) {
     return this.#kind === DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
+  }
+
+  isLocalEchoObjectDXN() {
+    return this.#kind === DXN.kind.ECHO && this.#parts[0] === LOCAL_SPACE_TAG && this.#parts.length === 2;
   }
 
   toString() {

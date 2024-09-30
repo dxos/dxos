@@ -4,7 +4,7 @@
 
 import type * as S from '@effect/schema/Schema';
 
-import { getEchoObjectAnnotation } from '../annotations';
+import { getEchoObjectAnnotation } from '../ast';
 import { requireTypeReference } from '../getter';
 
 export type StaticSchema = {

@@ -33,14 +33,19 @@ export const SettingsDialog = ({
     'dxos.org/plugin/registry',
   ];
 
-  const corePlugins = core.map((id) => plugins.find((plugin) => plugin.meta.id === id)?.meta).filter(nonNullable);
+  const sortPlugin = ({ name: a }: Plugin['meta'], { name: b }: Plugin['meta']) => a?.localeCompare(b ?? '') ?? 0;
+
+  const corePlugins = core
+    .map((id) => plugins.find((plugin) => plugin.meta.id === id)?.meta)
+    .filter(nonNullable)
+    .sort(sortPlugin);
 
   const filteredPlugins = enabled
     .filter((id) => !core.includes(id))
     .map((id) => plugins.find((plugin) => plugin.meta.id === id))
     .filter((plugin) => (plugin?.provides as any)?.settings)
     .map((plugin) => plugin!.meta)
-    .sort(({ name: a }, { name: b }) => a?.localeCompare(b ?? '') ?? 0);
+    .sort(sortPlugin);
 
   const [tabsActivePart, setTabsActivePart] = useState<TabsActivePart>('list');
 
@@ -83,9 +88,9 @@ export const SettingsDialog = ({
       >
         <Tabs.Viewport classNames='flex-1 min-bs-0'>
           <div role='none' className='overflow-y-auto pli-3 @md:pis-2 @md:pie-0 mbe-4 border-r border-separator'>
-            <Tabs.Tablist classNames='max-bs-none overflow-y-visible'>
+            <Tabs.Tablist classNames='flex flex-col gap-4 max-bs-none overflow-y-visible'>
               <PluginList title='Options' plugins={corePlugins} />
-              {filteredPlugins.length > 0 && <PluginList title='Plugins' plugins={filteredPlugins} gap />}
+              {filteredPlugins.length > 0 && <PluginList title='Plugins' plugins={filteredPlugins} />}
             </Tabs.Tablist>
           </div>
 
@@ -105,15 +110,17 @@ export const SettingsDialog = ({
   );
 };
 
-const PluginList = ({ title, plugins, gap }: { title: string; plugins: Plugin['meta'][]; gap?: boolean }) => {
+const PluginList = ({ title, plugins }: { title: string; plugins: Plugin['meta'][] }) => {
   return (
-    <>
-      <Tabs.TabGroupHeading classNames={gap ? 'mbs-4' : 'mbs-4 @md:mbs-2'}>{title}</Tabs.TabGroupHeading>
-      {plugins.map((plugin) => (
-        <Tabs.Tab key={plugin.id} value={plugin.id}>
-          {plugin.name}
-        </Tabs.Tab>
-      ))}
-    </>
+    <div role='none'>
+      <Tabs.TabGroupHeading classNames={'pli-1 mlb-2 mbs-4 @md:mbs-2'}>{title}</Tabs.TabGroupHeading>
+      <div className='flex flex-col ml-1'>
+        {plugins.map((plugin) => (
+          <Tabs.Tab key={plugin.id} value={plugin.id}>
+            {plugin.name}
+          </Tabs.Tab>
+        ))}
+      </div>
+    </div>
   );
 };

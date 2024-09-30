@@ -3,9 +3,11 @@
 //
 
 import React from 'react';
-import NativeSyntaxHighlighter, {
-  type SyntaxHighlighterProps as NativeSyntaxHighlighterProps,
-} from 'react-syntax-highlighter';
+import type { SyntaxHighlighterProps as NativeSyntaxHighlighterProps } from 'react-syntax-highlighter';
+// Lightweight version will load specific language parsers asynchronously.
+// Using `light-async` version directly from dist to avoid any chance of the heavy one being loaded.
+// eslint-disable-next-line no-restricted-imports
+import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/light-async';
 // eslint-disable-next-line no-restricted-imports
 import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
 // eslint-disable-next-line no-restricted-imports
@@ -33,7 +35,7 @@ export const SyntaxHighlighter = ({
 }: SyntaxHighlighterProps) => {
   const { themeMode } = useThemeContext();
   return (
-    <div role='none' className={mx('w-full', classNames)}>
+    <div role='none' className={mx(classNames)}>
       <NativeSyntaxHighlighter {...props} style={themeMode === 'dark' ? styleDark : styleLight}>
         {/* Non-empty fallback prevents collapse. */}
         {children || fallback}

@@ -3,6 +3,24 @@
   "name": "stories",
   "projectType": "library",
   "targets": {
+    "bundle": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "dependsOn": [
+        "compile-all"
+      ],
+      "executor": "@nx/storybook:build",
+      "options": {
+        "configDir": "tools/stories/config/all",
+        "outputDir": "tools/stories/out/stories"
+      },
+      "outputs": [
+        "{options.outputDir}"
+      ]
+    },
     "chromatic": {
       "dependsOn": [
         "chromatic-examples",
@@ -55,12 +73,18 @@
         "script": "chromatic-ui"
       }
     },
+    "compile-all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run-many --target=build --all"
+      }
+    },
     "lint": {
       "options": {
         "lintFilePatterns": [
-          "tools/stories/*-stories/*.mts",
-          "tools/stories/.storybook/*.ts",
-          "tools/stories/config/**/*.{ts,tsx,js,jsx}"
+          "{projectRoot}/*-stories/*.mts",
+          "{projectRoot}/.storybook/*.ts",
+          "{projectRoot}/config/**/*.{ts,tsx,js,jsx}"
         ]
       }
     },
@@ -80,6 +104,7 @@
         "devtools:compile",
         "examples:compile",
         "gem-core:compile",
+        "gem-globe:compile",
         "halo-app:compile",
         "mkdist",
         "plexus:compile",
@@ -95,12 +120,31 @@
         "react-ui-searchlist:compile",
         "react-ui-stack:compile",
         "react-ui-table:compile",
-        "react-ui:compile"
+        "react-ui:compile",
+        "vite-plugin-icons:compile"
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "tools/stories/config/all"
+        "configDir": "{projectRoot}/config/all"
       }
+    },
+    "storybook-build-all": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "dependsOn": [
+        "compile-all"
+      ],
+      "executor": "@nx/storybook:build",
+      "options": {
+        "configDir": "{projectRoot}/config/all",
+        "outputDir": "{projectRoot}/out/all"
+      },
+      "outputs": [
+        "{options.outputDir}"
+      ]
     },
     "storybook-build-examples": {
       "configurations": {
@@ -113,8 +157,8 @@
       ],
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "tools/stories/config/examples",
-        "outputDir": "tools/stories/out/examples"
+        "configDir": "{projectRoot}/config/examples",
+        "outputDir": "{projectRoot}/out/examples"
       },
       "outputs": [
         "{options.outputDir}"
@@ -131,8 +175,8 @@
       ],
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "tools/stories/config/shell",
-        "outputDir": "tools/stories/out/shell"
+        "configDir": "{projectRoot}/config/shell",
+        "outputDir": "{projectRoot}/out/shell"
       },
       "outputs": [
         "{options.outputDir}"
@@ -149,8 +193,8 @@
       ],
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "tools/stories/config/ui",
-        "outputDir": "tools/stories/out/ui"
+        "configDir": "{projectRoot}/config/ui",
+        "outputDir": "{projectRoot}/out/ui"
       },
       "outputs": [
         "{options.outputDir}"
@@ -170,8 +214,8 @@
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "tools/stories/config/e2e",
-        "outputDir": "tools/stories/out/e2e"
+        "configDir": "{projectRoot}/config/e2e",
+        "outputDir": "{projectRoot}/out/e2e"
       }
     },
     "storybook-examples": {
@@ -185,8 +229,8 @@
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "tools/stories/config/examples",
-        "outputDir": "tools/stories/out/examples"
+        "configDir": "{projectRoot}/config/examples",
+        "outputDir": "{projectRoot}/out/examples"
       }
     }
   }

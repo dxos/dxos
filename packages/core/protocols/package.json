@@ -83,8 +83,7 @@
   },
   "devDependencies": {
     "@bufbuild/buf": "^1.35.0",
-    "@bufbuild/protoc-gen-es": "^2.0.0",
-    "glob": "^7.2.3"
+    "@bufbuild/protoc-gen-es": "^2.0.0"
   },
   "publishConfig": {
     "access": "public"

@@ -24,6 +24,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/composer-crx/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/templates/bare-template/package.json",
           "jsonpath": "$.version"
         },
@@ -250,11 +255,6 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-signals/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/echo/echo-typegen/package.json",
           "jsonpath": "$.version"
         },
         {
