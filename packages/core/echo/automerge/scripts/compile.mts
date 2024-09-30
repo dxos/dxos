@@ -6,43 +6,64 @@ import path, { dirname, join } from 'node:path';
 
 const require = createRequire(import.meta.url);
 
-for (const platform of ['node', 'browser'] as const) {
-  const outdir = `dist/lib/${platform}`;
+const configurations = [
+  {
+    platform: 'node',
+    entryPoints: [
+      'src/automerge.ts',
+      'src/automerge/next.ts',
+      'src/automerge-repo.ts',
+      'src/automerge-repo-storage-indexeddb.ts',
+      'src/automerge-repo-network-broadcastchannel.ts',
+      'src/automerge-repo-network-websocket.ts',
+    ],
+    outdir: 'dist/lib/node',
+    outExtension: '.cjs',
+    convertToCommonJS: true,
+  },
+  {
+    platform: 'node',
+    entryPoints: [
+      'src/automerge.ts',
+      'src/automerge/next.ts',
+      'src/automerge-repo.ts',
+      'src/automerge-repo-storage-indexeddb.ts',
+      'src/automerge-repo-network-broadcastchannel.ts',
+      'src/automerge-repo-network-websocket.ts',
+    ],
+    outdir: 'dist/lib/node-esm',
+    outExtension: '.mjs',
+    convertToCommonJS: false,
+  },
+  {
+    platform: 'browser',
+    entryPoints: {
+      automerge: 'src/automerge.ts',
+      'automerge/next': 'src/automerge/next.ts',
+      'automerge-repo': 'src/automerge-repo.ts',
+      'automerge-repo-storage-indexeddb': 'src/automerge-repo-storage-indexeddb.ts',
+      'automerge-repo-network-broadcastchannel': 'src/automerge-repo-network-broadcastchannel.ts',
+      'automerge-repo-network-websocket': 'src/automerge-repo-network-websocket.ts',
+    },
+    outdir: 'dist/lib/browser',
+    outExtension: '.js',
+    convertToCommonJS: false,
+  },
+] as const;
 
+for (const config of configurations) {
   try {
-    await rm(outdir, { recursive: true });
+    await rm(config.outdir, { recursive: true });
   } catch {}
 
   const result = await build({
-    entryPoints:
-      platform === 'node'
-        ? [
-            'src/automerge.ts',
-            'src/automerge/next.ts',
-            'src/automerge-repo.ts',
-            'src/automerge-repo-storage-indexeddb.ts',
-            'src/automerge-repo-network-broadcastchannel.ts',
-            'src/automerge-repo-network-websocket.ts'
-          ]
-        : {
-            // automerge_wasm_bg: join(
-            //   dirname(await require.resolve('@automerge/automerge-wasm')),
-            //   '../bundler/automerge_wasm_bg.js',
-            // ),
-            // 'automerge-wasm': 'src/automerge-wasm.ts',
-            automerge: 'src/automerge.ts',
-            'automerge/next': 'src/automerge/next.ts',
-            'automerge-repo': 'src/automerge-repo.ts',
-            'automerge-repo-storage-indexeddb': 'src/automerge-repo-storage-indexeddb.ts',
-            'automerge-repo-network-broadcastchannel': 'src/automerge-repo-network-broadcastchannel.ts',
-            'automerge-repo-network-websocket': 'src/automerge-repo-network-websocket.ts',
-          },
+    entryPoints: config.entryPoints as any,
     bundle: true,
     format: 'esm',
-    platform: platform,
-    outdir,
+    platform: config.platform,
+    outdir: config.outdir,
     splitting: true,
-    outExtension: { '.js': platform === 'node' ? '.cjs' : '.js' },
+    outExtension: { '.js': config.outExtension },
     metafile: true,
     plugins: [
       // esbuildPlugin(),
@@ -75,7 +96,7 @@ for (const platform of ['node', 'browser'] as const) {
     ],
   });
 
-  if (platform === 'node') {
+  if (config.convertToCommonJS) {
     if (!result.metafile) {
       throw new Error('Missing metafile.');
     }
