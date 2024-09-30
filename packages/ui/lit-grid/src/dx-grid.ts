@@ -611,12 +611,14 @@ export class DxGrid extends LitElement {
     const selectColMax = Math.max(this.selectionStart.col, this.selectionEnd.col);
     const selectRowMin = Math.min(this.selectionStart.row, this.selectionEnd.row);
     const selectRowMax = Math.max(this.selectionStart.row, this.selectionEnd.row);
+    const selectVisible = selectColMin !== selectColMax || selectRowMin !== selectRowMax;
 
     return html`<div
       role="none"
       class="dx-grid"
       data-grid=${this.gridId}
       data-grid-mode=${this.mode}
+      ?data-grid-select=${selectVisible}
       @pointerdown=${this.handlePointerDown}
       @pointerup=${this.handlePointerUp}
       @pointermove=${this.handlePointerMove}

@@ -99,14 +99,18 @@ dx-grid {
       border-color: var(--dx-accentSurface);
       outline: none;
     }
-    &[aria-selected] {
-      background: var(--dx-gridSelectionOverlay);
-    }
   }
   &[data-grid-mode="edit"] {
-    [role='gridcell'], [role='columnheader'], [role='rowheader']{
+    [role='gridcell'], [role='columnheader'], [role='rowheader'] {
       &.dx-grid__cell--active {
         color: transparent !important;
+      }
+    }
+  }
+  &[data-grid-select] {
+    [role='gridcell'], [role='columnheader'], [role='rowheader'] {
+      &[aria-selected] {
+        background: var(--dx-gridSelectionOverlay);
       }
     }
   }
