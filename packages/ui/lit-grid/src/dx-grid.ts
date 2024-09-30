@@ -586,7 +586,7 @@ export class DxGrid extends LitElement {
           acc += this.colSize(this.visColMin + overscanCol + c0) + gap;
           return acc;
         }, 0);
-        this.posInline = this.binInlineMin + sizeSumCol + gap * 2 - this.sizeInline;
+        this.posInline = Math.max(0, this.binInlineMin + sizeSumCol + gap * 2 - this.sizeInline);
         this.updateVisInline();
       }
 
@@ -598,7 +598,7 @@ export class DxGrid extends LitElement {
           acc += this.rowSize(this.visRowMin + overscanRow + r0) + gap;
           return acc;
         }, 0);
-        this.posBlock = this.binBlockMin + sizeSumRow + gap * 2 - this.sizeBlock;
+        this.posBlock = Math.max(0, this.binBlockMin + sizeSumRow + gap * 2 - this.sizeBlock);
         this.updateVisBlock();
       }
     }
