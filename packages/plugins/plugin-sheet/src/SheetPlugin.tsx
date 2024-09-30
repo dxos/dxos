@@ -109,6 +109,15 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
           });
         },
       },
+      markdown: {
+        // TODO(burdon): Construct compute node.
+        extensions: ({ document }) => {
+          return undefined;
+          // return [
+          // compute(document)
+          // ];
+        },
+      },
       stack: {
         creators: [
           {
