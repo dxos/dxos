@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 
-import { type Transport, type TransportFactory, type TransportStats } from './transport';
+import { type Transport, type TransportFactory, type TransportStats } from '../transport';
 
 export const TcpTransportFactory: TransportFactory = {
   createTransport: () => new TcpTransport(),
@@ -23,9 +23,13 @@ export class TcpTransport implements Transport {
     return true;
   }
 
-  async open() {}
+  async open() {
+    return this;
+  }
 
-  async close() {}
+  async close() {
+    return this;
+  }
 
   async onSignal() {
     throw new Error('Method not implemented.');

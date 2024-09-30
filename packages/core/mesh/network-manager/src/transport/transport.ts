@@ -8,9 +8,8 @@ import { type PublicKey } from '@dxos/keys';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 export enum TransportKind {
-  SIMPLE_PEER = 'SIMPLE_PEER',
-  SIMPLE_PEER_PROXY = 'SIMPLE_PEER_PROXY',
-  LIBDATACHANNEL = 'LIBDATACHANNEL',
+  WEB_RTC = 'WEB-RTC',
+  WEB_RTC_PROXY = 'WEB-RTC_PROXY',
   MEMORY = 'MEMORY',
   TCP = 'TCP',
 }
@@ -25,10 +24,8 @@ export interface Transport {
   connected: Event;
   errors: ErrorStream;
 
-  open(): Promise<void>;
-  close(): Promise<void>;
-
-  get isOpen(): boolean;
+  open(): Promise<this>;
+  close(): Promise<this>;
 
   /**
    * Handle message from signaling.
@@ -50,6 +47,10 @@ export interface Transport {
  * Common options for all transports.
  */
 export type TransportOptions = {
+  ownPeerKey: string;
+  remotePeerKey: string;
+
+  topic: string;
   /**
    * Did local node initiate this connection.
    */
