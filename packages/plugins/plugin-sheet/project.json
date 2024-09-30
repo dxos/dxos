@@ -28,7 +28,10 @@
       "options": {
         "command": "./scripts/vendor.mjs",
         "cwd": "{projectRoot}"
-      }
+      },
+      "outputs": [
+        "{projectRoot}/dist/vendor/*"
+      ]
     },
     "test": {}
   },
