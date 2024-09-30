@@ -13,6 +13,7 @@
   "author": "info@dxos.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "type": "module",
   "bin": {
     "dx": "./bin/dx"
   },
@@ -23,7 +24,7 @@
     "/oclif.manifest.json"
   ],
   "scripts": {
-    "bin": "./bin/dx",
+    "bin": "./bin/dx.js",
     "manifest": "oclif manifest",
     "prepack": "oclif manifest && oclif readme --multi",
     "postpack": "shx rm -f oclif.manifest.json",
