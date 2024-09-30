@@ -6,13 +6,7 @@ import { ChatText } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
-import {
-  DensityProvider,
-  ElevationProvider,
-  Toolbar as NaturalToolbar,
-  type ThemedClassName,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Toolbar as NaturalToolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { ToolbarButton, ToolbarSeparator } from './common';
 import { TABLE_PLUGIN } from '../../meta';
