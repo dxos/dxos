@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Graph, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
@@ -25,8 +24,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
         records: {
           [ViewType.typename]: {
             placeholder: ['object title placeholder', { ns: EXPLORER_PLUGIN }],
-            icon: (props: IconProps) => <Graph {...props} />,
-            iconSymbol: 'ph--graph--regular',
+            icon: 'ph--graph--regular',
           },
         },
       },
@@ -67,8 +65,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
                   },
                   properties: {
                     label: ['create object label', { ns: EXPLORER_PLUGIN }],
-                    icon: (props: IconProps) => <Graph {...props} />,
-                    iconSymbol: 'ph--graph--regular',
+                    icon: 'ph--graph--regular',
                     testId: 'explorerPlugin.createObject',
                   },
                 },
