@@ -151,6 +151,15 @@ export const useRoutes = () => {
             },
           ],
         },
+        {
+          path: '/edge',
+          children: [
+            {
+              path: '/agent/dashboard',
+              element: <DashboardPanel />,
+            },
+          ],
+        },
       ],
     },
   ]);
