@@ -21,7 +21,7 @@ import { FunctionType } from '@dxos/plugin-script/types';
 //  - .only / .skip ignored (have to comment out tests)
 
 describe('test', () => {
-  test.only('test', async () => {
+  test('test', async () => {
     const client = new Client();
     client.addTypes([FunctionType]);
     await client.initialize();
