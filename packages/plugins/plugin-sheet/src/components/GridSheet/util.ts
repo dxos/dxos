@@ -2,13 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useCallback, useEffect, useState } from 'react';
+import { type MutableRefObject, useEffect, useLayoutEffect, useState } from 'react';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { type GridEditing, type GridContentProps } from '@dxos/react-ui-grid';
+import {
+  type GridEditing,
+  type GridContentProps,
+  type DxGridElement,
+  type DxGridCells,
+  type DxGridAxisMeta,
+  type DxGridRange,
+} from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
-import { addressFromIndex, type CellAddress, type SheetModel, type FormattingModel } from '../../model';
+import { type CellAddress, type SheetModel, type FormattingModel } from '../../model';
 
 export const dxGridCellIndexToSheetCellAddress = (gridEditing: GridEditing): CellAddress | null => {
   if (!gridEditing) {
@@ -21,19 +28,8 @@ export const dxGridCellIndexToSheetCellAddress = (gridEditing: GridEditing): Cel
   };
 };
 
-const createDxGridCells = (model: SheetModel, formatting: FormattingModel) => {
-  return Object.keys(model.sheet.cells).reduce((acc: NonNullable<GridContentProps['initialCells']>, sheetCellIndex) => {
-    const address = addressFromIndex(model.sheet, sheetCellIndex);
-    const cell = formatting.getFormatting(address);
-    if (cell.value) {
-      acc[`${address.column},${address.row}`] = { value: cell.value, className: mx(cell.classNames) };
-    }
-    return acc;
-  }, {});
-};
-
-const createDxGridColumns = (model: SheetModel): GridContentProps['columns'] => {
-  return model.sheet.columns.reduce((acc: NonNullable<GridContentProps['columns']>, columnId, numericIndex) => {
+const createDxGridColumns = (model: SheetModel): DxGridAxisMeta => {
+  return model.sheet.columns.reduce((acc: DxGridAxisMeta, columnId, numericIndex) => {
     if (model.sheet.columnMeta[columnId] && model.sheet.columnMeta[columnId].size) {
       acc[numericIndex] = { size: model.sheet.columnMeta[columnId].size, resizeable: true };
     }
@@ -41,8 +37,8 @@ const createDxGridColumns = (model: SheetModel): GridContentProps['columns'] => 
   }, {});
 };
 
-const createDxGridRows = (model: SheetModel): GridContentProps['rows'] => {
-  return model.sheet.rows.reduce((acc: NonNullable<GridContentProps['rows']>, rowId, numericIndex) => {
+const createDxGridRows = (model: SheetModel): DxGridAxisMeta => {
+  return model.sheet.rows.reduce((acc: DxGridAxisMeta, rowId, numericIndex) => {
     if (model.sheet.rowMeta[rowId] && model.sheet.rowMeta[rowId].size) {
       acc[numericIndex] = { size: model.sheet.rowMeta[rowId].size, resizeable: true };
     }
@@ -50,20 +46,37 @@ const createDxGridRows = (model: SheetModel): GridContentProps['rows'] => {
   }, {});
 };
 
+const cellGetter =
+  (model: SheetModel, formatting: FormattingModel) =>
+  (nextBounds: DxGridRange, prevBounds: DxGridRange | null): DxGridCells => {
+    return [...Array(nextBounds.end.col - nextBounds.start.col)].reduce((acc: DxGridCells, _, c0) => {
+      return [...Array(nextBounds.end.row - nextBounds.start.row)].reduce((acc: DxGridCells, _, r0) => {
+        const column = nextBounds.start.col + c0;
+        const row = nextBounds.start.row + r0;
+        const cell = formatting.getFormatting({ column, row });
+        if (cell.value) {
+          acc[`${column},${row}`] = { value: cell.value, className: mx(cell.classNames) };
+        }
+        return acc;
+      }, acc);
+    }, {});
+  };
+
 export const useSheetModelDxGridProps = (
+  dxGridRef: MutableRefObject<DxGridElement | null>,
   model: SheetModel,
   formatting: FormattingModel,
-): Pick<GridContentProps, 'columns' | 'rows' | 'getCells'> => {
-  const [dxGridCells, setDxGridCells] = useState<NonNullable<GridContentProps['initialCells']>>(
-    createDxGridCells(model, formatting),
-  );
-  const [dxGridColumns, setDxGridColumns] = useState<GridContentProps['columns']>(createDxGridColumns(model));
-  const [dxGridRows, setDxGridRows] = useState<GridContentProps['rows']>(createDxGridColumns(model));
+): Pick<GridContentProps, 'columns' | 'rows'> => {
+  const [columns, setColumns] = useState<DxGridAxisMeta>(createDxGridColumns(model));
+  const [rows, setRows] = useState<DxGridAxisMeta>(createDxGridColumns(model));
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const cellsAccessor = createDocAccessor(model.sheet, ['cells']);
+    if (dxGridRef.current) {
+      dxGridRef.current.getCells = cellGetter(model, formatting);
+    }
     const handleCellsUpdate = () => {
-      setDxGridCells(createDxGridCells(model, formatting));
+      dxGridRef.current?.requestUpdate('initialCells');
     };
     cellsAccessor.handle.addListener('change', handleCellsUpdate);
     return () => cellsAccessor.handle.removeListener('change', handleCellsUpdate);
@@ -73,10 +86,10 @@ export const useSheetModelDxGridProps = (
     const columnMetaAccessor = createDocAccessor(model.sheet, ['columnMeta']);
     const rowMetaAccessor = createDocAccessor(model.sheet, ['rowMeta']);
     const handleColumnMetaUpdate = () => {
-      setDxGridColumns(createDxGridColumns(model));
+      setColumns(createDxGridColumns(model));
     };
     const handleRowMetaUpdate = () => {
-      setDxGridRows(createDxGridRows(model));
+      setRows(createDxGridRows(model));
     };
     columnMetaAccessor.handle.addListener('change', handleColumnMetaUpdate);
     rowMetaAccessor.handle.addListener('change', handleRowMetaUpdate);
@@ -86,9 +99,5 @@ export const useSheetModelDxGridProps = (
     };
   }, [model]);
 
-  const getCells = useCallback(() => {
-    return dxGridCells;
-  }, [dxGridCells]);
-
-  return { getCells, columns: dxGridColumns, rows: dxGridRows };
+  return { columns, rows };
 };

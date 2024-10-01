@@ -12,12 +12,14 @@ import {
   DxAxisResize,
   DxEditRequest,
   type DxGridAxis,
+  type DxGridAxisMeta,
   type DxGridCells,
   DxGridCellsSelect,
   type DxGridMode,
   type DxGridPointer,
   type DxGridPosition,
   type DxGridPositionNullable,
+  type DxGridRange,
 } from './types';
 import { separator, toCellIndex } from './util';
 
@@ -103,10 +105,10 @@ export class DxGrid extends LitElement {
   columnDefault: AxisMeta = { size: 180 };
 
   @property({ type: Object })
-  rows: Record<string, AxisMeta> = {};
+  rows: DxGridAxisMeta = {};
 
   @property({ type: Object })
-  columns: Record<string, AxisMeta> = {};
+  columns: DxGridAxisMeta = {};
 
   @property({ type: Object })
   initialCells: DxGridCells = {};
@@ -118,10 +120,10 @@ export class DxGrid extends LitElement {
    * When this function is defined, it is used first to try to get a value for a cell, and otherwise will fall back
    * to `cells`.
    */
-  getCells: ((visColMin: number, visColMax: number, visRowMin: number, visRowMax: number) => DxGridCells) | null = null;
+  getCells: ((nextRange: DxGridRange, prevRange: DxGridRange | null) => DxGridCells) | null = null;
 
   @state()
-  private cells: DxGridCells = this.initialCells;
+  private cells: DxGridCells = {};
 
   //
   // `pos`, short for ‘position’, is the position in pixels of the viewport from the origin.
@@ -725,7 +727,13 @@ export class DxGrid extends LitElement {
 
   override firstUpdated() {
     if (this.getCells) {
-      this.cells = this.getCells(this.visColMin, this.visColMax, this.visRowMin, this.visRowMax);
+      this.cells = this.getCells(
+        {
+          start: { col: this.visColMin, row: this.visRowMin },
+          end: { col: this.visColMax, row: this.visRowMax },
+        },
+        null,
+      );
     }
     this.observer.observe(this.viewportRef.value!);
     this.colSizes = Object.entries(this.columns).reduce((acc: Record<string, number>, [colId, colMeta]) => {
@@ -751,7 +759,24 @@ export class DxGrid extends LitElement {
         changedProperties.has('visRowMin') ||
         changedProperties.has('visRowMax'))
     ) {
-      this.cells = this.getCells(this.visColMin, this.visColMax, this.visRowMin, this.visRowMax);
+      this.cells = this.getCells(
+        {
+          start: { col: this.visColMin, row: this.visRowMin },
+          end: { col: this.visColMax, row: this.visRowMax },
+        },
+        changedProperties.has('initialCells')
+          ? null
+          : {
+              start: {
+                col: changedProperties.get('visColMin') ?? this.visColMin,
+                row: changedProperties.get('visRowMin') ?? this.visRowMin,
+              },
+              end: {
+                col: changedProperties.get('visColMax') ?? this.visColMax,
+                row: changedProperties.get('visRowMax') ?? this.visRowMax,
+              },
+            },
+      );
     }
   }
 

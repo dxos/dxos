@@ -133,3 +133,5 @@ export const Grid = {
 export { GridRoot, GridContent, useGridContext, createGridScope };
 
 export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps, DxGridElement };
+
+export type { DxGridRange, DxGridAxisMeta, DxGridCells } from '@dxos/lit-grid';
