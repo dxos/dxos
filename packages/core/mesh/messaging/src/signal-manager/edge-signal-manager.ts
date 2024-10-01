@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AnySchema } from '@bufbuild/protobuf/wkt';
+import { bufWkt } from '@dxos/protocols/buf';
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
@@ -88,7 +88,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     }
 
     await this._edgeConnection.send(
-      protocol.createMessage(AnySchema, {
+      protocol.createMessage(bufWkt.AnySchema, {
         serviceId: EdgeService.SIGNAL_SERVICE_ID,
         source: message.author,
         target: [message.recipient],
@@ -155,8 +155,8 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   }
 
   private _processMessage(message: EdgeMessage) {
-    invariant(protocol.getPayloadType(message) === AnySchema.typeName, 'Wrong payload type');
-    const payload = protocol.getPayload(message, AnySchema);
+    invariant(protocol.getPayloadType(message) === bufWkt.AnySchema.typeName, 'Wrong payload type');
+    const payload = protocol.getPayload(message, bufWkt.AnySchema);
     invariant(message.source, 'source is missing');
     invariant(message.target, 'target is missing');
     invariant(message.target.length === 1, 'target should have exactly one item');
