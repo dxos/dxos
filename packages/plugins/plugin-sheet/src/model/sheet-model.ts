@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-// TODO(burdon): Remove HF dependencies (move into ComputeNode).
-import { DetailedCellError, ExportedCellChange } from 'hyperformula';
 import { type SimpleCellRange } from 'hyperformula/typings/AbsoluteCellRange';
 import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateTimeHelper';
@@ -14,6 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { DetailedCellError, ExportedCellChange } from '#hyperformula';
 import {
   addressFromA1Notation,
   addressToA1Notation,

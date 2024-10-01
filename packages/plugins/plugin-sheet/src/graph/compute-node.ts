@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DetailedCellError } from 'hyperformula';
-
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 
+import { DetailedCellError } from '#hyperformula';
 import { type ComputeGraph } from './compute-graph';
 import { type CellAddress } from '../defs';
 import { type CellScalarValue } from '../types';

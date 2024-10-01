@@ -4,23 +4,13 @@
 
 import '@dxos-theme';
 
-import {
-  Books,
-  CardsThree,
-  CaretLeft,
-  CaretLineLeft,
-  CaretLineRight,
-  CaretRight,
-  SidebarSimple,
-  TextAa,
-  X,
-} from '@phosphor-icons/react';
+import { CaretLeft, CaretLineLeft, CaretLineRight, CaretRight, SidebarSimple, X } from '@phosphor-icons/react';
 import React, { type PropsWithChildren, useState, type ComponentProps } from 'react';
 
 import { faker } from '@dxos/random';
-import { Button, Main } from '@dxos/react-ui';
+import { Button, Icon, Main } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
-import { PlankHeading, plankHeadingIconProps, Deck as NaturalDeck, Plank } from '@dxos/react-ui-deck';
+import { PlankHeading, Deck as NaturalDeck, Plank } from '@dxos/react-ui-deck';
 import { Mosaic, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
 import { arrayMove } from '@dxos/util';
@@ -51,7 +41,7 @@ const SimpleContent = ({ data }: { data: MosaicDataItem & { title?: string; body
 const rollItems = (n: number): StackSectionItem[] => {
   return [...Array(n)].map(() => ({
     id: faker.string.uuid(),
-    icon: TextAa,
+    icon: 'ph--text-aa--regular',
     isResizable: true,
     object: {
       id: faker.string.uuid(),
@@ -74,7 +64,7 @@ const StackPlank = ({ label, items, id, children }: PropsWithChildren<PlankProps
     <>
       <PlankHeading.Root classNames='pli-px'>
         <PlankHeading.Button>
-          <CardsThree {...plankHeadingIconProps} />
+          <Icon icon='ph--cards-three--regular' size={5} />
         </PlankHeading.Button>
         <PlankHeading.Label classNames='flex-1 truncate'>{label}</PlankHeading.Label>
         {children}
@@ -244,7 +234,7 @@ export const DynamicBasicStacks = () => {
     <>
       <PlankHeading.Root classNames='pli-px'>
         <PlankHeading.Button>
-          <Books {...plankHeadingIconProps} />
+          <Icon icon='ph--books--regular' size={5} />
         </PlankHeading.Button>
         <PlankHeading.Label classNames='grow'>Menu</PlankHeading.Label>
         {c11yContent === MENU ? (

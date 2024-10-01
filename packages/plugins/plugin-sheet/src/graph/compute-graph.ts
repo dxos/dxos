@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type FunctionPluginDefinition, HyperFormula } from 'hyperformula';
+import { type FunctionPluginDefinition } from 'hyperformula';
 import { type ConfigParams } from 'hyperformula/typings/ConfigParams';
 import { type FunctionTranslationsPackage } from 'hyperformula/typings/interpreter';
 
@@ -15,10 +15,15 @@ import { log } from '@dxos/log';
 import { FunctionType } from '@dxos/plugin-script/types';
 import { nonNullable } from '@dxos/util';
 
+import { HyperFormula } from '#hyperformula';
 import { FunctionContext, type FunctionContextOptions } from './async-function';
 import { ComputeNode } from './compute-node';
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './edge-function';
 import { defaultFunctions, type FunctionDefinition } from './function-defs';
+
+//
+// NOTE: The package.json file defines the packaged #hyperformula module.
+//
 
 // TODO(wittjosiah): Factor out.
 const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).

@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { HyperFormula } from 'hyperformula';
 import { describe, test, expect } from 'vitest';
+
+import { HyperFormula } from '#hyperformula';
 
 describe('hyperformula', () => {
   test('sanity', async () => {

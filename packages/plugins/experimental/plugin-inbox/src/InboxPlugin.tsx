@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AddressBook, Calendar, Envelope, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
@@ -26,18 +25,15 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
         records: {
           [MailboxType.typename]: {
             placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
-            icon: (props: IconProps) => <Envelope {...props} />,
-            iconSymbol: 'ph--envelope--regular',
+            icon: 'ph--envelope--regular',
           },
           [ContactsType.typename]: {
             placeholder: ['contacts title placeholder', { ns: INBOX_PLUGIN }],
-            icon: (props: IconProps) => <AddressBook {...props} />,
-            iconSymbol: 'ph--address-book--regular',
+            icon: 'ph--address-book--regular',
           },
           [CalendarType.typename]: {
             placeholder: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
-            icon: (props: IconProps) => <Calendar {...props} />,
-            iconSymbol: 'ph--calendar--regular',
+            icon: 'ph--calendar--regular',
           },
           [EventType.typename]: {
             // TODO(wittjosiah): Move out of metadata.
@@ -82,8 +78,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                   },
                   properties: {
                     label: ['create mailbox label', { ns: INBOX_PLUGIN }],
-                    icon: (props: IconProps) => <Envelope {...props} />,
-                    iconSymbol: 'ph--envelope--regular',
+                    icon: 'ph--envelope--regular',
                   },
                 },
                 {
@@ -97,8 +92,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                   },
                   properties: {
                     label: ['create contacts label', { ns: INBOX_PLUGIN }],
-                    icon: (props: IconProps) => <AddressBook {...props} />,
-                    iconSymbol: 'ph--address-book--regular',
+                    icon: 'ph--address-book--regular',
                   },
                 },
                 {
@@ -112,8 +106,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                   },
                   properties: {
                     label: ['create calendar label', { ns: INBOX_PLUGIN }],
-                    icon: (props: IconProps) => <Calendar {...props} />,
-                    iconSymbol: 'ph--calendar--regular',
+                    icon: 'ph--calendar--regular',
                   },
                 },
               ];

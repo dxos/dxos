@@ -2,9 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Flower, type IconProps } from '@phosphor-icons/react';
-import React from 'react';
-
 import { pluginMeta } from '@dxos/app-framework';
 
 // TODO(burdon): Rename.
@@ -15,6 +12,5 @@ export default pluginMeta({
   name: 'Inbox',
   description: 'Manages your email, calendar, and contacts.',
   tags: ['experimental'],
-  iconComponent: (props: IconProps) => <Flower {...props} />,
-  iconSymbol: 'ph--flower--regular',
+  icon: 'ph--flower--regular',
 });

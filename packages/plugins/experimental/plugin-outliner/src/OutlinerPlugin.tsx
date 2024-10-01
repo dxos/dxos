@@ -26,8 +26,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
         records: {
           [TreeType.typename]: {
             placeholder: ['object placeholder', { ns: OUTLINER_PLUGIN }],
-            icon: (props: IconProps) => <TreeStructure {...props} />,
-            iconSymbol: 'ph--tree-structure--regular',
+            icon: 'ph--tree-structure--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (tree: TreeType) => loadObjectReferences(tree, (tree) => [tree.root]),
           },
@@ -75,7 +74,6 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
                   properties: {
                     label: ['create object label', { ns: OUTLINER_PLUGIN }],
                     icon: (props: IconProps) => <TreeStructure {...props} />,
-                    iconSymbol: 'ph--tree-structure--regular',
                     testId: 'outlinerPlugin.createObject',
                   },
                 },

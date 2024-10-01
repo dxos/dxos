@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GridNine, type IconProps } from '@phosphor-icons/react';
+import { GridNine } from '@phosphor-icons/react';
 import React from 'react';
 
 import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
@@ -49,8 +49,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
           [SheetType.typename]: {
             label: (object: any) => (object instanceof SheetType ? object.title : undefined),
             placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
-            icon: (props: IconProps) => <GridNine {...props} />,
-            iconSymbol: 'ph--grid-nine--regular',
+            icon: 'ph--grid-nine--regular',
           },
         },
       },
@@ -99,8 +98,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
                   },
                   properties: {
                     label: ['create sheet label', { ns: SHEET_PLUGIN }],
-                    icon: (props: IconProps) => <GridNine {...props} />,
-                    iconSymbol: 'ph--grid-nine--regular',
+                    icon: 'ph--grid-nine--regular',
                     testId: 'sheetPlugin.createObject',
                   },
                 },

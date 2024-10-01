@@ -27,6 +27,8 @@ dx-grid {
   block-size: 100%;
   max-inline-size: 100dvw;
   max-block-size: 100dvh;
+
+  user-select: none;
 }
 
 .dx-grid__scrollbar__thumb {
@@ -99,9 +101,16 @@ dx-grid {
     }
   }
   &[data-grid-mode="edit"] {
-    [role='gridcell'], [role='columnheader'], [role='rowheader']{
+    [role='gridcell'], [role='columnheader'], [role='rowheader'] {
       &.dx-grid__cell--active {
         color: transparent !important;
+      }
+    }
+  }
+  &[data-grid-select] {
+    [role='gridcell'], [role='columnheader'], [role='rowheader'] {
+      &[aria-selected] {
+        background: var(--dx-gridSelectionOverlay);
       }
     }
   }
