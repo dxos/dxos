@@ -32,7 +32,6 @@ describe('sheet model', () => {
 
   test('create', async () => {
     const { model } = await createModel();
-    console.log(model);
     expect(model.bounds).to.deep.eq({ rows: 5, columns: 5 });
     model.setValue(addressFromA1Notation('A1'), 100);
     const value = model.getValue(addressFromA1Notation('A1'));

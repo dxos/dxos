@@ -6,7 +6,8 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { type S, create } from '@dxos/client/echo';
+import { create } from '@dxos/client/echo';
+import { type S } from '@dxos/echo-schema';
 import { FunctionType } from '@dxos/plugin-script/types';
 
 import { createComputeGraphRegistry } from './compute-graph';
