@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type FunctionPluginDefinition, HyperFormula } from 'hyperformula';
 import { type FunctionTranslationsPackage } from 'hyperformula/typings/interpreter';
 
 import { Event } from '@dxos/async';
@@ -10,6 +9,7 @@ import { type Space } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { type FunctionPluginDefinition, HyperFormula } from '#hyperformula';
 import { FunctionContext, type FunctionContextOptions } from './async-function';
 
 /**

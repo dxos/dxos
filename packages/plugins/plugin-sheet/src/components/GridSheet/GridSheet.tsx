@@ -4,12 +4,17 @@
 
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { Grid, useGridContext, type GridScopedProps } from '@dxos/react-ui-grid';
-import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid/src';
+import {
+  Grid,
+  useGridContext,
+  type DxGridElement,
+  type GridContentProps,
+  type GridScopedProps,
+} from '@dxos/react-ui-grid';
 
 import { dxGridCellIndexToSheetCellAddress, useSheetModelDxGridProps } from './util';
-import { type SheetModel, type FormattingModel } from '../../model';
-import { CellEditor, editorKeys, type EditorKeysProps, sheetExtension } from '../CellEditor';
+import { type FormattingModel, type SheetModel } from '../../model';
+import { CellEditor, editorKeys, sheetExtension, type EditorKeysProps } from '../CellEditor';
 import { useSheetModel, type UseSheetModelProps } from '../Sheet/util';
 
 const GridSheetCellEditor = ({
