@@ -135,7 +135,7 @@ function readPackage(packageJson, context) {
     }
 
     case '@rollup/pluginutils': {
-      packageJson.peerDependencies['rollup'] = '^3.0.0';
+      packageJson.peerDependencies['rollup'] = '^2.0.0||^3.0.0';
       break;
     }
 
