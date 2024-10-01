@@ -463,7 +463,7 @@ export class InvitationsHandler {
         oldState: stateToString(invitation.state),
       });
     } else {
-      log.info('invitation state update', {
+      log('invitation state update', {
         actor: actor?.constructor.name,
         newState: stateToString(newState),
         oldState: stateToString(invitation.state),

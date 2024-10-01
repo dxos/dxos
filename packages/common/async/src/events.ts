@@ -73,6 +73,9 @@ export type ListenerOptions = {
  */
 // TODO(burdon): Rename EventSink? (Event is a built-in type).
 export class Event<T = void> implements ReadOnlyEvent<T> {
+  /**
+   * Propagate events to parent.
+   */
   static wrap<T>(emitter: EventEmitterLike, eventName: string): Event<T> {
     const event = new Event<T>();
 

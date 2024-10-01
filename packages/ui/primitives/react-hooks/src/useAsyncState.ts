@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 /**
  * NOTE: Use with care and when necessary to be able to cancel an async operation when unmounting.
  */
-export const useAsyncCallback = <T>(cb: () => Promise<T>): T | undefined => {
+export const useAsyncState = <T>(cb: () => Promise<T | undefined>, deps: any[] = []): T | undefined => {
   const [value, setValue] = useState<T | undefined>();
   useEffect(() => {
     const t = setTimeout(async () => {
@@ -16,7 +16,7 @@ export const useAsyncCallback = <T>(cb: () => Promise<T>): T | undefined => {
     });
 
     return () => clearTimeout(t);
-  }, []);
+  }, deps);
 
   return value;
 };
