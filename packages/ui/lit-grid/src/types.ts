@@ -12,6 +12,8 @@ export type DxGridAxis = 'row' | 'col';
 export type DxGridPosition = Record<DxGridAxis, number>;
 export type DxGridPositionNullable = DxGridPosition | null;
 
+export type DxGridCells = Record<CellIndex, CellValue>;
+
 export type DxGridPointer = null | ({ state: 'resizing'; page: number } & DxAxisResizeProps) | { state: 'selecting' };
 
 export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'index' | 'size'>;
@@ -39,7 +41,7 @@ export type AxisMeta = {
   resizeable?: boolean;
 };
 
-export type DxGridProps = Partial<Pick<DxGrid, 'cells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault'>>;
+export type DxGridProps = Partial<Pick<DxGrid, 'initialCells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault'>>;
 
 export class DxAxisResize extends Event {
   public readonly axis: DxGridAxis;

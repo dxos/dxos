@@ -122,7 +122,11 @@ const GridSheetImpl = ({
     <>
       <GridSheetCellEditor model={model} extension={extension} />
       <Grid.Content
-        cells={cells}
+        initialCells={cells}
+        getCells={() => {
+          console.log('[get cells]');
+          return cells;
+        }}
         columns={columns}
         rows={rows}
         onAxisResize={handleAxisResize}

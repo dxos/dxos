@@ -8,11 +8,10 @@ import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 
 import {
   type AxisMeta,
-  type CellIndex,
-  type CellValue,
   DxAxisResize,
   DxEditRequest,
   type DxGridAxis,
+  type DxGridCells,
   DxGridCellsSelect,
   type DxGridMode,
   type DxGridPointer,
@@ -109,10 +108,19 @@ export class DxGrid extends LitElement {
   columns: Record<string, AxisMeta> = {};
 
   @property({ type: Object })
-  cells: Record<CellIndex, CellValue> = {};
+  initialCells: DxGridCells = {};
 
   @property({ type: String })
   mode: DxGridMode = 'browse';
+
+  /**
+   * When this function is defined, it is used first to try to get a value for a cell, and otherwise will fall back
+   * to `cells`.
+   */
+  getCells: ((visColMin: number, visColMax: number, visRowMin: number, visRowMax: number) => DxGridCells) | null = null;
+
+  @state()
+  private cells: DxGridCells = this.initialCells;
 
   //
   // `pos`, short for ‘position’, is the position in pixels of the viewport from the origin.
@@ -714,6 +722,7 @@ export class DxGrid extends LitElement {
   }
 
   override firstUpdated() {
+    this.cells = this.initialCells;
     this.observer.observe(this.viewportRef.value!);
     this.colSizes = Object.entries(this.columns).reduce((acc: Record<string, number>, [colId, colMeta]) => {
       if (colMeta?.size) {
@@ -727,6 +736,18 @@ export class DxGrid extends LitElement {
       }
       return acc;
     }, {});
+  }
+
+  override willUpdate(changedProperties: Map<string, any>) {
+    if (
+      this.getCells &&
+      (changedProperties.has('visColMin') ||
+        changedProperties.has('visColMax') ||
+        changedProperties.has('visRowMin') ||
+        changedProperties.has('visRowMax'))
+    ) {
+      this.cells = this.getCells(this.visColMin, this.visColMax, this.visRowMin, this.visRowMax);
+    }
   }
 
   override updated(changedProperties: Map<string, any>) {

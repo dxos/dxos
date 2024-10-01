@@ -7,9 +7,17 @@ import '@dxos/lit-grid/dx-grid.pcss';
 import { createComponent, type EventName } from '@lit/react';
 import { createContextScope, type Scope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentProps, forwardRef, type PropsWithChildren, useCallback, useState } from 'react';
+import React, {
+  type ComponentProps,
+  forwardRef,
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 
 import { type DxAxisResize, type DxEditRequest, type DxGridCellsSelect, DxGrid as NaturalDxGrid } from '@dxos/lit-grid';
+import { useForwardedRef } from '@dxos/react-ui';
 
 type DxGridElement = NaturalDxGrid;
 
@@ -89,19 +97,29 @@ const GridRoot = ({
 
 GridRoot.displayName = GRID_NAME;
 
-type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'onEdit'>;
+type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'onEdit'> & {
+  getCells?: NonNullable<NaturalDxGrid['getCells']>;
+};
 
 const GRID_CONTENT_NAME = 'GridContent';
 
 const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>((props, forwardedRef) => {
   const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME, props.__gridScope);
+  const ref = useForwardedRef(forwardedRef);
+
+  useEffect(() => {
+    if (ref.current && props.getCells) {
+      ref.current.getCells = props.getCells;
+      ref.current.requestUpdate();
+    }
+  }, [ref.current, props.getCells]);
 
   const handleEdit = useCallback((event: DxEditRequest) => {
     setEditBox(event.cellBox);
     setEditing({ index: event.cellIndex, initialContent: event.initialContent });
   }, []);
 
-  return <DxGrid {...props} gridId={id} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={forwardedRef} />;
+  return <DxGrid {...props} gridId={id} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={ref} />;
 });
 
 GridContent.displayName = GRID_CONTENT_NAME;

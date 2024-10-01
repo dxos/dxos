@@ -22,7 +22,7 @@ export const dxGridCellIndexToSheetCellAddress = (gridEditing: GridEditing): Cel
 };
 
 const createDxGridCells = (model: SheetModel, formatting: FormattingModel) => {
-  return Object.keys(model.sheet.cells).reduce((acc: NonNullable<GridContentProps['cells']>, sheetCellIndex) => {
+  return Object.keys(model.sheet.cells).reduce((acc: NonNullable<GridContentProps['initialCells']>, sheetCellIndex) => {
     const address = addressFromIndex(model.sheet, sheetCellIndex);
     const cell = formatting.getFormatting(address);
     if (cell.value) {
@@ -53,8 +53,10 @@ const createDxGridRows = (model: SheetModel): GridContentProps['rows'] => {
 export const useSheetModelDxGridProps = (
   model: SheetModel,
   formatting: FormattingModel,
-): Pick<GridContentProps, 'cells' | 'columns' | 'rows'> => {
-  const [dxGridCells, setDxGridCells] = useState<GridContentProps['cells']>(createDxGridCells(model, formatting));
+): Pick<GridContentProps, 'columns' | 'rows'> & { cells: NonNullable<GridContentProps['initialCells']> } => {
+  const [dxGridCells, setDxGridCells] = useState<NonNullable<GridContentProps['initialCells']>>(
+    createDxGridCells(model, formatting),
+  );
   const [dxGridColumns, setDxGridColumns] = useState<GridContentProps['columns']>(createDxGridColumns(model));
   const [dxGridRows, setDxGridRows] = useState<GridContentProps['rows']>(createDxGridColumns(model));
 
