@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as pb from 'protobufjs';
+import pb from 'protobufjs';
 
 import { invariant } from '@dxos/invariant';
 

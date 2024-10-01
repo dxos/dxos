@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { reconstructError } from './helpers';
-import { type Error as SerializedErrorProto } from '../proto/gen/dxos/error';
+import { reconstructError } from './helpers.js';
+import { type Error as SerializedErrorProto } from '../proto/gen/dxos/error.js';
 
 export const encodeError = (err: any): SerializedErrorProto => {
   if (typeof err === 'object' && err?.message) {

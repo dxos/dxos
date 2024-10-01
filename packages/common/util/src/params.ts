@@ -13,7 +13,9 @@ import { decamelize } from 'xcase';
 // TODO(burdon): Change annotations.
 
 type ParamKeyAnnotationType = string;
+
 const ParamKeyAnnotationId = Symbol.for('@dxos/schema/annotation/ParamKeyAnnotation');
+
 export const ParamKeyAnnotation =
   (value: ParamKeyAnnotationType) =>
   <S extends Annotable.All>(self: S): Annotable.Self<S> =>

@@ -37,7 +37,7 @@ export class WebsocketRpcServer<C, S> {
       ...this._params,
     });
     this._server.on('connection', async (socket, request) => {
-      log('connection', { request });
+      log('connection', { url: request.url, headers: request.headers });
       const info: ConnectionInfo = {
         request,
       };
