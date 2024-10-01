@@ -22,7 +22,7 @@ overrides:
   '@opentelemetry/sdk-node': ^0.52.1
   '@opentelemetry/sdk-trace-node': ^1.25.1
 
-pnpmfileChecksum: elrmhis56nc5mjztwsb5h3xxju
+pnpmfileChecksum: zx4jlus3cs3konx3vnx4ydxes4
 
 patchedDependencies:
   '@nx/js@19.7.2':
@@ -2906,8 +2906,8 @@ importers:
   packages/core/mesh/edge-client:
     dependencies:
       '@bufbuild/protobuf':
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: ^2.1.0
+        version: 2.1.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2949,8 +2949,8 @@ importers:
   packages/core/mesh/messaging:
     dependencies:
       '@bufbuild/protobuf':
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: ^2.1.0
+        version: 2.1.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -3385,8 +3385,8 @@ importers:
   packages/core/protocols:
     dependencies:
       '@bufbuild/protobuf':
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: ^2.1.0
+        version: 2.1.0
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
@@ -3411,7 +3411,7 @@ importers:
         version: 1.42.0
       '@bufbuild/protoc-gen-es':
         specifier: ^2.1.0
-        version: 2.1.0(@bufbuild/protobuf@2.0.0)
+        version: 2.1.0(@bufbuild/protobuf@2.1.0)
 
   packages/devtools/cli:
     dependencies:
@@ -13253,9 +13253,6 @@ packages:
     resolution: {integrity: sha512-k+Y4Sy9z2O9cOIA7q56WzAGC2xnIvxPfGb3X1+XsbeC0P/c7IW2/aWL324ppER538zCqqMtOwhp0vgljT4mthA==}
     engines: {node: '>=12'}
     hasBin: true
-
-  '@bufbuild/protobuf@2.0.0':
-    resolution: {integrity: sha512-sw2JhwJyvyL0zlhG61aDzOVryEfJg2PDZFSV7i7IdC7nAE41WuXCru3QWLGiP87At0BMzKOoKO/FqEGoKygGZQ==}
 
   '@bufbuild/protobuf@2.1.0':
     resolution: {integrity: sha512-+2Mx67Y3skJ4NCD/qNSdBJNWtu6x6Qr53jeNg+QcwiL6mt0wK+3jwHH2x1p7xaYH6Ve2JKOVn0OxU35WsmqI9A==}
@@ -35617,15 +35614,13 @@ snapshots:
       '@bufbuild/buf-win32-arm64': 1.42.0
       '@bufbuild/buf-win32-x64': 1.42.0
 
-  '@bufbuild/protobuf@2.0.0': {}
-
   '@bufbuild/protobuf@2.1.0': {}
 
-  '@bufbuild/protoc-gen-es@2.1.0(@bufbuild/protobuf@2.0.0)':
+  '@bufbuild/protoc-gen-es@2.1.0(@bufbuild/protobuf@2.1.0)':
     dependencies:
       '@bufbuild/protoplugin': 2.1.0
     optionalDependencies:
-      '@bufbuild/protobuf': 2.0.0
+      '@bufbuild/protobuf': 2.1.0
     transitivePeerDependencies:
       - supports-color
 
@@ -41267,13 +41262,6 @@ snapshots:
       estree-walker: 1.0.1
       picomatch: 2.3.1
       rollup: 2.79.1
-
-  '@rollup/pluginutils@3.1.0(rollup@3.23.0)':
-    dependencies:
-      '@types/estree': 0.0.39
-      estree-walker: 1.0.1
-      picomatch: 2.3.1
-      rollup: 3.23.0
 
   '@rollup/pluginutils@4.2.1':
     dependencies:
@@ -55788,7 +55776,7 @@ snapshots:
 
   rollup-plugin-sourcemaps@0.6.3(@types/node@22.6.1)(rollup@3.23.0):
     dependencies:
-      '@rollup/pluginutils': 3.1.0(rollup@3.23.0)
+      '@rollup/pluginutils': 5.1.0(rollup@3.23.0)
       rollup: 3.23.0
       source-map-resolve: 0.6.0
     optionalDependencies:
