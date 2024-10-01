@@ -17,7 +17,7 @@ import { ClientProvider, type ClientProviderProps } from '../client';
 type InitializeProps = {
   createIdentity?: boolean;
   createSpace?: boolean;
-  onSpaceCreated?: (client: Client, space: Space) => MaybePromise<void>;
+  onSpaceCreated?: (props: { client: Client; space: Space }) => MaybePromise<void>;
 };
 
 /**
@@ -41,7 +41,7 @@ const initializeClient = async (
   let space: Space | undefined;
   if (createSpace) {
     space = await client.spaces.create({ name: 'Test Space' });
-    await onSpaceCreated?.(client, space);
+    await onSpaceCreated?.({ client, space });
   }
 
   await onInitialized?.(client);
@@ -60,17 +60,19 @@ export const withClientProvider = ({
   onInitialized,
   ...props
 }: WithClientProviderProps = {}): Decorator => {
-  const handleInitialized = async (client: Client) => {
-    await initializeClient(client, { createIdentity, createSpace, onSpaceCreated, onInitialized });
-  };
+  return (Story) => {
+    const handleInitialized = async (client: Client) => {
+      await initializeClient(client, { createIdentity, createSpace, onSpaceCreated, onInitialized });
+    };
 
-  return (Story) => (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <ClientProvider onInitialized={handleInitialized} {...props}>
-        <Story />
-      </ClientProvider>
-    </ErrorBoundary>
-  );
+    return (
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <ClientProvider onInitialized={handleInitialized} {...props}>
+          <Story />
+        </ClientProvider>
+      </ErrorBoundary>
+    );
+  };
 };
 
 // TODO(burdon): Implement context per client for context.
@@ -83,7 +85,6 @@ export type WithMultiClientProviderProps = InitializeProps & ClientProviderProps
  * Orchestrates invitations between a randomly selected host and the remaining clients.
  * NOTE: Should come before withLayout.
  */
-// TODO(burdon): Create test.
 export const withMultiClientProvider = ({
   numClients = 2,
   createIdentity,
@@ -98,7 +99,7 @@ export const withMultiClientProvider = ({
     const spaceReady = useRef(new Trigger<Space | undefined>());
 
     // Handle invitations.
-    const handleClientInitialized = async (client: Client) => {
+    const handleInitialized = async (client: Client) => {
       if (createSpace) {
         if (!hostRef.current) {
           hostRef.current = client;
@@ -120,7 +121,7 @@ export const withMultiClientProvider = ({
           <ErrorBoundary key={index} FallbackComponent={ErrorFallback}>
             <ClientProvider
               services={builder.current.createLocalClientServices()}
-              onInitialized={handleClientInitialized}
+              onInitialized={handleInitialized}
               {...props}
             >
               <Story />
@@ -136,10 +137,10 @@ const ErrorFallback = ({ error }: FallbackProps) => {
   const { name, message, stack } =
     error instanceof Error ? error : { name: 'Error', message: String(error), stack: undefined };
   return (
-    <div role='alert' className='flex flex-col gap-4'>
+    <div role='alert' className='flex flex-col overflow-hidden p-4 gap-4'>
       <h1 className='text-xl text-red-500'>{name}</h1>
       <div className='text-lg'>{message}</div>
-      {stack && <pre className='text-sm text-subdued'>{stack}</pre>}
+      {stack && <pre className='whitespace-pre-wrap text-sm text-subdued'>{stack}</pre>}
     </div>
   );
 };

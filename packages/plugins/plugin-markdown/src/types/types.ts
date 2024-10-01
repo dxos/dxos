@@ -27,7 +27,7 @@ export enum MarkdownAction {
 
 export type MarkdownProperties = Record<string, any>;
 
-export type ExtensionsProvider = (props: { document?: DocumentType }) => Extension[];
+export type ExtensionsProvider = (props: { document?: DocumentType }) => Extension[] | undefined;
 
 export type OnChange = (text: string) => void;
 
@@ -50,7 +50,7 @@ export type MarkdownPluginState = {
 
   // TODO(burdon): Extend view mode per document to include scroll position, etc.
   // View mode per document.
-  viewMode: { [key: string]: EditorViewMode };
+  viewMode: Record<string, EditorViewMode>;
 };
 
 export type MarkdownSettingsProps = {

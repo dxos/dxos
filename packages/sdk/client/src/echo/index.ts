@@ -12,8 +12,8 @@ export {
   getTypename,
   Expando,
   type EchoReactiveObject,
-  type ReactiveObject,
   type ObjectMeta,
+  type ReactiveObject,
 } from '@dxos/echo-schema';
 export {
   createDocAccessor,
