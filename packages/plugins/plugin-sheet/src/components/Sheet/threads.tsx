@@ -27,7 +27,7 @@ const CommentIndicator = () => {
 
 const ThreadedCellWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useIntentDispatcher();
-  const [isHovered, setIsHovered] = React.useState(true);
+  const [isHovered, setIsHovered] = React.useState(false);
   const { t } = useTranslation(SHEET_PLUGIN);
 
   const handleClick = React.useCallback(
