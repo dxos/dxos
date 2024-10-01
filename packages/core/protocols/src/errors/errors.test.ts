@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { ApiError } from './base-errors';
+import { ApiError } from './base-errors.js';
 
 describe('Errors', () => {
   test('test', async () => {

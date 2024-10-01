@@ -12,16 +12,14 @@ import {
 } from '@tldraw/tldraw';
 import React from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
-
 export const CustomMenu = ({ isMobile }: TLUiStylePanelProps) => {
   const actions = useActions();
   const isReadonlyMode = useReadonly();
 
   return (
-    <div>
-      <div className={mx('tlui-style-panel', !isMobile && 'tlui-style-panel__wrapper')} data-ismobile={isMobile}>
-        <div className='tlui-buttons__horizontal'>
+    <div className='tlui-style-panel__wrapper'>
+      <div className='tlui-menu'>
+        <div className='tlui-buttons__horizontal' data-ismobile={isMobile}>
           <DefaultQuickActions>
             <DefaultQuickActionsContent />
             <TldrawUiMenuItem {...actions.snap} disabled={isReadonlyMode} />

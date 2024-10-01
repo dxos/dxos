@@ -4,7 +4,7 @@
 
 import { Schema as S } from '@effect/schema';
 
-import { EchoObject } from '../annotations';
+import { EchoObject } from '../ast';
 import { TypedObject } from '../typed-object-class';
 
 // TODO(burdon): Clean up.

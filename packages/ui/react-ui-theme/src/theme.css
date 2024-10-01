@@ -2,6 +2,7 @@
  * Variable fonts:
  * https://fontsource.org/?category=sans-serif&variable=true
  */
+
 @import 'tailwindcss/base';
 @import 'tailwindcss/utilities';
 @import 'tailwindcss/components';

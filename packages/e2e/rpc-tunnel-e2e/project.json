@@ -10,18 +10,18 @@
     "build": {
       "options": {
         "main": "{projectRoot}/src/index.ts",
-        "outputPath": "packages/e2e/rpc-tunnel-e2e/dist",
+        "outputPath": "{projectRoot}/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
+        "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
         "generatePackageJson": false,
-        "outputPath": "packages/e2e/rpc-tunnel-e2e/out"
+        "outputPath": "{projectRoot}/out"
       },
       "outputs": [
         "{options.outputPath}"

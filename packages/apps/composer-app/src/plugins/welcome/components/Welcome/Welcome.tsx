@@ -243,3 +243,5 @@ const _Alternate = ({ identity, onSignup, onJoinIdentity, onSpaceInvitation }: W
     </>
   );
 };
+
+export default Welcome;

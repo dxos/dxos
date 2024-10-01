@@ -2,19 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, Play, Warning } from '@phosphor-icons/react';
 // @ts-ignore
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createDocAccessor, DocAccessor } from '@dxos/react-client/echo';
-import { DensityProvider, Toolbar, Button } from '@dxos/react-ui';
-import { mx, getSize } from '@dxos/react-ui-theme';
+import { DensityProvider, Toolbar, Button, Icon } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-import { FrameContainer } from './FrameContainer';
-import { Splitter, SplitterSelector, type View } from './Splitter';
 import { Bundler, type BundlerResult, initializeBundler } from '../../bundler';
 import { type ScriptType } from '../../types';
+import { FrameContainer } from '../FrameContainer';
 import { ScriptEditor } from '../ScriptEditor';
 
 // Keep in sync with packages/apps/composer-app/script-frame/main.tsx .
@@ -29,7 +27,6 @@ const PROVIDED_MODULES = [
 
 export type ScriptBlockProps = {
   script: ScriptType;
-  view?: View;
   hideSelector?: boolean;
   classes?: {
     root?: string;
@@ -44,17 +41,8 @@ export type ScriptBlockProps = {
  * @deprecated
  */
 // TODO(burdon): Cache compiled results in context.
-export const ScriptBlock = ({
-  script,
-  view: controlledView,
-  hideSelector,
-  classes,
-  containerUrl,
-}: ScriptBlockProps) => {
+export const ScriptBlock = ({ script, hideSelector, classes, containerUrl }: ScriptBlockProps) => {
   const source = useMemo(() => script.source && createDocAccessor(script.source, ['content']), [script.source]);
-  const [view, setView] = useState<View>(controlledView ?? 'editor');
-  useEffect(() => handleSetView(controlledView ?? 'editor'), [controlledView]);
-
   const [result, setResult] = useState<BundlerResult>();
   const bundler = useMemo(
     () => new Bundler({ platform: 'browser', sandboxedModules: PROVIDED_MODULES, remoteModules: {} }),
@@ -78,16 +66,6 @@ export const ScriptBlock = ({
     return () => clearTimeout(t);
   }, [source]);
 
-  const handleSetView = useCallback(
-    (view: View) => {
-      setView(view);
-      if (!result && view !== 'editor') {
-        void handleExec(false);
-      }
-    },
-    [result],
-  );
-
   const handleExec = useCallback(
     async (auto = true) => {
       if (!source) {
@@ -95,11 +73,8 @@ export const ScriptBlock = ({
       }
       const result = await bundler.bundle(DocAccessor.getValue(source));
       setResult(result);
-      if (auto && view === 'editor') {
-        setView('preview');
-      }
     },
-    [source, view],
+    [source],
   );
 
   return (
@@ -107,29 +82,28 @@ export const ScriptBlock = ({
       {!hideSelector && (
         <DensityProvider density='fine'>
           <Toolbar.Root classNames={mx('mb-2', classes?.toolbar)}>
-            <SplitterSelector view={view} onChange={handleSetView} />
             <div className='grow' />
             {result?.bundle && !result?.error && (
               <div title={String(result.error)}>
-                <Check className={mx(getSize(5), 'text-green-500')} />
+                <Icon icon='ph--check--regular' size={5} classNames='text-green-500' />
               </div>
             )}
             {result?.error && (
               <div title={String(result.error)}>
-                <Warning className={mx(getSize(5), 'text-orange-500')} />
+                <Icon icon='ph--warning--regular' size={5} classNames='text-orange-500' />
               </div>
             )}
             <Button variant='ghost' onClick={() => handleExec()}>
-              <Play className={getSize(5)} />
+              <Icon icon='ph--play--regular' size={5} />
             </Button>
           </Toolbar.Root>
         </DensityProvider>
       )}
 
-      <Splitter view={view}>
+      <div className='flex'>
         <ScriptEditor script={script} />
         {result && <FrameContainer key={script.id} result={result} containerUrl={containerUrl} />}
-      </Splitter>
+      </div>
     </div>
   );
 };

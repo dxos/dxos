@@ -2,13 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@dxos-theme';
+
+import React from 'react';
+
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Grid, type GridProps } from './Grid';
+import { Grid, type GridContentProps, type GridRootProps } from './Grid';
+
+type StoryGridProps = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
+
+const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
+  return (
+    <Grid.Root id='story' onEditingChange={onEditingChange}>
+      <Grid.Content {...props} />
+    </Grid.Root>
+  );
+};
 
 export default {
   title: 'react-ui-grid/Grid',
-  component: Grid,
+  component: StoryGrid,
   decorators: [withTheme],
   parameters: { layout: 'fullscreen' },
 };
@@ -40,8 +54,8 @@ export const Basic = {
     onAxisResize: (event) => {
       console.log('[axis resize]', event);
     },
-    onEdit: (event) => {
+    onEditingChange: (event) => {
       console.log('[edit]', event);
     },
-  } satisfies GridProps,
+  } satisfies StoryGridProps,
 };

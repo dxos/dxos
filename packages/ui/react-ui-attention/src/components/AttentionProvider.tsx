@@ -96,8 +96,12 @@ const AttentionProvider = ({
     ].join(',');
     const nextAttended = new Set(getAttendables(selector, event.target));
     const [prev, next] = [Array.from(attended), Array.from(nextAttended)];
-    // Only update state if the result is different.
-    (prev.length !== next.length || !!prev.find((id, index) => next[index] !== id)) && setAttended(nextAttended);
+    // TODO(wittjosiah): Not allowing empty state means that the attended item is not strictly guaranteed to be in the DOM.
+    //   Currently this depends on the deck in order to ensure that when the attended item is removed something else is attended.
+    // Only update state if the result is different and not empty.
+    if (next.length > 0 && (prev.length !== next.length || !!prev.find((id, index) => next[index] !== id))) {
+      setAttended(nextAttended);
+    }
   };
   return (
     <AttentionContextProvider attended={attended}>

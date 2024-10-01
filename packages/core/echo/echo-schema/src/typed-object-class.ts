@@ -7,8 +7,7 @@ import type { SimplifyMutable, Struct } from '@effect/schema/Schema';
 
 import { invariant } from '@dxos/invariant';
 
-import { type EchoObjectAnnotation, EchoObjectAnnotationId } from './annotations';
-import { schemaVariance } from './ast';
+import { type EchoObjectAnnotation, EchoObjectAnnotationId, schemaVariance } from './ast';
 import { getSchema, getTypeReference } from './getter';
 
 type TypedObjectOptions = {

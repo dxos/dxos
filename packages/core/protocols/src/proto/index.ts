@@ -2,5 +2,5 @@
 // Copyright 2020 DXOS.org
 //
 
-export { schema, schemaJson, type TYPES } from './gen';
-export * from './types';
+export { schema, schemaJson, type TYPES } from './gen/index.js';
+export * from './types.js';
