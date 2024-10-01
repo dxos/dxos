@@ -2,9 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Bug, type IconProps } from '@phosphor-icons/react';
-import React from 'react';
-
 import { pluginMeta } from '@dxos/app-framework';
 
 export const DEBUG_PLUGIN = 'dxos.org/plugin/debug';
@@ -14,6 +11,5 @@ export default pluginMeta({
   name: 'Debug',
   description: 'DXOS debugging tools.',
   tags: ['experimental'],
-  iconComponent: (props: IconProps) => <Bug {...props} />,
-  iconSymbol: 'ph--bug--regular',
+  icon: 'ph--bug--regular',
 });
