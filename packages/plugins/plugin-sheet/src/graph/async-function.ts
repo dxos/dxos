@@ -69,7 +69,6 @@ export class FunctionContext {
 
   constructor(
     private readonly _hf: HyperFormula,
-    // TODO(burdon): How can space be undefined?
     private readonly _space: Space | undefined,
     onUpdate: (context: FunctionContext) => void,
     _options?: Partial<FunctionContextOptions>,

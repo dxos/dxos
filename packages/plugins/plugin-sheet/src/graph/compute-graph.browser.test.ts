@@ -7,6 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { create } from '@dxos/client/echo';
+import { Context } from '@dxos/context';
 import { type S } from '@dxos/echo-schema';
 import { FunctionType } from '@dxos/plugin-script/types';
 
@@ -31,6 +32,7 @@ import { type CellScalarValue } from '../types';
 describe('compute graph', () => {
   // TODO(burdon): Replace with builder.
   const createModel = async (types?: S.Schema<any>[]) => {
+    const ctx = new Context();
     const client = new Client();
     if (types) {
       client.addTypes(types);
@@ -38,12 +40,17 @@ describe('compute graph', () => {
     await client.initialize();
     await client.halo.createIdentity();
     const space = await client.spaces.create();
+    ctx.onDispose(() => client.destroy());
 
     const registry = createComputeGraphRegistry();
+    await registry.open(ctx);
+
     const graph = await registry.createGraph(space);
+    await graph.open(ctx);
+
     const sheet = createSheet({ rows: 5, columns: 5 });
     const model = new SheetModel(graph, sheet);
-    await model.open();
+    await model.open(ctx);
 
     // TODO(burdon): Move event propagation into graph.
     graph.update.on(() => model.update.emit());
