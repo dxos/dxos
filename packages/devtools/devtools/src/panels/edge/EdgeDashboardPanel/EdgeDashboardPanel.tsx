@@ -2,29 +2,37 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
-import { scheduleMicroTask, scheduleTaskInterval } from '@dxos/async';
-import { type Stream } from '@dxos/codec-protobuf';
-import { Context } from '@dxos/context';
-import { log } from '@dxos/log';
-import { AgentStatus } from '@dxos/protocols/proto/dxos/agent/dashboard';
-import { useClient } from '@dxos/react-client';
+import { PublicKey, useClient, useMulticastObservable } from '@dxos/react-client';
 
-import { AgentStat } from './AgentStat';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { PanelContainer } from '../../../components';
-
-const RETRY_IN_IF_FAILURE = 1000; // [ms]
+import type { Credential } from '@dxos/client/halo';
+import { arrayToString, deepMapValues, mapValues } from '@dxos/util';
 
 export const EdgeDashboardPanel = () => {
   const client = useClient();
 
-  client.halo.queryCredentials();
+  const credentials = useMulticastObservable(client.halo.credentials);
+  const serviceCredentials = credentials.filter(
+    (cred) => cred.subject.assertion['@type'] === 'dxos.halo.credentials.ServiceAccess',
+  );
 
   return (
     <PanelContainer classNames='flex-1 flex-row'>
-      <div className='flex-1 flex-col w-50%'>
-        <AgentStat status={agentState} />
+      <SyntaxHighlighter language='json'>{JSON.stringify(formatData(serviceCredentials), null, 2)}</SyntaxHighlighter>
     </PanelContainer>
   );
 };
+
+const formatData = (data: any) =>
+  deepMapValues(data, (value, recurse) => {
+    if (value instanceof Uint8Array) {
+      return arrayToString(value);
+    }
+    if (value instanceof PublicKey) {
+      return value.truncate();
+    }
+    return recurse(value);
+  });
