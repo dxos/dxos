@@ -3,9 +3,9 @@
 //
 
 import { randWord, randSentence } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
-import { StatsPanel, useStats } from '@dxos/devtools';
+import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
 import { type ReactiveObject, type S } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -29,7 +29,9 @@ export const Main = () => {
   const spaces = useSpaces({ all: true }).filter((space) => space !== client.spaces.default);
   const [space, setSpace] = useState<Space>();
   const [stats, refreshStats] = useStats();
-  const [showStats, setShowStats] = useState<boolean>(true);
+  const [showStats, setShowStats] = useState(false);
+  const [showDevTools, setShowDevTools] = useState(false);
+
   useEffect(() => {
     if (!space && spaces.length) {
       setSpace(spaces[0]);
@@ -186,50 +188,60 @@ export const Main = () => {
   };
 
   return (
-    <div className='flex flex-col grow max-w-[60rem] shadow-lg bg-white dark:bg-black'>
-      <AppToolbar
-        onHome={() => window.open(defs.issueUrl, 'DXOS')}
-        onProfile={() => {
-          void client.shell.open();
-        }}
-      />
-      <SpaceToolbar
-        spaces={spaces}
-        selected={space?.key ?? spaces[0]?.key}
-        onCreate={handleSpaceCreate}
-        onImport={handleSpaceImport}
-        onSelect={handleSpaceSelect}
-        onToggleOpen={handleSpaceToggleOpen}
-        onExport={handleSpaceExport}
-        onInvite={handleSpaceInvite}
-      />
-      <div className='flex flex-col grow overflow-hidden'>
-        {space?.isOpen && (
-          <>
-            <DataToolbar
-              types={Array.from(typeMap.keys())}
-              onAdd={handleObjectCreate}
-              onTypeChange={(type) => setType(type)}
-              onFilterChange={setFilter}
-              onViewChange={(view) => setView(view)}
-            />
+    <div className='flex flex-row w-full h-full justify-center'>
+      <div className='flex flex-col grow max-w-[60rem] shadow-lg bg-white dark:bg-black'>
+        <AppToolbar
+          onHome={() => window.open(defs.issueUrl, 'DXOS')}
+          onProfile={() => {
+            void client.shell.open();
+          }}
+          onDevtools={() => setShowDevTools((showDevTools) => !showDevTools)}
+        />
+        <SpaceToolbar
+          spaces={spaces}
+          selected={space?.key ?? spaces[0]?.key}
+          onCreate={handleSpaceCreate}
+          onImport={handleSpaceImport}
+          onSelect={handleSpaceSelect}
+          onToggleOpen={handleSpaceToggleOpen}
+          onExport={handleSpaceExport}
+          onInvite={handleSpaceInvite}
+        />
+        <div className='flex flex-col grow overflow-hidden'>
+          {space?.isOpen && (
+            <>
+              <DataToolbar
+                types={Array.from(typeMap.keys())}
+                onAdd={handleObjectCreate}
+                onTypeChange={(type) => setType(type)}
+                onFilterChange={setFilter}
+                onViewChange={(view) => setView(view)}
+              />
 
-            {view === 'table' && <ItemTable schema={getSchema(type)} objects={objects} />}
-            {view === 'list' && <ItemList objects={objects} onDelete={handleObjectDelete} />}
-            {view === 'debug' && <ItemList debug objects={objects} onDelete={handleObjectDelete} />}
-          </>
-        )}
+              {view === 'table' && <ItemTable schema={getSchema(type)} objects={objects} />}
+              {view === 'list' && <ItemList objects={objects} onDelete={handleObjectDelete} />}
+              {view === 'debug' && <ItemList debug objects={objects} onDelete={handleObjectDelete} />}
+            </>
+          )}
+        </div>
+        <div className='flex h-[32px] p-2 items-center relative text-xs'>
+          <div>{objects.length} objects</div>
+          <div className='grow' />
+          <StatusBar flushing={flushing} showStats={showStats} onShowStats={(show) => setShowStats(show)} />
+          {showStats && (
+            <div className='z-20 absolute right-0 bottom-[32px] w-[450px] border-l border-t border-neutral-500 dark:border-neutral-800'>
+              <StatsPanel stats={stats} onRefresh={refreshStats} />
+            </div>
+          )}
+        </div>
       </div>
-      <div className='flex h-[32px] p-2 items-center relative text-xs'>
-        <div>{objects.length} objects</div>
-        <div className='grow' />
-        <StatusBar flushing={flushing} showStats={showStats} onShowStats={(show) => setShowStats(show)} />
-        {showStats && (
-          <div className='z-20 absolute right-0 bottom-[32px] w-[450px] border-l border-t border-neutral-500 dark:border-neutral-800'>
-            <StatsPanel stats={stats} onRefresh={refreshStats} />
-          </div>
-        )}
-      </div>
+      {showDevTools && (
+        <div className='flex flex-col w-[120rem] h-full bg-white dark:bg-black'>
+          <Suspense fallback={<></>}>
+            <Devtools noRouter />
+          </Suspense>
+        </div>
+      )}
     </div>
   );
 };

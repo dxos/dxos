@@ -30,7 +30,7 @@ void initializeAppObservability({
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: '*',
     errorElement: <Error />,
     element: (
       <AppContainer>
