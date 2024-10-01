@@ -134,6 +134,11 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    case '@rollup/pluginutils': {
+      packageJson.peerDependencies['rollup'] = '^3.0.0';
+      break;
+    }
+
     // @dxos/devtools-extension
     case '@crxjs/vite-plugin': {
       packageJson.peerDependencies['vite'] = '^5.0.0';
