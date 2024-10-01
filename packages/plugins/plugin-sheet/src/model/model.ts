@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DetailedCellError, ExportedCellChange } from 'hyperformula';
 import { type SimpleCellRange } from 'hyperformula/typings/AbsoluteCellRange';
 import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateTimeHelper';
@@ -15,6 +14,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FunctionType } from '@dxos/plugin-script/types';
 
+import { DetailedCellError, ExportedCellChange } from '#hyperformula';
 import { defaultFunctions, type FunctionDefinition } from './functions';
 import { addressFromA1Notation, addressToA1Notation, type CellAddress, type CellRange } from './types';
 import { addressFromIndex, addressToIndex, createIndices, RangeException, ReadonlyException } from './util';
