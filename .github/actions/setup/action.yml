@@ -1,0 +1,34 @@
+name: Setup
+description: Setup the environment for the other workflows
+
+inputs:
+  node-version:
+    description: 'The Node.js version to use'
+    required: true
+  stop-agents-after:
+    description: 'Distribute the run on multiple agents'
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install system dependencies
+      run: sudo apt-get install libxtst-dev libpng++-dev
+      shell: bash
+
+    - uses: pnpm/action-setup@v4
+
+    - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-extra-large-js" --stop-agents-after="${{ inputs.stop-agents-after }}"
+      shell: bash
+      if: ${{ inputs.stop-agents-after }}
+
+    - uses: actions/setup-node@v3
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+      shell: bash
+
+    - uses: nrwl/nx-set-shas@v4

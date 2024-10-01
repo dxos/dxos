@@ -35,11 +35,10 @@ concurrency:
 
 # https://nx.dev/ci/intro/tutorials/github-actions
 jobs:
-  check:
+  test:
     strategy:
       matrix:
         node-version: ["18.20.1", "20.12.1", "21.7.2"]
-        target: ["lint", "build", "test"]
     runs-on: ubuntu-latest
     steps:
       - name: Setup tmate session
@@ -48,55 +47,22 @@ jobs:
         with:
           detached: true
 
-      # The lint & build targets only need to run once, test will run on all node versions.
-      - name: Continue?
-        id: continue
-        run: |
-          if [[ "${{ matrix.node-version }}" == "20.12.1" || "${{ matrix.target }}" == "test" ]]; then
-            echo "proceed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "proceed=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Install system dependencies
-        if: ${{ steps.continue.outputs.proceed == 'true' }}
-        run: sudo apt-get install libxtst-dev libpng++-dev
-
       - name: Checkout
         uses: actions/checkout@v4
-        if: ${{ steps.continue.outputs.proceed == 'true' }}
         with:
           lfs: true
 
-      - uses: pnpm/action-setup@v4
-        if: ${{ steps.continue.outputs.proceed == 'true' }}
-
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-extra-large-js" --stop-agents-after="test"
-        if: ${{ steps.continue.outputs.proceed == 'true' }}
-
-      - uses: actions/setup-node@v3
-        if: ${{ steps.continue.outputs.proceed == 'true' }}
+      - name: Setup
+        uses: ./.github/actions/setup
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        if: ${{ steps.continue.outputs.proceed == 'true' }}
-
-      - uses: nrwl/nx-set-shas@v4
-        if: ${{ steps.continue.outputs.proceed == 'true' }}
-
-      - name: Check
-        run: pnpm exec nx affected -t ${{ matrix.target }}
-        if: ${{ matrix.node-version == '20.12.1' && matrix.target != 'test' && matrix.target != 'e2e' }}
+          stop-agents-after: test
 
       - name: Test
         run: pnpm exec nx affected -t test --coverage
-        if: ${{ matrix.target == 'test' }}
 
       - uses: codecov/codecov-action@v4
-        if: ${{ matrix.target == 'test' }}
+        if: ${{ matrix.node-version == '20.12.1' }}
         with:
           directory: ./coverage
           fail_ci_if_error: true
@@ -111,6 +77,24 @@ jobs:
         run: ./.github/scripts/send-test-report.sh $GITHUB_JOB success
         if: ${{ github.event_name == 'schedule' && success() }}
 
+
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          node-version: 20.12.1
+          stop-agents-after: build
+
+      - name: Check
+        run: pnpm exec nx affected -t lint build
+
   e2e:
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || startsWith(github.ref, 'refs/heads/jdw') || inputs.e2e }}
@@ -119,35 +103,19 @@ jobs:
       DX_PWA: false
       NODE_OPTIONS: --max-old-space-size=8192
     steps:
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-        with:
-          detached: true
-
-      - name: Install system dependencies
-        run: sudo apt-get install libxtst-dev libpng++-dev && npx playwright@1.46.0 install-deps
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
           lfs: true
 
-      - uses: pnpm/action-setup@v4
-
-      # TODO(wittjosiah): Distribution fails because of bundling memeory usage.
-      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-extra-large-js" --stop-agents-after="e2e"
-
-      - uses: actions/setup-node@v3
+      - name: Setup
+        uses: ./.github/actions/setup
         with:
           node-version: 20.12.1
-          cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Install system dependencies
+        run: npx playwright@1.46.0 install-deps
 
-      - uses: nrwl/nx-set-shas@v4
-      
       - name: Bundle
         run: pnpm exec nx affected -t bundle --parallel=2
 
