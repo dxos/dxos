@@ -11,10 +11,22 @@ const Routes = () => {
   return useRoutes();
 };
 
+export type DevtoolsProps = {
+  noRouter?: boolean;
+};
+
 /**
  * Entrypoint for app and extension (no direct dependency on Client).
  */
-export const Devtools = () => {
+export const Devtools = ({ noRouter }: DevtoolsProps) => {
+  if (noRouter) {
+    return (
+      <DevtoolsContextProvider>
+        <Routes />
+      </DevtoolsContextProvider>
+    );
+  }
+
   return (
     <DevtoolsContextProvider>
       <HashRouter>
