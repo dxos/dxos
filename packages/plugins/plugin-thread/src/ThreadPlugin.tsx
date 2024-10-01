@@ -25,7 +25,7 @@ import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
+import { type ActionGroup, createExtension, isActionGroup, toSignal } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { SpaceAction } from '@dxos/plugin-space';
 import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
@@ -145,22 +145,32 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const subjectId = id.split('~').at(0);
                 const [spaceId, objectId] = subjectId?.split(':') ?? [];
                 const space = client.spaces.get().find((space) => space.id === spaceId);
-                const doc = space?.db.getObjectById(objectId);
-                if (!doc || !subjectId) {
+                const object = toSignal(
+                  (onChange) => {
+                    const timeout = setTimeout(async () => {
+                      await space?.db.loadObjectById(objectId);
+                      onChange();
+                    });
+
+                    return () => clearTimeout(timeout);
+                  },
+                  () => space?.db.getObjectById(objectId),
+                );
+                if (!object || !subjectId) {
                   return;
                 }
 
-                const docMeta = metadataResolver(getTypename(doc) ?? '');
-                const label = docMeta.label?.(doc) ||
-                  doc.name ||
-                  docMeta.placeholder || ['unnamed object threads label', { ns: THREAD_PLUGIN }];
+                const meta = metadataResolver(getTypename(object) ?? '');
+                const label = meta.label?.(object) ||
+                  object.name ||
+                  meta.placeholder || ['unnamed object threads label', { ns: THREAD_PLUGIN }];
 
                 const viewState = getViewState(subjectId);
 
                 return {
                   id,
                   type: 'orphan-comments-for-subject',
-                  data: doc,
+                  data: object,
                   properties: {
                     icon: meta.iconComponent,
                     label,
