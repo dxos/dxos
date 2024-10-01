@@ -10,7 +10,7 @@ export const HELP_PLUGIN = 'dxos.org/plugin/help';
 export default pluginMeta({
   id: HELP_PLUGIN,
   name: 'Help',
-  iconSymbol: 'ph--info--regular',
+  icon: 'ph--info--regular',
 });
 
 const HELP_ACTION = `${HELP_PLUGIN}/action`;

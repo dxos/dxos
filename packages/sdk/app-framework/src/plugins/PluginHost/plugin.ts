@@ -66,7 +66,7 @@ export type Plugin<TProvides = {}> = {
     /**
      * A grep-able symbol string which can be resolved to an icon asset by @ch-ui/icons, via @ch-ui/vite-plugin-icons.
      */
-    iconSymbol?: string;
+    icon?: string;
   };
 
   /**

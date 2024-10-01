@@ -11,5 +11,5 @@ export default pluginMeta({
   name: 'Excalidraw',
   description: 'Diagramming tool.',
   tags: ['experimental'],
-  iconSymbol: 'ph--compass-tool--regular',
+  icon: 'ph--compass-tool--regular',
 });

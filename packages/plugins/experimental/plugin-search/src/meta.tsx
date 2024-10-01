@@ -12,5 +12,5 @@ export default pluginMeta({
   name: 'Search',
   description: 'Search ECHO spaces for content.',
   tags: ['experimental'],
-  iconSymbol: 'ph--magnifying-glass--regular',
+  icon: 'ph--magnifying-glass--regular',
 });

@@ -33,7 +33,7 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
         records: {
           [FileType.typename]: {
             placeholder: ['file title placeholder', { ns: IPFS_PLUGIN }],
-            iconSymbol: 'ph--file-cloud--regular',
+            icon: 'ph--file-cloud--regular',
           },
         },
       },

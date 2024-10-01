@@ -43,7 +43,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         records: {
           [StackViewType.typename]: {
             placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
-            iconSymbol: 'ph--stack-simple--regular',
+            icon: 'ph--stack-simple--regular',
           },
           [SECTION_IDENTIFIER]: {
             parse: (section: { object: EchoReactiveObject<any> }, type: string) => {

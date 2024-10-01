@@ -33,7 +33,7 @@ const Story = () => {
         tags: faker.datatype.boolean({ probability: 0.6 })
           ? [faker.helpers.arrayElement(['experimental', 'beta', 'alpha', 'stable', 'new', '新発売'])]
           : undefined,
-        iconSymbol: faker.helpers.arrayElement(icons),
+        icon: faker.helpers.arrayElement(icons),
       }),
       { count: 16 },
     ),

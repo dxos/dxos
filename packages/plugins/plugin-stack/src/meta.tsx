@@ -9,5 +9,5 @@ export default {
   id: STACK_PLUGIN,
   // TODO(wittjosiah): Prevents "stacks" language from being exposed to users in settings panel.
   name: 'Collections',
-  iconSymbol: 'ph--stack-simple--regular',
+  icon: 'ph--stack-simple--regular',
 };

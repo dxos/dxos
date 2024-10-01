@@ -10,5 +10,5 @@ export default pluginMeta({
   id: SKETCH_PLUGIN,
   name: 'Sketch',
   description: 'Digital whiteboard and diagram editor.',
-  iconSymbol: 'ph--compass-tool--regular',
+  icon: 'ph--compass-tool--regular',
 });

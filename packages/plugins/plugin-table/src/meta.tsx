@@ -10,5 +10,5 @@ export default pluginMeta({
   id: TABLE_PLUGIN,
   name: 'Tables',
   description: 'Create and manage tables.',
-  iconSymbol: 'ph--table--regular',
+  icon: 'ph--table--regular',
 });

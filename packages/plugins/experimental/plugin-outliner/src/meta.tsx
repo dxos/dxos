@@ -11,5 +11,5 @@ export default pluginMeta({
   name: 'Outliner',
   description: 'Hierarchical note editor.',
   tags: ['experimental'],
-  iconSymbol: 'ph--tree-structure--regular',
+  icon: 'ph--tree-structure--regular',
 });

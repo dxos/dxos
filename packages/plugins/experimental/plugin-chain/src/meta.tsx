@@ -11,5 +11,5 @@ export default pluginMeta({
   name: 'Chain',
   description: 'AI prompt configuration.',
   tags: ['experimental'],
-  iconSymbol: 'ph--head-circuit--regular',
+  icon: 'ph--head-circuit--regular',
 });

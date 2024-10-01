@@ -25,7 +25,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
         records: {
           [GridType.typename]: {
             placeholder: ['grid title placeholder', { ns: GRID_PLUGIN }],
-            iconSymbol: 'ph--squares-four--regular',
+            icon: 'ph--squares-four--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (grid: GridType) => loadObjectReferences(grid, (grid) => grid.items),
           },
@@ -82,7 +82,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                   },
                   properties: {
                     label: ['create grid label', { ns: GRID_PLUGIN }],
-                    iconSymbol: 'ph--squares-four--regular',
+                    icon: 'ph--squares-four--regular',
                     testId: 'gridPlugin.createObject',
                   },
                 },

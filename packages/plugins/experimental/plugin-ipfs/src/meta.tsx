@@ -11,5 +11,5 @@ export default pluginMeta({
   name: 'IPFS',
   description: 'Upload & view files with IPFS.',
   tags: ['experimental'],
-  iconSymbol: 'ph--file-cloud--regular',
+  icon: 'ph--file-cloud--regular',
 });

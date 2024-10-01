@@ -25,7 +25,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         records: {
           [KanbanType.typename]: {
             placeholder: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
-            iconSymbol: 'ph--kanban--regular',
+            icon: 'ph--kanban--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (kanban: KanbanType) => loadObjectReferences(kanban, (kanban) => kanban.columns),
           },
@@ -76,7 +76,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
                   },
                   properties: {
                     label: ['create kanban label', { ns: KANBAN_PLUGIN }],
-                    iconSymbol: 'ph--kanban--regular',
+                    icon: 'ph--kanban--regular',
                     testId: 'kanbanPlugin.createObject',
                   },
                 },

@@ -11,5 +11,5 @@ export default pluginMeta({
   name: 'Maps',
   description: 'Display objects on maps.',
   tags: ['experimental'],
-  iconSymbol: 'ph--compass--regular',
+  icon: 'ph--compass--regular',
 });

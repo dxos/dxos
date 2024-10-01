@@ -71,7 +71,7 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
                 },
                 properties: {
                   label: ['search action label', { ns: SEARCH_PLUGIN }],
-                  iconSymbol: 'ph--magnifying-glass--regular',
+                  icon: 'ph--magnifying-glass--regular',
                   keyBinding: {
                     macos: 'shift+meta+f',
                     windows: 'shift+alt+f',

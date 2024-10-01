@@ -12,5 +12,5 @@ export default pluginMeta({
   name: 'Threads',
   // TODO(wittjosiah): Update once scope of threads expands.
   description: 'Comment threads on documents.',
-  iconSymbol: 'ph--chat--regular',
+  icon: 'ph--chat--regular',
 });

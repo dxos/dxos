@@ -9,5 +9,5 @@ export const TEMPLATE_PLUGIN = 'dxos.org/plugin/template';
 export default pluginMeta({
   id: TEMPLATE_PLUGIN,
   name: 'Template',
-  iconSymbol: 'ph--asterisk--regular',
+  icon: 'ph--asterisk--regular',
 });

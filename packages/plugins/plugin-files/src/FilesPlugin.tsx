@@ -303,7 +303,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   },
                   properties: {
                     label: ['export label', { ns: FILES_PLUGIN }],
-                    iconSymbol: 'ph--floppy-disk--regular',
+                    icon: 'ph--floppy-disk--regular',
                   },
                 },
                 {
@@ -316,7 +316,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   },
                   properties: {
                     label: ['import label', { ns: FILES_PLUGIN }],
-                    iconSymbol: 'ph--folder-open--regular',
+                    icon: 'ph--folder-open--regular',
                   },
                 },
               ],
@@ -361,7 +361,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   },
                   properties: {
                     label: ['open file label', { ns: FILES_PLUGIN }],
-                    iconSymbol: 'ph--file-plus--regular',
+                    icon: 'ph--file-plus--regular',
                   },
                 },
                 ...('showDirectoryPicker' in window
@@ -379,7 +379,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                         },
                         properties: {
                           label: ['open directory label', { ns: FILES_PLUGIN }],
-                          iconSymbol: 'ph--folder-plus--regular',
+                          icon: 'ph--folder-plus--regular',
                         },
                       },
                     ]
@@ -392,7 +392,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   data: entity,
                   properties: {
                     label: entity.title,
-                    iconSymbol: 'children' in entity ? 'ph--folder--regular' : 'ph--file--regular',
+                    icon: 'children' in entity ? 'ph--folder--regular' : 'ph--file--regular',
                     modified: 'children' in entity ? undefined : entity.modified,
                   },
                 })),
@@ -409,7 +409,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   data: child,
                   properties: {
                     label: child.title,
-                    iconSymbol: 'ph--file--regular',
+                    icon: 'ph--file--regular',
                   },
                 })),
             }),
@@ -430,7 +430,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   },
                   properties: {
                     label: ['close label', { ns: FILES_PLUGIN }],
-                    iconSymbol: 'ph--x--regular',
+                    icon: 'ph--x--regular',
                   },
                 },
                 ...(node.data.permission !== 'granted'
@@ -446,7 +446,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                         },
                         properties: {
                           label: ['re-open label', { ns: FILES_PLUGIN }],
-                          iconSymbol: 'ph--plugs--regular',
+                          icon: 'ph--plugs--regular',
                           disposition: 'default',
                         },
                       },
@@ -465,7 +465,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                         },
                         properties: {
                           label: [node.data.handle ? 'save label' : 'save as label', { ns: FILES_PLUGIN }],
-                          iconSymbol: 'ph--floppy-disk--regular',
+                          icon: 'ph--floppy-disk--regular',
                         },
                       },
                     ]

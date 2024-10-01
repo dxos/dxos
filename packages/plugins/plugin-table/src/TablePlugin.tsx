@@ -30,7 +30,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           [TableType.typename]: {
             label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
-            iconSymbol: 'ph--table--regular',
+            icon: 'ph--table--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (table: TableType) => [], // loadObjectReferences(table, (table) => [table.schema]),
           },
@@ -79,7 +79,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                   },
                   properties: {
                     label: ['create object label', { ns: TABLE_PLUGIN }],
-                    iconSymbol: 'ph--table--regular',
+                    icon: 'ph--table--regular',
                     testId: 'tablePlugin.createObject',
                   },
                 },

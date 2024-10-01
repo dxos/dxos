@@ -10,5 +10,5 @@ export default pluginMeta({
   id: CHESS_PLUGIN,
   name: 'Chess',
   description: 'Play chess.',
-  iconSymbol: 'ph--shield-chevron--regular',
+  icon: 'ph--shield-chevron--regular',
 });

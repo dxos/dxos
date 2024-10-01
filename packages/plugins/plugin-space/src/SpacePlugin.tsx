@@ -343,7 +343,7 @@ export const SpacePlugin = ({
         records: {
           [CollectionType.typename]: {
             placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
-            iconSymbol: 'ph--cards-three--regular',
+            icon: 'ph--cards-three--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (collection: CollectionType) =>
               loadObjectReferences(collection, (collection) => [
@@ -550,7 +550,7 @@ export const SpacePlugin = ({
                   },
                   properties: {
                     label: ['create space label', { ns: SPACE_PLUGIN }],
-                    iconSymbol: 'ph--plus--regular',
+                    icon: 'ph--plus--regular',
                     disposition: 'toolbar',
                     testId: 'spacePlugin.createSpace',
                   },
@@ -570,7 +570,7 @@ export const SpacePlugin = ({
                   },
                   properties: {
                     label: ['join space label', { ns: SPACE_PLUGIN }],
-                    iconSymbol: 'ph--sign-in--regular',
+                    icon: 'ph--sign-in--regular',
                     testId: 'spacePlugin.joinSpace',
                   },
                 },
@@ -1037,7 +1037,7 @@ export const SpacePlugin = ({
                             title: translations[0]['en-US'][SPACE_PLUGIN]['space limit label'],
                             description: translations[0]['en-US'][SPACE_PLUGIN]['space limit description'],
                             duration: 5_000,
-                            iconSymbol: 'ph--warning--regular',
+                            icon: 'ph--warning--regular',
                             actionLabel: translations[0]['en-US'][SPACE_PLUGIN]['remove deleted objects label'],
                             actionAlt: translations[0]['en-US'][SPACE_PLUGIN]['remove deleted objects alt'],
                             // TODO(wittjosiah): Use OS namespace.

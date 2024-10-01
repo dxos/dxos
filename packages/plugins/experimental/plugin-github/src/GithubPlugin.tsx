@@ -59,7 +59,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                     type: GITHUB_PLUGIN,
                     properties: {
                       label: ['plugin name', { ns: GITHUB_PLUGIN }],
-                      iconSymbol: 'ph--github-logo--regular',
+                      icon: 'ph--github-logo--regular',
                     },
                     // TODO(wittjosiah): Add documents.
                     // nodes: documents.map((doc) => ({}),

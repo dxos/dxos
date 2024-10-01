@@ -10,5 +10,5 @@ export default pluginMeta({
   id: PRESENTER_PLUGIN,
   name: 'Presenter',
   description: 'Present documents as slideshows.',
-  iconSymbol: 'ph--presentation--regular',
+  icon: 'ph--presentation--regular',
 });

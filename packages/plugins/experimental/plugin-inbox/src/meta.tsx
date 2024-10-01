@@ -12,5 +12,5 @@ export default pluginMeta({
   name: 'Inbox',
   description: 'Manages your email, calendar, and contacts.',
   tags: ['experimental'],
-  iconSymbol: 'ph--flower--regular',
+  icon: 'ph--flower--regular',
 });

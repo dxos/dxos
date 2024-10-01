@@ -85,7 +85,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
                   },
                   properties: {
                     label: ['toggle presentation label', { ns: PRESENTER_PLUGIN }],
-                    iconSymbol: 'ph--presentation--regular',
+                    icon: 'ph--presentation--regular',
                     keyBinding: {
                       macos: 'shift+meta+p',
                       windows: 'shift+alt+p',

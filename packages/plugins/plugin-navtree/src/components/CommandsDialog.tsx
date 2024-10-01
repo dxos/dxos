@@ -93,7 +93,7 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
                 disabled={action.properties.disabled}
                 {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
               >
-                <Icon icon={action.properties.iconSymbol} size={4} />
+                <Icon icon={action.properties.icon} size={4} />
                 <span className='grow truncate'>{label}</span>
                 {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
               </SearchList.Item>

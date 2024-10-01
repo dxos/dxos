@@ -39,7 +39,7 @@ const SearchListResult = forwardRef<HTMLDivElement, SearchListResultProps>(({ no
       onSelect={() => onSelect?.(node!.id)}
       ref={forwardedRef}
     >
-      <Icon size={5} icon={node?.properties.iconSymbol} />
+      <Icon size={5} icon={node?.properties.icon} />
       <span className='is-0 grow truncate'>{label}</span>
     </SearchList.Item>
   );

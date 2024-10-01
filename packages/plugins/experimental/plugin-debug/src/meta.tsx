@@ -11,5 +11,5 @@ export default pluginMeta({
   name: 'Debug',
   description: 'DXOS debugging tools.',
   tags: ['experimental'],
-  iconSymbol: 'ph--bug--regular',
+  icon: 'ph--bug--regular',
 });

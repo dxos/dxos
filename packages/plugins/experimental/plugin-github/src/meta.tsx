@@ -13,5 +13,5 @@ export default pluginMeta({
   name: 'GitHub',
   description: 'GitHub integration.',
   tags: ['experimental'],
-  iconSymbol: 'ph--github-logo--regular',
+  icon: 'ph--github-logo--regular',
 });

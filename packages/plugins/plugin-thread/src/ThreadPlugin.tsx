@@ -93,7 +93,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         records: {
           [ChannelType.typename]: {
             placeholder: ['channel title placeholder', { ns: THREAD_PLUGIN }],
-            iconSymbol: 'ph--chat--regular',
+            icon: 'ph--chat--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (channel: ChannelType) => loadObjectReferences(channel, (channel) => channel.threads),
           },
@@ -160,7 +160,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   type: 'orphan-comments-for-subject',
                   data: doc,
                   properties: {
-                    icon: meta.iconSymbol,
+                    icon: meta.icon,
                     label,
                     showResolvedThreads: viewState.showResolvedThreads,
                   },
@@ -196,7 +196,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                       menuItemType: 'toggle',
                       isChecked: viewState.showResolvedThreads,
                       testId: 'threadPlugin.toggleShowResolved',
-                      iconSymbol: viewState.showResolvedThreads ? 'ph--eye-slash--regular' : 'ph--eye--regular',
+                      icon: viewState.showResolvedThreads ? 'ph--eye-slash--regular' : 'ph--eye--regular',
                     },
                   },
                 ];
@@ -228,7 +228,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     },
                     properties: {
                       label: ['create channel label', { ns: THREAD_PLUGIN }],
-                      iconSymbol: 'ph--chat--regular',
+                      icon: 'ph--chat--regular',
                       testId: 'threadPlugin.createObject',
                     },
                   },

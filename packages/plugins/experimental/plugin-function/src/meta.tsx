@@ -11,5 +11,5 @@ export default pluginMeta({
   name: 'Rules',
   description: 'Rules for distributed functions.',
   tags: ['experimental'],
-  iconSymbol: 'ph--function--regular',
+  icon: 'ph--function--regular',
 });

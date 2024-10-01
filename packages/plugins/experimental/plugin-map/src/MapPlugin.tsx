@@ -37,7 +37,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         records: {
           [MapType.typename]: {
             placeholder: ['object title placeholder', { ns: MAP_PLUGIN }],
-            iconSymbol: 'ph--compass--regular',
+            icon: 'ph--compass--regular',
           },
         },
       },
@@ -85,7 +85,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                     },
                     properties: {
                       label: ['create object label', { ns: MAP_PLUGIN }],
-                      iconSymbol: 'ph--compass--regular',
+                      icon: 'ph--compass--regular',
                       testId: 'mapPlugin.createObject',
                     },
                   },
@@ -111,7 +111,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                     },
                     properties: {
                       label: ['toggle type label', { ns: MAP_PLUGIN }],
-                      iconSymbol: 'ph--compass--regular',
+                      icon: 'ph--compass--regular',
                     },
                   },
                 ];

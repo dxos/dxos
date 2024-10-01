@@ -11,5 +11,5 @@ export default pluginMeta({
   name: 'Grid',
   description: 'Place objects as cards on a grid.',
   tags: ['experimental'],
-  iconSymbol: 'ph--squares-four--regular',
+  icon: 'ph--squares-four--regular',
 });

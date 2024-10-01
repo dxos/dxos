@@ -35,7 +35,7 @@ const DropComponent: MosaicTileComponent<NavTreeItemNode> = forwardRef(({ isOver
     >
       {item ? (
         <>
-          <Icon icon={item.node.properties?.iconSymbol ?? 'ph--placeholder--regular'} size={4} />
+          <Icon icon={item.node.properties?.icon ?? 'ph--placeholder--regular'} size={4} />
           {toLocalizedString(item.node.properties?.label ?? 'never', t)}
         </>
       ) : (

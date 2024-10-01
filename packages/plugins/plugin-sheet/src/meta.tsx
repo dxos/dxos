@@ -10,5 +10,5 @@ export default pluginMeta({
   id: SHEET_PLUGIN,
   name: 'Sheet',
   description: 'A simple spreadsheet plugin.',
-  iconSymbol: 'ph--grid-nine--regular',
+  icon: 'ph--grid-nine--regular',
 });

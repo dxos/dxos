@@ -25,15 +25,15 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
         records: {
           [MailboxType.typename]: {
             placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
-            iconSymbol: 'ph--envelope--regular',
+            icon: 'ph--envelope--regular',
           },
           [ContactsType.typename]: {
             placeholder: ['contacts title placeholder', { ns: INBOX_PLUGIN }],
-            iconSymbol: 'ph--address-book--regular',
+            icon: 'ph--address-book--regular',
           },
           [CalendarType.typename]: {
             placeholder: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
-            iconSymbol: 'ph--calendar--regular',
+            icon: 'ph--calendar--regular',
           },
           [EventType.typename]: {
             // TODO(wittjosiah): Move out of metadata.
@@ -78,7 +78,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                   },
                   properties: {
                     label: ['create mailbox label', { ns: INBOX_PLUGIN }],
-                    iconSymbol: 'ph--envelope--regular',
+                    icon: 'ph--envelope--regular',
                   },
                 },
                 {
@@ -92,7 +92,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                   },
                   properties: {
                     label: ['create contacts label', { ns: INBOX_PLUGIN }],
-                    iconSymbol: 'ph--address-book--regular',
+                    icon: 'ph--address-book--regular',
                   },
                 },
                 {
@@ -106,7 +106,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                   },
                   properties: {
                     label: ['create calendar label', { ns: INBOX_PLUGIN }],
-                    iconSymbol: 'ph--calendar--regular',
+                    icon: 'ph--calendar--regular',
                   },
                 },
               ];

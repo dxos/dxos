@@ -10,5 +10,5 @@ export default pluginMeta({
   id: STATUS_BAR_PLUGIN,
   name: 'Status Bar',
   description: 'Display a bar with status and actions.',
-  iconSymbol: 'ph--info--regular',
+  icon: 'ph--info--regular',
 });

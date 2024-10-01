@@ -10,5 +10,5 @@ export default pluginMeta({
   id: MERMAID_PLUGIN,
   name: 'Mermaid',
   description: 'Tool that renders text definitions to create diagrams.',
-  iconSymbol: 'ph--anchor-simple--regular',
+  icon: 'ph--anchor-simple--regular',
 });

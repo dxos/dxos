@@ -45,7 +45,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange, 
   return (
     <DensityProvider density='fine'>
       <List classNames='mb-4 select-none'>
-        {plugins.map(({ id, name, description, homePage, iconSymbol = 'ph--circle--duotone' }) => {
+        {plugins.map(({ id, name, description, homePage, icon = 'ph--circle--duotone' }) => {
           const isEnabled = enabled.includes(id);
           const isLoaded = loaded.includes(id);
           const reloadRequired = isEnabled !== isLoaded;
@@ -61,7 +61,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange, 
                 aria-describedby={descriptionId}
                 classNames={['flex gap-2 cursor-pointer plb-2 pli-2 -mli-2 rounded', ghostHover]}
               >
-                <Icon icon={iconSymbol} size={6} classNames='shrink-0 mbs-1' />
+                <Icon icon={icon} size={6} classNames='shrink-0 mbs-1' />
                 <div role='none' className={mx(fineBlockSize, 'grow pbs-1 pl-1')}>
                   <label htmlFor={inputId} id={labelId} className='truncate'>
                     {name ?? id}

@@ -11,5 +11,5 @@ export default pluginMeta({
   name: 'Explorer',
   description: 'Explore the ECHO hypergraph.',
   tags: ['experimental'],
-  iconSymbol: 'ph--graph--regular',
+  icon: 'ph--graph--regular',
 });

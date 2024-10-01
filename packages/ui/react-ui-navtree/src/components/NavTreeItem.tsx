@@ -196,7 +196,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
                 id: node.id,
                 level,
                 label: node.properties ? toLocalizedString(node.properties.label, t) : 'never',
-                iconSymbol: node.properties?.iconSymbol,
+                icon: node.properties?.icon,
                 open,
                 onItemOpenChange,
                 current: current?.has(node.id),
@@ -212,7 +212,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
           {!active && primaryAction?.properties?.disposition === 'toolbar' ? (
             <NavTreeItemAction
               label={toLocalizedString(primaryAction.properties?.label, t)}
-              iconSymbol={primaryAction.properties?.iconSymbol ?? 'ph--placeholder--regular'}
+              icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
               actionsNode={primaryAction}
               menuActions={isAction(primaryAction) ? [primaryAction] : item.groupedActions?.[primaryAction.id]}
               active={active}
@@ -228,7 +228,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             <ActionRoot>
               <NavTreeItemActionDropdownMenu
                 label={t('tree item actions label')}
-                iconSymbol='ph--dots-three-vertical--regular'
+                icon='ph--dots-three-vertical--regular'
                 actionsNode={primaryAction}
                 menuActions={actions}
                 suppressNextTooltip={suppressNextTooltip}

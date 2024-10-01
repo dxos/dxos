@@ -100,7 +100,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
                   },
                   properties: {
                     label: ['create object label', { ns: SCRIPT_PLUGIN }],
-                    iconSymbol: 'ph--code--regular',
+                    icon: 'ph--code--regular',
                     testId: 'scriptPlugin.createObject',
                   },
                 },

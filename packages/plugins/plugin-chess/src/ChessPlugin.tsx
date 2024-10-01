@@ -24,7 +24,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
         records: {
           [GameType.typename]: {
             placeholder: ['game title placeholder', { ns: CHESS_PLUGIN }],
-            iconSymbol: 'ph--shield-chevron--regular',
+            icon: 'ph--shield-chevron--regular',
           },
         },
       },
@@ -70,7 +70,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                   },
                   properties: {
                     label: ['create game label', { ns: CHESS_PLUGIN }],
-                    iconSymbol: 'ph--shield-chevron--regular',
+                    icon: 'ph--shield-chevron--regular',
                     testId: 'chessPlugin.createObject',
                   },
                 },

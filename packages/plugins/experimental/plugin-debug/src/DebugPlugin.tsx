@@ -111,7 +111,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   type: 'dxos.org/plugin/debug/devtools',
                   properties: {
                     label: ['devtools label', { ns: DEBUG_PLUGIN }],
-                    iconSymbol: 'ph--hammer--regular',
+                    icon: 'ph--hammer--regular',
                   },
                 },
               ],
@@ -128,7 +128,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   data: { graph: graphPlugin?.provides.graph },
                   properties: {
                     label: ['debug label', { ns: DEBUG_PLUGIN }],
-                    iconSymbol: 'ph--bug--regular',
+                    icon: 'ph--bug--regular',
                   },
                 },
               ],
@@ -147,7 +147,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                     data: { space },
                     properties: {
                       label: ['debug label', { ns: DEBUG_PLUGIN }],
-                      iconSymbol: 'ph--bug--regular',
+                      icon: 'ph--bug--regular',
                     },
                   },
                 ];

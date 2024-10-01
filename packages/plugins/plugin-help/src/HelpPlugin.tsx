@@ -69,7 +69,7 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
                 },
                 properties: {
                   label: ['open help tour', { ns: HELP_PLUGIN }],
-                  iconSymbol: 'ph--info--regular',
+                  icon: 'ph--info--regular',
                   keyBinding: {
                     macos: 'shift+meta+/',
                     // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
@@ -93,7 +93,7 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
                 },
                 properties: {
                   label: ['open shortcuts label', { ns: HELP_PLUGIN }],
-                  iconSymbol: 'ph--keyboard--regular',
+                  icon: 'ph--keyboard--regular',
                   keyBinding: {
                     macos: 'meta+ctrl+/',
                   },

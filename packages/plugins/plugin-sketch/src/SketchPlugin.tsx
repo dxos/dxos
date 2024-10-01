@@ -37,7 +37,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         records: {
           [DiagramType.typename]: {
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
-            iconSymbol: 'ph--compass-tool--regular',
+            icon: 'ph--compass-tool--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (diagram: DiagramType) => loadObjectReferences(diagram, (diagram) => [diagram.canvas]),
             serializer,
@@ -89,7 +89,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                     },
                     properties: {
                       label: ['create object label', { ns: SKETCH_PLUGIN }],
-                      iconSymbol: 'ph--compass-tool--regular',
+                      icon: 'ph--compass-tool--regular',
                       testId: 'sketchPlugin.createObject',
                     },
                   },

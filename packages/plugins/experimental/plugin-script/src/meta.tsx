@@ -11,5 +11,5 @@ export default pluginMeta({
   name: 'Scripts',
   description: 'Distributed functions.',
   tags: ['experimental'],
-  iconSymbol: 'ph--code--regular',
+  icon: 'ph--code--regular',
 });
