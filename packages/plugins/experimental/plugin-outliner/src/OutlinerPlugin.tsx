@@ -26,7 +26,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
         records: {
           [TreeType.typename]: {
             placeholder: ['object placeholder', { ns: OUTLINER_PLUGIN }],
-            icon: (props: IconProps) => <TreeStructure {...props} />,
+            icon: 'ph--tree-structure--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (tree: TreeType) => loadObjectReferences(tree, (tree) => [tree.root]),
           },
