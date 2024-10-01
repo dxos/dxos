@@ -111,7 +111,7 @@ const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>
   useLayoutEffect(() => {
     if (dxGrid.current && props.getCells) {
       dxGrid.current.getCells = props.getCells;
-      dxGrid.current.requestUpdate();
+      dxGrid.current.requestUpdate('initialCells');
     }
   }, [props.getCells]);
 

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { type GridEditing, type GridContentProps } from '@dxos/react-ui-grid';
@@ -53,7 +53,7 @@ const createDxGridRows = (model: SheetModel): GridContentProps['rows'] => {
 export const useSheetModelDxGridProps = (
   model: SheetModel,
   formatting: FormattingModel,
-): Pick<GridContentProps, 'columns' | 'rows'> & { cells: NonNullable<GridContentProps['initialCells']> } => {
+): Pick<GridContentProps, 'columns' | 'rows' | 'getCells'> => {
   const [dxGridCells, setDxGridCells] = useState<NonNullable<GridContentProps['initialCells']>>(
     createDxGridCells(model, formatting),
   );
@@ -86,5 +86,9 @@ export const useSheetModelDxGridProps = (
     };
   }, [model]);
 
-  return { cells: dxGridCells, columns: dxGridColumns, rows: dxGridRows };
+  const getCells = useCallback(() => {
+    return dxGridCells;
+  }, [dxGridCells]);
+
+  return { getCells, columns: dxGridColumns, rows: dxGridRows };
 };

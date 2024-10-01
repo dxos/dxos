@@ -745,7 +745,8 @@ export class DxGrid extends LitElement {
   override willUpdate(changedProperties: Map<string, any>) {
     if (
       this.getCells &&
-      (changedProperties.has('visColMin') ||
+      (changedProperties.has('initialCells') ||
+        changedProperties.has('visColMin') ||
         changedProperties.has('visColMax') ||
         changedProperties.has('visRowMin') ||
         changedProperties.has('visRowMax'))
