@@ -10,7 +10,7 @@ import { Table } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ObjectTable, type ObjectTableProps } from './ObjectTable';
-import { Toolbar, type ToolbarAction } from '../components/Toolbar';
+import { Toolbar, type ToolbarAction } from './Toolbar';
 
 // TODO(Zan): Factor out, copied this from MarkdownPlugin.
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';

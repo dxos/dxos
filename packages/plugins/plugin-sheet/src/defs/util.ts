@@ -3,19 +3,16 @@
 //
 
 import { randomBytes } from '@dxos/crypto';
-import { type FunctionType } from '@dxos/plugin-script';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { create } from '@dxos/echo-schema';
 
-import { defaultFunctions } from './functions';
-import { type CellAddress, type CellRange } from './types';
-import { type SheetType } from '../types';
-
-// TODO(wittjosiah): Factor out.
-const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
+import { type CellAddress, type CellRange, DEFAULT_COLUMNS, DEFAULT_ROWS, MAX_COLUMNS, MAX_ROWS } from './types';
+import { type CreateSheetOptions, type SheetSize, SheetType } from '../types';
 
 // TODO(burdon): Factor out from dxos/protocols to new common package.
 export class ApiError extends Error {}
+
 export class ReadonlyException extends ApiError {}
+
 export class RangeException extends ApiError {
   constructor(n: number) {
     super();
@@ -34,11 +31,47 @@ export const createIndex = (length = 8): string => {
 
 export const createIndices = (length: number): string[] => Array.from({ length }).map(() => createIndex());
 
+export const insertIndices = (indices: string[], i: number, n: number, max: number) => {
+  if (i + n > max) {
+    throw new RangeException(i + n);
+  }
+
+  const idx = createIndices(n);
+  indices.splice(i, 0, ...idx);
+};
+
+export const initialize = (
+  sheet: SheetType,
+  { rows = DEFAULT_ROWS, columns = DEFAULT_COLUMNS }: Partial<SheetSize> = {},
+) => {
+  if (!sheet.rows.length) {
+    insertIndices(sheet.rows, 0, rows, MAX_ROWS);
+  }
+  if (!sheet.columns.length) {
+    insertIndices(sheet.columns, 0, columns, MAX_COLUMNS);
+  }
+};
+
+export const createSheet = ({ title, ...size }: CreateSheetOptions = {}): SheetType => {
+  const sheet = create(SheetType, {
+    title,
+    cells: {},
+    rows: [],
+    columns: [],
+    rowMeta: {},
+    columnMeta: {},
+    formatting: {},
+  });
+
+  initialize(sheet, size);
+  return sheet;
+};
+
 /**
  * E.g., "A1" => "CA2@CB3".
  */
 export const addressToIndex = (sheet: SheetType, cell: CellAddress): string => {
-  return `${sheet.columns[cell.column]}@${sheet.rows[cell.row]}`;
+  return `${sheet.columns[cell.col]}@${sheet.rows[cell.row]}`;
 };
 
 /**
@@ -47,7 +80,7 @@ export const addressToIndex = (sheet: SheetType, cell: CellAddress): string => {
 export const addressFromIndex = (sheet: SheetType, idx: string): CellAddress => {
   const [column, row] = idx.split('@');
   return {
-    column: sheet.columns.indexOf(column),
+    col: sheet.columns.indexOf(column),
     row: sheet.rows.indexOf(row),
   };
 };
@@ -67,22 +100,15 @@ export const rangeFromIndex = (sheet: SheetType, idx: string): CellRange => {
   return { from, to };
 };
 
-// TODO(burdon): Factor out.
-export const pickOne = <T>(values: T[]): T => values[Math.floor(Math.random() * values.length)];
-export const pickSome = <T>(values: T[], n = 1): T[] => {
-  const result = new Set<T>();
-  while (result.size < n) {
-    result.add(pickOne(values));
-  }
-  return Array.from(result.values());
-};
-
+/**
+ * Find closest cell to cursor.
+ */
 export const closest = (cursor: CellAddress, cells: CellAddress[]): CellAddress | undefined => {
   let closestCell: CellAddress | undefined;
   let closestDistance = Number.MAX_SAFE_INTEGER;
 
   for (const cell of cells) {
-    const distance = Math.abs(cell.row - cursor.row) + Math.abs(cell.column - cursor.column);
+    const distance = Math.abs(cell.row - cursor.row) + Math.abs(cell.col - cursor.col);
     if (distance < closestDistance) {
       closestCell = cell;
       closestDistance = distance;
@@ -97,8 +123,8 @@ export const closest = (cursor: CellAddress, cells: CellAddress[]): CellAddress 
  * Sorts primarily by row, then by column if rows are equal.
  */
 export const compareIndexPositions = (sheet: SheetType, indexA: string, indexB: string): number => {
-  const { row: rowA, column: columnA } = addressFromIndex(sheet, indexA);
-  const { row: rowB, column: columnB } = addressFromIndex(sheet, indexB);
+  const { row: rowA, col: columnA } = addressFromIndex(sheet, indexA);
+  const { row: rowB, col: columnB } = addressFromIndex(sheet, indexB);
 
   // Sort by row first, then by column.
   if (rowA !== rowB) {
@@ -107,44 +133,3 @@ export const compareIndexPositions = (sheet: SheetType, indexA: string, indexB: 
     return columnA - columnB;
   }
 };
-
-/**
- * Map from binding to fully qualified ECHO ID.
- */
-export const mapFormulaBindingToId =
-  (functions: FunctionType[]) =>
-  (formula: string): string => {
-    return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
-      if (defaultFunctions.find((fn) => fn.name === binding) || binding === 'EDGE') {
-        return match;
-      }
-
-      const fn = functions.find((fn) => fn.binding === binding);
-      if (fn) {
-        return `${fullyQualifiedId(fn)}(${args})`;
-      } else {
-        return match;
-      }
-    });
-  };
-
-/**
- * Map from fully qualified ECHO ID to binding.
- */
-export const mapFormulaBindingFromId =
-  (functions: FunctionType[]) =>
-  (formula: string): string => {
-    return formula.replace(/([a-zA-Z0-9]+):([a-zA-Z0-9]+)\((.*)\)/g, (match, spaceId, objectId, args) => {
-      const id = `${spaceId}:${objectId}`;
-      if (id.length !== OBJECT_ID_LENGTH) {
-        return match;
-      }
-
-      const fn = functions.find((fn) => fullyQualifiedId(fn) === id);
-      if (fn?.binding) {
-        return `${fn.binding}(${args})`;
-      } else {
-        return match;
-      }
-    });
-  };

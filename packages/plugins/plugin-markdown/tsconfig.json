@@ -8,6 +8,7 @@
       "ESNext"
     ],
     "types": [
+      "@dxos/typings",
       "node"
     ]
   },

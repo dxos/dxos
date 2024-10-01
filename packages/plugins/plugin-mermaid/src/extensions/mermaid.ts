@@ -7,9 +7,9 @@ import {
   type EditorState,
   type Extension,
   type RangeSet,
-  type Transaction,
   RangeSetBuilder,
   StateField,
+  type Transaction,
 } from '@codemirror/state';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 import _mermaid from 'mermaid';
@@ -29,7 +29,6 @@ export const mermaid = (options: MermaidOptions = {}): Extension => {
 
 const update = (state: EditorState, options: MermaidOptions) => {
   const builder = new RangeSetBuilder();
-
   syntaxTree(state).iterate({
     enter: (node) => {
       if (node.name === 'FencedCode') {
@@ -77,8 +76,7 @@ class MermaidWidget extends WidgetType {
   }
 
   override toDOM(view: EditorView) {
-    const wrapper = document.createElement('div');
-
+    const div = document.createElement('div');
     setTimeout(async () => {
       // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/config.type.ts
       _mermaid.initialize({
@@ -98,13 +96,13 @@ class MermaidWidget extends WidgetType {
       });
 
       // TODO(burdon): Cache?
-      const svg = await this.render(wrapper);
+      const svg = await this.render(div);
       if (this._error) {
-        wrapper.className = 'cm-mermaid-error';
-        wrapper.innerText = this._error;
+        div.className = 'cm-mermaid-error';
+        div.innerText = this._error;
       } else {
-        wrapper.className = 'cm-mermaid';
-        wrapper.innerHTML = svg!;
+        div.className = 'cm-mermaid';
+        div.innerHTML = svg!;
 
         // const label = document.createElement('span');
         // label.innerText = 'Mermaid';
@@ -114,7 +112,7 @@ class MermaidWidget extends WidgetType {
       }
     });
 
-    return wrapper;
+    return div;
   }
 
   async render(container: Element): Promise<string | undefined> {

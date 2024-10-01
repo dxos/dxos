@@ -5607,9 +5607,6 @@ importers:
       '@dxos/plugin-settings':
         specifier: workspace:*
         version: link:../../plugin-settings
-      '@dxos/plugin-sheet':
-        specifier: workspace:*
-        version: link:../../plugin-sheet
       '@dxos/plugin-sketch':
         specifier: workspace:*
         version: link:../../plugin-sketch
@@ -8068,6 +8065,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@dxos/plugin-script':
         specifier: workspace:*
         version: link:../experimental/plugin-script
@@ -8080,6 +8080,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../ui/primitives/react-hooks
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -8154,6 +8157,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../../ui/react-ui-types

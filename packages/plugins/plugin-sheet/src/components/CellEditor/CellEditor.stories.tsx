@@ -14,8 +14,9 @@ import { withTheme } from '@dxos/storybook-utils';
 import { HyperFormula } from '#hyperformula';
 import { CellEditor, type CellEditorProps } from './CellEditor';
 import { sheetExtension } from './extension';
-import { defaultFunctions } from '../../model';
-import { createSheet, SheetType } from '../../types';
+import { createSheet } from '../../defs';
+import { defaultFunctions } from '../../graph';
+import { SheetType } from '../../types';
 
 export default {
   title: 'plugin-sheet/CellEditor',
