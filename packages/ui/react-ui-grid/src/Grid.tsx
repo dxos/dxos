@@ -12,7 +12,7 @@ import React, {
   forwardRef,
   type PropsWithChildren,
   useCallback,
-  useEffect,
+  useLayoutEffect,
   useState,
 } from 'react';
 
@@ -105,21 +105,22 @@ const GRID_CONTENT_NAME = 'GridContent';
 
 const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>((props, forwardedRef) => {
   const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME, props.__gridScope);
-  const ref = useForwardedRef(forwardedRef);
+  const dxGrid = useForwardedRef(forwardedRef);
 
-  useEffect(() => {
-    if (ref.current && props.getCells) {
-      ref.current.getCells = props.getCells;
-      ref.current.requestUpdate();
+  // Needed instead of `useEffect` to ensure the DxGrid ref is defined.
+  useLayoutEffect(() => {
+    if (dxGrid.current && props.getCells) {
+      dxGrid.current.getCells = props.getCells;
+      dxGrid.current.requestUpdate();
     }
-  }, [ref.current, props.getCells]);
+  }, [props.getCells]);
 
   const handleEdit = useCallback((event: DxEditRequest) => {
     setEditBox(event.cellBox);
     setEditing({ index: event.cellIndex, initialContent: event.initialContent });
   }, []);
 
-  return <DxGrid {...props} gridId={id} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={ref} />;
+  return <DxGrid {...props} gridId={id} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={dxGrid} />;
 });
 
 GridContent.displayName = GRID_CONTENT_NAME;

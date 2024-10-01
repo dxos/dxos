@@ -8,6 +8,7 @@ import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 
 import {
   type AxisMeta,
+  type CellIndex,
   DxAxisResize,
   DxEditRequest,
   type DxGridAxis,
@@ -366,7 +367,8 @@ export class DxGrid extends LitElement {
   }
 
   private cell(c: number | string, r: number | string) {
-    return this.cells[`${c}${separator}${r}`];
+    const index: CellIndex = `${c}${separator}${r}`;
+    return this.cells[index] ?? this.initialCells[index];
   }
 
   private focusedCellBox(): DxEditRequest['cellBox'] {
@@ -722,7 +724,9 @@ export class DxGrid extends LitElement {
   }
 
   override firstUpdated() {
-    this.cells = this.initialCells;
+    if (this.getCells) {
+      this.cells = this.getCells(this.visColMin, this.visColMax, this.visRowMin, this.visRowMax);
+    }
     this.observer.observe(this.viewportRef.value!);
     this.colSizes = Object.entries(this.columns).reduce((acc: Record<string, number>, [colId, colMeta]) => {
       if (colMeta?.size) {

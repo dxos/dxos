@@ -118,15 +118,14 @@ const GridSheetImpl = ({
     [model, handleClose, editing],
   );
 
+  const getCells = useCallback(() => cells, [cells]);
+
   return (
     <>
       <GridSheetCellEditor model={model} extension={extension} />
       <Grid.Content
-        initialCells={cells}
-        getCells={() => {
-          console.log('[get cells]');
-          return cells;
-        }}
+        initialCells={{}}
+        getCells={getCells}
         columns={columns}
         rows={rows}
         onAxisResize={handleAxisResize}
