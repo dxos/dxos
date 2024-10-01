@@ -5,9 +5,9 @@
 import React from 'react';
 
 import { PublicKey, useClient, useMulticastObservable } from '@dxos/react-client';
-
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { arrayToString, deepMapValues } from '@dxos/util';
+
 import { PanelContainer } from '../../../components';
 
 export const EdgeDashboardPanel = () => {
