@@ -5,9 +5,9 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { Grid, useGridContext, type GridScopedProps } from '@dxos/react-ui-grid';
-import { type DxGridElement } from '@dxos/react-ui-grid/src';
+import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid/src';
 
-import { dxGridCellIndexToSheetCellAddress, useSheetModelDxGridCells } from './util';
+import { dxGridCellIndexToSheetCellAddress, useSheetModelDxGridProps } from './util';
 import { type SheetModel, type FormattingModel } from '../../model';
 import { CellEditor, editorKeys, type EditorKeysProps, sheetExtension } from '../CellEditor';
 import { useSheetModel, type UseSheetModelProps } from '../Sheet/util';
@@ -41,6 +41,9 @@ const GridSheetCellEditor = ({
 
 export type GridSheetProps = UseSheetModelProps;
 
+const sheetRowDefault = { size: 32, resizeable: true };
+const sheetColDefault = { size: 180, resizeable: true };
+
 const GridSheetImpl = ({
   model,
   formatting,
@@ -61,12 +64,35 @@ const GridSheetImpl = ({
     [model, editing, setEditing],
   );
 
-  const cells = useSheetModelDxGridCells(model, formatting);
+  const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
+    ({ axis, size, index: numericIndex }) => {
+      if (axis === 'row') {
+        const rowId = model.sheet.rows[parseInt(numericIndex)];
+        model.sheet.rowMeta[rowId] ??= {};
+        model.sheet.rowMeta[rowId].size = size;
+      } else {
+        const columnId = model.sheet.columns[parseInt(numericIndex)];
+        model.sheet.columnMeta[columnId] ??= {};
+        model.sheet.columnMeta[columnId].size = size;
+      }
+    },
+    [model],
+  );
+
+  const { cells, columns, rows } = useSheetModelDxGridProps(model, formatting);
 
   return (
     <>
       <GridSheetCellEditor model={model} onClose={handleClose} />
-      <Grid.Content cells={cells} ref={dxGrid} />
+      <Grid.Content
+        cells={cells}
+        columns={columns}
+        rows={rows}
+        onAxisResize={handleAxisResize}
+        rowDefault={sheetRowDefault}
+        columnDefault={sheetColDefault}
+        ref={dxGrid}
+      />
     </>
   );
 };

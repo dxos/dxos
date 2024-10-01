@@ -128,13 +128,20 @@ export const huePalettes = {
 };
 
 /**
- * LCH
+ * The keyPoint represents the LCH value (Lightness: 0-1, Chroma: 0-1, Hue: 0-360 [0=Red, 120=Green, 240=Blue]).
  * https://oklch.com/#47,0,86.52,100
+ *
+ * NOTE: Rebuild the theme and restart the dev server to see changes.
+ *
+ * Theme references
+ * https://colorsublime.github.io
+ * https://github.com/microsoft/vscode-docs/blob/main/api/extension-guides/color-theme.md#create-a-new-color-theme
+ * https://raw.githubusercontent.com/microsoft/vscode/main/src/vs/workbench/services/themes/common/colorThemeSchema.ts
  */
 const systemPalettes = {
   neutral: {
-    keyPoint: [0, 0, 0],
-    // keyPoint: [0.47, 0.004, 86.52],
+    keyPoint: [0, 0.01, 259.99], // Cold
+    // keyPoint: [0.47, 0.004, 86.52], // Warm
     lowerCp: 0,
     upperCp: 0,
     torsion: 0,

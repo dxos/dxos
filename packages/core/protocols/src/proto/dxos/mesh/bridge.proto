@@ -65,8 +65,12 @@ message BridgeEvent {
 }
 
 message ConnectionRequest {
-  dxos.keys.PublicKey  proxy_id = 1;
+  dxos.keys.PublicKey proxy_id = 1;
   bool initiator = 2;
+  string remote_peer_key = 3;
+  string own_peer_key = 4;
+  string topic = 5;
+
 }
 
 message SignalRequest {

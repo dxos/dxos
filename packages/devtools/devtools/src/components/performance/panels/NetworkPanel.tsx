@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { WifiHigh } from '@phosphor-icons/react';
 import React from 'react';
 
 import type { NetworkStatus } from '@dxos/client/mesh';
@@ -21,7 +20,7 @@ export const NetworkPanel = ({ network, ...props }: CustomPanelProps<{ network?:
   return (
     <Panel
       {...props}
-      icon={WifiHigh}
+      icon='ph--wifi-high--regular'
       title='Network'
       info={
         <div className='flex items-center gap-2'>

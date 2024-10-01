@@ -10,11 +10,11 @@
     "build": {
       "options": {
         "main": "{projectRoot}/src/index.ts",
-        "outputPath": "packages/apps/todomvc/dist",
+        "outputPath": "{projectRoot}/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "packages/apps/todomvc/tsconfig.json"
+        "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
     "bundle": {
@@ -25,7 +25,7 @@
       "executor": "@nx/vite:build",
       "options": {
         "generatePackageJson": false,
-        "outputPath": "packages/apps/todomvc/out/todomvc"
+        "outputPath": "{projectRoot}/out/todomvc"
       },
       "outputs": [
         "{options.outputPath}"
@@ -37,7 +37,7 @@
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "todomvc:bundle",
-        "staticFilePath": "packages/apps/todomvc/out/todomvc"
+        "staticFilePath": "{projectRoot}/out/todomvc"
       }
     },
     "serve": {

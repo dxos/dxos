@@ -37,7 +37,7 @@ export class ModuleSpecifier {
       const relativePath = normalizeRelativePath(relative(importContext, resolve(this.contextPath, this.name)));
       for (const ext of ['.js', '.ts']) {
         if (relativePath.endsWith(ext)) {
-          return removeExtension(relativePath, ext);
+          return removeExtension(relativePath, ext) + '.js';
         }
       }
       return relativePath;

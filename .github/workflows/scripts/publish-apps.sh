@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
+
 set -euo pipefail
 
 # Configure endpoints here:
 # https://dash.cloudflare.com/950816f3f59b079880a1ae33fb0ec320/dxos.org/dns/records
 
 APPS=(
-  ./packages/apps/composer-app
+  "./packages/apps/composer-app"
+  "./tools/stories"
 )
 
 # Do not use remote cache
@@ -39,8 +41,8 @@ if [[ $BRANCH = "production" || $BRANCH = "staging" || $BRANCH = "labs" ]]; then
 fi
 
 failed=""
-succeded=""
-devel_succeded=""
+succeeded=""
+devel_succeeded=""
 devel_failed=""
 
 for APP_PATH in "${APPS[@]}"; do
@@ -50,15 +52,17 @@ for APP_PATH in "${APPS[@]}"; do
   PACKAGE_CAPS=${PACKAGE^^}
   PACKAGE_ENV=${PACKAGE_CAPS//-/_}
 
-  set +e
-  eval "export DX_SENTRY_DESTINATION=$""${PACKAGE_ENV}"_SENTRY_DESTINATION""
-  eval "export DX_TELEMETRY_API_KEY=$""${PACKAGE_ENV}"_SEGMENT_API_KEY""
-  export LOG_FILTER=error
-
   APP=$(basename "$APP_PATH")
+  if [[ $APP == *-app ]]; then
+    set +e
+    eval "export DX_SENTRY_DESTINATION=$""${PACKAGE_ENV}"_SENTRY_DESTINATION""
+    eval "export DX_TELEMETRY_API_KEY=$""${PACKAGE_ENV}"_SEGMENT_API_KEY""
+    export LOG_FILTER="error"
+  fi
+
   pnpm -w nx bundle "$APP"
 
-  # TODO: extract outdir from project.json?
+  # TODO(???): extract outdir from project.json?
   outdir=${APP%-app}
   pnpm exec wrangler pages deploy out/"$outdir" --branch "$BRANCH"
   wrangler_rc=$?
@@ -66,9 +70,9 @@ for APP_PATH in "${APPS[@]}"; do
 
   if [[ "$wrangler_rc" -eq 0 ]]; then
     if [ "$BRANCH" = "main" ]; then
-      devel_succeded="${devel_succeded:+$devel_succeded,}$PACKAGE"
+      devel_succeeded="${devel_succeeded:+$devel_succeeded,}$PACKAGE"
     else
-      succeded="${succeded:+$succeded,}$PACKAGE"
+      succeeded="${succeeded:+$succeeded,}$PACKAGE"
     fi
   else
     if [[ "$BRANCH" = "main" ]]; then
@@ -80,8 +84,8 @@ for APP_PATH in "${APPS[@]}"; do
   popd
 done
 
-if [[ -n "$succeded" ]]; then
-  notifySuccess "$succeded"
+if [[ -n "$succeeded" ]]; then
+  notifySuccess "$succeeded"
 fi
 if [[ -n "$failed" ]]; then
   notifyFailure "$failed"
