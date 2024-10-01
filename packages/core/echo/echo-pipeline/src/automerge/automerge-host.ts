@@ -473,18 +473,19 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    const { different } = diffCollectionState(localState, remoteState);
+    const { different, missingOnLocal, missingOnRemote } = diffCollectionState(localState, remoteState);
+    const toReplicate = [...missingOnLocal, ...missingOnRemote, ...different];
 
-    if (different.length === 0) {
+    if (toReplicate.length === 0) {
       return;
     }
 
     log.info('replication documents after collection sync', {
-      count: different.length,
+      count: toReplicate.length,
     });
 
-    // Load the documents that are different.
-    for (const documentId of different) {
+    // Load the documents so they will start syncing.
+    for (const documentId of toReplicate) {
       this._repo.find(documentId);
     }
   }

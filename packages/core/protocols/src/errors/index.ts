@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './encoding';
-export * from './errors';
-export * from './helpers';
-export * from './base-errors';
+export * from './encoding.js';
+export * from './errors.js';
+export * from './helpers.js';
+export * from './base-errors.js';
