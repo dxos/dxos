@@ -130,8 +130,8 @@ export class ServiceContext extends Resource {
       keyring: this.keyring,
       feedStore: this.feedStore,
       spaceManager: this.spaceManager,
-      devicePresenceOfflineTimeout: this._runtimeParams?.spaceMemberPresenceOfflineTimeout,
-      devicePresenceAnnounceInterval: this._runtimeParams?.spaceMemberPresenceOfflineTimeout,
+      devicePresenceOfflineTimeout: this._runtimeParams?.devicePresenceOfflineTimeout,
+      devicePresenceAnnounceInterval: this._runtimeParams?.devicePresenceAnnounceInterval,
       edgeConnection: this._edgeConnection,
       edgeFeatures: this._edgeFeatures,
       callbacks: {
