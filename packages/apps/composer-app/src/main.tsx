@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { createApp, NavigationAction, parseIntentPlugin, Plugin, resolvePlugin } from '@dxos/app-framework';
+import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
 import { type defs } from '@dxos/config';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
@@ -15,7 +15,7 @@ import { getObservabilityGroup, initializeAppObservability, isObservabilityDisab
 import AttentionMeta from '@dxos/plugin-attention/meta';
 import ChainMeta from '@dxos/plugin-chain/meta';
 import ChessMeta from '@dxos/plugin-chess/meta';
-import ClientMeta, { CLIENT_PLUGIN, ClientAction } from '@dxos/plugin-client/meta';
+import ClientMeta from '@dxos/plugin-client/meta';
 import DebugMeta from '@dxos/plugin-debug/meta';
 import DeckMeta from '@dxos/plugin-deck/meta';
 import ExcalidrawMeta from '@dxos/plugin-excalidraw/meta';
@@ -45,7 +45,7 @@ import SearchMeta from '@dxos/plugin-search/meta';
 import SettingsMeta from '@dxos/plugin-settings/meta';
 import SheetMeta from '@dxos/plugin-sheet/meta';
 import SketchMeta from '@dxos/plugin-sketch/meta';
-import SpaceMeta, { SPACE_PLUGIN, SpaceAction } from '@dxos/plugin-space/meta';
+import SpaceMeta from '@dxos/plugin-space/meta';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import StackMeta from '@dxos/plugin-stack/meta';
 import StatusBarMeta from '@dxos/plugin-status-bar/meta';
@@ -63,7 +63,6 @@ import { appKey, INITIAL_COLLECTION_TITLE, INITIAL_CONTENT, INITIAL_DOC_TITLE } 
 import { steps } from './help';
 import { meta as WelcomeMeta } from './plugins/welcome/meta';
 import translations from './translations';
-import { removeQueryParamByValue } from './util';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
@@ -220,38 +219,6 @@ const main = async () => {
           client.shell.onReset(() => {
             window.location.pathname = '/';
           });
-        },
-        onReady: async (client, plugins) => {
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!dispatch) {
-            return;
-          }
-
-          const searchParams = new URLSearchParams(location.search);
-          const spaceInvitationCode = searchParams.get('spaceInvitationCode') ?? undefined;
-          const deviceInvitationCode = searchParams.get('deviceInvitationCode') ?? undefined;
-          if (deviceInvitationCode) {
-            await dispatch({
-              plugin: CLIENT_PLUGIN,
-              action: ClientAction.JOIN_IDENTITY,
-              data: { invitationCode: deviceInvitationCode },
-            });
-
-            removeQueryParamByValue(deviceInvitationCode);
-          } else if (spaceInvitationCode && client.halo.identity.get()) {
-            await dispatch([
-              {
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.JOIN,
-                data: { invitationCode: spaceInvitationCode },
-              },
-              {
-                action: NavigationAction.OPEN,
-              },
-            ]);
-
-            removeQueryParamByValue(spaceInvitationCode);
-          }
         },
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@dxos/plugin-debug')),
