@@ -73,6 +73,8 @@ export const createComputeGraphRegistry = (options: Partial<FunctionContextOptio
  * Manages a collection of ComputeGraph instances for each space.
  *
  * [ComputePlugin] => [ComputeGraphRegistry] => [ComputeGraph(Space)] => [ComputeNode(Object)]
+ *
+ * NOTE: The ComputeGraphRegistry manages the hierarchy of resources via its root Context.
  */
 // TODO(burdon): Move graph into separate plugin; isolate HF deps.
 export class ComputeGraphRegistry extends Resource {
@@ -172,7 +174,7 @@ export class ComputeGraph extends Resource {
   //  This would enable on-the-fly instantiation of new models when then are referenced.
   //  E.g., Cross-object reference would be stored as "ObjectId!A1"
   //  The graph would then load the object and create a ComputeNode (model) of the appropriate type.
-  getOrCreateNode(name: string): ComputeNode {
+  async getOrCreateNode(name: string): Promise<ComputeNode> {
     invariant(name.length);
     if (!this._hf.doesSheetExist(name)) {
       log.info('created node', { space: this._space?.id, name });
@@ -185,6 +187,7 @@ export class ComputeGraph extends Resource {
 
     // TODO(burdon): Chain context?
     const node = new ComputeNode(this, sheetId);
+    await node.open(this._ctx);
     this._nodes.set(sheetId, node);
     return node;
   }

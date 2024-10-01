@@ -15,7 +15,7 @@ import { type CellScalarValue } from '../types';
  */
 // TODO(burdon): Factor out common HF wrapper from from SheetModel.
 export class ComputeNode extends Resource {
-  // TODO(burdon): Chaing events.
+  // TODO(burdon): Chaining events.
   public readonly update = new Event();
 
   constructor(

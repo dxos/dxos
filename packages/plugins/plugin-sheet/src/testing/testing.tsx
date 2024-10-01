@@ -45,7 +45,7 @@ export const createCells = (): Record<string, CellValue> => ({
 });
 
 export const useTestSheet = (space?: Space, graph?: ComputeGraph, options?: CreateSheetOptions) => {
-  return useAsyncState(async () => {
+  const [sheet] = useAsyncState(async () => {
     if (!space || !graph) {
       return;
     }
@@ -54,6 +54,7 @@ export const useTestSheet = (space?: Space, graph?: ComputeGraph, options?: Crea
     space.db.add(sheet);
     return sheet;
   }, [space, graph]);
+  return sheet;
 };
 
 export const withGraphDecorator: Decorator = (Story) => {

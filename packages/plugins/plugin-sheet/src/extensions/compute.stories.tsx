@@ -3,10 +3,11 @@
 //
 
 import '@dxos-theme';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { useAsyncState } from '@dxos/react-hooks';
 import { useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
@@ -41,12 +42,8 @@ const Editor = ({ text }: EditorProps) => {
   const { themeMode } = useThemeContext();
   const space = useSpace();
   const graph = useComputeGraph(space);
-  const [node, setNode] = useState<ComputeNode>();
-  // TODO(burdon): Virtualize SheetModel.
-  useEffect(() => {
-    if (graph) {
-      setNode(graph.getOrCreateNode(DOC_NAME));
-    }
+  const [node] = useAsyncState<ComputeNode>(async () => {
+    return graph ? await graph.getOrCreateNode(DOC_NAME) : undefined;
   }, [graph]);
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
