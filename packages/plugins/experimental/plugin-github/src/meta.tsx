@@ -2,9 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GithubLogo, type IconProps } from '@phosphor-icons/react';
-import React from 'react';
-
 import { pluginMeta } from '@dxos/app-framework';
 
 export const GITHUB_PLUGIN = 'dxos.org/plugin/github';
@@ -16,6 +13,5 @@ export default pluginMeta({
   name: 'GitHub',
   description: 'GitHub integration.',
   tags: ['experimental'],
-  iconComponent: (props: IconProps) => <GithubLogo {...props} />,
   iconSymbol: 'ph--github-logo--regular',
 });

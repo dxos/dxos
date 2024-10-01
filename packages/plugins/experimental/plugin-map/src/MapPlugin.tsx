@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Compass, type IconProps } from '@phosphor-icons/react';
+import { Compass } from '@phosphor-icons/react';
 import { type LatLngLiteral } from 'leaflet';
 import React from 'react';
 
@@ -37,7 +37,6 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         records: {
           [MapType.typename]: {
             placeholder: ['object title placeholder', { ns: MAP_PLUGIN }],
-            icon: (props: IconProps) => <Compass {...props} />,
             iconSymbol: 'ph--compass--regular',
           },
         },
@@ -86,7 +85,6 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                     },
                     properties: {
                       label: ['create object label', { ns: MAP_PLUGIN }],
-                      icon: (props: IconProps) => <Compass {...props} />,
                       iconSymbol: 'ph--compass--regular',
                       testId: 'mapPlugin.createObject',
                     },
@@ -113,7 +111,6 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                     },
                     properties: {
                       label: ['toggle type label', { ns: MAP_PLUGIN }],
-                      icon: (props: IconProps) => <Compass {...props} />,
                       iconSymbol: 'ph--compass--regular',
                     },
                   },

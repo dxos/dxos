@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, MagnifyingGlass } from '@phosphor-icons/react';
 import React from 'react';
 
 import {
@@ -72,7 +71,6 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
                 },
                 properties: {
                   label: ['search action label', { ns: SEARCH_PLUGIN }],
-                  icon: (props: IconProps) => <MagnifyingGlass {...props} />,
                   iconSymbol: 'ph--magnifying-glass--regular',
                   keyBinding: {
                     macos: 'shift+meta+f',

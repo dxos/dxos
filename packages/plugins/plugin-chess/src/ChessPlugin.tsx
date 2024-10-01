@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, ShieldChevron } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type PluginDefinition, resolvePlugin, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
@@ -25,7 +24,6 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
         records: {
           [GameType.typename]: {
             placeholder: ['game title placeholder', { ns: CHESS_PLUGIN }],
-            icon: (props: IconProps) => <ShieldChevron {...props} />,
             iconSymbol: 'ph--shield-chevron--regular',
           },
         },
@@ -72,7 +70,6 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                   },
                   properties: {
                     label: ['create game label', { ns: CHESS_PLUGIN }],
-                    icon: (props: IconProps) => <ShieldChevron {...props} />,
                     iconSymbol: 'ph--shield-chevron--regular',
                     testId: 'chessPlugin.createObject',
                   },

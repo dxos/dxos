@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, SquaresFour } from '@phosphor-icons/react';
 import React from 'react';
 
 import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
@@ -26,7 +25,6 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
         records: {
           [GridType.typename]: {
             placeholder: ['grid title placeholder', { ns: GRID_PLUGIN }],
-            icon: (props: IconProps) => <SquaresFour {...props} />,
             iconSymbol: 'ph--squares-four--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (grid: GridType) => loadObjectReferences(grid, (grid) => grid.items),
@@ -84,7 +82,6 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                   },
                   properties: {
                     label: ['create grid label', { ns: GRID_PLUGIN }],
-                    icon: (props: IconProps) => <SquaresFour {...props} />,
                     iconSymbol: 'ph--squares-four--regular',
                     testId: 'gridPlugin.createObject',
                   },

@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AddressBook, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import {
@@ -137,7 +136,6 @@ export const ClientPlugin = ({
                 },
                 properties: {
                   label: ['open shell label', { ns: CLIENT_PLUGIN }],
-                  icon: (props: IconProps) => <AddressBook {...props} />,
                   iconSymbol: 'ph--address-book--regular',
                   keyBinding: {
                     macos: 'meta+shift+.',

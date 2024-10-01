@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Keyboard as KeyboardIcon, Info } from '@phosphor-icons/react';
 import React from 'react';
 
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
@@ -70,7 +69,6 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
                 },
                 properties: {
                   label: ['open help tour', { ns: HELP_PLUGIN }],
-                  icon: (props: IconProps) => <Info {...props} />,
                   iconSymbol: 'ph--info--regular',
                   keyBinding: {
                     macos: 'shift+meta+/',
@@ -95,7 +93,6 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
                 },
                 properties: {
                   label: ['open shortcuts label', { ns: HELP_PLUGIN }],
-                  icon: (props: IconProps) => <KeyboardIcon {...props} />,
                   iconSymbol: 'ph--keyboard--regular',
                   keyBinding: {
                     macos: 'meta+ctrl+/',

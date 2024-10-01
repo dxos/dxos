@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import React, { forwardRef, useState } from 'react';
 
 import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -34,7 +35,7 @@ const DropComponent: MosaicTileComponent<NavTreeItemNode> = forwardRef(({ isOver
     >
       {item ? (
         <>
-          {item.node.properties?.iconSymbol && <Icon icon={item.node.properties.iconSymbol} />}
+          <Icon icon={item.node.properties?.iconSymbol ?? 'ph--placeholder--regular'} size={4} />
           {toLocalizedString(item.node.properties?.label ?? 'never', t)}
         </>
       ) : (

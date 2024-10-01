@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Function, type IconProps } from '@phosphor-icons/react';
+import { Function } from '@phosphor-icons/react';
 import React from 'react';
 
 import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
@@ -27,7 +27,6 @@ export const FunctionPlugin = (): PluginDefinition<FunctionPluginProvides> => {
           [FunctionTrigger.typename]: {
             label: (object: any) => (object instanceof FunctionTrigger ? object.name : undefined),
             placeholder: ['object placeholder', { ns: FUNCTION_PLUGIN }],
-            icon: (props: IconProps) => <Function {...props} />,
             iconSymbol: 'ph--function--regular',
           },
         },
@@ -69,7 +68,6 @@ export const FunctionPlugin = (): PluginDefinition<FunctionPluginProvides> => {
                   },
                   properties: {
                     label: ['create object label', { ns: FUNCTION_PLUGIN }],
-                    icon: (props: IconProps) => <Function {...props} />,
                     iconSymbol: 'ph--function--duotone',
                     testId: 'functionPlugin.createObject',
                   },

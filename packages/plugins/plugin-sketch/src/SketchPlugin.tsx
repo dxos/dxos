@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CompassTool, type IconProps } from '@phosphor-icons/react';
+import { CompassTool } from '@phosphor-icons/react';
 import React from 'react';
 
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
@@ -37,7 +37,6 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         records: {
           [DiagramType.typename]: {
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
-            icon: (props: IconProps) => <CompassTool {...props} />,
             iconSymbol: 'ph--compass-tool--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (diagram: DiagramType) => loadObjectReferences(diagram, (diagram) => [diagram.canvas]),
@@ -90,7 +89,6 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                     },
                     properties: {
                       label: ['create object label', { ns: SKETCH_PLUGIN }],
-                      icon: (props: IconProps) => <CompassTool {...props} />,
                       iconSymbol: 'ph--compass-tool--regular',
                       testId: 'sketchPlugin.createObject',
                     },

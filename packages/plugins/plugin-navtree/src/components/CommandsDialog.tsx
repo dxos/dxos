@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotOutline } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
 import { useIntentDispatcher, LayoutAction } from '@dxos/app-framework';
 import { type ActionLike, isActionGroup, isAction } from '@dxos/app-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { useGraph } from '@dxos/plugin-graph';
-import { Button, Dialog, useTranslation, toLocalizedString } from '@dxos/react-ui';
+import { Button, Dialog, Icon, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
@@ -70,7 +69,6 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
               typeof action.properties.keyBinding === 'string'
                 ? action.properties.keyBinding
                 : action.properties.keyBinding?.[getHostPlatform()];
-            const Icon = action.properties.icon ?? DotOutline;
             return (
               <SearchList.Item
                 value={label}
@@ -95,7 +93,7 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
                 disabled={action.properties.disabled}
                 {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
               >
-                <Icon size={4} className={mx(!action.properties.icon && 'invisible')} />
+                <Icon icon={action.properties.iconSymbol} size={4} />
                 <span className='grow truncate'>{label}</span>
                 {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
               </SearchList.Item>

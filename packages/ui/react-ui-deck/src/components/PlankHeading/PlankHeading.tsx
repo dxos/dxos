@@ -8,19 +8,11 @@ import {
   CaretLineRight,
   CaretRight,
   Check,
-  type IconProps,
   Minus,
   ArrowsOut,
   ArrowsIn,
 } from '@phosphor-icons/react';
-import React, {
-  type ComponentPropsWithRef,
-  type FC,
-  forwardRef,
-  type PropsWithChildren,
-  useRef,
-  useState,
-} from 'react';
+import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef, useRef, useState } from 'react';
 
 import { keySymbols } from '@dxos/keyboard';
 import {
@@ -29,6 +21,7 @@ import {
   type ButtonGroupProps,
   type ButtonProps,
   DropdownMenu,
+  Icon,
   type ThemedClassName,
   toLocalizedString,
   Tooltip,
@@ -45,11 +38,6 @@ import { type PlankHeadingAction } from '../../types';
 type AttendableId = { attendableId?: string };
 
 type PlankHeadingButtonProps = Omit<ButtonProps, 'variant'> & AttendableId;
-
-const plankHeadingIconProps: IconProps = {
-  className: getSize(5),
-  weight: 'duotone',
-};
 
 type PlankRootProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
 
@@ -110,12 +98,12 @@ type PlankHeadingActionsMenuProps = PropsWithChildren<{
   attendableId?: string;
   triggerLabel: string;
   actions?: PlankHeadingAction[];
-  Icon: FC<IconProps>;
+  icon: string;
   onAction?: (action: PlankHeadingAction) => void;
 }>;
 
 const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingActionsMenuProps>(
-  ({ actions, onAction, triggerLabel, attendableId, Icon, children }, forwardedRef) => {
+  ({ actions, onAction, triggerLabel, attendableId, icon, children }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const suppressNextTooltip = useRef(false);
 
@@ -149,7 +137,7 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
             <DropdownMenu.Trigger asChild ref={forwardedRef}>
               <PlankHeadingButton attendableId={attendableId}>
                 <span className='sr-only'>{triggerLabel}</span>
-                <Icon {...plankHeadingIconProps} />
+                <Icon icon={icon} size={5} />
               </PlankHeadingButton>
             </DropdownMenu.Trigger>
           </Tooltip.Trigger>
@@ -183,7 +171,7 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
                       checked={menuItemType === 'toggle' ? action.properties.isChecked : undefined}
                       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                     >
-                      {action.properties.icon && <action.properties.icon className={mx(getSize(4), 'shrink-0')} />}
+                      <Icon icon={action.properties.iconSymbol ?? 'ph--placeholder--regular'} size={4} />
                       <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
                       {menuItemType === 'toggle' && (
                         <DropdownMenu.ItemIndicator asChild>
@@ -360,7 +348,6 @@ export const PlankHeading = {
   ActionsMenu: PlankHeadingActionsMenu,
   Controls: PlankHeadingControls,
 };
-export { plankHeadingIconProps };
 
 export type {
   PlankHeadingAction,

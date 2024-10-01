@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FileCloud, type IconProps } from '@phosphor-icons/react';
 import { create as createIpfsClient } from 'kubo-rpc-client';
 import React, { type Ref } from 'react';
 import urlJoin from 'url-join';
@@ -34,7 +33,6 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
         records: {
           [FileType.typename]: {
             placeholder: ['file title placeholder', { ns: IPFS_PLUGIN }],
-            icon: (props: IconProps) => <FileCloud {...props} />,
             iconSymbol: 'ph--file-cloud--regular',
           },
         },

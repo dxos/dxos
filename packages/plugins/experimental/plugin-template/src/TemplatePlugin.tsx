@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Asterisk, Placeholder, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { resolvePlugin, parseIntentPlugin, type PluginDefinition, NavigationAction } from '@dxos/app-framework';
@@ -26,7 +25,6 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
         records: {
           [typename]: {
             placeholder: ['object placeholder', { ns: TEMPLATE_PLUGIN }],
-            icon: (props: IconProps) => <Asterisk {...props} />,
             iconSymbol: 'ph--asterisk--regular',
           },
         },
@@ -65,7 +63,6 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
                   },
                   properties: {
                     label: ['create object label', { ns: TEMPLATE_PLUGIN }],
-                    icon: (props: IconProps) => <Placeholder {...props} />,
                     iconSymbol: 'ph--placeholder--regular',
                     testId: 'templatePlugin.createObject',
                   },

@@ -4,7 +4,6 @@
 
 import '@dxos-theme';
 
-import { Bug, Compass, GithubLogo, Kanban, Gear, Table } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import type { Plugin } from '@dxos/app-framework';
@@ -15,7 +14,14 @@ import { PluginList } from './PluginList';
 
 faker.seed(1);
 
-const icons = [Bug, Compass, Kanban, Table, Gear, GithubLogo];
+const icons = [
+  'ph--bug--regular',
+  'ph--compass--regular',
+  'ph--kanban--regular',
+  'ph--table--regular',
+  'ph--gear--regular',
+  'ph--github-logo--regular',
+];
 
 const Story = () => {
   const [plugins] = useState<Plugin['meta'][]>(
@@ -27,7 +33,7 @@ const Story = () => {
         tags: faker.datatype.boolean({ probability: 0.6 })
           ? [faker.helpers.arrayElement(['experimental', 'beta', 'alpha', 'stable', 'new', '新発売'])]
           : undefined,
-        iconComponent: faker.helpers.arrayElement(icons),
+        iconSymbol: faker.helpers.arrayElement(icons),
       }),
       { count: 16 },
     ),

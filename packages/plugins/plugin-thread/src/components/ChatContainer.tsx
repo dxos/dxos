@@ -2,15 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { MessageType } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
+import { Icon, ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { PlankHeading } from '@dxos/react-ui-deck';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
@@ -28,7 +27,7 @@ export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
   return (
     <div role='none' className='flex items-center'>
       <PlankHeading.Button attendableId={attendableId}>
-        <Chat {...plankHeadingIconProps} />
+        <Icon icon='ph--chat--duotone' size={5} />
       </PlankHeading.Button>
       <PlankHeading.Label attendableId={attendableId}>{t('chat heading')}</PlankHeading.Label>
     </div>

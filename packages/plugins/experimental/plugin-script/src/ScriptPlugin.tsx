@@ -52,7 +52,6 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
           [ScriptType.typename]: {
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
             icon: (props: IconProps) => <Code {...props} />,
-            iconSymbol: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (script: ScriptType) => loadObjectReferences(script, (script) => [script.source]),
           },
@@ -101,7 +100,6 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
                   },
                   properties: {
                     label: ['create object label', { ns: SCRIPT_PLUGIN }],
-                    icon: (props: IconProps) => <Code {...props} />,
                     iconSymbol: 'ph--code--regular',
                     testId: 'scriptPlugin.createObject',
                   },

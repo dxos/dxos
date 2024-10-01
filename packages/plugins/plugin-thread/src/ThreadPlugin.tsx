@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, type IconProps } from '@phosphor-icons/react';
 import { computed, effect } from '@preact/signals-core';
 import React from 'react';
 
@@ -94,7 +93,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         records: {
           [ChannelType.typename]: {
             placeholder: ['channel title placeholder', { ns: THREAD_PLUGIN }],
-            icon: (props: IconProps) => <Chat {...props} />,
             iconSymbol: 'ph--chat--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (channel: ChannelType) => loadObjectReferences(channel, (channel) => channel.threads),
@@ -141,7 +139,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   return;
                 }
 
-                // TODO(Zan): Find util (or make one)
+                // TODO(Zan): Find util (or make one).
                 const subjectId = id.split('~').at(0);
                 const [spaceId, objectId] = subjectId?.split(':') ?? [];
                 const space = client.spaces.get().find((space) => space.id === spaceId);
@@ -162,7 +160,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   type: 'orphan-comments-for-subject',
                   data: doc,
                   properties: {
-                    icon: meta.iconComponent,
+                    icon: meta.iconSymbol,
                     label,
                     showResolvedThreads: viewState.showResolvedThreads,
                   },
@@ -230,7 +228,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     },
                     properties: {
                       label: ['create channel label', { ns: THREAD_PLUGIN }],
-                      icon: (props: IconProps) => <Chat {...props} />,
                       iconSymbol: 'ph--chat--regular',
                       testId: 'threadPlugin.createObject',
                     },

@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Placeholder } from '@phosphor-icons/react';
 import React, { forwardRef, useCallback, useState } from 'react';
 
 import {
@@ -18,7 +17,7 @@ import {
 import { type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
 import { fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
-import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, type SearchListItemProps } from '@dxos/react-ui-searchlist';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
@@ -31,7 +30,6 @@ type SearchListResultProps = {
 
 const SearchListResult = forwardRef<HTMLDivElement, SearchListResultProps>(({ node, onSelect }, forwardedRef) => {
   const { t } = useTranslation(SEARCH_PLUGIN);
-  const Icon = node?.properties.icon ?? Placeholder;
   const label = toLocalizedString(node?.properties.label ?? 'never', t);
   return (
     <SearchList.Item
@@ -41,7 +39,7 @@ const SearchListResult = forwardRef<HTMLDivElement, SearchListResultProps>(({ no
       onSelect={() => onSelect?.(node!.id)}
       ref={forwardedRef}
     >
-      <Icon />
+      <Icon size={5} icon={node?.properties.iconSymbol} />
       <span className='is-0 grow truncate'>{label}</span>
     </SearchList.Item>
   );

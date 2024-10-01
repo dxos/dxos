@@ -2,17 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  File,
-  FilePlus,
-  FloppyDisk,
-  Folder,
-  FolderOpen,
-  FolderPlus,
-  Plugs,
-  X,
-  type IconProps,
-} from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
 import localforage from 'localforage';
 import React from 'react';
@@ -314,7 +303,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   },
                   properties: {
                     label: ['export label', { ns: FILES_PLUGIN }],
-                    icon: (props: IconProps) => <FloppyDisk {...props} />,
                     iconSymbol: 'ph--floppy-disk--regular',
                   },
                 },
@@ -328,7 +316,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   },
                   properties: {
                     label: ['import label', { ns: FILES_PLUGIN }],
-                    icon: (props: IconProps) => <FolderOpen {...props} />,
                     iconSymbol: 'ph--folder-open--regular',
                   },
                 },
@@ -374,7 +361,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   },
                   properties: {
                     label: ['open file label', { ns: FILES_PLUGIN }],
-                    icon: (props: IconProps) => <FilePlus {...props} />,
                     iconSymbol: 'ph--file-plus--regular',
                   },
                 },
@@ -393,7 +379,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                         },
                         properties: {
                           label: ['open directory label', { ns: FILES_PLUGIN }],
-                          icon: (props: IconProps) => <FolderPlus {...props} />,
                           iconSymbol: 'ph--folder-plus--regular',
                         },
                       },
@@ -407,7 +392,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   data: entity,
                   properties: {
                     label: entity.title,
-                    icon: (props: IconProps) => ('children' in entity ? <Folder {...props} /> : <File {...props} />),
                     iconSymbol: 'children' in entity ? 'ph--folder--regular' : 'ph--file--regular',
                     modified: 'children' in entity ? undefined : entity.modified,
                   },
@@ -425,7 +409,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   data: child,
                   properties: {
                     label: child.title,
-                    icon: (props: IconProps) => <File {...props} />,
                     iconSymbol: 'ph--file--regular',
                   },
                 })),
@@ -447,7 +430,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   },
                   properties: {
                     label: ['close label', { ns: FILES_PLUGIN }],
-                    icon: (props: IconProps) => <X {...props} />,
                     iconSymbol: 'ph--x--regular',
                   },
                 },
@@ -464,7 +446,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                         },
                         properties: {
                           label: ['re-open label', { ns: FILES_PLUGIN }],
-                          icon: (props: IconProps) => <Plugs {...props} />,
                           iconSymbol: 'ph--plugs--regular',
                           disposition: 'default',
                         },
@@ -484,7 +465,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                         },
                         properties: {
                           label: [node.data.handle ? 'save label' : 'save as label', { ns: FILES_PLUGIN }],
-                          icon: (props: IconProps) => <FloppyDisk {...props} />,
                           iconSymbol: 'ph--floppy-disk--regular',
                         },
                       },

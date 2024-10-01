@@ -2,9 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MagnifyingGlass, type IconProps } from '@phosphor-icons/react';
-import React from 'react';
-
 import { pluginMeta } from '@dxos/app-framework';
 
 export const SEARCH_PLUGIN = 'dxos.org/plugin/search';
@@ -15,6 +12,5 @@ export default pluginMeta({
   name: 'Search',
   description: 'Search ECHO spaces for content.',
   tags: ['experimental'],
-  iconComponent: (props: IconProps) => <MagnifyingGlass {...props} />,
   iconSymbol: 'ph--magnifying-glass--regular',
 });
