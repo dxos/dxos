@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FunctionArgumentType } from '#hyperformula';
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type ProcedureAst } from 'hyperformula/typings/parser';
 
 import { getDeep } from '@dxos/util';
 
+import { FunctionArgumentType } from '#hyperformula';
 import { type AsyncFunction, FunctionPluginAsync } from './async-function';
 
 // TODO(burdon): Factor out.

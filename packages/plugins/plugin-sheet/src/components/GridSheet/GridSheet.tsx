@@ -12,10 +12,10 @@ import {
   type GridScopedProps,
 } from '@dxos/react-ui-grid';
 
+import { dxGridCellIndexToSheetCellAddress, useSheetModelDxGridProps } from './util';
 import { type FormattingModel, type SheetModel } from '../../model';
 import { CellEditor, editorKeys, sheetExtension, type EditorKeysProps } from '../CellEditor';
 import { useSheetModel, type UseSheetModelProps } from '../Sheet/util';
-import { dxGridCellIndexToSheetCellAddress, useSheetModelDxGridProps } from './util';
 
 const GridSheetCellEditor = ({
   onNav,

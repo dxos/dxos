@@ -4,7 +4,6 @@
 
 import '@dxos-theme';
 
-import { HyperFormula } from '#hyperformula';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Client } from '@dxos/client';
@@ -12,6 +11,7 @@ import { createDocAccessor, type EchoReactiveObject } from '@dxos/client/echo';
 import { automerge } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
 
+import { HyperFormula } from '#hyperformula';
 import { CellEditor, type CellEditorProps } from './CellEditor';
 import { sheetExtension } from './extension';
 import { defaultFunctions } from '../../model';

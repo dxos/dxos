@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CellError, ErrorType, EmptyValue, FunctionPlugin, type HyperFormula } from '#hyperformula';
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type InterpreterValue } from 'hyperformula/typings/interpreter/InterpreterValue';
 import { type ProcedureAst } from 'hyperformula/typings/parser';
@@ -11,6 +10,8 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import { debounce, type UnsubscribeCallback } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
+
+import { CellError, ErrorType, EmptyValue, FunctionPlugin, type HyperFormula } from '#hyperformula';
 
 // TODO(burdon): API gateways!
 //  https://publicapis.io

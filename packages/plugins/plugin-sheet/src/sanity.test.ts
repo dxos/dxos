@@ -9,7 +9,6 @@ import { describe, test, expect } from 'vitest';
 //  - Cannot test Hyperformula
 //    - throws "Cannot convert undefined or null to object" in vitest (no browser).
 //    - throws "process.nextTick is not a function" (if browser)
-import Hyperformula from '#hyperformula';
 
 import { Client } from '@dxos/client';
 import { create } from '@dxos/client/echo';
