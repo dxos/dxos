@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CardsThree, type IconProps, Plus, SignIn, Warning } from '@phosphor-icons/react';
 import { effect, signal } from '@preact/signals-core';
 import React from 'react';
 
@@ -344,8 +343,7 @@ export const SpacePlugin = ({
         records: {
           [CollectionType.typename]: {
             placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
-            icon: (props: IconProps) => <CardsThree {...props} />,
-            iconSymbol: 'ph--cards-three--regular',
+            icon: 'ph--cards-three--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (collection: CollectionType) =>
               loadObjectReferences(collection, (collection) => [
@@ -552,8 +550,7 @@ export const SpacePlugin = ({
                   },
                   properties: {
                     label: ['create space label', { ns: SPACE_PLUGIN }],
-                    icon: (props: IconProps) => <Plus {...props} />,
-                    iconSymbol: 'ph--plus--regular',
+                    icon: 'ph--plus--regular',
                     disposition: 'toolbar',
                     testId: 'spacePlugin.createSpace',
                   },
@@ -573,8 +570,7 @@ export const SpacePlugin = ({
                   },
                   properties: {
                     label: ['join space label', { ns: SPACE_PLUGIN }],
-                    icon: (props: IconProps) => <SignIn {...props} />,
-                    iconSymbol: 'ph--sign-in--regular',
+                    icon: 'ph--sign-in--regular',
                     testId: 'spacePlugin.joinSpace',
                   },
                 },
@@ -1041,8 +1037,7 @@ export const SpacePlugin = ({
                             title: translations[0]['en-US'][SPACE_PLUGIN]['space limit label'],
                             description: translations[0]['en-US'][SPACE_PLUGIN]['space limit description'],
                             duration: 5_000,
-                            icon: (props: IconProps) => <Warning {...props} />,
-                            iconSymbol: 'ph--warning--regular',
+                            icon: 'ph--warning--regular',
                             actionLabel: translations[0]['en-US'][SPACE_PLUGIN]['remove deleted objects label'],
                             actionAlt: translations[0]['en-US'][SPACE_PLUGIN]['remove deleted objects alt'],
                             // TODO(wittjosiah): Use OS namespace.

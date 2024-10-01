@@ -2,9 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AnchorSimple, type IconProps } from '@phosphor-icons/react';
-import React from 'react';
-
 import { pluginMeta } from '@dxos/app-framework';
 
 export const MERMAID_PLUGIN = 'dxos.org/plugin/mermaid';
@@ -13,6 +10,5 @@ export default pluginMeta({
   id: MERMAID_PLUGIN,
   name: 'Mermaid',
   description: 'Tool that renders text definitions to create diagrams.',
-  iconComponent: (props: IconProps) => <AnchorSimple {...props} />,
-  iconSymbol: 'ph--anchor-simple--regular',
+  icon: 'ph--anchor-simple--regular',
 });
