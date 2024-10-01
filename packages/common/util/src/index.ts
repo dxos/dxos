@@ -41,3 +41,4 @@ export * from './weak';
 export * from './sliding-window-summary';
 export * from './callback-collection';
 export * from './chunk-array';
+export * from './array-to-hex';

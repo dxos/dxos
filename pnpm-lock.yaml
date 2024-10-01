@@ -1832,6 +1832,16 @@ importers:
         specifier: ^22.6.1
         version: 22.6.1
 
+  packages/common/merkle-search-tree:
+    dependencies:
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../invariant
+    devDependencies:
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../util
+
   packages/common/node-std:
     dependencies:
       assert:
