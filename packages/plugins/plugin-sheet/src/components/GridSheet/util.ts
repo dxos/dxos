@@ -10,11 +10,11 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { addressFromIndex, type CellAddress, type SheetModel, type FormattingModel } from '../../model';
 
-export const dxGridCellIndexToSheetCellAddress = (gridIndex: GridEditing): CellAddress | null => {
-  if (!gridIndex) {
+export const dxGridCellIndexToSheetCellAddress = (gridEditing: GridEditing): CellAddress | null => {
+  if (!gridEditing) {
     return null;
   }
-  const [colStr, rowStr] = gridIndex.split(',');
+  const [colStr, rowStr] = gridEditing.index.split(',');
   return {
     column: parseInt(colStr),
     row: parseInt(rowStr),
