@@ -27,7 +27,7 @@ export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
   return (
     <div role='none' className='flex items-center'>
       <PlankHeading.Button attendableId={attendableId}>
-        <Icon icon='ph--chat--duotone' size={5} />
+        <Icon icon='ph--chat--regular' size={5} />
       </PlankHeading.Button>
       <PlankHeading.Label attendableId={attendableId}>{t('chat heading')}</PlankHeading.Label>
     </div>

@@ -45,7 +45,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange, 
   return (
     <DensityProvider density='fine'>
       <List classNames='mb-4 select-none'>
-        {plugins.map(({ id, name, description, homePage, icon = 'ph--circle--duotone' }) => {
+        {plugins.map(({ id, name, description, homePage, icon = 'ph--circle--regular' }) => {
           const isEnabled = enabled.includes(id);
           const isLoaded = loaded.includes(id);
           const reloadRequired = isEnabled !== isLoaded;

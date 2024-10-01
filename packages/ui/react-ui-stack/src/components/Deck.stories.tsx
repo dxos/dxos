@@ -64,7 +64,7 @@ const StackPlank = ({ label, items, id, children }: PropsWithChildren<PlankProps
     <>
       <PlankHeading.Root classNames='pli-px'>
         <PlankHeading.Button>
-          <Icon icon='ph--cards-three--duotone' size={5} />
+          <Icon icon='ph--cards-three--regular' size={5} />
         </PlankHeading.Button>
         <PlankHeading.Label classNames='flex-1 truncate'>{label}</PlankHeading.Label>
         {children}
@@ -234,7 +234,7 @@ export const DynamicBasicStacks = () => {
     <>
       <PlankHeading.Root classNames='pli-px'>
         <PlankHeading.Button>
-          <Icon icon='ph--books--duotone' size={5} />
+          <Icon icon='ph--books--regular' size={5} />
         </PlankHeading.Button>
         <PlankHeading.Label classNames='grow'>Menu</PlankHeading.Label>
         {c11yContent === MENU ? (

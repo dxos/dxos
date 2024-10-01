@@ -95,7 +95,7 @@ export const ObservabilityPlugin = (options: {
                 title: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast label'],
                 description: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast description'],
                 duration: Infinity,
-                icon: 'ph--info--duotone',
+                icon: 'ph--info--regular',
                 actionLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action label'],
                 actionAlt: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action alt'],
                 closeLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast close label'],

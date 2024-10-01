@@ -40,13 +40,13 @@ const StorybookPlankHeading = ({
       </PlankHeading.Root>
       <PlankHeading.Root>
         <PlankHeading.Button attendableId={attendableId}>
-          <Icon icon='ph--text-aa--duotone' size={5} />
+          <Icon icon='ph--text-aa--regular' size={5} />
         </PlankHeading.Button>
         <PlankHeading.Label attendableId={attendableId}>{label}</PlankHeading.Label>
       </PlankHeading.Root>
       <PlankHeading.Root>
         <PlankHeading.Button attendableId={attendableId}>
-          <Icon icon='ph--image-square--duotone' size={5} />
+          <Icon icon='ph--image-square--regular' size={5} />
         </PlankHeading.Button>
         <PlankHeading.Label attendableId={attendableId}>{label}</PlankHeading.Label>
       </PlankHeading.Root>

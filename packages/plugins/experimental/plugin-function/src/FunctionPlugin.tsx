@@ -68,7 +68,7 @@ export const FunctionPlugin = (): PluginDefinition<FunctionPluginProvides> => {
                   },
                   properties: {
                     label: ['create object label', { ns: FUNCTION_PLUGIN }],
-                    icon: 'ph--function--duotone',
+                    icon: 'ph--function--regular',
                     testId: 'functionPlugin.createObject',
                   },
                 },

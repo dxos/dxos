@@ -40,7 +40,7 @@ export const CommentsHeading = ({ attendableId }: { attendableId?: string }) => 
   return (
     <div role='none' className='flex items-center'>
       <PlankHeading.Button attendableId={attendableId}>
-        <Icon icon='ph--quotes--duotone' size={5} />
+        <Icon icon='ph--quotes--regular' size={5} />
       </PlankHeading.Button>
       <PlankHeading.Label attendableId={attendableId}>{t('comments heading')}</PlankHeading.Label>
     </div>
