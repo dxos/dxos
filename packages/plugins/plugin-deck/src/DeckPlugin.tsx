@@ -40,7 +40,6 @@ import { createExtension, type Node } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { translations as deckTranslations } from '@dxos/react-ui-deck';
-import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import {
   DeckLayout,
@@ -354,31 +353,28 @@ export const DeckPlugin = ({
       ),
       root: () => {
         return (
-          <Mosaic.Root>
-            <DeckLayout
-              attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
-              layoutParts={location.values.active}
-              showHintsFooter={settings.values.showFooter}
-              overscroll={settings.values.overscroll}
-              flatDeck={settings.values.flatDeck}
-              slots={settings.values.customSlots ? customSlots : undefined}
-              toasts={layout.values.toasts}
-              onDismissToast={(id) => {
-                const index = layout.values.toasts.findIndex((toast) => toast.id === id);
-                if (index !== -1) {
-                  // Allow time for the toast to animate out.
-                  // TODO(burdon): Factor out and unregister timeout.
-                  setTimeout(() => {
-                    if (layout.values.toasts[index].id === currentUndoId) {
-                      currentUndoId = undefined;
-                    }
-                    layout.values.toasts.splice(index, 1);
-                  }, 1_000);
-                }
-              }}
-            />
-            <Mosaic.DragOverlay />
-          </Mosaic.Root>
+          <DeckLayout
+            attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
+            layoutParts={location.values.active}
+            showHintsFooter={settings.values.showFooter}
+            overscroll={settings.values.overscroll}
+            flatDeck={settings.values.flatDeck}
+            slots={settings.values.customSlots ? customSlots : undefined}
+            toasts={layout.values.toasts}
+            onDismissToast={(id) => {
+              const index = layout.values.toasts.findIndex((toast) => toast.id === id);
+              if (index !== -1) {
+                // Allow time for the toast to animate out.
+                // TODO(burdon): Factor out and unregister timeout.
+                setTimeout(() => {
+                  if (layout.values.toasts[index].id === currentUndoId) {
+                    currentUndoId = undefined;
+                  }
+                  layout.values.toasts.splice(index, 1);
+                }, 1_000);
+              }
+            }}
+          />
         );
       },
       surface: {
