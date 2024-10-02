@@ -27,7 +27,7 @@
   "dependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "ua-parser-js": "^1.0.35"
+    "ua-parser-js": "^1.0.39"
   },
   "devDependencies": {
     "@types/ua-parser-js": "^0.7.36"

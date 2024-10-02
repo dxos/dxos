@@ -138,7 +138,8 @@
     "jwt-decode": "^4.0.0",
     "lodash.get": "^4.4.2",
     "lodash.isequal": "^4.5.0",
-    "lodash.isequalwith": "^4.4.0"
+    "lodash.isequalwith": "^4.4.0",
+    "ua-parser-js": "^1.0.39"
   },
   "devDependencies": {
     "@dxos/automerge": "workspace:*",
