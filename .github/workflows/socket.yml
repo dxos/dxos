@@ -25,6 +25,11 @@ jobs:
           repository: socketsupply/socket
           ref: master
           path: socket
+
+      - name: Homebrew
+        run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          brew install automake
       
       - name: Setup Socket
         run: |
