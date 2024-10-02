@@ -4,12 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 import { buf, bufWkt } from '@dxos/protocols/buf';
-import {
-  type Message,
-  MessageSchema,
-  type Peer as PeerProto,
-  PeerSchema,
-} from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type Message, MessageSchema, type PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
 
 export type PeerData = buf.MessageInitShape<typeof PeerSchema>;

@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { bufWkt } from '@dxos/protocols/buf';
-
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { type EdgeConnection, protocol } from '@dxos/edge-client';
@@ -11,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeService } from '@dxos/protocols';
+import { bufWkt } from '@dxos/protocols/buf';
 import {
   SwarmRequestSchema,
   SwarmRequest_Action as SwarmRequestAction,

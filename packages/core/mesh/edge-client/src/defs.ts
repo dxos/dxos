@@ -3,7 +3,6 @@
 //
 
 import { bufWkt } from '@dxos/protocols/buf';
-
 import { SwarmRequestSchema, SwarmResponseSchema, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 import { Protocol } from './protocol';
