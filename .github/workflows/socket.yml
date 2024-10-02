@@ -6,6 +6,10 @@ on:
     branches:
       - jdw/build-socket
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   publish:
     runs-on: macos-latest
