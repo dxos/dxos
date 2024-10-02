@@ -4,15 +4,15 @@
 
 import '@dxos-theme';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { Grid } from '@dxos/react-ui-grid';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { type ColumnDefinition } from './table';
 import { useTable } from './hooks/';
+import { type ColumnDefinition } from './table';
 
 const makeData = (n: number) => {
   const { data } = create({
@@ -35,7 +35,7 @@ const columnDefinitions: ColumnDefinition[] = [
 
 const Story = () => {
   const data = React.useMemo(() => makeData(10000), []);
-  const { table, dispatch } = useTable(columnDefinitions, data);
+  const { table, dispatch: _dispatch } = useTable(columnDefinitions, data);
 
   const handleAddRow = () => {
     const newRow = {
