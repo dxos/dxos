@@ -18,16 +18,19 @@ import { mx } from '@dxos/react-ui-theme';
 import { type StackProps } from './Stack';
 
 export const StackItem = ({
+  id,
   children,
   classNames,
   orientation,
   container,
+  onReorder,
   ...props
 }: Omit<ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'aria-orientation'> & {
+  id: string;
   orientation?: StackProps['orientation'];
-  container?: string;
+  container: string;
+  onReorder: (itemId: string, targetId: string, closestEdge: Edge | null) => void;
 }) => {
-  const id = 'change-me';
   const ref = useRef<HTMLDivElement>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
 
@@ -40,10 +43,8 @@ export const StackItem = ({
 
     return combine(
       draggable({ element, getInitialData: () => ({ id, container }) }),
-      // TODO(zanthure): canDrop should have higher standards.
       dropTargetForElements({
         element,
-        canDrop: ({ ..._args }) => true,
         getData: ({ input, element }) => {
           return attachClosestEdge(
             { id, container },
@@ -60,15 +61,16 @@ export const StackItem = ({
             setEdge(extractClosestEdge(self.data));
           }
         },
-        onDragLeave: () => {
+        onDragLeave: () => setEdge(null),
+        onDrop: ({ self, source }) => {
           setEdge(null);
-        },
-        onDrop: () => {
-          setEdge(null);
+          if (source.data.container === self.data.container) {
+            onReorder(source.data.id as string, self.data.id as string, extractClosestEdge(self.data));
+          }
         },
       }),
     );
-  }, [orientation, container, id, ref]);
+  }, [orientation, container, id, onReorder]);
 
   return (
     <div
