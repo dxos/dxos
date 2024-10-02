@@ -6,6 +6,8 @@ import { LitElement, html, nothing } from 'lit';
 import { customElement, state, property, eventOptions } from 'lit/decorators.js';
 import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 
+// eslint-disable-next-line unused-imports/no-unused-imports
+import './dx-grid-axis-resize-handle';
 import {
   type AxisMeta,
   type CellIndex,
@@ -415,26 +417,30 @@ export class DxGrid extends LitElement {
 
   private viewportRef: Ref<HTMLDivElement> = createRef();
 
+  private maybeUpdateVis = () => {
+    if (
+      this.posInline >= this.binInlineMin &&
+      this.posInline < this.binInlineMax &&
+      this.posBlock >= this.binBlockMin &&
+      this.posBlock < this.binBlockMax
+    ) {
+      // do nothing
+    } else {
+      // console.info(
+      //   '[updating bounds]',
+      //   'wheel',
+      //   [this.binInlineMin, this.posInline, this.binInlineMax],
+      //   [this.binBlockMin, this.posBlock, this.binBlockMax],
+      // );
+      this.updateVis();
+    }
+  };
+
   private handleWheel = ({ deltaX, deltaY }: WheelEvent) => {
     if (this.mode === 'browse') {
       this.posInline = Math.max(0, this.posInline + deltaX);
       this.posBlock = Math.max(0, this.posBlock + deltaY);
-      if (
-        this.posInline >= this.binInlineMin &&
-        this.posInline < this.binInlineMax &&
-        this.posBlock >= this.binBlockMin &&
-        this.posBlock < this.binBlockMax
-      ) {
-        // do nothing
-      } else {
-        // console.info(
-        //   '[updating bounds]',
-        //   'wheel',
-        //   [this.binInlineMin, this.posInline, this.binInlineMax],
-        //   [this.binBlockMin, this.posBlock, this.binBlockMax],
-        // );
-        this.updateVis();
-      }
+      this.maybeUpdateVis();
     }
   };
 
@@ -609,6 +615,24 @@ export class DxGrid extends LitElement {
     }
   }
 
+  override get scrollLeft() {
+    return this.posInline;
+  }
+
+  override set scrollLeft(nextValue: number) {
+    this.posInline = nextValue;
+    this.maybeUpdateVis();
+  }
+
+  override get scrollTop() {
+    return this.posBlock;
+  }
+
+  override set scrollTop(nextValue: number) {
+    this.posBlock = nextValue;
+    this.maybeUpdateVis();
+  }
+
   //
   // Render and other lifecycle methods
   //
@@ -655,9 +679,7 @@ export class DxGrid extends LitElement {
             >
               <span id=${localChId(c0)}>${colToA1Notation(c)}</span>
               ${(this.columns[c]?.resizeable ?? this.columnDefault.resizeable) &&
-              html`<button class="dx-grid__resize-handle" data-dx-grid-action=${`resize-col,${c}`}>
-                <span class="sr-only">Resize</span>
-              </button>`}
+              html`<dx-grid-axis-resize-handle axis="col" index="${c}"></dx-grid-axis-resize-handle>`}
             </div>`;
           })}
         </div>
@@ -674,9 +696,7 @@ export class DxGrid extends LitElement {
             return html`<div role="rowheader" ?inert=${r < 0} style="grid-row:${r0 + 1}/${r0 + 2}">
               <span id=${localRhId(r0)}>${rowToA1Notation(r)}</span>
               ${(this.rows[r]?.resizeable ?? this.rowDefault.resizeable) &&
-              html`<button class="dx-grid__resize-handle" data-dx-grid-action=${`resize-row,${r}`}>
-                <span class="sr-only">Resize</span>
-              </button>`}
+              html`<dx-grid-axis-resize-handle axis="row" index="${r}"></dx-grid-axis-resize-handle>`}
             </div>`;
           })}
         </div>
