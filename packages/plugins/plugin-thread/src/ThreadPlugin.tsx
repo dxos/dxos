@@ -153,6 +153,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     return () => clearTimeout(timeout);
                   },
                   () => space?.db.getObjectById(objectId),
+                  subjectId,
                 );
                 if (!object || !subjectId) {
                   return;
