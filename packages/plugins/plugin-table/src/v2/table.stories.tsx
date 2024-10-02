@@ -69,7 +69,7 @@ const Story = () => {
       <button onClick={handleAddRow}>Add Row</button>
       <Grid.Root id='table-v2'>
         <Grid.Content
-          cells={Object.fromEntries(
+          initialCells={Object.fromEntries(
             table.rows.value.flatMap((row, rowIndex) =>
               table.columnDefinitions.map((col, colIndex) => [
                 `${colIndex},${rowIndex}`,
