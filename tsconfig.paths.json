@@ -359,9 +359,6 @@
       "@dxos/react-ui-stack-next": [
         "packages/ui/react-ui-stack-next/src/index.ts"
       ],
-      "@dxos/react-ui-stack-next/testing": [
-        "packages/ui/react-ui-stack-next/src/testing/index.ts"
-      ],
       "@dxos/react-ui-syntax-highlighter": [
         "packages/ui/react-ui-syntax-highlighter/src/index.ts"
       ],
