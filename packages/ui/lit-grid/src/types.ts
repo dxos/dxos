@@ -3,6 +3,7 @@
 //
 
 import { type DxGrid } from './dx-grid';
+import { toCellIndex } from './util';
 
 export type CellIndex = `${string},${string}`;
 
@@ -10,6 +11,8 @@ export type DxGridAxis = 'row' | 'col';
 
 export type DxGridPosition = Record<DxGridAxis, number>;
 export type DxGridPositionNullable = DxGridPosition | null;
+
+export type DxGridPointer = null | ({ state: 'resizing'; page: number } & DxAxisResizeProps) | { state: 'selecting' };
 
 export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'index' | 'size'>;
 
@@ -61,5 +64,25 @@ export class DxEditRequest extends Event {
     this.cellIndex = props.cellIndex;
     this.cellBox = props.cellBox;
     this.initialContent = props.initialContent;
+  }
+}
+
+export type DxSelectProps = { start: DxGridPosition; end: DxGridPosition };
+
+export class DxGridCellsSelect extends Event {
+  public readonly start: string;
+  public readonly end: string;
+  public readonly minCol: number;
+  public readonly maxCol: number;
+  public readonly minRow: number;
+  public readonly maxRow: number;
+  constructor({ start, end }: DxSelectProps) {
+    super('dx-grid-cells-select');
+    this.start = toCellIndex(start);
+    this.end = toCellIndex(end);
+    this.minCol = Math.min(start.col, end.col);
+    this.maxCol = Math.max(start.col, end.col);
+    this.minRow = Math.min(start.row, end.row);
+    this.maxRow = Math.max(start.row, end.row);
   }
 }

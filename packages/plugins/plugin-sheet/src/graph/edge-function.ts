@@ -3,7 +3,6 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { CellError, ErrorType, FunctionArgumentType } from 'hyperformula';
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type ProcedureAst } from 'hyperformula/typings/parser';
 
@@ -13,6 +12,7 @@ import { getUserFunctionUrlInMetadata } from '@dxos/plugin-script/edge';
 import { FunctionType } from '@dxos/plugin-script/types';
 import { nonNullable } from '@dxos/util';
 
+import { CellError, ErrorType, FunctionArgumentType } from '#hyperformula';
 import { type AsyncFunction, FunctionPluginAsync } from './async-function';
 
 const EDGE_FUNCTION_TTL = 10_000;
@@ -59,6 +59,7 @@ export class EdgeFunctionPlugin extends FunctionPluginAsync {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ args: args.filter(nonNullable) }),
         });
+
         return await result.text();
       };
 

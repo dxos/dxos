@@ -2,39 +2,28 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DetailedCellError, ExportedCellChange } from 'hyperformula';
 import { type SimpleCellRange } from 'hyperformula/typings/AbsoluteCellRange';
 import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateTimeHelper';
 
 import { Event } from '@dxos/async';
-import { type Space } from '@dxos/client/echo';
-import { Context } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FunctionType } from '@dxos/plugin-script/types';
 
-import { defaultFunctions, type FunctionDefinition } from './functions';
-import { addressFromA1Notation, addressToA1Notation, type CellAddress, type CellRange } from './types';
-import { addressFromIndex, addressToIndex, createIndices, RangeException, ReadonlyException } from './util';
-import { type ComputeGraph } from '../components';
+import { DetailedCellError, ExportedCellChange } from '#hyperformula';
+import {
+  addressFromA1Notation,
+  addressToA1Notation,
+  type CellAddress,
+  type CellRange,
+  MAX_COLUMNS,
+  MAX_ROWS,
+} from '../defs';
+import { addressFromIndex, addressToIndex, initialize, insertIndices, ReadonlyException } from '../defs';
+import { type ComputeNode, type ComputeGraph, createSheetName } from '../graph';
 import { type CellScalarValue, type CellValue, type SheetType, ValueTypeEnum } from '../types';
-
-const DEFAULT_ROWS = 100;
-const DEFAULT_COLUMNS = 26;
-
-export type CellIndex = string;
-
-export type CellContentValue = number | string | boolean | null;
-
-export type SheetModelOptions = {
-  readonly?: boolean;
-  rows: number;
-  columns: number;
-  mapFormulaBindingToId: (functions: FunctionType[]) => (formula: string) => string;
-  mapFormulaBindingFromId: (functions: FunctionType[]) => (formula: string) => string;
-};
 
 const typeMap: Record<string, ValueTypeEnum> = {
   BOOLEAN: ValueTypeEnum.Boolean,
@@ -46,22 +35,15 @@ const typeMap: Record<string, ValueTypeEnum> = {
   NUMBER_TIME: ValueTypeEnum.Time,
 };
 
-export const defaultOptions: SheetModelOptions = {
-  rows: 50,
-  columns: 26,
-  mapFormulaBindingFromId: () => (formula) => formula,
-  mapFormulaBindingToId: () => (formula) => formula,
-};
-
-const getTopLeft = (range: CellRange) => {
+const getTopLeft = (range: CellRange): CellAddress => {
   const to = range.to ?? range.from;
-  return { row: Math.min(range.from.row, to.row), column: Math.min(range.from.column, to.column) };
+  return { row: Math.min(range.from.row, to.row), col: Math.min(range.from.col, to.col) };
 };
 
 const toSimpleCellAddress = (sheet: number, cell: CellAddress): SimpleCellAddress => ({
   sheet,
   row: cell.row,
-  col: cell.column,
+  col: cell.col,
 });
 
 const toModelRange = (sheet: number, range: CellRange): SimpleCellRange => ({
@@ -69,38 +51,31 @@ const toModelRange = (sheet: number, range: CellRange): SimpleCellRange => ({
   end: toSimpleCellAddress(sheet, range.to ?? range.from),
 });
 
+export type SheetModelOptions = {
+  readonly?: boolean;
+};
+
 /**
  * Spreadsheet data model.
  *
  * [ComputeGraphContext] > [SheetContext]:[SheetModel] > [Sheet.Root]
  */
-export class SheetModel {
+// TODO(burdon): Factor out commonality with ComputeNode.
+export class SheetModel extends Resource {
   public readonly id = `model-${PublicKey.random().truncate()}`;
-  private _ctx?: Context = undefined;
-
-  /**
-   * Formula engine.
-   * Acts as a write through cache for scalar and computed values.
-   */
-  private readonly _sheetId: number;
-  private readonly _options: SheetModelOptions;
-  private _functions: FunctionType[] = [];
 
   public readonly update = new Event();
+
+  private readonly _node: ComputeNode;
 
   constructor(
     private readonly _graph: ComputeGraph,
     private readonly _sheet: SheetType,
-    private readonly _space?: Space,
-    options: Partial<SheetModelOptions> = {},
+    private readonly _options: SheetModelOptions = {},
   ) {
-    // Sheet for this object.
-    const name = this._sheet.id;
-    if (!this._graph.hf.doesSheetExist(name)) {
-      this._graph.hf.addSheet(name);
-    }
-    this._sheetId = this._graph.hf.getSheetId(name)!;
-    this._options = { ...defaultOptions, ...options };
+    super();
+    // TODO(burdon): SheetModel should extend ComputeNode and be constructed via the graph.
+    this._node = this._graph.getOrCreateNode(createSheetName(this._sheet.id));
     this.reset();
   }
 
@@ -123,60 +98,18 @@ export class SheetModel {
     };
   }
 
-  get functions(): FunctionDefinition[] {
-    const hfFunctions = this._graph.hf
-      .getRegisteredFunctionNames()
-      .map((name) => defaultFunctions.find((fn) => fn.name === name) ?? { name });
-    const echoFunctions = this._functions.map((fn) => ({ name: fn.binding! }));
-    return [...hfFunctions, ...echoFunctions];
-  }
-
-  get initialized(): boolean {
-    return !!this._ctx;
-  }
-
   /**
    * Initialize sheet and engine.
    */
-  async initialize() {
+  protected override async _open() {
     log('initialize', { id: this.id });
-    invariant(!this.initialized, 'Already initialized.');
-    this._ctx = new Context();
-    if (!this._sheet.rows.length) {
-      this._insertIndices(this._sheet.rows, 0, this._options.rows, DEFAULT_ROWS);
-    }
-    if (!this._sheet.columns.length) {
-      this._insertIndices(this._sheet.columns, 0, this._options.columns, DEFAULT_COLUMNS);
-    }
+    initialize(this._sheet);
     this.reset();
 
+    // TODO(burdon): Event hierarchy?
     // Listen for model updates (e.g., async calculations).
     const unsubscribe = this._graph.update.on(() => this.update.emit());
     this._ctx.onDispose(unsubscribe);
-
-    // Subscribe to function objects.
-    if (this._space) {
-      const { Filter } = await import('@dxos/client/echo');
-      const { FunctionType } = await import('@dxos/plugin-script/types');
-
-      // Listen for function changes.
-      const query = this._space?.db.query(Filter.schema(FunctionType));
-      const unsubscribe = query.subscribe(({ objects }) => {
-        this._functions = objects.filter((fn) => fn.binding);
-        this.update.emit();
-      });
-      this._ctx.onDispose(unsubscribe);
-    }
-
-    return this;
-  }
-
-  async destroy() {
-    log('destroy', { id: this.id });
-    if (this._ctx) {
-      await this._ctx.dispose();
-      this._ctx = undefined;
-    }
   }
 
   /**
@@ -185,14 +118,16 @@ export class SheetModel {
    * @deprecated
    */
   reset() {
-    this._graph.hf.clearSheet(this._sheetId);
+    this._node.hf.clearSheet(this._node.sheetId);
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
-      const { column, row } = addressFromIndex(this._sheet, key);
+      const { col, row } = addressFromIndex(this._sheet, key);
       if (typeof value === 'string' && value.charAt(0) === '=') {
-        value = this.mapFormulaBindingToFormula(this.mapFormulaBindingFromId(this.mapFormulaIndicesToRefs(value)));
+        value = this._graph.mapFormulaToNative(
+          this._graph.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value)),
+        );
       }
 
-      this._graph.hf.setCellContents({ sheet: this._sheetId, row, col: column }, value);
+      this._node.hf.setCellContents({ sheet: this._node.sheetId, row, col }, value);
     });
   }
 
@@ -204,16 +139,16 @@ export class SheetModel {
    */
   // TODO(burdon): Remove.
   recalculate() {
-    this._graph.hf.rebuildAndRecalculate();
+    this._node.hf.rebuildAndRecalculate();
   }
 
   insertRows(i: number, n = 1) {
-    this._insertIndices(this._sheet.rows, i, n, DEFAULT_ROWS);
+    insertIndices(this._sheet.rows, i, n, MAX_ROWS);
     this.reset();
   }
 
   insertColumns(i: number, n = 1) {
-    this._insertIndices(this._sheet.columns, i, n, DEFAULT_COLUMNS);
+    insertIndices(this._sheet.columns, i, n, MAX_COLUMNS);
     this.reset();
   }
 
@@ -221,13 +156,14 @@ export class SheetModel {
   // Undoable actions.
   // TODO(burdon): Group undoable methods; consistently update hf/sheet.
   //
+
   /**
    * Clear range of values.
    */
   clear(range: CellRange) {
     const topLeft = getTopLeft(range);
     const values = this._iterRange(range, () => null);
-    this._graph.hf.setCellContents(toSimpleCellAddress(this._sheetId, topLeft), values);
+    this._node.hf.setCellContents(toSimpleCellAddress(this._node.sheetId, topLeft), values);
     this._iterRange(range, (cell) => {
       const idx = addressToIndex(this._sheet, cell);
       delete this._sheet.cells[idx];
@@ -235,7 +171,7 @@ export class SheetModel {
   }
 
   cut(range: CellRange) {
-    this._graph.hf.cut(toModelRange(this._sheetId, range));
+    this._node.hf.cut(toModelRange(this._node.sheetId, range));
     this._iterRange(range, (cell) => {
       const idx = addressToIndex(this._sheet, cell);
       delete this._sheet.cells[idx];
@@ -243,16 +179,16 @@ export class SheetModel {
   }
 
   copy(range: CellRange) {
-    this._graph.hf.copy(toModelRange(this._sheetId, range));
+    this._node.hf.copy(toModelRange(this._node.sheetId, range));
   }
 
   paste(cell: CellAddress) {
-    if (!this._graph.hf.isClipboardEmpty()) {
-      const changes = this._graph.hf.paste(toSimpleCellAddress(this._sheetId, cell));
+    if (!this._node.hf.isClipboardEmpty()) {
+      const changes = this._node.hf.paste(toSimpleCellAddress(this._node.sheetId, cell));
       for (const change of changes) {
         if (change instanceof ExportedCellChange) {
           const { address, newValue } = change;
-          const idx = addressToIndex(this._sheet, { row: address.row, column: address.col });
+          const idx = addressToIndex(this._sheet, { row: address.row, col: address.col });
           this._sheet.cells[idx] = { value: newValue };
         }
       }
@@ -261,15 +197,15 @@ export class SheetModel {
 
   // TODO(burdon): Display undo/redo state.
   undo() {
-    if (this._graph.hf.isThereSomethingToUndo()) {
-      this._graph.hf.undo();
+    if (this._node.hf.isThereSomethingToUndo()) {
+      this._node.hf.undo();
       this.update.emit();
     }
   }
 
   redo() {
-    if (this._graph.hf.isThereSomethingToRedo()) {
-      this._graph.hf.redo();
+    if (this._node.hf.isThereSomethingToRedo()) {
+      this._node.hf.redo();
       this.update.emit();
     }
   }
@@ -292,7 +228,7 @@ export class SheetModel {
     }
 
     if (typeof value === 'string' && value.charAt(0) === '=') {
-      return this.mapFormulaBindingFromId(this.mapFormulaIndicesToRefs(value));
+      return this._graph.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value));
     } else {
       return String(value);
     }
@@ -310,7 +246,7 @@ export class SheetModel {
    */
   getValue(cell: CellAddress): CellScalarValue {
     // Applies rounding and post-processing.
-    const value = this._graph.hf.getCellValue(toSimpleCellAddress(this._sheetId, cell));
+    const value = this._node.hf.getCellValue(toSimpleCellAddress(this._node.sheetId, cell));
     if (value instanceof DetailedCellError) {
       return value.toString();
     }
@@ -322,8 +258,8 @@ export class SheetModel {
    * Get value type.
    */
   getValueType(cell: CellAddress): ValueTypeEnum {
-    const addr = toSimpleCellAddress(this._sheetId, cell);
-    const type = this._graph.hf.getCellValueDetailedType(addr);
+    const addr = toSimpleCellAddress(this._node.sheetId, cell);
+    const type = this._node.hf.getCellValueDetailedType(addr);
     return typeMap[type];
   }
 
@@ -338,21 +274,22 @@ export class SheetModel {
     // Reallocate if > current bounds.
     let refresh = false;
     if (cell.row >= this._sheet.rows.length) {
-      this._insertIndices(this._sheet.rows, cell.row, 1, DEFAULT_ROWS);
+      insertIndices(this._sheet.rows, cell.row, 1, MAX_ROWS);
       refresh = true;
     }
-    if (cell.column >= this._sheet.columns.length) {
-      this._insertIndices(this._sheet.columns, cell.column, 1, DEFAULT_COLUMNS);
+    if (cell.col >= this._sheet.columns.length) {
+      insertIndices(this._sheet.columns, cell.col, 1, MAX_COLUMNS);
       refresh = true;
     }
+
     if (refresh) {
       // TODO(burdon): Remove.
       this.reset();
     }
 
     // Insert into engine.
-    this._graph.hf.setCellContents({ sheet: this._sheetId, row: cell.row, col: cell.column }, [
-      [typeof value === 'string' && value.charAt(0) === '=' ? this.mapFormulaBindingToFormula(value) : value],
+    this._node.hf.setCellContents({ sheet: this._node.sheetId, row: cell.row, col: cell.col }, [
+      [typeof value === 'string' && value.charAt(0) === '=' ? this._graph.mapFormulaToNative(value) : value],
     ]);
 
     // Insert into sheet.
@@ -361,7 +298,7 @@ export class SheetModel {
       delete this._sheet.cells[idx];
     } else {
       if (typeof value === 'string' && value.charAt(0) === '=') {
-        value = this.mapFormulaBindingToId(this.mapFormulaRefsToIndices(value));
+        value = this._graph.mapFunctionBindingToId(this.mapFormulaRefsToIndices(value));
       }
 
       this._sheet.cells[idx] = { value };
@@ -383,33 +320,21 @@ export class SheetModel {
   private _iterRange(range: CellRange, cb: (cell: CellAddress) => CellScalarValue | void): CellScalarValue[][] {
     const to = range.to ?? range.from;
     const rowRange = [Math.min(range.from.row, to.row), Math.max(range.from.row, to.row)];
-    const columnRange = [Math.min(range.from.column, to.column), Math.max(range.from.column, to.column)];
+    const columnRange = [Math.min(range.from.col, to.col), Math.max(range.from.col, to.col)];
     const rows: CellScalarValue[][] = [];
     for (let row = rowRange[0]; row <= rowRange[1]; row++) {
       const rowCells: CellScalarValue[] = [];
       for (let column = columnRange[0]; column <= columnRange[1]; column++) {
-        const value = cb({ row, column });
+        const value = cb({ row, col: column });
         if (value !== undefined) {
           rowCells.push(value);
         }
       }
+
       rows.push(rowCells);
     }
 
     return rows;
-  }
-
-  /**
-   *
-   */
-  // TODO(burdon): Insert indices into sheet.
-  private _insertIndices(indices: string[], i: number, n: number, max: number) {
-    if (i + n > max) {
-      throw new RangeException(i + n);
-    }
-
-    const idx = createIndices(n);
-    indices.splice(i, 0, ...idx);
   }
 
   // TODO(burdon): Delete index.
@@ -425,49 +350,6 @@ export class SheetModel {
   //
   // Indices.
   //
-
-  /**
-   * E.g., "HELLO()" => "EDGE("HELLO")".
-   */
-  mapFormulaBindingToFormula(formula: string): string {
-    return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
-      const fn = this._functions.find((fn) => fn.binding === binding);
-      if (!fn) {
-        return match;
-      }
-
-      if (args.trim() === '') {
-        return `EDGE("${binding}")`;
-      }
-      return `EDGE("${binding}", ${args})`;
-    });
-  }
-
-  /**
-   * E.g., "EDGE("HELLO")" => "HELLO()".
-   */
-  mapFormulaBindingFromFormula(formula: string): string {
-    return formula.replace(/EDGE\("([a-zA-Z0-9]+)"(.*)\)/, (_match, binding, args) => {
-      if (args.trim() === '') {
-        return `${binding}()`;
-      }
-      return `${binding}(${args.slice(2)})`;
-    });
-  }
-
-  /**
-   * Map from binding to fully qualified ECHO ID.
-   */
-  mapFormulaBindingToId(formula: string): string {
-    return this._options.mapFormulaBindingToId(this._functions)(formula);
-  }
-
-  /**
-   * Map from fully qualified ECHO ID to binding.
-   */
-  mapFormulaBindingFromId(formula: string): string {
-    return this._options.mapFormulaBindingFromId(this._functions)(formula);
-  }
 
   /**
    * Map from A1 notation to indices.
@@ -504,14 +386,14 @@ export class SheetModel {
   }
 
   toDateTime(num: number): SimpleDateTime {
-    return this._graph.hf.numberToDateTime(num) as SimpleDateTime;
+    return this._node.hf.numberToDateTime(num) as SimpleDateTime;
   }
 
   toDate(num: number): SimpleDate {
-    return this._graph.hf.numberToDate(num) as SimpleDate;
+    return this._node.hf.numberToDate(num) as SimpleDate;
   }
 
   toTime(num: number): SimpleDate {
-    return this._graph.hf.numberToTime(num) as SimpleDate;
+    return this._node.hf.numberToTime(num) as SimpleDate;
   }
 }

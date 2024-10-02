@@ -15,6 +15,12 @@ import { SPACE_PLUGIN } from '../../meta';
 
 const SYNC_STALLED_TIMEOUT = 5_000;
 
+const styles = {
+  barBg: 'bg-neutral-50 dark:bg-green-900 text-black',
+  barFg: 'bg-neutral-100 bg-green-500',
+  barHover: 'dark:hover:bg-green-500',
+};
+
 export const SyncStatus = () => {
   const state = useSyncState();
   return <SyncStatusIndicator state={state} />;
@@ -126,7 +132,7 @@ const SpaceRow = ({
 
   return (
     <div
-      className={mx('flex items-center mx-[2px] gap-[2px] hover:text-green-500 cursor-pointer')}
+      className={mx('flex items-center mx-[2px] gap-[2px] cursor-pointer', styles.barHover)}
       title={spaceId}
       onClick={() => {
         void navigator.clipboard.writeText(spaceId);
@@ -158,9 +164,7 @@ const Candle = ({ classNames, up, down }: CandleProps) => {
     <div className={mx('grid grid-cols-[1fr_2rem_1fr] w-full h-3', classNames)}>
       <Bar classNames='justify-end' {...up} />
       <div className='relative'>
-        <div className='absolute inset-0 flex items-center justify-center text-xs bg-green-900 text-black'>
-          {up.total}
-        </div>
+        <div className={mx('absolute inset-0 flex items-center justify-center text-xs', styles.barBg)}>{up.total}</div>
       </div>
       <Bar {...down} />
     </div>
@@ -174,8 +178,8 @@ const Bar = ({ classNames, count, total }: ThemedClassName<Progress>) => {
   }
 
   return (
-    <div className={mx('relative flex w-full bg-neutral-50 dark:bg-green-900', classNames)}>
-      <div className='shrink-0 bg-green-500' style={{ width: `${p}%` }}></div>
+    <div className={mx('relative flex w-full', styles.barBg, classNames)}>
+      <div className={mx('shrink-0', styles.barFg)} style={{ width: `${p}%` }}></div>
       {count !== total && (
         <div className='absolute top-0 bottom-0 flex items-center mx-0.5 text-black text-xs'>{count}</div>
       )}

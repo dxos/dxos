@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { StackSimple, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type Plugin, type PluginDefinition } from '@dxos/app-framework';
@@ -44,8 +43,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         records: {
           [StackViewType.typename]: {
             placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
-            icon: (props: IconProps) => <StackSimple {...props} />,
-            iconSymbol: 'ph--stack-simple--regular',
+            icon: 'ph--stack-simple--regular',
           },
           [SECTION_IDENTIFIER]: {
             parse: (section: { object: EchoReactiveObject<any> }, type: string) => {

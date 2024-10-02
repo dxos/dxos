@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, type IconProps } from '@phosphor-icons/react';
 import { computed, effect } from '@preact/signals-core';
 import React from 'react';
 
@@ -25,7 +24,7 @@ import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
+import { type ActionGroup, createExtension, isActionGroup, toSignal } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { SpaceAction } from '@dxos/plugin-space';
 import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
@@ -94,8 +93,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         records: {
           [ChannelType.typename]: {
             placeholder: ['channel title placeholder', { ns: THREAD_PLUGIN }],
-            icon: (props: IconProps) => <Chat {...props} />,
-            iconSymbol: 'ph--chat--regular',
+            icon: 'ph--chat--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (channel: ChannelType) => loadObjectReferences(channel, (channel) => channel.threads),
           },
@@ -141,28 +139,38 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   return;
                 }
 
-                // TODO(Zan): Find util (or make one)
+                // TODO(Zan): Find util (or make one).
                 const subjectId = id.split('~').at(0);
                 const [spaceId, objectId] = subjectId?.split(':') ?? [];
                 const space = client.spaces.get().find((space) => space.id === spaceId);
-                const doc = space?.db.getObjectById(objectId);
-                if (!doc || !subjectId) {
+                const object = toSignal(
+                  (onChange) => {
+                    const timeout = setTimeout(async () => {
+                      await space?.db.loadObjectById(objectId);
+                      onChange();
+                    });
+
+                    return () => clearTimeout(timeout);
+                  },
+                  () => space?.db.getObjectById(objectId),
+                );
+                if (!object || !subjectId) {
                   return;
                 }
 
-                const docMeta = metadataResolver(getTypename(doc) ?? '');
-                const label = docMeta.label?.(doc) ||
-                  doc.name ||
-                  docMeta.placeholder || ['unnamed object threads label', { ns: THREAD_PLUGIN }];
+                const meta = metadataResolver(getTypename(object) ?? '');
+                const label = meta.label?.(object) ||
+                  object.name ||
+                  meta.placeholder || ['unnamed object threads label', { ns: THREAD_PLUGIN }];
 
                 const viewState = getViewState(subjectId);
 
                 return {
                   id,
                   type: 'orphan-comments-for-subject',
-                  data: doc,
+                  data: object,
                   properties: {
-                    icon: meta.iconComponent,
+                    icon: meta.icon,
                     label,
                     showResolvedThreads: viewState.showResolvedThreads,
                   },
@@ -198,7 +206,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                       menuItemType: 'toggle',
                       isChecked: viewState.showResolvedThreads,
                       testId: 'threadPlugin.toggleShowResolved',
-                      iconSymbol: viewState.showResolvedThreads ? 'ph--eye-slash--regular' : 'ph--eye--regular',
+                      icon: viewState.showResolvedThreads ? 'ph--eye-slash--regular' : 'ph--eye--regular',
                     },
                   },
                 ];
@@ -230,8 +238,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     },
                     properties: {
                       label: ['create channel label', { ns: THREAD_PLUGIN }],
-                      icon: (props: IconProps) => <Chat {...props} />,
-                      iconSymbol: 'ph--chat--regular',
+                      icon: 'ph--chat--regular',
                       testId: 'threadPlugin.createObject',
                     },
                   },

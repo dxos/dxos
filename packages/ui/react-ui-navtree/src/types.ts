@@ -10,7 +10,7 @@ export type OpenItemIds = Record<string, true>;
 
 type NavTreeNodeSharedProperties = {
   label: Label;
-  iconSymbol?: string;
+  icon?: string;
   disabled?: boolean;
   testId?: string;
 };

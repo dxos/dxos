@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Rive, useRive } from '@rive-app/react-canvas';
 import React, { useEffect } from 'react';
 
-import { useAsyncCallback } from '@dxos/react-ui';
+import { useAsyncState } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -46,7 +46,7 @@ const Component = ({ buffer }: { buffer: ArrayBuffer }) => {
 };
 
 export const Default = () => {
-  const buffer = useAsyncCallback<ArrayBuffer | undefined>(async () => {
+  const buffer = useAsyncState<ArrayBuffer>(async () => {
     // CORS set via dashboard.
     const response = await fetch('https://dxos.network/dxos.riv', { mode: 'cors' });
     if (response.ok) {

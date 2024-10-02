@@ -49,7 +49,6 @@ const TableHead = (_props: TableHeadProps) => {
                    * Resize handle.
                    * https://codesandbox.io/p/sandbox/github/tanstack/table/tree/main/examples/react/column-sizing
                    */}
-
                   {resizable && (
                     <div
                       className={theadResizeRoot({ isResizing })}

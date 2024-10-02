@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GithubLogo, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
@@ -60,8 +59,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                     type: GITHUB_PLUGIN,
                     properties: {
                       label: ['plugin name', { ns: GITHUB_PLUGIN }],
-                      icon: (props: IconProps) => <GithubLogo {...props} />,
-                      iconSymbol: 'ph--github-logo--regular',
+                      icon: 'ph--github-logo--regular',
                     },
                     // TODO(wittjosiah): Add documents.
                     // nodes: documents.map((doc) => ({}),
