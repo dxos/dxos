@@ -18,10 +18,10 @@ const StorybookStack = () => {
   return (
     <Stack orientation={'horizontal'} classNames='gap-2'>
       {[...Array(3)].map((_, index) => (
-        <StackItem key={index} orientation={'horizontal'}>
+        <StackItem key={index} orientation={'horizontal'} container={'container'}>
           <Stack orientation={'vertical'} classNames='gap-1'>
             {[...Array(4)].map((_, innerIndex) => (
-              <StackItem key={innerIndex} orientation={'vertical'}>
+              <StackItem key={innerIndex} orientation={'vertical'} container={`col-item-${index}`} classNames='p-2'>
                 <KanbanBlock />
               </StackItem>
             ))}

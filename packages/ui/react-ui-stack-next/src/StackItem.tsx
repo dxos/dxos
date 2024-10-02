@@ -21,9 +21,11 @@ export const StackItem = ({
   children,
   classNames,
   orientation,
+  container,
   ...props
 }: Omit<ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'aria-orientation'> & {
   orientation?: StackProps['orientation'];
+  container?: string;
 }) => {
   const id = 'change-me';
   const ref = useRef<HTMLDivElement>(null);
@@ -37,27 +39,26 @@ export const StackItem = ({
     const element = ref.current;
 
     return combine(
-      draggable({ element, getInitialData: () => ({ id }) }),
+      draggable({ element, getInitialData: () => ({ id, container }) }),
       // TODO(zanthure): canDrop should have higher standards.
       dropTargetForElements({
         element,
         canDrop: ({ ..._args }) => true,
-
         getData: ({ input, element }) => {
           return attachClosestEdge(
-            { id },
-            {
-              input,
-              element,
-              allowedEdges: orientation === 'vertical' ? ['top', 'bottom'] : ['left', 'right'],
-            },
+            { id, container },
+            { input, element, allowedEdges: orientation === 'vertical' ? ['top', 'bottom'] : ['left', 'right'] },
           );
         },
-        onDragEnter: (args) => {
-          setEdge(extractClosestEdge(args.self.data));
+        onDragEnter: ({ self, source }) => {
+          if (source.data.container === self.data.container) {
+            setEdge(extractClosestEdge(self.data));
+          }
         },
-        onDrag: (args) => {
-          setEdge(extractClosestEdge(args.self.data));
+        onDrag: ({ self, source }) => {
+          if (source.data.container === self.data.container) {
+            setEdge(extractClosestEdge(self.data));
+          }
         },
         onDragLeave: () => {
           setEdge(null);
@@ -67,11 +68,7 @@ export const StackItem = ({
         },
       }),
     );
-  }, [orientation]);
-
-  React.useEffect(() => {
-    console.log('Closest edge changed:', closestEdge);
-  }, [closestEdge]);
+  }, [orientation, container, id, ref]);
 
   return (
     <div
