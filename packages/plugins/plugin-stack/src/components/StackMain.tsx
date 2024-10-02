@@ -19,7 +19,7 @@ import { SpaceAction } from '@dxos/plugin-space';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { type MosaicDataItem, type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/react-ui-mosaic';
+import { type MosaicDataItem, type MosaicDropEvent, type MosaicMoveEvent, Mosaic, Path } from '@dxos/react-ui-mosaic';
 import {
   type AddSectionPosition,
   type CollapsedSections,
@@ -172,7 +172,8 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
   };
 
   return (
-    <>
+    <Mosaic.Root>
+      <Mosaic.DragOverlay />
       <Stack
         id={id}
         data-testid='main.stack'
@@ -212,7 +213,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
           </Button>
         </div>
       )}
-    </>
+    </Mosaic.Root>
   );
 };
 
