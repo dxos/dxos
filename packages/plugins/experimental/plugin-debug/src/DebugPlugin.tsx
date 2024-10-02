@@ -17,7 +17,7 @@ import { Timer } from '@dxos/async';
 import { Devtools } from '@dxos/devtools';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type ClientPluginProvides } from '@dxos/plugin-client';
-import { createExtension, Graph, type Node } from '@dxos/plugin-graph';
+import { createExtension, type Node } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
@@ -107,7 +107,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                 {
                   // TODO(zan): Removed `/` because it breaks deck layout reload. Fix?
                   id: 'dxos.org.plugin.debug.devtools',
-                  data: 'devtools',
+                  data: { type: 'dxos.org/plugin/debug/devtools' },
                   type: 'dxos.org/plugin/debug/devtools',
                   properties: {
                     label: ['devtools label', { ns: DEBUG_PLUGIN }],
@@ -125,7 +125,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                 {
                   id: 'dxos.org/plugin/debug/debug',
                   type: 'dxos.org/plugin/debug/debug',
-                  data: { graph: graphPlugin?.provides.graph },
+                  data: { graph: graphPlugin?.provides.graph, type: 'dxos.org/plugin/debug/debug' },
                   properties: {
                     label: ['debug label', { ns: DEBUG_PLUGIN }],
                     icon: 'ph--bug--regular',
@@ -144,7 +144,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   {
                     id: `${space.id}-debug`,
                     type: 'dxos.org/plugin/debug/space',
-                    data: { space },
+                    data: { space, type: 'dxos.org/plugin/debug/space' },
                     properties: {
                       label: ['debug label', { ns: DEBUG_PLUGIN }],
                       icon: 'ph--bug--regular',
@@ -190,42 +190,44 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               return <DebugStatus />;
           }
 
-          const primary = data.active ?? data.object;
+          const primary: any = data.active ?? data.object;
           let component: ReactNode;
           if (role === 'main' || role === 'article') {
-            if (primary === 'devtools' && settings.values.devtools) {
-              component = <Devtools />;
-            } else if (!primary || typeof primary !== 'object' || !settings.values.debug) {
-              component = null;
-            } else if ('space' in primary && isSpace(primary.space)) {
-              component = (
-                <DebugSpace
-                  space={primary.space}
-                  onAddObjects={(objects) => {
-                    if (!isSpace(primary.space)) {
-                      return;
-                    }
+            switch (primary?.type) {
+              case 'dxos.org/plugin/debug/devtools':
+                component = settings.values.devtools ? <Devtools /> : null;
+                break;
+              case 'dxos.org/plugin/debug/debug':
+                component = settings.values.debug ? <DebugGlobal graph={primary.graph} /> : null;
+                break;
+              case 'dxos.org/plugin/debug/space':
+                component = settings.values.debug ? (
+                  <DebugSpace
+                    space={primary.space}
+                    onAddObjects={(objects) => {
+                      if (!isSpace(primary.space)) {
+                        return;
+                      }
 
-                    const collection =
-                      primary.space.state.get() === SpaceState.SPACE_READY &&
-                      primary.space.properties[CollectionType.typename];
-                    if (!(collection instanceof CollectionType)) {
-                      return;
-                    }
+                      const collection =
+                        primary.space.state.get() === SpaceState.SPACE_READY &&
+                        primary.space.properties[CollectionType.typename];
+                      if (!(collection instanceof CollectionType)) {
+                        return;
+                      }
 
-                    void intentPlugin?.provides.intent.dispatch(
-                      objects.map((object) => ({
-                        action: SpaceAction.ADD_OBJECT,
-                        data: { target: collection, object },
-                      })),
-                    );
-                  }}
-                />
-              );
-            } else if ('graph' in primary && primary.graph instanceof Graph) {
-              component = <DebugGlobal graph={primary.graph} />;
-            } else {
-              component = null;
+                      void intentPlugin?.provides.intent.dispatch(
+                        objects.map((object) => ({
+                          action: SpaceAction.ADD_OBJECT,
+                          data: { target: collection, object },
+                        })),
+                      );
+                    }}
+                  />
+                ) : null;
+                break;
+              default:
+                component = null;
             }
           }
 
