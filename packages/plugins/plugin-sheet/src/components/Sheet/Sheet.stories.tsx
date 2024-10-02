@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
-import { type Space, useSpace } from '@dxos/react-client/echo';
+import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -17,16 +17,16 @@ import { Sheet } from './Sheet';
 import { type SizeMap } from './grid';
 import { useSheetContext } from './sheet-context';
 import { addressToIndex, rangeToIndex } from '../../defs';
+import { type ComputeGraph } from '../../graph';
 import { useComputeGraph } from '../../hooks';
 import { useTestSheet, withGraphDecorator } from '../../testing';
 import { SheetType, ValueTypeEnum } from '../../types';
 import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
 
 // TODO(burdon): Allow toolbar to access sheet context; provide state for current cursor/range.
-const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) => {
+const SheetWithToolbar = ({ graph, debug }: { graph: ComputeGraph; debug?: boolean }) => {
   const { model, cursor, range } = useSheetContext();
 
-  const graph = useComputeGraph(space);
   const handleRefresh = () => {
     graph?.refresh();
   };
@@ -115,13 +115,13 @@ export const Default = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
   const sheet = useTestSheet(space, graph);
-  if (!space || !sheet) {
+  if (!graph || !sheet) {
     return null;
   }
 
   return (
-    <Sheet.Root space={space} sheet={sheet} onInfo={() => setDebug((debug) => !debug)}>
-      <SheetWithToolbar debug={debug} space={space} />
+    <Sheet.Root graph={graph} sheet={sheet} onInfo={() => setDebug((debug) => !debug)}>
+      <SheetWithToolbar graph={graph} debug={debug} />
     </Sheet.Root>
   );
 };
@@ -130,12 +130,12 @@ export const Debug = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
   const sheet = useTestSheet(space, graph);
-  if (!sheet || !space) {
+  if (!graph || !sheet) {
     return null;
   }
 
   return (
-    <Sheet.Root space={space} sheet={sheet}>
+    <Sheet.Root graph={graph} sheet={sheet}>
       <Sheet.Main />
       <Sheet.Debug />
     </Sheet.Root>
@@ -147,12 +147,12 @@ export const Rows = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
   const sheet = useTestSheet(space, graph);
-  if (!sheet || !space) {
+  if (!graph || !sheet) {
     return null;
   }
 
   return (
-    <Sheet.Root space={space} sheet={sheet}>
+    <Sheet.Root graph={graph} sheet={sheet}>
       <Sheet.Rows
         rows={sheet.rows}
         sizes={rowSizes}
@@ -167,12 +167,12 @@ export const Columns = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
   const sheet = useTestSheet(space, graph);
-  if (!sheet || !space) {
+  if (!graph || !sheet) {
     return null;
   }
 
   return (
-    <Sheet.Root space={space} sheet={sheet}>
+    <Sheet.Root graph={graph} sheet={sheet}>
       <Sheet.Columns
         columns={sheet.columns}
         sizes={columnSizes}
@@ -186,12 +186,12 @@ export const Main = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
   const sheet = useTestSheet(space, graph);
-  if (!sheet || !space) {
+  if (!graph || !sheet) {
     return null;
   }
 
   return (
-    <Sheet.Root space={space} sheet={sheet}>
+    <Sheet.Root graph={graph} sheet={sheet}>
       <Sheet.Grid
         size={{
           numRows: 50,

@@ -31,5 +31,5 @@ export const Basic = () => {
     return null;
   }
 
-  return <GridSheet space={space} sheet={sheet} />;
+  return <GridSheet graph={graph} sheet={sheet} />;
 };

@@ -26,7 +26,7 @@ const Story = () => {
   const [sheet, setSheet] = useState<SheetType>();
   const [text, setText] = useState(`${FUNCTION_NAME}(100)`);
   const [result, setResult] = useState<any>();
-  const model = useSheetModel(space, sheet);
+  const model = useSheetModel(graph, sheet);
   useEffect(() => {
     if (space) {
       const sheet = space.db.add(createSheet());

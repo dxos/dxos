@@ -21,7 +21,7 @@ const Story = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
   const [sheet, setSheet] = useState<SheetType>();
-  const model = useSheetModel(space, sheet);
+  const model = useSheetModel(graph, sheet);
   useEffect(() => {
     if (space) {
       const sheet = space.db.add(createSheet());

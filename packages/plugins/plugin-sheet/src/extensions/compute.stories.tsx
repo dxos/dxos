@@ -66,20 +66,20 @@ const Grid = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
   const sheet = useTestSheet(space, graph, { title: SHEET_NAME });
-  const model = useSheetModel(space, sheet);
+  const model = useSheetModel(graph, sheet);
   useEffect(() => {
     if (model) {
       model.setValues({ A1: { value: 100 }, A2: { value: 200 }, A3: { value: 300 }, A5: { value: '=SUM(A1:A3)' } });
     }
   }, [model]);
 
-  if (!space || !sheet) {
+  if (!graph || !sheet) {
     return null;
   }
 
   return (
     <div className='flex w-[40rem] overflow-hidden'>
-      <Sheet.Root space={space} sheet={sheet}>
+      <Sheet.Root graph={graph} sheet={sheet}>
         <Sheet.Main classNames='border border-separator' />
       </Sheet.Root>
     </div>

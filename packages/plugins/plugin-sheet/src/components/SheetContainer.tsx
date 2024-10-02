@@ -22,7 +22,7 @@ const attentionFragment = mx(
 export const sectionToolbarLayout =
   'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 __-block-start-px transition-opacity';
 
-const SheetContainer = ({ sheet, space, role }: SheetRootProps & { role?: string }) => {
+const SheetContainer = ({ graph, sheet, role }: SheetRootProps & { role?: string }) => {
   const dispatch = useIntentDispatcher();
 
   const id = fullyQualifiedId(sheet);
@@ -50,7 +50,7 @@ const SheetContainer = ({ sheet, space, role }: SheetRootProps & { role?: string
 
   return (
     <div role='none' className={role === 'article' ? 'row-span-2 grid grid-rows-subgrid' : undefined}>
-      <Sheet.Root space={space} sheet={sheet}>
+      <Sheet.Root graph={graph} sheet={sheet}>
         <div role='none' className={mx('flex flex-0 justify-center overflow-x-auto')}>
           <Toolbar.Root
             onAction={handleAction}
