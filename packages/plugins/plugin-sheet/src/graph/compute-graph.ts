@@ -78,7 +78,7 @@ export const createComputeGraphRegistry = (options: Partial<FunctionContextOptio
  */
 // TODO(burdon): Move graph into separate plugin; isolate HF deps.
 export class ComputeGraphRegistry extends Resource {
-  private readonly _registry = new Map<SpaceId, ComputeGraph>();
+  private readonly _graphs = new Map<SpaceId, ComputeGraph>();
 
   constructor(private readonly _options: ComputeGraphOptions = defaultOptions) {
     super();
@@ -88,7 +88,7 @@ export class ComputeGraphRegistry extends Resource {
   }
 
   getGraph(spaceId: SpaceId): ComputeGraph | undefined {
-    return this._registry.get(spaceId);
+    return this._graphs.get(spaceId);
   }
 
   async getOrCreateGraph(space: Space): Promise<ComputeGraph> {
@@ -102,12 +102,18 @@ export class ComputeGraphRegistry extends Resource {
   }
 
   async createGraph(space: Space): Promise<ComputeGraph> {
-    invariant(!this._registry.has(space.id), `ComputeGraph already exists for space: ${space.id}`);
+    invariant(!this._graphs.has(space.id), `ComputeGraph already exists for space: ${space.id}`);
     const hf = HyperFormula.buildEmpty(this._options);
     const graph = new ComputeGraph(hf, space, this._options);
+    this._graphs.set(space.id, graph);
     await graph.open(this._ctx);
-    this._registry.set(space.id, graph);
     return graph;
+  }
+
+  protected override async _close() {
+    for (const graph of this._graphs.values()) {
+      await graph.close();
+    }
   }
 }
 
@@ -185,9 +191,8 @@ export class ComputeGraph extends Resource {
     const sheetId = this._hf.getSheetId(name);
     invariant(sheetId !== undefined);
 
-    // TODO(burdon): Chain context?
     const node = new ComputeNode(this, sheetId);
-    await node.open(this._ctx);
+    await node.open();
     this._nodes.set(sheetId, node);
     return node;
   }
@@ -288,6 +293,12 @@ export class ComputeGraph extends Resource {
       });
 
       this._ctx.onDispose(unsubscribe);
+    }
+  }
+
+  protected override async _close() {
+    for (const node of this._nodes.values()) {
+      await node.close();
     }
   }
 }
