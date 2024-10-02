@@ -54,11 +54,11 @@ const cellGetter = (model: SheetModel, formatting: FormattingModel) => {
   return (nextBounds: DxGridRange): DxGridCells => {
     [...Array(nextBounds.end.col - nextBounds.start.col)].forEach((_, c0) => {
       return [...Array(nextBounds.end.row - nextBounds.start.row)].forEach((_, r0) => {
-        const column = nextBounds.start.col + c0;
+        const col = nextBounds.start.col + c0;
         const row = nextBounds.start.row + r0;
-        const cell = formatting.getFormatting({ column, row });
+        const cell = formatting.getFormatting({ col, row });
         if (cell.value) {
-          cachedCells[`${column},${row}`] = { value: cell.value, className: mx(cell.classNames) };
+          cachedCells[`${col},${row}`] = { value: cell.value, className: mx(cell.classNames) };
         }
       });
     });
