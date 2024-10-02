@@ -10,19 +10,30 @@ import { withTheme } from '@dxos/storybook-utils';
 import { Stack } from './Stack';
 import { StackItem } from './StackItem';
 
-const KanbanBlock = () => {
-  return <div className='is-64 bs-24 bg-input rounded-lg border border-separator shadow-sm'></div>;
+const KanbanBlock = ({ column, row }: { column: number; row: number }) => {
+  return (
+    <div className='is-64 bs-24 bg-input rounded-lg border border-separator shadow-sm grid place-content-center'>
+      <span className='text-sm font-medium'>
+        {column},{row}
+      </span>
+    </div>
+  );
 };
 
 const StorybookStack = () => {
   return (
-    <Stack orientation={'horizontal'} classNames='gap-2'>
-      {[...Array(3)].map((_, index) => (
-        <StackItem key={index} orientation={'horizontal'} container={'container'}>
+    <Stack orientation={'horizontal'} classNames='gap-1'>
+      {[...Array(3)].map((_, columnIndex) => (
+        <StackItem
+          key={columnIndex}
+          orientation={'horizontal'}
+          container={'container'}
+          classNames='p-4 bg-deck rounded-md'
+        >
           <Stack orientation={'vertical'} classNames='gap-1'>
-            {[...Array(4)].map((_, innerIndex) => (
-              <StackItem key={innerIndex} orientation={'vertical'} container={`col-item-${index}`} classNames='p-2'>
-                <KanbanBlock />
+            {[...Array(4)].map((_, rowIndex) => (
+              <StackItem key={rowIndex} orientation={'vertical'} container={`col-item-${columnIndex}`}>
+                <KanbanBlock column={columnIndex} row={rowIndex} />
               </StackItem>
             ))}
           </Stack>
