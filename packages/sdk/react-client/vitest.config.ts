@@ -11,7 +11,7 @@ const specifiedEnv = (process.env.VITEST_ENV ?? 'node').toLowerCase();
 const environment = specifiedEnv === 'node' ? 'jsdom' : undefined;
 
 export default mergeConfig(
-  baseConfig(),
+  baseConfig({ cwd: __dirname }),
   defineConfig({
     test: {
       environment,
