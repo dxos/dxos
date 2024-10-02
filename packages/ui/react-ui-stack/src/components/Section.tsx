@@ -3,15 +3,7 @@
 //
 
 import { useFocusableGroup, useTabsterAttributes } from '@fluentui/react-tabster';
-import {
-  ArrowLineDown,
-  ArrowLineUp,
-  ArrowSquareOut,
-  CaretUpDown,
-  DotsNine,
-  type IconProps,
-  Trash,
-} from '@phosphor-icons/react';
+import { ArrowLineDown, ArrowLineUp, ArrowSquareOut, CaretUpDown, Trash } from '@phosphor-icons/react';
 import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import React, {
   forwardRef,
@@ -26,6 +18,7 @@ import React, {
 import {
   Button,
   DropdownMenu,
+  Icon,
   type Label,
   List,
   ListItem,
@@ -92,14 +85,14 @@ export type StackSectionItem = MosaicDataItem & {
   };
   // TODO(wittjosiah): Common type? Factor out?
   metadata?: {
-    icon?: FC<IconProps>;
+    icon?: string;
     placeholder?: Label;
     viewActions?: (item: StackSectionItem) => StackAction;
   };
 };
 
 export type StackAction = {
-  icon: FC<IconProps>;
+  icon: string;
   label: Label;
   onClick: () => void;
 };
@@ -133,7 +126,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
     {
       id,
       title,
-      icon: Icon = DotsNine,
+      icon = 'phosphor--placeholder--regular',
       size = 'intrinsic',
       collapsed,
       active,
@@ -206,7 +199,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                   }}
                 >
                   <DropDownMenuDragHandleTrigger active={!!active} variant='ghost' classNames='m-0' {...draggableProps}>
-                    <Icon className={mx(getSize(5), 'transition-opacity')} />
+                    <Icon icon={icon} size={5} className='transition-opacity' />
                   </DropDownMenuDragHandleTrigger>
                   <DropdownMenu.Portal>
                     <DropdownMenu.Content>
