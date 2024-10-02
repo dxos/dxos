@@ -33,7 +33,7 @@ jobs:
       - name: Homebrew
         run: |
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          brew install automake
+          brew install automake libtool
       
       - name: Setup Socket
         run: |
