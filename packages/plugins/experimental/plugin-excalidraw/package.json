@@ -28,9 +28,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "vitest-ui": "VITEST_ENV=chrome nx vitest plugin-sketch"
-  },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",

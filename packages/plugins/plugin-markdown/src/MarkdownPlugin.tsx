@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, TextAa } from '@phosphor-icons/react';
+import { TextAa } from '@phosphor-icons/react';
 import React, { type Ref } from 'react';
 
 import {
@@ -118,8 +118,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           [DocumentType.typename]: {
             label: (object: any) => (object instanceof DocumentType ? object.name ?? object.fallbackName : undefined),
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
-            icon: (props: IconProps) => <TextAa {...props} />,
-            iconSymbol: 'ph--text-aa--regular',
+            icon: 'ph--text-aa--regular',
             graphProps: {
               managesAutofocus: true,
             },
@@ -172,8 +171,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   },
                   properties: {
                     label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-                    icon: (props: IconProps) => <TextAa {...props} />,
-                    iconSymbol: 'ph--text-aa--regular',
+                    icon: 'ph--text-aa--regular',
                     testId: 'markdownPlugin.createObject',
                   },
                 },

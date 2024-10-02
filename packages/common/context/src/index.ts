@@ -3,6 +3,6 @@
 //
 
 export * from './context';
-export * from './promise-utils';
 export * from './context-disposed-error';
+export * from './promise-utils';
 export * from './resource';

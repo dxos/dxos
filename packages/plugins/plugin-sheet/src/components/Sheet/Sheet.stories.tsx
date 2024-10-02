@@ -7,7 +7,8 @@ import '@dxos-theme';
 import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
-import { getSpace, type Space } from '@dxos/react-client/echo';
+import { type Space, useSpace } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -15,15 +16,20 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Sheet } from './Sheet';
 import { type SizeMap } from './grid';
 import { useSheetContext } from './sheet-context';
-import { addressToIndex, rangeToIndex } from '../../model';
+import { addressToIndex, rangeToIndex } from '../../defs';
+import { useComputeGraph } from '../../hooks';
 import { useTestSheet, withGraphDecorator } from '../../testing';
-import { ValueTypeEnum } from '../../types';
-// TODO(wittjosiah): Refactor. This is not exported from ./components due to depending on ECHO.
-import { useComputeGraph } from '../ComputeGraph/useComputeGraph';
+import { SheetType, ValueTypeEnum } from '../../types';
 import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
+
 // TODO(burdon): Allow toolbar to access sheet context; provide state for current cursor/range.
 const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) => {
   const { model, cursor, range } = useSheetContext();
+
+  const graph = useComputeGraph(space);
+  const handleRefresh = () => {
+    graph?.refresh();
+  };
 
   // TODO(burdon): Factor out.
   const handleAction: ToolbarActionHandler = ({ type }) => {
@@ -77,11 +83,6 @@ const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) =
     }
   };
 
-  const graph = useComputeGraph(space);
-  const handleRefresh = () => {
-    graph.refresh();
-  };
-
   return (
     <div className='flex flex-col overflow-hidden'>
       <Toolbar.Root onAction={handleAction}>
@@ -101,33 +102,40 @@ const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) =
 export default {
   title: 'plugin-sheet/Sheet',
   component: Sheet,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true, classNames: 'inset-4' }), withGraphDecorator],
+  decorators: [
+    withClientProvider({ types: [SheetType], createIdentity: true }),
+    withGraphDecorator,
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true, classNames: 'inset-4' }),
+  ],
 };
 
 export const Default = () => {
   const [debug, setDebug] = useState(false);
-  const sheet = useTestSheet();
-  const space = getSpace(sheet);
-  if (!sheet || !space) {
+  const space = useSpace();
+  const graph = useComputeGraph(space);
+  const sheet = useTestSheet(space, graph);
+  if (!space || !sheet) {
     return null;
   }
 
   return (
-    <Sheet.Root sheet={sheet} space={space} onInfo={() => setDebug((debug) => !debug)}>
+    <Sheet.Root space={space} sheet={sheet} onInfo={() => setDebug((debug) => !debug)}>
       <SheetWithToolbar debug={debug} space={space} />
     </Sheet.Root>
   );
 };
 
 export const Debug = () => {
-  const sheet = useTestSheet();
-  const space = getSpace(sheet);
+  const space = useSpace();
+  const graph = useComputeGraph(space);
+  const sheet = useTestSheet(space, graph);
   if (!sheet || !space) {
     return null;
   }
 
   return (
-    <Sheet.Root sheet={sheet} space={space}>
+    <Sheet.Root space={space} sheet={sheet}>
       <Sheet.Main />
       <Sheet.Debug />
     </Sheet.Root>
@@ -136,14 +144,15 @@ export const Debug = () => {
 
 export const Rows = () => {
   const [rowSizes, setRowSizes] = useState<SizeMap>({});
-  const sheet = useTestSheet();
-  const space = getSpace(sheet);
+  const space = useSpace();
+  const graph = useComputeGraph(space);
+  const sheet = useTestSheet(space, graph);
   if (!sheet || !space) {
     return null;
   }
 
   return (
-    <Sheet.Root sheet={sheet} space={space}>
+    <Sheet.Root space={space} sheet={sheet}>
       <Sheet.Rows
         rows={sheet.rows}
         sizes={rowSizes}
@@ -155,14 +164,15 @@ export const Rows = () => {
 
 export const Columns = () => {
   const [columnSizes, setColumnSizes] = useState<SizeMap>({});
-  const sheet = useTestSheet();
-  const space = getSpace(sheet);
+  const space = useSpace();
+  const graph = useComputeGraph(space);
+  const sheet = useTestSheet(space, graph);
   if (!sheet || !space) {
     return null;
   }
 
   return (
-    <Sheet.Root sheet={sheet} space={space}>
+    <Sheet.Root space={space} sheet={sheet}>
       <Sheet.Columns
         columns={sheet.columns}
         sizes={columnSizes}
@@ -173,18 +183,19 @@ export const Columns = () => {
 };
 
 export const Main = () => {
-  const sheet = useTestSheet();
-  const space = getSpace(sheet);
+  const space = useSpace();
+  const graph = useComputeGraph(space);
+  const sheet = useTestSheet(space, graph);
   if (!sheet || !space) {
     return null;
   }
 
   return (
-    <Sheet.Root sheet={sheet} space={space}>
+    <Sheet.Root space={space} sheet={sheet}>
       <Sheet.Grid
         size={{
           numRows: 50,
-          numColumns: 26,
+          numCols: 26,
         }}
         rows={sheet.rows}
         columns={sheet.columns}

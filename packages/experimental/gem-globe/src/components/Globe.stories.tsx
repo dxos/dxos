@@ -9,7 +9,7 @@ import { Leva } from 'leva';
 import React, { useMemo, useState } from 'react';
 import { type Topology } from 'topojson-specification';
 
-import { useAsyncCallback } from '@dxos/react-ui';
+import { useAsyncState } from '@dxos/react-ui';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import {
@@ -150,15 +150,15 @@ const Story = ({
   xAxis = false,
 }: StoryProps) => {
   const [controller, setController] = useState<GlobeController | null>();
-  const dots = useAsyncCallback(async () => {
+  const dots = useAsyncState(async () => {
     const points = (await import('../../data/countries-dots-3.ts')).default;
     return {
       type: 'Topology',
       objects: { dots: points },
     } as any as Topology;
   });
-  const topology = useAsyncCallback(async () => (await import('../../data/countries-110m.ts')).default);
-  const airports = useAsyncCallback(async () => (await import('../../data/airports.ts')).default);
+  const topology = useAsyncState(async () => (await import('../../data/countries-110m.ts')).default);
+  const airports = useAsyncState(async () => (await import('../../data/airports.ts')).default);
   const features = useMemo(() => {
     return airports ? createTrip(airports, routes, (dots?.objects.dots as any)?.geometries[0].coordinates) : undefined;
   }, [airports, routes, dots]);
@@ -236,7 +236,7 @@ export default {
 };
 
 export const Earth1 = () => {
-  const topology = useAsyncCallback(async () => (await import('../../data/countries-110m.ts')).default);
+  const topology = useAsyncState(async () => (await import('../../data/countries-110m.ts')).default);
   const [controller, setController] = useState<GlobeController | null>();
   useDrag(controller);
 
@@ -248,7 +248,7 @@ export const Earth1 = () => {
 };
 
 export const Earth2 = () => {
-  const topology = useAsyncCallback(async () => (await import('../../data/countries-110m.ts')).default);
+  const topology = useAsyncState(async () => (await import('../../data/countries-110m.ts')).default);
   const [controller, setController] = useState<GlobeController | null>();
   useDrag(controller);
 
@@ -281,7 +281,7 @@ const monochrome: StyleSet = {
 };
 
 export const Mercator = () => {
-  const topology = useAsyncCallback(async () => (await import('../../data/countries-110m.ts')).default);
+  const topology = useAsyncState(async () => (await import('../../data/countries-110m.ts')).default);
   const [controller, setController] = useState<GlobeController | null>();
   useDrag(controller);
 

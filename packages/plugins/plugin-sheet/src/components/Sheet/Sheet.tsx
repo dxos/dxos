@@ -71,7 +71,7 @@ import {
   rangeToA1Notation,
   addressToIndex,
   addressFromIndex,
-} from '../../model';
+} from '../../defs';
 import {
   CellEditor,
   type CellRangeNotifier,
@@ -138,7 +138,7 @@ const SheetRoot = ({ children, ...props }: PropsWithChildren<SheetContextProps>)
 
 type SheetMainProps = ThemedClassName<Partial<GridSize>>;
 
-const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numRows, numColumns }, forwardRef) => {
+const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numRows, numCols }, forwardRef) => {
   const { model, cursor, setCursor, setRange, setEditing } = useSheetContext();
 
   // Scrolling.
@@ -263,8 +263,8 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
         ref={columnsRef}
         columns={columns}
         sizes={columnSizes}
-        selected={cursor?.column}
-        onSelect={(column) => setCursor(cursor?.column === column ? undefined : { row: -1, column })}
+        selected={cursor?.col}
+        onSelect={(col) => setCursor(cursor?.col === col ? undefined : { row: -1, col })}
         onResize={handleResizeColumn}
         onMove={handleMoveColumns}
       />
@@ -274,13 +274,13 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
         rows={rows}
         sizes={rowSizes}
         selected={cursor?.row}
-        onSelect={(row) => setCursor(cursor?.row === row ? undefined : { row, column: -1 })}
+        onSelect={(row) => setCursor(cursor?.row === row ? undefined : { row, col: -1 })}
         onResize={handleResizeRow}
         onMove={handleMoveRows}
       />
       <SheetGrid
         ref={contentRef}
-        size={{ numRows: numRows ?? rows.length, numColumns: numColumns ?? columns.length }}
+        size={{ numRows: numRows ?? rows.length, numCols: numCols ?? columns.length }}
         rows={rows}
         columns={columns}
         rowSizes={rowSizes}
@@ -885,9 +885,9 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
 
             {/* Grid cells. */}
             {rowRange.map(({ row, top, height }) => {
-              return columnRange.map(({ column, left, width }) => {
+              return columnRange.map(({ col, left, width }) => {
                 const style: CSSProperties = { position: 'absolute', top, left, width, height };
-                const cell = { row, column };
+                const cell: CellAddress = { row, col };
                 const id = addressToA1Notation(cell);
                 const idx = addressToIndex(model.sheet, cell);
                 const active = posEquals(cursor, cell);
@@ -1082,10 +1082,11 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
       notifier.current?.(rangeToA1Notation(range));
     }
   }, [range]);
+
   const extension = useMemo(
     () => [
       editorKeys({ onNav, onClose }),
-      sheetExtension({ functions: model.functions }),
+      sheetExtension({ functions: model.graph.getFunctions() }),
       rangeExtension((fn) => (notifier.current = fn)),
     ],
     [model],
@@ -1109,12 +1110,13 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
 
 const SheetStatusBar = () => {
   const { model, cursor, range } = useSheetContext();
+
   let value;
   let isFormula = false;
   if (cursor) {
     value = model.getCellValue(cursor);
     if (typeof value === 'string' && value.charAt(0) === '=') {
-      value = model.mapFormulaBindingFromId(model.mapFormulaIndicesToRefs(value));
+      value = model.graph.mapFunctionBindingFromId(model.mapFormulaIndicesToRefs(value));
       isFormula = true;
     } else if (value != null) {
       value = String(value);

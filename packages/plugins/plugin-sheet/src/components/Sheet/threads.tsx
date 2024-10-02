@@ -3,18 +3,19 @@
 //
 
 import { effect } from '@preact/signals-core';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
 
 import { type IntentResolver, LayoutAction, useIntentDispatcher, useIntentResolver } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Icon, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 
 import { type Decoration } from './decorations';
 import { useSheetContext } from './sheet-context';
+import { addressFromIndex, addressToIndex, type CellAddress, closest } from '../../defs';
 import { SHEET_PLUGIN } from '../../meta';
-import { addressFromIndex, addressToIndex, type CellAddress, closest } from '../../model';
+
+// TODO(burdon): Move into folder; split hooks.
 
 const CommentIndicator = () => {
   return (
@@ -25,7 +26,7 @@ const CommentIndicator = () => {
   );
 };
 
-const ThreadedCellWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const ThreadedCellWrapper = ({ children }: PropsWithChildren) => {
   const dispatch = useIntentDispatcher();
   const [isHovered, setIsHovered] = React.useState(false);
   const { t } = useTranslation(SHEET_PLUGIN);
@@ -40,7 +41,7 @@ const ThreadedCellWrapper: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <div
       role='none'
-      className={mx('relative h-full is-full')}
+      className='relative h-full is-full'
       onMouseEnter={() => {
         setIsHovered(true);
       }}
@@ -72,6 +73,8 @@ const createThreadDecoration = (cellIndex: string, threadId: string, sheetId: st
     decorate: (props) => <ThreadedCellWrapper {...props} />,
   };
 };
+
+// TODO(burdon): Factor out hooks.
 
 const useUpdateCursorOnThreadSelection = () => {
   const { setCursor, model } = useSheetContext();
@@ -190,6 +193,7 @@ const useThreadDecorations = () => {
         }
       }
     });
+
     return () => unsubscribe();
   });
 };
