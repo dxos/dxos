@@ -447,22 +447,25 @@ class SpaceQuerySource implements QuerySource {
   }
 
   private _query(filter: Filter): QueryResult<EchoReactiveObject<any>>[] {
-    return (
-      this._database.coreDatabase
-        .allObjectCores()
-        // TODO(dmaretskyi): Cleanup proxy <-> core.
-        .filter((core) => filterMatch(filter, core, this._database.getObjectById(core.id, { deleted: true })))
-        .map((core) => ({
-          id: core.id,
-          spaceId: this.spaceId,
-          spaceKey: this.spaceKey,
-          object: this._database.getObjectById(core.id, { deleted: true }),
-          resolution: {
-            source: 'local',
-            time: 0,
-          },
-        }))
-    );
+    const filteredCores = filter.isObjectIdFilter()
+      ? filter
+          .objectIds!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
+          .filter((core) => core !== undefined)
+      : this._database.coreDatabase
+          .allObjectCores()
+          // TODO(dmaretskyi): Cleanup proxy <-> core.
+          .filter((core) => filterMatch(filter, core, this._database.getObjectById(core.id, { deleted: true })));
+
+    return filteredCores.map((core) => ({
+      id: core.id,
+      spaceId: this.spaceId,
+      spaceKey: this.spaceKey,
+      object: this._database.getObjectById(core.id, { deleted: true }),
+      resolution: {
+        source: 'local',
+        time: 0,
+      },
+    }));
   }
 
   private _isValidSourceForFilter(filter: Filter<EchoReactiveObject<any>>): boolean {

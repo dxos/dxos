@@ -79,8 +79,14 @@ export class QueryState extends Resource {
   @trace.span({ showInBrowserTimeline: true, op: 'db.query', attributes: { 'db.system': 'echo' } })
   async execQuery(): Promise<QueryRunResult> {
     const filter = this._params.request.filter;
+
     const beginQuery = performance.now();
-    const hits = await this._params.indexer.execQuery(filterToIndexQuery(filter));
+
+    // For object id filters, we return no results as those are handled by the SpaceQuerySource.
+    const hits =
+      filter.objectIds && filter.objectIds?.length > 0
+        ? []
+        : await this._params.indexer.execQuery(filterToIndexQuery(filter));
     if (this._firstRun) {
       this.metrics.indexQueryTime = performance.now() - beginQuery;
     }
