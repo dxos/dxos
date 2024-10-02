@@ -108,7 +108,7 @@ const GridSheetImpl = ({
     [editing],
   );
 
-  const { cells, columns, rows } = useSheetModelDxGridProps(model, formatting);
+  const { columns, rows } = useSheetModelDxGridProps(dxGrid, model, formatting);
 
   const extension = useMemo(
     () => [
@@ -123,7 +123,7 @@ const GridSheetImpl = ({
     <>
       <GridSheetCellEditor model={model} extension={extension} />
       <Grid.Content
-        cells={cells}
+        initialCells={{}}
         columns={columns}
         rows={rows}
         onAxisResize={handleAxisResize}
