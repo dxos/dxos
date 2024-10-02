@@ -105,6 +105,8 @@ export class SheetModel extends Resource {
     // TODO(burdon): SheetModel should extend ComputeNode and be constructed via the graph.
     this._node = await this._graph.getOrCreateNode(createSheetName(this._sheet.id));
 
+    // TODO(burdon): Construction pattern.
+
     // TODO(burdon): Event hierarchy?
     // Listen for model updates (e.g., async calculations).
     const unsubscribe = this._graph.update.on(() => this.update.emit());
