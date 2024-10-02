@@ -22,7 +22,7 @@ overrides:
   '@opentelemetry/sdk-node': ^0.52.1
   '@opentelemetry/sdk-trace-node': ^1.25.1
 
-pnpmfileChecksum: elrmhis56nc5mjztwsb5h3xxju
+pnpmfileChecksum: 2nrjfm3owqhgoayepgjvszoojy
 
 patchedDependencies:
   '@nx/js@19.7.2':
@@ -2905,9 +2905,6 @@ importers:
 
   packages/core/mesh/edge-client:
     dependencies:
-      '@bufbuild/protobuf':
-        specifier: ^2.0.0
-        version: 2.0.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2948,9 +2945,6 @@ importers:
 
   packages/core/mesh/messaging:
     dependencies:
-      '@bufbuild/protobuf':
-        specifier: ^2.0.0
-        version: 2.0.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -3382,8 +3376,8 @@ importers:
   packages/core/protocols:
     dependencies:
       '@bufbuild/protobuf':
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: ^2.1.0
+        version: 2.1.0
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
@@ -3404,11 +3398,11 @@ importers:
         version: 0.67.16(effect@3.2.7)
     devDependencies:
       '@bufbuild/buf':
-        specifier: ^1.42.0
-        version: 1.42.0
+        specifier: ^1.43.0
+        version: 1.43.0
       '@bufbuild/protoc-gen-es':
         specifier: ^2.1.0
-        version: 2.1.0(@bufbuild/protobuf@2.0.0)
+        version: 2.1.0(@bufbuild/protobuf@2.1.0)
 
   packages/devtools/cli:
     dependencies:
@@ -5110,7 +5104,7 @@ importers:
         version: 0.7.0(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.6.1)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       vite-plugin-inspect:
         specifier: ^0.8.1
-        version: 0.8.3(rollup@4.22.4)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.6.1)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+        version: 0.8.3(rollup@3.23.0)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.6.1)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       vite-plugin-pwa:
         specifier: ^0.18.2
         version: 0.18.2(@types/babel__core@7.20.5)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.6.1)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(workbox-window@7.0.0)
@@ -11613,7 +11607,7 @@ importers:
         version: 8.3.3(@storybook/test@8.3.3(storybook@8.3.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@8.3.3)(typescript@5.6.2)
       '@storybook/react-vite':
         specifier: ~8.3.3
-        version: 8.3.3(@storybook/test@8.3.3(storybook@8.3.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(rollup@4.22.4)(storybook@8.3.3)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.6.1)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+        version: 8.3.3(@storybook/test@8.3.3(storybook@8.3.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(rollup@3.23.0)(storybook@8.3.3)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.6.1)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@storybook/theming':
         specifier: ^8.3.3
         version: 8.3.3(storybook@8.3.3)
@@ -13219,49 +13213,46 @@ packages:
   '@braintree/sanitize-url@6.0.2':
     resolution: {integrity: sha512-Tbsj02wXCbqGmzdnXNk0SOF19ChhRU70BsroIi4Pm6Ehp56in6vch94mfbdQ17DozxkL3BAVjbZ4Qc1a0HFRAg==}
 
-  '@bufbuild/buf-darwin-arm64@1.42.0':
-    resolution: {integrity: sha512-dbHui2HWVXpzpos/MN7msybJZ/E0uu9WeQ2zyer623U/wtgrm8Mt/+6qtycR+qQM5a7aUpyy28GIV5AuB/kyww==}
+  '@bufbuild/buf-darwin-arm64@1.43.0':
+    resolution: {integrity: sha512-IBVd4qpN8udUOwmqDB8KdGz8JUqVYq8yXN2MOj6JN7XFhaq0xAVfWsuQNOW4Uzukh+Ypg8EOb1nsJubOUbVe6g==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [darwin]
 
-  '@bufbuild/buf-darwin-x64@1.42.0':
-    resolution: {integrity: sha512-qnWjWEWLoC/5meyTvNX7l/px1bJOF8DtnO+HHzlY/bYE1sUl326OXWQbpHyr+R/ftB/A5RYpxkuH9ypi3t+Dag==}
+  '@bufbuild/buf-darwin-x64@1.43.0':
+    resolution: {integrity: sha512-XeuLdJIdOXzLpLA95k5NWhO6cJw5YW89IJW6OHENkxXkdf9aWzg9ozrhTpPzUoZmGZbNyXfpa7kbhJaJ5+F42w==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [darwin]
 
-  '@bufbuild/buf-linux-aarch64@1.42.0':
-    resolution: {integrity: sha512-j7135YYRJaCKNF/6p0FhqG+6VlitiL5dTRU836/kqYdAY5jaZo4jEpGZ7KpxOOshFgs0BeR/fwHYUJUX0U4u/Q==}
+  '@bufbuild/buf-linux-aarch64@1.43.0':
+    resolution: {integrity: sha512-7hyXvwM5NFY08+aqbxVx4GZ/3AsqZKas3bR5TFLuD8/4u4JfA59b9+YMzLL1bxHFLqMMeXJBLgIVkyTtQIXGVg==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [linux]
 
-  '@bufbuild/buf-linux-x64@1.42.0':
-    resolution: {integrity: sha512-h7oPu6uczTJQnnXIfHy/K/VgbI+WMziOc+1+WADr6xBqYZpXjeetCuVF/6Qo7Hr1jOdzQPh1gh5A7Z3TJUMZRA==}
+  '@bufbuild/buf-linux-x64@1.43.0':
+    resolution: {integrity: sha512-4mg6ZUNpW2C61vmPyQDolLRIsfAomd2Yv1PICC9XG1iQtf3xQ+6q5B/kihOadhG2AN31WeKdorvuyPL7vmbsDA==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [linux]
 
-  '@bufbuild/buf-win32-arm64@1.42.0':
-    resolution: {integrity: sha512-k4vA66wRECxUkPgqJDsW7jS8QtgAqNDC40vSiHgEq23nyOBFo9DP7FDV2rWAmY6cxhBm318TFTEgGvFeolm+yg==}
+  '@bufbuild/buf-win32-arm64@1.43.0':
+    resolution: {integrity: sha512-YKoiA5Ui8VBW0GaWthDLBYr1C3I4Fx/j9txrUpg3Fvf+iwWutWQuTdA6W95HnLzUyhT6KnBMbXmB+SzosW9iFg==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [win32]
 
-  '@bufbuild/buf-win32-x64@1.42.0':
-    resolution: {integrity: sha512-fruOTCeO21juCTtwOke/rNVfmau3LMcy5goHfbVgJ2NhMk2HPu1/JA5v8K2N7qOKvta16QcxY00hWFiqs09Qcg==}
+  '@bufbuild/buf-win32-x64@1.43.0':
+    resolution: {integrity: sha512-//t0ndbP7zkQDydwAXShCqsqgOGX/ktsS2g0+D9A5Aw/nyLTxBmfsN+7hPxL4o0qq2N4MKs6DJeP4TvjYKBaMA==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [win32]
 
-  '@bufbuild/buf@1.42.0':
-    resolution: {integrity: sha512-k+Y4Sy9z2O9cOIA7q56WzAGC2xnIvxPfGb3X1+XsbeC0P/c7IW2/aWL324ppER538zCqqMtOwhp0vgljT4mthA==}
+  '@bufbuild/buf@1.43.0':
+    resolution: {integrity: sha512-lWiH+QJ8l0TGWP1KELvIA5BvAsZc0IiXppJlwI8EdQ2vQp39Ue2Xub8b13uy6IH0VDm9azQEjXuY1FxdB4mqsA==}
     engines: {node: '>=12'}
     hasBin: true
-
-  '@bufbuild/protobuf@2.0.0':
-    resolution: {integrity: sha512-sw2JhwJyvyL0zlhG61aDzOVryEfJg2PDZFSV7i7IdC7nAE41WuXCru3QWLGiP87At0BMzKOoKO/FqEGoKygGZQ==}
 
   '@bufbuild/protobuf@2.1.0':
     resolution: {integrity: sha512-+2Mx67Y3skJ4NCD/qNSdBJNWtu6x6Qr53jeNg+QcwiL6mt0wK+3jwHH2x1p7xaYH6Ve2JKOVn0OxU35WsmqI9A==}
@@ -17939,17 +17930,19 @@ packages:
     resolution: {integrity: sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==}
     engines: {node: '>= 8.0.0'}
     peerDependencies:
-      rollup: ^1.20.0||^2.0.0
+      rollup: ^2.0.0||^3.0.0
 
   '@rollup/pluginutils@4.2.1':
     resolution: {integrity: sha512-iKnFXr7NkdZAIHiIWE+BX5ULi/ucVFYWD6TbAV+rZctiRTY2PL6tsIKhoIOaoskiWAkgu+VsbXgUVDNLHf+InQ==}
     engines: {node: '>= 8.0.0'}
+    peerDependencies:
+      rollup: ^2.0.0||^3.0.0
 
   '@rollup/pluginutils@5.1.0':
     resolution: {integrity: sha512-XTIWOPPcpvyKI6L1NHo0lFlCyznUEyPmPY1mc3KpPVDYulHSTvyeLNVW00QTLIAFNhR3kYnJTQHeGqU4M3n09g==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
-      rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
+      rollup: ^2.0.0||^3.0.0
     peerDependenciesMeta:
       rollup:
         optional: true
@@ -35577,42 +35570,40 @@ snapshots:
 
   '@braintree/sanitize-url@6.0.2': {}
 
-  '@bufbuild/buf-darwin-arm64@1.42.0':
+  '@bufbuild/buf-darwin-arm64@1.43.0':
     optional: true
 
-  '@bufbuild/buf-darwin-x64@1.42.0':
+  '@bufbuild/buf-darwin-x64@1.43.0':
     optional: true
 
-  '@bufbuild/buf-linux-aarch64@1.42.0':
+  '@bufbuild/buf-linux-aarch64@1.43.0':
     optional: true
 
-  '@bufbuild/buf-linux-x64@1.42.0':
+  '@bufbuild/buf-linux-x64@1.43.0':
     optional: true
 
-  '@bufbuild/buf-win32-arm64@1.42.0':
+  '@bufbuild/buf-win32-arm64@1.43.0':
     optional: true
 
-  '@bufbuild/buf-win32-x64@1.42.0':
+  '@bufbuild/buf-win32-x64@1.43.0':
     optional: true
 
-  '@bufbuild/buf@1.42.0':
+  '@bufbuild/buf@1.43.0':
     optionalDependencies:
-      '@bufbuild/buf-darwin-arm64': 1.42.0
-      '@bufbuild/buf-darwin-x64': 1.42.0
-      '@bufbuild/buf-linux-aarch64': 1.42.0
-      '@bufbuild/buf-linux-x64': 1.42.0
-      '@bufbuild/buf-win32-arm64': 1.42.0
-      '@bufbuild/buf-win32-x64': 1.42.0
-
-  '@bufbuild/protobuf@2.0.0': {}
+      '@bufbuild/buf-darwin-arm64': 1.43.0
+      '@bufbuild/buf-darwin-x64': 1.43.0
+      '@bufbuild/buf-linux-aarch64': 1.43.0
+      '@bufbuild/buf-linux-x64': 1.43.0
+      '@bufbuild/buf-win32-arm64': 1.43.0
+      '@bufbuild/buf-win32-x64': 1.43.0
 
   '@bufbuild/protobuf@2.1.0': {}
 
-  '@bufbuild/protoc-gen-es@2.1.0(@bufbuild/protobuf@2.0.0)':
+  '@bufbuild/protoc-gen-es@2.1.0(@bufbuild/protobuf@2.1.0)':
     dependencies:
       '@bufbuild/protoplugin': 2.1.0
     optionalDependencies:
-      '@bufbuild/protobuf': 2.0.0
+      '@bufbuild/protobuf': 2.1.0
     transitivePeerDependencies:
       - supports-color
 
@@ -36023,7 +36014,7 @@ snapshots:
 
   '@crxjs/vite-plugin@2.0.0-beta.23(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.6.1)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
     dependencies:
-      '@rollup/pluginutils': 4.2.1
+      '@rollup/pluginutils': 4.2.1(rollup@2.78.1)
       '@webcomponents/custom-elements': 1.5.1
       acorn-walk: 8.3.2
       cheerio: 1.0.0-rc.12
@@ -41262,10 +41253,11 @@ snapshots:
       picomatch: 2.3.1
       rollup: 3.23.0
 
-  '@rollup/pluginutils@4.2.1':
+  '@rollup/pluginutils@4.2.1(rollup@2.78.1)':
     dependencies:
       estree-walker: 2.0.2
       picomatch: 2.3.1
+      rollup: 2.78.1
 
   '@rollup/pluginutils@5.1.0(rollup@3.23.0)':
     dependencies:
@@ -41274,14 +41266,6 @@ snapshots:
       picomatch: 2.3.1
     optionalDependencies:
       rollup: 3.23.0
-
-  '@rollup/pluginutils@5.1.0(rollup@4.22.4)':
-    dependencies:
-      '@types/estree': 1.0.5
-      estree-walker: 2.0.2
-      picomatch: 2.3.1
-    optionalDependencies:
-      rollup: 4.22.4
 
   '@rollup/rollup-android-arm-eabi@4.14.1':
     optional: true
@@ -42396,10 +42380,10 @@ snapshots:
       react-dom: 18.2.0(react@18.2.0)
       storybook: 8.3.3
 
-  '@storybook/react-vite@8.3.3(@storybook/test@8.3.3(storybook@8.3.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(rollup@4.22.4)(storybook@8.3.3)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.6.1)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
+  '@storybook/react-vite@8.3.3(@storybook/test@8.3.3(storybook@8.3.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(rollup@3.23.0)(storybook@8.3.3)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.6.1)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
     dependencies:
       '@joshwooding/vite-plugin-react-docgen-typescript': 0.3.0(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.6.1)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
-      '@rollup/pluginutils': 5.1.0(rollup@4.22.4)
+      '@rollup/pluginutils': 5.1.0(rollup@3.23.0)
       '@storybook/builder-vite': 8.3.3(storybook@8.3.3)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.6.1)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@storybook/react': 8.3.3(@storybook/test@8.3.3(storybook@8.3.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@8.3.3)(typescript@5.6.2)
       find-up: 5.0.0
@@ -58218,22 +58202,6 @@ snapshots:
     dependencies:
       '@antfu/utils': 0.7.7
       '@rollup/pluginutils': 5.1.0(rollup@3.23.0)
-      debug: 4.3.4
-      error-stack-parser-es: 0.1.1
-      fs-extra: 11.2.0
-      open: 10.0.3
-      perfect-debounce: 1.0.0
-      picocolors: 1.0.0
-      sirv: 2.0.4
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.6.1)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
-    transitivePeerDependencies:
-      - rollup
-      - supports-color
-
-  vite-plugin-inspect@0.8.3(rollup@4.22.4)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.6.1)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)):
-    dependencies:
-      '@antfu/utils': 0.7.7
-      '@rollup/pluginutils': 5.1.0(rollup@4.22.4)
       debug: 4.3.4
       error-stack-parser-es: 0.1.1
       fs-extra: 11.2.0
