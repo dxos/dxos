@@ -4,16 +4,20 @@
 
 import React, { useCallback, useMemo, useRef } from 'react';
 
+import { type Space } from '@dxos/client/echo';
 import {
-  Grid,
-  useGridContext,
   type DxGridElement,
+  Grid,
   type GridContentProps,
   type GridScopedProps,
+  useGridContext,
 } from '@dxos/react-ui-grid';
 
 import { dxGridCellIndexToSheetCellAddress, useSheetModelDxGridProps } from './util';
-import { type SheetModel, type FormattingModel, rangeToA1Notation, type CellRange } from '../../model';
+import { rangeToA1Notation, type CellRange } from '../../defs';
+import { useFormattingModel, useSheetModel, type UseSheetModelOptions } from '../../hooks';
+import { type SheetModel, type FormattingModel } from '../../model';
+import { type SheetType } from '../../types';
 import {
   CellEditor,
   type CellEditorProps,
@@ -23,7 +27,6 @@ import {
   rangeExtension,
   sheetExtension,
 } from '../CellEditor';
-import { useSheetModel, type UseSheetModelProps } from '../Sheet/util';
 
 const GridSheetCellEditor = ({
   model,
@@ -45,8 +48,6 @@ const GridSheetCellEditor = ({
     />
   ) : null;
 };
-
-export type GridSheetProps = UseSheetModelProps;
 
 const sheetRowDefault = { size: 32, resizeable: true };
 const sheetColDefault = { size: 180, resizeable: true };
@@ -96,9 +97,9 @@ const GridSheetImpl = ({
   const handleSelect = useCallback<NonNullable<GridContentProps['onSelect']>>(
     ({ minCol, maxCol, minRow, maxRow }) => {
       if (editing) {
-        const range: CellRange = { from: { column: minCol, row: minRow } };
+        const range: CellRange = { from: { col: minCol, row: minRow } };
         if (minCol !== maxCol || minRow !== maxRow) {
-          range.to = { column: maxCol, row: maxRow };
+          range.to = { col: maxCol, row: maxRow };
         }
         // Update range selection in formula.
         rangeNotifier.current?.(rangeToA1Notation(range));
@@ -112,7 +113,7 @@ const GridSheetImpl = ({
   const extension = useMemo(
     () => [
       editorKeys({ onClose: handleClose, ...(editing?.initialContent && { onNav: handleClose }) }),
-      sheetExtension({ functions: model.functions }),
+      sheetExtension({ functions: model.graph.getFunctions() }),
       rangeExtension((fn) => (rangeNotifier.current = fn)),
     ],
     [model, handleClose, editing],
@@ -135,9 +136,16 @@ const GridSheetImpl = ({
   );
 };
 
-export const GridSheet = (props: GridSheetProps) => {
-  const { model, formatting } = useSheetModel(props);
-  return !model || !formatting ? null : (
+export type GridSheetProps = { space?: Space; sheet?: SheetType } & UseSheetModelOptions;
+
+export const GridSheet = ({ space, sheet, ...options }: GridSheetProps) => {
+  const model = useSheetModel(space, sheet, options);
+  const formatting = useFormattingModel(model);
+  if (!model || !formatting) {
+    return null;
+  }
+
+  return (
     <Grid.Root id={model.id}>
       <GridSheetImpl model={model} formatting={formatting} />
     </Grid.Root>

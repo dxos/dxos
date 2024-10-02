@@ -110,7 +110,7 @@ export const TablePrimitive = <TData extends RowData>(props: TableProps<TData>) 
     // Columns
     columns,
     defaultColumn: {
-      size: 256, // Required in order remove default width.
+      size: 400, // Required in order remove default width.
       maxSize: 1024,
     },
 

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ComponentFunction } from '@dxos/react-ui-types/src';
+import { type ComponentFunction } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
 import { bounceLayout, fixedBorder, fixedSurface } from '../fragments';

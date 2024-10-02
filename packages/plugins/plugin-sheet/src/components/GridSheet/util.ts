@@ -15,7 +15,8 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type CellAddress, type SheetModel, type FormattingModel } from '../../model';
+import { type CellAddress } from '../../defs';
+import { type SheetModel, type FormattingModel } from '../../model';
 
 export const dxGridCellIndexToSheetCellAddress = (gridEditing: GridEditing): CellAddress | null => {
   if (!gridEditing) {
@@ -23,7 +24,7 @@ export const dxGridCellIndexToSheetCellAddress = (gridEditing: GridEditing): Cel
   }
   const [colStr, rowStr] = gridEditing.index.split(',');
   return {
-    column: parseInt(colStr),
+    col: parseInt(colStr),
     row: parseInt(rowStr),
   };
 };
