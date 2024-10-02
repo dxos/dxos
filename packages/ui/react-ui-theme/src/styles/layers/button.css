@@ -50,7 +50,7 @@
         }
       }
       &[data-variant='destructive'] {
-        @apply text-inverse bg-error;
+        @apply text-inverse bg-rose-550;
         &:hover,
         &[aria-pressed='true'],
         &[aria-checked='true'] &[data-state='open'] {

@@ -5,15 +5,19 @@
 import {
   asyncTimeout,
   Event,
+  runInContextAsync,
   synchronized,
   TimeoutError,
   Trigger,
   UpdateScheduler,
+  type ReadOnlyEvent,
   type UnsubscribeCallback,
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
+import { Stream } from '@dxos/codec-protobuf';
 import { Context, ContextDisposedError } from '@dxos/context';
+import { raise } from '@dxos/debug';
 import { isEncodedReference, Reference, type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES, type AnyObjectData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -36,10 +40,10 @@ import { CoreDatabaseQueryContext } from './core-database-query-context';
 import { type UpdateOperation, type InsertBatch, type InsertData } from './crud-api';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
-import { RepoProxy, type ChangeEvent, type DocHandleProxy } from '../client';
+import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { Filter, Query, type FilterSource, type PropertyFilter, type QueryFn } from '../query';
+import { Filter, optionsToProto, Query, type FilterSource, type PropertyFilter, type QueryFn } from '../query';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -83,6 +87,8 @@ export class CoreDatabase {
 
   readonly rootChanged = new Event<void>();
 
+  readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+
   constructor(params: CoreDatabaseParams) {
     this._hypergraph = params.graph;
     this._dataService = params.dataService;
@@ -90,6 +96,7 @@ export class CoreDatabase {
     this._spaceId = params.spaceId;
     this._spaceKey = params.spaceKey;
     this._repoProxy = new RepoProxy(this._dataService, this._spaceId);
+    this.saveStateChanged = this._repoProxy.saveStateChanged;
     this._automergeDocLoader = new AutomergeDocumentLoaderImpl(params.spaceId, this._repoProxy, params.spaceKey);
   }
 
@@ -238,6 +245,10 @@ export class CoreDatabase {
   }
 
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
+    if (!this._automergeDocLoader.hasRootHandle) {
+      throw new Error('Database is not ready.');
+    }
+
     const objCore = this._objects.get(id);
     if (load && !objCore) {
       this._automergeDocLoader.loadObjectDocument(id);
@@ -266,6 +277,10 @@ export class CoreDatabase {
     objectIds: string[],
     { inactivityTimeout = 30000, returnDeleted = false }: { inactivityTimeout?: number; returnDeleted?: boolean } = {},
   ): Promise<(ObjectCore | undefined)[]> {
+    if (!this._automergeDocLoader.hasRootHandle) {
+      throw new Error('Database is not ready.');
+    }
+
     const result: (ObjectCore | undefined)[] = new Array(objectIds.length);
     const objectsToLoad: Array<{ id: string; resultIndex: number }> = [];
     for (let i = 0; i < objectIds.length; i++) {
@@ -327,7 +342,7 @@ export class CoreDatabase {
   private _query(filter?: FilterSource, options?: QueryOptions) {
     return new Query(
       new CoreDatabaseQueryContext(this, this._queryService),
-      Filter.from(filter, { ...options, spaceIds: [this.spaceId] }),
+      Filter.from(filter, optionsToProto({ ...options, spaceIds: [this.spaceId] })),
     );
   }
 
@@ -546,7 +561,26 @@ export class CoreDatabase {
   }
 
   async getSyncState(): Promise<SpaceSyncState> {
-    return this._dataService.getSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
+    const value = await Stream.first(
+      this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT }),
+    );
+    return value ?? raise(new Error('Failed to get sync state'));
+  }
+
+  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): UnsubscribeCallback {
+    const stream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
+    stream.subscribe(
+      (data) => {
+        void runInContextAsync(ctx, () => callback(data));
+      },
+      (err) => {
+        if (err) {
+          ctx.raise(err);
+        }
+      },
+    );
+    ctx.onDispose(() => stream.close());
+    return () => stream.close();
   }
 
   getLoadedDocumentHandles(): DocHandleProxy<any>[] {

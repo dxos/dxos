@@ -16,8 +16,8 @@
       },
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "packages/devtools/devtools/.storybook",
-        "outputPath": "packages/devtools/devtools/out/dxos/storybook/devtools",
+        "configDir": "{projectRoot}/.storybook",
+        "outputPath": "{projectRoot}/out/dxos/storybook/devtools",
         "uiFramework": "@storybook/react"
       },
       "outputs": [
@@ -28,7 +28,7 @@
       "executor": "@nx/vite:build",
       "options": {
         "generatePackageJson": false,
-        "outputPath": "packages/devtools/devtools/out/devtools"
+        "outputPath": "{projectRoot}/out/devtools"
       },
       "outputs": [
         "{options.outputPath}"
@@ -47,9 +47,6 @@
       "options": {
         "buildTarget": "devtools:bundle"
       }
-    },
-    "serve-with-vault": {
-      "executor": "@dxos/serve-with-vault:run"
     }
   },
   "implicitDependencies": [

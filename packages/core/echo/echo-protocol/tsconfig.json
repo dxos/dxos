@@ -1,17 +1,18 @@
 {
   "extends": "../../../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "dist/types",
-    "types": [
-      "@dxos/test"
-    ]
-  },
+  "compilerOptions": {},
   "include": [
     "src"
   ],
   "references": [
     {
+      "path": "../../../common/crypto"
+    },
+    {
       "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/util"
     },
     {
       "path": "../../protocols"

@@ -6,7 +6,7 @@ import { test, expect } from '@playwright/test';
 
 import { log } from '@dxos/log';
 
-import { AppManager } from './app-manager';
+import { AppManager, INITIAL_URL } from './app-manager';
 import { Markdown } from './plugins';
 
 if (process.env.DX_PWA !== 'false') {
@@ -38,9 +38,8 @@ test.describe('Basic tests', () => {
   });
 
   test('create document', async () => {
+    // NOTE: Document is automatically created when space is created.
     await host.createSpace();
-    await host.page.pause();
-    await host.createObject('markdownPlugin');
 
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
@@ -78,7 +77,7 @@ test.describe('Basic tests', () => {
     await host.openIdentityManager();
     await host.shell.resetDevice();
     // Wait for reset to complete and attempt to reload.
-    await host.page.waitForRequest(host.initialUrl, { timeout: 30_000 });
+    await host.page.waitForRequest(INITIAL_URL, { timeout: 30_000 });
     await expect(host.getSpaceItems()).toHaveCount(1);
   });
 });

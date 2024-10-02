@@ -83,18 +83,18 @@ export const Chessboard = ({
   const style = boardStyles[boardStyle];
 
   const handleDrop = (source: any, target: any, piece: any) => {
-    // TODO(burdon): Select promotion piece.
-    const promotion =
-      piece[1] === 'P' && ((piece[0] === 'w' && target[1] === '8') || (piece[0] === 'b' && target[1] === '1'))
-        ? 'q'
-        : undefined;
-
-    const move = { from: source, to: target, promotion };
-    const result = new Chess(chess.fen()).move(move);
-    if (result) {
-      onUpdate?.(move);
-      return true;
-    } else {
+    try {
+      // Promotion piece will be selected by popup.
+      const move = { from: source, to: target, promotion: piece.toLowerCase()[1] };
+      const state = new Chess(chess.fen());
+      const result = state.move(move);
+      if (result) {
+        onUpdate?.(move);
+        return true;
+      } else {
+        return false;
+      }
+    } catch (err) {
       return false;
     }
   };

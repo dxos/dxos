@@ -1,9 +1,7 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/types",
     "types": [
-      "@dxos/test",
       "@dxos/typings"
     ]
   },
@@ -19,9 +17,6 @@
     },
     {
       "path": "../../../common/random"
-    },
-    {
-      "path": "../../../common/util"
     },
     {
       "path": "../../../sdk/client"

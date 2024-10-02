@@ -6,8 +6,14 @@ import { Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { EchoEdgeReplicator, EchoHost } from '@dxos/echo-db';
-import { MeshEchoReplicator, MetadataStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import {
+  EchoEdgeReplicator,
+  EchoHost,
+  MeshEchoReplicator,
+  MetadataStore,
+  SpaceManager,
+  valueEncoding,
+} from '@dxos/echo-pipeline';
 import type { EdgeConnection } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -31,8 +37,8 @@ import { safeInstanceof } from '@dxos/util';
 import {
   IdentityManager,
   type CreateIdentityOptions,
-  type IdentityManagerRuntimeParams,
   type JoinIdentityParams,
+  type IdentityManagerParams,
 } from '../identity';
 import {
   DeviceInvitationProtocol,
@@ -43,7 +49,10 @@ import {
 } from '../invitations';
 import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
 
-export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams &
+export type ServiceContextRuntimeParams = Pick<
+  IdentityManagerParams,
+  'devicePresenceOfflineTimeout' | 'devicePresenceAnnounceInterval'
+> &
   DataSpaceManagerRuntimeParams & {
     invitationConnectionDefaultParams?: Partial<TeleportParams>;
     disableP2pReplication?: boolean;
@@ -116,13 +125,16 @@ export class ServiceContext extends Resource {
       disableP2pReplication: this._runtimeParams?.disableP2pReplication,
     });
 
-    this.identityManager = new IdentityManager(
-      this.metadataStore,
-      this.keyring,
-      this.feedStore,
-      this.spaceManager,
-      this._runtimeParams as IdentityManagerRuntimeParams,
-      {
+    this.identityManager = new IdentityManager({
+      metadataStore: this.metadataStore,
+      keyring: this.keyring,
+      feedStore: this.feedStore,
+      spaceManager: this.spaceManager,
+      devicePresenceOfflineTimeout: this._runtimeParams?.devicePresenceOfflineTimeout,
+      devicePresenceAnnounceInterval: this._runtimeParams?.devicePresenceAnnounceInterval,
+      edgeConnection: this._edgeConnection,
+      edgeFeatures: this._edgeFeatures,
+      callbacks: {
         onIdentityConstruction: (identity) => {
           if (this._edgeConnection) {
             log.info('Setting identity on edge connection', {
@@ -141,7 +153,7 @@ export class ServiceContext extends Resource {
           }
         },
       },
-    );
+    });
 
     this.echoHost = new EchoHost({ kv: this.level });
 

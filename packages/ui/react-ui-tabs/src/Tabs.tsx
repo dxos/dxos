@@ -143,7 +143,7 @@ type TabsTabGroupHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'h2'>>;
 
 const TabsTabGroupHeading = ({ children, classNames, ...props }: ThemedClassName<TabsTabGroupHeadingProps>) => {
   return (
-    <h2 {...props} className={mx('mlb-1 pli-2 text-sm fg-unAccent', classNames)}>
+    <h2 {...props} className={mx('mlb-1 pli-2 text-sm text-unAccent', classNames)}>
       {children}
     </h2>
   );

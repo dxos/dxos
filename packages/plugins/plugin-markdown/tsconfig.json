@@ -7,8 +7,8 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist/types",
     "types": [
+      "@dxos/typings",
       "node"
     ]
   },
@@ -41,9 +41,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/react-async"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -56,7 +53,13 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../ui/primitives/react-hooks"
+    },
+    {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-card"

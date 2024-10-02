@@ -10,10 +10,10 @@ import React, { useMemo, useState } from 'react';
 import { Graph } from '@dxos/app-graph';
 import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
-import { DensityProvider, Tooltip, Treegrid } from '@dxos/react-ui';
+import { Treegrid } from '@dxos/react-ui';
 import { Mosaic, Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation } from '@dxos/react-ui-mosaic';
 import { NavTree, type NavTreeItemNode, type OpenItemIds } from '@dxos/react-ui-navtree';
-import { withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { arrayMove } from '@dxos/util';
 
 import { type NavTreeItemGraphNode, treeItemsFromRootNode } from '../util';
@@ -135,21 +135,7 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
 export default {
   title: 'react-ui-navtree/Graph',
   component: NavTree,
-  parameters: {
-    layout: 'fullscreen',
-  },
-  decorators: [
-    withTheme,
-    (Story: any) => (
-      <Tooltip.Provider>
-        <DensityProvider density='fine'>
-          <div role='none' className='p-2'>
-            <Story />
-          </div>
-        </DensityProvider>
-      </Tooltip.Provider>
-    ),
-  ],
+  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
 };
 
 export const Default = {

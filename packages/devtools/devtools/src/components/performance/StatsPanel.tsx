@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ChartBar, Pause, Play } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { DensityProvider, Toggle } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { DensityProvider, Icon, Toggle } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { Panel, type PanelProps } from './Panel';
 import {
@@ -87,7 +86,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
   // Store in local storage.
   const [panelState, setPanelState] = useState<Record<PanelKey, boolean | undefined>>(() =>
     PANEL_KEYS.reduce<PanelMap>((acc, key) => {
-      acc[key] = localStorage?.getItem(`${LOCAL_STORAGE_KEY}/${key}`) !== 'false';
+      acc[key] = localStorage?.getItem(`${LOCAL_STORAGE_KEY}/${key}`) === 'true';
       return acc;
     }, {} as PanelMap),
   );
@@ -102,7 +101,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
       <div className={mx('flex flex-col w-full h-full divide-y', styles.border)}>
         <Panel
           id='main'
-          icon={ChartBar}
+          icon='ph--chart-bar--regular'
           title='Stats'
           info={
             <Toggle
@@ -112,7 +111,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
               value='ghost'
               onClick={handleToggleLive}
             >
-              {live ? <Pause className={getSize(4)} /> : <Play className={getSize(4)} />}
+              <Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} size={4} />
             </Toggle>
           }
         />

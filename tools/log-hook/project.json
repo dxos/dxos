@@ -1,15 +1,15 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "log-hook",
-  "sourceRoot": "tools/log-hook/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "compile": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "tools/log-hook/src/index.ts",
-        "outputPath": "tools/log-hook/dist",
-        "tsConfig": "tools/log-hook/tsconfig.json"
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "{projectRoot}/dist",
+        "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
     "lint": {}

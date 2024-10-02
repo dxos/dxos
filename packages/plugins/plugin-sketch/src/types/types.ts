@@ -14,7 +14,8 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-client';
-import type { StackProvides } from '@dxos/plugin-stack';
+import { type SpaceInitProvides } from '@dxos/plugin-space';
+import { type StackProvides } from '@dxos/plugin-stack';
 
 import { SKETCH_PLUGIN } from '../meta';
 
@@ -32,6 +33,7 @@ export type SketchPluginProvides = SurfaceProvides &
   TranslationsProvides &
   SettingsProvides<SketchSettingsProps> &
   SchemaProvides &
+  SpaceInitProvides &
   StackProvides;
 
 export interface SketchModel {

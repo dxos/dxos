@@ -14,7 +14,7 @@ export type NavTreeItemHeadingProps = {
   id: string;
   level: number;
   label: string;
-  iconSymbol?: string;
+  icon?: string;
   current?: boolean;
   disabled?: boolean;
   error?: boolean;
@@ -24,7 +24,7 @@ export type NavTreeItemHeadingProps = {
 };
 
 export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadingProps>(
-  ({ id, level, label, iconSymbol, current, disabled, error, modified, palette, onNavigate }, forwardedRef) => {
+  ({ id, level, label, icon, current, disabled, error, modified, palette, onNavigate }, forwardedRef) => {
     return (
       <TextTooltip
         text={label}
@@ -58,7 +58,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
           disabled={disabled}
           {...(current && { 'aria-current': 'location' })}
         >
-          {iconSymbol && <Icon icon={iconSymbol} size={4} />}
+          {icon && <Icon icon={icon} size={4} />}
           <span
             data-tooltip='content'
             id={`${id}__label`}

@@ -5,8 +5,8 @@
 import { ClipboardText, Download } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
-import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
+import { useAsyncEffect } from '@dxos/react-hooks';
 import { Input, Toolbar, useFileDownload } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 

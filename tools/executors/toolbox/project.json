@@ -1,24 +1,23 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "toolbox",
-  "sourceRoot": "tools/executors/toolbox/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "compile": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "tools/executors/toolbox/src/main.ts",
-        "outputPath": "tools/executors/toolbox/dist",
+        "main": "{projectRoot}/src/main.ts",
+        "outputPath": "{projectRoot}/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "tools/executors/toolbox/tsconfig.json"
+        "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
     "lint": {}
   },
   "implicitDependencies": [
-    "log-hook",
-    "test"
+    "log-hook"
   ]
 }

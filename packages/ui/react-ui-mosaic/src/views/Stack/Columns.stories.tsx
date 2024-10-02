@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Stack } from './Stack';
 import { DemoStack, type DemoStackProps } from './testing';
@@ -32,7 +32,7 @@ export default {
       </Mosaic.Root>
     );
   },
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },

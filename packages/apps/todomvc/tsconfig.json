@@ -27,13 +27,13 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/test-utils"
+    },
+    {
       "path": "../../common/util"
     },
     {
       "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-typegen"
     },
     {
       "path": "../../sdk/config"

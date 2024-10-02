@@ -2,76 +2,68 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, GridNine } from '@phosphor-icons/react';
+import { GridNine } from '@phosphor-icons/react';
 import React from 'react';
 
-import {
-  NavigationAction,
-  parseIntentPlugin,
-  resolvePlugin,
-  type PluginDefinition,
-  type LayoutCoordinate,
-} from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
+import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
+import { createExtension, isActionGroup, type ActionGroup } from '@dxos/plugin-graph';
 import { FunctionType } from '@dxos/plugin-script/types';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
-import { createComputeGraph, SheetContainer, type ComputeGraph } from './components';
-// TODO(wittjosiah): Refactor. These are not exported from ./components due to depending on ECHO.
-import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './components/ComputeGraph/edge-function';
-import { ComputeGraphContextProvider } from './components/ComputeGraph/graph-context';
+import { ComputeGraphContextProvider, SheetContainer } from './components';
+import { compareIndexPositions, createSheet } from './defs';
+import { type ComputeGraphRegistry } from './graph';
 import meta, { SHEET_PLUGIN } from './meta';
-import { SheetModel } from './model';
 import translations from './translations';
-import { createSheet, SheetAction, type SheetPluginProvides, SheetType } from './types';
+import { SheetAction, SheetType, type SheetPluginProvides } from './types';
 
 export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
-  let remoteFunctionUrl: string | undefined;
-
-  const graphs = create<Record<string, ComputeGraph>>({});
-  const setGraph = (key: string, graph: ComputeGraph) => {
-    graphs[key] = graph;
-  };
+  let graphRegistry: ComputeGraphRegistry | undefined;
 
   return {
     meta,
     ready: async (plugins) => {
       const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-      if (!client) {
-        return;
-      }
-
+      invariant(client);
+      let remoteFunctionUrl: string | undefined;
       if (client.config.values.runtime?.services?.edge?.url) {
         const url = new URL('/functions', client.config.values.runtime?.services?.edge?.url);
         url.protocol = 'https';
         remoteFunctionUrl = url.toString();
       }
+
+      // Async import removes direct dependency on hyperformula.
+      const { createComputeGraphRegistry } = await import('./graph');
+      graphRegistry = createComputeGraphRegistry({ remoteFunctionUrl });
     },
     provides: {
       context: ({ children }) => {
-        return (
-          <ComputeGraphContextProvider graphs={graphs} setGraph={setGraph}>
-            {children}
-          </ComputeGraphContextProvider>
-        );
+        invariant(graphRegistry);
+        return <ComputeGraphContextProvider registry={graphRegistry}>{children}</ComputeGraphContextProvider>;
       },
       metadata: {
         records: {
           [SheetType.typename]: {
+            label: (object: any) => (object instanceof SheetType ? object.title : undefined),
             placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
-            icon: (props: IconProps) => <GridNine {...props} />,
-            iconSymbol: 'ph--grid-nine--regular',
+            icon: 'ph--grid-nine--regular',
           },
         },
       },
       translations,
       echo: {
         // TODO(wittjosiah): Factor out to common package/plugin.
-        //   FunctionType is currently registered here in case script plugin isn't enabled.
+        //  FunctionType is currently registered here in case script plugin isn't enabled.
         schema: [SheetType, FunctionType],
+      },
+      space: {
+        onSpaceCreate: {
+          label: ['create sheet label', { ns: SHEET_PLUGIN }],
+          action: SheetAction.CREATE,
+        },
       },
       graph: {
         builder: (plugins) => {
@@ -106,8 +98,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
                   },
                   properties: {
                     label: ['create sheet label', { ns: SHEET_PLUGIN }],
-                    icon: (props: IconProps) => <GridNine {...props} />,
-                    iconSymbol: 'ph--grid-nine--regular',
+                    icon: 'ph--grid-nine--regular',
                     testId: 'sheetPlugin.createObject',
                   },
                 },
@@ -116,53 +107,55 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
           });
         },
       },
+      markdown: {
+        // TODO(burdon): Construct compute node.
+        extensions: ({ document }) => {
+          return undefined;
+          // return [
+          // compute(document)
+          // ];
+        },
+      },
       stack: {
         creators: [
           {
             id: 'create-stack-section-sheet',
-            testId: 'sheetPlugin.createSectionSpaceSheet',
+            testId: 'sheetPlugin.createSection',
             type: ['plugin name', { ns: SHEET_PLUGIN }],
             label: ['create sheet section label', { ns: SHEET_PLUGIN }],
             icon: (props: any) => <GridNine {...props} />,
-            intent: { plugin: SHEET_PLUGIN, action: SheetAction.CREATE },
+            intent: {
+              plugin: SHEET_PLUGIN,
+              action: SheetAction.CREATE,
+            },
           },
         ],
       },
+      thread: {
+        predicate: (data) => data instanceof SheetType,
+        createSort: (sheet) => (indexA, indexB) =>
+          !indexA || !indexB ? 0 : compareIndexPositions(sheet, indexA, indexB),
+      },
       surface: {
-        component: ({ data, role = 'never' }) => {
-          if (!['article', 'section'].includes(role) || !isEchoObject(data.object)) {
-            return null;
+        component: ({ data, role }) => {
+          const space = isEchoObject(data.object) && getSpace(data.object);
+          if (space && data.object instanceof SheetType) {
+            switch (role) {
+              case 'article':
+              case 'section': {
+                return <SheetContainer sheet={data.object} space={space} role={role} />;
+              }
+            }
           }
 
-          const space = getSpace(data.object);
-          return space && data.object instanceof SheetType ? (
-            <SheetContainer
-              sheet={data.object}
-              space={space}
-              role={role}
-              coordinate={data.coordinate as LayoutCoordinate}
-              remoteFunctionUrl={remoteFunctionUrl}
-            />
-          ) : null;
+          return null;
         },
       },
       intent: {
         resolver: async (intent) => {
           switch (intent.action) {
             case SheetAction.CREATE: {
-              const space = intent.data?.space;
-              const sheet = createSheet();
-              const graph =
-                graphs[space.id] ??
-                createComputeGraph(
-                  [{ plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations }],
-                  space,
-                  { remoteFunctionUrl },
-                );
-              const model = new SheetModel(graph, sheet);
-              await model.initialize();
-              await model.destroy();
-              return { data: sheet };
+              return { data: createSheet() };
             }
           }
         },

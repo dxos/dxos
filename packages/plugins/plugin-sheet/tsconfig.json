@@ -8,7 +8,7 @@
       "ESNext"
     ],
     "module": "ESNext",
-    "outDir": "dist/types",
+    "moduleResolution": "Bundler",
     "types": [
       "node"
     ]
@@ -65,6 +65,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../ui/primitives/react-hooks"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -72,6 +75,12 @@
     },
     {
       "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-grid"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/react-ui-theme"
@@ -86,10 +95,16 @@
       "path": "../experimental/plugin-script"
     },
     {
+      "path": "../plugin-attention"
+    },
+    {
       "path": "../plugin-client"
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"

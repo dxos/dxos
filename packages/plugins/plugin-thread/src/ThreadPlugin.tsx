@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, type IconProps } from '@phosphor-icons/react';
 import { computed, effect } from '@preact/signals-core';
 import React from 'react';
 
@@ -16,53 +15,38 @@ import {
   parseIntentPlugin,
   parseNavigationPlugin,
   resolvePlugin,
-  parseGraphPlugin,
-  SLUG_PATH_SEPARATOR,
-  SLUG_COLLECTION_INDICATOR,
   isLayoutParts,
   parseMetadataResolverPlugin,
-  type IntentDispatcher,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
+import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { type ActionGroup, createExtension, isActionGroup, toSignal } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { SpaceAction } from '@dxos/plugin-space';
 import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
 import {
   getSpace,
   getTextInRange,
-  Filter,
   createDocAccessor,
   fullyQualifiedId,
-  getRangeFromCursor,
   loadObjectReferences,
 } from '@dxos/react-client/echo';
-import { ScrollArea } from '@dxos/react-ui';
-import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { comments, createExternalCommentSync, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
-import {
-  ThreadMain,
-  ThreadSettings,
-  CommentsContainer,
-  CommentsHeading,
-  ChatContainer,
-  ChatHeading,
-  ThreadArticle,
-} from './components';
+import { ThreadMain, ThreadSettings, ChatContainer, ChatHeading, ThreadArticle } from './components';
+import { ThreadComplementary } from './components/ThreadComplementary';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, type ThreadSettingsProps } from './types';
 
 type ThreadState = {
+  /** An in-memory staging area for threads that are being drafted. */
   staging: Record<string, ThreadType[]>;
   current?: string | undefined;
   focus?: boolean;
@@ -72,6 +56,9 @@ type SubjectId = string;
 const initialViewState = { showResolvedThreads: false };
 type ViewStore = Record<SubjectId, typeof initialViewState>;
 
+// TODO(Zan): More robust runtime check.
+
+// TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
   const state = create<ThreadState>({ staging: {} });
@@ -84,10 +71,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
     return viewStore[subjectId];
   };
 
-  let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
-  let dispatch: IntentDispatcher | undefined;
 
   const unsubscribeCallbacks = [] as UnsubscribeCallback[];
 
@@ -96,45 +81,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
     ready: async (plugins) => {
       settings.prop({ key: 'standalone', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
-      attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
-      dispatch = intentPlugin?.provides.intent.dispatch;
-
-      const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-      if (!client) {
-        return;
-      }
-
-      // TODO(wittjosiah): This is a hack to make standalone threads work in the c11y sidebar.
-      //  This should have a better solution when deck is introduced.
-      const channelsQuery = client.spaces.query(Filter.schema(ChannelType));
-      const queryUnsubscribe = channelsQuery.subscribe();
-      const unsubscribe = effect(() => {
-        const attention = attentionPlugin?.provides.attention;
-        if (!attention?.attended) {
-          return;
-        }
-
-        const firstAttendedNodeWithComments = Array.from(attention.attended)
-          .map((id) => graphPlugin?.provides.graph.findNode(id))
-          .find((node) => node?.data instanceof DocumentType && (node.data.threads?.length ?? 0) > 0);
-
-        if (firstAttendedNodeWithComments) {
-          void intentPlugin?.provides.intent.dispatch({
-            action: NavigationAction.OPEN,
-            data: {
-              activeParts: {
-                complementary: `${firstAttendedNodeWithComments.id}${SLUG_PATH_SEPARATOR}comments`,
-              },
-            },
-          });
-        }
-      });
-
-      unsubscribeCallbacks.push(queryUnsubscribe);
-      unsubscribeCallbacks.push(unsubscribe);
     },
     unload: async () => {
       unsubscribeCallbacks.forEach((unsubscribe) => unsubscribe());
@@ -145,8 +93,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         records: {
           [ChannelType.typename]: {
             placeholder: ['channel title placeholder', { ns: THREAD_PLUGIN }],
-            icon: (props: IconProps) => <Chat {...props} />,
-            iconSymbol: 'ph--chat--regular',
+            icon: 'ph--chat--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (channel: ChannelType) => loadObjectReferences(channel, (channel) => channel.threads),
           },
@@ -192,30 +139,38 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   return;
                 }
 
-                // TODO(Zan): Find util (or make one)
-                const docId = id.split('~').at(0);
-                const [spaceId, objectId] = docId?.split(':') ?? [];
+                // TODO(Zan): Find util (or make one).
+                const subjectId = id.split('~').at(0);
+                const [spaceId, objectId] = subjectId?.split(':') ?? [];
                 const space = client.spaces.get().find((space) => space.id === spaceId);
-                const doc = space?.db.getObjectById(objectId);
+                const object = toSignal(
+                  (onChange) => {
+                    const timeout = setTimeout(async () => {
+                      await space?.db.loadObjectById(objectId);
+                      onChange();
+                    });
 
-                if (!doc || !docId) {
+                    return () => clearTimeout(timeout);
+                  },
+                  () => space?.db.getObjectById(objectId),
+                );
+                if (!object || !subjectId) {
                   return;
                 }
 
-                const docMeta = metadataResolver(getTypename(doc) ?? '');
-                const label = docMeta.label?.(doc) ||
-                  doc.name ||
-                  docMeta.placeholder || ['unnamed object threads label', { ns: THREAD_PLUGIN }];
-                // const label = docMeta.label?.(doc) || doc.name || docMeta.placeholder;
+                const meta = metadataResolver(getTypename(object) ?? '');
+                const label = meta.label?.(object) ||
+                  object.name ||
+                  meta.placeholder || ['unnamed object threads label', { ns: THREAD_PLUGIN }];
 
-                const viewState = getViewState(docId);
+                const viewState = getViewState(subjectId);
 
                 return {
                   id,
                   type: 'orphan-comments-for-subject',
-                  data: doc,
+                  data: object,
                   properties: {
-                    icon: meta.iconComponent,
+                    icon: meta.icon,
                     label,
                     showResolvedThreads: viewState.showResolvedThreads,
                   },
@@ -223,7 +178,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               },
               actions: ({ node }) => {
                 const dataId = node.id.split('~').at(0);
-
                 if (!node.id.endsWith('~comments') || !dataId) {
                   return;
                 }
@@ -252,6 +206,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                       menuItemType: 'toggle',
                       isChecked: viewState.showResolvedThreads,
                       testId: 'threadPlugin.toggleShowResolved',
+                      icon: viewState.showResolvedThreads ? 'ph--eye-slash--regular' : 'ph--eye--regular',
                     },
                   },
                 ];
@@ -283,8 +238,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     },
                     properties: {
                       label: ['create channel label', { ns: THREAD_PLUGIN }],
-                      icon: (props: IconProps) => <Chat {...props} />,
-                      iconSymbol: 'ph--chat--regular',
+                      icon: 'ph--chat--regular',
                       testId: 'threadPlugin.createObject',
                     },
                   },
@@ -316,9 +270,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 // TODO(zan): Maybe we should have utility for positional main object ids.
                 if (isLayoutParts(location?.active) && location.active.main) {
                   const layoutEntries = location.active.main;
-
                   const currentPosition = layoutEntries.findIndex((entry) => channel.id === entry.id);
-
                   if (currentPosition > 0) {
                     const objectToTheLeft = layoutEntries[currentPosition - 1];
                     const context = getSpace(data.object)?.db.getObjectById(objectToTheLeft.id);
@@ -329,121 +281,32 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 return <ThreadArticle thread={data.object.threads[0]} />;
               }
 
-              if (data.subject instanceof DocumentType) {
-                const doc = data.subject;
-                const accessor = doc.content ? createDocAccessor(doc.content, ['content']) : undefined;
-
-                if (!accessor) {
-                  return null;
-                }
-
-                const getStartPosition = (cursor: string | undefined) => {
-                  const range = cursor ? getRangeFromCursor(accessor, cursor) : undefined;
-                  return range?.start ?? Number.MAX_SAFE_INTEGER;
-                };
-
-                const threads = doc.threads
-                  .concat(state.staging[data.subject.id])
-                  .filter(nonNullable)
-                  .sort((a, b) => getStartPosition(a.anchor) - getStartPosition(b.anchor));
-
-                const detached = data.subject.threads
-                  .filter(nonNullable)
-                  .filter(({ anchor }) => !anchor)
-                  .map((thread) => thread.id);
-
-                const qualifiedSubjectId = fullyQualifiedId(doc);
-                const attention = attentionPlugin?.provides.attention?.attended ?? new Set([qualifiedSubjectId]);
-                const attendableAttrs = createAttendableAttributes(qualifiedSubjectId);
-                const space = getSpace(doc);
-                const { showResolvedThreads } = getViewState(qualifiedSubjectId);
-
-                const dispatchAnalytic = (name: string, meta: any) => {
-                  void dispatch?.({
-                    action: ObservabilityAction.SEND_EVENT,
-                    data: {
-                      name,
-                      properties: { ...meta, space: space?.id },
-                    },
-                  });
-                };
-
-                return (
-                  <div role='none' className='contents group/attention' {...attendableAttrs}>
-                    {role === 'complementary' && <CommentsHeading attendableId={qualifiedSubjectId} />}
-                    <ScrollArea.Root classNames='row-span-2'>
-                      <ScrollArea.Viewport>
-                        <CommentsContainer
-                          threads={threads}
-                          detached={detached}
-                          currentId={attention.has(qualifiedSubjectId) ? state.current : undefined}
-                          autoFocusCurrentTextbox={state.focus}
-                          showResolvedThreads={showResolvedThreads}
-                          onThreadAttend={(thread) => {
-                            if (state.current !== thread.id) {
-                              state.current = thread.id;
-                              void dispatch?.({
-                                action: LayoutAction.SCROLL_INTO_VIEW,
-                                data: {
-                                  id: fullyQualifiedId(data.subject!),
-                                  thread: fullyQualifiedId(thread),
-                                  cursor: thread.anchor,
-                                },
-                              });
-                            }
-                          }}
-                          onThreadDelete={(thread) =>
-                            dispatch?.({
-                              plugin: THREAD_PLUGIN,
-                              action: ThreadAction.DELETE,
-                              data: { document: data.subject, thread },
-                            })
-                          }
-                          onMessageDelete={(thread, messageId) =>
-                            dispatch?.({
-                              plugin: THREAD_PLUGIN,
-                              action: ThreadAction.DELETE_MESSAGE,
-                              data: { document: data.subject, thread, messageId },
-                            })
-                          }
-                          onThreadToggleResolved={(thread) =>
-                            dispatch?.({
-                              plugin: THREAD_PLUGIN,
-                              action: ThreadAction.TOGGLE_RESOLVED,
-                              data: { thread },
-                            })
-                          }
-                          onComment={(thread) => {
-                            // TODO(Zan): This might be a bit too much logic for a component. Move to intents?
-                            const doc = data.subject as DocumentType;
-                            if (state.staging[doc.id]?.find((t) => t === thread)) {
-                              // Move thread from staging to document.
-                              thread.status = 'active';
-                              doc.threads ? doc.threads.push(thread) : (doc.threads = [thread]);
-                              state.staging[doc.id] = state.staging[doc.id]?.filter((t) => t.id !== thread.id);
-                              dispatchAnalytic('threads.thread-created', { threadId: thread.id });
-                            }
-
-                            dispatchAnalytic('threads.message-added', {
-                              threadId: thread.id,
-                              threadLength: thread.messages.length,
-                            });
-                          }}
-                        />
-                        <div role='none' className='bs-10' />
-                        <ScrollArea.Scrollbar>
-                          <ScrollArea.Thumb />
-                        </ScrollArea.Scrollbar>
-                      </ScrollArea.Viewport>
-                    </ScrollArea.Root>
-                  </div>
-                );
-              } else if (data.subject instanceof ThreadType) {
+              if (data.subject instanceof ThreadType) {
                 return (
                   <>
                     <ChatHeading attendableId={data.subject.id} />
                     <ChatContainer thread={data.subject} />
                   </>
+                );
+              }
+
+              if (
+                data.subject &&
+                typeof data.subject === 'object' &&
+                'threads' in data.subject &&
+                Array.isArray(data.subject.threads)
+              ) {
+                const { showResolvedThreads } = getViewState(fullyQualifiedId(data.subject));
+
+                return (
+                  <ThreadComplementary
+                    role={role}
+                    subject={data.subject}
+                    stagedThreads={state.staging[fullyQualifiedId(data.subject)]}
+                    current={state.current}
+                    focus
+                    showResolvedThreads={showResolvedThreads}
+                  />
                 );
               }
             }
@@ -456,7 +319,52 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         resolver: async (intent) => {
           switch (intent.action) {
             case ThreadAction.CREATE: {
-              return { data: create(ChannelType, { threads: [create(ThreadType, { messages: [] })] }) };
+              if (intent.data && intent.data.cursor !== undefined) {
+                const { cursor, name, subject } = intent.data;
+
+                // Seed the threads array if it does not exist.
+                if (subject?.threads === undefined) {
+                  try {
+                    // Static schema will throw an error if subject does not support threads array property.
+                    subject.threads = [];
+                  } catch (e) {
+                    log.error('Subject does not support threads array', subject?.typename);
+                    return;
+                  }
+                }
+
+                const subjectId = fullyQualifiedId(subject);
+                const thread = create(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
+                const stagingArea = state.staging[subjectId];
+                if (stagingArea) {
+                  stagingArea.push(thread);
+                } else {
+                  state.staging[subjectId] = [thread];
+                }
+
+                return {
+                  data: thread,
+                  intents: [
+                    [
+                      {
+                        action: ThreadAction.SELECT,
+                        data: { current: fullyQualifiedId(thread), focus: true },
+                      },
+                      {
+                        action: LayoutAction.SET_LAYOUT,
+                        data: {
+                          element: 'complementary',
+                          subject: subjectId,
+                          state: true,
+                        },
+                      },
+                    ],
+                  ],
+                };
+              } else {
+                // NOTE: This is the standalone thread creation case.
+                return { data: create(ChannelType, { threads: [create(ThreadType, { messages: [] })] }) };
+              }
             }
 
             case ThreadAction.SELECT: {
@@ -493,32 +401,36 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             }
 
             case ThreadAction.DELETE: {
-              const { document: doc, thread } = intent.data ?? {};
-              if (!(doc instanceof DocumentType) || !(thread instanceof ThreadType)) {
+              const { subject, thread } = intent.data ?? {};
+              if (
+                !(thread instanceof ThreadType) ||
+                !(subject && typeof subject === 'object' && 'threads' in subject)
+              ) {
                 return;
               }
 
-              const stagingArea = state.staging[doc.id];
+              const subjectId = fullyQualifiedId(subject);
+              const stagingArea = state.staging[subjectId];
               if (stagingArea) {
                 // Check if we're deleting a thread that's in the staging area.
                 // If so, remove it from the staging area without ceremony.
-                const index = state.staging[doc.id]?.findIndex((t) => t.id === thread.id);
+                const index = stagingArea.findIndex((t) => t.id === thread.id);
                 if (index !== -1) {
-                  state.staging[doc.id]?.splice(index, 1);
-                  return;
+                  stagingArea.splice(index, 1);
+                  return { data: true };
                 }
               }
 
               const space = getSpace(thread);
-              if (!space || !doc.threads) {
+              if (!space || !subject.threads) {
                 return;
               }
 
               if (!intent.undo) {
-                const index = doc.threads.findIndex((t) => t?.id === thread.id);
-                const cursor = doc.threads[index]?.anchor;
+                const index = subject.threads.findIndex((t: any) => t?.id === thread.id);
+                const cursor = subject.threads[index]?.anchor;
                 if (index !== -1) {
-                  doc.threads?.splice(index, 1);
+                  subject.threads?.splice(index, 1);
                 }
 
                 space.db.remove(thread);
@@ -540,7 +452,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               } else if (intent.undo) {
                 // TODO(wittjosiah): SDK should do this automatically.
                 const savedThread = space.db.add(thread);
-                doc.threads.push(savedThread);
+                subject.threads.push(savedThread);
 
                 return {
                   data: true,
@@ -556,11 +468,55 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               }
               break;
             }
-            case ThreadAction.DELETE_MESSAGE: {
-              const { document: doc, thread, messageId } = intent.data ?? {};
-              const space = getSpace(doc);
 
-              if (!(doc instanceof DocumentType) || !(thread instanceof ThreadType) || !space) {
+            case ThreadAction.ON_MESSAGE_ADD: {
+              const { thread, subject } = intent.data ?? {};
+              if (
+                !(thread instanceof ThreadType) ||
+                !(subject && typeof subject === 'object' && 'threads' in subject && Array.isArray(subject.threads))
+              ) {
+                return;
+              }
+
+              const subjectId = fullyQualifiedId(subject);
+              const space = getSpace(subject);
+              const intents = [];
+              const analyticsProperties = { threadId: thread.id, spaceId: space?.id };
+
+              if (state.staging[subjectId]?.find((t) => t === thread)) {
+                // Move thread from staging to document.
+                thread.status = 'active';
+                subject.threads ? subject.threads.push(thread) : (subject.threads = [thread]);
+                state.staging[subjectId] = state.staging[subjectId]?.filter((t) => t.id !== thread.id);
+
+                intents.push({
+                  action: ObservabilityAction.SEND_EVENT,
+                  data: { name: 'threads.thread-created', properties: analyticsProperties },
+                });
+              }
+
+              intents.push({
+                action: ObservabilityAction.SEND_EVENT,
+                data: {
+                  name: 'threads.message-added',
+                  properties: { ...analyticsProperties, threadLength: thread.messages.length },
+                },
+              });
+
+              return {
+                data: thread,
+                intents: [intents],
+              };
+            }
+
+            case ThreadAction.DELETE_MESSAGE: {
+              const { subject, thread, messageId } = intent.data ?? {};
+              const space = getSpace(subject);
+
+              if (
+                !(thread instanceof ThreadType) ||
+                !(subject && typeof subject === 'object' && 'threads' in subject)
+              ) {
                 return;
               }
 
@@ -574,7 +530,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 if (messageIndex === 0 && thread.messages.length === 1) {
                   // If the message is the only message in the thread, delete the thread.
                   return {
-                    intents: [[{ action: ThreadAction.DELETE, data: { document: doc, thread } }]],
+                    intents: [[{ action: ThreadAction.DELETE, data: { subject, thread } }]],
                   };
                 } else {
                   thread.messages.splice(messageIndex, 1);
@@ -591,7 +547,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         action: ObservabilityAction.SEND_EVENT,
                         data: {
                           name: 'threads.message.delete',
-                          properties: { threadId: thread.id, spaceId: space.id },
+                          properties: { threadId: thread.id, spaceId: space?.id },
                         },
                       },
                     ],
@@ -615,7 +571,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         action: ObservabilityAction.SEND_EVENT,
                         data: {
                           name: 'threads.message.undo-delete',
-                          properties: { threadId: thread.id, spaceId: space.id },
+                          properties: { threadId: thread.id, spaceId: space?.id },
                         },
                       },
                     ],
@@ -638,7 +594,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
           // TODO(Zan): When we have the deepsignal specific equivalent of this we should use that instead.
           const threads = computed(() =>
-            [...doc.threads.filter(nonNullable), ...(state.staging[doc.id] ?? [])].filter(
+            [...doc.threads.filter(nonNullable), ...(state.staging[fullyQualifiedId(doc)] ?? [])].filter(
               (thread) => !(thread?.status === 'resolved'),
             ),
           );
@@ -666,52 +622,28 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               () =>
                 threads.value
                   .filter((thread) => thread?.anchor)
-                  .map((thread) => ({ id: thread.id, cursor: thread.anchor! })),
+                  .map((thread) => ({ id: fullyQualifiedId(thread), cursor: thread.anchor! })),
             ),
             comments({
               id: doc.id,
               onCreate: ({ cursor }) => {
                 const [start, end] = cursor.split(':');
                 const name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
-                const thread = create(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
 
-                const stagingArea = state.staging[doc.id];
-                if (stagingArea) {
-                  stagingArea.push(thread);
-                } else {
-                  state.staging[doc.id] = [thread];
-                }
-
-                void intentPlugin?.provides.intent.dispatch([
-                  {
-                    action: NavigationAction.OPEN,
-                    data: {
-                      activeParts: {
-                        complementary: `${fullyQualifiedId(doc)}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
-                      },
-                    },
+                void intentPlugin?.provides.intent.dispatch({
+                  action: ThreadAction.CREATE,
+                  data: {
+                    cursor,
+                    name,
+                    subject: doc,
                   },
-                  {
-                    action: ThreadAction.SELECT,
-                    data: { current: thread.id, focus: true },
-                  },
-                  {
-                    action: LayoutAction.SET_LAYOUT,
-                    data: {
-                      element: 'complementary',
-                      subject: doc,
-                      state: true,
-                    },
-                  },
-                ]);
-
-                return thread.id;
+                });
               },
               onDelete: ({ id }) => {
                 // If the thread is in the staging area, remove it.
-                const stagingArea = state.staging[doc.id];
+                const stagingArea = state.staging[fullyQualifiedId(doc)];
                 if (stagingArea) {
-                  const index = stagingArea.findIndex((thread) => thread.id === id);
+                  const index = stagingArea.findIndex((thread) => fullyQualifiedId(thread) === id);
                   if (index !== -1) {
                     stagingArea.splice(index, 1);
                   }
@@ -724,7 +656,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               },
               onUpdate: ({ id, cursor }) => {
                 const thread =
-                  state.staging[doc.id]?.find((thread) => thread.id === id) ??
+                  state.staging[fullyQualifiedId(doc)]?.find((thread) => fullyQualifiedId(thread) === id) ??
                   doc.threads.find((thread) => thread?.id === id);
 
                 if (thread instanceof ThreadType && thread.anchor) {

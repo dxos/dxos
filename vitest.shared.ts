@@ -2,18 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { join } from 'path';
-import { defineConfig, type UserConfig } from 'vitest/config';
-import { type Plugin } from 'vite';
-// import Inspect from 'vite-plugin-inspect';
+import { join } from 'node:path';
 import inject from '@rollup/plugin-inject';
-import { GLOBALS, MODULES } from '@dxos/node-std/_/config';
+import { type Plugin, UserConfig as ViteConfig } from 'vite';
+import { defineConfig, type UserConfig as VitestConfig } from 'vitest/config';
+// import Inspect from 'vite-plugin-inspect';
+import WasmPlugin from 'vite-plugin-wasm';
+import Inspect from 'vite-plugin-inspect';
 
-import { FixGracefulFsPlugin } from '@dxos/esbuild-plugins';
+import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
+import { GLOBALS, MODULES } from '@dxos/node-std/_/config';
 
 const targetProject = String(process.env.NX_TASK_TARGET_PROJECT);
 const isDebug = !!process.env.VITEST_DEBUG;
-const environment = (process.env.VITEST_ENV ?? '').toLowerCase();
+const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
 const shouldCreateXmlReport = Boolean(process.env.VITEST_XML_REPORT);
 
 const createNodeConfig = () =>
@@ -25,39 +27,57 @@ const createNodeConfig = () =>
       ...resolveReporterConfig({ browserMode: false }),
       environment: 'node',
       include: [
-        '**/src/**/*.test.ts',
-        '**/test/**/*.test.ts',
-        '!**/src/**/*.browser.test.ts',
-        '!**/test/**/*.browser.test.ts',
+        '**/src/**/*.test.{ts,tsx}',
+        '**/test/**/*.test.{ts,tsx}',
+        '!**/src/**/*.browser.test.{ts,tsx}',
+        '!**/test/**/*.browser.test.{ts,tsx}',
       ],
     },
+    // Shows build trace
+    // VITE_INSPECT=1 pnpm vitest --ui
+    // http://localhost:51204/__inspect/#/
+    plugins: [process.env.VITE_INSPECT && Inspect()],
   });
 
-const createBrowserConfig = (browserName: 'chrome') =>
+type BrowserOptions = {
+  browserName: string;
+  nodeExternal?: boolean;
+  injectGlobals?: boolean;
+};
+
+const createBrowserConfig = ({ browserName, nodeExternal = false, injectGlobals = true }) =>
   defineConfig({
     plugins: [
       nodeStdPlugin(),
+      WasmPlugin(),
       // Inspect()
     ],
     optimizeDeps: {
       include: ['buffer/'],
       esbuildOptions: {
-        plugins: [FixGracefulFsPlugin()],
+        plugins: [
+          FixGracefulFsPlugin(),
+          // TODO(wittjosiah): Compute nodeStd from package.json.
+          ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
+        ],
       },
     },
     esbuild: {
       target: 'es2020',
-      // TODO(dmaretskyi): Move into nodeStd plugin.
-      banner: 'import "@dxos/node-std/globals";',
     },
     test: {
       ...resolveReporterConfig({ browserMode: true }),
       name: targetProject,
+
+      env: {
+        LOG_CONFIG: 'log-config.yaml',
+      },
+
       include: [
-        '**/src/**/*.test.ts',
-        '**/test/**/*.test.ts',
-        '!**/src/**/*.node.test.ts',
-        '!**/test/**/*.node.test.ts',
+        '**/src/**/*.test.{ts,tsx}',
+        '**/test/**/*.test.{ts,tsx}',
+        '!**/src/**/*.node.test.{ts,tsx}',
+        '!**/test/**/*.node.test.{ts,tsx}',
       ],
 
       testTimeout: isDebug ? 9999999 : 5000,
@@ -72,32 +92,40 @@ const createBrowserConfig = (browserName: 'chrome') =>
 
       browser: {
         enabled: true,
+        screenshotFailures: false,
         headless: !isDebug,
+        provider: 'playwright',
         name: browserName,
         isolate: false,
       },
     },
   });
 
-const resolveReporterConfig = (args: { browserMode: boolean }): UserConfig['test'] => {
+const resolveReporterConfig = (args: { browserMode: boolean }): VitestConfig['test'] => {
   if (shouldCreateXmlReport) {
     const vitestReportDir = `vitest${args.browserMode ? '-browser' : ''}-reports`;
     return {
       passWithNoTests: true,
       reporters: ['junit', 'verbose'],
       outputFile: join(__dirname, `test-results/${vitestReportDir}/${targetProject}/report.xml`),
+      coverage: {
+        reportsDirectory: join(__dirname, `coverage/${vitestReportDir}/${targetProject}/`),
+      },
     };
   }
+
   return {
     passWithNoTests: true,
     reporters: ['verbose'],
   };
 };
 
-const resolveConfig = () => {
+export type ConfigOptions = Omit<BrowserOptions, 'browserName'>;
+
+export const baseConfig = (options: ConfigOptions = {}): ViteConfig => {
   switch (environment) {
-    case 'chrome':
-      return createBrowserConfig(environment);
+    case 'chromium':
+      return createBrowserConfig({ browserName: environment, ...options });
     case 'node':
     default:
       if (environment.length > 0 && environment !== 'node') {
@@ -107,7 +135,10 @@ const resolveConfig = () => {
   }
 };
 
-export default resolveConfig();
+/**
+ * @deprecated use `baseConfig` instead.
+ */
+export default baseConfig();
 
 // TODO(dmaretskyi): Extract.
 /**

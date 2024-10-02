@@ -9,7 +9,7 @@ import { type ObjectInternals, symbolHandler, symbolInternals, symbolNamespace, 
 import type { KeyPath } from '../core-db';
 
 export class EchoArray<T> extends Array<T> {
-  static get [Symbol.species]() {
+  static override get [Symbol.species]() {
     return Array;
   }
 

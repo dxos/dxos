@@ -34,7 +34,7 @@ export const EditorContent = ({ data: { content = '' } }: { data: StackSectionCo
         formattingObserver,
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2' } } }),
+        createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: { editor: { className: 'p-2' } } }),
         decorateMarkdown(),
         formattingKeymap(),
       ],

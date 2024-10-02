@@ -19,7 +19,6 @@ export const SLUG_COLLECTION_INDICATOR = '';
 const LayoutEntrySchema = S.mutable(S.Struct({ id: S.String, path: S.optional(S.String) }));
 export type LayoutEntry = S.Schema.Type<typeof LayoutEntrySchema>;
 
-// TODO(Zan): Consider making solo it's own part. It's not really a function of the 'main' part?
 // TODO(Zan): Consider renaming the 'main' part to 'deck' part now that we are throwing out the old layout plugin.
 // TODO(Zan): Extend to all strings?
 const LayoutPartSchema = S.Union(
@@ -49,11 +48,14 @@ export type LayoutAdjustment = S.Schema.Type<typeof LayoutAdjustmentSchema>;
 export const ActiveParts = z.record(z.string(), z.union([z.string(), z.array(z.string())]));
 export type ActiveParts = z.infer<typeof ActiveParts>;
 
+// TODO(burdon): Where should this go?
+export type LayoutContainerProps<T> = T & { role?: string; coordinate?: LayoutCoordinate };
+
 /**
  * Basic state provided by a navigation plugin.
  */
 export const Attention = z.object({
-  attended: z.set(z.string()).optional().describe('Ids of items which have focus.'),
+  attended: z.set(z.string()).describe('Ids of items which have focus.'),
 });
 export type Attention = z.infer<typeof Attention>;
 

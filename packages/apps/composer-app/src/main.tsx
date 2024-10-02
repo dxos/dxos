@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { createApp, NavigationAction, parseIntentPlugin, Plugin, resolvePlugin } from '@dxos/app-framework';
+import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
 import { type defs } from '@dxos/config';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
@@ -15,7 +15,7 @@ import { getObservabilityGroup, initializeAppObservability, isObservabilityDisab
 import AttentionMeta from '@dxos/plugin-attention/meta';
 import ChainMeta from '@dxos/plugin-chain/meta';
 import ChessMeta from '@dxos/plugin-chess/meta';
-import ClientMeta, { CLIENT_PLUGIN, ClientAction } from '@dxos/plugin-client/meta';
+import ClientMeta from '@dxos/plugin-client/meta';
 import DebugMeta from '@dxos/plugin-debug/meta';
 import DeckMeta from '@dxos/plugin-deck/meta';
 import ExcalidrawMeta from '@dxos/plugin-excalidraw/meta';
@@ -23,7 +23,6 @@ import ExplorerMeta from '@dxos/plugin-explorer/meta';
 import FilesMeta from '@dxos/plugin-files/meta';
 import FunctionMeta from '@dxos/plugin-function/meta';
 import GithubMeta from '@dxos/plugin-github/meta';
-import GptMeta from '@dxos/plugin-gpt/meta';
 import GraphMeta from '@dxos/plugin-graph/meta';
 import GridMeta from '@dxos/plugin-grid/meta';
 import HelpMeta from '@dxos/plugin-help/meta';
@@ -46,7 +45,7 @@ import SearchMeta from '@dxos/plugin-search/meta';
 import SettingsMeta from '@dxos/plugin-settings/meta';
 import SheetMeta from '@dxos/plugin-sheet/meta';
 import SketchMeta from '@dxos/plugin-sketch/meta';
-import SpaceMeta, { SPACE_PLUGIN, SpaceAction } from '@dxos/plugin-space/meta';
+import SpaceMeta from '@dxos/plugin-space/meta';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import StackMeta from '@dxos/plugin-stack/meta';
 import StatusBarMeta from '@dxos/plugin-status-bar/meta';
@@ -64,7 +63,9 @@ import { appKey, INITIAL_COLLECTION_TITLE, INITIAL_CONTENT, INITIAL_DOC_TITLE } 
 import { steps } from './help';
 import { meta as WelcomeMeta } from './plugins/welcome/meta';
 import translations from './translations';
-import { removeQueryParamByValue } from './util';
+
+const isTrue = (str?: string) => str === 'true' || str === '1';
+const isFalse = (str?: string) => str === 'false' || str === '0';
 
 const main = async () => {
   TRACE_PROCESSOR.setInstanceTag('app');
@@ -118,9 +119,9 @@ const main = async () => {
 
   const firstRun = new Trigger();
   const isSocket = !!(globalThis as any).__args;
-  const isPwa = config.values.runtime?.app?.env?.DX_PWA !== 'false';
+  const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
   const isDev = !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT);
-  const isExperimental = config.values.runtime?.app?.env?.DX_EXPERIMENTAL === 'true';
+  const isLabs = isTrue(config.values.runtime?.app?.env?.DX_LABS);
 
   const App = createApp({
     fallback: ({ error }) => (
@@ -174,6 +175,7 @@ const main = async () => {
       ChessMeta,
       ExcalidrawMeta,
       ExplorerMeta,
+      FunctionMeta,
       MapMeta,
       MarkdownMeta,
       MermaidMeta,
@@ -189,9 +191,7 @@ const main = async () => {
       // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
       SearchMeta,
 
-      ...(isExperimental
-        ? [ChainMeta, FunctionMeta, GithubMeta, GptMeta, GridMeta, InboxMeta, KanbanMeta, OutlinerMeta]
-        : []),
+      ...(isLabs ? [ChainMeta, GithubMeta, GridMeta, InboxMeta, KanbanMeta, OutlinerMeta] : []),
     ],
     plugins: {
       [AttentionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-attention')),
@@ -220,38 +220,6 @@ const main = async () => {
             window.location.pathname = '/';
           });
         },
-        onReady: async (client, plugins) => {
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!dispatch) {
-            return;
-          }
-
-          const searchParams = new URLSearchParams(location.search);
-          const spaceInvitationCode = searchParams.get('spaceInvitationCode') ?? undefined;
-          const deviceInvitationCode = searchParams.get('deviceInvitationCode') ?? undefined;
-          if (deviceInvitationCode) {
-            await dispatch({
-              plugin: CLIENT_PLUGIN,
-              action: ClientAction.JOIN_IDENTITY,
-              data: { invitationCode: deviceInvitationCode },
-            });
-
-            removeQueryParamByValue(deviceInvitationCode);
-          } else if (spaceInvitationCode && client.halo.identity.get()) {
-            await dispatch([
-              {
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.JOIN,
-                data: { invitationCode: spaceInvitationCode },
-              },
-              {
-                action: NavigationAction.OPEN,
-              },
-            ]);
-
-            removeQueryParamByValue(spaceInvitationCode);
-          }
-        },
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@dxos/plugin-debug')),
       [ExcalidrawMeta.id]: Plugin.lazy(() => import('@dxos/plugin-excalidraw')),
@@ -259,7 +227,6 @@ const main = async () => {
       [FilesMeta.id]: Plugin.lazy(() => import('@dxos/plugin-files')),
       [FunctionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-function')),
       [GithubMeta.id]: Plugin.lazy(() => import('@dxos/plugin-github')),
-      [GptMeta.id]: Plugin.lazy(() => import('@dxos/plugin-gpt')),
       [GraphMeta.id]: Plugin.lazy(() => import('@dxos/plugin-graph')),
       [GridMeta.id]: Plugin.lazy(() => import('@dxos/plugin-grid')),
       [HelpMeta.id]: Plugin.lazy(() => import('@dxos/plugin-help'), { steps }),

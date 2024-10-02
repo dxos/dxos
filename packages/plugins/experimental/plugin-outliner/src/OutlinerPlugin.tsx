@@ -26,8 +26,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
         records: {
           [TreeType.typename]: {
             placeholder: ['object placeholder', { ns: OUTLINER_PLUGIN }],
-            icon: (props: IconProps) => <TreeStructure {...props} />,
-            iconSymbol: 'ph--tree-structure--regular',
+            icon: 'ph--tree-structure--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (tree: TreeType) => loadObjectReferences(tree, (tree) => [tree.root]),
           },
@@ -75,7 +74,6 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
                   properties: {
                     label: ['create object label', { ns: OUTLINER_PLUGIN }],
                     icon: (props: IconProps) => <TreeStructure {...props} />,
-                    iconSymbol: 'ph--tree-structure--regular',
                     testId: 'outlinerPlugin.createObject',
                   },
                 },
@@ -88,11 +86,14 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
         creators: [
           {
             id: 'create-stack-section-tree',
-            testId: 'treePlugin.createSectionSpaceTree',
+            testId: 'treePlugin.createSection',
             type: ['plugin name', { ns: OUTLINER_PLUGIN }],
             label: ['create stack section label', { ns: OUTLINER_PLUGIN }],
             icon: (props: any) => <TreeStructure {...props} />,
-            intent: { plugin: OUTLINER_PLUGIN, action: OutlinerAction.CREATE },
+            intent: {
+              plugin: OUTLINER_PLUGIN,
+              action: OutlinerAction.CREATE,
+            },
           },
         ],
       },

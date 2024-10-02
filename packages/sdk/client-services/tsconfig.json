@@ -5,9 +5,7 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist/types",
     "types": [
-      "@dxos/test",
       "@dxos/typings",
       "node"
     ]
@@ -54,6 +52,9 @@
     },
     {
       "path": "../../common/random-access-storage"
+    },
+    {
+      "path": "../../common/test-utils"
     },
     {
       "path": "../../common/timeframe"

@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ChatText, Quotes } from '@phosphor-icons/react';
+import { ChatText } from '@phosphor-icons/react';
 import React, { useEffect } from 'react';
 
 import { type ThreadType } from '@dxos/plugin-space/types';
-import { useTranslation, Trans } from '@dxos/react-ui';
-import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { useTranslation, Icon, Trans } from '@dxos/react-ui';
+import { PlankHeading } from '@dxos/react-ui-deck';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { CommentContainer } from './CommentContainer';
@@ -39,7 +40,7 @@ export const CommentsHeading = ({ attendableId }: { attendableId?: string }) => 
   return (
     <div role='none' className='flex items-center'>
       <PlankHeading.Button attendableId={attendableId}>
-        <Quotes {...plankHeadingIconProps} />
+        <Icon icon='ph--quotes--regular' size={5} />
       </PlankHeading.Button>
       <PlankHeading.Label attendableId={attendableId}>{t('comments heading')}</PlankHeading.Label>
     </div>
@@ -73,20 +74,23 @@ export const CommentsContainer = ({
   return (
     <>
       {filteredThreads.length > 0 ? (
-        filteredThreads.map((thread) => (
-          <CommentContainer
-            key={thread.id}
-            thread={thread}
-            current={currentId === thread.id}
-            detached={detached.includes(thread.id)}
-            autoFocusTextbox={autoFocusCurrentTextbox && currentId === thread.id}
-            {...(onThreadAttend && { onAttend: () => onThreadAttend(thread) })}
-            {...(onThreadDelete && { onThreadDelete: () => onThreadDelete(thread) })}
-            {...(onMessageDelete && { onMessageDelete: (messageId: string) => onMessageDelete(thread, messageId) })}
-            {...(onThreadToggleResolved && { onResolve: () => onThreadToggleResolved(thread) })}
-            {...props}
-          />
-        ))
+        filteredThreads.map((thread) => {
+          const threadId = fullyQualifiedId(thread);
+          return (
+            <CommentContainer
+              key={threadId}
+              thread={thread}
+              current={currentId === threadId}
+              detached={detached.includes(threadId)}
+              autoFocusTextbox={autoFocusCurrentTextbox && currentId === threadId}
+              {...(onThreadAttend && { onAttend: () => onThreadAttend(thread) })}
+              {...(onThreadDelete && { onThreadDelete: () => onThreadDelete(thread) })}
+              {...(onMessageDelete && { onMessageDelete: (messageId: string) => onMessageDelete(thread, messageId) })}
+              {...(onThreadToggleResolved && { onResolve: () => onThreadToggleResolved(thread) })}
+              {...props}
+            />
+          );
+        })
       ) : (
         <div
           role='alert'

@@ -10,6 +10,7 @@ import {
   getEchoObjectAnnotation,
   getSchema,
   type S,
+  isReactiveObject,
 } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -48,10 +49,13 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     this._schemas[type] = schema;
   }
 
-  // TODO(burdon): Runtime type check via: https://github.com/Effect-TS/schema (or zod).
   async createObject({ types }: { types?: T[] } = {}): Promise<ReactiveObject<any>> {
     const type = faker.helpers.arrayElement(types ?? (Object.keys(this._schemas) as T[]));
     const data = await this._generators[type](this._provider);
+    if (isReactiveObject(data)) {
+      return data;
+    }
+
     const schema = this.getSchema(type);
     return schema ? create(schema, data) : create(data);
   }

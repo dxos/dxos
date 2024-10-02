@@ -2,27 +2,28 @@
 // Copyright 2022 DXOS.org
 //
 
+import { onTestFinished, describe, test } from 'vitest';
+
 import { latch, sleep } from '@dxos/async';
 import { TestBuilder } from '@dxos/teleport/testing';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { TestAgent } from './testing';
 
 describe('Presence', () => {
   test('Two peers see each other', async () => {
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
     const [agent1, agent2] = builder.createPeers({ factory: () => new TestAgent() });
 
     await builder.connect(agent1, agent2);
 
-    await agent1.waitForAgentsOnline([agent2], 200);
-    await agent2.waitForAgentsOnline([agent1], 200);
+    await agent1.waitForAgentsOnline([agent2], TIMEOUT);
+    await agent2.waitForAgentsOnline([agent1], TIMEOUT);
   });
 
   test('Reannounce', async () => {
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
     const [agent1, agent2] = builder.createPeers({ factory: () => new TestAgent() });
 
     await builder.connect(agent1, agent2);
@@ -39,7 +40,7 @@ describe('Presence', () => {
     // first peer  <->  second peer  <->  third  peer
 
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
 
     const [agent1, agent2, agent3] = builder.createPeers({ factory: () => new TestAgent() });
 
@@ -48,15 +49,15 @@ describe('Presence', () => {
     await builder.connect(agent2, agent3);
 
     // Check if first and third peers "see" each other.
-    await agent1.waitForAgentsOnline([agent2, agent3], 200);
-    await agent3.waitForAgentsOnline([agent1, agent2], 200);
+    await agent1.waitForAgentsOnline([agent2, agent3], TIMEOUT);
+    await agent3.waitForAgentsOnline([agent1, agent2], TIMEOUT);
   });
 
   test('One connection drops after some time', async () => {
     // first peer  <->  second peer  <->  third  peer
 
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
 
     const [agent1, agent2, agent3] = builder.createPeers({ factory: () => new TestAgent() });
 
@@ -65,18 +66,18 @@ describe('Presence', () => {
     await builder.connect(agent2, agent3);
 
     // Check if first and third peers "see" each other.
-    await agent1.waitForAgentsOnline([agent2, agent3], 200);
-    await agent3.waitForAgentsOnline([agent1, agent2], 200);
+    await agent1.waitForAgentsOnline([agent2, agent3], TIMEOUT);
+    await agent3.waitForAgentsOnline([agent1, agent2], TIMEOUT);
 
     await agent3.destroy();
 
     // Check if third peer is offline for first and second peer.
-    await agent1.waitForAgentsOnline([agent2], 200);
+    await agent1.waitForAgentsOnline([agent2], TIMEOUT);
   });
 
   test('Four peers connected', async () => {
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
 
     const [agent1, agent2, agent3, agent4] = builder.createPeers({
       factory: () => new TestAgent({ announceInterval: 10, offlineTimeout: 50 }),
@@ -97,7 +98,7 @@ describe('Presence', () => {
       // Run system for some time.
       await sleep(200);
 
-      await agent1.waitForAgentsOnline([agent2, agent3, agent4], 200);
+      await agent1.waitForAgentsOnline([agent2, agent3, agent4], TIMEOUT);
     }
 
     {
@@ -109,7 +110,7 @@ describe('Presence', () => {
       // fourth peer  --  third peer
       //
 
-      await agent1.waitForAgentsOnline([agent2, agent3, agent4], 200);
+      await agent1.waitForAgentsOnline([agent2, agent3, agent4], TIMEOUT);
     }
 
     {
@@ -121,7 +122,7 @@ describe('Presence', () => {
       // fourth peer      third peer
       //
 
-      await agent1.waitForAgentsOnline([agent2, agent3], 200);
+      await agent1.waitForAgentsOnline([agent2, agent3], TIMEOUT);
     }
 
     {
@@ -133,7 +134,9 @@ describe('Presence', () => {
       // fourth peer  --  third peer
       //
 
-      await agent1.waitForAgentsOnline([agent2, agent3, agent4], 200);
+      await agent1.waitForAgentsOnline([agent2, agent3, agent4], TIMEOUT);
     }
   });
 });
+
+const TIMEOUT = 500;

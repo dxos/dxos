@@ -6,21 +6,25 @@ import {
   DefaultQuickActions,
   DefaultQuickActionsContent,
   TldrawUiMenuItem,
+  type TLUiStylePanelProps,
   useActions,
   useReadonly,
 } from '@tldraw/tldraw';
 import React from 'react';
 
-export const CustomMenu = () => {
+export const CustomMenu = ({ isMobile }: TLUiStylePanelProps) => {
   const actions = useActions();
   const isReadonlyMode = useReadonly();
+
   return (
     <div className='tlui-style-panel__wrapper'>
-      <div className='tlui-buttons__horizontal'>
-        <DefaultQuickActions>
-          <DefaultQuickActionsContent />
-          <TldrawUiMenuItem {...actions.snap} disabled={isReadonlyMode} />
-        </DefaultQuickActions>
+      <div className='tlui-menu'>
+        <div className='tlui-buttons__horizontal' data-ismobile={isMobile}>
+          <DefaultQuickActions>
+            <DefaultQuickActionsContent />
+            <TldrawUiMenuItem {...actions.snap} disabled={isReadonlyMode} />
+          </DefaultQuickActions>
+        </div>
       </div>
     </div>
   );

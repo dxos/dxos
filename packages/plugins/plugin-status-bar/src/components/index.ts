@@ -3,4 +3,4 @@
 //
 
 export * from './StatusBar';
-export * from './StatusBarImpl';
+export * from './StatusBarPanel';

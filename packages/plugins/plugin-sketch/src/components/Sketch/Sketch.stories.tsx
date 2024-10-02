@@ -11,7 +11,7 @@ import React, { useState } from 'react';
 import { createEchoObject } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Sketch } from './Sketch';
 import { migrateCanvas } from '../../migrations';
@@ -69,7 +69,7 @@ export default {
   title: 'plugin-sketch/SketchComponent',
   component: Sketch,
   render: Story,
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },

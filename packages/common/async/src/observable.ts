@@ -11,14 +11,15 @@ import { Trigger } from './trigger';
 
 export { Observable, PushStream, type Subscriber };
 
+// Inspired by:
+// https://github.com/zenparsing/zen-push/blob/39949f1/index.js#L93
+// https://github.com/apollographql/apollo-client/blob/a0eb4d6/src/utilities/observables/Concast.ts
+
 /**
  * Observable which supports multiple subscribers and stores the current value.
  *
  * The current value is emitted to new subscribers on subscription.
  */
-// Inspired by:
-// https://github.com/zenparsing/zen-push/blob/39949f1/index.js#L93
-// https://github.com/apollographql/apollo-client/blob/a0eb4d6/src/utilities/observables/Concast.ts
 export class MulticastObservable<T> extends Observable<T> {
   private readonly _observers = new Set<Observer<T>>();
   private readonly _observable: Observable<T>;

@@ -7,7 +7,8 @@ import isEqual from 'lodash.isequal';
 import { waitForCondition } from '@dxos/async';
 import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type Context, Resource } from '@dxos/context';
-import { createIdFromSpaceKey } from '@dxos/echo-pipeline/light';
+import { EchoHost } from '@dxos/echo-pipeline';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -16,7 +17,6 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
-import { EchoHost } from '../host';
 import { type EchoDatabase } from '../proxy-db';
 
 export class EchoTestBuilder extends Resource {

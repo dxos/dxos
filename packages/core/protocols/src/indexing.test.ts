@@ -2,11 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
-import { describe, test } from '@dxos/test';
-
-import { ObjectPointerVersion, objectPointerCodec } from './indexing';
+import { ObjectPointerVersion, objectPointerCodec } from './indexing.js';
 
 describe('Indexing object pointer codec', () => {
   test('getVersion', async () => {

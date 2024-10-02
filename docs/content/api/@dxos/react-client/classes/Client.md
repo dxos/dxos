@@ -25,7 +25,7 @@ Type: <code>Event&lt;void&gt;</code>
 Emitted after the client is reset and the services have finished restarting.
 
 ### [version]()
-Type: <code>"0.6.10"</code>
+Type: <code>"0.6.11"</code>
 
 The version of this client API.
 

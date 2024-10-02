@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AnySchema } from '@bufbuild/protobuf/wkt';
-
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { type EdgeConnection, protocol } from '@dxos/edge-client';
@@ -11,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeService } from '@dxos/protocols';
+import { bufWkt } from '@dxos/protocols/buf';
 import {
   SwarmRequestSchema,
   SwarmRequest_Action as SwarmRequestAction,
@@ -88,7 +87,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     }
 
     await this._edgeConnection.send(
-      protocol.createMessage(AnySchema, {
+      protocol.createMessage(bufWkt.AnySchema, {
         serviceId: EdgeService.SIGNAL_SERVICE_ID,
         source: message.author,
         target: [message.recipient],
@@ -126,7 +125,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       return;
     }
     const oldPeers = this._swarmPeers.get(topic)!;
-    const timestamp = new Date(Date.parse(message.timestamp));
+    const timestamp = message.timestamp ? new Date(Date.parse(message.timestamp)) : new Date();
     const newPeers = new ComplexSet<PeerInfo>(PeerInfoHash, payload.peers);
 
     // Emit new available peers in the swarm.
@@ -155,8 +154,8 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   }
 
   private _processMessage(message: EdgeMessage) {
-    invariant(protocol.getPayloadType(message) === AnySchema.typeName, 'Wrong payload type');
-    const payload = protocol.getPayload(message, AnySchema);
+    invariant(protocol.getPayloadType(message) === bufWkt.AnySchema.typeName, 'Wrong payload type');
+    const payload = protocol.getPayload(message, bufWkt.AnySchema);
     invariant(message.source, 'source is missing');
     invariant(message.target, 'target is missing');
     invariant(message.target.length === 1, 'target should have exactly one item');

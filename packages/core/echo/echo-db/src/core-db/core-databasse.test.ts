@@ -3,16 +3,16 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { createIdFromSpaceKey } from '@dxos/echo-pipeline/light';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { type CoreDatabase } from './core-database';
@@ -514,6 +514,44 @@ describe('CoreDatabase', () => {
             keys: [],
           },
           title: 'Inner',
+        });
+      }
+    });
+
+    test('query with join', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { crud } = await testBuilder.createDatabase();
+
+      const { id: id1 } = await crud.insert({ title: 'Inner' });
+      const { id: id2 } = await crud.insert({ title: 'Inner', nested: { '/': id1 } });
+      const { id: id3 } = await crud.insert({ title: 'Outer', inner: { '/': id2 } });
+      await crud.flush({ indexes: true });
+
+      {
+        const object = await crud.query({ id: id3 }, { include: { inner: { nested: true } } }).first();
+        expect(object).to.deep.eq({
+          id: id3,
+          __typename: null,
+          __meta: {
+            keys: [],
+          },
+          title: 'Outer',
+          inner: {
+            id: id2,
+            __typename: null,
+            __meta: {
+              keys: [],
+            },
+            title: 'Inner',
+            nested: {
+              id: id1,
+              __typename: null,
+              __meta: {
+                keys: [],
+              },
+              title: 'Inner',
+            },
+          },
         });
       }
     });

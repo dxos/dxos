@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Bug, Hammer, type IconProps } from '@phosphor-icons/react';
 import React, { type ReactNode, useEffect, useState } from 'react';
 
 import {
@@ -15,6 +14,7 @@ import {
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
+import { Devtools } from '@dxos/devtools';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type ClientPluginProvides } from '@dxos/plugin-client';
 import { createExtension, Graph, type Node } from '@dxos/plugin-graph';
@@ -30,7 +30,7 @@ import {
   bottombarBlockPaddingEnd,
 } from '@dxos/react-ui-theme';
 
-import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain, Wireframe } from './components';
+import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, Wireframe } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
 import translations from './translations';
 import { DebugContext, type DebugSettingsProps, type DebugPluginProvides, DebugAction } from './types';
@@ -111,8 +111,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   type: 'dxos.org/plugin/debug/devtools',
                   properties: {
                     label: ['devtools label', { ns: DEBUG_PLUGIN }],
-                    icon: (props: IconProps) => <Hammer {...props} />,
-                    iconSymbol: 'ph--hammer--regular',
+                    icon: 'ph--hammer--regular',
                   },
                 },
               ],
@@ -129,8 +128,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   data: { graph: graphPlugin?.provides.graph },
                   properties: {
                     label: ['debug label', { ns: DEBUG_PLUGIN }],
-                    icon: (props: IconProps) => <Bug {...props} />,
-                    iconSymbol: 'ph--bug--regular',
+                    icon: 'ph--bug--regular',
                   },
                 },
               ],
@@ -149,8 +147,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                     data: { space },
                     properties: {
                       label: ['debug label', { ns: DEBUG_PLUGIN }],
-                      icon: (props: IconProps) => <Bug {...props} />,
-                      iconSymbol: 'ph--bug--regular',
+                      icon: 'ph--bug--regular',
                     },
                   },
                 ];
@@ -197,7 +194,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           let component: ReactNode;
           if (role === 'main' || role === 'article') {
             if (primary === 'devtools' && settings.values.devtools) {
-              component = <DevtoolsMain />;
+              component = <Devtools />;
             } else if (!primary || typeof primary !== 'object' || !settings.values.debug) {
               component = null;
             } else if ('space' in primary && isSpace(primary.space)) {

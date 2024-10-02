@@ -22,7 +22,17 @@
       }
     },
     "lint": {},
-    "vitest": {}
+    "prebuild": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./scripts/vendor.mjs",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": [
+        "{projectRoot}/dist/vendor/*"
+      ]
+    },
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild"

@@ -5,9 +5,7 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist/types",
     "types": [
-      "@dxos/test",
       "node"
     ]
   },
@@ -35,9 +33,6 @@
     },
     {
       "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-typegen"
     },
     {
       "path": "../../core/halo/credentials"

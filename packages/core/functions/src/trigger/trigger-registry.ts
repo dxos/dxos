@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, diff } from '@dxos/util';
 
-import { createSubscriptionTrigger, createTimerTrigger, createWebhookTrigger, createWebsocketTrigger } from './type';
+import { createSubscriptionTrigger, createTimerTrigger, createWebsocketTrigger } from './type';
 import { type FunctionManifest, FunctionTrigger, type FunctionTriggerType, type TriggerSpec } from '../types';
 
 type ResponseCode = number;
@@ -28,12 +28,14 @@ export type TriggerFactory<Spec extends TriggerSpec, Options = any> = (
   options?: Options,
 ) => Promise<void>;
 
-export type TriggerHandlerMap = { [type in FunctionTriggerType]: TriggerFactory<any> };
+export type TriggerFactoryMap = Record<FunctionTriggerType, TriggerFactory<any>>;
 
-const triggerHandlers: TriggerHandlerMap = {
+const triggerFactory: TriggerFactoryMap = {
   subscription: createSubscriptionTrigger,
   timer: createTimerTrigger,
-  webhook: createWebhookTrigger,
+  // TODO(burdon): Cannot use in browser.
+  // webhook: createWebhookTrigger,
+  webhook: null as any,
   websocket: createWebsocketTrigger,
 };
 
@@ -55,7 +57,7 @@ export class TriggerRegistry extends Resource {
 
   constructor(
     private readonly _client: Client,
-    private readonly _options?: TriggerHandlerMap,
+    private readonly _options?: TriggerFactoryMap,
   ) {
     super();
   }
@@ -68,7 +70,10 @@ export class TriggerRegistry extends Resource {
     return this._getTriggers(space, (t) => t.activationCtx == null);
   }
 
-  async activate(space: Space, trigger: FunctionTrigger, callback: TriggerCallback): Promise<void> {
+  /**
+   * Set callback for trigger.
+   */
+  public async activate(space: Space, trigger: FunctionTrigger, callback: TriggerCallback): Promise<void> {
     log('activate', { space: space.key, trigger });
 
     const activationCtx = new Context({ name: `FunctionTrigger-${trigger.function}` });
@@ -78,8 +83,11 @@ export class TriggerRegistry extends Resource {
     registeredTrigger.activationCtx = activationCtx;
 
     try {
+      // Create trigger.
       const options = this._options?.[trigger.spec.type];
-      await triggerHandlers[trigger.spec.type](activationCtx, space, trigger.spec, callback, options);
+      const createTrigger = triggerFactory[trigger.spec.type];
+      invariant(createTrigger, `Trigger factory not found: ${trigger.spec.type}`);
+      await createTrigger(activationCtx, space, trigger.spec, callback, options);
     } catch (err) {
       delete registeredTrigger.activationCtx;
       throw err;

@@ -6,12 +6,11 @@ import { CompletionContext, type CompletionSource } from '@codemirror/autocomple
 import { EditorState } from '@codemirror/state';
 // @ts-ignore
 import { testTree } from '@lezer/generator/test';
-import { expect } from 'chai';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
-import { describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import { sheetExtension } from './extension';
-import { defaultFunctions } from '../../model/functions';
+import { defaultFunctions } from '../../graph';
 
 describe('formula parser', () => {
   const {
@@ -37,8 +36,8 @@ describe('formula parser', () => {
       extensions: sheetExtension({ functions }),
     });
 
-    const [f] = state.languageDataAt<CompletionSource>('autocomplete', text.length);
-    const result = await f(new CompletionContext(state, text.length, true));
+    const [fn] = state.languageDataAt<CompletionSource>('autocomplete', text.length);
+    const result = await fn(new CompletionContext(state, text.length, true));
     expect(result?.options).to.have.length(1);
   });
 });

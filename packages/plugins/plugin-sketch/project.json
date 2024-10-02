@@ -13,6 +13,7 @@
         "entryPoints": [
           "{projectRoot}/src/index.ts",
           "{projectRoot}/src/meta.tsx",
+          "{projectRoot}/src/sdk.ts",
           "{projectRoot}/src/types/index.ts"
         ],
         "platforms": [
@@ -34,7 +35,6 @@
     "test": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "test"
+    "esbuild"
   ]
 }

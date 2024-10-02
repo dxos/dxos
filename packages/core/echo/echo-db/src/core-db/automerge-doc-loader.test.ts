@@ -2,17 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl, createIdFromSpaceKey } from '@dxos/echo-pipeline/light';
+import { AutomergeHost, DataServiceImpl, createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 import { generateEchoId } from '@dxos/echo-schema';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import {
   type AutomergeDocumentLoader,

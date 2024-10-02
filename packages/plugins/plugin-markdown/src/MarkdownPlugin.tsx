@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, TextAa } from '@phosphor-icons/react';
+import { TextAa } from '@phosphor-icons/react';
 import React, { type Ref } from 'react';
 
 import {
@@ -20,7 +20,13 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { fullyQualifiedId, isSpace, loadObjectReferences } from '@dxos/react-client/echo';
+import {
+  createDocAccessor,
+  fullyQualifiedId,
+  getRangeFromCursor,
+  isSpace,
+  loadObjectReferences,
+} from '@dxos/react-client/echo';
 import {
   type EditorInputMode,
   type EditorViewMode,
@@ -59,6 +65,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
     defaultViewMode: 'preview',
     toolbar: true,
+    folding: false,
     experimental: false,
   });
 
@@ -111,8 +118,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           [DocumentType.typename]: {
             label: (object: any) => (object instanceof DocumentType ? object.name ?? object.fallbackName : undefined),
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
-            icon: (props: IconProps) => <TextAa {...props} />,
-            iconSymbol: 'ph--text-aa--regular',
+            icon: 'ph--text-aa--regular',
             graphProps: {
               managesAutofocus: true,
             },
@@ -125,6 +131,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       translations: [...translations, ...editorTranslations],
       echo: {
         schema: [DocumentType, TextType],
+      },
+      space: {
+        onSpaceCreate: {
+          label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+          action: MarkdownAction.CREATE,
+        },
       },
       graph: {
         builder: (plugins) => {
@@ -159,8 +171,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   },
                   properties: {
                     label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-                    icon: (props: IconProps) => <TextAa {...props} />,
-                    iconSymbol: 'ph--text-aa--regular',
+                    icon: 'ph--text-aa--regular',
                     testId: 'markdownPlugin.createObject',
                   },
                 },
@@ -225,9 +236,35 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             type: ['plugin name', { ns: MARKDOWN_PLUGIN }],
             label: ['create stack section label', { ns: MARKDOWN_PLUGIN }],
             icon: (props: any) => <TextAa {...props} />,
-            intent: { plugin: MARKDOWN_PLUGIN, action: MarkdownAction.CREATE },
+            intent: {
+              plugin: MARKDOWN_PLUGIN,
+              action: MarkdownAction.CREATE,
+            },
           },
         ],
+      },
+      thread: {
+        predicate: (obj) => obj instanceof DocumentType,
+        createSort: (doc: DocumentType) => {
+          const accessor = doc.content ? createDocAccessor(doc.content, ['content']) : undefined;
+          if (!accessor) {
+            return (_) => 0;
+          }
+
+          const getStartPosition = (cursor: string | undefined) => {
+            const range = cursor ? getRangeFromCursor(accessor, cursor) : undefined;
+            return range?.start ?? Number.MAX_SAFE_INTEGER;
+          };
+
+          return (anchorA: string | undefined, anchorB: string | undefined): number => {
+            if (anchorA === undefined || anchorB === undefined) {
+              return 0;
+            }
+            const posA = getStartPosition(anchorA);
+            const posB = getStartPosition(anchorB);
+            return posA - posB;
+          };
+        },
       },
       surface: {
         component: ({ data, role, ...props }, forwardedRef) => {

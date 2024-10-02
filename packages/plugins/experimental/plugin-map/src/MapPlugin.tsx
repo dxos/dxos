@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Compass, type IconProps } from '@phosphor-icons/react';
+import { Compass } from '@phosphor-icons/react';
 import { type LatLngLiteral } from 'leaflet';
 import React from 'react';
 
@@ -37,14 +37,19 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         records: {
           [MapType.typename]: {
             placeholder: ['object title placeholder', { ns: MAP_PLUGIN }],
-            icon: (props: IconProps) => <Compass {...props} />,
-            iconSymbol: 'ph--compass--regular',
+            icon: 'ph--compass--regular',
           },
         },
       },
       translations,
       echo: {
         schema: [MapType],
+      },
+      space: {
+        onSpaceCreate: {
+          label: ['create object label', { ns: MAP_PLUGIN }],
+          action: MapAction.CREATE,
+        },
       },
       graph: {
         builder: (plugins) => {
@@ -80,8 +85,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                     },
                     properties: {
                       label: ['create object label', { ns: MAP_PLUGIN }],
-                      icon: (props: IconProps) => <Compass {...props} />,
-                      iconSymbol: 'ph--compass--regular',
+                      icon: 'ph--compass--regular',
                       testId: 'mapPlugin.createObject',
                     },
                   },
@@ -107,8 +111,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                     },
                     properties: {
                       label: ['toggle type label', { ns: MAP_PLUGIN }],
-                      icon: (props: IconProps) => <Compass {...props} />,
-                      iconSymbol: 'ph--compass--regular',
+                      icon: 'ph--compass--regular',
                     },
                   },
                 ];
@@ -121,11 +124,14 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         creators: [
           {
             id: 'create-stack-section-map',
-            testId: 'mapPlugin.createSectionSpaceMap',
+            testId: 'mapPlugin.createSection',
             type: ['plugin name', { ns: MAP_PLUGIN }],
             label: ['create stack section label', { ns: MAP_PLUGIN }],
             icon: (props: any) => <Compass {...props} />,
-            intent: { plugin: MAP_PLUGIN, action: MapAction.CREATE },
+            intent: {
+              plugin: MAP_PLUGIN,
+              action: MapAction.CREATE,
+            },
           },
         ],
       },

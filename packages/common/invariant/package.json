@@ -1,6 +1,6 @@
 {
   "name": "@dxos/invariant",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "Invariant assertion compatible with DXOS logger.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,8 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     }
@@ -23,13 +24,8 @@
     "dist",
     "src"
   ],
-  "dependencies": {
-    "@dxos/node-std": "workspace:*"
-  },
-  "devDependencies": {
-    "@types/node": "^18.11.9",
-    "typescript": "^5.5.4"
-  },
+  "dependencies": {},
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

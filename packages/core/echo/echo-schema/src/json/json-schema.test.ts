@@ -3,12 +3,10 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { expect } from 'chai';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 import { effectToJsonSchema, jsonToEffectSchema } from './json-schema';
-import { FieldMeta } from '../annotations';
+import { FieldMeta } from '../ast';
 import { ref } from '../ref-annotation';
 import { TEST_SCHEMA_TYPE } from '../testing';
 import { TypedObject } from '../typed-object-class';

@@ -6,7 +6,6 @@
       "ESNext"
     ],
     "module": "ESNext",
-    "outDir": "dist/types",
     "types": [
       "node"
     ]
@@ -45,9 +44,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/react-async"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -60,9 +56,6 @@
       "path": "../../core/echo/echo-signals"
     },
     {
-      "path": "../../core/echo/echo-typegen"
-    },
-    {
       "path": "../../core/protocols"
     },
     {
@@ -70,6 +63,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../primitives/react-hooks"
     },
     {
       "path": "../react-ui"

@@ -91,7 +91,7 @@ function readPackage(packageJson, context) {
     }
 
     case 'esbuild-plugin-raw': {
-      packageJson.peerDependencies['esbuild'] = '^0.19.0';
+      packageJson.peerDependencies['esbuild'] = '^0.23.1';
       break;
     }
 
@@ -131,6 +131,11 @@ function readPackage(packageJson, context) {
     case 'react-motion': {
       packageJson.peerDependencies['react'] = '^18.0.0';
       packageJson.peerDependencies['react-dom'] = '^18.0.0';
+      break;
+    }
+
+    case '@rollup/pluginutils': {
+      packageJson.peerDependencies['rollup'] = '^2.0.0||^3.0.0';
       break;
     }
 

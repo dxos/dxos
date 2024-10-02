@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CompassTool, type IconProps } from '@phosphor-icons/react';
+import { CompassTool } from '@phosphor-icons/react';
 import React from 'react';
 
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
@@ -37,8 +37,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         records: {
           [DiagramType.typename]: {
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
-            icon: (props: IconProps) => <CompassTool {...props} />,
-            iconSymbol: 'ph--compass-tool--regular',
+            icon: 'ph--compass-tool--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (diagram: DiagramType) => loadObjectReferences(diagram, (diagram) => [diagram.canvas]),
             serializer,
@@ -49,6 +48,12 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       translations,
       echo: {
         schema: [DiagramType, CanvasType],
+      },
+      space: {
+        onSpaceCreate: {
+          label: ['create object label', { ns: SKETCH_PLUGIN }],
+          action: SketchAction.CREATE,
+        },
       },
       graph: {
         builder: (plugins) => {
@@ -84,8 +89,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                     },
                     properties: {
                       label: ['create object label', { ns: SKETCH_PLUGIN }],
-                      icon: (props: IconProps) => <CompassTool {...props} />,
-                      iconSymbol: 'ph--compass-tool--regular',
+                      icon: 'ph--compass-tool--regular',
                       testId: 'sketchPlugin.createObject',
                     },
                   },
@@ -146,11 +150,14 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         creators: [
           {
             id: 'create-stack-section-sketch',
-            testId: 'sketchPlugin.createSectionSpaceSketch',
+            testId: 'sketchPlugin.createSection',
             type: ['plugin name', { ns: SKETCH_PLUGIN }],
             label: ['create stack section label', { ns: SKETCH_PLUGIN }],
             icon: (props: any) => <CompassTool {...props} />,
-            intent: { plugin: SKETCH_PLUGIN, action: SketchAction.CREATE },
+            intent: {
+              plugin: SKETCH_PLUGIN,
+              action: SketchAction.CREATE,
+            },
           },
         ],
       },

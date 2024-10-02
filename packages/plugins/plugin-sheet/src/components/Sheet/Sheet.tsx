@@ -40,7 +40,7 @@ import { debounce } from '@dxos/async';
 import { fullyQualifiedId, createDocAccessor } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { createAttendableAttributes } from '@dxos/react-ui-attention';
+import { createAttendableAttributes, useHasAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
@@ -60,6 +60,7 @@ import {
 } from './grid';
 import { type GridSize, handleArrowNav, handleNav, useRangeSelect } from './nav';
 import { type SheetContextProps, SheetContextProvider, useSheetContext } from './sheet-context';
+import { useThreads } from './threads';
 import { getRectUnion, getRelativeClientRect, scrollIntoView } from './util';
 import {
   type CellIndex,
@@ -68,7 +69,9 @@ import {
   columnLetter,
   posEquals,
   rangeToA1Notation,
-} from '../../model';
+  addressToIndex,
+  addressFromIndex,
+} from '../../defs';
 import {
   CellEditor,
   type CellRangeNotifier,
@@ -112,13 +115,11 @@ import {
  *  - Update formula ranges by selection.
  */
 
-// TODO(burdon): Factor out fragments.
 const fragments = {
-  axis: 'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-xs select-none',
-  axisSelected: 'bg-neutral-100 dark:bg-neutral-900 text-black dark:text-white',
-  cell: 'dark:bg-neutral-850',
-  cellSelected: 'bg-neutral-50 dark:bg-neutral-900 text-black dark:text-white border !border-primary-500',
-  border: 'border-neutral-200 dark:border-neutral-700',
+  axis: 'bg-axisSurface text-axisText text-xs select-none',
+  axisSelected: 'bg-attention text-baseText',
+  cell: 'bg-gridCell',
+  cellSelected: 'bg-gridCellSelected text-baseText border !border-accentSurface',
 };
 
 //
@@ -137,11 +138,15 @@ const SheetRoot = ({ children, ...props }: PropsWithChildren<SheetContextProps>)
 
 type SheetMainProps = ThemedClassName<Partial<GridSize>>;
 
-const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numRows, numColumns }, forwardRef) => {
+const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numRows, numCols }, forwardRef) => {
   const { model, cursor, setCursor, setRange, setEditing } = useSheetContext();
 
   // Scrolling.
   const { rowsRef, columnsRef, contentRef } = useScrollHandlers();
+
+  // Threads.
+  // TODO(Zan): Move this to an extension once we have an extension model.
+  useThreads();
 
   //
   // Order of Row/columns.
@@ -172,21 +177,21 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
   }, [rows, columns]);
 
   const handleMoveRows: SheetRowsProps['onMove'] = (from, to, num = 1) => {
-    const cursorIdx = cursor ? model.addressToIndex(cursor) : undefined;
+    const cursorIdx = cursor ? addressToIndex(model.sheet, cursor) : undefined;
     const [rows] = model.sheet.rows.splice(from, num);
     model.sheet.rows.splice(to, 0, rows);
     if (cursorIdx) {
-      setCursor(model.addressFromIndex(cursorIdx));
+      setCursor(addressFromIndex(model.sheet, cursorIdx));
     }
     setRows([...model.sheet.rows]);
   };
 
   const handleMoveColumns: SheetColumnsProps['onMove'] = (from, to, num = 1) => {
-    const cursorIdx = cursor ? model.addressToIndex(cursor) : undefined;
+    const cursorIdx = cursor ? addressToIndex(model.sheet, cursor) : undefined;
     const columns = model.sheet.columns.splice(from, num);
     model.sheet.columns.splice(to, 0, ...columns);
     if (cursorIdx) {
-      setCursor(model.addressFromIndex(cursorIdx));
+      setCursor(addressFromIndex(model.sheet, cursorIdx));
     }
     setColumns([...model.sheet.columns]);
   };
@@ -244,7 +249,6 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
       role='none'
       className={mx(
         'grid grid-cols-[calc(var(--rail-size)-2px)_1fr] grid-rows-[32px_1fr_32px] bs-full is-full overflow-hidden',
-        fragments.border,
         classNames,
       )}
     >
@@ -259,8 +263,8 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
         ref={columnsRef}
         columns={columns}
         sizes={columnSizes}
-        selected={cursor?.column}
-        onSelect={(column) => setCursor(cursor?.column === column ? undefined : { row: -1, column })}
+        selected={cursor?.col}
+        onSelect={(col) => setCursor(cursor?.col === col ? undefined : { row: -1, col })}
         onResize={handleResizeColumn}
         onMove={handleMoveColumns}
       />
@@ -270,13 +274,13 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
         rows={rows}
         sizes={rowSizes}
         selected={cursor?.row}
-        onSelect={(row) => setCursor(cursor?.row === row ? undefined : { row, column: -1 })}
+        onSelect={(row) => setCursor(cursor?.row === row ? undefined : { row, col: -1 })}
         onResize={handleResizeRow}
         onMove={handleMoveRows}
       />
       <SheetGrid
         ref={contentRef}
-        size={{ numRows: numRows ?? rows.length, numColumns: numColumns ?? columns.length }}
+        size={{ numRows: numRows ?? rows.length, numCols: numCols ?? columns.length }}
         rows={rows}
         columns={columns}
         rowSizes={rowSizes}
@@ -345,7 +349,7 @@ const GridCorner = (props: { className?: string } & Pick<DOMAttributes<HTMLDivEl
 
 const MovingOverlay = ({ label }: { label: string }) => {
   return (
-    <div className='flex w-full h-full justify-center items-center text-sm p-1 bg-primary-500/50 cursor-pointer'>
+    <div className='flex w-full h-full justify-center items-center text-sm p-1 bg-gridOverlay cursor-pointer'>
       {label}
     </div>
   );
@@ -425,7 +429,7 @@ const SheetRows = forwardRef<HTMLDivElement, SheetRowsProps>(
       <div className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
         <div
-          className={mx('z-20 absolute inset-0 border-y pointer-events-none', fragments.border)}
+          className={mx('z-20 absolute inset-0 border-y border-gridLine pointer-events-none')}
           style={{ width: axisWidth }}
         />
 
@@ -520,8 +524,7 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
         {...listeners}
         className={mx(
           'flex h-full items-center justify-center cursor-pointer',
-          'border-t focus-visible:outline-none',
-          fragments.border,
+          'border-t border-gridLine focus-visible:outline-none',
           fragments.axis,
           selected && fragments.axisSelected,
           isDragging && fragments.axisSelected,
@@ -532,11 +535,11 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
 
         {/* Drop indicator. */}
         {over?.id === idx && !isDragging && (
-          <div className='z-20 absolute top-0 w-full min-h-[4px] border-b-4 border-primary-500' />
+          <div className='z-20 absolute top-0 w-full min-h-[4px] border-b-4 border-accentSurface' />
         )}
 
         {/* Resize indicator. */}
-        {resizing && <div className='z-20 absolute bottom-0 w-full min-h-[4px] border-b-4 border-primary-500' />}
+        {resizing && <div className='z-20 absolute bottom-0 w-full min-h-[4px] border-b-4 border-accentSurface' />}
       </div>
     </Resizable>
   );
@@ -588,7 +591,7 @@ const SheetColumns = forwardRef<HTMLDivElement, SheetColumnsProps>(
       <div className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
         <div
-          className={mx('z-20 absolute inset-0 border-x pointer-events-none', fragments.border)}
+          className={mx('z-20 absolute inset-0 border-x border-gridLine pointer-events-none')}
           style={{ height: axisHeight }}
         />
 
@@ -684,8 +687,7 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
         {...listeners}
         className={mx(
           'flex h-full items-center justify-center cursor-pointer',
-          'border-l focus-visible:outline-none',
-          fragments.border,
+          'border-l border-gridLine focus-visible:outline-none',
           fragments.axis,
           selected && fragments.axisSelected,
           isDragging && fragments.axisSelected,
@@ -696,11 +698,11 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
 
         {/* Drop indicator. */}
         {over?.id === idx && !isDragging && (
-          <div className='z-20 absolute left-0 h-full min-w-[4px] border-l-4 border-primary-500' />
+          <div className='z-20 absolute left-0 h-full min-w-[4px] border-l-4 border-accentSurface' />
         )}
 
         {/* Resize indicator. */}
-        {resizing && <div className='z-20 absolute right-0 h-full min-h-[4px] border-l-4 border-primary-500' />}
+        {resizing && <div className='z-20 absolute right-0 h-full min-h-[4px] border-l-4 border-accentSurface' />}
       </div>
     </Resizable>
   );
@@ -860,18 +862,17 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
     });
 
     // TODO(burdon): Prevent scroll if not attended.
-    const qualifiedSubjectId = fullyQualifiedId(model.sheet);
-    const attendableAttrs = createAttendableAttributes(qualifiedSubjectId);
-    // const attended = useHasAttention(qualifiedSubjectId);
-    const attended = true;
+    const id = fullyQualifiedId(model.sheet);
+    const attendableAttrs = createAttendableAttributes(id);
+    const hasAttention = useHasAttention(id);
 
     return (
       <div ref={containerRef} role='grid' className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
-        <div className={mx('z-20 absolute inset-0 border pointer-events-none', fragments.border)} />
+        <div className={mx('z-20 absolute inset-0 border border-gridLine pointer-events-none')} />
 
         {/* Grid scroll container. */}
-        <div ref={scrollerRef} className={mx('grow', attended && 'overflow-auto scrollbar-thin')}>
+        <div ref={scrollerRef} className={mx('grow', hasAttention && 'overflow-auto scrollbar-thin')}>
           {/* Scroll content. */}
           <div
             className='relative select-none'
@@ -884,11 +885,11 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
 
             {/* Grid cells. */}
             {rowRange.map(({ row, top, height }) => {
-              return columnRange.map(({ column, left, width }) => {
+              return columnRange.map(({ col, left, width }) => {
                 const style: CSSProperties = { position: 'absolute', top, left, width, height };
-                const cell = { row, column };
+                const cell: CellAddress = { row, col };
                 const id = addressToA1Notation(cell);
-                const idx = model.addressToIndex(cell);
+                const idx = addressToIndex(model.sheet, cell);
                 const active = posEquals(cursor, cell);
                 if (active && editing) {
                   const value = initialText.current ?? model.getCellText(cell) ?? '';
@@ -991,7 +992,7 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
     <div
       role='none'
       style={bounds}
-      className='z-10 absolute pointer-events-none bg-primary-500/20 border border-primary-500/50'
+      className='z-10 absolute pointer-events-none bg-gridSelectionOverlay border border-gridOverlay'
     />
   );
 };
@@ -1009,8 +1010,38 @@ type SheetCellProps = {
 };
 
 const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
-  const { formatting, editing, setRange } = useSheetContext();
+  const {
+    formatting,
+    editing,
+    setRange,
+    decorations,
+    model: { sheet },
+  } = useSheetContext();
   const { value, classNames } = formatting.getFormatting(cell);
+
+  const decorationsForCell = decorations.getDecorationsForCell(addressToIndex(sheet, cell)) ?? [];
+  const decorationAddedClasses = useMemo(
+    () => decorationsForCell.flatMap((d) => d.classNames ?? []),
+    [decorationsForCell],
+  );
+  const decoratedContent = decorationsForCell.reduce(
+    (children, { decorate }) => {
+      if (!decorate) {
+        return children;
+      }
+      const DecoratorComponent = decorate;
+      return <DecoratorComponent>{children}</DecoratorComponent>;
+    },
+    <div
+      role='none'
+      className={mx(
+        'flex flex-grow bs-full is-full px-2 items-center truncate cursor-pointer',
+        ...decorationAddedClasses,
+      )}
+    >
+      {value}
+    </div>,
+  );
 
   return (
     <div
@@ -1018,10 +1049,8 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       role='cell'
       style={style}
       className={mx(
-        'flex w-full h-full truncate items-center border cursor-pointer',
-        'px-2 py-1',
+        'border border-gridLine cursor-pointer',
         fragments.cell,
-        fragments.border,
         active && ['z-20', fragments.cellSelected],
         classNames,
       )}
@@ -1034,7 +1063,7 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       }}
       onDoubleClick={() => onSelect?.(cell, true)}
     >
-      {value}
+      {decoratedContent}
     </div>
   );
 };
@@ -1053,10 +1082,11 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
       notifier.current?.(rangeToA1Notation(range));
     }
   }, [range]);
+
   const extension = useMemo(
     () => [
       editorKeys({ onNav, onClose }),
-      sheetExtension({ functions: model.functions }),
+      sheetExtension({ functions: model.graph.getFunctions() }),
       rangeExtension((fn) => (notifier.current = fn)),
     ],
     [model],
@@ -1080,12 +1110,13 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
 
 const SheetStatusBar = () => {
   const { model, cursor, range } = useSheetContext();
+
   let value;
   let isFormula = false;
   if (cursor) {
     value = model.getCellValue(cursor);
     if (typeof value === 'string' && value.charAt(0) === '=') {
-      value = model.mapFormulaBindingFromId(model.mapFormulaIndicesToRefs(value));
+      value = model.graph.mapFunctionBindingFromId(model.mapFormulaIndicesToRefs(value));
       isFormula = true;
     } else if (value != null) {
       value = String(value);
@@ -1093,13 +1124,13 @@ const SheetStatusBar = () => {
   }
 
   return (
-    <div className={mx('flex shrink-0 justify-between items-center px-4 py-1 text-sm border-x', fragments.border)}>
+    <div className={mx('flex shrink-0 justify-between items-center px-4 py-1 text-sm border-x border-gridLine')}>
       <div className='flex gap-4 items-center'>
         <div className='flex w-16 items-center font-mono'>
           {(range && rangeToA1Notation(range)) || (cursor && addressToA1Notation(cursor))}
         </div>
         <div className='flex gap-2 items-center'>
-          <FunctionIcon className={mx('text-green-500', isFormula ? 'visible' : 'invisible')} />
+          <FunctionIcon className={mx('text-greenText', isFormula ? 'visible' : 'invisible')} />
           <span className='font-mono'>{value}</span>
         </div>
       </div>
@@ -1129,8 +1160,7 @@ const SheetDebug = () => {
     <div
       className={mx(
         'z-20 absolute right-0 top-20 bottom-20 w-[30rem] overflow-auto scrollbar-thin',
-        'border text-xs bg-neutral-50 dark:bg-black text-cyan-500 font-mono p-1 opacity-80',
-        fragments.border,
+        'border border-gridLine text-xs bg-neutral-50 dark:bg-black text-cyan-500 font-mono p-1 opacity-80',
       )}
     >
       <pre className='whitespace-pre-wrap'>

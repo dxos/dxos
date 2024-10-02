@@ -8,7 +8,6 @@
       "ESNext"
     ],
     "module": "ESNext",
-    "outDir": "dist/types",
     "types": [
       "node"
     ]
@@ -78,10 +77,16 @@
       "path": "../../../ui/react-ui"
     },
     {
+      "path": "../../../ui/react-ui-attention"
+    },
+    {
       "path": "../../../ui/react-ui-editor"
     },
     {
       "path": "../../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../../ui/react-ui-theme"
@@ -97,6 +102,9 @@
     },
     {
       "path": "../../plugin-markdown"
+    },
+    {
+      "path": "../../plugin-settings"
     },
     {
       "path": "../../plugin-space"

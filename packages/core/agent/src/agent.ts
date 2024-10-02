@@ -19,12 +19,7 @@ import {
 } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import {
-  createIceProvider,
-  createLibDataChannelTransportFactory,
-  createSimplePeerTransportFactory,
-  type TransportFactory,
-} from '@dxos/network-manager';
+import { createIceProvider, createRtcTransportFactory, type TransportFactory } from '@dxos/network-manager';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { tracer } from '@dxos/util';
 import { WebsocketRpcServer, authenticateRequestWithTokenAuth } from '@dxos/websocket-rpc';
@@ -82,24 +77,11 @@ export class Agent {
     invariant(!this._clientServices);
     log('starting...');
 
-    // TODO(nf): move to config
-    let transportFactory: TransportFactory;
-    // TODO(burdon): Change to DX_WEBRTCLIB for consistency and easier discovery.
-    if (process.env.WEBRTCLIBRARY === 'SimplePeer') {
-      log.info('using SimplePeer');
-      transportFactory = createSimplePeerTransportFactory(
-        { iceServers: this._options.config.get('runtime.services.ice') },
-        this._options.config.get('runtime.services.iceProviders') &&
-          createIceProvider(this._options.config.get('runtime.services.iceProviders')!),
-      );
-    } else {
-      log.info('using LibDataChannel');
-      transportFactory = createLibDataChannelTransportFactory(
-        { iceServers: this._options.config.get('runtime.services.ice') },
-        this._options.config.get('runtime.services.iceProviders') &&
-          createIceProvider(this._options.config.get('runtime.services.iceProviders')!),
-      );
-    }
+    const transportFactory: TransportFactory = createRtcTransportFactory(
+      { iceServers: this._options.config.get('runtime.services.ice') },
+      this._options.config.get('runtime.services.iceProviders') &&
+        createIceProvider(this._options.config.get('runtime.services.iceProviders')!),
+    );
 
     // Create client services.
     // TODO(nf): set observability group.

@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Presentation } from '@phosphor-icons/react';
 import React from 'react';
 
 import {
@@ -86,8 +85,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
                   },
                   properties: {
                     label: ['toggle presentation label', { ns: PRESENTER_PLUGIN }],
-                    icon: (props: IconProps) => <Presentation {...props} />,
-                    iconSymbol: 'ph--presentation--regular',
+                    icon: 'ph--presentation--regular',
                     keyBinding: {
                       macos: 'shift+meta+p',
                       windows: 'shift+alt+p',
@@ -125,11 +123,12 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
               }
               return null;
             }
-            case 'slide':
+            case 'slide': {
               return data.slide instanceof DocumentType ? <MarkdownSlide document={data.slide} /> : null;
-
-            case 'settings':
+            }
+            case 'settings': {
               return data.plugin === meta.id ? <PresenterSettings settings={settings.values} /> : null;
+            }
           }
 
           return null;

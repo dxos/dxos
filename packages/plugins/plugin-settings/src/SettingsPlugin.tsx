@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Gear, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import {
@@ -106,8 +105,7 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
                 },
                 properties: {
                   label: ['open settings label', { ns: SETTINGS_PLUGIN }],
-                  icon: (props: IconProps) => <Gear {...props} />,
-                  iconSymbol: 'ph--gear--regular',
+                  icon: 'ph--gear--regular',
                   keyBinding: {
                     macos: 'meta+,',
                     windows: 'alt+,',

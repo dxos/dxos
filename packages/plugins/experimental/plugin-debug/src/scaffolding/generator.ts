@@ -22,11 +22,12 @@ import {
 import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
-import { TLDrawStoreAdapter } from '@dxos/plugin-sketch';
+import { TLDrawStoreAdapter } from '@dxos/plugin-sketch/sdk';
 import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';
 import { createDocAccessor, type Space } from '@dxos/react-client/echo';
 
+// TODO(wittjosiah): Remove? Just use typenames.
 export enum SchemasNames {
   document = 'dxos.org/type/Document',
   diagram = 'dxos.org/type/Diagram',
@@ -39,12 +40,12 @@ export const SchemasMap: TestSchemaMap<SchemasNames> = {
 
 export const ObjectGenerators: TestGeneratorMap<SchemasNames> = {
   [SchemasNames.document]: () => {
-    const name = faker.lorem.sentence();
+    const name = faker.lorem.sentence({ min: 2, max: 3 });
     return { name, content: create(TextType, { content: '' }), threads: [] };
   },
 
   [SchemasNames.diagram]: () => {
-    const name = faker.lorem.sentence();
+    const name = faker.lorem.sentence({ min: 2, max: 3 });
     return {
       name,
       canvas: create(CanvasType, { schema: TLDRAW_SCHEMA, content: {} }),

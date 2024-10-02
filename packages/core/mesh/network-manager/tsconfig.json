@@ -4,10 +4,10 @@
     "lib": [
       "DOM",
       "ESNext"
-    ],
-    "outDir": "dist/types"
+    ]
   },
   "include": [
+    "network-manager.d.ts",
     "src",
     "tests-setup.js"
   ],
@@ -20,9 +20,6 @@
     },
     {
       "path": "../../../common/context"
-    },
-    {
-      "path": "../../../common/crypto"
     },
     {
       "path": "../../../common/debug"
@@ -40,19 +37,13 @@
       "path": "../../../common/node-std"
     },
     {
+      "path": "../../../common/tracing"
+    },
+    {
       "path": "../../../common/util"
     },
     {
-      "path": "../../../sdk/config"
-    },
-    {
-      "path": "../../halo/credentials"
-    },
-    {
       "path": "../../protocols"
-    },
-    {
-      "path": "../edge-client"
     },
     {
       "path": "../messaging"

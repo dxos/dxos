@@ -45,6 +45,8 @@ const classGroupsConfig = {
   'logical.block-end': [{ 'block-end': getLengthWithAuto() }],
   'logical.inline-start': [{ 'inline-start': getLengthWithAuto() }],
   'logical.inline-end': [{ 'inline-end': getLengthWithAuto() }],
+  'logical.border-li': [{ 'border-li': getLengthWithEmpty() }],
+  'logical.border-lb': [{ 'border-lb': getLengthWithEmpty() }],
   'logical.border-bs': [{ 'border-bs': getLengthWithEmpty() }],
   'logical.border-be': [{ 'border-be': getLengthWithEmpty() }],
   'logical.border-is': [{ 'border-is': getLengthWithEmpty() }],
@@ -97,6 +99,8 @@ export const withLogical = (prevConfig: WithLogicalConfig): WithLogicalConfig =>
         'logical.rounded-be': ['logical.rounded-es', 'logical.rounded-ee'],
         'logical.rounded-is': ['logical.rounded-ss', 'logical.rounded-es'],
         'logical.rounded-ie': ['logical.rounded-ee', 'logical.rounded-se'],
+        'logical.border-li': ['logical.border-is', 'logical.border-ie'],
+        'logical.border-lb': ['logical.border-bs', 'logical.border-be'],
         'border-color': [
           'logical.border-color-bs',
           'logical.border-color-be',

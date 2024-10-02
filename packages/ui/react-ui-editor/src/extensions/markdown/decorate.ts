@@ -17,6 +17,19 @@ import { table } from './table';
 import { theme, type HeadingLevel } from '../../styles';
 import { wrapWithCatch } from '../util';
 
+/**
+ * Unicode characters.
+ * NOTE: Depends on font.
+ * https://www.compart.com/en/unicode (nice resource).
+ * https://en.wikipedia.org/wiki/List_of_Unicode_characters
+ */
+const Unicode = {
+  emDash: '\u2014',
+  bullet: '\u2022',
+  bulletSmall: '\u2219',
+  bulletSquare: '\u2b1d',
+};
+
 //
 // Widgets
 //
@@ -67,12 +80,18 @@ class CheckboxWidget extends WidgetType {
       input.setAttribute('disabled', 'true');
     } else {
       input.onmousedown = (event: Event) => {
-        const pos = view.posAtDOM(span);
-        const text = view.state.sliceDoc(pos, pos + 3);
-        if (text === (this._checked ? '[x]' : '[ ]')) {
+        // Could be beginning of line.
+        const line = view.state.doc.lineAt(view.posAtDOM(span));
+        const text = view.state.sliceDoc(line.from, line.to);
+        const match = text.match(/^\s*- (\[[xX ]]).*/);
+        if (match) {
+          const [, checked] = match;
+          const pos = line.from + text.indexOf(checked);
+          this._checked = checked !== '[ ]';
           view.dispatch({
             changes: { from: pos + 1, to: pos + 2, insert: this._checked ? ' ' : 'x' },
           });
+
           event.preventDefault();
         }
       };
@@ -246,17 +265,20 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       }
 
       case 'ListItem': {
+        const line = state.doc.lineAt(node.from);
+
         // Set indentation.
         const list = getCurrentListLevel();
         const width = list.type === 'OrderedList' ? orderedListIndentationWidth : bulletListIndentationWidth;
         const offset = ((list.level ?? 0) + 1) * width;
-        const line = state.doc.lineAt(node.from);
         if (node.from === line.to - 1) {
           // Abort if only the hyphen is typed.
           return false;
         }
 
-        // Add line decoration for continuation indent.
+        // Add line decoration for the continuation indent.
+        // TODO(burdon): Bug if indentation is more than one indentation unit (e.g., 4 spaces) from the previous line.
+
         deco.add(
           line.from,
           line.from,
@@ -268,32 +290,26 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           }),
         );
 
-        // Remove indentation spaces.
-        const text = state.doc.sliceString(line.from, node.to);
-        const whitespace = text.match(/^ */)?.[0].length ?? 0;
-        if (whitespace) {
-          atomicDeco.add(line.from, line.from + whitespace, hide);
-        }
-
         break;
       }
 
       case 'ListMark': {
+        const list = getCurrentListLevel();
+
         // Look-ahead for task marker.
-        // NOTE: Requires space to exist (otherwise processes as a link).
+        // NOTE: Requires space to exist (otherwise the text is parsed as the start of a link).
         const next = tree.resolve(node.to + 1, 1);
         if (next?.name === 'TaskMarker') {
-          atomicDeco.add(node.from, node.to + 1, hide);
           break;
         }
 
-        const list = getCurrentListLevel();
-
         // TODO(burdon): Option to make hierarchical; or a), i), etc.
-        const label = list.type === 'OrderedList' ? `${++list.number}.` : '•';
+        const label = list.type === 'OrderedList' ? `${++list.number}.` : Unicode.bulletSmall;
+        const line = state.doc.lineAt(node.from);
+        const to = state.doc.sliceString(node.to, node.to + 1) === ' ' ? node.to + 1 : node.to;
         atomicDeco.add(
-          node.from,
-          node.to + 1,
+          line.from,
+          to,
           Decoration.replace({
             widget: new TextWidget(
               label,
@@ -305,10 +321,11 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       }
 
       case 'TaskMarker': {
-        if (!editingRange(state, node, focus)) {
-          const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
-          atomicDeco.add(node.from, node.to + 1, checked ? checkedTask : uncheckedTask);
-        }
+        const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
+        // Check if the next character is a space and if so, include it in the replacement.
+        const line = state.doc.lineAt(node.from);
+        const to = state.doc.sliceString(node.to, node.to + 1) === ' ' ? node.to + 1 : node.to;
+        atomicDeco.add(line.from, to, checked ? checkedTask : uncheckedTask);
         break;
       }
 

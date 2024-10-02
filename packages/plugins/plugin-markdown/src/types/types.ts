@@ -12,6 +12,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-client';
+import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { type Extension, type EditorInputMode, type EditorViewMode } from '@dxos/react-ui-editor';
 
 import { type DocumentType } from './document';
@@ -26,7 +27,7 @@ export enum MarkdownAction {
 
 export type MarkdownProperties = Record<string, any>;
 
-export type ExtensionsProvider = (props: { document?: DocumentType }) => Extension[];
+export type ExtensionsProvider = (props: { document?: DocumentType }) => Extension[] | undefined;
 
 export type OnChange = (text: string) => void;
 
@@ -49,7 +50,7 @@ export type MarkdownPluginState = {
 
   // TODO(burdon): Extend view mode per document to include scroll position, etc.
   // View mode per document.
-  viewMode: { [key: string]: EditorViewMode };
+  viewMode: Record<string, EditorViewMode>;
 };
 
 export type MarkdownSettingsProps = {
@@ -64,6 +65,14 @@ export type MarkdownSettingsProps = {
   folding?: boolean;
 };
 
+// TODO(Zan): Move this to the plugin-space plugin or another common location when we implement comments in sheets.
+type ThreadProvides<T> = {
+  thread: {
+    predicate: (obj: any) => obj is T;
+    createSort: (obj: T) => (anchorA: string | undefined, anchorB: string | undefined) => number;
+  };
+};
+
 export type MarkdownPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
@@ -72,4 +81,6 @@ export type MarkdownPluginProvides = SurfaceProvides &
   SettingsProvides<MarkdownSettingsProps> &
   TranslationsProvides &
   SchemaProvides &
-  StackProvides;
+  SpaceInitProvides &
+  StackProvides &
+  ThreadProvides<DocumentType>;

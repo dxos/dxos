@@ -1,26 +1,20 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "beast",
-  "sourceRoot": "tools/beast/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {
       "options": {
-        "main": "tools/beast/src/index.ts",
-        "outputPath": "tools/beast/dist",
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "{projectRoot}/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "tools/beast/tsconfig.json"
+        "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
     "lint": {},
-    "test": {
-      "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ]
-      }
-    }
+    "test": {}
   }
 }

@@ -25,7 +25,7 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
       __inputScope,
       segmentClassName,
       inputClassName,
-      segmentPadding = '13px',
+      segmentPadding = '8px',
       segmentHeight = '100%',
       ...props
     }: InputScopedProps<PinInputProps>,

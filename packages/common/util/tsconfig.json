@@ -1,9 +1,9 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/types",
     "types": [
-      "@dxos/test"
+      "@dxos/typings",
+      "node"
     ]
   },
   "include": [
