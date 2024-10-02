@@ -214,6 +214,10 @@
         {
           "env": "VITEST_XML_REPORT"
         }
+      ],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}",
+        "{workspaceRoot}/test-results/{projectRoot}"
       ]
     },
     "compile-lib": {

@@ -3,7 +3,7 @@ on:
     inputs:
       publish_npm:
         description: 'Publish a non-production branch to NPM'
-        default: false
+        default: 'false'
   push:
     branches:
       - labs
@@ -121,7 +121,7 @@ jobs:
         uses: fnkr/github-action-ghr@v1
         env:
           GHR_PATH: artifacts/
-          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: github.event_name == 'release' && github.event.action == 'published'
 
       - name: Monitor publish
