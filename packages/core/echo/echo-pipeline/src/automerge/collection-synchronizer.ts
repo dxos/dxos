@@ -6,8 +6,8 @@ import { asyncReturn, Event, scheduleTask, scheduleTaskInterval } from '@dxos/as
 import { next as am } from '@dxos/automerge/automerge';
 import type { DocumentId, PeerId } from '@dxos/automerge/automerge-repo';
 import { Resource, type Context } from '@dxos/context';
-import { defaultMap } from '@dxos/util';
 import { log } from '@dxos/log';
+import { defaultMap } from '@dxos/util';
 
 const MIN_QUERY_INTERVAL = 5_000;
 
