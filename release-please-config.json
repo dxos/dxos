@@ -794,6 +794,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-stack-next/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-syntax-highlighter/package.json",
           "jsonpath": "$.version"
         },
