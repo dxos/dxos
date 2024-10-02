@@ -76,19 +76,28 @@ const StorybookStack = () => {
         return newColumns;
       } else {
         // Reordering items within a column
-        return prevColumns.map((column) => {
-          const sourceIndex = column.items.findIndex((item) => item.id === itemId);
-          const targetIndex = column.items.findIndex((item) => item.id === targetId);
+        const newColumns = [...prevColumns];
+        const sourceColumn = newColumns.find((col) => col.items.some((item) => item.id === itemId));
+        const targetColumn = newColumns.find((col) => col.items.some((item) => item.id === targetId));
 
-          if (sourceIndex !== -1 && targetIndex !== -1) {
-            const newItems = [...column.items];
-            const [movedItem] = newItems.splice(sourceIndex, 1);
-            const insertIndex = closestEdge === 'bottom' ? targetIndex + 1 : targetIndex;
-            newItems.splice(insertIndex, 0, movedItem);
-            return { ...column, items: newItems };
+        if (sourceColumn && targetColumn) {
+          const sourceIndex = sourceColumn.items.findIndex((item) => item.id === itemId);
+          const targetIndex = targetColumn.items.findIndex((item) => item.id === targetId);
+          const [movedItem] = sourceColumn.items.splice(sourceIndex, 1);
+
+          // Fix: Adjust insert index based on the edge and whether it's the same column
+          let insertIndex;
+          if (sourceColumn === targetColumn && sourceIndex < targetIndex) {
+            // If moving within the same column and the source was above the target,
+            // we need to adjust the target index
+            insertIndex = closestEdge === 'bottom' ? targetIndex : targetIndex - 1;
+          } else {
+            insertIndex = closestEdge === 'bottom' ? targetIndex + 1 : targetIndex;
           }
-          return column;
-        });
+          targetColumn.items.splice(insertIndex, 0, movedItem);
+        }
+
+        return newColumns;
       }
     });
   }, []);
