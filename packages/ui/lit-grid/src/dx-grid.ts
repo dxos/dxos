@@ -9,15 +9,17 @@ import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 import {
   type AxisMeta,
   type CellIndex,
-  type CellValue,
   DxAxisResize,
   DxEditRequest,
   type DxGridAxis,
+  type DxGridAxisMeta,
+  type DxGridCells,
   DxGridCellsSelect,
   type DxGridMode,
   type DxGridPointer,
   type DxGridPosition,
   type DxGridPositionNullable,
+  type DxGridRange,
 } from './types';
 import { separator, toCellIndex } from './util';
 
@@ -103,16 +105,25 @@ export class DxGrid extends LitElement {
   columnDefault: AxisMeta = { size: 180 };
 
   @property({ type: Object })
-  rows: Record<string, AxisMeta> = {};
+  rows: DxGridAxisMeta = {};
 
   @property({ type: Object })
-  columns: Record<string, AxisMeta> = {};
+  columns: DxGridAxisMeta = {};
 
   @property({ type: Object })
-  cells: Record<CellIndex, CellValue> = {};
+  initialCells: DxGridCells = {};
 
   @property({ type: String })
   mode: DxGridMode = 'browse';
+
+  /**
+   * When this function is defined, it is used first to try to get a value for a cell, and otherwise will fall back
+   * to `cells`.
+   */
+  getCells: ((nextRange: DxGridRange) => DxGridCells) | null = null;
+
+  @state()
+  private cells: DxGridCells = {};
 
   //
   // `pos`, short for ‘position’, is the position in pixels of the viewport from the origin.
@@ -358,7 +369,8 @@ export class DxGrid extends LitElement {
   }
 
   private cell(c: number | string, r: number | string) {
-    return this.cells[`${c}${separator}${r}`];
+    const index: CellIndex = `${c}${separator}${r}`;
+    return this.cells[index] ?? this.initialCells[index];
   }
 
   private focusedCellBox(): DxEditRequest['cellBox'] {
@@ -714,6 +726,12 @@ export class DxGrid extends LitElement {
   }
 
   override firstUpdated() {
+    if (this.getCells) {
+      this.cells = this.getCells({
+        start: { col: this.visColMin, row: this.visRowMin },
+        end: { col: this.visColMax, row: this.visRowMax },
+      });
+    }
     this.observer.observe(this.viewportRef.value!);
     this.colSizes = Object.entries(this.columns).reduce((acc: Record<string, number>, [colId, colMeta]) => {
       if (colMeta?.size) {
@@ -727,6 +745,22 @@ export class DxGrid extends LitElement {
       }
       return acc;
     }, {});
+  }
+
+  override willUpdate(changedProperties: Map<string, any>) {
+    if (
+      this.getCells &&
+      (changedProperties.has('initialCells') ||
+        changedProperties.has('visColMin') ||
+        changedProperties.has('visColMax') ||
+        changedProperties.has('visRowMin') ||
+        changedProperties.has('visRowMax'))
+    ) {
+      this.cells = this.getCells({
+        start: { col: this.visColMin, row: this.visRowMin },
+        end: { col: this.visColMax, row: this.visRowMax },
+      });
+    }
   }
 
   override updated(changedProperties: Map<string, any>) {

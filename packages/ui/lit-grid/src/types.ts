@@ -12,6 +12,10 @@ export type DxGridAxis = 'row' | 'col';
 export type DxGridPosition = Record<DxGridAxis, number>;
 export type DxGridPositionNullable = DxGridPosition | null;
 
+export type DxGridCells = Record<CellIndex, CellValue>;
+
+export type DxGridAxisMeta = Record<string, AxisMeta>;
+
 export type DxGridPointer = null | ({ state: 'resizing'; page: number } & DxAxisResizeProps) | { state: 'selecting' };
 
 export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'index' | 'size'>;
@@ -39,7 +43,7 @@ export type AxisMeta = {
   resizeable?: boolean;
 };
 
-export type DxGridProps = Partial<Pick<DxGrid, 'cells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault'>>;
+export type DxGridProps = Partial<Pick<DxGrid, 'initialCells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault'>>;
 
 export class DxAxisResize extends Event {
   public readonly axis: DxGridAxis;
@@ -67,7 +71,7 @@ export class DxEditRequest extends Event {
   }
 }
 
-export type DxSelectProps = { start: DxGridPosition; end: DxGridPosition };
+export type DxGridRange = { start: DxGridPosition; end: DxGridPosition };
 
 export class DxGridCellsSelect extends Event {
   public readonly start: string;
@@ -76,7 +80,7 @@ export class DxGridCellsSelect extends Event {
   public readonly maxCol: number;
   public readonly minRow: number;
   public readonly maxRow: number;
-  constructor({ start, end }: DxSelectProps) {
+  constructor({ start, end }: DxGridRange) {
     super('dx-grid-cells-select');
     this.start = toCellIndex(start);
     this.end = toCellIndex(end);
