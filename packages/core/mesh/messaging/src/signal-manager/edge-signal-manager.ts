@@ -126,7 +126,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       return;
     }
     const oldPeers = this._swarmPeers.get(topic)!;
-    const timestamp = new Date(Date.parse(message.timestamp));
+    const timestamp = message.timestamp ? new Date(Date.parse(message.timestamp)) : new Date();
     const newPeers = new ComplexSet<PeerInfo>(PeerInfoHash, payload.peers);
 
     // Emit new available peers in the swarm.
