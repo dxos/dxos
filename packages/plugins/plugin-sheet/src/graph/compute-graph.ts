@@ -160,7 +160,9 @@ export class ComputeGraph extends Resource {
     this.update.emit();
   }
 
-  getFunctions({ standard = true, echo = true }: { standard?: boolean; echo?: boolean } = {}): FunctionDefinition[] {
+  getFunctions(
+    { standard, echo }: { standard?: boolean; echo?: boolean } = { standard: true, echo: true },
+  ): FunctionDefinition[] {
     return [
       ...(standard
         ? this._hf

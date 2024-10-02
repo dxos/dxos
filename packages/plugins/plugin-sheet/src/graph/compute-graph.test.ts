@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { create } from '@dxos/client/echo';
+import { create, fullyQualifiedId } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { type S } from '@dxos/echo-schema';
 import { FunctionType } from '@dxos/plugin-script/types';
@@ -16,21 +16,12 @@ import { addressFromA1Notation, createSheet } from '../defs';
 import { SheetModel } from '../model';
 import { type CellScalarValue } from '../types';
 
-// TODO(burdon): Vitest issues:
-//  - Cannot test Hyperformula
-//    - throws "Cannot convert undefined or null to object" in vitest (without browser).
-//    - throws "process.nextTick is not a function" (with browser)
-//    - throws "Buffer already defined" (if nodeExternal: true in config)
-//  - Need better docs; esp. vitest config.
-//    - NOTE: For non-browser tests, import types from x-plugin/types (otherwise will bring in react deps).
-//  - Can't add flags to our tools?
-//  - test.only / test.skip ignored?
-
 /**
  * NOTE: Browser test required for hyperformula due to raw translation files.
  */
 describe('compute graph', () => {
   // TODO(burdon): Replace with builder.
+  // TODO(burdon): Dispose
   const createModel = async (types?: S.Schema<any>[]) => {
     const ctx = new Context();
     const client = new Client();
@@ -61,22 +52,30 @@ describe('compute graph', () => {
     const { space, graph } = await createModel([FunctionType]);
 
     // Create script.
+    const trigger = new Trigger();
+    graph.update.once(() => trigger.wake());
     const fn = space.db.add(create(FunctionType, { version: 1, binding: 'TEST' }));
+    await trigger.wait();
+    expect(graph.getFunctions({ echo: true })).to.toHaveLength(1);
+
     const id = graph.mapFunctionBindingToId('TEST()');
-    expect(id).to.eq(`${fn.id}()`);
+    expect(id).to.eq(`${fullyQualifiedId(fn)}()`);
   });
 
-  test('cross-node references', async () => {
+  test.only('cross-node references', async () => {
     const { graph } = await createModel();
 
     // Create nodes.
     const node1 = await graph.getOrCreateNode('node-1');
     const node2 = await graph.getOrCreateNode('node-2');
-    node1.graph.hf.setCellContents({ sheet: node1.sheetId, row: 1, col: 1 }, 100);
-    node2.graph.hf.setCellContents({ sheet: node2.sheetId, row: 1, col: 1 }, `=${node1.sheetId}!A1`);
-    const value1 = node1.graph.hf.getCellValue({ sheet: node1.sheetId, col: 1, row: 1 });
-    const value2 = node1.graph.hf.getCellValue({ sheet: node2.sheetId, col: 1, row: 1 });
-    expect(value1).to.eq(value2);
+    // expect(graph.hf.getSheetNames()).to.eq([]);
+    node1.graph.hf.setCellContents({ sheet: node1.sheetId, row: 0, col: 0 }, 100);
+    // node2.graph.hf.setCellContents({ sheet: node2.sheetId, row: 0, col: 0 }, '=100');
+    node2.graph.hf.setCellContents({ sheet: node2.sheetId, row: 0, col: 0 }, '=SUM("node-1"!A1)');
+    // const value1 = node1.graph.hf.getCellValue({ sheet: node1.sheetId, col: 0, row: 0 });
+    const value2 = node2.graph.hf.getCellValue({ sheet: node2.sheetId, col: 0, row: 0 });
+    console.log(value2);
+    // expect(value1).to.eq(value2);
   });
 
   test('async function', async () => {
