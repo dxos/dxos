@@ -98,6 +98,9 @@ packages/devtools/cli/src/util/telemetryrc.json
 packages/sdk/observability/src/cli-observability-secrets.json
 
 .idea/workspace.xml
+.idea/compiler.xml
+.idea/runConfigurations/*
+.idea/php.xml
 
 .tool-versions
 
