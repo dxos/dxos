@@ -85,7 +85,7 @@ export default defineConfig((env) => ({
   },
   worker: {
     format: 'es',
-    plugins: () => [WasmPlugin()],
+    plugins: () => [WasmPlugin(), sourceMaps()],
   },
   plugins: [
     sourceMaps(),
