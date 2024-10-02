@@ -62,7 +62,7 @@ module.exports = {
     'no-restricted-imports': [
       'error',
       {
-        patterns: ['**/dist', '**/src/**', '!./**', '!../**'],
+        patterns: ['**/dist', '**/src', '**/src/**', '!./**', '!../**'],
       },
     ],
     'no-unused-expressions': 'off',
