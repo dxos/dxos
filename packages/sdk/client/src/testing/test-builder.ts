@@ -5,7 +5,7 @@
 import { Trigger } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
 import { ClientServicesHost } from '@dxos/client-services';
-import { type ServiceContextRuntimeParams } from '@dxos/client-services/src';
+import { type ServiceContextRuntimeParams } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
