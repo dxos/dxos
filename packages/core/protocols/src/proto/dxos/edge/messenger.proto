@@ -28,7 +28,7 @@ message Peer {
   // TODO(burdon): Rename topic?
   optional string swarmKey = 1;
   optional string identityKey = 2;
-  required string peerKey = 3;
+  string peerKey = 3;
 }
 
 //
@@ -62,7 +62,7 @@ message SwarmRequest {
 }
 
 message SwarmResponse {
-  required string swarmKey = 1;
+  string swarmKey = 1;
   /**
    * The list of peers in the swarm.
    */
