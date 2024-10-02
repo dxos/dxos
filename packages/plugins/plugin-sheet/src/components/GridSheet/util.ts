@@ -46,21 +46,25 @@ const createDxGridRows = (model: SheetModel): DxGridAxisMeta => {
   }, {});
 };
 
-const cellGetter =
-  (model: SheetModel, formatting: FormattingModel) =>
-  (nextBounds: DxGridRange, prevBounds: DxGridRange | null): DxGridCells => {
-    return [...Array(nextBounds.end.col - nextBounds.start.col)].reduce((acc: DxGridCells, _, c0) => {
-      return [...Array(nextBounds.end.row - nextBounds.start.row)].reduce((acc: DxGridCells, _, r0) => {
+const cellGetter = (model: SheetModel, formatting: FormattingModel) => {
+  // TODO(thure): Actually use the cache.
+  let _cachedBounds: DxGridRange | null = null;
+  const cachedCells: DxGridCells = {};
+  return (nextBounds: DxGridRange): DxGridCells => {
+    [...Array(nextBounds.end.col - nextBounds.start.col)].forEach((_, c0) => {
+      return [...Array(nextBounds.end.row - nextBounds.start.row)].forEach((_, r0) => {
         const column = nextBounds.start.col + c0;
         const row = nextBounds.start.row + r0;
         const cell = formatting.getFormatting({ column, row });
         if (cell.value) {
-          acc[`${column},${row}`] = { value: cell.value, className: mx(cell.classNames) };
+          cachedCells[`${column},${row}`] = { value: cell.value, className: mx(cell.classNames) };
         }
-        return acc;
-      }, acc);
-    }, {});
+      });
+    });
+    _cachedBounds = nextBounds;
+    return cachedCells;
   };
+};
 
 export const useSheetModelDxGridProps = (
   dxGridRef: MutableRefObject<DxGridElement | null>,

@@ -120,7 +120,7 @@ export class DxGrid extends LitElement {
    * When this function is defined, it is used first to try to get a value for a cell, and otherwise will fall back
    * to `cells`.
    */
-  getCells: ((nextRange: DxGridRange, prevRange: DxGridRange | null) => DxGridCells) | null = null;
+  getCells: ((nextRange: DxGridRange) => DxGridCells) | null = null;
 
   @state()
   private cells: DxGridCells = {};
@@ -727,13 +727,10 @@ export class DxGrid extends LitElement {
 
   override firstUpdated() {
     if (this.getCells) {
-      this.cells = this.getCells(
-        {
-          start: { col: this.visColMin, row: this.visRowMin },
-          end: { col: this.visColMax, row: this.visRowMax },
-        },
-        null,
-      );
+      this.cells = this.getCells({
+        start: { col: this.visColMin, row: this.visRowMin },
+        end: { col: this.visColMax, row: this.visRowMax },
+      });
     }
     this.observer.observe(this.viewportRef.value!);
     this.colSizes = Object.entries(this.columns).reduce((acc: Record<string, number>, [colId, colMeta]) => {
@@ -759,24 +756,10 @@ export class DxGrid extends LitElement {
         changedProperties.has('visRowMin') ||
         changedProperties.has('visRowMax'))
     ) {
-      this.cells = this.getCells(
-        {
-          start: { col: this.visColMin, row: this.visRowMin },
-          end: { col: this.visColMax, row: this.visRowMax },
-        },
-        changedProperties.has('initialCells')
-          ? null
-          : {
-              start: {
-                col: changedProperties.get('visColMin') ?? this.visColMin,
-                row: changedProperties.get('visRowMin') ?? this.visRowMin,
-              },
-              end: {
-                col: changedProperties.get('visColMax') ?? this.visColMax,
-                row: changedProperties.get('visRowMax') ?? this.visRowMax,
-              },
-            },
-      );
+      this.cells = this.getCells({
+        start: { col: this.visColMin, row: this.visRowMin },
+        end: { col: this.visColMax, row: this.visRowMax },
+      });
     }
   }
 
