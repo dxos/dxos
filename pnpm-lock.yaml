@@ -8623,6 +8623,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-grid':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-grid
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table

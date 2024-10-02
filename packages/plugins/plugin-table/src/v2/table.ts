@@ -4,7 +4,6 @@
 
 import { computed, type ReadonlySignal } from '@preact/signals-core';
 import { produce, setAutoFreeze } from 'immer';
-import { useMemo } from 'react';
 
 import { create } from '@dxos/echo-schema';
 
@@ -15,6 +14,7 @@ const DEFAULT_WIDTH = 100; // px
 export type ColumnId = string;
 export type SortDirection = 'asc' | 'desc';
 
+// TODO(Zan): Extend to multi-select.
 export type DataType = 'string' | 'number' | 'boolean' | 'date';
 
 export type ColumnDefinition = {
@@ -114,17 +114,4 @@ export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]):
     rowSelection: [],
     rows,
   });
-};
-
-// TODO(Zan): Take ordering here (or order based on some stored property).
-// When the order changes, we should notify the consumer.
-export const useTable = (columnDefinitions: ColumnDefinition[], data: any[]) => {
-  let table = useMemo(() => createTable(columnDefinitions, data), [columnDefinitions]);
-
-  const dispatch = (event: TableEvent) => {
-    // TODO(Zan): When we switch to signia-react, we can use Incrementally computed signals
-    table = create(updateTable(table, event));
-  };
-
-  return { table, dispatch };
 };
