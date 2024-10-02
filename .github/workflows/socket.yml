@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-        # if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
         with:
           detached: true
 
@@ -66,3 +66,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: packages/apps/composer-app/build
+          include-hidden-files: true
