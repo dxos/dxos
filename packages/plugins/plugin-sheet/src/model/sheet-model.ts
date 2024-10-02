@@ -122,7 +122,7 @@ export class SheetModel extends Resource {
    */
   reset() {
     invariant(this._node);
-    this._node.hf.clearSheet(this._node.sheetId);
+    this._node.graph.hf.clearSheet(this._node.sheetId);
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
       invariant(this._node);
       const { col, row } = addressFromIndex(this._sheet, key);
@@ -132,7 +132,7 @@ export class SheetModel extends Resource {
         );
       }
 
-      this._node.hf.setCellContents({ sheet: this._node.sheetId, row, col }, value);
+      this._node.graph.hf.setCellContents({ sheet: this._node.sheetId, row, col }, value);
     });
   }
 
@@ -169,7 +169,7 @@ export class SheetModel extends Resource {
     invariant(this._node);
     const topLeft = getTopLeft(range);
     const values = this._iterRange(range, () => null);
-    this._node.hf.setCellContents(toSimpleCellAddress(this._node.sheetId, topLeft), values);
+    this._node.graph.hf.setCellContents(toSimpleCellAddress(this._node.sheetId, topLeft), values);
     this._iterRange(range, (cell) => {
       const idx = addressToIndex(this._sheet, cell);
       delete this._sheet.cells[idx];
@@ -178,7 +178,7 @@ export class SheetModel extends Resource {
 
   cut(range: CellRange) {
     invariant(this._node);
-    this._node.hf.cut(toModelRange(this._node.sheetId, range));
+    this._node.graph.hf.cut(toModelRange(this._node.sheetId, range));
     this._iterRange(range, (cell) => {
       const idx = addressToIndex(this._sheet, cell);
       delete this._sheet.cells[idx];
@@ -187,13 +187,13 @@ export class SheetModel extends Resource {
 
   copy(range: CellRange) {
     invariant(this._node);
-    this._node.hf.copy(toModelRange(this._node.sheetId, range));
+    this._node.graph.hf.copy(toModelRange(this._node.sheetId, range));
   }
 
   paste(cell: CellAddress) {
     invariant(this._node);
-    if (!this._node.hf.isClipboardEmpty()) {
-      const changes = this._node.hf.paste(toSimpleCellAddress(this._node.sheetId, cell));
+    if (!this._node.graph.hf.isClipboardEmpty()) {
+      const changes = this._node.graph.hf.paste(toSimpleCellAddress(this._node.sheetId, cell));
       for (const change of changes) {
         if (change instanceof ExportedCellChange) {
           const { address, newValue } = change;
@@ -207,16 +207,16 @@ export class SheetModel extends Resource {
   // TODO(burdon): Display undo/redo state.
   undo() {
     invariant(this._node);
-    if (this._node.hf.isThereSomethingToUndo()) {
-      this._node.hf.undo();
+    if (this._node.graph.hf.isThereSomethingToUndo()) {
+      this._node.graph.hf.undo();
       this.update.emit();
     }
   }
 
   redo() {
     invariant(this._node);
-    if (this._node.hf.isThereSomethingToRedo()) {
-      this._node.hf.redo();
+    if (this._node.graph.hf.isThereSomethingToRedo()) {
+      this._node.graph.hf.redo();
       this.update.emit();
     }
   }
@@ -258,7 +258,7 @@ export class SheetModel extends Resource {
   getValue(cell: CellAddress): CellScalarValue {
     // Applies rounding and post-processing.
     invariant(this._node);
-    const value = this._node.hf.getCellValue(toSimpleCellAddress(this._node.sheetId, cell));
+    const value = this._node.graph.hf.getCellValue(toSimpleCellAddress(this._node.sheetId, cell));
     if (value instanceof DetailedCellError) {
       return value.toString();
     }
@@ -272,7 +272,7 @@ export class SheetModel extends Resource {
   getValueType(cell: CellAddress): ValueTypeEnum {
     invariant(this._node);
     const addr = toSimpleCellAddress(this._node.sheetId, cell);
-    const type = this._node.hf.getCellValueDetailedType(addr);
+    const type = this._node.graph.hf.getCellValueDetailedType(addr);
     return typeMap[type];
   }
 
@@ -302,7 +302,7 @@ export class SheetModel extends Resource {
     }
 
     // Insert into engine.
-    this._node.hf.setCellContents({ sheet: this._node.sheetId, row: cell.row, col: cell.col }, [
+    this._node.graph.hf.setCellContents({ sheet: this._node.sheetId, row: cell.row, col: cell.col }, [
       [typeof value === 'string' && value.charAt(0) === '=' ? this._graph.mapFormulaToNative(value) : value],
     ]);
 
@@ -401,16 +401,16 @@ export class SheetModel extends Resource {
 
   toDateTime(num: number): SimpleDateTime {
     invariant(this._node);
-    return this._node.hf.numberToDateTime(num) as SimpleDateTime;
+    return this._node.graph.hf.numberToDateTime(num) as SimpleDateTime;
   }
 
   toDate(num: number): SimpleDate {
     invariant(this._node);
-    return this._node.hf.numberToDate(num) as SimpleDate;
+    return this._node.graph.hf.numberToDate(num) as SimpleDate;
   }
 
   toTime(num: number): SimpleDate {
     invariant(this._node);
-    return this._node.hf.numberToTime(num) as SimpleDate;
+    return this._node.graph.hf.numberToTime(num) as SimpleDate;
   }
 }
