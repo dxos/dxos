@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { Decorator } from '@storybook/react';
+import { type Decorator } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
@@ -13,11 +13,10 @@ import { createSheet } from '../defs';
 import { type ComputeGraph, ComputeGraphRegistry } from '../graph';
 import { type CellValue, type CreateSheetOptions } from '../types';
 
-export const testSheetName = 'test';
+const testSheetName = 'test';
 
-// TODO(thure): Remove this from the `/testing` entrypoint.
-export const createCells = (): Record<string, CellValue> => ({
-  B1: { value: 'Qty' },
+export const createTestCells = (): Record<string, CellValue> => ({
+  B1: { value: 'Qty2' },
   B3: { value: 1 },
   B4: { value: 2 },
   B5: { value: 3 },

@@ -74,7 +74,6 @@ export class SheetModel extends Resource {
     private readonly _options: SheetModelOptions = {},
   ) {
     super();
-    this.reset();
   }
 
   get graph() {
@@ -102,7 +101,6 @@ export class SheetModel extends Resource {
   protected override async _open() {
     log('initialize', { id: this.id });
     initialize(this._sheet);
-    this.reset();
 
     // TODO(burdon): SheetModel should extend ComputeNode and be constructed via the graph.
     this._node = await this._graph.getOrCreateNode(createSheetName(this._sheet.id));
@@ -111,6 +109,8 @@ export class SheetModel extends Resource {
     // Listen for model updates (e.g., async calculations).
     const unsubscribe = this._graph.update.on(() => this.update.emit());
     this._ctx.onDispose(unsubscribe);
+
+    this.reset();
   }
 
   /**

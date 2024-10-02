@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useSpace } from '@dxos/react-client/echo';
@@ -18,8 +18,8 @@ import { type SizeMap } from './grid';
 import { useSheetContext } from './sheet-context';
 import { addressToIndex, rangeToIndex } from '../../defs';
 import { type ComputeGraph } from '../../graph';
-import { useComputeGraph } from '../../hooks';
-import { useTestSheet, withGraphDecorator } from '../../testing';
+import { useComputeGraph, useSheetModel } from '../../hooks';
+import { createTestCells, useTestSheet, withGraphDecorator } from '../../testing';
 import { SheetType, ValueTypeEnum } from '../../types';
 import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
 
@@ -115,6 +115,12 @@ export const Default = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
   const sheet = useTestSheet(space, graph);
+  const model = useSheetModel(graph, sheet);
+  useEffect(() => {
+    if (model) {
+      model.setValues(createTestCells());
+    }
+  }, [model]);
   if (!graph || !sheet) {
     return null;
   }
