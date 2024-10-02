@@ -48,6 +48,12 @@ const filterMatchInner = (
     }
   }
 
+  if (filter.objectIds) {
+    if (!filter.objectIds.includes(core.id)) {
+      return false;
+    }
+  }
+
   if (filter.or.length) {
     for (const orFilter of filter.or) {
       if (filterMatch(orFilter, core, echoObject)) {
