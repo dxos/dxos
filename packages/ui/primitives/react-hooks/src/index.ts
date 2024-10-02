@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './useAsyncCallback';
 export * from './useAsyncEffect';
+export * from './useAsyncState';
 export * from './useControlledValue';
 export * from './useDebugReactDeps';
 export * from './useDefaultValue';

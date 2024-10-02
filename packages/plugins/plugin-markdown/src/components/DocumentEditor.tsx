@@ -58,7 +58,9 @@ const DocumentEditor = ({
     () =>
       extensionProviders.reduce((acc: Extension[], provider) => {
         const provided = typeof provider === 'function' ? provider({ document: doc }) : provider;
-        acc.push(...provided);
+        if (provided) {
+          acc.push(...provided);
+        }
         return acc;
       }, []),
     [extensionProviders],

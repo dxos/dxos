@@ -13,7 +13,6 @@
         "entryPoints": [
           "{projectRoot}/src/index.ts",
           "{projectRoot}/src/meta.tsx",
-          "{projectRoot}/src/testing.tsx",
           "{projectRoot}/src/types.ts"
         ],
         "platforms": [
@@ -23,6 +22,16 @@
       }
     },
     "lint": {},
+    "prebuild": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./scripts/vendor.mjs",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": [
+        "{projectRoot}/dist/vendor/*"
+      ]
+    },
     "test": {}
   },
   "implicitDependencies": [

@@ -3,7 +3,7 @@
 //
 
 import './dxos';
-import './growing-file'
+import './growing-file';
 import './hypercore';
 import './hypercore-crypto';
 import './hypercore-protocol';
@@ -13,7 +13,8 @@ import './nanoerror';
 import './nanomessage';
 import './nanoresource';
 import './nanoresource-promise';
+import './race-as-promised';
 import './random-access-storage';
 import './streamx';
+import './xcase';
 import './zen-push';
-import './race-as-promised';

@@ -59,8 +59,7 @@
     "src"
   ],
   "scripts": {
-    "copy:assets": "./scripts/copy_assets.sh",
-    "vitest-ui": "VITEST_ENV=chrome nx vitest plugin-sketch"
+    "copy:assets": "./scripts/copy_assets.sh"
   },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",

@@ -50,7 +50,7 @@ describe('identity/identity-manager', () => {
       blobStore,
       metadataStore,
     });
-    const identityManager = new IdentityManager(metadataStore, keyring, feedStore, spaceManager);
+    const identityManager = new IdentityManager({ metadataStore, keyring, feedStore, spaceManager });
 
     return {
       metadataStore,
