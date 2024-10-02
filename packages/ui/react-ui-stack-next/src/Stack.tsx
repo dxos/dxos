@@ -7,20 +7,23 @@ import React, { type CSSProperties, type ComponentPropsWithoutRef } from 'react'
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-const deckGrid = 'grid grid-cols-[repeat(99,min-content)]';
+type Orientation = 'horizontal' | 'vertical';
 
-type StackProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+export type StackProps = Omit<ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'aria-orientation'> & {
+  orientation?: Orientation;
+};
 
-export const Stack = ({ children, classNames, style, ...props }: StackProps) => {
+export const Stack = ({ children, classNames, style, orientation, ...props }: StackProps) => {
   const childrenCount = React.Children.count(children);
 
   const styles: CSSProperties = {
-    gridTemplateColumns: `repeat(${childrenCount}, min-content)`,
+    [orientation === 'horizontal' ? 'gridTemplateColumns' : 'gridTemplateRows']:
+      `repeat(${childrenCount}, min-content)`,
     ...style,
   };
 
   return (
-    <div className={mx(deckGrid, classNames)} style={styles} {...props}>
+    <div className={mx('grid', classNames)} aria-orientation={orientation} style={styles} {...props}>
       {children}
     </div>
   );
