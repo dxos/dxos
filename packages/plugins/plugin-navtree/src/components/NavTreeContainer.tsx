@@ -7,7 +7,7 @@ import React, { type ReactNode, useCallback, useMemo } from 'react';
 import { NavigationAction, LayoutAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { getGraph, isAction, isActionLike } from '@dxos/app-graph';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
-import { type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/react-ui-mosaic';
+import { type MosaicDropEvent, type MosaicMoveEvent, Mosaic, Path } from '@dxos/react-ui-mosaic';
 import {
   NavTree,
   type NavTreeItemNode,
@@ -333,34 +333,37 @@ export const NavTreeContainer = ({
   }, [onOpenItemIdsChange, openItemIds]);
 
   return (
-    <ElevationProvider elevation='chrome'>
-      <div
-        role='none'
-        className='bs-full overflow-hidden row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'
-      >
-        <Surface role='search-input' limit={1} />
-        {/* TODO(thure): what gives this an inline `overflow: initial`? */}
-        <div role='none' className='!overflow-y-auto'>
-          <NavTree
-            id={root.id}
-            items={items}
-            current={activeIds}
-            attended={attended}
-            type={NODE_TYPE}
-            open={openItemIds}
-            onNavigate={handleNavigate}
-            onItemOpenChange={handleItemOpenChange}
-            onMove={handleMove}
-            onDrop={handleDrop}
-            onDragEnd={handleDragEnd}
-            popoverAnchorId={popoverAnchorId}
-            renderPresence={renderPresence}
-            resolveItemLevel={resolveItemLevel}
-            loadDescendents={loadDescendents}
-          />
+    <Mosaic.Root>
+      <Mosaic.DragOverlay />
+      <ElevationProvider elevation='chrome'>
+        <div
+          role='none'
+          className='bs-full overflow-hidden row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'
+        >
+          <Surface role='search-input' limit={1} />
+          {/* TODO(thure): what gives this an inline `overflow: initial`? */}
+          <div role='none' className='!overflow-y-auto'>
+            <NavTree
+              id={root.id}
+              items={items}
+              current={activeIds}
+              attended={attended}
+              type={NODE_TYPE}
+              open={openItemIds}
+              onNavigate={handleNavigate}
+              onItemOpenChange={handleItemOpenChange}
+              onMove={handleMove}
+              onDrop={handleDrop}
+              onDragEnd={handleDragEnd}
+              popoverAnchorId={popoverAnchorId}
+              renderPresence={renderPresence}
+              resolveItemLevel={resolveItemLevel}
+              loadDescendents={loadDescendents}
+            />
+          </div>
+          <NavTreeFooter />
         </div>
-        <NavTreeFooter />
-      </div>
-    </ElevationProvider>
+      </ElevationProvider>
+    </Mosaic.Root>
   );
 };
