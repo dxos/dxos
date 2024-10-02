@@ -73,7 +73,7 @@ const initialContent = {
       data: null,
       properties: {
         label: l0.title,
-        iconSymbol: 'ph--horse--regular',
+        icon: 'ph--horse--regular',
       },
       nodes: [...Array(4)].map(() => {
         const l1 = generator.createObject();
@@ -82,7 +82,7 @@ const initialContent = {
           data: null,
           properties: {
             label: l1.title,
-            iconSymbol: 'ph--butterfly--regular',
+            icon: 'ph--butterfly--regular',
           },
           actions: [
             {
@@ -90,7 +90,7 @@ const initialContent = {
               data: () => {},
               properties: {
                 label: faker.lorem.words(2),
-                iconSymbol: 'ph--boat--regular',
+                icon: 'ph--boat--regular',
               },
             },
             {
@@ -98,7 +98,7 @@ const initialContent = {
               data: () => {},
               properties: {
                 label: faker.lorem.words(2),
-                iconSymbol: 'ph--train-simple--regular',
+                icon: 'ph--train-simple--regular',
               },
             },
           ],
@@ -110,7 +110,7 @@ const initialContent = {
           data: () => {},
           properties: {
             label: faker.lorem.words(2),
-            iconSymbol: 'ph--boat--regular',
+            icon: 'ph--boat--regular',
           },
         },
         {
@@ -118,7 +118,7 @@ const initialContent = {
           data: () => {},
           properties: {
             label: faker.lorem.words(2),
-            iconSymbol: 'ph--train-simple--regular',
+            icon: 'ph--train-simple--regular',
           },
         },
       ],

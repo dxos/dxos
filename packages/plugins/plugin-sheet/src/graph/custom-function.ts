@@ -9,11 +9,7 @@ import { getDeep } from '@dxos/util';
 
 import { FunctionArgumentType } from '#hyperformula';
 import { type AsyncFunction, FunctionPluginAsync } from './async-function';
-
-// TODO(burdon): Factor out.
-const parseNumberString = (str: string): number => {
-  return parseFloat(str.replace(/[^\d.]/g, ''));
-};
+import { parseNumberString } from './util';
 
 /**
  * https://hyperformula.handsontable.com/guide/custom-functions.html#add-a-simple-custom-function

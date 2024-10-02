@@ -5,11 +5,11 @@
 import { type KeyboardEvent, type MouseEventHandler, useState } from 'react';
 
 import { getCellAtPointer } from './grid';
-import { type CellAddress, type CellRange, posEquals } from '../../model';
+import { type CellAddress, type CellRange, posEquals } from '../../defs';
 
 export type GridSize = {
   numRows: number;
-  numColumns: number;
+  numCols: number;
 };
 
 /**
@@ -38,14 +38,14 @@ export const handleNav = (
         break;
       }
       case 'ArrowLeft': {
-        if (opposite.column > 0) {
-          opposite.column -= 1;
+        if (opposite.col > 0) {
+          opposite.col -= 1;
         }
         break;
       }
       case 'ArrowRight': {
-        if (opposite.column < size.numColumns - 1) {
-          opposite.column += 1;
+        if (opposite.col < size.numCols - 1) {
+          opposite.col += 1;
         }
         break;
       }
@@ -64,41 +64,41 @@ export const handleNav = (
 export const handleArrowNav = (
   ev: Pick<KeyboardEvent<HTMLInputElement>, 'key' | 'metaKey'>,
   cursor: CellAddress | undefined,
-  { numRows, numColumns }: GridSize,
+  { numRows, numCols }: GridSize,
 ): CellAddress | undefined => {
   switch (ev.key) {
     case 'ArrowUp':
       if (cursor === undefined) {
-        return { row: 0, column: 0 };
+        return { row: 0, col: 0 };
       } else if (cursor.row > 0) {
-        return { row: ev.metaKey ? 0 : cursor.row - 1, column: cursor.column };
+        return { row: ev.metaKey ? 0 : cursor.row - 1, col: cursor.col };
       }
       break;
     case 'ArrowDown':
       if (cursor === undefined) {
-        return { row: 0, column: 0 };
+        return { row: 0, col: 0 };
       } else if (cursor.row < numRows - 1) {
-        return { row: ev.metaKey ? numRows - 1 : cursor.row + 1, column: cursor.column };
+        return { row: ev.metaKey ? numRows - 1 : cursor.row + 1, col: cursor.col };
       }
       break;
     case 'ArrowLeft':
       if (cursor === undefined) {
-        return { row: 0, column: 0 };
-      } else if (cursor.column > 0) {
-        return { row: cursor.row, column: ev.metaKey ? 0 : cursor.column - 1 };
+        return { row: 0, col: 0 };
+      } else if (cursor.col > 0) {
+        return { row: cursor.row, col: ev.metaKey ? 0 : cursor.col - 1 };
       }
       break;
     case 'ArrowRight':
       if (cursor === undefined) {
-        return { row: 0, column: 0 };
-      } else if (cursor.column < numColumns - 1) {
-        return { row: cursor.row, column: ev.metaKey ? numColumns - 1 : cursor.column + 1 };
+        return { row: 0, col: 0 };
+      } else if (cursor.col < numCols - 1) {
+        return { row: cursor.row, col: ev.metaKey ? numCols - 1 : cursor.col + 1 };
       }
       break;
     case 'Home':
-      return { row: 0, column: 0 };
+      return { row: 0, col: 0 };
     case 'End':
-      return { row: numRows - 1, column: numColumns - 1 };
+      return { row: numRows - 1, col: numCols - 1 };
   }
 };
 

@@ -29,13 +29,6 @@
       },
       "types": "./dist/types/src/meta.d.ts"
     },
-    "./testing": {
-      "browser": "./dist/lib/browser/testing.mjs",
-      "node": {
-        "default": "./dist/lib/node/testing.cjs"
-      },
-      "types": "./dist/types/src/testing.d.ts"
-    },
     "./types": {
       "browser": "./dist/lib/browser/types.mjs",
       "node": {
@@ -88,10 +81,12 @@
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-grid": "workspace:*",
@@ -114,6 +109,7 @@
     "@dxos/echo-generator": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

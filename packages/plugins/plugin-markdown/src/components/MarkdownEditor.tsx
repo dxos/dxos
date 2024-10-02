@@ -38,11 +38,11 @@ import {
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
-import { nonNullable } from '@dxos/util';
+import { isNotFalsy, nonNullable } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../hooks';
 import { MARKDOWN_PLUGIN } from '../meta';
-import type { MarkdownPluginState } from '../types';
+import { type MarkdownPluginState } from '../types';
 
 // TODO(Zan): Factor into a shared location.
 const attentionFragment = mx(
@@ -87,7 +87,11 @@ export const MarkdownEditor = ({
   const isDirectlyAttended = useIsDirectlyAttended(id);
 
   // Extensions from other plugins.
-  const providerExtensions = useMemo(() => extensionProviders?.map((provider) => provider({})), [extensionProviders]);
+  const providerExtensions = useMemo(
+    // TODO(burdon): Must pass object to provider.
+    () => extensionProviders?.flatMap((provider) => provider({})).filter(nonNullable),
+    [extensionProviders],
+  );
 
   // TODO(Zan): Move these into thread plugin as well?
   const [commentsState, commentObserver] = useCommentState();
@@ -128,10 +132,10 @@ export const MarkdownEditor = ({
           slots: { content: { className: editorContent } },
         }),
         editorGutter,
-        role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
+        role !== 'section' && onFileUpload && dropFile({ onDrop: handleDrop }),
         providerExtensions,
         extensions,
-      ].filter(nonNullable),
+      ].filter(isNotFalsy),
       ...(role !== 'section' && {
         id,
         scrollTo,
