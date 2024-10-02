@@ -15,7 +15,7 @@ import {
   SpaceProtocol,
   valueEncoding,
 } from '@dxos/echo-pipeline';
-import { type EdgeConnection, type MessageListener } from '@dxos/edge-client/src';
+import { type EdgeConnection, type MessageListener } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { type FeedWrapper } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
