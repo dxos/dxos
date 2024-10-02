@@ -13,6 +13,7 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
 import AttentionMeta from '@dxos/plugin-attention/meta';
+import CallsMeta from '@dxos/plugin-calls/meta';
 import ChainMeta from '@dxos/plugin-chain/meta';
 import ChessMeta from '@dxos/plugin-chess/meta';
 import ClientMeta from '@dxos/plugin-client/meta';
@@ -172,6 +173,7 @@ const main = async () => {
       RegistryMeta,
 
       // Presentation
+      CallsMeta,
       ChessMeta,
       ExcalidrawMeta,
       ExplorerMeta,
@@ -195,6 +197,7 @@ const main = async () => {
     ],
     plugins: {
       [AttentionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-attention')),
+      [CallsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-calls')),
       [ChainMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chain')),
       [ChessMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chess')),
       [ClientMeta.id]: Plugin.lazy(() => import('@dxos/plugin-client'), {

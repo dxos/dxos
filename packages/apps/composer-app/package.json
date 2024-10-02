@@ -25,6 +25,7 @@
     "@dxos/migrations": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-calls": "workspace:*",
     "@dxos/plugin-chain": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
