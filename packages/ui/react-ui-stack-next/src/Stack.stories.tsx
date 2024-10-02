@@ -11,15 +11,15 @@ import { Stack } from './Stack';
 import { StackItem } from './StackItem';
 
 const KanbanBlock = () => {
-  return <div className='is-64 bs-24 bg-unAccent m-2 rounded'></div>;
+  return <div className='is-64 bs-24 bg-input rounded-lg border border-separator shadow-sm'></div>;
 };
 
 const StorybookStack = () => {
   return (
-    <Stack orientation={'horizontal'}>
+    <Stack orientation={'horizontal'} classNames='gap-2'>
       {[...Array(3)].map((_, index) => (
         <StackItem key={index} orientation={'horizontal'}>
-          <Stack orientation={'vertical'}>
+          <Stack orientation={'vertical'} classNames='gap-1'>
             {[...Array(4)].map((_, innerIndex) => (
               <StackItem key={innerIndex} orientation={'vertical'}>
                 <KanbanBlock />

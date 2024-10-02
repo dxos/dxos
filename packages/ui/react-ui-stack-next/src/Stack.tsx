@@ -23,7 +23,7 @@ export const Stack = ({ children, classNames, style, orientation, ...props }: St
   };
 
   return (
-    <div className={mx('grid', classNames)} aria-orientation={orientation} style={styles} {...props}>
+    <div className={mx('grid relative', classNames)} aria-orientation={orientation} style={styles} {...props}>
       {children}
     </div>
   );
