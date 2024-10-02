@@ -19,7 +19,7 @@ import {
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { nonNullable } from '@dxos/util';
 
-import { compute } from './compute';
+import { compute, computeNodeFacet } from './compute';
 import { Sheet } from '../components';
 import { type ComputeNode } from '../graph';
 import { useComputeGraph, useSheetModel } from '../hooks';
@@ -35,6 +35,8 @@ type EditorProps = {
 // TODO(burdon): Implement named expressions.
 //  https://hyperformula.handsontable.com/guide/cell-references.html
 
+// TODO(burdon): Inline Adobe eCharts.
+
 const DOC_NAME = 'Test Doc';
 const SHEET_NAME = 'Test Sheet';
 
@@ -42,7 +44,7 @@ const Editor = ({ text }: EditorProps) => {
   const { themeMode } = useThemeContext();
   const space = useSpace();
   const graph = useComputeGraph(space);
-  const [node] = useAsyncState<ComputeNode>(async () => {
+  const [computeNode] = useAsyncState<ComputeNode>(async () => {
     return graph ? await graph.getOrCreateNode(DOC_NAME) : undefined;
   }, [graph]);
   const { parentRef, focusAttributes } = useTextEditor(
@@ -52,11 +54,12 @@ const Editor = ({ text }: EditorProps) => {
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-        node && compute(node),
+        computeNode && computeNodeFacet.of(computeNode),
+        compute(),
         decorateMarkdown(),
       ].filter(nonNullable),
     }),
-    [node, themeMode],
+    [computeNode, themeMode],
   );
 
   return <div className='w-[40rem] overflow-hidden' ref={parentRef} {...focusAttributes} />;
@@ -106,6 +109,7 @@ export default {
   parameters: { layout: 'fullscreen' },
 };
 
+// TODO(burdon): Inline formulae.
 export const Default = {
   render: Editor,
   args: {
@@ -142,6 +146,7 @@ export const Graph = {
       '```dx',
       `="${SHEET_NAME}"!A5`,
       '```',
+      '',
       '',
     ),
   },

@@ -25,13 +25,12 @@ export class ComputeNode extends Resource {
     super();
   }
 
-  // TODO(burdon): Remove?
   get graph() {
     return this._graph;
   }
 
-  get hf() {
-    return this._graph.hf;
+  clear() {
+    this._graph.hf.clearSheet(this.sheetId);
   }
 
   getValue(cell: CellAddress): CellScalarValue {
@@ -47,5 +46,10 @@ export class ComputeNode extends Resource {
     const mappedValue =
       typeof value === 'string' && value.charAt(0) === '=' ? this._graph.mapFormulaToNative(value) : value;
     this._graph.hf.setCellContents({ sheet: this.sheetId, row: cell.row, col: cell.col }, [[mappedValue]]);
+  }
+
+  protected override async _open() {
+    // const unsubscribe = this._graph.update.on(this.update.emit);
+    // this._ctx.onDispose(unsubscribe);
   }
 }

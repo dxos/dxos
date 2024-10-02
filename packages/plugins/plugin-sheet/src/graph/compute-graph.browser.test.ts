@@ -72,10 +72,10 @@ describe('compute graph', () => {
     // Create nodes.
     const node1 = await graph.getOrCreateNode('node-1');
     const node2 = await graph.getOrCreateNode('node-2');
-    node1.hf.setCellContents({ sheet: node1.sheetId, row: 1, col: 1 }, 100);
-    node2.hf.setCellContents({ sheet: node2.sheetId, row: 1, col: 1 }, `=${node1.sheetId}!A1`);
-    const value1 = node1.hf.getCellValue({ sheet: node1.sheetId, col: 1, row: 1 });
-    const value2 = node1.hf.getCellValue({ sheet: node2.sheetId, col: 1, row: 1 });
+    node1.graph.hf.setCellContents({ sheet: node1.sheetId, row: 1, col: 1 }, 100);
+    node2.graph.hf.setCellContents({ sheet: node2.sheetId, row: 1, col: 1 }, `=${node1.sheetId}!A1`);
+    const value1 = node1.graph.hf.getCellValue({ sheet: node1.sheetId, col: 1, row: 1 });
+    const value2 = node1.graph.hf.getCellValue({ sheet: node2.sheetId, col: 1, row: 1 });
     expect(value1).to.eq(value2);
   });
 

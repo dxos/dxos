@@ -109,7 +109,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         },
       },
       markdown: {
-        // TODO(burdon): Construct compute node.
+        // TODO(burdon): Facet to get current space/compute graph.
         extensions: ({ document }) => {
           return undefined;
           // return [

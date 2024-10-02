@@ -142,7 +142,7 @@ export class SheetModel extends Resource {
    */
   // TODO(burdon): Remove.
   recalculate() {
-    this._node?.hf.rebuildAndRecalculate();
+    this._node?.graph.hf.rebuildAndRecalculate();
   }
 
   insertRows(i: number, n = 1) {

@@ -151,7 +151,6 @@ export class ComputeGraph extends Resource {
     this._hf.updateConfig({ context: this.context });
   }
 
-  // TODO(burdon): Remove.
   get hf() {
     return this._hf;
   }
