@@ -22,9 +22,7 @@ import {
 import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
-import { createTestSheet } from '@dxos/plugin-sheet/testing';
-import { SheetType } from '@dxos/plugin-sheet/types';
-import { TLDrawStoreAdapter } from '@dxos/plugin-sketch';
+import { TLDrawStoreAdapter } from '@dxos/plugin-sketch/sdk';
 import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';
 import { createDocAccessor, type Space } from '@dxos/react-client/echo';
@@ -33,13 +31,11 @@ import { createDocAccessor, type Space } from '@dxos/react-client/echo';
 export enum SchemasNames {
   document = 'dxos.org/type/Document',
   diagram = 'dxos.org/type/Diagram',
-  sheet = 'dxos.org/type/SheetType',
 }
 
 export const SchemasMap: TestSchemaMap<SchemasNames> = {
   [SchemasNames.document]: DocumentType,
   [SchemasNames.diagram]: DiagramType,
-  [SchemasNames.sheet]: SheetType,
 };
 
 export const ObjectGenerators: TestGeneratorMap<SchemasNames> = {
@@ -54,11 +50,6 @@ export const ObjectGenerators: TestGeneratorMap<SchemasNames> = {
       name,
       canvas: create(CanvasType, { schema: TLDRAW_SCHEMA, content: {} }),
     };
-  },
-
-  [SchemasNames.sheet]: () => {
-    const name = faker.lorem.sentence({ min: 2, max: 3 });
-    return createTestSheet({ name });
   },
 };
 
@@ -146,10 +137,6 @@ export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
         await sleep(1);
       }
     }
-  },
-
-  [SchemasNames.sheet]: async (object, params) => {
-    // TODO: Implement.
   },
 };
 

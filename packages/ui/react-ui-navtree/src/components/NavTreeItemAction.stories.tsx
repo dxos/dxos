@@ -34,7 +34,7 @@ export const Default = {
           },
           properties: {
             label: faker.lorem.words(2),
-            iconSymbol: 'ph--circle--regular',
+            icon: 'ph--circle--regular',
           },
         }) satisfies NavTreeActionNode,
       { count: 20 },
@@ -43,7 +43,7 @@ export const Default = {
     // TODO(burdon): Goal: Factor-out CMD-K like dialog.
     return (
       <NavTreeItemActionSearchList
-        iconSymbol='ph--list--regular'
+        icon='ph--list--regular'
         menuActions={actions}
         label='Select action'
         onAction={(action) => {

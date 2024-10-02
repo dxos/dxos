@@ -16,7 +16,7 @@
       "executor": "@nx/vite:build",
       "options": {
         "generatePackageJson": false,
-        "outputPath": "packages/sdk/shell/dist/bundle"
+        "outputPath": "{projectRoot}/dist/bundle"
       },
       "outputs": [
         "{options.outputPath}"

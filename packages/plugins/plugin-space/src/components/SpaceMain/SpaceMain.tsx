@@ -6,34 +6,13 @@ import { Command } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { type Action } from '@dxos/plugin-graph';
 import { SpaceState, type Space } from '@dxos/react-client/echo';
-import { Button, Main, useTranslation, toLocalizedString } from '@dxos/react-ui';
+import { Main, useTranslation } from '@dxos/react-ui';
 import { getSize, mx, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 import { ClipboardProvider } from '@dxos/shell/react';
 
 import { SpaceMembersSection } from './SpaceMembersSection';
 import { SPACE_PLUGIN } from '../../meta';
-
-const _InFlowSpaceActions = ({ actionsMap }: { actionsMap: Record<string, Action> }) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
-  return (
-    <section className='mbe-4 col-start-2 col-end-4 md:col-end-7 grid gap-2 auto-rows-min grid-cols-[repeat(auto-fill,minmax(8rem,1fr))]'>
-      {Object.entries(actionsMap)
-        .filter(([_, { properties }]) => properties?.mainAreaDisposition === 'in-flow')
-        .map(([actionId, { data: invoke, properties }]) => {
-          const Icon = properties?.icon;
-          const label = properties?.label;
-          return (
-            <Button key={actionId} classNames='block text-center plb-2 font-normal'>
-              {Icon && <Icon size={5} className='mli-auto' />}
-              <p>{toLocalizedString(label, t)}</p>
-            </Button>
-          );
-        })}
-    </section>
-  );
-};
 
 const KeyShortcuts = () => {
   const { t } = useTranslation(SPACE_PLUGIN);

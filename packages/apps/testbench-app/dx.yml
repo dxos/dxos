@@ -13,6 +13,7 @@ runtime:
       dataStore: 1
     edgeFeatures:
       signaling: true
+      echoReplicator: true
   services:
     # signaling:
     #   - server: wss://kube.dxos.org/.well-known/dx/signal

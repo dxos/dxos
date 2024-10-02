@@ -22,8 +22,6 @@ export interface VitePluginTailwindOptions {
   verbose?: boolean;
 }
 
-// TODO(zhenyasav): Make it easy to override the tailwind config.
-// TODO(zhenyasav): Make it easy to add postcss plugins?
 export const ThemePlugin = (
   options: Pick<VitePluginTailwindOptions, 'content' | 'root' | 'verbose'> & { extensions?: Partial<ThemeConfig>[] },
 ) => {
@@ -48,6 +46,7 @@ export const ThemePlugin = (
           postcss: {
             plugins: [
               nesting,
+              // TODO(burdon): Make configurable.
               chTokens({ config: () => tokenSet }),
               tailwindcss(
                 tailwindConfig({

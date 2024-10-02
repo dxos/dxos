@@ -9,8 +9,9 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { create, ref, S, TypedObject } from '@dxos/echo-schema';
+import { ref, S, TypedObject } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-client';
+import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { type StackProvides } from '@dxos/plugin-stack';
@@ -36,6 +37,7 @@ type ThreadProvides<T> = {
 export type SheetPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  MarkdownExtensionProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   SchemaProvides &
@@ -124,14 +126,12 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
   threads: S.optional(S.mutable(S.Array(ref(ThreadType)))),
 }) {}
 
-// TODO(burdon): Fix defaults.
-export const createSheet = (title?: string): SheetType =>
-  create(SheetType, {
-    title,
-    cells: {},
-    rows: [],
-    columns: [],
-    rowMeta: {},
-    columnMeta: {},
-    formatting: {},
-  });
+export type SheetSize = {
+  rows: number;
+  columns: number;
+};
+
+export type CreateSheetOptions = {
+  // TODO(burdon): Standardize as name.
+  title?: string;
+} & Partial<SheetSize>;

@@ -46,7 +46,7 @@ export abstract class Resource implements Lifecycle {
   }
 
   get isOpen() {
-    return this.#lifecycleState === LifecycleState.OPEN;
+    return this.#lifecycleState === LifecycleState.OPEN && this.#closePromise == null;
   }
 
   protected get _lifecycleState() {

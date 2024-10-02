@@ -2,6 +2,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.log*
 
 # Runtime data
 *.pid
@@ -97,6 +98,9 @@ packages/devtools/cli/src/util/telemetryrc.json
 packages/sdk/observability/src/cli-observability-secrets.json
 
 .idea/workspace.xml
+.idea/compiler.xml
+.idea/runConfigurations/*
+.idea/php.xml
 
 .tool-versions
 
@@ -160,5 +164,3 @@ dump.rdb
 
 # lychee link checker
 /.lychee.report.md
-
-

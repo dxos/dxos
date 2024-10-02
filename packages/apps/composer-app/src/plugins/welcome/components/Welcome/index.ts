@@ -2,5 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import React from 'react';
+
 export * from './types';
-export * from './Welcome';
+
+export const Welcome = React.lazy(() => import('./Welcome'));

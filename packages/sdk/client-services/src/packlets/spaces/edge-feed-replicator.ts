@@ -64,7 +64,7 @@ export class EdgeFeedReplicator extends Resource {
         }
 
         const payload = decodeCbor(message.payload!.value) as ProtocolMessage;
-        log.info('recv', { from: message.source, payload });
+        log.info('receive', { from: message.source, feedKey: payload.feedKey, type: payload.type });
         this._onMessage(payload);
       }),
     );
@@ -112,7 +112,9 @@ export class EdgeFeedReplicator extends Resource {
   }
 
   private async _sendMessage(message: ProtocolMessage) {
-    log.info('sending message', { message });
+    const logPayload =
+      message.type === 'data' ? { feedKey: message.feedKey, blocks: message.blocks.map((b) => b.index) } : { message };
+    log.info('sending message', logPayload);
 
     invariant(message.feedKey);
     const payloadValue = bufferToArray(encodeCbor(message));
@@ -130,11 +132,11 @@ export class EdgeFeedReplicator extends Resource {
   }
 
   private _onMessage(message: ProtocolMessage) {
-    log.info('received message', { message });
-
     scheduleMicroTask(this._ctx, async () => {
       switch (message.type) {
         case 'metadata': {
+          log.info('received metadata', { message });
+
           const feedKey = PublicKey.fromHex(message.feedKey);
           const feed = this._feeds.get(feedKey);
           if (!feed) {
@@ -160,6 +162,8 @@ export class EdgeFeedReplicator extends Resource {
         }
 
         case 'data': {
+          log.info('received data', { feed: message.feedKey, blocks: message.blocks.map((b) => b.index) });
+
           const feedKey = PublicKey.fromHex(message.feedKey);
           const feed = this._feeds.get(feedKey);
           if (!feed) {
@@ -226,6 +230,7 @@ export class EdgeFeedReplicator extends Resource {
     using _guard = await this._getPushMutex(feed.key).acquire();
 
     if (!this._remoteLength.has(feed.key)) {
+      log('blocks not pushed because remote length is unknown');
       return;
     }
 

@@ -233,9 +233,6 @@
       "@dxos/plugin-sheet/meta": [
         "packages/plugins/plugin-sheet/src/meta.tsx"
       ],
-      "@dxos/plugin-sheet/testing": [
-        "packages/plugins/plugin-sheet/src/testing.tsx"
-      ],
       "@dxos/plugin-sheet/types": [
         "packages/plugins/plugin-sheet/src/types.ts"
       ],
@@ -244,6 +241,9 @@
       ],
       "@dxos/plugin-sketch/meta": [
         "packages/plugins/plugin-sketch/src/meta.tsx"
+      ],
+      "@dxos/plugin-sketch/sdk": [
+        "packages/plugins/plugin-sketch/src/sdk.ts"
       ],
       "@dxos/plugin-sketch/types": [
         "packages/plugins/plugin-sketch/src/types/index.ts"
