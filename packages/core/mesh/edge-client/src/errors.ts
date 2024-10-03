@@ -2,8 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-export class WebsocketClosedError extends Error {
+export class EdgeConnectionClosedError extends Error {
   constructor() {
-    super('WebSocket connection closed');
+    super('Edge connection closed.');
+  }
+}
+
+export class EdgeIdentityChangedError extends Error {
+  constructor() {
+    super('Edge identity changed.');
   }
 }
