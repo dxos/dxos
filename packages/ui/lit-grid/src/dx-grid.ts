@@ -33,10 +33,9 @@ import { separator, toCellIndex } from './util';
 const gap = 1;
 
 /**
- * This should be about the width of the `1` numeral so resize is triggered as the row header column’s intrinsic size
- * changes when scrolling vertically.
+ * ResizeObserver notices even subpixel changes, only respond to changes of at least 1px.
  */
-const resizeTolerance = 8;
+const resizeTolerance = 1;
 
 //
 // `overscan` is the number of columns or rows to render outside of the viewport
@@ -419,10 +418,16 @@ export class DxGrid extends LitElement {
       inlineSize: 0,
       blockSize: 0,
     };
-    this.sizeInline = inlineSize;
-    this.sizeBlock = blockSize;
-    this.updateVis();
-    queueMicrotask(() => this.updatePos());
+    if (
+      Math.abs(inlineSize - this.sizeInline) > resizeTolerance ||
+      Math.abs(blockSize - this.sizeBlock) > resizeTolerance
+    ) {
+      // console.info('[updating bounds]', 'resize', [inlineSize - this.sizeInline, blockSize - this.sizeBlock]);
+      this.sizeInline = inlineSize;
+      this.sizeBlock = blockSize;
+      this.updateVis();
+      queueMicrotask(() => this.updatePos());
+    }
   });
 
   private viewportRef: Ref<HTMLDivElement> = createRef();
