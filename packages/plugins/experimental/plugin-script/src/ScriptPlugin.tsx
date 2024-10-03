@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Code, type IconProps } from '@phosphor-icons/react';
 // @ts-ignore
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React from 'react';
