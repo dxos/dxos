@@ -73,7 +73,9 @@ export class EdgeFeedReplicator extends Resource {
       }),
     );
 
-    this._messenger.connected.on(this._ctx, () => {
+    this._messenger.connected.on(this._ctx, async () => {
+      await this._resetConnection();
+
       this._connected = true;
       const connectionCtx = new Context({
         onError: async (err: any) => {
@@ -231,16 +233,11 @@ export class EdgeFeedReplicator extends Resource {
       }),
     );
 
-    try {
-      await this._sendMessage({
-        type: 'data',
-        feedKey: feed.key.toHex(),
-        blocks,
-      });
-    } catch (err) {
-      log.catch(err);
-      throw err;
-    }
+    await this._sendMessage({
+      type: 'data',
+      feedKey: feed.key.toHex(),
+      blocks,
+    });
     this._remoteLength.set(feed.key, to);
   }
 
