@@ -16,9 +16,9 @@ export const INITIAL_CONTENT = [
 
 ## What is Composer?
 
-Composer is an extensible application that includes familiar components such as documents, diagrams, and tables. It leverages DXOS — a full stack framework for building collaborative local-first applications. 
+Composer is an extensible application that includes familiar components such as documents, diagrams, and tables. It leverages DXOS — a full stack framework for building collaborative local-first applications.
 
-With our upcoming SDK, you'll be able to build custom plugins, leverage external APIs and integrate with LLMs. All inside of a private collaborative workspace. 
+With our upcoming SDK, you'll be able to build custom plugins, leverage external APIs and integrate with LLMs. All inside of a private collaborative workspace.
 
 ## Disclaimer
 
@@ -29,6 +29,7 @@ Please join our [Discord](https://dxos.org/discord) to share feature requests, b
   `# Working in Composer
 
 Composer is made up from plugins developed by DXOS and the community. Plugins typically manage data objects that represent different types of content.
+
 Plugins can be installed and configured from the Settings dialog. By default Composer installs the following plugins:
 
 - **Document** - Collaborative Markdown documents, with realtime comments.
@@ -59,7 +60,7 @@ Invite a collaborator to your shared Space by selecting the Space from the sideb
 We are early on our journey, but here are a few things that will always be true about Composer.
 
 **Free to use**
-Since Composer does not depend on centralized servers to operate, there is no significant overhead for running the core system. 
+Since Composer does not depend on centralized servers to operate, there is no significant overhead for running the core system.
 
 **Private by default**
 Data from Composer is stored locally on your device. This means no one else can see it unless you invite them to a shared space.
