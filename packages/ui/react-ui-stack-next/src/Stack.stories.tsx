@@ -11,94 +11,99 @@ import { withTheme } from '@dxos/storybook-utils';
 import { Stack } from './Stack';
 import { StackItem } from './StackItem';
 
-type KanbanItem = {
+type CardItem = {
   id: string;
-  column: number;
-  row: number;
+  type: 'card';
+  content: string;
 };
 
-type KanbanColumn = {
+type ColumnItem = {
   id: string;
-  items: KanbanItem[];
+  type: 'column';
+  title: string;
+  cards: CardItem[];
 };
 
-const KanbanBlock = ({ item }: { item: KanbanItem }) => {
+const KanbanBlock = ({ item }: { item: CardItem }) => {
   return (
     <div className='is-64 bs-24 bg-input rounded-lg border border-separator shadow-sm grid place-content-center'>
-      <span className='text-sm font-medium'>{item.id}</span>
+      <span className='text-sm font-medium'>{item.content}</span>
     </div>
   );
 };
 
 const StorybookStack = () => {
-  const [columns, setColumns] = useState<KanbanColumn[]>([
+  const [columns, setColumns] = useState<ColumnItem[]>([
     {
       id: 'col-0',
-      items: [
-        { id: 'banana', column: 0, row: 0 },
-        { id: 'pickle', column: 0, row: 1 },
-        { id: 'wombat', column: 0, row: 2 },
-        { id: 'kazoo', column: 0, row: 3 },
+      type: 'column',
+      title: 'To Do',
+      cards: [
+        { id: 'banana', type: 'card', content: 'Banana' },
+        { id: 'pickle', type: 'card', content: 'Pickle' },
+        { id: 'wombat', type: 'card', content: 'Wombat' },
+        { id: 'kazoo', type: 'card', content: 'Kazoo' },
       ],
     },
     {
       id: 'col-1',
-      items: [
-        { id: 'noodle', column: 1, row: 0 },
-        { id: 'squish', column: 1, row: 1 },
-        { id: 'wobble', column: 1, row: 2 },
-        { id: 'floof', column: 1, row: 3 },
+      type: 'column',
+      title: 'In Progress',
+      cards: [
+        { id: 'noodle', type: 'card', content: 'Noodle' },
+        { id: 'squish', type: 'card', content: 'Squish' },
+        { id: 'wobble', type: 'card', content: 'Wobble' },
+        { id: 'floof', type: 'card', content: 'Floof' },
       ],
     },
     {
       id: 'col-2',
-      items: [
-        { id: 'snorkel', column: 2, row: 0 },
-        { id: 'bloop', column: 2, row: 1 },
-        { id: 'wiggle', column: 2, row: 2 },
-        { id: 'zoop', column: 2, row: 3 },
+      type: 'column',
+      title: 'Done',
+      cards: [
+        { id: 'snorkel', type: 'card', content: 'Snorkel' },
+        { id: 'bloop', type: 'card', content: 'Bloop' },
+        { id: 'wiggle', type: 'card', content: 'Wiggle' },
+        { id: 'zoop', type: 'card', content: 'Zoop' },
       ],
     },
   ]);
 
-  const reorderItem = useCallback((itemId: string, targetId: string, closestEdge: Edge | null) => {
+  const reorderItem = useCallback((sourceId: string, targetId: string, closestEdge: Edge | null) => {
     setColumns((prevColumns) => {
-      // Check if we're reordering columns
-      const sourceColumnIndex = prevColumns.findIndex((col) => col.id === itemId);
-      const targetColumnIndex = prevColumns.findIndex((col) => col.id === targetId);
+      const newColumns = [...prevColumns];
+      const sourceColumn = newColumns.find(
+        (col) => col.id === sourceId || col.cards.some((card) => card.id === sourceId),
+      );
+      const targetColumn = newColumns.find(
+        (col) => col.id === targetId || col.cards.some((card) => card.id === targetId),
+      );
 
-      if (sourceColumnIndex !== -1 && targetColumnIndex !== -1) {
-        // Reordering columns
-        const newColumns = [...prevColumns];
-        const [movedColumn] = newColumns.splice(sourceColumnIndex, 1);
-        const insertIndex = closestEdge === 'right' ? targetColumnIndex + 1 : targetColumnIndex;
-        newColumns.splice(insertIndex, 0, movedColumn);
-        return newColumns;
-      } else {
-        // Reordering items within a column
-        const newColumns = [...prevColumns];
-        const sourceColumn = newColumns.find((col) => col.items.some((item) => item.id === itemId));
-        const targetColumn = newColumns.find((col) => col.items.some((item) => item.id === targetId));
+      if (sourceColumn && targetColumn) {
+        if (sourceId.startsWith('col-') && targetId.startsWith('col-')) {
+          // Reordering columns
+          const sourceIndex = newColumns.findIndex((col) => col.id === sourceId);
+          const targetIndex = newColumns.findIndex((col) => col.id === targetId);
+          const [movedColumn] = newColumns.splice(sourceIndex, 1);
+          const insertIndex = closestEdge === 'right' ? targetIndex + 1 : targetIndex;
+          newColumns.splice(insertIndex, 0, movedColumn);
+        } else {
+          // Reordering cards within a column
+          const sourceCardIndex = sourceColumn.cards.findIndex((card) => card.id === sourceId);
+          const targetCardIndex = targetColumn.cards.findIndex((card) => card.id === targetId);
+          const [movedCard] = sourceColumn.cards.splice(sourceCardIndex, 1);
 
-        if (sourceColumn && targetColumn) {
-          const sourceIndex = sourceColumn.items.findIndex((item) => item.id === itemId);
-          const targetIndex = targetColumn.items.findIndex((item) => item.id === targetId);
-          const [movedItem] = sourceColumn.items.splice(sourceIndex, 1);
-
-          // Fix: Adjust insert index based on the edge and whether it's the same column
           let insertIndex;
-          if (sourceColumn === targetColumn && sourceIndex < targetIndex) {
-            // If moving within the same column and the source was above the target,
-            // we need to adjust the target index
-            insertIndex = closestEdge === 'bottom' ? targetIndex : targetIndex - 1;
+          if (sourceColumn === targetColumn && sourceCardIndex < targetCardIndex) {
+            insertIndex = closestEdge === 'bottom' ? targetCardIndex : targetCardIndex - 1;
           } else {
-            insertIndex = closestEdge === 'bottom' ? targetIndex + 1 : targetIndex;
+            insertIndex = closestEdge === 'bottom' ? targetCardIndex + 1 : targetCardIndex;
           }
-          targetColumn.items.splice(insertIndex, 0, movedItem);
+          targetColumn.cards.splice(insertIndex, 0, movedCard);
         }
-
-        return newColumns;
       }
+
+      return newColumns;
     });
   }, []);
 
@@ -107,22 +112,15 @@ const StorybookStack = () => {
       {columns.map((column) => (
         <StackItem
           key={column.id}
-          id={column.id}
+          item={column}
           orientation={'horizontal'}
-          container={'board'}
           classNames='p-4 bg-deck rounded-md'
           onReorder={reorderItem}
         >
           <Stack orientation={'vertical'} classNames='gap-1'>
-            {column.items.map((item) => (
-              <StackItem
-                key={item.id}
-                id={item.id}
-                orientation={'vertical'}
-                container={column.id}
-                onReorder={reorderItem}
-              >
-                <KanbanBlock item={item} />
+            {column.cards.map((card) => (
+              <StackItem key={card.id} item={card} orientation={'vertical'} onReorder={reorderItem}>
+                <KanbanBlock item={card} />
               </StackItem>
             ))}
           </Stack>

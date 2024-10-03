@@ -17,20 +17,13 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type StackProps } from './Stack';
 
-export const StackItem = ({
-  id,
-  children,
-  classNames,
-  orientation,
-  container,
-  onReorder,
-  ...props
-}: Omit<ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'aria-orientation'> & {
-  id: string;
+export type StackItemProps = Omit<ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'aria-orientation'> & {
+  item: { id: string; type: 'column' | 'card' };
   orientation?: StackProps['orientation'];
-  container: string;
-  onReorder: (itemId: string, targetId: string, closestEdge: Edge | null) => void;
-}) => {
+  onReorder: (sourceId: string, targetId: string, closestEdge: Edge | null) => void;
+};
+
+export const StackItem = ({ item, children, classNames, orientation, onReorder, ...props }: StackItemProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
 
@@ -42,35 +35,35 @@ export const StackItem = ({
     const element = ref.current;
 
     return combine(
-      draggable({ element, getInitialData: () => ({ id, container }) }),
+      draggable({ element, getInitialData: () => ({ id: item.id, type: item.type }) }),
       dropTargetForElements({
         element,
         getData: ({ input, element }) => {
           return attachClosestEdge(
-            { id, container },
+            { id: item.id, type: item.type },
             { input, element, allowedEdges: orientation === 'vertical' ? ['top', 'bottom'] : ['left', 'right'] },
           );
         },
         onDragEnter: ({ self, source }) => {
-          if (source.data.container === self.data.container) {
+          if (source.data.type === self.data.type) {
             setEdge(extractClosestEdge(self.data));
           }
         },
         onDrag: ({ self, source }) => {
-          if (source.data.container === self.data.container) {
+          if (source.data.type === self.data.type) {
             setEdge(extractClosestEdge(self.data));
           }
         },
         onDragLeave: () => setEdge(null),
         onDrop: ({ self, source }) => {
           setEdge(null);
-          if (source.data.container === self.data.container) {
+          if (source.data.type === self.data.type) {
             onReorder(source.data.id as string, self.data.id as string, extractClosestEdge(self.data));
           }
         },
       }),
     );
-  }, [orientation, container, id, onReorder]);
+  }, [orientation, item, onReorder]);
 
   return (
     <div
