@@ -605,7 +605,7 @@ export class DxGrid extends LitElement {
       // );
     } else {
       if (this.focusedCell.col <= this.visColMin + overscanCol) {
-        this.posInline = this.binInlineMin;
+        this.posInline = this.binInlineMin + gap;
         this.updateVisInline();
       } else if (this.focusedCell.col >= this.visColMax - overscanCol - 1) {
         const sizeSumCol = [...Array(this.focusedCell.col - this.visColMin)].reduce((acc, _, c0) => {
@@ -623,7 +623,7 @@ export class DxGrid extends LitElement {
       }
 
       if (this.focusedCell.row <= this.visRowMin + overscanRow) {
-        this.posBlock = this.binBlockMin;
+        this.posBlock = this.binBlockMin + gap;
         this.updateVisBlock();
       } else if (this.focusedCell.row >= this.visRowMax - overscanRow - 1) {
         const sizeSumRow = [...Array(this.focusedCell.row - this.visRowMin)].reduce((acc, _, r0) => {
