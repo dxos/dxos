@@ -54,8 +54,8 @@ jobs:
           lfs: true
 
       - name: Extract branch
-        uses: ./.github/actions/branch
         id: extract_branch
+        uses: ./.github/actions/branch
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -94,8 +94,8 @@ jobs:
           lfs: true
 
       - name: Extract branch
-        uses: ./.github/actions/branch
         id: extract_branch
+        uses: ./.github/actions/branch
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -126,8 +126,8 @@ jobs:
           lfs: true
 
       - name: Extract branch
-        uses: ./.github/actions/branch
         id: extract_branch
+        uses: ./.github/actions/branch
 
       - name: Setup
         uses: ./.github/actions/setup

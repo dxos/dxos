@@ -1,9 +1,15 @@
 name: Extract Branch
 description: Get the current branch name
 
+outputs:
+  branch:
+    description: 'Branch name'
+    value: ${{ steps.extract-branch.outputs.branch }}
+
 runs:
   using: 'composite'
   steps:
     - name: Extract branch name
+      id: extract-branch
       shell: bash
       run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
