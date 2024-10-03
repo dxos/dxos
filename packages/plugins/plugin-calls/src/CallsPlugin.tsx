@@ -22,7 +22,7 @@ export const CallsPlugin = (): PluginDefinition<CallsPluginProvides> => {
           return [
             // Space calls nodes.
             createExtension({
-              id: 'dxos.org/plugin/debug/spaces',
+              id: `${CALLS_PLUGIN}/space`,
               filter: (node): node is Node<Space> => isSpace(node.data),
               connector: ({ node }) => {
                 const space = node.data;
@@ -30,9 +30,9 @@ export const CallsPlugin = (): PluginDefinition<CallsPluginProvides> => {
                   {
                     id: `${space.id}-calls`,
                     type: `${CALLS_PLUGIN}/space`,
-                    data: { space },
+                    data: { space, type: `${CALLS_PLUGIN}/space` },
                     properties: {
-                      label: ['debug label', { ns: CALLS_PLUGIN }],
+                      label: ['calls label', { ns: CALLS_PLUGIN }],
                       icon: 'ph--phone-call--regular',
                     },
                   },
@@ -49,7 +49,7 @@ export const CallsPlugin = (): PluginDefinition<CallsPluginProvides> => {
             case 'article':
             case 'section': {
               const primary: any = data.active ?? data.object;
-              if ('space' in primary && isSpace(primary.space)) {
+              if (primary.type === `${CALLS_PLUGIN}/space` && 'space' in primary && isSpace(primary.space)) {
                 return <CallsContainer space={primary.space} role={role} />;
               }
               return null;
