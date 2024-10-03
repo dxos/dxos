@@ -1,0 +1,15 @@
+name: Test Report
+description: Send a test report to the team
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Send failure report
+      shell: bash
+      run: ./.github/scripts/send-test-report.sh $GITHUB_JOB failure
+      if: ${{ failure() }}
+
+    - name: Send success report
+      shell: bash
+      run: ./.github/scripts/send-test-report.sh $GITHUB_JOB success
+      if: ${{ success() }}
