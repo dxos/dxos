@@ -108,7 +108,7 @@ jobs:
         run: pnpm exec nx affected -t lint build
 
       - name: Check All
-        if: ${{ steps.extract_branch.outputs.branch == 'jdw/test-all' }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: pnpm exec nx run-many -t lint build
 
   e2e:
