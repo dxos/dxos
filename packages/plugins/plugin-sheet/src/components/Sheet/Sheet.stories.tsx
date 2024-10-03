@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useSpace } from '@dxos/react-client/echo';
@@ -18,8 +18,9 @@ import { type SizeMap } from './grid';
 import { useSheetContext } from './sheet-context';
 import { addressToIndex, rangeToIndex } from '../../defs';
 import { type ComputeGraph } from '../../graph';
-import { useComputeGraph, useSheetModel } from '../../hooks';
-import { createTestCells, useTestSheet, withGraphDecorator } from '../../testing';
+import { testPlugins } from '../../graph/testing';
+import { useComputeGraph } from '../../hooks';
+import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { SheetType, ValueTypeEnum } from '../../types';
 import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
 
@@ -28,7 +29,7 @@ const SheetWithToolbar = ({ graph, debug }: { graph: ComputeGraph; debug?: boole
   const { model, cursor, range } = useSheetContext();
 
   const handleRefresh = () => {
-    graph?.refresh();
+    // graph?.refresh(); // TODO(burdon): ???
   };
 
   // TODO(burdon): Factor out.
@@ -104,7 +105,7 @@ export default {
   component: Sheet,
   decorators: [
     withClientProvider({ types: [SheetType], createIdentity: true }),
-    withGraphDecorator,
+    withComputeGraphDecorator({ plugins: testPlugins }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true, classNames: 'inset-4' }),
   ],
@@ -114,13 +115,7 @@ export const Default = () => {
   const [debug, setDebug] = useState(false);
   const space = useSpace();
   const graph = useComputeGraph(space);
-  const sheet = useTestSheet(space, graph);
-  const model = useSheetModel(graph, sheet);
-  useEffect(() => {
-    if (model) {
-      model.setValues(createTestCells());
-    }
-  }, [model]);
+  const sheet = useTestSheet(space, graph, { cells: createTestCells() });
   if (!graph || !sheet) {
     return null;
   }
@@ -135,7 +130,7 @@ export const Default = () => {
 export const Debug = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
-  const sheet = useTestSheet(space, graph);
+  const sheet = useTestSheet(space, graph, { cells: createTestCells() });
   if (!graph || !sheet) {
     return null;
   }
@@ -191,7 +186,7 @@ export const Columns = () => {
 export const Main = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
-  const sheet = useTestSheet(space, graph);
+  const sheet = useTestSheet(space, graph, { cells: createTestCells() });
   if (!graph || !sheet) {
     return null;
   }

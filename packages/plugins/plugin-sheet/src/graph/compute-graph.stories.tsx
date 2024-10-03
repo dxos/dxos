@@ -13,9 +13,10 @@ import { Toolbar, Button, Input } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/storybook-utils';
 
+import { testPlugins } from './testing';
 import { createSheet } from '../defs';
 import { useComputeGraph, useSheetModel } from '../hooks';
-import { withGraphDecorator } from '../testing';
+import { withComputeGraphDecorator } from '../testing';
 import { SheetType } from '../types';
 
 const FUNCTION_NAME = 'TEST';
@@ -83,7 +84,7 @@ export default {
   title: 'plugin-sheet/functions',
   decorators: [
     withClientProvider({ types: [FunctionType, SheetType], createIdentity: true, createSpace: true }),
-    withGraphDecorator,
+    withComputeGraphDecorator({ plugins: testPlugins }),
     withTheme,
   ],
   render: (args: any) => <Story {...args} />,

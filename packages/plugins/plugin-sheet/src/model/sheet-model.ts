@@ -22,7 +22,7 @@ import {
   MAX_ROWS,
 } from '../defs';
 import { addressFromIndex, addressToIndex, initialize, insertIndices, ReadonlyException } from '../defs';
-import { type ComputeNode, type ComputeGraph, createSheetName } from '../graph';
+import { type ComputeNode, type ComputeGraph, createSheetName, type ComputeNodeEvent } from '../graph';
 import { type CellScalarValue, type CellValue, type SheetType, ValueTypeEnum } from '../types';
 
 const typeMap: Record<string, ValueTypeEnum> = {
@@ -64,7 +64,8 @@ export type SheetModelOptions = {
 export class SheetModel extends Resource {
   public readonly id = `model-${PublicKey.random().truncate()}`;
 
-  public readonly update = new Event();
+  // Wraps compute node.
+  public readonly update = new Event<ComputeNodeEvent>();
 
   private _node?: ComputeNode;
 
@@ -105,11 +106,8 @@ export class SheetModel extends Resource {
     // TODO(burdon): SheetModel should extend ComputeNode and be constructed via the graph.
     this._node = await this._graph.getOrCreateNode(createSheetName(this._sheet.id));
 
-    // TODO(burdon): Construction pattern.
-
-    // TODO(burdon): Event hierarchy?
     // Listen for model updates (e.g., async calculations).
-    const unsubscribe = this._graph.update.on(() => this.update.emit());
+    const unsubscribe = this._node.update.on((event) => this.update.emit(event));
     this._ctx.onDispose(unsubscribe);
 
     this.reset();
@@ -209,7 +207,7 @@ export class SheetModel extends Resource {
     invariant(this._node);
     if (this._node.graph.hf.isThereSomethingToUndo()) {
       this._node.graph.hf.undo();
-      this.update.emit();
+      // this.update.emit();
     }
   }
 
@@ -217,7 +215,7 @@ export class SheetModel extends Resource {
     invariant(this._node);
     if (this._node.graph.hf.isThereSomethingToRedo()) {
       this._node.graph.hf.redo();
-      this.update.emit();
+      // this.update.emit();
     }
   }
 

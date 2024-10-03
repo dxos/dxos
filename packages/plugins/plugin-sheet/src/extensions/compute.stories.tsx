@@ -23,7 +23,7 @@ import { compute, computeNodeFacet } from './compute';
 import { Sheet } from '../components';
 import { type ComputeNode } from '../graph';
 import { useComputeGraph, useSheetModel } from '../hooks';
-import { useTestSheet, withGraphDecorator } from '../testing';
+import { useTestSheet, withComputeGraphDecorator } from '../testing';
 import { SheetType } from '../types';
 
 const str = (...lines: string[]) => lines.join('\n');
@@ -102,7 +102,7 @@ export default {
   title: 'plugin-sheet/extensions',
   decorators: [
     withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
-    withGraphDecorator,
+    withComputeGraphDecorator(),
     withTheme,
     withLayout({ fullscreen: true, classNames: 'justify-center' }),
   ],

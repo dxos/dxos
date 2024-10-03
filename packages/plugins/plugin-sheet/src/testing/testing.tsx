@@ -10,7 +10,7 @@ import { useAsyncState } from '@dxos/react-hooks';
 
 import { ComputeGraphContextProvider } from '../components';
 import { createSheet } from '../defs';
-import { type ComputeGraph, ComputeGraphRegistry } from '../graph';
+import { type ComputeGraph, type ComputeGraphOptions, ComputeGraphRegistry } from '../graph';
 import { type CellValue, type CreateSheetOptions } from '../types';
 
 const testSheetName = 'test';
@@ -56,11 +56,13 @@ export const useTestSheet = (space?: Space, graph?: ComputeGraph, options?: Crea
   return sheet;
 };
 
-export const withGraphDecorator: Decorator = (Story) => {
-  const [registry] = useState(new ComputeGraphRegistry());
-  return (
-    <ComputeGraphContextProvider registry={registry}>
-      <Story />
-    </ComputeGraphContextProvider>
-  );
-};
+export const withComputeGraphDecorator =
+  (options?: ComputeGraphOptions): Decorator =>
+  (Story) => {
+    const [registry] = useState(new ComputeGraphRegistry(options));
+    return (
+      <ComputeGraphContextProvider registry={registry}>
+        <Story />
+      </ComputeGraphContextProvider>
+    );
+  };

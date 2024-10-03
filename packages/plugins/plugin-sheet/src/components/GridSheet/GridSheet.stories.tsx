@@ -10,14 +10,14 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { GridSheet } from './GridSheet';
 import { useComputeGraph } from '../../hooks';
-import { useTestSheet, withGraphDecorator } from '../../testing';
+import { useTestSheet, withComputeGraphDecorator } from '../../testing';
 
 export default {
   title: 'plugin-sheet/GridSheet',
   component: GridSheet,
   decorators: [
     withClientProvider({ createSpace: true }),
-    withGraphDecorator,
+    withComputeGraphDecorator(),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
   ],

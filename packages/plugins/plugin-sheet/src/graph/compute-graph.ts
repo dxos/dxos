@@ -4,7 +4,9 @@
 
 import { type FunctionPluginDefinition } from 'hyperformula';
 import { type ConfigParams } from 'hyperformula/typings/ConfigParams';
+import { type Listeners } from 'hyperformula/typings/Emitter';
 import { type FunctionTranslationsPackage } from 'hyperformula/typings/interpreter';
+import defaultsDeep from 'lodash.defaultsdeep';
 
 import { Event } from '@dxos/async';
 import { type SpaceId, type Space, Filter, fullyQualifiedId } from '@dxos/client/echo';
@@ -15,7 +17,7 @@ import { log } from '@dxos/log';
 import { FunctionType } from '@dxos/plugin-script/types';
 import { nonNullable } from '@dxos/util';
 
-import { HyperFormula } from '#hyperformula';
+import { ExportedCellChange, HyperFormula } from '#hyperformula';
 import { FunctionContext, type FunctionContextOptions } from './async-function';
 import { ComputeNode } from './compute-node';
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './edge-function';
@@ -43,13 +45,14 @@ export type ComputeGraphOptions = {
 
 export const defaultOptions: ComputeGraphOptions = {
   licenseKey: 'gpl-v3',
-  plugins: [
-    {
-      plugin: EdgeFunctionPlugin,
-      translations: EdgeFunctionPluginTranslations,
-    },
-  ],
 };
+
+export const defaultPlugins: ComputeGraphPlugin[] = [
+  {
+    plugin: EdgeFunctionPlugin,
+    translations: EdgeFunctionPluginTranslations,
+  },
+];
 
 /**
  * Marker for sheets that are managed by an ECHO object.
@@ -58,16 +61,6 @@ const PREFIX = '__';
 export const createSheetName = (id: string) => `${PREFIX}${id}`;
 export const getSheetId = (name: string): string | undefined =>
   name.startsWith(PREFIX) ? name.slice(PREFIX.length) : undefined;
-
-/**
- * NOTE: Async imports to decouple hyperformula deps.
- */
-export const createComputeGraphRegistry = (options: Partial<FunctionContextOptions> = {}) => {
-  return new ComputeGraphRegistry({
-    ...defaultOptions,
-    ...options,
-  });
-};
 
 /**
  * Manages a collection of ComputeGraph instances for each space.
@@ -80,8 +73,11 @@ export const createComputeGraphRegistry = (options: Partial<FunctionContextOptio
 export class ComputeGraphRegistry extends Resource {
   private readonly _graphs = new Map<SpaceId, ComputeGraph>();
 
-  constructor(private readonly _options: ComputeGraphOptions = defaultOptions) {
+  private readonly _options: ComputeGraphOptions;
+
+  constructor(options: ComputeGraphOptions = { plugins: defaultPlugins }) {
     super();
+    this._options = defaultsDeep({}, options, defaultOptions);
     this._options.plugins?.forEach(({ plugin, translations }) => {
       HyperFormula.registerFunctionPlugin(plugin, translations);
     });
@@ -106,7 +102,7 @@ export class ComputeGraphRegistry extends Resource {
     const hf = HyperFormula.buildEmpty(this._options);
     const graph = new ComputeGraph(hf, space, this._options);
     this._graphs.set(space.id, graph);
-    await graph.open(this._ctx);
+    await graph.open();
     return graph;
   }
 
@@ -117,13 +113,14 @@ export class ComputeGraphRegistry extends Resource {
   }
 }
 
+export type ComputeGraphEvent = 'functionsUpdated';
+
 /**
  * Per-space compute and dependency graph.
  * Consists of multiple ComputeNode (corresponding to a HyperFormula sheet).
  * Manages the set of custom functions.
  * HyperFormula manages the dependency graph.
  */
-// TODO(burdon): Tests.
 export class ComputeGraph extends Resource {
   public readonly id = `graph-${PublicKey.random().truncate()}`;
 
@@ -133,13 +130,10 @@ export class ComputeGraph extends Resource {
   // Cached function objects.
   private _functions: FunctionType[] = [];
 
-  // The context is passed to all functions.
-  public readonly context = new FunctionContext(this._hf, this._space, this.refresh.bind(this), this._options);
+  public readonly update = new Event<{ type: ComputeGraphEvent }>();
 
-  // TODO(burdon): Typed events.
-  // TODO(burdon): Tie into HyperFormula dependency graph.
-  // TODO(burdon): Event propagation.
-  public readonly update = new Event();
+  // The context is passed to all functions.
+  public readonly context = new FunctionContext(this._hf, this._space, this._options);
 
   constructor(
     private readonly _hf: HyperFormula,
@@ -147,18 +141,31 @@ export class ComputeGraph extends Resource {
     private readonly _options?: Partial<FunctionContextOptions>,
   ) {
     super();
-
     this._hf.updateConfig({ context: this.context });
+    const onValuesUpdate: Listeners['valuesUpdated'] = (changes) => {
+      for (const change of changes) {
+        if (change instanceof ExportedCellChange) {
+          const { sheet } = change;
+          const node = this._nodes.get(sheet);
+          if (node) {
+            node.update.emit({ type: 'valuesUpdated', change });
+          }
+        }
+      }
+    };
+
+    this._hf.on('valuesUpdated', onValuesUpdate);
+    this._ctx.onDispose(() => this._hf.off('valuesUpdated', onValuesUpdate));
   }
 
   get hf() {
     return this._hf;
   }
 
-  refresh() {
-    log('refresh', { id: this.id });
-    this.update.emit();
-  }
+  // refresh() {
+  //   log('refresh', { id: this.id });
+  //   this.update.emit();
+  // }
 
   getFunctions(
     { standard, echo }: { standard?: boolean; echo?: boolean } = { standard: true, echo: true },
@@ -186,7 +193,7 @@ export class ComputeGraph extends Resource {
     if (!this._hf.doesSheetExist(name)) {
       log.info('created node', { space: this._space?.id, name });
       this._hf.addSheet(name);
-      this.update.emit();
+      // this.update.emit();
     }
 
     const sheetId = this._hf.getSheetId(name);
@@ -290,7 +297,7 @@ export class ComputeGraph extends Resource {
       const query = this._space.db.query(Filter.schema(FunctionType));
       const unsubscribe = query.subscribe(({ objects }) => {
         this._functions = objects.filter(({ binding }) => binding);
-        this.update.emit();
+        this.update.emit({ type: 'functionsUpdated' });
       });
 
       this._ctx.onDispose(unsubscribe);
