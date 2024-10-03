@@ -12,6 +12,7 @@ import {
   type AxisMeta,
   type CellIndex,
   DxAxisResize,
+  type DxAxisResizeInternal,
   DxEditRequest,
   type DxGridAxis,
   type DxGridAxisMeta,
@@ -97,6 +98,11 @@ const getPage = (axis: string, event: PointerEvent) => (axis === 'col' ? event.p
 
 @customElement('dx-grid')
 export class DxGrid extends LitElement {
+  constructor() {
+    super();
+    this.addEventListener('dx-axis-resize-internal', this.handleAxisResizeInternal as EventListener);
+  }
+
   @property({ type: String })
   gridId: string = 'default-grid-id';
 
@@ -276,12 +282,7 @@ export class DxGrid extends LitElement {
 
   private handlePointerUp = (event: PointerEvent) => {
     if (this.pointer?.state === 'resizing') {
-      const resizeEvent = new DxAxisResize({
-        axis: this.pointer.axis,
-        index: this.pointer.index,
-        size: this[this.pointer.axis === 'col' ? 'colSize' : 'rowSize'](this.pointer.index),
-      });
-      this.dispatchEvent(resizeEvent);
+      // do nothing, todo: remove
     } else {
       const cell = closestCell(event.target);
       if (cell) {
@@ -298,18 +299,7 @@ export class DxGrid extends LitElement {
   };
 
   private handlePointerMove = (event: PointerEvent) => {
-    if (this.pointer?.state === 'resizing') {
-      const delta = getPage(this.pointer.axis, event) - this.pointer.page;
-      if (this.pointer.axis === 'col') {
-        const nextSize = Math.max(sizeColMin, Math.min(sizeColMax, this.pointer.size + delta));
-        this.colSizes = { ...this.colSizes, [this.pointer.index]: nextSize };
-        this.updateVisInline();
-      } else {
-        const nextSize = Math.max(sizeRowMin, Math.min(sizeRowMax, this.pointer.size + delta));
-        this.rowSizes = { ...this.rowSizes, [this.pointer.index]: nextSize };
-        this.updateVisBlock();
-      }
-    } else if (this.pointer?.state === 'selecting') {
+    if (this.pointer?.state === 'selecting') {
       const cell = closestCell(event.target);
       if (cell && (cell.col !== this.selectionEnd.col || cell.row !== this.selectionEnd.row)) {
         this.selectionEnd = cell;
@@ -615,6 +605,10 @@ export class DxGrid extends LitElement {
     }
   }
 
+  //
+  // Map scroll DOM methods to virtualized value.
+  //
+
   override get scrollLeft() {
     return this.posInline;
   }
@@ -631,6 +625,32 @@ export class DxGrid extends LitElement {
   override set scrollTop(nextValue: number) {
     this.posBlock = nextValue;
     this.maybeUpdateVis();
+  }
+
+  //
+  // Resize handlers
+  //
+  private handleAxisResizeInternal(event: DxAxisResizeInternal) {
+    event.stopPropagation();
+    const { axis, delta, size, index, type } = event;
+    if (axis === 'col') {
+      const nextSize = Math.max(sizeColMin, Math.min(sizeColMax, size + delta));
+      this.colSizes = { ...this.colSizes, [index]: nextSize };
+      this.updateVisInline();
+    } else {
+      const nextSize = Math.max(sizeRowMin, Math.min(sizeRowMax, size + delta));
+      this.rowSizes = { ...this.rowSizes, [index]: nextSize };
+      this.updateVisBlock();
+    }
+    if (type === 'dropped') {
+      this.dispatchEvent(
+        new DxAxisResize({
+          axis,
+          index,
+          size: this[axis === 'col' ? 'colSize' : 'rowSize'](index),
+        }),
+      );
+    }
   }
 
   //
@@ -655,10 +675,6 @@ export class DxGrid extends LitElement {
       data-grid=${this.gridId}
       data-grid-mode=${this.mode}
       ?data-grid-select=${selectVisible}
-      @pointerdown=${this.handlePointerDown}
-      @pointerup=${this.handlePointerUp}
-      @pointermove=${this.handlePointerMove}
-      @pointerleave=${this.handlePointerUp}
       @focus=${this.handleFocus}
       @blur=${this.handleBlur}
       @keydown=${this.handleKeydown}
@@ -679,7 +695,12 @@ export class DxGrid extends LitElement {
             >
               <span id=${localChId(c0)}>${colToA1Notation(c)}</span>
               ${(this.columns[c]?.resizeable ?? this.columnDefault.resizeable) &&
-              html`<dx-grid-axis-resize-handle axis="col" index="${c}"></dx-grid-axis-resize-handle>`}
+              html`<dx-grid-axis-resize-handle
+                axis="col"
+                index=${c}
+                size=${this.colSize(c)}
+                @dxaxisresizeinternal=${this.handleAxisResizeInternal}
+              ></dx-grid-axis-resize-handle>`}
             </div>`;
           })}
         </div>
@@ -696,7 +717,11 @@ export class DxGrid extends LitElement {
             return html`<div role="rowheader" ?inert=${r < 0} style="grid-row:${r0 + 1}/${r0 + 2}">
               <span id=${localRhId(r0)}>${rowToA1Notation(r)}</span>
               ${(this.rows[r]?.resizeable ?? this.rowDefault.resizeable) &&
-              html`<dx-grid-axis-resize-handle axis="row" index="${r}"></dx-grid-axis-resize-handle>`}
+              html`<dx-grid-axis-resize-handle
+                axis="row"
+                index=${r}
+                size=${this.rowSize(r)}
+              ></dx-grid-axis-resize-handle>`}
             </div>`;
           })}
         </div>
