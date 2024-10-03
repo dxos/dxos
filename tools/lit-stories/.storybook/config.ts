@@ -48,7 +48,7 @@ export const config = (
             `./packages/icons/node_modules/@phosphor-icons/core/assets/${variant}/${name}${
               variant === 'regular' ? '' : `-${variant}`
             }.svg`,
-          spritePath: resolve(__dirname, '../dist/assets/sprite.svg'),
+          spriteFile: 'icons.svg',
           contentPaths: ['**/*.stories.{ts,tsx}'],
         }),
       ],

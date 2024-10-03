@@ -30,7 +30,7 @@ export default {
 export const Basic = {
   args: {
     id: 'story',
-    cells: {
+    initialCells: {
       '1,1': {
         // end: '8,1',
         value: 'Weekly sales report',

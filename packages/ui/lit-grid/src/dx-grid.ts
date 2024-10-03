@@ -6,18 +6,23 @@ import { LitElement, html, nothing } from 'lit';
 import { customElement, state, property, eventOptions } from 'lit/decorators.js';
 import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 
+// eslint-disable-next-line unused-imports/no-unused-imports
+import './dx-grid-axis-resize-handle';
 import {
   type AxisMeta,
   type CellIndex,
-  type CellValue,
   DxAxisResize,
+  type DxAxisResizeInternal,
   DxEditRequest,
   type DxGridAxis,
+  type DxGridAxisMeta,
+  type DxGridCells,
   DxGridCellsSelect,
   type DxGridMode,
   type DxGridPointer,
   type DxGridPosition,
   type DxGridPositionNullable,
+  type DxGridRange,
 } from './types';
 import { separator, toCellIndex } from './util';
 
@@ -93,6 +98,19 @@ const getPage = (axis: string, event: PointerEvent) => (axis === 'col' ? event.p
 
 @customElement('dx-grid')
 export class DxGrid extends LitElement {
+  constructor() {
+    super();
+    this.addEventListener('dx-axis-resize-internal', this.handleAxisResizeInternal as EventListener);
+    this.addEventListener('wheel', this.handleWheel);
+    this.addEventListener('pointerdown', this.handlePointerDown);
+    this.addEventListener('pointermove', this.handlePointerMove);
+    this.addEventListener('pointerup', this.handlePointerUp);
+    this.addEventListener('pointerleave', this.handlePointerUp);
+    this.addEventListener('focus', this.handleFocus, { capture: true });
+    this.addEventListener('blur', this.handleBlur, { capture: true });
+    this.addEventListener('keydown', this.handleKeydown);
+  }
+
   @property({ type: String })
   gridId: string = 'default-grid-id';
 
@@ -103,16 +121,25 @@ export class DxGrid extends LitElement {
   columnDefault: AxisMeta = { size: 180 };
 
   @property({ type: Object })
-  rows: Record<string, AxisMeta> = {};
+  rows: DxGridAxisMeta = {};
 
   @property({ type: Object })
-  columns: Record<string, AxisMeta> = {};
+  columns: DxGridAxisMeta = {};
 
   @property({ type: Object })
-  cells: Record<CellIndex, CellValue> = {};
+  initialCells: DxGridCells = {};
 
   @property({ type: String })
   mode: DxGridMode = 'browse';
+
+  /**
+   * When this function is defined, it is used first to try to get a value for a cell, and otherwise will fall back
+   * to `cells`.
+   */
+  getCells: ((nextRange: DxGridRange) => DxGridCells) | null = null;
+
+  @state()
+  private cells: DxGridCells = {};
 
   //
   // `pos`, short for ‘position’, is the position in pixels of the viewport from the origin.
@@ -263,12 +290,7 @@ export class DxGrid extends LitElement {
 
   private handlePointerUp = (event: PointerEvent) => {
     if (this.pointer?.state === 'resizing') {
-      const resizeEvent = new DxAxisResize({
-        axis: this.pointer.axis,
-        index: this.pointer.index,
-        size: this[this.pointer.axis === 'col' ? 'colSize' : 'rowSize'](this.pointer.index),
-      });
-      this.dispatchEvent(resizeEvent);
+      // do nothing, todo: remove
     } else {
       const cell = closestCell(event.target);
       if (cell) {
@@ -285,18 +307,7 @@ export class DxGrid extends LitElement {
   };
 
   private handlePointerMove = (event: PointerEvent) => {
-    if (this.pointer?.state === 'resizing') {
-      const delta = getPage(this.pointer.axis, event) - this.pointer.page;
-      if (this.pointer.axis === 'col') {
-        const nextSize = Math.max(sizeColMin, Math.min(sizeColMax, this.pointer.size + delta));
-        this.colSizes = { ...this.colSizes, [this.pointer.index]: nextSize };
-        this.updateVisInline();
-      } else {
-        const nextSize = Math.max(sizeRowMin, Math.min(sizeRowMax, this.pointer.size + delta));
-        this.rowSizes = { ...this.rowSizes, [this.pointer.index]: nextSize };
-        this.updateVisBlock();
-      }
-    } else if (this.pointer?.state === 'selecting') {
+    if (this.pointer?.state === 'selecting') {
       const cell = closestCell(event.target);
       if (cell && (cell.col !== this.selectionEnd.col || cell.row !== this.selectionEnd.row)) {
         this.selectionEnd = cell;
@@ -358,7 +369,8 @@ export class DxGrid extends LitElement {
   }
 
   private cell(c: number | string, r: number | string) {
-    return this.cells[`${c}${separator}${r}`];
+    const index: CellIndex = `${c}${separator}${r}`;
+    return this.cells[index] ?? this.initialCells[index];
   }
 
   private focusedCellBox(): DxEditRequest['cellBox'] {
@@ -403,26 +415,30 @@ export class DxGrid extends LitElement {
 
   private viewportRef: Ref<HTMLDivElement> = createRef();
 
+  private maybeUpdateVis = () => {
+    if (
+      this.posInline >= this.binInlineMin &&
+      this.posInline < this.binInlineMax &&
+      this.posBlock >= this.binBlockMin &&
+      this.posBlock < this.binBlockMax
+    ) {
+      // do nothing
+    } else {
+      // console.info(
+      //   '[updating bounds]',
+      //   'wheel',
+      //   [this.binInlineMin, this.posInline, this.binInlineMax],
+      //   [this.binBlockMin, this.posBlock, this.binBlockMax],
+      // );
+      this.updateVis();
+    }
+  };
+
   private handleWheel = ({ deltaX, deltaY }: WheelEvent) => {
     if (this.mode === 'browse') {
       this.posInline = Math.max(0, this.posInline + deltaX);
       this.posBlock = Math.max(0, this.posBlock + deltaY);
-      if (
-        this.posInline >= this.binInlineMin &&
-        this.posInline < this.binInlineMax &&
-        this.posBlock >= this.binBlockMin &&
-        this.posBlock < this.binBlockMax
-      ) {
-        // do nothing
-      } else {
-        // console.info(
-        //   '[updating bounds]',
-        //   'wheel',
-        //   [this.binInlineMin, this.posInline, this.binInlineMax],
-        //   [this.binBlockMin, this.posBlock, this.binBlockMax],
-        // );
-        this.updateVis();
-      }
+      this.maybeUpdateVis();
     }
   };
 
@@ -598,6 +614,54 @@ export class DxGrid extends LitElement {
   }
 
   //
+  // Map scroll DOM methods to virtualized value.
+  //
+
+  override get scrollLeft() {
+    return this.posInline;
+  }
+
+  override set scrollLeft(nextValue: number) {
+    this.posInline = nextValue;
+    this.maybeUpdateVis();
+  }
+
+  override get scrollTop() {
+    return this.posBlock;
+  }
+
+  override set scrollTop(nextValue: number) {
+    this.posBlock = nextValue;
+    this.maybeUpdateVis();
+  }
+
+  //
+  // Resize handlers
+  //
+  private handleAxisResizeInternal(event: DxAxisResizeInternal) {
+    event.stopPropagation();
+    const { axis, delta, size, index, type } = event;
+    if (axis === 'col') {
+      const nextSize = Math.max(sizeColMin, Math.min(sizeColMax, size + delta));
+      this.colSizes = { ...this.colSizes, [index]: nextSize };
+      this.updateVisInline();
+    } else {
+      const nextSize = Math.max(sizeRowMin, Math.min(sizeRowMax, size + delta));
+      this.rowSizes = { ...this.rowSizes, [index]: nextSize };
+      this.updateVisBlock();
+    }
+    if (type === 'dropped') {
+      this.dispatchEvent(
+        new DxAxisResize({
+          axis,
+          index,
+          size: this[axis === 'col' ? 'colSize' : 'rowSize'](index),
+        }),
+      );
+    }
+  }
+
+  //
   // Render and other lifecycle methods
   //
 
@@ -619,13 +683,6 @@ export class DxGrid extends LitElement {
       data-grid=${this.gridId}
       data-grid-mode=${this.mode}
       ?data-grid-select=${selectVisible}
-      @pointerdown=${this.handlePointerDown}
-      @pointerup=${this.handlePointerUp}
-      @pointermove=${this.handlePointerMove}
-      @pointerleave=${this.handlePointerUp}
-      @focus=${this.handleFocus}
-      @blur=${this.handleBlur}
-      @keydown=${this.handleKeydown}
     >
       <div role="none" class="dx-grid__corner"></div>
       <div role="none" class="dx-grid__columnheader">
@@ -643,9 +700,12 @@ export class DxGrid extends LitElement {
             >
               <span id=${localChId(c0)}>${colToA1Notation(c)}</span>
               ${(this.columns[c]?.resizeable ?? this.columnDefault.resizeable) &&
-              html`<button class="dx-grid__resize-handle" data-dx-grid-action=${`resize-col,${c}`}>
-                <span class="sr-only">Resize</span>
-              </button>`}
+              html`<dx-grid-axis-resize-handle
+                axis="col"
+                index=${c}
+                size=${this.colSize(c)}
+                @dxaxisresizeinternal=${this.handleAxisResizeInternal}
+              ></dx-grid-axis-resize-handle>`}
             </div>`;
           })}
         </div>
@@ -662,9 +722,11 @@ export class DxGrid extends LitElement {
             return html`<div role="rowheader" ?inert=${r < 0} style="grid-row:${r0 + 1}/${r0 + 2}">
               <span id=${localRhId(r0)}>${rowToA1Notation(r)}</span>
               ${(this.rows[r]?.resizeable ?? this.rowDefault.resizeable) &&
-              html`<button class="dx-grid__resize-handle" data-dx-grid-action=${`resize-row,${r}`}>
-                <span class="sr-only">Resize</span>
-              </button>`}
+              html`<dx-grid-axis-resize-handle
+                axis="row"
+                index=${r}
+                size=${this.rowSize(r)}
+              ></dx-grid-axis-resize-handle>`}
             </div>`;
           })}
         </div>
@@ -714,6 +776,12 @@ export class DxGrid extends LitElement {
   }
 
   override firstUpdated() {
+    if (this.getCells) {
+      this.cells = this.getCells({
+        start: { col: this.visColMin, row: this.visRowMin },
+        end: { col: this.visColMax, row: this.visRowMax },
+      });
+    }
     this.observer.observe(this.viewportRef.value!);
     this.colSizes = Object.entries(this.columns).reduce((acc: Record<string, number>, [colId, colMeta]) => {
       if (colMeta?.size) {
@@ -727,6 +795,22 @@ export class DxGrid extends LitElement {
       }
       return acc;
     }, {});
+  }
+
+  override willUpdate(changedProperties: Map<string, any>) {
+    if (
+      this.getCells &&
+      (changedProperties.has('initialCells') ||
+        changedProperties.has('visColMin') ||
+        changedProperties.has('visColMax') ||
+        changedProperties.has('visRowMin') ||
+        changedProperties.has('visRowMax'))
+    ) {
+      this.cells = this.getCells({
+        start: { col: this.visColMin, row: this.visRowMin },
+        end: { col: this.visColMax, row: this.visRowMax },
+      });
+    }
   }
 
   override updated(changedProperties: Map<string, any>) {
