@@ -50,6 +50,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: '0'
           lfs: true
 
       - name: Setup
@@ -84,6 +85,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: '0'
           lfs: true
 
       - name: Setup
@@ -106,6 +108,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: '0'
           lfs: true
 
       - name: Setup
