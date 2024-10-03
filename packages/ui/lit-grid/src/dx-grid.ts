@@ -102,7 +102,7 @@ export class DxGrid extends LitElement {
   constructor() {
     super();
     this.addEventListener('dx-axis-resize-internal', this.handleAxisResizeInternal as EventListener);
-    this.addEventListener('wheel', this.handleWheel);
+    this.addEventListener('wheel', this.handleWheel, { passive: true });
     this.addEventListener('pointerdown', this.handlePointerDown);
     this.addEventListener('pointermove', this.handlePointerMove);
     this.addEventListener('pointerup', this.handlePointerUp);
@@ -419,15 +419,10 @@ export class DxGrid extends LitElement {
       inlineSize: 0,
       blockSize: 0,
     };
-    if (
-      Math.abs(inlineSize - this.sizeInline) > resizeTolerance ||
-      Math.abs(blockSize - this.sizeBlock) > resizeTolerance
-    ) {
-      // console.info('[updating bounds]', 'resize', [inlineSize - this.sizeInline, blockSize - this.sizeBlock]);
-      this.sizeInline = inlineSize;
-      this.sizeBlock = blockSize;
-      this.updateVis();
-    }
+    this.sizeInline = inlineSize;
+    this.sizeBlock = blockSize;
+    this.updateVis();
+    queueMicrotask(() => this.updatePos());
   });
 
   private viewportRef: Ref<HTMLDivElement> = createRef();
@@ -451,11 +446,15 @@ export class DxGrid extends LitElement {
     }
   };
 
-  private handleWheel = ({ deltaX, deltaY }: WheelEvent) => {
+  private updatePos(inline?: number, block?: number) {
+    this.posInline = Math.max(0, Math.min(this.intrinsicInlineSize - this.sizeInline, inline ?? this.posInline));
+    this.posBlock = Math.max(0, Math.min(this.intrinsicBlockSize - this.sizeBlock, block ?? this.posBlock));
+    this.maybeUpdateVis();
+  }
+
+  private handleWheel = ({ deltaX, deltaY }: Pick<WheelEvent, 'deltaX' | 'deltaY'>) => {
     if (this.mode === 'browse') {
-      this.posInline = Math.max(0, Math.min(this.intrinsicInlineSize - this.sizeInline, this.posInline + deltaX));
-      this.posBlock = Math.max(0, Math.min(this.intrinsicBlockSize - this.sizeBlock, this.posBlock + deltaY));
-      this.maybeUpdateVis();
+      this.updatePos(this.posInline + deltaX, this.posBlock + deltaY);
     }
   };
 
