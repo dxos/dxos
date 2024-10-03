@@ -5,6 +5,7 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state, property, eventOptions } from 'lit/decorators.js';
 import { ref, createRef, type Ref } from 'lit/directives/ref.js';
+import { styleMap } from 'lit/directives/style-map.js';
 
 // eslint-disable-next-line unused-imports/no-unused-imports
 import './dx-grid-axis-resize-handle';
@@ -611,7 +612,13 @@ export class DxGrid extends LitElement {
           acc += this.colSize(this.visColMin + overscanCol + c0) + gap;
           return acc;
         }, 0);
-        this.posInline = Math.max(0, this.binInlineMin + sizeSumCol + gap * 2 - this.sizeInline);
+        this.posInline = Math.max(
+          0,
+          Math.min(
+            this.intrinsicInlineSize - this.sizeInline,
+            this.binInlineMin + sizeSumCol + gap * 2 - this.sizeInline,
+          ),
+        );
         this.updateVisInline();
       }
 
@@ -623,7 +630,10 @@ export class DxGrid extends LitElement {
           acc += this.rowSize(this.visRowMin + overscanRow + r0) + gap;
           return acc;
         }, 0);
-        this.posBlock = Math.max(0, this.binBlockMin + sizeSumRow + gap * 2 - this.sizeBlock);
+        this.posBlock = Math.max(
+          0,
+          Math.min(this.intrinsicBlockSize - this.sizeBlock, this.binBlockMin + sizeSumRow + gap * 2 - this.sizeBlock),
+        );
         this.updateVisBlock();
       }
     }
@@ -698,6 +708,10 @@ export class DxGrid extends LitElement {
     return html`<div
       role="none"
       class="dx-grid"
+      style=${styleMap({
+        '--dx-viewport-inline-size': Number.isFinite(this.limitColumns) ? `${this.intrinsicInlineSize}px` : '1fr',
+        '--dx-viewport-block-size': Number.isFinite(this.limitRows) ? `${this.intrinsicBlockSize}px` : '1fr',
+      })}
       data-grid=${this.gridId}
       data-grid-mode=${this.mode}
       ?data-grid-select=${selectVisible}
@@ -794,13 +808,13 @@ export class DxGrid extends LitElement {
 
   private updateIntrinsicInlineSize() {
     this.intrinsicInlineSize = Number.isFinite(this.limitColumns)
-      ? [...Array(this.limitColumns)].reduce((acc, _, c0) => acc + this.colSize(c0), 0)
+      ? [...Array(this.limitColumns)].reduce((acc, _, c0) => acc + this.colSize(c0), 0) + gap * (this.limitColumns - 1)
       : Infinity;
   }
 
   private updateIntrinsicBlockSize() {
     this.intrinsicBlockSize = Number.isFinite(this.limitRows)
-      ? [...Array(this.limitRows)].reduce((acc, _, r0) => acc + this.rowSize(r0), 0)
+      ? [...Array(this.limitRows)].reduce((acc, _, r0) => acc + this.rowSize(r0), 0) + gap * (this.limitRows - 1)
       : Infinity;
   }
 
