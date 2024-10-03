@@ -37,6 +37,7 @@ export class Teleport {
 
   private readonly _ctx = new Context({
     onError: (err) => {
+      log.info('error in teleport context', { err });
       void this.destroy(err).catch(() => {
         log.error('Error during destroy', err);
       });
