@@ -19,6 +19,7 @@ export type DxGridAxisMeta = Record<string, AxisMeta>;
 export type DxGridPointer = null | ({ state: 'resizing'; page: number } & DxAxisResizeProps) | { state: 'selecting' };
 
 export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'index' | 'size'>;
+export type DxAxisResizeInternalProps = DxAxisResizeProps & { delta: number; state: 'dragging' | 'dropped' };
 
 export type DxGridMode = 'browse' | 'edit';
 
@@ -54,6 +55,22 @@ export class DxAxisResize extends Event {
     this.axis = props.axis;
     this.index = props.index;
     this.size = props.size;
+  }
+}
+
+export class DxAxisResizeInternal extends Event {
+  public readonly axis: DxGridAxis;
+  public readonly index: string;
+  public readonly size: number;
+  public readonly delta: number;
+  public readonly state: 'dragging' | 'dropped';
+  constructor(props: DxAxisResizeInternalProps) {
+    super('dx-axis-resize-internal', { composed: true, bubbles: true });
+    this.axis = props.axis;
+    this.index = props.index;
+    this.size = props.size;
+    this.delta = props.delta;
+    this.state = props.state;
   }
 }
 
