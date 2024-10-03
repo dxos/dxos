@@ -86,7 +86,6 @@ export const compute = (options: ComputeOptions = {}): Extension => {
           const computeNode = view.state.facet(computeNodeFacet);
           if (computeNode) {
             this._subscription = computeNode.graph.update.on(() => {
-              console.log('updated'); // TODO(burdon): Get update from graph.
               view.dispatch({
                 effects: updateAllDecorations.of(),
               });
