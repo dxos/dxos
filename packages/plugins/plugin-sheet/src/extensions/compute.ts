@@ -16,12 +16,17 @@ import {
 import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
 import { type UnsubscribeCallback } from '@dxos/async';
+import { type Space } from '@dxos/client/echo';
 
-import type { CellAddress } from '../defs';
+import { type CellAddress } from '../defs';
 import { type ComputeNode } from '../graph';
 import { type CellScalarValue } from '../types';
 
-// TODO(burdon): Make generic; compute from object/space facet?
+export const spaceFacet = Facet.define<Space, Space>({
+  combine: (values) => values[0],
+});
+
+// TODO(burdon): Create on demand?
 export const computeNodeFacet = Facet.define<ComputeNode, ComputeNode>({
   combine: (values) => values[0],
 });
