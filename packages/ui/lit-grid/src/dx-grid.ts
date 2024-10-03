@@ -132,6 +132,12 @@ export class DxGrid extends LitElement {
   @property({ type: String })
   mode: DxGridMode = 'browse';
 
+  @property({ type: Number })
+  limitColumns: number = Infinity;
+
+  @property({ type: Number })
+  limitRows: number = Infinity;
+
   /**
    * When this function is defined, it is used first to try to get a value for a cell, and otherwise will fall back
    * to `cells`.
@@ -239,6 +245,16 @@ export class DxGrid extends LitElement {
   private selectionEnd: DxGridPosition = { col: 0, row: 0 };
 
   //
+  // Limits
+  //
+
+  @state()
+  private intrinsicInlineSize: number = Infinity;
+
+  @state()
+  private intrinsicBlockSize: number = Infinity;
+
+  //
   // Primary pointer and keyboard handlers
   //
 
@@ -320,13 +336,13 @@ export class DxGrid extends LitElement {
       // Adjust state
       switch (event.key) {
         case 'ArrowDown':
-          this.focusedCell = { ...this.focusedCell, row: this.focusedCell.row + 1 };
+          this.focusedCell = { ...this.focusedCell, row: Math.min(this.limitRows - 1, this.focusedCell.row + 1) };
           break;
         case 'ArrowUp':
           this.focusedCell = { ...this.focusedCell, row: Math.max(0, this.focusedCell.row - 1) };
           break;
         case 'ArrowRight':
-          this.focusedCell = { ...this.focusedCell, col: this.focusedCell.col + 1 };
+          this.focusedCell = { ...this.focusedCell, col: Math.min(this.limitColumns - 1, this.focusedCell.col + 1) };
           break;
         case 'ArrowLeft':
           this.focusedCell = { ...this.focusedCell, col: Math.max(0, this.focusedCell.col - 1) };
@@ -436,8 +452,8 @@ export class DxGrid extends LitElement {
 
   private handleWheel = ({ deltaX, deltaY }: WheelEvent) => {
     if (this.mode === 'browse') {
-      this.posInline = Math.max(0, this.posInline + deltaX);
-      this.posBlock = Math.max(0, this.posBlock + deltaY);
+      this.posInline = Math.max(0, Math.min(this.intrinsicInlineSize - this.sizeInline, this.posInline + deltaX));
+      this.posBlock = Math.max(0, Math.min(this.intrinsicBlockSize - this.sizeBlock, this.posBlock + deltaY));
       this.maybeUpdateVis();
     }
   };
@@ -469,7 +485,7 @@ export class DxGrid extends LitElement {
       pxInline += this.colSize(colIndex) + gap;
     }
 
-    this.visColMax = colIndex + overscanCol;
+    this.visColMax = Math.min(this.limitColumns, colIndex + overscanCol);
 
     this.templateColumns = [...Array(this.visColMax - this.visColMin)]
       .map((_, c0) => `${this.colSize(this.visColMin + c0)}px`)
@@ -503,7 +519,7 @@ export class DxGrid extends LitElement {
       pxBlock += this.rowSize(rowIndex) + gap;
     }
 
-    this.visRowMax = rowIndex + overscanRow;
+    this.visRowMax = Math.min(this.limitRows, rowIndex + overscanRow);
 
     this.templateRows = [...Array(this.visRowMax - this.visRowMin)]
       .map((_, r0) => `${this.rowSize(this.visRowMin + r0)}px`)
@@ -645,10 +661,12 @@ export class DxGrid extends LitElement {
       const nextSize = Math.max(sizeColMin, Math.min(sizeColMax, size + delta));
       this.colSizes = { ...this.colSizes, [index]: nextSize };
       this.updateVisInline();
+      this.updateIntrinsicInlineSize();
     } else {
       const nextSize = Math.max(sizeRowMin, Math.min(sizeRowMax, size + delta));
       this.rowSizes = { ...this.rowSizes, [index]: nextSize };
       this.updateVisBlock();
+      this.updateIntrinsicBlockSize();
     }
     if (type === 'dropped') {
       this.dispatchEvent(
@@ -774,6 +792,23 @@ export class DxGrid extends LitElement {
     </div>`;
   }
 
+  private updateIntrinsicInlineSize() {
+    this.intrinsicInlineSize = Number.isFinite(this.limitColumns)
+      ? [...Array(this.limitColumns)].reduce((acc, _, c0) => acc + this.colSize(c0), 0)
+      : Infinity;
+  }
+
+  private updateIntrinsicBlockSize() {
+    this.intrinsicBlockSize = Number.isFinite(this.limitRows)
+      ? [...Array(this.limitRows)].reduce((acc, _, r0) => acc + this.rowSize(r0), 0)
+      : Infinity;
+  }
+
+  private updateIntrinsicSizes() {
+    this.updateIntrinsicInlineSize();
+    this.updateIntrinsicBlockSize();
+  }
+
   override firstUpdated() {
     if (this.getCells) {
       this.cells = this.getCells({
@@ -794,6 +829,7 @@ export class DxGrid extends LitElement {
       }
       return acc;
     }, {});
+    this.updateIntrinsicSizes();
   }
 
   override willUpdate(changedProperties: Map<string, any>) {

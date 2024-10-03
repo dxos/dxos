@@ -48,3 +48,35 @@ Basic.args = {
     4: { size: 270 },
   } satisfies DxGridProps['columns']),
 };
+
+export const Limits = (props: DxGridProps) => {
+  return html`<div style="position:fixed;inset:0;">
+    <dx-grid
+      limitRows=${props.limitRows ?? nothing}
+      limitColumns=${props.limitColumns ?? nothing}
+      columnDefault=${props.columnDefault ?? nothing}
+      rowDefault=${props.rowDefault ?? nothing}
+      columns=${props.columns ?? nothing}
+    ></dx-grid>
+  </div>`;
+};
+
+Limits.args = {
+  limitRows: JSON.stringify(10 satisfies DxGridProps['limitRows']),
+  limitColumns: JSON.stringify(3 satisfies DxGridProps['limitColumns']),
+  columnDefault: JSON.stringify({
+    size: 180,
+    resizeable: true,
+  } satisfies DxGridProps['columnDefault']),
+  rowDefault: JSON.stringify({
+    size: 32,
+    resizeable: true,
+  } satisfies DxGridProps['rowDefault']),
+  columns: JSON.stringify({
+    0: { size: 200 },
+    1: { size: 210 },
+    2: { size: 230 },
+    3: { size: 250 },
+    4: { size: 270 },
+  } satisfies DxGridProps['columns']),
+};
