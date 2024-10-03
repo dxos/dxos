@@ -461,6 +461,9 @@ export class Muxer {
   }
 
   private _destroyChannel(channel: Channel, err?: Error) {
+    if (err) {
+      log.warn('destroying channel with error', { err });
+    }
     if (channel.destroy) {
       channel.destroy(err);
     }

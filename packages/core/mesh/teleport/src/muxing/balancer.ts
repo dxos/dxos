@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as varint from 'varint';
+import varint from 'varint';
 
 import { type Trigger, Event } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
