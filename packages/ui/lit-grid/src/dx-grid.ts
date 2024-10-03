@@ -704,7 +704,6 @@ export class DxGrid extends LitElement {
                 axis="col"
                 index=${c}
                 size=${this.colSize(c)}
-                @dxaxisresizeinternal=${this.handleAxisResizeInternal}
               ></dx-grid-axis-resize-handle>`}
             </div>`;
           })}
@@ -731,7 +730,7 @@ export class DxGrid extends LitElement {
           })}
         </div>
       </div>
-      <div role="grid" class="dx-grid__viewport" tabindex="0" @wheel=${this.handleWheel} ${ref(this.viewportRef)}>
+      <div role="grid" class="dx-grid__viewport" tabindex="0" ${ref(this.viewportRef)}>
         <div
           role="none"
           class="dx-grid__content"
