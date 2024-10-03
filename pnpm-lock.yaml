@@ -3119,12 +3119,12 @@ importers:
         specifier: workspace:*
         version: link:../rpc
       ua-parser-js:
-        specifier: ^1.0.35
-        version: 1.0.35
+        specifier: ^1.0.39
+        version: 1.0.39
     devDependencies:
       '@types/ua-parser-js':
-        specifier: ^0.7.36
-        version: 0.7.36
+        specifier: ^0.7.39
+        version: 0.7.39
 
   packages/core/mesh/signal:
     dependencies:
@@ -3137,6 +3137,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      find-process:
+        specifier: ^1.4.7
+        version: 1.4.7
       node-fetch:
         specifier: ^2.6.0
         version: 2.6.7(encoding@0.1.13)
@@ -3186,14 +3189,14 @@ importers:
       randombytes:
         specifier: ^2.1.0
         version: 2.1.0
-      varint:
-        specifier: 6.0.0
-        version: 6.0.0
     devDependencies:
       '@types/randombytes':
         specifier: ^2.0.0
         version: 2.0.0
       '@types/varint':
+        specifier: 6.0.0
+        version: 6.0.0
+      varint:
         specifier: 6.0.0
         version: 6.0.0
 
@@ -4638,6 +4641,9 @@ importers:
       '@dxos/agent':
         specifier: workspace:*
         version: link:../../core/agent
+      '@dxos/plate':
+        specifier: workspace:*
+        version: link:../../common/plate
       '@mediapipe/tasks-text':
         specifier: ^0.10.7
         version: 0.10.8
@@ -8596,6 +8602,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -8620,6 +8629,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-grid':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-grid
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
@@ -8632,6 +8644,9 @@ importers:
       '@radix-ui/react-context':
         specifier: ^1.0.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
+      immer:
+        specifier: ^10.1.1
+        version: 10.1.1
     optionalDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -9090,6 +9105,9 @@ importers:
       lodash.isequalwith:
         specifier: ^4.4.0
         version: 4.4.0
+      ua-parser-js:
+        specifier: ^1.0.39
+        version: 1.0.39
     devDependencies:
       '@dxos/edge-client':
         specifier: workspace:*
@@ -9109,6 +9127,9 @@ importers:
       '@types/node':
         specifier: ^22.6.1
         version: 22.6.1
+      '@types/ua-parser-js':
+        specifier: ^0.7.39
+        version: 0.7.39
       fast-check:
         specifier: ^3.19.0
         version: 3.19.0
@@ -9281,6 +9302,9 @@ importers:
       '@types/readable-stream':
         specifier: ^2.3.9
         version: 2.3.14
+      get-port-please:
+        specifier: ^3.1.1
+        version: 3.1.1
 
   packages/sdk/config:
     dependencies:
@@ -9800,6 +9824,9 @@ importers:
 
   packages/ui/lit-grid:
     dependencies:
+      '@atlaskit/pragmatic-drag-and-drop':
+        specifier: ^1.3.1
+        version: 1.3.1
       lit:
         specifier: ^3.2.0
         version: 3.2.0
@@ -11795,6 +11822,9 @@ packages:
     engines: {node: '>=10'}
     peerDependencies:
       ajv: '>=8'
+
+  '@atlaskit/pragmatic-drag-and-drop@1.3.1':
+    resolution: {integrity: sha512-MptcLppK78B2eplL5fHk93kfCbZ6uCpt33YauBPrOwI5zcHYJhZGeaGEaAXoVAHnSJOdQUhy6kGVVC9qggz2Fg==}
 
   '@automerge/automerge-repo-network-broadcastchannel@1.1.12':
     resolution: {integrity: sha512-XEyNWa43ixZtMOTUMAzeB0KY31EseLG3/AEJMnFQGIVwDyb95ihtuBSPWfdjshSZd46dJmCPxzNa4Niev80Siw==}
@@ -20159,8 +20189,8 @@ packages:
   '@types/trusted-types@2.0.2':
     resolution: {integrity: sha512-F5DIZ36YVLE+PN+Zwws4kJogq47hNgX3Nx6WyDJ3kcplxyke3XIzB8uK5n/Lpm1HBsbGzd6nmGehL8cPekP+Tg==}
 
-  '@types/ua-parser-js@0.7.36':
-    resolution: {integrity: sha512-N1rW+njavs70y2cApeIw1vLMYXRwfBy+7trgavGuuTfOd7j1Yh7QTRc/yqsPl6ncokt72ZXuxEU0PiCp9bSwNQ==}
+  '@types/ua-parser-js@0.7.39':
+    resolution: {integrity: sha512-P/oDfpofrdtF5xw433SPALpdSchtJmY7nsJItf8h3KXqOslkbySh8zq4dSWXH2oTjRvJ5PczVEoCZPow6GicLg==}
 
   '@types/uniq@0.0.27':
     resolution: {integrity: sha512-frhneF50xyiZj11bWVtjf1F+UpxkRjw4aFgp0VNxsZ6jIIVcVXRNTOab/yw/yy5wERfKFbmNFrwQVztQUG98Gg==}
@@ -20841,6 +20871,11 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -21369,6 +21404,9 @@ packages:
   binaryextensions@2.3.0:
     resolution: {integrity: sha512-nAihlQsYGyc5Bwq6+EsubvANYGExeJKHDO3RjnvwU042fawQTQfM3Kxn7IHUXQOz4bzfwsGYYHGSvXyW4zOGLg==}
     engines: {node: '>=0.8'}
+
+  bind-event-listener@3.0.0:
+    resolution: {integrity: sha512-PJvH288AWQhKs2v9zyfYdPzlPqf5bXbGMmhmUIY9x4dAUGIWgomO771oBQNwJnMQSnUIXhKu6sgzpBRXTlvb8Q==}
 
   bindings@1.5.0:
     resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
@@ -22129,6 +22167,10 @@ packages:
 
   commander@4.1.1:
     resolution: {integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==}
+    engines: {node: '>= 6'}
+
+  commander@5.1.0:
+    resolution: {integrity: sha512-P0CysNDQ7rtVw4QIQtm+MRxV66vKFSvlsQvGYXZWR3qFU0jlMKHZZZgw8e+8DSah4UDKMqnknRDQz+xuQXQ/Zg==}
     engines: {node: '>= 6'}
 
   commander@7.2.0:
@@ -24185,6 +24227,10 @@ packages:
   find-pkg@2.0.0:
     resolution: {integrity: sha512-WgZ+nKbELDa6N3i/9nrHeNznm+lY3z4YfhDDWgW+5P0pdmMj26bxaxU11ookgY3NyP9GC7HvZ9etp0jRFqGEeQ==}
     engines: {node: '>=8'}
+
+  find-process@1.4.7:
+    resolution: {integrity: sha512-/U4CYp1214Xrp3u3Fqr9yNynUrr5Le4y0SsJh2lMDDSbpwYSz3M2SMWQC+wqcx79cN8PQtHQIL8KnuY9M66fdg==}
+    hasBin: true
 
   find-root@1.1.0:
     resolution: {integrity: sha512-NKfW6bec6GfKc0SGx1e07QZY9PE99u0Bft/0rzSD5k3sO/vwkVUpDUKVm5Gpp5Ue3YfShPFTX2070tDs5kB9Ng==}
@@ -28958,6 +29004,9 @@ packages:
   race-as-promised@0.0.2:
     resolution: {integrity: sha512-7BLWiZMSVJDxMTT/QUuEEdd/f/pYDkusGvU0p3NUCDAc6HSlhPpvRS42/GmK79p3Kw4aDA+l+sD8wNpxQdOYTQ==}
 
+  raf-schd@4.0.3:
+    resolution: {integrity: sha512-tQkJl2GRWh83ui2DiPTJz9wEiMN20syf+5oKfB03yYP7ioZcJwsIK8FjrtLwH1m7C7e+Tt2yYBlrOpdT+dyeIQ==}
+
   raf@3.4.1:
     resolution: {integrity: sha512-Sq4CW4QhwOHE8ucn6J34MqtZCeWFP2aQSmrlroYgqAV1PjStIhJXxYuTgUIfkEk7zTLjmIjLmU5q+fbD1NnOJA==}
 
@@ -31244,8 +31293,9 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  ua-parser-js@1.0.35:
-    resolution: {integrity: sha512-fKnGuqmTBnIE+/KXSzCn4db8RTigUzw1AN0DmdU6hJovUTbYJKyqj+8Mt1c4VfRDnOVJnENmfYkIPZ946UrSAA==}
+  ua-parser-js@1.0.39:
+    resolution: {integrity: sha512-k24RCVWlEcjkdOxYmVJgeD/0a1TiSpqLg+ZalVGV9lsnr4yqu0w7tX/x2xX6G4zpkgQnRf89lxuZ1wsbjXM8lw==}
+    hasBin: true
 
   uberproto@1.2.0:
     resolution: {integrity: sha512-pGtPAQmLwh+R9w81WVHzui1FfedpQWQpiaIIfPCwhtsBez4q6DYbJFfyXPVHPUTNFnedAvNEnkoFiLuhXIR94w==}
@@ -32999,6 +33049,12 @@ snapshots:
       json-schema: 0.4.0
       jsonpointer: 5.0.1
       leven: 3.1.0
+
+  '@atlaskit/pragmatic-drag-and-drop@1.3.1':
+    dependencies:
+      '@babel/runtime': 7.24.5
+      bind-event-listener: 3.0.0
+      raf-schd: 4.0.3
 
   '@automerge/automerge-repo-network-broadcastchannel@1.1.12(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.6.1)(typescript@5.6.2)':
     dependencies:
@@ -43943,7 +43999,7 @@ snapshots:
 
   '@types/trusted-types@2.0.2': {}
 
-  '@types/ua-parser-js@0.7.36': {}
+  '@types/ua-parser-js@0.7.39': {}
 
   '@types/uniq@0.0.27': {}
 
@@ -45031,8 +45087,8 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1:
-    dependencies:
+  ajv-formats@2.1.1(ajv@8.12.0):
+    optionalDependencies:
       ajv: 8.12.0
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -45612,6 +45668,8 @@ snapshots:
       chainsaw: 0.1.0
 
   binaryextensions@2.3.0: {}
+
+  bind-event-listener@3.0.0: {}
 
   bindings@1.5.0:
     dependencies:
@@ -46480,6 +46538,8 @@ snapshots:
 
   commander@4.1.1: {}
 
+  commander@5.1.0: {}
+
   commander@7.2.0: {}
 
   commander@9.3.0: {}
@@ -46547,7 +46607,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -48949,6 +49009,14 @@ snapshots:
   find-pkg@2.0.0:
     dependencies:
       find-file-up: 2.0.1
+
+  find-process@1.4.7:
+    dependencies:
+      chalk: 4.1.2
+      commander: 5.1.0
+      debug: 4.3.7(supports-color@5.5.0)
+    transitivePeerDependencies:
+      - supports-color
 
   find-root@1.1.0: {}
 
@@ -54739,6 +54807,8 @@ snapshots:
 
   race-as-promised@0.0.2: {}
 
+  raf-schd@4.0.3: {}
+
   raf@3.4.1:
     dependencies:
       performance-now: 2.1.0
@@ -55959,7 +56029,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       ajv-keywords: 5.1.0(ajv@8.12.0)
 
   scroll@3.0.1: {}
@@ -57656,7 +57726,7 @@ snapshots:
 
   typescript@5.6.2: {}
 
-  ua-parser-js@1.0.35: {}
+  ua-parser-js@1.0.39: {}
 
   uberproto@1.2.0: {}
 

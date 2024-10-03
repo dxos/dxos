@@ -51,6 +51,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
@@ -59,10 +60,12 @@
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-grid": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "@radix-ui/react-context": "^1.0.0"
+    "@radix-ui/react-context": "^1.0.0",
+    "immer": "^10.1.1"
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",

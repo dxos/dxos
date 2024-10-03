@@ -271,7 +271,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this.get();
   }
 
-  @trace.info()
   get default(): Space {
     invariant(this._defaultSpaceId, 'Default space ID not set.');
     const space = this.get().find((space) => space.id === this._defaultSpaceId);
