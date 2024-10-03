@@ -138,7 +138,8 @@
     "jwt-decode": "^4.0.0",
     "lodash.get": "^4.4.2",
     "lodash.isequal": "^4.5.0",
-    "lodash.isequalwith": "^4.4.0"
+    "lodash.isequalwith": "^4.4.0",
+    "ua-parser-js": "^1.0.39"
   },
   "devDependencies": {
     "@dxos/automerge": "workspace:*",
@@ -148,6 +149,7 @@
     "@types/lodash.isequal": "^4.5.0",
     "@types/lodash.isequalwith": "^4.4.0",
     "@types/node": "^22.6.1",
+    "@types/ua-parser-js": "^0.7.39",
     "fast-check": "^3.19.0",
     "source-map-support": "^0.5.12"
   },
