@@ -8,7 +8,7 @@
   "author": "DXOS.org",
   "imports": {
     "#hypercore-crypto": {
-      "workerd": "./hypercore-crypto-stub.js",
+      "workerd": "./hypercore-crypto-stub.mjs",
       "default": "hypercore-crypto"
     }
   },
