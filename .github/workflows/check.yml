@@ -38,7 +38,7 @@ jobs:
   test:
     strategy:
       matrix:
-        node-version: ["18.20.1", "20.12.1", "21.7.2"]
+        node-version: ['18.20.1', '20.12.1', '21.7.2']
     runs-on: ubuntu-latest
     steps:
       - name: Setup tmate session
@@ -50,8 +50,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: '0'
+          fetch-depth: 0
           lfs: true
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -59,25 +63,26 @@ jobs:
           node-version: ${{ matrix.node-version }}
           stop-agents-after: test
 
-      - name: Test
+      - name: Test Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: pnpm exec nx affected -t test --coverage
+
+      - name: Test All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        run: pnpm exec nx run-many -t test --coverage
 
       - uses: codecov/codecov-action@v4
         if: ${{ matrix.node-version == '20.12.1' }}
         with:
           directory: ./coverage
           fail_ci_if_error: true
+          handle_no_reports_found: true
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
-      - name: Send failure report
-        run: ./.github/scripts/send-test-report.sh $GITHUB_JOB failure
-        if: ${{ github.event_name == 'schedule' && failure() }}
-
-      - name: Send success report
-        run: ./.github/scripts/send-test-report.sh $GITHUB_JOB success
-        if: ${{ github.event_name == 'schedule' && success() }}
-
+      - name: Send test report
+        uses: ./.github/actions/test-report
+        if: ${{ github.event_name == 'schedule' }}
 
   check:
     runs-on: ubuntu-latest
@@ -85,8 +90,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: '0'
+          fetch-depth: 0
           lfs: true
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -94,8 +103,13 @@ jobs:
           node-version: 20.12.1
           stop-agents-after: build
 
-      - name: Check
+      - name: Check Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: pnpm exec nx affected -t lint build
+
+      - name: Check All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        run: pnpm exec nx run-many -t lint build
 
   e2e:
     runs-on: ubuntu-latest
@@ -108,8 +122,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: '0'
+          fetch-depth: 0
           lfs: true
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -122,16 +140,17 @@ jobs:
       - name: Bundle
         run: pnpm exec nx affected -t bundle --parallel=2
 
-      - name: Test
+      - name: Test Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: pnpm exec nx affected -t e2e --browser=all --parallel=1
 
-      - name: Send failure report
-        run: ./.github/scripts/send-test-report.sh $GITHUB_JOB failure
-        if: ${{ github.event_name == 'schedule' && failure() }}
+      - name: Test All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        run: pnpm exec nx run-many -t e2e --browser=all --parallel=1
 
-      - name: Send success report
-        run: ./.github/scripts/send-test-report.sh $GITHUB_JOB success
-        if: ${{ github.event_name == 'schedule' && success() }}
+      - name: Send test report
+        uses: ./.github/actions/test-report
+        if: ${{ github.event_name == 'schedule' }}
 
   dead-links:
     runs-on: ubuntu-latest
