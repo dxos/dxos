@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Code, type IconProps } from '@phosphor-icons/react';
 // @ts-ignore
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React from 'react';
@@ -51,7 +50,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
         records: {
           [ScriptType.typename]: {
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
-            icon: (props: IconProps) => <Code {...props} />,
+            icon: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (script: ScriptType) => loadObjectReferences(script, (script) => [script.source]),
           },
