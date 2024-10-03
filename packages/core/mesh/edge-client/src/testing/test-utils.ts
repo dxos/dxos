@@ -40,7 +40,7 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
       const { request, requestPayload } = await decodeRequest(params, data);
       if (params?.messageHandler) {
         const responsePayload = await params.messageHandler(requestPayload);
-        if (responsePayload) {
+        if (responsePayload && connection) {
           sendResponseMessage(request, responsePayload);
         }
       }
