@@ -21,6 +21,7 @@ const SIGNAL_KEEPALIVE_INTERVAL = 5_000;
 export type MessageListener = (message: Message) => void | Promise<void>;
 
 export interface EdgeConnection extends Required<Lifecycle> {
+  connected: Event;
   reconnect: Event;
 
   get info(): any;

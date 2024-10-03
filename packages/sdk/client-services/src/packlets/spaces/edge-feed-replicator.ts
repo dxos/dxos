@@ -5,15 +5,19 @@
 import { decode as decodeCbor, encode as encodeCbor } from 'cbor-x';
 
 import { Event, Mutex, scheduleMicroTask } from '@dxos/async';
-import { Resource, type Context } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
+import { EdgeConnectionClosedError, EdgeIdentityChangedError } from '@dxos/edge-client';
 import { type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeService } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
-import { MessageSchema as RouterMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import {
+  MessageSchema as RouterMessageSchema,
+  type Message as RouterMessage,
+} from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import type { FeedBlock, ProtocolMessage } from '@dxos/protocols/feed-replication';
 import { ComplexMap, arrayToBuffer, bufferToArray, defaultMap, rangeFromTo } from '@dxos/util';
 
@@ -48,7 +52,7 @@ export class EdgeFeedReplicator extends Resource {
   protected override async _open(): Promise<void> {
     // TODO: handle reconnects
     this._ctx.onDispose(
-      this._messenger.addListener(async (message) => {
+      this._messenger.addListener((message: RouterMessage) => {
         if (!message.serviceId) {
           return;
         }
@@ -69,16 +73,36 @@ export class EdgeFeedReplicator extends Resource {
       }),
     );
 
-    this._connected = true;
-    this._connectionCtx = this._ctx.derive();
-    for (const feed of this._feeds.values()) {
-      await this._replicateFeed(feed);
-    }
+    this._messenger.connected.on(this._ctx, () => {
+      this._connected = true;
+      const connectionCtx = new Context({
+        onError: async (err: any) => {
+          if (connectionCtx !== this._connectionCtx) {
+            return;
+          }
+          if (err instanceof EdgeIdentityChangedError || err instanceof EdgeConnectionClosedError) {
+            log('resetting on reconnect');
+            await this._resetConnection();
+          } else {
+            this._ctx.raise(err);
+          }
+        },
+      });
+      this._connectionCtx = connectionCtx;
+      log('connection context created');
+      scheduleMicroTask(connectionCtx, async () => {
+        for (const feed of this._feeds.values()) {
+          await this._replicateFeed(connectionCtx, feed);
+        }
+      });
+    });
   }
 
   protected override async _close(): Promise<void> {
-    this._connected = false;
+    await this._resetConnection();
+  }
 
+  private async _resetConnection() {
     this._connected = false;
     await this._connectionCtx?.dispose();
     this._connectionCtx = undefined;
@@ -89,8 +113,8 @@ export class EdgeFeedReplicator extends Resource {
     log.info('addFeed', { key: feed.key });
     this._feeds.set(feed.key, feed);
 
-    if (this._connected) {
-      await this._replicateFeed(feed);
+    if (this._connected && this._connectionCtx) {
+      await this._replicateFeed(this._connectionCtx, feed);
     }
   }
 
@@ -98,20 +122,23 @@ export class EdgeFeedReplicator extends Resource {
     return defaultMap(this._pushMutex, key, () => new Mutex());
   }
 
-  private async _replicateFeed(feed: FeedWrapper<any>) {
-    invariant(this._connectionCtx);
-
+  private async _replicateFeed(ctx: Context, feed: FeedWrapper<any>) {
     await this._sendMessage({
       type: 'get-metadata',
       feedKey: feed.key.toHex(),
     });
 
-    Event.wrap(feed.core as any, 'append').on(this._connectionCtx, async () => {
+    Event.wrap(feed.core as any, 'append').on(ctx, async () => {
       await this._pushBlocksIfNeeded(feed);
     });
   }
 
   private async _sendMessage(message: ProtocolMessage) {
+    if (!this._connectionCtx) {
+      log.info('message dropped because connection was disposed');
+      return;
+    }
+
     const logPayload =
       message.type === 'data' ? { feedKey: message.feedKey, blocks: message.blocks.map((b) => b.index) } : { message };
     log.info('sending message', logPayload);
@@ -132,7 +159,11 @@ export class EdgeFeedReplicator extends Resource {
   }
 
   private _onMessage(message: ProtocolMessage) {
-    scheduleMicroTask(this._ctx, async () => {
+    if (!this._connectionCtx) {
+      log.warn('received message after connection context was disposed');
+      return;
+    }
+    scheduleMicroTask(this._connectionCtx, async () => {
       switch (message.type) {
         case 'metadata': {
           log.info('received metadata', { message });
@@ -200,11 +231,16 @@ export class EdgeFeedReplicator extends Resource {
       }),
     );
 
-    await this._sendMessage({
-      type: 'data',
-      feedKey: feed.key.toHex(),
-      blocks,
-    });
+    try {
+      await this._sendMessage({
+        type: 'data',
+        feedKey: feed.key.toHex(),
+        blocks,
+      });
+    } catch (err) {
+      log.catch(err);
+      throw err;
+    }
     this._remoteLength.set(feed.key, to);
   }
 
@@ -227,7 +263,7 @@ export class EdgeFeedReplicator extends Resource {
   }
 
   private async _pushBlocksIfNeeded(feed: FeedWrapper<any>) {
-    using _guard = await this._getPushMutex(feed.key).acquire();
+    using _ = await this._getPushMutex(feed.key).acquire();
 
     if (!this._remoteLength.has(feed.key)) {
       log('blocks not pushed because remote length is unknown');
