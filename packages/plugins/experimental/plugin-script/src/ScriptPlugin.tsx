@@ -51,7 +51,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
         records: {
           [ScriptType.typename]: {
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
-            icon: (props: IconProps) => <Code {...props} />,
+            icon: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (script: ScriptType) => loadObjectReferences(script, (script) => [script.source]),
           },
