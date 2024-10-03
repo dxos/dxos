@@ -60,9 +60,9 @@ export const initialize = (
   }
 };
 
-export const createSheet = ({ title, cells, ...size }: CreateSheetOptions = {}): SheetType => {
+export const createSheet = ({ name, cells, ...size }: CreateSheetOptions = {}): SheetType => {
   const sheet = create(SheetType, {
-    title,
+    name,
     cells: {},
     rows: [],
     columns: [],

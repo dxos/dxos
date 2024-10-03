@@ -102,7 +102,7 @@ export const RowColumnMeta = S.Struct({
 // TODO(wittjosiah): Migrate typename to remove `Type` suffix.
 // TODO(wittjosiah): Rename title to name to align with other schemas.
 export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType', version: '0.1.0' })({
-  title: S.optional(S.String),
+  name: S.optional(S.String),
 
   // Sparse map of cells referenced by index.
   cells: S.mutable(S.Record(S.String, S.mutable(CellValue))),
@@ -132,7 +132,6 @@ export type SheetSize = {
 };
 
 export type CreateSheetOptions = {
-  // TODO(burdon): Standardize as name.
-  title?: string;
+  name?: string;
   cells?: Record<string, CellValue>;
 } & Partial<SheetSize>;

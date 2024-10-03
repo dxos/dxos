@@ -68,7 +68,7 @@ const Editor = ({ text }: EditorProps) => {
 const Grid = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
-  const sheet = useTestSheet(space, graph, { title: SHEET_NAME });
+  const sheet = useTestSheet(space, graph, { name: SHEET_NAME });
   const model = useSheetModel(graph, sheet);
   useEffect(() => {
     if (model) {

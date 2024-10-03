@@ -48,7 +48,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       metadata: {
         records: {
           [SheetType.typename]: {
-            label: (object: any) => (object instanceof SheetType ? object.title : undefined),
+            label: (object: any) => (object instanceof SheetType ? object.name : undefined),
             placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
             icon: 'ph--grid-nine--regular',
           },
