@@ -101,6 +101,14 @@ export class DxGrid extends LitElement {
   constructor() {
     super();
     this.addEventListener('dx-axis-resize-internal', this.handleAxisResizeInternal as EventListener);
+    this.addEventListener('wheel', this.handleWheel);
+    this.addEventListener('pointerdown', this.handlePointerDown);
+    this.addEventListener('pointermove', this.handlePointerMove);
+    this.addEventListener('pointerup', this.handlePointerUp);
+    this.addEventListener('pointerleave', this.handlePointerUp);
+    this.addEventListener('focus', this.handleFocus, { capture: true });
+    this.addEventListener('blur', this.handleBlur, { capture: true });
+    this.addEventListener('keydown', this.handleKeydown);
   }
 
   @property({ type: String })
@@ -675,9 +683,6 @@ export class DxGrid extends LitElement {
       data-grid=${this.gridId}
       data-grid-mode=${this.mode}
       ?data-grid-select=${selectVisible}
-      @focus=${this.handleFocus}
-      @blur=${this.handleBlur}
-      @keydown=${this.handleKeydown}
     >
       <div role="none" class="dx-grid__corner"></div>
       <div role="none" class="dx-grid__columnheader">
