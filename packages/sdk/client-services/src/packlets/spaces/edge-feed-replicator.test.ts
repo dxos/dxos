@@ -3,6 +3,7 @@
 //
 
 import { decode as decodeCbor, encode as encodeCbor } from 'cbor-x';
+import { getRandomPort } from 'get-port-please';
 import { describe, test, onTestFinished, vi, expect } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
@@ -24,7 +25,7 @@ import { EdgeFeedReplicator } from './edge-feed-replicator';
 
 describe('EdgeFeedReplicator', () => {
   test('requests metadata after connection is open', async () => {
-    const { endpoint, admitConnection, messageSink } = await createEdge(8005);
+    const { endpoint, admitConnection, messageSink } = await createEdge();
     const { messenger, sendSpy } = await createClient(endpoint);
 
     await attachReplicator(messenger);
@@ -41,7 +42,7 @@ describe('EdgeFeedReplicator', () => {
   });
 
   test('sends a block', async () => {
-    const { endpoint, admitConnection, messageSink } = await createEdge(8006);
+    const { endpoint, admitConnection, messageSink } = await createEdge();
     const { messenger } = await createClient(endpoint);
 
     const { feed } = await attachReplicator(messenger);
@@ -54,7 +55,7 @@ describe('EdgeFeedReplicator', () => {
   });
 
   test('re-requests metadata on reconnect', async () => {
-    const { endpoint, admitConnection, messageSink } = await createEdge(8007);
+    const { endpoint, admitConnection, messageSink } = await createEdge();
     const { messenger } = await createClient(endpoint);
 
     await attachReplicator(messenger);
@@ -70,7 +71,7 @@ describe('EdgeFeedReplicator', () => {
   });
 
   test('recovers after query sending failure during identity change', async () => {
-    const { endpoint, admitConnection, messageSink } = await createEdge(8008);
+    const { endpoint, admitConnection, messageSink } = await createEdge();
     const { messenger, sendSpy } = await createClient(endpoint);
 
     await attachReplicator(messenger);
@@ -89,7 +90,7 @@ describe('EdgeFeedReplicator', () => {
   });
 
   test('recovers after response sending failure during identity change', async () => {
-    const { endpoint, admitConnection, messageSink, sendResponseMessage } = await createEdge(8009);
+    const { endpoint, admitConnection, messageSink, sendResponseMessage } = await createEdge();
     const { messenger, sendSpy } = await createClient(endpoint);
 
     const { feed } = await attachReplicator(messenger);
@@ -113,7 +114,7 @@ describe('EdgeFeedReplicator', () => {
   });
 
   test('propagates errors unrelated to reconnect', async () => {
-    const { endpoint, admitConnection } = await createEdge(8009);
+    const { endpoint, admitConnection } = await createEdge();
     const { messenger, sendSpy } = await createClient(endpoint);
 
     const { replicator } = await attachReplicator(messenger, { skipOpen: true });
@@ -132,7 +133,7 @@ describe('EdgeFeedReplicator', () => {
   });
 
   test('identity update before connected', async () => {
-    const { endpoint, admitConnection, messageSink } = await createEdge(8010);
+    const { endpoint, admitConnection, messageSink } = await createEdge();
     const { messenger } = await createClient(endpoint);
 
     await attachReplicator(messenger);
@@ -145,7 +146,7 @@ describe('EdgeFeedReplicator', () => {
   });
 
   test('block appended during reconnect', async () => {
-    const { endpoint, admitConnection, feedLength } = await createEdge(8010);
+    const { endpoint, admitConnection, feedLength } = await createEdge();
     const { messenger } = await createClient(endpoint);
 
     const { feed } = await attachReplicator(messenger);
@@ -162,7 +163,7 @@ describe('EdgeFeedReplicator', () => {
   });
 
   test('reconnect during block append', async () => {
-    const { endpoint, admitConnection, feedLength } = await createEdge(8011);
+    const { endpoint, admitConnection, feedLength } = await createEdge();
     const { messenger } = await createClient(endpoint);
 
     const { feed } = await attachReplicator(messenger);
@@ -175,7 +176,8 @@ describe('EdgeFeedReplicator', () => {
     await expect.poll(() => feedLength()).toEqual(1);
   });
 
-  const createEdge = async (port: number) => {
+  const createEdge = async () => {
+    const port = await getRandomPort('127.0.0.1');
     let lastBlockIndex = -1;
     const admitConnection = new Trigger();
     const { cleanup, endpoint, messageSink, sendResponseMessage } = await createTestEdgeWsServer(port, {
