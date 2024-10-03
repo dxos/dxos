@@ -6,13 +6,12 @@ import WebSocket from 'isomorphic-ws';
 
 import { Trigger, Event, scheduleTaskInterval, scheduleTask, TriggerState } from '@dxos/async';
 import { Context, LifecycleState, Resource, type Lifecycle } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 import { protocol } from './defs';
-import { WebsocketClosedError } from './errors';
+import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors';
 import { PersistentLifecycle } from './persistent-lifecycle';
 import { type Protocol, toUint8Array } from './protocol';
 
@@ -22,6 +21,7 @@ const SIGNAL_KEEPALIVE_INTERVAL = 5_000;
 export type MessageListener = (message: Message) => void | Promise<void>;
 
 export interface EdgeConnection extends Required<Lifecycle> {
+  connected: Event;
   reconnect: Event;
 
   get info(): any;
@@ -43,7 +43,8 @@ export type MessengerConfig = {
  * Messenger client.
  */
 export class EdgeClient extends Resource implements EdgeConnection {
-  public reconnect = new Event();
+  public readonly reconnect = new Event();
+  public readonly connected = new Event();
   private readonly _persistentLifecycle = new PersistentLifecycle({
     start: async () => this._openWebSocket(),
     stop: async () => this._closeWebSocket(),
@@ -51,7 +52,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
   });
 
   private readonly _listeners = new Set<MessageListener>();
-  private readonly _protocol: Protocol;
   private _ready = new Trigger();
   private _ws?: WebSocket = undefined;
   private _keepaliveCtx?: Context = undefined;
@@ -63,7 +63,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
     private readonly _config: MessengerConfig,
   ) {
     super();
-    this._protocol = this._config.protocol ?? protocol;
   }
 
   // TODO(burdon): Attach logging.
@@ -119,6 +118,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
     this._ws.onopen = () => {
       log('opened', this.info);
       this._ready.wake();
+      this.connected.emit();
     };
     this._ws.onclose = () => {
       log('closed', this.info);
@@ -170,7 +170,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
       return;
     }
     try {
-      this._ready.throw(new WebsocketClosedError());
+      this._ready.throw(this.isOpen ? new EdgeIdentityChangedError() : new EdgeConnectionClosedError());
       this._ready.reset();
       void this._keepaliveCtx?.dispose();
       this._keepaliveCtx = undefined;
@@ -197,10 +197,19 @@ export class EdgeClient extends Resource implements EdgeConnection {
    */
   public async send(message: Message): Promise<void> {
     if (this._ready.state !== TriggerState.RESOLVED) {
+      log('waiting for websocket to become ready');
       await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
     }
-    invariant(this._ws);
-    invariant(!message.source || message.source.peerKey === this._peerKey);
+    if (!this._ws) {
+      throw new EdgeConnectionClosedError();
+    }
+    if (
+      message.source &&
+      (message.source.peerKey !== this._peerKey || message.source.identityKey !== this.identityKey)
+    ) {
+      throw new EdgeIdentityChangedError();
+    }
+
     log('sending...', { peerKey: this._peerKey, payload: protocol.getPayloadType(message) });
     this._ws.send(buf.toBinary(MessageSchema, message));
   }
