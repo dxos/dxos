@@ -15,7 +15,6 @@ import {
 import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
 import { type UnsubscribeCallback } from '@dxos/async';
-import { scheduleTask } from '@dxos/async/src';
 import { invariant } from '@dxos/invariant';
 import { documentId } from '@dxos/react-ui-editor';
 
@@ -55,6 +54,7 @@ export const compute = (options: ComputeOptions = {}): Extension => {
                   if (iter?.value && iter?.value.spec.formula === formula) {
                     builder.add(node.from, node.to, iter.value);
                   } else {
+                    // TODO(burdon): Create ordered list of cells on each decoration run.
                     const cell: CellAddress = { col: node.node.from, row: 0 };
                     invariant(computeNode);
                     computeNode.setValue(cell, formula);
@@ -88,7 +88,7 @@ export const compute = (options: ComputeOptions = {}): Extension => {
           const id = view.state.facet(documentId);
           const computeGraph = view.state.facet(computeGraphFacet);
           if (id && computeGraph) {
-            scheduleTask(async () => {
+            queueMicrotask(async () => {
               computeNode = await computeGraph.getOrCreateNode(id);
               this._subscription = computeNode.update.on(({ type }) => {
                 if (type === 'valuesUpdated') {
