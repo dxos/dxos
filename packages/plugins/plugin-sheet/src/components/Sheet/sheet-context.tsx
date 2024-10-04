@@ -5,10 +5,10 @@
 import React, { type PropsWithChildren, createContext, useContext, useMemo, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type Space } from '@dxos/react-client/echo';
 
 import { createDecorations } from './decorations';
 import { type CellAddress, type CellRange } from '../../defs';
+import { type ComputeGraph } from '../../graph';
 import { useSheetModel, useFormattingModel } from '../../hooks';
 import { type FormattingModel, type SheetModel } from '../../model';
 import { type SheetType } from '../../types';
@@ -45,19 +45,19 @@ export const useSheetContext = (): SheetContextType => {
 };
 
 export type SheetContextProps = {
+  graph: ComputeGraph;
   sheet: SheetType;
-  space: Space;
   readonly?: boolean;
 } & Pick<SheetContextType, 'onInfo'>;
 
 export const SheetContextProvider = ({
   children,
+  graph,
   sheet,
-  space,
   readonly,
   onInfo,
 }: PropsWithChildren<SheetContextProps>) => {
-  const model = useSheetModel(space, sheet, { readonly });
+  const model = useSheetModel(graph, sheet, { readonly });
   const formatting = useFormattingModel(model);
 
   // TODO(Zan): Impl. set range and set cursor that scrolls to that cell or range if it is not visible.

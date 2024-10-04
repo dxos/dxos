@@ -74,6 +74,7 @@ export const defaultTheme: ThemeStyles = {
    */
   '.cm-gutters': {
     background: 'var(--surface-bg)',
+    borderRight: 'none',
   },
   '.cm-gutter': {},
   '.cm-gutter.cm-lineNumbers .cm-gutterElement': {

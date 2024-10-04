@@ -33,9 +33,13 @@ export const ObjectTable = ({ table, role, stickyHeader }: ObjectTableProps) => 
 
   const [schemas, setSchemas] = useState<DynamicSchema[]>([]);
   useEffect(() => {
-    if (space) {
-      void space.db.schema.list().then(setSchemas).catch();
-    }
+    const t = setTimeout(async () => {
+      if (space) {
+        const schemata = await space.db.schema.list();
+        setSchemas(schemata);
+      }
+    });
+    return () => clearTimeout(t);
   }, [showSettings, space]);
 
   const handleClose = useCallback(() => {

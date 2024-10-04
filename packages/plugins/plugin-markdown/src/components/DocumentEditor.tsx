@@ -41,25 +41,28 @@ const DocumentEditor = ({
   const identity = useIdentity();
   const dispatch = useIntentDispatcher();
 
-  const baseExtensions = useMemo(() => {
-    // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
-    // const query = space?.db.query(Filter.schema(DocumentType));
-    // query?.subscribe();
-    return createBaseExtensions({
-      viewMode,
-      settings,
-      document: doc,
-      dispatch,
-      // query,
-    });
-  }, [doc, viewMode, dispatch, settings, settings.folding, settings.numberedHeadings]);
+  // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
+  // TODO(burdon): Unsubscribe.
+  // const query = space?.db.query(Filter.schema(DocumentType));
+  // query?.subscribe();
+  const baseExtensions = useMemo(
+    () =>
+      createBaseExtensions({
+        viewMode,
+        settings,
+        document: doc,
+        dispatch,
+        // query,
+      }),
+    [doc, viewMode, dispatch, settings, settings.folding, settings.numberedHeadings],
+  );
 
-  const providerExtensions = useMemo(
+  const pluginExtensions = useMemo(
     () =>
       extensionProviders.reduce((acc: Extension[], provider) => {
-        const provided = typeof provider === 'function' ? provider({ document: doc }) : provider;
-        if (provided) {
-          acc.push(...provided);
+        const extension = typeof provider === 'function' ? provider({ document: doc }) : provider;
+        if (extension) {
+          acc.push(extension);
         }
         return acc;
       }, []),
@@ -81,10 +84,10 @@ const DocumentEditor = ({
           setFallbackName(doc, text);
         },
       }),
-      providerExtensions,
       baseExtensions,
+      pluginExtensions,
     ],
-    [doc, doc.content, space, baseExtensions, providerExtensions, identity],
+    [baseExtensions, pluginExtensions, doc, doc.content, space, identity],
   );
 
   const initialValue = useMemo(() => doc.content?.content, [doc.content]);
