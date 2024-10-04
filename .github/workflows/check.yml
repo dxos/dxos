@@ -83,7 +83,7 @@ jobs:
 
       - name: Send test report
         uses: ./.github/actions/test-report
-        if: ${{ github.event_name == 'schedule' || steps.extract_branch.outputs.branch == 'jdw/test-report' }}
+        if: ${{ github.event_name == 'schedule' }}
 
   check:
     runs-on: ubuntu-latest
