@@ -90,11 +90,12 @@ export const compute = (options: ComputeOptions = {}): Extension => {
         constructor(view: EditorView) {
           const computeNode = view.state.facet(computeNodeFacet);
           if (computeNode) {
-            this._subscription = computeNode.graph.update.on((e) => {
-              console.log('!!!', e);
-              view.dispatch({
-                effects: updateAllDecorations.of(),
-              });
+            this._subscription = computeNode.update.on(({ type }) => {
+              if (type === 'valuesUpdated') {
+                view.dispatch({
+                  effects: updateAllDecorations.of(),
+                });
+              }
             });
           }
         }
