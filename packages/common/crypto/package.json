@@ -32,7 +32,7 @@
   "files": [
     "dist",
     "src",
-    "./hypercore-crypto-stub.js"
+    "./hypercore-crypto-stub.mjs"
   ],
   "dependencies": {
     "@dxos/invariant": "workspace:*",
