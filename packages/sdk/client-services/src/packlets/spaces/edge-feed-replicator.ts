@@ -11,7 +11,7 @@ import { EdgeConnectionClosedError, EdgeIdentityChangedError } from '@dxos/edge-
 import { type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { log, logInfo } from '@dxos/log';
 import { EdgeService } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import {
@@ -28,7 +28,10 @@ export type EdgeFeedReplicatorParams = {
 
 export class EdgeFeedReplicator extends Resource {
   private readonly _messenger: EdgeConnection;
+
+  @logInfo
   private readonly _spaceId: SpaceId;
+
   private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<any>>(PublicKey.hash);
 
   private _connectionCtx?: Context = undefined;
@@ -50,6 +53,7 @@ export class EdgeFeedReplicator extends Resource {
   }
 
   protected override async _open(): Promise<void> {
+    log('open');
     // TODO: handle reconnects
     this._ctx.onDispose(
       this._messenger.addListener((message: RouterMessage) => {
@@ -68,7 +72,7 @@ export class EdgeFeedReplicator extends Resource {
         }
 
         const payload = decodeCbor(message.payload!.value) as ProtocolMessage;
-        log.info('receive', { from: message.source, feedKey: payload.feedKey, type: payload.type });
+        log('receive', { from: message.source, feedKey: payload.feedKey, type: payload.type });
         this._onMessage(payload);
       }),
     );
@@ -84,6 +88,7 @@ export class EdgeFeedReplicator extends Resource {
   }
 
   protected override async _close(): Promise<void> {
+    log('close');
     await this._resetConnection();
   }
 
@@ -100,6 +105,7 @@ export class EdgeFeedReplicator extends Resource {
   }
 
   private async _resetConnection() {
+    log('resetConnection');
     this._connected = false;
     await this._connectionCtx?.dispose();
     this._connectionCtx = undefined;
@@ -107,7 +113,7 @@ export class EdgeFeedReplicator extends Resource {
   }
 
   async addFeed(feed: FeedWrapper<any>) {
-    log.info('addFeed', { key: feed.key });
+    log.info('addFeed', { key: feed.key, connected: this._connected, hasConnectionCtx: !!this._connectionCtx });
     this._feeds.set(feed.key, feed);
 
     if (this._connected && this._connectionCtx) {
@@ -120,6 +126,7 @@ export class EdgeFeedReplicator extends Resource {
   }
 
   private async _replicateFeed(ctx: Context, feed: FeedWrapper<any>) {
+    log('replicateFeed', { key: feed.key });
     await this._sendMessage({
       type: 'get-metadata',
       feedKey: feed.key.toHex(),
@@ -143,6 +150,7 @@ export class EdgeFeedReplicator extends Resource {
     invariant(message.feedKey);
     const payloadValue = bufferToArray(encodeCbor(message));
 
+    log('send', { type: message.type });
     await this._messenger.send(
       buf.create(RouterMessageSchema, {
         source: {
