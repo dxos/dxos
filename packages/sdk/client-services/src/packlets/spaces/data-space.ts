@@ -323,6 +323,7 @@ export class DataSpace {
     this._state = SpaceState.SPACE_INITIALIZING;
     log('new state', { state: SpaceState[this._state] });
 
+    log('initializing control pipeline');
     await this._initializeAndReadControlPipeline();
 
     // Allow other tasks to run before loading the data pipeline.
@@ -330,10 +331,13 @@ export class DataSpace {
 
     const ready = this.stateUpdate.waitForCondition(() => this._state === SpaceState.SPACE_READY);
 
+    log('initializing automerge root');
     this._automergeSpaceState.startProcessingRootDocs();
 
     // TODO(dmaretskyi): Change so `initializeDataPipeline` doesn't wait for the space to be READY, but rather any state with a valid root.
+    log('waiting for space to be ready');
     await ready;
+    log('space is ready');
   }
 
   private async _enterReadyState() {
@@ -350,6 +354,7 @@ export class DataSpace {
   private async _initializeAndReadControlPipeline() {
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
       ctx: this._ctx,
+      timeout: 10_000,
       breakOnStall: false,
     });
 
@@ -413,8 +418,16 @@ export class DataSpace {
     }
 
     if (credentials.length > 0) {
-      // Never times out
-      await this.notarizationPlugin.notarize({ ctx: this._ctx, credentials, timeout: 0 });
+      try {
+        log('will notarize credentials for feed admission', { count: credentials.length });
+        // Never times out
+        await this.notarizationPlugin.notarize({ ctx: this._ctx, credentials, timeout: 0 });
+
+        log('credentials notarized');
+      } catch (err) {
+        log.error('error notarizing credentials for feed admission', err);
+        throw err;
+      }
 
       // Set this after credentials are notarized so that on failure we will retry.
       await this._metadataStore.setWritableFeedKeys(this.key, this.inner.controlFeedKey!, this.inner.dataFeedKey!);
