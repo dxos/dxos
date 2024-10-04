@@ -74,8 +74,7 @@ EdgeFunctionPlugin.implementedFunctions = {
       // Binding
       { argumentType: FunctionArgumentType.STRING },
 
-      // Remote function arguments (currently supporting up to 9).
-      { argumentType: FunctionArgumentType.ANY, optionalArg: true },
+      // Remote function arguments (currently supporting up to 8).
       { argumentType: FunctionArgumentType.ANY, optionalArg: true },
       { argumentType: FunctionArgumentType.ANY, optionalArg: true },
       { argumentType: FunctionArgumentType.ANY, optionalArg: true },

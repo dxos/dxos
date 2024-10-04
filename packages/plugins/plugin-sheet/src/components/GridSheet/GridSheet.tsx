@@ -4,7 +4,6 @@
 
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { type Space } from '@dxos/client/echo';
 import {
   type DxGridElement,
   Grid,
@@ -15,6 +14,7 @@ import {
 
 import { dxGridCellIndexToSheetCellAddress, useSheetModelDxGridProps } from './util';
 import { rangeToA1Notation, type CellRange } from '../../defs';
+import { type ComputeGraph } from '../../graph';
 import { useFormattingModel, useSheetModel, type UseSheetModelOptions } from '../../hooks';
 import { type SheetModel, type FormattingModel } from '../../model';
 import { type SheetType } from '../../types';
@@ -136,10 +136,10 @@ const GridSheetImpl = ({
   );
 };
 
-export type GridSheetProps = { space?: Space; sheet?: SheetType } & UseSheetModelOptions;
+export type GridSheetProps = { graph?: ComputeGraph; sheet?: SheetType } & UseSheetModelOptions;
 
-export const GridSheet = ({ space, sheet, ...options }: GridSheetProps) => {
-  const model = useSheetModel(space, sheet, options);
+export const GridSheet = ({ graph, sheet, ...options }: GridSheetProps) => {
+  const model = useSheetModel(graph, sheet, options);
   const formatting = useFormattingModel(model);
   if (!model || !formatting) {
     return null;

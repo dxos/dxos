@@ -44,7 +44,9 @@ export type AxisMeta = {
   resizeable?: boolean;
 };
 
-export type DxGridProps = Partial<Pick<DxGrid, 'initialCells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault'>>;
+export type DxGridProps = Partial<
+  Pick<DxGrid, 'initialCells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault' | 'limitRows' | 'limitColumns'>
+>;
 
 export class DxAxisResize extends Event {
   public readonly axis: DxGridAxis;

@@ -5,7 +5,15 @@
 import { randomBytes } from '@dxos/crypto';
 import { create } from '@dxos/echo-schema';
 
-import { type CellAddress, type CellRange, DEFAULT_COLUMNS, DEFAULT_ROWS, MAX_COLUMNS, MAX_ROWS } from './types';
+import {
+  addressFromA1Notation,
+  type CellAddress,
+  type CellRange,
+  DEFAULT_COLUMNS,
+  DEFAULT_ROWS,
+  MAX_COLUMNS,
+  MAX_ROWS,
+} from './types';
 import { type CreateSheetOptions, type SheetSize, SheetType } from '../types';
 
 // TODO(burdon): Factor out from dxos/protocols to new common package.
@@ -52,9 +60,9 @@ export const initialize = (
   }
 };
 
-export const createSheet = ({ title, ...size }: CreateSheetOptions = {}): SheetType => {
+export const createSheet = ({ name, cells, ...size }: CreateSheetOptions = {}): SheetType => {
   const sheet = create(SheetType, {
-    title,
+    name,
     cells: {},
     rows: [],
     columns: [],
@@ -64,6 +72,14 @@ export const createSheet = ({ title, ...size }: CreateSheetOptions = {}): SheetT
   });
 
   initialize(sheet, size);
+
+  if (cells) {
+    Object.entries(cells).forEach(([key, { value }]) => {
+      const idx = addressToIndex(sheet, addressFromA1Notation(key));
+      sheet.cells[idx] = { value };
+    });
+  }
+
   return sheet;
 };
 

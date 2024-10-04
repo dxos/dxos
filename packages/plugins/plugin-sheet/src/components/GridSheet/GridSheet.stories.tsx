@@ -10,7 +10,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { GridSheet } from './GridSheet';
 import { useComputeGraph } from '../../hooks';
-import { useTestSheet, withGraphDecorator } from '../../testing';
+import { useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { SheetType } from '../../types';
 
 export default {
@@ -18,7 +18,7 @@ export default {
   component: GridSheet,
   decorators: [
     withClientProvider({ types: [SheetType], createSpace: true }),
-    withGraphDecorator,
+    withComputeGraphDecorator(),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
   ],
@@ -32,5 +32,5 @@ export const Basic = () => {
     return null;
   }
 
-  return <GridSheet space={space} sheet={sheet} />;
+  return <GridSheet graph={graph} sheet={sheet} />;
 };

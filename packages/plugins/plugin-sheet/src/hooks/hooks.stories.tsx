@@ -14,14 +14,14 @@ import { withTheme } from '@dxos/storybook-utils';
 import { ComputeGraphContextProvider } from '../components';
 import { createSheet } from '../defs';
 import { useComputeGraph, useSheetModel } from '../hooks';
-import { withGraphDecorator } from '../testing';
+import { withComputeGraphDecorator } from '../testing';
 import { SheetType } from '../types';
 
 const Story = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
   const [sheet, setSheet] = useState<SheetType>();
-  const model = useSheetModel(space, sheet);
+  const model = useSheetModel(graph, sheet);
   useEffect(() => {
     if (space) {
       const sheet = space.db.add(createSheet());
@@ -41,7 +41,7 @@ export default {
   component: ComputeGraphContextProvider,
   decorators: [
     withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
-    withGraphDecorator,
+    withComputeGraphDecorator(),
     withTheme,
   ],
   render: (args: any) => <Story {...args} />,
