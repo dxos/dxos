@@ -41,6 +41,16 @@ describe('EdgeFeedReplicator', () => {
     expect(messageSink[0].type).toEqual('get-metadata');
   });
 
+  test('replicates if added to a connected client', async () => {
+    const { endpoint, admitConnection, messageSink } = await createEdge();
+    const { messenger } = await createClient(endpoint);
+    admitConnection.wake();
+    await expect.poll(() => messenger.isConnected).toBeTruthy();
+
+    await attachReplicator(messenger);
+    await expect.poll(() => messageSink.length).toEqual(1);
+  });
+
   test('sends a block', async () => {
     const { endpoint, admitConnection, messageSink } = await createEdge();
     const { messenger } = await createClient(endpoint);
