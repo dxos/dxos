@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type InterpreterValue } from 'hyperformula/typings/interpreter/InterpreterValue';
 import { type ProcedureAst } from 'hyperformula/typings/parser';
@@ -22,6 +23,11 @@ import { CellError, ErrorType, EmptyValue, FunctionPlugin, type HyperFormula } f
 // TODO(burdon): Create wrapper.
 export type AsyncFunction = (...args: any) => Promise<InterpreterValue>;
 
+export type FunctionUpdateEvent = {
+  name: string;
+  cell: SimpleCellAddress;
+};
+
 export type FunctionOptions = {
   ttl?: number;
 };
@@ -30,6 +36,7 @@ export type FunctionContextOptions = {
   defaultTtl: number;
   recalculationDelay: number;
   remoteFunctionUrl: string;
+  onUpdate?: (update: FunctionUpdateEvent) => void;
 };
 
 export const defaultFunctionContextOptions: FunctionContextOptions = {
@@ -66,24 +73,24 @@ export class FunctionContext {
   private _invocations: Record<string, number> = {};
 
   private readonly _options: FunctionContextOptions;
-  private readonly _onUpdate: () => void;
+
+  // Debounced update handler.
+  private readonly _onUpdate: (update: FunctionUpdateEvent) => void;
 
   constructor(
     private readonly _hf: HyperFormula,
     private readonly _space: Space | undefined,
-    onUpdate: (context: FunctionContext) => void,
     _options?: Partial<FunctionContextOptions>,
   ) {
     this._options = defaultsDeep(_options ?? {}, defaultFunctionContextOptions);
-    this._onUpdate = debounce(() => {
+    this._onUpdate = debounce((update) => {
       // TODO(burdon): Better way to trigger recalculation?
       //  NOTE: rebuildAndRecalculate resets the undo history.
       this._hf.resumeEvaluation();
-      onUpdate(this);
+      this._options.onUpdate?.(update);
     }, this._options.recalculationDelay);
   }
 
-  // TODO(burdon): Remove?
   get space() {
     return this._space;
   }
@@ -136,7 +143,7 @@ export class FunctionContext {
           const value = await cb(...args);
           this._cache.set(invocationKey, { value, ts: Date.now() });
           log('set', { cell, value });
-          this._onUpdate();
+          this._onUpdate({ name, cell });
         } catch (err) {
           // TODO(burdon): Show error to user.
           log.warn('failed', { cell, err });

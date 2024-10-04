@@ -4,9 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { type Space } from '@dxos/react-client/echo';
-
-import { useComputeGraph } from './useComputeGraph';
+import { type ComputeGraph } from '../graph';
 import { SheetModel } from '../model';
 import { type SheetType } from '../types';
 
@@ -15,14 +13,13 @@ export type UseSheetModelOptions = {
 };
 
 export const useSheetModel = (
-  space?: Space,
+  graph?: ComputeGraph,
   sheet?: SheetType,
   { readonly }: UseSheetModelOptions = {},
 ): SheetModel | undefined => {
-  const graph = useComputeGraph(space);
   const [model, setModel] = useState<SheetModel>();
   useEffect(() => {
-    if (!space || !graph || !sheet) {
+    if (!graph || !sheet) {
       return;
     }
 
@@ -37,7 +34,7 @@ export const useSheetModel = (
       clearTimeout(t);
       void model?.close();
     };
-  }, [space, sheet, graph, readonly]);
+  }, [graph, sheet, readonly]);
 
   return model;
 };
