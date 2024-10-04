@@ -79,34 +79,29 @@ export class EdgeFeedReplicator extends Resource {
 
     this._messenger.connected.on(this._ctx, async () => {
       await this._resetConnection();
-
-      this._connected = true;
-      const connectionCtx = new Context({
-        onError: async (err: any) => {
-          if (connectionCtx !== this._connectionCtx) {
-            return;
-          }
-          if (err instanceof EdgeIdentityChangedError || err instanceof EdgeConnectionClosedError) {
-            log('resetting on reconnect');
-            await this._resetConnection();
-          } else {
-            this._ctx.raise(err);
-          }
-        },
-      });
-      this._connectionCtx = connectionCtx;
-      log('connection context created');
-      scheduleMicroTask(connectionCtx, async () => {
-        for (const feed of this._feeds.values()) {
-          await this._replicateFeed(connectionCtx, feed);
-        }
-      });
+      this._startReplication();
     });
+
+    if (this._messenger.isConnected) {
+      this._startReplication();
+    }
   }
 
   protected override async _close(): Promise<void> {
     log('close');
     await this._resetConnection();
+  }
+
+  private _startReplication() {
+    this._connected = true;
+    const connectionCtx = this._createConnectionContext();
+    this._connectionCtx = connectionCtx;
+    log('connection context created');
+    scheduleMicroTask(connectionCtx, async () => {
+      for (const feed of this._feeds.values()) {
+        await this._replicateFeed(connectionCtx, feed);
+      }
+    });
   }
 
   private async _resetConnection() {
@@ -279,6 +274,23 @@ export class EdgeFeedReplicator extends Resource {
     if (remoteLength < feed.length) {
       await this._pushBlocks(feed, remoteLength, feed.length);
     }
+  }
+
+  private _createConnectionContext() {
+    const connectionCtx = new Context({
+      onError: async (err: any) => {
+        if (connectionCtx !== this._connectionCtx) {
+          return;
+        }
+        if (err instanceof EdgeIdentityChangedError || err instanceof EdgeConnectionClosedError) {
+          log('resetting on reconnect');
+          await this._resetConnection();
+        } else {
+          this._ctx.raise(err);
+        }
+      },
+    });
+    return connectionCtx;
   }
 }
 
