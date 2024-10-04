@@ -6,10 +6,10 @@ runs:
   steps:
     - name: Send failure report
       shell: bash
-      run: ./.github/scripts/send-test-report.sh $GITHUB_JOB failure
+      run: ./.github/actions/test-report/send-test-report.sh $GITHUB_JOB failure
       if: ${{ failure() }}
 
     - name: Send success report
       shell: bash
-      run: ./.github/scripts/send-test-report.sh $GITHUB_JOB success
+      run: ./.github/actions/test-report/send-test-report.sh $GITHUB_JOB success
       if: ${{ success() }}
