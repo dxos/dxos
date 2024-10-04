@@ -4146,7 +4146,7 @@ importers:
         version: 18.2.0
       react-charts:
         specifier: beta
-        version: 3.0.0-beta.55(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        version: 3.0.0-beta.57(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react-dom:
         specifier: ~18.2.0
         version: 18.2.0(react@18.2.0)
@@ -10742,6 +10742,15 @@ importers:
 
   packages/ui/react-ui-stack:
     dependencies:
+      '@atlaskit/pragmatic-drag-and-drop':
+        specifier: ^1.3.1
+        version: 1.3.1
+      '@atlaskit/pragmatic-drag-and-drop-hitbox':
+        specifier: ^1.0.3
+        version: 1.0.3
+      '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator':
+        specifier: ^1.1.3
+        version: 1.1.3(@babel/core@7.24.6)(@types/react@18.2.79)(react@18.2.0)
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -11823,8 +11832,29 @@ packages:
     peerDependencies:
       ajv: '>=8'
 
+  '@atlaskit/ds-lib@2.7.0':
+    resolution: {integrity: sha512-+U4aPE2dBRFUBYWCM9vkrwJGrLAYVcK30ZpEiQDNpM2D7K41223TfEijC8azaN4VM3tsCgwSKBWwniloNxqYbA==}
+    peerDependencies:
+      react: ~18.2.0
+
+  '@atlaskit/platform-feature-flags@0.3.0':
+    resolution: {integrity: sha512-/0u5fFJ0Rw2j4M5wzsXgaHO6Ey12oekPCDTRvmmAIp4GO9T2Swbl80bavLAPSOmSHMhHTSuvRxiJveZXfQ21IQ==}
+
+  '@atlaskit/pragmatic-drag-and-drop-hitbox@1.0.3':
+    resolution: {integrity: sha512-/Sbu/HqN2VGLYBhnsG7SbRNg98XKkbF6L7XDdBi+izRybfaK1FeMfodPpm/xnBHPJzwYMdkE0qtLyv6afhgMUA==}
+
+  '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator@1.1.3':
+    resolution: {integrity: sha512-/4bKoIuaA1itAUhImYh8Z+25c2y9+07dCsumQ4aIwF3OPktWAoSEXILt43TvA4cSddHISs/Pq+eAdgMy0k7Rvg==}
+    peerDependencies:
+      react: ~18.2.0
+
   '@atlaskit/pragmatic-drag-and-drop@1.3.1':
     resolution: {integrity: sha512-MptcLppK78B2eplL5fHk93kfCbZ6uCpt33YauBPrOwI5zcHYJhZGeaGEaAXoVAHnSJOdQUhy6kGVVC9qggz2Fg==}
+
+  '@atlaskit/tokens@2.0.1':
+    resolution: {integrity: sha512-/BqDg8snjLCwzI6vunJo7FDKT2LXdxj0entWe3ag/hyTMzT+d1wsVnByjeizkuvwTqbt++vFffi/ZLM7/KDMQw==}
+    peerDependencies:
+      react: ~18.2.0
 
   '@automerge/automerge-repo-network-broadcastchannel@1.1.12':
     resolution: {integrity: sha512-XEyNWa43ixZtMOTUMAzeB0KY31EseLG3/AEJMnFQGIVwDyb95ihtuBSPWfdjshSZd46dJmCPxzNa4Niev80Siw==}
@@ -12531,12 +12561,6 @@ packages:
 
   '@babel/plugin-syntax-json-strings@7.8.3':
     resolution: {integrity: sha512-lY6kdGpWHvjoe2vk4WrAapEuBR69EMxZl+RoGRhrFGNYVK8mOPAW8VfbT/ZgrFbXlDNiiaxQnAtgVCZ6jv30EA==}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-
-  '@babel/plugin-syntax-jsx@7.18.6':
-    resolution: {integrity: sha512-6mmljtAedFGTWu2p/8WIORGwy+61PLgOMPOdazc7YoJ9ZCWUyFy3A6CpPkRKLKD1ToAesxX8KGEViAiLo9N+7Q==}
-    engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
@@ -13757,11 +13781,6 @@ packages:
 
   '@emotion/unitless@0.8.0':
     resolution: {integrity: sha512-VINS5vEYAscRl2ZUDiT3uMPlrFQupiKgHz5AA4bCH1miKBg4qtwkim1qPmJj/4WG6TreYMY111rEFsjupcOKHw==}
-
-  '@emotion/use-insertion-effect-with-fallbacks@1.0.0':
-    resolution: {integrity: sha512-1eEgUGmkaljiBnRMTdksDV1W4kUnmwgp7X9G8B++9GYwl1lUdqSndSriIrTJ0N7LQaoauY9JJ2yhiOYK5+NI4A==}
-    peerDependencies:
-      react: ~18.2.0
 
   '@emotion/use-insertion-effect-with-fallbacks@1.0.1':
     resolution: {integrity: sha512-jT/qyKZ9rzLErtrjGgdkMBn2OP8wl0G3sQlBb3YPryvKHsjvINUhVaPFfP+fpBcOkmrVOVEEHQFJ7nbj2TH2gw==}
@@ -20765,6 +20784,7 @@ packages:
 
   abab@2.0.6:
     resolution: {integrity: sha512-j2afSsaIENvHZN2B8GOpF566vZ5WVk5opAiMTvWgaQT8DkbOqsTfvNAvHoRGU2zzP8cPoqys+xHTRDWW8L+/BA==}
+    deprecated: Use your platform's native atob() and btoa() methods instead
 
   abbrev@1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
@@ -20871,11 +20891,6 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -21003,6 +21018,7 @@ packages:
   are-we-there-yet@2.0.0:
     resolution: {integrity: sha512-Ci/qENmwHnsYo9xKIcUJN5LeDKdJ6R1Z1j9V/J5wyq8nh/mYPEpIKJbBZXtZjG04HiK7zV/p6Vs9952MrMeUIw==}
     engines: {node: '>=10'}
+    deprecated: This package is no longer supported.
 
   arg@4.1.3:
     resolution: {integrity: sha512-58S9QDqG0Xx27YwPSt9fJxivjYl432YCwfDMfZ+71RAqUrZef7LrKQZ3LHLOwCS4FLNBplP533Zx895SeOCHvA==}
@@ -24464,6 +24480,7 @@ packages:
   fstream@1.0.12:
     resolution: {integrity: sha512-WvJ193OHa0GHPEL+AycEJgxvBEwyfRkN1vhjca23OaPVMCaLCXTd5qAu82AjTcgP1UJmytkOKb63Ypde7raDIg==}
     engines: {node: '>=0.6'}
+    deprecated: This package is no longer supported.
 
   function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
@@ -24486,6 +24503,7 @@ packages:
   gauge@3.0.2:
     resolution: {integrity: sha512-+5J6MS/5XksCuXq++uFRsnUd7Ovu1XenbeuIuNRJxYWjgQbPuFhT14lAvsWfqfAmnwluf1OwMjz39HjfLPci0Q==}
     engines: {node: '>=10'}
+    deprecated: This package is no longer supported.
 
   gaxios@5.1.3:
     resolution: {integrity: sha512-95hVgBRgEIRQQQHIbnxBXeHbW4TqFk4ZDJW7wmVtvYar72FdhRIo1UGOLS2eRAKCPEdPBWu+M7+A33D9CdX9rA==}
@@ -24747,6 +24765,7 @@ packages:
   google-p12-pem@4.0.1:
     resolution: {integrity: sha512-WPkN4yGtz05WZ5EhtlxNDWPhC4JIic6G8ePitwUWy4l+XPVYec+a0j0Ts47PDtW59y3RwAhUd9/h9ZZ63px6RQ==}
     engines: {node: '>=12.0.0'}
+    deprecated: Package is no longer maintained
     hasBin: true
 
   google-protobuf@3.21.2:
@@ -27817,6 +27836,7 @@ packages:
 
   npmlog@5.0.1:
     resolution: {integrity: sha512-AqZtDUWOMKs1G/8lwylVjrdYgqA4d9nu8hc+0gzRxlDb1I10+FHBGMXs6aiQHFdCUUlqH99MUMuLfzWDNDtfxw==}
+    deprecated: This package is no longer supported.
 
   nth-check@1.0.2:
     resolution: {integrity: sha512-WeBOdju8SnzPN5vTUJYxYUxLeXpCaVP5i5e0LF8fg7WORF2Wd7wFX/pk0tYZk7s8T+J7VLy0Da6J1+wCT0AtHg==}
@@ -29072,8 +29092,8 @@ packages:
   react-base16-styling@0.9.1:
     resolution: {integrity: sha512-1s0CY1zRBOQ5M3T61wetEpvQmsYSNtWEcdYzyZNxKa8t7oDvaOn9d21xrGezGAHFWLM7SHcktPuPTrvoqxSfKw==}
 
-  react-charts@3.0.0-beta.55:
-    resolution: {integrity: sha512-PuPGoK/3B4SgmnANqh1+biuJAN/iYAvLO/juLKJ2dtF0+Wzfa0KarGbgAij2o8P83bAn9bZnu46RCevNvYwOjQ==}
+  react-charts@3.0.0-beta.57:
+    resolution: {integrity: sha512-vqas7IQhsnDGcMxreGaWXvSIL3poEMoUBNltJrslz/+m0pI3QejBCszL1QrLNYQfOWXrbZADfedi/a+yWOQ7Hw==}
     peerDependencies:
       react: ~18.2.0
       react-dom: ~18.2.0
@@ -29344,6 +29364,16 @@ packages:
     resolution: {integrity: sha512-JWD+aQ0lh2gvh4NM3bBM42Kx+XybOxCpgYK7F8ugAlpaTSnWsX+39Z4XkOykGZAHrjwwTZT3x3KxswVWxHPUqA==}
     peerDependencies:
       react: ~18.2.0
+
+  react-uid@2.3.3:
+    resolution: {integrity: sha512-iNpDovcb9qBpBTo8iUgqRSQOS8GV3bWoNaTaUptHkXtAooXSo0OWe7vN6TqqB8x3x0bNBbQx96kkmSltQ5h9kQ==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      '@types/react': ~18.2.0
+      react: ~18.2.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   react-vis@1.11.12:
     resolution: {integrity: sha512-WuYZrwrH/cXgxKcynciuwZ6+6V9a5N43qa4Wwfgll/tyLq+ACcJ5m8fHFXQk7fQBK80RAp61Oc+a+T64woorvw==}
@@ -29719,6 +29749,7 @@ packages:
 
   rimraf@3.0.2:
     resolution: {integrity: sha512-JZkJMZkAGFFPP2YqXZXPbMlMBgsxzE8ILs4lMIX/2o0L9UBw9O/Y3o6wFw/i9YLapcUJWwqbi3kdxIPdC62TIA==}
+    deprecated: Rimraf versions prior to v4 are no longer supported
     hasBin: true
 
   ripemd160@2.0.2:
@@ -30839,6 +30870,7 @@ packages:
 
   three-mesh-bvh@0.7.8:
     resolution: {integrity: sha512-BGEZTOIC14U0XIRw3tO4jY7IjP7n7v24nv9JXS1CyeVRWOCkcOMhRnmENUjuV39gktAw4Ofhr0OvIAiTspQrrw==}
+    deprecated: Deprecated due to three.js version incompatibility. Please use v0.8.0, instead.
     peerDependencies:
       three: '>= 0.151.0'
 
@@ -31946,6 +31978,7 @@ packages:
   vuepress-plugin-auto-catalog@2.0.0-rc.5:
     resolution: {integrity: sha512-+OhGWu+tOIC86k4kc5wTZcK0hN9P2KzCnOX5TnTK2WnmPZHeHR1GZR0sMAUeXg47SuELJrBHlzC/bmp7aireZw==}
     engines: {node: '>=18.16.0', npm: '>=8', pnpm: '>=7', yarn: '>=2'}
+    deprecated: Please use @vuepress/plugin-catalog@next intead
     peerDependencies:
       sass-loader: ^13.3.2
       vuepress: 2.0.0-rc.0
@@ -31964,6 +31997,7 @@ packages:
   vuepress-plugin-blog2@2.0.0-rc.5:
     resolution: {integrity: sha512-Mj5YBeTAvH3yZUw/+C35LJV6H/t7SJ+B16cyew8PztocajC/cpAc/2dusYXizPXGwvwaH0LI91M9I9xj6yBC1g==}
     engines: {node: '>=18.16.0', npm: '>=8', pnpm: '>=7', yarn: '>=2'}
+    deprecated: Use @vuepress/plugin-blog@next instead
     peerDependencies:
       vuepress: 2.0.0-rc.0
       vuepress-vite: 2.0.0-rc.0
@@ -31979,6 +32013,7 @@ packages:
   vuepress-plugin-comment2@2.0.0-rc.5:
     resolution: {integrity: sha512-EVYsUIIWLFUQoxrALdVcBPnSDPJfXWrsrpbryuWUFDkpjstm7gMHgNGJr6vkaqmP92BkysXcwJ2EuN4OweMtcA==}
     engines: {node: '>=18.16.0', npm: '>=8', pnpm: '>=7', yarn: '>=2'}
+    deprecated: Use @vuepress/plugin-comment@next instead
     peerDependencies:
       '@waline/client': ^2.15.8 || ^3.0.0-alpha.7
       artalk: ^2.6.4
@@ -32039,6 +32074,7 @@ packages:
   vuepress-plugin-copy-code2@2.0.0-rc.5:
     resolution: {integrity: sha512-PjLsN90jVv+dfTGaJ9D+D8I3iSAKNntxe8UCyiYi7cS6aZ5wQyDWD1+Sqnu1XtxoUz0eZ9CcyJnYIckRdsH1dw==}
     engines: {node: '>=18.16.0', npm: '>=8', pnpm: '>=7', yarn: '>=2'}
+    deprecated: Please use @vuepress/plugin-copy-code@v2 instead
     peerDependencies:
       sass-loader: ^13.3.2
       vuepress: 2.0.0-rc.0
@@ -32057,6 +32093,7 @@ packages:
   vuepress-plugin-copyright2@2.0.0-rc.5:
     resolution: {integrity: sha512-2zVrCyUpf9DCmmlQEPjhU0f4fX6F6MPSCyA2gPcrI6TTDIgBEzu4B8ySZHYx3/R/PkK7TmIslrtPEY7Enl0Xjw==}
     engines: {node: '>=18.16.0', npm: '>=8', pnpm: '>=7', yarn: '>=2'}
+    deprecated: Please use @vuepress/plugin-copyright@v2 instead
     peerDependencies:
       vuepress: 2.0.0-rc.0
       vuepress-vite: 2.0.0-rc.0
@@ -32072,6 +32109,7 @@ packages:
   vuepress-plugin-feed2@2.0.0-rc.5:
     resolution: {integrity: sha512-Z6RK10ZUZhDtHnkGe7zu1g9J4AlohDxZYf2QU0xjIXM0LkrF1r26ppPX9mPOE0HBgAaDtKTFOhJieOw+6X6lHQ==}
     engines: {node: '>=18.16.0', npm: '>=8', pnpm: '>=7', yarn: '>=2'}
+    deprecated: Please use @vuepress/plugin-feed@v2 instead
     peerDependencies:
       vuepress: 2.0.0-rc.0
       vuepress-vite: 2.0.0-rc.0
@@ -32144,6 +32182,7 @@ packages:
   vuepress-plugin-photo-swipe@2.0.0-rc.5:
     resolution: {integrity: sha512-XhTJLofyOljFwCzFRGOKMlNM3Z4K8vUdWzOgiMQvR3ETZ80LQw9ydqhUid21m+qqGusBx7SWcpRlRixTxL8Jqw==}
     engines: {node: '>=18.16.0', npm: '>=8', pnpm: '>=7', yarn: '>=2'}
+    deprecated: Use @vuepress/plugin-photo-swipe instead
     peerDependencies:
       sass-loader: ^13.3.2
       vuepress: 2.0.0-rc.0
@@ -32162,6 +32201,7 @@ packages:
   vuepress-plugin-pwa2@2.0.0-rc.5:
     resolution: {integrity: sha512-pGv1POJ1k8DUBKy3pHdLyOLO/W0sLdNWnNX7HJfBnGF+cu7rzTyz10PNrmf3Uvas0MbAzsCsEOH/WYWVFo6v3w==}
     engines: {node: '>=18.16.0', npm: '>=8', pnpm: '>=7', yarn: '>=2'}
+    deprecated: Use @vuepress/plugin-pwa@next instead
     peerDependencies:
       sass-loader: ^13.3.2
       vuepress: 2.0.0-rc.0
@@ -32180,6 +32220,7 @@ packages:
   vuepress-plugin-reading-time2@2.0.0-rc.5:
     resolution: {integrity: sha512-yPz5roTniTORiS4iKQ6YpD/qmBHAWXPV0YZd/+KqUMNlb0AAjDNTCPEXR3mlgx3vIERjqxyLUbbAD48QDBcTjg==}
     engines: {node: '>=18.16.0', npm: '>=8', pnpm: '>=7', yarn: '>=2'}
+    deprecated: Please use @vuepress/plugin-reading-time@v2 instead
     peerDependencies:
       vuepress: 2.0.0-rc.0
       vuepress-vite: 2.0.0-rc.0
@@ -32195,6 +32236,7 @@ packages:
   vuepress-plugin-rtl@2.0.0-rc.5:
     resolution: {integrity: sha512-su6+1UPXLik49KOZdJ0gXLNiJghA2g7MaIQQDL+fV/Ps8nBbG5MTn/CSv5+ZKiogfYZhTuTrEYLh7BANeBGvdQ==}
     engines: {node: '>=18.16.0', npm: '>=8', pnpm: '>=7', yarn: '>=2'}
+    deprecated: Use @vuepress/plugin-rtl@next instead
     peerDependencies:
       vuepress: 2.0.0-rc.0
       vuepress-vite: 2.0.0-rc.0
@@ -32228,6 +32270,7 @@ packages:
   vuepress-plugin-seo2@2.0.0-rc.5:
     resolution: {integrity: sha512-VwnBF1zuIjwrIQzAKQQm2l0QucZ/MqEnm3l5Hdg/katGuSna4AjEnhVDswwr4plHliNYWNzcu9V2o0tqEaRouw==}
     engines: {node: '>=18.16.0', npm: '>=8', pnpm: '>=7', yarn: '>=2'}
+    deprecated: Please use @vuepress/plugin-seo@v2 instead
     peerDependencies:
       vuepress: 2.0.0-rc.0
       vuepress-vite: 2.0.0-rc.0
@@ -32243,6 +32286,7 @@ packages:
   vuepress-plugin-sitemap2@2.0.0-rc.5:
     resolution: {integrity: sha512-b1ylNdPLsmhQ+R0NzyaIXHaAybFf0sB47TnYc43X9O8Ql+O8TI6jpBcF8DID7pWp5scQIdf3BIQ1yd/Q0wQgnw==}
     engines: {node: '>=18.16.0', npm: '>=8', pnpm: '>=7', yarn: '>=2'}
+    deprecated: Please use @vuepress/plugin-sitemap@v2 instead
     peerDependencies:
       vuepress: 2.0.0-rc.0
       vuepress-vite: 2.0.0-rc.0
@@ -33050,11 +33094,56 @@ snapshots:
       jsonpointer: 5.0.1
       leven: 3.1.0
 
+  '@atlaskit/ds-lib@2.7.0(@types/react@18.2.79)(react@18.2.0)':
+    dependencies:
+      '@atlaskit/platform-feature-flags': 0.3.0
+      '@babel/runtime': 7.24.5
+      bind-event-listener: 3.0.0
+      react: 18.2.0
+      react-uid: 2.3.3(@types/react@18.2.79)(react@18.2.0)
+    transitivePeerDependencies:
+      - '@types/react'
+
+  '@atlaskit/platform-feature-flags@0.3.0':
+    dependencies:
+      '@babel/runtime': 7.24.5
+
+  '@atlaskit/pragmatic-drag-and-drop-hitbox@1.0.3':
+    dependencies:
+      '@atlaskit/pragmatic-drag-and-drop': 1.3.1
+      '@babel/runtime': 7.24.5
+
+  '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator@1.1.3(@babel/core@7.24.6)(@types/react@18.2.79)(react@18.2.0)':
+    dependencies:
+      '@atlaskit/pragmatic-drag-and-drop': 1.3.1
+      '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.0.3
+      '@atlaskit/tokens': 2.0.1(@types/react@18.2.79)(react@18.2.0)
+      '@babel/runtime': 7.24.5
+      '@emotion/react': 11.10.4(@babel/core@7.24.6)(@types/react@18.2.79)(react@18.2.0)
+      react: 18.2.0
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@types/react'
+      - supports-color
+
   '@atlaskit/pragmatic-drag-and-drop@1.3.1':
     dependencies:
       '@babel/runtime': 7.24.5
       bind-event-listener: 3.0.0
       raf-schd: 4.0.3
+
+  '@atlaskit/tokens@2.0.1(@types/react@18.2.79)(react@18.2.0)':
+    dependencies:
+      '@atlaskit/ds-lib': 2.7.0(@types/react@18.2.79)(react@18.2.0)
+      '@atlaskit/platform-feature-flags': 0.3.0
+      '@babel/runtime': 7.24.5
+      '@babel/traverse': 7.24.8(supports-color@5.5.0)
+      '@babel/types': 7.25.6
+      bind-event-listener: 3.0.0
+      react: 18.2.0
+    transitivePeerDependencies:
+      - '@types/react'
+      - supports-color
 
   '@automerge/automerge-repo-network-broadcastchannel@1.1.12(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.6.1)(typescript@5.6.2)':
     dependencies:
@@ -34472,11 +34561,6 @@ snapshots:
       '@babel/helper-plugin-utils': 7.24.8
 
   '@babel/plugin-syntax-json-strings@7.8.3(@babel/core@7.24.6)':
-    dependencies:
-      '@babel/core': 7.24.6
-      '@babel/helper-plugin-utils': 7.24.8
-
-  '@babel/plugin-syntax-jsx@7.18.6(@babel/core@7.24.6)':
     dependencies:
       '@babel/core': 7.24.6
       '@babel/helper-plugin-utils': 7.24.8
@@ -36310,7 +36394,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.24.6
       '@babel/helper-module-imports': 7.24.7(supports-color@5.5.0)
-      '@babel/plugin-syntax-jsx': 7.18.6(@babel/core@7.24.6)
+      '@babel/plugin-syntax-jsx': 7.24.7(@babel/core@7.24.6)
       '@babel/runtime': 7.24.5
       '@emotion/hash': 0.9.0
       '@emotion/memoize': 0.8.0
@@ -36354,7 +36438,7 @@ snapshots:
       '@emotion/babel-plugin': 11.10.2(@babel/core@7.24.6)
       '@emotion/cache': 11.10.3
       '@emotion/serialize': 1.1.0
-      '@emotion/use-insertion-effect-with-fallbacks': 1.0.0(react@18.2.0)
+      '@emotion/use-insertion-effect-with-fallbacks': 1.0.1(react@18.2.0)
       '@emotion/utils': 1.2.0
       '@emotion/weak-memoize': 0.3.0
       hoist-non-react-statics: 3.3.2
@@ -36380,10 +36464,6 @@ snapshots:
   '@emotion/unitless@0.7.5': {}
 
   '@emotion/unitless@0.8.0': {}
-
-  '@emotion/use-insertion-effect-with-fallbacks@1.0.0(react@18.2.0)':
-    dependencies:
-      react: 18.2.0
 
   '@emotion/use-insertion-effect-with-fallbacks@1.0.1(react@18.2.0)':
     dependencies:
@@ -45087,8 +45167,8 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1(ajv@8.12.0):
-    optionalDependencies:
+  ajv-formats@2.1.1:
+    dependencies:
       ajv: 8.12.0
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -46607,7 +46687,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv-formats: 2.1.1
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -54901,7 +54981,7 @@ snapshots:
       csstype: 3.1.3
       lodash.curry: 4.1.1
 
-  react-charts@3.0.0-beta.55(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
+  react-charts@3.0.0-beta.57(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
       '@babel/runtime': 7.24.5
       '@types/d3-array': 3.0.3
@@ -55245,6 +55325,13 @@ snapshots:
       react-is: 18.2.0
       react-shallow-renderer: 16.15.0(react@18.2.0)
       scheduler: 0.23.0
+
+  react-uid@2.3.3(@types/react@18.2.79)(react@18.2.0):
+    dependencies:
+      react: 18.2.0
+      tslib: 2.6.2
+    optionalDependencies:
+      '@types/react': 18.2.79
 
   react-vis@1.11.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
@@ -56029,7 +56116,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv-formats: 2.1.1
       ajv-keywords: 5.1.0(ajv@8.12.0)
 
   scroll@3.0.1: {}
