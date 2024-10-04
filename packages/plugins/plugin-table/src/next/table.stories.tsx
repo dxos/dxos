@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { ClientRepeater } from '@dxos/react-client/testing';
@@ -13,6 +13,16 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useTable } from './hooks/';
 import { type ColumnDefinition } from './table';
+
+const DevTools = ({ table }: any) => {
+  const { rows: _rows, ...data } = table;
+
+  return (
+    <div className='fixed bottom-1 right-1 p-1 bg-neutral-800 text-white text-xs font-mono overflow-auto max-w-[50vw] shadow-lg border border-neutral-900 rounded-xl'>
+      <pre>{JSON.stringify({ data }, null, 2)}</pre>
+    </div>
+  );
+};
 
 const makeData = (n: number) => {
   const { data } = create({
@@ -34,7 +44,7 @@ const columnDefinitions: ColumnDefinition[] = [
 
 const Story = () => {
   const data = React.useMemo(() => makeData(50), []);
-  const { table, dispatch: _dispatch } = useTable(columnDefinitions, data);
+  const { table, dispatch } = useTable(columnDefinitions, data);
 
   const handleAddRow = () => {
     const newRow = {
@@ -46,26 +56,12 @@ const Story = () => {
     data.unshift(newRow);
   };
 
-  // // Mutations
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     const randomRowIndex = Math.floor(Math.random() * data.length);
-  //     const randomField = ['name', 'age', 'active'][Math.floor(Math.random() * 3)];
-
-  //     if (randomField === 'name') {
-  //       data[randomRowIndex].name = `Person ${Math.floor(Math.random() * 1000)}`;
-  //     } else if (randomField === 'age') {
-  //       data[randomRowIndex].age = Math.floor(Math.random() * 50) + 20;
-  //     } else {
-  //       data[randomRowIndex].active = !data[randomRowIndex].active;
-  //     }
-  //   }, 100);
-  //   return () => clearInterval(interval);
-  // }, [data]);
-
   return (
     <div>
-      <button onClick={handleAddRow}>Add Row</button>
+      <DevTools table={table} />
+      <button className='ch-button' onClick={handleAddRow}>
+        Add Row
+      </button>
       <Grid.Root id='table-v2'>
         <Grid.Content
           limitRows={table.rows.value.length}
@@ -86,11 +82,12 @@ const Story = () => {
           )}
           onAxisResize={(event) => {
             if (event.axis === 'col') {
-              // dispatch({
-              //   type: 'ModifyColumnWidth',
-              //   columnId: table.columnDefinitions[event.index].id,
-              //   width: event.size,
-              // });
+              const columnIndex = parseInt(event.index, 10);
+              dispatch({
+                type: 'ModifyColumnWidth',
+                columnIndex,
+                width: event.size,
+              });
             }
           }}
         />

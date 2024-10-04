@@ -47,7 +47,7 @@ export type TableEvent =
   | { type: 'SelectRow'; rowIndex: number }
   | { type: 'DeselectRow'; rowIndex: number }
   | { type: 'DeselectAllRows' }
-  | { type: 'ModifyColumnWidth'; columnId: ColumnId; width: number };
+  | { type: 'ModifyColumnWidth'; columnIndex: number; width: number };
 
 export const updateTable = (table: Table, event: TableEvent): Table =>
   produce(table, (draft) => {
@@ -88,7 +88,11 @@ export const updateTable = (table: Table, event: TableEvent): Table =>
         break;
       }
       case 'ModifyColumnWidth': {
-        draft.columnWidths[event.columnId] = event.width;
+        const columnId = table.columnOrdering.at(event.columnIndex);
+        if (columnId) {
+          const newWidth = Math.max(0, event.width);
+          draft.columnWidths[columnId] = newWidth;
+        }
         break;
       }
     }

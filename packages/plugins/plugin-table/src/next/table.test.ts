@@ -82,49 +82,43 @@ describe('updateTable', () => {
 
 describe('column width modification', () => {
   it('should modify an existing column width', () => {
-    const events: TableEvent[] = [{ type: 'ModifyColumnWidth', columnId: 'col1', width: 120 }];
+    const events: TableEvent[] = [{ type: 'ModifyColumnWidth', columnIndex: 0, width: 120 }];
     const newTable = applyEvents(initialTable, events);
-    expect(newTable.columnWidths.col1).toBe(120);
+    expect(newTable.columnWidths[newTable.columnOrdering[0]]).toBe(120);
   });
 
   it('should not affect other column widths when modifying one', () => {
-    const initialCol2Width = initialTable.columnWidths.col2;
-    const initialCol3Width = initialTable.columnWidths.col3;
-    const events: TableEvent[] = [{ type: 'ModifyColumnWidth', columnId: 'col1', width: 120 }];
+    const initialCol2Width = initialTable.columnWidths[initialTable.columnOrdering[1]];
+    const initialCol3Width = initialTable.columnWidths[initialTable.columnOrdering[2]];
+    const events: TableEvent[] = [{ type: 'ModifyColumnWidth', columnIndex: 0, width: 120 }];
     const newTable = applyEvents(initialTable, events);
-    expect(newTable.columnWidths.col2).toBe(initialCol2Width);
-    expect(newTable.columnWidths.col3).toBe(initialCol3Width);
+    expect(newTable.columnWidths[newTable.columnOrdering[1]]).toBe(initialCol2Width);
+    expect(newTable.columnWidths[newTable.columnOrdering[2]]).toBe(initialCol3Width);
   });
 
   it('should handle multiple width modifications', () => {
     const events: TableEvent[] = [
-      { type: 'ModifyColumnWidth', columnId: 'col1', width: 120 },
-      { type: 'ModifyColumnWidth', columnId: 'col2', width: 80 },
-      { type: 'ModifyColumnWidth', columnId: 'col3', width: 200 },
+      { type: 'ModifyColumnWidth', columnIndex: 0, width: 120 },
+      { type: 'ModifyColumnWidth', columnIndex: 1, width: 80 },
+      { type: 'ModifyColumnWidth', columnIndex: 2, width: 200 },
     ];
     const modifiedTable = applyEvents(initialTable, events);
 
-    expect(modifiedTable.columnWidths).toEqual({
-      col1: 120,
-      col2: 80,
-      col3: 200,
-    });
+    expect(modifiedTable.columnWidths[modifiedTable.columnOrdering[0]]).toBe(120);
+    expect(modifiedTable.columnWidths[modifiedTable.columnOrdering[1]]).toBe(80);
+    expect(modifiedTable.columnWidths[modifiedTable.columnOrdering[2]]).toBe(200);
   });
 
   it('should allow setting width to 0', () => {
-    const events: TableEvent[] = [{ type: 'ModifyColumnWidth', columnId: 'col1', width: 0 }];
+    const events: TableEvent[] = [{ type: 'ModifyColumnWidth', columnIndex: 0, width: 0 }];
     const newTable = applyEvents(initialTable, events);
-    expect(newTable.columnWidths.col1).toBe(0);
+    expect(newTable.columnWidths[newTable.columnOrdering[0]]).toBe(0);
   });
 
-  it('should handle non-existent column ids gracefully', () => {
-    const events: TableEvent[] = [{ type: 'ModifyColumnWidth', columnId: 'nonexistent', width: 100 }];
+  it('should ignore modifications for non-existent column indices', () => {
+    const events: TableEvent[] = [{ type: 'ModifyColumnWidth', columnIndex: 999, width: 100 }];
     const newTable = applyEvents(initialTable, events);
-    expect(newTable.columnWidths.nonexistent).toBe(100);
-    expect(newTable.columnWidths).toEqual({
-      ...initialTable.columnWidths,
-      nonexistent: 100,
-    });
+    expect(newTable.columnWidths).toEqual(initialTable.columnWidths);
   });
 });
 
