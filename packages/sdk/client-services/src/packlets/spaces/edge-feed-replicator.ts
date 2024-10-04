@@ -31,6 +31,7 @@ export class EdgeFeedReplicator extends Resource {
 
   @logInfo
   private readonly _spaceId: SpaceId;
+
   private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<any>>(PublicKey.hash);
 
   private _connectionCtx?: Context = undefined;
