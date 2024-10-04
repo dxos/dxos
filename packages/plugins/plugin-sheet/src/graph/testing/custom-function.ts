@@ -8,8 +8,9 @@ import { type ProcedureAst } from 'hyperformula/typings/parser';
 import { getDeep } from '@dxos/util';
 
 import { FunctionArgumentType } from '#hyperformula';
-import { type AsyncFunction, FunctionPluginAsync } from './async-function';
-import { parseNumberString } from './util';
+import { type AsyncFunction, FunctionPluginAsync } from '../async-function';
+import { type ComputeGraphPlugin } from '../compute-graph';
+import { parseNumberString } from '../util';
 
 /**
  * https://hyperformula.handsontable.com/guide/custom-functions.html#add-a-simple-custom-function
@@ -64,3 +65,10 @@ export const CustomPluginTranslations = {
     CRYPTO: 'CRYPTO',
   },
 };
+
+export const testPlugins: ComputeGraphPlugin[] = [
+  {
+    plugin: CustomPlugin,
+    translations: CustomPluginTranslations,
+  },
+];
