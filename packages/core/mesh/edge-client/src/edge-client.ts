@@ -28,6 +28,7 @@ export interface EdgeConnection extends Required<Lifecycle> {
   get identityKey(): string;
   get peerKey(): string;
   get isOpen(): boolean;
+  get isConnected(): boolean;
   setIdentity(params: { peerKey: string; identityKey: string }): void;
   addListener(listener: MessageListener): () => void;
   send(message: Message): Promise<void>;
@@ -72,6 +73,10 @@ export class EdgeClient extends Resource implements EdgeConnection {
       identity: this._identityKey,
       device: this._peerKey,
     };
+  }
+
+  get isConnected() {
+    return Boolean(this._ws) && this._ready.state === TriggerState.RESOLVED;
   }
 
   get identityKey() {

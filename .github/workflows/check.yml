@@ -27,6 +27,7 @@ permissions:
 
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
 
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
 concurrency:
@@ -81,8 +82,10 @@ jobs:
           verbose: true
 
       - name: Send test report
-        uses: ./.github/actions/test-report
         if: ${{ github.event_name == 'schedule' }}
+        uses: ./.github/actions/test-report
+        with:
+          name: '${{ github.job }}-${{ matrix.node-version }}'
 
   check:
     runs-on: ubuntu-latest
@@ -149,8 +152,10 @@ jobs:
         run: pnpm exec nx run-many -t e2e --browser=all --parallel=1
 
       - name: Send test report
-        uses: ./.github/actions/test-report
         if: ${{ github.event_name == 'schedule' }}
+        uses: ./.github/actions/test-report
+        with:
+          name: ${{ github.job }}
 
   dead-links:
     runs-on: ubuntu-latest
