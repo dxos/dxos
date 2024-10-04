@@ -90,7 +90,8 @@ export const compute = (options: ComputeOptions = {}): Extension => {
         constructor(view: EditorView) {
           const computeNode = view.state.facet(computeNodeFacet);
           if (computeNode) {
-            this._subscription = computeNode.graph.update.on(() => {
+            this._subscription = computeNode.graph.update.on((e) => {
+              console.log('!!!', e);
               view.dispatch({
                 effects: updateAllDecorations.of(),
               });

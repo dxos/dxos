@@ -142,6 +142,7 @@ export class ComputeGraph extends Resource {
   ) {
     super();
     this._hf.updateConfig({ context: this.context });
+    // TODO(burdon): If debounce then aggregate changes.
     const onValuesUpdate: Listeners['valuesUpdated'] = (changes) => {
       for (const change of changes) {
         if (change instanceof ExportedCellChange) {

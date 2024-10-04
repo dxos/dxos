@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { type CellValue } from 'hyperformula';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
@@ -21,10 +22,16 @@ import { type CellScalarValue } from '../types';
  * NOTE: Browser test required for hyperformula due to raw translation files.
  */
 describe('compute graph', () => {
+  let ctx: Context;
+  beforeEach(() => {
+    ctx = new Context();
+  });
+  afterEach(async () => {
+    await ctx.dispose();
+  });
+
   // TODO(burdon): Replace with builder.
   const createModel = async (types?: S.Schema<any>[]) => {
-    const ctx = new Context();
-
     const client = new Client();
     if (types) {
       // TODO(burdon): Add to config.
@@ -45,11 +52,11 @@ describe('compute graph', () => {
     const model = new SheetModel(graph, sheet);
     await model.open();
 
-    return { ctx, space, graph, model };
+    return { space, graph, model };
   };
 
   test('map functions', async () => {
-    const { ctx, space, graph } = await createModel([FunctionType]);
+    const { space, graph } = await createModel([FunctionType]);
 
     // Create script.
     const trigger = new Trigger();
@@ -60,22 +67,38 @@ describe('compute graph', () => {
 
     const id = graph.mapFunctionBindingToId('TEST()');
     expect(id).to.eq(`${fullyQualifiedId(fn)}()`);
-    await ctx.dispose();
   });
 
   test('cross-node references', async () => {
-    const { ctx, graph } = await createModel();
+    const { graph } = await createModel();
 
     // Create nodes.
     const node1 = await graph.getOrCreateNode('node-1');
     const node2 = await graph.getOrCreateNode('node-2');
-    expect(graph.hf.getSheetNames()).to.toHaveLength(3);
-    node1.graph.hf.setCellContents({ sheet: node1.sheetId, row: 0, col: 0 }, 100);
-    node2.graph.hf.setCellContents({ sheet: node2.sheetId, row: 0, col: 0 }, "='node-1'!A1");
-    const value1 = node1.graph.hf.getCellValue({ sheet: node1.sheetId, col: 0, row: 0 });
-    const value2 = node2.graph.hf.getCellValue({ sheet: node2.sheetId, col: 0, row: 0 });
-    expect(value1).to.eq(value2);
-    await ctx.dispose();
+
+    {
+      expect(graph.hf.getSheetNames()).to.toHaveLength(3);
+      node1.graph.hf.setCellContents({ sheet: node1.sheetId, row: 0, col: 0 }, [[100, 200, 300, '=SUM(A1:C1)']]);
+      node2.graph.hf.setCellContents({ sheet: node2.sheetId, row: 0, col: 0 }, "='node-1'!D1");
+      const value1 = node1.graph.hf.getCellValue({ sheet: node1.sheetId, col: 3, row: 0 });
+      const value2 = node2.graph.hf.getCellValue({ sheet: node2.sheetId, col: 0, row: 0 });
+      expect(value1).to.eq(value2);
+    }
+
+    // Get updated event.
+    const trigger = new Trigger<CellValue>();
+    node2.update.on(({ change }) => {
+      const value = node2.graph.hf.getCellValue({ sheet: node2.sheetId, col: 0, row: 0 });
+      expect(value).to.eq(change?.newValue);
+      trigger.wake(value);
+    });
+
+    {
+      node1.graph.hf.setCellContents({ sheet: node1.sheetId, row: 0, col: 0 }, 400);
+      const value1 = node1.graph.hf.getCellValue({ sheet: node1.sheetId, col: 3, row: 0 });
+      const value2 = await trigger.wait();
+      expect(value1).to.eq(value2);
+    }
   });
 
   test('async function', async () => {
