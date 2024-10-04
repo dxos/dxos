@@ -85,7 +85,7 @@ jobs:
         if: ${{ github.event_name == 'schedule' || steps.extract_branch.outputs.branch == 'jdw/test-report' }}
         uses: ./.github/actions/test-report
         with:
-          name: ${{ github.workflow }}
+          name: '${{ github.job }}-${{ matrix.node-version }}'
 
   check:
     runs-on: ubuntu-latest
@@ -155,7 +155,7 @@ jobs:
         if: ${{ github.event_name == 'schedule' }}
         uses: ./.github/actions/test-report
         with:
-          name: ${{ github.workflow }}
+          name: ${{ github.job }}
 
   dead-links:
     runs-on: ubuntu-latest
