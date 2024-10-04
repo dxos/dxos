@@ -2,10 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Extension, Facet } from '@codemirror/state';
+import { type Extension } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { vim } from '@replit/codemirror-vim';
 import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
+
+import { singleValueFacet } from './util';
 
 export const focusEvent = 'focus.container';
 
@@ -19,9 +21,7 @@ export type EditorInputConfig = {
   noTabster?: boolean;
 };
 
-export const editorInputMode = Facet.define<EditorInputConfig, EditorInputConfig>({
-  combine: (modes) => modes[0] ?? {},
-});
+export const editorInputMode = singleValueFacet<EditorInputConfig>();
 
 export const InputModeExtensions: { [mode: string]: Extension } = {
   default: [],

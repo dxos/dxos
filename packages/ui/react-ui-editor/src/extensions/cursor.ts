@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EditorState, Facet } from '@codemirror/state';
+import { type EditorState } from '@codemirror/state';
 
 import { type Range } from './types';
+import { singleValueFacet } from './util';
 
 /**
  * Converts indexes into the text document into stable peer-independent cursors.
@@ -27,11 +28,7 @@ const defaultCursorConverter: CursorConverter = {
 };
 
 export class Cursor {
-  static readonly converter = Facet.define<CursorConverter, CursorConverter>({
-    combine: (providers) => {
-      return providers[0] ?? defaultCursorConverter;
-    },
-  });
+  static readonly converter = singleValueFacet(defaultCursorConverter);
 
   static readonly getCursorFromRange = (state: EditorState, range: Range) => {
     const cursorConverter = state.facet(Cursor.converter);

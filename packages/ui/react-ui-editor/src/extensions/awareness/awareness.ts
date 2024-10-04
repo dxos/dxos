@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Annotation, Facet, type Extension, RangeSet, type Range } from '@codemirror/state';
+import { Annotation, type Extension, RangeSet, type Range } from '@codemirror/state';
 import {
   Decoration,
   type DecorationSet,
@@ -17,6 +17,7 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 
 import { Cursor, type CursorConverter } from '../cursor';
+import { singleValueFacet } from '../util';
 
 export interface AwarenessProvider {
   remoteStateChange: Event<void>;
@@ -38,9 +39,7 @@ const dummyProvider: AwarenessProvider = {
   update: () => {},
 };
 
-export const awarenessProvider = Facet.define<AwarenessProvider, AwarenessProvider>({
-  combine: (providers) => providers[0] ?? dummyProvider,
-});
+export const awarenessProvider = singleValueFacet<AwarenessProvider>(dummyProvider);
 
 // TODO(dmaretskyi): Specify the users that actually changed. Currently, we recalculate positions for every user.
 const RemoteSelectionChangedAnnotation = Annotation.define();

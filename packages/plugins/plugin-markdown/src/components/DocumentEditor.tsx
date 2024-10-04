@@ -108,18 +108,12 @@ const DocumentEditor = ({
 
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
   const handleFileUpload = useMemo(() => {
-    if (space === undefined) {
+    if (space === undefined || fileManagerPlugin?.provides.file.upload === undefined) {
       return undefined;
     }
 
-    if (fileManagerPlugin?.provides.file.upload === undefined) {
-      return undefined;
-    }
-
-    return async (file: File) => {
-      return fileManagerPlugin?.provides?.file?.upload?.(file, space);
-    };
-  }, [fileManagerPlugin, space]);
+    return async (file: File) => fileManagerPlugin?.provides?.file?.upload?.(file, space);
+  }, [space, fileManagerPlugin]);
 
   return (
     <MarkdownEditor
@@ -128,10 +122,10 @@ const DocumentEditor = ({
       extensions={extensions}
       scrollTo={scrollTo}
       selection={selection}
-      onFileUpload={handleFileUpload}
       inputMode={settings.editorInputMode}
       toolbar={settings.toolbar}
       viewMode={viewMode}
+      onFileUpload={handleFileUpload}
       {...props}
     />
   );

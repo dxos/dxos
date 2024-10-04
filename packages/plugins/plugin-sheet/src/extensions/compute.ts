@@ -3,7 +3,6 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { Facet } from '@codemirror/state';
 import {
   type EditorState,
   type Extension,
@@ -16,32 +15,29 @@ import {
 import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type Space } from '@dxos/client/echo';
+import { scheduleTask } from '@dxos/async/src';
+import { invariant } from '@dxos/invariant';
+import { documentId } from '@dxos/react-ui-editor';
 
+import { singleValueFacet } from './facets';
 import { type CellAddress } from '../defs';
-import { type ComputeNode } from '../graph';
+import { type ComputeGraph, type ComputeNode } from '../graph';
 import { type CellScalarValue } from '../types';
-
-export const spaceFacet = Facet.define<Space, Space>({
-  combine: (values) => values[0],
-});
-
-// TODO(burdon): Create on demand?
-export const computeNodeFacet = Facet.define<ComputeNode, ComputeNode>({
-  combine: (values) => values[0],
-});
 
 const LANGUAGE_TAG = 'dx';
 
 // TODO(burdon): Create marker just for our decorator?
 const updateAllDecorations = StateEffect.define<void>();
 
+export const computeGraphFacet = singleValueFacet<ComputeGraph>();
+
 export type ComputeOptions = {};
 
 export const compute = (options: ComputeOptions = {}): Extension => {
+  let computeNode: ComputeNode | undefined;
+
   const update = (state: EditorState, rangeSet?: RangeSet<Decoration>) => {
     const builder = new RangeSetBuilder<Decoration>();
-    const computeNode = state.facet(computeNodeFacet);
     if (computeNode) {
       computeNode.clear();
       syntaxTree(state).iterate({
@@ -60,6 +56,7 @@ export const compute = (options: ComputeOptions = {}): Extension => {
                     builder.add(node.from, node.to, iter.value);
                   } else {
                     const cell: CellAddress = { col: node.node.from, row: 0 };
+                    invariant(computeNode);
                     computeNode.setValue(cell, formula);
                     const value = computeNode.getValue(cell);
                     builder.add(
@@ -83,25 +80,31 @@ export const compute = (options: ComputeOptions = {}): Extension => {
   };
 
   return [
-    // Graph subscription.
     ViewPlugin.fromClass(
       class {
-        private readonly _subscription?: UnsubscribeCallback;
+        // Graph subscription.
+        private _subscription?: UnsubscribeCallback;
         constructor(view: EditorView) {
-          const computeNode = view.state.facet(computeNodeFacet);
-          if (computeNode) {
-            this._subscription = computeNode.update.on(({ type }) => {
-              if (type === 'valuesUpdated') {
-                view.dispatch({
-                  effects: updateAllDecorations.of(),
-                });
-              }
+          const id = view.state.facet(documentId);
+          const computeGraph = view.state.facet(computeGraphFacet);
+          if (id && computeGraph) {
+            scheduleTask(async () => {
+              computeNode = await computeGraph.getOrCreateNode(id);
+              this._subscription = computeNode.update.on(({ type }) => {
+                if (type === 'valuesUpdated') {
+                  view.dispatch({
+                    effects: updateAllDecorations.of(),
+                  });
+                }
+              });
             });
           }
         }
 
         destroy() {
           this._subscription?.();
+          void computeNode?.close();
+          computeNode = undefined;
         }
       },
     ),

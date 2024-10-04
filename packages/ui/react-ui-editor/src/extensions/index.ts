@@ -22,3 +22,4 @@ export * from './modes';
 export * from './state';
 export * from './types';
 export * from './typewriter';
+export * from './typewriter';
