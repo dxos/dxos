@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Listeners } from 'hyperformula/typings/Emitter';
+import { type ExportedCellChange } from 'hyperformula/typings/Exporter';
+
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 
@@ -10,13 +13,17 @@ import { type ComputeGraph } from './compute-graph';
 import { type CellAddress } from '../defs';
 import { type CellScalarValue } from '../types';
 
+export type ComputeNodeEvent = {
+  type: keyof Listeners;
+  change?: ExportedCellChange;
+};
+
 /**
  * Individual "sheet" (typically corresponds to an ECHO object).
  */
 // TODO(burdon): Factor out common HF wrapper from from SheetModel.
 export class ComputeNode extends Resource {
-  // TODO(burdon): Chaing events.
-  public readonly update = new Event();
+  public readonly update = new Event<ComputeNodeEvent>();
 
   constructor(
     private readonly _graph: ComputeGraph,
@@ -25,13 +32,12 @@ export class ComputeNode extends Resource {
     super();
   }
 
-  // TODO(burdon): Remove?
   get graph() {
     return this._graph;
   }
 
-  get hf() {
-    return this._graph.hf;
+  clear() {
+    this._graph.hf.clearSheet(this.sheetId);
   }
 
   getValue(cell: CellAddress): CellScalarValue {
@@ -47,5 +53,10 @@ export class ComputeNode extends Resource {
     const mappedValue =
       typeof value === 'string' && value.charAt(0) === '=' ? this._graph.mapFormulaToNative(value) : value;
     this._graph.hf.setCellContents({ sheet: this.sheetId, row: cell.row, col: cell.col }, [[mappedValue]]);
+  }
+
+  protected override async _open() {
+    // const unsubscribe = this._graph.update.on(this.update.emit);
+    // this._ctx.onDispose(unsubscribe);
   }
 }

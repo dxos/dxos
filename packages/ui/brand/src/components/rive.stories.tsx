@@ -46,7 +46,7 @@ const Component = ({ buffer }: { buffer: ArrayBuffer }) => {
 };
 
 export const Default = () => {
-  const buffer = useAsyncState<ArrayBuffer>(async () => {
+  const [buffer] = useAsyncState<ArrayBuffer>(async () => {
     // CORS set via dashboard.
     const response = await fetch('https://dxos.network/dxos.riv', { mode: 'cors' });
     if (response.ok) {
