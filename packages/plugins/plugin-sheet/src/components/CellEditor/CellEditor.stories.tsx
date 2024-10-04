@@ -49,7 +49,7 @@ const AutomergeStory = ({ value, ...props }: StoryProps) => {
       client.addTypes([SheetType]);
 
       const sheet = createSheet();
-      sheet.title = 'Test';
+      sheet.name = 'Test';
       sheet.cells[cell] = { value };
       space.db.add(sheet);
       setObject(sheet);

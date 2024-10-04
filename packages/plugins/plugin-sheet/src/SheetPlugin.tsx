@@ -16,6 +16,7 @@ import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { ComputeGraphContextProvider, SheetContainer } from './components';
 import { compareIndexPositions, createSheet } from './defs';
 import { type ComputeGraphRegistry } from './graph';
+import { useComputeGraph } from './hooks';
 import meta, { SHEET_PLUGIN } from './meta';
 import translations from './translations';
 import { SheetAction, SheetType, type SheetPluginProvides } from './types';
@@ -36,8 +37,8 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       }
 
       // Async import removes direct dependency on hyperformula.
-      const { createComputeGraphRegistry } = await import('./graph');
-      graphRegistry = createComputeGraphRegistry({ remoteFunctionUrl });
+      const { ComputeGraphRegistry } = await import('./graph');
+      graphRegistry = new ComputeGraphRegistry({ remoteFunctionUrl });
     },
     provides: {
       context: ({ children }) => {
@@ -47,7 +48,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       metadata: {
         records: {
           [SheetType.typename]: {
-            label: (object: any) => (object instanceof SheetType ? object.title : undefined),
+            label: (object: any) => (object instanceof SheetType ? object.name : undefined),
             placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
             icon: 'ph--grid-nine--regular',
           },
@@ -108,7 +109,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         },
       },
       markdown: {
-        // TODO(burdon): Construct compute node.
+        // TODO(burdon): Facet to get current space/compute graph.
         extensions: ({ document }) => {
           return undefined;
           // return [
@@ -138,12 +139,13 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          const space = isEchoObject(data.object) && getSpace(data.object);
-          if (space && data.object instanceof SheetType) {
+          const space = isEchoObject(data.object) ? getSpace(data.object) : undefined;
+          const graph = useComputeGraph(space);
+          if (graph && data.object instanceof SheetType) {
             switch (role) {
               case 'article':
               case 'section': {
-                return <SheetContainer sheet={data.object} space={space} role={role} />;
+                return <SheetContainer graph={graph} sheet={data.object} role={role} />;
               }
             }
           }
