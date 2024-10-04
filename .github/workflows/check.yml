@@ -82,8 +82,10 @@ jobs:
           verbose: true
 
       - name: Send test report
+        if: ${{ github.event_name == 'schedule' || steps.extract_branch.outputs.branch == 'jdw/test-report' }}
         uses: ./.github/actions/test-report
-        if: ${{ github.event_name == 'schedule' }}
+        with:
+          name: ${{ github.workflow }}
 
   check:
     runs-on: ubuntu-latest
@@ -150,8 +152,10 @@ jobs:
         run: pnpm exec nx run-many -t e2e --browser=all --parallel=1
 
       - name: Send test report
-        uses: ./.github/actions/test-report
         if: ${{ github.event_name == 'schedule' }}
+        uses: ./.github/actions/test-report
+        with:
+          name: ${{ github.workflow }}
 
   dead-links:
     runs-on: ubuntu-latest
