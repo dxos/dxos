@@ -27,14 +27,13 @@ const makeData = (n: number) => {
 };
 
 const columnDefinitions: ColumnDefinition[] = [
-  { id: 'id', dataType: 'number', headerLabel: 'ID', accessor: (row: any) => row.id },
   { id: 'name', dataType: 'string', headerLabel: 'Name', accessor: (row: any) => row.name },
   { id: 'age', dataType: 'number', headerLabel: 'Age', accessor: (row: any) => row.age },
   { id: 'active', dataType: 'boolean', headerLabel: 'Active', accessor: (row: any) => row.active },
 ];
 
 const Story = () => {
-  const data = React.useMemo(() => makeData(10000), []);
+  const data = React.useMemo(() => makeData(50), []);
   const { table, dispatch: _dispatch } = useTable(columnDefinitions, data);
 
   const handleAddRow = () => {
@@ -69,6 +68,8 @@ const Story = () => {
       <button onClick={handleAddRow}>Add Row</button>
       <Grid.Root id='table-v2'>
         <Grid.Content
+          limitRows={table.rows.value.length}
+          limitColumns={table.columnDefinitions.length}
           initialCells={Object.fromEntries(
             table.rows.value.flatMap((row, rowIndex) =>
               table.columnDefinitions.map((col, colIndex) => [
