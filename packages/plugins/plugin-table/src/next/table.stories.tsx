@@ -99,7 +99,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'table-v2-rename-me',
+  title: 'plugin-table/table-next',
   component: Story,
   render: () => <ClientRepeater component={Story} createIdentity createSpace />,
   decorators: [withTheme, withLayout({ fullscreen: true })],
