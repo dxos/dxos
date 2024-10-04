@@ -5,6 +5,7 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state, property, eventOptions } from 'lit/decorators.js';
 import { ref, createRef, type Ref } from 'lit/directives/ref.js';
+import { styleMap } from 'lit/directives/style-map.js';
 
 // eslint-disable-next-line unused-imports/no-unused-imports
 import './dx-grid-axis-resize-handle';
@@ -32,10 +33,9 @@ import { separator, toCellIndex } from './util';
 const gap = 1;
 
 /**
- * This should be about the width of the `1` numeral so resize is triggered as the row header column’s intrinsic size
- * changes when scrolling vertically.
+ * ResizeObserver notices even subpixel changes, only respond to changes of at least 1px.
  */
-const resizeTolerance = 8;
+const resizeTolerance = 1;
 
 //
 // `overscan` is the number of columns or rows to render outside of the viewport
@@ -101,7 +101,7 @@ export class DxGrid extends LitElement {
   constructor() {
     super();
     this.addEventListener('dx-axis-resize-internal', this.handleAxisResizeInternal as EventListener);
-    this.addEventListener('wheel', this.handleWheel);
+    this.addEventListener('wheel', this.handleWheel, { passive: true });
     this.addEventListener('pointerdown', this.handlePointerDown);
     this.addEventListener('pointermove', this.handlePointerMove);
     this.addEventListener('pointerup', this.handlePointerUp);
@@ -131,6 +131,12 @@ export class DxGrid extends LitElement {
 
   @property({ type: String })
   mode: DxGridMode = 'browse';
+
+  @property({ type: Number })
+  limitColumns: number = Infinity;
+
+  @property({ type: Number })
+  limitRows: number = Infinity;
 
   /**
    * When this function is defined, it is used first to try to get a value for a cell, and otherwise will fall back
@@ -239,6 +245,16 @@ export class DxGrid extends LitElement {
   private selectionEnd: DxGridPosition = { col: 0, row: 0 };
 
   //
+  // Limits
+  //
+
+  @state()
+  private intrinsicInlineSize: number = Infinity;
+
+  @state()
+  private intrinsicBlockSize: number = Infinity;
+
+  //
   // Primary pointer and keyboard handlers
   //
 
@@ -320,13 +336,13 @@ export class DxGrid extends LitElement {
       // Adjust state
       switch (event.key) {
         case 'ArrowDown':
-          this.focusedCell = { ...this.focusedCell, row: this.focusedCell.row + 1 };
+          this.focusedCell = { ...this.focusedCell, row: Math.min(this.limitRows - 1, this.focusedCell.row + 1) };
           break;
         case 'ArrowUp':
           this.focusedCell = { ...this.focusedCell, row: Math.max(0, this.focusedCell.row - 1) };
           break;
         case 'ArrowRight':
-          this.focusedCell = { ...this.focusedCell, col: this.focusedCell.col + 1 };
+          this.focusedCell = { ...this.focusedCell, col: Math.min(this.limitColumns - 1, this.focusedCell.col + 1) };
           break;
         case 'ArrowLeft':
           this.focusedCell = { ...this.focusedCell, col: Math.max(0, this.focusedCell.col - 1) };
@@ -410,6 +426,7 @@ export class DxGrid extends LitElement {
       this.sizeInline = inlineSize;
       this.sizeBlock = blockSize;
       this.updateVis();
+      queueMicrotask(() => this.updatePos());
     }
   });
 
@@ -434,11 +451,15 @@ export class DxGrid extends LitElement {
     }
   };
 
-  private handleWheel = ({ deltaX, deltaY }: WheelEvent) => {
+  private updatePos(inline?: number, block?: number) {
+    this.posInline = Math.max(0, Math.min(this.intrinsicInlineSize - this.sizeInline, inline ?? this.posInline));
+    this.posBlock = Math.max(0, Math.min(this.intrinsicBlockSize - this.sizeBlock, block ?? this.posBlock));
+    this.maybeUpdateVis();
+  }
+
+  private handleWheel = ({ deltaX, deltaY }: Pick<WheelEvent, 'deltaX' | 'deltaY'>) => {
     if (this.mode === 'browse') {
-      this.posInline = Math.max(0, this.posInline + deltaX);
-      this.posBlock = Math.max(0, this.posBlock + deltaY);
-      this.maybeUpdateVis();
+      this.updatePos(this.posInline + deltaX, this.posBlock + deltaY);
     }
   };
 
@@ -469,7 +490,7 @@ export class DxGrid extends LitElement {
       pxInline += this.colSize(colIndex) + gap;
     }
 
-    this.visColMax = colIndex + overscanCol;
+    this.visColMax = Math.min(this.limitColumns, colIndex + overscanCol);
 
     this.templateColumns = [...Array(this.visColMax - this.visColMin)]
       .map((_, c0) => `${this.colSize(this.visColMin + c0)}px`)
@@ -503,7 +524,7 @@ export class DxGrid extends LitElement {
       pxBlock += this.rowSize(rowIndex) + gap;
     }
 
-    this.visRowMax = rowIndex + overscanRow;
+    this.visRowMax = Math.min(this.limitRows, rowIndex + overscanRow);
 
     this.templateRows = [...Array(this.visRowMax - this.visRowMin)]
       .map((_, r0) => `${this.rowSize(this.visRowMin + r0)}px`)
@@ -588,26 +609,35 @@ export class DxGrid extends LitElement {
       // );
     } else {
       if (this.focusedCell.col <= this.visColMin + overscanCol) {
-        this.posInline = this.binInlineMin;
+        this.posInline = this.binInlineMin + gap;
         this.updateVisInline();
       } else if (this.focusedCell.col >= this.visColMax - overscanCol - 1) {
         const sizeSumCol = [...Array(this.focusedCell.col - this.visColMin)].reduce((acc, _, c0) => {
           acc += this.colSize(this.visColMin + overscanCol + c0) + gap;
           return acc;
         }, 0);
-        this.posInline = Math.max(0, this.binInlineMin + sizeSumCol + gap * 2 - this.sizeInline);
+        this.posInline = Math.max(
+          0,
+          Math.min(
+            this.intrinsicInlineSize - this.sizeInline,
+            this.binInlineMin + sizeSumCol + gap * 2 - this.sizeInline,
+          ),
+        );
         this.updateVisInline();
       }
 
       if (this.focusedCell.row <= this.visRowMin + overscanRow) {
-        this.posBlock = this.binBlockMin;
+        this.posBlock = this.binBlockMin + gap;
         this.updateVisBlock();
       } else if (this.focusedCell.row >= this.visRowMax - overscanRow - 1) {
         const sizeSumRow = [...Array(this.focusedCell.row - this.visRowMin)].reduce((acc, _, r0) => {
           acc += this.rowSize(this.visRowMin + overscanRow + r0) + gap;
           return acc;
         }, 0);
-        this.posBlock = Math.max(0, this.binBlockMin + sizeSumRow + gap * 2 - this.sizeBlock);
+        this.posBlock = Math.max(
+          0,
+          Math.min(this.intrinsicBlockSize - this.sizeBlock, this.binBlockMin + sizeSumRow + gap * 2 - this.sizeBlock),
+        );
         this.updateVisBlock();
       }
     }
@@ -645,10 +675,12 @@ export class DxGrid extends LitElement {
       const nextSize = Math.max(sizeColMin, Math.min(sizeColMax, size + delta));
       this.colSizes = { ...this.colSizes, [index]: nextSize };
       this.updateVisInline();
+      this.updateIntrinsicInlineSize();
     } else {
       const nextSize = Math.max(sizeRowMin, Math.min(sizeRowMax, size + delta));
       this.rowSizes = { ...this.rowSizes, [index]: nextSize };
       this.updateVisBlock();
+      this.updateIntrinsicBlockSize();
     }
     if (type === 'dropped') {
       this.dispatchEvent(
@@ -680,6 +712,10 @@ export class DxGrid extends LitElement {
     return html`<div
       role="none"
       class="dx-grid"
+      style=${styleMap({
+        '--dx-viewport-inline-size': Number.isFinite(this.limitColumns) ? `${this.intrinsicInlineSize}px` : '1fr',
+        '--dx-viewport-block-size': Number.isFinite(this.limitRows) ? `${this.intrinsicBlockSize}px` : '1fr',
+      })}
       data-grid=${this.gridId}
       data-grid-mode=${this.mode}
       ?data-grid-select=${selectVisible}
@@ -704,7 +740,6 @@ export class DxGrid extends LitElement {
                 axis="col"
                 index=${c}
                 size=${this.colSize(c)}
-                @dxaxisresizeinternal=${this.handleAxisResizeInternal}
               ></dx-grid-axis-resize-handle>`}
             </div>`;
           })}
@@ -731,7 +766,7 @@ export class DxGrid extends LitElement {
           })}
         </div>
       </div>
-      <div role="grid" class="dx-grid__viewport" tabindex="0" @wheel=${this.handleWheel} ${ref(this.viewportRef)}>
+      <div role="grid" class="dx-grid__viewport" tabindex="0" ${ref(this.viewportRef)}>
         <div
           role="none"
           class="dx-grid__content"
@@ -775,6 +810,23 @@ export class DxGrid extends LitElement {
     </div>`;
   }
 
+  private updateIntrinsicInlineSize() {
+    this.intrinsicInlineSize = Number.isFinite(this.limitColumns)
+      ? [...Array(this.limitColumns)].reduce((acc, _, c0) => acc + this.colSize(c0), 0) + gap * (this.limitColumns - 1)
+      : Infinity;
+  }
+
+  private updateIntrinsicBlockSize() {
+    this.intrinsicBlockSize = Number.isFinite(this.limitRows)
+      ? [...Array(this.limitRows)].reduce((acc, _, r0) => acc + this.rowSize(r0), 0) + gap * (this.limitRows - 1)
+      : Infinity;
+  }
+
+  private updateIntrinsicSizes() {
+    this.updateIntrinsicInlineSize();
+    this.updateIntrinsicBlockSize();
+  }
+
   override firstUpdated() {
     if (this.getCells) {
       this.cells = this.getCells({
@@ -795,6 +847,7 @@ export class DxGrid extends LitElement {
       }
       return acc;
     }, {});
+    this.updateIntrinsicSizes();
   }
 
   override willUpdate(changedProperties: Map<string, any>) {
