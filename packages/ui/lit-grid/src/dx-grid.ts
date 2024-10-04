@@ -670,7 +670,7 @@ export class DxGrid extends LitElement {
   //
   private handleAxisResizeInternal(event: DxAxisResizeInternal) {
     event.stopPropagation();
-    const { axis, delta, size, index, type } = event;
+    const { axis, delta, size, index, state } = event;
     if (axis === 'col') {
       const nextSize = Math.max(sizeColMin, Math.min(sizeColMax, size + delta));
       this.colSizes = { ...this.colSizes, [index]: nextSize };
@@ -682,7 +682,7 @@ export class DxGrid extends LitElement {
       this.updateVisBlock();
       this.updateIntrinsicBlockSize();
     }
-    if (type === 'dropped') {
+    if (state === 'dropped') {
       this.dispatchEvent(
         new DxAxisResize({
           axis,
