@@ -335,11 +335,11 @@
       "@dxos/react-ui-deck": [
         "packages/ui/react-ui-deck/src/index.ts"
       ],
-      "@dxos/react-ui-editor/defs": [
-        "packages/ui/react-ui-editor/src/defs/index.ts"
-      ],
       "@dxos/react-ui-editor": [
         "packages/ui/react-ui-editor/src/index.ts"
+      ],
+      "@dxos/react-ui-editor/state": [
+        "packages/ui/react-ui-editor/src/state/index.ts"
       ],
       "@dxos/react-ui-grid": [
         "packages/ui/react-ui-grid/src/index.ts"
