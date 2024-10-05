@@ -28,9 +28,8 @@ import { debounce, type UnsubscribeCallback } from '@dxos/async';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
-import { Cursor } from './cursor';
 import { overlap } from './util';
-import { documentId, singleValueFacet } from '../state';
+import { Cursor, documentId, singleValueFacet } from '../state';
 import { type Comment, type Range } from '../state';
 import { callbackWrapper } from '../util';
 

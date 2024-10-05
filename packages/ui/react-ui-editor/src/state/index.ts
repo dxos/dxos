@@ -4,6 +4,7 @@
 
 // Non-UX exports.
 
+export * from './cursor';
 export * from './doc';
 export * from './state';
 export * from './types';
