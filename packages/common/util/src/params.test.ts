@@ -15,10 +15,9 @@ const InvitationUrl = S.Struct({
   timeout: S.Number,
 });
 
-describe('Params', () => {
-  test('parse', () => {
+describe.only('Params', () => {
+  test.only('parse', () => {
     const props = new Params(InvitationUrl);
-
     const values = props.parse(
       new URL('http://localhost?access_token=100&deviceInvitationCode=200&experimental=1&timeout=100'),
     );
