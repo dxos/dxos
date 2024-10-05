@@ -13,7 +13,15 @@
         "require": "./dist/lib/node/index.cjs",
         "default": "./dist/lib/node-esm/index.mjs"
       },
-    "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./state": {
+      "browser": "./dist/lib/browser/state/index.mjs",
+      "node": {
+        "require": "./dist/lib/node/state/index.cjs",
+        "default": "./dist/lib/node-esm/state/index.mjs"
+      },
+      "types": "./dist/types/src/state/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -7,12 +7,13 @@ import { keymap } from '@codemirror/view';
 import { vim } from '@replit/codemirror-vim';
 import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
 
-import { singleValueFacet } from './util';
+import { singleValueFacet } from '../state';
 
 export const focusEvent = 'focus.container';
 
 export const EditorViewModes = ['preview', 'readonly', 'source'] as const;
 export type EditorViewMode = (typeof EditorViewModes)[number];
+
 export const EditorInputModes = ['default', 'vim', 'vscode'] as const;
 export type EditorInputMode = (typeof EditorInputModes)[number];
 

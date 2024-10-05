@@ -4,8 +4,7 @@
 
 import { type EditorState } from '@codemirror/state';
 
-import { type Range } from './types';
-import { singleValueFacet } from './util';
+import { type Range, singleValueFacet } from '../state';
 
 /**
  * Converts indexes into the text document into stable peer-independent cursors.

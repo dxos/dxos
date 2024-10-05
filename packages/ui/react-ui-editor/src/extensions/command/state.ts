@@ -13,7 +13,7 @@ import {
 } from '@codemirror/view';
 
 import { type CommandOptions } from './command';
-import { singleValueFacet } from '../util';
+import { singleValueFacet } from '../../state';
 
 type CommandState = {
   tooltip?: Tooltip | null;

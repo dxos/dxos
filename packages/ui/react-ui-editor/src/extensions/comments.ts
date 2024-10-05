@@ -29,9 +29,9 @@ import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
 import { Cursor } from './cursor';
-import { documentId } from './doc';
-import { type Comment, type Range } from './types';
-import { overlap, singleValueFacet } from './util';
+import { overlap } from './util';
+import { documentId, singleValueFacet } from '../state';
+import { type Comment, type Range } from '../state';
 import { callbackWrapper } from '../util';
 
 //

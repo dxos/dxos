@@ -47,18 +47,16 @@ import {
   linkTooltip,
   listener,
   mention,
-  state,
   table,
   typewriter,
   type CommandAction,
-  type Comment,
   type CommentsOptions,
-  type EditorSelectionState,
   debugTree,
   type DebugNode,
 } from './extensions';
 import { renderRoot } from './extensions/util';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
+import { type Comment, type EditorSelectionState, state } from './state';
 import translations from './translations';
 
 faker.seed(101);

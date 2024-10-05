@@ -335,6 +335,9 @@
       "@dxos/react-ui-deck": [
         "packages/ui/react-ui-deck/src/index.ts"
       ],
+      "@dxos/react-ui-editor/defs": [
+        "packages/ui/react-ui-editor/src/defs/index.ts"
+      ],
       "@dxos/react-ui-editor": [
         "packages/ui/react-ui-editor/src/index.ts"
       ],
