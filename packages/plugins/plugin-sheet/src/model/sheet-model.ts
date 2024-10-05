@@ -104,7 +104,8 @@ export class SheetModel extends Resource {
     initialize(this._sheet);
 
     // TODO(burdon): SheetModel should extend ComputeNode and be constructed via the graph.
-    this._node = await this._graph.getOrCreateNode(createSheetName(this._sheet.id));
+    this._node = this._graph.getOrCreateNode(createSheetName(this._sheet.id));
+    await this._node.open();
 
     // Listen for model updates (e.g., async calculations).
     const unsubscribe = this._node.update.on((event) => this.update.emit(event));

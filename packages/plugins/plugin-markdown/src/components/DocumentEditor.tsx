@@ -30,6 +30,7 @@ type DocumentEditorProps = {
 /**
  * Editor for a `DocumentType`.
  */
+// TODO(burdon): Merge with MarkdownEditor.
 const DocumentEditor = ({
   document: doc,
   extensionProviders = [],
@@ -57,6 +58,7 @@ const DocumentEditor = ({
     [doc, viewMode, dispatch, settings, settings.folding, settings.numberedHeadings],
   );
 
+  // TODO(burdon): Async.
   const pluginExtensions = useMemo(
     () =>
       extensionProviders.reduce((acc: Extension[], provider) => {

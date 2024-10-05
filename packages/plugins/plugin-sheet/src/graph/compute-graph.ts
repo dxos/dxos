@@ -18,10 +18,15 @@ import { FunctionType } from '@dxos/plugin-script/types';
 import { nonNullable } from '@dxos/util';
 
 import { ExportedCellChange, HyperFormula } from '#hyperformula';
-import { FunctionContext, type FunctionContextOptions } from './async-function';
 import { ComputeNode } from './compute-node';
-import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './edge-function';
-import { defaultFunctions, type FunctionDefinition } from './function-defs';
+import {
+  defaultFunctions,
+  EdgeFunctionPlugin,
+  EdgeFunctionPluginTranslations,
+  FunctionContext,
+  type FunctionContextOptions,
+  type FunctionDefinition,
+} from './functions';
 
 //
 // NOTE: The package.json file defines the packaged #hyperformula module.
@@ -87,22 +92,21 @@ export class ComputeGraphRegistry extends Resource {
     return this._graphs.get(spaceId);
   }
 
-  async getOrCreateGraph(space: Space): Promise<ComputeGraph> {
+  getOrCreateGraph(space: Space): ComputeGraph {
     let graph = this.getGraph(space.id);
     if (!graph) {
       log.info('create graph', { space: space.id });
-      graph = await this.createGraph(space);
+      graph = this.createGraph(space);
     }
 
     return graph;
   }
 
-  async createGraph(space: Space): Promise<ComputeGraph> {
+  createGraph(space: Space): ComputeGraph {
     invariant(!this._graphs.has(space.id), `ComputeGraph already exists for space: ${space.id}`);
     const hf = HyperFormula.buildEmpty(this._options);
     const graph = new ComputeGraph(hf, space, this._options);
     this._graphs.set(space.id, graph);
-    await graph.open();
     return graph;
   }
 
@@ -189,7 +193,7 @@ export class ComputeGraph extends Resource {
   //  This would enable on-the-fly instantiation of new models when then are referenced.
   //  E.g., Cross-object reference would be stored as "ObjectId!A1"
   //  The graph would then load the object and create a ComputeNode (model) of the appropriate type.
-  async getOrCreateNode(name: string): Promise<ComputeNode> {
+  getOrCreateNode(name: string): ComputeNode {
     invariant(name.length);
     if (!this._hf.doesSheetExist(name)) {
       log.info('created node', { space: this._space?.id, name });
@@ -201,7 +205,6 @@ export class ComputeGraph extends Resource {
     invariant(sheetId !== undefined);
 
     const node = new ComputeNode(this, sheetId);
-    await node.open();
     this._nodes.set(sheetId, node);
     return node;
   }

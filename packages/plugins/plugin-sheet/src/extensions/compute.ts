@@ -89,7 +89,8 @@ export const compute = (options: ComputeOptions = {}): Extension => {
           const computeGraph = view.state.facet(computeGraphFacet);
           if (id && computeGraph) {
             queueMicrotask(async () => {
-              computeNode = await computeGraph.getOrCreateNode(id);
+              computeNode = computeGraph.getOrCreateNode(id);
+              await computeNode.open();
               this._subscription = computeNode.update.on(({ type }) => {
                 if (type === 'valuesUpdated') {
                   view.dispatch({

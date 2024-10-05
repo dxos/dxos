@@ -275,6 +275,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 ? data.object
                 : undefined;
 
+          // TODO(burdon): Unify editor components.
           switch (role) {
             case 'section':
             case 'article': {

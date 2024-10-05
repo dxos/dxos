@@ -8,8 +8,8 @@ import { type ProcedureAst } from 'hyperformula/typings/parser';
 import { getDeep } from '@dxos/util';
 
 import { FunctionArgumentType } from '#hyperformula';
-import { type AsyncFunction, FunctionPluginAsync } from '../async-function';
 import { type ComputeGraphPlugin } from '../compute-graph';
+import { type AsyncFunction, FunctionPluginAsync } from '../functions';
 import { parseNumberString } from '../util';
 
 /**

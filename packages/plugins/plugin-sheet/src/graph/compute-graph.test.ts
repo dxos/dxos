@@ -46,7 +46,8 @@ describe('compute graph', () => {
     await registry.open();
     ctx.onDispose(() => registry.close());
 
-    const graph = await registry.createGraph(space);
+    const graph = registry.createGraph(space);
+    await graph.open();
 
     const sheet = createSheet({ rows: 5, columns: 5 });
     const model = new SheetModel(graph, sheet);
@@ -73,8 +74,10 @@ describe('compute graph', () => {
     const { graph } = await createModel();
 
     // Create nodes.
-    const node1 = await graph.getOrCreateNode('node-1');
-    const node2 = await graph.getOrCreateNode('node-2');
+    const node1 = graph.getOrCreateNode('node-1');
+    const node2 = graph.getOrCreateNode('node-2');
+    await node1.open();
+    await node2.open();
 
     {
       expect(graph.hf.getSheetNames()).to.toHaveLength(3);

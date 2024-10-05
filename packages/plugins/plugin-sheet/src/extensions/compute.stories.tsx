@@ -52,7 +52,6 @@ const Editor = ({ text }: EditorProps) => {
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         documentId.of(id.toHex()),
-        // TODO(burdon): How is this set in composer's Markdown editor without dependency.
         computeGraph && computeGraphFacet.of(computeGraph),
         compute(),
         decorateMarkdown(),
