@@ -200,9 +200,9 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
     return listLevels[listLevels.length - 1];
   };
 
-  let count = 0;
+  // let count = 0;
   const enterNode = (node: SyntaxNodeRef) => {
-    console.log(`[${count++}]`, { node: node.name, from: node.from, to: node.to });
+    // console.log(`[${count++}]`, { node: node.name, from: node.from, to: node.to });
     switch (node.name) {
       // ATXHeading > HeaderMark > Paragraph
       // NOTE: Numbering requires processing the entire document since otherwise only the visible range will be
