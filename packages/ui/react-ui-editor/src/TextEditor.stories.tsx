@@ -163,8 +163,8 @@ const content = {
     '> This is a long wrapping block quote. Neque reiciendis ullam quae error labore sit, at, et, nulla, aut at nostrum omnis quas nostrum, at consectetur vitae eos asperiores non omnis ullam in beatae at vitae deserunt asperiores sapiente.',
     '',
     '> This is ...',
-    '> ... a multi-line ...',
-    '> block quote.',
+    '... a multi-line ...',
+    'block quote.',
     '',
   ),
 
@@ -450,6 +450,12 @@ export const ScrollTo = {
 //
 // Markdown
 //
+
+export const Blockquote = {
+  render: () => (
+    <Story text={str('> Blockquote', 'continuation', content.footer)} extensions={decorateMarkdown()} debug='raw' />
+  ),
+};
 
 export const Headings = {
   render: () => <Story text={headings} extensions={decorateMarkdown({ numberedHeadings: { from: 2, to: 4 } })} />,

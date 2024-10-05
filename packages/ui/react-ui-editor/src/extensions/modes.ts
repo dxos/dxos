@@ -18,11 +18,11 @@ export const EditorInputModes = ['default', 'vim', 'vscode'] as const;
 export type EditorInputMode = (typeof EditorInputModes)[number];
 
 export type EditorInputConfig = {
-  type: string;
+  type?: string;
   noTabster?: boolean;
 };
 
-export const editorInputMode = singleValueFacet<EditorInputConfig>();
+export const editorInputMode = singleValueFacet<EditorInputConfig>({});
 
 export const InputModeExtensions: { [mode: string]: Extension } = {
   default: [],
