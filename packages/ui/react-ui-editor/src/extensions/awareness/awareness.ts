@@ -16,7 +16,6 @@ import {
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 
-import {} from '../../state';
 import { singleValueFacet, Cursor, type CursorConverter } from '../../state';
 
 export interface AwarenessProvider {
