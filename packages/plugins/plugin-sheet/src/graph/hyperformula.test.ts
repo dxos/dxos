@@ -7,8 +7,7 @@ import { describe, test, expect } from 'vitest';
 import { HyperFormula } from '#hyperformula';
 
 describe('hyperformula', () => {
-  test('sanity', async () => {
-    // TODO(burdon): Throws "Cannot convert undefined or null to object" in vitest (without browser).
+  test('import bundle', async () => {
     const hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
     expect(hf).to.exist;
   });

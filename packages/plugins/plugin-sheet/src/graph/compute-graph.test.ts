@@ -127,4 +127,6 @@ describe('compute graph', () => {
     expect(v2).not.to.be.null;
     expect(graph.context.info.invocations.TEST).to.eq(1);
   });
+
+  // TODO(burdon): Dynamically load node/model based on dependencies.
 });
