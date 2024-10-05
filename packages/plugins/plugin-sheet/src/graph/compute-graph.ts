@@ -38,6 +38,9 @@ const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
 // TODO(burdon): Change to "DX".
 const CUSTOM_FUNCTION = 'ECHO';
 
+// TODO(burdon): Factory.
+// export type ComputeNodeGenerator = <T>(obj: T) => ComputeNode;
+
 export type ComputeGraphPlugin = {
   plugin: FunctionPluginDefinition;
   translations: FunctionTranslationsPackage;
@@ -167,11 +170,6 @@ export class ComputeGraph extends Resource {
     return this._hf;
   }
 
-  // refresh() {
-  //   log('refresh', { id: this.id });
-  //   this.update.emit();
-  // }
-
   getFunctions(
     { standard, echo }: { standard?: boolean; echo?: boolean } = { standard: true, echo: true },
   ): FunctionDefinition[] {
@@ -198,7 +196,6 @@ export class ComputeGraph extends Resource {
     if (!this._hf.doesSheetExist(name)) {
       log.info('created node', { space: this._space?.id, name });
       this._hf.addSheet(name);
-      // this.update.emit();
     }
 
     const sheetId = this._hf.getSheetId(name);
@@ -220,7 +217,7 @@ export class ComputeGraph extends Resource {
         // https://hyperformula.handsontable.com/guide/cell-references.html#cell-references
         .replace(/['"]?([ \w]+)['"]?!/, (_match, name) => {
           if (name) {
-            // TODO(burdon): What if not loaded?
+            // TODO(burdon): Dynamically create downstream models.
             const objects = this._hf
               .getSheetNames()
               .map((name) => {
@@ -231,7 +228,7 @@ export class ComputeGraph extends Resource {
 
             for (const obj of objects) {
               if (obj.name === name || obj.title === name) {
-                return `${createSheetName(obj.id)}!`;
+                return `'${createSheetName(obj.id)}'!`;
               }
             }
           }
