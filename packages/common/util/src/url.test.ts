@@ -5,32 +5,34 @@
 import { Schema as S } from '@effect/schema';
 import { describe, expect, test } from 'vitest';
 
-import { ParamKeyAnnotation, Params } from './params';
+import { ParamKeyAnnotation, UrlParser } from './url';
 
-const InvitationUrl = S.Struct({
+const Invitation = S.Struct({
   accessToken: S.String,
   deviceInvitationCode: S.String.pipe(ParamKeyAnnotation({ key: 'deviceInvitationCode' })),
   spaceInvitationCode: S.String,
   experimental: S.Boolean,
+  testing: S.Boolean,
   timeout: S.Number,
 });
 
-describe('Params', () => {
+describe.only('Params', () => {
   test('parse', () => {
-    const props = new Params(InvitationUrl);
-    const values = props.parse(
-      new URL('http://localhost?access_token=100&deviceInvitationCode=200&experimental=1&timeout=100'),
+    const parser = new UrlParser(Invitation);
+    const values = parser.parse(
+      'http://localhost?access_token=100&deviceInvitationCode=200&experimental=1&testing=false&timeout=100',
     );
     expect(values).to.deep.eq({
       accessToken: '100',
       deviceInvitationCode: '200',
       experimental: true,
+      testing: false,
       timeout: 100,
     });
 
-    const url = props.params(new URL('http://localhost'), values);
+    const url = parser.create('http://localhost', values);
     expect(url.toString()).to.eq(
-      'http://localhost/?access_token=100&deviceInvitationCode=200&experimental=true&timeout=100',
+      'http://localhost/?access_token=100&deviceInvitationCode=200&experimental=true&testing=false&timeout=100',
     );
   });
 });

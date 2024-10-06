@@ -15,20 +15,22 @@ const getParamKeyAnnotation: (annotated: AST.Annotated) => Option.Option<ParamKe
 
 export const ParamKeyAnnotation =
   (value: ParamKeyAnnotationValue) =>
-  <S extends S.Annotable.All>(self: S) =>
+  <S extends S.Schema.All>(self: S) =>
     self.annotations({ [ParamKeyAnnotationId]: value });
 
 /**
  * HTTP params parser.
+ * Supports custom key serialization.
  */
-export class Params<T extends Record<string, any>> {
+export class UrlParser<T extends Record<string, any>> {
   constructor(private readonly _schema: S.Struct<T>) {}
 
   /**
    * Parse URL params.
    * @param url
    */
-  parse(url: URL): T {
+  parse(_url: string): T {
+    const url = new URL(_url);
     return Object.entries(this._schema.fields).reduce<Record<string, any>>((params, [key, type]) => {
       let value = url.searchParams.get(decamelize(key));
       if (value == null) {
@@ -52,7 +54,8 @@ export class Params<T extends Record<string, any>> {
   /**
    * Update URL with params.
    */
-  params(url: URL, values: T): URL {
+  create(_url: string, values: T): URL {
+    const url = new URL(_url);
     Object.entries(values).forEach(([key, value]) => {
       if (value !== undefined) {
         const field = this._schema.fields[key];
