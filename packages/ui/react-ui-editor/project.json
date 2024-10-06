@@ -11,10 +11,12 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/state/index.ts"
         ],
         "platforms": [
-          "browser"
+          "browser",
+          "node"
         ]
       }
     },
