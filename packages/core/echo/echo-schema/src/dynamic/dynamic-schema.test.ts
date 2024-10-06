@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import * as AST from '@effect/schema/AST';
+import { AST, Schema as S } from '@effect/schema';
 import { effect } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 

@@ -38,7 +38,8 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@effect/schema": "^0.67.16",
-    "base-x": "~3.0.9"
+    "base-x": "~3.0.9",
+    "effect": "^3.2.7"
   },
   "publishConfig": {
     "access": "public"

@@ -2794,6 +2794,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -4741,6 +4744,9 @@ importers:
       chess.js:
         specifier: ^1.0.0-beta.8
         version: 1.0.0-beta.8
+      effect:
+        specifier: ^3.2.7
+        version: 3.8.4
       react-chessboard:
         specifier: ^4.7.1
         version: 4.7.1(@types/node@22.7.4)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -5518,6 +5524,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -5849,6 +5858,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@observablehq/plot':
         specifier: ^0.6.11
         version: 0.6.11
@@ -6192,6 +6204,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6284,6 +6299,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6355,6 +6373,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       kubo-rpc-client:
         specifier: ^4.1.1
         version: 4.1.1(undici@6.13.0)
@@ -6441,6 +6462,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6515,6 +6539,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6623,6 +6650,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6766,6 +6796,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@lezer/common':
         specifier: ^1.2.2
         version: 1.2.2
@@ -6781,6 +6814,9 @@ importers:
       codemirror:
         specifier: ^6.0.1
         version: 6.0.1(@lezer/common@1.2.2)
+      effect:
+        specifier: ^3.2.7
+        version: 3.8.4
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
@@ -7476,6 +7512,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -8104,6 +8143,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@lezer/common':
         specifier: ^1.2.2
         version: 1.2.2
@@ -8128,6 +8170,9 @@ importers:
       codemirror-lang-spreadsheet:
         specifier: ^1.3.0
         version: 1.3.0
+      effect:
+        specifier: ^3.2.7
+        version: 3.8.4
       hyperformula:
         specifier: ^2.7.1
         version: 2.7.1
@@ -8250,6 +8295,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -8396,6 +8444,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -8497,6 +8548,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -8647,6 +8701,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -8926,6 +8983,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -9099,6 +9159,9 @@ importers:
       '@dxos/websocket-rpc':
         specifier: workspace:*
         version: link:../../core/mesh/websocket-rpc
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
@@ -9187,6 +9250,9 @@ importers:
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
+      effect:
+        specifier: ^3.2.7
+        version: 3.8.4
 
   packages/sdk/client-services:
     dependencies:
@@ -10778,6 +10844,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)

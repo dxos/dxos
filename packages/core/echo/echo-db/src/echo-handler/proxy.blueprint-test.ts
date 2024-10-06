@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as S from '@effect/schema/Schema';
+import { type Schema as S } from '@effect/schema';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { getProxyHandlerSlot, getSchema, getType, getTypeReference } from '@dxos/echo-schema';

@@ -4,8 +4,7 @@
 
 import '@dxos-theme';
 
-import { Schema as S } from '@effect/schema';
-import * as Arbitrary from '@effect/schema/Arbitrary';
+import { Arbitrary, Schema as S } from '@effect/schema';
 import * as fc from 'fast-check';
 import React from 'react';
 

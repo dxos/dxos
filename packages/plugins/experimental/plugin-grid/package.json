@@ -62,6 +62,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/schema": "^0.67.16",
     "@preact/signals-core": "^1.6.0",
     "lodash.defaultsdeep": "^4.6.1",
     "react-markdown": "^8.0.5",

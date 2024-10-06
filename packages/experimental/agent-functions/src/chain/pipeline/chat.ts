@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as JSONSchema from '@effect/schema/JSONSchema';
-import type * as S from '@effect/schema/Schema';
+import { JSONSchema, type Schema as S } from '@effect/schema';
 import { type BaseFunctionCallOptions, type BaseLanguageModelCallOptions } from '@langchain/core/language_models/base';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
