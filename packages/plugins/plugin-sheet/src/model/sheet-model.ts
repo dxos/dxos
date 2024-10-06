@@ -60,7 +60,7 @@ export type SheetModelOptions = {
  *
  * [ComputeGraphContext] > [SheetContext]:[SheetModel] > [Sheet.Root]
  */
-// TODO(burdon): Factor out commonality with ComputeNode.
+// TODO(burdon): Factor out commonality with ComputeNode. Factor out HF.
 export class SheetModel extends Resource {
   public readonly id = `model-${PublicKey.random().truncate()}`;
 
