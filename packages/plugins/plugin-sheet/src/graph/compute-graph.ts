@@ -2,14 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type FunctionPluginDefinition } from 'hyperformula';
-import { type ConfigParams } from 'hyperformula/typings/ConfigParams';
 import { type Listeners } from 'hyperformula/typings/Emitter';
-import { type FunctionTranslationsPackage } from 'hyperformula/typings/interpreter';
-import defaultsDeep from 'lodash.defaultsdeep';
 
 import { Event } from '@dxos/async';
-import { type SpaceId, type Space, Filter, fullyQualifiedId } from '@dxos/client/echo';
+import { type Space, Filter, fullyQualifiedId } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -17,15 +13,14 @@ import { log } from '@dxos/log';
 import { FunctionType } from '@dxos/plugin-script/types';
 import { nonNullable } from '@dxos/util';
 
-import { ExportedCellChange, HyperFormula } from '#hyperformula';
+import { ExportedCellChange, type HyperFormula } from '#hyperformula';
 import { ComputeNode } from './compute-node';
 import {
   defaultFunctions,
-  EdgeFunctionPlugin,
-  EdgeFunctionPluginTranslations,
   FunctionContext,
   type FunctionContextOptions,
   type FunctionDefinition,
+  EDGE_FUNCTION_NAME,
 } from './functions';
 
 //
@@ -35,90 +30,16 @@ import {
 // TODO(wittjosiah): Factor out.
 const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
 
-// TODO(burdon): Change to "DX".
-const CUSTOM_FUNCTION = 'ECHO';
-
 // TODO(burdon): Factory.
 // export type ComputeNodeGenerator = <T>(obj: T) => ComputeNode;
-
-export type ComputeGraphPlugin = {
-  plugin: FunctionPluginDefinition;
-  translations: FunctionTranslationsPackage;
-};
-
-export type ComputeGraphOptions = {
-  plugins?: ComputeGraphPlugin[];
-} & Partial<FunctionContextOptions> &
-  Partial<ConfigParams>;
-
-export const defaultOptions: ComputeGraphOptions = {
-  licenseKey: 'gpl-v3',
-};
-
-export const defaultPlugins: ComputeGraphPlugin[] = [
-  {
-    plugin: EdgeFunctionPlugin,
-    translations: EdgeFunctionPluginTranslations,
-  },
-];
 
 /**
  * Marker for sheets that are managed by an ECHO object.
  */
-const PREFIX = '__';
+const PREFIX = 'ECHO_';
 export const createSheetName = (id: string) => `${PREFIX}${id}`;
 export const getSheetId = (name: string): string | undefined =>
   name.startsWith(PREFIX) ? name.slice(PREFIX.length) : undefined;
-
-/**
- * Manages a collection of ComputeGraph instances for each space.
- *
- * [ComputePlugin] => [ComputeGraphRegistry] => [ComputeGraph(Space)] => [ComputeNode(Object)]
- *
- * NOTE: The ComputeGraphRegistry manages the hierarchy of resources via its root Context.
- */
-// TODO(burdon): Move graph into separate plugin; isolate HF deps.
-export class ComputeGraphRegistry extends Resource {
-  private readonly _graphs = new Map<SpaceId, ComputeGraph>();
-
-  private readonly _options: ComputeGraphOptions;
-
-  constructor(options: ComputeGraphOptions = { plugins: defaultPlugins }) {
-    super();
-    this._options = defaultsDeep({}, options, defaultOptions);
-    this._options.plugins?.forEach(({ plugin, translations }) => {
-      HyperFormula.registerFunctionPlugin(plugin, translations);
-    });
-  }
-
-  getGraph(spaceId: SpaceId): ComputeGraph | undefined {
-    return this._graphs.get(spaceId);
-  }
-
-  getOrCreateGraph(space: Space): ComputeGraph {
-    let graph = this.getGraph(space.id);
-    if (!graph) {
-      log.info('create graph', { space: space.id });
-      graph = this.createGraph(space);
-    }
-
-    return graph;
-  }
-
-  createGraph(space: Space): ComputeGraph {
-    invariant(!this._graphs.has(space.id), `ComputeGraph already exists for space: ${space.id}`);
-    const hf = HyperFormula.buildEmpty(this._options);
-    const graph = new ComputeGraph(hf, space, this._options);
-    this._graphs.set(space.id, graph);
-    return graph;
-  }
-
-  protected override async _close() {
-    for (const graph of this._graphs.values()) {
-      await graph.close();
-    }
-  }
-}
 
 export type ComputeGraphEvent = 'functionsUpdated';
 
@@ -135,7 +56,7 @@ export class ComputeGraph extends Resource {
   private readonly _nodes = new Map<number, ComputeNode>();
 
   // Cached function objects.
-  private _functions: FunctionType[] = [];
+  private _remoteFunctions: FunctionType[] = [];
 
   public readonly update = new Event<{ type: ComputeGraphEvent }>();
 
@@ -179,7 +100,7 @@ export class ComputeGraph extends Resource {
             .getRegisteredFunctionNames()
             .map((name) => defaultFunctions.find((fn) => fn.name === name) ?? { name })
         : []),
-      ...(echo ? this._functions.map((fn) => ({ name: fn.binding! })) : []),
+      ...(echo ? this._remoteFunctions.map((fn) => ({ name: fn.binding! })) : []),
     ];
   }
 
@@ -194,7 +115,7 @@ export class ComputeGraph extends Resource {
   getOrCreateNode(name: string): ComputeNode {
     invariant(name.length);
     if (!this._hf.doesSheetExist(name)) {
-      log.info('created node', { space: this._space?.id, name });
+      log.info('created node', { space: this._space?.id, sheet: name });
       this._hf.addSheet(name);
     }
 
@@ -213,7 +134,7 @@ export class ComputeGraph extends Resource {
   mapFormulaToNative(formula: string): string {
     return (
       formula
-        // Sheet references.
+        // Map cross-sheet references (e.g., onto sheet stored by ECHO object/model).
         // https://hyperformula.handsontable.com/guide/cell-references.html#cell-references
         .replace(/['"]?([ \w]+)['"]?!/, (_match, name) => {
           if (name) {
@@ -228,7 +149,7 @@ export class ComputeGraph extends Resource {
 
             for (const obj of objects) {
               if (obj.name === name || obj.title === name) {
-                return `'${createSheetName(obj.id)}'!`;
+                return `${createSheetName(obj.id)}!`;
               }
             }
           }
@@ -236,17 +157,17 @@ export class ComputeGraph extends Resource {
           return `${name}!`;
         })
 
-        // Functions.
+        // Map remote function references (i.e., to remote DX function invocation).
         .replace(/(\w+)\((.*)\)/g, (match, binding, args) => {
-          const fn = this._functions.find((fn) => fn.binding === binding);
+          const fn = this._remoteFunctions.find((fn) => fn.binding === binding);
           if (!fn) {
             return match;
           }
 
           if (args.trim() === '') {
-            return `${CUSTOM_FUNCTION}("${binding}")`;
+            return `${EDGE_FUNCTION_NAME}("${binding}")`;
           } else {
-            return `${CUSTOM_FUNCTION}("${binding}", ${args})`;
+            return `${EDGE_FUNCTION_NAME}("${binding}", ${args})`;
           }
         })
     );
@@ -258,11 +179,11 @@ export class ComputeGraph extends Resource {
    */
   mapFunctionBindingToId(formula: string) {
     return formula.replace(/(\w+)\((.*)\)/g, (match, binding, args) => {
-      if (binding === CUSTOM_FUNCTION || defaultFunctions.find((fn) => fn.name === binding)) {
+      if (binding === EDGE_FUNCTION_NAME || defaultFunctions.find((fn) => fn.name === binding)) {
         return match;
       }
 
-      const fn = this._functions.find((fn) => fn.binding === binding);
+      const fn = this._remoteFunctions.find((fn) => fn.binding === binding);
       if (fn) {
         const id = fullyQualifiedId(fn);
         return `${id}(${args})`;
@@ -283,7 +204,7 @@ export class ComputeGraph extends Resource {
         return match;
       }
 
-      const fn = this._functions.find((fn) => fullyQualifiedId(fn) === id);
+      const fn = this._remoteFunctions.find((fn) => fullyQualifiedId(fn) === id);
       if (fn?.binding) {
         return `${fn.binding}(${args})`;
       } else {
@@ -297,7 +218,7 @@ export class ComputeGraph extends Resource {
       // Subscribe to remote function definitions.
       const query = this._space.db.query(Filter.schema(FunctionType));
       const unsubscribe = query.subscribe(({ objects }) => {
-        this._functions = objects.filter(({ binding }) => binding);
+        this._remoteFunctions = objects.filter(({ binding }) => binding);
         this.update.emit({ type: 'functionsUpdated' });
       });
 

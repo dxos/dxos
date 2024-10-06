@@ -8,15 +8,30 @@ import { type ProcedureAst } from 'hyperformula/typings/parser';
 import { getDeep } from '@dxos/util';
 
 import { FunctionArgumentType } from '#hyperformula';
-import { type ComputeGraphPlugin } from '../compute-graph';
-import { type AsyncFunction, FunctionPluginAsync } from '../functions';
+import { type ComputeGraphPlugin } from '../compute-graph-registry';
+import { type AsyncFunction, AsyncFunctionPlugin } from '../functions';
 import { parseNumberString } from '../util';
 
 /**
+ * Testing functions run locally (not run via EDGE).
  * https://hyperformula.handsontable.com/guide/custom-functions.html#add-a-simple-custom-function
  */
-export class CustomPlugin extends FunctionPluginAsync {
+export class TestPlugin extends AsyncFunctionPlugin {
+  /**
+   * Simple local function returns input value.
+   */
   test(ast: ProcedureAst, state: InterpreterState) {
+    const handler: AsyncFunction = async (_value) => {
+      return _value;
+    };
+
+    return this.runAsyncFunction(ast, state, handler);
+  }
+
+  /**
+   * Simple local function returns random number.
+   */
+  random(ast: ProcedureAst, state: InterpreterState) {
     const handler: AsyncFunction = async () => {
       return Math.random();
     };
@@ -24,6 +39,9 @@ export class CustomPlugin extends FunctionPluginAsync {
     return this.runAsyncFunction(ast, state, handler);
   }
 
+  /**
+   * Async HTTP function.
+   */
   crypto(ast: ProcedureAst, state: InterpreterState) {
     const handler: AsyncFunction = async (_currency) => {
       const currency = (_currency || 'USD').toUpperCase();
@@ -41,9 +59,15 @@ export class CustomPlugin extends FunctionPluginAsync {
   }
 }
 
-CustomPlugin.implementedFunctions = {
+TestPlugin.implementedFunctions = {
   TEST: {
     method: 'test',
+    parameters: [{ argumentType: FunctionArgumentType.NUMBER, optionalArg: false }],
+    isVolatile: true,
+  },
+
+  RANDOM: {
+    method: 'random',
     parameters: [],
     isVolatile: true,
   },
@@ -55,20 +79,22 @@ CustomPlugin.implementedFunctions = {
   },
 };
 
-export const CustomPluginTranslations = {
+export const TestPluginTranslations = {
   enGB: {
-    TEST: 'TEST',
-    CRYPTO: 'CRYPTO',
+    TEST: 'Returns input value',
+    RANDOM: 'Random number',
+    CRYPTO: 'Crypto token value',
   },
   enUS: {
-    TEST: 'TEST',
-    CRYPTO: 'CRYPTO',
+    TEST: 'Returns input value',
+    RANDOM: 'Random number',
+    CRYPTO: 'Crypto token value',
   },
 };
 
-export const testPlugins: ComputeGraphPlugin[] = [
+export const testFunctionPlugins: ComputeGraphPlugin[] = [
   {
-    plugin: CustomPlugin,
-    translations: CustomPluginTranslations,
+    plugin: TestPlugin,
+    translations: TestPluginTranslations,
   },
 ];
