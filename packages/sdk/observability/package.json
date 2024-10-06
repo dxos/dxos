@@ -86,7 +86,7 @@
     "@opentelemetry/semantic-conventions": "^1.25.0",
     "@segment/analytics-node": "^2.1.0",
     "@segment/snippet": "^4.15.3",
-    "@sentry/browser": "^8.8.0",
+    "@sentry/browser": "^8.33.0",
     "@sentry/node": "^8.8.0",
     "debug": "^4.3.4",
     "js-yaml": "^4.1.0",
