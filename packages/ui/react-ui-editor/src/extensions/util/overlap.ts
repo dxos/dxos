@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Range } from '../types';
+import { type Range } from '../../state';
 
 /**
  * Determines if two ranges overlap.

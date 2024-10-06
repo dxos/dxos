@@ -2,23 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST } from '@effect/schema';
-// eslint-disable-next-line import/no-duplicates
-import type * as S from '@effect/schema/Schema';
-// eslint-disable-next-line import/no-duplicates
-import { type Annotable } from '@effect/schema/Schema';
-import { type Some } from 'effect/Option';
+import { AST, type Schema as S } from '@effect/schema';
+import { Option, pipe } from 'effect';
 import { decamelize } from 'xcase';
 
-// TODO(burdon): Change annotations.
+const ParamKeyAnnotationId = Symbol.for('@dxos/schema/annotation/ParamKey');
 
-type ParamKeyAnnotationType = string;
+type ParamKeyAnnotationValue = { key: string };
 
-const ParamKeyAnnotationId = Symbol.for('@dxos/schema/annotation/ParamKeyAnnotation');
+const getParamKeyAnnotation: (annotated: AST.Annotated) => Option.Option<ParamKeyAnnotationValue> =
+  AST.getAnnotation<ParamKeyAnnotationValue>(ParamKeyAnnotationId);
 
 export const ParamKeyAnnotation =
-  (value: ParamKeyAnnotationType) =>
-  <S extends Annotable.All>(self: S): Annotable.Self<S> =>
+  (value: ParamKeyAnnotationValue) =>
+  <S extends S.Annotable.All>(self: S) =>
     self.annotations({ [ParamKeyAnnotationId]: value });
 
 /**
@@ -32,23 +29,23 @@ export class Params<T extends Record<string, any>> {
    * @param url
    */
   parse(url: URL): T {
-    return Object.entries(this._schema.fields).reduce<Record<string, any>>((acc, [key, type]) => {
-      let v = url.searchParams.get(decamelize(key));
-      if (v == null) {
-        v = url.searchParams.get(key);
+    return Object.entries(this._schema.fields).reduce<Record<string, any>>((params, [key, type]) => {
+      let value = url.searchParams.get(decamelize(key));
+      if (value == null) {
+        value = url.searchParams.get(key);
       }
 
-      if (v != null) {
+      if (value != null) {
         if (AST.isNumberKeyword(type.ast)) {
-          acc[key] = parseInt(v);
+          params[key] = parseInt(value);
         } else if (AST.isBooleanKeyword(type.ast)) {
-          acc[key] = v === 'true' || v === '1';
+          params[key] = value === 'true' || value === '1';
         } else {
-          acc[key] = v;
+          params[key] = value;
         }
       }
 
-      return acc;
+      return params;
     }, {}) as T;
   }
 
@@ -57,11 +54,18 @@ export class Params<T extends Record<string, any>> {
    */
   params(url: URL, values: T): URL {
     Object.entries(values).forEach(([key, value]) => {
-      const type = this._schema.fields[key];
-      if (type && value != null) {
-        const { value: alt } = AST.getAnnotation(ParamKeyAnnotationId)(type.ast) as Some<ParamKeyAnnotationType>;
-        const k = alt ?? decamelize(key);
-        url.searchParams.set(k, String(value));
+      if (value !== undefined) {
+        const field = this._schema.fields[key];
+        if (field) {
+          const { key: serializedKey } = pipe(
+            getParamKeyAnnotation(field.ast),
+            Option.getOrElse(() => ({
+              key: decamelize(key),
+            })),
+          );
+
+          url.searchParams.set(serializedKey, String(value));
+        }
       }
     });
 
