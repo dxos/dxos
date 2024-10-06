@@ -4732,6 +4732,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -9178,6 +9181,9 @@ importers:
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.8.4)
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
