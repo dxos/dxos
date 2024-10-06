@@ -2,9 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * as S from '@effect/schema/Schema';
-export * as AST from '@effect/schema/AST';
-
 export * from './ast';
 export * from './dynamic';
 export * from './expando';

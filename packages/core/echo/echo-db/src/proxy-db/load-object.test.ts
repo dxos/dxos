@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
 import { describe, expect, test } from 'vitest';
 
-import { create, type EchoReactiveObject, Expando, ref, S, TypedObject } from '@dxos/echo-schema';
+import { create, type EchoReactiveObject, Expando, ref, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';

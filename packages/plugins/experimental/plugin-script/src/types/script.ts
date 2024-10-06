@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ref, S, TypedObject } from '@dxos/echo-schema';
+import { Schema as S } from '@effect/schema';
+
+import { ref, TypedObject } from '@dxos/echo-schema';
 import { TextType } from '@dxos/plugin-markdown/types';
 
 // TODO(burdon): Which is the outer type? I.e., in the navbar?

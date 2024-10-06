@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema as S } from '@effect/schema';
 import { type CellValue } from 'hyperformula';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
@@ -9,7 +10,6 @@ import { Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { create, fullyQualifiedId } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { type S } from '@dxos/echo-schema';
 import { FunctionType } from '@dxos/plugin-script/types';
 
 import { ComputeGraphRegistry } from './compute-graph';

@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, TYPE_PROPERTIES, TypedObject } from '@dxos/echo-schema';
+import { Schema as S } from '@effect/schema';
+
+import { TYPE_PROPERTIES, TypedObject } from '@dxos/echo-schema';
 
 export class PropertiesType extends TypedObject({ typename: TYPE_PROPERTIES, version: '0.1.0' })(
   {
