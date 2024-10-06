@@ -3,11 +3,9 @@
 //
 
 import { resolve } from 'node:path';
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig } from 'vite';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
-
-const plugin: Plugin = ThemePlugin({});
 
 export default defineConfig({
   plugins: [
