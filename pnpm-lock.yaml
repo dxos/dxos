@@ -440,7 +440,7 @@ importers:
         specifier: ^8.44.9
         version: 8.56.2
       '@types/markdown-it':
-        specifier: ^12.2.3
+        specifier: 12.2.3
         version: 12.2.3
       '@types/markdown-it-container':
         specifier: ^2.0.9
@@ -11237,7 +11237,7 @@ importers:
         specifier: ^4.1.7
         version: 4.1.7
       '@types/markdown-it':
-        specifier: ^12.2.3
+        specifier: 12.2.3
         version: 12.2.3
       '@types/minimatch':
         specifier: ^5.1.2
