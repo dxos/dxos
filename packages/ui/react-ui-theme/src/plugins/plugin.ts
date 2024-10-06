@@ -7,8 +7,8 @@ import autoprefixer from 'autoprefixer';
 import { resolve } from 'node:path';
 import tailwindcss from 'tailwindcss';
 import nesting from 'tailwindcss/nesting';
-import type { ThemeConfig } from 'tailwindcss/types/config';
-import { type Plugin } from 'vite';
+import { type ThemeConfig } from 'tailwindcss/types/config';
+import { type Plugin, type UserConfig } from 'vite';
 
 import { resolveKnownPeers } from './resolveContent';
 import { tailwindConfig, tokenSet } from '../config';
@@ -24,7 +24,7 @@ export interface VitePluginTailwindOptions {
 
 export const ThemePlugin = (
   options: Pick<VitePluginTailwindOptions, 'content' | 'root' | 'verbose'> & { extensions?: Partial<ThemeConfig>[] },
-) => {
+): Plugin => {
   const config: VitePluginTailwindOptions & Pick<typeof options, 'extensions'> = {
     jit: true,
     cssPath: resolve(__dirname, '../theme.css'),
@@ -34,7 +34,7 @@ export const ThemePlugin = (
 
   return {
     name: 'vite-plugin-dxos-ui-theme',
-    config: async ({ root }, env) => {
+    config: async ({ root }, env): Promise<UserConfig> => {
       const content = root ? await resolveKnownPeers(config.content ?? [], root) : config.content;
       if (options.verbose) {
         // eslint-disable-next-line no-console
@@ -55,7 +55,7 @@ export const ThemePlugin = (
                   extensions: config.extensions,
                 }),
               ),
-              autoprefixer,
+              autoprefixer as any,
             ],
           },
         },
@@ -66,5 +66,5 @@ export const ThemePlugin = (
         return config.cssPath;
       }
     },
-  } as Plugin;
+  };
 };
