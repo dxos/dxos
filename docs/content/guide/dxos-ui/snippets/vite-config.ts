@@ -7,6 +7,8 @@ import { defineConfig, type Plugin } from 'vite';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
+const plugin: Plugin = ThemePlugin({});
+
 export default defineConfig({
   plugins: [
     ThemePlugin({
@@ -14,6 +16,6 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
       ],
-    }) as Plugin, // TODO(burdon): Remove type.
+    }),
   ],
 });
