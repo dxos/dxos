@@ -13,24 +13,25 @@ import { type Plugin, type UserConfig } from 'vite';
 import { resolveKnownPeers } from './resolveContent';
 import { tailwindConfig, tokenSet } from '../config';
 
-export interface VitePluginTailwindOptions {
+export type ThemePluginOptions = {
   jit?: boolean;
   cssPath?: string;
   virtualFileId?: string;
   content?: string[];
   root?: string;
   verbose?: boolean;
-}
+  extensions?: Partial<ThemeConfig>[];
+};
 
-export const ThemePlugin = (
-  options: Pick<VitePluginTailwindOptions, 'content' | 'root' | 'verbose'> & { extensions?: Partial<ThemeConfig>[] },
-): Plugin => {
-  const config: VitePluginTailwindOptions & Pick<typeof options, 'extensions'> = {
-    jit: true,
-    cssPath: resolve(__dirname, '../theme.css'),
-    virtualFileId: '@dxos-theme',
-    ...options,
-  };
+export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
+  const config: ThemePluginOptions = Object.assign(
+    {
+      jit: true,
+      cssPath: resolve(__dirname, '../theme.css'),
+      virtualFileId: '@dxos-theme',
+    },
+    options,
+  );
 
   return {
     name: 'vite-plugin-dxos-ui-theme',
