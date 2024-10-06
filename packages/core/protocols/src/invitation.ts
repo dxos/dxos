@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+// import { Schema as S } from '@effect/schema';
 
-import { ParamKeyAnnotation } from '@dxos/util';
+// import { ParamKeyAnnotation } from '@dxos/util';
 
 // TODO(burdon): Error (which doesn't happen in util/common/src/url.test.ts).
 /*
@@ -15,8 +15,8 @@ import { ParamKeyAnnotation } from '@dxos/util';
 */
 
 // TODO(burdon): Use uniformly for processing HTTP params.
-export const InvitationUrl = S.Struct({
-  accessToken: S.String, // TODO(burdon): Remove.
-  deviceInvitationCode: S.String.pipe(ParamKeyAnnotation({ key: 'deviceInvitationCode' })),
-  spaceInvitationCode: S.String.pipe(ParamKeyAnnotation({ key: 'spaceInvitationCode' })),
-});
+// export const InvitationUrl = S.Struct({
+//   accessToken: S.String, // TODO(burdon): Remove.
+//   deviceInvitationCode: S.String.pipe(ParamKeyAnnotation({ key: 'deviceInvitationCode' })),
+//   spaceInvitationCode: S.String.pipe(ParamKeyAnnotation({ key: 'spaceInvitationCode' })),
+// });
