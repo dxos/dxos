@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Expando, ref, S, TypedObject, DynamicSchema } from '@dxos/echo-schema';
+import { Schema as S } from '@effect/schema';
+
+import { Expando, ref, TypedObject, DynamicSchema } from '@dxos/echo-schema';
 
 export class FolderType extends TypedObject({ typename: 'braneframe.Folder', version: '0.1.0' })({
   name: S.optional(S.String),

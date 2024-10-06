@@ -15,7 +15,7 @@ const getParamKeyAnnotation: (annotated: AST.Annotated) => Option.Option<ParamKe
 
 export const ParamKeyAnnotation =
   (value: ParamKeyAnnotationValue) =>
-  <S extends S.Schema<any>>(self: S) =>
+  <S extends S.Annotable.All>(self: S): S.Annotable.Self<S> =>
     self.annotations({ [ParamKeyAnnotationId]: value });
 
 /**
