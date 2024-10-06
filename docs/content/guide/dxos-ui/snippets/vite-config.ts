@@ -3,11 +3,10 @@
 //
 
 import { resolve } from 'node:path';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
-// https://vitejs.dev/config
 export default defineConfig({
   plugins: [
     ThemePlugin({
@@ -15,6 +14,6 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
       ],
-    }),
+    }) as Plugin,
   ],
 });
