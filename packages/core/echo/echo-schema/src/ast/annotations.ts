@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import * as AST from '@effect/schema/AST';
+import { AST, Schema as S } from '@effect/schema';
 import { pipe } from 'effect';
 import * as Option from 'effect/Option';
 import { type Simplify } from 'effect/Types';
@@ -63,6 +62,8 @@ export const getEchoObjectTypename = (schema: S.Schema.All): string | undefined 
 export const ReferenceAnnotationId = Symbol.for('@dxos/schema/annotation/Reference');
 
 export type ReferenceAnnotationValue = EchoObjectAnnotation;
+
+const x = AST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId);
 
 export const getReferenceAnnotation = (schema: S.Schema.All) =>
   pipe(

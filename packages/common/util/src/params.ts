@@ -2,26 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type Schema } from '@effect/schema';
+import { AST, type Schema as S } from '@effect/schema';
 import { Option, pipe } from 'effect';
 import { decamelize } from 'xcase';
 
-// TODO(burdon): Change annotations.
+const ParamKeyAnnotationId = Symbol.for('@dxos/schema/annotation/ParamKey');
 
-type ParamKeyAnnotationType = string;
+type ParamKeyAnnotationValue = { key: string };
 
-const ParamKeyAnnotationId = Symbol.for('@dxos/schema/annotation/ParamKeyAnnotation');
+const getParamKeyAnnotation: (annotated: AST.Annotated) => Option.Option<ParamKeyAnnotationValue> =
+  AST.getAnnotation<ParamKeyAnnotationValue>(ParamKeyAnnotationId);
 
 export const ParamKeyAnnotation =
-  (value: ParamKeyAnnotationType) =>
-  <S extends Schema.Annotable.All>(self: S): Schema.Annotable.Self<S> =>
+  (value: ParamKeyAnnotationValue) =>
+  <S extends S.Annotable.All>(self: S) =>
     self.annotations({ [ParamKeyAnnotationId]: value });
 
 /**
  * HTTP params parser.
  */
 export class Params<T extends Record<string, any>> {
-  constructor(private readonly _schema: Schema.Struct<T>) {}
+  constructor(private readonly _schema: S.Struct<T>) {}
 
   /**
    * Parse URL params.
@@ -53,14 +54,18 @@ export class Params<T extends Record<string, any>> {
    */
   params(url: URL, values: T): URL {
     Object.entries(values).forEach(([key, value]) => {
-      const type = this._schema.fields[key];
-      if (type && value != null) {
-        const paramKey = pipe(
-          AST.getAnnotation<ParamKeyAnnotationType>(ParamKeyAnnotationId)(type.ast),
-          Option.getOrElse(() => undefined) as any,
-        );
+      if (value !== undefined) {
+        const field = this._schema.fields[key];
+        if (field) {
+          const { key: serializedKey } = pipe(
+            getParamKeyAnnotation(field.ast),
+            Option.getOrElse(() => ({
+              key: decamelize(key),
+            })),
+          );
 
-        url.searchParams.set(paramKey ?? decamelize(key), String(value));
+          url.searchParams.set(serializedKey, String(value));
+        }
       }
     });
 
