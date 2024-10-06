@@ -7,6 +7,8 @@ import { describe, expect, test } from 'vitest';
 
 import { ParamKeyAnnotation, UrlParser } from './url';
 
+const p = ParamKeyAnnotation({ key: 'deviceInvitationCode' });
+
 const Invitation = S.Struct({
   accessToken: S.String,
   deviceInvitationCode: S.String.pipe(ParamKeyAnnotation({ key: 'deviceInvitationCode' })),

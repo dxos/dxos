@@ -20,6 +20,7 @@ export const ref = <T extends Identifiable>(schema: S.Schema<T, any>): ref<T> =>
   if (annotation == null) {
     throw new Error('Reference target must be an ECHO object.');
   }
+
   return createEchoReferenceSchema(annotation);
 };
 
@@ -28,6 +29,7 @@ export const createEchoReferenceSchema = (annotation: EchoObjectAnnotation): S.S
     annotation.typename === EXPANDO_TYPENAME
       ? () => true
       : (obj: object) => getTypename(obj) === (annotation.schemaId ?? annotation.typename);
+
   return S.Any.pipe(
     S.filter(
       (obj) => {

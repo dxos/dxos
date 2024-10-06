@@ -15,7 +15,7 @@ const getParamKeyAnnotation: (annotated: AST.Annotated) => Option.Option<ParamKe
 
 export const ParamKeyAnnotation =
   (value: ParamKeyAnnotationValue) =>
-  <S extends S.Schema.All>(self: S) =>
+  <S extends S.Schema<any>>(self: S) =>
     self.annotations({ [ParamKeyAnnotationId]: value });
 
 /**
@@ -27,7 +27,6 @@ export class UrlParser<T extends Record<string, any>> {
 
   /**
    * Parse URL params.
-   * @param url
    */
   parse(_url: string): T {
     const url = new URL(_url);
@@ -52,11 +51,11 @@ export class UrlParser<T extends Record<string, any>> {
   }
 
   /**
-   * Update URL with params.
+   * Return URL with encoded params.
    */
-  create(_url: string, values: T): URL {
+  create(_url: string, params: T): URL {
     const url = new URL(_url);
-    Object.entries(values).forEach(([key, value]) => {
+    Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) {
         const field = this._schema.fields[key];
         if (field) {
