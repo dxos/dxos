@@ -9,7 +9,7 @@ import { ParamKeyAnnotation, Params } from './params';
 
 const InvitationUrl = S.Struct({
   accessToken: S.String,
-  deviceInvitationCode: S.String.pipe(ParamKeyAnnotation('deviceInvitationCode')),
+  deviceInvitationCode: S.String.pipe(ParamKeyAnnotation({ key: 'deviceInvitationCode' })),
   spaceInvitationCode: S.String,
   experimental: S.Boolean,
   timeout: S.Number,
@@ -18,7 +18,6 @@ const InvitationUrl = S.Struct({
 describe('Params', () => {
   test('parse', () => {
     const props = new Params(InvitationUrl);
-
     const values = props.parse(
       new URL('http://localhost?access_token=100&deviceInvitationCode=200&experimental=1&timeout=100'),
     );

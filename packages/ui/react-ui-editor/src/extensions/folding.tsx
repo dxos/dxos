@@ -17,7 +17,7 @@ export type FoldingOptions = {};
 /**
  * https://codemirror.net/examples/gutter
  */
-// TODO(burdon): Remember folding state.
+// TODO(burdon): Remember folding state (to state).
 export const folding = (_props: FoldingOptions = {}): Extension => [
   codeFolding({
     placeholderDOM: () => {
@@ -26,6 +26,7 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
   }),
   foldGutter({
     markerDOM: (open) => {
+      // TODO(burdon): Use sprite directly.
       return renderRoot(
         createElement('div', { className: 'flex h-full items-center' }),
         <Icon icon='ph--caret-right--regular' classNames={[getSize(3), 'mx-3 cursor-pointer', open && 'rotate-90']} />,
