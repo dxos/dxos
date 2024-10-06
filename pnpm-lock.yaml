@@ -440,7 +440,7 @@ importers:
         specifier: ^8.44.9
         version: 8.56.2
       '@types/markdown-it':
-        specifier: ^12.2.3
+        specifier: 12.2.3
         version: 12.2.3
       '@types/markdown-it-container':
         specifier: ^2.0.9
@@ -19943,9 +19943,6 @@ packages:
   '@types/less@3.0.3':
     resolution: {integrity: sha512-1YXyYH83h6We1djyoUEqTlVyQtCfJAFXELSKW2ZRtjHD4hQ82CC4lvrv5D0l0FLcKBaiPbXyi3MpMsI9ZRgKsw==}
 
-  '@types/linkify-it@3.0.2':
-    resolution: {integrity: sha512-HZQYqbiFVWufzCwexrvh694SOim8z2d+xJl5UNamcvQFejLY/2YUtzXHYi3cHdI7PMlS8ejH2slRAOJQ32aNbA==}
-
   '@types/linkify-it@5.0.0':
     resolution: {integrity: sha512-sVDA58zAw4eWAffKOaQH5/5j3XeayukzDk+ewSsnv3p4yJEZHCCzMDiZM8e0OUrRvmpGZ85jf4yDHkHsgBNr9Q==}
 
@@ -20032,9 +20029,6 @@ packages:
 
   '@types/mdast@4.0.3':
     resolution: {integrity: sha512-LsjtqsyF+d2/yFOYaN22dHZI1Cpwkrj+g06G8+qtUKlhovPW89YhqSnfKtMbkgmEtYpH2gydRNULd6y8mciAFg==}
-
-  '@types/mdurl@1.0.2':
-    resolution: {integrity: sha512-eC4U9MlIcu2q0KQmXszyn5Akca/0jrQmwDRgpAMJai7qBWq4amIQhZyNau4VYGtCeALvW1/NtjzJJ567aZxfKA==}
 
   '@types/mdurl@2.0.0':
     resolution: {integrity: sha512-RGdgjQUZba5p6QEFAVx2OGb8rQDL/cPRG7GiedRzMcJ1tYnUANBncjbSB1NRGwbvjcPeikRABz2nshyPk1bhWg==}
@@ -44493,8 +44487,6 @@ snapshots:
 
   '@types/less@3.0.3': {}
 
-  '@types/linkify-it@3.0.2': {}
-
   '@types/linkify-it@5.0.0': {}
 
   '@types/lodash.defaultsdeep@4.6.7':
@@ -44586,8 +44578,8 @@ snapshots:
 
   '@types/markdown-it@12.2.3':
     dependencies:
-      '@types/linkify-it': 3.0.2
-      '@types/mdurl': 1.0.2
+      '@types/linkify-it': 5.0.0
+      '@types/mdurl': 2.0.0
 
   '@types/markdown-it@13.0.7':
     dependencies:
@@ -44601,8 +44593,6 @@ snapshots:
   '@types/mdast@4.0.3':
     dependencies:
       '@types/unist': 3.0.0
-
-  '@types/mdurl@1.0.2': {}
 
   '@types/mdurl@2.0.0': {}
 

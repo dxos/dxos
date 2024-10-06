@@ -34,6 +34,7 @@ const tsConfig = {
 /**
  * @deprecated Use @dxos/apidoc showcase directive.
  */
+// TODO(burdon): Remove.
 export const showcasePlugin = async (): Promise<Plugin> => {
   const demoFileNames = await readdir(join(__dirname, '../demos'));
   const demos = await Promise.all(
