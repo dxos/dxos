@@ -2,10 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { JSONSchema, Schema as S } from '@effect/schema';
-import * as AST from '@effect/schema/AST';
-import { JSONSchemaAnnotationId } from '@effect/schema/AST';
-import { type JsonSchema7Any, type JsonSchema7Object, type JsonSchema7Root } from '@effect/schema/JSONSchema';
+import { AST, JSONSchema, Schema as S } from '@effect/schema';
 import { type Mutable } from 'effect/Types';
 
 import { invariant } from '@dxos/invariant';
@@ -119,7 +116,7 @@ export const effectToJsonSchema = (schema: S.Schema<any>): any => {
       return recursiveResult;
     }
     return new AST.Refinement(recursiveResult, () => null as any, {
-      [JSONSchemaAnnotationId]: { [ECHO_REFINEMENT_KEY]: refinement },
+      [AST.JSONSchemaAnnotationId]: { [ECHO_REFINEMENT_KEY]: refinement },
     });
   };
 
@@ -127,7 +124,10 @@ export const effectToJsonSchema = (schema: S.Schema<any>): any => {
   return JSONSchema.make(schemaWithRefinements);
 };
 
-const jsonToEffectTypeSchema = (root: JsonSchema7Object, defs: JsonSchema7Root['$defs']): S.Schema<any> => {
+const jsonToEffectTypeSchema = (
+  root: JSONSchema.JsonSchema7Object,
+  defs: JSONSchema.JsonSchema7Root['$defs'],
+): S.Schema<any> => {
   invariant('type' in root && root.type === 'object', `not an object: ${root}`);
   invariant(root.patternProperties == null, 'template literals are not supported');
   const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
@@ -173,7 +173,7 @@ const jsonToEffectTypeSchema = (root: JsonSchema7Object, defs: JsonSchema7Root['
   return schema.annotations(annotations) as any;
 };
 
-const parseJsonSchemaAny = (root: JsonSchema7Any): S.Schema<any> => {
+const parseJsonSchemaAny = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
   const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
   if (echoRefinement?.reference != null) {
     return createEchoReferenceSchema(echoRefinement.reference);
@@ -181,7 +181,10 @@ const parseJsonSchemaAny = (root: JsonSchema7Any): S.Schema<any> => {
   return S.Any;
 };
 
-export const jsonToEffectSchema = (root: JsonSchema7Root, definitions?: JsonSchema7Root['$defs']): S.Schema<any> => {
+export const jsonToEffectSchema = (
+  root: JSONSchema.JsonSchema7Root,
+  definitions?: JSONSchema.JsonSchema7Root['$defs'],
+): S.Schema<any> => {
   const defs = root.$defs ? { ...definitions, ...root.$defs } : definitions ?? {};
   if ('type' in root && root.type === 'object') {
     return jsonToEffectTypeSchema(root, defs);

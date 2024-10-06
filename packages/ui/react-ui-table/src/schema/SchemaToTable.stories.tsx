@@ -4,11 +4,10 @@
 
 import '@dxos-theme';
 
-import * as Arbitrary from '@effect/schema/Arbitrary';
+import { Arbitrary, Schema as S } from '@effect/schema';
 import * as fc from 'fast-check';
 import React from 'react';
 
-import { S } from '@dxos/echo-schema';
 import { DensityProvider } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 

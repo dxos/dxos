@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { AST, type Schema as S } from '@effect/schema';
+
 import {
-  AST,
   DynamicSchema,
   getSchema,
   getType,
   ReferenceAnnotationId,
-  type S,
   SchemaValidator,
   StoredSchema,
 } from '@dxos/echo-schema';

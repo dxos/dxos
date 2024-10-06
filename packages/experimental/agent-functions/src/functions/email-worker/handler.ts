@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
-import { TextType } from '@dxos/plugin-markdown/types';
+import { Schema as S } from '@effect/schema';
+
 import { Filter, findObjectWithForeignKey } from '@dxos/echo-db';
-import { create, foreignKey, S } from '@dxos/echo-schema';
+import { create, foreignKey } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { TextType } from '@dxos/plugin-markdown/types';
+import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
 
 import { type EmailMessage, SOURCE_ID } from './types';
 

@@ -2,11 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema as S } from '@effect/schema';
 import { type CellValue } from 'hyperformula';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { create, fullyQualifiedId } from '@dxos/client/echo';
+import { Context } from '@dxos/context';
 import { FunctionType } from '@dxos/plugin-script/types';
 
 import { DetailedCellError } from '#hyperformula';

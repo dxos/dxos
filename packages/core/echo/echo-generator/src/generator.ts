@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Schema as S } from '@effect/schema';
+
 import { type Space, Filter } from '@dxos/client/echo';
 import {
   type EchoReactiveObject,
@@ -9,7 +11,6 @@ import {
   DynamicSchema,
   getEchoObjectAnnotation,
   getSchema,
-  type S,
   isReactiveObject,
 } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';

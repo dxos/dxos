@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema as S } from '@effect/schema';
 import { type ColumnDef } from '@tanstack/react-table';
-
-import type { S } from '@dxos/echo-schema';
 
 import { classifySchemaProperties } from './schema';
 import { createColumnBuilder } from '../helpers';

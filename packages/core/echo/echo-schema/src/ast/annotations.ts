@@ -3,8 +3,7 @@
 //
 
 import { AST, Schema as S } from '@effect/schema';
-import { pipe } from 'effect';
-import * as Option from 'effect/Option';
+import { Option, pipe } from 'effect';
 import { type Simplify } from 'effect/Types';
 
 import { checkIdNotPresentOnSchema } from './schema-validator';

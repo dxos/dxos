@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ref, S, TypedObject } from '@dxos/echo-schema';
+import { Schema as S } from '@effect/schema';
+
+import { ref, TypedObject } from '@dxos/echo-schema';
 
 // TODO(burdon): Change to S.Literal (and discriminated union).
 export enum ChainInputType {

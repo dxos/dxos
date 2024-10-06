@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
+import { Schema as S } from '@effect/schema';
+
+import { Expando, ref, TypedObject } from '@dxos/echo-schema';
 
 // TODO(burdon): Copied to avoid circular dependency @dxos/client <=> @braneframe/types.
 //  Better to simplify tests and remove dependency completely.
@@ -12,7 +14,7 @@ export class TextV0Type extends TypedObject({ typename: 'dxos.Text.v0', version:
 }) {}
 
 export class DocumentType extends TypedObject({ typename: 'braneframe.Document', version: '0.1.0' })({
-  title: S.optional(S.String),
+  title: S.optional(S.String), // TODO(burdon): Change to name.
   content: ref(TextV0Type),
 }) {}
 

@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import * as AST from '@effect/schema/AST';
-import { isTypeLiteral } from '@effect/schema/AST';
+import { AST, Schema as S } from '@effect/schema';
 
 import { invariant } from '@dxos/invariant';
 
@@ -20,7 +18,7 @@ export class SchemaValidator {
   public static validateSchema(schema: S.Schema<any>) {
     const visitAll = (astList: AST.AST[]) => astList.forEach((ast) => this.validateSchema(S.make(ast)));
     if (AST.isUnion(schema.ast)) {
-      const typeAstList = schema.ast.types.filter((type) => isTypeLiteral(type)) as AST.TypeLiteral[];
+      const typeAstList = schema.ast.types.filter((type) => AST.isTypeLiteral(type)) as AST.TypeLiteral[];
       // check we can handle a discriminated union
       if (typeAstList.length > 1) {
         getTypeDiscriminators(typeAstList);
@@ -208,7 +206,7 @@ const unwrapAst = (rootAst: AST.AST, predicate?: (ast: AST.AST) => boolean): AST
 const unwrapArray = (ast: AST.AST) => unwrapAst(ast, AST.isTupleType) as AST.TupleType | null;
 
 export const checkIdNotPresentOnSchema = (schema: S.Schema<any, any, any>) => {
-  invariant(isTypeLiteral(schema.ast));
+  invariant(AST.isTypeLiteral(schema.ast));
   const idProperty = AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'id');
   if (idProperty != null) {
     throw new Error('"id" property name is reserved');

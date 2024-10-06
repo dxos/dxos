@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/react-ui/testing.
+import { Schema as S } from '@effect/schema';
 
-// TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
-
-import { S, TypedObject, create, type EchoReactiveObject } from '@dxos/echo-schema';
+import { TypedObject, create, type EchoReactiveObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
+
+// TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/react-ui/testing.
+// TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 
 // TODO(burdon): Util.
 export const range = <T>(fn: (i: number) => T | undefined, length: number): T[] =>
