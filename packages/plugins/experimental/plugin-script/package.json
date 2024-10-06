@@ -98,7 +98,6 @@
     "@typescript/vfs": "^1.6.0",
     "@valtown/codemirror-ts": "^2.2.0",
     "codemirror": "^6.0.1",
-    "effect": "^3.2.7",
     "esbuild-wasm": "^0.16.14",
     "iso-did": "^1.6.0",
     "lodash.get": "^4.4.2",

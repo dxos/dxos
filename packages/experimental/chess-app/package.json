@@ -42,7 +42,6 @@
     "@effect/schema": "^0.67.16",
     "@phosphor-icons/react": "^2.1.5",
     "chess.js": "^1.0.0-beta.8",
-    "effect": "^3.2.7",
     "react-chessboard": "^4.7.1",
     "react-resize-detector": "^11.0.1",
     "react-router-dom": "^6.4.0"
