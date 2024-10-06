@@ -10,11 +10,11 @@ import { type Simplify } from 'effect/Types';
 import { checkIdNotPresentOnSchema } from './schema-validator';
 import { type Identifiable } from '../types';
 
+// TODO(burdon): Standardize names.
+
 export type ToMutable<T> = T extends {}
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
   : T;
-
-// TODO(burdon): Standardize names.
 
 //
 // Object
@@ -62,8 +62,6 @@ export const getEchoObjectTypename = (schema: S.Schema.All): string | undefined 
 export const ReferenceAnnotationId = Symbol.for('@dxos/schema/annotation/Reference');
 
 export type ReferenceAnnotationValue = EchoObjectAnnotation;
-
-const x = AST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId);
 
 export const getReferenceAnnotation = (schema: S.Schema.All) =>
   pipe(
