@@ -8,7 +8,7 @@ import { resolve } from 'node:path';
 import tailwindcss from 'tailwindcss';
 import nesting from 'tailwindcss/nesting';
 import { type ThemeConfig } from 'tailwindcss/types/config';
-import { type Plugin, type UserConfig } from 'vite';
+import { type UserConfig, type Plugin } from 'vite';
 
 import { resolveKnownPeers } from './resolveContent';
 import { tailwindConfig, tokenSet } from '../config';
@@ -24,14 +24,12 @@ export type ThemePluginOptions = {
 };
 
 export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
-  const config: ThemePluginOptions = Object.assign(
-    {
-      jit: true,
-      cssPath: resolve(__dirname, '../theme.css'),
-      virtualFileId: '@dxos-theme',
-    },
-    options,
-  );
+  const config: ThemePluginOptions = {
+    jit: true,
+    cssPath: resolve(__dirname, '../theme.css'),
+    virtualFileId: '@dxos-theme',
+    ...options,
+  };
 
   return {
     name: 'vite-plugin-dxos-ui-theme',
@@ -67,5 +65,5 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
         return config.cssPath;
       }
     },
-  };
+  } satisfies Plugin;
 };

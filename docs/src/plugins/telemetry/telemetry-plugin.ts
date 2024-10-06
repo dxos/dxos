@@ -3,7 +3,7 @@
 //
 
 import { resolve } from 'node:path';
-import type { Plugin } from 'vuepress';
+import { type Plugin } from 'vuepress';
 
 export const telemetryPlugin = (): Plugin => ({
   name: 'dxos-telemetry',

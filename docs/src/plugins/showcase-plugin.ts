@@ -13,15 +13,18 @@ import ts from 'typescript';
 import { type Plugin } from 'vuepress';
 
 const require = createRequire(import.meta.url);
+
 // TODO(wittjosiah): Consider adding the following rules to the global config:
 //   - https://eslint.org/docs/latest/rules/newline-before-return
 //   - https://eslint.org/docs/latest/rules/arrow-parens#as-needed
 const eslint = new ESLint();
+
 const prettierConfig = {
   parser: 'typescript',
   singleQuote: true,
   jsxSingleQuote: true,
 };
+
 const tsConfig = {
   target: ts.ScriptTarget.ESNext,
   allowJs: true,
