@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema as S } from '@effect/schema';
+
 import { Client } from '@dxos/client';
 import { type Context, Resource } from '@dxos/context';
-import { type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import { type ComputeGraphOptions, ComputeGraphRegistry } from '../compute-graph-registry';
