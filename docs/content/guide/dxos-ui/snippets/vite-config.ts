@@ -15,6 +15,6 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
       ],
-    }) as Plugin,
+    }) as Plugin, // TODO(burdon): Fix cast.
   ],
 });
