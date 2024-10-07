@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+/**
+ * Peer dependencies re-exported symbols that are effectively part of the ECHO API.
+ */
 export { AST, JSONSchema, S } from '@dxos/effect';
 
 export * from './ast';
