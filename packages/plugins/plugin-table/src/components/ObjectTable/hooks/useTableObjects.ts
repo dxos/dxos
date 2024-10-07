@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EchoReactiveObject, type S } from '@dxos/echo-schema';
+import { type Schema as S } from '@effect/schema';
+
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { type Space, useQuery, Filter } from '@dxos/react-client/echo';
 

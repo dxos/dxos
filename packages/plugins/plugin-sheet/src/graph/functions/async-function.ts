@@ -14,13 +14,12 @@ import { log } from '@dxos/log';
 
 import { CellError, ErrorType, EmptyValue, FunctionPlugin, type HyperFormula } from '#hyperformula';
 
-// TODO(burdon): API gateways!
+// TODO(burdon): Create API gateways:
 //  https://publicapis.io
 //  https://api-ninjas.com/api/cryptoprice
 //  https://developers.google.com/apis-explorer
 //  https://publicapis.io/coin-desk-api
 
-// TODO(burdon): Create wrapper.
 export type AsyncFunction = (...args: any) => Promise<InterpreterValue>;
 
 export type FunctionUpdateEvent = {
@@ -34,14 +33,14 @@ export type FunctionOptions = {
 
 export type FunctionContextOptions = {
   defaultTtl: number;
-  recalculationDelay: number;
+  debounceDelay: number;
   remoteFunctionUrl: string;
   onUpdate?: (update: FunctionUpdateEvent) => void;
 };
 
 export const defaultFunctionContextOptions: FunctionContextOptions = {
   defaultTtl: 5_000,
-  recalculationDelay: 200,
+  debounceDelay: 200,
   remoteFunctionUrl: 'https://edge.dxos.workers.dev/functions', // TODO(burdon): Config.
 };
 
@@ -84,11 +83,10 @@ export class FunctionContext {
   ) {
     this._options = defaultsDeep(_options ?? {}, defaultFunctionContextOptions);
     this._onUpdate = debounce((update) => {
-      // TODO(burdon): Better way to trigger recalculation?
-      //  NOTE: rebuildAndRecalculate resets the undo history.
+      // TODO(burdon): Better way to trigger recalculation? (NOTE: rebuildAndRecalculate resets the undo history.)
       this._hf.resumeEvaluation();
       this._options.onUpdate?.(update);
-    }, this._options.recalculationDelay);
+    }, this._options.debounceDelay);
   }
 
   get space() {
@@ -162,12 +160,15 @@ export class FunctionContext {
 /**
  * Base class for async functions.
  */
-export class FunctionPluginAsync extends FunctionPlugin {
+export class AsyncFunctionPlugin extends FunctionPlugin {
   get context() {
     return this.config.context as FunctionContext;
   }
 
-  runAsyncFunction(ast: ProcedureAst, state: InterpreterState, cb: AsyncFunction, options?: FunctionOptions) {
+  /**
+   * Immediately returns cached value then runs the async function.
+   */
+  protected runAsyncFunction(ast: ProcedureAst, state: InterpreterState, cb: AsyncFunction, options?: FunctionOptions) {
     const { procedureName } = ast;
     const metadata = this.metadata(procedureName);
     return this.runFunction(ast.args, state, metadata, (...args: any) => {

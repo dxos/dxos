@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Expando, ref, TypedObject, S } from '@dxos/echo-schema';
+import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 
 // TODO(wittjosiah): These types were placed here rather than in @dxos/plugin-thread
 //   in order to avoid a circular dependency between threads and other objects that use threads.

@@ -46,6 +46,7 @@
     "@dxos/react-ui-deck": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@effect/schema": "^0.67.16",
     "@fluentui/react-tabster": "^9.19.0",
     "@radix-ui/primitive": "^1.0.0",
     "@radix-ui/react-collapsible": "^1.0.2",

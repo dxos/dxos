@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
 import { z } from 'zod';
-
-import { S } from '@dxos/echo-schema';
 
 import type { IntentData } from '../IntentPlugin';
 import type { Plugin } from '../PluginHost';

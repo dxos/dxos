@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Expando, ref, TypedObject, S } from '@dxos/echo-schema';
+import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 
 // TODO(burdon): Copied to avoid circular dependency @dxos/client <=> @braneframe/types.
 //  Better to simplify tests and remove dependency completely.

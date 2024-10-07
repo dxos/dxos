@@ -57,10 +57,8 @@ describe('Index queries', () => {
   const TIMEOUT = 1_000;
 
   const initClient = async (services: ClientServicesProvider) => {
-    const client = new Client({ services });
+    const client = new Client({ services, types: [ContactType, DocumentType, TextV0Type] });
     await client.initialize();
-    client.addTypes([ContactType, DocumentType, TextV0Type]);
-
     return client;
   };
 

@@ -25,29 +25,32 @@ describe('Composer migrations', () => {
   let space: Space;
 
   beforeEach(async () => {
-    client = new Client({ services: testBuilder.createLocalClientServices() });
+    client = new Client({
+      services: testBuilder.createLocalClientServices(),
+      types: [
+        LegacyTypes.DocumentType,
+        LegacyTypes.FileType,
+        LegacyTypes.FolderType,
+        LegacyTypes.MessageType,
+        LegacyTypes.SectionType,
+        LegacyTypes.SketchType,
+        LegacyTypes.StackType,
+        LegacyTypes.TableType,
+        LegacyTypes.TextType,
+        LegacyTypes.ThreadType,
+        Expando,
+        ChannelType,
+        CollectionType,
+        DocumentType,
+        FileType,
+        MessageType,
+        DiagramType,
+        TableType,
+        ThreadType,
+      ],
+    });
+
     await client.initialize();
-    client.addTypes([
-      LegacyTypes.DocumentType,
-      LegacyTypes.FileType,
-      LegacyTypes.FolderType,
-      LegacyTypes.MessageType,
-      LegacyTypes.SectionType,
-      LegacyTypes.SketchType,
-      LegacyTypes.StackType,
-      LegacyTypes.TableType,
-      LegacyTypes.TextType,
-      LegacyTypes.ThreadType,
-      Expando,
-      ChannelType,
-      CollectionType,
-      DocumentType,
-      FileType,
-      MessageType,
-      DiagramType,
-      TableType,
-      ThreadType,
-    ]);
     await client.halo.createIdentity();
     await client.spaces.isReady.wait();
     space = client.spaces.default;

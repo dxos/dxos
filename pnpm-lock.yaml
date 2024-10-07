@@ -2490,6 +2490,7 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
+    devDependencies:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
@@ -2666,19 +2667,18 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@preact/signals-core':
-        specifier: ^1.6.0
-        version: 1.6.0
-      ulidx:
-        specifier: ^2.3.0
-        version: 2.3.0
-    devDependencies:
       '@effect/schema':
         specifier: ^0.67.16
         version: 0.67.16(effect@3.2.7)
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
       effect:
         specifier: ^3.2.7
         version: 3.2.7
+      ulidx:
+        specifier: ^2.3.0
+        version: 2.3.0
 
   packages/core/echo/echo-signals:
     dependencies:
@@ -2804,6 +2804,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -4727,6 +4730,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -5510,6 +5516,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -5843,6 +5852,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@observablehq/plot':
         specifier: ^0.6.11
         version: 0.6.11
@@ -6182,6 +6194,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6273,6 +6288,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6343,6 +6361,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       kubo-rpc-client:
         specifier: ^4.1.1
         version: 4.1.1(undici@6.13.0)
@@ -6428,6 +6449,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6501,6 +6525,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6608,6 +6635,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6750,6 +6780,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@lezer/common':
         specifier: ^1.2.2
         version: 1.2.2
@@ -6856,6 +6889,9 @@ importers:
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../../../ui/react-ui-searchlist
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       main-thread-scheduling:
         specifier: ^14.1.1
         version: 14.2.0
@@ -7456,6 +7492,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -8083,6 +8122,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@lezer/common':
         specifier: ^1.2.2
         version: 1.2.2
@@ -8228,6 +8270,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -8373,6 +8418,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -8473,6 +8521,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -8622,6 +8673,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -8899,6 +8953,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -9072,6 +9129,9 @@ importers:
       '@dxos/websocket-rpc':
         specifier: workspace:*
         version: link:../../core/mesh/websocket-rpc
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
@@ -9154,6 +9214,9 @@ importers:
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
@@ -10751,6 +10814,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -20948,11 +21014,6 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -45903,8 +45964,8 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1(ajv@8.12.0):
-    optionalDependencies:
+  ajv-formats@2.1.1:
+    dependencies:
       ajv: 8.12.0
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -47452,7 +47513,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv-formats: 2.1.1
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -56883,7 +56944,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv-formats: 2.1.1
       ajv-keywords: 5.1.0(ajv@8.12.0)
 
   scroll@3.0.1: {}

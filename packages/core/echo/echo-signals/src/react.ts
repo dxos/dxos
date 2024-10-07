@@ -13,6 +13,7 @@ export const registerSignalRuntime = () => {
   if (registered) {
     return false;
   }
+
   registered = true;
 
   registerRuntimeForEcho({
@@ -35,8 +36,3 @@ export const registerSignalRuntime = () => {
 
   return true;
 };
-
-/**
- * @deprecated Use `registerSignalRuntime`.
- */
-export const registerSignalFactory = registerSignalRuntime;

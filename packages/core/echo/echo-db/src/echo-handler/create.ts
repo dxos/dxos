@@ -2,15 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { EchoReactiveObject, ObjectMeta, S } from '@dxos/echo-schema';
 import {
   createReactiveProxy,
   DynamicSchema,
+  type EchoReactiveObject,
+  type ObjectMeta,
   getMeta,
   getProxyHandlerSlot,
   getSchema,
   isReactiveObject,
   requireTypeReference,
+  type S,
   SchemaValidator,
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';

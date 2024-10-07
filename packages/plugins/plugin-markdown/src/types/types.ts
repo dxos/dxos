@@ -27,6 +27,7 @@ export enum MarkdownAction {
 
 export type MarkdownProperties = Record<string, any>;
 
+// TODO(burdon): Async.
 export type MarkdownExtensionProvider = (props: { document?: DocumentType }) => Extension | undefined;
 
 export type OnChange = (text: string) => void;
