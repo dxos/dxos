@@ -8,7 +8,7 @@ import { LayoutAction, type Plugin, useIntentDispatcher, useResolvePlugins } fro
 import { type ThreadType } from '@dxos/plugin-space';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
-import { createAttendableAttributes, useAttentionContext } from '@dxos/react-ui-attention';
+import { useAttendableAttributes, useAttended } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
 
 import { CommentsContainer, CommentsHeading } from '../components';
@@ -23,14 +23,12 @@ export const ThreadComplementary = ({
   subject,
   stagedThreads,
   current,
-  focus,
   showResolvedThreads,
 }: {
   role: string;
   subject: any;
   stagedThreads: ThreadType[] | undefined;
   current?: string;
-  focus?: boolean;
   showResolvedThreads?: boolean;
 }) => {
   const dispatch = useIntentDispatcher();
@@ -58,22 +56,18 @@ export const ThreadComplementary = ({
     threads.sort((a, b) => sort(a?.anchor, b?.anchor));
   }, [sort, threads]);
 
-  // TODO(Zan): Maybe we should have a hook for this?
-  const { attended } = useAttentionContext('Thread Complementary');
+  const attended = useAttended();
   const qualifiedSubjectId = fullyQualifiedId(subject);
 
-  const attendableAttrs = createAttendableAttributes(qualifiedSubjectId);
-
   return (
-    <div role='none' className='contents group/attention' {...attendableAttrs}>
+    <div role='none' className='contents'>
       {role === 'complementary' && <CommentsHeading attendableId={qualifiedSubjectId} />}
       <ScrollArea.Root classNames='row-span-2'>
         <ScrollArea.Viewport>
           <CommentsContainer
             threads={threads}
             detached={detachedIds}
-            currentId={attended.has(qualifiedSubjectId) ? current : undefined}
-            autoFocusCurrentTextbox={focus}
+            currentId={attended.includes(qualifiedSubjectId) ? current : undefined}
             showResolvedThreads={showResolvedThreads}
             onThreadAttend={(thread) => {
               const threadId = fullyQualifiedId(thread);

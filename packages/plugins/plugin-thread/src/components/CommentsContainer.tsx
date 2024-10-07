@@ -25,7 +25,6 @@ export type ThreadsContainerProps = Omit<
    */
   detached?: string[];
   currentId?: string;
-  autoFocusCurrentTextbox?: boolean;
   showResolvedThreads?: boolean;
   onThreadAttend?: (thread: ThreadType) => void;
   onThreadDelete?: (thread: ThreadType) => void;
@@ -54,7 +53,6 @@ export const CommentsContainer = ({
   threads,
   detached = [],
   currentId,
-  autoFocusCurrentTextbox,
   showResolvedThreads,
   onThreadAttend,
   onThreadDelete,
@@ -82,7 +80,6 @@ export const CommentsContainer = ({
               thread={thread}
               current={currentId === threadId}
               detached={detached.includes(threadId)}
-              autoFocusTextbox={autoFocusCurrentTextbox && currentId === threadId}
               {...(onThreadAttend && { onAttend: () => onThreadAttend(thread) })}
               {...(onThreadDelete && { onThreadDelete: () => onThreadDelete(thread) })}
               {...(onMessageDelete && { onMessageDelete: (messageId: string) => onMessageDelete(thread, messageId) })}

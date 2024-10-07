@@ -52,14 +52,6 @@ export type ActiveParts = z.infer<typeof ActiveParts>;
 export type LayoutContainerProps<T> = T & { role?: string; coordinate?: LayoutCoordinate };
 
 /**
- * Basic state provided by a navigation plugin.
- */
-export const Attention = z.object({
-  attended: z.set(z.string()).describe('Ids of items which have focus.'),
-});
-export type Attention = z.infer<typeof Attention>;
-
-/**
  * Provides for a plugin that can manage the app navigation.
  */
 const LocationProvidesSchema = S.mutable(

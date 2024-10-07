@@ -5,7 +5,8 @@
 import React, { useCallback } from 'react';
 
 import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
-import { useIsDirectlyAttended } from '@dxos/react-ui-attention';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { useHasAttention } from '@dxos/react-ui-attention';
 import { Table } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -16,7 +17,7 @@ import { Toolbar, type ToolbarAction } from './Toolbar';
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
 
 const TableContainer = ({ role, table }: LayoutContainerProps<Omit<ObjectTableProps, 'role' | 'getScrollElement'>>) => {
-  const isDirectlyAttended = useIsDirectlyAttended();
+  const hasAttention = useHasAttention(fullyQualifiedId(table));
   const dispatch = useIntentDispatcher();
 
   const onThreadCreate = useCallback(() => {
@@ -46,7 +47,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<Omit<ObjectTablePr
           onAction={handleAction}
           classNames={mx(
             role === 'section'
-              ? ['z-[2] group-focus-within/section:visible', !isDirectlyAttended && 'invisible', sectionToolbarLayout]
+              ? ['z-[2] group-focus-within/section:visible', !hasAttention && 'invisible', sectionToolbarLayout]
               : 'group-focus-within/editor:border-separator group-[[aria-current]]/editor:border-separator',
           )}
         >

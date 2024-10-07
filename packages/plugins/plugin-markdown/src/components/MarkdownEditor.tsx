@@ -6,16 +6,9 @@ import { openSearchPanel } from '@codemirror/search';
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 
-import {
-  type FileInfo,
-  LayoutAction,
-  type LayoutCoordinate,
-  useResolvePlugin,
-  parseLayoutPlugin,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { type FileInfo, LayoutAction, type LayoutCoordinate, useIntentDispatcher } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
-import { useIsDirectlyAttended } from '@dxos/react-ui-attention';
+import { useAttendableAttributes, useHasAttention } from '@dxos/react-ui-attention';
 import {
   type Action,
   type DNDOptions,
@@ -44,12 +37,6 @@ import { useSelectCurrentThread } from '../hooks';
 import { MARKDOWN_PLUGIN } from '../meta';
 import { type MarkdownPluginState } from '../types';
 
-// TODO(Zan): Factor into a shared location.
-const attentionFragment = mx(
-  'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
-  'group-focus-within/editor:border-separator',
-);
-
 const DEFAULT_VIEW_MODE: EditorViewMode = 'preview';
 
 export type MarkdownEditorProps = {
@@ -65,6 +52,12 @@ export type MarkdownEditorProps = {
 } & Pick<UseTextEditorProps, 'initialValue' | 'scrollTo' | 'selection' | 'extensions'> &
   Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
 
+/**
+ * Base markdown editor component.
+ *
+ * This component provides all the features of the markdown editor that do no depend on ECHO.
+ * This allows it to be used as a common editor for markdown content on arbitrary backends (e.g. files).
+ */
 export const MarkdownEditor = ({
   id,
   role = 'article',
@@ -82,9 +75,9 @@ export const MarkdownEditor = ({
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
   const dispatch = useIntentDispatcher();
-  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const [formattingState, formattingObserver] = useFormattingState();
-  const isDirectlyAttended = useIsDirectlyAttended(id);
+  const attendableAttributes = useAttendableAttributes(id);
+  const hasAttention = useHasAttention(id);
 
   // Extensions from other plugins.
   const providerExtensions = useMemo(
@@ -141,7 +134,7 @@ export const MarkdownEditor = ({
         scrollTo,
         selection,
         // TODO(wittjosiah): Autofocus based on layout is racy.
-        autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
+        // autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
         moveToEndOfLine: true,
       }),
     }),
@@ -177,25 +170,24 @@ export const MarkdownEditor = ({
       {...(role === 'section'
         ? { className: 'flex flex-col' }
         : {
-            className: 'contents group/editor',
-            ...(isDirectlyAttended && { 'aria-current': 'location' }),
+            className: 'contents',
+            // TODO(wittjosiah): Factor out to `useAttendableAttributes`?
+            ...(hasAttention && { 'aria-current': 'location' }),
+            ...attendableAttributes,
           })}
     >
       {toolbar && (
-        <div role='none' className={mx('flex shrink-0 justify-center overflow-x-auto', attentionFragment)}>
+        <div role='none' className='flex shrink-0 justify-center overflow-x-auto'>
           <Toolbar.Root
             classNames={
               role === 'section'
                 ? [
                     textBlockWidth,
                     'z-[2] group-focus-within/section:visible',
-                    !isDirectlyAttended && 'invisible',
+                    !hasAttention && 'invisible',
                     sectionToolbarLayout,
                   ]
-                : [
-                    textBlockWidth,
-                    'group-focus-within/editor:border-separator group-[[aria-current]]/editor:border-separator',
-                  ]
+                : [textBlockWidth, 'attention-surface']
             }
             state={formattingState && { ...formattingState, ...commentsState }}
             onAction={handleAction}
@@ -219,8 +211,7 @@ export const MarkdownEditor = ({
             : mx(
                 'flex is-full bs-full overflow-hidden',
                 focusRing,
-                attentionFragment,
-                'focus-visible:ring-inset',
+                'focus-visible:ring-inset attention-surface',
                 'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
               )
         }
