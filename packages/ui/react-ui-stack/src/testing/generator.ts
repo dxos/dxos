@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-
-import { create, type EchoReactiveObject } from '@dxos/echo-schema';
+import { create, type EchoReactiveObject, S } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 // TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/react-ui/testing.

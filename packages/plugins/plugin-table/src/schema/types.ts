@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
-
 import {
+  AST,
   type EchoObjectAnnotation,
   FieldMeta,
   ReferenceAnnotationId,
   getFieldMetaAnnotation,
   ref,
+  S,
 } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';

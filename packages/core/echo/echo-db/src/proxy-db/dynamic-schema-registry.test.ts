@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
@@ -15,6 +14,7 @@ import {
   StoredSchema,
   TypedObject,
 } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
 import { TestSchemaType } from '@dxos/echo-schema/testing';
 
 import { Filter } from '../query';

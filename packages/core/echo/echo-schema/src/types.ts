@@ -4,7 +4,6 @@
 
 import { AST, Schema as S } from '@effect/schema';
 import { type Simplify } from 'effect/Types';
-
 import { type Comparator, intersection } from '@dxos/util';
 
 import { getMeta } from './getter';

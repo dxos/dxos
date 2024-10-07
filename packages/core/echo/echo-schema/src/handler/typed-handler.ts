@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { type Reference } from '@dxos/echo-protocol';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
+import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { getTargetMeta } from './object';

@@ -2,10 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
-
-import { type EchoReactiveObject } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
+import { create, type EchoReactiveObject, type S } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 // TODO(burdon): Reconcile with @dxos/echo-generator.

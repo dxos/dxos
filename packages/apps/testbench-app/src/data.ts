@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-
-import { TypedObject } from '@dxos/echo-schema';
+import { S, TypedObject } from '@dxos/echo-schema';
 
 // TODO(burdon): [API]: extends feels a bit Frankenstein (get review from effect discord).
 // TODO(burdon): FQ URIs for type names.

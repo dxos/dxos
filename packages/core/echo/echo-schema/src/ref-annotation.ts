@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-
-import type { EncodedReference } from '@dxos/echo-protocol';
+import { type EncodedReference } from '@dxos/echo-protocol';
+import { S } from '@dxos/effect';
 
 import { type EchoObjectAnnotation, getEchoObjectAnnotation, ReferenceAnnotationId } from './ast';
 import { DynamicSchema, StoredSchema } from './dynamic';

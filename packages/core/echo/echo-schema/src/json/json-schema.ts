@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, JSONSchema, Schema as S } from '@effect/schema';
 import { type Mutable } from 'effect/Types';
 
+import { AST, JSONSchema, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import {

@@ -39,5 +39,4 @@ export * from './to-fallback';
 export * from './tracer';
 export * from './types';
 export * from './uint8array';
-export * from './url';
 export * from './weak';

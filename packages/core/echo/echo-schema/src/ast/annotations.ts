@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
 import { Option, pipe } from 'effect';
 import { type Simplify } from 'effect/Types';
+
+import { AST, S } from '@dxos/effect';
 
 import { checkIdNotPresentOnSchema } from './schema-validator';
 import { type Identifiable } from '../types';

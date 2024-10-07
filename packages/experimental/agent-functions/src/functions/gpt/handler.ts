@@ -2,10 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
-import { create, foreignKey, getMeta, getTypename } from '@dxos/echo-schema';
+import { S, create, foreignKey, getMeta, getTypename } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

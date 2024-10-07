@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
 import React, { useMemo } from 'react';
 
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, type S } from '@dxos/echo-schema';
 import { Table, schemaToColumnDefs } from '@dxos/react-ui-table';
 
 export type ItemTableProps<T> = {
