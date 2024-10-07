@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { ClientRepeater } from '@dxos/react-client/testing';

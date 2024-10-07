@@ -3,11 +3,8 @@
 //
 
 import { computed, type ReadonlySignal } from '@preact/signals-core';
-import { produce, setAutoFreeze } from 'immer';
 
 import { create } from '@dxos/echo-schema';
-
-setAutoFreeze(false);
 
 const DEFAULT_WIDTH = 100; // px
 
@@ -49,58 +46,80 @@ export type TableEvent =
   | { type: 'DeselectAllRows' }
   | { type: 'ModifyColumnWidth'; columnIndex: number; width: number };
 
-export const updateTable = (table: Table, event: TableEvent): Table =>
-  produce(table, (draft) => {
-    switch (event.type) {
-      case 'SetSort': {
-        draft.sorting = [{ columnId: event.columnId, direction: event.direction }];
-        break;
-      }
-      case 'MoveColumn': {
-        const currentIndex = draft.columnOrdering.indexOf(event.columnId);
-        if (currentIndex !== -1) {
-          draft.columnOrdering.splice(currentIndex, 1);
-          draft.columnOrdering.splice(event.newIndex, 0, event.columnId);
-        }
-        break;
-      }
-      case 'PinRow': {
-        draft.pinnedRows[event.side].push(event.rowIndex);
-        break;
-      }
-      case 'UnpinRow': {
-        draft.pinnedRows.top = draft.pinnedRows.top.filter((index) => index !== event.rowIndex);
-        draft.pinnedRows.bottom = draft.pinnedRows.bottom.filter((index) => index !== event.rowIndex);
-        break;
-      }
-      case 'SelectRow': {
-        if (!draft.rowSelection.includes(event.rowIndex)) {
-          draft.rowSelection.push(event.rowIndex);
-        }
-        break;
-      }
-      case 'DeselectRow': {
-        draft.rowSelection = draft.rowSelection.filter((index) => index !== event.rowIndex);
-        break;
-      }
-      case 'DeselectAllRows': {
-        draft.rowSelection = [];
-        break;
-      }
-      case 'ModifyColumnWidth': {
-        const columnId = table.columnOrdering.at(event.columnIndex);
-        if (columnId) {
-          const newWidth = Math.max(0, event.width);
-          draft.columnWidths[columnId] = newWidth;
-        }
-        break;
-      }
+export const updateTable = (table: Table, event: TableEvent): Table => {
+  switch (event.type) {
+    case 'SetSort': {
+      table.sorting = [{ columnId: event.columnId, direction: event.direction }];
+      break;
     }
-  });
+    case 'MoveColumn': {
+      const currentIndex = table.columnOrdering.indexOf(event.columnId);
+      if (currentIndex !== -1) {
+        table.columnOrdering.splice(currentIndex, 1);
+        table.columnOrdering.splice(event.newIndex, 0, event.columnId);
+      }
+      break;
+    }
+    case 'PinRow': {
+      table.pinnedRows[event.side].push(event.rowIndex);
+      break;
+    }
+    case 'UnpinRow': {
+      table.pinnedRows.top = table.pinnedRows.top.filter((index: number) => index !== event.rowIndex);
+      table.pinnedRows.bottom = table.pinnedRows.bottom.filter((index: number) => index !== event.rowIndex);
+      break;
+    }
+    case 'SelectRow': {
+      if (!table.rowSelection.includes(event.rowIndex)) {
+        table.rowSelection.push(event.rowIndex);
+      }
+      break;
+    }
+    case 'DeselectRow': {
+      table.rowSelection = table.rowSelection.filter((index: number) => index !== event.rowIndex);
+      break;
+    }
+    case 'DeselectAllRows': {
+      table.rowSelection = [];
+      break;
+    }
+    case 'ModifyColumnWidth': {
+      const columnId = table.columnOrdering.at(event.columnIndex);
+      if (columnId) {
+        const newWidth = Math.max(0, event.width);
+        table.columnWidths[columnId] = newWidth;
+      }
+      break;
+    }
+  }
+  return table;
+};
 
 // Return a preact-signals reactive object (with create) for an initialized table.
 // TODO(Zan): Take widths, and callbacks for changing sorting, column widths.
 export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]): Table => {
+  /**
+   * Creates a nested computed signal structure for table rows.
+   *
+   * This structure is currently optimized for reactive collaboration on cell edits:
+   *
+   * 1. Outer computed:
+   *    - Tracks changes to the entire data array (additions, removals, reordering)
+   *    - Recreates all inner computed signals when triggered
+   *
+   * 2. Inner computed (one per row):
+   *    - Tracks changes to individual row data
+   *    - Recalculates only when its specific row data changes
+   *
+   * Benefits:
+   * - Highly efficient for cell-level edits (most common in collaborative editing)
+   * - Maintains reactivity at both array and row levels
+   * - Automatically updates UI for all users on any collaborative change
+   *
+   * Performance characteristics:
+   * - Cell edits: Optimal (only affected row recalculates)
+   * - Array-level changes: Expensive (all inner `computed` recreated)
+   */
   const rows = computed(() => {
     return data.map((row: any) => {
       return computed(() => {
