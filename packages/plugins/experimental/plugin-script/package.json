@@ -59,13 +59,13 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/autocomplete": "^6.18.0",
+    "@codemirror/autocomplete": "^6.18.1",
     "@codemirror/lang-javascript": "^6.2.2",
-    "@codemirror/language": "^6.10.2",
-    "@codemirror/lint": "^6.8.1",
+    "@codemirror/language": "^6.10.3",
+    "@codemirror/lint": "^6.8.2",
     "@codemirror/state": "^6.4.1",
     "@codemirror/theme-one-dark": "^6.1.2",
-    "@codemirror/view": "^6.29.1",
+    "@codemirror/view": "^6.34.1",
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -92,7 +92,7 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@lezer/common": "^1.2.1",
+    "@lezer/common": "^1.2.2",
     "@preact/signals-core": "^1.6.0",
     "@typescript/vfs": "^1.6.0",
     "@valtown/codemirror-ts": "^2.2.0",
@@ -119,7 +119,7 @@
     "react-dom": "~18.2.0",
     "vite": "5.4.7"
   },
-  "optionalDependencies": {
+  "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

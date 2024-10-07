@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-
-import { TypedObject } from '@dxos/echo-schema';
+import { S, TypedObject } from '@dxos/echo-schema';
 
 export class Todo extends TypedObject({
   typename: 'example.org/type/Todo',

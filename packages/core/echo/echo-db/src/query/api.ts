@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { EchoReactiveObject } from '@dxos/echo-schema';
-import type { PublicKey } from '@dxos/keys';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type { Filter$, FilterSource } from './filter';

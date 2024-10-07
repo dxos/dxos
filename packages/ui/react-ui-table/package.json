@@ -22,6 +22,7 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -30,7 +31,6 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.67.16",
     "@fluentui/react-tabster": "^9.19.0",
     "@radix-ui/react-context": "^1.0.0",
     "@radix-ui/react-primitive": "^1.0.2",
@@ -38,11 +38,9 @@
     "@radix-ui/react-use-controllable-state": "^1.0.0",
     "@tanstack/react-table": "^8.13.2",
     "@tanstack/react-virtual": "^3.9.0",
-    "date-fns": "^3.3.1",
-    "effect": "^3.2.7"
+    "date-fns": "^3.3.1"
   },
   "devDependencies": {
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

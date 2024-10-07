@@ -3,14 +3,13 @@
 //
 
 import {
-  AST,
   type EchoObjectAnnotation,
   FieldMeta,
+  ReferenceAnnotationId,
   getFieldMetaAnnotation,
   ref,
-  ReferenceAnnotationId,
-  S,
 } from '@dxos/echo-schema';
+import { AST, S } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
 

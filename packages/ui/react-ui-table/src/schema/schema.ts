@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as AST from '@effect/schema/AST';
-import type * as S from '@effect/schema/Schema';
+import { AST, type S } from '@dxos/echo-schema';
 
 import { type ColumnType } from './types';
 

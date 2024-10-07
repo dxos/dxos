@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
@@ -14,6 +13,7 @@ import {
   getTypeReference,
   ref,
   TypedObject,
+  S,
 } from '@dxos/echo-schema';
 import { EmptySchemaType, TEST_SCHEMA_TYPE } from '@dxos/echo-schema/testing';
 
