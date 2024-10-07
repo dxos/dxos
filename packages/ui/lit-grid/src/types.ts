@@ -9,16 +9,25 @@ export type CellIndex = `${string},${string}`;
 
 export type DxGridAxis = 'row' | 'col';
 
+export type DxGridFrozenPlane = `frozen${'Cols' | 'Rows'}${'Start' | 'End'}`;
+export type DxGridFixedPlane = `fixed${'Start' | 'End'}${'Start' | 'End'}`;
+
+export type DxGridPlane = 'grid' | DxGridFrozenPlane | DxGridFixedPlane;
+
 export type DxGridPosition = Record<DxGridAxis, number>;
 export type DxGridPositionNullable = DxGridPosition | null;
 
-export type DxGridCells = Record<CellIndex, CellValue>;
+export type DxGridPlaneCells = Record<CellIndex, CellValue>;
+export type DxGridCells = { grid: DxGridPlaneCells } & Partial<
+  Record<DxGridFixedPlane | DxGridFrozenPlane, DxGridPlaneCells>
+>;
 
-export type DxGridAxisMeta = Record<string, AxisMeta>;
+export type DxGridPlaneAxisMeta = Record<string, AxisMeta>;
+export type DxGridAxisMeta = { grid: DxGridPlaneAxisMeta } & Partial<Record<DxGridFrozenPlane, DxGridPlaneAxisMeta>>;
 
-export type DxGridPointer = null | ({ state: 'resizing'; page: number } & DxAxisResizeProps) | { state: 'selecting' };
+export type DxGridPointer = null | { state: 'selecting' };
 
-export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'index' | 'size'>;
+export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'plane' | 'index' | 'size'>;
 export type DxAxisResizeInternalProps = DxAxisResizeProps & { delta: number; state: 'dragging' | 'dropped' };
 
 export type DxGridMode = 'browse' | 'edit';
@@ -50,11 +59,13 @@ export type DxGridProps = Partial<
 
 export class DxAxisResize extends Event {
   public readonly axis: DxGridAxis;
+  public readonly plane: 'grid' | DxGridFrozenPlane;
   public readonly index: string;
   public readonly size: number;
   constructor(props: DxAxisResizeProps) {
     super('dx-axis-resize');
     this.axis = props.axis;
+    this.plane = props.plane;
     this.index = props.index;
     this.size = props.size;
   }
@@ -62,6 +73,7 @@ export class DxAxisResize extends Event {
 
 export class DxAxisResizeInternal extends Event {
   public readonly axis: DxGridAxis;
+  public readonly plane: 'grid' | DxGridFrozenPlane;
   public readonly index: string;
   public readonly size: number;
   public readonly delta: number;
@@ -69,6 +81,7 @@ export class DxAxisResizeInternal extends Event {
   constructor(props: DxAxisResizeInternalProps) {
     super('dx-axis-resize-internal', { composed: true, bubbles: true });
     this.axis = props.axis;
+    this.plane = props.plane;
     this.index = props.index;
     this.size = props.size;
     this.delta = props.delta;

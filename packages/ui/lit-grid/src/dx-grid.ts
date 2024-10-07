@@ -12,14 +12,17 @@ import './dx-grid-axis-resize-handle';
 import {
   type AxisMeta,
   type CellIndex,
+  type CellValue,
   DxAxisResize,
   type DxAxisResizeInternal,
   DxEditRequest,
-  type DxGridAxis,
   type DxGridAxisMeta,
   type DxGridCells,
   DxGridCellsSelect,
+  type DxGridFrozenPlane,
   type DxGridMode,
+  type DxGridPlane,
+  type DxGridPlaneCells,
   type DxGridPointer,
   type DxGridPosition,
   type DxGridPositionNullable,
@@ -94,8 +97,6 @@ const isSameCell = (a: DxGridPositionNullable, b: DxGridPositionNullable) =>
 const localChId = (c0: number) => `ch--${c0}`;
 const localRhId = (r0: number) => `rh--${r0}`;
 
-const getPage = (axis: string, event: PointerEvent) => (axis === 'col' ? event.pageX : event.pageY);
-
 @customElement('dx-grid')
 export class DxGrid extends LitElement {
   constructor() {
@@ -121,13 +122,13 @@ export class DxGrid extends LitElement {
   columnDefault: AxisMeta = { size: 180 };
 
   @property({ type: Object })
-  rows: DxGridAxisMeta = {};
+  rows: DxGridAxisMeta = { grid: {} };
 
   @property({ type: Object })
-  columns: DxGridAxisMeta = {};
+  columns: DxGridAxisMeta = { grid: {} };
 
   @property({ type: Object })
-  initialCells: DxGridCells = {};
+  initialCells: DxGridCells = { grid: {} };
 
   @property({ type: String })
   mode: DxGridMode = 'browse';
@@ -138,14 +139,17 @@ export class DxGrid extends LitElement {
   @property({ type: Number })
   limitRows: number = Infinity;
 
+  @property({ type: Object })
+  frozen: Partial<Record<DxGridFrozenPlane, number>> = {};
+
   /**
    * When this function is defined, it is used first to try to get a value for a cell, and otherwise will fall back
    * to `cells`.
    */
-  getCells: ((nextRange: DxGridRange) => DxGridCells) | null = null;
+  getCells: ((nextRange: DxGridRange, plane: DxGridPlane) => DxGridPlaneCells) | null = null;
 
   @state()
-  private cells: DxGridCells = {};
+  private cells: DxGridCells = { grid: {} };
 
   //
   // `pos`, short for ‘position’, is the position in pixels of the viewport from the origin.
@@ -276,17 +280,7 @@ export class DxGrid extends LitElement {
     if (event.isPrimary) {
       const { action, actionEl } = closestAction(event.target);
       if (action) {
-        if (action.startsWith('resize') && this.mode === 'browse') {
-          const [resize, index] = action.split(',');
-          const [_, axis] = resize.split('-');
-          this.pointer = {
-            state: 'resizing',
-            axis: axis as DxGridAxis,
-            size: axis === 'col' ? this.colSize(index) : this.rowSize(index),
-            page: getPage(axis, event),
-            index,
-          };
-        } else if (action === 'cell') {
+        if (action === 'cell') {
           const cellCoords = closestCell(event.target, actionEl);
           if (cellCoords) {
             this.pointer = { state: 'selecting' };
@@ -305,19 +299,15 @@ export class DxGrid extends LitElement {
   };
 
   private handlePointerUp = (event: PointerEvent) => {
-    if (this.pointer?.state === 'resizing') {
-      // do nothing, todo: remove
-    } else {
-      const cell = closestCell(event.target);
-      if (cell) {
-        this.selectionEnd = cell;
-        this.dispatchEvent(
-          new DxGridCellsSelect({
-            start: this.selectionStart,
-            end: this.selectionEnd,
-          }),
-        );
-      }
+    const cell = closestCell(event.target);
+    if (cell) {
+      this.selectionEnd = cell;
+      this.dispatchEvent(
+        new DxGridCellsSelect({
+          start: this.selectionStart,
+          end: this.selectionEnd,
+        }),
+      );
     }
     this.pointer = null;
   };
@@ -384,9 +374,9 @@ export class DxGrid extends LitElement {
     return this.rowSizes?.[r] ?? this.rowDefault.size;
   }
 
-  private cell(c: number | string, r: number | string) {
+  private cell(c: number | string, r: number | string, plane: DxGridPlane): CellValue | undefined {
     const index: CellIndex = `${c}${separator}${r}`;
-    return this.cells[index] ?? this.initialCells[index];
+    return this.cells?.[plane]?.[index] ?? this.cells?.[plane]?.[index];
   }
 
   private focusedCellBox(): DxEditRequest['cellBox'] {
@@ -534,6 +524,32 @@ export class DxGrid extends LitElement {
   private updateVis() {
     this.updateVisInline();
     this.updateVisBlock();
+  }
+
+  private updateCells() {
+    this.cells.grid = this.getCells!(
+      {
+        start: { col: this.visColMin, row: this.visRowMin },
+        end: { col: this.visColMax, row: this.visRowMax },
+      },
+      'grid',
+    );
+    Object.entries(this.frozen)
+      .filter(([_plane, limit]) => limit && limit > 0)
+      .forEach(([plane, limit]) => {
+        this.cells[plane as Exclude<DxGridPlane, 'grid'>] = this.getCells!(
+          plane.startsWith('frozenRows')
+            ? {
+                start: { col: this.visColMin, row: 0 },
+                end: { col: this.visColMax, row: limit },
+              }
+            : {
+                start: { col: 0, row: this.visRowMin },
+                end: { col: limit, row: this.visRowMax },
+              },
+          plane as DxGridPlane,
+        );
+      });
   }
 
   // Focus handlers
@@ -686,6 +702,8 @@ export class DxGrid extends LitElement {
       this.dispatchEvent(
         new DxAxisResize({
           axis,
+          // todo(thure): Support other planes
+          plane: 'grid',
           index,
           size: this[axis === 'col' ? 'colSize' : 'rowSize'](index),
         }),
@@ -829,10 +847,13 @@ export class DxGrid extends LitElement {
 
   override firstUpdated() {
     if (this.getCells) {
-      this.cells = this.getCells({
-        start: { col: this.visColMin, row: this.visRowMin },
-        end: { col: this.visColMax, row: this.visRowMax },
-      });
+      this.cells = this.getCells(
+        {
+          start: { col: this.visColMin, row: this.visRowMin },
+          end: { col: this.visColMax, row: this.visRowMax },
+        },
+        'grid',
+      );
     }
     this.observer.observe(this.viewportRef.value!);
     this.colSizes = Object.entries(this.columns).reduce((acc: Record<string, number>, [colId, colMeta]) => {
@@ -859,10 +880,7 @@ export class DxGrid extends LitElement {
         changedProperties.has('visRowMin') ||
         changedProperties.has('visRowMax'))
     ) {
-      this.cells = this.getCells({
-        start: { col: this.visColMin, row: this.visRowMin },
-        end: { col: this.visColMax, row: this.visRowMax },
-      });
+      this.updateCells();
     }
   }
 
