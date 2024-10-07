@@ -1,0 +1,39 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import React from 'react';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { HashRouter } from 'react-router-dom';
+
+import { RoomContextProvider } from './RoomContextProvider';
+import { useRoutes } from './useRoutes';
+
+const Routes = () => {
+  return useRoutes();
+};
+const queryClient = new QueryClient();
+
+export type CallsProps = {
+  roomName: string;
+  noRouter?: boolean;
+};
+
+/**
+ * Entrypoint for app and extension (no direct dependency on Client).
+ */
+export const Calls = ({ roomName, noRouter }: CallsProps) => {
+  if (noRouter) {
+    return <Routes />;
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RoomContextProvider roomName={roomName}>
+        <HashRouter>
+          <Routes />
+        </HashRouter>
+      </RoomContextProvider>
+    </QueryClientProvider>
+  );
+};

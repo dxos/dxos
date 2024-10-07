@@ -6997,6 +6997,12 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/network-manager':
+        specifier: workspace:*
+        version: link:../../core/mesh/network-manager
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -7096,6 +7102,9 @@ importers:
       react-query:
         specifier: ^3.39.3
         version: 3.39.3(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      react-router-dom:
+        specifier: ^6.4.0
+        version: 6.26.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react-use:
         specifier: ^17.5.1
         version: 17.5.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -7152,6 +7161,9 @@ importers:
       '@remix-run/eslint-config':
         specifier: 2.11.1
         version: 2.11.1(eslint@8.57.0)(react@18.2.0)(typescript@5.6.2)
+      '@types/cookie':
+        specifier: ^0.6.0
+        version: 0.6.0
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -38158,7 +38170,7 @@ snapshots:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       react-is: 18.2.0
-      react-router-dom: 6.4.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      react-router-dom: 6.26.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react-syntax-highlighter: 15.5.0(react@18.2.0)
       rehype-highlight: 5.0.2
       styled-components: 5.3.6(react-dom@18.2.0(react@18.2.0))(react-is@18.2.0)(react@18.2.0)

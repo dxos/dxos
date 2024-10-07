@@ -31,7 +31,13 @@
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/mesh/network-manager"
     },
     {
       "path": "../../sdk/app-framework"
