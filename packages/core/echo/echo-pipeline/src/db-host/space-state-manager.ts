@@ -7,8 +7,8 @@ import isEqual from 'lodash.isequal';
 import { Event, UpdateScheduler } from '@dxos/async';
 import { interpretAsDocumentId, type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Resource, Context } from '@dxos/context';
-import type { SpaceDoc } from '@dxos/echo-protocol';
-import type { SpaceId } from '@dxos/keys';
+import { type SpaceDoc } from '@dxos/echo-protocol';
+import { type SpaceId } from '@dxos/keys';
 
 import { DatabaseRoot } from './database-root';
 

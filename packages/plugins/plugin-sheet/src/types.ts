@@ -9,7 +9,7 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { ref, S, TypedObject } from '@dxos/echo-schema';
+import { ref, TypedObject, S } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-client';
 import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import { type SpaceInitProvides } from '@dxos/plugin-space';

@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
 import { describe, expect, test } from 'vitest';
+
+import { S } from '@dxos/effect';
 
 import { create } from './object';
 import { getMeta } from '../getter';

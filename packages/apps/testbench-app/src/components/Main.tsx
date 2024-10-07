@@ -6,8 +6,7 @@ import { randWord, randSentence } from '@ngneat/falso'; // TODO(burdon): Reconci
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
-import { type ReactiveObject, type S } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
+import { type ReactiveObject, create, type S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useQuery, Filter, useSpaces } from '@dxos/react-client/echo';

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, TypedObject } from '@dxos/echo-schema';
+import { TypedObject, S } from '@dxos/echo-schema';
 
 // All section metadata needs to be optional/have defaults.
 // Any objects added to the collection will start with the section defaults.

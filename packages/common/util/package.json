@@ -28,10 +28,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/node-std": "workspace:*",
-    "@effect/schema": "^0.67.16",
-    "effect": "^3.2.7",
-    "xcase": "^2.0.1"
+    "@dxos/node-std": "workspace:*"
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*"

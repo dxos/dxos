@@ -15,7 +15,7 @@ import {
   type Space,
 } from '@dxos/echo-pipeline';
 import { SpaceDocVersion } from '@dxos/echo-protocol';
-import type { EdgeConnection } from '@dxos/edge-client';
+import { type EdgeConnection } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { failedInvariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';

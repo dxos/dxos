@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import * as AST from '@effect/schema/AST';
-
+import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { StoredSchema } from './stored-schema';

@@ -4,7 +4,7 @@
 
 import { type ColumnDef } from '@tanstack/react-table';
 
-import type { S } from '@dxos/echo-schema';
+import { type S } from '@dxos/echo-schema';
 
 import { classifySchemaProperties } from './schema';
 import { createColumnBuilder } from '../helpers';
