@@ -46,22 +46,9 @@ const Story = () => {
   const data = React.useMemo(() => makeData(50), []);
   const { table, dispatch } = useTable(columnDefinitions, data);
 
-  const handleAddRow = () => {
-    const newRow = {
-      id: data.length + 1,
-      name: `New Person ${data.length + 1}`,
-      age: Math.floor(Math.random() * 50) + 20,
-      active: Math.random() > 0.5,
-    };
-    data.unshift(newRow);
-  };
-
   return (
     <div>
       <DevTools table={table} />
-      <button className='ch-button' onClick={handleAddRow}>
-        Add Row
-      </button>
       <Grid.Root id='table-v2'>
         <Grid.Content
           limitRows={table.rows.value.length}
