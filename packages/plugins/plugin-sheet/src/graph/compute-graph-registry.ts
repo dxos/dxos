@@ -16,10 +16,6 @@ import { HyperFormula } from '#hyperformula';
 import { ComputeGraph } from './compute-graph';
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations, type FunctionContextOptions } from './functions';
 
-//
-// NOTE: The package.json file defines the packaged #hyperformula module.
-//
-
 export type ComputeGraphPlugin = {
   plugin: FunctionPluginDefinition;
   translations: FunctionTranslationsPackage;
@@ -47,6 +43,7 @@ export const defaultPlugins: ComputeGraphPlugin[] = [
  * [ComputePlugin] => [ComputeGraphRegistry] => [ComputeGraph(Space)] => [ComputeNode(Object)]
  *
  * NOTE: The ComputeGraphRegistry manages the hierarchy of resources via its root Context.
+ * NOTE: The package.json file defines the packaged #hyperformula module.
  */
 // TODO(burdon): Move graph into separate plugin; isolate HF deps.
 export class ComputeGraphRegistry extends Resource {
@@ -67,9 +64,9 @@ export class ComputeGraphRegistry extends Resource {
   }
 
   getOrCreateGraph(space: Space): ComputeGraph {
-    let graph = this.getGraph(space.id);
+    let graph = this._graphs.get(space.id);
     if (!graph) {
-      log.info('create graph', { space: space.id });
+      log('create graph', { space: space.id });
       graph = this.createGraph(space);
     }
 
@@ -88,5 +85,6 @@ export class ComputeGraphRegistry extends Resource {
     for (const graph of this._graphs.values()) {
       await graph.close();
     }
+    this._graphs.clear();
   }
 }

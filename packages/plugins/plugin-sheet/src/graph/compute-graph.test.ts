@@ -30,13 +30,13 @@ describe('ComputeGraph', () => {
     // Create script.
     const trigger = new Trigger();
     graph.update.once(() => trigger.wake());
-    const fn = space.db.add(create(FunctionType, { version: 1, binding: 'TEST' }));
+    const functionObject = space.db.add(create(FunctionType, { version: 1, binding: 'TEST' }));
     await trigger.wait();
     const functions = graph.getFunctions({ echo: true });
     expect(functions).to.toHaveLength(1);
 
     const id = graph.mapFunctionBindingToId('TEST()');
-    expect(id).to.eq(`${fullyQualifiedId(fn)}()`);
+    expect(id).to.eq(`${fullyQualifiedId(functionObject)}()`);
   });
 
   test('cross-node references', async () => {

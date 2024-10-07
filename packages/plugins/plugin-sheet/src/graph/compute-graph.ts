@@ -7,6 +7,7 @@ import { type Listeners } from 'hyperformula/typings/Emitter';
 import { Event } from '@dxos/async';
 import { type Space, Filter, fullyQualifiedId } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
+import { getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -23,23 +24,23 @@ import {
   EDGE_FUNCTION_NAME,
 } from './functions';
 
-//
-// NOTE: The package.json file defines the packaged #hyperformula module.
-//
-
 // TODO(wittjosiah): Factor out.
-const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
+const OBJECT_ID_LENGTH = 60; // 33 (space id) + 1 (separator) + 26 (object id).
 
 // TODO(burdon): Factory.
 // export type ComputeNodeGenerator = <T>(obj: T) => ComputeNode;
 
+type ObjectRef = { type: string; id: string };
+
 /**
  * Marker for sheets that are managed by an ECHO object.
+ * Sheet ID: `dxos.org/type/SheetType@1234`
  */
-const PREFIX = 'ECHO_';
-export const createSheetName = (id: string) => `${PREFIX}${id}`;
-export const getSheetId = (name: string): string | undefined =>
-  name.startsWith(PREFIX) ? name.slice(PREFIX.length) : undefined;
+export const createSheetName = ({ type, id }: ObjectRef) => `${type}@${id}`;
+export const parseSheetName = (name: string): Partial<ObjectRef> => {
+  const [type, id] = name.split('@');
+  return id ? { type, id } : { id: type };
+};
 
 export type ComputeGraphEvent = 'functionsUpdated';
 
@@ -134,22 +135,27 @@ export class ComputeGraph extends Resource {
   mapFormulaToNative(formula: string): string {
     return (
       formula
-        // Map cross-sheet references (e.g., onto sheet stored by ECHO object/model).
+        //
+        // Map cross-sheet references by name onto sheet stored by ECHO object/model.
+        // Example: "Test Sheet"!A0 => "dxos.org/type/SheetType@1234"!A0
         // https://hyperformula.handsontable.com/guide/cell-references.html#cell-references
+        //
         .replace(/['"]?([ \w]+)['"]?!/, (_match, name) => {
           if (name) {
-            // TODO(burdon): Dynamically create downstream models.
+            // TODO(burdon): Cache map.
             const objects = this._hf
               .getSheetNames()
               .map((name) => {
-                const id = getSheetId(name);
-                return id ? this._space?.db.getObjectById(id) : undefined;
+                const { type, id } = parseSheetName(name);
+                return type && id ? this._space?.db.getObjectById(id) : undefined;
               })
               .filter(nonNullable);
 
             for (const obj of objects) {
-              if (obj.name === name || obj.title === name) {
-                return `${createSheetName(obj.id)}!`;
+              if (obj.name === name) {
+                const type = getTypename(obj)!;
+                // NOTE: Names must be single quoted.
+                return `'${createSheetName({ type, id: obj.id })}'!`;
               }
             }
           }
@@ -157,7 +163,9 @@ export class ComputeGraph extends Resource {
           return `${name}!`;
         })
 
+        //
         // Map remote function references (i.e., to remote DX function invocation).
+        //
         .replace(/(\w+)\((.*)\)/g, (match, binding, args) => {
           const fn = this._remoteFunctions.find((fn) => fn.binding === binding);
           if (!fn) {

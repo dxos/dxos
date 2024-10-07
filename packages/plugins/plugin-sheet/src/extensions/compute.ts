@@ -14,12 +14,12 @@ import {
 } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
-import { type UnsubscribeCallback } from '@dxos/async';
+import { type UnsubscribeCallback, debounce } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { documentId, singleValueFacet } from '@dxos/react-ui-editor/state';
 
 import { type CellAddress } from '../defs';
-import { type ComputeGraph, type ComputeNode } from '../graph';
+import { type ComputeGraph, type ComputeNode, createSheetName } from '../graph';
 import { type CellScalarValue } from '../types';
 
 const LANGUAGE_TAG = 'dx';
@@ -34,41 +34,48 @@ export type ComputeOptions = {};
 export const compute = (options: ComputeOptions = {}): Extension => {
   let computeNode: ComputeNode | undefined;
 
-  const update = (state: EditorState, rangeSet?: RangeSet<Decoration>) => {
+  const update = (state: EditorState, current?: RangeSet<Decoration>) => {
     const builder = new RangeSetBuilder<Decoration>();
     if (computeNode) {
       computeNode.clear();
       syntaxTree(state).iterate({
         enter: (node) => {
-          if (node.name === 'FencedCode') {
-            const cursor = state.selection.main.head;
-            if (state.readOnly || cursor < node.from || cursor > node.to) {
-              const info = node.node.getChild('CodeInfo');
-              if (info) {
-                const type = state.sliceDoc(info.from, info.to);
-                const text = node.node.getChild('CodeText');
-                if (type === LANGUAGE_TAG && text) {
-                  const formula = state.sliceDoc(text.from, text.to);
-                  const iter = rangeSet?.iter(node.node.from);
-                  if (iter?.value && iter?.value.spec.formula === formula) {
-                    builder.add(node.from, node.to, iter.value);
-                  } else {
-                    // TODO(burdon): Create ordered list of cells on each decoration run.
-                    const cell: CellAddress = { col: node.node.from, row: 0 };
-                    invariant(computeNode);
-                    computeNode.setValue(cell, formula);
-                    const value = computeNode.getValue(cell);
-                    builder.add(
-                      node.from,
-                      node.to,
-                      Decoration.replace({
-                        widget: new DxWidget(formula, value),
-                        formula,
-                      }),
-                    );
+          switch (node.name) {
+            case 'FencedCode': {
+              const cursor = state.selection.main.head;
+              if (state.readOnly || cursor < node.from || cursor > node.to) {
+                const info = node.node.getChild('CodeInfo');
+                if (info) {
+                  const type = state.sliceDoc(info.from, info.to);
+                  const text = node.node.getChild('CodeText');
+                  if (type === LANGUAGE_TAG && text) {
+                    const formula = state.sliceDoc(text.from, text.to);
+
+                    const iter = current?.iter(node.node.from);
+                    if (iter?.value && iter?.value.spec.formula === formula) {
+                      // Add existing widget.
+                      builder.add(node.from, node.to, iter.value);
+                    } else {
+                      // TODO(burdon): Create ordered list of cells on each decoration run.
+                      const cell: CellAddress = { col: node.node.from, row: 0 };
+                      invariant(computeNode);
+                      // NOTE: This triggers re-render (below).
+                      computeNode.setValue(cell, formula);
+                      const value = computeNode.getValue(cell);
+                      builder.add(
+                        node.from,
+                        node.to,
+                        Decoration.replace({
+                          widget: new ComputeWidget(formula, value),
+                          formula,
+                        }),
+                      );
+                    }
                   }
                 }
               }
+
+              break;
             }
           }
         },
@@ -88,15 +95,20 @@ export const compute = (options: ComputeOptions = {}): Extension => {
           const computeGraph = view.state.facet(computeGraphFacet);
           if (id && computeGraph) {
             queueMicrotask(async () => {
-              computeNode = computeGraph.getOrCreateNode(id);
+              computeNode = computeGraph.getOrCreateNode(createSheetName({ type: '', id }));
               await computeNode.open();
-              this._subscription = computeNode.update.on(({ type }) => {
-                if (type === 'valuesUpdated') {
-                  view.dispatch({
-                    effects: updateAllDecorations.of(),
-                  });
-                }
-              });
+
+              // Trigger re-render if values updated.
+              // TODO(burdon): Trigger only if formula value updated (currently triggered during render).
+              this._subscription = computeNode.update.on(
+                debounce(({ type, ...rest }) => {
+                  if (type === 'valuesUpdated') {
+                    view.dispatch({
+                      effects: updateAllDecorations.of(),
+                    });
+                  }
+                }, 250),
+              );
             });
           }
         }
@@ -117,7 +129,8 @@ export const compute = (options: ComputeOptions = {}): Extension => {
   ];
 };
 
-class DxWidget extends WidgetType {
+// TODO(burdon): Click to edit.
+class ComputeWidget extends WidgetType {
   constructor(
     private readonly formula: string,
     private readonly value: CellScalarValue,
