@@ -7,7 +7,7 @@ import React, { useState, type FC, useEffect, useRef } from 'react';
 
 import { Client, type PublicKey } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { registerSignalFactory } from '@dxos/echo-signals/react';
+import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
 
 import { type WithClientProviderProps } from './withClientProvider';
@@ -15,14 +15,15 @@ import { ClientProvider } from '../client';
 
 export type ClientRepeatedComponentProps = { id: number; count: number; spaceKey?: PublicKey };
 
+export type ClientRepeaterControlsProps = { clients: Client[] };
+
 // TODO(burdon): Reconcile with ClientProviderProps.
 export type ClientRepeaterProps<P extends ClientRepeatedComponentProps> = {
   className?: string;
   component: FC<ClientRepeatedComponentProps>;
-  controls?: FC<{ clients: Client[] }>;
+  controls?: FC<ClientRepeaterControlsProps>;
   count?: number;
   clients?: Client[];
-  registerSignalFactory?: boolean;
   types?: S.Schema<any>[];
   args?: Omit<P, 'id' | 'count'>;
 } & Pick<WithClientProviderProps, 'createIdentity' | 'createSpace' | 'onSpaceCreated'>;
@@ -47,9 +48,9 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
     createSpace,
     onSpaceCreated,
   } = props;
-  if (props.registerSignalFactory ?? true) {
-    registerSignalFactory();
-  }
+  useEffect(() => {
+    registerSignalRuntime();
+  }, []);
 
   const [clients, setClients] = useState(props.clients ?? []);
   const [spaceKey, setSpaceKey] = useState<PublicKey>();

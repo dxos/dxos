@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { create } from '@dxos/echo-schema';
-import { registerSignalFactory } from '@dxos/echo-signals';
+import { registerSignalRuntime } from '@dxos/echo-signals';
 import { TextType, DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
@@ -30,13 +30,12 @@ const testBuilder = new TestBuilder();
 type PeersInSpaceProps = {
   count?: number;
   types?: S.Schema<any>[];
-  registerSignalFactory?: boolean; // TODO(burdon): Document.
   onSpaceCreated?: (props: { space: Space }) => MaybePromise<void>;
 };
 
 const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
-  const { count = 1, registerSignalFactory: register = true, types, onSpaceCreated } = options;
-  register && registerSignalFactory();
+  const { count = 1, types, onSpaceCreated } = options;
+  registerSignalRuntime();
   const clients = [...Array(count)].map(
     (_) => new Client({ services: testBuilder.createLocalClientServices(), types }),
   );

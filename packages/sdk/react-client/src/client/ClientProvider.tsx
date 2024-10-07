@@ -56,16 +56,8 @@ export type ClientProviderProps = Omit<ClientOptions, 'config' | 'services'> &
     fallback?: FunctionComponent<Partial<ClientContextProps>>;
 
     /**
-     * Set to false to stop default signal runtime from being registered.
-     *
-     * The signals runtime is used to provide reactive updates to ECHO objects.
-     */
-    registerSignalRuntime?: boolean;
-
-    /**
      * Skip the DXOS banner print.
      */
-    // TODO(burdon): Invert.
     noBanner?: boolean;
 
     /**
@@ -89,7 +81,6 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
       services: servicesProvider,
       status: controlledStatus,
       fallback: Fallback = () => null,
-      registerSignalRuntime: _registerSignalRuntime = true,
       noBanner,
       onInitialized,
       ...options
@@ -99,8 +90,8 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
     useEffect(() => {
       // TODO(wittjosiah): Ideally this should be imported asynchronously because it is optional.
       //   Unfortunately, async import seemed to break signals React instrumentation.
-      _registerSignalRuntime && registerSignalRuntime();
-    }, [_registerSignalRuntime]);
+      registerSignalRuntime();
+    }, []);
 
     // The client is initialized asynchronously.
     // If an error occurs during initialization, it is caught and the state is set.

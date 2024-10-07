@@ -32,8 +32,3 @@ export const registerSignalRuntime = () => {
     untracked,
   });
 };
-
-/**
- * @deprecated Use `registerSignalRuntime`.
- */
-export const registerSignalFactory = registerSignalRuntime;

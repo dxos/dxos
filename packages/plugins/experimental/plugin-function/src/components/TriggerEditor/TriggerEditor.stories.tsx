@@ -59,7 +59,6 @@ export default {
   render: () => (
     <ClientRepeater
       component={TriggerEditorStory}
-      registerSignalFactory
       types={[FunctionTrigger, FunctionDef, ChainPromptType]}
       createIdentity
       createSpace

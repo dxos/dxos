@@ -40,12 +40,8 @@ const Story = () => {
 export default {
   title: 'plugin-table/TableSettings',
   component: TableSettings,
-  render: () => <ClientRepeater types={[TableType]} component={Story} createSpace />,
   decorators: [withTheme],
+  render: () => <ClientRepeater component={Story} types={[TableType]} createSpace />,
 };
 
-export const Default = {
-  args: {
-    // table: new TableType(), // TODO(burdon): Causes hang.
-  },
-};
+export const Default = {};
