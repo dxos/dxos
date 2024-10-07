@@ -70,7 +70,6 @@
     "wtfnode": "^0.9.1"
   },
   "devDependencies": {
-    "@effect/schema": "^0.67.16",
     "@oclif/test": "^4.0.3",
     "@phosphor-icons/react": "^2.1.5",
     "@types/cli-progress": "^3.11.0",

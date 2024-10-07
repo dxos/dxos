@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
 import React from 'react';
 
 import {
@@ -16,6 +15,7 @@ import {
   type TranslationsProvides,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
+import { type S } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { createExtension, type Node } from '@dxos/plugin-graph';

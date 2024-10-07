@@ -2,16 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, type Schema as S } from '@effect/schema';
-
 import {
-  DynamicSchema,
   getSchema,
   getType,
+  DynamicSchema,
   ReferenceAnnotationId,
   SchemaValidator,
   StoredSchema,
 } from '@dxos/echo-schema';
+import { AST, type S } from '@dxos/echo-schema';
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
 import { log } from '@dxos/log';
 import { CollectionType } from '@dxos/plugin-space/types';

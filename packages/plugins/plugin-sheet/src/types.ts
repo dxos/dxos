@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -11,7 +9,7 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { ref, TypedObject } from '@dxos/echo-schema';
+import { ref, TypedObject, S } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-client';
 import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import { type SpaceInitProvides } from '@dxos/plugin-space';

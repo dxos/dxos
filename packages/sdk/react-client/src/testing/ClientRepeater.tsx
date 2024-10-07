@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
 import React, { useState, type FC, useEffect, useRef } from 'react';
 
 import { Client, type PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
+import { type S } from '@dxos/echo-schema';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
 import { type MaybePromise } from '@dxos/util';

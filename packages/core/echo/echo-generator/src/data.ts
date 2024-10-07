@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-
 import { next as A } from '@dxos/automerge/automerge';
 import { createDocAccessor, type Space } from '@dxos/client/echo';
 import {
@@ -15,6 +13,7 @@ import {
   getEchoObjectAnnotation,
   ref,
   StoredSchema,
+  S,
 } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 

@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
-
 import { Reference } from '@dxos/echo-protocol';
+import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { getEchoObjectAnnotation } from './ast';

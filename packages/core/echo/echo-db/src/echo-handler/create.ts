@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
-
-import type { EchoReactiveObject, ObjectMeta } from '@dxos/echo-schema';
+import type { EchoReactiveObject, ObjectMeta, S } from '@dxos/echo-schema';
 import {
   createReactiveProxy,
   DynamicSchema,

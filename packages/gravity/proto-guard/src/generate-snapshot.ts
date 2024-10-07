@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
 import { rmSync } from 'node:fs';
 import path, { join } from 'node:path';
 import yargs from 'yargs';
@@ -10,7 +9,7 @@ import { hideBin } from 'yargs/helpers';
 
 import { Client } from '@dxos/client';
 import { create, Expando } from '@dxos/client/echo';
-import { ref, TypedObject } from '@dxos/echo-schema';
+import { ref, S, TypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';

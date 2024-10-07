@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { JSONSchema, type Schema as S } from '@effect/schema';
 import { type BaseFunctionCallOptions, type BaseLanguageModelCallOptions } from '@langchain/core/language_models/base';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
@@ -10,6 +9,7 @@ import { RunnableSequence } from '@langchain/core/runnables';
 import { type BaseChatModel } from 'langchain/chat_models/base';
 import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
 
+import { JSONSchema, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import { type Context, type PipelineFunction } from './pipeline';

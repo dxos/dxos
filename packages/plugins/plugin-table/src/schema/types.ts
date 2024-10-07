@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
-
 import {
   type EchoObjectAnnotation,
   FieldMeta,
@@ -11,6 +9,7 @@ import {
   getFieldMetaAnnotation,
   ref,
 } from '@dxos/echo-schema';
+import { AST, S } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
 

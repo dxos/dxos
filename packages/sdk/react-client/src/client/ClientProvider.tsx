@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
 import React, {
-  forwardRef,
   type FunctionComponent,
   type ReactNode,
+  forwardRef,
   useEffect,
   useImperativeHandle,
   useState,
@@ -14,6 +13,7 @@ import React, {
 
 import { Client, type ClientOptions, type ClientServicesProvider, SystemStatus } from '@dxos/client';
 import { type Config } from '@dxos/config';
+import { type S } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { useControlledValue } from '@dxos/react-hooks';

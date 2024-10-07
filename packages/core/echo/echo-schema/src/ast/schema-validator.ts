@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
-
+import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { getEchoObjectTypename } from './annotations';

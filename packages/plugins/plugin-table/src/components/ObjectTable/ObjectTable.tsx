@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { create, type DynamicSchema, TypedObject } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type ColumnProps, Table, type TableProps } from '@dxos/react-ui-table';

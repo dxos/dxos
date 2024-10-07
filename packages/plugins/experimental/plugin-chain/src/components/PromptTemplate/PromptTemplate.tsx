@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
 import React, { type JSX, type PropsWithChildren, useEffect } from 'react';
 
+import { type S } from '@dxos/echo-schema';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {

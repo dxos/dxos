@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
-
 import { type UnsubscribeCallback } from '@dxos/async';
 import {
   create,
@@ -15,6 +13,7 @@ import {
   makeStaticSchema,
   type StaticSchema,
   StoredSchema,
+  type S,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

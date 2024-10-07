@@ -37,7 +37,6 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@effect/schema": "^0.67.16",
     "base-x": "~3.0.9"
   },
   "publishConfig": {

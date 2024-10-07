@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import textract from 'textract';
 
 import { Filter, hasType, loadObjectReferences } from '@dxos/echo-db';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';

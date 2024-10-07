@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
 import { ulid } from 'ulidx';
 
+import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';

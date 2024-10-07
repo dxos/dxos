@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
 import { Args, Command, type Config as OclifConfig, Flags, type Interfaces, settings } from '@oclif/core';
 import chalk from 'chalk';
 import * as fs from 'fs-extra';
@@ -28,6 +27,7 @@ import {
 } from '@dxos/client-protocol';
 import { type ConfigProto, Remote } from '@dxos/config';
 import { raise } from '@dxos/debug';
+import { type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { createFileProcessor, log, LogLevel, parseFilter } from '@dxos/log';
 import {

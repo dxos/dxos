@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
 import { X, PaperPlaneTilt } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 

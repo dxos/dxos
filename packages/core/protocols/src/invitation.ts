@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-
-import { ParamKeyAnnotation } from '@dxos/util';
+import { ParamKeyAnnotation, S } from '@dxos/effect';
 
 // TODO(burdon): Use uniformly for processing HTTP params.
 export const InvitationUrl = S.Struct({

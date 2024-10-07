@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-
-import { TYPE_PROPERTIES, TypedObject } from '@dxos/echo-schema';
+import { TYPE_PROPERTIES, TypedObject, S } from '@dxos/echo-schema';
 
 // TODO(burdon): Factor out (co-locate with TYPE_PROPERTIES).
 export class PropertiesType extends TypedObject({

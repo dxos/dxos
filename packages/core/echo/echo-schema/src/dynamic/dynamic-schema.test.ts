@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
 import { effect } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
 import { registerSignalRuntime } from '@dxos/echo-signals';
+import { AST, S } from '@dxos/effect';
 
 import { DynamicSchema } from './dynamic-schema';
 import { StoredSchema } from './stored-schema';

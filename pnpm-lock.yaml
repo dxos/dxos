@@ -715,9 +715,15 @@ importers:
       '@dxos/web-auth':
         specifier: ^0.4.77
         version: 0.4.80
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@fontsource/poiret-one':
         specifier: ^5.0.20
         version: 5.0.20
+      effect:
+        specifier: ^3.2.7
+        version: 3.2.7
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0(encoding@0.1.13)
@@ -758,9 +764,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-ui-card':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-card
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -1450,6 +1453,22 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../keys
+
+  packages/common/effect:
+    dependencies:
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../node-std
+      xcase:
+        specifier: ^2.0.1
+        version: 2.0.1
+    devDependencies:
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
+      effect:
+        specifier: ^3.2.7
+        version: 3.2.7
 
   packages/common/esbuild-plugins:
     dependencies:
@@ -2185,15 +2204,6 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
-      effect:
-        specifier: ^3.2.7
-        version: 3.2.7
-      xcase:
-        specifier: ^2.0.1
-        version: 2.0.1
     devDependencies:
       '@dxos/crypto':
         specifier: workspace:*
@@ -2404,6 +2414,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../mesh/edge-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -2431,9 +2444,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       effect:
         specifier: ^3.2.7
         version: 3.2.7
@@ -2477,6 +2487,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo-schema
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -2486,9 +2499,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
 
   packages/core/echo/echo-pipeline:
     dependencies:
@@ -2647,6 +2657,9 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../echo-signals
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -2659,18 +2672,19 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-      effect:
-        specifier: ^3.2.7
-        version: 3.2.7
       ulidx:
         specifier: ^2.3.0
         version: 2.3.0
+    devDependencies:
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
+      effect:
+        specifier: ^3.2.7
+        version: 3.2.7
 
   packages/core/echo/echo-signals:
     dependencies:
@@ -2778,6 +2792,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo/echo-schema
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -2796,9 +2813,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -3392,6 +3406,9 @@ importers:
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -3404,9 +3421,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
     devDependencies:
       '@bufbuild/buf':
         specifier: ^1.43.0
@@ -3752,9 +3766,6 @@ importers:
         specifier: ^0.9.1
         version: 0.9.1
     devDependencies:
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@oclif/test':
         specifier: ^4.0.3
         version: 4.0.3(@oclif/core@4.0.3(typescript@5.6.2))
@@ -3969,9 +3980,6 @@ importers:
         specifier: ^0.9.1
         version: 0.9.1
     devDependencies:
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@oclif/test':
         specifier: ^4.0.3
         version: 4.0.3(@oclif/core@4.0.3(typescript@5.6.2))
@@ -4527,9 +4535,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@langchain/community':
         specifier: ^0.0.43
         version: 0.0.43(@tensorflow/tfjs-converter@3.21.0(@tensorflow/tfjs-core@3.21.0(encoding@0.1.13)))(@tensorflow/tfjs-core@3.21.0(encoding@0.1.13))(discord.js@14.14.1)(encoding@0.1.13)(faiss-node@0.5.1)(google-auth-library@8.9.0(encoding@0.1.13))(googleapis@126.0.1(encoding@0.1.13))(hnswlib-node@1.4.2)(html-to-text@9.0.5)(interface-datastore@8.2.11)(ioredis@5.3.2)(it-all@3.0.6)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(lodash@4.17.21)(openai@4.26.1(encoding@0.1.13))(redis@4.6.6)(ws@8.18.0)
@@ -4563,9 +4568,6 @@ importers:
       csv-parse:
         specifier: ^5.3.6
         version: 5.5.2
-      date-fns:
-        specifier: ^3.3.1
-        version: 3.3.1
       discord.js:
         specifier: ^14.14.1
         version: 14.14.1
@@ -4642,6 +4644,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      date-fns:
+        specifier: ^3.3.1
+        version: 3.3.1
     devDependencies:
       '@dxos/agent':
         specifier: workspace:*
@@ -4731,9 +4736,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -5517,31 +5522,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
-    optionalDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
     devDependencies:
       '@dxos/echo-db':
         specifier: workspace:*
@@ -5549,9 +5535,18 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -5561,6 +5556,12 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -5851,9 +5852,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
       '@observablehq/plot':
         specifier: ^0.6.11
         version: 0.6.11
@@ -5875,22 +5876,6 @@ importers:
       topojson-client:
         specifier: ^3.1.0
         version: 3.1.0
-    optionalDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
     devDependencies:
       '@dxos/echo-generator':
         specifier: workspace:*
@@ -5901,9 +5886,15 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
@@ -5928,6 +5919,12 @@ importers:
       '@types/topojson-specification':
         specifier: ^1.0.5
         version: 1.0.5
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -6197,9 +6194,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6212,22 +6206,6 @@ importers:
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-    optionalDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
     devDependencies:
       '@dxos/echo-generator':
         specifier: workspace:*
@@ -6235,12 +6213,21 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
       '@dxos/react-ui-card':
         specifier: workspace:*
         version: link:../../../ui/react-ui-card
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -6253,6 +6240,12 @@ importers:
       '@types/react-window':
         specifier: ^1.8.8
         version: 1.8.8
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -6292,9 +6285,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6304,7 +6294,10 @@ importers:
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
-    optionalDependencies:
+    devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -6314,22 +6307,12 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../../common/random
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -6339,6 +6322,12 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -6366,9 +6355,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       kubo-rpc-client:
         specifier: ^4.1.1
         version: 4.1.1(undici@6.13.0)
@@ -6381,26 +6367,19 @@ importers:
       url-join:
         specifier: ^5.0.0
         version: 5.0.0
-    optionalDependencies:
+    devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -6410,6 +6389,12 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -6455,41 +6440,37 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-    optionalDependencies:
+    devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../../common/random
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -6532,9 +6513,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6550,26 +6528,19 @@ importers:
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-    optionalDependencies:
+    devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/leaflet':
         specifier: ^1.9.12
         version: 1.9.12
@@ -6579,6 +6550,12 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -6643,38 +6620,28 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
-    optionalDependencies:
+    devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../../common/random
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -6684,6 +6651,12 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -6789,9 +6762,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@lezer/common':
         specifier: ^1.2.2
         version: 1.2.2
@@ -6825,7 +6795,13 @@ importers:
       typescript:
         specifier: ^5.6.2
         version: 5.6.2
-    optionalDependencies:
+    devDependencies:
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-generator
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -6835,25 +6811,12 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
-      '@dxos/echo-generator':
-        specifier: workspace:*
-        version: link:../../../core/echo/echo-generator
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../../common/random
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -6863,6 +6826,12 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -6899,9 +6868,6 @@ importers:
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../../../ui/react-ui-searchlist
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       main-thread-scheduling:
         specifier: ^14.1.1
         version: 14.2.0
@@ -6960,32 +6926,31 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-    optionalDependencies:
+    devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -7059,32 +7024,31 @@ importers:
       chess.js:
         specifier: ^1.0.0-beta.8
         version: 1.0.0-beta.8
-    optionalDependencies:
+    devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -7285,32 +7249,31 @@ importers:
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
-    optionalDependencies:
+    devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -7505,41 +7468,37 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-    optionalDependencies:
+    devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -8136,9 +8095,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@lezer/common':
         specifier: ^1.2.2
         version: 1.2.2
@@ -8178,22 +8134,6 @@ importers:
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-    optionalDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
     devDependencies:
       '@dxos/echo-generator':
         specifier: workspace:*
@@ -8201,9 +8141,15 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../../ui/react-ui-types
@@ -8213,6 +8159,9 @@ importers:
       '@lezer/generator':
         specifier: ^1.7.1
         version: 1.7.1
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@tldraw/indices':
         specifier: ^2.0.0-alpha.14
         version: 2.0.0-canary.e43b0103fdf5
@@ -8228,6 +8177,12 @@ importers:
       '@types/react-window':
         specifier: ^1.8.8
         version: 1.8.8
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -8285,9 +8240,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -8318,29 +8270,22 @@ importers:
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-    optionalDependencies:
+    devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -8350,6 +8295,12 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -8434,9 +8385,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -8455,7 +8403,7 @@ importers:
       react-is:
         specifier: ~18.2.0
         version: 18.2.0
-    optionalDependencies:
+    devDependencies:
       '@babel/core':
         specifier: ^7.18.13
         version: 7.25.7
@@ -8465,19 +8413,12 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -8487,6 +8428,12 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -8538,9 +8485,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -8553,7 +8497,7 @@ importers:
       react-is:
         specifier: ~18.2.0
         version: 18.2.0
-    optionalDependencies:
+    devDependencies:
       '@babel/core':
         specifier: ^7.18.13
         version: 7.25.7
@@ -8563,25 +8507,24 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -8691,9 +8634,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -8703,22 +8643,6 @@ importers:
       immer:
         specifier: ^10.1.1
         version: 10.1.1
-    optionalDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
     devDependencies:
       '@dxos/echo-generator':
         specifier: workspace:*
@@ -8726,15 +8650,30 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -8847,6 +8786,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/react-ui-thread':
         specifier: workspace:*
         version: link:../../ui/react-ui-thread
@@ -8862,29 +8804,19 @@ importers:
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
-    optionalDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -8894,6 +8826,12 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -8973,9 +8911,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -9149,9 +9084,6 @@ importers:
       '@dxos/websocket-rpc':
         specifier: workspace:*
         version: link:../../core/mesh/websocket-rpc
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
@@ -9234,9 +9166,6 @@ importers:
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
@@ -10612,6 +10541,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -10652,9 +10584,6 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/gem-core':
         specifier: workspace:*
         version: link:../../experimental/gem-core
@@ -10816,6 +10745,9 @@ importers:
       '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator':
         specifier: ^1.1.3
         version: 1.1.3(@babel/core@7.25.7)(@types/react@18.2.79)(react@18.2.0)
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -10831,9 +10763,6 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -10862,9 +10791,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -10941,6 +10867,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -10965,9 +10894,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -10993,9 +10919,6 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
     devDependencies:
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -21037,6 +20960,11 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -40598,7 +40526,6 @@ snapshots:
     dependencies:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-    optional: true
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
@@ -45988,8 +45915,8 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1:
-    dependencies:
+  ajv-formats@2.1.1(ajv@8.12.0):
+    optionalDependencies:
       ajv: 8.12.0
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -47537,7 +47464,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -56968,7 +56895,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       ajv-keywords: 5.1.0(ajv@8.12.0)
 
   scroll@3.0.1: {}

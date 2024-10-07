@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
@@ -22,6 +21,7 @@ import { Context } from '@dxos/context';
 import { inspectObject, raise } from '@dxos/debug';
 import { EchoClient } from '@dxos/echo-db';
 import { getEchoObjectTypename } from '@dxos/echo-schema';
+import { type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

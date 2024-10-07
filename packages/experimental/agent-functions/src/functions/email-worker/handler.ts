@@ -2,10 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-
 import { Filter, findObjectWithForeignKey } from '@dxos/echo-db';
-import { create, foreignKey } from '@dxos/echo-schema';
+import { create, foreignKey, S } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
