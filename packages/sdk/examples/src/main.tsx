@@ -37,10 +37,11 @@ type PeersInSpaceProps = {
 const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
   const { count = 1, registerSignalFactory: register = true, types, onCreateSpace } = options;
   register && registerSignalFactory();
-  const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocalClientServices() }));
+  const clients = [...Array(count)].map(
+    (_) => new Client({ services: testBuilder.createLocalClientServices(), types }),
+  );
   await Promise.all(clients.map((client) => client.initialize()));
   await Promise.all(clients.map((client) => client.halo.createIdentity()));
-  types && clients.map((client) => client.addTypes(types));
   const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
   await onCreateSpace?.(space);
   await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space, guest: client.spaces })));

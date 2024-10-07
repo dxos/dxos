@@ -2,17 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
-
-import { Client } from '@dxos/client';
+import { Client, type ClientOptions } from '@dxos/client';
 import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 
 import { type ComputeGraphOptions, ComputeGraphRegistry } from '../compute-graph-registry';
 
-export type TestBuilderOptions = ComputeGraphOptions & {
-  types?: S.Schema<any>[];
-};
+export type TestBuilderOptions = ClientOptions & ComputeGraphOptions;
 
 // TODO(burdon): Reconcile with @dxos/client/testing.
 export class TestBuilder extends Resource {
@@ -38,12 +34,7 @@ export class TestBuilder extends Resource {
   }
 
   override async _open() {
-    const client = new Client();
-    if (this._options.types) {
-      // TODO(burdon): Add to config.
-      client.addTypes(this._options.types);
-    }
-
+    const client = new Client(this._options);
     await client.initialize();
     await client.halo.createIdentity();
     this._client = client;

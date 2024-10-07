@@ -60,11 +60,10 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
   useEffect(() => {
     const timeout = setTimeout(async () => {
       const clients = [...Array(count)].map(
-        (_) => new Client({ services: testBuilder.current.createLocalClientServices() }),
+        (_) => new Client({ services: testBuilder.current.createLocalClientServices(), types }),
       );
-      await Promise.all(clients.map((client) => client.initialize()));
-      types && clients.map((client) => client.addTypes(types));
 
+      await Promise.all(clients.map((client) => client.initialize()));
       if (createIdentity || createSpace) {
         await Promise.all(clients.map((client) => client.halo.createIdentity()));
       }

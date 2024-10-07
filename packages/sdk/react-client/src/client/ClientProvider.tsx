@@ -93,7 +93,6 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
       config: configProvider,
       client: clientProvider,
       services: servicesProvider,
-      types,
       status: controlledStatus,
       fallback: Fallback = () => null,
       registerSignalRuntime: _registerSignalRuntime = true,
@@ -141,13 +140,8 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
         if (!client.initialized) {
           await client.initialize().catch(setError);
           log('client ready');
-          if (types) {
-            client.addTypes(types);
-          }
           await onInitialized?.(client);
           log('initialization complete');
-        } else if (types) {
-          client.addTypes(types);
         }
 
         setClient(client);
