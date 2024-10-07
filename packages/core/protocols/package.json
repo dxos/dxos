@@ -76,11 +76,11 @@
   "dependencies": {
     "@bufbuild/protobuf": "^2.1.0",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/timeframe": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.67.16"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@bufbuild/buf": "^1.43.0",

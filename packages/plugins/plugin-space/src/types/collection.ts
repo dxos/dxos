@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
+import { Expando, ref, TypedObject, S } from '@dxos/echo-schema';
 
 export class CollectionType extends TypedObject({ typename: 'dxos.org/type/Collection', version: '0.1.0' })({
   name: S.optional(S.String),

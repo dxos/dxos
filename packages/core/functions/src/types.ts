@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { RawObject, S, TypedObject } from '@dxos/echo-schema';
+import { RawObject, TypedObject, S } from '@dxos/echo-schema';
 
 /**
  * Type discriminator for TriggerSpec.

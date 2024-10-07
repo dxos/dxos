@@ -23,7 +23,6 @@ export * from './json';
 export * from './map';
 export * from './map-values';
 export * from './order';
-export * from './params';
 export * from './pick';
 export * from './platform';
 export * from './random';

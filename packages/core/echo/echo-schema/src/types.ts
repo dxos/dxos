@@ -2,15 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
-import type { Simplify } from 'effect/Types';
+import { type Simplify } from 'effect/Types';
 
+import { AST, S } from '@dxos/effect';
 import { type Comparator, intersection } from '@dxos/util';
 
 import { getMeta } from './getter';
 
 export const data = Symbol.for('dxos.echo.data');
 
+// TODO(burdon): Move to client-protocol.
 export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
 
 // TODO(burdon): Use consistently (with serialization utils).

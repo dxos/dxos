@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Reconcile with @dxos/echo-generator.
-
-import type { EchoReactiveObject, S } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
+import { create, type EchoReactiveObject, type S } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
+
+// TODO(burdon): Reconcile with @dxos/echo-generator.
 
 // TODO(burdon): Util.
 export const range = <T>(fn: (i: number) => T | undefined, length: number): T[] =>

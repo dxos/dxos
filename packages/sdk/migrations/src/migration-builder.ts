@@ -8,7 +8,8 @@ import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import { ObjectCore, migrateDocument, type RepoProxy, type DocHandleProxy } from '@dxos/echo-db';
 import { SpaceDocVersion, encodeReference, type ObjectStructure, type SpaceDoc, Reference } from '@dxos/echo-protocol';
-import { requireTypeReference, type S } from '@dxos/echo-schema';
+import { requireTypeReference } from '@dxos/echo-schema';
+import { type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
