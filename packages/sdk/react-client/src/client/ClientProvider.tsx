@@ -2,15 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
-import React, {
-  forwardRef,
-  type FunctionComponent,
-  type ReactNode,
-  useEffect,
-  useImperativeHandle,
-  useState,
-} from 'react';
+import React, { type FunctionComponent, forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 
 import { Client, type ClientOptions, type ClientServicesProvider, SystemStatus } from '@dxos/client';
 import { type Config } from '@dxos/config';
@@ -25,10 +17,9 @@ import { printBanner } from '../banner';
 /**
  * Properties for the ClientProvider.
  */
-export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
-  Omit<ClientOptions, 'config' | 'services'> & {
-    children?: ReactNode;
-
+export type ClientProviderProps = Omit<ClientOptions, 'config' | 'services'> &
+  Pick<ClientContextProps, 'status'> &
+  PropsWithChildren<{
     /**
      * Client object or async provider to enable to caller to do custom initialization.
      *
@@ -41,6 +32,7 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
      *
      * NOTE: If a `client` is provided then `config` is ignored.
      */
+    // TODO(burdon): Reconcile with ClientOptions.
     config?: Config | Provider<Promise<Config>>;
 
     /**
@@ -48,14 +40,8 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
      *
      * NOTE: If a `client` is provided then `services` is ignored.
      */
+    // TODO(burdon): Reconcile with ClientOptions.
     services?: ClientServicesProvider | ((config?: Config) => MaybePromise<ClientServicesProvider>);
-
-    /**
-     * List of schema to register.
-     *
-     * NOTE: If a `client` is provided then `types` will not be added until after the children are first rendered.
-     */
-    types?: S.Schema<any>[];
 
     /**
      * ReactNode to display until the client is available.
@@ -72,7 +58,8 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
     /**
      * Skip the DXOS banner print.
      */
-    disableBanner?: boolean;
+    // TODO(burdon): Invert.
+    noBanner?: boolean;
 
     /**
      * Post initialization hook to enable to caller to do custom initialization.
@@ -80,7 +67,7 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
      * @param Client
      */
     onInitialized?: (client: Client) => MaybePromise<void>;
-  };
+  }>;
 
 /**
  * Root component that provides the DXOS client instance to child components.
@@ -96,7 +83,7 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
       status: controlledStatus,
       fallback: Fallback = () => null,
       registerSignalRuntime: _registerSignalRuntime = true,
-      disableBanner,
+      noBanner,
       onInitialized,
       ...options
     },
@@ -146,7 +133,7 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
 
         setClient(client);
 
-        if (!disableBanner) {
+        if (!noBanner) {
           printBanner(client);
         }
       };
@@ -179,7 +166,7 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
           })
           .catch((err) => log.catch(err));
       };
-    }, [configProvider, clientProvider, servicesProvider, disableBanner]);
+    }, [configProvider, clientProvider, servicesProvider, noBanner]);
 
     if (!client?.initialized || status !== SystemStatus.ACTIVE) {
       return <Fallback client={client} status={status} />;

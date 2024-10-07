@@ -16,6 +16,7 @@ import { ClientProvider } from '../client';
 
 export type ClientRepeatedComponentProps = { id: number; count: number; spaceKey?: PublicKey };
 
+// TODO(burdon): Reconcile with ClientProviderProps.
 export type ClientRepeaterProps<P extends ClientRepeatedComponentProps> = {
   className?: string;
   component: FC<ClientRepeatedComponentProps>;

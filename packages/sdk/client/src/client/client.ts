@@ -40,8 +40,7 @@ import { DXOS_VERSION } from '../version';
 /**
  * This options object configures the DXOS Client.
  */
-// TODO(burdon): Specify types.
-// TODO(burdon): Reconcile with ClientContextProps.
+// TODO(burdon): Reconcile with ClientProviderProps.
 export type ClientOptions = {
   /** Client configuration object. */
   config?: Config;
