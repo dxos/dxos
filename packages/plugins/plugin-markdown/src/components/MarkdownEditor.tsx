@@ -177,7 +177,7 @@ export const MarkdownEditor = ({
           })}
     >
       {toolbar && (
-        <div role='none' className='flex shrink-0 justify-center overflow-x-auto'>
+        <div role='none' className='flex shrink-0 justify-center overflow-x-auto attention-surface'>
           <Toolbar.Root
             classNames={
               role === 'section'
@@ -187,7 +187,7 @@ export const MarkdownEditor = ({
                     !hasAttention && 'invisible',
                     sectionToolbarLayout,
                   ]
-                : [textBlockWidth, 'attention-surface']
+                : [textBlockWidth]
             }
             state={formattingState && { ...formattingState, ...commentsState }}
             onAction={handleAction}
