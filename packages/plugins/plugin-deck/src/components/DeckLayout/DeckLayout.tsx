@@ -14,7 +14,7 @@ import {
   usePlugin,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, useOnTransition, useTranslation } from '@dxos/react-ui';
-import { useAttended, type Attention } from '@dxos/react-ui-attention';
+import { useAttended } from '@dxos/react-ui-attention';
 import { Deck } from '@dxos/react-ui-deck';
 import { getSize } from '@dxos/react-ui-theme';
 

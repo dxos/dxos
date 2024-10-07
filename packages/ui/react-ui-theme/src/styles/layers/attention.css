@@ -1,5 +1,5 @@
 @layer utilities {
-  /* If an element is attendable, it should have this class. */
+  /* If an element should apply attention-related color tokens, it should use this class. */
   .attention-surface {
     --surface-separator: transparent;
     background-color: var(--surface-bg);

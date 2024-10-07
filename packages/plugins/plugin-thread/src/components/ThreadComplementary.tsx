@@ -8,7 +8,7 @@ import { LayoutAction, type Plugin, useIntentDispatcher, useResolvePlugins } fro
 import { type ThreadType } from '@dxos/plugin-space';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
-import { useAttendableAttributes, useAttended } from '@dxos/react-ui-attention';
+import { useAttended } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
 
 import { CommentsContainer, CommentsHeading } from '../components';

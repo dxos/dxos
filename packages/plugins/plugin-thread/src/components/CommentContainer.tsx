@@ -3,7 +3,7 @@
 //
 
 import { CheckCircle, X } from '@phosphor-icons/react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { MessageType } from '@dxos/plugin-space/types';
