@@ -129,7 +129,7 @@ export const WithEcho = {
         count={2}
         component={EchoStory}
         createSpace
-        onCreateSpace={async (space) => {
+        onSpaceCreated={async ({ space }) => {
           space.db.add(
             create({
               type: 'test',

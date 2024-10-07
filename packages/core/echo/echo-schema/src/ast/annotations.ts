@@ -10,11 +10,11 @@ import { AST, S } from '@dxos/effect';
 import { checkIdNotPresentOnSchema } from './schema-validator';
 import { type Identifiable } from '../types';
 
+// TODO(burdon): Standardize names.
+
 export type ToMutable<T> = T extends {}
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
   : T;
-
-// TODO(burdon): Standardize names.
 
 //
 // Object

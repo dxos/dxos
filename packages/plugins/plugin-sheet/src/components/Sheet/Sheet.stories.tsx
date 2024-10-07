@@ -18,7 +18,7 @@ import { type SizeMap } from './grid';
 import { useSheetContext } from './sheet-context';
 import { addressToIndex, rangeToIndex } from '../../defs';
 import { type ComputeGraph } from '../../graph';
-import { testPlugins } from '../../graph/testing';
+import { testFunctionPlugins } from '../../graph/testing';
 import { useComputeGraph } from '../../hooks';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { SheetType, ValueTypeEnum } from '../../types';
@@ -105,7 +105,7 @@ export default {
   component: Sheet,
   decorators: [
     withClientProvider({ types: [SheetType], createIdentity: true }),
-    withComputeGraphDecorator({ plugins: testPlugins }),
+    withComputeGraphDecorator({ plugins: testFunctionPlugins }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true, classNames: 'inset-4' }),
   ],

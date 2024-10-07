@@ -20,8 +20,7 @@ import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject, raise } from '@dxos/debug';
 import { EchoClient } from '@dxos/echo-db';
-import { getEchoObjectTypename } from '@dxos/echo-schema';
-import { type S } from '@dxos/echo-schema';
+import { getEchoObjectTypename, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -40,15 +39,14 @@ import { DXOS_VERSION } from '../version';
 /**
  * This options object configures the DXOS Client.
  */
-// TODO(burdon): Specify types.
-// TODO(burdon): Reconcile with ClientContextProps.
+// TODO(burdon): Reconcile with ClientProviderProps.
 export type ClientOptions = {
   /** Client configuration object. */
   config?: Config;
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
-  /** Custom model factory. @deprecated */
-  modelFactory?: any;
+  /** ECHO schema. */
+  types?: S.Schema<any>[];
   /** Shell path. */
   shell?: string;
   /** Create client worker. */
@@ -126,6 +124,9 @@ export class Client {
     }
 
     this._echoClient.graph.schemaRegistry.addSchema([PropertiesType]);
+    if (options.types) {
+      this.addTypes(options.types);
+    }
   }
 
   [inspect.custom]() {

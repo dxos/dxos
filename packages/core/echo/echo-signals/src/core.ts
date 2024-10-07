@@ -34,8 +34,3 @@ export const registerSignalRuntime = () => {
 
   return true;
 };
-
-/**
- * @deprecated Use `registerSignalRuntime`.
- */
-export const registerSignalFactory = registerSignalRuntime;

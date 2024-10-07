@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { TypedObject, S } from '@dxos/echo-schema';
+import { S, TypedObject } from '@dxos/echo-schema';
 
 export class FileType extends TypedObject({ typename: 'dxos.org/type/File', version: '0.1.0' })({
   filename: S.String,
