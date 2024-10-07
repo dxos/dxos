@@ -32,6 +32,9 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*"
   },
+  "devDependencies": {
+    "@dxos/random": "workspace:*"
+  },
   "peerDependencies": {
     "@dxos/random": "workspace:*"
   },
