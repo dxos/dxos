@@ -61,6 +61,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@effect/schema": "^0.67.16",
     "@observablehq/plot": "^0.6.11",
     "@preact/signals-core": "^1.6.0",
     "d3": "^7.9.0",

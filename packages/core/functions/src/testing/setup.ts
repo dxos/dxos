@@ -22,14 +22,21 @@ export type FunctionsPluginInitializer = (client: Client) => Promise<{ close: ()
 // TODO(burdon): Extend/wrap TestBuilder.
 
 export const createInitializedClients = async (testBuilder: TestBuilder, count: number = 1, config?: Config) => {
-  const clients = range(count).map(() => new Client({ config, services: testBuilder.createLocalClientServices() }));
+  const clients = range(count).map(
+    () =>
+      new Client({
+        config,
+        services: testBuilder.createLocalClientServices(),
+        types: [FunctionDef, FunctionTrigger, TestType],
+      }),
+  );
+
   testBuilder.ctx.onDispose(() => Promise.all(clients.map((client) => client.destroy())));
   return Promise.all(
     clients.map(async (client, index) => {
       await client.initialize();
       await client.halo.createIdentity({ displayName: `Peer ${index}` });
       await client.spaces.isReady.wait();
-      client.addTypes([FunctionDef, FunctionTrigger, TestType]);
       return client;
     }),
   );

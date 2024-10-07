@@ -8,9 +8,8 @@ import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { create } from '@dxos/echo-schema';
-import { type S } from '@dxos/echo-schema';
-import { registerSignalFactory } from '@dxos/echo-signals';
+import { create, type S } from '@dxos/echo-schema';
+import { registerSignalRuntime } from '@dxos/echo-signals';
 import { TextType, DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
@@ -30,19 +29,19 @@ const testBuilder = new TestBuilder();
 type PeersInSpaceProps = {
   count?: number;
   types?: S.Schema<any>[];
-  registerSignalFactory?: boolean; // TODO(burdon): Document.
-  onCreateSpace?: (space: Space) => MaybePromise<void>;
+  onSpaceCreated?: (props: { space: Space }) => MaybePromise<void>;
 };
 
 const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
-  const { count = 1, registerSignalFactory: register = true, types, onCreateSpace } = options;
-  register && registerSignalFactory();
-  const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocalClientServices() }));
+  const { count = 1, types, onSpaceCreated } = options;
+  registerSignalRuntime();
+  const clients = [...Array(count)].map(
+    (_) => new Client({ services: testBuilder.createLocalClientServices(), types }),
+  );
   await Promise.all(clients.map((client) => client.initialize()));
   await Promise.all(clients.map((client) => client.halo.createIdentity()));
-  types && clients.map((client) => client.addTypes(types));
   const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
-  await onCreateSpace?.(space);
+  await onSpaceCreated?.({ space });
   await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space, guest: client.spaces })));
   return { spaceKey: space.key, clients };
 };
@@ -52,7 +51,7 @@ const main = async () => {
   const { clients, spaceKey } = await setupPeersInSpace({
     count: 2,
     types: [DocumentType, TextType],
-    onCreateSpace: (space) => {
+    onSpaceCreated: ({ space }) => {
       space.db.add(
         create(DocumentType, {
           content: create(TextType, { content: '## Type here...\n\ntry the airplane mode switch.' }),

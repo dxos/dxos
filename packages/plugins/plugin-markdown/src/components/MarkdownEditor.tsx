@@ -10,8 +10,8 @@ import {
   type FileInfo,
   LayoutAction,
   type LayoutCoordinate,
-  useResolvePlugin,
   parseLayoutPlugin,
+  useResolvePlugin,
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';

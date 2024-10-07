@@ -24,7 +24,7 @@ const Story = () => {
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
 
-    // TODO(zan): This can be moved to `onCreateSpace` on `clientRepeater` after client is made available
+    // TODO(zan): This can be moved to `onSpaceCreated` on `clientRepeater` after client is made available
     // TODO(zan): Currently we need to cast as any since `_graph` is marked @internal.
     setTable(space.db.add(create(TableType, { name: 'Table', props: [] })));
     void space.db.schema.list().then(setSchemas).catch();
@@ -40,12 +40,8 @@ const Story = () => {
 export default {
   title: 'plugin-table/TableSettings',
   component: TableSettings,
-  render: () => <ClientRepeater types={[TableType]} component={Story} createSpace />,
   decorators: [withTheme],
+  render: () => <ClientRepeater component={Story} types={[TableType]} createSpace />,
 };
 
-export const Default = {
-  args: {
-    // table: new TableType(), // TODO(burdon): Causes hang.
-  },
-};
+export const Default = {};
