@@ -31,11 +31,10 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@effect/schema": "^0.67.16"
   },
   "peerDependencies": {
-    "@dxos/faker": "workspace:*"
+    "@dxos/random": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
