@@ -7,7 +7,7 @@ import { next as A } from '@dxos/automerge/automerge';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { isEncodedReference, type SpaceDoc } from '@dxos/echo-protocol';
-import type { AnyObjectData } from '@dxos/echo-schema';
+import { type AnyObjectData } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

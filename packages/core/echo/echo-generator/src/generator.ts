@@ -9,8 +9,8 @@ import {
   DynamicSchema,
   getEchoObjectAnnotation,
   getSchema,
-  type S,
   isReactiveObject,
+  type S,
 } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';

@@ -3,15 +3,14 @@
 //
 
 import {
-  AST,
-  DynamicSchema,
   getSchema,
   getType,
+  DynamicSchema,
   ReferenceAnnotationId,
-  type S,
   SchemaValidator,
   StoredSchema,
 } from '@dxos/echo-schema';
+import { AST, type S } from '@dxos/echo-schema';
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
 import { log } from '@dxos/log';
 import { CollectionType } from '@dxos/plugin-space/types';

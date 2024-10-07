@@ -10,6 +10,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/effect"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {
