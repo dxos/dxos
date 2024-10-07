@@ -60,10 +60,10 @@ export default {
     <ClientRepeater
       component={TriggerEditorStory}
       registerSignalFactory
+      types={[FunctionTrigger, FunctionDef, ChainPromptType]}
       createIdentity
       createSpace
-      types={[FunctionTrigger, FunctionDef, ChainPromptType]}
-      onCreateSpace={(space) => {
+      onSpaceCreated={({ space }) => {
         for (const fn of functions) {
           space.db.add(create(FunctionDef, fn));
         }

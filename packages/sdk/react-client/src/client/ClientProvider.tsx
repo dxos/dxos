@@ -2,7 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { type FunctionComponent, forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import React, {
+  type FunctionComponent,
+  type PropsWithChildren,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useState,
+} from 'react';
 
 import { Client, type ClientOptions, type ClientServicesProvider, SystemStatus } from '@dxos/client';
 import { type Config } from '@dxos/config';

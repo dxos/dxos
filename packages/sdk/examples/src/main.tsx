@@ -31,11 +31,11 @@ type PeersInSpaceProps = {
   count?: number;
   types?: S.Schema<any>[];
   registerSignalFactory?: boolean; // TODO(burdon): Document.
-  onCreateSpace?: (space: Space) => MaybePromise<void>;
+  onSpaceCreated?: (props: { space: Space }) => MaybePromise<void>;
 };
 
 const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
-  const { count = 1, registerSignalFactory: register = true, types, onCreateSpace } = options;
+  const { count = 1, registerSignalFactory: register = true, types, onSpaceCreated } = options;
   register && registerSignalFactory();
   const clients = [...Array(count)].map(
     (_) => new Client({ services: testBuilder.createLocalClientServices(), types }),
@@ -43,7 +43,7 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
   await Promise.all(clients.map((client) => client.initialize()));
   await Promise.all(clients.map((client) => client.halo.createIdentity()));
   const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
-  await onCreateSpace?.(space);
+  await onSpaceCreated?.({ space });
   await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space, guest: client.spaces })));
   return { spaceKey: space.key, clients };
 };
@@ -53,7 +53,7 @@ const main = async () => {
   const { clients, spaceKey } = await setupPeersInSpace({
     count: 2,
     types: [DocumentType, TextType],
-    onCreateSpace: (space) => {
+    onSpaceCreated: ({ space }) => {
       space.db.add(
         create(DocumentType, {
           content: create(TextType, { content: '## Type here...\n\ntry the airplane mode switch.' }),

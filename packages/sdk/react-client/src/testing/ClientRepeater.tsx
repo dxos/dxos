@@ -6,12 +6,11 @@ import { type Schema as S } from '@effect/schema';
 import React, { useState, type FC, useEffect, useRef } from 'react';
 
 import { Client, type PublicKey } from '@dxos/client';
-import { type Space } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
-import { type MaybePromise } from '@dxos/util';
 
+import { type WithClientProviderProps } from './withClientProvider';
 import { ClientProvider } from '../client';
 
 export type ClientRepeatedComponentProps = { id: number; count: number; spaceKey?: PublicKey };
@@ -21,19 +20,17 @@ export type ClientRepeaterProps<P extends ClientRepeatedComponentProps> = {
   className?: string;
   component: FC<ClientRepeatedComponentProps>;
   controls?: FC<{ clients: Client[] }>;
-  clients?: Client[];
   count?: number;
+  clients?: Client[];
   registerSignalFactory?: boolean;
   types?: S.Schema<any>[];
-  createIdentity?: boolean;
-  createSpace?: boolean;
-  onCreateSpace?: (space: Space) => MaybePromise<void>;
   args?: Omit<P, 'id' | 'count'>;
-};
+} & Pick<WithClientProviderProps, 'createIdentity' | 'createSpace' | 'onSpaceCreated'>;
 
 /**
  * Utility component for Storybook stories which sets up clients for n peers.
  * The `Component` property is rendered n times, once for each peer.
+ * @deprecated use `withClientProvider`.
  */
 // TODO(burdon): To discuss: evolve ClientRepeater with optional decorator that uses it.
 // NOTE: This is specifically not a storybook decorator because it broke stories as a decorator.
@@ -48,7 +45,7 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
     types,
     createIdentity,
     createSpace,
-    onCreateSpace,
+    onSpaceCreated,
   } = props;
   if (props.registerSignalFactory ?? true) {
     registerSignalFactory();
@@ -70,9 +67,10 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
       }
 
       if (createSpace) {
-        const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
+        const client = clients[0];
+        const space = await client.spaces.create({ name: faker.commerce.productName() });
         setSpaceKey(space.key);
-        await onCreateSpace?.(space);
+        await onSpaceCreated?.({ client, space });
         await Promise.all(
           clients.slice(1).flatMap((client) => performInvitation({ host: space, guest: client.spaces })),
         );
