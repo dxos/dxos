@@ -19,14 +19,16 @@ import {
   type DxGridAxisMeta,
   type DxGridCells,
   DxGridCellsSelect,
+  type DxGridFrozenColsPlane,
   type DxGridFrozenPlane,
+  type DxGridFrozenRowsPlane,
   type DxGridMode,
   type DxGridPlane,
   type DxGridPlaneCells,
+  type DxGridPlaneRange,
   type DxGridPointer,
   type DxGridPosition,
   type DxGridPositionNullable,
-  type DxGridRange,
 } from './types';
 import { separator, toCellIndex } from './util';
 
@@ -85,9 +87,39 @@ const closestCell = (target: EventTarget | null, actionEl?: HTMLElement | null):
   if (cellElement) {
     const col = parseInt(cellElement.getAttribute('aria-colindex') ?? 'never');
     const row = parseInt(cellElement.getAttribute('aria-rowindex') ?? 'never');
-    return { col, row };
+    return { plane: 'grid', col, row };
   } else {
     return null;
+  }
+};
+
+const resolveRowPlane = (plane: DxGridPlane): 'grid' | DxGridFrozenRowsPlane => {
+  switch (plane) {
+    case 'fixedStartStart':
+    case 'fixedStartEnd':
+    case 'frozenRowsStart':
+      return 'frozenRowsStart';
+    case 'fixedEndStart':
+    case 'fixedEndEnd':
+    case 'frozenRowsEnd':
+      return 'frozenRowsEnd';
+    default:
+      return 'grid';
+  }
+};
+
+const resolveColPlane = (plane: DxGridPlane): 'grid' | DxGridFrozenColsPlane => {
+  switch (plane) {
+    case 'fixedStartStart':
+    case 'fixedEndStart':
+    case 'frozenRowsStart':
+      return 'frozenColsStart';
+    case 'fixedStartEnd':
+    case 'fixedEndEnd':
+    case 'frozenRowsEnd':
+      return 'frozenColsEnd';
+    default:
+      return 'grid';
   }
 };
 
@@ -96,6 +128,10 @@ const isSameCell = (a: DxGridPositionNullable, b: DxGridPositionNullable) =>
 
 const localChId = (c0: number) => `ch--${c0}`;
 const localRhId = (r0: number) => `rh--${r0}`;
+
+const defaultRowSize = 32;
+
+const defaultColSize = 180;
 
 @customElement('dx-grid')
 export class DxGrid extends LitElement {
@@ -116,10 +152,14 @@ export class DxGrid extends LitElement {
   gridId: string = 'default-grid-id';
 
   @property({ type: Object })
-  rowDefault: AxisMeta = { size: 32 };
+  rowDefault: Record<'grid', AxisMeta> & Partial<Record<DxGridFrozenRowsPlane, AxisMeta>> = {
+    grid: { size: defaultRowSize },
+  };
 
   @property({ type: Object })
-  columnDefault: AxisMeta = { size: 180 };
+  columnDefault: Record<'grid', AxisMeta> & Partial<Record<DxGridFrozenColsPlane, AxisMeta>> = {
+    grid: { size: defaultColSize },
+  };
 
   @property({ type: Object })
   rows: DxGridAxisMeta = { grid: {} };
@@ -146,7 +186,7 @@ export class DxGrid extends LitElement {
    * When this function is defined, it is used first to try to get a value for a cell, and otherwise will fall back
    * to `cells`.
    */
-  getCells: ((nextRange: DxGridRange, plane: DxGridPlane) => DxGridPlaneCells) | null = null;
+  getCells: ((nextRange: DxGridPlaneRange, plane: DxGridPlane) => DxGridPlaneCells) | null = null;
 
   @state()
   private cells: DxGridCells = { grid: {} };
@@ -189,13 +229,13 @@ export class DxGrid extends LitElement {
   private binInlineMin = 0;
 
   @state()
-  private binInlineMax = this.colSize(0);
+  private binInlineMax = defaultColSize;
 
   @state()
   private binBlockMin = 0;
 
   @state()
-  private binBlockMax = this.rowSize(0);
+  private binBlockMax = defaultRowSize;
 
   //
   // `vis`, short for ‘visible’, is the range in numeric index of the columns or rows which should be rendered within
@@ -218,10 +258,22 @@ export class DxGrid extends LitElement {
   // `template` is the rendered value of `grid-{axis}-template`.
   //
   @state()
-  private templateColumns = `${this.colSize(0)}px`;
+  private templateGridColumns = '0';
 
   @state()
-  private templateRows = `${this.rowSize(0)}px`;
+  private templateStartColumns = '0';
+
+  @state()
+  private templateEndColumns = '0';
+
+  @state()
+  private templateGridRows = '0';
+
+  @state()
+  private templateStartRows = '0';
+
+  @state()
+  private templateEndRows = '0';
 
   //
   // Focus, selection, and resize states
@@ -231,22 +283,24 @@ export class DxGrid extends LitElement {
   private pointer: DxGridPointer = null;
 
   @state()
-  private colSizes: Record<string, number> = {};
+  private colSizes: Record<'grid', Record<string, number>> &
+    Partial<Record<DxGridFrozenPlane, Record<string, number>>> = { grid: {} };
 
   @state()
-  private rowSizes: Record<string, number> = {};
+  private rowSizes: Record<'grid', Record<string, number>> &
+    Partial<Record<DxGridFrozenPlane, Record<string, number>>> = { grid: {} };
 
   @state()
   private focusActive: boolean = false;
 
   @state()
-  private focusedCell: DxGridPosition = { col: 0, row: 0 };
+  private focusedCell: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
 
   @state()
-  private selectionStart: DxGridPosition = { col: 0, row: 0 };
+  private selectionStart: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
 
   @state()
-  private selectionEnd: DxGridPosition = { col: 0, row: 0 };
+  private selectionEnd: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
 
   //
   // Limits
@@ -366,12 +420,14 @@ export class DxGrid extends LitElement {
   // Accessors
   //
 
-  private colSize(c: number | string) {
-    return this.colSizes?.[c] ?? this.columnDefault.size;
+  private colSize(c: number | string, plane: DxGridPlane) {
+    const resolvedPlane = resolveColPlane(plane);
+    return this.colSizes?.[resolvedPlane]?.[c] ?? this.columnDefault[resolvedPlane]?.size ?? defaultColSize;
   }
 
-  private rowSize(r: number | string) {
-    return this.rowSizes?.[r] ?? this.rowDefault.size;
+  private rowSize(r: number | string, plane: DxGridPlane) {
+    const resolvedPlane = resolveRowPlane(plane);
+    return this.rowSizes?.[resolvedPlane]?.[r] ?? this.rowDefault[resolvedPlane]?.size ?? defaultRowSize;
   }
 
   private cell(c: number | string, r: number | string, plane: DxGridPlane): CellValue | undefined {
@@ -381,7 +437,10 @@ export class DxGrid extends LitElement {
 
   private focusedCellBox(): DxEditRequest['cellBox'] {
     const cellElement = this.focusedCellElement();
-    const cellSize = { inlineSize: this.colSize(this.focusedCell.col), blockSize: this.rowSize(this.focusedCell.row) };
+    const cellSize = {
+      inlineSize: this.colSize(this.focusedCell.col, this.focusedCell.plane),
+      blockSize: this.rowSize(this.focusedCell.row, this.focusedCell.plane),
+    };
     if (!cellElement) {
       return { insetInlineStart: NaN, insetBlockStart: NaN, ...cellSize };
     }
@@ -456,68 +515,84 @@ export class DxGrid extends LitElement {
   private updateVisInline() {
     // todo: avoid starting from zero
     let colIndex = 0;
-    let pxInline = this.colSize(colIndex);
+    let pxInline = this.colSize(colIndex, 'grid');
 
     while (pxInline < this.posInline) {
       colIndex += 1;
-      pxInline += this.colSize(colIndex) + gap;
+      pxInline += this.colSize(colIndex, 'grid') + gap;
     }
 
     this.visColMin = colIndex - overscanCol;
 
-    this.binInlineMin = pxInline - this.colSize(colIndex) - gap;
+    this.binInlineMin = pxInline - this.colSize(colIndex, 'grid') - gap;
     this.binInlineMax = pxInline + gap;
 
     this.overscanInline =
       [...Array(overscanCol)].reduce((acc, _, c0) => {
-        acc += this.colSize(this.visColMin + c0);
+        acc += this.colSize(this.visColMin + c0, 'grid');
         return acc;
       }, 0) +
       gap * (overscanCol - 1);
 
     while (pxInline < this.binInlineMax + this.sizeInline + gap) {
       colIndex += 1;
-      pxInline += this.colSize(colIndex) + gap;
+      pxInline += this.colSize(colIndex, 'grid') + gap;
     }
 
     this.visColMax = Math.min(this.limitColumns, colIndex + overscanCol);
 
-    this.templateColumns = [...Array(this.visColMax - this.visColMin)]
-      .map((_, c0) => `${this.colSize(this.visColMin + c0)}px`)
+    this.templateGridColumns = [...Array(this.visColMax - this.visColMin)]
+      .map((_, c0) => `${this.colSize(this.visColMin + c0, 'grid')}px`)
+      .join(' ');
+
+    this.templateStartColumns = [...Array(this.frozen.frozenColsStart ?? 0)]
+      .map((_, c0) => `${this.colSize(c0, 'frozenColsStart')}px`)
+      .join(' ');
+
+    this.templateEndColumns = [...Array(this.frozen.frozenColsEnd ?? 0)]
+      .map((_, c0) => `${this.colSize(c0, 'frozenColsEnd')}px`)
       .join(' ');
   }
 
   private updateVisBlock() {
     // todo: avoid starting from zero
     let rowIndex = 0;
-    let pxBlock = this.rowSize(rowIndex);
+    let pxBlock = this.rowSize(rowIndex, 'grid');
 
     while (pxBlock < this.posBlock) {
       rowIndex += 1;
-      pxBlock += this.rowSize(rowIndex) + gap;
+      pxBlock += this.rowSize(rowIndex, 'grid') + gap;
     }
 
     this.visRowMin = rowIndex - overscanRow;
 
-    this.binBlockMin = pxBlock - this.rowSize(rowIndex) - gap;
+    this.binBlockMin = pxBlock - this.rowSize(rowIndex, 'grid') - gap;
     this.binBlockMax = pxBlock + gap;
 
     this.overscanBlock =
       [...Array(overscanRow)].reduce((acc, _, r0) => {
-        acc += this.rowSize(this.visRowMin + r0);
+        acc += this.rowSize(this.visRowMin + r0, 'grid');
         return acc;
       }, 0) +
       gap * (overscanRow - 1);
 
     while (pxBlock < this.binBlockMax + this.sizeBlock) {
       rowIndex += 1;
-      pxBlock += this.rowSize(rowIndex) + gap;
+      pxBlock += this.rowSize(rowIndex, 'grid') + gap;
     }
 
     this.visRowMax = Math.min(this.limitRows, rowIndex + overscanRow);
 
-    this.templateRows = [...Array(this.visRowMax - this.visRowMin)]
-      .map((_, r0) => `${this.rowSize(this.visRowMin + r0)}px`)
+    this.templateGridRows = [...Array(this.visRowMax - this.visRowMin)]
+      .map((_, r0) => `${this.rowSize(this.visRowMin + r0, 'grid')}px`)
+      .join(' ');
+
+    this.templateStartRows = [...Array(this.frozen.frozenRowsStart ?? 0)]
+      .map((_, r0) => `${this.rowSize(r0, 'frozenRowsStart')}px`)
+      .join(' ');
+
+    this.templateEndRows = [...Array(this.frozen.frozenRowsEnd ?? 0)]
+      .map((_, r0) => `${this.rowSize(r0, 'frozenRowsEnd')}px`)
       .join(' ');
   }
 
@@ -526,7 +601,7 @@ export class DxGrid extends LitElement {
     this.updateVisBlock();
   }
 
-  private updateCells() {
+  private updateCells(includeFixed?: boolean) {
     this.cells.grid = this.getCells!(
       {
         start: { col: this.visColMin, row: this.visRowMin },
@@ -535,9 +610,9 @@ export class DxGrid extends LitElement {
       'grid',
     );
     Object.entries(this.frozen)
-      .filter(([_plane, limit]) => limit && limit > 0)
+      .filter(([_, limit]) => limit && limit > 0)
       .forEach(([plane, limit]) => {
-        this.cells[plane as Exclude<DxGridPlane, 'grid'>] = this.getCells!(
+        this.cells[plane as DxGridFrozenPlane] = this.getCells!(
           plane.startsWith('frozenRows')
             ? {
                 start: { col: this.visColMin, row: 0 },
@@ -547,9 +622,47 @@ export class DxGrid extends LitElement {
                 start: { col: 0, row: this.visRowMin },
                 end: { col: limit, row: this.visRowMax },
               },
-          plane as DxGridPlane,
+          plane as DxGridFrozenPlane,
         );
       });
+    if (includeFixed) {
+      if ((this.frozen.frozenColsStart ?? -1) > 0 && (this.frozen.frozenRowsStart ?? -1) > 0) {
+        this.cells.fixedStartStart = this.getCells!(
+          {
+            start: { col: 0, row: 0 },
+            end: { col: this.frozen.frozenColsStart!, row: this.frozen.frozenRowsStart! },
+          },
+          'fixedStartStart',
+        );
+      }
+      if ((this.frozen.frozenColsEnd ?? -1) > 0 && (this.frozen.frozenRowsStart ?? -1) > 0) {
+        this.cells.fixedStartEnd = this.getCells!(
+          {
+            start: { col: 0, row: 0 },
+            end: { col: this.frozen.frozenColsEnd!, row: this.frozen.frozenRowsStart! },
+          },
+          'fixedStartEnd',
+        );
+      }
+      if ((this.frozen.frozenColsStart ?? -1) > 0 && (this.frozen.frozenRowsEnd ?? -1) > 0) {
+        this.cells.fixedEndStart = this.getCells!(
+          {
+            start: { col: 0, row: 0 },
+            end: { col: this.frozen.frozenColsStart!, row: this.frozen.frozenRowsEnd! },
+          },
+          'fixedEndStart',
+        );
+      }
+      if ((this.frozen.frozenColsEnd ?? -1) > 0 && (this.frozen.frozenRowsEnd ?? -1) > 0) {
+        this.cells.fixedEndEnd = this.getCells!(
+          {
+            start: { col: 0, row: 0 },
+            end: { col: this.frozen.frozenColsEnd!, row: this.frozen.frozenRowsEnd! },
+          },
+          'fixedEndEnd',
+        );
+      }
+    }
   }
 
   // Focus handlers
@@ -629,7 +742,7 @@ export class DxGrid extends LitElement {
         this.updateVisInline();
       } else if (this.focusedCell.col >= this.visColMax - overscanCol - 1) {
         const sizeSumCol = [...Array(this.focusedCell.col - this.visColMin)].reduce((acc, _, c0) => {
-          acc += this.colSize(this.visColMin + overscanCol + c0) + gap;
+          acc += this.colSize(this.visColMin + overscanCol + c0, 'grid') + gap;
           return acc;
         }, 0);
         this.posInline = Math.max(
@@ -647,7 +760,7 @@ export class DxGrid extends LitElement {
         this.updateVisBlock();
       } else if (this.focusedCell.row >= this.visRowMax - overscanRow - 1) {
         const sizeSumRow = [...Array(this.focusedCell.row - this.visRowMin)].reduce((acc, _, r0) => {
-          acc += this.rowSize(this.visRowMin + overscanRow + r0) + gap;
+          acc += this.rowSize(this.visRowMin + overscanRow + r0, 'grid') + gap;
           return acc;
         }, 0);
         this.posBlock = Math.max(
@@ -705,7 +818,7 @@ export class DxGrid extends LitElement {
           // todo(thure): Support other planes
           plane: 'grid',
           index,
-          size: this[axis === 'col' ? 'colSize' : 'rowSize'](index),
+          size: this[axis === 'col' ? 'colSize' : 'rowSize'](index, 'grid'),
         }),
       );
     }
@@ -743,7 +856,7 @@ export class DxGrid extends LitElement {
         <div
           role="none"
           class="dx-grid__columnheader__content"
-          style="transform:translate3d(${offsetInline}px,0,0);grid-template-columns:${this.templateColumns};"
+          style="transform:translate3d(${offsetInline}px,0,0);grid-template-columns:${this.templateGridColumns};"
         >
           ${[...Array(visibleCols)].map((_, c0) => {
             const c = this.visColMin + c0;
@@ -768,7 +881,7 @@ export class DxGrid extends LitElement {
         <div
           role="none"
           class="dx-grid__rowheader__content"
-          style="transform:translate3d(0,${offsetBlock}px,0);grid-template-rows:${this.templateRows};"
+          style="transform:translate3d(0,${offsetBlock}px,0);grid-template-rows:${this.templateGridRows};"
         >
           ${[...Array(visibleRows)].map((_, r0) => {
             const r = this.visRowMin + r0;
@@ -789,7 +902,7 @@ export class DxGrid extends LitElement {
           role="none"
           class="dx-grid__content"
           style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:${this
-            .templateColumns};grid-template-rows:${this.templateRows};"
+            .templateGridColumns};grid-template-rows:${this.templateGridRows};"
         >
           ${[...Array(visibleCols)].map((_, c0) => {
             return [...Array(visibleRows)].map((_, r0) => {

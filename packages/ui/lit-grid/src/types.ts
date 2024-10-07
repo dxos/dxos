@@ -9,12 +9,16 @@ export type CellIndex = `${string},${string}`;
 
 export type DxGridAxis = 'row' | 'col';
 
-export type DxGridFrozenPlane = `frozen${'Cols' | 'Rows'}${'Start' | 'End'}`;
+export type DxGridFrozenColsPlane = `frozenCols${'Start' | 'End'}`;
+export type DxGridFrozenRowsPlane = `frozenRows${'Start' | 'End'}`;
+
+export type DxGridFrozenPlane = DxGridFrozenColsPlane | DxGridFrozenRowsPlane;
 export type DxGridFixedPlane = `fixed${'Start' | 'End'}${'Start' | 'End'}`;
 
 export type DxGridPlane = 'grid' | DxGridFrozenPlane | DxGridFixedPlane;
 
-export type DxGridPosition = Record<DxGridAxis, number>;
+export type DxGridPlanePosition = Record<DxGridAxis, number>;
+export type DxGridPosition = DxGridPlanePosition & { plane: DxGridPlane };
 export type DxGridPositionNullable = DxGridPosition | null;
 
 export type DxGridPlaneCells = Record<CellIndex, CellValue>;
@@ -103,6 +107,7 @@ export class DxEditRequest extends Event {
   }
 }
 
+export type DxGridPlaneRange = { start: DxGridPlanePosition; end: DxGridPlanePosition };
 export type DxGridRange = { start: DxGridPosition; end: DxGridPosition };
 
 export class DxGridCellsSelect extends Event {
