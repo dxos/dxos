@@ -33,7 +33,7 @@ export const createEchoReferenceSchema = (annotation: EchoObjectAnnotation): S.S
     S.filter(
       (obj) => {
         if (obj === undefined) {
-          // unresolved reference
+          // Unresolved reference.
           return true;
         }
         if (obj instanceof DynamicSchema) {

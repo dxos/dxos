@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ref, TypedObject, S } from '@dxos/echo-schema';
+import { ref, S, TypedObject } from '@dxos/echo-schema';
 import { type Space, create } from '@dxos/react-client/echo';
 
 export class TodoType extends TypedObject({ typename: 'dxos.app.todomvc.Todo', version: '0.1.0' })({

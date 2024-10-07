@@ -4,7 +4,6 @@
 
 import { CompletionContext, type CompletionSource } from '@codemirror/autocomplete';
 import { EditorState } from '@codemirror/state';
-// @ts-ignore
 import { testTree } from '@lezer/generator/test';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 import { describe, expect, test } from 'vitest';

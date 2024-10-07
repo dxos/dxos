@@ -48,6 +48,8 @@ export const testConfigWithLocalSignal = new Config({
 /**
  * Client builder supports different configurations, incl. signaling, transports, storage.
  */
+// TODO(burdon): Make extensible.
+// TODO(burdon): Implement as Resource.
 export class TestBuilder {
   private readonly _ctx = new Context({ name: 'TestBuilder' });
 
@@ -72,45 +74,8 @@ export class TestBuilder {
     return this._ctx;
   }
 
-  /**
-   * Get network manager using local shared memory or remote signal manager.
-   */
-  private get networking() {
-    const signals = this.config.get('runtime.services.signaling');
-    if (signals) {
-      log.info(`using transport ${this._transport}`);
-      let transportFactory: TransportFactory;
-      switch (this._transport) {
-        case TransportKind.WEB_RTC:
-          transportFactory = createRtcTransportFactory(
-            { iceServers: this.config.get('runtime.services.ice') },
-            this.config.get('runtime.services.iceProviders') &&
-              createIceProvider(this.config.get('runtime.services.iceProviders')!),
-          );
-          break;
-
-        case TransportKind.TCP:
-          transportFactory = TcpTransportFactory;
-          break;
-
-        default:
-          throw new Error(`Unsupported transport w/ signalling: ${this._transport}`);
-      }
-
-      return {
-        signalManager: new WebsocketSignalManager(signals),
-        transportFactory,
-      };
-    }
-    // if (this._transport !== TransportKind.MEMORY) {
-    // log.warn(`specified transport ${this._transport} but no signalling configured, using memory transport instead`);
-    // }
-
-    // Memory transport with shared context.
-    return {
-      signalManager: new MemorySignalManager(this.signalManagerContext),
-      transportFactory: MemoryTransportFactory,
-    };
+  async destroy() {
+    await this._ctx.dispose(false); // TODO(burdon): Set to true to check clean shutdown.
   }
 
   /**
@@ -168,8 +133,45 @@ export class TestBuilder {
     return [client, server];
   }
 
-  async destroy() {
-    await this._ctx.dispose(false); // TODO(burdon): Set to true to check clean shutdown.
+  /**
+   * Get network manager using local shared memory or remote signal manager.
+   */
+  private get networking() {
+    const signals = this.config.get('runtime.services.signaling');
+    if (signals) {
+      log.info(`using transport ${this._transport}`);
+      let transportFactory: TransportFactory;
+      switch (this._transport) {
+        case TransportKind.WEB_RTC:
+          transportFactory = createRtcTransportFactory(
+            { iceServers: this.config.get('runtime.services.ice') },
+            this.config.get('runtime.services.iceProviders') &&
+              createIceProvider(this.config.get('runtime.services.iceProviders')!),
+          );
+          break;
+
+        case TransportKind.TCP:
+          transportFactory = TcpTransportFactory;
+          break;
+
+        default:
+          throw new Error(`Unsupported transport w/ signalling: ${this._transport}`);
+      }
+
+      return {
+        signalManager: new WebsocketSignalManager(signals),
+        transportFactory,
+      };
+    }
+    // if (this._transport !== TransportKind.MEMORY) {
+    // log.warn(`specified transport ${this._transport} but no signalling configured, using memory transport instead`);
+    // }
+
+    // Memory transport with shared context.
+    return {
+      signalManager: new MemorySignalManager(this.signalManagerContext),
+      transportFactory: MemoryTransportFactory,
+    };
   }
 }
 

@@ -8,7 +8,6 @@ import { type Client, type SystemStatus } from '@dxos/client';
 
 export type ClientContextProps = {
   client: Client;
-
   status?: SystemStatus | null;
 };
 

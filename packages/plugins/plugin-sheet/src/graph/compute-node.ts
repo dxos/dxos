@@ -55,6 +55,7 @@ export class ComputeNode extends Resource {
     this._graph.hf.setCellContents({ sheet: this.sheetId, row: cell.row, col: cell.col }, [[mappedValue]]);
   }
 
+  // TODO(burdon): Load data into sheet.
   protected override async _open() {
     // const unsubscribe = this._graph.update.on(this.update.emit);
     // this._ctx.onDispose(unsubscribe);

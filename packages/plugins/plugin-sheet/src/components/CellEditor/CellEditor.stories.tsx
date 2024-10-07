@@ -42,11 +42,10 @@ const AutomergeStory = ({ value, ...props }: StoryProps) => {
   const [object, setObject] = useState<EchoReactiveObject<SheetType>>();
   useEffect(() => {
     setTimeout(async () => {
-      const client = new Client();
+      const client = new Client({ types: [SheetType] });
       await client.initialize();
       await client.halo.createIdentity();
       const space = await client.spaces.create();
-      client.addTypes([SheetType]);
 
       const sheet = createSheet();
       sheet.name = 'Test';

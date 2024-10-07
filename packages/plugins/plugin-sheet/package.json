@@ -91,6 +91,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-grid": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/schema": "^0.67.16",
     "@lezer/common": "^1.2.2",
     "@lezer/highlight": "^1.2.1",
     "@lezer/lezer": "^1.1.2",
