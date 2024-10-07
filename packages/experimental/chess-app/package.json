@@ -39,7 +39,6 @@
   ],
   "dependencies": {
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/effect": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "chess.js": "^1.0.0-beta.8",
     "react-chessboard": "^4.7.1",

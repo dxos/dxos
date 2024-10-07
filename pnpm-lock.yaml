@@ -2414,9 +2414,6 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../mesh/edge-client
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -2487,9 +2484,6 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo-schema
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -2792,9 +2786,6 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo/echo-schema
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -4736,9 +4727,6 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
