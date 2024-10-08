@@ -18,4 +18,3 @@ export * from './markdown';
 export * from './mention';
 export * from './modes';
 export * from './typewriter';
-export * from './typewriter';

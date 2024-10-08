@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { useHasAttention } from '@dxos/react-ui-attention';
+import { useAttention } from '@dxos/react-ui-attention';
 import { Table } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -17,7 +17,7 @@ import { Toolbar, type ToolbarAction } from './Toolbar';
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
 
 const TableContainer = ({ role, table }: LayoutContainerProps<Omit<ObjectTableProps, 'role' | 'getScrollElement'>>) => {
-  const hasAttention = useHasAttention(fullyQualifiedId(table));
+  const { hasAttention } = useAttention(fullyQualifiedId(table));
   const dispatch = useIntentDispatcher();
 
   const onThreadCreate = useCallback(() => {

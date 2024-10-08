@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { useAttendableAttributes, useHasAttention } from '@dxos/react-ui-attention';
+import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
 
 import { Sketch, type SketchProps } from './Sketch';
 
@@ -14,7 +14,7 @@ import { Sketch, type SketchProps } from './Sketch';
 const SketchContainer = ({ classNames, sketch, ...props }: SketchProps) => {
   const id = fullyQualifiedId(sketch);
   const attentionAttrs = useAttendableAttributes(id);
-  const hasAttention = useHasAttention(id);
+  const { hasAttention } = useAttention(id);
   const dispatch = useIntentDispatcher();
 
   const onThreadCreate = useCallback(() => {
