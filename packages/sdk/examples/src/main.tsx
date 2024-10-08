@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { create, type S } from '@dxos/echo-schema';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { TextType, DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
@@ -34,7 +34,7 @@ type PeersInSpaceProps = {
 
 const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
   const { count = 1, types, onSpaceCreated } = options;
-  registerSignalRuntime();
+  registerSignalsRuntime();
   const clients = [...Array(count)].map(
     (_) => new Client({ services: testBuilder.createLocalClientServices(), types }),
   );
