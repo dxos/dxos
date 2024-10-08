@@ -31,12 +31,58 @@ type DocumentEditorProps = {
 export const DocumentEditor = ({
   document: doc,
   extensionProviders,
-  viewMode,
   settings,
+  viewMode,
   ...props
 }: DocumentEditorProps) => {
-  const identity = useIdentity();
+  const space = getSpace(doc);
+  const extensions = useExtensions({ document: doc, extensionProviders, settings, viewMode });
+
+  const initialValue = useMemo(() => doc.content?.content, [doc.content]);
+
+  // Migrate gradually to `fallbackName`.
+  useEffect(() => {
+    if (!doc.fallbackName && doc.content?.content) {
+      doc.fallbackName = getFallbackName(doc.content.content);
+    }
+  }, [doc, doc.content]);
+
+  // Restore last selection and scroll point.
+  const id = fullyQualifiedId(doc);
+  const { scrollTo, selection } = useMemo<EditorSelectionState>(
+    () => localStorageStateStoreAdapter.getState(id) ?? {},
+    [doc],
+  );
+
+  // File dragging.
+  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+  const handleFileUpload = useMemo(() => {
+    if (space === undefined || fileManagerPlugin?.provides.file.upload === undefined) {
+      return undefined;
+    }
+
+    return async (file: File) => fileManagerPlugin?.provides?.file?.upload?.(file, space);
+  }, [space, fileManagerPlugin]);
+
+  return (
+    <MarkdownEditor
+      id={id}
+      initialValue={initialValue}
+      extensions={extensions}
+      scrollTo={scrollTo}
+      selection={selection}
+      toolbar={settings.toolbar}
+      inputMode={settings.editorInputMode}
+      viewMode={viewMode}
+      onFileUpload={handleFileUpload}
+      {...props}
+    />
+  );
+};
+
+const useExtensions = ({ document: doc, extensionProviders, settings, viewMode }: DocumentEditorProps): Extension[] => {
   const dispatch = useIntentDispatcher();
+  const identity = useIdentity();
   const space = getSpace(doc);
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
@@ -89,44 +135,5 @@ export const DocumentEditor = ({
     [baseExtensions, pluginExtensions, doc, doc.content, space, identity],
   );
 
-  const initialValue = useMemo(() => doc.content?.content, [doc.content]);
-
-  // Migrate gradually to `fallbackName`.
-  useEffect(() => {
-    if (!doc.fallbackName && doc.content?.content) {
-      doc.fallbackName = getFallbackName(doc.content.content);
-    }
-  }, [doc, doc.content]);
-
-  // Restore last selection and scroll point.
-  const id = fullyQualifiedId(doc);
-  const { scrollTo, selection } = useMemo<EditorSelectionState>(
-    () => localStorageStateStoreAdapter.getState(id) ?? {},
-    [doc],
-  );
-
-  // File dragging.
-  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
-  const handleFileUpload = useMemo(() => {
-    if (space === undefined || fileManagerPlugin?.provides.file.upload === undefined) {
-      return undefined;
-    }
-
-    return async (file: File) => fileManagerPlugin?.provides?.file?.upload?.(file, space);
-  }, [space, fileManagerPlugin]);
-
-  return (
-    <MarkdownEditor
-      id={id}
-      initialValue={initialValue}
-      extensions={extensions}
-      scrollTo={scrollTo}
-      selection={selection}
-      toolbar={settings.toolbar}
-      inputMode={settings.editorInputMode}
-      viewMode={viewMode}
-      onFileUpload={handleFileUpload}
-      {...props}
-    />
-  );
+  return extensions;
 };
