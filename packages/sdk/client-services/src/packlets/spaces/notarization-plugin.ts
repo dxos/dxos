@@ -5,12 +5,13 @@
 import { DeferredTask, Event, scheduleTask, sleep, TimeoutError, Trigger } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
 import { type CredentialProcessor } from '@dxos/credentials';
+import { verifyCredential } from '@dxos/credentials';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { logInfo, log } from '@dxos/log';
 import { EdgeCallFailedError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
@@ -87,7 +88,9 @@ export class NotarizationPlugin implements CredentialProcessor {
   private readonly _processedCredentials = new ComplexSet<PublicKey>(PublicKey.hash);
   private readonly _processCredentialsTriggers = new ComplexMap<PublicKey, Trigger>(PublicKey.hash);
 
+  @logInfo
   private readonly _spaceId: SpaceId;
+
   private readonly _edgeClient: EdgeHttpClient | undefined;
 
   constructor(params: NotarizationPluginParams) {
@@ -217,14 +220,12 @@ export class NotarizationPlugin implements CredentialProcessor {
           body: { credentials: encodedCredentials },
           retry: { count: MAX_EDGE_RETRIES, timeout: timeouts.retryTimeout, jitter: timeouts.jitter },
         });
+
         log('edge notarization success');
+
         await sleep(timeouts.successDelay);
       } catch (error: any) {
-        if (!(error instanceof EdgeCallFailedError) || error.errorData) {
-          log.catch(error);
-        } else {
-          log.info('edge could not notarize credentials', { reason: error.reason });
-        }
+        handleEdgeError(error);
       }
     });
   }
@@ -244,10 +245,37 @@ export class NotarizationPlugin implements CredentialProcessor {
   setWriter(writer: FeedWriter<Credential>) {
     invariant(!this._writer, 'Writer already set.');
     this._writer = writer;
-    this._notarizePendingEdgeCredentials();
+    if (this._edgeClient) {
+      this._notarizePendingEdgeCredentials(this._edgeClient, writer);
+    }
   }
 
-  private _notarizePendingEdgeCredentials() {}
+  private _notarizePendingEdgeCredentials(client: EdgeHttpClient, writer: FeedWriter<Credential>) {
+    setTimeout(async () => {
+      try {
+        const response = await client.get<{ awaitingNotarization: { credentials: string[] } }>(
+          `/spaces/${this._spaceId}/notarization`,
+          { retry: { count: MAX_EDGE_RETRIES } },
+        );
+
+        if (!response.awaitingNotarization.credentials.length) {
+          log('edge did not return credentials for notarization');
+          return;
+        }
+
+        const decodedCredentials = response.awaitingNotarization.credentials.map((credential) => {
+          const binary = Buffer.from(credential, 'base64');
+          return credentialCodec.decode(binary);
+        });
+
+        await this._notarizeCredentials(writer, decodedCredentials);
+
+        log.info('notarized edge credentials', { count: decodedCredentials.length });
+      } catch (error: any) {
+        handleEdgeError(error);
+      }
+    });
+  }
 
   private async _waitUntilProcessed(id: PublicKey) {
     if (this._processedCredentials.has(id)) {
@@ -263,12 +291,20 @@ export class NotarizationPlugin implements CredentialProcessor {
     if (!this._writer) {
       throw new Error(WRITER_NOT_SET_ERROR_CODE);
     }
-    for (const credential of request.credentials ?? []) {
+    await this._notarizeCredentials(this._writer, request.credentials ?? []);
+  }
+
+  private async _notarizeCredentials(writer: FeedWriter<Credential>, credentials: Credential[]) {
+    for (const credential of credentials) {
       invariant(credential.id, 'Credential must have an id');
       if (this._processedCredentials.has(credential.id)) {
         continue;
       }
-      await this._writer.write(credential);
+      const verificationResult = await verifyCredential(credential);
+      if (verificationResult.kind === 'fail') {
+        throw new Error(`Credential verification failed: ${verificationResult.errors.join('\n')}.`);
+      }
+      await writer.write(credential);
     }
   }
 
@@ -303,6 +339,14 @@ export class NotarizationPlugin implements CredentialProcessor {
     );
   }
 }
+
+const handleEdgeError = (error: any) => {
+  if (!(error instanceof EdgeCallFailedError) || error.errorData) {
+    log.catch(error);
+  } else {
+    log.info('Edge notarization failure', { reason: error.reason });
+  }
+};
 
 export type NotarizationTeleportExtensionParams = {
   onOpen: () => Promise<void>;
