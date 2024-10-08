@@ -56,9 +56,9 @@ export const useExtensions = ({
   const baseExtensions = useMemo(
     () =>
       createBaseExtensions({
-        viewMode,
-        settings,
         document,
+        settings,
+        viewMode,
         dispatch,
         // query,
       }),
@@ -109,17 +109,10 @@ export const useExtensions = ({
  * Create extension instances for editor.
  */
 const createBaseExtensions = ({ document, dispatch, settings, query, viewMode }: ExtensionsOptions): Extension[] => {
-  const extensions: Extension[] = [];
-
-  //
-  // Editor mode.
-  //
-  if (settings.editorInputMode) {
-    const extension = InputModeExtensions[settings.editorInputMode];
-    if (extension) {
-      extensions.push(extension);
-    }
-  }
+  const extensions: Extension[] = [
+    settings.editorInputMode && InputModeExtensions[settings.editorInputMode],
+    settings.folding && folding(),
+  ].filter(isNotFalsy);
 
   //
   // Markdown
@@ -176,11 +169,11 @@ const createBaseExtensions = ({ document, dispatch, settings, query, viewMode }:
     );
   }
 
-  extensions.push(...[settings.folding && folding()].filter(isNotFalsy));
-
   if (settings.debug) {
-    const items = settings.typewriter ?? '';
-    extensions.push(...[items ? typewriter({ items: items.split(/[,\n]/) }) : undefined].filter(isNotFalsy));
+    const items = settings.typewriter?.split(/[,\n]/) ?? '';
+    if (items) {
+      extensions.push(typewriter({ items }));
+    }
   }
 
   return extensions;
