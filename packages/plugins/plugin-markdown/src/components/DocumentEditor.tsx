@@ -35,10 +35,10 @@ export const DocumentEditor = ({
   viewMode,
   ...props
 }: DocumentEditorProps) => {
+  const id = fullyQualifiedId(doc);
   const space = getSpace(doc);
-  const extensions = useExtensions({ document: doc, extensionProviders, settings, viewMode });
-
   const initialValue = useMemo(() => doc.content?.content, [doc.content]);
+  const extensions = useExtensions({ document: doc, extensionProviders, settings, viewMode });
 
   // Migrate gradually to `fallbackName`.
   useEffect(() => {
@@ -48,7 +48,6 @@ export const DocumentEditor = ({
   }, [doc, doc.content]);
 
   // Restore last selection and scroll point.
-  const id = fullyQualifiedId(doc);
   const { scrollTo, selection } = useMemo<EditorSelectionState>(
     () => localStorageStateStoreAdapter.getState(id) ?? {},
     [doc],
@@ -80,6 +79,7 @@ export const DocumentEditor = ({
   );
 };
 
+// TODO(burdon): Factor out (with stories).
 const useExtensions = ({ document: doc, extensionProviders, settings, viewMode }: DocumentEditorProps): Extension[] => {
   const dispatch = useIntentDispatcher();
   const identity = useIdentity();
@@ -113,7 +113,7 @@ const useExtensions = ({ document: doc, extensionProviders, settings, viewMode }
     [extensionProviders],
   );
 
-  const extensions = useMemo<Extension[]>(
+  return useMemo<Extension[]>(
     () =>
       [
         // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
@@ -134,6 +134,4 @@ const useExtensions = ({ document: doc, extensionProviders, settings, viewMode }
       ].filter(nonNullable),
     [baseExtensions, pluginExtensions, doc, doc.content, space, identity],
   );
-
-  return extensions;
 };
