@@ -190,43 +190,48 @@ export const jsonToEffectSchema = (
     return jsonToEffectTypeSchema(root, defs);
   }
 
-  let result: S.Schema<any>;
+  let result: S.Schema<any> = S.Unknown;
   if ('$id' in root) {
     switch (root.$id) {
-      case '/schemas/any':
+      case '/schemas/any': {
         result = parseJsonSchemaAny(root);
         break;
-      case '/schemas/unknown':
+      }
+      case '/schemas/unknown': {
         result = S.Unknown;
         break;
+      }
       case '/schemas/{}':
-      case '/schemas/object':
+      case '/schemas/object': {
         result = S.Object;
         break;
+      }
     }
-  } else if ('const' in root) {
-    result = S.Literal(root.const);
   } else if ('enum' in root) {
     result = S.Union(...root.enum.map((e) => S.Literal(e)));
   } else if ('anyOf' in root) {
     result = S.Union(...root.anyOf.map((v) => jsonToEffectSchema(v, defs)));
   } else if ('$comment' in root && root.$comment === '/schemas/enums') {
-    result = S.Enums(Object.fromEntries(root.oneof.map(({ title, const: v }) => [title, v])));
+    result = S.Enums(Object.fromEntries(root.oneOf.map(({ title, const: v }) => [title, v])));
   } else if ('type' in root) {
     switch (root.type) {
-      case 'string':
+      case 'string': {
         result = S.String;
         break;
-      case 'number':
+      }
+      case 'number': {
         result = S.Number;
         break;
-      case 'integer':
+      }
+      case 'integer': {
         result = S.Number.pipe(S.int());
         break;
-      case 'boolean':
+      }
+      case 'boolean': {
         result = S.Boolean;
         break;
-      case 'array':
+      }
+      case 'array': {
         if (Array.isArray(root.items)) {
           result = S.Tuple(...root.items.map((v) => jsonToEffectSchema(v, defs)));
         } else {
@@ -234,6 +239,7 @@ export const jsonToEffectSchema = (
           result = S.Array(jsonToEffectSchema(root.items, defs));
         }
         break;
+      }
     }
   } else if ('$ref' in root) {
     const refSegments = root.$ref.split('/');
@@ -242,8 +248,6 @@ export const jsonToEffectSchema = (
     result = jsonToEffectSchema(jsonSchema, defs).pipe(
       S.annotations({ identifier: refSegments[refSegments.length - 1] }),
     );
-  } else {
-    result = S.Unknown;
   }
 
   const refinement: EchoRefinement | undefined = (root as any)[ECHO_REFINEMENT_KEY];
