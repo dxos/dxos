@@ -80,8 +80,8 @@ export const MarkdownEditor = ({
   const { hasAttention } = useAttention(id);
 
   // Extensions from other plugins.
+  // TODO(burdon): Reconcile with DocumentEditor.useExtensions.
   const providerExtensions = useMemo(
-    // TODO(burdon): Must pass object to provider.
     () => extensionProviders?.flatMap((provider) => provider({})).filter(nonNullable),
     [extensionProviders],
   );

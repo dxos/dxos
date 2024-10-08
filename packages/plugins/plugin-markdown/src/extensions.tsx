@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowSquareDown, ArrowSquareOut, type Icon } from '@phosphor-icons/react';
-import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
+import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { type IntentDispatcher, NavigationAction } from '@dxos/app-framework';
+import { type IntentDispatcher, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { fullyQualifiedId, type Query } from '@dxos/react-client/echo';
+import { createDocAccessor, fullyQualifiedId, getSpace, type Query } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { Icon, ThemeProvider } from '@dxos/react-ui';
+import { createDataExtensions, listener, localStorageStateStoreAdapter, state } from '@dxos/react-ui-editor';
 import {
   type AutocompleteResult,
   type Extension,
@@ -21,39 +23,30 @@ import {
   linkTooltip,
   typewriter,
 } from '@dxos/react-ui-editor';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { defaultTx } from '@dxos/react-ui-theme';
 import { isNotFalsy, nonNullable } from '@dxos/util';
 
-import { type DocumentType, type MarkdownSettingsProps } from './types';
+import { type DocumentType, type MarkdownPluginState, type MarkdownSettingsProps } from './types';
+import { setFallbackName } from './util';
 
-export type ExtensionsOptions = {
-  viewMode?: EditorViewMode;
-  settings?: MarkdownSettingsProps;
-  document?: DocumentType;
-  debug?: boolean;
-  experimental?: boolean;
-  numberedHeadings?: boolean;
-  folding?: boolean;
-  query?: Query<DocumentType>;
+type ExtensionsOptions = {
+  document: DocumentType;
   dispatch?: IntentDispatcher;
+  query?: Query<DocumentType>;
+  settings: MarkdownSettingsProps;
+  viewMode?: EditorViewMode;
 };
 
 /**
  * Create extension instances for editor.
  */
-export const createBaseExtensions = ({
-  viewMode,
-  settings,
-  document,
-  query,
-  dispatch,
-}: ExtensionsOptions): Extension[] => {
+const createBaseExtensions = ({ document, dispatch, settings, query, viewMode }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [];
 
   //
   // Editor mode.
   //
-  if (settings?.editorInputMode) {
+  if (settings.editorInputMode) {
     const extension = InputModeExtensions[settings.editorInputMode];
     if (extension) {
       extensions.push(extension);
@@ -69,7 +62,7 @@ export const createBaseExtensions = ({
         formattingKeymap(),
         decorateMarkdown({
           selectionChangeDelay: 100,
-          numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
+          numberedHeadings: settings.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links, consider ignoring the link text and rendering the label of the object being linked to.
           renderLinkButton:
             dispatch && document
@@ -116,19 +109,78 @@ export const createBaseExtensions = ({
     );
   }
 
-  extensions.push(
-    ...[
-      //
-      settings?.folding && folding(),
-    ].filter(isNotFalsy),
-  );
+  extensions.push(...[settings.folding && folding()].filter(isNotFalsy));
 
-  if (settings?.debug) {
+  if (settings.debug) {
     const items = settings.typewriter ?? '';
     extensions.push(...[items ? typewriter({ items: items.split(/[,\n]/) }) : undefined].filter(nonNullable));
   }
 
   return extensions;
+};
+
+// TODO(burdon): Merge with createBaseExtensions above.
+export const useExtensions = ({
+  extensionProviders,
+  document,
+  settings,
+  viewMode,
+}: Pick<ExtensionsOptions, 'document' | 'settings' | 'viewMode'> &
+  Pick<MarkdownPluginState, 'extensionProviders'>): Extension[] => {
+  const dispatch = useIntentDispatcher();
+  const identity = useIdentity();
+  const space = getSpace(document);
+
+  // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
+  // TODO(burdon): Unsubscribe.
+  // const query = space?.db.query(Filter.schema(DocumentType));
+  // query?.subscribe();
+  const baseExtensions = useMemo(
+    () =>
+      createBaseExtensions({
+        viewMode,
+        settings,
+        document,
+        dispatch,
+        // query,
+      }),
+    [document, viewMode, dispatch, settings, settings.folding, settings.numberedHeadings],
+  );
+
+  const pluginExtensions = useMemo<Extension[] | undefined>(
+    () =>
+      extensionProviders?.reduce((acc: Extension[], provider) => {
+        const extension = typeof provider === 'function' ? provider({ document }) : provider;
+        if (extension) {
+          acc.push(extension);
+        }
+
+        return acc;
+      }, []),
+    [extensionProviders],
+  );
+
+  return useMemo<Extension[]>(
+    () =>
+      [
+        // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
+        createDataExtensions({
+          id: document.id,
+          text: document.content && createDocAccessor(document.content, ['content']),
+          space,
+          identity,
+        }),
+        state(localStorageStateStoreAdapter),
+        listener({
+          onChange: (text) => {
+            setFallbackName(document, text);
+          },
+        }),
+        baseExtensions,
+        pluginExtensions,
+      ].filter(nonNullable),
+    [baseExtensions, pluginExtensions, document, document.content, space, identity],
+  );
 };
 
 // TODO(burdon): Factor out style.
@@ -155,25 +207,31 @@ const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url
         target: '_blank',
       };
 
-  const LinkIcon: Icon = isInternal ? ArrowSquareDown : ArrowSquareOut;
-
-  createRoot(el).render(
-    <StrictMode>
-      <a {...options} className={hover}>
-        <LinkIcon weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 cursor-pointer')} />
-      </a>
-    </StrictMode>,
+  renderRoot(
+    el,
+    <a {...options} className={hover}>
+      <Icon
+        icon={isInternal ? 'ph--arrows-square-down--bold' : 'ph--arrows-square-out--bold'}
+        size={4}
+        classNames='inline-block leading-none mis-1 cursor-pointer'
+      />
+    </a>,
   );
 };
 
 const renderLinkTooltip = (el: Element, url: string) => {
   const web = new URL(url);
-  createRoot(el).render(
-    <StrictMode>
-      <a href={url} target='_blank' rel='noreferrer' className={hover}>
-        {web.origin}
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 cursor-pointer')} />
-      </a>
-    </StrictMode>,
+  renderRoot(
+    el,
+    <a href={url} target='_blank' rel='noreferrer' className={hover}>
+      {web.origin}
+      <Icon icon='ph--arrow-square-out--bold' size={4} classNames='inline-block leading-none mis-1 cursor-pointer' />
+    </a>,
   );
+};
+
+// TODO(burdon): Factor out. Reconcile with rect-ui-editor.
+export const renderRoot = <T extends Element>(root: T, node: ReactNode): T => {
+  createRoot(root).render(<ThemeProvider tx={defaultTx}>{node}</ThemeProvider>);
+  return root;
 };
