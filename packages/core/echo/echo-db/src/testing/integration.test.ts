@@ -13,14 +13,14 @@ import {
 } from '@dxos/echo-pipeline/testing';
 import { create, Expando } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
 
-registerSignalRuntime();
+registerSignalsRuntime();
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;

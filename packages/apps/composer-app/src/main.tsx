@@ -9,7 +9,7 @@ import { createRoot } from 'react-dom/client';
 
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
 import { type defs } from '@dxos/config';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
 import AttentionMeta from '@dxos/plugin-attention/meta';
@@ -70,7 +70,7 @@ const isFalse = (str?: string) => str === 'false' || str === '0';
 const main = async () => {
   TRACE_PROCESSOR.setInstanceTag('app');
 
-  registerSignalRuntime();
+  registerSignalsRuntime();
 
   const { Trigger } = await import('@dxos/async');
   const { defs, SaveConfig } = await import('@dxos/config');
