@@ -58,7 +58,7 @@ export const useTable = (columnDefinitions: ColumnDefinition[], data: any[], gri
     });
   }, []);
 
-  // Clean up table.
+  // Clean up table on unmount.
   useEffect(() => () => table.dispose(), []);
 
   return { table, columnMeta, gridCells, dispatch };
