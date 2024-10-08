@@ -179,8 +179,11 @@ const createBaseExtensions = ({ document, dispatch, settings, query, viewMode }:
   return extensions;
 };
 
-// TODO(burdon): Factor out style.
-const hover = 'rounded-sm text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
+// TODO(burdon): Factor out styles.
+const style = {
+  hover: 'rounded-sm text-primary-500 hover:text-primary-600 dark:text-primary-500 hover:dark:text-primary-400',
+  icon: 'inline-block leading-none mis-1 cursor-pointer',
+};
 
 const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url: string) => {
   // TODO(burdon): Formalize/document internal link format.
@@ -205,11 +208,11 @@ const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url
 
   renderRoot(
     el,
-    <a {...options} className={hover}>
+    <a {...options} className={style.hover}>
       <Icon
         icon={isInternal ? 'ph--arrow-square-down--bold' : 'ph--arrow-square-out--bold'}
         size={4}
-        classNames='inline-block leading-none mis-1 cursor-pointer'
+        classNames={style.icon}
       />
     </a>,
   );
@@ -219,9 +222,9 @@ const renderLinkTooltip = (el: Element, url: string) => {
   const web = new URL(url);
   renderRoot(
     el,
-    <a href={url} target='_blank' rel='noreferrer' className={hover}>
+    <a href={url} rel='noreferrer' target='_blank' className={style.hover}>
       {web.origin}
-      <Icon icon='ph--arrow-square-out--bold' size={4} classNames='inline-block leading-none mis-1 cursor-pointer' />
+      <Icon icon='ph--arrow-square-out--bold' size={4} classNames={style.icon} />
     </a>,
   );
 };
