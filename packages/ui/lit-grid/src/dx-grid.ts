@@ -432,29 +432,31 @@ export class DxGrid extends LitElement {
 
   private viewportRef: Ref<HTMLDivElement> = createRef();
 
-  private maybeUpdateVis = () => {
-    if (
-      this.posInline >= this.binInlineMin &&
-      this.posInline < this.binInlineMax &&
-      this.posBlock >= this.binBlockMin &&
-      this.posBlock < this.binBlockMax
-    ) {
-      // do nothing
-    } else {
-      // console.info(
-      //   '[updating bounds]',
-      //   'wheel',
-      //   [this.binInlineMin, this.posInline, this.binInlineMax],
-      //   [this.binBlockMin, this.posBlock, this.binBlockMax],
-      // );
-      this.updateVis();
+  private maybeUpdateVisInline = () => {
+    if (this.posInline < this.binInlineMin || this.posInline >= this.binInlineMax) {
+      this.updateVisInline();
     }
   };
 
-  private updatePos(inline?: number, block?: number) {
+  private maybeUpdateVisBlock = () => {
+    if (this.posBlock < this.binBlockMin || this.posBlock >= this.binBlockMax) {
+      this.updateVisBlock();
+    }
+  };
+
+  private updatePosInline(inline?: number) {
     this.posInline = Math.max(0, Math.min(this.intrinsicInlineSize - this.sizeInline, inline ?? this.posInline));
+    this.maybeUpdateVisInline();
+  }
+
+  private updatePosBlock(block?: number) {
     this.posBlock = Math.max(0, Math.min(this.intrinsicBlockSize - this.sizeBlock, block ?? this.posBlock));
-    this.maybeUpdateVis();
+    this.maybeUpdateVisBlock();
+  }
+
+  private updatePos(inline?: number, block?: number) {
+    this.updatePosInline(inline);
+    this.updatePosBlock(block);
   }
 
   private handleWheel = ({ deltaX, deltaY }: Pick<WheelEvent, 'deltaX' | 'deltaY'>) => {
@@ -653,7 +655,7 @@ export class DxGrid extends LitElement {
 
   override set scrollLeft(nextValue: number) {
     this.posInline = nextValue;
-    this.maybeUpdateVis();
+    this.maybeUpdateVisInline();
   }
 
   override get scrollTop() {
@@ -662,7 +664,7 @@ export class DxGrid extends LitElement {
 
   override set scrollTop(nextValue: number) {
     this.posBlock = nextValue;
-    this.maybeUpdateVis();
+    this.maybeUpdateVisBlock();
   }
 
   //
@@ -863,6 +865,22 @@ export class DxGrid extends LitElement {
         start: { col: this.visColMin, row: this.visRowMin },
         end: { col: this.visColMax, row: this.visRowMax },
       });
+    }
+
+    if (changedProperties.has('rowDefault') || changedProperties.has('rows') || changedProperties.has('limitRows')) {
+      this.updateIntrinsicBlockSize();
+      this.updatePosBlock();
+      this.updateVisBlock();
+    }
+
+    if (
+      changedProperties.has('colDefault') ||
+      changedProperties.has('columns') ||
+      changedProperties.has('limitColumns')
+    ) {
+      this.updateIntrinsicInlineSize();
+      this.updatePosInline();
+      this.updateVisInline();
     }
   }
 
