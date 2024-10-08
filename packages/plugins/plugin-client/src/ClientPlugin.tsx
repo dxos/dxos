@@ -16,7 +16,7 @@ import {
   type TranslationsProvides,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
-import { registerSignalRuntime } from '@dxos/echo-signals/react';
+import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { Client, type ClientOptions, ClientProvider } from '@dxos/react-client';
@@ -69,7 +69,7 @@ export const ClientPlugin = ({
   Omit<ClientPluginProvides, 'client'>,
   Pick<ClientPluginProvides, 'client'>
 > => {
-  registerSignalRuntime();
+  registerSignalsRuntime();
 
   let client: Client;
   let error: unknown = null;
