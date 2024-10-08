@@ -101,7 +101,7 @@ export class DataSpace {
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _metadataStore: MetadataStore;
   private readonly _signingContext: SigningContext;
-  private readonly _notarizationPlugin = new NotarizationPlugin();
+  private readonly _notarizationPlugin: NotarizationPlugin;
   private readonly _callbacks: DataSpaceCallbacks;
   private readonly _cache?: SpaceCache = undefined;
   private readonly _echoHost: EchoHost;
@@ -141,6 +141,11 @@ export class DataSpace {
     this._signingContext = params.signingContext;
     this._callbacks = params.callbacks ?? {};
     this._echoHost = params.echoHost;
+    this._notarizationPlugin = new NotarizationPlugin({
+      spaceId: this._inner.id,
+      edgeConnection: params.edgeConnection,
+      edgeFeatures: params.edgeFeatures,
+    });
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
       trustedKeysProvider: () =>
