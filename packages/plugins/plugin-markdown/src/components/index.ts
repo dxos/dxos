@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type LazyExoticComponent } from 'react';
-
-import { type DocumentEditor as DocumentEditorType } from './DocumentEditor';
+import React from 'react';
 
 export * from './DocumentEditor';
 export * from './MarkdownEditor';
@@ -13,6 +11,4 @@ export * from './Layout';
 export * from './MarkdownSettings';
 
 // Lazily load components for content surfaces.
-export const DocumentEditor: LazyExoticComponent<DocumentEditorType> = React.lazy(() => import('./DocumentEditor'));
-export const MarkdownEditor = React.lazy(() => import('./MarkdownEditor'));
 export const MarkdownContainer = React.lazy(() => import('./MarkdownContainer'));

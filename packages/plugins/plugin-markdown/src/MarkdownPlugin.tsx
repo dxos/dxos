@@ -33,7 +33,7 @@ import {
   translations as editorTranslations,
 } from '@dxos/react-ui-editor';
 
-import { DocumentEditor, MarkdownContainer, MarkdownEditor, MarkdownSettings } from './components';
+import { MarkdownContainer, MarkdownSettings } from './components';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
 import { DocumentType, TextType } from './types';
@@ -265,23 +265,22 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role, ...props }, forwardedRef) => {
-          // TODO(burdon): Unify editor components.
-          const doc =
-            data.active instanceof DocumentType
-              ? data.active
-              : data.object instanceof DocumentType
-                ? data.object
-                : undefined;
-          const { id, object } = isEditorModel(data.object)
-            ? { id: data.object.id, object: data.object }
-            : doc
-              ? { id: fullyQualifiedId(doc), object: doc }
-              : {};
-
+        component: ({ data, role }) => {
           switch (role) {
             case 'section':
             case 'article': {
+              // TODO(burdon): Unify editor components.
+              const doc =
+                data.active instanceof DocumentType
+                  ? data.active
+                  : data.object instanceof DocumentType
+                    ? data.object
+                    : undefined;
+              const { id, object } = isEditorModel(data.object)
+                ? { id: data.object.id, object: data.object }
+                : doc
+                  ? { id: fullyQualifiedId(doc), object: doc }
+                  : {};
               if (!id || !object) {
                 return null;
               }
@@ -299,40 +298,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   onViewModeChange={setViewMode}
                 />
               );
-            }
-
-            case '_section':
-            case '_article': {
-              if (doc && doc.content) {
-                return (
-                  <DocumentEditor
-                    document={doc}
-                    settings={settings.values}
-                    role={role}
-                    coordinate={data.coordinate as LayoutCoordinate}
-                    extensionProviders={state.values.extensionProviders}
-                    scrollPastEnd
-                    viewMode={getViewMode(fullyQualifiedId(doc))}
-                    onViewModeChange={setViewMode}
-                  />
-                );
-              } else if (isEditorModel(data.object)) {
-                return (
-                  <MarkdownEditor
-                    id={data.object.id}
-                    initialValue={data.object.text}
-                    inputMode={settings.values.editorInputMode}
-                    toolbar={settings.values.toolbar}
-                    role={role}
-                    coordinate={data.coordinate as LayoutCoordinate}
-                    extensionProviders={state.values.extensionProviders}
-                    scrollPastEnd
-                    viewMode={getViewMode(data.object.id)}
-                    onViewModeChange={setViewMode}
-                  />
-                );
-              }
-              break;
             }
 
             case 'settings': {
