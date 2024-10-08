@@ -7,7 +7,6 @@ import React, { type PropsWithChildren } from 'react';
 
 import {
   type Plugin,
-  type Attention,
   type GraphProvides,
   resolvePlugin,
   parseGraphPlugin,
@@ -15,7 +14,7 @@ import {
 } from '@dxos/app-framework';
 import { create, type ReactiveObject } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
-import { AttentionProvider } from '@dxos/react-ui-attention';
+import { type Attention, RootAttentionProvider } from '@dxos/react-ui-attention';
 
 import meta from './meta';
 
@@ -29,10 +28,7 @@ export const parseAttentionPlugin = (plugin?: Plugin) =>
   typeof (plugin?.provides as any).attention === 'object' ? (plugin as Plugin<AttentionPluginProvides>) : undefined;
 
 export const AttentionPlugin = (): PluginDefinition<AttentionPluginProvides> => {
-  const attention = create<Attention>({
-    attended: new Set(),
-  });
-
+  const attention = create<Attention>({ attended: [] });
   let graphPlugin: Plugin<GraphProvides> | undefined;
 
   return {
@@ -53,11 +49,9 @@ export const AttentionPlugin = (): PluginDefinition<AttentionPluginProvides> => 
     provides: {
       attention,
       context: (props: PropsWithChildren) => (
-        <AttentionProvider
-          attended={attention.attended}
-          onChangeAttend={(nextAttended) => {
-            attention.attended = nextAttended;
-
+        <RootAttentionProvider
+          attention={attention}
+          onChange={(nextAttended) => {
             // TODO(Zan): Workout why this was in deck plugin. It didn't seem to work?
             // if (layout.values.scrollIntoView && nextAttended.has(layout.values.scrollIntoView)) {
             //   layout.values.scrollIntoView = undefined;
@@ -65,7 +59,7 @@ export const AttentionPlugin = (): PluginDefinition<AttentionPluginProvides> => 
           }}
         >
           {props.children}
-        </AttentionProvider>
+        </RootAttentionProvider>
       ),
     },
   };

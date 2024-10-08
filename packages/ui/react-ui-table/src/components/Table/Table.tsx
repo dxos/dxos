@@ -79,8 +79,8 @@ export const TablePrimitive = <TData extends RowData>(props: TableProps<TData>) 
     pinLastRow,
   } = props;
 
-  const columns = useDefaultValue(props.columns, []);
-  const incomingData = useDefaultValue(props.data, []);
+  const columns = useDefaultValue(props.columns, () => []);
+  const incomingData = useDefaultValue(props.data, () => []);
 
   const [data, setData] = useState([...incomingData]);
 

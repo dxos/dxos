@@ -40,7 +40,7 @@ import { debounce } from '@dxos/async';
 import { fullyQualifiedId, createDocAccessor } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { createAttendableAttributes, useHasAttention } from '@dxos/react-ui-attention';
+import { useAttendableAttributes, useHasAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
@@ -863,7 +863,7 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
 
     // TODO(burdon): Prevent scroll if not attended.
     const id = fullyQualifiedId(model.sheet);
-    const attendableAttrs = createAttendableAttributes(id);
+    const attendableAttrs = useAttendableAttributes(id);
     const hasAttention = useHasAttention(id);
 
     return (

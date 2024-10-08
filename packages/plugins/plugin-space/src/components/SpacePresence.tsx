@@ -110,7 +110,7 @@ export type MemberPresenceProps = ThemedClassName<{
 
 export const FullPresence = (props: MemberPresenceProps) => {
   const { size = 9, onMemberClick } = props;
-  const members = useDefaultValue(props.members, []);
+  const members = useDefaultValue(props.members, () => []);
 
   if (members.length === 0) {
     return null;
