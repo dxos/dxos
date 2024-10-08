@@ -6,13 +6,14 @@ import React, { useCallback } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { useHasAttention } from '@dxos/react-ui-attention';
+import { useAttendableAttributes, useHasAttention } from '@dxos/react-ui-attention';
 
 import { Sketch, type SketchProps } from './Sketch';
 
 // TODO(burdon): Standardize plugin component containers.
 const SketchContainer = ({ classNames, sketch, ...props }: SketchProps) => {
   const id = fullyQualifiedId(sketch);
+  const attentionAttrs = useAttendableAttributes(id);
   const hasAttention = useHasAttention(id);
   const dispatch = useIntentDispatcher();
 
@@ -34,9 +35,9 @@ const SketchContainer = ({ classNames, sketch, ...props }: SketchProps) => {
       key={id}
       sketch={sketch}
       hideUi={!hasAttention}
-      // TODO(burdon): Factor out fragment.
-      classNames={[classNames, hasAttention && 'bg-[--surface-bg] attention-static']}
+      classNames={[classNames, 'attention-surface']}
       onThreadCreate={onThreadCreate}
+      {...attentionAttrs}
       {...props}
     />
   );

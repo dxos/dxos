@@ -19,7 +19,7 @@ import {
 import { debounce } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';
 import { Button, Tooltip, useTranslation } from '@dxos/react-ui';
-import { createAttendableAttributes } from '@dxos/react-ui-attention';
+import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { Plank as NaturalPlank } from '@dxos/react-ui-deck';
 import { mainIntrinsicSize } from '@dxos/react-ui-theme';
 
@@ -52,7 +52,7 @@ export const Plank = ({ entry, layoutParts, part, flatDeck, searchEnabled, layou
   const rootElement = useRef<HTMLDivElement | null>(null);
   const resizeable = layoutMode === 'deck';
 
-  const attendableAttrs = createAttendableAttributes(entry.id);
+  const attendableAttrs = useAttendableAttributes(entry.id);
   const coordinate: LayoutCoordinate = { part, entryId: entry.id };
 
   const size = plankSizing?.[entry.id] as number | undefined;

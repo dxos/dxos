@@ -20,6 +20,10 @@ export const systemSememes = {
     light: ['neutral', surfaceCadence.light[0]],
     dark: ['neutral', surfaceCadence.dark[0]],
   },
+  currentRelated: {
+    light: ['neutral', surfaceCadence.light[0]],
+    dark: ['neutral', surfaceCadence.dark[0]],
+  },
   deck: {
     light: ['neutral', surfaceCadence.light[4]],
     dark: ['neutral', surfaceCadence.dark[1]],
