@@ -19,3 +19,4 @@ export * from './MarkdownSettings';
 export const DocumentCard = React.lazy(() => import('./DocumentCard'));
 export const DocumentEditor: LazyExoticComponent<DocumentEditorType> = React.lazy(() => import('./DocumentEditor'));
 export const MarkdownEditor = React.lazy(() => import('./MarkdownEditor'));
+export const MarkdownContainer = React.lazy(() => import('./MarkdownContainer'));

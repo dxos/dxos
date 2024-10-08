@@ -3,10 +3,9 @@
 //
 
 import { TextAa } from '@phosphor-icons/react';
-import React, { type Ref } from 'react';
+import React from 'react';
 
 import {
-  isObject,
   parseIntentPlugin,
   resolvePlugin,
   LayoutAction,
@@ -33,9 +32,8 @@ import {
   EditorViewModes,
   translations as editorTranslations,
 } from '@dxos/react-ui-editor';
-import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
-import { type DocumentItemProps, DocumentCard, DocumentEditor, MarkdownEditor, MarkdownSettings } from './components';
+import { DocumentEditor, MarkdownContainer, MarkdownEditor, MarkdownSettings } from './components';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
 import { DocumentType, TextType } from './types';
@@ -71,10 +69,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   const state = new LocalStorageStore<MarkdownPluginState>(MARKDOWN_PLUGIN, { extensionProviders: [], viewMode: {} });
 
+  // TODO(burdon): Factor out.
   const getViewMode = (id?: string) => {
     return (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
   };
-
   const setViewMode = (id: string, nextViewMode: EditorViewMode) => {
     state.values.viewMode[id] = nextViewMode;
   };
@@ -108,7 +106,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
       markdownExtensionPlugins(plugins).forEach((plugin) => {
         const { extensions } = plugin.provides.markdown;
-        state.values.extensionProviders.push(extensions);
+        state.values.extensionProviders?.push(extensions);
       });
     },
     provides: {
@@ -268,25 +266,53 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       surface: {
         component: ({ data, role, ...props }, forwardedRef) => {
+          // TODO(burdon): Unify editor components.
           const doc =
             data.active instanceof DocumentType
               ? data.active
               : data.object instanceof DocumentType
                 ? data.object
                 : undefined;
+          const { id, object } = isEditorModel(data.object)
+            ? { id: data.object.id, object: data.object }
+            : doc
+              ? { id: fullyQualifiedId(doc), object: doc }
+              : {};
 
-          // TODO(burdon): Unify editor components.
           switch (role) {
+            case 'test': {
+              if (!id || !object) {
+                return null;
+              }
+
+              return (
+                <MarkdownContainer
+                  id={id}
+                  object={object}
+                  role={role}
+                  coordinate={data.coordinate as LayoutCoordinate}
+                  settings={settings.values}
+                  extensionProviders={state.values.extensionProviders}
+                  // TODO(burdon): Factor out settings.
+                  viewMode={getViewMode(id)}
+                  onViewModeChange={setViewMode}
+                />
+              );
+            }
+
             case 'section':
             case 'article': {
+              // return <MarkdownContainer />;
               if (doc && doc.content) {
                 return (
                   <DocumentEditor
+                    // TODO(burdon): Return extensions and initial value.
+                    document={doc}
+                    //
+                    settings={settings.values}
                     role={role}
                     coordinate={data.coordinate as LayoutCoordinate}
-                    document={doc}
                     extensionProviders={state.values.extensionProviders}
-                    settings={settings.values}
                     scrollPastEnd
                     viewMode={getViewMode(fullyQualifiedId(doc))}
                     onViewModeChange={setViewMode}
@@ -295,13 +321,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               } else if (isEditorModel(data.object)) {
                 return (
                   <MarkdownEditor
-                    id={data.object.id}
-                    role={role}
-                    coordinate={data.coordinate as LayoutCoordinate}
                     initialValue={data.object.text}
-                    extensionProviders={state.values.extensionProviders}
+                    //
+                    id={data.object.id}
                     inputMode={settings.values.editorInputMode}
                     toolbar={settings.values.toolbar}
+                    role={role}
+                    coordinate={data.coordinate as LayoutCoordinate}
+                    extensionProviders={state.values.extensionProviders}
                     scrollPastEnd
                     viewMode={getViewMode(data.object.id)}
                     onViewModeChange={setViewMode}
@@ -311,29 +338,29 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               break;
             }
 
-            case 'card': {
-              if (
-                isObject(data.content) &&
-                typeof data.content.id === 'string' &&
-                data.content.object instanceof DocumentType
-              ) {
-                // isTileComponentProps is a type guard for these props.
-                // `props` will not pass this guard without transforming `data` into `item`.
-                const cardProps = {
-                  ...props,
-                  item: {
-                    id: data.content.id,
-                    object: data.content.object,
-                    color: typeof data.content.color === 'string' ? data.content.color : undefined,
-                  } as DocumentItemProps,
-                };
-
-                return isTileComponentProps(cardProps) ? (
-                  <DocumentCard {...cardProps} settings={settings.values} ref={forwardedRef as Ref<HTMLDivElement>} />
-                ) : null;
-              }
-              break;
-            }
+            // case 'card': {
+            //   if (
+            //     isObject(data.content) &&
+            //     typeof data.content.id === 'string' &&
+            //     data.content.object instanceof DocumentType
+            //   ) {
+            //     // isTileComponentProps is a type guard for these props.
+            //     // `props` will not pass this guard without transforming `data` into `item`.
+            //     const cardProps = {
+            //       ...props,
+            //       item: {
+            //         id: data.content.id,
+            //         object: data.content.object,
+            //         color: typeof data.content.color === 'string' ? data.content.color : undefined,
+            //       } as DocumentItemProps,
+            //     };
+            //
+            //     return isTileComponentProps(cardProps) ? (
+            //       <DocumentCard {...cardProps} settings={settings.values} ref={forwardedRef as Ref<HTMLDivElement>} />
+            //     ) : null;
+            //   }
+            //   break;
+            // }
 
             case 'settings': {
               return data.plugin === meta.id ? <MarkdownSettings settings={settings.values} /> : null;

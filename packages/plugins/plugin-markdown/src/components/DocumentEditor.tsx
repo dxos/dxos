@@ -15,6 +15,7 @@ import {
   type Extension,
   type EditorSelectionState,
 } from '@dxos/react-ui-editor';
+import { nonNullable } from '@dxos/util';
 
 import MarkdownEditor, { type MarkdownEditorProps } from './MarkdownEditor';
 import { createBaseExtensions } from '../extensions';
@@ -31,9 +32,9 @@ type DocumentEditorProps = {
  * Editor for a `DocumentType`.
  */
 // TODO(burdon): Merge with MarkdownEditor.
-const DocumentEditor = ({
+export const DocumentEditor = ({
   document: doc,
-  extensionProviders = [],
+  extensionProviders,
   viewMode,
   settings,
   ...props
@@ -61,7 +62,7 @@ const DocumentEditor = ({
   // TODO(burdon): Async.
   const pluginExtensions = useMemo(
     () =>
-      extensionProviders.reduce((acc: Extension[], provider) => {
+      extensionProviders?.reduce((acc: Extension[], provider) => {
         const extension = typeof provider === 'function' ? provider({ document: doc }) : provider;
         if (extension) {
           acc.push(extension);
@@ -71,24 +72,25 @@ const DocumentEditor = ({
     [extensionProviders],
   );
 
-  const extensions = useMemo(
-    () => [
-      // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
-      createDataExtensions({
-        id: doc.id,
-        text: doc.content && createDocAccessor(doc.content, ['content']),
-        space,
-        identity,
-      }),
-      state(localStorageStateStoreAdapter),
-      listener({
-        onChange: (text) => {
-          setFallbackName(doc, text);
-        },
-      }),
-      baseExtensions,
-      pluginExtensions,
-    ],
+  const extensions = useMemo<Extension[]>(
+    () =>
+      [
+        // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
+        createDataExtensions({
+          id: doc.id,
+          text: doc.content && createDocAccessor(doc.content, ['content']),
+          space,
+          identity,
+        }),
+        state(localStorageStateStoreAdapter),
+        listener({
+          onChange: (text) => {
+            setFallbackName(doc, text);
+          },
+        }),
+        baseExtensions,
+        pluginExtensions,
+      ].filter(nonNullable),
     [baseExtensions, pluginExtensions, doc, doc.content, space, identity],
   );
 
@@ -108,6 +110,7 @@ const DocumentEditor = ({
     [doc],
   );
 
+  // File dragging.
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
   const handleFileUpload = useMemo(() => {
     if (space === undefined || fileManagerPlugin?.provides.file.upload === undefined) {
