@@ -27,18 +27,29 @@ const [AttentionContextProvider, useAttentionContext] = createContext<AttentionC
   path: [],
 });
 
-const useHasAttention = (attendableId?: string) => {
+type UseAttention = {
+  hasAttention: boolean;
+  isAncestor: boolean;
+  isRelated: boolean;
+};
+
+const useAttention = (attendableId?: string): UseAttention => {
   const { attention, path } = useAttentionContext(ATTENTION_NAME);
   if (!attendableId) {
-    return false;
+    return { hasAttention: false, isAncestor: false, isRelated: false };
   }
 
   const current = [attendableId, ...path];
-  if (current.length !== attention.attended.length) {
-    return false;
-  }
+  const hasAttention =
+    current.length === attention.attended.length && current.every((id, index) => attention.attended[index] === id);
 
-  return current.every((id, index) => attention.attended[index] === id);
+  const isAncestor =
+    current.length < attention.attended.length &&
+    attention.attended.slice(-current.length).every((id, index) => current[index] === id);
+
+  const isRelated = attendableId === attention.attended[0];
+
+  return { hasAttention, isAncestor, isRelated };
 };
 
 const useAttended = () => {
@@ -51,7 +62,7 @@ const useAttended = () => {
  * @param attendableId
  */
 const useAttendableAttributes = (attendableId?: string) => {
-  const hasAttention = useHasAttention(attendableId);
+  const { hasAttention } = useAttention(attendableId);
 
   return useMemo(() => {
     const attributes: Record<string, string | undefined> = { 'data-attendable-id': attendableId };
@@ -128,11 +139,11 @@ const RootAttentionProvider = ({
 };
 
 const AttentionProvider = ({ id, children }: PropsWithChildren<{ id: string }>) => {
-  const { attention } = useAttentionContext(ATTENTION_NAME);
-  const path = useMemo(() => [id], [id]);
+  const { attention, path } = useAttentionContext(ATTENTION_NAME);
+  const nextPath = useMemo(() => [id, ...path], [id, path]);
 
   return (
-    <AttentionContextProvider attention={attention} path={path}>
+    <AttentionContextProvider attention={attention} path={nextPath}>
       {children}
     </AttentionContextProvider>
   );
@@ -142,7 +153,7 @@ export {
   RootAttentionProvider,
   AttentionProvider,
   useAttentionContext,
-  useHasAttention,
+  useAttention,
   useAttended,
   useAttendableAttributes,
   ATTENTION_NAME,

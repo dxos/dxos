@@ -170,7 +170,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   type: 'orphan-comments-for-subject',
                   data: null,
                   properties: {
-                    icon: 'ph--quotes--regular',
+                    icon: 'ph--chat-text--regular',
                     label,
                     showResolvedThreads: viewState.showResolvedThreads,
                     object,
@@ -616,7 +616,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               },
             }),
             createExternalCommentSync(
-              doc.id,
+              fullyQualifiedId(doc),
               (sink) => effect(() => sink()),
               () =>
                 threads.value
@@ -624,7 +624,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   .map((thread) => ({ id: fullyQualifiedId(thread), cursor: thread.anchor! })),
             ),
             comments({
-              id: doc.id,
+              id: fullyQualifiedId(doc),
               onCreate: ({ cursor }) => {
                 const [start, end] = cursor.split(':');
                 const name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);

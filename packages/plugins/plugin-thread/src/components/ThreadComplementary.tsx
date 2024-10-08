@@ -11,7 +11,7 @@ import { ScrollArea } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
 
-import { CommentsContainer, CommentsHeading } from '../components';
+import { CommentsContainer } from '../components';
 import { THREAD_PLUGIN } from '../meta';
 import { ThreadAction, type ThreadProvides } from '../types';
 
@@ -61,7 +61,6 @@ export const ThreadComplementary = ({
 
   return (
     <div role='none' className='contents'>
-      {role === 'complementary' && <CommentsHeading attendableId={qualifiedSubjectId} />}
       <ScrollArea.Root classNames='row-span-2'>
         <ScrollArea.Viewport>
           <CommentsContainer
