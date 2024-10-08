@@ -147,6 +147,9 @@ export const useExtensions = ({
     [document, viewMode, dispatch, settings, settings.folding, settings.numberedHeadings],
   );
 
+  //
+  // External extensions from other plugins.
+  //
   const pluginExtensions = useMemo<Extension[] | undefined>(
     () =>
       extensionProviders?.reduce((acc: Extension[], provider) => {
@@ -160,6 +163,9 @@ export const useExtensions = ({
     [extensionProviders],
   );
 
+  //
+  // Basic plugins.
+  //
   return useMemo<Extension[]>(
     () =>
       [
@@ -231,7 +237,7 @@ const renderLinkTooltip = (el: Element, url: string) => {
 };
 
 // TODO(burdon): Factor out. Reconcile with rect-ui-editor.
-export const renderRoot = <T extends Element>(root: T, node: ReactNode): T => {
+const renderRoot = <T extends Element>(root: T, node: ReactNode): T => {
   createRoot(root).render(<ThemeProvider tx={defaultTx}>{node}</ThemeProvider>);
   return root;
 };
