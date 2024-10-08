@@ -36,8 +36,8 @@ export default {
   title: 'plugin-markdown/EditorMain',
   component: MarkdownEditor,
   decorators: [withTheme, withLayout({ tooltips: true })],
-  render: Story,
   parameters: { layout: 'fullscreen' },
+  render: Story,
 };
 
 const content = Array.from({ length: 100 })
