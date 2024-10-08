@@ -8,7 +8,7 @@ import React, { useMemo, useEffect, useCallback } from 'react';
 
 import { type FileInfo, LayoutAction, type LayoutCoordinate, useIntentDispatcher } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
-import { useAttendableAttributes, useHasAttention } from '@dxos/react-ui-attention';
+import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
 import {
   type Action,
   type DNDOptions,
@@ -77,7 +77,7 @@ export const MarkdownEditor = ({
   const dispatch = useIntentDispatcher();
   const [formattingState, formattingObserver] = useFormattingState();
   const attendableAttributes = useAttendableAttributes(id);
-  const hasAttention = useHasAttention(id);
+  const { hasAttention } = useAttention(id);
 
   // Extensions from other plugins.
   const providerExtensions = useMemo(

@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { useHasAttention } from '@dxos/react-ui-attention';
+import { useAttention } from '@dxos/react-ui-attention';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
 import { Sheet, type SheetRootProps } from './Sheet';
@@ -26,7 +26,7 @@ const SheetContainer = ({ graph, sheet, role }: SheetRootProps & { role?: string
   const dispatch = useIntentDispatcher();
 
   const id = fullyQualifiedId(sheet);
-  const hasAttention = useHasAttention(id);
+  const { hasAttention } = useAttention(id);
 
   // TODO(Zan): Centralise the toolbar action handler. Current implementation in stories.
   const handleAction = useCallback(
