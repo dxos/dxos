@@ -5,12 +5,13 @@
 import { DeferredTask, Event, scheduleTask, sleep, TimeoutError, Trigger } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
 import { type CredentialProcessor } from '@dxos/credentials';
-import { type EdgeConnection } from '@dxos/edge-client';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { EdgeCallFailedError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -22,16 +23,17 @@ const DEFAULT_RETRY_TIMEOUT = 1_000;
 
 const DEFAULT_SUCCESS_DELAY = 1_000;
 
-const DEFAULT_EDGE_RETRY_JITTER = 500;
-const MAX_EDGE_RETRIES = 3;
-
 const DEFAULT_NOTARIZE_TIMEOUT = 10_000;
+
+const MAX_EDGE_RETRIES = 2;
 
 const WRITER_NOT_SET_ERROR_CODE = 'WRITER_NOT_SET';
 
+const credentialCodec = schema.getCodecForType('dxos.halo.credentials.Credential');
+
 export type NotarizationPluginParams = {
   spaceId: SpaceId;
-  edgeConnection?: EdgeConnection;
+  edgeClient?: EdgeHttpClient;
   edgeFeatures?: Runtime.Client.EdgeFeatures;
 };
 
@@ -86,14 +88,12 @@ export class NotarizationPlugin implements CredentialProcessor {
   private readonly _processCredentialsTriggers = new ComplexMap<PublicKey, Trigger>(PublicKey.hash);
 
   private readonly _spaceId: SpaceId;
-  private readonly _edgeBaseUrl: string | undefined;
+  private readonly _edgeClient: EdgeHttpClient | undefined;
 
   constructor(params: NotarizationPluginParams) {
     this._spaceId = params.spaceId;
-    if (params.edgeConnection && params.edgeFeatures?.feedReplicator) {
-      const edgeBaseUrl = new URL(params.edgeConnection.edgeUrl);
-      edgeBaseUrl.protocol = 'https';
-      this._edgeBaseUrl = edgeBaseUrl.toString();
+    if (params.edgeClient && params.edgeFeatures?.feedReplicator) {
+      this._edgeClient = params.edgeClient;
     }
   }
 
@@ -116,7 +116,7 @@ export class NotarizationPlugin implements CredentialProcessor {
     timeout = DEFAULT_NOTARIZE_TIMEOUT,
     retryTimeout = DEFAULT_RETRY_TIMEOUT,
     successDelay = DEFAULT_SUCCESS_DELAY,
-    edgeRetryJitter = DEFAULT_EDGE_RETRY_JITTER,
+    edgeRetryJitter,
   }: NotarizeParams) {
     log('notarize', { credentials });
     invariant(
@@ -143,8 +143,8 @@ export class NotarizationPlugin implements CredentialProcessor {
 
     this._tryNotarizeCredentialsWithPeers(ctx, credentials, { retryTimeout, successDelay });
 
-    if (this._edgeBaseUrl) {
-      this._tryNotarizeCredentialsWithEdge(ctx, this._edgeBaseUrl, credentials, {
+    if (this._edgeClient) {
+      this._tryNotarizeCredentialsWithEdge(ctx, this._edgeClient, credentials, {
         retryTimeout,
         successDelay,
         jitter: edgeRetryJitter,
@@ -203,47 +203,30 @@ export class NotarizationPlugin implements CredentialProcessor {
 
   private _tryNotarizeCredentialsWithEdge(
     ctx: Context,
-    edgeUrl: string,
+    client: EdgeHttpClient,
     credentials: Credential[],
-    timeouts: NotarizationTimeouts & { jitter: number },
+    timeouts: NotarizationTimeouts & { jitter?: number },
   ) {
-    const codec = schema.getCodecForType('dxos.halo.credentials.Credential');
     const encodedCredentials = credentials.map((credential) => {
-      const binary = codec.encode(credential);
+      const binary = credentialCodec.encode(credential);
       return Buffer.from(binary).toString('base64');
     });
-    let retryCount = 0;
-    const scheduleRetry = () => {
-      if (++retryCount < MAX_EDGE_RETRIES) {
-        const timeout = timeouts.retryTimeout + timeouts.jitter * Math.random();
-        scheduleTask(ctx, notarizeWithEdge, timeout);
-      }
-    };
-    const requestBody = JSON.stringify({ credentials: encodedCredentials });
-    const notarizeWithEdge = async () => {
-      const response = await fetch(this._notarizationEndpointPath(edgeUrl), {
-        method: 'POST',
-        body: requestBody,
-      });
-      if (!response.ok) {
-        log.info('edge notarization request failed', { status: response.status, message: response.statusText });
-        scheduleRetry();
-        return;
-      }
-      let body: any;
+    scheduleTask(ctx, async () => {
       try {
-        body = await response.json();
-      } catch (error: any) {
-        log.error('malformed edge response', { error });
-      }
-      if (body.success) {
+        await client.post(`/spaces/${this._spaceId}/notarization`, {
+          body: { credentials: encodedCredentials },
+          retry: { count: MAX_EDGE_RETRIES, timeout: timeouts.retryTimeout, jitter: timeouts.jitter },
+        });
+        log('edge notarization success');
         await sleep(timeouts.successDelay);
-      } else {
-        log.info('edge notarization failed', { reason: body.reason });
-        scheduleRetry();
+      } catch (error: any) {
+        if (!(error instanceof EdgeCallFailedError) || error.errorData) {
+          log.catch(error);
+        } else {
+          log.info('edge could not notarize credentials', { reason: error.reason });
+        }
       }
-    };
-    scheduleTask(ctx, notarizeWithEdge);
+    });
   }
 
   /**
@@ -261,7 +244,10 @@ export class NotarizationPlugin implements CredentialProcessor {
   setWriter(writer: FeedWriter<Credential>) {
     invariant(!this._writer, 'Writer already set.');
     this._writer = writer;
+    this._notarizePendingEdgeCredentials();
   }
+
+  private _notarizePendingEdgeCredentials() {}
 
   private async _waitUntilProcessed(id: PublicKey) {
     if (this._processedCredentials.has(id)) {
@@ -315,10 +301,6 @@ export class NotarizationPlugin implements CredentialProcessor {
       },
       timeout,
     );
-  }
-
-  private _notarizationEndpointPath(baseUrl: string) {
-    return `${baseUrl}/spaces/${this._spaceId}/notarization`;
   }
 }
 
