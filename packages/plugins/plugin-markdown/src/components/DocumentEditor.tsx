@@ -58,7 +58,7 @@ export const DocumentEditor = ({
     [doc, viewMode, dispatch, settings, settings.folding, settings.numberedHeadings],
   );
 
-  const pluginExtensions = useMemo(
+  const pluginExtensions = useMemo<Extension[] | undefined>(
     () =>
       extensionProviders?.reduce((acc: Extension[], provider) => {
         const extension = typeof provider === 'function' ? provider({ document: doc }) : provider;
@@ -125,8 +125,8 @@ export const DocumentEditor = ({
       extensions={extensions}
       scrollTo={scrollTo}
       selection={selection}
-      inputMode={settings.editorInputMode}
       toolbar={settings.toolbar}
+      inputMode={settings.editorInputMode}
       viewMode={viewMode}
       onFileUpload={handleFileUpload}
       {...props}

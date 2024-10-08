@@ -4,9 +4,6 @@
 
 import React from 'react';
 
-import { useIntentDispatcher } from '@dxos/app-framework';
-import { useIdentity } from '@dxos/react-client/halo';
-
 import { DocumentEditor } from './DocumentEditor';
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { DocumentType, type MarkdownSettingsProps } from '../types';
@@ -20,10 +17,8 @@ export type MarkdownContainerProps = Pick<
   settings: MarkdownSettingsProps;
 };
 
+// TODO(burdon): Factor out difference for ECHO and non-ECHO objects; i.e., single component.
 const MarkdownContainer = ({ id, object, settings, ...props }: MarkdownContainerProps) => {
-  const identity = useIdentity();
-  const dispatch = useIntentDispatcher();
-
   if (object instanceof DocumentType) {
     return <DocumentEditor document={object} settings={settings} scrollPastEnd {...props} />;
   } else {

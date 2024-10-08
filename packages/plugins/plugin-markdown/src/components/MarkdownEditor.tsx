@@ -14,20 +14,20 @@ import {
   type DNDOptions,
   type EditorViewMode,
   type EditorInputMode,
-  type UseTextEditorProps,
   Toolbar,
+  type UseTextEditorProps,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
+  editorContent,
+  editorGutter,
   processAction,
   useActionHandler,
   useCommentState,
   useCommentClickListener,
   useFormattingState,
   useTextEditor,
-  editorContent,
-  editorGutter,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
@@ -41,9 +41,9 @@ const DEFAULT_VIEW_MODE: EditorViewMode = 'preview';
 
 export type MarkdownEditorProps = {
   id: string;
+  role?: string;
   coordinate?: LayoutCoordinate;
   inputMode?: EditorInputMode;
-  role?: string;
   scrollPastEnd?: boolean;
   toolbar?: boolean;
   viewMode?: EditorViewMode;

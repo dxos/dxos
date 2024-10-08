@@ -45,20 +45,6 @@ import {
 } from './types';
 import { markdownExtensionPlugins, serializer } from './util';
 
-/**
- * Checks if an object conforms to the interface needed to render an editor.
- */
-const isEditorModel = (data: any): data is { id: string; text: string } => {
-  return (
-    data &&
-    typeof data === 'object' &&
-    'id' in data &&
-    typeof data.id === 'string' &&
-    'text' in data &&
-    typeof data.text === 'string'
-  );
-};
-
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
     defaultViewMode: 'preview',
@@ -68,14 +54,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   });
 
   const state = new LocalStorageStore<MarkdownPluginState>(MARKDOWN_PLUGIN, { extensionProviders: [], viewMode: {} });
-
-  // TODO(burdon): Factor out.
-  const getViewMode = (id?: string) => {
-    return (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
-  };
-  const setViewMode = (id: string, nextViewMode: EditorViewMode) => {
-    state.values.viewMode[id] = nextViewMode;
-  };
 
   return {
     meta,
@@ -269,18 +247,31 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           switch (role) {
             case 'section':
             case 'article': {
-              // TODO(burdon): Unify editor components.
-              const doc =
-                data.active instanceof DocumentType
-                  ? data.active
-                  : data.object instanceof DocumentType
-                    ? data.object
-                    : undefined;
+              /**
+               * Checks if an object conforms to the interface needed to render an editor.
+               */
+              // TODO(burdon): Remove need for this; intents should provide DocumentType.
+              const isEditorModel = (data: any): data is { id: string; text: string } =>
+                data &&
+                typeof data === 'object' &&
+                'id' in data &&
+                typeof data.id === 'string' &&
+                'text' in data &&
+                typeof data.text === 'string';
+
+              // TODO(burdon): Normalize active/object.
+              const getDoc = (object: any) => (object instanceof DocumentType ? object : undefined);
+              const doc = getDoc(data.active) ?? getDoc(data.object);
+
               const { id, object } = isEditorModel(data.object)
                 ? { id: data.object.id, object: data.object }
                 : doc
                   ? { id: fullyQualifiedId(doc), object: doc }
                   : {};
+
+              const getViewMode = (id: string) => (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
+              const setViewMode = (id: string, viewMode: EditorViewMode) => (state.values.viewMode[id] = viewMode);
+
               if (!id || !object) {
                 return null;
               }
@@ -293,7 +284,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   coordinate={data.coordinate as LayoutCoordinate}
                   settings={settings.values}
                   extensionProviders={state.values.extensionProviders}
-                  // TODO(burdon): Factor out settings.
                   viewMode={getViewMode(id)}
                   onViewModeChange={setViewMode}
                 />
