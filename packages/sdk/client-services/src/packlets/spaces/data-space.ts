@@ -15,8 +15,7 @@ import {
   type Space,
 } from '@dxos/echo-pipeline';
 import { SpaceDocVersion } from '@dxos/echo-protocol';
-import type { EdgeConnection } from '@dxos/edge-client';
-import { EdgeHttpClient } from '@dxos/edge-client';
+import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { failedInvariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -81,6 +80,7 @@ export type DataSpaceParams = {
   callbacks?: DataSpaceCallbacks;
   cache?: SpaceCache;
   edgeConnection?: EdgeConnection;
+  edgeHttpClient?: EdgeHttpClient;
   edgeFeatures?: Runtime.Client.EdgeFeatures;
 };
 
@@ -144,7 +144,7 @@ export class DataSpace {
     this._echoHost = params.echoHost;
     this._notarizationPlugin = new NotarizationPlugin({
       spaceId: this._inner.id,
-      edgeClient: params.edgeConnection && new EdgeHttpClient(params.edgeConnection.edgeUrl),
+      edgeClient: params.edgeHttpClient,
       edgeFeatures: params.edgeFeatures,
     });
 

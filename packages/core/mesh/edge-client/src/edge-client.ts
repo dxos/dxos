@@ -25,7 +25,6 @@ export interface EdgeConnection extends Required<Lifecycle> {
   reconnect: Event;
 
   get info(): any;
-  get edgeUrl(): string;
   get identityKey(): string;
   get peerKey(): string;
   get isOpen(): boolean;
@@ -65,10 +64,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
     private readonly _config: MessengerConfig,
   ) {
     super();
-  }
-
-  public get edgeUrl(): string {
-    return this._config.socketEndpoint;
   }
 
   // TODO(burdon): Attach logging.
