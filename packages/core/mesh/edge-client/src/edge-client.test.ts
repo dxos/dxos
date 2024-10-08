@@ -8,10 +8,11 @@ import { Trigger } from '@dxos/async';
 import { TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { openAndClose } from '@dxos/test-utils';
 
-import { createEphemeralEdgeIdentity } from './auth';
+import { createEphemeralEdgeIdentity, createTestHaloEdgeIdentity } from './auth';
 import { protocol } from './defs';
 import { EdgeClient } from './edge-client';
 import { createTestEdgeWsServer } from './testing';
+import { Keyring } from '@dxos/keyring';
 
 describe('EdgeClient', () => {
   const textMessage = (message: string) => protocol.createMessage(TextMessageSchema, { payload: { message } });
@@ -70,7 +71,12 @@ describe('EdgeClient', () => {
   test.only('connect to local edge server', async () => {
     const endpoint = 'ws://localhost:8787';
 
-    const client = new EdgeClient(await createEphemeralEdgeIdentity(), { socketEndpoint: endpoint });
+    // const identity = await createEphemeralEdgeIdentity();
+
+    const keyring = new Keyring();
+    const identity = await createTestHaloEdgeIdentity(keyring, await keyring.createKey(), await keyring.createKey());
+
+    const client = new EdgeClient(identity, { socketEndpoint: endpoint });
     await openAndClose(client);
     await client.send(textMessage('Hello world 1'));
     expect(client.isOpen).is.true;
