@@ -17,7 +17,6 @@ export const useObservableEffect = <T>(observable: Observable<T>, fn: (value: T)
   fnRef.current = fn;
   useEffect(() => {
     const subscription = observable.subscribe((v) => {
-      console.log('useObservableEffect', v);
       fnRef.current(v);
     });
     return () => {

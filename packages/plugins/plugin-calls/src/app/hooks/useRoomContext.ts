@@ -3,6 +3,7 @@
 //
 
 import { createContext, useContext, type Dispatch, type SetStateAction } from 'react';
+import invariant from 'tiny-invariant';
 
 import type useRoom from './useRoom';
 import type { useRoomHistory } from './useRoomHistory';
@@ -30,4 +31,8 @@ export type RoomContextType = {
 
 export const RoomContext = createContext<RoomContextType | undefined>(undefined);
 
-export const useRoomContext = () => useContext(RoomContext);
+export const useRoomContext = () => {
+  const context = useContext(RoomContext);
+  invariant(context, 'useRoomContext must be used within a RoomContextProvider');
+  return context;
+};

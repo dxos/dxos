@@ -23,7 +23,6 @@ export const getUserMediaTrack$ = (
   constraints$: Observable<MediaTrackConstraints> = of({}),
   deviceList$: Observable<MediaDeviceInfo[]> = getSortedDeviceListObservable(),
 ): Observable<MediaStreamTrack> => {
-  console.log('getUserMediaTrack$', { kind, constraints$, deviceList$: deviceList$.pipe });
   return combineLatest([
     deviceList$.pipe(
       map((list) => list.filter((d) => d.kind === kind)),
@@ -35,7 +34,6 @@ export const getUserMediaTrack$ = (
     switchMap(([deviceList, constraints]) => {
       // concat here is going to make these be subscribed
       // to sequentially
-      console.log('getUserMediaTrack$ switchMap', { deviceList, constraints, kind });
       return concat(
         ...deviceList
           .filter((d) => d.kind === kind)

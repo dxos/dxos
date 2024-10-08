@@ -10,7 +10,6 @@ import { RxjsPeer, type PeerConfig } from '../utils/rxjs/RxjsPeer.client';
 
 export const usePeerConnection = (config: PeerConfig) => {
   const stableConfig = useStablePojo(config);
-  console.log('usePeerConnection', stableConfig);
   const peer = useMemo(() => new RxjsPeer(stableConfig), [stableConfig]);
   const peerConnection = useSubscribedState(peer.peerConnection$);
 
