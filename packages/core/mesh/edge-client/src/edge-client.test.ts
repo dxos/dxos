@@ -68,15 +68,16 @@ describe('EdgeClient', () => {
     await expect(client.send(textMessage('Hello world 2'))).resolves.not.toThrow();
   });
 
-  test.only('connect to local edge server', async () => {
-    const endpoint = 'ws://localhost:8787';
-
+  test('connect to local edge server', async (t) => {
+    if (!process.env.EDGE_ENDPOINT) {
+      t.skip();
+    }
     // const identity = await createEphemeralEdgeIdentity();
 
     const keyring = new Keyring();
     const identity = await createTestHaloEdgeIdentity(keyring, await keyring.createKey(), await keyring.createKey());
 
-    const client = new EdgeClient(identity, { socketEndpoint: endpoint });
+    const client = new EdgeClient(identity, { socketEndpoint: process.env.EDGE_ENDPOINT! });
     await openAndClose(client);
     await client.send(textMessage('Hello world 1'));
     expect(client.isOpen).is.true;
