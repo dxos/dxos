@@ -4,12 +4,12 @@
 
 import { signal, batch, untracked } from '@preact/signals-react';
 
-import { registerSignalRuntime as registerRuntimeForEcho } from './runtime';
+import { registerSignalsRuntime as registerRuntimeForEcho } from './runtime';
 
 let registered = false;
 
 // TODO(burdon): Document.
-export const registerSignalRuntime = () => {
+export const registerSignalsRuntime = () => {
   if (registered) {
     return false;
   }

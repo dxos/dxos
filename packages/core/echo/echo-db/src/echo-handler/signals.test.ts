@@ -5,10 +5,10 @@
 import { test } from 'vitest';
 
 import { updateCounter } from '@dxos/echo-schema/testing';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
-registerSignalRuntime();
+registerSignalsRuntime();
 
 test('signals', ({ expect }) => {
   const sig = compositeRuntime.createSignal();
