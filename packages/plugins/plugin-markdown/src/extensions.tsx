@@ -207,7 +207,7 @@ const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url
     el,
     <a {...options} className={hover}>
       <Icon
-        icon={isInternal ? 'ph--arrows-square-down--bold' : 'ph--arrows-square-out--bold'}
+        icon={isInternal ? 'ph--arrow-square-down--bold' : 'ph--arrow-square-out--bold'}
         size={4}
         classNames='inline-block leading-none mis-1 cursor-pointer'
       />
