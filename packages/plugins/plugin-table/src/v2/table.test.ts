@@ -7,11 +7,11 @@ import { describe, it, expect } from 'vitest';
 
 import { create } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 import { createTable, updateTable, type Table, type TableEvent } from './table';
 
-registerSignalRuntime();
+registerSignalsRuntime();
 
 const initialTable: Table = createTable(
   [

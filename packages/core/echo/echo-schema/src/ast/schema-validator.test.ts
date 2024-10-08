@@ -135,7 +135,7 @@ describe('schema-validator', () => {
           meta: S.optional(S.mutable(S.Any)),
           // NOTE: S.Record only supports shallow values.
           // https://www.npmjs.com/package/@effect/schema#mutable-records
-          // meta: S.optional(S.mutable(S.Record(S.String, S.Any))),
+          // meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
           // meta: S.optional(S.mutable(S.object)),
         }),
       );
@@ -165,7 +165,7 @@ describe('schema-validator', () => {
           typename: 'dxos.org/type/FunctionTrigger',
           version: '0.1.0',
         })({
-          meta: S.optional(S.mutable(S.Record(S.String, S.Any))),
+          meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
         }) {}
 
         const object = create(Test2, {});
@@ -189,7 +189,7 @@ describe('schema-validator', () => {
     test('index signature from optional record', () => {
       for (const value of [42, '42']) {
         validateValueToAssign({
-          schema: S.Struct({ field: S.optional(S.Record(S.String, S.Number)) }),
+          schema: S.Struct({ field: S.optional(S.Record({ key: S.String, value: S.Number })) }),
           target: {},
           path: ['field', 'unknownField'],
           valueToAssign: value,

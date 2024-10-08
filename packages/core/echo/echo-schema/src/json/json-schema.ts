@@ -102,8 +102,8 @@ export const effectToJsonSchema = (schema: S.Schema<any>): any => {
     } else if (AST.isTupleType(ast)) {
       recursiveResult = {
         ...ast,
-        elements: ast.elements.map((e) => ({ ...e, type: withEchoRefinements(e.type) })),
-        rest: ast.rest.map((e) => withEchoRefinements(e)),
+        elements: ast.elements.map((t) => ({ ...t, type: withEchoRefinements(t.type) })),
+        rest: ast.rest.map((t) => withEchoRefinements(t.type)),
       } as any;
     }
     const refinement: EchoRefinement = {};
@@ -153,7 +153,7 @@ const jsonToEffectTypeSchema = (
     if (propertyList.length > 0) {
       schemaWithoutEchoId = S.Struct(fields, { key: S.String, value: indexValue });
     } else {
-      schemaWithoutEchoId = S.Record(S.String, indexValue);
+      schemaWithoutEchoId = S.Record({ key: S.String, value: indexValue });
     }
   }
 
@@ -211,7 +211,7 @@ export const jsonToEffectSchema = (
   } else if ('anyOf' in root) {
     result = S.Union(...root.anyOf.map((v) => jsonToEffectSchema(v, defs)));
   } else if ('$comment' in root && root.$comment === '/schemas/enums') {
-    result = S.Enums(Object.fromEntries(root.oneOf.map(({ title, const: v }) => [title, v])));
+    result = S.Enums(Object.fromEntries(root.oneof.map(({ title, const: v }) => [title, v])));
   } else if ('type' in root) {
     switch (root.type) {
       case 'string':
@@ -239,7 +239,9 @@ export const jsonToEffectSchema = (
     const refSegments = root.$ref.split('/');
     const jsonSchema = defs[refSegments[refSegments.length - 1]];
     invariant(jsonSchema, `missing definition for ${root.$ref}`);
-    result = jsonToEffectSchema(jsonSchema, defs).pipe(S.identifier(refSegments[refSegments.length - 1]));
+    result = jsonToEffectSchema(jsonSchema, defs).pipe(
+      S.annotations({ identifier: refSegments[refSegments.length - 1] }),
+    );
   } else {
     result = S.Unknown;
   }

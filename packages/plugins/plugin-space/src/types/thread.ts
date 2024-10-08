@@ -53,7 +53,7 @@ export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message'
   /** Non-text content sent with a message (e.g. files, polls, etc.) */
   parts: S.optional(S.mutable(S.Array(ref(Expando)))),
   /** Custom properties for specific message types (e.g. email subject or cc fields). */
-  properties: S.optional(S.mutable(S.Record(S.String, S.Any))),
+  properties: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
   // TODO(wittjosiah): Add read status:
   //  - Read receipts need to be per space member.
   //  - Read receipts don't need to be added to schema until they being implemented.

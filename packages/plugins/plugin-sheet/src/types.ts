@@ -105,7 +105,7 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
   name: S.optional(S.String),
 
   // Sparse map of cells referenced by index.
-  cells: S.mutable(S.Record(S.String, S.mutable(CellValue))),
+  cells: S.mutable(S.Record({ key: S.String, value: S.mutable(CellValue) })),
 
   // Ordered row indices.
   rows: S.mutable(S.Array(S.String)),

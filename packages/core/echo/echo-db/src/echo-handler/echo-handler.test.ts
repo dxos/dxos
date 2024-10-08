@@ -31,7 +31,7 @@ import {
   type TestSchemaWithClass,
   TestType,
 } from '@dxos/echo-schema/testing';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
@@ -44,7 +44,7 @@ import { loadObjectReferences } from '../proxy-db';
 import { Filter } from '../query';
 import { Contact, EchoTestBuilder, Task } from '../testing';
 
-registerSignalRuntime();
+registerSignalsRuntime();
 
 const TEST_OBJECT: TestSchema = {
   string: 'foo',
