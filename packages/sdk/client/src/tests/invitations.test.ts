@@ -21,7 +21,7 @@ import {
   performInvitation,
 } from '@dxos/client-services/testing';
 import { MetadataStore } from '@dxos/echo-pipeline';
-import { EdgeClient } from '@dxos/edge-client';
+import { createEphemeralEdgeIdentity, EdgeClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -363,7 +363,7 @@ describe('Invitations', () => {
   describe.skip('EDGE signaling', () => {
     describe('space', () => {
       const createPeer = async () => {
-        const edgeConnection = new EdgeClient(PublicKey.random().toHex(), PublicKey.random().toHex(), {
+        const edgeConnection = new EdgeClient(await createEphemeralEdgeIdentity(), {
           socketEndpoint: 'ws://localhost:8787',
         });
         await openAndClose(edgeConnection);

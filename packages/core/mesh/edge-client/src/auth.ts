@@ -1,11 +1,12 @@
-import { Signer } from '@dxos/crypto';
-import { PublicKey } from '@dxos/keys';
 import { createCredential, signPresentation } from '@dxos/credentials';
-import type { EdgeIdentity } from './edge-client';
+import { Signer } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
+import { PublicKey } from '@dxos/keys';
+import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import type { EdgeIdentity } from './edge-client';
 
 /**
- * Edge identity backed by a device key without HALO.
+ * Edge identity backed by a device key without a credential chain.
  */
 export const createDeviceEdgeIdentity = async (signer: Signer, key: PublicKey): Promise<EdgeIdentity> => {
   return {
@@ -29,6 +30,33 @@ export const createDeviceEdgeIdentity = async (signer: Signer, key: PublicKey): 
         signer,
         signerKey: key,
         nonce: challenge,
+      });
+    },
+  };
+};
+
+/**
+ * Edge identity backed by a chain of credentials.
+ */
+export const createChainEdgeIdentity = async (
+  signer: Signer,
+  identityKey: PublicKey,
+  peerKey: PublicKey,
+  chain: Chain,
+  credentials: Credential[],
+): Promise<EdgeIdentity> => {
+  return {
+    identityKey: identityKey.toHex(),
+    peerKey: peerKey.toHex(),
+    presentCredentials: async ({ challenge }) => {
+      return signPresentation({
+        presentation: {
+          credentials,
+        },
+        signer,
+        nonce: challenge,
+        signerKey: peerKey,
+        chain,
       });
     },
   };
@@ -61,33 +89,16 @@ export const createTestHaloEdgeIdentity = async (
     subject: deviceKey,
     signer,
   });
-  return {
-    identityKey: identityKey.toHex(),
-    peerKey: deviceKey.toHex(),
-    presentCredentials: async ({ challenge }) => {
-      return signPresentation({
-        presentation: {
-          credentials: [
-            // Verifier requires at least one credential in the presentation to establish the subject.
-            await createCredential({
-              assertion: {
-                '@type': 'dxos.halo.credentials.Auth',
-              },
-              issuer: identityKey,
-              subject: identityKey,
-              signer,
-              signingKey: deviceKey,
-              chain: { credential: deviceAdmission },
-            }),
-          ],
-        },
-        signer,
-        nonce: challenge,
-        signerKey: deviceKey,
-        chain: { credential: deviceAdmission },
-      });
-    },
-  };
+  return createChainEdgeIdentity(signer, identityKey, deviceKey, { credential: deviceAdmission }, [
+    await createCredential({
+      assertion: {
+        '@type': 'dxos.halo.credentials.Auth',
+      },
+      issuer: identityKey,
+      subject: identityKey,
+      signer,
+    }),
+  ]);
 };
 
 export const createStubEdgeIdentity = (): EdgeIdentity => {

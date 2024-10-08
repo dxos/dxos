@@ -6,7 +6,12 @@ import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, type ClientServices } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { EdgeClient, type EdgeConnection } from '@dxos/edge-client';
+import {
+  EdgeClient,
+  type EdgeConnection,
+  createEphemeralEdgeIdentity,
+  createStubEdgeIdentity,
+} from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -212,8 +217,7 @@ export class ClientServicesHost {
 
     const edgeEndpoint = config?.get('runtime.services.edge.url');
     if (edgeEndpoint) {
-      const randomKey = PublicKey.random().toHex();
-      this._edgeConnection = new EdgeClient(randomKey, randomKey, { socketEndpoint: edgeEndpoint });
+      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: edgeEndpoint });
     }
 
     const {

@@ -9,7 +9,7 @@ import { describe, test, onTestFinished, vi, expect } from 'vitest';
 import { Trigger, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { valueEncoding } from '@dxos/echo-pipeline';
-import { EdgeClient, EdgeIdentityChangedError } from '@dxos/edge-client';
+import { createEphemeralEdgeIdentity, EdgeClient, EdgeIdentityChangedError } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { type FeedWrapper } from '@dxos/feed-store';
@@ -73,7 +73,7 @@ describe('EdgeFeedReplicator', () => {
     admitConnection.wake();
     await expect.poll(() => messageSink.length).toEqual(1);
 
-    updateIdentity(messenger);
+    await updateIdentity(messenger);
     await messenger.reconnect.waitForCount(1);
 
     await expect.poll(() => messageSink.length).toEqual(2);
@@ -93,7 +93,7 @@ describe('EdgeFeedReplicator', () => {
 
     await expect.poll(() => sendSpy.mock.calls.length).toEqual(1);
     expect(messageSink.length).toEqual(0);
-    updateIdentity(messenger);
+    await updateIdentity(messenger);
 
     await expect.poll(() => messageSink.length).toEqual(1);
     expect(messageSink[0].type).toEqual('get-metadata');
@@ -117,7 +117,7 @@ describe('EdgeFeedReplicator', () => {
 
     await expect.poll(() => sendSpy.mock.calls.length).toEqual(2);
     expect(messageSink.length).toEqual(0);
-    updateIdentity(messenger);
+    await updateIdentity(messenger);
 
     await expect.poll(() => messageSink.length).toEqual(2);
     expect(messageSink[1].type).toEqual('data');
@@ -147,7 +147,7 @@ describe('EdgeFeedReplicator', () => {
     const { messenger } = await createClient(endpoint);
 
     await attachReplicator(messenger);
-    updateIdentity(messenger);
+    await updateIdentity(messenger);
     await sleep(100);
     admitConnection.wake();
 
@@ -164,7 +164,7 @@ describe('EdgeFeedReplicator', () => {
     await sleep(10);
 
     admitConnection.reset();
-    updateIdentity(messenger);
+    await updateIdentity(messenger);
     await appendMessage(feed);
     await sleep(20);
     admitConnection.wake();
@@ -181,7 +181,7 @@ describe('EdgeFeedReplicator', () => {
     await sleep(10);
 
     void appendMessage(feed);
-    updateIdentity(messenger);
+    await updateIdentity(messenger);
 
     await expect.poll(() => feedLength()).toEqual(1);
   });
@@ -214,7 +214,7 @@ describe('EdgeFeedReplicator', () => {
 
   const createClient = async (endpoint: string) => {
     const peerKey = PublicKey.random().toHex();
-    const messenger = new EdgeClient(peerKey, peerKey, { socketEndpoint: endpoint });
+    const messenger = new EdgeClient(await createEphemeralEdgeIdentity(), { socketEndpoint: endpoint });
     const sendSpy = vi.spyOn(messenger, 'send');
     await openAndClose(messenger);
     return { messenger, sendSpy };
@@ -245,9 +245,8 @@ describe('EdgeFeedReplicator', () => {
     return feedStore.openFeed(await keyring.createKey(), { writable: true });
   };
 
-  const updateIdentity = (messenger: EdgeClient) => {
-    const identityKey = PublicKey.random().toHex();
-    messenger.setIdentity({ peerKey: messenger.peerKey, identityKey });
+  const updateIdentity = async (messenger: EdgeClient) => {
+    messenger.setIdentity(await createEphemeralEdgeIdentity());
   };
 
   const appendMessage = (feed: FeedWrapper<FeedMessage>) => feed.append({ timeframe: new Timeframe() });
