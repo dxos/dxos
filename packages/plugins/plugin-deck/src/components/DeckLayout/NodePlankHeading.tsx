@@ -14,7 +14,6 @@ import {
   partLength,
   type LayoutParts,
   type LayoutPart,
-  type LayoutEntry,
 } from '@dxos/app-framework';
 import { type Node, useGraph } from '@dxos/plugin-graph';
 import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
