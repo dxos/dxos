@@ -104,7 +104,11 @@ export class NotarizationPlugin implements CredentialProcessor {
     return !!this._writer;
   }
 
-  async open() {}
+  async open() {
+    if (this._edgeClient && this._writer) {
+      this._notarizePendingEdgeCredentials(this._edgeClient, this._writer);
+    }
+  }
 
   async close() {
     await this._ctx.dispose();
@@ -137,7 +141,6 @@ export class NotarizationPlugin implements CredentialProcessor {
     });
     opCtx?.onDispose(() => ctx.dispose());
 
-    // Timeout/
     if (timeout !== 0) {
       this._scheduleTimeout(ctx, errors, timeout);
     }
@@ -258,12 +261,15 @@ export class NotarizationPlugin implements CredentialProcessor {
           { retry: { count: MAX_EDGE_RETRIES } },
         );
 
-        if (!response.awaitingNotarization.credentials.length) {
+        const credentials = response.awaitingNotarization.credentials;
+        if (!credentials.length) {
           log('edge did not return credentials for notarization');
           return;
         }
 
-        const decodedCredentials = response.awaitingNotarization.credentials.map((credential) => {
+        log('got edge credentials for notarization', { count: credentials.length });
+
+        const decodedCredentials = credentials.map((credential) => {
           const binary = Buffer.from(credential, 'base64');
           return credentialCodec.decode(binary);
         });
