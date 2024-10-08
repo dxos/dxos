@@ -13,8 +13,8 @@ import { Icon, ThemeProvider } from '@dxos/react-ui';
 import { createDataExtensions, listener, localStorageStateStoreAdapter, state } from '@dxos/react-ui-editor';
 import {
   type AutocompleteResult,
-  type Extension,
   type EditorViewMode,
+  type Extension,
   InputModeExtensions,
   autocomplete,
   decorateMarkdown,
@@ -24,7 +24,7 @@ import {
   typewriter,
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { isNotFalsy, nonNullable } from '@dxos/util';
+import { isNotFalsy } from '@dxos/util';
 
 import { type DocumentType, type MarkdownPluginState, type MarkdownSettingsProps } from './types';
 import { setFallbackName } from './util';
@@ -35,88 +35,6 @@ type ExtensionsOptions = {
   query?: Query<DocumentType>;
   settings: MarkdownSettingsProps;
   viewMode?: EditorViewMode;
-};
-
-/**
- * Create extension instances for editor.
- */
-const createBaseExtensions = ({ document, dispatch, settings, query, viewMode }: ExtensionsOptions): Extension[] => {
-  const extensions: Extension[] = [];
-
-  //
-  // Editor mode.
-  //
-  if (settings.editorInputMode) {
-    const extension = InputModeExtensions[settings.editorInputMode];
-    if (extension) {
-      extensions.push(extension);
-    }
-  }
-
-  //
-  // Markdown
-  //
-  if (viewMode !== 'source') {
-    extensions.push(
-      ...[
-        formattingKeymap(),
-        decorateMarkdown({
-          selectionChangeDelay: 100,
-          numberedHeadings: settings.numberedHeadings ? { from: 2 } : undefined,
-          // TODO(wittjosiah): For internal links, consider ignoring the link text and rendering the label of the object being linked to.
-          renderLinkButton:
-            dispatch && document
-              ? onRenderLink((id: string) => {
-                  void dispatch({
-                    action: NavigationAction.ADD_TO_ACTIVE,
-                    data: {
-                      id,
-                      part: 'main',
-                      pivotId: fullyQualifiedId(document),
-                      scrollIntoView: true,
-                    },
-                  });
-                })
-              : undefined,
-        }),
-        linkTooltip(renderLinkTooltip),
-      ],
-    );
-  }
-
-  //
-  // Autocomplete object links.
-  //
-  if (query) {
-    extensions.push(
-      autocomplete({
-        onSearch: (text: string) => {
-          // TODO query
-          // TODO(burdon): Specify filter (e.g., stack).
-          return query.objects
-            .map<AutocompleteResult | undefined>((object) =>
-              object.name?.length && object.id !== document?.id
-                ? {
-                    label: object.name,
-                    // TODO(burdon): Factor out URL builder.
-                    apply: `[${object.name}](/${fullyQualifiedId(object)})`,
-                  }
-                : undefined,
-            )
-            .filter(nonNullable);
-        },
-      }),
-    );
-  }
-
-  extensions.push(...[settings.folding && folding()].filter(isNotFalsy));
-
-  if (settings.debug) {
-    const items = settings.typewriter ?? '';
-    extensions.push(...[items ? typewriter({ items: items.split(/[,\n]/) }) : undefined].filter(nonNullable));
-  }
-
-  return extensions;
 };
 
 // TODO(burdon): Merge with createBaseExtensions above.
@@ -178,15 +96,94 @@ export const useExtensions = ({
         }),
         state(localStorageStateStoreAdapter),
         listener({
-          onChange: (text) => {
-            setFallbackName(document, text);
-          },
+          onChange: (text) => setFallbackName(document, text),
         }),
         baseExtensions,
         pluginExtensions,
-      ].filter(nonNullable),
+      ].filter(isNotFalsy),
     [baseExtensions, pluginExtensions, document, document.content, space, identity],
   );
+};
+
+/**
+ * Create extension instances for editor.
+ */
+const createBaseExtensions = ({ document, dispatch, settings, query, viewMode }: ExtensionsOptions): Extension[] => {
+  const extensions: Extension[] = [];
+
+  //
+  // Editor mode.
+  //
+  if (settings.editorInputMode) {
+    const extension = InputModeExtensions[settings.editorInputMode];
+    if (extension) {
+      extensions.push(extension);
+    }
+  }
+
+  //
+  // Markdown
+  //
+  if (viewMode !== 'source') {
+    extensions.push(
+      ...[
+        formattingKeymap(),
+        decorateMarkdown({
+          selectionChangeDelay: 100,
+          numberedHeadings: settings.numberedHeadings ? { from: 2 } : undefined,
+          // TODO(wittjosiah): For internal links, consider ignoring the link text and rendering the label of the object being linked to.
+          renderLinkButton:
+            dispatch && document
+              ? onRenderLink((id: string) => {
+                  void dispatch({
+                    action: NavigationAction.ADD_TO_ACTIVE,
+                    data: {
+                      id,
+                      part: 'main',
+                      pivotId: fullyQualifiedId(document),
+                      scrollIntoView: true,
+                    },
+                  });
+                })
+              : undefined,
+        }),
+        linkTooltip(renderLinkTooltip),
+      ],
+    );
+  }
+
+  //
+  // Autocomplete object links.
+  //
+  if (query) {
+    extensions.push(
+      autocomplete({
+        onSearch: (text: string) => {
+          // TODO(burdon): Specify filter (e.g., stack).
+          return query.objects
+            .map<AutocompleteResult | undefined>((object) =>
+              object.name?.length && object.id !== document?.id
+                ? {
+                    label: object.name,
+                    // TODO(burdon): Factor out URL builder.
+                    apply: `[${object.name}](/${fullyQualifiedId(object)})`,
+                  }
+                : undefined,
+            )
+            .filter(isNotFalsy);
+        },
+      }),
+    );
+  }
+
+  extensions.push(...[settings.folding && folding()].filter(isNotFalsy));
+
+  if (settings.debug) {
+    const items = settings.typewriter ?? '';
+    extensions.push(...[items ? typewriter({ items: items.split(/[,\n]/) }) : undefined].filter(isNotFalsy));
+  }
+
+  return extensions;
 };
 
 // TODO(burdon): Factor out style.
@@ -236,7 +233,7 @@ const renderLinkTooltip = (el: Element, url: string) => {
   );
 };
 
-// TODO(burdon): Factor out. Reconcile with rect-ui-editor.
+// TODO(burdon): Factor out. Reconcile with react-ui-editor.
 const renderRoot = <T extends Element>(root: T, node: ReactNode): T => {
   createRoot(root).render(<ThemeProvider tx={defaultTx}>{node}</ThemeProvider>);
   return root;

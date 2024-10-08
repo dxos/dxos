@@ -16,7 +16,7 @@ import { getFallbackName } from '../util';
 type DocumentEditorProps = {
   document: DocumentType;
   settings: MarkdownSettingsProps;
-} & Omit<MarkdownEditorProps, 'id' | 'inputMode' | 'toolbar' | 'extensions'> &
+} & Omit<MarkdownEditorProps, 'id' | 'extensions' | 'inputMode' | 'toolbar'> &
   Pick<MarkdownPluginState, 'extensionProviders'>;
 
 export const DocumentEditor = ({
