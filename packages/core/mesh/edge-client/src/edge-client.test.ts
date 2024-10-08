@@ -68,10 +68,7 @@ describe('EdgeClient', () => {
     await expect(client.send(textMessage('Hello world 2'))).resolves.not.toThrow();
   });
 
-  test('connect to local edge server', async (t) => {
-    if (!process.env.EDGE_ENDPOINT) {
-      t.skip();
-    }
+  test.skipIf(!process.env.EDGE_ENDPOINT)('connect to local edge server', async () => {
     // const identity = await createEphemeralEdgeIdentity();
 
     const keyring = new Keyring();
