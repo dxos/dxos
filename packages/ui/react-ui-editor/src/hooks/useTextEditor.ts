@@ -24,6 +24,7 @@ import { type EditorSelection, createEditorStateTransaction, documentId } from '
 import { logChanges } from '../util';
 
 export type UseTextEditor = {
+  // TODO(burdon): Rename.
   parentRef: RefObject<HTMLDivElement>;
   view?: EditorView;
   focusAttributes: ReturnType<typeof useFocusableGroup> & {

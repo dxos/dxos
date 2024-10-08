@@ -212,6 +212,7 @@ export const MarkdownEditor = ({
                 'flex is-full bs-full overflow-hidden',
                 focusRing,
                 'focus-visible:ring-inset attention-surface',
+                'p-0.5', // TODO(burdon): Handle padding for focusRing consistently.
                 'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
               )
         }
