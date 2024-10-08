@@ -170,7 +170,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   type: 'orphan-comments-for-subject',
                   data: null,
                   properties: {
-                    icon: 'ph--quotes--regular',
+                    icon: 'ph--chat-text--regular',
                     label,
                     showResolvedThreads: viewState.showResolvedThreads,
                     object,

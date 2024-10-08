@@ -27,7 +27,7 @@ import {
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
-import { useHasAttention } from '@dxos/react-ui-attention';
+import { useAttention } from '@dxos/react-ui-attention';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
@@ -79,11 +79,11 @@ const _MenuSignifierVertical = () => (
 
 const PlankHeadingButton = forwardRef<HTMLButtonElement, PlankHeadingButtonProps>(
   ({ attendableId, classNames, children, ...props }, forwardedRef) => {
-    const hasAttention = useHasAttention(attendableId);
+    const { hasAttention, isAncestor } = useAttention(attendableId);
     return (
       <Button
         {...props}
-        variant={hasAttention ? 'primary' : 'ghost'}
+        variant={hasAttention || isAncestor ? 'primary' : 'ghost'}
         classNames={['m-1 shrink-0 pli-0 min-bs-0 is-[--rail-action] bs-[--rail-action] relative', classNames]}
         ref={forwardedRef}
       >
@@ -205,11 +205,11 @@ type PlankHeadingLabelProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & Att
 
 const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>(
   ({ attendableId, classNames, ...props }, forwardedRef) => {
-    const hasAttention = useHasAttention(attendableId);
+    const { hasAttention, isAncestor } = useAttention(attendableId);
     return (
       <h1
         {...props}
-        data-attention={hasAttention.toString()}
+        data-attention={(hasAttention || isAncestor).toString()}
         className={mx(
           'pli-1 min-is-0 is-0 grow truncate font-medium text-baseText data-[attention=true]:text-accentText',
           classNames,

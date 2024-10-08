@@ -33,19 +33,6 @@ export type ThreadsContainerProps = Omit<
   onComment?: (thread: ThreadType) => void;
 };
 
-export const CommentsHeading = ({ attendableId }: { attendableId?: string }) => {
-  const { t } = useTranslation(THREAD_PLUGIN);
-
-  return (
-    <div role='none' className='flex items-center'>
-      <PlankHeading.Button attendableId={attendableId}>
-        <Icon icon='ph--quotes--regular' size={5} />
-      </PlankHeading.Button>
-      <PlankHeading.Label attendableId={attendableId}>{t('comments heading')}</PlankHeading.Label>
-    </div>
-  );
-};
-
 /**
  * Comment threads.
  */
