@@ -9,12 +9,21 @@ import { type DxGridElement, Grid } from '@dxos/react-ui-grid';
 import { useTable } from '../hooks';
 import { type ColumnDefinition } from '../table';
 
-type TableComponentProps = {
+type TableProps = {
   columnDefinitions: ColumnDefinition[];
   data: any[];
 };
 
-export const TableComponent: React.FC<TableComponentProps> = ({ columnDefinitions, data }) => {
+// NOTE: The table model manages both ephemeral and persistent state.
+// - Ephemeral state (e.g., sorting, filtering, selection) is handled internally.
+// - Persistent state (e.g., column order, widths) is propagated to the parent for storage.
+
+// TODO(Zan): Callback for changing column width.
+// TODO(Zan): Callback for re-arranging columns.
+// TODO(Zan): Callbacks for editing column schema.
+// TODO(Zan): Remove column axis labels.
+// TODO(Zan): Custom header labels and buttons.
+export const Table: React.FC<TableProps> = ({ columnDefinitions, data }) => {
   const gridRef = useRef<DxGridElement>(null);
   const { table, columnMeta, gridCells, dispatch } = useTable(columnDefinitions, data, gridRef);
 

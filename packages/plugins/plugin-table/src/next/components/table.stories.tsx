@@ -8,10 +8,10 @@ import React, { useEffect } from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
-import { ClientRepeater } from '@dxos/react-client/testing';
+import { type WithClientProviderProps, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { TableComponent } from './Table';
+import { Table } from './Table';
 import { type ColumnDefinition } from '../table';
 
 registerSignalRuntime();
@@ -32,7 +32,7 @@ const columnDefinitions: ColumnDefinition[] = [
   { id: 'name', dataType: 'string', headerLabel: 'Name', accessor: (row: any) => row.name },
   { id: 'age', dataType: 'number', headerLabel: 'Age', accessor: (row: any) => row.age },
   { id: 'active', dataType: 'boolean', headerLabel: 'Active', accessor: (row: any) => row.active },
-];
+] as const;
 
 const useSimulateCollaborativeUpdates = (
   data: any[],
@@ -52,15 +52,18 @@ const useSimulateCollaborativeUpdates = (
       const row = data[rowIndex];
 
       switch (column.dataType) {
-        case 'string':
+        case 'string': {
           (row as any)[column.id] = `Updated ${Date.now()}`;
           break;
-        case 'number':
+        }
+        case 'number': {
           (row as any)[column.id] = Math.floor(Math.random() * 100);
           break;
-        case 'boolean':
+        }
+        case 'boolean': {
           (row as any)[column.id] = !(row as any)[column.id];
           break;
+        }
       }
     };
 
@@ -74,7 +77,7 @@ const DefaultStory = () => {
 
   return (
     <div>
-      <TableComponent columnDefinitions={columnDefinitions} data={data} />
+      <Table columnDefinitions={columnDefinitions} data={data} />
     </div>
   );
 };
@@ -92,27 +95,32 @@ const LargeDataStory = ({
 
   useSimulateCollaborativeUpdates(data, columnDefinitions, updateIntervalMs, simulateCollaborativeCellUpdates);
 
-  return <TableComponent columnDefinitions={columnDefinitions} data={data} />;
+  return <Table columnDefinitions={columnDefinitions} data={data} />;
+};
+
+const clientProps: WithClientProviderProps = {
+  createIdentity: true,
+  createSpace: true,
 };
 
 export default {
   title: 'plugin-table/table-next',
   component: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withClientProvider(clientProps), withTheme, withLayout({ fullscreen: true })],
   parameters: { layout: 'fullscreen' },
 };
 
 export const Default = {
-  render: () => <ClientRepeater component={DefaultStory} createIdentity createSpace />,
+  render: () => <DefaultStory />,
 };
 
 export const LargeDataSet = {
   render: (args: { rowCount: number; updateIntervalMs: number; simulateCollaborativeCellUpdates: boolean }) => (
-    <ClientRepeater component={() => <LargeDataStory {...args} />} createIdentity createSpace />
+    <LargeDataStory {...args} />
   ),
   args: {
-    rowCount: 10000,
-    simulateCollaborativeCellUpdates: false,
+    rowCount: 1000,
+    simulateCollaborativeCellUpdates: true,
     updateIntervalMs: 1,
   },
 };
