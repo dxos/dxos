@@ -4,11 +4,11 @@
 
 import '@dxos-theme';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { Grid } from '@dxos/react-ui-grid';
+import { type DxGridAxisMeta, type DxGridCells, Grid } from '@dxos/react-ui-grid';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useTable } from './hooks/';
@@ -46,27 +46,61 @@ const Story = () => {
   const data = React.useMemo(() => makeData(50), []);
   const { table, dispatch } = useTable(columnDefinitions, data);
 
+  const columnMeta: DxGridAxisMeta = React.useMemo(() => {
+    return Object.fromEntries(
+      table.columnDefinitions.map((col, index) => [index, { size: table.columnWidths[col.id] }]),
+    );
+  }, [table.columnDefinitions, table.columnWidths]);
+
+  const gridCells: DxGridCells = React.useMemo(() => {
+    return Object.fromEntries(
+      Array.from(table.cells.value.entries()).map(([key, cellSignal]) => [
+        key,
+        {
+          get value() {
+            return cellSignal.value;
+          },
+        },
+      ]),
+    );
+  }, [table.cells.value]);
+
+  // Stress test: Mutate a random cell every millisecond
+  useEffect(() => {
+    const mutateRandomCell = () => {
+      const rowIndex = Math.floor(Math.random() * data.length);
+      const columnIndex = Math.floor(Math.random() * columnDefinitions.length);
+      const column = columnDefinitions[columnIndex];
+      const row = data[rowIndex];
+
+      switch (column.dataType) {
+        case 'string':
+          (row as any)[column.id] = `Updated ${Date.now()}`;
+          break;
+        case 'number':
+          (row as any)[column.id] = Math.floor(Math.random() * 100);
+          break;
+        case 'boolean':
+          (row as any)[column.id] = !(row as any)[column.id];
+          break;
+      }
+    };
+
+    const intervalId = setInterval(mutateRandomCell, 1);
+    return () => clearInterval(intervalId);
+  }, [data, columnDefinitions]);
+
   return (
     <div>
       <DevTools table={table} />
       <Grid.Root id='table-v2'>
         <Grid.Content
-          limitRows={table.rows.value.length}
+          limitRows={table.rowCount.value}
           limitColumns={table.columnDefinitions.length}
-          initialCells={Object.fromEntries(
-            table.rows.value.flatMap((row, rowIndex) =>
-              table.columnDefinitions.map((col, colIndex) => [
-                `${colIndex},${rowIndex}`,
-                { value: row.value[col.id].toString() },
-              ]),
-            ),
-          )}
+          initialCells={gridCells}
           columnDefault={{ size: 120, resizeable: true }}
           rowDefault={{ size: 32, resizeable: true }}
-          // TODO(Zan): Make this fast.
-          columns={Object.fromEntries(
-            table.columnDefinitions.map((col, index) => [index, { size: table.columnWidths[col.id] }]),
-          )}
+          columns={columnMeta}
           onAxisResize={(event) => {
             if (event.axis === 'col') {
               const columnIndex = parseInt(event.index, 10);

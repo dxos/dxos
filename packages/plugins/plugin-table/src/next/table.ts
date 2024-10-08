@@ -24,16 +24,15 @@ export type ColumnDefinition = {
 };
 
 export type SortConfig = { columnId: ColumnId; direction: SortDirection };
-
 export type Table = {
-  columnDefinitions: ColumnDefinition[];
+  readonly columnDefinitions: ColumnDefinition[];
   columnOrdering: ColumnId[];
   columnWidths: Record<ColumnId, number>;
   sorting: SortConfig[];
   pinnedRows: { top: number[]; bottom: number[] };
   rowSelection: number[];
-
-  rows: ReadonlySignal<ReadonlySignal<{ [k: string]: any }>[]>;
+  cells: ReadonlySignal<Map<string, ReadonlySignal<any>>>;
+  rowCount: ReadonlySignal<number>;
 };
 
 export type TableEvent =
@@ -96,37 +95,48 @@ export const updateTable = (table: Table, event: TableEvent): Table => {
 };
 
 // Return a preact-signals reactive object (with create) for an initialized table.
-// TODO(Zan): Take widths, and callbacks for changing sorting, column widths.
+// TODO(Zan): Take widths + callbacks for width changes, column ordering.
 export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]): Table => {
   /**
-   * Creates a nested computed signal structure for table rows.
+   * Creates a computed signal structure for table cells.
    *
-   * This structure is currently optimized for reactive collaboration on cell edits:
+   * This structure is optimized for reactive collaboration on cell edits:
    *
    * 1. Outer computed:
    *    - Tracks changes to the entire data array (additions, removals, reordering)
-   *    - Recreates all inner computed signals when triggered
+   *    - Recreates all cell computed signals when triggered
    *
-   * 2. Inner computed (one per row):
-   *    - Tracks changes to individual row data
-   *    - Recalculates only when its specific row data changes
+   * 2. Inner computed (one per cell):
+   *    - Tracks changes to individual cell data
+   *    - Recalculates only when its specific cell data changes
    *
    * Benefits:
    * - Highly efficient for cell-level edits (most common in collaborative editing)
-   * - Maintains reactivity at both array and row levels
+   * - Maintains reactivity at the cell level
    * - Automatically updates UI for all users on any collaborative change
+   * - Eliminates the need for a separate row structure
    *
    * Performance characteristics:
-   * - Cell edits: Optimal (only affected row recalculates)
-   * - Array-level changes: Expensive (all inner `computed` recreated)
+   * - Cell edits: Optimal (only affected cell recalculates)
+   * - Array-level changes: More expensive (all cell `computed` recreated)
    */
-  const rows = computed(() => {
-    return data.map((row: any) => {
-      return computed(() => {
-        return Object.fromEntries(columnDefinitions.map((column) => [column.id, column.accessor(row)]));
+  const cells = computed(() => {
+    const cellMap = new Map();
+
+    data.forEach((row, rowIndex) => {
+      columnDefinitions.forEach((col, colIndex) => {
+        const key = `${colIndex},${rowIndex}`;
+        cellMap.set(
+          key,
+          computed(() => col.accessor(row)),
+        );
       });
     });
+
+    return cellMap;
   });
+
+  const rowCount = computed(() => data.length);
 
   return create({
     columnDefinitions,
@@ -135,6 +145,7 @@ export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]):
     sorting: [],
     pinnedRows: { top: [], bottom: [] },
     rowSelection: [],
-    rows,
+    rowCount,
+    cells,
   });
 };

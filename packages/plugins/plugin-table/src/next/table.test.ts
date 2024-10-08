@@ -125,7 +125,7 @@ describe('column width modification', () => {
   });
 });
 
-describe('signal tests', () => {
+describe('reactivity', () => {
   it('pure signals should nest', () => {
     const signal$ = create({ arr: [{ thingInside: 1 }, { thingInside: 2 }] });
 
@@ -154,54 +154,137 @@ describe('signal tests', () => {
     expect(innerCounter.count).toBe(1);
   });
 
-  it('table rows should compute correctly demonstrating nested reactive structure', () => {
-    // Create initial data with two rows.
-    const { data } = create({
-      data: [
-        { col1: 'A', col2: 1, col3: true },
-        { col1: 'B', col2: 2, col3: false },
-      ],
+  describe('cell reactivity', () => {
+    it('should update cell value reactively', () => {
+      const { data } = create({
+        data: [
+          { col1: 'A', col2: 1, col3: true },
+          { col1: 'B', col2: 2, col3: false },
+        ],
+      });
+
+      const table = createTable(
+        [
+          { id: 'col1', dataType: 'string', headerLabel: 'Column 1', accessor: (row: any) => row.col1 },
+          { id: 'col2', dataType: 'number', headerLabel: 'Column 2', accessor: (row: any) => row.col2 },
+          { id: 'col3', dataType: 'boolean', headerLabel: 'Column 3', accessor: (row: any) => row.col3 },
+        ],
+        data,
+      );
+
+      using cellUpdates = updateCounter(() => {
+        table.cells.value.get('0,0')?.value;
+      });
+
+      data[0].col1 = 'New Value';
+
+      expect(cellUpdates.count).toBe(1);
+      expect(table.cells.value.get('0,0')?.value).toBe('New Value');
     });
 
-    // Create table with column definitions.
-    const table = createTable(
-      [
-        { id: 'col1', dataType: 'string', headerLabel: 'Column 1', accessor: (row: any) => row.col1 },
-        { id: 'col2', dataType: 'number', headerLabel: 'Column 2', accessor: (row: any) => row.col2 },
-        { id: 'col3', dataType: 'boolean', headerLabel: 'Column 3', accessor: (row: any) => row.col3 },
-      ],
-      data,
-    );
+    it('should update rowCount reactively', () => {
+      const { data } = create({
+        data: [
+          { col1: 'A', col2: 1, col3: true },
+          { col1: 'B', col2: 2, col3: false },
+        ],
+      });
 
-    // Track updates to the outer computed (entire rows array).
-    using outerComputedUpdates = updateCounter(() => {
-      table.rows.value;
+      const table = createTable(
+        [
+          { id: 'col1', dataType: 'string', headerLabel: 'Column 1', accessor: (row: any) => row.col1 },
+          { id: 'col2', dataType: 'number', headerLabel: 'Column 2', accessor: (row: any) => row.col2 },
+          { id: 'col3', dataType: 'boolean', headerLabel: 'Column 3', accessor: (row: any) => row.col3 },
+        ],
+        data,
+      );
+
+      using rowCountUpdates = updateCounter(() => {
+        table.rowCount.value;
+      });
+
+      expect(table.rowCount.value).toBe(2);
+
+      data.push({ col1: 'C', col2: 3, col3: true });
+
+      expect(rowCountUpdates.count).toBe(1);
+      expect(table.rowCount.value).toBe(3);
     });
 
-    // Track updates to an inner computed (single row).
-    using innerComputedUpdates = updateCounter(() => {
-      table.rows.value[0].value;
+    it('should update cells reactively when adding a new row', () => {
+      const { data } = create({
+        data: [
+          { col1: 'A', col2: 1, col3: true },
+          { col1: 'B', col2: 2, col3: false },
+        ],
+      });
+
+      const table = createTable(
+        [
+          { id: 'col1', dataType: 'string', headerLabel: 'Column 1', accessor: (row: any) => row.col1 },
+          { id: 'col2', dataType: 'number', headerLabel: 'Column 2', accessor: (row: any) => row.col2 },
+          { id: 'col3', dataType: 'boolean', headerLabel: 'Column 3', accessor: (row: any) => row.col3 },
+        ],
+        data,
+      );
+
+      using cellsUpdates = updateCounter(() => {
+        table.cells.value.size;
+      });
+
+      data.push({ col1: 'C', col2: 3, col3: true });
+
+      expect(cellsUpdates.count).toBe(1);
+      expect(table.cells.value.size).toBe(9); // 3 rows * 3 columns
+      expect(table.cells.value.get('0,2')?.value).toBe('C');
     });
 
-    // Trigger outer computed by adding a new row.
-    data.push({ col1: 'C', col2: 3, col3: true });
+    it('should handle combined operations reactively', () => {
+      const { data } = create({
+        data: [
+          { col1: 'A', col2: 1, col3: true },
+          { col1: 'B', col2: 2, col3: false },
+        ],
+      });
 
-    // Trigger inner computed by modifying existing row data.
-    data[0].col1 = 'Value 1';
-    data[0].col2 = 999;
-    data[0].col3 = !data[0].col3;
+      const table = createTable(
+        [
+          { id: 'col1', dataType: 'string', headerLabel: 'Column 1', accessor: (row: any) => row.col1 },
+          { id: 'col2', dataType: 'number', headerLabel: 'Column 2', accessor: (row: any) => row.col2 },
+          { id: 'col3', dataType: 'boolean', headerLabel: 'Column 3', accessor: (row: any) => row.col3 },
+        ],
+        data,
+      );
 
-    // Outer computed should update once for the array-level change.
-    expect(outerComputedUpdates.count).toBe(1);
+      using rowCountUpdates = updateCounter(() => table.rowCount.value);
+      using cellsUpdates = updateCounter(() => table.cells.value.size);
+      using specificCellUpdates = updateCounter(() => table.cells.value.get('0,0')?.value);
 
-    // Inner computed should update for array change and each property modification.
-    expect(innerComputedUpdates.count).toBe(4);
+      data[0].col1 = 'Updated A';
+      data.push({ col1: 'C', col2: 3, col3: true });
+      data.splice(1, 1);
 
-    // Verify final state of the table.
-    expect(table.rows.value.map((row) => row.value)).toEqual([
-      { col1: 'Value 1', col2: 999, col3: false },
-      { col1: 'B', col2: 2, col3: false },
-      { col1: 'C', col2: 3, col3: true },
-    ]);
+      // Check row count updates
+      expect(rowCountUpdates.count).toBe(2); // Two changes: add and remove
+      expect(table.rowCount.value).toBe(2);
+
+      // Check cells map updates
+      expect(cellsUpdates.count).toBe(2); // Two changes: add and remove row
+      expect(table.cells.value.size).toBe(6); // 2 rows * 3 columns
+
+      // Check specific cell update
+      expect(specificCellUpdates.count).toBe(3); // Updates for modify, add row, and remove row
+      expect(table.cells.value.get('0,0')?.value).toBe('Updated A');
+
+      // Verify final state
+      expect(Array.from(table.cells.value.entries())).toEqual([
+        ['0,0', expect.objectContaining({ value: 'Updated A' })],
+        ['1,0', expect.objectContaining({ value: 1 })],
+        ['2,0', expect.objectContaining({ value: true })],
+        ['0,1', expect.objectContaining({ value: 'C' })],
+        ['1,1', expect.objectContaining({ value: 3 })],
+        ['2,1', expect.objectContaining({ value: true })],
+      ]);
+    });
   });
 });
