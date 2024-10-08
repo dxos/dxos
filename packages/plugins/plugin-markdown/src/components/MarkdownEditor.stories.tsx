@@ -3,13 +3,15 @@
 //
 
 import '@dxos-theme';
+
 import React, { useMemo, type FC } from 'react';
 
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
-import { automerge } from '@dxos/react-ui-editor';
+import { Main } from '@dxos/react-ui';
+import { editorWithToolbarLayout, automerge } from '@dxos/react-ui-editor';
+import { topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { MainLayout } from './Layout';
 import { MarkdownEditor } from './MarkdownEditor';
 
 const Story: FC<{
@@ -20,9 +22,13 @@ const Story: FC<{
   const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
 
   return (
-    <MainLayout toolbar={toolbar}>
+    <Main.Content
+      bounce
+      data-toolbar={toolbar ? 'enabled' : 'disabled'}
+      classNames={[topbarBlockPaddingStart, editorWithToolbarLayout]}
+    >
       <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
-    </MainLayout>
+    </Main.Content>
   );
 };
 

@@ -232,5 +232,3 @@ const useTest = (view?: EditorView) => {
     }
   }, [view]);
 };
-
-export default MarkdownEditor;

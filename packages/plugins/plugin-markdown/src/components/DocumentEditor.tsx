@@ -12,12 +12,12 @@ import {
   listener,
   localStorageStateStoreAdapter,
   state,
-  type Extension,
   type EditorSelectionState,
+  type Extension,
 } from '@dxos/react-ui-editor';
 import { nonNullable } from '@dxos/util';
 
-import MarkdownEditor, { type MarkdownEditorProps } from './MarkdownEditor';
+import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { createBaseExtensions } from '../extensions';
 import { type DocumentType, type MarkdownPluginState, type MarkdownSettingsProps } from '../types';
 import { getFallbackName, setFallbackName } from '../util';
@@ -28,9 +28,6 @@ type DocumentEditorProps = {
 } & Omit<MarkdownEditorProps, 'id' | 'inputMode' | 'toolbar' | 'extensions'> &
   Pick<MarkdownPluginState, 'extensionProviders'>;
 
-/**
- * Editor for a `DocumentType`.
- */
 export const DocumentEditor = ({
   document: doc,
   extensionProviders,
@@ -133,7 +130,3 @@ export const DocumentEditor = ({
     />
   );
 };
-
-export default DocumentEditor;
-
-export type DocumentEditor = typeof DocumentEditor;
