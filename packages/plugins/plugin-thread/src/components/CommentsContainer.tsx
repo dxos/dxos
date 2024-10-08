@@ -7,8 +7,7 @@ import React, { useEffect } from 'react';
 
 import { type ThreadType } from '@dxos/plugin-space/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { useTranslation, Icon, Trans } from '@dxos/react-ui';
-import { PlankHeading } from '@dxos/react-ui-deck';
+import { useTranslation, Trans } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { CommentContainer } from './CommentContainer';

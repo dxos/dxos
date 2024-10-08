@@ -37,7 +37,9 @@ import { type PlankHeadingAction } from '../../types';
 
 type AttendableId = { attendableId?: string };
 
-type PlankHeadingButtonProps = Omit<ButtonProps, 'variant'> & AttendableId;
+type Related = { related?: boolean };
+
+type PlankHeadingButtonProps = Omit<ButtonProps, 'variant'> & AttendableId & Related;
 
 type PlankRootProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
 
@@ -78,12 +80,13 @@ const _MenuSignifierVertical = () => (
 );
 
 const PlankHeadingButton = forwardRef<HTMLButtonElement, PlankHeadingButtonProps>(
-  ({ attendableId, classNames, children, ...props }, forwardedRef) => {
-    const { hasAttention, isAncestor } = useAttention(attendableId);
+  ({ attendableId, classNames, related, children, ...props }, forwardedRef) => {
+    const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
+    const variant = (related && isRelated) || hasAttention || isAncestor ? 'primary' : 'ghost';
     return (
       <Button
         {...props}
-        variant={hasAttention || isAncestor ? 'primary' : 'ghost'}
+        variant={variant}
         classNames={['m-1 shrink-0 pli-0 min-bs-0 is-[--rail-action] bs-[--rail-action] relative', classNames]}
         ref={forwardedRef}
       >
@@ -94,16 +97,18 @@ const PlankHeadingButton = forwardRef<HTMLButtonElement, PlankHeadingButtonProps
   },
 );
 
-type PlankHeadingActionsMenuProps = PropsWithChildren<{
-  attendableId?: string;
-  triggerLabel: string;
-  actions?: PlankHeadingAction[];
-  icon: string;
-  onAction?: (action: PlankHeadingAction) => void;
-}>;
+type PlankHeadingActionsMenuProps = PropsWithChildren<
+  {
+    attendableId?: string;
+    triggerLabel: string;
+    actions?: PlankHeadingAction[];
+    icon: string;
+    onAction?: (action: PlankHeadingAction) => void;
+  } & Related
+>;
 
 const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingActionsMenuProps>(
-  ({ actions, onAction, triggerLabel, attendableId, icon, children }, forwardedRef) => {
+  ({ actions, onAction, triggerLabel, attendableId, icon, related, children }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const suppressNextTooltip = useRef(false);
 
@@ -135,7 +140,7 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
         >
           <Tooltip.Trigger asChild>
             <DropdownMenu.Trigger asChild ref={forwardedRef}>
-              <PlankHeadingButton attendableId={attendableId}>
+              <PlankHeadingButton attendableId={attendableId} related={related}>
                 <span className='sr-only'>{triggerLabel}</span>
                 <Icon icon={icon} size={5} />
               </PlankHeadingButton>
@@ -201,15 +206,15 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
   },
 );
 
-type PlankHeadingLabelProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId;
+type PlankHeadingLabelProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId & Related;
 
 const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>(
-  ({ attendableId, classNames, ...props }, forwardedRef) => {
-    const { hasAttention, isAncestor } = useAttention(attendableId);
+  ({ attendableId, related, classNames, ...props }, forwardedRef) => {
+    const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
     return (
       <h1
         {...props}
-        data-attention={(hasAttention || isAncestor).toString()}
+        data-attention={((related && isRelated) || hasAttention || isAncestor).toString()}
         className={mx(
           'pli-1 min-is-0 is-0 grow truncate font-medium text-baseText data-[attention=true]:text-accentText',
           classNames,
