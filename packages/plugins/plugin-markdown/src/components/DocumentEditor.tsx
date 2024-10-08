@@ -31,7 +31,6 @@ type DocumentEditorProps = {
 /**
  * Editor for a `DocumentType`.
  */
-// TODO(burdon): Merge with MarkdownEditor.
 export const DocumentEditor = ({
   document: doc,
   extensionProviders,
@@ -39,9 +38,9 @@ export const DocumentEditor = ({
   settings,
   ...props
 }: DocumentEditorProps) => {
-  const space = getSpace(doc);
   const identity = useIdentity();
   const dispatch = useIntentDispatcher();
+  const space = getSpace(doc);
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
   // TODO(burdon): Unsubscribe.
@@ -59,7 +58,6 @@ export const DocumentEditor = ({
     [doc, viewMode, dispatch, settings, settings.folding, settings.numberedHeadings],
   );
 
-  // TODO(burdon): Async.
   const pluginExtensions = useMemo(
     () =>
       extensionProviders?.reduce((acc: Extension[], provider) => {

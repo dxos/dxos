@@ -13,13 +13,13 @@ import {
   type AutocompleteResult,
   type Extension,
   type EditorViewMode,
+  InputModeExtensions,
   autocomplete,
   decorateMarkdown,
+  folding,
+  formattingKeymap,
   linkTooltip,
   typewriter,
-  formattingKeymap,
-  InputModeExtensions,
-  folding,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { isNotFalsy, nonNullable } from '@dxos/util';

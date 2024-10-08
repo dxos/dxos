@@ -280,7 +280,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               : {};
 
           switch (role) {
-            case 'test': {
+            case 'section':
+            case 'article': {
               if (!id || !object) {
                 return null;
               }
@@ -300,15 +301,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               );
             }
 
-            case 'section':
-            case 'article': {
-              // return <MarkdownContainer />;
+            case '_section':
+            case '_article': {
               if (doc && doc.content) {
                 return (
                   <DocumentEditor
-                    // TODO(burdon): Return extensions and initial value.
                     document={doc}
-                    //
                     settings={settings.values}
                     role={role}
                     coordinate={data.coordinate as LayoutCoordinate}
@@ -321,9 +319,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               } else if (isEditorModel(data.object)) {
                 return (
                   <MarkdownEditor
-                    initialValue={data.object.text}
-                    //
                     id={data.object.id}
+                    initialValue={data.object.text}
                     inputMode={settings.values.editorInputMode}
                     toolbar={settings.values.toolbar}
                     role={role}
@@ -337,30 +334,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               }
               break;
             }
-
-            // case 'card': {
-            //   if (
-            //     isObject(data.content) &&
-            //     typeof data.content.id === 'string' &&
-            //     data.content.object instanceof DocumentType
-            //   ) {
-            //     // isTileComponentProps is a type guard for these props.
-            //     // `props` will not pass this guard without transforming `data` into `item`.
-            //     const cardProps = {
-            //       ...props,
-            //       item: {
-            //         id: data.content.id,
-            //         object: data.content.object,
-            //         color: typeof data.content.color === 'string' ? data.content.color : undefined,
-            //       } as DocumentItemProps,
-            //     };
-            //
-            //     return isTileComponentProps(cardProps) ? (
-            //       <DocumentCard {...cardProps} settings={settings.values} ref={forwardedRef as Ref<HTMLDivElement>} />
-            //     ) : null;
-            //   }
-            //   break;
-            // }
 
             case 'settings': {
               return data.plugin === meta.id ? <MarkdownSettings settings={settings.values} /> : null;

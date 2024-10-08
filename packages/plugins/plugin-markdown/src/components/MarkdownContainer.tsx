@@ -4,6 +4,9 @@
 
 import React from 'react';
 
+import { useIntentDispatcher } from '@dxos/app-framework';
+import { useIdentity } from '@dxos/react-client/halo';
+
 import { DocumentEditor } from './DocumentEditor';
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { DocumentType, type MarkdownSettingsProps } from '../types';
@@ -17,11 +20,14 @@ export type MarkdownContainerProps = Pick<
   settings: MarkdownSettingsProps;
 };
 
-const MarkdownContainer = ({ id, object, ...props }: MarkdownContainerProps) => {
+const MarkdownContainer = ({ id, object, settings, ...props }: MarkdownContainerProps) => {
+  const identity = useIdentity();
+  const dispatch = useIntentDispatcher();
+
   if (object instanceof DocumentType) {
-    return <DocumentEditor document={object} scrollPastEnd {...props} />;
+    return <DocumentEditor document={object} settings={settings} scrollPastEnd {...props} />;
   } else {
-    return <MarkdownEditor id={id} initialValue={object.text} scrollPastEnd {...props} />;
+    return <MarkdownEditor id={id} initialValue={object.text} toolbar={settings.toolbar} scrollPastEnd {...props} />;
   }
 };
 
