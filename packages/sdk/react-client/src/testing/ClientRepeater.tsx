@@ -7,7 +7,7 @@ import React, { useState, type FC, useEffect, useRef } from 'react';
 
 import { Client, type PublicKey } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { registerSignalRuntime } from '@dxos/echo-signals/react';
+import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
 
 import { type WithClientProviderProps } from './withClientProvider';
@@ -49,7 +49,7 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
     onSpaceCreated,
   } = props;
   useEffect(() => {
-    registerSignalRuntime();
+    registerSignalsRuntime();
   }, []);
 
   const [clients, setClients] = useState(props.clients ?? []);
