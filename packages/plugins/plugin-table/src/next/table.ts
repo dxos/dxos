@@ -2,9 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { computed, type ReadonlySignal } from '@preact/signals-core';
+import { computed } from '@preact/signals-core';
 
 import { create } from '@dxos/echo-schema';
+
+import { CellUpdateTracker } from './CellUpdateTracker';
 
 const DEFAULT_WIDTH = 100; // px
 
@@ -24,16 +26,7 @@ export type ColumnDefinition = {
 };
 
 export type SortConfig = { columnId: ColumnId; direction: SortDirection };
-export type Table = {
-  readonly columnDefinitions: ColumnDefinition[];
-  columnOrdering: ColumnId[];
-  columnWidths: Record<ColumnId, number>;
-  sorting: SortConfig[];
-  pinnedRows: { top: number[]; bottom: number[] };
-  rowSelection: number[];
-  cells: ReadonlySignal<Map<string, ReadonlySignal<any>>>;
-  rowCount: ReadonlySignal<number>;
-};
+export type Table = ReturnType<typeof createTable>;
 
 export type TableEvent =
   | { type: 'SetSort'; columnId: ColumnId; direction: SortDirection }
@@ -96,7 +89,7 @@ export const updateTable = (table: Table, event: TableEvent): Table => {
 
 // Return a preact-signals reactive object (with create) for an initialized table.
 // TODO(Zan): Take widths + callbacks for width changes, column ordering.
-export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]): Table => {
+export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]) => {
   /**
    * Creates a computed signal structure for table cells.
    *
@@ -120,6 +113,7 @@ export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]):
    * - Cell edits: Optimal (only affected cell recalculates)
    * - Array-level changes: More expensive (all cell `computed` recreated)
    */
+
   const cells = computed(() => {
     const cellMap = new Map();
 
@@ -128,7 +122,10 @@ export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]):
         const key = `${colIndex},${rowIndex}`;
         cellMap.set(
           key,
-          computed(() => col.accessor(row)),
+          computed(() => {
+            const value = col.accessor(row);
+            return value;
+          }),
         );
       });
     });
@@ -137,15 +134,20 @@ export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]):
   });
 
   const rowCount = computed(() => data.length);
+  const updateTracker = new CellUpdateTracker(cells);
 
   return create({
     columnDefinitions,
     columnOrdering: columnDefinitions.map((column) => column.id),
     columnWidths: Object.fromEntries(columnDefinitions.map((column) => [column.id, DEFAULT_WIDTH])),
-    sorting: [],
-    pinnedRows: { top: [], bottom: [] },
-    rowSelection: [],
+    sorting: [] as SortConfig[],
+    pinnedRows: { top: [], bottom: [] } as { top: number[]; bottom: number[] },
+    rowSelection: [] as number[],
     rowCount,
     cells,
+    __cellUpdateTracker: updateTracker as CellUpdateTracker,
+    dispose: () => {
+      updateTracker.dispose();
+    },
   });
 };

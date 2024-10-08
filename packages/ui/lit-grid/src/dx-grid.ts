@@ -876,6 +876,14 @@ export class DxGrid extends LitElement {
     }
   }
 
+  public updateIfWithinBounds({ col, row }: { col: number; row: number }): boolean {
+    if (col >= this.visColMin && col <= this.visColMax && row >= this.visRowMin && row <= this.visRowMax) {
+      this.requestUpdate();
+      return true;
+    }
+    return false;
+  }
+
   override disconnectedCallback() {
     super.disconnectedCallback();
     // console.log('[disconnected]', this.viewportRef.value);

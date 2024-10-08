@@ -4,15 +4,19 @@
 
 import '@dxos-theme';
 
-import React, { useEffect } from 'react';
+import { effect } from '@preact/signals-core';
+import React, { useEffect, useRef } from 'react';
 
 import { create } from '@dxos/echo-schema';
+import { registerSignalRuntime } from '@dxos/echo-signals';
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { type DxGridAxisMeta, type DxGridCells, Grid } from '@dxos/react-ui-grid';
+import { type DxGridElement, Grid } from '@dxos/react-ui-grid';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useTable } from './hooks/';
 import { type ColumnDefinition } from './table';
+
+registerSignalRuntime();
 
 const DevTools = ({ table }: any) => {
   const { rows: _rows, ...data } = table;
@@ -42,29 +46,7 @@ const columnDefinitions: ColumnDefinition[] = [
   { id: 'active', dataType: 'boolean', headerLabel: 'Active', accessor: (row: any) => row.active },
 ];
 
-const Story = () => {
-  const data = React.useMemo(() => makeData(50), []);
-  const { table, dispatch } = useTable(columnDefinitions, data);
-
-  const columnMeta: DxGridAxisMeta = React.useMemo(() => {
-    return Object.fromEntries(
-      table.columnDefinitions.map((col, index) => [index, { size: table.columnWidths[col.id] }]),
-    );
-  }, [table.columnDefinitions, table.columnWidths]);
-
-  const gridCells: DxGridCells = React.useMemo(() => {
-    return Object.fromEntries(
-      Array.from(table.cells.value.entries()).map(([key, cellSignal]) => [
-        key,
-        {
-          get value() {
-            return cellSignal.value;
-          },
-        },
-      ]),
-    );
-  }, [table.cells.value]);
-
+const useStressTest = (data: any, columnDefinitions: ColumnDefinition[]) => {
   // Stress test: Mutate a random cell every millisecond
   useEffect(() => {
     const mutateRandomCell = () => {
@@ -89,12 +71,21 @@ const Story = () => {
     const intervalId = setInterval(mutateRandomCell, 1);
     return () => clearInterval(intervalId);
   }, [data, columnDefinitions]);
+};
+
+const Story = () => {
+  const data = React.useMemo(() => makeData(50000), []);
+  const gridRef = useRef<DxGridElement>(null);
+  const { table, columnMeta, gridCells, dispatch } = useTable(columnDefinitions, data, gridRef);
+
+  useStressTest(data, columnDefinitions);
 
   return (
     <div>
-      <DevTools table={table} />
+      {false && <DevTools table={table} />}
       <Grid.Root id='table-v2'>
         <Grid.Content
+          ref={gridRef}
           limitRows={table.rowCount.value}
           limitColumns={table.columnDefinitions.length}
           initialCells={gridCells}
