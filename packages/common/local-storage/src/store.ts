@@ -6,7 +6,7 @@ import { effect } from '@preact/signals-core';
 
 import type { UnsubscribeCallback } from '@dxos/async';
 import { type ReactiveObject, create } from '@dxos/echo-schema';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 type PropType<T> = {
   get: (key: string) => T | undefined;
@@ -111,7 +111,7 @@ export class LocalStorageStore<T extends object> {
     private readonly _prefix: string,
     defaults?: T,
   ) {
-    registerSignalRuntime();
+    registerSignalsRuntime();
     this.values = create(defaults ?? ({} as T));
   }
 

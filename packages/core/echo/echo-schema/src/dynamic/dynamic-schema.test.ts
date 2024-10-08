@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { AST, S } from '@dxos/effect';
 
 import { DynamicSchema } from './dynamic-schema';
@@ -17,7 +17,7 @@ import { effectToJsonSchema } from '../json';
 import { EmptySchemaType, TEST_SCHEMA_TYPE } from '../testing';
 import { TypedObject } from '../typed-object-class';
 
-registerSignalRuntime();
+registerSignalsRuntime();
 
 describe('dynamic schema', () => {
   test('getProperties filters out id and unwraps optionality', async () => {
