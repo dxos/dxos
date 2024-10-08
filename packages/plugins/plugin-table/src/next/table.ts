@@ -122,10 +122,7 @@ export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]) 
         const key = `${colIndex},${rowIndex}`;
         cellMap.set(
           key,
-          computed(() => {
-            const value = col.accessor(row);
-            return value;
-          }),
+          computed(() => col.accessor(row)),
         );
       });
     });

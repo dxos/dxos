@@ -56,7 +56,7 @@ export const useTable = (columnDefinitions: ColumnDefinition[], data: any[], gri
         }
       }
     });
-  }, []);
+  }, [table.__cellUpdateTracker.updatedCells]);
 
   // Clean up table on unmount.
   useEffect(() => () => table.dispose(), []);

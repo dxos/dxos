@@ -31,7 +31,7 @@ export const Table: React.FC<TableProps> = ({ columnDefinitions, data }) => {
     <Grid.Root id='table-v2'>
       <Grid.Content
         ref={gridRef}
-        limitRows={table.rowCount.value}
+        limitRows={data.length}
         limitColumns={table.columnDefinitions.length}
         initialCells={gridCells}
         columnDefault={{ size: 120, resizeable: true }}
