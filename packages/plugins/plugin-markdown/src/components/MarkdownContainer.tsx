@@ -10,7 +10,7 @@ import { localStorageStateStoreAdapter, type EditorSelectionState } from '@dxos/
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { useExtensions } from '../extensions';
-import { DocumentType, type MarkdownSettingsProps, type MarkdownPluginState } from '../types';
+import { DocumentType, type MarkdownSettingsProps } from '../types';
 import { getFallbackName } from '../util';
 
 export type MarkdownContainerProps = Pick<
@@ -23,28 +23,44 @@ export type MarkdownContainerProps = Pick<
 };
 
 // TODO(burdon): Factor out difference for ECHO and non-ECHO objects; i.e., single component.
-const MarkdownContainer = ({ id, object, settings, ...props }: MarkdownContainerProps) => {
+const MarkdownContainer = ({ role, id, object, settings, ...props }: MarkdownContainerProps) => {
+  const scrollPastEnd = role === 'article';
   if (object instanceof DocumentType) {
-    return <DocumentEditor document={object} settings={settings} scrollPastEnd {...props} />;
+    return (
+      <DocumentEditor
+        id={fullyQualifiedId(object)}
+        document={object}
+        settings={settings}
+        scrollPastEnd={scrollPastEnd}
+        {...props}
+      />
+    );
   } else {
-    return <MarkdownEditor id={id} initialValue={object.text} toolbar={settings.toolbar} scrollPastEnd {...props} />;
+    return (
+      <MarkdownEditor
+        id={id}
+        initialValue={object.text}
+        toolbar={settings.toolbar}
+        scrollPastEnd={scrollPastEnd}
+        {...props}
+      />
+    );
   }
 };
 
-type DocumentEditorProps = {
-  document: DocumentType;
-  settings: MarkdownSettingsProps;
-} & Omit<MarkdownEditorProps, 'id' | 'extensions' | 'inputMode' | 'toolbar'> &
-  Pick<MarkdownPluginState, 'extensionProviders'>;
+type DocumentEditorProps = Omit<MarkdownContainerProps, 'object'> & { document: DocumentType } & Pick<
+    MarkdownEditorProps,
+    'id' | 'scrollPastEnd'
+  >;
 
 export const DocumentEditor = ({
+  id,
   document: doc,
   extensionProviders,
   settings,
   viewMode,
   ...props
 }: DocumentEditorProps) => {
-  const id = fullyQualifiedId(doc);
   const space = getSpace(doc);
   const initialValue = useMemo(() => doc.content?.content, [doc.content]);
   const extensions = useExtensions({ extensionProviders, document: doc, settings, viewMode });
