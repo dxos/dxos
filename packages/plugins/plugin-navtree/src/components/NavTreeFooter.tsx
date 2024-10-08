@@ -35,7 +35,7 @@ const buttonStyles = 'pli-1.5 text-xs font-normal';
 const repo = 'https://github.com/dxos/dxos';
 
 export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
-  const layoutPart = useDefaultValue(props.layoutPart, 'sidebar');
+  const layoutPart = useDefaultValue(props.layoutPart, () => 'sidebar');
   const config = useConfig();
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const { navigationSidebarOpen } = useSidebars(NAVTREE_PLUGIN);
