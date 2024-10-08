@@ -1,6 +1,6 @@
 import { Signer } from '@dxos/crypto';
 import type { PublicKey } from '@dxos/keys';
-import { signPresentation } from '@dxos/credentials';
+import { createCredential, signPresentation } from '@dxos/credentials';
 import type { EdgeIdentity } from './edge-client';
 import { Keyring } from '@dxos/keyring';
 
@@ -11,7 +11,17 @@ export const createDeviceEdgeIdentity = async (signer: Signer, key: PublicKey): 
     presentCredentials: async ({ challenge }) => {
       return signPresentation({
         presentation: {
-          credentials: [],
+          credentials: [
+            // Verifier requires at least one credential in the presentation to establish the subject.
+            await createCredential({
+              assertion: {
+                '@type': 'dxos.halo.credentials.Auth',
+              },
+              issuer: key,
+              subject: key,
+              signer,
+            }),
+          ],
         },
         signer,
         signerKey: key,
