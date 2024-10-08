@@ -5,7 +5,7 @@
 import { Mutex, scheduleMicroTask, Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
-import { failUndefined } from '@dxos/debug';
+import { failUndefined, warnAfterTimeout } from '@dxos/debug';
 import {
   EchoEdgeReplicator,
   EchoHost,
@@ -146,6 +146,10 @@ export class ServiceContext extends Resource {
                 identity: identity.identityKey.toHex(),
                 oldIdentity: this._edgeConnection!.identityKey,
                 swarms: this.networkManager.topics,
+              });
+
+              await warnAfterTimeout(10_000, 'Waiting for identity to be ready for edge connection', async () => {
+                await identity.ready();
               });
 
               invariant(identity.deviceCredentialChain);
