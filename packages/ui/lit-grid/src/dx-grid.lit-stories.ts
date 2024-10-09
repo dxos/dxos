@@ -28,8 +28,8 @@ export const Basic = (props: DxGridProps) => {
 };
 
 const initialLabels = {
-  frozenColsStart: [...Array(12)].reduce((acc, _, i) => {
-    acc[`0,${i}`] = { value: rowToA1Notation(i) };
+  frozenColsStart: [...Array(64)].reduce((acc, _, i) => {
+    acc[`0,${i}`] = { value: rowToA1Notation(i), className: 'text-end !pie-1' };
     return acc;
   }, {}),
   frozenRowsStart: [...Array(12)].reduce((acc, _, i) => {
@@ -52,6 +52,10 @@ Basic.args = {
     grid: {
       size: 180,
       resizeable: true,
+    },
+    frozenColsStart: {
+      size: 64,
+      resizeable: false,
     },
   } satisfies DxGridProps['columnDefault']),
   rowDefault: JSON.stringify({
