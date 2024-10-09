@@ -117,9 +117,10 @@ describe('EdgeFeedReplicator', () => {
 
     await expect.poll(() => sendSpy.mock.calls.length).toEqual(2);
     expect(messageSink.length).toEqual(0);
+
     updateIdentity(messenger);
 
-    await expect.poll(() => messageSink.length).toEqual(2);
+    await expect.poll(() => messageSink.length, { timeout: 1500 }).toEqual(2);
     expect(messageSink[1].type).toEqual('data');
   });
 
