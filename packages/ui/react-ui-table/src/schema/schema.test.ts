@@ -78,7 +78,7 @@ describe('schema->column-type', () => {
     expect(columns).to.deep.equal([
       ['name', 'string'],
       ['nested.age', 'number'],
-      ['someUnion', 'display'],
+      ['someUnion', 'json'],
     ]);
   });
 
@@ -124,7 +124,7 @@ describe('schema->column-type', () => {
     ]);
   });
 
-  test('multiple-nested schemata as sibblings', () => {
+  test('multiple-nested schemata as siblings', () => {
     const simpleSchema = S.Struct({
       name: S.String,
       nested: S.Struct({

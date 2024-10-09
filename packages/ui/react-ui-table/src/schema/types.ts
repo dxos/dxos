@@ -8,7 +8,7 @@ export type TableDef = {
   columns: ColumnProps[];
 };
 
-export type ColumnType = 'number' | 'boolean' | 'date' | 'string' | 'ref';
+export type ColumnType = 'number' | 'boolean' | 'date' | 'string' | 'json' | 'ref';
 
 export type ColumnProps = {
   id: string;

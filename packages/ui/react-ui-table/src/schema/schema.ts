@@ -8,12 +8,9 @@ import { type ColumnType } from './types';
 
 // TODO(burdon): Factor out to @dxos/effect?
 
-// TODO(burdon): Reconcile with react-ui-table.
-export type ClassifiedColumnType = ColumnType | 'display';
-
-// TODO(burdon): Rename getX? and return typed array?
-export const classifySchemaProperties = (schema: S.Schema<any, any>): [string, ClassifiedColumnType][] => {
-  const recurse = (node: AST.AST, path: string[], acc: [string, ClassifiedColumnType][]) => {
+// TODO(burdon): Rename?
+export const classifySchemaProperties = (schema: S.Schema<any, any>): [string, ColumnType][] => {
+  const recurse = (node: AST.AST, path: string[], acc: [string, ColumnType][]) => {
     const properties = AST.getPropertySignatures(node);
     properties.forEach((prop) => {
       const propName = prop.name.toString();
@@ -51,11 +48,11 @@ const unwrapOptionProperty = (prop: AST.PropertySignature) => {
     throw new Error(`Not a union type: ${String(prop.name)}`);
   }
 
-  const [type, _undefinedCase] = prop.type.types;
+  const [type] = prop.type.types;
   return type;
 };
 
-const typeToColumn = (type: AST.AST): ClassifiedColumnType => {
+const typeToColumn = (type: AST.AST): ColumnType => {
   if (AST.isStringKeyword(type)) {
     return 'string';
   } else if (AST.isNumberKeyword(type)) {
@@ -81,10 +78,10 @@ const typeToColumn = (type: AST.AST): ClassifiedColumnType => {
     }
   }
 
-  return 'display';
+  return 'json';
 };
 
-const propertyToColumn = (prop: AST.PropertySignature): ClassifiedColumnType => {
+const propertyToColumn = (prop: AST.PropertySignature): ColumnType => {
   let type = prop.type;
   if (prop.isOptional) {
     type = unwrapOptionProperty(prop);

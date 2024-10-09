@@ -34,8 +34,8 @@ export const schemaToColumnDefs = <T>(schema: S.Schema<T, any>): ColumnDef<T, an
         column = builder.date({ label: propertyKey });
         break;
       }
-      case 'display': {
-        column = builder.display({ label: propertyKey, id: propertyKey });
+      case 'json': {
+        column = builder.json({ label: propertyKey, id: propertyKey });
         break;
       }
       default: {

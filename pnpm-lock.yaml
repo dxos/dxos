@@ -10927,6 +10927,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
