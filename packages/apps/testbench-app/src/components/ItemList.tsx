@@ -15,15 +15,12 @@ import {
   createThemeExtensions,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import { classifySchemaProperties } from '@dxos/react-ui-table';
 import { mx, subtleHover } from '@dxos/react-ui-theme';
-
-import { classifySchemaProperties } from '../util';
 
 const MAX_RENDERED_COUNT = 80;
 
-export type ItemListProps<T> = {
-  objects: T[];
-} & Pick<ItemProps<T>, 'debug' | 'onDelete'>;
+export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | 'onDelete'>;
 
 export const ItemList = ({ objects, debug, ...props }: ItemListProps<EchoReactiveObject<any>>) => {
   return (

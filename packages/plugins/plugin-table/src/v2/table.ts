@@ -35,7 +35,6 @@ export type Table = {
   sorting: SortConfig[];
   pinnedRows: { top: number[]; bottom: number[] };
   rowSelection: number[];
-
   rows: ReadonlySignal<ReadonlySignal<{ [k: string]: any }>[]>;
 };
 

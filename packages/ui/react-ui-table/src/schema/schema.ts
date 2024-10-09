@@ -2,9 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type S } from '@dxos/echo-schema';
+import { AST, type S } from '@dxos/effect';
 
 import { type ColumnType } from './types';
+
+// TODO(burdon): Factor out to @dxos/effect?
 
 // TODO(burdon): Reconcile with react-ui-table.
 export type ClassifiedColumnType = ColumnType | 'display';

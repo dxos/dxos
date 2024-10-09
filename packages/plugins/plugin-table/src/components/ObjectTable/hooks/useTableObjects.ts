@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
-
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, type S } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { type Space, useQuery, Filter } from '@dxos/react-client/echo';
 
@@ -16,7 +14,7 @@ import { type Space, useQuery, Filter } from '@dxos/react-client/echo';
  *
  * @returns {EchoReactiveObject<any>[]} - The filtered objects.
  */
-export const useTableObjects = (space?: Space, schema?: S.Schema<any>) => {
+export const useTableObjects = (space?: Space, schema?: S.Schema<any>): EchoReactiveObject<any>[] => {
   const objects = useQuery<EchoReactiveObject<any>>(
     space,
     schema ? Filter.schema(schema) : () => false,
