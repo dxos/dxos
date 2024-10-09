@@ -265,6 +265,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 return null;
               }
 
+              last = Date.now();
               return (
                 <MarkdownContainer
                   id={id}
@@ -318,3 +319,5 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     },
   };
 };
+
+let last = Date.now();
