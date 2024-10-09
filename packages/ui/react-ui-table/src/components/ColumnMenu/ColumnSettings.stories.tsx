@@ -12,9 +12,9 @@ import { ColumnSettings, type ColumnSettingsProps } from './ColumnSettings';
 import { type TableDef } from '../../schema';
 import translations from '../../translations';
 
-const Story = (args: ColumnSettingsProps) => (
-  <div className='m-2 flex w-[300px]'>
-    <ColumnSettings {...args} />
+const Story = (props: ColumnSettingsProps) => (
+  <div className='flex w-[240px] m-2 p-2 border border-separator rounded'>
+    <ColumnSettings {...props} />
   </div>
 );
 

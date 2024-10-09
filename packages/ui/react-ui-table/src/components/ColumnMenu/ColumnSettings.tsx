@@ -13,9 +13,10 @@ import { translationKey } from '../../translations';
 export type ColumnSettingsProps = {
   column: ColumnProps;
   tableDef: TableDef;
+  // TODO(burdon): Rename.
   tablesToReference: TableDef[];
-  onUpdate?: ((id: string, column: ColumnProps) => void) | undefined;
-  onDelete?: ((id: string) => void) | undefined;
+  onUpdate?: (id: string, column: ColumnProps) => void;
+  onDelete?: (id: string) => void;
   onClose?: () => void;
 };
 
@@ -78,7 +79,7 @@ export const ColumnSettings = ({
 
   // TODO(burdon): Standardize dialog/popup.
   return (
-    <div className='flex flex-col w-full p-1 gap-4'>
+    <div className='flex flex-col w-full gap-4'>
       <div className='flex flex-col gap-2'>
         <Input.Root>
           <Input.Label>{t('column label label')}</Input.Label>
