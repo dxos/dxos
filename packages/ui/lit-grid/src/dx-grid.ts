@@ -424,7 +424,7 @@ export class DxGrid extends LitElement {
 
   private cell(c: number | string, r: number | string, plane: DxGridPlane): CellValue | undefined {
     const index: CellIndex = `${c}${separator}${r}`;
-    return this.cells?.[plane]?.[index] ?? this.cells?.[plane]?.[index];
+    return this.cells?.[plane]?.[index] ?? this.initialCells?.[plane]?.[index];
   }
 
   private cellActive(c: number | string, r: number | string, plane: DxGridPlane): boolean {

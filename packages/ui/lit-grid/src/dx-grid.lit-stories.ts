@@ -17,7 +17,7 @@ export default {
 export const Basic = (props: DxGridProps) => {
   return html`<div style="position:fixed;inset:0;">
     <dx-grid
-      cells=${props.initialCells ?? nothing}
+      initialCells=${props.initialCells ?? nothing}
       columnDefault=${props.columnDefault ?? nothing}
       rowDefault=${props.rowDefault ?? nothing}
       columns=${props.columns ?? nothing}
@@ -26,7 +26,7 @@ export const Basic = (props: DxGridProps) => {
 };
 
 Basic.args = {
-  cells: JSON.stringify({
+  initialCells: JSON.stringify({
     grid: {
       '1,1': {
         // end: '8,1',

@@ -24,6 +24,10 @@ dx-grid, dx-grid-axis-resize-handle {
 .dx-grid__plane--grid {
   overflow: hidden;
   position: relative;
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-template-rows: subgrid;
+  background: var(--dx-grid-lines, var(--dx-separator));
   &:focus-visible {
     outline: none;
   }
@@ -42,7 +46,6 @@ dx-grid, dx-grid-axis-resize-handle {
 .dx-grid__plane--grid__content {
   display: grid;
   gap: var(--dx-grid-gap);
-  background: var(--dx-grid-lines, var(--dx-separator));
 }
 
 .dx-grid {
