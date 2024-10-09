@@ -28,26 +28,28 @@ export const Table: React.FC<TableProps> = ({ columnDefinitions, data }) => {
   const { table, columnMeta, gridCells, dispatch } = useTable(columnDefinitions, data, gridRef);
 
   return (
-    <Grid.Root id='table-v2'>
-      <Grid.Content
-        ref={gridRef}
-        limitRows={data.length}
-        limitColumns={table.columnDefinitions.length}
-        initialCells={gridCells}
-        columnDefault={{ size: 120, resizeable: true }}
-        rowDefault={{ size: 32, resizeable: true }}
-        columns={columnMeta}
-        onAxisResize={(event) => {
-          if (event.axis === 'col') {
-            const columnIndex = parseInt(event.index, 10);
-            dispatch({
-              type: 'ModifyColumnWidth',
-              columnIndex,
-              width: event.size,
-            });
-          }
-        }}
-      />
-    </Grid.Root>
+    <>
+      <Grid.Root id='table-v2'>
+        <Grid.Content
+          ref={gridRef}
+          limitRows={data.length}
+          limitColumns={table.columnDefinitions.length}
+          initialCells={gridCells}
+          columnDefault={{ size: 120, resizeable: true }}
+          rowDefault={{ size: 32, resizeable: true }}
+          columns={columnMeta}
+          onAxisResize={(event) => {
+            if (event.axis === 'col') {
+              const columnIndex = parseInt(event.index, 10);
+              dispatch({
+                type: 'ModifyColumnWidth',
+                columnIndex,
+                width: event.size,
+              });
+            }
+          }}
+        />
+      </Grid.Root>
+    </>
   );
 };

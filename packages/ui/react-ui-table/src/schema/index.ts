@@ -4,3 +4,4 @@
 
 export * from './schemaToColumns';
 export * from './types';
+export * from './schema';

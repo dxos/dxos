@@ -5,6 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { create, getSpace } from '@dxos/react-client/echo';
+import { classifySchemaProperties } from '@dxos/react-ui-table';
 
 import { Table } from './Table';
 import { type TableType } from '../../types';
@@ -21,14 +22,26 @@ export const ObjectTable: React.FC<ObjectTableProps> = ({ table }) => {
       return [];
     }
 
-    // TODO(zan): I wonder if it's time to interrogate the schema more deeply with tools
-    // from ../schema
-    return Object.entries(table.schema.getProperties()).map(([key, property]) => ({
-      id: key,
-      dataType: property.type as any, // This might need refinement based on your schema types
-      headerLabel: table.props.find((prop) => prop.id === key)?.label ?? key,
-      accessor: (row: any) => row[key],
-    }));
+    const properties = classifySchemaProperties(table.schema).filter(([key]) =>
+      table.props.find((prop) => prop.id === key),
+    );
+
+    const columnDefs = properties.map(([key, type]) => {
+      return {
+        id: key,
+        dataType: type === 'ref' || type === 'display' ? 'string' : type,
+        headerLabel: key,
+        accessor: (row: any) => row[key],
+      };
+    });
+
+    // Sort by the key position in table.props
+    // TODO(Zan): Something fishy here. Why is 'count' first in our storybook example?
+    return columnDefs.sort((a, b) => {
+      const indexA = table.props.findIndex((prop) => prop === a.id);
+      const indexB = table.props.findIndex((prop) => prop === b.id);
+      return indexA - indexB;
+    });
   }, [table.schema, table.props]);
 
   const space = getSpace(table);
@@ -38,7 +51,7 @@ export const ObjectTable: React.FC<ObjectTableProps> = ({ table }) => {
     if (!table.schema || !space) {
       return;
     }
-    const newRow = create(table.schema, {});
+    const newRow = create(table.schema, { title: 'test', description: 'content', count: 0 });
     space.db.add(newRow);
   };
 
@@ -49,7 +62,9 @@ export const ObjectTable: React.FC<ObjectTableProps> = ({ table }) => {
 
   return (
     <div>
-      <button onClick={() => addRow()}>Add row</button>
+      <button className='ch-button' onClick={() => addRow()}>
+        Add row
+      </button>
       <Table columnDefinitions={columnDefinitions} data={objects} />
     </div>
   );

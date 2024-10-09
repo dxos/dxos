@@ -6,6 +6,7 @@ import { effect, type ReadonlySignal } from '@preact/signals-core';
 
 import { create } from '@dxos/echo-schema';
 
+// TODO(Zan): Take in the current visible bounds and only subscribe to cells within that range.
 export class CellUpdateTracker {
   public readonly updatedCells = create({ value: [] as string[] });
   private cellEffectsUnsubscribes: (() => void)[] = [];
@@ -31,7 +32,7 @@ export class CellUpdateTracker {
   private createCellEffects = (cellsMap: Map<any, ReadonlySignal<any>>): void => {
     this.cellEffectsUnsubscribes = Array.from(cellsMap.entries()).map(([key, cellSignal]) => {
       return effect(() => {
-        cellSignal.value; // Access the value to trigger the effect
+        cellSignal.value; // Access the value to subscribe to the signal.
         queueMicrotask(() => this.trackUpdate(key));
       });
     });
