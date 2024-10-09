@@ -939,12 +939,12 @@ export class DxGrid extends LitElement {
       role="none"
       class="dx-grid"
       style=${styleMap({
-        'grid-template-columns': `${this.templatefrozenColsStart ? `${this.templatefrozenColsStart} ` : ''}minmax(0, ${
+        'grid-template-columns': `${this.templatefrozenColsStart ? 'min-content ' : ''}minmax(0, ${
           Number.isFinite(this.limitColumns) ? `${this.intrinsicInlineSize}px` : '1fr'
-        })${this.templatefrozenColsEnd ? ` ${this.templatefrozenColsEnd}` : ''}`,
-        'grid-template-rows': `${this.templatefrozenRowsStart ? `${this.templatefrozenRowsStart} ` : ''}minmax(0, ${
+        })${this.templatefrozenColsEnd ? ' min-content' : ''}`,
+        'grid-template-rows': `${this.templatefrozenRowsStart ? 'min-content ' : ''}minmax(0, ${
           Number.isFinite(this.limitRows) ? `${this.intrinsicBlockSize}px` : '1fr'
-        })${this.templatefrozenRowsEnd ? ` ${this.templatefrozenRowsEnd}` : ''}`,
+        })${this.templatefrozenRowsEnd ? ' min-content' : ''}`,
       })}
       data-grid=${this.gridId}
       data-grid-mode=${this.mode}

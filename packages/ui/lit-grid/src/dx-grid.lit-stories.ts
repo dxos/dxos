@@ -79,6 +79,55 @@ Basic.args = {
   } satisfies DxGridProps['frozen']),
 };
 
+export const Frozen = (props: DxGridProps) => {
+  return html`<div class="dark" style="position:fixed;inset:0;">
+    <dx-grid
+      initialCells=${props.initialCells ?? nothing}
+      columnDefault=${props.columnDefault ?? nothing}
+      rowDefault=${props.rowDefault ?? nothing}
+      columns=${props.columns ?? nothing}
+      frozen=${props.frozen ?? nothing}
+    ></dx-grid>
+  </div>`;
+};
+
+Basic.args = {
+  initialCells: JSON.stringify({
+    grid: {},
+    ...initialLabels,
+  } satisfies DxGridProps['initialCells']),
+  columnDefault: JSON.stringify({
+    grid: {
+      size: 32,
+    },
+    frozenColsStart: {
+      size: 32,
+    },
+    frozenColsEnd: {
+      size: 32,
+    },
+  } satisfies DxGridProps['columnDefault']),
+  rowDefault: JSON.stringify({
+    grid: {
+      size: 32,
+    },
+    frozenRowsStart: {
+      size: 32,
+    },
+    frozenRowsEnd: {
+      size: 32,
+    },
+  } satisfies DxGridProps['rowDefault']),
+  columns: JSON.stringify({ grid: {} } satisfies DxGridProps['columns']),
+  rows: JSON.stringify({ grid: {} } satisfies DxGridProps['rows']),
+  frozen: JSON.stringify({
+    frozenColsStart: 2,
+    frozenRowsStart: 2,
+    frozenColsEnd: 2,
+    frozenRowsEnd: 2,
+  } satisfies DxGridProps['frozen']),
+};
+
 export const Limits = (props: DxGridProps) => {
   return html`<div style="position:fixed;inset:0;">
     <dx-grid
