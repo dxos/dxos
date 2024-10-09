@@ -7,22 +7,22 @@ import '@dxos-theme';
 import React, { useEffect } from 'react';
 
 import { create } from '@dxos/echo-schema';
-import { registerSignalRuntime } from '@dxos/echo-signals';
 import { type WithClientProviderProps, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { faker } from '@dxos/random';
 
 import { Table } from './Table';
 import { type ColumnDefinition } from '../table';
 
-registerSignalRuntime();
+faker.seed(0);
 
 const makeData = (n: number) => {
   const { data } = create({
     data: Array.from({ length: n }, (_, i) => ({
       id: i + 1,
-      name: `Person ${i + 1}`,
-      age: Math.floor(Math.random() * 50) + 20,
-      active: Math.random() > 0.5,
+      name: faker.person.fullName(),
+      age: faker.number.int({ min: 20, max: 70 }),
+      active: faker.datatype.boolean(),
     })),
   });
   return data;
@@ -79,12 +79,7 @@ const useSimulateRowAdditions = (data: any[], intervalMs: number, isEnabled: boo
     }
 
     const addNewRow = () => {
-      const newRow = {
-        id: data.length + 1,
-        name: `New Person ${data.length + 1}`,
-        age: Math.floor(Math.random() * 50) + 20,
-        active: Math.random() > 0.5,
-      };
+      const newRow = makeData(1)[0]
       data.unshift(newRow);
     };
 
