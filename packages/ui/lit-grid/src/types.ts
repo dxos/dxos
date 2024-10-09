@@ -30,7 +30,10 @@ export type DxGridCells = { grid: DxGridPlaneCells } & Partial<
 export type DxGridPlaneAxisMeta = Record<string, AxisMeta>;
 export type DxGridAxisMeta = DxGridPlaneRecord<DxGridFrozenPlane, DxGridPlaneAxisMeta>;
 
-export type DxGridPointer = null | { state: 'selecting' };
+export type DxGridPointer =
+  | null
+  | ({ state: 'maybeSelecting' } & Pick<PointerEvent, 'pageX' | 'pageY'>)
+  | { state: 'selecting' };
 
 export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'plane' | 'index' | 'size'>;
 export type DxAxisResizeInternalProps = DxAxisResizeProps & { delta: number; state: 'dragging' | 'dropped' };
@@ -72,6 +75,15 @@ export type DxGridProps = Partial<
     'initialCells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault' | 'limitRows' | 'limitColumns' | 'frozen'
   >
 >;
+
+export type DxGridSelectionProps = {
+  plane: DxGridPlane;
+  colMin: number;
+  colMax: number;
+  rowMin: number;
+  rowMax: number;
+  visible?: boolean;
+};
 
 export class DxAxisResize extends Event {
   public readonly axis: DxGridAxis;

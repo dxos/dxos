@@ -34,6 +34,7 @@ import {
   type DxGridPosition,
   type DxGridPositionNullable,
   type DxGridAxis,
+  type DxGridSelectionProps,
 } from './types';
 import { separator, toCellIndex } from './util';
 
@@ -46,6 +47,11 @@ const gap = 1;
  * ResizeObserver notices even subpixel changes, only respond to changes of at least 1px.
  */
 const resizeTolerance = 1;
+
+/**
+ * The amount of pixels the primary pointer has to move after PointerDown to engage in selection.
+ */
+const selectTolerance = 4;
 
 //
 // `overscan` is the number of columns or rows to render outside of the viewport
@@ -60,6 +66,34 @@ const sizeColMin = 32;
 const sizeColMax = 1024;
 const sizeRowMin = 16;
 const sizeRowMax = 1024;
+
+const shouldSelect = (pointer: DxGridPointer, { pageX, pageY }: PointerEvent) => {
+  if (pointer?.state === 'maybeSelecting') {
+    return Math.hypot(Math.abs(pointer.pageX - pageX), Math.abs(pointer.pageY - pageY)) >= selectTolerance;
+  } else {
+    return false;
+  }
+};
+
+const selectionProps = (selectionStart: DxGridPosition, selectionEnd: DxGridPosition): DxGridSelectionProps => {
+  const colMin = Math.min(selectionStart.col, selectionEnd.col);
+  const colMax = Math.max(selectionStart.col, selectionEnd.col);
+  const rowMin = Math.min(selectionStart.row, selectionEnd.row);
+  const rowMax = Math.max(selectionStart.row, selectionEnd.row);
+  const plane = selectionStart.plane;
+  const visible = colMin !== colMax || rowMin !== rowMax;
+  return { colMin, colMax, rowMin, rowMax, plane, visible };
+};
+
+const cellSelected = (col: number, row: number, plane: DxGridPlane, selection: DxGridSelectionProps): boolean => {
+  return (
+    plane === selection.plane &&
+    col >= selection.colMin &&
+    col <= selection.colMax &&
+    row >= selection.rowMin &&
+    row <= selection.rowMax
+  );
+};
 
 const closestAction = (target: EventTarget | null): { action: string | null; actionEl: HTMLElement | null } => {
   const actionEl: HTMLElement | null = (target as HTMLElement | null)?.closest('[data-dx-grid-action]') ?? null;
@@ -351,8 +385,9 @@ export class DxGrid extends LitElement {
         if (action === 'cell') {
           const cellCoords = closestCell(event.target, actionEl);
           if (cellCoords) {
-            this.pointer = { state: 'selecting' };
+            this.pointer = { state: 'maybeSelecting', pageX: event.pageX, pageY: event.pageY };
             this.selectionStart = cellCoords;
+            this.selectionEnd = cellCoords;
           }
           if (this.mode === 'edit') {
             event.preventDefault();
@@ -381,9 +416,15 @@ export class DxGrid extends LitElement {
   };
 
   private handlePointerMove = (event: PointerEvent) => {
-    if (this.pointer?.state === 'selecting') {
+    if (shouldSelect(this.pointer, event)) {
+      this.pointer = { state: 'selecting' };
+    } else if (this.pointer?.state === 'selecting') {
       const cell = closestCell(event.target);
-      if (cell && (cell.col !== this.selectionEnd.col || cell.row !== this.selectionEnd.row)) {
+      if (
+        cell &&
+        cell.plane === this.selectionStart.plane &&
+        (cell.col !== this.selectionEnd.col || cell.row !== this.selectionEnd.row)
+      ) {
         this.selectionEnd = cell;
       }
     }
@@ -453,12 +494,6 @@ export class DxGrid extends LitElement {
     return (
       this.focusActive && this.focusedCell.plane === plane && this.focusedCell.col === c && this.focusedCell.row === r
     );
-  }
-
-  private cellSelected(c: number | string, r: number | string, plane: DxGridPlane): boolean {
-    // todo(thure): restore selection
-    // c >= selectColMin && c <= selectColMax && r >= selectRowMin && r <= selectRowMax;
-    return false;
   }
 
   private focusedCellBox(): DxEditRequest['cellBox'] {
@@ -855,7 +890,7 @@ export class DxGrid extends LitElement {
   // Render and other lifecycle methods
   //
 
-  private renderFixed(plane: DxGridFixedPlane) {
+  private renderFixed(plane: DxGridFixedPlane, selection: DxGridSelectionProps) {
     const colPlane = resolveColPlane(plane) as DxGridFrozenPlane;
     const rowPlane = resolveRowPlane(plane) as DxGridFrozenPlane;
     const cols = this.frozen[colPlane];
@@ -872,14 +907,19 @@ export class DxGrid extends LitElement {
         >
           ${[...Array(cols)].map((_, c) => {
             return [...Array(rows)].map((_, r) => {
-              return this.renderCell(c, r, plane);
+              return this.renderCell(c, r, plane, cellSelected(c, r, plane, selection));
             });
           })}
         </div>`
       : null;
   }
 
-  private renderFrozenRows(plane: DxGridFrozenRowsPlane, visibleCols: number, offsetInline: number) {
+  private renderFrozenRows(
+    plane: DxGridFrozenRowsPlane,
+    visibleCols: number,
+    offsetInline: number,
+    selection: DxGridSelectionProps,
+  ) {
     const rowPlane = resolveRowPlane(plane) as DxGridFrozenPlane;
     const rows = this.frozen[rowPlane];
     return (rows ?? 0) > 0
@@ -894,7 +934,7 @@ export class DxGrid extends LitElement {
             ${[...Array(visibleCols)].map((_, c0) => {
               return [...Array(rows)].map((_, r) => {
                 const c = this.visColMin + c0;
-                return this.renderCell(c, r, plane, c0, r);
+                return this.renderCell(c, r, plane, cellSelected(c, r, plane, selection), c0, r);
               });
             })}
           </div>
@@ -902,7 +942,12 @@ export class DxGrid extends LitElement {
       : null;
   }
 
-  private renderFrozenColumns(plane: DxGridFrozenColsPlane, visibleRows: number, offsetBlock: number) {
+  private renderFrozenColumns(
+    plane: DxGridFrozenColsPlane,
+    visibleRows: number,
+    offsetBlock: number,
+    selection: DxGridSelectionProps,
+  ) {
     const colPlane = resolveColPlane(plane) as DxGridFrozenPlane;
     const cols = this.frozen[colPlane];
     return (cols ?? 0) > 0
@@ -917,7 +962,7 @@ export class DxGrid extends LitElement {
             ${[...Array(cols)].map((_, c) => {
               return [...Array(visibleRows)].map((_, r0) => {
                 const r = this.visRowMin + r0;
-                return this.renderCell(c, r, plane, c, r0);
+                return this.renderCell(c, r, plane, cellSelected(c, r, plane, selection), c, r0);
               });
             })}
           </div>
@@ -925,10 +970,9 @@ export class DxGrid extends LitElement {
       : null;
   }
 
-  private renderCell(col: number, row: number, plane: DxGridPlane, visCol = col, visRow = row) {
+  private renderCell(col: number, row: number, plane: DxGridPlane, selected?: boolean, visCol = col, visRow = row) {
     const cell = this.cell(col, row, plane);
     const active = this.cellActive(col, row, plane);
-    const selected = this.cellSelected(col, row, plane);
     const resizeIndex = cell?.resizeHandle ? (cell.resizeHandle === 'col' ? col : row) : undefined;
     const resizePlane = cell?.resizeHandle ? resolveResizePlane(cell.resizeHandle, plane) : undefined;
     return html`<div
@@ -960,12 +1004,7 @@ export class DxGrid extends LitElement {
     const visibleRows = this.visRowMax - this.visRowMin;
     const offsetInline = this.binInlineMin - this.posInline - this.overscanInline;
     const offsetBlock = this.binBlockMin - this.posBlock - this.overscanBlock;
-
-    const selectColMin = Math.min(this.selectionStart.col, this.selectionEnd.col);
-    const selectColMax = Math.max(this.selectionStart.col, this.selectionEnd.col);
-    const selectRowMin = Math.min(this.selectionStart.row, this.selectionEnd.row);
-    const selectRowMax = Math.max(this.selectionStart.row, this.selectionEnd.row);
-    const selectVisible = selectColMin !== selectColMax || selectRowMin !== selectRowMax;
+    const selection = selectionProps(this.selectionStart, this.selectionEnd);
 
     return html`<div
       role="none"
@@ -980,13 +1019,19 @@ export class DxGrid extends LitElement {
       })}
       data-grid=${this.gridId}
       data-grid-mode=${this.mode}
-      ?data-grid-select=${selectVisible}
+      ?data-grid-select=${selection.visible}
     >
-      ${this.renderFixed('fixedStartStart')}${this.renderFrozenRows(
+      ${this.renderFixed('fixedStartStart', selection)}${this.renderFrozenRows(
         'frozenRowsStart',
         visibleCols,
         offsetInline,
-      )}${this.renderFixed('fixedStartEnd')}${this.renderFrozenColumns('frozenColsStart', visibleRows, offsetBlock)}
+        selection,
+      )}${this.renderFixed('fixedStartEnd', selection)}${this.renderFrozenColumns(
+        'frozenColsStart',
+        visibleRows,
+        offsetBlock,
+        selection,
+      )}
       <div role="grid" class="dx-grid__plane--grid" tabindex="0" ${ref(this.viewportRef)}>
         <div
           role="none"
@@ -999,14 +1044,18 @@ export class DxGrid extends LitElement {
             return [...Array(visibleRows)].map((_, r0) => {
               const c = c0 + this.visColMin;
               const r = r0 + this.visRowMin;
-              return this.renderCell(c, r, 'grid', c0, r0);
+              return this.renderCell(c, r, 'grid', cellSelected(c, r, 'grid', selection), c0, r0);
             });
           })}
         </div>
       </div>
-      ${this.renderFrozenColumns('frozenColsEnd', visibleRows, offsetBlock)}${this.renderFixed(
+      ${this.renderFrozenColumns('frozenColsEnd', visibleRows, offsetBlock, selection)}${this.renderFixed(
         'fixedEndStart',
-      )}${this.renderFrozenRows('frozenRowsEnd', visibleCols, offsetInline)}${this.renderFixed('fixedEndEnd')}
+        selection,
+      )}${this.renderFrozenRows('frozenRowsEnd', visibleCols, offsetInline, selection)}${this.renderFixed(
+        'fixedEndEnd',
+        selection,
+      )}
     </div>`;
   }
 
