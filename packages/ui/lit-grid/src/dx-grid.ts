@@ -3,7 +3,7 @@
 //
 
 import { LitElement, html, nothing } from 'lit';
-import { customElement, state, property, eventOptions } from 'lit/decorators.js';
+import { customElement, state, property } from 'lit/decorators.js';
 import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
@@ -671,7 +671,6 @@ export class DxGrid extends LitElement {
 
   // Focus handlers
 
-  @eventOptions({ capture: true })
   private handleFocus(event: FocusEvent) {
     const cellCoords = closestCell(event.target);
     if (cellCoords) {
@@ -680,7 +679,6 @@ export class DxGrid extends LitElement {
     }
   }
 
-  @eventOptions({ capture: true })
   private handleBlur(event: FocusEvent) {
     // Only unset `focusActive` if focus is not moving to an element within the grid.
     if (!event.relatedTarget || !(event.relatedTarget as HTMLElement).closest(`[data-grid="${this.gridId}"]`)) {
@@ -690,7 +688,7 @@ export class DxGrid extends LitElement {
 
   private focusedCellElement() {
     return this.viewportRef.value?.querySelector(
-      `[aria-colindex="${this.focusedCell.col}"][aria-rowindex="${this.focusedCell.row}"]`,
+      `[data-dx-grid-plane=${this.focusedCell.plane}] > [aria-colindex="${this.focusedCell.col}"][aria-rowindex="${this.focusedCell.row}"]`,
     ) as HTMLElement | null;
   }
 
