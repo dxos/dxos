@@ -692,6 +692,29 @@ export class DxGrid extends LitElement {
     ) as HTMLElement | null;
   }
 
+  private focusedCellRowOutOfVis() {
+    return this.focusedCell.row < this.visRowMin || this.focusedCell.row > this.visRowMax;
+  }
+
+  private focusedCellColOutOfVis() {
+    return this.focusedCell.col < this.visColMin || this.focusedCell.col > this.visColMax;
+  }
+
+  private focusedCellOutOfVis() {
+    switch (this.focusedCell.plane) {
+      case 'grid':
+        return this.focusedCellRowOutOfVis() || this.focusedCellColOutOfVis();
+      case 'frozenRowsStart':
+      case 'frozenRowsEnd':
+        return this.focusedCellColOutOfVis();
+      case 'frozenColsStart':
+      case 'frozenColsEnd':
+        return this.focusedCellColOutOfVis();
+      default:
+        return false;
+    }
+  }
+
   /**
    * Moves focus to the cell with actual focus, otherwise moves focus to the viewport.
    */
@@ -703,13 +726,7 @@ export class DxGrid extends LitElement {
       case 'col':
         this.focusedCell = { ...this.focusedCell, col: this.focusedCell.col + delta };
     }
-    (this.focusedCell.row < this.visRowMin ||
-    this.focusedCell.row > this.visRowMax ||
-    this.focusedCell.col < this.visColMin ||
-    this.focusedCell.col > this.visColMax
-      ? this.viewportRef.value
-      : this.focusedCellElement()
-    )?.focus({ preventScroll: true });
+    (this.focusedCellOutOfVis() ? this.viewportRef.value : this.focusedCellElement())?.focus({ preventScroll: true });
     if (increment) {
       this.snapPosToFocusedCell();
     }
