@@ -3,10 +3,9 @@
 //
 
 import { TextAa } from '@phosphor-icons/react';
-import React, { type Ref } from 'react';
+import React from 'react';
 
 import {
-  isObject,
   parseIntentPlugin,
   resolvePlugin,
   LayoutAction,
@@ -33,12 +32,11 @@ import {
   EditorViewModes,
   translations as editorTranslations,
 } from '@dxos/react-ui-editor';
-import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
-import { type DocumentItemProps, DocumentCard, DocumentEditor, MarkdownEditor, MarkdownSettings } from './components';
+import { MarkdownContainer, MarkdownSettings } from './components';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
-import { DocumentType, TextType } from './types';
+import { DocumentType, isEditorModel, TextType } from './types';
 import {
   type MarkdownPluginProvides,
   type MarkdownSettingsProps,
@@ -47,19 +45,8 @@ import {
 } from './types';
 import { markdownExtensionPlugins, serializer } from './util';
 
-/**
- * Checks if an object conforms to the interface needed to render an editor.
- */
-const isEditorModel = (data: any): data is { id: string; text: string } => {
-  return (
-    data &&
-    typeof data === 'object' &&
-    'id' in data &&
-    typeof data.id === 'string' &&
-    'text' in data &&
-    typeof data.text === 'string'
-  );
-};
+// TODO(burdon): Normalize active/object.
+const getDoc = (object: any) => (object instanceof DocumentType ? object : undefined);
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
@@ -71,13 +58,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   const state = new LocalStorageStore<MarkdownPluginState>(MARKDOWN_PLUGIN, { extensionProviders: [], viewMode: {} });
 
-  const getViewMode = (id?: string) => {
-    return (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
-  };
-
-  const setViewMode = (id: string, nextViewMode: EditorViewMode) => {
-    state.values.viewMode[id] = nextViewMode;
-  };
+  const getViewMode = (id: string) => (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
+  const setViewMode = (id: string, viewMode: EditorViewMode) => (state.values.viewMode[id] = viewMode);
 
   return {
     meta,
@@ -108,7 +90,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
       markdownExtensionPlugins(plugins).forEach((plugin) => {
         const { extensions } = plugin.provides.markdown;
-        state.values.extensionProviders.push(extensions);
+        state.values.extensionProviders?.push(extensions);
       });
     },
     provides: {
@@ -267,72 +249,34 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role, ...props }, forwardedRef) => {
-          const doc =
-            data.active instanceof DocumentType
-              ? data.active
-              : data.object instanceof DocumentType
-                ? data.object
-                : undefined;
-
-          // TODO(burdon): Unify editor components.
+        component: ({ data, role }) => {
           switch (role) {
             case 'section':
             case 'article': {
-              if (doc && doc.content) {
-                return (
-                  <DocumentEditor
-                    role={role}
-                    coordinate={data.coordinate as LayoutCoordinate}
-                    document={doc}
-                    extensionProviders={state.values.extensionProviders}
-                    settings={settings.values}
-                    scrollPastEnd
-                    viewMode={getViewMode(fullyQualifiedId(doc))}
-                    onViewModeChange={setViewMode}
-                  />
-                );
-              } else if (isEditorModel(data.object)) {
-                return (
-                  <MarkdownEditor
-                    id={data.object.id}
-                    role={role}
-                    coordinate={data.coordinate as LayoutCoordinate}
-                    initialValue={data.object.text}
-                    extensionProviders={state.values.extensionProviders}
-                    inputMode={settings.values.editorInputMode}
-                    toolbar={settings.values.toolbar}
-                    scrollPastEnd
-                    viewMode={getViewMode(data.object.id)}
-                    onViewModeChange={setViewMode}
-                  />
-                );
-              }
-              break;
-            }
+              // TODO(burdon): Normalize types (from FilesPlugin).
+              const doc = getDoc(data.active) ?? getDoc(data.object);
+              const { id, object } = isEditorModel(data.object)
+                ? { id: data.object.id, object: data.object }
+                : doc
+                  ? { id: fullyQualifiedId(doc), object: doc }
+                  : {};
 
-            case 'card': {
-              if (
-                isObject(data.content) &&
-                typeof data.content.id === 'string' &&
-                data.content.object instanceof DocumentType
-              ) {
-                // isTileComponentProps is a type guard for these props.
-                // `props` will not pass this guard without transforming `data` into `item`.
-                const cardProps = {
-                  ...props,
-                  item: {
-                    id: data.content.id,
-                    object: data.content.object,
-                    color: typeof data.content.color === 'string' ? data.content.color : undefined,
-                  } as DocumentItemProps,
-                };
-
-                return isTileComponentProps(cardProps) ? (
-                  <DocumentCard {...cardProps} settings={settings.values} ref={forwardedRef as Ref<HTMLDivElement>} />
-                ) : null;
+              if (!id || !object) {
+                return null;
               }
-              break;
+
+              return (
+                <MarkdownContainer
+                  id={id}
+                  object={object}
+                  role={role}
+                  coordinate={data.coordinate as LayoutCoordinate}
+                  settings={settings.values}
+                  extensionProviders={state.values.extensionProviders}
+                  viewMode={getViewMode(id)}
+                  onViewModeChange={setViewMode}
+                />
+              );
             }
 
             case 'settings': {

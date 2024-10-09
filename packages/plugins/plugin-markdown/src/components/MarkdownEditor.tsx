@@ -14,20 +14,20 @@ import {
   type DNDOptions,
   type EditorViewMode,
   type EditorInputMode,
-  type UseTextEditorProps,
   Toolbar,
+  type UseTextEditorProps,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
+  editorContent,
+  editorGutter,
   processAction,
   useActionHandler,
   useCommentState,
   useCommentClickListener,
   useFormattingState,
   useTextEditor,
-  editorContent,
-  editorGutter,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
@@ -41,9 +41,9 @@ const DEFAULT_VIEW_MODE: EditorViewMode = 'preview';
 
 export type MarkdownEditorProps = {
   id: string;
+  role?: string;
   coordinate?: LayoutCoordinate;
   inputMode?: EditorInputMode;
-  role?: string;
   scrollPastEnd?: boolean;
   toolbar?: boolean;
   viewMode?: EditorViewMode;
@@ -80,8 +80,8 @@ export const MarkdownEditor = ({
   const { hasAttention } = useAttention(id);
 
   // Extensions from other plugins.
+  // TODO(burdon): Reconcile with DocumentEditor.useExtensions.
   const providerExtensions = useMemo(
-    // TODO(burdon): Must pass object to provider.
     () => extensionProviders?.flatMap((provider) => provider({})).filter(nonNullable),
     [extensionProviders],
   );
@@ -232,5 +232,3 @@ const useTest = (view?: EditorView) => {
     }
   }, [view]);
 };
-
-export default MarkdownEditor;
