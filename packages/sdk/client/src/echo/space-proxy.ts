@@ -24,9 +24,8 @@ import {
   type SpaceMember,
   type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { SpaceMember as HaloSpaceMember, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';

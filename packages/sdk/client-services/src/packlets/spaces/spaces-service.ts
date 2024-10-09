@@ -78,7 +78,7 @@ export class SpacesServiceImpl implements SpacesService {
       }
     }
 
-    if(edgeReplication !== undefined) {
+    if (edgeReplication !== undefined) {
       await dataSpaceManager.setSpaceEdgeReplicationSetting(spaceKey, edgeReplication);
     }
   }
