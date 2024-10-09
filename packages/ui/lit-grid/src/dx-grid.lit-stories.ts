@@ -28,15 +28,18 @@ export const Basic = (props: DxGridProps) => {
 };
 
 const initialLabels = {
+  fixedStartStart: {
+    '0,0': { value: '', resizeHandle: 'col' },
+  },
   frozenColsStart: [...Array(64)].reduce((acc, _, i) => {
-    acc[`0,${i}`] = { value: rowToA1Notation(i), className: 'text-end !pie-1' };
+    acc[`0,${i}`] = { value: rowToA1Notation(i), className: 'text-end !pie-1', resizeHandle: 'row' };
     return acc;
   }, {}),
   frozenRowsStart: [...Array(12)].reduce((acc, _, i) => {
-    acc[`${i},0`] = { value: colToA1Notation(i) };
+    acc[`${i},0`] = { value: colToA1Notation(i), resizeHandle: 'col' };
     return acc;
   }, {}),
-} satisfies Partial<Record<DxGridFrozenPlane, DxGridPlaneCells>>;
+} satisfies Partial<Record<DxGridFrozenPlane | 'fixedStartStart', DxGridPlaneCells>>;
 
 Basic.args = {
   initialCells: JSON.stringify({
@@ -55,11 +58,15 @@ Basic.args = {
     },
     frozenColsStart: {
       size: 64,
-      resizeable: false,
+      resizeable: true,
     },
   } satisfies DxGridProps['columnDefault']),
   rowDefault: JSON.stringify({
     grid: {
+      size: 32,
+      resizeable: true,
+    },
+    frozenRowsStart: {
       size: 32,
       resizeable: true,
     },

@@ -13,7 +13,7 @@ import {
   type AxisMeta,
   type AxisSizes,
   type CellIndex,
-  type CellValue,
+  type DxGridCellValue,
   DxAxisResize,
   type DxAxisResizeInternal,
   DxEditRequest,
@@ -33,6 +33,7 @@ import {
   type DxGridPointer,
   type DxGridPosition,
   type DxGridPositionNullable,
+  type DxGridAxis,
 } from './types';
 import { separator, toCellIndex } from './util';
 
@@ -111,6 +112,27 @@ const resolveColPlane = (plane: DxGridPlane): 'grid' | DxGridFrozenColsPlane => 
       return 'frozenColsEnd';
     default:
       return 'grid';
+  }
+};
+
+const resolveResizePlane = (resizeAxis: DxGridAxis, cellPlane: DxGridPlane): 'grid' | DxGridFrozenPlane => {
+  switch (cellPlane) {
+    case 'fixedStartStart':
+      return resizeAxis === 'col' ? 'frozenColsStart' : 'frozenRowsStart';
+    case 'fixedStartEnd':
+      return resizeAxis === 'col' ? 'frozenColsEnd' : 'frozenRowsStart';
+    case 'fixedEndStart':
+      return resizeAxis === 'col' ? 'frozenColsStart' : 'frozenRowsEnd';
+    case 'fixedEndEnd':
+      return resizeAxis === 'col' ? 'frozenColsEnd' : 'frozenRowsEnd';
+    case 'frozenColsStart':
+    case 'frozenColsEnd':
+      return resizeAxis === 'col' ? cellPlane : 'grid';
+    case 'frozenRowsStart':
+    case 'frozenRowsEnd':
+      return resizeAxis === 'row' ? cellPlane : 'grid';
+    default:
+      return cellPlane;
   }
 };
 
@@ -422,7 +444,7 @@ export class DxGrid extends LitElement {
     return this.rowSizes?.[resolvedPlane]?.[r] ?? this.rowDefault[resolvedPlane]?.size ?? defaultRowSize;
   }
 
-  private cell(c: number | string, r: number | string, plane: DxGridPlane): CellValue | undefined {
+  private cell(c: number | string, r: number | string, plane: DxGridPlane): DxGridCellValue | undefined {
     const index: CellIndex = `${c}${separator}${r}`;
     return this.cells?.[plane]?.[index] ?? this.initialCells?.[plane]?.[index];
   }
@@ -796,28 +818,34 @@ export class DxGrid extends LitElement {
   //
   // Resize handlers
   //
+
+  private axisResizeable(plane: 'grid' | DxGridFrozenPlane, axis: DxGridAxis, index: number | string) {
+    return axis === 'col'
+      ? !!(this.columns[plane]?.[index]?.resizeable ?? this.columnDefault[plane as DxGridFrozenColsPlane]?.resizeable)
+      : !!(this.rows[plane]?.[index]?.resizeable ?? this.rowDefault[plane as DxGridFrozenRowsPlane]?.resizeable);
+  }
+
   private handleAxisResizeInternal(event: DxAxisResizeInternal) {
     event.stopPropagation();
-    const { axis, delta, size, index, type } = event;
+    const { plane, axis, delta, size, index, type } = event;
     if (axis === 'col') {
       const nextSize = Math.max(sizeColMin, Math.min(sizeColMax, size + delta));
-      this.colSizes = { ...this.colSizes, [index]: nextSize };
+      this.colSizes = { ...this.colSizes, [plane]: { ...this.colSizes[plane], [index]: nextSize } };
       this.updateVisInline();
       this.updateIntrinsicInlineSize();
     } else {
       const nextSize = Math.max(sizeRowMin, Math.min(sizeRowMax, size + delta));
-      this.rowSizes = { ...this.rowSizes, [index]: nextSize };
+      this.rowSizes = { ...this.colSizes, [plane]: { ...this.rowSizes[plane], [index]: nextSize } };
       this.updateVisBlock();
       this.updateIntrinsicBlockSize();
     }
     if (type === 'dropped') {
       this.dispatchEvent(
         new DxAxisResize({
+          plane,
           axis,
-          // todo(thure): Support other planes
-          plane: 'grid',
           index,
-          size: this[axis === 'col' ? 'colSize' : 'rowSize'](index, 'grid'),
+          size: this[`${axis}Size`](index, plane),
         }),
       );
     }
@@ -901,6 +929,8 @@ export class DxGrid extends LitElement {
     const cell = this.cell(col, row, plane);
     const active = this.cellActive(col, row, plane);
     const selected = this.cellSelected(col, row, plane);
+    const resizeIndex = cell?.resizeHandle ? (cell.resizeHandle === 'col' ? col : row) : undefined;
+    const resizePlane = cell?.resizeHandle ? resolveResizePlane(cell.resizeHandle, plane) : undefined;
     return html`<div
       role="gridcell"
       tabindex="0"
@@ -914,7 +944,14 @@ export class DxGrid extends LitElement {
       data-dx-grid-action="cell"
       style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
     >
-      ${cell?.value}
+      ${cell?.value}${cell?.resizeHandle && this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
+        ? html`<dx-grid-axis-resize-handle
+            axis=${cell.resizeHandle}
+            plane=${resizePlane}
+            index=${resizeIndex}
+            size=${this[`${cell.resizeHandle}Size`](resizeIndex!, plane)}
+          ></dx-grid-axis-resize-handle>`
+        : null}
     </div>`;
   }
 
@@ -1055,8 +1092,6 @@ export class DxGrid extends LitElement {
 
   override disconnectedCallback() {
     super.disconnectedCallback();
-    // console.log('[disconnected]', this.viewportRef.value);
-    // TODO(thure): Will this even work?
     if (this.viewportRef.value) {
       this.observer.unobserve(this.viewportRef.value);
     }

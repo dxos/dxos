@@ -22,7 +22,7 @@ export type DxGridPlanePosition = Record<DxGridAxis, number>;
 export type DxGridPosition = DxGridPlanePosition & { plane: DxGridPlane };
 export type DxGridPositionNullable = DxGridPosition | null;
 
-export type DxGridPlaneCells = Record<CellIndex, CellValue>;
+export type DxGridPlaneCells = Record<CellIndex, DxGridCellValue>;
 export type DxGridCells = { grid: DxGridPlaneCells } & Partial<
   Record<DxGridFixedPlane | DxGridFrozenPlane, DxGridPlaneCells>
 >;
@@ -39,7 +39,7 @@ export type DxGridMode = 'browse' | 'edit';
 
 export type DxGridFrozenAxes = Partial<Record<DxGridFrozenPlane, number>>;
 
-export type CellValue = {
+export type DxGridCellValue = {
   /**
    * The content value
    */
@@ -49,9 +49,13 @@ export type CellValue = {
    */
   end?: string;
   /**
-   * `class` attribute value to apply to the gridcell element
+   * `class` attribute value to apply to the gridcell element.
    */
   className?: string;
+  /**
+   * Whether to render a resize handle for this cell’s row or column.
+   */
+  resizeHandle?: DxGridAxis;
 };
 
 export type AxisMeta = {
