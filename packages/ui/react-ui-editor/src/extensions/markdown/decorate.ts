@@ -45,7 +45,7 @@ class HorizontalRuleWidget extends WidgetType {
 class LinkButton extends WidgetType {
   constructor(
     private readonly url: string,
-    private readonly render: (el: Element, url: string) => void,
+    private readonly render: (el: HTMLElement, url: string) => void,
   ) {
     super();
   }
@@ -54,6 +54,7 @@ class LinkButton extends WidgetType {
     return this.url === other.url;
   }
 
+  // TODO(burdon): Create icon and link directly without react?
   override toDOM(view: EditorView) {
     const el = document.createElement('span');
     this.render(el, this.url);
