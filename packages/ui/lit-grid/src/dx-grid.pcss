@@ -2,18 +2,6 @@ dx-grid, dx-grid-axis-resize-handle {
   display: contents;
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
-
 .dx-grid {
   display: grid;
   grid-template-columns: min-content 1fr min-content;
@@ -31,15 +19,6 @@ dx-grid, dx-grid-axis-resize-handle {
   user-select: none;
 }
 
-.dx-grid__plane--fixed,
-.dx-grid__plane--frozen-row__content,
-.dx-grid__plane--frozen-col__content,
-.dx-grid__plane--grid__content {
-  display: grid;
-  gap: var(--dx-grid-gap);
-  background: var(--dx-grid-lines, var(--dx-separator));
-}
-
 .dx-grid__plane--frozen-row,
 .dx-grid__plane--frozen-col,
 .dx-grid__plane--grid {
@@ -55,6 +34,15 @@ dx-grid, dx-grid-axis-resize-handle {
     pointer-events: none;
     border: 1px solid var(--dx-accentSurface);
   }
+}
+
+.dx-grid__plane--fixed,
+.dx-grid__plane--frozen-row__content,
+.dx-grid__plane--frozen-col__content,
+.dx-grid__plane--grid__content {
+  display: grid;
+  gap: var(--dx-grid-gap);
+  background: var(--dx-grid-lines, var(--dx-separator));
 }
 
 .dx-grid {
@@ -114,4 +102,17 @@ dx-grid, dx-grid-axis-resize-handle {
   inset-block-end: 0;
   block-size: .5rem;
   cursor: row-resize;
+}
+
+// todo(thure): Move this somewhere better.
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
