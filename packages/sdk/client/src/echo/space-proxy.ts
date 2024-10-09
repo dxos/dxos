@@ -24,6 +24,8 @@ import {
   type SpaceMember,
   type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { SpaceMember as HaloSpaceMember, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -119,6 +121,7 @@ export class SpaceProxy implements Space {
       getEpochs: this._getEpochs.bind(this),
       removeMember: this._removeMember.bind(this),
       migrate: this._migrate.bind(this),
+      setEdgeReplicationPreference: this._setEdgeReplicationPreference.bind(this),
     };
 
     this._error = this._data.error ? decodeError(this._data.error) : undefined;
@@ -520,6 +523,16 @@ export class SpaceProxy implements Space {
         migration: CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT,
       });
     }
+  }
+
+  private async _setEdgeReplicationPreference(setting: EdgeReplicationSetting) {
+    await this._clientServices.services.SpacesService!.updateSpace(
+      {
+        spaceKey: this.key,
+        edgeReplication: setting,
+      },
+      { timeout: RPC_TIMEOUT },
+    );
   }
 
   private _throwIfNotInitialized() {

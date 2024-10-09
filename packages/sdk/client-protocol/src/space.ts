@@ -19,6 +19,7 @@ import {
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import type { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 import { type CancellableInvitation } from './invitations';
 
@@ -41,6 +42,8 @@ export interface SpaceInternal {
    * Migrate space data to the latest version.
    */
   migrate(): Promise<void>;
+
+  setEdgeReplicationPreference(setting: EdgeReplicationSetting): Promise<void>;
 }
 
 // TODO(burdon): Separate public API form implementation (move comments here).
