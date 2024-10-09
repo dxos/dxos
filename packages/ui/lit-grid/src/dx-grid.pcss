@@ -16,8 +16,8 @@ dx-grid, dx-grid-axis-resize-handle {
 
 .dx-grid {
   display: grid;
-  grid-template-columns: min-content minmax(0, var(--dx-viewport-inline-size)) min-content;
-  grid-template-rows: min-content minmax(0, var(--dx-viewport-block-size)) min-content;
+  grid-template-columns: min-content 1fr min-content;
+  grid-template-rows: min-content 1fr min-content;
   font-variant-numeric: tabular-nums;
   --dx-grid-gap: 1px;
 

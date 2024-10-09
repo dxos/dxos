@@ -11,6 +11,7 @@ import { styleMap } from 'lit/directives/style-map.js';
 import './dx-grid-axis-resize-handle';
 import {
   type AxisMeta,
+  type AxisSizes,
   type CellIndex,
   type CellValue,
   DxAxisResize,
@@ -19,6 +20,7 @@ import {
   type DxGridAxisMeta,
   type DxGridCells,
   DxGridCellsSelect,
+  type DxGridFixedPlane,
   type DxGridFrozenColsPlane,
   type DxGridFrozenPlane,
   type DxGridFrozenRowsPlane,
@@ -56,21 +58,6 @@ const sizeColMax = 1024;
 const sizeRowMin = 16;
 const sizeRowMax = 1024;
 
-//
-// A1 notation is the fallback for numbering columns and rows.
-//
-
-const colToA1Notation = (col: number): string => {
-  return (
-    (col >= 26 ? String.fromCharCode('A'.charCodeAt(0) + Math.floor(col / 26) - 1) : '') +
-    String.fromCharCode('A'.charCodeAt(0) + (col % 26))
-  );
-};
-
-const rowToA1Notation = (row: number): string => {
-  return `${row + 1}`;
-};
-
 const closestAction = (target: EventTarget | null): { action: string | null; actionEl: HTMLElement | null } => {
   const actionEl: HTMLElement | null = (target as HTMLElement | null)?.closest('[data-dx-grid-action]') ?? null;
   return { actionEl, action: actionEl?.getAttribute('data-dx-grid-action') ?? null };
@@ -87,7 +74,9 @@ const closestCell = (target: EventTarget | null, actionEl?: HTMLElement | null):
   if (cellElement) {
     const col = parseInt(cellElement.getAttribute('aria-colindex') ?? 'never');
     const row = parseInt(cellElement.getAttribute('aria-rowindex') ?? 'never');
-    return { plane: 'grid', col, row };
+    const plane = (cellElement.closest('[data-dx-grid-plane]')?.getAttribute('data-dx-grid-plane') ??
+      'grid') as DxGridPlane;
+    return { plane, col, row };
   } else {
     return null;
   }
@@ -124,10 +113,13 @@ const resolveColPlane = (plane: DxGridPlane): 'grid' | DxGridFrozenColsPlane => 
 };
 
 const isSameCell = (a: DxGridPositionNullable, b: DxGridPositionNullable) =>
-  a && b && Number.isFinite(a.col) && Number.isFinite(a.row) && a.col === b.col && a.row === b.row;
-
-const localChId = (c0: number) => `ch--${c0}`;
-const localRhId = (r0: number) => `rh--${r0}`;
+  a &&
+  b &&
+  a.plane === b.plane &&
+  Number.isFinite(a.col) &&
+  Number.isFinite(a.row) &&
+  a.col === b.col &&
+  a.row === b.row;
 
 const defaultRowSize = 32;
 
@@ -261,19 +253,19 @@ export class DxGrid extends LitElement {
   private templateGridColumns = '0';
 
   @state()
-  private templateStartColumns = '0';
+  private templatefrozenColsStart = '';
 
   @state()
-  private templateEndColumns = '0';
+  private templatefrozenColsEnd = '';
 
   @state()
   private templateGridRows = '0';
 
   @state()
-  private templateStartRows = '0';
+  private templatefrozenRowsStart = '';
 
   @state()
-  private templateEndRows = '0';
+  private templatefrozenRowsEnd = '';
 
   //
   // Focus, selection, and resize states
@@ -283,12 +275,10 @@ export class DxGrid extends LitElement {
   private pointer: DxGridPointer = null;
 
   @state()
-  private colSizes: Record<'grid', Record<string, number>> &
-    Partial<Record<DxGridFrozenPlane, Record<string, number>>> = { grid: {} };
+  private colSizes: AxisSizes = { grid: {} };
 
   @state()
-  private rowSizes: Record<'grid', Record<string, number>> &
-    Partial<Record<DxGridFrozenPlane, Record<string, number>>> = { grid: {} };
+  private rowSizes: AxisSizes = { grid: {} };
 
   @state()
   private focusActive: boolean = false;
@@ -435,6 +425,18 @@ export class DxGrid extends LitElement {
     return this.cells?.[plane]?.[index] ?? this.cells?.[plane]?.[index];
   }
 
+  private cellActive(c: number | string, r: number | string, plane: DxGridPlane): boolean {
+    return (
+      this.focusActive && this.focusedCell.plane === plane && this.focusedCell.col === c && this.focusedCell.row === r
+    );
+  }
+
+  private cellSelected(c: number | string, r: number | string, plane: DxGridPlane): boolean {
+    // todo(thure): restore selection
+    // c >= selectColMin && c <= selectColMax && r >= selectRowMin && r <= selectRowMax;
+    return false;
+  }
+
   private focusedCellBox(): DxEditRequest['cellBox'] {
     const cellElement = this.focusedCellElement();
     const cellSize = {
@@ -545,11 +547,11 @@ export class DxGrid extends LitElement {
       .map((_, c0) => `${this.colSize(this.visColMin + c0, 'grid')}px`)
       .join(' ');
 
-    this.templateStartColumns = [...Array(this.frozen.frozenColsStart ?? 0)]
+    this.templatefrozenColsStart = [...Array(this.frozen.frozenColsStart ?? 0)]
       .map((_, c0) => `${this.colSize(c0, 'frozenColsStart')}px`)
       .join(' ');
 
-    this.templateEndColumns = [...Array(this.frozen.frozenColsEnd ?? 0)]
+    this.templatefrozenColsEnd = [...Array(this.frozen.frozenColsEnd ?? 0)]
       .map((_, c0) => `${this.colSize(c0, 'frozenColsEnd')}px`)
       .join(' ');
   }
@@ -587,11 +589,11 @@ export class DxGrid extends LitElement {
       .map((_, r0) => `${this.rowSize(this.visRowMin + r0, 'grid')}px`)
       .join(' ');
 
-    this.templateStartRows = [...Array(this.frozen.frozenRowsStart ?? 0)]
+    this.templatefrozenRowsStart = [...Array(this.frozen.frozenRowsStart ?? 0)]
       .map((_, r0) => `${this.rowSize(r0, 'frozenRowsStart')}px`)
       .join(' ');
 
-    this.templateEndRows = [...Array(this.frozen.frozenRowsEnd ?? 0)]
+    this.templatefrozenRowsEnd = [...Array(this.frozen.frozenRowsEnd ?? 0)]
       .map((_, r0) => `${this.rowSize(r0, 'frozenRowsEnd')}px`)
       .join(' ');
   }
@@ -626,7 +628,7 @@ export class DxGrid extends LitElement {
         );
       });
     if (includeFixed) {
-      if ((this.frozen.frozenColsStart ?? -1) > 0 && (this.frozen.frozenRowsStart ?? -1) > 0) {
+      if ((this.frozen.frozenColsStart ?? 0) > 0 && (this.frozen.frozenRowsStart ?? 0) > 0) {
         this.cells.fixedStartStart = this.getCells!(
           {
             start: { col: 0, row: 0 },
@@ -635,7 +637,7 @@ export class DxGrid extends LitElement {
           'fixedStartStart',
         );
       }
-      if ((this.frozen.frozenColsEnd ?? -1) > 0 && (this.frozen.frozenRowsStart ?? -1) > 0) {
+      if ((this.frozen.frozenColsEnd ?? 0) > 0 && (this.frozen.frozenRowsStart ?? 0) > 0) {
         this.cells.fixedStartEnd = this.getCells!(
           {
             start: { col: 0, row: 0 },
@@ -644,7 +646,7 @@ export class DxGrid extends LitElement {
           'fixedStartEnd',
         );
       }
-      if ((this.frozen.frozenColsStart ?? -1) > 0 && (this.frozen.frozenRowsEnd ?? -1) > 0) {
+      if ((this.frozen.frozenColsStart ?? 0) > 0 && (this.frozen.frozenRowsEnd ?? 0) > 0) {
         this.cells.fixedEndStart = this.getCells!(
           {
             start: { col: 0, row: 0 },
@@ -653,7 +655,7 @@ export class DxGrid extends LitElement {
           'fixedEndStart',
         );
       }
-      if ((this.frozen.frozenColsEnd ?? -1) > 0 && (this.frozen.frozenRowsEnd ?? -1) > 0) {
+      if ((this.frozen.frozenColsEnd ?? 0) > 0 && (this.frozen.frozenRowsEnd ?? 0) > 0) {
         this.cells.fixedEndEnd = this.getCells!(
           {
             start: { col: 0, row: 0 },
@@ -828,6 +830,98 @@ export class DxGrid extends LitElement {
   // Render and other lifecycle methods
   //
 
+  private renderFixed(plane: DxGridFixedPlane) {
+    const colPlane = resolveColPlane(plane) as DxGridFrozenPlane;
+    const rowPlane = resolveRowPlane(plane) as DxGridFrozenPlane;
+    const cols = this.frozen[colPlane];
+    const rows = this.frozen[rowPlane];
+    return (
+      (cols ?? 0) > 0 &&
+      (rows ?? 0) > 0 &&
+      html`<div
+        role="none"
+        data-dx-grid-plane=${plane}
+        class="dx-grid__plane--fixed"
+        style=${styleMap({
+          'grid-template-columns': this[`template${colPlane}`],
+          'grid-template-rows': this[`template${rowPlane}`],
+        })}
+      >
+        ${[...Array(cols)].map((_, c) => {
+          return [...Array(rows)].map((_, r) => {
+            return this.renderCell(c, r, plane);
+          });
+        })}
+      </div>`
+    );
+  }
+
+  private renderFrozenRows(plane: DxGridFrozenRowsPlane, visibleCols: number, offsetInline: number) {
+    const rowPlane = resolveRowPlane(plane) as DxGridFrozenPlane;
+    const rows = this.frozen[rowPlane];
+    return (
+      (rows ?? 0) > 0 &&
+      html`<div role="none" class="dx-grid__plane--frozen-row">
+        <div
+          role="none"
+          data-dx-grid-plane=${plane}
+          class="dx-grid__plane--frozen-row__content"
+          style="transform:translate3d(${offsetInline}px,0,0);grid-template-columns:${this
+            .templateGridColumns};grid-template-rows:${this[`template${rowPlane}`]}"
+        >
+          ${[...Array(visibleCols)].map((_, c0) => {
+            return [...Array(rows)].map((_, r) => {
+              const c = this.visColMin + c0;
+              return this.renderCell(c, r, plane, c0, r);
+            });
+          })}
+        </div>
+      </div>`
+    );
+  }
+
+  private renderFrozenColumns(plane: DxGridFrozenColsPlane, visibleRows: number, offsetBlock: number) {
+    const colPlane = resolveColPlane(plane) as DxGridFrozenPlane;
+    const cols = this.frozen[colPlane];
+    return html`<div role="none" class="dx-grid__plane--frozen-col">
+      <div
+        role="none"
+        data-dx-grid-plane=${plane}
+        class="dx-grid__plane--frozen-col__content"
+        style="transform:translate3d(0,${offsetBlock}px,0);grid-template-rows:${this
+          .templateGridRows};grid-template-columns:${this[`template${colPlane}`]}"
+      >
+        ${[...Array(cols)].map((_, c) => {
+          return [...Array(visibleRows)].map((_, r0) => {
+            const r = this.visRowMin + r0;
+            return this.renderCell(c, r, plane, c, r0);
+          });
+        })}
+      </div>
+    </div>`;
+  }
+
+  private renderCell(col: number, row: number, plane: DxGridPlane, visCol = col, visRow = row) {
+    const cell = this.cell(col, row, plane);
+    const active = this.cellActive(col, row, plane);
+    const selected = this.cellSelected(col, row, plane);
+    return html`<div
+      role="gridcell"
+      tabindex="0"
+      ?inert=${col < 0 || row < 0}
+      ?aria-selected=${selected}
+      class=${cell || active
+        ? (cell?.className ? cell.className + ' ' : '') + (active ? 'dx-grid__cell--active' : '')
+        : nothing}
+      aria-colindex=${col}
+      aria-rowindex=${row}
+      data-dx-grid-action="cell"
+      style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
+    >
+      ${cell?.value}
+    </div>`;
+  }
+
   override render() {
     const visibleCols = this.visColMax - this.visColMin;
     const visibleRows = this.visRowMax - this.visRowMin;
@@ -844,63 +938,27 @@ export class DxGrid extends LitElement {
       role="none"
       class="dx-grid"
       style=${styleMap({
-        '--dx-viewport-inline-size': Number.isFinite(this.limitColumns) ? `${this.intrinsicInlineSize}px` : '1fr',
-        '--dx-viewport-block-size': Number.isFinite(this.limitRows) ? `${this.intrinsicBlockSize}px` : '1fr',
+        'grid-template-columns': `${this.templatefrozenColsStart ? `${this.templatefrozenColsStart} ` : ''}minmax(0, ${
+          Number.isFinite(this.limitColumns) ? `${this.intrinsicInlineSize}px` : '1fr'
+        })${this.templatefrozenColsEnd ? ` ${this.templatefrozenColsEnd}` : ''}`,
+        'grid-template-rows': `${this.templatefrozenRowsStart ? `${this.templatefrozenRowsStart} ` : ''}minmax(0, ${
+          Number.isFinite(this.limitRows) ? `${this.intrinsicBlockSize}px` : '1fr'
+        })${this.templatefrozenRowsEnd ? ` ${this.templatefrozenRowsEnd}` : ''}`,
       })}
       data-grid=${this.gridId}
       data-grid-mode=${this.mode}
       ?data-grid-select=${selectVisible}
     >
-      <div role="none" class="dx-grid__corner"></div>
-      <div role="none" class="dx-grid__columnheader">
+      ${this.renderFixed('fixedStartStart')}${this.renderFrozenRows(
+        'frozenRowsStart',
+        visibleCols,
+        offsetInline,
+      )}${this.renderFixed('fixedStartEnd')}${this.renderFrozenColumns('frozenColsStart', visibleRows, offsetBlock)}
+      <div role="grid" class="dx-grid__plane--grid" tabindex="0" ${ref(this.viewportRef)}>
         <div
           role="none"
-          class="dx-grid__columnheader__content"
-          style="transform:translate3d(${offsetInline}px,0,0);grid-template-columns:${this.templateGridColumns};"
-        >
-          ${[...Array(visibleCols)].map((_, c0) => {
-            const c = this.visColMin + c0;
-            return html`<div
-              role="columnheader"
-              ?inert=${c < 0}
-              style="block-size:${this.rowDefault.size}px;grid-column:${c0 + 1}/${c0 + 2};"
-            >
-              <span id=${localChId(c0)}>${colToA1Notation(c)}</span>
-              ${(this.columns[c]?.resizeable ?? this.columnDefault.resizeable) &&
-              html`<dx-grid-axis-resize-handle
-                axis="col"
-                index=${c}
-                size=${this.colSize(c)}
-              ></dx-grid-axis-resize-handle>`}
-            </div>`;
-          })}
-        </div>
-      </div>
-      <div role="none" class="dx-grid__corner"></div>
-      <div role="none" class="dx-grid__rowheader">
-        <div
-          role="none"
-          class="dx-grid__rowheader__content"
-          style="transform:translate3d(0,${offsetBlock}px,0);grid-template-rows:${this.templateGridRows};"
-        >
-          ${[...Array(visibleRows)].map((_, r0) => {
-            const r = this.visRowMin + r0;
-            return html`<div role="rowheader" ?inert=${r < 0} style="grid-row:${r0 + 1}/${r0 + 2}">
-              <span id=${localRhId(r0)}>${rowToA1Notation(r)}</span>
-              ${(this.rows[r]?.resizeable ?? this.rowDefault.resizeable) &&
-              html`<dx-grid-axis-resize-handle
-                axis="row"
-                index=${r}
-                size=${this.rowSize(r)}
-              ></dx-grid-axis-resize-handle>`}
-            </div>`;
-          })}
-        </div>
-      </div>
-      <div role="grid" class="dx-grid__viewport" tabindex="0" ${ref(this.viewportRef)}>
-        <div
-          role="none"
-          class="dx-grid__content"
+          class="dx-grid__plane--grid__content"
+          data-dx-grid-plane="grid"
           style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:${this
             .templateGridColumns};grid-template-rows:${this.templateGridRows};"
         >
@@ -908,48 +966,28 @@ export class DxGrid extends LitElement {
             return [...Array(visibleRows)].map((_, r0) => {
               const c = c0 + this.visColMin;
               const r = r0 + this.visRowMin;
-              const cell = this.cell(c, r);
-              const active = this.focusActive && this.focusedCell.col === c && this.focusedCell.row === r;
-              const selected = c >= selectColMin && c <= selectColMax && r >= selectRowMin && r <= selectRowMax;
-              return html`<div
-                role="gridcell"
-                tabindex="0"
-                ?inert=${c < 0 || r < 0}
-                ?aria-selected=${selected}
-                class=${cell || active
-                  ? (cell?.className ? cell.className + ' ' : '') + (active ? 'dx-grid__cell--active' : '')
-                  : nothing}
-                aria-rowindex=${r}
-                aria-colindex=${c}
-                data-dx-grid-action="cell"
-                style="grid-column:${c0 + 1};grid-row:${r0 + 1}"
-              >
-                ${cell?.value}
-              </div>`;
+              return this.renderCell(c, r, 'grid', c0, r0);
             });
           })}
         </div>
       </div>
-      <div role="none" class="dx-grid__scrollbar" aria-orientation="vertical">
-        <div role="none" class="dx-grid__scrollbar__thumb"></div>
-      </div>
-      <div role="none" class="dx-grid__corner"></div>
-      <div role="none" class="dx-grid__scrollbar" aria-orientation="horizontal">
-        <div role="none" class="dx-grid__scrollbar__thumb"></div>
-      </div>
-      <div role="none" class="dx-grid__corner"></div>
+      ${this.renderFrozenColumns('frozenColsEnd', visibleRows, offsetBlock)}${this.renderFixed(
+        'fixedEndStart',
+      )}${this.renderFrozenRows('frozenRowsEnd', visibleCols, offsetInline)}${this.renderFixed('fixedEndEnd')}
     </div>`;
   }
 
   private updateIntrinsicInlineSize() {
     this.intrinsicInlineSize = Number.isFinite(this.limitColumns)
-      ? [...Array(this.limitColumns)].reduce((acc, _, c0) => acc + this.colSize(c0), 0) + gap * (this.limitColumns - 1)
+      ? [...Array(this.limitColumns)].reduce((acc, _, c0) => acc + this.colSize(c0, 'grid'), 0) +
+        gap * (this.limitColumns - 1)
       : Infinity;
   }
 
   private updateIntrinsicBlockSize() {
     this.intrinsicBlockSize = Number.isFinite(this.limitRows)
-      ? [...Array(this.limitRows)].reduce((acc, _, r0) => acc + this.rowSize(r0), 0) + gap * (this.limitRows - 1)
+      ? [...Array(this.limitRows)].reduce((acc, _, r0) => acc + this.rowSize(r0, 'grid'), 0) +
+        gap * (this.limitRows - 1)
       : Infinity;
   }
 
@@ -960,27 +998,39 @@ export class DxGrid extends LitElement {
 
   override firstUpdated() {
     if (this.getCells) {
-      this.cells = this.getCells(
-        {
-          start: { col: this.visColMin, row: this.visRowMin },
-          end: { col: this.visColMax, row: this.visRowMax },
-        },
-        'grid',
-      );
+      this.updateCells(true);
     }
     this.observer.observe(this.viewportRef.value!);
-    this.colSizes = Object.entries(this.columns).reduce((acc: Record<string, number>, [colId, colMeta]) => {
-      if (colMeta?.size) {
-        acc[colId] = colMeta.size;
-      }
-      return acc;
-    }, {});
-    this.rowSizes = Object.entries(this.rows).reduce((acc: Record<string, number>, [rowId, rowMeta]) => {
-      if (rowMeta?.size) {
-        acc[rowId] = rowMeta.size;
-      }
-      return acc;
-    }, {});
+    this.colSizes = Object.entries(this.columns).reduce(
+      (acc: AxisSizes, [plane, planeColMeta]) => {
+        acc[plane as 'grid' | DxGridFrozenPlane] = Object.entries(planeColMeta).reduce(
+          (planeAcc: Record<string, number>, [col, colMeta]) => {
+            if (colMeta?.size) {
+              planeAcc[col] = colMeta.size;
+            }
+            return planeAcc;
+          },
+          {},
+        );
+        return acc;
+      },
+      { grid: {} },
+    );
+    this.rowSizes = Object.entries(this.rows).reduce(
+      (acc: AxisSizes, [plane, planeRowMeta]) => {
+        acc[plane as 'grid' | DxGridFrozenPlane] = Object.entries(planeRowMeta).reduce(
+          (planeAcc: Record<string, number>, [row, rowMeta]) => {
+            if (rowMeta?.size) {
+              planeAcc[row] = rowMeta.size;
+            }
+            return planeAcc;
+          },
+          {},
+        );
+        return acc;
+      },
+      { grid: {} },
+    );
     this.updateIntrinsicSizes();
   }
 

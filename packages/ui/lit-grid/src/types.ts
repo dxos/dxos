@@ -57,6 +57,9 @@ export type AxisMeta = {
   resizeable?: boolean;
 };
 
+export type AxisSizes = Record<'grid', Record<string, number>> &
+  Partial<Record<DxGridFrozenPlane, Record<string, number>>>;
+
 export type DxGridProps = Partial<
   Pick<DxGrid, 'initialCells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault' | 'limitRows' | 'limitColumns'>
 >;
