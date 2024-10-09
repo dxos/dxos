@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
+import { Mutex, scheduleMicroTask, Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
-import { failUndefined } from '@dxos/debug';
+import { failUndefined, warnAfterTimeout } from '@dxos/debug';
 import {
   EchoEdgeReplicator,
   EchoHost,
@@ -14,7 +14,8 @@ import {
   SpaceManager,
   valueEncoding,
 } from '@dxos/echo-pipeline';
-import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
+import { createChainEdgeIdentity, createEphemeralEdgeIdentity } from '@dxos/edge-client';
+import type { EdgeHttpClient, EdgeConnection } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
@@ -37,8 +38,8 @@ import { safeInstanceof } from '@dxos/util';
 import {
   IdentityManager,
   type CreateIdentityOptions,
-  type JoinIdentityParams,
   type IdentityManagerParams,
+  type JoinIdentityParams,
 } from '../identity';
 import {
   DeviceInvitationProtocol,
@@ -65,6 +66,8 @@ export type ServiceContextRuntimeParams = Pick<
 @safeInstanceof('dxos.client-services.ServiceContext')
 @Trace.resource()
 export class ServiceContext extends Resource {
+  private readonly _edgeIdentityUpdateMutex = new Mutex();
+
   public readonly initialized = new Trigger();
   public readonly metadataStore: MetadataStore;
   public readonly blobStore: BlobStore;
@@ -138,18 +141,33 @@ export class ServiceContext extends Resource {
       callbacks: {
         onIdentityConstruction: (identity) => {
           if (this._edgeConnection) {
-            log.info('Setting identity on edge connection', {
-              identity: identity.identityKey.toHex(),
-              oldIdentity: this._edgeConnection.identityKey,
-              swarms: this.networkManager.topics,
-            });
-            this._edgeConnection.setIdentity({
-              peerKey: identity.deviceKey.toHex(),
-              identityKey: identity.identityKey.toHex(),
-            });
-            this.networkManager.setPeerInfo({
-              identityKey: identity.identityKey.toHex(),
-              peerKey: identity.deviceKey.toHex(),
+            scheduleMicroTask(this._ctx, async () => {
+              using _ = await this._edgeIdentityUpdateMutex.acquire();
+
+              log.info('Setting identity on edge connection', {
+                identity: identity.identityKey.toHex(),
+                oldIdentity: this._edgeConnection!.identityKey,
+                swarms: this.networkManager.topics,
+              });
+
+              await warnAfterTimeout(10_000, 'Waiting for identity to be ready for edge connection', async () => {
+                await identity.ready();
+              });
+
+              invariant(identity.deviceCredentialChain);
+              this._edgeConnection!.setIdentity(
+                await createChainEdgeIdentity(
+                  identity.signer,
+                  identity.identityKey,
+                  identity.deviceKey,
+                  identity.deviceCredentialChain,
+                  [], // TODO(dmaretskyi): Service access credentials.
+                ),
+              );
+              this.networkManager.setPeerInfo({
+                identityKey: identity.identityKey.toHex(),
+                peerKey: identity.deviceKey.toHex(),
+              });
             });
           }
         },
@@ -198,7 +216,11 @@ export class ServiceContext extends Resource {
 
     log('opening...');
     log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
-    await this._edgeConnection?.open();
+    if (this._edgeConnection) {
+      // TODO(dmaretskyi): Use device key.
+      this._edgeConnection.setIdentity(await createEphemeralEdgeIdentity());
+      await this._edgeConnection.open();
+    }
     await this.signalManager.open();
     await this.networkManager.open();
 
