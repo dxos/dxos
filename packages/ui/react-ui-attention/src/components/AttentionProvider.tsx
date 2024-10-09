@@ -12,6 +12,8 @@ import { create } from '@dxos/echo-schema';
 import { useDefaultValue } from '@dxos/react-ui';
 
 const ATTENTION_NAME = 'Attention';
+const ATTENABLE_ATTRIBUTE = 'data-attendable-id';
+const ATTENTION_SOURCE_ATTRIBUTE = 'data-is-attention-source';
 
 type Attention = {
   attended: string[];
@@ -65,14 +67,19 @@ const useAttendableAttributes = (attendableId?: string) => {
   const { hasAttention } = useAttention(attendableId);
 
   return useMemo(() => {
-    const attributes: Record<string, string | undefined> = { 'data-attendable-id': attendableId };
+    const attributes: Record<string, string | undefined> = { [ATTENABLE_ATTRIBUTE]: attendableId };
 
     if (hasAttention) {
-      attributes['data-is-attention-source'] = 'true';
+      attributes[ATTENTION_SOURCE_ATTRIBUTE] = 'true';
     }
 
     return attributes;
   }, [attendableId, hasAttention]);
+};
+
+const useAttentionPath = () => {
+  const { path } = useAttentionContext(ATTENTION_NAME);
+  return path;
 };
 
 /**
@@ -156,7 +163,10 @@ export {
   useAttention,
   useAttended,
   useAttendableAttributes,
+  useAttentionPath,
   ATTENTION_NAME,
+  ATTENABLE_ATTRIBUTE,
+  ATTENTION_SOURCE_ATTRIBUTE,
 };
 
 export type { Attention, AttentionContextValue };
