@@ -16,6 +16,7 @@ export type DxGridFrozenPlane = DxGridFrozenColsPlane | DxGridFrozenRowsPlane;
 export type DxGridFixedPlane = `fixed${'Start' | 'End'}${'Start' | 'End'}`;
 
 export type DxGridPlane = 'grid' | DxGridFrozenPlane | DxGridFixedPlane;
+export type DxGridPlaneRecord<P extends Exclude<DxGridPlane, 'grid'>, T> = Record<'grid', T> & Partial<Record<P, T>>;
 
 export type DxGridPlanePosition = Record<DxGridAxis, number>;
 export type DxGridPosition = DxGridPlanePosition & { plane: DxGridPlane };
@@ -27,7 +28,7 @@ export type DxGridCells = { grid: DxGridPlaneCells } & Partial<
 >;
 
 export type DxGridPlaneAxisMeta = Record<string, AxisMeta>;
-export type DxGridAxisMeta = { grid: DxGridPlaneAxisMeta } & Partial<Record<DxGridFrozenPlane, DxGridPlaneAxisMeta>>;
+export type DxGridAxisMeta = DxGridPlaneRecord<DxGridFrozenPlane, DxGridPlaneAxisMeta>;
 
 export type DxGridPointer = null | { state: 'selecting' };
 
@@ -35,6 +36,8 @@ export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'plane' | 'index' | 
 export type DxAxisResizeInternalProps = DxAxisResizeProps & { delta: number; state: 'dragging' | 'dropped' };
 
 export type DxGridMode = 'browse' | 'edit';
+
+export type DxGridFrozenAxes = Partial<Record<DxGridFrozenPlane, number>>;
 
 export type CellValue = {
   /**
@@ -57,8 +60,7 @@ export type AxisMeta = {
   resizeable?: boolean;
 };
 
-export type AxisSizes = Record<'grid', Record<string, number>> &
-  Partial<Record<DxGridFrozenPlane, Record<string, number>>>;
+export type AxisSizes = DxGridPlaneRecord<DxGridFrozenPlane, Record<string, number>>;
 
 export type DxGridProps = Partial<
   Pick<DxGrid, 'initialCells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault' | 'limitRows' | 'limitColumns'>

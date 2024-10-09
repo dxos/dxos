@@ -21,6 +21,7 @@ import {
   type DxGridCells,
   DxGridCellsSelect,
   type DxGridFixedPlane,
+  type DxGridFrozenAxes,
   type DxGridFrozenColsPlane,
   type DxGridFrozenPlane,
   type DxGridFrozenRowsPlane,
@@ -28,6 +29,7 @@ import {
   type DxGridPlane,
   type DxGridPlaneCells,
   type DxGridPlaneRange,
+  type DxGridPlaneRecord,
   type DxGridPointer,
   type DxGridPosition,
   type DxGridPositionNullable,
@@ -144,12 +146,12 @@ export class DxGrid extends LitElement {
   gridId: string = 'default-grid-id';
 
   @property({ type: Object })
-  rowDefault: Record<'grid', AxisMeta> & Partial<Record<DxGridFrozenRowsPlane, AxisMeta>> = {
+  rowDefault: DxGridPlaneRecord<DxGridFrozenRowsPlane, AxisMeta> = {
     grid: { size: defaultRowSize },
   };
 
   @property({ type: Object })
-  columnDefault: Record<'grid', AxisMeta> & Partial<Record<DxGridFrozenColsPlane, AxisMeta>> = {
+  columnDefault: DxGridPlaneRecord<DxGridFrozenColsPlane, AxisMeta> = {
     grid: { size: defaultColSize },
   };
 
@@ -172,7 +174,7 @@ export class DxGrid extends LitElement {
   limitRows: number = Infinity;
 
   @property({ type: Object })
-  frozen: Partial<Record<DxGridFrozenPlane, number>> = {};
+  frozen: DxGridFrozenAxes = {};
 
   /**
    * When this function is defined, it is used first to try to get a value for a cell, and otherwise will fall back
