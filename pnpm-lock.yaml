@@ -2930,12 +2930,24 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
+      '@dxos/credentials':
+        specifier: workspace:*
+        version: link:../../halo/credentials
+      '@dxos/crypto':
+        specifier: workspace:*
+        version: link:../../../common/crypto
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/keyring':
+        specifier: workspace:*
+        version: link:../../halo/keyring
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -2955,9 +2967,6 @@ importers:
         specifier: ^8.14.2
         version: 8.18.0
     devDependencies:
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../../common/test-utils
