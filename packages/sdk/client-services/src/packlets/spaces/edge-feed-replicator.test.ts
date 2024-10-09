@@ -119,8 +119,7 @@ describe('EdgeFeedReplicator', () => {
     expect(messageSink.length).toEqual(0);
     await updateIdentity(messenger);
 
-    await expect.poll(() => messageSink.length).toEqual(2);
-    expect(messageSink[1].type).toEqual('data');
+    await expect.poll(() => messageSink.find((msg) => msg.type === 'data')).toBeDefined();
   });
 
   test('propagates errors unrelated to reconnect', async () => {

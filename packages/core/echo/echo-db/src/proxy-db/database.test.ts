@@ -16,7 +16,7 @@ import {
   type ReactiveObject,
 } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -104,7 +104,7 @@ describe('Database', () => {
   });
 
   test('query by ID async loading with signals', async () => {
-    registerSignalRuntime();
+    registerSignalsRuntime();
     const peer = await builder.createPeer();
     let id: string, rootUrl: string;
     const spaceKey = PublicKey.random();

@@ -154,7 +154,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
             ...(current?.has(node.id) && {
               'aria-current': '' as 'page',
-              'data-attention': attended?.has(node.id) ?? false,
+              'data-attention': attended?.includes(node.id) ?? false,
             })
           }
           onContextMenu={(event) => {

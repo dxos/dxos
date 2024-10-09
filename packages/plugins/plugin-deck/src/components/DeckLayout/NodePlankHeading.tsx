@@ -14,7 +14,6 @@ import {
   partLength,
   type LayoutParts,
   type LayoutPart,
-  type LayoutEntry,
 } from '@dxos/app-framework';
 import { type Node, useGraph } from '@dxos/plugin-graph';
 import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
@@ -28,8 +27,6 @@ export const NodePlankHeading = ({
   id,
   layoutParts,
   layoutPart,
-  // TODO(wittjosiah): Unused?
-  layoutEntry,
   popoverAnchorId,
   pending,
   flatDeck,
@@ -38,7 +35,6 @@ export const NodePlankHeading = ({
   id?: string;
   layoutParts?: LayoutParts;
   layoutPart?: LayoutPart;
-  layoutEntry?: LayoutEntry;
   popoverAnchorId?: string;
   pending?: boolean;
   flatDeck?: boolean;
@@ -79,6 +75,7 @@ export const NodePlankHeading = ({
         {node ? (
           <PlankHeading.ActionsMenu
             icon={icon}
+            related={layoutPart === 'complementary'}
             attendableId={attendableId}
             triggerLabel={t('actions menu label')}
             actions={graph.actions(node)}
@@ -96,7 +93,11 @@ export const NodePlankHeading = ({
         )}
       </ActionRoot>
       <TextTooltip text={label} onlyWhenTruncating>
-        <PlankHeading.Label attendableId={node?.id} {...(pending && { classNames: 'text-description' })}>
+        <PlankHeading.Label
+          attendableId={attendableId}
+          related={layoutPart === 'complementary'}
+          {...(pending && { classNames: 'text-description' })}
+        >
           {label}
         </PlankHeading.Label>
       </TextTooltip>

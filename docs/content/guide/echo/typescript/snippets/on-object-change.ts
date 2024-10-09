@@ -6,9 +6,9 @@ import { effect } from '@preact/signals-core';
 
 import { Client } from '@dxos/client';
 import { Expando, create } from '@dxos/client/echo';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 
-registerSignalRuntime();
+registerSignalsRuntime();
 
 const client = new Client();
 

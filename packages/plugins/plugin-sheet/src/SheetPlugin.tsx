@@ -15,6 +15,7 @@ import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
 import { ComputeGraphContextProvider, SheetContainer } from './components';
 import { compareIndexPositions, createSheet } from './defs';
+import { computeGraphFacet } from './extensions';
 import { type ComputeGraphRegistry } from './graph';
 import { useComputeGraph } from './hooks';
 import meta, { SHEET_PLUGIN } from './meta';
@@ -22,7 +23,7 @@ import translations from './translations';
 import { SheetAction, SheetType, type SheetPluginProvides } from './types';
 
 export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
-  let graphRegistry: ComputeGraphRegistry | undefined;
+  let computeGraphRegistry: ComputeGraphRegistry | undefined;
 
   return {
     meta,
@@ -38,12 +39,12 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
 
       // Async import removes direct dependency on hyperformula.
       const { ComputeGraphRegistry } = await import('./graph');
-      graphRegistry = new ComputeGraphRegistry({ remoteFunctionUrl });
+      computeGraphRegistry = new ComputeGraphRegistry({ remoteFunctionUrl });
     },
     provides: {
       context: ({ children }) => {
-        invariant(graphRegistry);
-        return <ComputeGraphContextProvider registry={graphRegistry}>{children}</ComputeGraphContextProvider>;
+        invariant(computeGraphRegistry);
+        return <ComputeGraphContextProvider registry={computeGraphRegistry}>{children}</ComputeGraphContextProvider>;
       },
       metadata: {
         records: {
@@ -109,12 +110,13 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         },
       },
       markdown: {
-        // TODO(burdon): Facet to get current space/compute graph.
-        extensions: ({ document }) => {
-          return undefined;
-          // return [
-          // compute(document)
-          // ];
+        extensions: ({ document: doc }) => {
+          invariant(computeGraphRegistry);
+          const space = getSpace(doc);
+          if (space) {
+            const computeGraph = computeGraphRegistry.getOrCreateGraph(space);
+            return computeGraphFacet.of(computeGraph);
+          }
         },
       },
       stack: {

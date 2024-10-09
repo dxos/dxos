@@ -36,7 +36,7 @@ import {
   type SpaceDoc,
 } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES, generateEchoId, getTypeReference } from '@dxos/echo-schema';
-import type { EdgeConnection } from '@dxos/edge-client';
+import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages, type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -110,6 +110,7 @@ export type DataSpaceManagerParams = {
   echoHost: EchoHost;
   invitationsManager: InvitationsManager;
   edgeConnection?: EdgeConnection;
+  edgeHttpClient?: EdgeHttpClient;
   meshReplicator?: MeshEchoReplicator;
   echoEdgeReplicator?: EchoEdgeReplicator;
   runtimeParams?: DataSpaceManagerRuntimeParams;
@@ -138,6 +139,7 @@ export class DataSpaceManager extends Resource {
   private readonly _echoHost: EchoHost;
   private readonly _invitationsManager: InvitationsManager;
   private readonly _edgeConnection?: EdgeConnection = undefined;
+  private readonly _edgeHttpClient?: EdgeHttpClient = undefined;
   private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures = undefined;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
   private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
@@ -157,6 +159,7 @@ export class DataSpaceManager extends Resource {
     this._edgeConnection = params.edgeConnection;
     this._edgeFeatures = params.edgeFeatures;
     this._echoEdgeReplicator = params.echoEdgeReplicator;
+    this._edgeHttpClient = params.edgeHttpClient;
     this._runtimeParams = params.runtimeParams;
 
     trace.diagnostic({
@@ -482,6 +485,7 @@ export class DataSpaceManager extends Resource {
       },
       cache: metadata.cache,
       edgeConnection: this._edgeConnection,
+      edgeHttpClient: this._edgeHttpClient,
       edgeFeatures: this._edgeFeatures,
     });
     dataSpace.postOpen.append(async () => {

@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
 import { Effect, pipe } from 'effect';
 import { isFailType } from 'effect/Cause';
 import { isFailure, isSuccess } from 'effect/Exit';
 import { describe, expect, test } from 'vitest';
+
+import { S } from '@dxos/echo-schema';
 
 import { jsonChat } from './chat';
 import { type Context, logger, tryFunction } from './pipeline';

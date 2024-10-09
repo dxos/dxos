@@ -7,7 +7,7 @@ import { getHeads, type Doc } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context, Resource } from '@dxos/context';
-import type { SpaceDoc } from '@dxos/echo-protocol';
+import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type ObjectSnapshot, type Indexer, type IdToHeads } from '@dxos/indexing';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';

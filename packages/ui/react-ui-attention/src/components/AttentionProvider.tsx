@@ -6,42 +6,73 @@
 
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { createContext, type Scope, type CreateScope } from '@radix-ui/react-context';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import React, { type FocusEvent, type PropsWithChildren, useMemo } from 'react';
+import React, { useMemo, type FocusEvent, type PropsWithChildren } from 'react';
+
+import { create } from '@dxos/echo-schema';
+import { useDefaultValue } from '@dxos/react-ui';
 
 const ATTENTION_NAME = 'Attention';
 
+type Attention = {
+  attended: string[];
+};
+
 type AttentionContextValue = {
-  attended: Set<string>;
+  attention: Attention;
+  path: string[];
 };
 
 const [AttentionContextProvider, useAttentionContext] = createContext<AttentionContextValue>(ATTENTION_NAME, {
-  attended: new Set(),
+  attention: { attended: [] },
+  path: [],
 });
 
-const useHasAttention = (attendableId?: string) => {
-  const { attended } = useAttentionContext(ATTENTION_NAME);
-  return attendableId ? attended.has(attendableId) : false;
+type UseAttention = {
+  hasAttention: boolean;
+  isAncestor: boolean;
+  isRelated: boolean;
 };
 
-const useIsDirectlyAttended = (attendableId?: string) => {
-  const { attended } = useAttentionContext(ATTENTION_NAME);
-  const attendedArray = Array.from(attended);
-  return attendedArray.length === 1 && attendedArray[0] === attendableId;
+const useAttention = (attendableId?: string): UseAttention => {
+  const { attention, path } = useAttentionContext(ATTENTION_NAME);
+  if (!attendableId) {
+    return { hasAttention: false, isAncestor: false, isRelated: false };
+  }
+
+  const current = [attendableId, ...path];
+  const hasAttention =
+    current.length === attention.attended.length && current.every((id, index) => attention.attended[index] === id);
+
+  const isAncestor =
+    current.length < attention.attended.length &&
+    attention.attended.slice(-current.length).every((id, index) => current[index] === id);
+
+  const isRelated = attendableId === attention.attended[0];
+
+  return { hasAttention, isAncestor, isRelated };
 };
 
-const useAttendedIds = () => {
-  const { attended } = useAttentionContext(ATTENTION_NAME);
-  return useMemo(() => Array.from(attended), [attended]);
+const useAttended = () => {
+  const { attention } = useAttentionContext(ATTENTION_NAME);
+  return attention.attended;
 };
 
 /**
  * Computes HTML element attributes to apply so the attention system can detect changes
  * @param attendableId
  */
-const createAttendableAttributes = (attendableId?: string) => {
-  return { 'data-attendable-id': attendableId };
+const useAttendableAttributes = (attendableId?: string) => {
+  const { hasAttention } = useAttention(attendableId);
+
+  return useMemo(() => {
+    const attributes: Record<string, string | undefined> = { 'data-attendable-id': attendableId };
+
+    if (hasAttention) {
+      attributes['data-is-attention-source'] = 'true';
+    }
+
+    return attributes;
+  }, [attendableId, hasAttention]);
 };
 
 /**
@@ -70,23 +101,17 @@ const getAttendables = (selector: string, cursor: Element, acc: string[] = []): 
   }
 };
 
-const AttentionProvider = ({
+const RootAttentionProvider = ({
   children,
-  attended: propsAttended,
-  defaultAttended,
-  onChangeAttend,
+  attention: propsAttention,
+  onChange,
 }: PropsWithChildren<
   Partial<{
-    attended: Set<string>;
-    onChangeAttend: (nextAttended: Set<string>) => void;
-    defaultAttended: Set<string>;
+    attention: Attention;
+    onChange: (nextAttended: string[]) => void;
   }>
 >) => {
-  const [attended = new Set(), setAttended] = useControllableState<Set<string>>({
-    prop: propsAttended,
-    defaultProp: defaultAttended,
-    onChange: onChangeAttend,
-  });
+  const attention = useDefaultValue(propsAttention, () => create<Attention>({ attended: [] }));
   const handleFocus = (event: FocusEvent) => {
     const selector = [
       '[data-attendable-id]',
@@ -94,17 +119,18 @@ const AttentionProvider = ({
         (el) => `[id="${el.getAttribute('aria-controls')}"]`,
       ),
     ].join(',');
-    const nextAttended = new Set(getAttendables(selector, event.target));
-    const [prev, next] = [Array.from(attended), Array.from(nextAttended)];
+    const prev = attention.attended;
+    const next = Array.from(new Set(getAttendables(selector, event.target)));
     // TODO(wittjosiah): Not allowing empty state means that the attended item is not strictly guaranteed to be in the DOM.
     //   Currently this depends on the deck in order to ensure that when the attended item is removed something else is attended.
     // Only update state if the result is different and not empty.
     if (next.length > 0 && (prev.length !== next.length || !!prev.find((id, index) => next[index] !== id))) {
-      setAttended(nextAttended);
+      attention.attended = next;
+      onChange?.(next);
     }
   };
   return (
-    <AttentionContextProvider attended={attended}>
+    <AttentionContextProvider attention={attention} path={[]}>
       <div role='none' className='contents' onFocusCapture={handleFocus}>
         {children}
       </div>
@@ -112,14 +138,25 @@ const AttentionProvider = ({
   );
 };
 
+const AttentionProvider = ({ id, children }: PropsWithChildren<{ id: string }>) => {
+  const { attention, path } = useAttentionContext(ATTENTION_NAME);
+  const nextPath = useMemo(() => [id, ...path], [id, path]);
+
+  return (
+    <AttentionContextProvider attention={attention} path={nextPath}>
+      {children}
+    </AttentionContextProvider>
+  );
+};
+
 export {
+  RootAttentionProvider,
   AttentionProvider,
   useAttentionContext,
-  useHasAttention,
-  useIsDirectlyAttended,
-  useAttendedIds,
-  createAttendableAttributes,
+  useAttention,
+  useAttended,
+  useAttendableAttributes,
   ATTENTION_NAME,
 };
 
-export type { AttentionContextValue };
+export type { Attention, AttentionContextValue };

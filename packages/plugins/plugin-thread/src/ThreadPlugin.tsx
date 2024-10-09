@@ -49,7 +49,6 @@ type ThreadState = {
   /** An in-memory staging area for threads that are being drafted. */
   staging: Record<string, ThreadType[]>;
   current?: string | undefined;
-  focus?: boolean;
 };
 
 type SubjectId = string;
@@ -169,11 +168,12 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 return {
                   id,
                   type: 'orphan-comments-for-subject',
-                  data: object,
+                  data: null,
                   properties: {
-                    icon: meta.icon,
+                    icon: 'ph--chat-text--regular',
                     label,
                     showResolvedThreads: viewState.showResolvedThreads,
+                    object,
                   },
                 };
               },
@@ -305,7 +305,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     subject={data.subject}
                     stagedThreads={state.staging[fullyQualifiedId(data.subject)]}
                     current={state.current}
-                    focus
                     showResolvedThreads={showResolvedThreads}
                   />
                 );
@@ -349,7 +348,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     [
                       {
                         action: ThreadAction.SELECT,
-                        data: { current: fullyQualifiedId(thread), focus: true },
+                        data: { current: fullyQualifiedId(thread) },
                       },
                       {
                         action: LayoutAction.SET_LAYOUT,
@@ -369,7 +368,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             }
 
             case ThreadAction.SELECT: {
-              state.focus = intent.data?.current === state.current ? state.focus : intent.data?.focus;
               state.current = intent.data?.current;
               return { data: true };
             }
@@ -618,7 +616,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               },
             }),
             createExternalCommentSync(
-              doc.id,
+              fullyQualifiedId(doc),
               (sink) => effect(() => sink()),
               () =>
                 threads.value
@@ -626,7 +624,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   .map((thread) => ({ id: fullyQualifiedId(thread), cursor: thread.anchor! })),
             ),
             comments({
-              id: doc.id,
+              id: fullyQualifiedId(doc),
               onCreate: ({ cursor }) => {
                 const [start, end] = cursor.split(':');
                 const name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);

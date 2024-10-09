@@ -19,10 +19,12 @@ import {
 import { log } from '@dxos/log';
 import { getProviderValue, isNotFalsy, type MaybeProvider } from '@dxos/util';
 
-import { createEditorStateTransaction, documentId, editorInputMode, type EditorSelection } from '../extensions';
+import { editorInputMode } from '../extensions';
+import { type EditorSelection, createEditorStateTransaction, documentId } from '../state';
 import { logChanges } from '../util';
 
 export type UseTextEditor = {
+  // TODO(burdon): Rename.
   parentRef: RefObject<HTMLDivElement>;
   view?: EditorView;
   focusAttributes: ReturnType<typeof useFocusableGroup> & {

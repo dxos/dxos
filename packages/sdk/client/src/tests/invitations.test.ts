@@ -381,6 +381,7 @@ describe('Invitations', () => {
           networkManager,
           signalManager,
           edgeConnection,
+          undefined,
           {
             invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
           },

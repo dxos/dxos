@@ -9,3 +9,4 @@ export * from './defs';
 export * from './protocol';
 export * from './errors';
 export * from './auth';
+export * from './edge-http-client';

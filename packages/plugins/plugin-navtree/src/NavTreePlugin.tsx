@@ -154,7 +154,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                     activeIds={data.activeIds as Set<string>}
                     openItemIds={state.values.openItemIds}
                     onOpenItemIdsChange={handleOpenItemIdsChange}
-                    attended={data.attended as Set<string>}
+                    attended={data.attended as string[]}
                     popoverAnchorId={data.popoverAnchorId as string}
                   />
                 );

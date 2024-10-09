@@ -354,7 +354,6 @@ export const DeckPlugin = ({
       root: () => {
         return (
           <DeckLayout
-            attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
             layoutParts={location.values.active}
             showHintsFooter={settings.values.showFooter}
             overscroll={settings.values.overscroll}

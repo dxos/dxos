@@ -8,6 +8,7 @@ import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateT
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
+import { getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -60,7 +61,7 @@ export type SheetModelOptions = {
  *
  * [ComputeGraphContext] > [SheetContext]:[SheetModel] > [Sheet.Root]
  */
-// TODO(burdon): Factor out commonality with ComputeNode.
+// TODO(burdon): Factor out commonality with ComputeNode. Factor out HF.
 export class SheetModel extends Resource {
   public readonly id = `model-${PublicKey.random().truncate()}`;
 
@@ -104,7 +105,8 @@ export class SheetModel extends Resource {
     initialize(this._sheet);
 
     // TODO(burdon): SheetModel should extend ComputeNode and be constructed via the graph.
-    this._node = await this._graph.getOrCreateNode(createSheetName(this._sheet.id));
+    this._node = this._graph.getOrCreateNode(createSheetName({ type: getTypename(this._sheet)!, id: this._sheet.id }));
+    await this._node.open();
 
     // Listen for model updates (e.g., async calculations).
     const unsubscribe = this._node.update.on((event) => this.update.emit(event));

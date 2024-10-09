@@ -130,18 +130,22 @@ describe('Client', () => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 
-    const client1 = new Client({ services: testBuilder.createLocalClientServices() });
-    const client2 = new Client({ services: testBuilder.createLocalClientServices() });
-    await client1.initialize();
-    onTestFinished(() => client1.destroy());
-    await client2.initialize();
-    onTestFinished(() => client2.destroy());
+    const client1 = new Client({
+      services: testBuilder.createLocalClientServices(),
+      types: [ThreadType, MessageType, TextV0Type],
+    });
+    const client2 = new Client({
+      services: testBuilder.createLocalClientServices(),
+      types: [ThreadType, MessageType, TextV0Type],
+    });
 
+    await client1.initialize();
     await client1.halo.createIdentity();
+    onTestFinished(() => client1.destroy());
+
+    await client2.initialize();
     await client2.halo.createIdentity();
-    for (const client of [client1, client2]) {
-      client.addTypes([ThreadType, MessageType, TextV0Type]);
-    }
+    onTestFinished(() => client2.destroy());
 
     const threadQueried = new Trigger<ThreadType>();
 
