@@ -14,7 +14,7 @@ import {
   SpaceManager,
   valueEncoding,
 } from '@dxos/echo-pipeline';
-import type { EdgeConnection } from '@dxos/edge-client';
+import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
@@ -96,6 +96,7 @@ export class ServiceContext extends Resource {
     public readonly networkManager: SwarmNetworkManager,
     public readonly signalManager: SignalManager,
     private readonly _edgeConnection: EdgeConnection | undefined,
+    private readonly _edgeHttpClient: EdgeHttpClient | undefined,
     public readonly _runtimeParams?: ServiceContextRuntimeParams,
     private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures,
   ) {
@@ -304,6 +305,7 @@ export class ServiceContext extends Resource {
       echoHost: this.echoHost,
       invitationsManager: this.invitationsManager,
       edgeConnection: this._edgeConnection,
+      edgeHttpClient: this._edgeHttpClient,
       echoEdgeReplicator: this._echoEdgeReplicator,
       meshReplicator: this._meshReplicator,
       runtimeParams: this._runtimeParams as DataSpaceManagerRuntimeParams,
