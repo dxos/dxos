@@ -63,7 +63,10 @@ export type AxisMeta = {
 export type AxisSizes = DxGridPlaneRecord<DxGridFrozenPlane, Record<string, number>>;
 
 export type DxGridProps = Partial<
-  Pick<DxGrid, 'initialCells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault' | 'limitRows' | 'limitColumns'>
+  Pick<
+    DxGrid,
+    'initialCells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault' | 'limitRows' | 'limitColumns' | 'frozen'
+  >
 >;
 
 export class DxAxisResize extends Event {

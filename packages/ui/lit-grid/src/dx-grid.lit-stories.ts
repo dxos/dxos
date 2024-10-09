@@ -7,7 +7,8 @@ import './dx-grid.pcss';
 
 import { html, nothing } from 'lit';
 
-import { type DxGridProps } from './types';
+import { type DxGridFrozenPlane, type DxGridPlaneCells, type DxGridProps } from './types';
+import { colToA1Notation, rowToA1Notation } from './util';
 
 export default {
   title: 'dx-grid',
@@ -15,15 +16,27 @@ export default {
 };
 
 export const Basic = (props: DxGridProps) => {
-  return html`<div style="position:fixed;inset:0;">
+  return html`<div class="dark" style="position:fixed;inset:0;">
     <dx-grid
       initialCells=${props.initialCells ?? nothing}
       columnDefault=${props.columnDefault ?? nothing}
       rowDefault=${props.rowDefault ?? nothing}
       columns=${props.columns ?? nothing}
+      frozen=${props.frozen ?? nothing}
     ></dx-grid>
   </div>`;
 };
+
+const initialLabels = {
+  frozenColsStart: [...Array(12)].reduce((acc, _, i) => {
+    acc[`0,${i}`] = { value: rowToA1Notation(i) };
+    return acc;
+  }, {}),
+  frozenRowsStart: [...Array(12)].reduce((acc, _, i) => {
+    acc[`${i},0`] = { value: colToA1Notation(i) };
+    return acc;
+  }, {}),
+} satisfies Partial<Record<DxGridFrozenPlane, DxGridPlaneCells>>;
 
 Basic.args = {
   initialCells: JSON.stringify({
@@ -33,6 +46,7 @@ Basic.args = {
         value: 'Weekly sales report',
       },
     },
+    ...initialLabels,
   } satisfies DxGridProps['initialCells']),
   columnDefault: JSON.stringify({
     grid: {
@@ -55,6 +69,10 @@ Basic.args = {
       4: { size: 270 },
     },
   } satisfies DxGridProps['columns']),
+  frozen: JSON.stringify({
+    frozenColsStart: 1,
+    frozenRowsStart: 1,
+  } satisfies DxGridProps['frozen']),
 };
 
 export const Limits = (props: DxGridProps) => {

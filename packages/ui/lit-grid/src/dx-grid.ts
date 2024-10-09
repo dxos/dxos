@@ -103,11 +103,11 @@ const resolveColPlane = (plane: DxGridPlane): 'grid' | DxGridFrozenColsPlane => 
   switch (plane) {
     case 'fixedStartStart':
     case 'fixedEndStart':
-    case 'frozenRowsStart':
+    case 'frozenColsStart':
       return 'frozenColsStart';
     case 'fixedStartEnd':
     case 'fixedEndEnd':
-    case 'frozenRowsEnd':
+    case 'frozenColsEnd':
       return 'frozenColsEnd';
     default:
       return 'grid';
