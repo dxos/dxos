@@ -837,70 +837,69 @@ export class DxGrid extends LitElement {
     const rowPlane = resolveRowPlane(plane) as DxGridFrozenPlane;
     const cols = this.frozen[colPlane];
     const rows = this.frozen[rowPlane];
-    return (
-      (cols ?? 0) > 0 &&
-      (rows ?? 0) > 0 &&
-      html`<div
-        role="none"
-        data-dx-grid-plane=${plane}
-        class="dx-grid__plane--fixed"
-        style=${styleMap({
-          'grid-template-columns': this[`template${colPlane}`],
-          'grid-template-rows': this[`template${rowPlane}`],
-        })}
-      >
-        ${[...Array(cols)].map((_, c) => {
-          return [...Array(rows)].map((_, r) => {
-            return this.renderCell(c, r, plane);
-          });
-        })}
-      </div>`
-    );
+    return (cols ?? 0) > 0 && (rows ?? 0) > 0
+      ? html`<div
+          role="none"
+          data-dx-grid-plane=${plane}
+          class="dx-grid__plane--fixed"
+          style=${styleMap({
+            'grid-template-columns': this[`template${colPlane}`],
+            'grid-template-rows': this[`template${rowPlane}`],
+          })}
+        >
+          ${[...Array(cols)].map((_, c) => {
+            return [...Array(rows)].map((_, r) => {
+              return this.renderCell(c, r, plane);
+            });
+          })}
+        </div>`
+      : null;
   }
 
   private renderFrozenRows(plane: DxGridFrozenRowsPlane, visibleCols: number, offsetInline: number) {
     const rowPlane = resolveRowPlane(plane) as DxGridFrozenPlane;
     const rows = this.frozen[rowPlane];
-    return (
-      (rows ?? 0) > 0 &&
-      html`<div role="none" class="dx-grid__plane--frozen-row">
-        <div
-          role="none"
-          data-dx-grid-plane=${plane}
-          class="dx-grid__plane--frozen-row__content"
-          style="transform:translate3d(${offsetInline}px,0,0);grid-template-columns:${this
-            .templateGridColumns};grid-template-rows:${this[`template${rowPlane}`]}"
-        >
-          ${[...Array(visibleCols)].map((_, c0) => {
-            return [...Array(rows)].map((_, r) => {
-              const c = this.visColMin + c0;
-              return this.renderCell(c, r, plane, c0, r);
-            });
-          })}
-        </div>
-      </div>`
-    );
+    return (rows ?? 0) > 0
+      ? html`<div role="none" class="dx-grid__plane--frozen-row">
+          <div
+            role="none"
+            data-dx-grid-plane=${plane}
+            class="dx-grid__plane--frozen-row__content"
+            style="transform:translate3d(${offsetInline}px,0,0);grid-template-columns:${this
+              .templateGridColumns};grid-template-rows:${this[`template${rowPlane}`]}"
+          >
+            ${[...Array(visibleCols)].map((_, c0) => {
+              return [...Array(rows)].map((_, r) => {
+                const c = this.visColMin + c0;
+                return this.renderCell(c, r, plane, c0, r);
+              });
+            })}
+          </div>
+        </div>`
+      : null;
   }
 
   private renderFrozenColumns(plane: DxGridFrozenColsPlane, visibleRows: number, offsetBlock: number) {
     const colPlane = resolveColPlane(plane) as DxGridFrozenPlane;
     const cols = this.frozen[colPlane];
-    return html`<div role="none" class="dx-grid__plane--frozen-col">
-      <div
-        role="none"
-        data-dx-grid-plane=${plane}
-        class="dx-grid__plane--frozen-col__content"
-        style="transform:translate3d(0,${offsetBlock}px,0);grid-template-rows:${this
-          .templateGridRows};grid-template-columns:${this[`template${colPlane}`]}"
-      >
-        ${[...Array(cols)].map((_, c) => {
-          return [...Array(visibleRows)].map((_, r0) => {
-            const r = this.visRowMin + r0;
-            return this.renderCell(c, r, plane, c, r0);
-          });
-        })}
-      </div>
-    </div>`;
+    return (cols ?? 0) > 0
+      ? html`<div role="none" class="dx-grid__plane--frozen-col">
+          <div
+            role="none"
+            data-dx-grid-plane=${plane}
+            class="dx-grid__plane--frozen-col__content"
+            style="transform:translate3d(0,${offsetBlock}px,0);grid-template-rows:${this
+              .templateGridRows};grid-template-columns:${this[`template${colPlane}`]}"
+          >
+            ${[...Array(cols)].map((_, c) => {
+              return [...Array(visibleRows)].map((_, r0) => {
+                const r = this.visRowMin + r0;
+                return this.renderCell(c, r, plane, c, r0);
+              });
+            })}
+          </div>
+        </div>`
+      : null;
   }
 
   private renderCell(col: number, row: number, plane: DxGridPlane, visCol = col, visRow = row) {
