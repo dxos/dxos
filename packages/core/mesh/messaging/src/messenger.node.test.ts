@@ -5,7 +5,7 @@
 import { afterAll, onTestFinished, beforeAll, test, describe } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
-import { EdgeClient } from '@dxos/edge-client';
+import { createEphemeralEdgeIdentity, EdgeClient } from '@dxos/edge-client';
 import { type PublicKey } from '@dxos/keys';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
 import { openAndClose } from '@dxos/test-utils';
@@ -54,7 +54,7 @@ describe('Messenger with WebsocketSignalManager', () => {
 // TODO(mykola): Expects wrangler dev in edge repo to run. Skip to pass CI.
 describe.skip('Messenger with EdgeSignalManager', () => {
   const edgeSignalFactory = async (identityKey: PublicKey, deviceKey: PublicKey) => {
-    const client = new EdgeClient(identityKey.toHex(), deviceKey.toHex(), { socketEndpoint: 'ws://localhost:8787' });
+    const client = new EdgeClient(await createEphemeralEdgeIdentity(), { socketEndpoint: 'ws://localhost:8787' });
     await openAndClose(client);
 
     return new EdgeSignalManager({ edgeConnection: client });
