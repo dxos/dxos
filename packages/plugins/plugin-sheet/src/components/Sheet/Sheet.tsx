@@ -967,6 +967,7 @@ const SheetInput = forwardRef<HTMLInputElement, SheetInputProps>(({ id, onKeyDow
   const path = useAttentionPath();
   const attendableAttrs = useAttendableAttributes(id);
 
+  // TODO(wittjosiah): Consider factoring out as an attention util.
   // Wrap input in attendable divs for each part of the path.
   // This ensures that the sheet stays attended when the input is focused.
   return path.toReversed().reduce(
