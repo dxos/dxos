@@ -14,8 +14,8 @@ import {
   SpaceManager,
   valueEncoding,
 } from '@dxos/echo-pipeline';
-import type { EdgeHttpClient } from '@dxos/edge-client';
-import { createChainEdgeIdentity, createEphemeralEdgeIdentity, type EdgeConnection } from '@dxos/edge-client';
+import { createChainEdgeIdentity, createEphemeralEdgeIdentity } from '@dxos/edge-client';
+import type { EdgeHttpClient, type EdgeConnection } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';

@@ -14,7 +14,7 @@ import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { type FeedWrapper } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
-import { PublicKey, SpaceId } from '@dxos/keys';
+import { SpaceId } from '@dxos/keys';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage } from '@dxos/random-access-storage';
 import { openAndClose } from '@dxos/test-utils';

@@ -24,6 +24,8 @@ import { type Storage } from '@dxos/random-access-storage';
 import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
+import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
+import { ServiceRegistry } from './service-registry';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
 import {
@@ -40,8 +42,6 @@ import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createLevel, createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
-import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
-import { ServiceRegistry } from './service-registry';
 
 export type ClientServicesHostParams = {
   /**
