@@ -91,7 +91,7 @@ export const Frozen = (props: DxGridProps) => {
   </div>`;
 };
 
-Basic.args = {
+Frozen.args = {
   initialCells: JSON.stringify({
     grid: {},
     ...initialLabels,
