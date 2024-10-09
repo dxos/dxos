@@ -6,12 +6,12 @@ import WebSocket from 'isomorphic-ws';
 
 import { Trigger, Event, scheduleTaskInterval, scheduleTask, TriggerState } from '@dxos/async';
 import { Context, LifecycleState, Resource, type Lifecycle } from '@dxos/context';
+import { randomBytes } from '@dxos/crypto';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { schema } from '@dxos/protocols/proto';
-import { randomBytes } from '@dxos/crypto';
+import { type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { protocol } from './defs';
 import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors';

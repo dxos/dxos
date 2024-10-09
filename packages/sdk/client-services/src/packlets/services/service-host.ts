@@ -6,12 +6,7 @@ import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, type ClientServices } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import {
-  EdgeClient,
-  type EdgeConnection,
-  createEphemeralEdgeIdentity,
-  createStubEdgeIdentity,
-} from '@dxos/edge-client';
+import { EdgeClient, type EdgeConnection, createStubEdgeIdentity } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';

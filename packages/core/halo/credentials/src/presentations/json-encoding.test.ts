@@ -2,17 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
+import { inspect } from 'util';
 import { describe, test } from 'vitest';
 
 import { randomBytes } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
-import { schema } from '@dxos/protocols/proto';
 import { buf } from '@dxos/protocols/buf';
 import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { schema } from '@dxos/protocols/proto';
 
-import { createCredential } from '../credentials';
 import { signPresentation } from './presentation';
-import { inspect } from 'util';
+import { createCredential } from '../credentials';
 
 describe('json encoding', () => {
   test.skip('service access exercise by a device', async () => {

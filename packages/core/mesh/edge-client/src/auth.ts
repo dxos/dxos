@@ -1,8 +1,13 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { createCredential, signPresentation } from '@dxos/credentials';
-import { Signer } from '@dxos/crypto';
+import { type Signer } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Chain, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+
 import type { EdgeIdentity } from './edge-client';
 
 /**

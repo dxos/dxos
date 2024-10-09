@@ -23,7 +23,6 @@ import {
 import { MetadataStore } from '@dxos/echo-pipeline';
 import { createEphemeralEdgeIdentity, EdgeClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { EdgeSignalManager } from '@dxos/messaging';

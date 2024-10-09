@@ -213,7 +213,6 @@ describe('EdgeFeedReplicator', () => {
   };
 
   const createClient = async (endpoint: string) => {
-    const peerKey = PublicKey.random().toHex();
     const messenger = new EdgeClient(await createEphemeralEdgeIdentity(), { socketEndpoint: endpoint });
     const sendSpy = vi.spyOn(messenger, 'send');
     await openAndClose(messenger);

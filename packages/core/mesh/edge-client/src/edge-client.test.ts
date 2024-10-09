@@ -5,6 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { Keyring } from '@dxos/keyring';
 import { TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -12,7 +13,6 @@ import { createEphemeralEdgeIdentity, createTestHaloEdgeIdentity } from './auth'
 import { protocol } from './defs';
 import { EdgeClient } from './edge-client';
 import { createTestEdgeWsServer } from './testing';
-import { Keyring } from '@dxos/keyring';
 
 describe('EdgeClient', () => {
   const textMessage = (message: string) => protocol.createMessage(TextMessageSchema, { payload: { message } });
