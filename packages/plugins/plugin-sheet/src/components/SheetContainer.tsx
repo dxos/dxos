@@ -43,7 +43,6 @@ const SheetContainer = ({ graph, sheet, role }: SheetRootProps & { role?: string
     [sheet, dispatch],
   );
 
-  // TODO(wittjosiah): Whole sheet isn't attended when key navigating around the sheet.
   return (
     <div
       role='none'

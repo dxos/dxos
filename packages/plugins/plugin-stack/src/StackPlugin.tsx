@@ -6,9 +6,9 @@ import React from 'react';
 
 import { type Plugin, type PluginDefinition } from '@dxos/app-framework';
 import { create, type EchoReactiveObject } from '@dxos/echo-schema';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { CollectionType } from '@dxos/plugin-space/types';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, bottombarBlockPaddingEnd } from '@dxos/react-ui-theme';
 

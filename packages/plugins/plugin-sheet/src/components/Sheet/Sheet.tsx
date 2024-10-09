@@ -25,9 +25,8 @@ import { Resizable, type ResizeCallback, type ResizeStartCallback } from 're-res
 import React, {
   type CSSProperties,
   type DOMAttributes,
-  KeyboardEventHandler,
+  type KeyboardEventHandler,
   type PropsWithChildren,
-  ReactNode,
   forwardRef,
   useEffect,
   useImperativeHandle,
@@ -42,13 +41,7 @@ import { debounce } from '@dxos/async';
 import { fullyQualifiedId, createDocAccessor } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
-import {
-  ATTENABLE_ATTRIBUTE,
-  AttentionProvider,
-  useAttendableAttributes,
-  useAttention,
-  useAttentionPath,
-} from '@dxos/react-ui-attention';
+import { ATTENABLE_ATTRIBUTE, useAttendableAttributes, useAttention, useAttentionPath } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
@@ -870,7 +863,6 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
     });
 
     const id = fullyQualifiedId(model.sheet);
-    const attendableAttrs = useAttendableAttributes(id);
     const { hasAttention } = useAttention(id);
 
     return (
