@@ -5,7 +5,7 @@
 import { Schema as S } from '@effect/schema';
 import { describe, expect, test } from 'vitest';
 
-import { classifySchemaProperties } from './schema';
+import { getColumnTypes } from './schema';
 
 describe('schema->column-type', () => {
   test('basic', () => {
@@ -14,7 +14,7 @@ describe('schema->column-type', () => {
       field2: S.Number,
     });
 
-    const columns = classifySchemaProperties(simpleSchema);
+    const columns = getColumnTypes(simpleSchema);
 
     expect(columns).to.deep.equal([
       ['field1', 'string'],
@@ -28,7 +28,7 @@ describe('schema->column-type', () => {
       field2: S.optional(S.Number),
     });
 
-    const columns = classifySchemaProperties(simpleSchema);
+    const columns = getColumnTypes(simpleSchema);
 
     expect(columns).to.deep.equal([
       ['field1', 'string'],
@@ -42,7 +42,7 @@ describe('schema->column-type', () => {
       field2: S.optional(S.Date),
     });
 
-    const columns = classifySchemaProperties(simpleSchema);
+    const columns = getColumnTypes(simpleSchema);
 
     expect(columns).to.deep.equal([
       ['field1', 'date'],
@@ -56,7 +56,7 @@ describe('schema->column-type', () => {
       age: S.Number.pipe(S.negative()),
     });
 
-    const columns = classifySchemaProperties(simpleSchema);
+    const columns = getColumnTypes(simpleSchema);
 
     expect(columns).to.deep.equal([
       ['name', 'string'],
@@ -73,7 +73,7 @@ describe('schema->column-type', () => {
       someUnion: S.Union(S.String, S.Number),
     });
 
-    const columns = classifySchemaProperties(simpleSchema);
+    const columns = getColumnTypes(simpleSchema);
 
     expect(columns).to.deep.equal([
       ['name', 'string'],
@@ -93,7 +93,7 @@ describe('schema->column-type', () => {
       }),
     });
 
-    const columns = classifySchemaProperties(simpleSchema);
+    const columns = getColumnTypes(simpleSchema);
 
     expect(columns).to.deep.equal([
       ['name', 'string'],
@@ -115,7 +115,7 @@ describe('schema->column-type', () => {
       }),
     });
 
-    const columns = classifySchemaProperties(simpleSchema);
+    const columns = getColumnTypes(simpleSchema);
 
     expect(columns).to.deep.equal([
       ['name', 'string'],
@@ -135,7 +135,7 @@ describe('schema->column-type', () => {
       }),
     });
 
-    const columns = classifySchemaProperties(simpleSchema);
+    const columns = getColumnTypes(simpleSchema);
 
     expect(columns).to.deep.equal([
       ['name', 'string'],

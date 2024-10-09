@@ -431,7 +431,7 @@ export class ColumnBuilder<TData extends RowData> {
    * Row selector
    */
   selectRow({ classNames, onUpdate, id = 'selectRow' }: SelectRowColumnOptions<TData> = {}): Parameters<
-    ColumnHelper<TData>['json'] // TODO(burdon): ???
+    ColumnHelper<TData>['display']
   >[0] {
     return {
       id,

@@ -8,8 +8,7 @@ import { type ColumnType } from './types';
 
 // TODO(burdon): Factor out to @dxos/effect?
 
-// TODO(burdon): Rename?
-export const classifySchemaProperties = (schema: S.Schema<any, any>): [string, ColumnType][] => {
+export const getColumnTypes = (schema: S.Schema<any, any>): [string, ColumnType][] => {
   const recurse = (node: AST.AST, path: string[], acc: [string, ColumnType][]) => {
     const properties = AST.getPropertySignatures(node);
     properties.forEach((prop) => {
