@@ -32,7 +32,7 @@ export interface EdgeConnection extends Required<Lifecycle> {
   get peerKey(): string;
   get isOpen(): boolean;
   get isConnected(): boolean;
-  setIdentity(params: { peerKey: string; identityKey: string }): void;
+  setIdentity(identity: EdgeIdentity): void;
   addListener(listener: MessageListener): () => void;
   send(message: Message): Promise<void>;
 }
@@ -173,7 +173,10 @@ export class EdgeClient extends Resource implements EdgeConnection {
       }
     };
 
+    // TODO(dmaretskyi): Potential race condition here since web socket errors don't resolve this trigger.
     await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
+
+    // TODO(dmaretskyi): Potential leak: context re-assigned without disposing the previous one.
     this._keepaliveCtx = new Context();
     scheduleTaskInterval(
       this._keepaliveCtx,

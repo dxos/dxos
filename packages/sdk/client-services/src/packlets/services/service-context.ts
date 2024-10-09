@@ -167,11 +167,6 @@ export class ServiceContext extends Resource {
                 peerKey: identity.deviceKey.toHex(),
               });
             });
-
-            this._edgeConnection.setIdentity({
-              peerKey: identity.deviceKey.toHex(),
-              identityKey: identity.identityKey.toHex(),
-            });
           }
         },
       },
