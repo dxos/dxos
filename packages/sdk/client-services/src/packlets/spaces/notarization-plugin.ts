@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DeferredTask, Event, scheduleTask, sleep, TimeoutError, Trigger } from '@dxos/async';
-import { Context, rejectOnDispose } from '@dxos/context';
-import { type CredentialProcessor } from '@dxos/credentials';
-import { verifyCredential } from '@dxos/credentials';
+import { DeferredTask, Event, scheduleTask, sleep, TimeoutError, Trigger, scheduleMicroTask } from '@dxos/async';
+import { type Context, rejectOnDispose, Resource } from '@dxos/context';
+import { type CredentialProcessor, verifyCredential } from '@dxos/credentials';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -71,7 +70,6 @@ export type NotarizeParams = {
 
   /**
    * A random amount of time before making or retrying an edge request to help prevent large bursts of requests.
-   * @default {@link DEFAULT_EDGE_RETRY_JITTER}
    */
   edgeRetryJitter?: number;
 };
@@ -79,8 +77,7 @@ export type NotarizeParams = {
 /**
  * See NotarizationService proto.
  */
-export class NotarizationPlugin implements CredentialProcessor {
-  private readonly _ctx = new Context();
+export class NotarizationPlugin extends Resource implements CredentialProcessor {
   private readonly _extensionOpened = new Event();
 
   private _writer: FeedWriter<Credential> | undefined;
@@ -94,6 +91,7 @@ export class NotarizationPlugin implements CredentialProcessor {
   private readonly _edgeClient: EdgeHttpClient | undefined;
 
   constructor(params: NotarizationPluginParams) {
+    super();
     this._spaceId = params.spaceId;
     if (params.edgeClient && params.edgeFeatures?.feedReplicator) {
       this._edgeClient = params.edgeClient;
@@ -104,13 +102,13 @@ export class NotarizationPlugin implements CredentialProcessor {
     return !!this._writer;
   }
 
-  async open() {
+  protected override async _open() {
     if (this._edgeClient && this._writer) {
       this._notarizePendingEdgeCredentials(this._edgeClient, this._writer);
     }
   }
 
-  async close() {
+  protected override async _close() {
     await this._ctx.dispose();
   }
 
@@ -194,6 +192,7 @@ export class NotarizationPlugin implements CredentialProcessor {
           credentials: credentials.filter((credential) => !this._processedCredentials.has(credential.id!)),
         });
         log('success');
+
         await sleep(successDelay); // wait before trying with a new peer
       } catch (err: any) {
         if (!ctx.disposed && !err.message.includes(WRITER_NOT_SET_ERROR_CODE)) {
@@ -219,14 +218,13 @@ export class NotarizationPlugin implements CredentialProcessor {
     });
     scheduleTask(ctx, async () => {
       try {
-        await client.post(`/spaces/${this._spaceId}/notarization`, {
-          body: { credentials: encodedCredentials },
-          retry: { count: MAX_EDGE_RETRIES, timeout: timeouts.retryTimeout, jitter: timeouts.jitter },
-        });
+        await client.notarizeCredentials(
+          this._spaceId,
+          { credentials: encodedCredentials },
+          { retry: { count: MAX_EDGE_RETRIES, timeout: timeouts.retryTimeout, jitter: timeouts.jitter } },
+        );
 
         log('edge notarization success');
-
-        await sleep(timeouts.successDelay);
       } catch (error: any) {
         handleEdgeError(error);
       }
@@ -253,13 +251,18 @@ export class NotarizationPlugin implements CredentialProcessor {
     }
   }
 
+  /**
+   * The method is used only for adding agent feeds to spaces.
+   * When an agent is created we can admit them into all the existing spaces. In case the operation fails
+   * this method will fix it on the next space open.
+   * Given how rarely this happens there's no need to poll the endpoint.
+   */
   private _notarizePendingEdgeCredentials(client: EdgeHttpClient, writer: FeedWriter<Credential>) {
-    setTimeout(async () => {
+    scheduleMicroTask(this._ctx, async () => {
       try {
-        const response = await client.get<{ awaitingNotarization: { credentials: string[] } }>(
-          `/spaces/${this._spaceId}/notarization`,
-          { retry: { count: MAX_EDGE_RETRIES } },
-        );
+        const response = await client.getCredentialsForNotarization(this._spaceId, {
+          retry: { count: MAX_EDGE_RETRIES },
+        });
 
         const credentials = response.awaitingNotarization.credentials;
         if (!credentials.length) {

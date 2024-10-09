@@ -4,8 +4,14 @@
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EdgeCallFailedError, type EdgeHttpResponse } from '@dxos/protocols';
+import {
+  EdgeCallFailedError,
+  type EdgeHttpResponse,
+  type GetNotarizationResponseBody,
+  type PostNotarizationRequestBody,
+} from '@dxos/protocols';
 
 const DEFAULT_RETRY_TIMEOUT = 1500;
 const DEFAULT_RETRY_JITTER = 500;
@@ -21,12 +27,16 @@ export class EdgeHttpClient {
     log('created', { url: this._baseUrl });
   }
 
-  public get<T>(path: string, args?: EdgeHttpGetArgs): Promise<T> {
-    return this._call(path, { ...args, method: 'GET' });
+  public getCredentialsForNotarization(spaceId: SpaceId, args?: EdgeHttpGetArgs): Promise<GetNotarizationResponseBody> {
+    return this._call(`/spaces/${spaceId}/notarization`, { ...args, method: 'GET' });
   }
 
-  public post<T>(path: string, args?: EdgeHttpPostArgs): Promise<T> {
-    return this._call(path, { ...args, method: 'POST' });
+  public async notarizeCredentials(
+    spaceId: SpaceId,
+    body: PostNotarizationRequestBody,
+    args?: EdgeHttpGetArgs,
+  ): Promise<void> {
+    await this._call(`/spaces/${spaceId}/notarization`, { ...args, body, method: 'POST' });
   }
 
   private async _call<T>(path: string, args: EdgeHttpCallArgs): Promise<T> {
