@@ -54,6 +54,8 @@ export interface EdgeIdentity {
   presentCredentials({ challenge }: { challenge: Uint8Array }): Promise<Presentation>;
 }
 
+const DISABLE_AUTH = true;
+
 /**
  * Messenger client.
  */
@@ -129,14 +131,18 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   private async _openWebSocket() {
-    // TODO(dmaretskyi): Get challenge from the WWW-Authenticate header returned by the endpoint.
-    const challenge = randomBytes(32);
-    const credential = await this._identity.presentCredentials({ challenge });
+    let protocolHeader: string | undefined;
+
+    if (!DISABLE_AUTH) {
+      // TODO(dmaretskyi): Get challenge from the WWW-Authenticate header returned by the endpoint.
+      const challenge = randomBytes(32);
+      const credential = await this._identity.presentCredentials({ challenge });
+      protocolHeader = encodePresentationIntoAuthHeader(credential);
+    }
 
     const url = new URL(`/ws/${this._identity.identityKey}/${this._identity.peerKey}`, this._config.socketEndpoint);
-    const protocolHeader = encodePresentationIntoAuthHeader(credential);
     log('Opening websocket', { url: url.toString(), protocolHeader });
-    this._ws = new WebSocket(url, [protocolHeader]);
+    this._ws = new WebSocket(url, protocolHeader ? [protocolHeader] : []);
 
     this._ws.onopen = () => {
       log('opened', this.info);
