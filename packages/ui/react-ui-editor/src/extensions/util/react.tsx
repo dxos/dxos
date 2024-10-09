@@ -25,6 +25,8 @@ export const createElement = (tag: string, options?: ElementOptions, children?: 
   return el;
 };
 
+// TODO(burdon): Remove react rendering; use DOM directly.
+// NOTE: CM seems to remove/detach/overwrite portals that are attached to the DOM it control.s
 export const renderRoot = <T extends Element>(root: T, node: ReactNode): T => {
   createRoot(root).render(<ThemeProvider tx={defaultTx}>{node}</ThemeProvider>);
   return root;

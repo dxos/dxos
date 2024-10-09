@@ -229,8 +229,8 @@ const renderLinkTooltip = (el: Element, url: string) => {
   );
 };
 
-// TODO(burdon): Factor out. Reconcile with react-ui-editor.
-const renderRoot = <T extends Element>(root: T, node: ReactNode): T => {
+// TODO(burdon): Remove react rendering; use DOM directly.
+export const renderRoot = <T extends Element>(root: T, node: ReactNode): T => {
   createRoot(root).render(<ThemeProvider tx={defaultTx}>{node}</ThemeProvider>);
   return root;
 };

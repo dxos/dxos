@@ -36,7 +36,7 @@ import {
 import { MarkdownContainer, MarkdownSettings } from './components';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
-import { DocumentType, TextType } from './types';
+import { DocumentType, isEditorModel, TextType } from './types';
 import {
   type MarkdownPluginProvides,
   type MarkdownSettingsProps,
@@ -44,6 +44,9 @@ import {
   type MarkdownPluginState,
 } from './types';
 import { markdownExtensionPlugins, serializer } from './util';
+
+// TODO(burdon): Normalize active/object.
+const getDoc = (object: any) => (object instanceof DocumentType ? object : undefined);
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
@@ -54,6 +57,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   });
 
   const state = new LocalStorageStore<MarkdownPluginState>(MARKDOWN_PLUGIN, { extensionProviders: [], viewMode: {} });
+
+  const getViewMode = (id: string) => (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
+  const setViewMode = (id: string, viewMode: EditorViewMode) => (state.values.viewMode[id] = viewMode);
 
   return {
     meta,
@@ -247,30 +253,13 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           switch (role) {
             case 'section':
             case 'article': {
-              /**
-               * Checks if an object conforms to the interface needed to render an editor.
-               */
-              // TODO(burdon): Remove need for this; intents should provide DocumentType.
-              const isEditorModel = (data: any): data is { id: string; text: string } =>
-                data &&
-                typeof data === 'object' &&
-                'id' in data &&
-                typeof data.id === 'string' &&
-                'text' in data &&
-                typeof data.text === 'string';
-
-              // TODO(burdon): Normalize active/object.
-              const getDoc = (object: any) => (object instanceof DocumentType ? object : undefined);
+              // TODO(burdon): Normalize types (from FilesPlugin).
               const doc = getDoc(data.active) ?? getDoc(data.object);
-
               const { id, object } = isEditorModel(data.object)
                 ? { id: data.object.id, object: data.object }
                 : doc
                   ? { id: fullyQualifiedId(doc), object: doc }
                   : {};
-
-              const getViewMode = (id: string) => (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
-              const setViewMode = (id: string, viewMode: EditorViewMode) => (state.values.viewMode[id] = viewMode);
 
               if (!id || !object) {
                 return null;
