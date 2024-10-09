@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import React from 'react';
+import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
@@ -326,9 +326,9 @@ const main = async () => {
   });
 
   createRoot(document.getElementById('root')!).render(
-    // <StrictMode>
-    <App />,
-    // </StrictMode>,
+    <StrictMode>
+      <App />,
+    </StrictMode>,
   );
 };
 
