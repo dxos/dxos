@@ -87,7 +87,6 @@ export const updateTable = (table: Table, event: TableEvent): Table => {
   return table;
 };
 
-// Return a preact-signals reactive object (with create) for an initialized table.
 // TODO(Zan): Take widths + callbacks for width changes, column ordering.
 export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]) => {
   /**
@@ -114,17 +113,22 @@ export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]) 
    * - Array-level changes: More expensive (all cell `computed` recreated)
    */
 
+  // NOTE(Zan): Our table.cells.value is {[k: string]: ReadonlySignal<any>}.
+  // dx-grid needs {[k: string]: CellValue } where CellValue is { value: any, className?: string }.
+  // Since CellValue has `.value` and our ReadonlySignal<any> has `.value` this just works.
+  // Not sure what to do when we need to pass other CellValue properties though.
+  // This is a bit of a hack to avoid mapping over the entire table.cells.value again.
   const cells = computed(() => {
-    const cellObject: { [key: string]: ReadonlySignal<any> } = {};
+    const dxCellValues: { [key: string]: ReadonlySignal<any> } = {};
 
     data.forEach((row, rowIndex) => {
       columnDefinitions.forEach((col, colIndex) => {
         const key = `${colIndex},${rowIndex}`;
-        cellObject[key] = computed(() => col.accessor(row));
+        dxCellValues[key] = computed(() => col.accessor(row));
       });
     });
 
-    return cellObject;
+    return dxCellValues;
   });
 
   const rowCount = computed(() => data.length);

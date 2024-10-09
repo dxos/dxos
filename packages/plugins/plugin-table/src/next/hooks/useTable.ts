@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 import { type RefObject, useCallback, useEffect, useMemo } from 'react';
 
-import { type DxGridElement, type DxGridAxisMeta, type DxGridCells } from '@dxos/react-ui-grid';
+import { type DxGridElement, type DxGridAxisMeta } from '@dxos/react-ui-grid';
 
 import { type TableEvent, type ColumnDefinition, createTable, updateTable } from '../table';
 
@@ -23,10 +23,6 @@ export const useTable = (columnDefinitions: ColumnDefinition[], data: any[], gri
       table.columnDefinitions.map((col, index) => [index, { size: table.columnWidths[col.id] }]),
     );
   }, [table.columnDefinitions, table.columnWidths]);
-
-  // NOTE(Zan): Since CellValue has `.value` and our ReadOnlySignal has `.value` this just works.
-  // Not sure what to do when we need to pass other CellValue properties though.
-  const gridCells: DxGridCells = table.cells.value;
 
   useEffect(() => {
     return effect(() => {
@@ -52,5 +48,5 @@ export const useTable = (columnDefinitions: ColumnDefinition[], data: any[], gri
   // Clean up table on unmount.
   useEffect(() => () => table.dispose(), []);
 
-  return { table, columnMeta, gridCells, dispatch };
+  return { table, columnMeta, dispatch };
 };

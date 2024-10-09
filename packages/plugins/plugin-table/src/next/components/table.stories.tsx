@@ -72,6 +72,27 @@ const useSimulateCollaborativeUpdates = (
   }, [data, columnDefinitions, intervalMs, isEnabled]);
 };
 
+const useSimulateRowAdditions = (data: any[], intervalMs: number, isEnabled: boolean) => {
+  useEffect(() => {
+    if (!isEnabled) {
+      return;
+    }
+
+    const addNewRow = () => {
+      const newRow = {
+        id: data.length + 1,
+        name: `New Person ${data.length + 1}`,
+        age: Math.floor(Math.random() * 50) + 20,
+        active: Math.random() > 0.5,
+      };
+      data.unshift(newRow);
+    };
+
+    const intervalId = setInterval(addNewRow, intervalMs);
+    return () => clearInterval(intervalId);
+  }, [data, intervalMs, isEnabled]);
+};
+
 const DefaultStory = () => {
   const data = React.useMemo(() => makeData(100), []);
 
@@ -98,6 +119,44 @@ const LargeDataStory = ({
   return <Table columnDefinitions={columnDefinitions} data={data} />;
 };
 
+export const LargeDataSet = {
+  render: (args: { rowCount: number; updateIntervalMs: number; simulateCollaborativeCellUpdates: boolean }) => (
+    <LargeDataStory {...args} />
+  ),
+  args: {
+    rowCount: 1000,
+    simulateCollaborativeCellUpdates: true,
+    updateIntervalMs: 1,
+  },
+};
+
+const RowAdditionStory = ({
+  initialRowCount,
+  updateIntervalMs,
+  simulateRowAdditions,
+}: {
+  initialRowCount: number;
+  updateIntervalMs: number;
+  simulateRowAdditions: boolean;
+}) => {
+  const data = React.useMemo(() => makeData(initialRowCount), [initialRowCount]);
+
+  useSimulateRowAdditions(data, updateIntervalMs, simulateRowAdditions);
+
+  return <Table columnDefinitions={columnDefinitions} data={data} />;
+};
+
+export const RowAddition = {
+  render: (args: { initialRowCount: number; updateIntervalMs: number; simulateRowAdditions: boolean }) => (
+    <RowAdditionStory {...args} />
+  ),
+  args: {
+    initialRowCount: 1,
+    simulateRowAdditions: true,
+    updateIntervalMs: 100,
+  },
+};
+
 const clientProps: WithClientProviderProps = {
   createIdentity: true,
   createSpace: true,
@@ -112,15 +171,4 @@ export default {
 
 export const Default = {
   render: () => <DefaultStory />,
-};
-
-export const LargeDataSet = {
-  render: (args: { rowCount: number; updateIntervalMs: number; simulateCollaborativeCellUpdates: boolean }) => (
-    <LargeDataStory {...args} />
-  ),
-  args: {
-    rowCount: 1000,
-    simulateCollaborativeCellUpdates: true,
-    updateIntervalMs: 1,
-  },
 };

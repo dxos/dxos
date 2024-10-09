@@ -25,7 +25,7 @@ type TableProps = {
 // TODO(Zan): Custom header labels and buttons.
 export const Table: React.FC<TableProps> = ({ columnDefinitions, data }) => {
   const gridRef = useRef<DxGridElement>(null);
-  const { table, columnMeta, gridCells, dispatch } = useTable(columnDefinitions, data, gridRef);
+  const { table, columnMeta, dispatch } = useTable(columnDefinitions, data, gridRef);
 
   return (
     <>
@@ -34,7 +34,7 @@ export const Table: React.FC<TableProps> = ({ columnDefinitions, data }) => {
           ref={gridRef}
           limitRows={data.length}
           limitColumns={table.columnDefinitions.length}
-          initialCells={gridCells}
+          initialCells={table.cells.value}
           columnDefault={{ size: 120, resizeable: true }}
           rowDefault={{ size: 32, resizeable: true }}
           columns={columnMeta}
