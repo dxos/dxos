@@ -24,18 +24,9 @@ export const useTable = (columnDefinitions: ColumnDefinition[], data: any[], gri
     );
   }, [table.columnDefinitions, table.columnWidths]);
 
-  const gridCells: DxGridCells = useMemo(() => {
-    return Object.fromEntries(
-      Array.from(table.cells.value.entries()).map(([key, cellSignal]) => [
-        key,
-        {
-          get value() {
-            return cellSignal.value;
-          },
-        },
-      ]),
-    );
-  }, [table.cells.value]);
+  // NOTE(Zan): Since CellValue has `.value` and our ReadOnlySignal has `.value` this just works.
+  // Not sure what to do when we need to pass other CellValue properties though.
+  const gridCells: DxGridCells = table.cells.value;
 
   useEffect(() => {
     return effect(() => {

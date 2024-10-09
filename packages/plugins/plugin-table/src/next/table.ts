@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { computed } from '@preact/signals-core';
+import { computed, type ReadonlySignal } from '@preact/signals-core';
 
 import { create } from '@dxos/echo-schema';
 
@@ -115,19 +115,16 @@ export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]) 
    */
 
   const cells = computed(() => {
-    const cellMap = new Map();
+    const cellObject: { [key: string]: ReadonlySignal<any> } = {};
 
     data.forEach((row, rowIndex) => {
       columnDefinitions.forEach((col, colIndex) => {
         const key = `${colIndex},${rowIndex}`;
-        cellMap.set(
-          key,
-          computed(() => col.accessor(row)),
-        );
+        cellObject[key] = computed(() => col.accessor(row));
       });
     });
 
-    return cellMap;
+    return cellObject;
   });
 
   const rowCount = computed(() => data.length);

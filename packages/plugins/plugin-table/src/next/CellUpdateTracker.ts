@@ -12,16 +12,16 @@ export class CellUpdateTracker {
   private cellEffectsUnsubscribes: (() => void)[] = [];
   private topLevelEffectUnsubscribe: (() => void) | null = null;
 
-  constructor(private readonly cells: ReadonlySignal<Map<any, any>>) {
+  constructor(private readonly cells: ReadonlySignal<{ [key: string]: any }>) {
     this.setupCellListeners();
     this.createInitialCellEffects();
   }
 
   private setupCellListeners = (): void => {
     this.topLevelEffectUnsubscribe = effect(() => {
-      const cellsMap = this.cells.value;
+      const cellsObj = this.cells.value;
       this.cleanupCellListeners();
-      this.createCellEffects(cellsMap);
+      this.createCellEffects(cellsObj);
     });
   };
 
@@ -29,8 +29,8 @@ export class CellUpdateTracker {
     this.createCellEffects(this.cells.value);
   };
 
-  private createCellEffects = (cellsMap: Map<any, ReadonlySignal<any>>): void => {
-    this.cellEffectsUnsubscribes = Array.from(cellsMap.entries()).map(([key, cellSignal]) => {
+  private createCellEffects = (cellsObj: { [key: string]: ReadonlySignal<any> }): void => {
+    this.cellEffectsUnsubscribes = Object.entries(cellsObj).map(([key, cellSignal]) => {
       return effect(() => {
         cellSignal.value; // Access the value to subscribe to the signal.
         queueMicrotask(() => this.trackUpdate(key));
