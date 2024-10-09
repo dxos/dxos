@@ -45,13 +45,29 @@ export const createChainEdgeIdentity = async (
   chain: Chain,
   credentials: Credential[],
 ): Promise<EdgeIdentity> => {
+  const credentialsToSign =
+    credentials.length > 0
+      ? credentials
+      : [
+          await createCredential({
+            assertion: {
+              '@type': 'dxos.halo.credentials.Auth',
+            },
+            issuer: identityKey,
+            subject: identityKey,
+            signer,
+            chain,
+            signingKey: peerKey,
+          }),
+        ];
+
   return {
     identityKey: identityKey.toHex(),
     peerKey: peerKey.toHex(),
     presentCredentials: async ({ challenge }) => {
       return signPresentation({
         presentation: {
-          credentials,
+          credentials: credentialsToSign,
         },
         signer,
         nonce: challenge,
