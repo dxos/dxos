@@ -7,6 +7,7 @@ import { clientServiceBundle, type ClientServices } from '@dxos/client-protocol'
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeConnection } from '@dxos/edge-client';
+import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -89,6 +90,7 @@ export class ClientServicesHost {
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
   private _edgeConnection?: EdgeConnection = undefined;
+  private _edgeHttpClient?: EdgeHttpClient = undefined;
 
   private _serviceContext!: ServiceContext;
   private readonly _runtimeParams: ServiceContextRuntimeParams;
@@ -214,6 +216,7 @@ export class ClientServicesHost {
     if (edgeEndpoint) {
       const randomKey = PublicKey.random().toHex();
       this._edgeConnection = new EdgeClient(randomKey, randomKey, { socketEndpoint: edgeEndpoint });
+      this._edgeHttpClient = new EdgeHttpClient(edgeEndpoint);
     }
 
     const {
@@ -278,6 +281,7 @@ export class ClientServicesHost {
       this._networkManager,
       this._signalManager,
       this._edgeConnection,
+      this._edgeHttpClient,
       this._runtimeParams,
       this._config.get('runtime.client.edgeFeatures'),
     );
