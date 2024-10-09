@@ -81,5 +81,6 @@ const typeToColumn = (type: AST.AST): ColumnType => {
     }
   }
 
+  // TODO(burdon): Better fallback?
   return 'json';
 };
