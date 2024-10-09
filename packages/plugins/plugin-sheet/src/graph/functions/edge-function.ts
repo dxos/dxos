@@ -13,17 +13,19 @@ import { FunctionType } from '@dxos/plugin-script/types';
 import { nonNullable } from '@dxos/util';
 
 import { CellError, ErrorType, FunctionArgumentType } from '#hyperformula';
-import { type AsyncFunction, FunctionPluginAsync } from './async-function';
+import { type AsyncFunction, AsyncFunctionPlugin } from './async-function';
 
-const EDGE_FUNCTION_TTL = 10_000;
+export const EDGE_FUNCTION_NAME = 'DX';
+
+const FUNCTION_TTL = 10_000;
 
 /**
- * A hyperformula function plugin for calling EDGE functions.
+ * A hyperformula function plugin for calling remote (EDGE) functions.
  *
  * https://hyperformula.handsontable.com/guide/custom-functions.html#add-a-simple-custom-function
  */
-export class EdgeFunctionPlugin extends FunctionPluginAsync {
-  edge(ast: ProcedureAst, state: InterpreterState) {
+export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
+  dx(ast: ProcedureAst, state: InterpreterState) {
     const handler =
       (subscribe = false): AsyncFunction =>
       async (binding: string, ...args: any) => {
@@ -47,7 +49,7 @@ export class EdgeFunctionPlugin extends FunctionPluginAsync {
 
             // TODO(wittjosiah): `ttl` should be 0 to force a recalculation when a new version is deployed.
             //  This needs a ttl to prevent a binding change from causing the function not to be found.
-            this.runAsyncFunction(ast, state, handler(false), { ttl: EDGE_FUNCTION_TTL });
+            this.runAsyncFunction(ast, state, handler(false), { ttl: FUNCTION_TTL });
           });
 
           this.context.createSubscription(ast.procedureName, unsubscribe);
@@ -63,13 +65,13 @@ export class EdgeFunctionPlugin extends FunctionPluginAsync {
         return await result.text();
       };
 
-    return this.runAsyncFunction(ast, state, handler(true), { ttl: EDGE_FUNCTION_TTL });
+    return this.runAsyncFunction(ast, state, handler(true), { ttl: FUNCTION_TTL });
   }
 }
 
 EdgeFunctionPlugin.implementedFunctions = {
-  EDGE: {
-    method: 'edge',
+  [EDGE_FUNCTION_NAME]: {
+    method: 'dx',
     parameters: [
       // Binding
       { argumentType: FunctionArgumentType.STRING },
@@ -90,9 +92,9 @@ EdgeFunctionPlugin.implementedFunctions = {
 
 export const EdgeFunctionPluginTranslations = {
   enGB: {
-    EDGE: 'EDGE',
+    [EDGE_FUNCTION_NAME]: 'Remote function',
   },
   enUS: {
-    EDGE: 'EDGE',
+    [EDGE_FUNCTION_NAME]: 'Remote function',
   },
 };

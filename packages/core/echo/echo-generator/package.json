@@ -30,10 +30,14 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/node-std": "workspace:*",
+    "@dxos/node-std": "workspace:*"
+  },
+  "devDependencies": {
     "@dxos/random": "workspace:*"
   },
-  "devDependencies": {},
+  "peerDependencies": {
+    "@dxos/random": "workspace:*"
+  },
   "publishConfig": {
     "access": "public"
   }

@@ -4,9 +4,9 @@
 
 import {
   AST,
-  DynamicSchema,
   getSchema,
   getType,
+  DynamicSchema,
   ReferenceAnnotationId,
   type S,
   SchemaValidator,

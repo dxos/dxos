@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
 import { SerpAPI } from '@langchain/community/tools/serpapi';
 import { HNSWLib } from '@langchain/community/vectorstores/hnswlib';
 import { type BaseFunctionCallOptions } from '@langchain/core/language_models/base';
@@ -33,7 +34,7 @@ import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { z } from 'zod';
 
-import { effectToJsonSchema, S } from '@dxos/echo-schema';
+import { effectToJsonSchema } from '@dxos/echo-schema';
 
 import { getConfig, getKey } from '../../../util';
 

@@ -2,20 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import * as AST from '@effect/schema/AST';
-import { pipe } from 'effect';
-import * as Option from 'effect/Option';
+import { Option, pipe } from 'effect';
 import { type Simplify } from 'effect/Types';
+
+import { AST, S } from '@dxos/effect';
 
 import { checkIdNotPresentOnSchema } from './schema-validator';
 import { type Identifiable } from '../types';
 
+// TODO(burdon): Standardize names.
+
 export type ToMutable<T> = T extends {}
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
   : T;
-
-// TODO(burdon): Standardize names.
 
 //
 // Object

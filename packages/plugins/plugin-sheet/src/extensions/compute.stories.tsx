@@ -3,25 +3,25 @@
 //
 
 import '@dxos-theme';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
+import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { useAsyncState } from '@dxos/react-hooks';
 import { useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  documentId,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { nonNullable } from '@dxos/util';
 
-import { compute, computeNodeFacet } from './compute';
+import { compute, computeGraphFacet } from './compute';
 import { Sheet } from '../components';
-import { type ComputeNode } from '../graph';
 import { useComputeGraph, useSheetModel } from '../hooks';
 import { useTestSheet, withComputeGraphDecorator } from '../testing';
 import { SheetType } from '../types';
@@ -37,16 +37,13 @@ type EditorProps = {
 
 // TODO(burdon): Inline Adobe eCharts.
 
-const DOC_NAME = 'Test Doc';
 const SHEET_NAME = 'Test Sheet';
 
 const Editor = ({ text }: EditorProps) => {
+  const id = useMemo(() => PublicKey.random(), []);
   const { themeMode } = useThemeContext();
   const space = useSpace();
-  const graph = useComputeGraph(space);
-  const [computeNode] = useAsyncState<ComputeNode>(async () => {
-    return graph ? await graph.getOrCreateNode(DOC_NAME) : undefined;
-  }, [graph]);
+  const computeGraph = useComputeGraph(space);
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       initialValue: text,
@@ -54,12 +51,13 @@ const Editor = ({ text }: EditorProps) => {
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-        computeNode && computeNodeFacet.of(computeNode),
+        documentId.of(id.toHex()),
+        computeGraph && computeGraphFacet.of(computeGraph),
         compute(),
         decorateMarkdown(),
       ].filter(nonNullable),
     }),
-    [computeNode, themeMode],
+    [computeGraph, themeMode],
   );
 
   return <div className='w-[40rem] overflow-hidden' ref={parentRef} {...focusAttributes} />;

@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
 import { describe, expect, test } from 'vitest';
+
+import { S } from '@dxos/effect';
 
 import { effectToJsonSchema, jsonToEffectSchema } from './json-schema';
 import { FieldMeta } from '../ast';

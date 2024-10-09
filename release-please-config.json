@@ -89,6 +89,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/effect/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/esbuild-plugins/package.json",
           "jsonpath": "$.version"
         },
