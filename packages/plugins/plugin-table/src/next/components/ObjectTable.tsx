@@ -47,12 +47,13 @@ export const ObjectTable: React.FC<ObjectTableProps> = ({ table }) => {
   const space = getSpace(table);
   const objects = useTableObjects(space, table.schema);
 
+  // TODO(Zan): Delete this after testing.
   const addRow = () => {
     if (!table.schema || !space) {
       return;
     }
-    const newRow = create(table.schema, { title: 'test', description: 'content', count: 0 });
-    space.db.add(newRow);
+    const newrow = create(table.schema, { title: 'test', description: 'content', count: 0 });
+    space.db.add(newrow);
   };
 
   // TODO(Zan): Do we need this?

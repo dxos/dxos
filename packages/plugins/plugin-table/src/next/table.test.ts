@@ -173,13 +173,13 @@ describe('reactivity', () => {
       );
 
       using cellUpdates = updateCounter(() => {
-        table.cells.value.get('0,0')?.value;
+        table.cells.value['0,0']?.value;
       });
 
       data[0].col1 = 'New Value';
 
       expect(cellUpdates.count).toBe(1);
-      expect(table.cells.value.get('0,0')?.value).toBe('New Value');
+      expect(table.cells.value['0,0']?.value).toBe('New Value');
     });
 
     it('should update rowCount reactively', () => {
@@ -229,14 +229,14 @@ describe('reactivity', () => {
       );
 
       using cellsUpdates = updateCounter(() => {
-        table.cells.value.size;
+        table.cells.value;
       });
 
       data.push({ col1: 'C', col2: 3, col3: true });
 
       expect(cellsUpdates.count).toBe(1);
-      expect(table.cells.value.size).toBe(9); // 3 rows * 3 columns
-      expect(table.cells.value.get('0,2')?.value).toBe('C');
+      expect(Object.keys(table.cells.value).length).toBe(9); // 3 rows * 3 columns
+      expect(table.cells.value['0,2']?.value).toBe('C');
     });
 
     it('should handle combined operations reactively', () => {
@@ -258,7 +258,7 @@ describe('reactivity', () => {
 
       using rowCountUpdates = updateCounter(() => table.rowCount.value);
       using cellsUpdates = updateCounter(() => table.cells.value.size);
-      using specificCellUpdates = updateCounter(() => table.cells.value.get('0,0')?.value);
+      using specificCellUpdates = updateCounter(() => table.cells.value['0,0']?.value);
 
       data[0].col1 = 'Updated A';
       data.push({ col1: 'C', col2: 3, col3: true });
@@ -270,14 +270,13 @@ describe('reactivity', () => {
 
       // Check cells map updates
       expect(cellsUpdates.count).toBe(2); // Two changes: add and remove row
-      expect(table.cells.value.size).toBe(6); // 2 rows * 3 columns
+      expect(Object.keys(table.cells.value).length).toBe(6); // 2 rows * 3 columns
 
       // Check specific cell update
       expect(specificCellUpdates.count).toBe(3); // Updates for modify, add row, and remove row
-      expect(table.cells.value.get('0,0')?.value).toBe('Updated A');
-
+      expect(table.cells.value['0,0']?.value).toBe('Updated A');
       // Verify final state
-      expect(Array.from(table.cells.value.entries())).toEqual([
+      expect(Object.entries(table.cells.value)).toEqual([
         ['0,0', expect.objectContaining({ value: 'Updated A' })],
         ['1,0', expect.objectContaining({ value: 1 })],
         ['2,0', expect.objectContaining({ value: true })],

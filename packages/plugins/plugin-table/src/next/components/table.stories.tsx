@@ -7,9 +7,9 @@ import '@dxos-theme';
 import React, { useEffect } from 'react';
 
 import { create } from '@dxos/echo-schema';
+import { faker } from '@dxos/random';
 import { type WithClientProviderProps, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
-import { faker } from '@dxos/random';
 
 import { Table } from './Table';
 import { type ColumnDefinition } from '../table';
@@ -79,7 +79,7 @@ const useSimulateRowAdditions = (data: any[], intervalMs: number, isEnabled: boo
     }
 
     const addNewRow = () => {
-      const newRow = makeData(1)[0]
+      const newRow = makeData(1)[0];
       data.unshift(newRow);
     };
 
