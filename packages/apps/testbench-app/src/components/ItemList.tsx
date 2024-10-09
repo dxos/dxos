@@ -63,9 +63,7 @@ export const Item = ({ object, onDelete }: ItemProps<EchoReactiveObject<any>>) =
 
   // TODO(burdon): [API]: Type check?
   const getValue = (object: EchoReactiveObject<any>, prop: string) => (object as any)[prop];
-  const setValue = (object: EchoReactiveObject<any>, prop: string, value: any) => {
-    (object as any)[prop] = value;
-  };
+  const setValue = (object: EchoReactiveObject<any>, prop: string, value: any) => ((object as any)[prop] = value);
 
   return (
     <div className={mx('flex m-1 p-2 border', subtleHover)}>

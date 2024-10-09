@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { ColumnMenu } from './ColumnMenu';
-import { type ColumnSettingsFormProps } from './ColumnSettingsForm';
+import { type ColumnSettingsProps } from './ColumnSettings';
 import { type ColumnProps } from '../../schema';
 
 export default {
@@ -19,7 +19,7 @@ export default {
   decorators: [withTheme],
 };
 
-const defs: Pick<ColumnSettingsFormProps, 'tableDef' | 'tablesToReference'> = {
+const defs: Pick<ColumnSettingsProps, 'tableDef' | 'tablesToReference'> = {
   tableDef: {
     id: '1',
     name: 'table 1',
@@ -39,7 +39,7 @@ const defs: Pick<ColumnSettingsFormProps, 'tableDef' | 'tablesToReference'> = {
   ],
 };
 
-const functions: Pick<ColumnSettingsFormProps, 'onUpdate' | 'onDelete'> = {
+const functions: Pick<ColumnSettingsProps, 'onUpdate' | 'onDelete'> = {
   onUpdate: (...args: any) => console.log('onUpdate args', args),
   onDelete: (...args: any) => console.log('onDelete args', args),
 };
