@@ -47,7 +47,7 @@ export const RawObject = <S extends S.Schema.All>(
 };
 
 /**
- * Has `id`.
+ * Marker interface for object with an `id`.
  */
 // TODO(burdon): Rename BaseObject?
 export interface Identifiable {

@@ -15,7 +15,7 @@ class Organization extends TypedObject(TEST_SCHEMA_TYPE)({
   name: S.String,
 }) {}
 
-const DEFAULT_ORG: Omit<Organization, 'id'> = { name: 'FooCorp' };
+const DEFAULT_ORG: Omit<Organization, 'id'> = { name: 'Test' };
 
 describe('EchoObject class dsl', () => {
   test('type is a valid schema', async () => {

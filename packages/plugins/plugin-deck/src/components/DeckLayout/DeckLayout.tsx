@@ -6,7 +6,6 @@ import { Sidebar as MenuIcon } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useRef, type UIEvent } from 'react';
 
 import {
-  type Attention,
   type LayoutEntry,
   type LayoutParts,
   Surface,
@@ -15,6 +14,7 @@ import {
   usePlugin,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, useOnTransition, useTranslation } from '@dxos/react-ui';
+import { useAttended } from '@dxos/react-ui-attention';
 import { Deck } from '@dxos/react-ui-deck';
 import { getSize } from '@dxos/react-ui-theme';
 
@@ -34,7 +34,6 @@ import { useLayout } from '../LayoutContext';
 
 export type DeckLayoutProps = {
   layoutParts: LayoutParts;
-  attention: Attention;
   toasts: ToastSchema[];
   flatDeck?: boolean;
   overscroll: Overscroll;
@@ -47,7 +46,6 @@ export type DeckLayoutProps = {
 
 export const DeckLayout = ({
   layoutParts,
-  attention,
   toasts,
   flatDeck,
   overscroll,
@@ -69,6 +67,7 @@ export const DeckLayout = ({
   } = context;
   const { t } = useTranslation(DECK_PLUGIN);
   const { plankSizing } = useDeckContext();
+  const attended = useAttended();
   const searchPlugin = usePlugin('dxos.org/plugin/search');
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
 
@@ -78,7 +77,7 @@ export const DeckLayout = ({
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
     const firstId = layoutMode === 'solo' ? firstIdInPart(layoutParts, 'solo') : firstIdInPart(layoutParts, 'main');
-    if (attention.attended.size === 0 && firstId) {
+    if (attended.length === 0 && firstId) {
       // TODO(wittjosiah): Focusing the type button is a workaround.
       //   If the plank is directly focused on first load the focus ring appears.
       document.querySelector<HTMLElement>(`article[data-attendable-id="${firstId}"] button`)?.focus();
@@ -117,8 +116,7 @@ export const DeckLayout = ({
     [layoutMode],
   );
 
-  const firstAttendedId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
-
+  const firstAttendedId = attended[0];
   useEffect(() => {
     // TODO(burdon): Can we prevent the need to re-scroll since the planks are preserved?
     //  E.g., hide the deck and just move the solo article?
@@ -193,7 +191,7 @@ export const DeckLayout = ({
         </Main.Notch>
 
         {/* Left sidebar. */}
-        <Sidebar attention={attention} layoutParts={layoutParts} />
+        <Sidebar layoutParts={layoutParts} />
 
         {/* Right sidebar. */}
         {/* TODO(wittjosiah): Get context from layout parts. */}

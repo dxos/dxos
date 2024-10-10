@@ -5,12 +5,12 @@
 import React from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { createAttendableAttributes } from '@dxos/react-ui-attention';
+import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Make focusable and attendable with input.
 export const Wireframe = ({ label, data, className }: { label?: string; data?: any; className?: string }) => {
-  const attendableAttrs = createAttendableAttributes(data);
+  const attendableAttrs = useAttendableAttributes(data);
   const { width, height, ref } = useResizeDetector();
   return (
     <div ref={ref} className={mx('relative grow min-bs-96', className)} {...attendableAttrs}>

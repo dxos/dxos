@@ -69,20 +69,24 @@ const Story = () => {
       <button onClick={handleAddRow}>Add Row</button>
       <Grid.Root id='table-v2'>
         <Grid.Content
-          initialCells={Object.fromEntries(
-            table.rows.value.flatMap((row, rowIndex) =>
-              table.columnDefinitions.map((col, colIndex) => [
-                `${colIndex},${rowIndex}`,
-                { value: row.value[col.id].toString() },
-              ]),
+          initialCells={{
+            grid: Object.fromEntries(
+              table.rows.value.flatMap((row, rowIndex) =>
+                table.columnDefinitions.map((col, colIndex) => [
+                  `${colIndex},${rowIndex}`,
+                  { value: row.value[col.id].toString() },
+                ]),
+              ),
             ),
-          )}
-          columnDefault={{ size: 120, resizeable: true }}
-          rowDefault={{ size: 32, resizeable: true }}
+          }}
+          columnDefault={{ grid: { size: 120, resizeable: true } }}
+          rowDefault={{ grid: { size: 32, resizeable: true } }}
           // TODO(Zan): Make this fast.
-          columns={Object.fromEntries(
-            table.columnDefinitions.map((col, index) => [index, { size: table.columnWidths[col.id] }]),
-          )}
+          columns={{
+            grid: Object.fromEntries(
+              table.columnDefinitions.map((col, index) => [index, { size: table.columnWidths[col.id] }]),
+            ),
+          }}
           onAxisResize={(event) => {
             if (event.axis === 'col') {
               // dispatch({

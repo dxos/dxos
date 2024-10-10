@@ -66,7 +66,7 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
       static readonly pipe = annotatedSchema.pipe.bind(annotatedSchema);
 
       private constructor() {
-        throw new Error('Use create(MyClass, fields) to instantiate an object.');
+        throw new Error('Use create(Typename, { ...fields }) to instantiate an object.');
       }
     } as any;
   };
