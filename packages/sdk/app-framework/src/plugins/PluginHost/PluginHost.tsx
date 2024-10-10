@@ -8,12 +8,12 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 
 import { type PluginContext, PluginProvider } from './PluginContext';
-import { type Plugin, type PluginDefinition, type PluginProvides } from './plugin';
+import { type Plugin, type PluginDefinition, type PluginMeta, type PluginProvides } from './plugin';
 import { ErrorBoundary } from '../SurfacePlugin';
 
 export type BootstrapPluginsParams = {
-  order: PluginDefinition['meta'][];
-  plugins: Record<string, () => Promise<PluginDefinition>>;
+  order: PluginMeta[];
+  plugins: Record<PluginMeta['id'], () => Promise<PluginDefinition>>;
   core?: string[];
   defaults?: string[];
   fallback?: ErrorBoundary['props']['fallback'];
@@ -57,6 +57,7 @@ export const PluginHost = ({
   });
 
   state.prop({ key: 'enabled', type: LocalStorageStore.json<string[]>() });
+  console.log(state.values.available);
 
   return {
     meta: {

@@ -33,6 +33,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
 
   const available = useMemo(() => pluginContext.available.filter(({ id }) => !enabled.includes(id)).sort(sort), []);
   const recommended = available.filter((meta) => !meta.tags?.includes('experimental'));
+  console.log({ installed, available: available.map((a) => JSON.stringify(a)), recommended });
   const experimental = available.filter((meta) => meta.tags?.includes('experimental'));
 
   const handleChange = (id: string, enabled: boolean) => {
