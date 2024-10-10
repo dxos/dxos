@@ -219,6 +219,7 @@ message SpaceMember {
   dxos.halo.credentials.SpaceMember.Role role = 4;
 }
 
+
 // TODO(burdon): Rename SpaceInfo?
 message Space {
   message Metrics {
@@ -283,6 +284,7 @@ message Space {
   SpaceState state = 2;
   optional PipelineState pipeline = 3;
   optional dxos.error.Error error = 4;
+  optional dxos.echo.metadata.EdgeReplicationSetting edge_replication = 6;
 
   repeated SpaceMember members = 10;
   optional dxos.keys.PublicKey creator = 11;
@@ -298,6 +300,8 @@ message UpdateSpaceRequest {
 
   /// Allowed values: ACTIVE, INACTIVE.
   optional SpaceState state = 2;
+
+  optional dxos.echo.metadata.EdgeReplicationSetting edge_replication = 3;
 }
 
 message QuerySpacesResponse {
