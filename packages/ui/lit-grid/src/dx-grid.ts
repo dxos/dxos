@@ -41,7 +41,7 @@ import { separator, toCellIndex } from './util';
 /**
  * The size in pixels of the gap between cells
  */
-const gap = 1;
+const gap = 24;
 
 /**
  * ResizeObserver notices even subpixel changes, only respond to changes of at least 1px.
@@ -595,7 +595,7 @@ export class DxGrid extends LitElement {
       }, 0) +
       gap * (overscanCol - 1);
 
-    while (pxInline < this.binInlineMax + this.sizeInline + gap) {
+    while (pxInline < this.binInlineMax + this.sizeInline - gap * 2) {
       colIndex += 1;
       pxInline += this.colSize(colIndex, 'grid') + gap;
     }
@@ -637,7 +637,7 @@ export class DxGrid extends LitElement {
       }, 0) +
       gap * (overscanRow - 1);
 
-    while (pxBlock < this.binBlockMax + this.sizeBlock) {
+    while (pxBlock < this.binBlockMax + this.sizeBlock - gap * 2) {
       rowIndex += 1;
       pxBlock += this.rowSize(rowIndex, 'grid') + gap;
     }
@@ -749,26 +749,39 @@ export class DxGrid extends LitElement {
     ) as HTMLElement | null;
   }
 
+  //
+  // `outOfVis` returns by how many rows/cols the focused cell is outside of the `vis` range for an axis, inset by a
+  // `delta`, otherwise zero if it is within that range.
+  //
+
   private focusedCellRowOutOfVis(minDelta = 0, maxDelta = minDelta) {
-    return this.focusedCell.row < this.visRowMin + minDelta || this.focusedCell.row > this.visRowMax - maxDelta;
+    return this.focusedCell.row <= this.visRowMin + minDelta
+      ? this.focusedCell.row - (this.visRowMin + minDelta)
+      : this.focusedCell.row >= this.visRowMax - maxDelta
+        ? -(this.focusedCell.row - this.visRowMax - maxDelta)
+        : 0;
   }
 
   private focusedCellColOutOfVis(minDelta = 0, maxDelta = minDelta) {
-    return this.focusedCell.col < this.visColMin + minDelta || this.focusedCell.col > this.visColMax - maxDelta;
+    return this.focusedCell.col <= this.visColMin + minDelta
+      ? this.focusedCell.col - (this.visColMin + minDelta)
+      : this.focusedCell.col >= this.visColMax - maxDelta
+        ? -(this.focusedCell.col - this.visColMax - maxDelta)
+        : 0;
   }
 
-  private focusedCellOutOfVis(colDelta = 0, rowDelta = colDelta) {
+  private focusedCellOutOfVis(colDelta = 0, rowDelta = colDelta): { col: number; row: number } {
     switch (this.focusedCell.plane) {
       case 'grid':
-        return this.focusedCellRowOutOfVis(rowDelta) || this.focusedCellColOutOfVis(colDelta);
+        return { row: this.focusedCellRowOutOfVis(rowDelta), col: this.focusedCellColOutOfVis(colDelta) };
       case 'frozenRowsStart':
       case 'frozenRowsEnd':
-        return this.focusedCellColOutOfVis(colDelta);
+        return { col: this.focusedCellColOutOfVis(colDelta), row: 0 };
       case 'frozenColsStart':
       case 'frozenColsEnd':
-        return this.focusedCellRowOutOfVis(rowDelta);
+        return { col: 0, row: this.focusedCellRowOutOfVis(rowDelta) };
       default:
-        return false;
+        return { col: 0, row: 0 };
     }
   }
 
@@ -786,45 +799,56 @@ export class DxGrid extends LitElement {
     if (increment) {
       this.snapPosToFocusedCell();
     }
-    queueMicrotask(() =>
-      (this.focusedCellOutOfVis() ? this.viewportRef.value : this.focusedCellElement())?.focus({ preventScroll: true }),
-    );
+    queueMicrotask(() => {
+      const outOfVis = this.focusedCellOutOfVis(overscanCol, overscanRow);
+      (outOfVis.col !== 0 || outOfVis.row !== 0 ? this.viewportRef.value : this.focusedCellElement())?.focus({
+        preventScroll: true,
+      });
+    });
+  }
+
+  private findPosInlineForCol(col: number) {
+    return [...Array(col)].reduce((acc, _, c0) => acc + this.colSize(c0, 'grid') + gap, 0);
+  }
+
+  private findPosBlockForRow(row: number) {
+    return [...Array(row)].reduce((acc, _, r0) => acc + this.rowSize(r0, 'grid') + gap, 0);
   }
 
   /**
    * Updates `pos` so that a cell in focus is fully within the viewport
    */
   snapPosToFocusedCell() {
-    if (this.focusedCellOutOfVis(overscanCol + 1, overscanRow + 1)) {
-      if (this.focusedCell.col <= this.visColMin + overscanCol) {
-        this.posInline = this.binInlineMin;
-        this.updateVisInline();
-      } else if (this.focusedCell.col >= this.visColMax - overscanCol - 1) {
-        const sizeSumCol = [...Array(this.focusedCell.col - this.visColMin)].reduce((acc, _, c0) => {
-          acc += this.colSize(this.visColMin + overscanCol + c0, 'grid') + gap;
-          return acc;
-        }, 0);
-        this.posInline = Math.max(
-          0,
-          Math.min(this.intrinsicInlineSize - this.sizeInline, this.binInlineMin + sizeSumCol - this.sizeInline),
-        );
-        this.updateVisInline();
-      }
+    const outOfVis = this.focusedCellOutOfVis(overscanCol, overscanRow);
+    console.log('[snap pos]', outOfVis);
+    if (outOfVis.col < 0) {
+      this.posInline = this.findPosInlineForCol(this.focusedCell.col);
+      this.updateVisInline();
+    } else if (outOfVis.col > 0) {
+      const sizeSumCol = [...Array(this.focusedCell.col - this.visColMin)].reduce((acc, _, c0) => {
+        acc += this.colSize(this.visColMin + overscanCol + c0, 'grid') + gap;
+        return acc;
+      }, 0);
+      this.posInline = Math.max(
+        0,
+        Math.min(this.intrinsicInlineSize - this.sizeInline, this.binInlineMin + sizeSumCol - gap - this.sizeInline),
+      );
+      this.updateVisInline();
+    }
 
-      if (this.focusedCell.row <= this.visRowMin + overscanRow) {
-        this.posBlock = this.binBlockMin;
-        this.updateVisBlock();
-      } else if (this.focusedCell.row >= this.visRowMax - overscanRow - 1) {
-        const sizeSumRow = [...Array(this.focusedCell.row - this.visRowMin)].reduce((acc, _, r0) => {
-          acc += this.rowSize(this.visRowMin + overscanRow + r0, 'grid') + gap;
-          return acc;
-        }, 0);
-        this.posBlock = Math.max(
-          0,
-          Math.min(this.intrinsicBlockSize - this.sizeBlock, this.binBlockMin + sizeSumRow - this.sizeBlock),
-        );
-        this.updateVisBlock();
-      }
+    if (outOfVis.row < 0) {
+      this.posBlock = this.findPosBlockForRow(this.focusedCell.row);
+      this.updateVisBlock();
+    } else if (outOfVis.row > 0) {
+      const sizeSumRow = [...Array(this.focusedCell.row - this.visRowMin)].reduce((acc, _, r0) => {
+        acc += this.rowSize(this.visRowMin + overscanRow + r0, 'grid') + gap;
+        return acc;
+      }, 0);
+      this.posBlock = Math.max(
+        0,
+        Math.min(this.intrinsicBlockSize - this.sizeBlock, this.binBlockMin + sizeSumRow - gap - this.sizeBlock),
+      );
+      this.updateVisBlock();
     }
   }
 
