@@ -48,16 +48,16 @@ const clientProps: WithClientProviderProps = {
   createIdentity: true,
   createSpace: true,
   onSpaceCreated: ({ space }) => {
-    const tableObj = create(TableType, {
-      name: 'Test Table',
-      props: [
-        { id: 'title', label: 'Title' },
-        { id: 'description', label: 'Description' },
-        { id: 'count', label: 'Count' },
-      ],
-    });
-
-    const table = space.db.add(tableObj);
+    const table = space.db.add(
+      create(TableType, {
+        name: 'Test Table',
+        props: [
+          { id: 'title', label: 'Title' },
+          { id: 'description', label: 'Description' },
+          { id: 'count', label: 'Count' },
+        ],
+      }),
+    );
 
     const schema = TypedObject({ typename: 'example.com/type/start-table-schema', version: '0.1.0' })({
       title: S.optional(S.String),
