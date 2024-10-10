@@ -29,7 +29,9 @@ const LayoutPartSchema = S.Union(
 );
 export type LayoutPart = S.Schema.Type<typeof LayoutPartSchema>;
 
-const LayoutPartsSchema = S.partial(S.mutable(S.Record(LayoutPartSchema, S.mutable(S.Array(LayoutEntrySchema)))));
+const LayoutPartsSchema = S.partial(
+  S.mutable(S.Record({ key: LayoutPartSchema, value: S.mutable(S.Array(LayoutEntrySchema)) })),
+);
 export type LayoutParts = S.Schema.Type<typeof LayoutPartsSchema>;
 
 const LayoutCoordinateSchema = S.mutable(S.Struct({ part: LayoutPartSchema, entryId: S.String }));

@@ -52,7 +52,7 @@ describe('schema->column-type', () => {
 
   test('Piped validators', () => {
     const simpleSchema = S.Struct({
-      name: S.optional(S.String.pipe(S.nonEmpty(), S.maxLength(10))),
+      name: S.optional(S.String.pipe(S.nonEmptyString(), S.maxLength(10))),
       age: S.Number.pipe(S.negative()),
     });
 

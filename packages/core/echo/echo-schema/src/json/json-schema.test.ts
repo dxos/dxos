@@ -72,12 +72,12 @@ describe('json-to-effect', () => {
 
       class Schema extends TypedObject(TEST_SCHEMA_TYPE)(
         {
-          string: S.String.pipe(S.identifier('String')),
+          string: S.String.pipe(S.annotations({ identifier: 'String' })),
           number: S.Number.pipe(FieldMeta('dxos.test', { is_date: true })),
           boolean: S.Boolean,
           array: S.Array(S.String),
           twoDArray: S.Array(S.Array(S.String)),
-          record: S.Record(S.String, S.Number),
+          record: S.Record({ key: S.String, value: S.Number }),
           object: S.Struct({ id: S.String, field: ref(Nested) }),
           echoObject: ref(Nested),
           echoObjectArray: S.Array(ref(Nested)),
