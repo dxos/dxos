@@ -25,6 +25,7 @@ import { Resizable, type ResizeCallback, type ResizeStartCallback } from 're-res
 import React, {
   type CSSProperties,
   type DOMAttributes,
+  type KeyboardEventHandler,
   type PropsWithChildren,
   forwardRef,
   useEffect,
@@ -40,7 +41,7 @@ import { debounce } from '@dxos/async';
 import { fullyQualifiedId, createDocAccessor } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
+import { ATTENABLE_ATTRIBUTE, useAttendableAttributes, useAttention, useAttentionPath } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
@@ -861,9 +862,7 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
       columnSizes,
     });
 
-    // TODO(burdon): Prevent scroll if not attended.
     const id = fullyQualifiedId(model.sheet);
-    const attendableAttrs = useAttendableAttributes(id);
     const { hasAttention } = useAttention(id);
 
     return (
@@ -872,6 +871,7 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
         <div className={mx('z-20 absolute inset-0 border border-gridLine pointer-events-none')} />
 
         {/* Grid scroll container. */}
+        {/* NOTE: Prevents scroll if not attended. */}
         <div ref={scrollerRef} className={mx('grow', hasAttention && 'overflow-auto scrollbar-thin')}>
           {/* Scroll content. */}
           <div
@@ -952,20 +952,36 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
         </div>
 
         {/* Hidden input for key navigation. */}
-        {createPortal(
-          <input
-            ref={inputRef}
-            autoFocus
-            className='absolute w-[1px] h-[1px] bg-transparent outline-none border-none caret-transparent'
-            onKeyDown={handleKeyDown}
-            {...attendableAttrs}
-          />,
-          document.body,
-        )}
+        {createPortal(<SheetInput ref={inputRef} id={id} onKeyDown={handleKeyDown} />, document.body)}
       </div>
     );
   },
 );
+
+type SheetInputProps = {
+  id: string;
+  onKeyDown?: KeyboardEventHandler<HTMLInputElement>;
+};
+
+const SheetInput = forwardRef<HTMLInputElement, SheetInputProps>(({ id, onKeyDown }, forwardedRef) => {
+  const path = useAttentionPath();
+  const attendableAttrs = useAttendableAttributes(id);
+
+  // TODO(wittjosiah): Consider factoring out as an attention util.
+  // Wrap input in attendable divs for each part of the path.
+  // This ensures that the sheet stays attended when the input is focused.
+  return path.toReversed().reduce(
+    (acc, part) => {
+      return <div {...{ [ATTENABLE_ATTRIBUTE]: part }}>{acc}</div>;
+    },
+    <input
+      ref={forwardedRef}
+      className='absolute w-[1px] h-[1px] bg-transparent outline-none border-none caret-transparent'
+      onKeyDown={onKeyDown}
+      {...attendableAttrs}
+    />,
+  );
+});
 
 //
 // Selection

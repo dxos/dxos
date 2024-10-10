@@ -15,3 +15,15 @@ export class DocumentType extends TypedObject({ typename: 'dxos.org/type/Documen
   content: ref(TextType),
   threads: S.mutable(S.Array(ref(ThreadType))),
 }) {}
+
+/**
+ * Checks if an object conforms to the interface needed to render an editor.
+ */
+// TODO(burdon): Normalize types (from FilesPlugin).
+export const isEditorModel = (data: any): data is { id: string; text: string } =>
+  data &&
+  typeof data === 'object' &&
+  'id' in data &&
+  typeof data.id === 'string' &&
+  'text' in data &&
+  typeof data.text === 'string';
