@@ -3,10 +3,9 @@
 //
 
 import { computed, type ReadonlySignal } from '@preact/signals-core';
-import { type DxGridCells } from 'packages/ui/lit-grid/src';
 
 import { create } from '@dxos/echo-schema';
-import { type DxGridPlaneCells } from '@dxos/react-ui-grid';
+import { type DxGridPlaneCells, type DxGridCells } from '@dxos/react-ui-grid';
 
 import { CellUpdateTracker } from './CellUpdateTracker';
 
