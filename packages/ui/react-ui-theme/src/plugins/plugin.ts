@@ -65,5 +65,5 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
         return config.cssPath;
       }
     },
-  } satisfies Plugin;
+  };
 };

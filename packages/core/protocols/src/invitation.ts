@@ -2,11 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { ParamKeyAnnotation, S } from '@dxos/effect';
 
-import { ParamKeyAnnotation } from '@dxos/util';
-
-// TODO(burdon): Use uniformly for processing params.
+// TODO(burdon): Use uniformly for processing HTTP params.
 export const InvitationUrl = S.Struct({
   accessToken: S.String, // TODO(burdon): Remove.
   deviceInvitationCode: S.String.pipe(ParamKeyAnnotation({ key: 'deviceInvitationCode' })),

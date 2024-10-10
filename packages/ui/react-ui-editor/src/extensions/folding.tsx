@@ -27,8 +27,9 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
   foldGutter({
     markerDOM: (open) => {
       // TODO(burdon): Use sprite directly.
+      const el = createElement('div', { className: 'flex h-full items-center' });
       return renderRoot(
-        createElement('div', { className: 'flex h-full items-center' }),
+        el,
         <Icon icon='ph--caret-right--regular' classNames={[getSize(3), 'mx-3 cursor-pointer', open && 'rotate-90']} />,
       );
     },

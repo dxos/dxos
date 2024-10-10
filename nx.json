@@ -213,6 +213,9 @@
         },
         {
           "env": "VITEST_XML_REPORT"
+        },
+        {
+          "env": "EDGE_ENDPOINT"
         }
       ],
       "outputs": [

@@ -27,6 +27,7 @@ export enum MarkdownAction {
 
 export type MarkdownProperties = Record<string, any>;
 
+// TODO(burdon): Async.
 export type MarkdownExtensionProvider = (props: { document?: DocumentType }) => Extension | undefined;
 
 export type OnChange = (text: string) => void;
@@ -47,7 +48,7 @@ type StackProvides = {
 
 export type MarkdownPluginState = {
   // Codemirror extensions provided by other plugins.
-  extensionProviders: NonNullable<MarkdownExtensionProvider>[];
+  extensionProviders?: MarkdownExtensionProvider[];
 
   // TODO(burdon): Extend view mode per document to include scroll position, etc.
   // View mode per document.

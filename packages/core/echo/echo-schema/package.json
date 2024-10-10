@@ -39,20 +39,15 @@
   "dependencies": {
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/schema": "^0.67.16",
     "@preact/signals-core": "^1.6.0",
+    "effect": "^3.2.7",
     "ulidx": "^2.3.0"
-  },
-  "devDependencies": {
-    "@effect/schema": "^0.67.16",
-    "effect": "^3.2.7"
-  },
-  "peerDependencies": {
-    "@effect/schema": "^0.67.16",
-    "effect": "^3.2.7"
   },
   "publishConfig": {
     "access": "public"

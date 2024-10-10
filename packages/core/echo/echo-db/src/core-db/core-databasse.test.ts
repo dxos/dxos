@@ -9,7 +9,7 @@ import { Trigger } from '@dxos/async';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
@@ -64,7 +64,7 @@ describe('CoreDatabase', () => {
     });
 
     test('effect nested reference access triggers document loading', async () => {
-      registerSignalRuntime();
+      registerSignalsRuntime();
 
       const document = createExpando({ text: createTextObject('Hello, world!') });
       const db = await createClientDbInSpaceWithObject(document);
