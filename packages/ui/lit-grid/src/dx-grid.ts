@@ -807,12 +807,18 @@ export class DxGrid extends LitElement {
     });
   }
 
-  private findPosInlineForCol(col: number) {
-    return [...Array(col)].reduce((acc, _, c0) => acc + this.colSize(c0, 'grid') + gap, 0);
+  private findPosInlineFromVisColMin(deltaCols: number) {
+    return [...Array(deltaCols)].reduce(
+      (acc, _, c0) => acc - this.colSize(this.visColMin - c0, 'grid') - gap,
+      this.binInlineMin + gap,
+    );
   }
 
-  private findPosBlockForRow(row: number) {
-    return [...Array(row)].reduce((acc, _, r0) => acc + this.rowSize(r0, 'grid') + gap, 0);
+  private findPosBlockFromVisRowMin(deltaRows: number) {
+    return [...Array(deltaRows)].reduce(
+      (acc, _, r0) => acc - this.rowSize(this.visRowMin - r0, 'grid') - gap,
+      this.binBlockMin + gap,
+    );
   }
 
   /**
@@ -820,9 +826,8 @@ export class DxGrid extends LitElement {
    */
   snapPosToFocusedCell() {
     const outOfVis = this.focusedCellOutOfVis(overscanCol, overscanRow);
-    console.log('[snap pos]', outOfVis);
     if (outOfVis.col < 0) {
-      this.posInline = this.findPosInlineForCol(this.focusedCell.col);
+      this.posInline = this.findPosInlineFromVisColMin(-outOfVis.col);
       this.updateVisInline();
     } else if (outOfVis.col > 0) {
       const sizeSumCol = [...Array(this.focusedCell.col - this.visColMin)].reduce((acc, _, c0) => {
@@ -837,7 +842,7 @@ export class DxGrid extends LitElement {
     }
 
     if (outOfVis.row < 0) {
-      this.posBlock = this.findPosBlockForRow(this.focusedCell.row);
+      this.posBlock = this.findPosBlockFromVisRowMin(-outOfVis.row);
       this.updateVisBlock();
     } else if (outOfVis.row > 0) {
       const sizeSumRow = [...Array(this.focusedCell.row - this.visRowMin)].reduce((acc, _, r0) => {
