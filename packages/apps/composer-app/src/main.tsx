@@ -327,7 +327,7 @@ const main = async () => {
 
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <App />,
+      <App />
     </StrictMode>,
   );
 };
