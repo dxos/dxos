@@ -1,5 +1,64 @@
 # Changelog
 
+## [0.6.12](https://github.com/dxos/dxos/compare/v0.6.11...v0.6.12) (2024-10-10)
+
+
+### Features
+
+* Add saving indicator ([#7810](https://github.com/dxos/dxos/issues/7810)) ([8e567a3](https://github.com/dxos/dxos/commit/8e567a302c6abffad17b8695b45ff288b2f9909f))
+* **comments:** Create threads in sketch and table ([#7837](https://github.com/dxos/dxos/issues/7837)) ([d7c9cde](https://github.com/dxos/dxos/commit/d7c9cdea20f62c784ad9adf3965f752879f20982))
+* Composer CRX ([#7838](https://github.com/dxos/dxos/issues/7838)) ([b26fcdf](https://github.com/dxos/dxos/commit/b26fcdf538d7acabdeda71bb3f61d96adfc799cd))
+* Compute graph and CM sheet extension ([#7848](https://github.com/dxos/dxos/issues/7848)) ([cb1f700](https://github.com/dxos/dxos/commit/cb1f70066ca9130ea6c75512a5516d7ccceb08ea))
+* compute graph extension ([#7884](https://github.com/dxos/dxos/issues/7884)) ([128f57f](https://github.com/dxos/dxos/commit/128f57f2812f6792a1dc19ddda5903d233ed8616))
+* edge notarization ([#7897](https://github.com/dxos/dxos/issues/7897)) ([8a09cbc](https://github.com/dxos/dxos/commit/8a09cbcb4c2b6f9bea31b0a06ff49890fbbc1b07))
+* Edge sync indicator ([#7830](https://github.com/dxos/dxos/issues/7830)) ([a183335](https://github.com/dxos/dxos/commit/a1833355b7dcb7443dc8fa635d6a677598acbc9a))
+* **edge:** halo feed replication ([#7860](https://github.com/dxos/dxos/issues/7860)) ([9c1b7a9](https://github.com/dxos/dxos/commit/9c1b7a9bb6d5202179457a4b0e892b7ec0b38540))
+* Fix collection sync & add edge panel to devtools ([#7858](https://github.com/dxos/dxos/issues/7858)) ([873579f](https://github.com/dxos/dxos/commit/873579fbac9c89a22e490ac0cf8cab5cbfa332e1))
+* Function triggers demo ([#7802](https://github.com/dxos/dxos/issues/7802)) ([bc11935](https://github.com/dxos/dxos/commit/bc119352ded445c8983c28381e5b4384b62ed4d4))
+* Grid selection, ranges ([#7853](https://github.com/dxos/dxos/issues/7853)) ([286fdd5](https://github.com/dxos/dxos/commit/286fdd5e777b076ed41ed43ad3f33a5d088104ed))
+* Grid-Sheet integration ([#7817](https://github.com/dxos/dxos/issues/7817)) ([9990dc6](https://github.com/dxos/dxos/commit/9990dc6e3a10bfae78ca6fe7e238f90ef7aeaabd))
+* Joins in queries ([#7809](https://github.com/dxos/dxos/issues/7809)) ([aeb0f6d](https://github.com/dxos/dxos/commit/aeb0f6dacf910ef0f38c5d4eb67ed19c976095e0))
+* **lit-grid:** Cell getter / windowing API ([#7867](https://github.com/dxos/dxos/issues/7867)) ([e9ddc8e](https://github.com/dxos/dxos/commit/e9ddc8edf42936ecc1569cd701b0e16faccf4397))
+* **lit-grid:** Intrinsic sizing & col/row limits ([#7883](https://github.com/dxos/dxos/issues/7883)) ([f6c2125](https://github.com/dxos/dxos/commit/f6c2125fbc94a7311ca967c9093eb02995051301))
+* **mesh:** unified webrtc ([#7725](https://github.com/dxos/dxos/issues/7725)) ([7d5203e](https://github.com/dxos/dxos/commit/7d5203eeb71407126f4f15e586ca0d2f01ed8f73))
+* **plugin-sheet:** Grid axis resize support ([#7849](https://github.com/dxos/dxos/issues/7849)) ([531a0d8](https://github.com/dxos/dxos/commit/531a0d8740dc39ef2d3d9e3ac2cf079c3b6864e2))
+* **plugin-space:** default content on space creation ([#7826](https://github.com/dxos/dxos/issues/7826)) ([21d8203](https://github.com/dxos/dxos/commit/21d820369f3f606fa250ea3af2d6d848fd2d2fd3))
+* Query proxies by ID ([#7846](https://github.com/dxos/dxos/issues/7846)) ([326766a](https://github.com/dxos/dxos/commit/326766a46d4dec8fef94126222a76159f70f9773))
+* Router authentication ([#7895](https://github.com/dxos/dxos/issues/7895)) ([7165d25](https://github.com/dxos/dxos/commit/7165d25ae020b25ca4c1c45f4c789c8191197c74))
+* **stack:** Stack next ([#7870](https://github.com/dxos/dxos/issues/7870)) ([fd47510](https://github.com/dxos/dxos/commit/fd47510d48f081d82a0ae05473be694457c534d4))
+* Sync status indicator ([#7842](https://github.com/dxos/dxos/issues/7842)) ([22f19de](https://github.com/dxos/dxos/commit/22f19decab7049072b6dfd2fa3f546164edd5a6d))
+* **tables:** Table v2 prototype ([#7862](https://github.com/dxos/dxos/issues/7862)) ([80ab061](https://github.com/dxos/dxos/commit/80ab061a14d7092275bfc4690180d074e8ffb579))
+* **threads:** Integrate threads with sheets ([#7763](https://github.com/dxos/dxos/issues/7763)) ([e04155f](https://github.com/dxos/dxos/commit/e04155f8fdaff29a539410c0c4e076d61da1d9c8))
+
+
+### Bug Fixes
+
+* `varint` package in teleport ([#7872](https://github.com/dxos/dxos/issues/7872)) ([ed7cda7](https://github.com/dxos/dxos/commit/ed7cda7bf61318a13df23920302bbacc566527ff))
+* Adjustment for editor focus ring ([#7898](https://github.com/dxos/dxos/issues/7898)) ([b701a94](https://github.com/dxos/dxos/commit/b701a9407e42e165839f5885a5ece4ceb5afc91a))
+* always maintain attention to a plank ([#7843](https://github.com/dxos/dxos/issues/7843)) ([3d6d41d](https://github.com/dxos/dxos/commit/3d6d41d6eb97d02394930906a568101f7b7f1139))
+* client provider option to not install signals ([#7894](https://github.com/dxos/dxos/issues/7894)) ([85cc8b2](https://github.com/dxos/dxos/commit/85cc8b2145df2028f8f0efbcd46351854628f66b))
+* comments don't load if object wasn't loaded first ([#7844](https://github.com/dxos/dxos/issues/7844)) ([103f859](https://github.com/dxos/dxos/commit/103f859610ebe81d998ac69c0e32f72096221156))
+* comments type icon ([#7877](https://github.com/dxos/dxos/issues/7877)) ([94b23a2](https://github.com/dxos/dxos/commit/94b23a278ac0c0841b15b773332206bc46c94e33))
+* Compute graph context  ([#7861](https://github.com/dxos/dxos/issues/7861)) ([2e06bfb](https://github.com/dxos/dxos/commit/2e06bfb0ac531a45dceefca9c5741be7d5098f40))
+* Docs deps ([#7886](https://github.com/dxos/dxos/issues/7886)) ([92305c6](https://github.com/dxos/dxos/commit/92305c6373482cd7e968c90b4751c44c84ae65dd))
+* don't use worker on ios ([#7868](https://github.com/dxos/dxos/issues/7868)) ([a96135e](https://github.com/dxos/dxos/commit/a96135ef181f2d17c0a9c5e9142d867f02d1bc62))
+* **edge:** edge-feed-replicator reconnect handling ([#7871](https://github.com/dxos/dxos/issues/7871)) ([c4a728f](https://github.com/dxos/dxos/commit/c4a728fde14ad25fb820c410941ea1a4d73ebd4f))
+* **edge:** immediately start feed replication if edge-client is connected ([#7881](https://github.com/dxos/dxos/issues/7881)) ([f9d0246](https://github.com/dxos/dxos/commit/f9d0246f8210d38f721930ba6b01a29baff6dbc4))
+* editor selection error ([#7904](https://github.com/dxos/dxos/issues/7904)) ([41ea673](https://github.com/dxos/dxos/commit/41ea6734d9aaf63a7df6c3681ec8b4858ae03590))
+* Fix effect deps ([#7887](https://github.com/dxos/dxos/issues/7887)) ([48a90d3](https://github.com/dxos/dxos/commit/48a90d345172770b18f831cd8e9309241b01faed))
+* improve handling of invitations ([#7834](https://github.com/dxos/dxos/issues/7834)) ([2b26ad7](https://github.com/dxos/dxos/commit/2b26ad73907a4dae5a39e942d3e6ed4b841e7738))
+* **maps:** correctly add new markers to the live map view ([#7801](https://github.com/dxos/dxos/issues/7801)) ([0da6e43](https://github.com/dxos/dxos/commit/0da6e439ce6edc4bb2a48b44266afb95e6c7c922))
+* **perf:** Deck re-renders when scrolling deck layout ([#7820](https://github.com/dxos/dxos/issues/7820)) ([591896e](https://github.com/dxos/dxos/commit/591896e4c78664474019c8fd89ba9275fa2d3118))
+* plugin icons ([#7857](https://github.com/dxos/dxos/issues/7857)) ([652681e](https://github.com/dxos/dxos/commit/652681eca87d441597167109dff4a5c92776362b))
+* react-ui-editor deps ([#7885](https://github.com/dxos/dxos/issues/7885)) ([91d7089](https://github.com/dxos/dxos/commit/91d7089c2b134f9ae4c0b8164b2ab2aa5810f796))
+* Remove default space from log info ([#7873](https://github.com/dxos/dxos/issues/7873)) ([e2fd45c](https://github.com/dxos/dxos/commit/e2fd45c2f622f7ade4725984579635ece675c62a))
+* set contents of complementary sidebar based on attention ([#7832](https://github.com/dxos/dxos/issues/7832)) ([34693e5](https://github.com/dxos/dxos/commit/34693e5de41e84505be40f7dc3818776cc38562b))
+* Source maps for production build ([#7841](https://github.com/dxos/dxos/issues/7841)) ([c443b22](https://github.com/dxos/dxos/commit/c443b22f85cb5e3e6947468677923b39d537863d))
+* Support importing @dxos/client in node ESM mode ([#7852](https://github.com/dxos/dxos/issues/7852)) ([44094b6](https://github.com/dxos/dxos/commit/44094b653ccc9c6e16f62d880438d61b4d86639b))
+* typo bug ([#7835](https://github.com/dxos/dxos/issues/7835)) ([1816eff](https://github.com/dxos/dxos/commit/1816eff27721c682cc89872ff27bcf41af73bc4e))
+* Use extant color tokens instead of removed ones ([#7819](https://github.com/dxos/dxos/issues/7819)) ([b606a3d](https://github.com/dxos/dxos/commit/b606a3de0e578319e26726f0bfa9bec1914d0661))
+* useQuery filter deps ([#7840](https://github.com/dxos/dxos/issues/7840)) ([27079cb](https://github.com/dxos/dxos/commit/27079cb7a70dcb3e0bd3f5031db812f4bff6f631))
+
 ## [0.6.11](https://github.com/dxos/dxos/compare/v0.6.10...v0.6.11) (2024-09-23)
 
 
