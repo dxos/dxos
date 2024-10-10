@@ -31,25 +31,33 @@ export const Basic = {
   args: {
     id: 'story',
     initialCells: {
-      '1,1': {
-        // end: '8,1',
-        value: 'Weekly sales report',
+      grid: {
+        '1,1': {
+          // end: '8,1',
+          value: 'Weekly sales report',
+        },
       },
     },
     columnDefault: {
-      size: 180,
-      resizeable: true,
+      grid: {
+        size: 180,
+        resizeable: true,
+      },
     },
     rowDefault: {
-      size: 32,
-      resizeable: true,
+      grid: {
+        size: 32,
+        resizeable: true,
+      },
     },
     columns: {
-      0: { size: 200 },
-      1: { size: 210 },
-      2: { size: 230 },
-      3: { size: 250 },
-      4: { size: 270 },
+      grid: {
+        0: { size: 200 },
+        1: { size: 210 },
+        2: { size: 230 },
+        3: { size: 250 },
+        4: { size: 270 },
+      },
     },
     onAxisResize: (event) => {
       console.log('[axis resize]', event);
