@@ -54,6 +54,7 @@ export const createEditorStateTransaction = ({ scrollTo, selection }: EditorSele
 /**
  * Track scrolling and selection state to be restored when switching to document.
  */
+// TODO(burdon): Rename.
 export const state = ({ getState, setState }: Partial<EditorStateOptions> = {}): Extension => {
   const setStateDebounced = debounce(setState!, 1_000);
 

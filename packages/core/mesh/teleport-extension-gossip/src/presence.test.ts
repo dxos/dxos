@@ -139,4 +139,4 @@ describe('Presence', () => {
   });
 });
 
-const TIMEOUT = 500;
+const TIMEOUT = 1000;

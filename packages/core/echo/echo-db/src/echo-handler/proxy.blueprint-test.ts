@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as S from '@effect/schema/Schema';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { getProxyHandlerSlot, getSchema, getType, getTypeReference } from '@dxos/echo-schema';
+import { type S } from '@dxos/echo-schema';
 import { TestSchema, TestSchemaType, updateCounter } from '@dxos/echo-schema/testing';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 
-registerSignalRuntime();
+registerSignalsRuntime();
 
 const TEST_OBJECT: TestSchema = {
   string: 'foo',

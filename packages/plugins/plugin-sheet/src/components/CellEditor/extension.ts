@@ -12,12 +12,13 @@ import {
   startCompletion,
 } from '@codemirror/autocomplete';
 import { HighlightStyle, type Language, syntaxHighlighting } from '@codemirror/language';
-import { type Extension, Facet } from '@codemirror/state';
+import { type Extension } from '@codemirror/state';
 import { type EditorView, ViewPlugin, type ViewUpdate, keymap } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 import { tags } from '@lezer/highlight';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
+import { singleValueFacet } from '@dxos/react-ui-editor/state';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type FunctionDefinition } from '../../graph';
@@ -59,7 +60,7 @@ const highlightStyles = HighlightStyle.define([
   },
 ]);
 
-const languageFacet = Facet.define<Language>();
+const languageFacet = singleValueFacet<Language>();
 
 export type SheetExtensionOptions = {
   functions?: FunctionDefinition[];
@@ -229,7 +230,7 @@ export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): E
 
         // Find first Range or cell at cursor.
         activeRange = undefined;
-        const [language] = view.state.facet(languageFacet);
+        const language = view.state.facet(languageFacet);
         const { topNode } = language.parser.parse(view.state.doc.toString());
         visitTree(topNode, ({ type, from, to }) => {
           if (from <= anchor && to >= anchor) {

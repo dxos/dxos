@@ -61,6 +61,7 @@ export class DeferredTask {
     if (this._ctx.disposed) {
       throw new ContextDisposedError();
     }
+
     this.schedule();
     await this._nextTask.wait();
   }

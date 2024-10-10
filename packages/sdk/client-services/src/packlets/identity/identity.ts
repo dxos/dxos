@@ -177,6 +177,10 @@ export class Identity {
     return this._presence;
   }
 
+  get signer() {
+    return this._signer;
+  }
+
   /**
    * Issues credentials as identity.
    * Requires identity to be ready.

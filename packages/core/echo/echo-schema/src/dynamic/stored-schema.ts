@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { S } from '@dxos/effect';
 
 import { TypedObject } from '../typed-object-class';
 

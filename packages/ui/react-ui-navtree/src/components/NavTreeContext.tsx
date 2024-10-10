@@ -9,8 +9,9 @@ import { type MaybePromise } from '@dxos/util';
 import { type NavTreeActionsNode, type NavTreeItemNode, type NavTreeNode, type OpenItemIds } from '../types';
 
 export type NavTreeContextType = {
+  // TODO(wittjosiah): Stop using `Set`.
   current?: Set<string>;
-  attended?: Set<string>;
+  attended?: string[];
   open?: OpenItemIds;
   popoverAnchorId?: string;
   onNavigate?: (item: NavTreeItemNode) => void;

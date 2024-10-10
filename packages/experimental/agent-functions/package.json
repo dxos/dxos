@@ -53,7 +53,6 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.67.16",
     "@langchain/community": "^0.0.43",
     "@langchain/core": "^0.1.51",
     "@langchain/mistralai": "^0.0.16",
@@ -111,6 +110,7 @@
     "ts-node": "10.9.1"
   },
   "optionalDependencies": {
-    "@dxos/random": "workspace:*"
+    "@dxos/random": "workspace:*",
+    "date-fns": "^3.3.1"
   }
 }

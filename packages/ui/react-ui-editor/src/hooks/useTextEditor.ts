@@ -19,10 +19,12 @@ import {
 import { log } from '@dxos/log';
 import { getProviderValue, isNotFalsy, type MaybeProvider } from '@dxos/util';
 
-import { createEditorStateTransaction, documentId, editorInputMode, type EditorSelection } from '../extensions';
+import { editorInputMode } from '../extensions';
+import { type EditorSelection, createEditorStateTransaction, documentId } from '../state';
 import { logChanges } from '../util';
 
 export type UseTextEditor = {
+  // TODO(burdon): Rename.
   parentRef: RefObject<HTMLDivElement>;
   view?: EditorView;
   focusAttributes: ReturnType<typeof useFocusableGroup> & {
@@ -109,7 +111,6 @@ export const useTextEditor = (
       // https://codemirror.net/docs/ref/#view.EditorViewConfig
       view = new EditorView({
         parent: parentRef.current,
-        selection: initialSelection,
         state,
         // NOTE: Uncomment to debug/monitor all transactions.
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch

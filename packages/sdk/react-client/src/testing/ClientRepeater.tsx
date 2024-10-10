@@ -2,37 +2,36 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type Schema as S } from '@effect/schema';
 import React, { useState, type FC, useEffect, useRef } from 'react';
 
 import { Client, type PublicKey } from '@dxos/client';
-import { type Space } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { type S } from '@dxos/echo-schema';
-import { registerSignalFactory } from '@dxos/echo-signals/react';
+import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
-import { type MaybePromise } from '@dxos/util';
 
+import { type WithClientProviderProps } from './withClientProvider';
 import { ClientProvider } from '../client';
 
 export type ClientRepeatedComponentProps = { id: number; count: number; spaceKey?: PublicKey };
 
+export type ClientRepeaterControlsProps = { clients: Client[] };
+
+// TODO(burdon): Reconcile with ClientProviderProps.
 export type ClientRepeaterProps<P extends ClientRepeatedComponentProps> = {
   className?: string;
   component: FC<ClientRepeatedComponentProps>;
-  controls?: FC<{ clients: Client[] }>;
-  clients?: Client[];
+  controls?: FC<ClientRepeaterControlsProps>;
   count?: number;
-  registerSignalFactory?: boolean;
+  clients?: Client[];
   types?: S.Schema<any>[];
-  createIdentity?: boolean;
-  createSpace?: boolean;
-  onCreateSpace?: (space: Space) => MaybePromise<void>;
   args?: Omit<P, 'id' | 'count'>;
-};
+} & Pick<WithClientProviderProps, 'createIdentity' | 'createSpace' | 'onSpaceCreated'>;
 
 /**
  * Utility component for Storybook stories which sets up clients for n peers.
  * The `Component` property is rendered n times, once for each peer.
+ * @deprecated use `withClientProvider`.
  */
 // TODO(burdon): To discuss: evolve ClientRepeater with optional decorator that uses it.
 // NOTE: This is specifically not a storybook decorator because it broke stories as a decorator.
@@ -47,11 +46,11 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
     types,
     createIdentity,
     createSpace,
-    onCreateSpace,
+    onSpaceCreated,
   } = props;
-  if (props.registerSignalFactory ?? true) {
-    registerSignalFactory();
-  }
+  useEffect(() => {
+    registerSignalsRuntime();
+  }, []);
 
   const [clients, setClients] = useState(props.clients ?? []);
   const [spaceKey, setSpaceKey] = useState<PublicKey>();
@@ -60,19 +59,19 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
   useEffect(() => {
     const timeout = setTimeout(async () => {
       const clients = [...Array(count)].map(
-        (_) => new Client({ services: testBuilder.current.createLocalClientServices() }),
+        (_) => new Client({ services: testBuilder.current.createLocalClientServices(), types }),
       );
-      await Promise.all(clients.map((client) => client.initialize()));
-      types && clients.map((client) => client.addTypes(types));
 
+      await Promise.all(clients.map((client) => client.initialize()));
       if (createIdentity || createSpace) {
         await Promise.all(clients.map((client) => client.halo.createIdentity()));
       }
 
       if (createSpace) {
-        const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
+        const client = clients[0];
+        const space = await client.spaces.create({ name: faker.commerce.productName() });
         setSpaceKey(space.key);
-        await onCreateSpace?.(space);
+        await onSpaceCreated?.({ client, space });
         await Promise.all(
           clients.slice(1).flatMap((client) => performInvitation({ host: space, guest: client.spaces })),
         );

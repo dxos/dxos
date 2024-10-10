@@ -44,7 +44,7 @@ export default {
   render: () => (
     <ClientRepeater
       component={Story}
-      onCreateSpace={async (space) => {
+      onSpaceCreated={async ({ space }) => {
         const factory = generator.factories.project;
         const objects = [
           factory.schema,

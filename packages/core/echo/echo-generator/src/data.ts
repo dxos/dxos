@@ -2,9 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/aurora/testing.
-// TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
-
 import { next as A } from '@dxos/automerge/automerge';
 import { createDocAccessor, type Space } from '@dxos/client/echo';
 import {
@@ -15,14 +12,17 @@ import {
   effectToJsonSchema,
   getEchoObjectAnnotation,
   ref,
-  S,
   StoredSchema,
+  S,
 } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
 import { type TestMutationsMap, type TestGeneratorMap, type TestSchemaMap } from './types';
 import { randomText } from './util';
+
+// TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/aurora/testing.
+// TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 
 // TODO(burdon): Handle restricted values.
 export const Status = ['pending', 'active', 'done'];

@@ -7,7 +7,7 @@ import React from 'react';
 import { type LayoutParts, SLUG_PATH_SEPARATOR, Surface } from '@dxos/app-framework';
 import { useGraph } from '@dxos/plugin-graph';
 import { Main } from '@dxos/react-ui';
-import { createAttendableAttributes, useAttendedIds } from '@dxos/react-ui-attention';
+import { useAttended } from '@dxos/react-ui-attention';
 import { deckGrid } from '@dxos/react-ui-deck';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -25,16 +25,15 @@ export type ComplementarySidebarProps = {
 
 export const ComplementarySidebar = ({ context, layoutParts, flatDeck }: ComplementarySidebarProps) => {
   const { popoverAnchorId } = useLayout();
-  const attended = useAttendedIds();
+  const attended = useAttended();
   const id = attended[0] ? `${attended[0]}${SLUG_PATH_SEPARATOR}${context}` : undefined;
   const { graph } = useGraph();
   const node = useNode(graph, id);
-  const complementaryAttrs = createAttendableAttributes(id?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
 
   useNodeActionExpander(node);
 
   return (
-    <Main.ComplementarySidebar {...complementaryAttrs}>
+    <Main.ComplementarySidebar>
       <div role='none' className={mx(deckGrid, 'grid-cols-1 bs-full')}>
         <NodePlankHeading
           node={node}
@@ -48,7 +47,7 @@ export const ComplementarySidebar = ({ context, layoutParts, flatDeck }: Complem
         {node && (
           <Surface
             role='article'
-            data={{ subject: node.data, part: 'complementary', popoverAnchorId }}
+            data={{ subject: node.properties.object, part: 'complementary', popoverAnchorId }}
             limit={1}
             fallback={PlankContentError}
             placeholder={<PlankLoading />}

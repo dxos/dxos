@@ -40,8 +40,12 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/credentials": "workspace:*",
+    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keyring": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -50,7 +54,6 @@
     "ws": "^8.14.2"
   },
   "devDependencies": {
-    "@dxos/keys": "workspace:*",
     "@dxos/test-utils": "workspace:*"
   },
   "publishConfig": {

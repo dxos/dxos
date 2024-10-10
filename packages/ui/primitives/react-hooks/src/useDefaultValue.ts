@@ -15,11 +15,11 @@ import { useEffect, useState, useMemo } from 'react';
  * @param defaultValue - The initial value used when the reactiveValue is undefined. This value is not reactive.
  * @returns - The reactiveValue if it's defined, otherwise the defaultValue.
  */
-export const useDefaultValue = <T>(reactiveValue: T | undefined | null, defaultValue: T): T => {
+export const useDefaultValue = <T>(reactiveValue: T | undefined | null, getDefaultValue: () => T): T => {
   // Memoize defaultValue with an empty dependency array.
   // This ensures that the defaultValue instance remains stable across all re-renders,
   // regardless of whether the defaultValue changes.
-  const stableDefaultValue = useMemo(() => defaultValue, []);
+  const stableDefaultValue = useMemo(getDefaultValue, []);
   const [value, setValue] = useState(reactiveValue ?? stableDefaultValue);
 
   useEffect(() => {

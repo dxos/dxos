@@ -8,7 +8,7 @@ import { promises as fs } from 'node:fs';
 import path from 'path';
 import { type SidebarItem } from 'vuepress-theme-hope';
 
-import { API_SECTIONS, PINNED_PACKAGES, API_PACKAGE_IGNORE } from '../constants';
+import { API_SECTIONS, API_PACKAGE_IGNORE, PINNED_PACKAGES } from '../constants';
 
 const apiPath = path.resolve(__dirname, '../../content/api');
 
@@ -19,6 +19,7 @@ export const link = {
 };
 
 type AnySidebarItem = SidebarItem;
+
 type MaybePromise<T> = T | Promise<T>;
 
 const isMarkdown = (file: string) => /\.md$/.test(file);
@@ -84,15 +85,13 @@ const sidebarItem: {
 };
 
 export const apiSidebar = async (): Promise<AnySidebarItem[]> => {
-  const allscopes = (await fs.readdir(apiPath, { withFileTypes: true })).filter(
+  const allScopes = (await fs.readdir(apiPath, { withFileTypes: true })).filter(
     (s) => /^@/.test(s.name) && s.isDirectory(),
   );
   const packagesByScope = await Promise.all(
-    allscopes.map(async (scope) => {
-      const dircontents = await fs.readdir(path.resolve(apiPath, scope.name), {
-        withFileTypes: true,
-      });
-      const folders = dircontents.filter((entry) => entry.isDirectory());
+    allScopes.map(async (scope) => {
+      const dirContents = await fs.readdir(path.resolve(apiPath, scope.name), { withFileTypes: true });
+      const folders = dirContents.filter((entry) => entry.isDirectory());
       return folders.map((pkg) => `${scope.name}/${pkg.name}`);
     }),
   );

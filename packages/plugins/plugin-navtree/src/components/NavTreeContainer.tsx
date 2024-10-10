@@ -51,7 +51,8 @@ export const NavTreeContainer = ({
   activeIds: Set<string>;
   openItemIds: Record<string, true>;
   onOpenItemIdsChange: (nextOpenItemIds: Record<string, true>) => void;
-  attended: Set<string>;
+  // TODO(wittjosiah): Use attention context directly?
+  attended: string[];
   popoverAnchorId?: string;
 }) => {
   const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);

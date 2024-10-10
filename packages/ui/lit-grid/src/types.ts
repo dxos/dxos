@@ -9,21 +9,40 @@ export type CellIndex = `${string},${string}`;
 
 export type DxGridAxis = 'row' | 'col';
 
-export type DxGridPosition = Record<DxGridAxis, number>;
+export type DxGridFrozenColsPlane = `frozenCols${'Start' | 'End'}`;
+export type DxGridFrozenRowsPlane = `frozenRows${'Start' | 'End'}`;
+
+export type DxGridFrozenPlane = DxGridFrozenColsPlane | DxGridFrozenRowsPlane;
+export type DxGridFixedPlane = `fixed${'Start' | 'End'}${'Start' | 'End'}`;
+
+export type DxGridPlane = 'grid' | DxGridFrozenPlane | DxGridFixedPlane;
+export type DxGridPlaneRecord<P extends Exclude<DxGridPlane, 'grid'>, T> = Record<'grid', T> & Partial<Record<P, T>>;
+
+export type DxGridPlanePosition = Record<DxGridAxis, number>;
+export type DxGridPosition = DxGridPlanePosition & { plane: DxGridPlane };
 export type DxGridPositionNullable = DxGridPosition | null;
 
-export type DxGridCells = Record<CellIndex, CellValue>;
+export type DxGridPlaneCells = Record<CellIndex, DxGridCellValue>;
+export type DxGridCells = { grid: DxGridPlaneCells } & Partial<
+  Record<DxGridFixedPlane | DxGridFrozenPlane, DxGridPlaneCells>
+>;
 
-export type DxGridAxisMeta = Record<string, AxisMeta>;
+export type DxGridPlaneAxisMeta = Record<string, AxisMeta>;
+export type DxGridAxisMeta = DxGridPlaneRecord<DxGridFrozenPlane, DxGridPlaneAxisMeta>;
 
-export type DxGridPointer = null | ({ state: 'resizing'; page: number } & DxAxisResizeProps) | { state: 'selecting' };
+export type DxGridPointer =
+  | null
+  | ({ state: 'maybeSelecting' } & Pick<PointerEvent, 'pageX' | 'pageY'>)
+  | { state: 'selecting' };
 
-export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'index' | 'size'>;
+export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'plane' | 'index' | 'size'>;
 export type DxAxisResizeInternalProps = DxAxisResizeProps & { delta: number; state: 'dragging' | 'dropped' };
 
 export type DxGridMode = 'browse' | 'edit';
 
-export type CellValue = {
+export type DxGridFrozenAxes = Partial<Record<DxGridFrozenPlane, number>>;
+
+export type DxGridCellValue = {
   /**
    * The content value
    */
@@ -33,9 +52,13 @@ export type CellValue = {
    */
   end?: string;
   /**
-   * `class` attribute value to apply to the gridcell element
+   * `class` attribute value to apply to the gridcell element.
    */
   className?: string;
+  /**
+   * Whether to render a resize handle for this cell’s row or column.
+   */
+  resizeHandle?: DxGridAxis;
 };
 
 export type AxisMeta = {
@@ -44,17 +67,33 @@ export type AxisMeta = {
   resizeable?: boolean;
 };
 
+export type AxisSizes = DxGridPlaneRecord<DxGridFrozenPlane, Record<string, number>>;
+
 export type DxGridProps = Partial<
-  Pick<DxGrid, 'initialCells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault' | 'limitRows' | 'limitColumns'>
+  Pick<
+    DxGrid,
+    'initialCells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault' | 'limitRows' | 'limitColumns' | 'frozen'
+  >
 >;
+
+export type DxGridSelectionProps = {
+  plane: DxGridPlane;
+  colMin: number;
+  colMax: number;
+  rowMin: number;
+  rowMax: number;
+  visible?: boolean;
+};
 
 export class DxAxisResize extends Event {
   public readonly axis: DxGridAxis;
+  public readonly plane: 'grid' | DxGridFrozenPlane;
   public readonly index: string;
   public readonly size: number;
   constructor(props: DxAxisResizeProps) {
     super('dx-axis-resize');
     this.axis = props.axis;
+    this.plane = props.plane;
     this.index = props.index;
     this.size = props.size;
   }
@@ -62,6 +101,7 @@ export class DxAxisResize extends Event {
 
 export class DxAxisResizeInternal extends Event {
   public readonly axis: DxGridAxis;
+  public readonly plane: 'grid' | DxGridFrozenPlane;
   public readonly index: string;
   public readonly size: number;
   public readonly delta: number;
@@ -69,6 +109,7 @@ export class DxAxisResizeInternal extends Event {
   constructor(props: DxAxisResizeInternalProps) {
     super('dx-axis-resize-internal', { composed: true, bubbles: true });
     this.axis = props.axis;
+    this.plane = props.plane;
     this.index = props.index;
     this.size = props.size;
     this.delta = props.delta;
@@ -90,6 +131,7 @@ export class DxEditRequest extends Event {
   }
 }
 
+export type DxGridPlaneRange = { start: DxGridPlanePosition; end: DxGridPlanePosition };
 export type DxGridRange = { start: DxGridPosition; end: DxGridPosition };
 
 export class DxGridCellsSelect extends Event {

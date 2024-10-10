@@ -45,7 +45,7 @@ class HorizontalRuleWidget extends WidgetType {
 class LinkButton extends WidgetType {
   constructor(
     private readonly url: string,
-    private readonly render: (el: Element, url: string) => void,
+    private readonly render: (el: HTMLElement, url: string) => void,
   ) {
     super();
   }
@@ -54,6 +54,7 @@ class LinkButton extends WidgetType {
     return this.url === other.url;
   }
 
+  // TODO(burdon): Create icon and link directly without react?
   override toDOM(view: EditorView) {
     const el = document.createElement('span');
     this.render(el, this.url);
@@ -127,6 +128,7 @@ class TextWidget extends WidgetType {
 }
 
 const hide = Decoration.replace({});
+const blockQuote = Decoration.line({ class: mx('cm-blockquote') });
 const fencedCodeLine = Decoration.line({ class: mx('cm-code cm-codeblock-line') });
 const fencedCodeLineFirst = Decoration.line({ class: mx('cm-code cm-codeblock-line', 'cm-codeblock-first') });
 const fencedCodeLineLast = Decoration.line({ class: mx('cm-code cm-codeblock-line', 'cm-codeblock-last') });
@@ -199,7 +201,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
     return listLevels[listLevels.length - 1];
   };
 
-  // const count = 0;
+  // let count = 0;
   const enterNode = (node: SyntaxNodeRef) => {
     // console.log(`[${count++}]`, { node: node.name, from: node.from, to: node.to });
     switch (node.name) {
@@ -329,7 +331,36 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         break;
       }
 
+      //
+      // Blockquote > QuoteMark > Paragraph
+      //
+
+      case 'Blockquote': {
+        const editing = editingRange(state, node, focus);
+        const quoteMark = node.node.getChild('QuoteMark');
+        const paragraph = node.node.getChild('Paragraph');
+        if (!editing && quoteMark && paragraph) {
+          atomicDeco.add(quoteMark.from, paragraph.from, hide);
+        }
+
+        for (const block of view.viewportLineBlocks) {
+          if (block.to < node.from) {
+            continue;
+          }
+          if (block.from > node.to) {
+            break;
+          }
+
+          deco.add(block.from, block.from, blockQuote);
+        }
+
+        break;
+      }
+
+      //
       // CommentBlock
+      //
+
       case 'CommentBlock': {
         const editing = editingRange(state, node, focus);
         for (const block of view.viewportLineBlocks) {
@@ -339,21 +370,27 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           if (block.from > node.to) {
             break;
           }
-          const first = block.from <= node.from;
-          const last = block.to >= node.to && /^(\s>)*-->$/.test(state.doc.sliceString(block.from, block.to));
+
+          const isFirst = block.from <= node.from;
+          const isLast = block.to >= node.to && /^(\s>)*-->$/.test(state.doc.sliceString(block.from, block.to));
+
           deco.add(
             block.from,
             block.from,
-            first ? commentBlockLineFirst : last ? commentBlockLineLast : commentBlockLine,
+            isFirst ? commentBlockLineFirst : isLast ? commentBlockLineLast : commentBlockLine,
           );
-          if (!editing && (first || last)) {
+
+          if (!editing && (isFirst || isLast)) {
             atomicDeco.add(block.from, block.to, hide);
           }
         }
         break;
       }
 
+      //
       // FencedCode > CodeMark > [CodeInfo] > CodeText > CodeMark
+      //
+
       case 'FencedCode': {
         for (const block of view.viewportLineBlocks) {
           if (block.to < node.from) {
@@ -375,7 +412,10 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         return false;
       }
 
+      //
       // Link > [LinkMark, URL]
+      //
+
       case 'Link': {
         const marks = node.node.getChildren('LinkMark');
         const urlNode = node.node.getChild('URL');
@@ -412,7 +452,10 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         break;
       }
 
+      //
       // HR
+      //
+
       case 'HorizontalRule': {
         if (!editingRange(state, node, focus)) {
           deco.add(node.from, node.to, horizontalRule);
