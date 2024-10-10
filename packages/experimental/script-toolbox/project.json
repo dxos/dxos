@@ -1,0 +1,19 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "script-toolbox",
+  "tags": ["scope:common", "scope:experimental"],
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": ["{projectRoot}/src/index.ts"],
+        "platforms": ["browser"]
+      }
+    },
+    "lint": {},
+    "vitest": {}
+  },
+  "implicitDependencies": ["esbuild"]
+}
