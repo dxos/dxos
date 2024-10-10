@@ -38,6 +38,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';
+import { readReference } from './reference';
 import { getDatabaseFromObject } from './util';
 import { getObjectCore } from '../core-db';
 import { loadObjectReferences } from '../proxy-db';
@@ -611,7 +612,6 @@ describe('Reactive Object with ECHO database', () => {
 
   test('typed object is linked with the database on assignment to another db-linked object', async () => {
     const { db, graph } = await builder.createDatabase();
-
     graph.schemaRegistry.addSchema([TestSchemaType]);
 
     const obj = db.add(create(TestSchemaType, { string: 'Object 1' }));
@@ -619,5 +619,16 @@ describe('Reactive Object with ECHO database', () => {
     obj.other = another;
 
     expect(getDatabaseFromObject(another)).not.to.be.undefined;
+  });
+
+  test('explicit reference API', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.schemaRegistry.addSchema([TestSchemaType]);
+
+    const obj = db.add(create({ string: 'Object 1', another: create(Expando, { string: 'Object 2' }) }));
+
+    expect(readReference(obj, 'another')!.dxn.toString()).to.eq(`dxn:echo:@:${obj.another.id}`);
+    expect(readReference(obj, 'another')!.target).to.eq(obj.another); // obj already loaded
+    expect(await readReference(obj, 'another')!.deref()).to.eq(obj.another);
   });
 });
