@@ -4,7 +4,7 @@
 
 import React, { useMemo, type PropsWithChildren } from 'react';
 
-import { type Plugin, useIntentDispatcher, usePlugins } from '@dxos/app-framework';
+import { type PluginMeta, useIntentDispatcher, usePlugins } from '@dxos/app-framework';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { SettingsValue } from '@dxos/plugin-settings';
 import { Input, useTranslation } from '@dxos/react-ui';
@@ -18,7 +18,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
   const { enabled, core, plugins, setPlugin, ...pluginContext } = usePlugins();
   const dispatch = useIntentDispatcher();
 
-  const sort = (a: Plugin['meta'], b: Plugin['meta']) => a.name?.localeCompare(b.name ?? '') ?? 0;
+  const sort = (a: PluginMeta, b: PluginMeta) => a.name?.localeCompare(b.name ?? '') ?? 0;
 
   // Memoize to prevent plugins from disappearing when toggling enabled.
   const installed = useMemo(
@@ -31,9 +31,9 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
     [],
   );
 
+  const pluginIds = plugins.map(({ meta: { id } }) => id);
   const available = useMemo(() => pluginContext.available.filter(({ id }) => !enabled.includes(id)).sort(sort), []);
   const recommended = available.filter((meta) => !meta.tags?.includes('experimental'));
-  console.log({ installed, available: available.map((a) => JSON.stringify(a)), recommended });
   const experimental = available.filter((meta) => meta.tags?.includes('experimental'));
 
   const handleChange = (id: string, enabled: boolean) => {
@@ -64,7 +64,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
       <Section label={t('settings section installed label')}>
         <PluginList
           plugins={installed}
-          loaded={plugins.map(({ meta }) => meta.id)}
+          loaded={pluginIds}
           enabled={enabled}
           onChange={handleChange}
           onReload={handleReload}
@@ -74,7 +74,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
       <Section label={t('settings section recommended label')}>
         <PluginList
           plugins={recommended}
-          loaded={plugins.map(({ meta }) => meta.id)}
+          loaded={pluginIds}
           enabled={enabled}
           onChange={handleChange}
           onReload={handleReload}
@@ -85,7 +85,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
         <Section label={t('settings section experimental label')}>
           <PluginList
             plugins={experimental}
-            loaded={plugins.map(({ meta }) => meta.id)}
+            loaded={pluginIds}
             enabled={enabled}
             onChange={handleChange}
             onReload={handleReload}

@@ -15,7 +15,7 @@ import SurfaceMeta from './plugins/SurfacePlugin/meta';
  * Initializes plugins and renders the root components.
  *
  * @example
- * const order = [LayoutMeta, MyPluginMeta];
+ * const meta = [LayoutMeta, MyPluginMeta];
  * const plugins = {
  *  [LayoutMeta.id]: Plugin.lazy(() => import('./plugins/LayoutPlugin/plugin')),
  *  [MyPluginMeta.id]: Plugin.lazy(() => import('./plugins/MyPlugin/plugin')),
@@ -30,20 +30,21 @@ import SurfaceMeta from './plugins/SurfacePlugin/meta';
  *   </StrictMode>,
  * );
  *
- * @param params.order Total ordering of plugins.
  * @param params.plugins All plugins available to the application.
+ * @param params.meta All plugin metadata.
  * @param params.core Core plugins which will always be enabled.
  * @param params.default Default plugins are enabled by default but can be disabled by the user.
  * @param params.fallback Fallback component to render while plugins are initializing.
  */
-export const createApp = ({ order, plugins, core = order.map(({ id }) => id), ...params }: BootstrapPluginsParams) => {
+export const createApp = ({ meta, plugins, core, ...params }: BootstrapPluginsParams) => {
   const host = PluginHost({
-    order: [SurfaceMeta, IntentMeta, ...order],
     plugins: {
       ...plugins,
       [SurfaceMeta.id]: Plugin.lazy(() => import('./plugins/SurfacePlugin/plugin')),
       [IntentMeta.id]: Plugin.lazy(() => import('./plugins/IntentPlugin/plugin')),
     },
+    // TODO(burdon): Why not include in core?
+    meta: [SurfaceMeta, IntentMeta, ...meta],
     core: [SurfaceMeta.id, IntentMeta.id, ...core],
     ...params,
   });

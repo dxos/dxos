@@ -64,9 +64,6 @@ export type PluginMeta = {
   icon?: string;
 };
 
-// TODO(burdon): Rename definePlugin.
-export const pluginMeta = (meta: PluginMeta) => meta;
-
 /**
  * A unit of containment of modular functionality that can be provided to an application.
  * Plugins provide things like components, state, actions, etc. to the application.

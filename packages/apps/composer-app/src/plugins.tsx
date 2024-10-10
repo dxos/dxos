@@ -47,6 +47,7 @@ import TableMeta from '@dxos/plugin-table/meta';
 import ThemeMeta from '@dxos/plugin-theme/meta';
 import ThreadMeta from '@dxos/plugin-thread/meta';
 import WildcardMeta from '@dxos/plugin-wildcard/meta';
+import { isNotFalsy } from '@dxos/util';
 
 import { INITIAL_COLLECTION_TITLE, INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
 import { steps } from './help';
@@ -62,74 +63,60 @@ export type State = {
 
 export type PluginConfig = State & { isDev?: boolean; isPwa?: boolean; isSocket?: boolean; isLabs?: boolean };
 
-export const core = ({ isPwa, isSocket }: PluginConfig): PluginMeta['id'][] => [
-  ...(isSocket ? [NativeMeta.id] : []),
-  ...(!isSocket && isPwa ? [PwaMeta.id] : []),
-  AttentionMeta.id,
-  ClientMeta.id,
-  GraphMeta.id,
-  FilesMeta.id,
-  HelpMeta.id,
-  DeckMeta.id,
-  MetadataMeta.id,
-  NavTreeMeta.id,
-  ObservabilityMeta.id,
-  RegistryMeta.id,
-  SettingsMeta.id,
-  SpaceMeta.id,
-  StackMeta.id,
-  StatusBarMeta.id,
-  ThemeMeta.id,
-  WelcomeMeta.id,
-  WildcardMeta.id,
-];
+/**
+ * NOTE: Order is important.
+ */
+// TODO(burdon): Impl. dependency graph.
+export const core = ({ isPwa, isSocket }: PluginConfig): PluginMeta[] =>
+  [
+    ObservabilityMeta,
+    ThemeMeta,
 
-export const defaults = ({ isDev }: PluginConfig): PluginMeta['id'][] => [
-  ...(isDev ? [DebugMeta.id] : []),
-  MarkdownMeta.id,
-  ThreadMeta.id,
-  SketchMeta.id,
-  TableMeta.id,
-  SheetMeta.id,
-];
+    // TODO(wittjosiah): Consider what happens to PWA updates when hitting error boundary.
+    !isSocket && isPwa && PwaMeta,
+    isSocket && NativeMeta,
+    WelcomeMeta,
 
-export const system = ({ isPwa, isSocket }: PluginConfig): PluginMeta[] => [
-  ObservabilityMeta,
-  ThemeMeta,
-  // TODO(wittjosiah): Consider what happens to PWA updates when hitting error boundary.
-  ...(!isSocket && isPwa ? [PwaMeta] : []),
-  ...(isSocket ? [NativeMeta] : []),
-  WelcomeMeta,
+    // UX
+    AttentionMeta,
+    DeckMeta,
+    StackMeta,
+    NavTreeMeta,
+    SettingsMeta,
+    StatusBarMeta,
 
-  // UX
-  AttentionMeta,
-  DeckMeta,
-  NavTreeMeta,
-  SettingsMeta,
-  StatusBarMeta,
+    // Shell and help (client must precede help because help’s context depends on client’s)
+    ClientMeta,
+    HelpMeta,
 
-  // Shell and help (client must precede help because help’s context depends on client’s)
-  ClientMeta,
-  HelpMeta,
+    // Data integrations
+    SpaceMeta,
+    DebugMeta,
 
-  // Data integrations
-  SpaceMeta,
-  DebugMeta,
+    // Framework extensions
+    // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
+    //  Root folder needs to be created before the graph is built or else it's not ordered first.
+    GraphMeta,
+    MetadataMeta,
+    RegistryMeta,
+  ].filter(isNotFalsy);
 
-  // Framework extensions
-  // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
-  //  Root folder needs to be created before the graph is built or else it's not ordered first.
-  GraphMeta,
-  MetadataMeta,
-  RegistryMeta,
-];
+export const defaults = ({ isDev }: PluginConfig): PluginMeta[] =>
+  [
+    //
+    isDev && DebugMeta,
+    MarkdownMeta,
+    ThreadMeta,
+    SketchMeta,
+    TableMeta,
+    SheetMeta,
+  ].filter(isNotFalsy);
 
-export const recommended = (conf: PluginConfig): PluginMeta[] => [
+export const recommended = ({ isLabs }: PluginConfig): PluginMeta[] => [
   //
   ChessMeta,
   ExcalidrawMeta,
   ExplorerMeta,
-  FilesMeta,
   FunctionMeta,
   IpfsMeta,
   MapMeta,
@@ -137,6 +124,7 @@ export const recommended = (conf: PluginConfig): PluginMeta[] => [
   MermaidMeta,
   PresenterMeta,
   ScriptMeta,
+  SearchMeta,
   SheetMeta,
   SketchMeta,
   StackMeta,
@@ -144,12 +132,8 @@ export const recommended = (conf: PluginConfig): PluginMeta[] => [
   ThreadMeta,
   WildcardMeta,
 
-  // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
-  SearchMeta,
-];
-
-export const labs = ({ isLabs }: PluginConfig): PluginMeta[] =>
-  isLabs
+  // TODO(burdon): Use meta tags.
+  ...(isLabs
     ? [
         //
         ChainMeta,
@@ -159,11 +143,13 @@ export const labs = ({ isLabs }: PluginConfig): PluginMeta[] =>
         KanbanMeta,
         OutlinerMeta,
       ]
-    : [];
+    : []),
+];
 
 /**
  * Individual plugin constructors.
  */
+// TODO(burdon): Create registry of meta and constructors.
 export const plugins = ({
   appKey,
   config,

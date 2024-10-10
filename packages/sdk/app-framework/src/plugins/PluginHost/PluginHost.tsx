@@ -12,9 +12,9 @@ import { type Plugin, type PluginDefinition, type PluginMeta, type PluginProvide
 import { ErrorBoundary } from '../SurfacePlugin';
 
 export type BootstrapPluginsParams = {
-  order: PluginMeta[];
-  plugins: Record<PluginMeta['id'], () => Promise<PluginDefinition>>;
-  core?: string[];
+  plugins: Record<string, () => Promise<PluginDefinition>>;
+  meta: PluginMeta[];
+  core: string[];
   defaults?: string[];
   fallback?: ErrorBoundary['props']['fallback'];
   placeholder?: ReactNode;
@@ -33,9 +33,9 @@ const PLUGIN_HOST = 'dxos.org/plugin/host';
  * Bootstraps an application by initializing plugins and rendering root components.
  */
 export const PluginHost = ({
-  order,
-  plugins: definitions,
-  core = [],
+  plugins,
+  meta,
+  core,
   defaults = [],
   fallback = DefaultFallback,
   placeholder = null,
@@ -43,9 +43,10 @@ export const PluginHost = ({
   const state = new LocalStorageStore<PluginContext>(PLUGIN_HOST, {
     ready: false,
     core,
-    enabled: [...defaults],
+    defaults,
+    enabled: [],
     plugins: [],
-    available: order.filter(({ id }) => !core.includes(id)),
+    available: meta.filter(({ id }) => !core.includes(id)),
     setPlugin: (id: string, enabled: boolean) => {
       if (enabled) {
         state.values.enabled.push(id);
@@ -57,7 +58,6 @@ export const PluginHost = ({
   });
 
   state.prop({ key: 'enabled', type: LocalStorageStore.json<string[]>() });
-  console.log(state.values.available);
 
   return {
     meta: {
@@ -70,7 +70,14 @@ export const PluginHost = ({
       root: () => {
         return (
           <ErrorBoundary fallback={fallback}>
-            <Root order={order} core={core} definitions={definitions} state={state.values} placeholder={placeholder} />
+            <Root
+              plugins={plugins}
+              meta={meta}
+              core={core}
+              defaults={defaults}
+              state={state.values}
+              placeholder={placeholder}
+            />
           </ErrorBoundary>
         );
       },
@@ -88,24 +95,25 @@ const DefaultFallback = ({ error }: { error: Error }) => {
   );
 };
 
-type RootProps = {
-  order: PluginDefinition['meta'][];
+type RootProps = Pick<BootstrapPluginsParams, 'meta' | 'core' | 'defaults'> & {
+  plugins: Record<string, () => Promise<PluginDefinition>>;
   state: PluginContext;
-  definitions: Record<string, () => Promise<PluginDefinition>>;
-  core: string[];
   placeholder: ReactNode;
 };
 
-const Root = ({ order, core: corePluginIds, definitions, state, placeholder }: RootProps) => {
+/**
+ * Root component initializes plugins.
+ */
+const Root = ({ plugins: definitions, meta, core, defaults = [], state, placeholder }: RootProps) => {
   const [error, setError] = useState<unknown>();
 
   useEffect(() => {
     log('initializing plugins', { enabled: state.enabled });
-    const timeout = setTimeout(async () => {
+    const t = setTimeout(async () => {
       try {
-        const enabledIds = [...corePluginIds, ...state.enabled].sort((a, b) => {
-          const indexA = order.findIndex(({ id }) => id === a);
-          const indexB = order.findIndex(({ id }) => id === b);
+        const enabledIds = [...core, ...defaults, ...state.enabled].sort((a, b) => {
+          const indexA = meta.findIndex(({ id }) => id === a);
+          const indexB = meta.findIndex(({ id }) => id === b);
           return indexA - indexB;
         });
 
@@ -119,19 +127,19 @@ const Root = ({ order, core: corePluginIds, definitions, state, placeholder }: R
 
         const plugins = await Promise.all(
           enabled.map(async (definition) => {
-            const plugin = await initializePlugin(definition).catch((err) => {
+            return await initializePlugin(definition).catch((err) => {
               log.error('Failed to initialize plugin:', { id: definition.meta.id, err });
-              return undefined;
             });
-            return plugin;
           }),
-        ).then((plugins) => plugins.filter((plugin): plugin is Plugin => Boolean(plugin)));
-        log('plugins initialized', { plugins });
+        );
 
-        await Promise.all(enabled.map((pluginDefinition) => pluginDefinition.ready?.(plugins)));
-        log('plugins ready', { plugins });
+        const initialized = plugins.filter((plugin): plugin is Plugin => Boolean(plugin));
+        log('plugins initialized', { plugins: initialized });
 
-        state.plugins = plugins;
+        await Promise.all(enabled.map((plugin) => plugin.ready?.(initialized)));
+        log('plugins ready', { plugins: initialized });
+
+        state.plugins = initialized;
         state.ready = true;
       } catch (err) {
         setError(err);
@@ -139,7 +147,7 @@ const Root = ({ order, core: corePluginIds, definitions, state, placeholder }: R
     });
 
     return () => {
-      clearTimeout(timeout);
+      clearTimeout(t);
       state.ready = false;
       // TODO(wittjosiah): Does this ever need to be called prior to having dynamic plugins?
       // void Promise.all(enabled.map((definition) => definition.unload?.()));
