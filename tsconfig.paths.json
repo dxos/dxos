@@ -11,12 +11,6 @@
       "@dxos/plugin-chain/types": [
         "packages/plugins/experimental/plugin-chain/src/types/index.ts"
       ],
-      "@dxos/plugin-debug": [
-        "packages/plugins/experimental/plugin-debug/src/index.ts"
-      ],
-      "@dxos/plugin-debug/meta": [
-        "packages/plugins/experimental/plugin-debug/src/meta.tsx"
-      ],
       "@dxos/plugin-excalidraw": [
         "packages/plugins/experimental/plugin-excalidraw/src/index.ts"
       ],
@@ -145,6 +139,12 @@
       ],
       "@dxos/plugin-client/meta": [
         "packages/plugins/plugin-client/src/meta.ts"
+      ],
+      "@dxos/plugin-debug": [
+        "packages/plugins/plugin-debug/src/index.ts"
+      ],
+      "@dxos/plugin-debug/meta": [
+        "packages/plugins/plugin-debug/src/meta.tsx"
       ],
       "@dxos/plugin-deck": [
         "packages/plugins/plugin-deck/src/index.ts"

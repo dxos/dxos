@@ -3,17 +3,29 @@
 //
 
 import '@dxos-theme';
+
 import React from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { ColumnSettingsForm, type ColumnSettingsFormProps } from './ColumnSettingsForm';
+import { ColumnSettings, type ColumnSettingsProps } from './ColumnSettings';
 import { type TableDef } from '../../schema';
+import translations from '../../translations';
+
+const Story = (props: ColumnSettingsProps) => (
+  <div className='flex w-[240px] m-2 p-2 border border-separator rounded'>
+    <ColumnSettings {...props} />
+  </div>
+);
 
 export default {
-  title: 'react-ui-table/ColumnSettingsForm',
-  component: ColumnSettingsForm,
-  decorators: [withTheme],
+  title: 'react-ui-table/ColumnSettings',
+  component: ColumnSettings,
+  decorators: [withTheme, withLayout()],
+  parameters: {
+    translations,
+  },
+  render: Story,
 };
 
 const sampleTableDef: TableDef = {
@@ -37,7 +49,7 @@ const sampleTablesToReference: TableDef[] = [
   },
 ];
 
-const defaultArgs: ColumnSettingsFormProps = {
+const defaultArgs: ColumnSettingsProps = {
   column: {
     id: 'col-1',
     prop: 'name',
@@ -93,12 +105,3 @@ export const NewColumn = {
     },
   },
 };
-
-const Template = (args: ColumnSettingsFormProps) => (
-  <div className='p-4 max-is-64'>
-    <ColumnSettingsForm {...args} />
-  </div>
-);
-
-export const Interactive = Template.bind({});
-(Interactive as any).args = defaultArgs;

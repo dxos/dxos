@@ -6,9 +6,9 @@ import {
   AST,
   type EchoObjectAnnotation,
   FieldMeta,
-  ReferenceAnnotationId,
   getFieldMetaAnnotation,
   ref,
+  ReferenceAnnotationId,
   S,
 } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
@@ -17,6 +17,7 @@ import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
 import { type TableType } from '../types';
 
 const FIELD_META_NAMESPACE = 'plugin-table';
+
 const typeToSchema: Partial<{ [key in ColumnProps['type']]: S.Schema<any> }> = {
   boolean: S.Boolean,
   number: S.Number,
@@ -33,6 +34,7 @@ export const getPropType = (type?: AST.AST): ColumnProps['type'] => {
   if (type == null) {
     return 'string';
   }
+
   if (AST.isTypeLiteral(type)) {
     return 'ref';
   } else if (AST.isBooleanKeyword(type)) {
@@ -94,5 +96,6 @@ export const createUniqueProp = (table: TableDef) => {
     }
   }
 
+  // TODO(burdon): Const for prefix.
   return 'prop_' + PublicKey.random().toHex().slice(0, 8);
 };

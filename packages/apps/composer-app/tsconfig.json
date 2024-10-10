@@ -69,9 +69,6 @@
       "path": "../../plugins/experimental/plugin-chain"
     },
     {
-      "path": "../../plugins/experimental/plugin-debug"
-    },
-    {
       "path": "../../plugins/experimental/plugin-excalidraw"
     },
     {
@@ -121,6 +118,9 @@
     },
     {
       "path": "../../plugins/plugin-client"
+    },
+    {
+      "path": "../../plugins/plugin-debug"
     },
     {
       "path": "../../plugins/plugin-deck"

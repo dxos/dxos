@@ -49,6 +49,7 @@ export const createColumnsFromTableDef = ({
 /**
  * Create column definitions from schema metadata.
  */
+// TODO(burdon): Space first.
 export const createColumns = (
   tableDef: TableDef,
   tablesToReference: TableDef[],

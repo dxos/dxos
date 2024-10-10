@@ -16,6 +16,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",

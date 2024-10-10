@@ -39,7 +39,12 @@ const noOpProps: IdentityPanelImplProps = {
 export default {
   title: 'react-shell/IdentityPanel',
   decorators: [withTheme],
-  parameters: { translations: [osTranslations], chromatic: { disableSnapshot: false } },
+  parameters: {
+    translations: [osTranslations],
+    chromatic: {
+      disableSnapshot: false,
+    },
+  },
 };
 
 export const IdentityActionChooser = () => {

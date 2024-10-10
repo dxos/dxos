@@ -3,4 +3,4 @@
 //
 
 export * from './ColumnMenu';
-export * from './ColumnSettingsForm';
+export * from './ColumnSettings';
