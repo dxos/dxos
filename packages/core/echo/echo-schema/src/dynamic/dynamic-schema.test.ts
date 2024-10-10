@@ -28,8 +28,8 @@ describe('dynamic schema', () => {
 
     const registered = createDynamicSchema(GeneratedSchema);
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
-      ['field2', AST.booleanKeyword],
       ['field1', AST.stringKeyword],
+      ['field2', AST.booleanKeyword],
     ]);
   });
 

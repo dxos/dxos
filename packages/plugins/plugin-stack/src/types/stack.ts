@@ -13,9 +13,9 @@ export const SectionSchema = S.Struct({
   height: S.optional(S.Number),
   // Space for data that isn't stack-specific but is specific to this view instance.
   //  e.g. cover/fill for an image
-  custom: S.optional(S.Record(S.String, S.Any)),
+  custom: S.optional(S.Record({ key: S.String, value: S.Any })),
 });
 
 export class StackViewType extends TypedObject({ typename: 'dxos.org/type/StackView', version: '0.1.0' })({
-  sections: S.mutable(S.Record(S.String, SectionSchema)),
+  sections: S.mutable(S.Record({ key: S.String, value: SectionSchema })),
 }) {}

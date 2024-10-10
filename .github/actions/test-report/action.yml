@@ -5,16 +5,12 @@ inputs:
   name:
     description: 'The name of the test report'
     required: true
+  result:
+    description: 'Result of the job'
+    required: true
 
 runs:
   using: 'composite'
   steps:
-    - name: Send failure report
+    - run: ./.github/actions/test-report/send-test-report.sh "${{ inputs.name }}" "${{ inputs.result }}"
       shell: bash
-      run: ./.github/actions/test-report/send-test-report.sh "${{ inputs.name }}" failure
-      if: ${{ failure() }}
-
-    - name: Send success report
-      shell: bash
-      run: ./.github/actions/test-report/send-test-report.sh "${{ inputs.name }}" success
-      if: ${{ success() }}

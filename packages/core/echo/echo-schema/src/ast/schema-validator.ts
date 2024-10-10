@@ -18,14 +18,14 @@ export class SchemaValidator {
     const visitAll = (astList: AST.AST[]) => astList.forEach((ast) => this.validateSchema(S.make(ast)));
     if (AST.isUnion(schema.ast)) {
       const typeAstList = schema.ast.types.filter((type) => AST.isTypeLiteral(type)) as AST.TypeLiteral[];
-      // check we can handle a discriminated union
+      // Check we can handle a discriminated union.
       if (typeAstList.length > 1) {
         getTypeDiscriminators(typeAstList);
       }
       visitAll(typeAstList);
     } else if (AST.isTupleType(schema.ast)) {
-      const positionalTypes = schema.ast.elements.map((e) => e.type);
-      const allTypes = positionalTypes.concat(schema.ast.rest);
+      const positionalTypes = schema.ast.elements.map((t) => t.type);
+      const allTypes = positionalTypes.concat(schema.ast.rest.map((t) => t.type));
       visitAll(allTypes);
     } else if (AST.isTypeLiteral(schema.ast)) {
       visitAll(AST.getPropertySignatures(schema.ast).map((p) => p.type));
@@ -100,7 +100,7 @@ const getArrayElementSchema = (tupleAst: AST.TupleType, property: string | symbo
   }
 
   const restType = tupleAst.rest;
-  return S.make(restType[0]).annotations(restType[0].annotations);
+  return S.make(restType[0].type).annotations(restType[0].annotations);
 };
 
 const flattenUnion = (typeAst: AST.AST): AST.AST[] =>
