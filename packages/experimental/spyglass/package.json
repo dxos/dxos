@@ -32,6 +32,6 @@
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@types/isomorphic-fetch": "^0.0.36",
-    "@types/node": "^22.7.4"
+    "@types/node": "22.7.4"
   }
 }

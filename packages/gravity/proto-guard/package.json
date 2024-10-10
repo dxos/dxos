@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@types/lodash.isequal": "^4.5.0",
-    "@types/node": "^22.7.4",
+    "@types/node": "22.7.4",
     "@types/yargs": "~16.0.1"
   },
   "publishConfig": {

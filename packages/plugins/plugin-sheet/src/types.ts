@@ -114,13 +114,13 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
   columns: S.mutable(S.Array(S.String)),
 
   // Row metadata referenced by index.
-  rowMeta: S.mutable(S.Record(S.String, S.mutable(RowColumnMeta))),
+  rowMeta: S.mutable(S.Record({ key: S.String, value: S.mutable(RowColumnMeta) })),
 
   // Column metadata referenced by index.
-  columnMeta: S.mutable(S.Record(S.String, S.mutable(RowColumnMeta))),
+  columnMeta: S.mutable(S.Record({ key: S.String, value: S.mutable(RowColumnMeta) })),
 
   // Cell formatting referenced by indexed range.
-  formatting: S.mutable(S.Record(S.String, S.mutable(Formatting))),
+  formatting: S.mutable(S.Record({ key: S.String, value: S.mutable(Formatting) })),
 
   // Threads associated with the sheet
   threads: S.optional(S.mutable(S.Array(ref(ThreadType)))),
@@ -134,4 +134,4 @@ export type SheetSize = {
 export type CreateSheetOptions = {
   name?: string;
   cells?: Record<string, CellValue>;
-} & Partial<SheetSize>;
+};
