@@ -64,8 +64,7 @@
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "@radix-ui/react-context": "^1.0.0",
-    "immer": "^10.1.1"
+    "@radix-ui/react-context": "^1.0.0"
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",

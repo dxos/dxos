@@ -23,7 +23,7 @@ type TableProps = {
 // TODO(Zan): Callbacks for editing column schema.
 // TODO(Zan): Remove column axis labels.
 // TODO(Zan): Custom header labels and buttons.
-export const Table: React.FC<TableProps> = ({ columnDefinitions, data }) => {
+export const Table = ({ columnDefinitions, data }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
   const { table, columnMeta, dispatch } = useTable(columnDefinitions, data, gridRef);
 

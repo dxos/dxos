@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
@@ -89,7 +89,7 @@ const useSimulateRowAdditions = (data: any[], intervalMs: number, isEnabled: boo
 };
 
 const DefaultStory = () => {
-  const data = React.useMemo(() => makeData(100), []);
+  const data = useMemo(() => makeData(100), []);
 
   return (
     <div>
@@ -107,7 +107,7 @@ const LargeDataStory = ({
   updateIntervalMs: number;
   simulateCollaborativeCellUpdates: boolean;
 }) => {
-  const data = React.useMemo(() => makeData(rowCount), [rowCount]);
+  const data = useMemo(() => makeData(rowCount), [rowCount]);
 
   useSimulateCollaborativeUpdates(data, columnDefinitions, updateIntervalMs, simulateCollaborativeCellUpdates);
 
@@ -134,7 +134,7 @@ const RowAdditionStory = ({
   updateIntervalMs: number;
   simulateRowAdditions: boolean;
 }) => {
-  const data = React.useMemo(() => makeData(initialRowCount), [initialRowCount]);
+  const data = useMemo(() => makeData(initialRowCount), [initialRowCount]);
 
   useSimulateRowAdditions(data, updateIntervalMs, simulateRowAdditions);
 
