@@ -10,9 +10,9 @@ import { styleMap } from 'lit/directives/style-map.js';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import './dx-grid-axis-resize-handle';
 import {
-  type AxisMeta,
-  type AxisSizes,
-  type CellIndex,
+  type DxGridAxisMetaProps,
+  type DxGridAxisSizes,
+  type DxGridCellIndex,
   type DxGridCellValue,
   DxAxisResize,
   type DxAxisResizeInternal,
@@ -41,7 +41,7 @@ import { separator, toCellIndex } from './util';
 /**
  * The size in pixels of the gap between cells
  */
-const gap = 24;
+const gap = 1;
 
 /**
  * ResizeObserver notices even subpixel changes, only respond to changes of at least 1px.
@@ -202,12 +202,12 @@ export class DxGrid extends LitElement {
   gridId: string = 'default-grid-id';
 
   @property({ type: Object })
-  rowDefault: DxGridPlaneRecord<DxGridFrozenRowsPlane, AxisMeta> = {
+  rowDefault: DxGridPlaneRecord<DxGridFrozenRowsPlane, DxGridAxisMetaProps> = {
     grid: { size: defaultRowSize },
   };
 
   @property({ type: Object })
-  columnDefault: DxGridPlaneRecord<DxGridFrozenColsPlane, AxisMeta> = {
+  columnDefault: DxGridPlaneRecord<DxGridFrozenColsPlane, DxGridAxisMetaProps> = {
     grid: { size: defaultColSize },
   };
 
@@ -333,10 +333,10 @@ export class DxGrid extends LitElement {
   private pointer: DxGridPointer = null;
 
   @state()
-  private colSizes: AxisSizes = { grid: {} };
+  private colSizes: DxGridAxisSizes = { grid: {} };
 
   @state()
-  private rowSizes: AxisSizes = { grid: {} };
+  private rowSizes: DxGridAxisSizes = { grid: {} };
 
   @state()
   private focusActive: boolean = false;
@@ -486,7 +486,7 @@ export class DxGrid extends LitElement {
   }
 
   private cell(c: number | string, r: number | string, plane: DxGridPlane): DxGridCellValue | undefined {
-    const index: CellIndex = `${c}${separator}${r}`;
+    const index: DxGridCellIndex = `${c}${separator}${r}`;
     return this.cells?.[plane]?.[index] ?? this.initialCells?.[plane]?.[index];
   }
 
@@ -836,7 +836,7 @@ export class DxGrid extends LitElement {
       }, 0);
       this.posInline = Math.max(
         0,
-        Math.min(this.intrinsicInlineSize - this.sizeInline, this.binInlineMin + sizeSumCol - gap - this.sizeInline),
+        Math.min(this.intrinsicInlineSize - this.sizeInline, this.binInlineMin + sizeSumCol - this.sizeInline),
       );
       this.updateVisInline();
     }
@@ -851,7 +851,7 @@ export class DxGrid extends LitElement {
       }, 0);
       this.posBlock = Math.max(
         0,
-        Math.min(this.intrinsicBlockSize - this.sizeBlock, this.binBlockMin + sizeSumRow - gap - this.sizeBlock),
+        Math.min(this.intrinsicBlockSize - this.sizeBlock, this.binBlockMin + sizeSumRow - this.sizeBlock),
       );
       this.updateVisBlock();
     }
@@ -1113,7 +1113,7 @@ export class DxGrid extends LitElement {
     }
     this.observer.observe(this.viewportRef.value!);
     this.colSizes = Object.entries(this.columns).reduce(
-      (acc: AxisSizes, [plane, planeColMeta]) => {
+      (acc: DxGridAxisSizes, [plane, planeColMeta]) => {
         acc[plane as 'grid' | DxGridFrozenPlane] = Object.entries(planeColMeta).reduce(
           (planeAcc: Record<string, number>, [col, colMeta]) => {
             if (colMeta?.size) {
@@ -1128,7 +1128,7 @@ export class DxGrid extends LitElement {
       { grid: {} },
     );
     this.rowSizes = Object.entries(this.rows).reduce(
-      (acc: AxisSizes, [plane, planeRowMeta]) => {
+      (acc: DxGridAxisSizes, [plane, planeRowMeta]) => {
         acc[plane as 'grid' | DxGridFrozenPlane] = Object.entries(planeRowMeta).reduce(
           (planeAcc: Record<string, number>, [row, rowMeta]) => {
             if (rowMeta?.size) {
