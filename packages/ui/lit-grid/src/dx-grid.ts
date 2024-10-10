@@ -1150,3 +1150,5 @@ export class DxGrid extends LitElement {
     return this;
   }
 }
+
+export { rowToA1Notation, colToA1Notation } from './util';

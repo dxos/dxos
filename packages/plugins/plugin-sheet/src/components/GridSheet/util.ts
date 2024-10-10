@@ -9,9 +9,12 @@ import {
   type GridEditing,
   type GridContentProps,
   type DxGridElement,
-  type DxGridCells,
   type DxGridAxisMeta,
-  type DxGridRange,
+  type DxGridPlane,
+  type DxGridPlaneRange,
+  type DxGridPlaneCells,
+  colToA1Notation,
+  rowToA1Notation,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -30,40 +33,77 @@ export const dxGridCellIndexToSheetCellAddress = (gridEditing: GridEditing): Cel
 };
 
 const createDxGridColumns = (model: SheetModel): DxGridAxisMeta => {
-  return model.sheet.columns.reduce((acc: DxGridAxisMeta, columnId, numericIndex) => {
-    if (model.sheet.columnMeta[columnId] && model.sheet.columnMeta[columnId].size) {
-      acc[numericIndex] = { size: model.sheet.columnMeta[columnId].size, resizeable: true };
-    }
-    return acc;
-  }, {});
+  return model.sheet.columns.reduce(
+    (acc: DxGridAxisMeta, columnId, numericIndex) => {
+      if (model.sheet.columnMeta[columnId] && model.sheet.columnMeta[columnId].size) {
+        acc.grid[numericIndex] = { size: model.sheet.columnMeta[columnId].size, resizeable: true };
+      }
+      return acc;
+    },
+    { grid: {} },
+  );
 };
 
 const createDxGridRows = (model: SheetModel): DxGridAxisMeta => {
-  return model.sheet.rows.reduce((acc: DxGridAxisMeta, rowId, numericIndex) => {
-    if (model.sheet.rowMeta[rowId] && model.sheet.rowMeta[rowId].size) {
-      acc[numericIndex] = { size: model.sheet.rowMeta[rowId].size, resizeable: true };
-    }
-    return acc;
-  }, {});
+  return model.sheet.rows.reduce(
+    (acc: DxGridAxisMeta, rowId, numericIndex) => {
+      if (model.sheet.rowMeta[rowId] && model.sheet.rowMeta[rowId].size) {
+        acc.grid[numericIndex] = { size: model.sheet.rowMeta[rowId].size, resizeable: true };
+      }
+      return acc;
+    },
+    { grid: {} },
+  );
 };
 
-const cellGetter = (model: SheetModel, formatting: FormattingModel) => {
+const gridCellGetter = (model: SheetModel, formatting: FormattingModel) => {
   // TODO(thure): Actually use the cache.
-  let _cachedBounds: DxGridRange | null = null;
-  const cachedCells: DxGridCells = {};
-  return (nextBounds: DxGridRange): DxGridCells => {
+  const cachedGridCells: DxGridPlaneCells = {};
+  return (nextBounds: DxGridPlaneRange): DxGridPlaneCells => {
     [...Array(nextBounds.end.col - nextBounds.start.col)].forEach((_, c0) => {
       return [...Array(nextBounds.end.row - nextBounds.start.row)].forEach((_, r0) => {
         const col = nextBounds.start.col + c0;
         const row = nextBounds.start.row + r0;
         const cell = formatting.getFormatting({ col, row });
         if (cell.value) {
-          cachedCells[`${col},${row}`] = { value: cell.value, className: mx(cell.classNames) };
+          cachedGridCells;
+          cachedGridCells[`${col},${row}`] = { value: cell.value, className: mx(cell.classNames) };
         }
       });
     });
-    _cachedBounds = nextBounds;
-    return cachedCells;
+    return cachedGridCells;
+  };
+};
+
+export const rowLabelCell = (row: number) => ({
+  value: rowToA1Notation(row),
+  className: 'text-end !pie-1',
+  resizeHandle: 'row',
+});
+
+export const colLabelCell = (col: number) => ({ value: colToA1Notation(col), resizeHandle: 'col' });
+
+const cellGetter = (model: SheetModel, formatting: FormattingModel) => {
+  const getGridCells = gridCellGetter(model, formatting);
+  return (nextBounds: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells => {
+    switch (plane) {
+      case 'grid':
+        return getGridCells(nextBounds);
+      case 'frozenColsStart':
+        return [...Array(nextBounds.end.row - nextBounds.start.row)].reduce((acc, _, r0) => {
+          const r = nextBounds.start.row + r0;
+          acc[`0,${r}`] = rowLabelCell(r);
+          return acc;
+        }, {});
+      case 'frozenRowsStart':
+        return [...Array(nextBounds.end.col - nextBounds.start.col)].reduce((acc, _, c0) => {
+          const c = nextBounds.start.col + c0;
+          acc[`${c},0`] = colLabelCell(c);
+          return acc;
+        }, {});
+      default:
+        return {};
+    }
   };
 };
 
