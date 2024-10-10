@@ -111,7 +111,6 @@ export const useTextEditor = (
       // https://codemirror.net/docs/ref/#view.EditorViewConfig
       view = new EditorView({
         parent: parentRef.current,
-        selection: initialSelection,
         state,
         // NOTE: Uncomment to debug/monitor all transactions.
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch
