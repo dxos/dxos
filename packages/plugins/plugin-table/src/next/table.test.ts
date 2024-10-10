@@ -7,11 +7,11 @@ import { describe, it, expect } from 'vitest';
 
 import { create } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 import { createTable, updateTable, type Table, type TableEvent } from './table';
 
-registerSignalRuntime();
+registerSignalsRuntime();
 
 const createInitialTable = (): Table =>
   createTable(
@@ -173,42 +173,13 @@ describe('reactivity', () => {
       );
 
       using cellUpdates = updateCounter(() => {
-        table.cells.value['0,0']?.value;
+        table.cells.value.grid['0,0']?.value;
       });
 
       data[0].col1 = 'New Value';
 
       expect(cellUpdates.count).toBe(1);
-      expect(table.cells.value['0,0']?.value).toBe('New Value');
-    });
-
-    it('should update rowCount reactively', () => {
-      const { data } = create({
-        data: [
-          { col1: 'A', col2: 1, col3: true },
-          { col1: 'B', col2: 2, col3: false },
-        ],
-      });
-
-      const table = createTable(
-        [
-          { id: 'col1', dataType: 'string', headerLabel: 'Column 1', accessor: (row: any) => row.col1 },
-          { id: 'col2', dataType: 'number', headerLabel: 'Column 2', accessor: (row: any) => row.col2 },
-          { id: 'col3', dataType: 'boolean', headerLabel: 'Column 3', accessor: (row: any) => row.col3 },
-        ],
-        data,
-      );
-
-      using rowCountUpdates = updateCounter(() => {
-        table.rowCount.value;
-      });
-
-      expect(table.rowCount.value).toBe(2);
-
-      data.push({ col1: 'C', col2: 3, col3: true });
-
-      expect(rowCountUpdates.count).toBe(1);
-      expect(table.rowCount.value).toBe(3);
+      expect(table.cells.value.grid['0,0']?.value).toBe('New Value');
     });
 
     it('should update cells reactively when adding a new row', () => {
@@ -235,8 +206,8 @@ describe('reactivity', () => {
       data.push({ col1: 'C', col2: 3, col3: true });
 
       expect(cellsUpdates.count).toBe(1);
-      expect(Object.keys(table.cells.value).length).toBe(9); // 3 rows * 3 columns
-      expect(table.cells.value['0,2']?.value).toBe('C');
+      expect(Object.keys(table.cells.value.grid).length).toBe(9); // 3 rows * 3 columns
+      expect(table.cells.value.grid['0,2']?.value).toBe('C');
     });
 
     it('should handle combined operations reactively', () => {
@@ -256,27 +227,23 @@ describe('reactivity', () => {
         data,
       );
 
-      using rowCountUpdates = updateCounter(() => table.rowCount.value);
-      using cellsUpdates = updateCounter(() => table.cells.value.size);
-      using specificCellUpdates = updateCounter(() => table.cells.value['0,0']?.value);
+      using cellsUpdates = updateCounter(() => table.cells.value);
+      using specificCellUpdates = updateCounter(() => table.cells.value.grid['0,0']?.value);
 
       data[0].col1 = 'Updated A';
       data.push({ col1: 'C', col2: 3, col3: true });
       data.splice(1, 1);
 
-      // Check row count updates
-      expect(rowCountUpdates.count).toBe(2); // Two changes: add and remove
-      expect(table.rowCount.value).toBe(2);
-
       // Check cells map updates
       expect(cellsUpdates.count).toBe(2); // Two changes: add and remove row
-      expect(Object.keys(table.cells.value).length).toBe(6); // 2 rows * 3 columns
+      expect(Object.keys(table.cells.value.grid).length).toBe(6); // 2 rows * 3 columns
 
       // Check specific cell update
       expect(specificCellUpdates.count).toBe(3); // Updates for modify, add row, and remove row
-      expect(table.cells.value['0,0']?.value).toBe('Updated A');
+      expect(table.cells.value.grid['0,0']?.value).toBe('Updated A');
+
       // Verify final state
-      expect(Object.entries(table.cells.value)).toEqual([
+      expect(Object.entries(table.cells.value.grid)).toEqual([
         ['0,0', expect.objectContaining({ value: 'Updated A' })],
         ['1,0', expect.objectContaining({ value: 1 })],
         ['2,0', expect.objectContaining({ value: true })],

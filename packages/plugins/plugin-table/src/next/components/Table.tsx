@@ -35,9 +35,8 @@ export const Table = ({ columnDefinitions, data }: TableProps) => {
           limitRows={data.length}
           limitColumns={table.columnDefinitions.length}
           initialCells={table.cells.value}
-          columnDefault={{ size: 120, resizeable: true }}
-          rowDefault={{ size: 32, resizeable: true }}
           columns={columnMeta}
+          frozen={{ frozenRowsStart: 1 }}
           onAxisResize={(event) => {
             if (event.axis === 'col') {
               const columnIndex = parseInt(event.index, 10);

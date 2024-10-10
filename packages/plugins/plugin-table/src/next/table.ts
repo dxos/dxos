@@ -3,12 +3,14 @@
 //
 
 import { computed, type ReadonlySignal } from '@preact/signals-core';
+import { type DxGridCells } from 'packages/ui/lit-grid/src';
 
 import { create } from '@dxos/echo-schema';
+import { type DxGridPlaneCells } from '@dxos/react-ui-grid';
 
 import { CellUpdateTracker } from './CellUpdateTracker';
 
-const DEFAULT_WIDTH = 100; // px
+const DEFAULT_WIDTH = 256; // px
 
 export type ColumnId = string;
 export type SortDirection = 'asc' | 'desc';
@@ -111,28 +113,35 @@ export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]) 
    * Performance characteristics:
    * - Cell edits: Optimal (only affected cell recalculates)
    * - Array-level changes: More expensive (all cell `computed` recreated)
+   *
+   * NOTE(Zan): Our `table.cells.value` is `{[k: string]: ReadonlySignal<any>}`.
+   * dx-grid needs `{[k: string]: CellValue }` where `CellValue` is `{ value: any, className?: string }`.
+   * Since `CellValue` has `.value` and our `ReadonlySignal<any>` has `.value` this just works.
+   * Not sure what to do when we need to pass other `CellValue` properties though.
+   * This is a bit of a hack to avoid mapping over the entire `table.cells.value` again.
    */
+  const columnHeaderCells: DxGridPlaneCells = Object.fromEntries(
+    columnDefinitions.map((col, index) => {
+      return [`${index},0`, { value: col.headerLabel, resizeHandle: 'col' }];
+    }),
+  );
 
-  // NOTE(Zan): Our table.cells.value is {[k: string]: ReadonlySignal<any>}.
-  // dx-grid needs {[k: string]: CellValue } where CellValue is { value: any, className?: string }.
-  // Since CellValue has `.value` and our ReadonlySignal<any> has `.value` this just works.
-  // Not sure what to do when we need to pass other CellValue properties though.
-  // This is a bit of a hack to avoid mapping over the entire table.cells.value again.
-  const cells = computed(() => {
-    const dxCellValues: { [key: string]: ReadonlySignal<any> } = {};
-
+  const dxCellValues: ReadonlySignal<DxGridPlaneCells> = computed(() => {
+    const cellValues: { [key: string]: ReadonlySignal<any> } = {};
     data.forEach((row, rowIndex) => {
       columnDefinitions.forEach((col, colIndex) => {
         const key = `${colIndex},${rowIndex}`;
-        dxCellValues[key] = computed(() => col.accessor(row));
+        cellValues[key] = computed(() => col.accessor(row));
       });
     });
-
-    return dxCellValues;
+    return cellValues;
   });
 
-  const rowCount = computed(() => data.length);
-  const updateTracker = new CellUpdateTracker(cells);
+  const cells: ReadonlySignal<DxGridCells> = computed(() => {
+    return { grid: dxCellValues.value, frozenRowsStart: columnHeaderCells };
+  });
+
+  const updateTracker = new CellUpdateTracker(dxCellValues);
 
   return create({
     columnDefinitions,
@@ -141,7 +150,6 @@ export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]) 
     sorting: [] as SortConfig[],
     pinnedRows: { top: [], bottom: [] } as { top: number[]; bottom: number[] },
     rowSelection: [] as number[],
-    rowCount,
     cells,
     __cellUpdateTracker: updateTracker as CellUpdateTracker,
     dispose: () => {

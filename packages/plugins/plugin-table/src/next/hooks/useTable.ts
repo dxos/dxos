@@ -19,9 +19,11 @@ export const useTable = (columnDefinitions: ColumnDefinition[], data: any[], gri
   }, []);
 
   const columnMeta: DxGridAxisMeta = useMemo(() => {
-    return Object.fromEntries(
-      table.columnDefinitions.map((col, index) => [index, { size: table.columnWidths[col.id] }]),
+    const headings = Object.fromEntries(
+      table.columnDefinitions.map((col, index) => [index, { size: table.columnWidths[col.id], resizeable: true }]),
     );
+
+    return { grid: headings };
   }, [table.columnDefinitions, table.columnWidths]);
 
   useEffect(() => {
