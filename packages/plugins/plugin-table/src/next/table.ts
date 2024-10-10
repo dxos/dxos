@@ -112,12 +112,6 @@ export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]) 
    * Performance characteristics:
    * - Cell edits: Optimal (only affected cell recalculates)
    * - Array-level changes: More expensive (all cell `computed` recreated)
-   *
-   * NOTE(Zan): Our `table.cells.value` is `{[k: string]: ReadonlySignal<any>}`.
-   * dx-grid needs `{[k: string]: CellValue }` where `CellValue` is `{ value: any, className?: string }`.
-   * Since `CellValue` has `.value` and our `ReadonlySignal<any>` has `.value` this just works.
-   * Not sure what to do when we need to pass other `CellValue` properties though.
-   * This is a bit of a hack to avoid mapping over the entire `table.cells.value` again.
    */
   const columnHeaderCells: DxGridPlaneCells = Object.fromEntries(
     columnDefinitions.map((col, index) => {
@@ -126,13 +120,20 @@ export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]) 
   );
 
   const dxCellValues: ReadonlySignal<DxGridPlaneCells> = computed(() => {
-    const cellValues: { [key: string]: ReadonlySignal<any> } = {};
+    const cellValues: DxGridPlaneCells = {};
     data.forEach((row, rowIndex) => {
       columnDefinitions.forEach((col, colIndex) => {
-        const key = `${colIndex},${rowIndex}`;
-        cellValues[key] = computed(() => col.accessor(row));
+        // TODO(Zan): Stringifying the value is a temporary solution. Base on column type?
+        const cellValueSignal = computed(() => `${col.accessor(row)}`);
+        cellValues[`${colIndex},${rowIndex}`] = {
+          get value() {
+            return cellValueSignal.value;
+          },
+          // Can implement per cell class names in this object
+        };
       });
     });
+
     return cellValues;
   });
 
