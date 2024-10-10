@@ -7,7 +7,7 @@ import { isFailType } from 'effect/Cause';
 import { isFailure, isSuccess } from 'effect/Exit';
 import { describe, expect, test } from 'vitest';
 
-import { S } from '@dxos/echo-schema';
+import { AST, S } from '@dxos/echo-schema';
 
 import { jsonChat } from './chat';
 import { type Context, logger, tryFunction } from './pipeline';
@@ -79,7 +79,7 @@ describe('Pipeline', () => {
 
     const contactSchema = S.Struct({
       name: S.String,
-    }).pipe(S.description("A person's contact record"));
+    }).annotations({ [AST.DescriptionAnnotationId]: "A person's contact record" });
 
     const schema = S.Struct({
       person: S.Array(contactSchema),
