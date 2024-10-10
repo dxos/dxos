@@ -29,7 +29,7 @@ import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
 import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
-import { type Node, createExtension, isGraphNode, memoize, toSignal } from '@dxos/plugin-graph';
+import { type Node, createExtension, memoize, toSignal } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
@@ -54,8 +54,7 @@ import {
   AwaitingObject,
   CollectionMain,
   CollectionSection,
-  EmptySpace,
-  EmptyTree,
+  FallbackSettings,
   MenuFooter,
   MissingObject,
   PopoverRenameObject,
@@ -374,16 +373,8 @@ export const SpacePlugin = ({
               ) : typeof primary === 'string' && primary.length === OBJECT_ID_LENGTH ? (
                 <MissingObject id={primary} />
               ) : null;
-            // TODO(burdon): Add role name syntax to minimal plugin docs.
-            case 'tree--empty':
-              switch (true) {
-                case data.plugin === SPACE_PLUGIN:
-                  return <EmptyTree />;
-                case isGraphNode(data.activeNode) && isSpace(data.activeNode.data):
-                  return <EmptySpace />;
-                default:
-                  return null;
-              }
+            case 'complementary--settings':
+              return isEchoObject(data.subject) ? <FallbackSettings object={data.subject} /> : null;
             case 'dialog':
               if (data.component === 'dxos.org/plugin/space/InvitationManagerDialog') {
                 return (
@@ -404,6 +395,7 @@ export const SpacePlugin = ({
                 return <PopoverRenameObject object={data.subject} />;
               }
               return null;
+            // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
                 <SmallPresenceLive viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]} />
@@ -717,6 +709,52 @@ export const SpacePlugin = ({
                   .filter(nonNullable)
                   .map((object) => createObjectNode({ object, space, resolve }))
                   .filter(nonNullable);
+              },
+            }),
+
+            // Create nodes for object settings.
+            createExtension({
+              id: `${SPACE_PLUGIN}/settings-for-subject`,
+              resolver: ({ id }) => {
+                if (!id.endsWith('~settings')) {
+                  return;
+                }
+
+                // TODO(Zan): Find util (or make one).
+                const subjectId = id.split('~').at(0);
+                const [spaceId, objectId] = subjectId?.split(':') ?? [];
+                const space = client.spaces.get().find((space) => space.id === spaceId);
+                const object = toSignal(
+                  (onChange) => {
+                    const timeout = setTimeout(async () => {
+                      await space?.db.loadObjectById(objectId);
+                      onChange();
+                    });
+
+                    return () => clearTimeout(timeout);
+                  },
+                  () => space?.db.getObjectById(objectId),
+                  subjectId,
+                );
+                if (!object || !subjectId) {
+                  return;
+                }
+
+                const meta = resolve(getTypename(object) ?? '');
+                const label = meta.label?.(object) ||
+                  object.name ||
+                  meta.placeholder || ['unnamed object settings label', { ns: SPACE_PLUGIN }];
+
+                return {
+                  id,
+                  type: 'orphan-settings-for-subject',
+                  data: null,
+                  properties: {
+                    icon: 'ph--gear--regular',
+                    label,
+                    object,
+                  },
+                };
               },
             }),
           ];

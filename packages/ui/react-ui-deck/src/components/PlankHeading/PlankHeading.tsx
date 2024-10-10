@@ -12,7 +12,14 @@ import {
   ArrowsOut,
   ArrowsIn,
 } from '@phosphor-icons/react';
-import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef, useRef, useState } from 'react';
+import React, {
+  type ComponentPropsWithRef,
+  Fragment,
+  type PropsWithChildren,
+  forwardRef,
+  useRef,
+  useState,
+} from 'react';
 
 import { keySymbols } from '@dxos/keyboard';
 import {
@@ -101,14 +108,14 @@ type PlankHeadingActionsMenuProps = PropsWithChildren<
   {
     attendableId?: string;
     triggerLabel: string;
-    actions?: PlankHeadingAction[];
+    actions?: PlankHeadingAction[][];
     icon: string;
     onAction?: (action: PlankHeadingAction) => void;
   } & Related
 >;
 
 const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingActionsMenuProps>(
-  ({ actions, onAction, triggerLabel, attendableId, icon, related, children }, forwardedRef) => {
+  ({ actions: actionGroups, onAction, triggerLabel, attendableId, icon, related, children }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const suppressNextTooltip = useRef(false);
 
@@ -149,44 +156,52 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
           <DropdownMenu.Portal>
             <DropdownMenu.Content classNames='z-[31]'>
               <DropdownMenu.Viewport>
-                {actions?.map((action) => {
-                  const shortcut =
-                    typeof action.properties.keyBinding === 'string'
-                      ? action.properties.keyBinding
-                      : action.properties.keyBinding?.[getHostPlatform()];
-
-                  const menuItemType = action.properties.menuItemType;
-                  const Root = menuItemType === 'toggle' ? DropdownMenu.CheckboxItem : DropdownMenu.Item;
-
+                {actionGroups?.map((actions, index) => {
+                  const separator = index > 0 ? <DropdownMenu.Separator /> : null;
                   return (
-                    <Root
-                      key={action.id}
-                      onClick={(event) => {
-                        if (action.properties.disabled) {
-                          return;
-                        }
-                        event.stopPropagation();
-                        // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                        suppressNextTooltip.current = true;
-                        setOptionsMenuOpen(false);
-                        onAction?.(action);
-                      }}
-                      classNames='gap-2'
-                      disabled={action.properties.disabled}
-                      checked={menuItemType === 'toggle' ? action.properties.isChecked : undefined}
-                      {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-                    >
-                      <Icon icon={action.properties.icon ?? 'ph--placeholder--regular'} size={4} />
-                      <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
-                      {menuItemType === 'toggle' && (
-                        <DropdownMenu.ItemIndicator asChild>
-                          <Check className={getSize(4)} />
-                        </DropdownMenu.ItemIndicator>
-                      )}
-                      {shortcut && (
-                        <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
-                      )}
-                    </Root>
+                    <Fragment key={index}>
+                      {separator}
+                      {actions.map((action) => {
+                        const shortcut =
+                          typeof action.properties.keyBinding === 'string'
+                            ? action.properties.keyBinding
+                            : action.properties.keyBinding?.[getHostPlatform()];
+
+                        const menuItemType = action.properties.menuItemType;
+                        const Root = menuItemType === 'toggle' ? DropdownMenu.CheckboxItem : DropdownMenu.Item;
+
+                        return (
+                          <Root
+                            key={action.id}
+                            onClick={(event) => {
+                              if (action.properties.disabled) {
+                                return;
+                              }
+                              event.stopPropagation();
+                              // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                              suppressNextTooltip.current = true;
+                              setOptionsMenuOpen(false);
+                              onAction?.(action);
+                            }}
+                            classNames='gap-2'
+                            disabled={action.properties.disabled}
+                            checked={menuItemType === 'toggle' ? action.properties.isChecked : undefined}
+                            {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+                          >
+                            <Icon icon={action.properties.icon ?? 'ph--placeholder--regular'} size={4} />
+                            <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
+                            {menuItemType === 'toggle' && (
+                              <DropdownMenu.ItemIndicator asChild>
+                                <Check className={getSize(4)} />
+                              </DropdownMenu.ItemIndicator>
+                            )}
+                            {shortcut && (
+                              <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
+                            )}
+                          </Root>
+                        );
+                      })}
+                    </Fragment>
                   );
                 })}
                 {children}
