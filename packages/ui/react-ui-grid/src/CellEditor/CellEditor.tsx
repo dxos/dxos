@@ -14,7 +14,8 @@ import {
   preventNewline,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { type GridEditBox } from '@dxos/react-ui-grid';
+
+import { type GridEditBox } from '../Grid';
 
 type EditorKeyEvent = Pick<KeyboardEvent<HTMLInputElement>, 'key'> & { shift?: boolean };
 
@@ -23,6 +24,7 @@ export type EditorKeysProps = {
   onNav?: (value: string | undefined, event: EditorKeyEvent) => void;
 };
 
+// TODO(Zan): Should each consumer be responsible for defining these?
 export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
   return keymap.of([
     {
