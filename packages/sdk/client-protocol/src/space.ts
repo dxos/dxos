@@ -16,10 +16,10 @@ import {
   type UpdateMemberRoleRequest,
   type Contact,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import type { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 import { type CancellableInvitation } from './invitations';
 
