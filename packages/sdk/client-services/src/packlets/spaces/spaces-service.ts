@@ -312,6 +312,7 @@ export class SpacesServiceImpl implements SpacesService {
       creator: space.inner.spaceState.creator?.key,
       cache: space.cache,
       metrics: space.metrics,
+      edgeReplication: space.getEdgeReplicationSetting(),
     };
   }
 

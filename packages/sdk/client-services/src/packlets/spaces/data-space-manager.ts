@@ -507,13 +507,13 @@ export class DataSpaceManager extends Resource {
       edgeFeatures: this._edgeFeatures,
     });
     dataSpace.postOpen.append(async () => {
-      const setting = this._metadataStore.getSpaceEdgeReplicationSetting(dataSpace.key);
+      const setting = dataSpace.getEdgeReplicationSetting();
       if (setting === EdgeReplicationSetting.ENABLED) {
         await this._echoEdgeReplicator?.connectToSpace(dataSpace.id);
       }
     });
     dataSpace.preClose.append(async () => {
-      const setting = this._metadataStore.getSpaceEdgeReplicationSetting(dataSpace.key);
+      const setting = dataSpace.getEdgeReplicationSetting();
       if (setting === EdgeReplicationSetting.ENABLED) {
         await this._echoEdgeReplicator?.disconnectFromSpace(dataSpace.id);
       }
