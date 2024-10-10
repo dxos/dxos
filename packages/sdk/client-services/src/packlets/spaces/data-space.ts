@@ -570,6 +570,10 @@ export class DataSpace {
     this.stateUpdate.emit();
   }
 
+  getEdgeReplicationSetting() {
+    return this._metadataStore.getSpaceEdgeReplicationSetting(this.key);
+  }
+
   private _onFeedAdded = async (feed: FeedWrapper<any>) => {
     await this._edgeFeedReplicator!.addFeed(feed);
   };
