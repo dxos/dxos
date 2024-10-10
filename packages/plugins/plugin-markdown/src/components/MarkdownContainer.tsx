@@ -75,7 +75,7 @@ export const DocumentEditor = ({
   // Restore last selection and scroll point.
   const { scrollTo, selection } = useMemo<EditorSelectionState>(
     () => localStorageStateStoreAdapter.getState(id) ?? {},
-    [doc],
+    [id, doc],
   );
 
   // File dragging.
