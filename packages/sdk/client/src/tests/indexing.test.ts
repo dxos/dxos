@@ -142,7 +142,7 @@ describe('Index queries', () => {
     {
       const client = await initClient(builder.createLocalClientServices());
       onTestFinished(() => client.destroy());
-      await asyncTimeout(client.spaces.isReady.wait(), 5000);
+      await asyncTimeout(client.spaces.waitForReady(), 5000);
       const space = client.spaces.get(spaceKey)!;
       await space.waitUntilReady();
 
@@ -212,7 +212,7 @@ describe('Index queries', () => {
     {
       const client = await initClient(builder.createLocalClientServices());
       onTestFinished(() => client.destroy());
-      await client.spaces.isReady.wait();
+      await client.spaces.waitForReady();
       const space = client.spaces.get(spaceKey)!;
       await asyncTimeout(space.waitUntilReady(), TIMEOUT);
 

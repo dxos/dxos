@@ -83,7 +83,7 @@ describe('Spaces', () => {
 
     let objectId: string;
     {
-      await client.spaces.isReady.wait();
+      await client.spaces.waitForReady();
       const space = client.spaces.default;
       ({ objectId } = await testSpaceAutomerge(space.db));
       expect(space.members.get()).to.be.length(1);

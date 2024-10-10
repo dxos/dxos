@@ -52,7 +52,7 @@ describe('Composer migrations', () => {
 
     await client.initialize();
     await client.halo.createIdentity();
-    await client.spaces.isReady.wait();
+    await client.spaces.waitForReady();
     space = client.spaces.default;
   });
 

@@ -24,7 +24,7 @@ export const createClient = async ({
   let space: Space | undefined;
   if (createSpace) {
     space = await client.spaces.create();
-    await client.spaces.isReady.wait();
+    await client.spaces.waitForReady();
   }
 
   return { client, space };

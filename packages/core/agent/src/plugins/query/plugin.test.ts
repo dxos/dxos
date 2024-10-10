@@ -76,7 +76,7 @@ describe('QueryPlugin', () => {
     // Subscribe for search results.
     const results = new Trigger<GossipMessage>();
     {
-      await asyncTimeout(client2.spaces.isReady.wait(), 1000);
+      await asyncTimeout(client2.spaces.waitForReady(), 1000);
 
       await asyncTimeout(client2.spaces.default.waitUntilReady(), 1000);
 
@@ -168,7 +168,7 @@ describe('QueryPlugin', () => {
 
       {
         // Wait for client to be ready.
-        await asyncTimeout(client.spaces.isReady.wait(), 2000);
+        await asyncTimeout(client.spaces.waitForReady(), 2000);
         await asyncTimeout(client.spaces.default.waitUntilReady(), 1000);
       }
     });

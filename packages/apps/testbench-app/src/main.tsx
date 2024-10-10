@@ -104,7 +104,7 @@ const main = async () => {
     }
 
     client.addTypes([ItemType, DocumentType]);
-    await client.spaces.isReady.wait();
+    await client.spaces.waitForReady();
   };
 
   const root = createRoot(document.getElementById('root')!);

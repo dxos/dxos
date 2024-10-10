@@ -37,7 +37,7 @@ describe('useSpace', () => {
     expect(result.current).to.be.undefined;
     await act(async () => {
       await client.halo.createIdentity();
-      await client.spaces.isReady.wait();
+      await client.spaces.waitForReady();
     });
     rerender();
     expect(result.current).to.not.be.undefined;

@@ -70,7 +70,7 @@ const main = async () => {
     await client.initialize();
     client.addTypes([Todo]);
     await client.halo.createIdentity();
-    await client.spaces.isReady.wait();
+    await client.spaces.waitForReady();
   }
 
   log.break();

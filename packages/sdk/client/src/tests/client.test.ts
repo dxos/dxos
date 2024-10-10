@@ -38,7 +38,7 @@ describe('Client', () => {
     onTestFinished(() => client.destroy());
     await asyncTimeout(client.initialize(), 2_000);
     await asyncTimeout(client.halo.createIdentity(), 2_000);
-    await asyncTimeout(client.spaces.isReady.wait(), 2_000);
+    await asyncTimeout(client.spaces.waitForReady(), 2_000);
     await asyncTimeout(client.spaces.default.waitUntilReady(), 2_000);
   });
 
@@ -99,7 +99,7 @@ describe('Client', () => {
       expect(client.halo.identity.get()).not.to.exist;
       const identity = await client.halo.createIdentity({ displayName });
       expect(client.halo.identity.get()).to.deep.eq(identity);
-      await client.spaces.isReady.wait();
+      await client.spaces.waitForReady();
       await client.destroy();
     }
 
@@ -109,7 +109,7 @@ describe('Client', () => {
       expect(client.halo.identity).to.exist;
       // TODO(burdon): Error type.
       await expect(client.halo.createIdentity({ displayName })).rejects.toBeInstanceOf(Error);
-      await client.spaces.isReady.wait();
+      await client.spaces.waitForReady();
     }
     {
       // Reset storage.
@@ -121,7 +121,7 @@ describe('Client', () => {
       expect(client.halo.identity.get()).to.eq(null);
       await client.halo.createIdentity({ displayName });
       expect(client.halo.identity).to.exist;
-      await client.spaces.isReady.wait();
+      await client.spaces.waitForReady();
       await client.destroy();
     }
   });

@@ -44,7 +44,7 @@ describe('Load client from storage snapshot', () => {
 
     log.break();
 
-    await client.spaces.isReady.wait();
+    await client.spaces.waitForReady();
 
     log.info('Preparing for migration');
 
