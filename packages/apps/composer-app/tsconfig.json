@@ -114,6 +114,9 @@
       "path": "../../plugins/experimental/plugin-template"
     },
     {
+      "path": "../../plugins/experimental/plugin-wnfs"
+    },
+    {
       "path": "../../plugins/plugin-attention"
     },
     {
