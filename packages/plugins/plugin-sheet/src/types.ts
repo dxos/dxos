@@ -134,4 +134,4 @@ export type SheetSize = {
 export type CreateSheetOptions = {
   name?: string;
   cells?: Record<string, CellValue>;
-};
+} & Partial<SheetSize>;

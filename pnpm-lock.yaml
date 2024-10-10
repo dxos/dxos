@@ -10,7 +10,6 @@ overrides:
   nan: 2.19.0
   react: ~18.2.0
   react-dom: ~18.2.0
-  '@types/node': 22.7.4
   '@types/react': ~18.2.0
   '@types/react-dom': ~18.2.0
   '@automerge/automerge-wasm': npm:@dxos/automerge-wasm@^0.17.1
@@ -183,7 +182,7 @@ importers:
         specifier: ^4.3.7
         version: 4.3.7
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       '@types/node-fetch':
         specifier: ^2.5.10
@@ -447,7 +446,7 @@ importers:
         specifier: ^2.0.9
         version: 2.0.9
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       '@types/prettier':
         specifier: ^2.7.3
@@ -996,7 +995,7 @@ importers:
         specifier: workspace:*
         version: link:../../devtools/cli
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       '@types/react':
         specifier: ~18.2.0
@@ -1051,7 +1050,7 @@ importers:
         specifier: ^4.6.6
         version: 4.6.7
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       tmp-promise:
         specifier: ^3.0.3
@@ -1076,7 +1075,7 @@ importers:
         version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.7.4)(typescript@5.6.2))
     devDependencies:
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       postcss:
         specifier: ^8.4.41
@@ -1101,7 +1100,7 @@ importers:
         version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.7.4)(typescript@5.6.2))
     devDependencies:
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       postcss:
         specifier: ^8.4.41
@@ -1409,7 +1408,7 @@ importers:
         version: 2.3.2
     devDependencies:
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
 
   packages/common/crypto-names:
@@ -1815,7 +1814,7 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
 
   packages/common/log:
@@ -1849,7 +1848,7 @@ importers:
         specifier: ^4.5.7
         version: 4.5.7
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
 
   packages/common/node-std:
@@ -1893,7 +1892,7 @@ importers:
         version: 3.1.0
     devDependencies:
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
 
   packages/common/plate:
@@ -1966,7 +1965,7 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       '@types/prettier':
         specifier: ^2.7.3
@@ -2032,7 +2031,7 @@ importers:
         specifier: ^10.0.7
         version: 10.0.7
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       expect:
         specifier: ^27.0.2
@@ -2313,7 +2312,7 @@ importers:
         specifier: ^4.6.6
         version: 4.6.7
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       nodemon:
         specifier: ^2.0.22
@@ -2328,7 +2327,7 @@ importers:
         specifier: workspace:*
         version: link:../../common/node-std
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
 
   packages/core/echo/automerge:
@@ -2764,7 +2763,7 @@ importers:
         specifier: ^4.5.0
         version: 4.5.6
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
 
   packages/core/functions:
@@ -2917,7 +2916,7 @@ importers:
         version: link:../../../common/util
     devDependencies:
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
 
   packages/core/mesh/edge-client:
@@ -3021,7 +3020,7 @@ importers:
         specifier: workspace:*
         version: link:../../../common/test-utils
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
 
   packages/core/mesh/network-manager:
@@ -3174,7 +3173,7 @@ importers:
         version: 3.1.0
     devDependencies:
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       '@types/node-fetch':
         specifier: ^2.5.10
@@ -3399,7 +3398,7 @@ importers:
         version: 8.14.2
     devDependencies:
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
 
   packages/core/protocols:
@@ -3620,7 +3619,7 @@ importers:
         specifier: ^4.6.6
         version: 4.6.7
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       '@types/node-fetch':
         specifier: ^2.5.10
@@ -3792,7 +3791,7 @@ importers:
         specifier: ^4.6.6
         version: 4.6.7
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       '@types/node-fetch':
         specifier: ^2.5.10
@@ -4006,7 +4005,7 @@ importers:
         specifier: ^4.6.6
         version: 4.6.7
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       '@types/node-fetch':
         specifier: ^2.5.10
@@ -5242,7 +5241,7 @@ importers:
         specifier: ^0.0.36
         version: 0.0.36
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
 
   packages/gravity/blade-runner:
@@ -5390,7 +5389,7 @@ importers:
         specifier: ^4.0.5
         version: 4.0.5
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       '@types/seedrandom':
         specifier: ^3.0.5
@@ -5418,7 +5417,7 @@ importers:
         specifier: workspace:*
         version: link:../../devtools/cli
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
 
   packages/gravity/proto-guard:
@@ -5470,7 +5469,7 @@ importers:
         specifier: ^4.5.0
         version: 4.5.6
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       '@types/yargs':
         specifier: ~16.0.1
@@ -9180,7 +9179,7 @@ importers:
         specifier: ^4.4.0
         version: 4.4.7
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       '@types/ua-parser-js':
         specifier: ^0.7.39
@@ -11404,7 +11403,7 @@ importers:
         specifier: ^5.1.2
         version: 5.1.2
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       '@types/yargs':
         specifier: ~16.0.1
@@ -11501,7 +11500,7 @@ importers:
         specifier: ^4.7.7
         version: 4.7.7
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
 
   tools/lit-stories:
@@ -11571,7 +11570,7 @@ importers:
         version: 0.6.1
     devDependencies:
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
 
   tools/protobuf-test: {}
@@ -11652,7 +11651,7 @@ importers:
         specifier: ^4.0.5
         version: 4.0.5
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       '@types/protocol-buffers-schema':
         specifier: ^3.4.1
@@ -11760,7 +11759,7 @@ importers:
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.7.4)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
     devDependencies:
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       '@types/picomatch':
         specifier: ^3.0.1
@@ -11845,7 +11844,7 @@ importers:
         specifier: ^5.1.2
         version: 5.1.2
       '@types/node':
-        specifier: 22.7.4
+        specifier: ^22.7.4
         version: 22.7.4
       '@types/react':
         specifier: ~18.2.0
@@ -20137,6 +20136,21 @@ packages:
   '@types/node-forge@1.3.11':
     resolution: {integrity: sha512-FQx220y22OKNTqaByeBGqHWYz4cl94tpcxeFdvBo3wjG6XPBuZ0BNgNZRV5J5TFmmcsJ4IzsLkmGRiQbnYsBEQ==}
 
+  '@types/node@11.11.6':
+    resolution: {integrity: sha512-Exw4yUWMBXM3X+8oqzJNRqZSwUAaS4+7NdvHqQuFi/d+synz++xmX3QIf+BFqneW8N31R8Ky+sikfZUXq07ggQ==}
+
+  '@types/node@12.20.24':
+    resolution: {integrity: sha512-yxDeaQIAJlMav7fH5AQqPH1u8YIuhYJXYBzxaQ4PifsU0GDO38MSdmEDeRlIxrKbC6NbEaaEHDanWb+y30U8SQ==}
+
+  '@types/node@17.0.45':
+    resolution: {integrity: sha512-w+tIMs3rq2afQdsPJlODhoUEKzFP1ayaoyl1CcnwtIlsVe7K7bA1NGm4s3PraqTLlXnbIN84zuBlxBWo1u9BLw==}
+
+  '@types/node@18.19.55':
+    resolution: {integrity: sha512-zzw5Vw52205Zr/nmErSEkN5FLqXPuKX/k5d1D7RKHATGqU7y6YfX9QxZraUzUrFGqH6XzOzG196BC35ltJC4Cw==}
+
+  '@types/node@20.16.11':
+    resolution: {integrity: sha512-y+cTCACu92FyA5fgQSAI8A1H429g7aSK2HsO7K4XYUWc4dY5IUz55JSDIYT6/VsOLfGy8vmvQYC2hfb0iF16Uw==}
+
   '@types/node@22.7.4':
     resolution: {integrity: sha512-y+NPi1rFzDs1NdQHHToqeiX2TIS79SWEAw9GYhkkx8bD0ChpfqC+n2j5OXOCpzfojBEBt6DnEnnG9MY0zk1XLg==}
 
@@ -21015,6 +21029,11 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -29265,7 +29284,7 @@ packages:
     resolution: {integrity: sha512-QeoM/i73HHu2XF9aKksIUuamHPDvRglEwdHL4jsp784BgUuWcg6mzfxT0QDdQz8Wj0qyRKx2eMg8iZtWvU4E2Q==}
     peerDependencies:
       '@types/hoist-non-react-statics': '>= 3.3.1'
-      '@types/node': 22.7.4
+      '@types/node': '>= 12'
       '@types/react': ~18.2.0
       react: ~18.2.0
     peerDependenciesMeta:
@@ -29910,7 +29929,7 @@ packages:
     resolution: {integrity: sha512-paFu+nT1xvuO1tPFYXGe+XnQvg4Hjqv/eIhG8i5EspfYYPBKL57X7iVbfv55aNVASg3dzWvES9dmWsL2KhfByw==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
-      '@types/node': 22.7.4
+      '@types/node': '>=10.0.0'
       rollup: '>=0.31.2'
     peerDependenciesMeta:
       '@types/node':
@@ -31281,7 +31300,7 @@ packages:
     peerDependencies:
       '@swc/core': '>=1.2.50'
       '@swc/wasm': '>=1.2.50'
-      '@types/node': 22.7.4
+      '@types/node': '*'
       typescript: '>=2.7'
     peerDependenciesMeta:
       '@swc/core':
@@ -31517,6 +31536,9 @@ packages:
 
   undefsafe@2.0.5:
     resolution: {integrity: sha512-WxONCrssBM8TSPRqN5EmsjVrsv4A8X12J4ArBiiayv3DyyG3ZlIg6yysuuSYdZsVz3TKcTg2fd//Ujd4CHV1iA==}
+
+  undici-types@5.26.5:
+    resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
 
   undici-types@6.19.8:
     resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
@@ -31970,7 +31992,7 @@ packages:
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
-      '@types/node': 22.7.4
+      '@types/node': ^18.0.0 || >=20.0.0
       less: '*'
       lightningcss: ^1.21.0
       sass: '*'
@@ -31998,7 +32020,7 @@ packages:
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
-      '@types/node': 22.7.4
+      '@types/node': ^18.0.0 || >=20.0.0
       less: '*'
       lightningcss: ^1.21.0
       sass: '*'
@@ -32030,7 +32052,7 @@ packages:
     hasBin: true
     peerDependencies:
       '@edge-runtime/vm': '*'
-      '@types/node': 22.7.4
+      '@types/node': ^18.0.0 || >=20.0.0
       '@vitest/browser': 1.5.3
       '@vitest/ui': 1.5.3
       happy-dom: '*'
@@ -32055,7 +32077,7 @@ packages:
     hasBin: true
     peerDependencies:
       '@edge-runtime/vm': '*'
-      '@types/node': 22.7.4
+      '@types/node': ^18.0.0 || >=20.0.0
       '@vitest/browser': 2.1.1
       '@vitest/ui': 2.1.1
       happy-dom: '*'
@@ -33212,7 +33234,7 @@ snapshots:
 
   '@anthropic-ai/sdk@0.9.1(encoding@0.1.13)':
     dependencies:
-      '@types/node': 22.7.4
+      '@types/node': 18.19.55
       '@types/node-fetch': 2.6.9
       abort-controller: 3.0.0
       agentkeepalive: 4.2.1
@@ -37903,7 +37925,7 @@ snapshots:
       '@inquirer/figures': 1.0.2
       '@inquirer/type': 1.3.2
       '@types/mute-stream': 0.0.4
-      '@types/node': 22.7.4
+      '@types/node': 20.16.11
       '@types/wrap-ansi': 3.0.0
       ansi-escapes: 4.3.2
       chalk: 4.1.2
@@ -37919,7 +37941,7 @@ snapshots:
       '@inquirer/figures': 1.0.3
       '@inquirer/type': 1.3.3
       '@types/mute-stream': 0.0.4
-      '@types/node': 22.7.4
+      '@types/node': 20.16.11
       '@types/wrap-ansi': 3.0.0
       ansi-escapes: 4.3.2
       chalk: 4.1.2
@@ -42353,7 +42375,7 @@ snapshots:
 
   '@rushstack/node-core-library@3.50.2':
     dependencies:
-      '@types/node': 22.7.4
+      '@types/node': 12.20.24
       colors: 1.2.5
       fs-extra: 7.0.1
       import-lazy: 4.0.0
@@ -42365,7 +42387,7 @@ snapshots:
 
   '@rushstack/node-core-library@3.53.2':
     dependencies:
-      '@types/node': 22.7.4
+      '@types/node': 12.20.24
       colors: 1.2.5
       fs-extra: 7.0.1
       import-lazy: 4.0.0
@@ -44643,6 +44665,20 @@ snapshots:
     dependencies:
       '@types/node': 22.7.4
 
+  '@types/node@11.11.6': {}
+
+  '@types/node@12.20.24': {}
+
+  '@types/node@17.0.45': {}
+
+  '@types/node@18.19.55':
+    dependencies:
+      undici-types: 5.26.5
+
+  '@types/node@20.16.11':
+    dependencies:
+      undici-types: 6.19.8
+
   '@types/node@22.7.4':
     dependencies:
       undici-types: 6.19.8
@@ -45704,11 +45740,11 @@ snapshots:
 
   '@wdio/repl@8.24.12':
     dependencies:
-      '@types/node': 22.7.4
+      '@types/node': 20.16.11
 
   '@wdio/types@8.32.4':
     dependencies:
-      '@types/node': 22.7.4
+      '@types/node': 20.16.11
 
   '@wdio/utils@8.33.1':
     dependencies:
@@ -45952,8 +45988,8 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1:
-    dependencies:
+  ajv-formats@2.1.1(ajv@8.12.0):
+    optionalDependencies:
       ajv: 8.12.0
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -46564,7 +46600,7 @@ snapshots:
 
   bip39@3.0.4:
     dependencies:
-      '@types/node': 22.7.4
+      '@types/node': 11.11.6
       create-hash: 1.2.0
       pbkdf2: 3.1.2
       randombytes: 2.1.0
@@ -47501,7 +47537,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -54629,7 +54665,7 @@ snapshots:
 
   openai@4.26.1(encoding@0.1.13):
     dependencies:
-      '@types/node': 22.7.4
+      '@types/node': 18.19.55
       '@types/node-fetch': 2.6.9
       abort-controller: 3.0.0
       agentkeepalive: 4.2.1
@@ -56936,7 +56972,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       ajv-keywords: 5.1.0(ajv@8.12.0)
 
   scroll@3.0.1: {}
@@ -57258,7 +57294,7 @@ snapshots:
 
   sitemap@7.1.1:
     dependencies:
-      '@types/node': 22.7.4
+      '@types/node': 17.0.45
       '@types/sax': 1.2.4
       arg: 5.0.2
       sax: 1.2.4
@@ -58686,6 +58722,8 @@ snapshots:
 
   undefsafe@2.0.5: {}
 
+  undici-types@5.26.5: {}
+
   undici-types@6.19.8: {}
 
   undici@5.27.2:
@@ -59844,7 +59882,7 @@ snapshots:
 
   webdriver@8.33.1:
     dependencies:
-      '@types/node': 22.7.4
+      '@types/node': 20.16.11
       '@types/ws': 8.5.12
       '@wdio/config': 8.33.1
       '@wdio/logger': 8.28.0
@@ -59862,7 +59900,7 @@ snapshots:
 
   webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2):
     dependencies:
-      '@types/node': 22.7.4
+      '@types/node': 20.16.11
       '@wdio/config': 8.33.1
       '@wdio/logger': 8.28.0
       '@wdio/protocols': 8.32.0
