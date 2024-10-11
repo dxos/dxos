@@ -3,18 +3,18 @@
 //
 
 import { computed } from '@preact/signals-core';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 
 import { create } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 
-import { TableModel, type TableAction } from './table-model';
+import { TableModel } from './table-model';
 
 registerSignalsRuntime();
 
-const createInitialTableModel = (): TableModel =>
-  new TableModel(
+const createInitialTableModel = (): TableModel => {
+  const tableModel = new TableModel(
     [
       { id: 'col1', dataType: 'string', headerLabel: 'Column 1', accessor: (row: any) => row.col1 },
       { id: 'col2', dataType: 'number', headerLabel: 'Column 2', accessor: (row: any) => row.col2 },
@@ -22,109 +22,95 @@ const createInitialTableModel = (): TableModel =>
     ],
     [],
   );
-
-export const applyActions = (events: TableAction[]): TableModel => {
-  const model = createInitialTableModel();
-  for (const event of events) {
-    model.dispatch(event);
-  }
-  return model;
+  tableModel.open();
+  return tableModel;
 };
 
-describe('updateTable', () => {
+describe('TableModel methods', () => {
   it('should set sorting', () => {
-    const events: TableAction[] = [{ type: 'SetSort', columnId: 'col2', direction: 'asc' }];
-    const newTable = applyActions(events);
-    expect(newTable.sorting).toEqual([{ columnId: 'col2', direction: 'asc' }]);
+    const model = createInitialTableModel();
+    model.setSort('col2', 'asc');
+    expect(model.sorting).toEqual([{ columnId: 'col2', direction: 'asc' }]);
   });
 
   it('should move a column', () => {
-    const events: TableAction[] = [{ type: 'MoveColumn', columnId: 'col1', newIndex: 2 }];
-    const newTable = applyActions(events);
-    expect(newTable.columnOrdering).toEqual(['col2', 'col3', 'col1']);
+    const model = createInitialTableModel();
+    model.moveColumn('col1', 2);
+    expect(model.columnOrdering).toEqual(['col2', 'col3', 'col1']);
   });
 
   it('should pin a row', () => {
-    const events: TableAction[] = [{ type: 'PinRow', rowIndex: 1, side: 'top' }];
-    const newTable = applyActions(events);
-    expect(newTable.pinnedRows.top).toContain(1);
+    const model = createInitialTableModel();
+    model.pinRow(1, 'top');
+    expect(model.pinnedRows.top).toContain(1);
   });
 
   it('should unpin a row', () => {
-    const events: TableAction[] = [
-      { type: 'PinRow', rowIndex: 1, side: 'top' },
-      { type: 'UnpinRow', rowIndex: 1 },
-    ];
-    const newTable = applyActions(events);
-    expect(newTable.pinnedRows.top).not.toContain(1);
+    const model = createInitialTableModel();
+    model.pinRow(1, 'top');
+    model.unpinRow(1);
+    expect(model.pinnedRows.top).not.toContain(1);
   });
 
   it('should select a row', () => {
-    const events: TableAction[] = [{ type: 'SelectRow', rowIndex: 2 }];
-    const newTable = applyActions(events);
-    expect(newTable.rowSelection).toContain(2);
+    const model = createInitialTableModel();
+    model.selectRow(2);
+    expect(model.rowSelection).toContain(2);
   });
 
   it('should deselect a row', () => {
-    const events: TableAction[] = [
-      { type: 'SelectRow', rowIndex: 2 },
-      { type: 'DeselectRow', rowIndex: 2 },
-    ];
-    const newTable = applyActions(events);
-    expect(newTable.rowSelection).not.toContain(2);
+    const model = createInitialTableModel();
+    model.selectRow(2);
+    model.deselectRow(2);
+    expect(model.rowSelection).not.toContain(2);
   });
 
   it('should deselect all rows', () => {
-    const events: TableAction[] = [
-      { type: 'SelectRow', rowIndex: 1 },
-      { type: 'SelectRow', rowIndex: 2 },
-      { type: 'DeselectAllRows' },
-    ];
-    const newTable = applyActions(events);
-    expect(newTable.rowSelection).toHaveLength(0);
+    const model = createInitialTableModel();
+    model.selectRow(1);
+    model.selectRow(2);
+    model.deselectAllRows();
+    expect(model.rowSelection).toHaveLength(0);
   });
 });
 
 describe('column width modification', () => {
   it('should modify an existing column width', () => {
-    const events: TableAction[] = [{ type: 'ModifyColumnWidth', columnIndex: 0, width: 120 }];
-    const newTable = applyActions(events);
-    expect(newTable.columnWidths[newTable.columnOrdering[0]]).toBe(120);
+    const model = createInitialTableModel();
+    model.modifyColumnWidth(0, 120);
+    expect(model.columnWidths[model.columnOrdering[0]]).toBe(120);
   });
 
   it('should not affect other column widths when modifying one', () => {
-    const initialTable = createInitialTableModel();
-    const initialCol2Width = initialTable.columnWidths[initialTable.columnOrdering[1]];
-    const initialCol3Width = initialTable.columnWidths[initialTable.columnOrdering[2]];
-    const events: TableAction[] = [{ type: 'ModifyColumnWidth', columnIndex: 0, width: 120 }];
-    const newTable = applyActions(events);
-    expect(newTable.columnWidths[newTable.columnOrdering[1]]).toBe(initialCol2Width);
-    expect(newTable.columnWidths[newTable.columnOrdering[2]]).toBe(initialCol3Width);
+    const model = createInitialTableModel();
+    const initialCol2Width = model.columnWidths[model.columnOrdering[1]];
+    const initialCol3Width = model.columnWidths[model.columnOrdering[2]];
+    model.modifyColumnWidth(0, 120);
+    expect(model.columnWidths[model.columnOrdering[1]]).toBe(initialCol2Width);
+    expect(model.columnWidths[model.columnOrdering[2]]).toBe(initialCol3Width);
   });
 
   it('should handle multiple width modifications', () => {
-    const events: TableAction[] = [
-      { type: 'ModifyColumnWidth', columnIndex: 0, width: 120 },
-      { type: 'ModifyColumnWidth', columnIndex: 1, width: 80 },
-      { type: 'ModifyColumnWidth', columnIndex: 2, width: 200 },
-    ];
-    const modifiedTable = applyActions(events);
+    const model = createInitialTableModel();
+    model.modifyColumnWidth(0, 120);
+    model.modifyColumnWidth(1, 80);
+    model.modifyColumnWidth(2, 200);
 
-    expect(modifiedTable.columnWidths[modifiedTable.columnOrdering[0]]).toBe(120);
-    expect(modifiedTable.columnWidths[modifiedTable.columnOrdering[1]]).toBe(80);
-    expect(modifiedTable.columnWidths[modifiedTable.columnOrdering[2]]).toBe(200);
+    expect(model.columnWidths[model.columnOrdering[0]]).toBe(120);
+    expect(model.columnWidths[model.columnOrdering[1]]).toBe(80);
+    expect(model.columnWidths[model.columnOrdering[2]]).toBe(200);
   });
 
   it('should allow setting width to 0', () => {
-    const events: TableAction[] = [{ type: 'ModifyColumnWidth', columnIndex: 0, width: 0 }];
-    const newTable = applyActions(events);
-    expect(newTable.columnWidths[newTable.columnOrdering[0]]).toBe(0);
+    const model = createInitialTableModel();
+    model.modifyColumnWidth(0, 0);
+    expect(model.columnWidths[model.columnOrdering[0]]).toBe(0);
   });
 
   it('should ignore modifications for non-existent column indices', () => {
-    const events: TableAction[] = [{ type: 'ModifyColumnWidth', columnIndex: 999, width: 100 }];
-    const newTable = applyActions(events);
-    expect(newTable.columnWidths).toEqual(createInitialTableModel().columnWidths);
+    const model = createInitialTableModel();
+    model.modifyColumnWidth(999, 100);
+    expect(model.columnWidths).toEqual(createInitialTableModel().columnWidths);
   });
 });
 
@@ -158,15 +144,18 @@ describe('reactivity', () => {
   });
 
   describe('cell reactivity', () => {
-    it('should update cell value reactively', () => {
-      const { data } = create({
+    let table: TableModel;
+    let data: any[];
+
+    beforeEach(async () => {
+      ({ data } = create({
         data: [
           { col1: 'A', col2: 1, col3: true },
           { col1: 'B', col2: 2, col3: false },
         ],
-      });
+      }));
 
-      const table = new TableModel(
+      table = new TableModel(
         [
           { id: 'col1', dataType: 'string', headerLabel: 'Column 1', accessor: (row: any) => row.col1 },
           { id: 'col2', dataType: 'number', headerLabel: 'Column 2', accessor: (row: any) => row.col2 },
@@ -174,7 +163,14 @@ describe('reactivity', () => {
         ],
         data,
       );
+      await table.open();
+    });
 
+    afterEach(async () => {
+      await table.close();
+    });
+
+    it('should update cell value reactively', () => {
       using cellUpdates = updateCounter(() => {
         table.cells.value.grid['0,0']?.value;
       });
@@ -186,22 +182,6 @@ describe('reactivity', () => {
     });
 
     it('should update cells reactively when adding a new row', () => {
-      const { data } = create({
-        data: [
-          { col1: 'A', col2: 1, col3: true },
-          { col1: 'B', col2: 2, col3: false },
-        ],
-      });
-
-      const table = new TableModel(
-        [
-          { id: 'col1', dataType: 'string', headerLabel: 'Column 1', accessor: (row: any) => row.col1 },
-          { id: 'col2', dataType: 'number', headerLabel: 'Column 2', accessor: (row: any) => row.col2 },
-          { id: 'col3', dataType: 'boolean', headerLabel: 'Column 3', accessor: (row: any) => row.col3 },
-        ],
-        data,
-      );
-
       using cellsUpdates = updateCounter(() => {
         table.cells.value;
       });
@@ -214,22 +194,6 @@ describe('reactivity', () => {
     });
 
     it('should handle combined operations reactively', () => {
-      const { data } = create({
-        data: [
-          { col1: 'A', col2: 1, col3: true },
-          { col1: 'B', col2: 2, col3: false },
-        ],
-      });
-
-      const table = new TableModel(
-        [
-          { id: 'col1', dataType: 'string', headerLabel: 'Column 1', accessor: (row: any) => row.col1 },
-          { id: 'col2', dataType: 'number', headerLabel: 'Column 2', accessor: (row: any) => row.col2 },
-          { id: 'col3', dataType: 'boolean', headerLabel: 'Column 3', accessor: (row: any) => row.col3 },
-        ],
-        data,
-      );
-
       using cellsUpdates = updateCounter(() => table.cells.value);
       using specificCellUpdates = updateCounter(() => table.cells.value.grid['0,0']?.value);
 

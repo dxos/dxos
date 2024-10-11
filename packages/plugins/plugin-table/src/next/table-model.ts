@@ -29,16 +29,6 @@ export type ColumnDefinition = {
 
 export type SortConfig = { columnId: ColumnId; direction: SortDirection };
 
-export type TableAction =
-  | { type: 'SetSort'; columnId: ColumnId; direction: SortDirection }
-  | { type: 'MoveColumn'; columnId: ColumnId; newIndex: number }
-  | { type: 'PinRow'; rowIndex: number; side: 'top' | 'bottom' }
-  | { type: 'UnpinRow'; rowIndex: number }
-  | { type: 'SelectRow'; rowIndex: number }
-  | { type: 'DeselectRow'; rowIndex: number }
-  | { type: 'DeselectAllRows' }
-  | { type: 'ModifyColumnWidth'; columnIndex: number; width: number };
-
 export class TableModel extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
 
@@ -92,51 +82,46 @@ export class TableModel extends Resource {
     this._ctx.onDispose(this.cellUpdateListener.dispose);
   }
 
-  public dispatch(action: TableAction): void {
-    switch (action.type) {
-      case 'SetSort': {
-        this.sorting = [{ columnId: action.columnId, direction: action.direction }];
-        break;
-      }
-      case 'MoveColumn': {
-        const currentIndex = this.columnOrdering.indexOf(action.columnId);
-        if (currentIndex !== -1) {
-          this.columnOrdering.splice(currentIndex, 1);
-          this.columnOrdering.splice(action.newIndex, 0, action.columnId);
-        }
-        break;
-      }
-      case 'PinRow': {
-        this.pinnedRows[action.side].push(action.rowIndex);
-        break;
-      }
-      case 'UnpinRow': {
-        this.pinnedRows.top = this.pinnedRows.top.filter((index: number) => index !== action.rowIndex);
-        this.pinnedRows.bottom = this.pinnedRows.bottom.filter((index: number) => index !== action.rowIndex);
-        break;
-      }
-      case 'SelectRow': {
-        if (!this.rowSelection.includes(action.rowIndex)) {
-          this.rowSelection.push(action.rowIndex);
-        }
-        break;
-      }
-      case 'DeselectRow': {
-        this.rowSelection = this.rowSelection.filter((index: number) => index !== action.rowIndex);
-        break;
-      }
-      case 'DeselectAllRows': {
-        this.rowSelection = [];
-        break;
-      }
-      case 'ModifyColumnWidth': {
-        const columnId = this.columnOrdering.at(action.columnIndex);
-        if (columnId) {
-          const newWidth = Math.max(0, action.width);
-          this.columnWidths[columnId] = newWidth;
-        }
-        break;
-      }
+  public setSort(columnId: ColumnId, direction: SortDirection): void {
+    this.sorting = [{ columnId, direction }];
+  }
+
+  public moveColumn(columnId: ColumnId, newIndex: number): void {
+    const currentIndex = this.columnOrdering.indexOf(columnId);
+    if (currentIndex !== -1) {
+      this.columnOrdering.splice(currentIndex, 1);
+      this.columnOrdering.splice(newIndex, 0, columnId);
+    }
+  }
+
+  public pinRow(rowIndex: number, side: 'top' | 'bottom'): void {
+    this.pinnedRows[side].push(rowIndex);
+  }
+
+  public unpinRow(rowIndex: number): void {
+    this.pinnedRows.top = this.pinnedRows.top.filter((index: number) => index !== rowIndex);
+    this.pinnedRows.bottom = this.pinnedRows.bottom.filter((index: number) => index !== rowIndex);
+  }
+
+  public selectRow(rowIndex: number): void {
+    if (!this.rowSelection.includes(rowIndex)) {
+      this.rowSelection.push(rowIndex);
+    }
+  }
+
+  public deselectRow(rowIndex: number): void {
+    this.rowSelection = this.rowSelection.filter((index: number) => index !== rowIndex);
+  }
+
+  public deselectAllRows(): void {
+    this.rowSelection = [];
+  }
+
+  public modifyColumnWidth(columnIndex: number, width: number): void {
+    const columnId = this.columnOrdering.at(columnIndex);
+    if (columnId) {
+      const newWidth = Math.max(0, width);
+      this.columnWidths[columnId] = newWidth;
     }
   }
 
