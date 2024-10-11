@@ -37,7 +37,7 @@ import {
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
 import { CoreDatabaseQueryContext } from './core-database-query-context';
-import { type UpdateOperation, type InsertBatch, type InsertData } from './crud-api';
+import { type UpdateOperation, type InsertBatch, type InsertData, type CrudDatabase } from './crud-api';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
@@ -61,7 +61,7 @@ export type CoreDatabaseParams = {
 const THROTTLED_UPDATE_FREQUENCY = 10;
 
 @trace.resource()
-export class CoreDatabase {
+export class CoreDatabase implements CrudDatabase {
   private readonly _hypergraph: Hypergraph;
   private readonly _dataService: DataService;
   private readonly _queryService: QueryService;
