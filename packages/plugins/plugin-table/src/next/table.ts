@@ -108,6 +108,7 @@ export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]) 
     // Find the property that the accessor is reading
     for (const key in row) {
       if (column.accessor(row) === row[key]) {
+        // TODO(Zan): We should coerce the string to the correct type based on the column definition.
         row[key] = value;
         break;
       }
