@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { create, getSpace } from '@dxos/react-client/echo';
-import { classifySchemaProperties } from '@dxos/react-ui-table';
+import { getColumnTypes } from '@dxos/react-ui-table';
 
 import { Table } from './Table';
 import { type TableType } from '../../types';
@@ -16,20 +16,17 @@ export type ObjectTableProps = {
   table: TableType;
 };
 
-export const ObjectTable: React.FC<ObjectTableProps> = ({ table }) => {
+export const ObjectTable = ({ table }: ObjectTableProps) => {
   const columnDefinitions: ColumnDefinition[] = useMemo(() => {
     if (!table.schema) {
       return [];
     }
 
-    const properties = classifySchemaProperties(table.schema).filter(([key]) =>
-      table.props.find((prop) => prop.id === key),
-    );
-
+    const properties = getColumnTypes(table.schema).filter(([key]) => table.props.find((prop) => prop.id === key));
     const columnDefs = properties.map(([key, type]) => {
       return {
         id: key,
-        dataType: type === 'ref' || type === 'display' ? 'string' : type,
+        dataType: type === 'ref' || type === 'json' ? 'string' : type,
         headerLabel: key,
         accessor: (row: any) => row[key],
       };
@@ -52,8 +49,8 @@ export const ObjectTable: React.FC<ObjectTableProps> = ({ table }) => {
     if (!table.schema || !space) {
       return;
     }
-    const newrow = create(table.schema, { title: 'test', description: 'content', count: 0 });
-    space.db.add(newrow);
+
+    space.db.add(create(table.schema, { title: 'test', description: 'content', count: 0 }));
   };
 
   // TODO(Zan): Do we need this?
