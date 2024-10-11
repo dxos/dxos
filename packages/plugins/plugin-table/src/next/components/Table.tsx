@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type Ref, useCallback, useRef } from 'react';
+import { type DxAxisResize } from 'packages/ui/lit-grid/src';
+import React, { type Ref, useCallback, useEffect, useRef } from 'react';
 
 import {
   type DxGridElement,
@@ -16,7 +17,6 @@ import {
 
 import { useTable } from '../hooks';
 import { type ColumnDefinition } from '../table';
-import { DxAxisResize } from 'packages/ui/lit-grid/src';
 
 const TableCellEditor = ({
   __gridScope,
@@ -30,22 +30,43 @@ const TableCellEditor = ({
   const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
   const dxGrid = useRef<DxGridElement | null>(null);
 
-  const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
-    (value, { key, shift }) => {
+  const updateCell = useCallback(
+    (value: any) => {
       if (value !== undefined && editing) {
         const [col, row] = editing.index.split(',').map(Number);
         setCellData(col, row, value);
       }
+    },
+    [editing, setCellData],
+  );
+
+  const determineNavigationAxis = (key: string): 'row' | 'col' | undefined => {
+    if (['Enter', 'ArrowUp', 'ArrowDown'].includes(key)) {
+      return 'row';
+    }
+    if (['Tab', 'ArrowLeft', 'ArrowRight'].includes(key)) {
+      return 'col';
+    }
+    return undefined;
+  };
+
+  const determineNavigationDelta = (key: string, shift?: boolean): -1 | 1 => {
+    if (key.startsWith('Arrow')) {
+      return ['ArrowUp', 'ArrowLeft'].includes(key) ? -1 : 1;
+    }
+    return shift ? -1 : 1;
+  };
+
+  const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
+    (value, { key, shift }) => {
+      updateCell(value);
       setEditing(null);
-      const axis = ['Enter', 'ArrowUp', 'ArrowDown'].includes(key)
-        ? 'row'
-        : ['Tab', 'ArrowLeft', 'ArrowRight'].includes(key)
-          ? 'col'
-          : undefined;
-      const delta = key.startsWith('Arrow') ? (['ArrowUp', 'ArrowLeft'].includes(key) ? -1 : 1) : shift ? -1 : 1;
+
+      const axis = determineNavigationAxis(key);
+      const delta = determineNavigationDelta(key, shift);
       dxGrid.current?.refocus(axis, delta);
     },
-    [editing, setEditing, setCellData],
+    [updateCell, setEditing, determineNavigationAxis, determineNavigationDelta],
   );
 
   const extension = [editorKeys({ onClose: handleClose, ...(editing?.initialContent && { onNav: handleClose }) })];
@@ -89,6 +110,14 @@ export const Table = ({ columnDefinitions, data }: TableProps) => {
     },
     [dispatch],
   );
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      console.log('mode', gridRef.current?.mode);
+    }, 100);
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   return (
     <Grid.Root id='table-next'>
