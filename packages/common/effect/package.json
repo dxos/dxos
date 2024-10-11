@@ -25,8 +25,7 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/node-std": "workspace:*",
-    "xcase": "^2.0.1"
+    "@dxos/node-std": "workspace:*"
   },
   "devDependencies": {
     "@effect/schema": "^0.75.1",

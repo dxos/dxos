@@ -4,7 +4,8 @@
 
 import { AST, type Schema as S } from '@effect/schema';
 import { Option, pipe } from 'effect';
-import { decamelize } from 'xcase';
+
+import { decamelize } from './decamelize';
 
 const ParamKeyAnnotationId = Symbol.for('@dxos/schema/annotation/ParamKey');
 
