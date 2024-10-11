@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Extension, Transaction, type TransactionSpec } from '@codemirror/state';
+import { type EditorState, type Extension, Transaction, type TransactionSpec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 
 import { debounce } from '@dxos/async';
@@ -42,7 +42,10 @@ export const localStorageStateStoreAdapter: EditorStateOptions = {
   },
 };
 
-export const createEditorStateTransaction = ({ scrollTo, selection }: EditorSelectionState): TransactionSpec => {
+export const createEditorStateTransaction = (
+  state: EditorState,
+  { scrollTo, selection }: EditorSelectionState,
+): TransactionSpec => {
   return {
     selection,
     scrollIntoView: !scrollTo,
@@ -87,7 +90,7 @@ export const state = ({ getState, setState }: Partial<EditorStateOptions> = {}):
           run: (view) => {
             const state = getState(view.state.facet(documentId));
             if (state) {
-              view.dispatch(createEditorStateTransaction(state));
+              view.dispatch(createEditorStateTransaction(view.state, state));
             }
             return true;
           },

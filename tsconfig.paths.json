@@ -231,7 +231,7 @@
         "packages/plugins/plugin-sheet/src/index.ts"
       ],
       "@dxos/plugin-sheet/meta": [
-        "packages/plugins/plugin-sheet/src/meta.tsx"
+        "packages/plugins/plugin-sheet/src/meta.ts"
       ],
       "@dxos/plugin-sheet/types": [
         "packages/plugins/plugin-sheet/src/types.ts"
@@ -291,7 +291,7 @@
         "packages/plugins/plugin-thread/src/index.ts"
       ],
       "@dxos/plugin-thread/meta": [
-        "packages/plugins/plugin-thread/src/meta.tsx"
+        "packages/plugins/plugin-thread/src/meta.ts"
       ],
       "@dxos/plugin-thread/types": [
         "packages/plugins/plugin-thread/src/types.ts"
