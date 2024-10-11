@@ -45,7 +45,7 @@ type ViewStore = Record<SubjectId, typeof initialViewState>;
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
-  const state = create<ThreadState>({ staging: {} });
+  const state = create<ThreadState>({ drafts: {} });
 
   const viewStore = create<ViewStore>({});
   const getViewState = (subjectId: string) => {
@@ -291,7 +291,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   <ThreadComplementary
                     role={role}
                     subject={data.subject}
-                    stagedThreads={state.staging[fullyQualifiedId(data.subject)]}
+                    drafts={state.drafts[fullyQualifiedId(data.subject)]}
                     current={state.current}
                     showResolvedThreads={showResolvedThreads}
                   />
@@ -325,11 +325,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
                 const subjectId = fullyQualifiedId(subject);
                 const thread = create(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
-                const stagingArea = state.staging[subjectId];
-                if (stagingArea) {
-                  stagingArea.push(thread);
+                const draft = state.drafts[subjectId];
+                if (draft) {
+                  draft.push(thread);
                 } else {
-                  state.staging[subjectId] = [thread];
+                  state.drafts[subjectId] = [thread];
                 }
 
                 return {
@@ -407,13 +407,12 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               }
 
               const subjectId = fullyQualifiedId(subject);
-              const stagingArea = state.staging[subjectId];
-              if (stagingArea) {
-                // Check if we're deleting a thread that's in the staging area.
-                // If so, remove it from the staging area without ceremony.
-                const index = stagingArea.findIndex((t) => t.id === thread.id);
+              const draft = state.drafts[subjectId];
+              if (draft) {
+                // Check if we're deleting a draft; if so, remove it.
+                const index = draft.findIndex((t) => t.id === thread.id);
                 if (index !== -1) {
-                  stagingArea.splice(index, 1);
+                  draft.splice(index, 1);
                   return { data: true };
                 }
               }
@@ -480,12 +479,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const intents = [];
               const analyticsProperties = { threadId: thread.id, spaceId: space?.id };
 
-              if (state.staging[subjectId]?.find((t) => t === thread)) {
-                // Move thread from staging to document.
+              if (state.drafts[subjectId]?.find((t) => t === thread)) {
+                // Move draft to document.
                 thread.status = 'active';
                 subject.threads ? subject.threads.push(thread) : (subject.threads = [thread]);
-                state.staging[subjectId] = state.staging[subjectId]?.filter((t) => t.id !== thread.id);
-
+                state.drafts[subjectId] = state.drafts[subjectId]?.filter(({ id }) => id !== thread.id);
                 intents.push({
                   action: ObservabilityAction.SEND_EVENT,
                   data: { name: 'threads.thread-created', properties: analyticsProperties },

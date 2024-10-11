@@ -26,8 +26,7 @@ export enum ThreadAction {
   TOGGLE_RESOLVED = `${THREAD_ACTION}/toggle-resolved`,
 }
 
-// TODO(Zan): Move this to the plugin-space plugin or another common location
-// when we implement threads in sheets.
+// TODO(Zan): Move this to the plugin-space plugin or another common location when we implement threads in sheets.
 export type ThreadProvides<T> = {
   thread: {
     predicate: (obj: any) => obj is T;
@@ -51,7 +50,7 @@ export interface ThreadModel {
 }
 
 export type ThreadState = {
-  /** An in-memory staging area for threads that are being drafted. */
-  staging: Record<string, ThreadType[]>;
+  /** In-memory draft threads. */
+  drafts: Record<string, ThreadType[]>;
   current?: string | undefined;
 };
