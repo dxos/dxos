@@ -134,4 +134,13 @@ export { GridRoot, GridContent, useGridContext, createGridScope };
 
 export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps, DxGridElement };
 
-export type { DxGridRange, DxGridAxisMeta, DxGridCells } from '@dxos/lit-grid';
+export { colToA1Notation, rowToA1Notation } from '@dxos/lit-grid';
+
+export type {
+  DxGridRange,
+  DxGridAxisMeta,
+  DxGridCells,
+  DxGridPlaneRange,
+  DxGridPlaneCells,
+  DxGridPlane,
+} from '@dxos/lit-grid';

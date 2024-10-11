@@ -46,7 +46,7 @@ import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type SpaceMetadata, EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { SpaceMember, type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
@@ -394,6 +394,24 @@ export class DataSpaceManager extends Resource {
     });
   }
 
+  async setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting) {
+    const space = this._spaces.get(spaceKey);
+    invariant(space, 'Space not found.');
+
+    await this._metadataStore.setSpaceEdgeReplicationSetting(spaceKey, setting);
+
+    if (space.isOpen) {
+      switch (setting) {
+        case EdgeReplicationSetting.DISABLED:
+          await this._echoEdgeReplicator?.disconnectFromSpace(space.id);
+          break;
+        case EdgeReplicationSetting.ENABLED:
+          await this._echoEdgeReplicator?.connectToSpace(space.id);
+          break;
+      }
+    }
+  }
+
   private async _constructSpace(metadata: SpaceMetadata) {
     log('construct space', { metadata });
     const gossip = new Gossip({
@@ -489,10 +507,16 @@ export class DataSpaceManager extends Resource {
       edgeFeatures: this._edgeFeatures,
     });
     dataSpace.postOpen.append(async () => {
-      await this._echoEdgeReplicator?.connectToSpace(dataSpace.id);
+      const setting = dataSpace.getEdgeReplicationSetting();
+      if (setting === EdgeReplicationSetting.ENABLED) {
+        await this._echoEdgeReplicator?.connectToSpace(dataSpace.id);
+      }
     });
     dataSpace.preClose.append(async () => {
-      await this._echoEdgeReplicator?.disconnectFromSpace(dataSpace.id);
+      const setting = dataSpace.getEdgeReplicationSetting();
+      if (setting === EdgeReplicationSetting.ENABLED) {
+        await this._echoEdgeReplicator?.disconnectFromSpace(dataSpace.id);
+      }
     });
 
     presence.newPeer.on((peerState) => {

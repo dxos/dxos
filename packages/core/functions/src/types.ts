@@ -19,7 +19,7 @@ const SubscriptionTriggerSchema = S.mutable(
     filter: S.Array(
       S.Struct({
         type: S.String,
-        props: S.optional(S.Record(S.String, S.Any)),
+        props: S.optional(S.Record({ key: S.String, value: S.Any })),
       }),
     ),
     options: S.optional(
@@ -59,7 +59,7 @@ const WebsocketTriggerSchema = S.mutable(
   S.Struct({
     type: S.Literal('websocket'),
     url: S.String,
-    init: S.optional(S.Record(S.String, S.Any)),
+    init: S.optional(S.Record({ key: S.String, value: S.Any })),
   }),
 );
 
@@ -96,9 +96,9 @@ export class FunctionTrigger extends TypedObject({
 })({
   name: S.optional(S.String),
   enabled: S.optional(S.Boolean),
-  function: S.String.pipe(S.description('Function URI.')),
+  function: S.String.pipe(S.annotations({ description: 'Function URI.' })),
   // The `meta` property is merged into the event data passed to the function.
-  meta: S.optional(S.mutable(S.Record(S.String, S.Any))),
+  meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
   spec: TriggerSpecSchema,
 }) {}
 
