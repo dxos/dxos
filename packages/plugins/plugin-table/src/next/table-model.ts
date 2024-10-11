@@ -13,7 +13,6 @@ import { CellUpdateListener } from './CellUpdateListener';
 const DEFAULT_WIDTH = 256; // px
 
 export type ColumnId = string;
-export type SortDirection = 'asc' | 'desc';
 
 // TODO(Zan): Extend to multi-select.
 export type DataType = 'string' | 'number' | 'boolean' | 'date';
@@ -27,6 +26,7 @@ export type ColumnDefinition = {
   accessor: (row: any) => any;
 };
 
+export type SortDirection = 'asc' | 'desc';
 export type SortConfig = { columnId: ColumnId; direction: SortDirection };
 
 export class TableModel extends Resource {
