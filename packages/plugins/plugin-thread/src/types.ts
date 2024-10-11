@@ -49,3 +49,9 @@ export type ThreadSettingsProps = { standalone?: boolean };
 export interface ThreadModel {
   root: ThreadType;
 }
+
+export type ThreadState = {
+  /** An in-memory staging area for threads that are being drafted. */
+  staging: Record<string, ThreadType[]>;
+  current?: string | undefined;
+};

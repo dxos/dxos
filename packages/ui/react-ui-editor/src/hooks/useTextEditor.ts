@@ -3,7 +3,7 @@
 //
 
 import { EditorState, type EditorStateConfig } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { EditorView, ViewPlugin } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import {
   type DependencyList,
@@ -67,8 +67,6 @@ export const useTextEditor = (
 
   // NOTE: Increments by 2 in strict mode.
   const [instanceId] = useState(() => `text-editor-${++instanceCount}`);
-  // Callback once view is created.
-  const onUpdate = useRef<() => void>();
   const [view, setView] = useState<EditorView>();
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -89,22 +87,27 @@ export const useTextEditor = (
       }
 
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
-      // NOTE: Don't set selection here in case it is invalid (and crashes the state); dispatch below.
       const state = EditorState.create({
         doc: initialValue,
         selection: initialSelection,
         extensions: [
           id && documentId.of(id),
-          // NOTE: Doesn't catch errors in keymap functions.
+          extensions,
+          // NOTE: This doesn't catch errors in keymap functions.
           EditorView.exceptionSink.of((err) => {
             log.catch(err);
           }),
-          extensions,
-          EditorView.updateListener.of(() => {
-            setTimeout(() => {
-              onUpdate.current?.();
-            });
-          }),
+          ViewPlugin.fromClass(
+            class {
+              constructor(_view: EditorView) {
+                log('construct', { id });
+              }
+
+              destroy() {
+                log('destroy', { id });
+              }
+            },
+          ),
         ].filter(isNotFalsy),
       });
 
@@ -114,18 +117,26 @@ export const useTextEditor = (
         state,
         // NOTE: Uncomment to debug/monitor all transactions.
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch
-        dispatchTransactions: (trs, view) => {
-          if (debug) {
-            logChanges(trs);
-          }
-          view.update(trs);
-        },
+        dispatchTransactions: debug
+          ? (trs, view) => {
+              if (debug) {
+                logChanges(trs);
+              }
+              view.update(trs);
+            }
+          : undefined,
       });
 
       // Move to end of line after document loaded.
-      if (!initialValue && moveToEndOfLine) {
+      if (initialValue && moveToEndOfLine) {
         const { to } = view.state.doc.lineAt(0);
-        view.dispatch({ selection: { anchor: to } });
+        if (to) {
+          try {
+            view.dispatch({ selection: { anchor: to } });
+          } catch (err) {
+            log.catch(err);
+          }
+        }
       }
 
       setView(view);
@@ -139,18 +150,15 @@ export const useTextEditor = (
 
   useEffect(() => {
     if (view) {
-      // NOTE: Set selection after first update (since content may rerender on focus).
-      onUpdate.current = () => {
-        onUpdate.current = undefined;
-        view.dispatch(createEditorStateTransaction({ scrollTo, selection }));
-      };
+      // NOTE: Set selection after first update (since content may rerender due to decorations).
+      view.dispatch(createEditorStateTransaction({ scrollTo, selection }));
 
       // Remove tabster attribute (rely on custom keymap).
       if (view.state.facet(editorInputMode).noTabster) {
         parentRef.current?.removeAttribute('data-tabster');
       }
     }
-  }, [view, selection, scrollTo]);
+  }, [view, scrollTo, selection]);
 
   useEffect(() => {
     if (view && autoFocus) {
