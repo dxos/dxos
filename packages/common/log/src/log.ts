@@ -102,6 +102,24 @@ const createLog = (): LogImp => {
  */
 export const log: Log = ((globalThis as any).dx_log ??= createLog());
 
+const start = Date.now();
+let last = start;
+
+/**
+ * Log debug stack.
+ */
+export const debug = (label?: any, args?: any) => {
+  const now = Date.now();
+  const err = new Error();
+  console.group(
+    `DEBUG[${label}]`,
+    JSON.stringify({ t: Number(now - start).toLocaleString(), dt: Number(now - last).toLocaleString(), ...args }),
+  );
+  console.warn(err.stack);
+  console.groupEnd();
+  last = Date.now();
+};
+
 /**
  * Accessible from browser console.
  */
