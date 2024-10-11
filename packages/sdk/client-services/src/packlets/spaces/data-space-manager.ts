@@ -410,6 +410,8 @@ export class DataSpaceManager extends Resource {
           break;
       }
     }
+
+    space.stateUpdate.emit();
   }
 
   private async _constructSpace(metadata: SpaceMetadata) {
