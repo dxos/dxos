@@ -2,16 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import { computed, effect } from '@preact/signals-core';
 
 import { type IntentDispatcher } from '@dxos/app-framework';
 import { type DocumentType } from '@dxos/plugin-markdown/types';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { getSpace, getTextInRange, createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
-import { comments, createExternalCommentSync, listener } from '@dxos/react-ui-editor';
+import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
 import { nonNullable } from '@dxos/util';
 
 import { ThreadAction, type ThreadState } from '../types';
+
+// TODO(burdon): This is quite expensive.
+const getName = (doc: DocumentType, start: string, end: string): string | undefined => {
+  if (doc.content) {
+    return getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
+  }
+};
 
 /**
  * Construct plugins.
@@ -32,21 +40,22 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Inten
   );
 
   return [
-    listener({
-      onChange: () => {
+    EditorView.updateListener.of((update) => {
+      if (update.docChanged) {
         doc.threads.forEach((thread) => {
           if (thread?.anchor) {
             const [start, end] = thread.anchor.split(':');
-            const name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
+            const name = getName(doc, start, end);
+            console.log('docChanged', name, start, end);
             // TODO(burdon): This seems unsafe; review.
             // Only update if the name has changed, otherwise this will cause an infinite loop.
-            // Skip if the name is empty - this means comment text was deleted, but thread name should remain.
+            // Skip if the name is empty; this means comment text was deleted, but thread name should remain.
             if (name && name !== thread.name) {
               thread.name = name;
             }
           }
         });
-      },
+      }
     }),
 
     createExternalCommentSync(
@@ -62,7 +71,8 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Inten
       id: fullyQualifiedId(doc),
       onCreate: ({ cursor }) => {
         const [start, end] = cursor.split(':');
-        const name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
+        const name = getName(doc, start, end);
+        console.log('onCreate', cursor, name);
         void dispatch({
           action: ThreadAction.CREATE,
           data: {
@@ -94,12 +104,17 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Inten
 
         if (thread instanceof ThreadType && thread.anchor) {
           const [start, end] = thread.anchor.split(':');
-          thread.name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
+          const name = getName(doc, start, end);
+          console.log('onUpdate', id, cursor, name);
+          thread.name = name;
           thread.anchor = cursor;
         }
       },
       onSelect: ({ selection: { current, closest } }) => {
-        void dispatch([{ action: ThreadAction.SELECT, data: { current: current ?? closest } }]);
+        void dispatch({
+          action: ThreadAction.SELECT,
+          data: { current: current ?? closest, skipOpen: true },
+        });
       },
     }),
   ];

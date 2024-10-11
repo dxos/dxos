@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EditorState, type EditorStateConfig, type TransactionSpec } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { EditorState, type EditorStateConfig } from '@codemirror/state';
+import { EditorView, ViewPlugin } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import {
   type DependencyList,
@@ -68,7 +68,6 @@ export const useTextEditor = (
   // NOTE: Increments by 2 in strict mode.
   const [instanceId] = useState(() => `text-editor-${++instanceCount}`);
   const [view, setView] = useState<EditorView>();
-  const initialTransaction = useRef<TransactionSpec>();
   const parentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -88,39 +87,33 @@ export const useTextEditor = (
       }
 
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
-      // NOTE: Don't set selection here in case it is invalid (and crashes the state); dispatch below.
       const state = EditorState.create({
         doc: initialValue,
+        selection: initialSelection,
         extensions: [
           id && documentId.of(id),
           extensions,
-          // NOTE: Doesn't catch errors in keymap functions.
+          // NOTE: This doesn't catch errors in keymap functions.
           EditorView.exceptionSink.of((err) => {
             log.catch(err);
           }),
-          // TODO(burdon): Figure out better way.
-          EditorView.updateListener.of(({ view }) => {
-            setTimeout(() => {
-              if (initialTransaction.current) {
-                try {
-                  // console.log('###', JSON.stringify({ len: view.state.doc.length, t: initialTransaction.current }));
-                  if (view.state.doc.length) {
-                    view.dispatch(initialTransaction.current);
-                    initialTransaction.current = undefined;
-                  }
-                } catch (err) {
-                  log.catch(err);
-                }
+          ViewPlugin.fromClass(
+            class {
+              constructor(_view: EditorView) {
+                log('construct', { id });
               }
-            });
-          }),
+
+              destroy() {
+                log('destroy', { id });
+              }
+            },
+          ),
         ].filter(isNotFalsy),
       });
 
       // https://codemirror.net/docs/ref/#view.EditorViewConfig
       view = new EditorView({
         parent: parentRef.current,
-        selection: initialSelection,
         state,
         // NOTE: Uncomment to debug/monitor all transactions.
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch
@@ -157,8 +150,8 @@ export const useTextEditor = (
 
   useEffect(() => {
     if (view) {
-      // NOTE: Set selection after first update (since content may rerender on focus).
-      initialTransaction.current = createEditorStateTransaction({ scrollTo, selection });
+      // NOTE: Set selection after first update (since content may rerender due to decorations).
+      view.dispatch(createEditorStateTransaction({ scrollTo, selection }));
 
       // Remove tabster attribute (rely on custom keymap).
       if (view.state.facet(editorInputMode).noTabster) {

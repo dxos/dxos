@@ -13,6 +13,7 @@ import { ErrorBoundary } from '../SurfacePlugin';
 
 export type BootstrapPluginsParams = {
   plugins: Record<string, () => Promise<PluginDefinition>>;
+  // Ordered list of plugins.
   meta: PluginMeta[];
   core: string[];
   defaults?: string[];

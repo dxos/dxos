@@ -595,6 +595,7 @@ class ExternalCommentSync implements PluginValue {
   };
 }
 
+// TODO(burdon): Needs comment.
 export const createExternalCommentSync = (
   id: string,
   subscribe: (sink: () => void) => UnsubscribeCallback,

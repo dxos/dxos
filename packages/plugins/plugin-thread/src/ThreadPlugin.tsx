@@ -6,7 +6,6 @@ import React from 'react';
 
 import {
   type IntentPluginProvides,
-  LayoutAction,
   NavigationAction,
   type LocationProvides,
   type Plugin,
@@ -248,8 +247,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               return data.plugin === meta.id ? <ThreadSettings settings={settings.values} /> : null;
             }
 
-            case 'article':
-            case 'complementary': {
+            case 'article': {
               const location = navigationPlugin?.provides.location;
 
               if (data.object instanceof ChannelType && data.object.threads[0]) {
@@ -277,6 +275,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 );
               }
 
+              break;
+            }
+
+            case 'complementary--comments': {
               if (
                 data.subject &&
                 typeof data.subject === 'object' &&
@@ -295,6 +297,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   />
                 );
               }
+
+              break;
             }
           }
 
@@ -336,14 +340,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         action: ThreadAction.SELECT,
                         data: { current: fullyQualifiedId(thread) },
                       },
-                      {
-                        action: LayoutAction.SET_LAYOUT,
-                        data: {
-                          element: 'complementary',
-                          subject: subjectId,
-                          state: true,
-                        },
-                      },
                     ],
                   ],
                 };
@@ -355,7 +351,22 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             case ThreadAction.SELECT: {
               state.current = intent.data?.current;
-              return { data: true };
+
+              return {
+                data: true,
+                intents: !intent.data?.skipOpen
+                  ? [
+                      [
+                        {
+                          action: NavigationAction.OPEN,
+                          data: {
+                            activeParts: { complementary: 'comments' },
+                          },
+                        },
+                      ],
+                    ]
+                  : [],
+              };
             }
 
             case ThreadAction.TOGGLE_RESOLVED: {
@@ -374,6 +385,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const spaceId = space?.id;
 
               return {
+                data: true,
                 intents: [
                   [
                     {

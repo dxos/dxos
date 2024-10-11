@@ -109,7 +109,7 @@ export const core = ({ isPwa, isSocket }: PluginConfig): PluginMeta[] =>
 
 export const defaults = ({ isDev }: PluginConfig): PluginMeta[] =>
   [
-    //
+    // prettier-ignore
     isDev && DebugMeta,
     MarkdownMeta,
     SketchMeta,
@@ -120,7 +120,7 @@ export const defaults = ({ isDev }: PluginConfig): PluginMeta[] =>
 
 // TODO(burdon): Use meta tags to determine default/recommended/labs.
 export const recommended = ({ isLabs }: PluginConfig): PluginMeta[] => [
-  //
+  // prettier-ignore
   ChessMeta,
   ExcalidrawMeta,
   ExplorerMeta,
@@ -134,7 +134,7 @@ export const recommended = ({ isLabs }: PluginConfig): PluginMeta[] => [
 
   ...(isLabs
     ? [
-        //
+        // prettier-ignore
         ChainMeta,
         GithubMeta,
         GridMeta,
