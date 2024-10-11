@@ -41,6 +41,8 @@ export default [
         'settings overscroll centering label': 'Centering',
         'settings overscroll none label': 'None',
         'settings flat deck': 'Flatten deck appearance',
+        'comments label': 'Show Comments',
+        'settings label': 'Show Settings',
       },
     },
   },
