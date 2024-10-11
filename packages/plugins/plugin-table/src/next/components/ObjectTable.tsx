@@ -5,6 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { create, getSpace } from '@dxos/react-client/echo';
+import { Button, Icon } from '@dxos/react-ui';
 import { getColumnTypes } from '@dxos/react-ui-table';
 
 import { Table } from './Table';
@@ -34,9 +35,9 @@ export const ObjectTable = ({ table }: ObjectTableProps) => {
 
     // Sort by the key position in table.props
     // TODO(Zan): Something fishy here. Why is 'count' first in our storybook example?
-    return columnDefs.sort((a, b) => {
-      const indexA = table.props.findIndex((prop) => prop === a.id);
-      const indexB = table.props.findIndex((prop) => prop === b.id);
+    return columnDefs.sort(({ id: a }, { id: b }) => {
+      const indexA = table.props.findIndex((prop) => prop === a);
+      const indexB = table.props.findIndex((prop) => prop === b);
       return indexA - indexB;
     });
   }, [table.schema, table.props]);
@@ -45,7 +46,7 @@ export const ObjectTable = ({ table }: ObjectTableProps) => {
   const objects = useTableObjects(space, table.schema);
 
   // TODO(Zan): Delete this after testing.
-  const addRow = () => {
+  const handleAdd = () => {
     if (!table.schema || !space) {
       return;
     }
@@ -59,11 +60,11 @@ export const ObjectTable = ({ table }: ObjectTableProps) => {
   }
 
   return (
-    <div>
-      <button className='ch-button' onClick={() => addRow()}>
-        Add row
-      </button>
+    <div className='flex flex-col w-full'>
       <Table columnDefinitions={columnDefinitions} data={objects} />
+      <Button onClick={() => handleAdd()}>
+        <Icon icon='ph--plus--regular' size={4} />
+      </Button>
     </div>
   );
 };

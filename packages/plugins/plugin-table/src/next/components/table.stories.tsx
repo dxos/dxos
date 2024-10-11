@@ -108,7 +108,6 @@ const LargeDataStory = ({
   simulateCollaborativeCellUpdates: boolean;
 }) => {
   const data = useMemo(() => makeData(rowCount), [rowCount]);
-
   useSimulateCollaborativeUpdates(data, columnDefinitions, updateIntervalMs, simulateCollaborativeCellUpdates);
 
   return <Table columnDefinitions={columnDefinitions} data={data} />;
