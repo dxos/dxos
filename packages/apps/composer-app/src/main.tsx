@@ -9,6 +9,7 @@ import { createRoot } from 'react-dom/client';
 
 import { createApp } from '@dxos/app-framework';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { log } from '@dxos/log';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
@@ -84,6 +85,7 @@ const main = async () => {
     isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
     isSocket: !!(globalThis as any).__args,
     isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
+    isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 
   const App = createApp({
@@ -107,11 +109,17 @@ const main = async () => {
     defaults: defaults(conf).map((meta) => meta.id),
   });
 
-  createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <App />
-    </StrictMode>,
-  );
+  log.info('starting');
+  const root = document.getElementById('root')!;
+  if (conf.isStrict) {
+    createRoot(root).render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    );
+  } else {
+    createRoot(root).render(<App />);
+  }
 };
 
 void main();

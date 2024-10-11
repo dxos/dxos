@@ -15,7 +15,7 @@ import { REGISTRY_PLUGIN } from '../meta';
 
 export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
-  const { enabled, core, plugins, setPlugin, ...pluginContext } = usePlugins();
+  const { plugins, enabled, core, setPlugin, ...pluginContext } = usePlugins();
   const dispatch = useIntentDispatcher();
 
   const sort = (a: PluginMeta, b: PluginMeta) => a.name?.localeCompare(b.name ?? '') ?? 0;
@@ -31,7 +31,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
     [],
   );
 
-  const pluginIds = plugins.map(({ meta: { id } }) => id);
+  const pluginIds = plugins.map(({ meta }) => meta.id);
   const available = useMemo(() => pluginContext.available.filter(({ id }) => !enabled.includes(id)).sort(sort), []);
   const recommended = available.filter((meta) => !meta.tags?.includes('experimental'));
   const experimental = available.filter((meta) => meta.tags?.includes('experimental'));
@@ -50,6 +50,8 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
   const handleReload = () => {
     window.location.reload();
   };
+
+  console.log(JSON.stringify({ plugins: plugins.map((p) => p.meta.id), pluginIds, enabled, installed }, null, 2));
 
   return (
     <>

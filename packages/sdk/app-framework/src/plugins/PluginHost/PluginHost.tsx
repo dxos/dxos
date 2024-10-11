@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type JSX, type FC, type PropsWithChildren, type ReactNode, useEffect, useState } from 'react';
+import React, { type ReactNode } from 'react';
 
 import { LocalStorageStore } from '@dxos/local-storage';
-import { log } from '@dxos/log';
+import { debug } from '@dxos/log';
 
+import { PluginContainer } from './PluginContainer';
 import { type PluginContext, PluginProvider } from './PluginContext';
-import { type Plugin, type PluginDefinition, type PluginMeta, type PluginProvides } from './plugin';
+import { type Plugin, type PluginDefinition, type PluginMeta } from './plugin';
 import { ErrorBoundary } from '../SurfacePlugin';
 
 export type BootstrapPluginsParams = {
@@ -43,8 +44,7 @@ export const PluginHost = ({
   const state = new LocalStorageStore<PluginContext>(PLUGIN_HOST, {
     ready: false,
     core,
-    defaults,
-    enabled: [],
+    enabled: [...defaults],
     plugins: [],
     available: meta.filter(({ id }) => !core.includes(id)),
     setPlugin: (id: string, enabled: boolean) => {
@@ -57,6 +57,7 @@ export const PluginHost = ({
     },
   });
 
+  // Register and load values.
   state.prop({ key: 'enabled', type: LocalStorageStore.json<string[]>() });
 
   return {
@@ -66,13 +67,16 @@ export const PluginHost = ({
     },
     provides: {
       plugins: state.values,
-      context: ({ children }) => <PluginProvider value={state.values}>{children}</PluginProvider>,
+      context: ({ children }) => {
+        // TODO(burdon): Called multiple times (even with strict off).
+        debug('PluginProvider', { enabled: state.values.enabled.length });
+        return <PluginProvider value={state.values}>{children}</PluginProvider>;
+      },
       root: () => {
         return (
           <ErrorBoundary fallback={fallback}>
-            <Root
+            <PluginContainer
               plugins={plugins}
-              meta={meta}
               core={core}
               defaults={defaults}
               state={state.values}
@@ -85,6 +89,9 @@ export const PluginHost = ({
   };
 };
 
+/**
+ * Fallback does not use tailwind or theme.
+ */
 const DefaultFallback = ({ error }: { error: Error }) => {
   return (
     <div style={{ padding: '1rem' }}>
@@ -93,115 +100,4 @@ const DefaultFallback = ({ error }: { error: Error }) => {
       <pre>{error.stack}</pre>
     </div>
   );
-};
-
-type RootProps = Pick<BootstrapPluginsParams, 'meta' | 'core' | 'defaults'> & {
-  plugins: Record<string, () => Promise<PluginDefinition>>;
-  state: PluginContext;
-  placeholder: ReactNode;
-};
-
-/**
- * Root component initializes plugins.
- */
-const Root = ({ plugins: definitions, meta, core, defaults = [], state, placeholder }: RootProps) => {
-  const [error, setError] = useState<unknown>();
-
-  useEffect(() => {
-    log('initializing plugins', { enabled: state.enabled });
-    const t = setTimeout(async () => {
-      try {
-        const enabledIds = [...core, ...defaults, ...state.enabled].sort((a, b) => {
-          const indexA = meta.findIndex(({ id }) => id === a);
-          const indexB = meta.findIndex(({ id }) => id === b);
-          return indexA - indexB;
-        });
-
-        const enabled = await Promise.all(
-          enabledIds
-            .map((id) => definitions[id])
-            // If local storage indicates a plugin is enabled, but it is not available, ignore it.
-            .filter((definition): definition is () => Promise<PluginDefinition> => Boolean(definition))
-            .map((definition) => definition()),
-        );
-
-        const plugins = await Promise.all(
-          enabled.map(async (definition) => {
-            return await initializePlugin(definition).catch((err) => {
-              log.error('Failed to initialize plugin:', { id: definition.meta.id, err });
-            });
-          }),
-        );
-
-        const initialized = plugins.filter((plugin): plugin is Plugin => Boolean(plugin));
-        log('plugins initialized', { plugins: initialized });
-
-        await Promise.all(enabled.map((plugin) => plugin.ready?.(initialized)));
-        log('plugins ready', { plugins: initialized });
-
-        state.plugins = initialized;
-        state.ready = true;
-      } catch (err) {
-        setError(err);
-      }
-    });
-
-    return () => {
-      clearTimeout(t);
-      state.ready = false;
-      // TODO(wittjosiah): Does this ever need to be called prior to having dynamic plugins?
-      // void Promise.all(enabled.map((definition) => definition.unload?.()));
-    };
-  }, []);
-
-  if (error) {
-    throw error;
-  }
-
-  if (!state.ready) {
-    return <>{placeholder}</>;
-  }
-
-  const ComposedContext = composeContext(state.plugins);
-
-  return <ComposedContext>{rootComponents(state.plugins)}</ComposedContext>;
-};
-
-/**
- * Resolve a `PluginDefinition` into a fully initialized `Plugin`.
- */
-export const initializePlugin = async <T, U>(pluginDefinition: PluginDefinition<T, U>): Promise<Plugin<T & U>> => {
-  const provides = await pluginDefinition.initialize?.();
-  return {
-    ...pluginDefinition,
-    provides: {
-      ...pluginDefinition.provides,
-      ...provides,
-    } as PluginProvides<T & U>,
-  };
-};
-
-const rootComponents = (plugins: Plugin[]) => {
-  return plugins
-    .map((plugin) => {
-      const Component = plugin.provides.root;
-      if (Component) {
-        return <Component key={plugin.meta.id} />;
-      } else {
-        return null;
-      }
-    })
-    .filter((node): node is JSX.Element => Boolean(node));
-};
-
-const composeContext = (plugins: Plugin[]) => {
-  return compose(plugins.map((p) => p.provides.context!).filter(Boolean));
-};
-
-const compose = (contexts: FC<PropsWithChildren>[]) => {
-  return [...contexts].reduce((Acc, Next) => ({ children }) => (
-    <Acc>
-      <Next>{children}</Next>
-    </Acc>
-  ));
 };

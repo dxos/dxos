@@ -61,7 +61,13 @@ export type State = {
   firstRun: Trigger;
 };
 
-export type PluginConfig = State & { isDev?: boolean; isPwa?: boolean; isSocket?: boolean; isLabs?: boolean };
+export type PluginConfig = State & {
+  isDev?: boolean;
+  isPwa?: boolean;
+  isSocket?: boolean;
+  isLabs?: boolean;
+  isStrict?: boolean;
+};
 
 /**
  * NOTE: Order is important.
@@ -84,6 +90,7 @@ export const core = ({ isPwa, isSocket }: PluginConfig): PluginMeta[] =>
     NavTreeMeta,
     SettingsMeta,
     StatusBarMeta,
+    WildcardMeta,
 
     // Shell and help (client must precede help because help’s context depends on client’s)
     ClientMeta,
@@ -91,7 +98,6 @@ export const core = ({ isPwa, isSocket }: PluginConfig): PluginMeta[] =>
 
     // Data integrations
     SpaceMeta,
-    DebugMeta,
 
     // Framework extensions
     // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
@@ -106,12 +112,13 @@ export const defaults = ({ isDev }: PluginConfig): PluginMeta[] =>
     //
     isDev && DebugMeta,
     MarkdownMeta,
-    ThreadMeta,
     SketchMeta,
-    TableMeta,
     SheetMeta,
+    TableMeta,
+    ThreadMeta,
   ].filter(isNotFalsy);
 
+// TODO(burdon): Use meta tags to determine default/recommended/labs.
 export const recommended = ({ isLabs }: PluginConfig): PluginMeta[] => [
   //
   ChessMeta,
@@ -120,19 +127,11 @@ export const recommended = ({ isLabs }: PluginConfig): PluginMeta[] => [
   FunctionMeta,
   IpfsMeta,
   MapMeta,
-  MarkdownMeta,
   MermaidMeta,
   PresenterMeta,
   ScriptMeta,
   SearchMeta,
-  SheetMeta,
-  SketchMeta,
-  StackMeta,
-  TableMeta,
-  ThreadMeta,
-  WildcardMeta,
 
-  // TODO(burdon): Use meta tags.
   ...(isLabs
     ? [
         //

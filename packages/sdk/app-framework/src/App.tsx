@@ -33,7 +33,7 @@ import SurfaceMeta from './plugins/SurfacePlugin/meta';
  * @param params.plugins All plugins available to the application.
  * @param params.meta All plugin metadata.
  * @param params.core Core plugins which will always be enabled.
- * @param params.default Default plugins are enabled by default but can be disabled by the user.
+ * @param params.defaults Default plugins are enabled by default but can be disabled by the user.
  * @param params.fallback Fallback component to render while plugins are initializing.
  */
 export const createApp = ({ meta, plugins, core, ...params }: BootstrapPluginsParams) => {
@@ -49,10 +49,10 @@ export const createApp = ({ meta, plugins, core, ...params }: BootstrapPluginsPa
     ...params,
   });
 
-  invariant(host.provides?.context);
-  invariant(host.provides?.root);
-  const Context = host.provides.context;
-  const Root = host.provides.root;
+  invariant(host.provides);
+  const { context: Context, root: Root } = host.provides;
+  invariant(Context);
+  invariant(Root);
 
   return () => (
     <Context>

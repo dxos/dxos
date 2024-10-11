@@ -22,11 +22,6 @@ export type PluginContext = {
   core: string[];
 
   /**
-   * Default plugins.
-   */
-  defaults: string[];
-
-  /**
    * Ids of plugins which are enabled on this device.
    */
   enabled: string[];
