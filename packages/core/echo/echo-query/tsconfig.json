@@ -8,15 +8,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../../common/node-std"
-    },
-    {
-      "path": "../../../common/random"
-    },
-    {
-      "path": "../echo-generator"
-    }
-  ]
+  "references": []
 }
