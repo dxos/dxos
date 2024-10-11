@@ -9,7 +9,7 @@ import { create } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 
-import { createTable, updateTable, type Table, type TableEvent } from './table';
+import { createTable, updateTable, type Table, type TableAction } from './table';
 
 registerSignalsRuntime();
 
@@ -23,32 +23,32 @@ const createInitialTable = (): Table =>
     [],
   );
 
-export const applyEvents = (events: TableEvent[]): Table => {
+export const applyEvents = (events: TableAction[]): Table => {
   const initialState = createInitialTable();
   return events.reduce((state, event) => updateTable(state, event), initialState);
 };
 
 describe('updateTable', () => {
   it('should set sorting', () => {
-    const events: TableEvent[] = [{ type: 'SetSort', columnId: 'col2', direction: 'asc' }];
+    const events: TableAction[] = [{ type: 'SetSort', columnId: 'col2', direction: 'asc' }];
     const newTable = applyEvents(events);
     expect(newTable.sorting).toEqual([{ columnId: 'col2', direction: 'asc' }]);
   });
 
   it('should move a column', () => {
-    const events: TableEvent[] = [{ type: 'MoveColumn', columnId: 'col1', newIndex: 2 }];
+    const events: TableAction[] = [{ type: 'MoveColumn', columnId: 'col1', newIndex: 2 }];
     const newTable = applyEvents(events);
     expect(newTable.columnOrdering).toEqual(['col2', 'col3', 'col1']);
   });
 
   it('should pin a row', () => {
-    const events: TableEvent[] = [{ type: 'PinRow', rowIndex: 1, side: 'top' }];
+    const events: TableAction[] = [{ type: 'PinRow', rowIndex: 1, side: 'top' }];
     const newTable = applyEvents(events);
     expect(newTable.pinnedRows.top).toContain(1);
   });
 
   it('should unpin a row', () => {
-    const events: TableEvent[] = [
+    const events: TableAction[] = [
       { type: 'PinRow', rowIndex: 1, side: 'top' },
       { type: 'UnpinRow', rowIndex: 1 },
     ];
@@ -57,13 +57,13 @@ describe('updateTable', () => {
   });
 
   it('should select a row', () => {
-    const events: TableEvent[] = [{ type: 'SelectRow', rowIndex: 2 }];
+    const events: TableAction[] = [{ type: 'SelectRow', rowIndex: 2 }];
     const newTable = applyEvents(events);
     expect(newTable.rowSelection).toContain(2);
   });
 
   it('should deselect a row', () => {
-    const events: TableEvent[] = [
+    const events: TableAction[] = [
       { type: 'SelectRow', rowIndex: 2 },
       { type: 'DeselectRow', rowIndex: 2 },
     ];
@@ -72,7 +72,7 @@ describe('updateTable', () => {
   });
 
   it('should deselect all rows', () => {
-    const events: TableEvent[] = [
+    const events: TableAction[] = [
       { type: 'SelectRow', rowIndex: 1 },
       { type: 'SelectRow', rowIndex: 2 },
       { type: 'DeselectAllRows' },
@@ -84,7 +84,7 @@ describe('updateTable', () => {
 
 describe('column width modification', () => {
   it('should modify an existing column width', () => {
-    const events: TableEvent[] = [{ type: 'ModifyColumnWidth', columnIndex: 0, width: 120 }];
+    const events: TableAction[] = [{ type: 'ModifyColumnWidth', columnIndex: 0, width: 120 }];
     const newTable = applyEvents(events);
     expect(newTable.columnWidths[newTable.columnOrdering[0]]).toBe(120);
   });
@@ -93,14 +93,14 @@ describe('column width modification', () => {
     const initialTable = createInitialTable();
     const initialCol2Width = initialTable.columnWidths[initialTable.columnOrdering[1]];
     const initialCol3Width = initialTable.columnWidths[initialTable.columnOrdering[2]];
-    const events: TableEvent[] = [{ type: 'ModifyColumnWidth', columnIndex: 0, width: 120 }];
+    const events: TableAction[] = [{ type: 'ModifyColumnWidth', columnIndex: 0, width: 120 }];
     const newTable = applyEvents(events);
     expect(newTable.columnWidths[newTable.columnOrdering[1]]).toBe(initialCol2Width);
     expect(newTable.columnWidths[newTable.columnOrdering[2]]).toBe(initialCol3Width);
   });
 
   it('should handle multiple width modifications', () => {
-    const events: TableEvent[] = [
+    const events: TableAction[] = [
       { type: 'ModifyColumnWidth', columnIndex: 0, width: 120 },
       { type: 'ModifyColumnWidth', columnIndex: 1, width: 80 },
       { type: 'ModifyColumnWidth', columnIndex: 2, width: 200 },
@@ -113,13 +113,13 @@ describe('column width modification', () => {
   });
 
   it('should allow setting width to 0', () => {
-    const events: TableEvent[] = [{ type: 'ModifyColumnWidth', columnIndex: 0, width: 0 }];
+    const events: TableAction[] = [{ type: 'ModifyColumnWidth', columnIndex: 0, width: 0 }];
     const newTable = applyEvents(events);
     expect(newTable.columnWidths[newTable.columnOrdering[0]]).toBe(0);
   });
 
   it('should ignore modifications for non-existent column indices', () => {
-    const events: TableEvent[] = [{ type: 'ModifyColumnWidth', columnIndex: 999, width: 100 }];
+    const events: TableAction[] = [{ type: 'ModifyColumnWidth', columnIndex: 999, width: 100 }];
     const newTable = applyEvents(events);
     expect(newTable.columnWidths).toEqual(createInitialTable().columnWidths);
   });
