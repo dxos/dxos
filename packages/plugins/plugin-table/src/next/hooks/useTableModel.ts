@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import { type RefObject, useEffect, useMemo, useState } from 'react';
 
 import { type DxGridElement, type DxGridAxisMeta } from '@dxos/react-ui-grid';
@@ -23,9 +22,13 @@ export const useTableModel = (
       return;
     }
 
+    const onCellUpdate = (col: number, row: number) => {
+      gridRef.current?.updateIfWithinBounds({ col, row });
+    };
+
     let model: TableModel | undefined;
     const t = setTimeout(async () => {
-      model = new TableModel(columnDefinitions, data);
+      model = new TableModel(columnDefinitions, data, onCellUpdate);
       await model.open();
       setTableModel(model);
     });
@@ -49,32 +52,6 @@ export const useTableModel = (
 
     return { grid: headings };
   }, [tableModel]);
-
-  // TODO(Zan): Table should take a callback like onCellUpdated. Move this effect into TableModel
-  useEffect(() => {
-    if (!tableModel || !gridRef.current) {
-      return;
-    }
-
-    return effect(() => {
-      if (!gridRef.current || !tableModel.cellUpdateListener) {
-        return;
-      }
-
-      for (const cellKey of tableModel.cellUpdateListener.updatedCells.value) {
-        const [col, row] = cellKey.split(',');
-        const didUpdate = gridRef.current.updateIfWithinBounds({
-          col: Number.parseInt(col),
-          row: Number.parseInt(row),
-        });
-
-        if (didUpdate) {
-          tableModel.cellUpdateListener.clearUpdates();
-          return;
-        }
-      }
-    });
-  }, [tableModel, gridRef]);
 
   return { tableModel, columnMeta };
 };

@@ -48,6 +48,7 @@ export class TableModel extends Resource {
   constructor(
     public readonly columnDefinitions: ColumnDefinition[],
     public readonly data: any[],
+    private onCellUpdate?: (col: number, row: number) => void,
     public columnOrdering: ColumnId[] = columnDefinitions.map((column) => column.id),
     public columnWidths: Record<ColumnId, number> = Object.fromEntries(
       columnDefinitions.map((column) => [column.id, DEFAULT_WIDTH]),
@@ -87,7 +88,7 @@ export class TableModel extends Resource {
       return { grid: cellValues.value, frozenRowsStart: headerCells };
     });
 
-    this.cellUpdateListener = new CellUpdateListener(cellValues);
+    this.cellUpdateListener = new CellUpdateListener(cellValues, this.onCellUpdate);
     this._ctx.onDispose(this.cellUpdateListener.dispose);
   }
 
