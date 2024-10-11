@@ -6,7 +6,7 @@ import { ArrowClockwise } from '@phosphor-icons/react';
 import React, { type FC, useState } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
-import { SpaceState, Space as SpaceData } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useMulticastObservable } from '@dxos/react-hooks';
 import { Toolbar } from '@dxos/react-ui';
