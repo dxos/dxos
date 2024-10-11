@@ -1462,9 +1462,6 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
-      xcase:
-        specifier: ^2.0.1
-        version: 2.0.1
     devDependencies:
       '@effect/schema':
         specifier: ^0.75.1
@@ -32844,9 +32841,6 @@ packages:
     resolution: {integrity: sha512-Ip6C2KeQPl/F3aP1EfOnPoQk14Udd9lffpoqWDNH3Xt78svxPbv53ngtmtfI0q2Te3oTq79XKTnRNXVIn/GsPA==}
     hasBin: true
 
-  xcase@2.0.1:
-    resolution: {integrity: sha512-UmFXIPU+9Eg3E9m/728Bii0lAIuoc+6nbrNUKaRPJOFp91ih44qqGlWtxMB6kXFrRD6po+86ksHM5XHCfk6iPw==}
-
   xlsjs@0.7.6:
     resolution: {integrity: sha512-IQtL2z+BVYaIVzEhknZ1YBr8ItUbqiS7kaQZ3O35/k1q+kSgjVxmzwno6r3EbBgEWhrVCad2mKbnFeMmEE5zdw==}
     engines: {node: '>=0.8'}
@@ -60152,8 +60146,6 @@ snapshots:
   ws@8.18.0: {}
 
   wtfnode@0.9.1: {}
-
-  xcase@2.0.1: {}
 
   xlsjs@0.7.6:
     dependencies:
