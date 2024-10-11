@@ -19,7 +19,6 @@ import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from
 import { deferAsync } from '@dxos/util';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
-
 registerSignalsRuntime();
 
 describe('Integration tests', () => {
@@ -325,6 +324,27 @@ describe('Integration tests', () => {
         })
         .toEqual(0);
     }
+  });
+
+  test('replicate and load by id', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using network = await new TestReplicationNetwork().open();
+
+    await using peer1 = await builder.createPeer();
+    await using peer2 = await builder.createPeer();
+    await peer1.host.addReplicator(await network.createReplicator());
+    await peer2.host.addReplicator(await network.createReplicator());
+
+    await using db1 = await peer1.createDatabase(spaceKey);
+    await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+
+    const obj1 = db1.add(
+      create({
+        content: 'test',
+      }),
+    );
+    await db1.flush();
+    await expect.poll(() => db2.getObjectById(obj1.id)).not.toEqual(undefined);
   });
 });
 
