@@ -39,6 +39,7 @@ export type ToolboxConfig = {
        */
       include: string[];
     };
+    noProjectReferences?: boolean;
   };
 };
 
@@ -344,11 +345,15 @@ export class Toolbox {
         );
 
         const deps = Array.from(depsMap.entries());
-        tsConfigJson.references = deps.map(([dependencyName]) => {
-          const dependency = this._getProjectByPackageName(dependencyName)!;
-          const path = relative(project.path, dependency.path);
-          return { path };
-        });
+        if (!this.config.tsconfig?.noProjectReferences) {
+          tsConfigJson.references = deps.map(([dependencyName]) => {
+            const dependency = this._getProjectByPackageName(dependencyName)!;
+            const path = relative(project.path, dependency.path);
+            return { path };
+          });
+        } else {
+          tsConfigJson.references = [];
+        }
 
         const updated = sortJson(tsConfigJson, {
           depth: 3,

@@ -2,14 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type CellIndex, type DxGridPosition } from './types';
+import { type DxGridCellIndex, type DxGridPosition } from './types';
 
 /**
  * Separator for serializing cell position vectors
  */
 export const separator = ',';
 
-export const toCellIndex = (cellCoords: DxGridPosition): CellIndex => `${cellCoords.col}${separator}${cellCoords.row}`;
+export const toCellIndex = (cellCoords: DxGridPosition): DxGridCellIndex =>
+  `${cellCoords.col}${separator}${cellCoords.row}`;
 
 //
 // A1 notation is the fallback for numbering columns and rows.

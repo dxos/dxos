@@ -21,13 +21,13 @@ const providesThreadsConfig = (plugin: any): Plugin<ThreadProvides<any>> | undef
 export const ThreadComplementary = ({
   role,
   subject,
-  stagedThreads,
+  drafts,
   current,
   showResolvedThreads,
 }: {
   role: string;
   subject: any;
-  stagedThreads: ThreadType[] | undefined;
+  drafts: ThreadType[] | undefined;
   current?: string;
   showResolvedThreads?: boolean;
 }) => {
@@ -42,8 +42,8 @@ export const ThreadComplementary = ({
   const sort = useMemo(() => createSort?.(subject), [createSort, subject]);
 
   const threads = useMemo(() => {
-    return subject.threads.concat(stagedThreads ?? []).filter(nonNullable) as ThreadType[];
-  }, [JSON.stringify(subject.threads), JSON.stringify(stagedThreads)]);
+    return subject.threads.concat(drafts ?? []).filter(nonNullable) as ThreadType[];
+  }, [JSON.stringify(subject.threads), JSON.stringify(drafts)]);
 
   const detachedIds = useMemo(() => {
     return threads.filter(({ anchor }) => !anchor).map((thread) => fullyQualifiedId(thread));

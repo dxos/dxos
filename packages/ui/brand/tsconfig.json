@@ -11,15 +11,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../react-ui"
-    },
-    {
-      "path": "../react-ui-theme"
-    },
-    {
-      "path": "../storybook-utils"
-    }
-  ]
+  "references": []
 }

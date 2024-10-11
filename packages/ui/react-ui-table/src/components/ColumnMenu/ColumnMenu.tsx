@@ -9,7 +9,7 @@ import React, { useRef, useState, useCallback } from 'react';
 import { Button, Popover, DropdownMenu } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { ColumnSettingsForm } from './ColumnSettingsForm';
+import { ColumnSettings } from './ColumnSettings';
 import { useSortColumn } from '../../hooks';
 import { type TableDef, type ColumnProps } from '../../schema';
 
@@ -138,7 +138,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({
           <Popover.Portal>
             <Popover.Content>
               <Popover.Viewport>
-                <ColumnSettingsForm {...props} column={column} onClose={() => setIsColumnSettingsOpen(false)} />
+                <ColumnSettings {...props} column={column} onClose={() => setIsColumnSettingsOpen(false)} />
               </Popover.Viewport>
               <Popover.Arrow />
             </Popover.Content>
