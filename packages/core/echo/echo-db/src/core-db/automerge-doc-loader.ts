@@ -119,9 +119,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       if (this._objectDocumentHandles.has(objectId) || this._objectsPendingDocumentLoad.has(objectId)) {
         continue;
       }
-      const spaceRootDoc = this._spaceRootDocHandle.docSync();
-      invariant(spaceRootDoc);
-      const documentUrl = (spaceRootDoc.links ?? {})[objectId];
+      const documentUrl = this._getLinkedDocumentUrl(objectId);
       if (documentUrl == null) {
         this._objectsPendingDocumentLoad.add(objectId);
         log.info('loading delayed until object links are initialized', { objectId });
@@ -142,7 +140,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     if (spaceRootDoc.objects?.[objectId]) {
       return this._spaceRootDocHandle.documentId;
     }
-    const documentUrl = (spaceRootDoc.links ?? {})[objectId];
+    const documentUrl = this._getLinkedDocumentUrl(objectId);
     return documentUrl && interpretAsDocumentId(documentUrl.toString() as AutomergeUrl);
   }
 
@@ -185,6 +183,12 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     this._objectDocumentHandles.clear();
     this._spaceRootDocHandle = null;
     return objectsWithHandles;
+  }
+
+  private _getLinkedDocumentUrl(objectId: string): AutomergeUrl | undefined {
+    const spaceRootDoc = this._spaceRootDocHandle?.docSync();
+    invariant(spaceRootDoc);
+    return (spaceRootDoc.links ?? {})[objectId]?.toString() as AutomergeUrl;
   }
 
   private _loadLinkedObjects(links: SpaceDocumentLinks) {
