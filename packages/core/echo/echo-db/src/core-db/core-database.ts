@@ -609,14 +609,14 @@ export class CoreDatabase {
         if (newObjectDocUrl === object.docHandle?.url) {
           continue;
         }
-        const existing = objectsToRebind.get(newObjectDocUrl);
+        const existing = objectsToRebind.get(newObjectDocUrl.toString());
         if (existing != null) {
           existing.objectIds.push(object.id);
           continue;
         }
         const newDocHandle = this._repoProxy.find(newObjectDocUrl as DocumentId);
         await newDocHandle.doc();
-        objectsToRebind.set(newObjectDocUrl, { handle: newDocHandle, objectIds: [object.id] });
+        objectsToRebind.set(newObjectDocUrl.toString(), { handle: newDocHandle, objectIds: [object.id] });
       } else {
         objectsToRemove.push(object.id);
       }

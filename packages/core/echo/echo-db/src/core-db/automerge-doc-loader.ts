@@ -4,6 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@dxos/automerge/automerge-repo';
+import { next as A } from '@dxos/automerge/automerge';
 import { cancelWithContext, type Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { type SpaceState, type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
@@ -170,7 +171,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     this.onObjectBoundToDocument(spaceDocHandle, objectId);
     this._spaceRootDocHandle.change((newDoc: SpaceDoc) => {
       newDoc.links ??= {};
-      newDoc.links[objectId] = spaceDocHandle.url;
+      newDoc.links[objectId] = new A.RawString(spaceDocHandle.url);
     });
     return spaceDocHandle;
   }
