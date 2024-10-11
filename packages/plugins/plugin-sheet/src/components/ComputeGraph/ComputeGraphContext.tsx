@@ -15,6 +15,6 @@ export type ComputeGraphContextType = {
  */
 export const ComputeGraphContext = createContext<ComputeGraphContextType | undefined>(undefined);
 
-export const ComputeGraphContextProvider = ({ registry, children }: PropsWithChildren<ComputeGraphContextType>) => {
+export const ComputeGraphProvider = ({ registry, children }: PropsWithChildren<ComputeGraphContextType>) => {
   return <ComputeGraphContext.Provider value={{ registry }}>{children}</ComputeGraphContext.Provider>;
 };

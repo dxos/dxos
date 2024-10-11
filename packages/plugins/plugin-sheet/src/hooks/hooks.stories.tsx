@@ -11,7 +11,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { ComputeGraphContextProvider } from '../components';
+import { ComputeGraphProvider } from '../components';
 import { createSheet } from '../defs';
 import { useComputeGraph, useSheetModel } from '../hooks';
 import { withComputeGraphDecorator } from '../testing';
@@ -38,7 +38,7 @@ const Story = () => {
 
 export default {
   title: 'plugin-sheet/hooks',
-  component: ComputeGraphContextProvider,
+  component: ComputeGraphProvider,
   decorators: [
     withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
     withComputeGraphDecorator(),

@@ -3,6 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
+import { type DxGridPosition, type DxGridRange } from '@dxos/react-ui-grid';
 
 export const DEFAULT_ROWS = 50;
 export const DEFAULT_COLUMNS = 26;
@@ -10,9 +11,9 @@ export const DEFAULT_COLUMNS = 26;
 export const MAX_ROWS = 500;
 export const MAX_COLUMNS = 26 * 2;
 
-export type CellAddress = { col: number; row: number };
+export type CellAddress = DxGridPosition;
 
-export type CellRange = { from: CellAddress; to?: CellAddress };
+export type CellRange = DxGridRange;
 
 export type CellIndex = string;
 
@@ -41,18 +42,19 @@ export const addressFromA1Notation = (ref: string): CellAddress => {
   return {
     row: parseInt(match[2], 10) - 1,
     col: match[1].split('').reduce((acc, c) => acc * 26 + c.charCodeAt(0) - 'A'.charCodeAt(0) + 1, 0) - 1,
+    plane: 'grid',
   };
 };
 
 export const rangeToA1Notation = (range: CellRange) => {
-  return [range?.from && addressToA1Notation(range?.from), range?.to && addressToA1Notation(range?.to)]
+  return [range?.start && addressToA1Notation(range?.end), range?.end && addressToA1Notation(range?.end)]
     .filter(Boolean)
     .join(':');
 };
 
 export const rangeFromA1Notation = (ref: string): CellRange => {
-  const [from, to] = ref.split(':').map(addressFromA1Notation);
-  return { from, to };
+  const [start, end] = ref.split(':').map(addressFromA1Notation);
+  return { start, end };
 };
 
 export const inRange = (range: CellRange | undefined, cell: CellAddress): boolean => {
@@ -60,17 +62,17 @@ export const inRange = (range: CellRange | undefined, cell: CellAddress): boolea
     return false;
   }
 
-  const { from, to } = range;
-  if ((from && posEquals(from, cell)) || (to && posEquals(to, cell))) {
+  const { start, end } = range;
+  if ((start && posEquals(start, cell)) || (end && posEquals(end, cell))) {
     return true;
   }
 
-  if (!from || !to) {
+  if (!start || !end) {
     return false;
   }
 
-  const { col: c1, row: r1 } = from;
-  const { col: c2, row: r2 } = to;
+  const { col: c1, row: r1 } = start;
+  const { col: c2, row: r2 } = end;
   const cMin = Math.min(c1, c2);
   const cMax = Math.max(c1, c2);
   const rMin = Math.min(r1, r2);

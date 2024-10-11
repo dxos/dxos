@@ -9,11 +9,11 @@ import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
-import { GridSheet } from './GridSheet';
-import { SheetProvider } from './SheetContext';
-import { Toolbar, type ToolbarAction } from './Toolbar';
-import { type ComputeGraph } from '../graph';
-import { type SheetType } from '../types';
+import { type ComputeGraph } from '../../graph';
+import { type SheetType } from '../../types';
+import { GridSheet } from '../GridSheet';
+import { SheetProvider } from '../SheetContext';
+import { Toolbar, type ToolbarAction } from '../Toolbar';
 
 // TODO(Zan): Factor out, copied this from MarkdownPlugin.
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';

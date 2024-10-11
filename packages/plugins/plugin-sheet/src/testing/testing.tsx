@@ -8,7 +8,6 @@ import React, { useState } from 'react';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncState } from '@dxos/react-hooks';
 
-import { ComputeGraphContextProvider } from '../components';
 import { createSheet } from '../defs';
 import { type ComputeGraph, type ComputeGraphOptions, ComputeGraphRegistry } from '../graph';
 import { type CellValue, type CreateSheetOptions } from '../types';
@@ -61,8 +60,8 @@ export const withComputeGraphDecorator =
   (Story) => {
     const [registry] = useState(new ComputeGraphRegistry(options));
     return (
-      <ComputeGraphContextProvider registry={registry}>
+      <ComputeGraphContext registry={registry}>
         <Story />
-      </ComputeGraphContextProvider>
+      </ComputeGraphContext>
     );
   };

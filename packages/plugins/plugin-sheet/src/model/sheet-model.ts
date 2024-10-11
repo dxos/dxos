@@ -12,6 +12,7 @@ import { getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type DxGridPlane } from '@dxos/react-ui-grid';
 
 import { DetailedCellError, ExportedCellChange } from '#hyperformula';
 import {
@@ -36,9 +37,9 @@ const typeMap: Record<string, ValueTypeEnum> = {
   NUMBER_TIME: ValueTypeEnum.Time,
 };
 
-const getTopLeft = (range: CellRange): CellAddress => {
-  const to = range.to ?? range.from;
-  return { row: Math.min(range.from.row, to.row), col: Math.min(range.from.col, to.col) };
+const getTopLeft = (range: CellRange, plane: DxGridPlane = 'grid'): CellAddress => {
+  const end = range.end ?? range.start;
+  return { row: Math.min(range.start.row, end.row), col: Math.min(range.start.col, end.col), plane };
 };
 
 const toSimpleCellAddress = (sheet: number, cell: CellAddress): SimpleCellAddress => ({
@@ -48,8 +49,8 @@ const toSimpleCellAddress = (sheet: number, cell: CellAddress): SimpleCellAddres
 });
 
 const toModelRange = (sheet: number, range: CellRange): SimpleCellRange => ({
-  start: toSimpleCellAddress(sheet, range.from),
-  end: toSimpleCellAddress(sheet, range.to ?? range.from),
+  start: toSimpleCellAddress(sheet, range.start),
+  end: toSimpleCellAddress(sheet, range.end ?? range.start),
 });
 
 export type SheetModelOptions = {
@@ -190,14 +191,14 @@ export class SheetModel extends Resource {
     this._node.graph.hf.copy(toModelRange(this._node.sheetId, range));
   }
 
-  paste(cell: CellAddress) {
+  paste(cell: CellAddress, plane: DxGridPlane = 'grid') {
     invariant(this._node);
     if (!this._node.graph.hf.isClipboardEmpty()) {
       const changes = this._node.graph.hf.paste(toSimpleCellAddress(this._node.sheetId, cell));
       for (const change of changes) {
         if (change instanceof ExportedCellChange) {
           const { address, newValue } = change;
-          const idx = addressToIndex(this._sheet, { row: address.row, col: address.col });
+          const idx = addressToIndex(this._sheet, { row: address.row, col: address.col, plane });
           this._sheet.cells[idx] = { value: newValue };
         }
       }
@@ -331,15 +332,19 @@ export class SheetModel extends Resource {
   /**
    * Iterate range.
    */
-  private _iterRange(range: CellRange, cb: (cell: CellAddress) => CellScalarValue | void): CellScalarValue[][] {
-    const to = range.to ?? range.from;
-    const rowRange = [Math.min(range.from.row, to.row), Math.max(range.from.row, to.row)];
-    const columnRange = [Math.min(range.from.col, to.col), Math.max(range.from.col, to.col)];
+  private _iterRange(
+    range: CellRange,
+    cb: (cell: CellAddress) => CellScalarValue | void,
+    plane: DxGridPlane = 'grid',
+  ): CellScalarValue[][] {
+    const end = range.end ?? range.start;
+    const rowRange = [Math.min(range.start.row, end.row), Math.max(range.start.row, end.row)];
+    const columnRange = [Math.min(range.start.col, end.col), Math.max(range.start.col, end.col)];
     const rows: CellScalarValue[][] = [];
     for (let row = rowRange[0]; row <= rowRange[1]; row++) {
       const rowCells: CellScalarValue[] = [];
       for (let column = columnRange[0]; column <= columnRange[1]; column++) {
-        const value = cb({ row, col: column });
+        const value = cb({ row, col: column, plane });
         if (value !== undefined) {
           rowCells.push(value);
         }
