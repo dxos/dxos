@@ -17,7 +17,7 @@ import {
 } from '@dxos/app-framework';
 import { type Node, useGraph } from '@dxos/plugin-graph';
 import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
-import { PlankHeading } from '@dxos/react-ui-deck';
+import { PlankHeading, type PlankHeadingAction } from '@dxos/react-ui-deck';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { DECK_PLUGIN } from '../../meta';
@@ -30,6 +30,7 @@ export const NodePlankHeading = ({
   popoverAnchorId,
   pending,
   flatDeck,
+  actions = [],
 }: {
   node?: Node;
   id?: string;
@@ -38,6 +39,7 @@ export const NodePlankHeading = ({
   popoverAnchorId?: string;
   pending?: boolean;
   flatDeck?: boolean;
+  actions?: PlankHeadingAction[];
 }) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const { graph } = useGraph();
@@ -78,7 +80,7 @@ export const NodePlankHeading = ({
             related={layoutPart === 'complementary'}
             attendableId={attendableId}
             triggerLabel={t('actions menu label')}
-            actions={graph.actions(node)}
+            actions={[actions, graph.actions(node)].filter((a) => a.length > 0)}
             onAction={(action) =>
               typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
             }
