@@ -4,7 +4,6 @@
 
 import '@dxos-theme';
 
-import { DescriptionAnnotationId } from '@effect/schema/AST';
 import React from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
@@ -49,7 +48,7 @@ const Form = ({ schema }: FormProps) => {
 };
 
 const schema = S.Struct({
-  name: S.String.annotations({ [DescriptionAnnotationId]: 'Name' }),
+  name: S.String.annotations({ [AST.DescriptionAnnotationId]: 'Name' }),
   email: S.String,
   age: S.Number,
 });
