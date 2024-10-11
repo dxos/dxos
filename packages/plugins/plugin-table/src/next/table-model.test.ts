@@ -22,149 +22,144 @@ const createTableModel = (): TableModel => {
       { id: 'col3', label: 'Column 3' },
     ],
   });
-  const tableModel = new TableModel(table, []);
-  return tableModel;
+  return new TableModel(table, []);
 };
 
-describe('TableModel methods', () => {
-  it('should set sorting', () => {
-    const model = createTableModel();
-    model.setSort('col2', 'asc');
-    expect(model.sorting).toEqual([{ columnId: 'col2', direction: 'asc' }]);
+describe('TableModel', () => {
+  let model: TableModel;
+
+  beforeEach(async () => {
+    model = createTableModel();
+    await model.open();
   });
 
-  it('should pin a row', () => {
-    const model = createTableModel();
-    model.pinRow(1, 'top');
-    expect(model.pinnedRows.top).toContain(1);
+  afterEach(async () => {
+    await model.close();
   });
 
-  it('should unpin a row', () => {
-    const model = createTableModel();
-    model.pinRow(1, 'top');
-    model.unpinRow(1);
-    expect(model.pinnedRows.top).not.toContain(1);
-  });
-
-  it('should select a row', () => {
-    const model = createTableModel();
-    model.selectRow(2);
-    expect(model.rowSelection).toContain(2);
-  });
-
-  it('should deselect a row', () => {
-    const model = createTableModel();
-    model.selectRow(2);
-    model.deselectRow(2);
-    expect(model.rowSelection).not.toContain(2);
-  });
-
-  it('should deselect all rows', () => {
-    const model = createTableModel();
-    model.selectRow(1);
-    model.selectRow(2);
-    model.deselectAllRows();
-    expect(model.rowSelection).toHaveLength(0);
-  });
-});
-
-describe('reactivity', () => {
-  it('pure signals should nest', () => {
-    const signal$ = create({ arr: [{ thingInside: 1 }, { thingInside: 2 }] });
-
-    const computed$ = computed(() => {
-      return signal$.arr.map((row) =>
-        computed(() => {
-          return row.thingInside;
-        }),
-      );
+  describe('methods', () => {
+    it('should set sorting', () => {
+      model.setSort('col2', 'asc');
+      expect(model.sorting).toEqual([{ columnId: 'col2', direction: 'asc' }]);
     });
 
-    using outerCounter = updateCounter(() => {
-      computed$.value.map((c) => c.value);
+    it('should pin a row', () => {
+      model.pinRow(1, 'top');
+      expect(model.pinnedRows.top).toContain(1);
     });
 
-    using innerCounter = updateCounter(() => {
-      computed$.value[0].value;
+    it('should unpin a row', () => {
+      model.pinRow(1, 'top');
+      model.unpinRow(1);
+      expect(model.pinnedRows.top).not.toContain(1);
     });
 
-    expect(computed$.value.map((v) => v.value)).toEqual([1, 2]);
+    it('should select a row', () => {
+      model.selectRow(2);
+      expect(model.rowSelection).toContain(2);
+    });
 
-    signal$.arr[0].thingInside = 3;
+    it('should deselect a row', () => {
+      model.selectRow(2);
+      model.deselectRow(2);
+      expect(model.rowSelection).not.toContain(2);
+    });
 
-    expect(computed$.value.map((v) => v.value)).toEqual([3, 2]);
-    expect(outerCounter.count).toBe(1);
-    expect(innerCounter.count).toBe(1);
+    it('should deselect all rows', () => {
+      model.selectRow(1);
+      model.selectRow(2);
+      model.deselectAllRows();
+      expect(model.rowSelection).toHaveLength(0);
+    });
   });
 
-  describe('cell reactivity', () => {
-    let table: TableModel;
-    let data: any[];
+  describe('reactivity', () => {
+    it('pure signals should nest', () => {
+      const signal$ = create({ arr: [{ thingInside: 1 }, { thingInside: 2 }] });
 
-    beforeEach(async () => {
-      ({ data } = create({
-        data: [
-          { col1: 'A', col2: 1, col3: true },
-          { col1: 'B', col2: 2, col3: false },
-        ],
-      }));
-
-      table = createTableModel();
-      await table.open();
-    });
-
-    afterEach(async () => {
-      await table.close();
-    });
-
-    it('should update cell value reactively', () => {
-      using cellUpdates = updateCounter(() => {
-        table.cells.value.grid['0,0']?.value;
+      const computed$ = computed(() => {
+        return signal$.arr.map((row) =>
+          computed(() => {
+            return row.thingInside;
+          }),
+        );
       });
 
-      data[0].col1 = 'New Value';
-
-      expect(cellUpdates.count).toBe(1);
-      expect(table.cells.value.grid['0,0']?.value).toBe('New Value');
-    });
-
-    it('should update cells reactively when adding a new row', () => {
-      using cellsUpdates = updateCounter(() => {
-        table.cells.value;
+      using outerCounter = updateCounter(() => {
+        computed$.value.map((c) => c.value);
       });
 
-      data.push({ col1: 'C', col2: 3, col3: true });
+      using innerCounter = updateCounter(() => {
+        computed$.value[0].value;
+      });
 
-      expect(cellsUpdates.count).toBe(1);
-      expect(Object.keys(table.cells.value.grid).length).toBe(9); // 3 rows * 3 columns
-      expect(table.cells.value.grid['0,2']?.value).toBe('C');
+      expect(computed$.value.map((v) => v.value)).toEqual([1, 2]);
+
+      signal$.arr[0].thingInside = 3;
+
+      expect(computed$.value.map((v) => v.value)).toEqual([3, 2]);
+      expect(outerCounter.count).toBe(1);
+      expect(innerCounter.count).toBe(1);
     });
 
-    it('should handle combined operations reactively', () => {
-      using cellsUpdates = updateCounter(() => table.cells.value);
-      using specificCellUpdates = updateCounter(() => table.cells.value.grid['0,0']?.value);
+    describe('cell reactivity', () => {
+      let data: any[];
 
-      data[0].col1 = 'Updated A';
-      data.push({ col1: 'C', col2: 3, col3: true });
-      data.splice(1, 1);
+      beforeEach(() => {
+        ({ data } = create({
+          data: [
+            { col1: 'A', col2: 1, col3: true },
+            { col1: 'B', col2: 2, col3: false },
+          ],
+        }));
+      });
 
-      // Check cells map updates
-      expect(cellsUpdates.count).toBe(2); // Two changes: add and remove row
-      expect(Object.keys(table.cells.value.grid).length).toBe(6); // 2 rows * 3 columns
+      it('should update cell value reactively', () => {
+        using cellUpdates = updateCounter(() => {
+          model.cells.value.grid['0,0']?.value;
+        });
 
-      // Check specific cell update
-      expect(specificCellUpdates.count).toBe(3); // Updates for modify, add row, and remove row
-      expect(table.cells.value.grid['0,0']?.value).toBe('Updated A');
+        data[0].col1 = 'New Value';
 
-      // Verify final state
-      expect(Object.entries(table.cells.value.grid)).toEqual([
-        ['0,0', expect.objectContaining({ value: 'Updated A' })],
-        ['1,0', expect.objectContaining({ value: '1' })],
-        ['2,0', expect.objectContaining({ value: 'true' })],
-        ['0,1', expect.objectContaining({ value: 'C' })],
-        ['1,1', expect.objectContaining({ value: '3' })],
-        ['2,1', expect.objectContaining({ value: 'true' })],
-      ]);
+        expect(cellUpdates.count).toBe(1);
+        expect(model.cells.value.grid['0,0']?.value).toBe('New Value');
+      });
+
+      it('should update cells reactively when adding a new row', () => {
+        using cellsUpdates = updateCounter(() => {
+          model.cells.value;
+        });
+
+        data.push({ col1: 'C', col2: 3, col3: true });
+
+        expect(cellsUpdates.count).toBe(1);
+        expect(Object.keys(model.cells.value.grid).length).toBe(9); // 3 rows * 3 columns
+        expect(model.cells.value.grid['0,2']?.value).toBe('C');
+      });
+
+      it('should handle combined operations reactively', () => {
+        using cellsUpdates = updateCounter(() => model.cells.value);
+        using specificCellUpdates = updateCounter(() => model.cells.value.grid['0,0']?.value);
+
+        data[0].col1 = 'Updated A';
+        data.push({ col1: 'C', col2: 3, col3: true });
+        data.splice(1, 1);
+
+        expect(cellsUpdates.count).toBe(2);
+        expect(Object.keys(model.cells.value.grid).length).toBe(6);
+
+        expect(specificCellUpdates.count).toBe(3);
+        expect(model.cells.value.grid['0,0']?.value).toBe('Updated A');
+
+        expect(Object.entries(model.cells.value.grid)).toEqual([
+          ['0,0', expect.objectContaining({ value: 'Updated A' })],
+          ['1,0', expect.objectContaining({ value: '1' })],
+          ['2,0', expect.objectContaining({ value: 'true' })],
+          ['0,1', expect.objectContaining({ value: 'C' })],
+          ['1,1', expect.objectContaining({ value: '3' })],
+          ['2,1', expect.objectContaining({ value: 'true' })],
+        ]);
+      });
     });
   });
 });
