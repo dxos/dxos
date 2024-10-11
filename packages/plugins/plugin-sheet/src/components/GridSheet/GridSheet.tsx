@@ -2,15 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { type FocusEvent, useCallback, useMemo, useRef } from 'react';
 
-import {
-  type DxGridElement,
-  Grid,
-  type GridContentProps,
-  type GridScopedProps,
-  useGridContext,
-} from '@dxos/react-ui-grid';
+import { type DxGridElement, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
 
 import {
   useSelectThreadOnCellFocus,
@@ -19,10 +13,7 @@ import {
 } from './hooks-threads';
 import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
 import { rangeToA1Notation, type CellRange } from '../../defs';
-import { type ComputeGraph } from '../../graph';
-import { useFormattingModel, useSheetModel, type UseSheetModelOptions } from '../../hooks';
 import { type SheetModel, type FormattingModel } from '../../model';
-import { type SheetType } from '../../types';
 import {
   CellEditor,
   type CellEditorProps,
@@ -32,13 +23,10 @@ import {
   rangeExtension,
   sheetExtension,
 } from '../CellEditor';
+import { useSheetContext } from '../SheetContext';
 
-const GridSheetCellEditor = ({
-  model,
-  extension,
-  __gridScope,
-}: GridScopedProps<Pick<CellEditorProps, 'extension'> & { model: SheetModel }>) => {
-  const { id, editing, setEditing, editBox } = useGridContext('GridSheetCellEditor', __gridScope);
+const GridSheetCellEditor = ({ model, extension }: Pick<CellEditorProps, 'extension'> & { model: SheetModel }) => {
+  const { id, editing, setEditing, editBox } = useSheetContext();
   const cell = dxGridCellIndexToSheetCellAddress(editing);
 
   return editing ? (
@@ -74,18 +62,18 @@ const frozen = {
 const sheetRowDefault = { grid: { size: 32, resizeable: true } };
 const sheetColDefault = { frozenColsStart: { size: 48 }, grid: { size: 180, resizeable: true } };
 
-const GridSheetImpl = ({
-  model,
-  formatting,
-  __gridScope,
-}: GridScopedProps<{ model: SheetModel; formatting: FormattingModel }>) => {
-  const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
+const GridSheetImpl = ({ model, formatting }: { model: SheetModel; formatting: FormattingModel }) => {
+  const { editing, setEditing, setCursor, setRange } = useSheetContext();
   const dxGrid = useRef<DxGridElement | null>(null);
   const rangeNotifier = useRef<CellRangeNotifier>();
 
   useUpdateFocusedCellOnThreadSelection(model, dxGrid);
-  const handleFocus = useSelectThreadOnCellFocus(model);
+  useSelectThreadOnCellFocus(model);
   const decorations = useThreadDecorations(model);
+
+  const handleFocus = useCallback((event: FocusEvent<DxGridElement>) => {
+    setCursor(closestCell(event.target));
+  }, []);
 
   // TODO(burdon): Validate formula before closing: hf.validateFormula();
   const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
@@ -127,6 +115,7 @@ const GridSheetImpl = ({
         if (minCol !== maxCol || minRow !== maxRow) {
           range.to = { col: maxCol, row: maxRow };
         }
+        setRange(range);
         // Update range selection in formula.
         rangeNotifier.current?.(rangeToA1Notation(range));
       }
@@ -164,18 +153,14 @@ const GridSheetImpl = ({
   );
 };
 
-export type GridSheetProps = { graph?: ComputeGraph; sheet?: SheetType } & UseSheetModelOptions;
+export type GridSheetProps = {};
 
-export const GridSheet = ({ graph, sheet, ...options }: GridSheetProps) => {
-  const model = useSheetModel(graph, sheet, options);
-  const formatting = useFormattingModel(model);
+export const GridSheet = () => {
+  const { model, formatting } = useSheetContext();
+
   if (!model || !formatting) {
     return null;
   }
 
-  return (
-    <Grid.Root id={model.id}>
-      <GridSheetImpl model={model} formatting={formatting} />
-    </Grid.Root>
-  );
+  return <GridSheetImpl model={model} formatting={formatting} />;
 };

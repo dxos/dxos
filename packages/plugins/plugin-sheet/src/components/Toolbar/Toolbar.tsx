@@ -29,7 +29,7 @@ import { ToolbarButton, ToolbarSeparator, ToolbarToggleButton } from './common';
 import { addressToIndex } from '../../defs';
 import { SHEET_PLUGIN } from '../../meta';
 import { type Formatting } from '../../types';
-import { useSheetContext } from '../Sheet/sheet-context';
+import { useSheetContext } from '../SheetContext';
 
 //
 // Root

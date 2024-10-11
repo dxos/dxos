@@ -3,17 +3,17 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { type MutableRefObject, useCallback, useEffect, useMemo, useState, type FocusEvent } from 'react';
+import { type MutableRefObject, useCallback, useEffect, useMemo } from 'react';
 
 import { type IntentResolver, LayoutAction, useIntentDispatcher, useIntentResolver } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { type DxGridElement, closestCell, type DxGridPositionNullable, type DxGridPosition } from '@dxos/react-ui-grid';
+import { type DxGridElement, type DxGridPosition } from '@dxos/react-ui-grid';
 
 import { addressFromIndex, addressToIndex, type CellAddress, closest } from '../../defs';
 import { SHEET_PLUGIN } from '../../meta';
-import { type SheetModel } from '../../model';
-import { createDecorations, type Decoration } from '../Sheet/decorations';
+import { type SheetModel, createDecorations, type Decoration } from '../../model';
+import { useSheetContext } from '../SheetContext';
 
 export const useUpdateFocusedCellOnThreadSelection = (
   model: SheetModel,
@@ -41,11 +41,7 @@ export const useUpdateFocusedCellOnThreadSelection = (
 
 export const useSelectThreadOnCellFocus = (model: SheetModel) => {
   const dispatch = useIntentDispatcher();
-  const [cellCoords, setCellCoords] = useState<DxGridPositionNullable>(null);
-
-  const handleFocus = useCallback((event: FocusEvent<DxGridElement>) => {
-    setCellCoords(closestCell(event.target));
-  }, []);
+  const { cursor } = useSheetContext();
 
   const activeThreads = useMemo(
     () =>
@@ -94,13 +90,11 @@ export const useSelectThreadOnCellFocus = (model: SheetModel) => {
   }, [selectClosestThread]);
 
   useEffect(() => {
-    if (!cellCoords) {
+    if (!cursor) {
       return;
     }
-    debounced(cellCoords);
-  }, [cellCoords, selectClosestThread]);
-
-  return handleFocus;
+    debounced(cursor);
+  }, [cursor, selectClosestThread]);
 };
 
 const createThreadDecoration = (cellIndex: string, threadId: string, sheetId: string): Decoration => {

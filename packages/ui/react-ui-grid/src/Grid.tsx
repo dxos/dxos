@@ -132,7 +132,15 @@ export const Grid = {
 
 export { GridRoot, GridContent, useGridContext, createGridScope };
 
-export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps, DxGridElement };
+export type {
+  GridRootProps,
+  GridContentProps,
+  GridEditing,
+  GridEditBox,
+  GridScopedProps,
+  DxGridElement,
+  GridContextValue,
+};
 
 export { colToA1Notation, rowToA1Notation, closestCell } from '@dxos/lit-grid';
 

@@ -12,6 +12,7 @@ import { GridSheet } from './GridSheet';
 import { useComputeGraph } from '../../hooks';
 import { useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { SheetType } from '../../types';
+import { SheetProvider } from '../SheetContext';
 
 export default {
   title: 'plugin-sheet/GridSheet',
@@ -32,5 +33,9 @@ export const Basic = () => {
     return null;
   }
 
-  return <GridSheet graph={graph} sheet={sheet} />;
+  return (
+    <SheetProvider graph={graph} sheet={sheet}>
+      <GridSheet />
+    </SheetProvider>
+  );
 };
