@@ -9,23 +9,14 @@ import * as fc from 'fast-check';
 import React from 'react';
 
 import { S } from '@dxos/echo-schema';
-import { DensityProvider } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { schemaToColumnDefs } from './schemaToColumns';
+import { schemaToColumnDefs } from './column-utils';
 import { Table } from '../components';
 
 export default {
-  title: 'react-ui-table/SchemaTable',
-  args: {},
-  decorators: [
-    withTheme,
-    (Story: any) => (
-      <DensityProvider density='fine'>
-        <Story />
-      </DensityProvider>
-    ),
-  ],
+  title: 'react-ui-table/Schema',
+  decorators: [withTheme, withLayout()],
 };
 
 const exampleSchema = S.Struct({
@@ -49,7 +40,7 @@ const exampleSchemaArbitrary = Arbitrary.make(exampleSchema);
 
 const items = fc.sample(exampleSchemaArbitrary, 10);
 
-export const SchemaTable = {
+export const Default = {
   render: () => {
     return (
       <Table.Root>

@@ -68,20 +68,13 @@ export const PluginHost = ({
     provides: {
       plugins: state.values,
       context: ({ children }) => {
-        // TODO(burdon): Called multiple times (even with strict off).
         debug('PluginProvider', { enabled: state.values.enabled.length });
         return <PluginProvider value={state.values}>{children}</PluginProvider>;
       },
       root: () => {
         return (
           <ErrorBoundary fallback={fallback}>
-            <PluginContainer
-              plugins={plugins}
-              core={core}
-              defaults={defaults}
-              state={state.values}
-              placeholder={placeholder}
-            />
+            <PluginContainer plugins={plugins} core={core} state={state.values} placeholder={placeholder} />
           </ErrorBoundary>
         );
       },

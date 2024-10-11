@@ -51,8 +51,6 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
     window.location.reload();
   };
 
-  console.log(JSON.stringify({ plugins: plugins.map((p) => p.meta.id), pluginIds, enabled, installed }, null, 2));
-
   return (
     <>
       <SettingsValue label={t('settings show experimental label')}>
