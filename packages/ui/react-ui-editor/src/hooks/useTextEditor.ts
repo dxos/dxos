@@ -3,7 +3,7 @@
 //
 
 import { EditorState, type EditorStateConfig } from '@codemirror/state';
-import { EditorView, ViewPlugin } from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import {
   type DependencyList,
