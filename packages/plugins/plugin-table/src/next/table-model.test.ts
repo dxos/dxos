@@ -10,19 +10,22 @@ import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 import { TableModel } from './table-model';
-import { TableType } from '../types';
+
+// TODO(Zan): Restore this when importing the type doesn't break bundling.
+// import { TableType } from '../types';
 
 registerSignalsRuntime();
 
 const createTableModel = (): TableModel => {
-  const table = create(TableType, {
+  // TODO(Zan): Restore schema specification when importing TableType doesn't break bundling.
+  const table = create({
     props: [
       { id: 'col1', label: 'Column 1' },
       { id: 'col2', label: 'Column 2' },
       { id: 'col3', label: 'Column 3' },
     ],
   });
-  return new TableModel(table, []);
+  return new TableModel(table as any, []);
 };
 
 describe('TableModel', () => {
@@ -105,13 +108,24 @@ describe('TableModel', () => {
     describe('cell reactivity', () => {
       let data: any[];
 
-      beforeEach(() => {
+      beforeEach(async () => {
+        const table = create({
+          props: [
+            { id: 'col1', label: 'Column 1' },
+            { id: 'col2', label: 'Column 2' },
+            { id: 'col3', label: 'Column 3' },
+          ],
+        });
+
         ({ data } = create({
           data: [
             { col1: 'A', col2: 1, col3: true },
             { col1: 'B', col2: 2, col3: false },
           ],
         }));
+
+        model = new TableModel(table as any, data);
+        await model.open();
       });
 
       it('should update cell value reactively', () => {
