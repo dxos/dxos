@@ -13,12 +13,12 @@ import { PluginList } from './PluginList';
 import { type RegistrySettingsProps } from '../RegistryPlugin';
 import { REGISTRY_PLUGIN } from '../meta';
 
+const sort = ({ name: a = '' }: PluginMeta, { name: b = '' }: PluginMeta) => a.localeCompare(b);
+
 export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
   const { plugins, enabled, core, setPlugin, ...pluginContext } = usePlugins();
   const dispatch = useIntentDispatcher();
-
-  const sort = (a: PluginMeta, b: PluginMeta) => a.name?.localeCompare(b.name ?? '') ?? 0;
 
   // Memoize to prevent plugins from disappearing when toggling enabled.
   const installed = useMemo(
@@ -99,7 +99,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
 const Section = ({ label, children }: PropsWithChildren<{ label: string }>) => {
   return (
     <div>
-      <h2 className='py-2 text-sm text-neutral-500'>{label}</h2>
+      <h2 className='py-2 text-sm text-subdued'>{label}</h2>
       {children}
     </div>
   );

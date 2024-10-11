@@ -9,7 +9,6 @@ import { createRoot } from 'react-dom/client';
 
 import { createApp } from '@dxos/app-framework';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { log } from '@dxos/log';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
@@ -109,7 +108,6 @@ const main = async () => {
     defaults: defaults(conf).map((meta) => meta.id),
   });
 
-  log.info('starting');
   const root = document.getElementById('root')!;
   if (conf.isStrict) {
     createRoot(root).render(

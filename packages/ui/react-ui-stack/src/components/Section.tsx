@@ -126,7 +126,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
     {
       id,
       title,
-      icon = 'phosphor--placeholder--regular',
+      icon = 'ph--placeholder--regular',
       size = 'intrinsic',
       collapsed,
       active,
