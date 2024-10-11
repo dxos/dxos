@@ -43,6 +43,7 @@ const initialViewState = { showResolvedThreads: false };
 type ViewStore = Record<SubjectId, typeof initialViewState>;
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
+//  NOTE(burdon): Review/discuss CursorConverter semantics.
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
   const state = create<ThreadState>({ drafts: {} });
@@ -317,7 +318,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   try {
                     // Static schema will throw an error if subject does not support threads array property.
                     subject.threads = [];
-                  } catch (e) {
+                  } catch (err) {
                     log.error('Subject does not support threads array', subject?.typename);
                     return;
                   }
@@ -341,11 +342,21 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         data: { current: fullyQualifiedId(thread) },
                       },
                     ],
+                    [
+                      {
+                        action: NavigationAction.OPEN,
+                        data: {
+                          activeParts: { complementary: 'comments' },
+                        },
+                      },
+                    ],
                   ],
                 };
               } else {
                 // NOTE: This is the standalone thread creation case.
-                return { data: create(ChannelType, { threads: [create(ThreadType, { messages: [] })] }) };
+                return {
+                  data: create(ChannelType, { threads: [create(ThreadType, { messages: [] })] }),
+                };
               }
             }
 

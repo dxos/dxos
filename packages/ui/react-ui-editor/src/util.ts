@@ -3,6 +3,7 @@
 //
 
 import type { Transaction } from '@codemirror/state';
+import { type EditorView } from '@codemirror/view';
 
 import { log } from '@dxos/log';
 
@@ -18,6 +19,15 @@ export const callbackWrapper = <T extends Function>(fn: T): T =>
       log.catch(err);
     }
   }) as unknown as T;
+
+/**
+ * Log all changes before dispatching them to the view.
+ * https://codemirror.net/docs/ref/#view.EditorView.dispatch
+ */
+export const debugDispatcher = (trs: readonly Transaction[], view: EditorView) => {
+  logChanges(trs);
+  view.update(trs);
+};
 
 export const logChanges = (trs: readonly Transaction[]) => {
   const changes = trs

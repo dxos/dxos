@@ -106,7 +106,10 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Inten
       onSelect: ({ selection: { current, closest } }) => {
         void dispatch({
           action: ThreadAction.SELECT,
-          data: { current: current ?? closest, skipOpen: true },
+          data: {
+            current: current ?? closest,
+            skipOpen: true,
+          },
         });
       },
     }),
