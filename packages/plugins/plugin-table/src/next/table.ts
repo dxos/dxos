@@ -90,6 +90,30 @@ export const updateTable = (table: Table, event: TableEvent): Table => {
 
 // TODO(Zan): Take widths + callbacks for width changes, column ordering.
 export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]) => {
+  const getCellData = (colIndex: number, rowIndex: number): any => {
+    if (rowIndex < 0 || rowIndex >= data.length || colIndex < 0 || colIndex >= columnDefinitions.length) {
+      return undefined;
+    }
+    const column = columnDefinitions[colIndex];
+    return column.accessor(data[rowIndex]);
+  };
+
+  const setCellData = (colIndex: number, rowIndex: number, value: any): void => {
+    if (rowIndex < 0 || rowIndex >= data.length || colIndex < 0 || colIndex >= columnDefinitions.length) {
+      return;
+    }
+    const column = columnDefinitions[colIndex];
+    const row = data[rowIndex];
+
+    // Find the property that the accessor is reading
+    for (const key in row) {
+      if (column.accessor(row) === row[key]) {
+        row[key] = value;
+        break;
+      }
+    }
+  };
+
   /**
    * Creates a computed signal structure for table cells.
    *
@@ -151,6 +175,8 @@ export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]) 
     pinnedRows: { top: [], bottom: [] } as { top: number[]; bottom: number[] },
     rowSelection: [] as number[],
     cells,
+    getCellData,
+    setCellData,
     __cellUpdateTracker: updateTracker as CellUpdateTracker,
     dispose: () => {
       updateTracker.dispose();

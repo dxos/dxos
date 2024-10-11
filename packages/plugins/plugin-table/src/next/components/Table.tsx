@@ -2,9 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef } from 'react';
+import React, { type Ref, useCallback, useRef } from 'react';
 
-import { type DxGridElement, Grid } from '@dxos/react-ui-grid';
+import {
+  type DxGridElement,
+  editorKeys,
+  type EditorKeysProps,
+  Grid,
+  GridCellEditor,
+  type GridScopedProps,
+  useGridContext,
+} from '@dxos/react-ui-grid';
 
 import { useTable } from '../hooks';
 import { type ColumnDefinition } from '../table';
@@ -12,6 +20,48 @@ import { type ColumnDefinition } from '../table';
 type TableProps = {
   columnDefinitions: ColumnDefinition[];
   data: any[];
+};
+
+const TableCellEditor = ({
+  __gridScope,
+  getCellData,
+  setCellData,
+}: GridScopedProps<{
+  gridRef: Ref<DxGridElement>;
+  getCellData: (colIndex: number, rowIndex: number) => any;
+  setCellData: (colIndex: number, rowIndex: number, value: any) => void;
+}>) => {
+  const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
+  const dxGrid = useRef<DxGridElement | null>(null);
+
+  const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
+    (value, { key, shift }) => {
+      if (value !== undefined && editing) {
+        const [col, row] = editing.index.split(',').map(Number);
+        setCellData(col, row, value);
+      }
+      setEditing(null);
+      const axis = ['Enter', 'ArrowUp', 'ArrowDown'].includes(key)
+        ? 'row'
+        : ['Tab', 'ArrowLeft', 'ArrowRight'].includes(key)
+          ? 'col'
+          : undefined;
+      const delta = key.startsWith('Arrow') ? (['ArrowUp', 'ArrowLeft'].includes(key) ? -1 : 1) : shift ? -1 : 1;
+      dxGrid.current?.refocus(axis, delta);
+    },
+    [editing, setEditing, setCellData],
+  );
+
+  const extension = [editorKeys({ onClose: handleClose, ...(editing?.initialContent && { onNav: handleClose }) })];
+
+  const getCellContent = useCallback(() => {
+    if (editing) {
+      const [col, row] = editing.index.split(',').map(Number);
+      return `${getCellData(col, row)}`;
+    }
+  }, [editing, getCellData]);
+
+  return <GridCellEditor extension={extension} getCellContent={getCellContent} />;
 };
 
 // NOTE: The table model manages both ephemeral and persistent state.
@@ -30,6 +80,7 @@ export const Table = ({ columnDefinitions, data }: TableProps) => {
   return (
     <>
       <Grid.Root id='table-v2'>
+        <TableCellEditor getCellData={table.getCellData} setCellData={table.setCellData} gridRef={gridRef} />
         <Grid.Content
           ref={gridRef}
           limitRows={data.length}
