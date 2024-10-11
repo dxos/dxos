@@ -4,35 +4,14 @@
 
 import React from 'react';
 
-import type { Plugin } from '@dxos/app-framework';
-import {
-  Button,
-  // type ChromaticPalette,
-  // type NeutralPalette,
-  DensityProvider,
-  Icon,
-  Input,
-  List,
-  ListItem,
-  useTranslation,
-  // Link,
-} from '@dxos/react-ui';
+import { type PluginMeta } from '@dxos/app-framework';
+import { Button, DensityProvider, Icon, Input, List, ListItem, useTranslation } from '@dxos/react-ui';
 import { descriptionText, fineBlockSize, ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { REGISTRY_PLUGIN } from '../meta';
 
-// TODO(burdon): Reconcile with theme.
-// const palette: { [tag: string]: ChromaticPalette | NeutralPalette } = {
-//   default: 'neutral',
-//   new: 'green',
-//   beta: 'cyan',
-//   alpha: 'purple',
-//   experimental: 'indigo',
-//   新発売: 'red',
-// };
-
 export type PluginListProps = {
-  plugins?: Plugin['meta'][];
+  plugins?: PluginMeta[];
   loaded?: string[];
   enabled?: string[];
   onChange?: (id: string, enabled: boolean) => void;
@@ -94,7 +73,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange, 
                 <div className='pbs-1'>
                   <Input.Switch
                     classNames='self-center'
-                    checked={!!isEnabled}
+                    checked={isEnabled}
                     onClick={() => onChange?.(id, !isEnabled)}
                   />
                 </div>

@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import React, { useState } from 'react';
 
-import type { Plugin } from '@dxos/app-framework';
+import { type PluginMeta } from '@dxos/app-framework';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -24,7 +24,7 @@ const icons = [
 ];
 
 const Story = () => {
-  const [plugins] = useState<Plugin['meta'][]>(
+  const [plugins] = useState<PluginMeta[]>(
     faker.helpers.multiple(
       () => ({
         id: `dxos.org/plugin/plugin-${faker.string.uuid()}`,

@@ -60,7 +60,7 @@ const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(
 
 type StatusBarContainerProps = ThemedClassName<{ children: ReactNode }>;
 
-// TODO(zan): tabable group with tabster
+// TODO(zan): tabable group with tabster.
 const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
   ({ classNames, children }, forwardedRef) => {
     const groupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
@@ -70,7 +70,7 @@ const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
         tabIndex={0}
         {...groupAttrs}
         className={mx(
-          'bs-[--statusbar-size] flex justify-end items-center gap-2 border-bs border-separator bg-base text-description text-lg pointer-fine:text-xs ch-focus-ring-inset',
+          'bs-[--statusbar-size] flex justify-end items-center gap-2 bg-base text-description text-lg pointer-fine:text-xs ch-focus-ring-inset',
           classNames,
         )}
         ref={forwardedRef}

@@ -61,25 +61,22 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
           </Select.Portal>
         </Select.Root>
       </SettingsValue>
-      <SettingsValue label={t('settings show footer label')}>
-        <Input.Switch checked={settings.showFooter} onCheckedChange={(checked) => (settings.showFooter = !!checked)} />
+      <SettingsValue label={t('settings show hints label')}>
+        <Input.Switch checked={settings.showHints} onCheckedChange={(checked) => (settings.showHints = checked)} />
       </SettingsValue>
       {!isSocket && (
         <SettingsValue label={t('settings native redirect label')}>
           <Input.Switch
             checked={settings.enableNativeRedirect}
-            onCheckedChange={(checked) => (settings.enableNativeRedirect = !!checked)}
+            onCheckedChange={(checked) => (settings.enableNativeRedirect = checked)}
           />
         </SettingsValue>
       )}
       <SettingsValue label={t('settings custom slots')}>
-        <Input.Switch
-          checked={settings.customSlots}
-          onCheckedChange={(checked) => (settings.customSlots = !!checked)}
-        />
+        <Input.Switch checked={settings.customSlots} onCheckedChange={(checked) => (settings.customSlots = checked)} />
       </SettingsValue>
       <SettingsValue label={t('settings flat deck')}>
-        <Input.Switch checked={settings.flatDeck} onCheckedChange={(checked) => (settings.flatDeck = !!checked)} />
+        <Input.Switch checked={settings.flatDeck} onCheckedChange={(checked) => (settings.flatDeck = checked)} />
       </SettingsValue>
     </>
   );
