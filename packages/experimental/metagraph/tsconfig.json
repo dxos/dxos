@@ -10,21 +10,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../sdk/config"
-    }
-  ]
+  "references": []
 }

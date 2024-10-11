@@ -21,12 +21,5 @@
     "src/.vscode/*",
     "test"
   ],
-  "references": [
-    {
-      "path": "../../../common/plate"
-    },
-    {
-      "path": "../../../common/process"
-    }
-  ]
+  "references": []
 }

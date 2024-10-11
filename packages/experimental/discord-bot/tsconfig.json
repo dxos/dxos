@@ -11,15 +11,5 @@
     "src",
     "stories"
   ],
-  "references": [
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/node-std"
-    },
-    {
-      "path": "../../sdk/config"
-    }
-  ]
+  "references": []
 }
