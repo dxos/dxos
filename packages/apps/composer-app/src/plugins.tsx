@@ -55,10 +55,10 @@ import { meta as WelcomeMeta } from './plugins/welcome/meta';
 
 export type State = {
   appKey: string;
+  firstRun: Trigger;
   config: Config;
   services: ClientServicesProvider;
   observability: Promise<Observability>;
-  firstRun: Trigger;
 };
 
 export type PluginConfig = State & {
@@ -72,7 +72,7 @@ export type PluginConfig = State & {
 /**
  * NOTE: Order is important.
  */
-// TODO(burdon): Impl. dependency graph.
+// TODO(burdon): Impl. plugin dependency graph (to determine order).
 export const core = ({ isPwa, isSocket }: PluginConfig): PluginMeta[] =>
   [
     ObservabilityMeta,
@@ -227,19 +227,19 @@ export const plugins = ({
       const { DocumentType, TextType } = await import('@dxos/plugin-markdown/types');
       const { CollectionType } = await import('@dxos/plugin-space/types');
 
-      const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
       const readme = create(CollectionType, { name: INITIAL_COLLECTION_TITLE, objects: [], views: {} });
-      defaultSpaceCollection?.objects.push(readme);
-
       INITIAL_CONTENT.forEach((content, index) => {
-        content = content + '\n';
-        const document = create(DocumentType, {
-          name: index === 0 ? INITIAL_DOC_TITLE : undefined,
-          content: create(TextType, { content }),
-          threads: [],
-        });
-        readme.objects.push(document);
+        readme.objects.push(
+          create(DocumentType, {
+            name: index === 0 ? INITIAL_DOC_TITLE : undefined,
+            content: create(TextType, { content: content + '\n' }),
+            threads: [],
+          }),
+        );
       });
+
+      const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
+      defaultSpaceCollection?.objects.push(readme);
 
       void dispatch({
         action: NavigationAction.OPEN,

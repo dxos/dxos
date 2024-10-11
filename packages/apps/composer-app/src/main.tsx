@@ -76,10 +76,10 @@ const main = async () => {
 
   const conf: PluginConfig = {
     appKey,
+    firstRun,
     config,
     services,
     observability,
-    firstRun,
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
     isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
