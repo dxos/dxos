@@ -139,6 +139,7 @@ export { colToA1Notation, rowToA1Notation } from '@dxos/lit-grid';
 export type {
   DxGridRange,
   DxGridAxisMeta,
+  DxAxisResize,
   DxGridCells,
   DxGridPlaneRange,
   DxGridPlaneCells,
