@@ -4,6 +4,7 @@
 
 import React, { type PropsWithChildren, createContext, useContext, useMemo, useState } from 'react';
 
+import { fullyQualifiedId } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 import {
   Grid,
@@ -102,8 +103,10 @@ export const SheetProvider = ({ children, graph, sheet, readonly, onInfo }: Shee
     return null;
   }
 
-  return !model || !formatting ? null : (
-    <Grid.Root id={model.id}>
+  const id = fullyQualifiedId(sheet!);
+
+  return (
+    <Grid.Root id={id}>
       <SheetProviderImpl model={model} formatting={formatting} onInfo={onInfo}>
         {children}
       </SheetProviderImpl>

@@ -16,13 +16,8 @@ import {
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
-import {
-  DensityProvider,
-  ElevationProvider,
-  Toolbar as NaturalToolbar,
-  type ThemedClassName,
-  useTranslation,
-} from '@dxos/react-ui';
+import { DensityProvider, ElevationProvider, Toolbar as NaturalToolbar, useTranslation } from '@dxos/react-ui';
+import { useAttention } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
 
 import { ToolbarButton, ToolbarSeparator, ToolbarToggleButton } from './common';
@@ -30,6 +25,9 @@ import { addressToIndex } from '../../defs';
 import { SHEET_PLUGIN } from '../../meta';
 import { type Formatting } from '../../types';
 import { useSheetContext } from '../SheetContext';
+
+// TODO(Zan): Factor out, copied this from MarkdownPlugin.
+export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
 
 //
 // Root
@@ -49,20 +47,28 @@ export type ToolbarActionType = ToolbarAction['type'];
 
 export type ToolbarActionHandler = (action: ToolbarAction) => void;
 
-export type ToolbarProps = ThemedClassName<
-  PropsWithChildren<{
-    onAction?: ToolbarActionHandler;
-  }>
->;
+export type ToolbarProps = PropsWithChildren<{
+  onAction?: ToolbarActionHandler;
+  role?: string;
+}>;
 
 const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>('Toolbar');
 
-const ToolbarRoot = ({ children, onAction, classNames }: ToolbarProps) => {
+const ToolbarRoot = ({ role, onAction, children }: ToolbarProps) => {
+  const { id } = useSheetContext();
+  const { hasAttention } = useAttention(id);
   return (
     <ToolbarContextProvider onAction={onAction}>
       <DensityProvider density='fine'>
         <ElevationProvider elevation='chrome'>
-          <NaturalToolbar.Root classNames={['is-full shrink-0 overflow-x-auto overflow-y-hidden p-1', classNames]}>
+          <NaturalToolbar.Root
+            classNames={[
+              'is-full shrink-0 overflow-x-auto overflow-y-hidden p-1',
+              role === 'section'
+                ? ['z-[2] group-focus-within/section:visible', !hasAttention && 'invisible', sectionToolbarLayout]
+                : 'attention-surface',
+            ]}
+          >
             {children}
           </NaturalToolbar.Root>
         </ElevationProvider>
@@ -227,7 +233,7 @@ const Actions = () => {
   );
 };
 
-export const Toolbar = {
+export const SheetToolbar = {
   Root: ToolbarRoot,
   Separator: ToolbarSeparator,
   Alignment,

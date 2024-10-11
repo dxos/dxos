@@ -9,20 +9,20 @@ import React from 'react';
 import { textBlockWidth } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Toolbar } from './Toolbar';
+import { SheetToolbar } from './SheetToolbar';
 import translations from '../../translations';
 
 const Story = () => {
   return (
-    <Toolbar.Root classNames={textBlockWidth}>
-      <Toolbar.Alignment />
-    </Toolbar.Root>
+    <SheetToolbar.Root classNames={textBlockWidth}>
+      <SheetToolbar.Alignment />
+    </SheetToolbar.Root>
   );
 };
 
 export default {
   title: 'plugin-sheet/Toolbar',
-  component: Toolbar,
+  component: SheetToolbar,
   decorators: [withTheme, withLayout({ tooltips: true })],
   parameters: { translations, layout: 'fullscreen' },
   render: (args: any) => <Story {...args} />,

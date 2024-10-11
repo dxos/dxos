@@ -20,7 +20,11 @@ export default {
     withClientProvider({ types: [SheetType], createSpace: true }),
     withComputeGraphDecorator(),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({
+      fullscreen: true,
+      tooltips: true,
+      classNames: 'grid grid-cols-1 grid-rows-[min-content_1fr_min-content]',
+    }),
   ],
 };
 

@@ -5,25 +5,16 @@
 import React, { useCallback } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
-import { mx } from '@dxos/react-ui-theme';
 
 import { type ComputeGraph } from '../../graph';
 import { type SheetType } from '../../types';
+import { FunctionEditor } from '../Editors/FunctionEditor';
 import { GridSheet } from '../GridSheet';
 import { SheetProvider } from '../SheetContext';
-import { Toolbar, type ToolbarAction } from '../Toolbar';
-
-// TODO(Zan): Factor out, copied this from MarkdownPlugin.
-export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
+import { SheetToolbar, type ToolbarAction } from '../Toolbar';
 
 export const SheetContainer = ({ graph, sheet, role }: { graph: ComputeGraph; sheet: SheetType; role?: string }) => {
   const dispatch = useIntentDispatcher();
-
-  const id = fullyQualifiedId(sheet);
-  const attendableAttrs = useAttendableAttributes(id);
-  const { hasAttention } = useAttention(id);
 
   // TODO(Zan): Centralise the toolbar action handler. Current implementation in stories.
   const handleAction = useCallback(
@@ -47,36 +38,15 @@ export const SheetContainer = ({ graph, sheet, role }: { graph: ComputeGraph; sh
 
   return (
     <SheetProvider graph={graph} sheet={sheet}>
-      <div
-        role='none'
-        className={role === 'article' ? 'row-span-2 grid grid-rows-subgrid' : undefined}
-        {...(role === 'article' && attendableAttrs)}
-      >
-        <Toolbar.Root
-          onAction={handleAction}
-          classNames={mx(
-            role === 'section'
-              ? ['z-[2] group-focus-within/section:visible', !hasAttention && 'invisible', sectionToolbarLayout]
-              : 'attention-surface',
-          )}
-        >
-          <Toolbar.Styles />
-          <Toolbar.Format />
-          <Toolbar.Alignment />
-          <Toolbar.Separator />
-          <Toolbar.Actions />
-        </Toolbar.Root>
-        <div
-          role='none'
-          className={mx(
-            role === 'section' && 'aspect-square border-is border-bs border-be border-separator',
-            role === 'article' &&
-              'flex is-full overflow-hidden focus-visible:ring-inset row-span-1 data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2 border-bs border-separator attention-surface',
-          )}
-        >
-          <GridSheet />
-        </div>
-      </div>
+      <SheetToolbar.Root role={role} onAction={handleAction}>
+        <SheetToolbar.Styles />
+        <SheetToolbar.Format />
+        <SheetToolbar.Alignment />
+        <SheetToolbar.Separator />
+        <SheetToolbar.Actions />
+      </SheetToolbar.Root>
+      <GridSheet />
+      <FunctionEditor />
     </SheetProvider>
   );
 };
