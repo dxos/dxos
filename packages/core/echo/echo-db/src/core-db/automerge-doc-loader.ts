@@ -143,7 +143,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       return this._spaceRootDocHandle.documentId;
     }
     const documentUrl = (spaceRootDoc.links ?? {})[objectId];
-    return documentUrl && interpretAsDocumentId(documentUrl as AutomergeUrl);
+    return documentUrl && interpretAsDocumentId(documentUrl.toString() as AutomergeUrl);
   }
 
   public onObjectLinksUpdated(links: SpaceDocumentLinks) {
@@ -191,7 +191,8 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     if (!links) {
       return;
     }
-    for (const [objectId, automergeUrl] of Object.entries(links)) {
+    for (const [objectId, automergeUrlData] of Object.entries(links)) {
+      const automergeUrl = automergeUrlData.toString();
       const logMeta = { objectId, automergeUrl };
       const objectDocumentHandle = this._objectDocumentHandles.get(objectId);
       if (objectDocumentHandle != null && objectDocumentHandle.url !== automergeUrl) {

@@ -498,7 +498,9 @@ export class CoreDatabase {
 
     const headsStates = await this._dataService.getDocumentHeads(
       {
-        documentIds: Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+        documentIds: Object.values(doc.links ?? {}).map((link) =>
+          interpretAsDocumentId(link.toString() as AutomergeUrl),
+        ),
       },
       { timeout: RPC_TIMEOUT },
     );
@@ -590,7 +592,7 @@ export class CoreDatabase {
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandleProxy<SpaceDoc>, objectsToLoad: string[]) {
     const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
-    const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}));
+    const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}).map(([k, v]) => [k, v.toString()]));
 
     const objectsToRebind = new Map<string, { handle: DocHandleProxy<SpaceDoc>; objectIds: string[] }>();
     objectsToRebind.set(spaceRootDocHandle.url, { handle: spaceRootDocHandle, objectIds: [] });
