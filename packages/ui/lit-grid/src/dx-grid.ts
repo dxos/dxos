@@ -100,7 +100,7 @@ const closestAction = (target: EventTarget | null): { action: string | null; act
   return { actionEl, action: actionEl?.getAttribute('data-dx-grid-action') ?? null };
 };
 
-const closestCell = (target: EventTarget | null, actionEl?: HTMLElement | null): DxGridPositionNullable => {
+export const closestCell = (target: EventTarget | null, actionEl?: HTMLElement | null): DxGridPositionNullable => {
   let cellElement = actionEl;
   if (!cellElement) {
     const { action, actionEl } = closestAction(target);
@@ -729,6 +729,14 @@ export class DxGrid extends LitElement {
   }
 
   // Focus handlers
+
+  setFocus(coords: DxGridPosition, snap = true) {
+    this.focusedCell = coords;
+    this.focusActive = true;
+    if (snap) {
+      this.snapPosToFocusedCell();
+    }
+  }
 
   private handleFocus(event: FocusEvent) {
     const cellCoords = closestCell(event.target);

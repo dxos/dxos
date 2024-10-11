@@ -12,6 +12,11 @@ import {
   useGridContext,
 } from '@dxos/react-ui-grid';
 
+import {
+  useSelectThreadOnCellFocus,
+  useThreadDecorations,
+  useUpdateFocusedCellOnThreadSelection,
+} from './hooks-threads';
 import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
 import { rangeToA1Notation, type CellRange } from '../../defs';
 import { type ComputeGraph } from '../../graph';
@@ -78,6 +83,10 @@ const GridSheetImpl = ({
   const dxGrid = useRef<DxGridElement | null>(null);
   const rangeNotifier = useRef<CellRangeNotifier>();
 
+  useUpdateFocusedCellOnThreadSelection(model, dxGrid);
+  const handleFocus = useSelectThreadOnCellFocus(model);
+  const decorations = useThreadDecorations(model);
+
   // TODO(burdon): Validate formula before closing: hf.validateFormula();
   const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
     (value, { key, shift }) => {
@@ -125,7 +134,7 @@ const GridSheetImpl = ({
     [editing],
   );
 
-  const { columns, rows } = useSheetModelDxGridProps(dxGrid, model, formatting);
+  const { columns, rows } = useSheetModelDxGridProps(dxGrid, model, formatting, decorations);
 
   const extension = useMemo(
     () => [
@@ -145,6 +154,7 @@ const GridSheetImpl = ({
         rows={rows}
         onAxisResize={handleAxisResize}
         onSelect={handleSelect}
+        onFocus={handleFocus}
         rowDefault={sheetRowDefault}
         columnDefault={sheetColDefault}
         frozen={frozen}

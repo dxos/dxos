@@ -60,3 +60,5 @@ export const createDecorations = () => {
     getAllDecorations,
   } as const;
 };
+
+export type Decorations = ReturnType<typeof createDecorations>;
