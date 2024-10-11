@@ -3,8 +3,8 @@
 //
 
 import { Event } from '@dxos/async';
-import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@dxos/automerge/automerge-repo';
 import { next as A } from '@dxos/automerge/automerge';
+import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@dxos/automerge/automerge-repo';
 import { cancelWithContext, type Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { type SpaceState, type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
