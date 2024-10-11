@@ -6,19 +6,16 @@ import { type RefObject, useEffect, useMemo, useState } from 'react';
 
 import { type DxGridElement, type DxGridAxisMeta } from '@dxos/react-ui-grid';
 
-import { type ColumnDefinition, TableModel } from '../table-model';
+import { type TableType } from '../../types';
+import { TableModel } from '../table-model';
 
 // TODO(Zan): Take ordering here (or order based on some stored property).
 // When the order changes, we should notify the consumer.
-export const useTableModel = (
-  columnDefinitions: ColumnDefinition[],
-  data: any[],
-  gridRef: RefObject<DxGridElement>,
-) => {
+export const useTableModel = (table: TableType, data: any[], gridRef: RefObject<DxGridElement>) => {
   const [tableModel, setTableModel] = useState<TableModel>();
 
   useEffect(() => {
-    if (!columnDefinitions || !data) {
+    if (!table || !data) {
       return;
     }
 
@@ -28,7 +25,7 @@ export const useTableModel = (
 
     let model: TableModel | undefined;
     const t = setTimeout(async () => {
-      model = new TableModel(columnDefinitions, data, onCellUpdate);
+      model = new TableModel(table, data, onCellUpdate);
       await model.open();
       setTableModel(model);
     });
@@ -37,16 +34,16 @@ export const useTableModel = (
       clearTimeout(t);
       void model?.close();
     };
-  }, [columnDefinitions, data]);
+  }, [data]);
 
   const columnMeta: DxGridAxisMeta = useMemo(() => {
     if (!tableModel) {
       return { grid: {} };
     }
     const headings = Object.fromEntries(
-      tableModel.columnDefinitions.map((col, index) => [
+      tableModel.table.props.map((prop, index) => [
         index,
-        { size: tableModel.columnWidths[col.id], resizeable: true },
+        { size: tableModel.columnWidths[prop.id!], resizeable: true },
       ]),
     );
 

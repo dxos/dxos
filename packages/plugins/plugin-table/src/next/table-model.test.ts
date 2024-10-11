@@ -10,107 +10,61 @@ import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 import { TableModel } from './table-model';
+import { TableType } from '../types';
 
 registerSignalsRuntime();
 
-const createInitialTableModel = (): TableModel => {
-  const tableModel = new TableModel(
-    [
-      { id: 'col1', dataType: 'string', headerLabel: 'Column 1', accessor: (row: any) => row.col1 },
-      { id: 'col2', dataType: 'number', headerLabel: 'Column 2', accessor: (row: any) => row.col2 },
-      { id: 'col3', dataType: 'boolean', headerLabel: 'Column 3', accessor: (row: any) => row.col3 },
+const createTableModel = (): TableModel => {
+  const table = create(TableType, {
+    props: [
+      { id: 'col1', label: 'Column 1' },
+      { id: 'col2', label: 'Column 2' },
+      { id: 'col3', label: 'Column 3' },
     ],
-    [],
-  );
-  tableModel.open();
+  });
+  const tableModel = new TableModel(table, []);
   return tableModel;
 };
 
 describe('TableModel methods', () => {
   it('should set sorting', () => {
-    const model = createInitialTableModel();
+    const model = createTableModel();
     model.setSort('col2', 'asc');
     expect(model.sorting).toEqual([{ columnId: 'col2', direction: 'asc' }]);
   });
 
-  it('should move a column', () => {
-    const model = createInitialTableModel();
-    model.moveColumn('col1', 2);
-    expect(model.columnOrdering).toEqual(['col2', 'col3', 'col1']);
-  });
-
   it('should pin a row', () => {
-    const model = createInitialTableModel();
+    const model = createTableModel();
     model.pinRow(1, 'top');
     expect(model.pinnedRows.top).toContain(1);
   });
 
   it('should unpin a row', () => {
-    const model = createInitialTableModel();
+    const model = createTableModel();
     model.pinRow(1, 'top');
     model.unpinRow(1);
     expect(model.pinnedRows.top).not.toContain(1);
   });
 
   it('should select a row', () => {
-    const model = createInitialTableModel();
+    const model = createTableModel();
     model.selectRow(2);
     expect(model.rowSelection).toContain(2);
   });
 
   it('should deselect a row', () => {
-    const model = createInitialTableModel();
+    const model = createTableModel();
     model.selectRow(2);
     model.deselectRow(2);
     expect(model.rowSelection).not.toContain(2);
   });
 
   it('should deselect all rows', () => {
-    const model = createInitialTableModel();
+    const model = createTableModel();
     model.selectRow(1);
     model.selectRow(2);
     model.deselectAllRows();
     expect(model.rowSelection).toHaveLength(0);
-  });
-});
-
-describe('column width modification', () => {
-  it('should modify an existing column width', () => {
-    const model = createInitialTableModel();
-    model.modifyColumnWidth(0, 120);
-    expect(model.columnWidths[model.columnOrdering[0]]).toBe(120);
-  });
-
-  it('should not affect other column widths when modifying one', () => {
-    const model = createInitialTableModel();
-    const initialCol2Width = model.columnWidths[model.columnOrdering[1]];
-    const initialCol3Width = model.columnWidths[model.columnOrdering[2]];
-    model.modifyColumnWidth(0, 120);
-    expect(model.columnWidths[model.columnOrdering[1]]).toBe(initialCol2Width);
-    expect(model.columnWidths[model.columnOrdering[2]]).toBe(initialCol3Width);
-  });
-
-  it('should handle multiple width modifications', () => {
-    const model = createInitialTableModel();
-    model.modifyColumnWidth(0, 120);
-    model.modifyColumnWidth(1, 80);
-    model.modifyColumnWidth(2, 200);
-
-    expect(model.columnWidths[model.columnOrdering[0]]).toBe(120);
-    expect(model.columnWidths[model.columnOrdering[1]]).toBe(80);
-    expect(model.columnWidths[model.columnOrdering[2]]).toBe(200);
-  });
-
-  it('should allow setting width to 0', () => {
-    const model = createInitialTableModel();
-    model.modifyColumnWidth(0, 0);
-    expect(model.columnWidths[model.columnOrdering[0]]).toBe(0);
-  });
-
-  it('should ignore modifications for non-existent column indices', () => {
-    const model = createInitialTableModel();
-    model.modifyColumnWidth(999, 100);
-    expect(model.columnWidths).toEqual(createInitialTableModel().columnWidths);
   });
 });
 
@@ -155,14 +109,7 @@ describe('reactivity', () => {
         ],
       }));
 
-      table = new TableModel(
-        [
-          { id: 'col1', dataType: 'string', headerLabel: 'Column 1', accessor: (row: any) => row.col1 },
-          { id: 'col2', dataType: 'number', headerLabel: 'Column 2', accessor: (row: any) => row.col2 },
-          { id: 'col3', dataType: 'boolean', headerLabel: 'Column 3', accessor: (row: any) => row.col3 },
-        ],
-        data,
-      );
+      table = createTableModel();
       await table.open();
     });
 

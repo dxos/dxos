@@ -15,8 +15,9 @@ import {
   useGridContext,
 } from '@dxos/react-ui-grid';
 
+import { type TableType } from '../../types';
 import { useTableModel } from '../hooks';
-import { type TableModel, type ColumnDefinition } from '../table-model';
+import { type TableModel } from '../table-model';
 
 const TableCellEditor = ({
   __gridScope,
@@ -81,7 +82,7 @@ const TableCellEditor = ({
 };
 
 type TableProps = {
-  columnDefinitions: ColumnDefinition[];
+  table: TableType;
   data: any[];
 };
 
@@ -94,15 +95,15 @@ const frozen = { frozenRowsStart: 1 };
 // TODO(Zan): Callback for changing column width.
 // TODO(Zan): Callback for re-arranging columns.
 // TODO(Zan): Callbacks for editing column schema.
-export const Table = ({ columnDefinitions, data }: TableProps) => {
+export const Table = ({ table, data }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
-  const { tableModel, columnMeta } = useTableModel(columnDefinitions, data, gridRef);
+  const { tableModel, columnMeta } = useTableModel(table, data, gridRef);
 
   const handleAxisResize = useCallback(
     (event: DxAxisResize) => {
       if (event.axis === 'col') {
         const columnIndex = parseInt(event.index, 10);
-        tableModel?.dispatch({ type: 'ModifyColumnWidth', columnIndex, width: event.size });
+        tableModel?.modifyColumnWidth(columnIndex, event.size);
       }
     },
     [tableModel],
@@ -114,7 +115,7 @@ export const Table = ({ columnDefinitions, data }: TableProps) => {
       <Grid.Content
         ref={gridRef}
         limitRows={data.length}
-        limitColumns={tableModel?.columnDefinitions.length}
+        limitColumns={table.props.length}
         initialCells={tableModel?.cells.value}
         columns={columnMeta}
         frozen={frozen}

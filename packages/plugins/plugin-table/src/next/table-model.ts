@@ -9,23 +9,11 @@ import { PublicKey } from '@dxos/react-client';
 import { type DxGridPlaneCells, type DxGridCells } from '@dxos/react-ui-grid';
 
 import { CellUpdateListener } from './CellUpdateListener';
+import { type TableType } from '../types';
 
 const DEFAULT_WIDTH = 256; // px
 
 export type ColumnId = string;
-
-// TODO(Zan): Extend to multi-select.
-export type DataType = 'string' | 'number' | 'boolean' | 'date';
-
-export type ColumnDefinition = {
-  id: ColumnId;
-  dataType: DataType;
-  headerLabel: string;
-
-  // TODO(Zan): This return type should be based on the dataType.
-  accessor: (row: any) => any;
-};
-
 export type SortDirection = 'asc' | 'desc';
 export type SortConfig = { columnId: ColumnId; direction: SortDirection };
 
@@ -36,12 +24,11 @@ export class TableModel extends Resource {
   public cellUpdateListener!: CellUpdateListener;
 
   constructor(
-    public readonly columnDefinitions: ColumnDefinition[],
+    public readonly table: TableType,
     public readonly data: any[],
     private onCellUpdate?: (col: number, row: number) => void,
-    public columnOrdering: ColumnId[] = columnDefinitions.map((column) => column.id),
     public columnWidths: Record<ColumnId, number> = Object.fromEntries(
-      columnDefinitions.map((column) => [column.id, DEFAULT_WIDTH]),
+      table.props.map((prop) => [prop.id, DEFAULT_WIDTH]),
     ),
     public sorting: SortConfig[] = [],
     public pinnedRows: { top: number[]; bottom: number[] } = { top: [], bottom: [] },
@@ -51,10 +38,10 @@ export class TableModel extends Resource {
   }
 
   protected override async _open() {
-    // Construct the header cells based on the column definitions.
+    // Construct the header cells based on the table props.
     const headerCells: DxGridPlaneCells = Object.fromEntries(
-      this.columnDefinitions.map((col, index) => {
-        return [`${index},0`, { value: col.headerLabel, resizeHandle: 'col' }];
+      this.table.props.map((prop, index) => {
+        return [`${index},0`, { value: prop.id!, resizeHandle: 'col' }];
       }),
     );
 
@@ -62,8 +49,8 @@ export class TableModel extends Resource {
     const cellValues: ReadonlySignal<DxGridPlaneCells> = computed(() => {
       const values: DxGridPlaneCells = {};
       this.data.forEach((row, rowIndex) => {
-        this.columnDefinitions.forEach((col, colIndex) => {
-          const cellValueSignal = computed(() => `${col.accessor(row)}`);
+        this.table.props.forEach((prop, colIndex) => {
+          const cellValueSignal = computed(() => `${row[prop.id!]}`);
           values[`${colIndex},${rowIndex}`] = {
             get value() {
               return cellValueSignal.value;
@@ -87,10 +74,10 @@ export class TableModel extends Resource {
   }
 
   public moveColumn(columnId: ColumnId, newIndex: number): void {
-    const currentIndex = this.columnOrdering.indexOf(columnId);
+    const currentIndex = this.table.props.findIndex((prop) => prop.id === columnId);
     if (currentIndex !== -1) {
-      this.columnOrdering.splice(currentIndex, 1);
-      this.columnOrdering.splice(newIndex, 0, columnId);
+      const [removed] = this.table.props.splice(currentIndex, 1);
+      this.table.props.splice(newIndex, 0, removed);
     }
   }
 
@@ -118,33 +105,26 @@ export class TableModel extends Resource {
   }
 
   public modifyColumnWidth(columnIndex: number, width: number): void {
-    const columnId = this.columnOrdering.at(columnIndex);
-    if (columnId) {
+    const propId = this.table.props[columnIndex]?.id;
+    if (propId) {
       const newWidth = Math.max(0, width);
-      this.columnWidths[columnId] = newWidth;
+      this.columnWidths[propId] = newWidth;
     }
   }
 
   public getCellData = (colIndex: number, rowIndex: number): any => {
-    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= this.columnDefinitions.length) {
+    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= this.table.props.length) {
       return undefined;
     }
-    const column = this.columnDefinitions[colIndex];
-    return column.accessor(this.data[rowIndex]);
+    const propId = this.table.props[colIndex].id!;
+    return this.data[rowIndex][propId];
   };
 
   public setCellData = (colIndex: number, rowIndex: number, value: any): void => {
-    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= this.columnDefinitions.length) {
+    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= this.table.props.length) {
       return;
     }
-    const column = this.columnDefinitions[colIndex];
-    const row = this.data[rowIndex];
-
-    for (const key in row) {
-      if (column.accessor(row) === row[key]) {
-        row[key] = value;
-        break;
-      }
-    }
+    const propId = this.table.props[colIndex].id!;
+    this.data[rowIndex][propId] = value;
   };
 }
