@@ -9,12 +9,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Client } from '@dxos/client';
 import { createDocAccessor, type EchoReactiveObject } from '@dxos/client/echo';
 import { automerge } from '@dxos/react-ui-editor';
+import { CellEditor, type CellEditorProps } from '@dxos/react-ui-grid';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { HyperFormula } from '#hyperformula';
-import { CellEditor, type CellEditorProps } from './CellEditor';
-import { sheetExtension } from './extension';
 import { createSheet } from '../../defs';
+import { sheetExtension } from '../../extensions';
 import { defaultFunctions } from '../../graph';
 import { SheetType } from '../../types';
 

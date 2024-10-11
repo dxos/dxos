@@ -14,5 +14,24 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../lit-grid"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-editor"
+    },
+    {
+      "path": "../react-ui-theme"
+    },
+    {
+      "path": "../storybook-utils"
+    }
+  ]
 }

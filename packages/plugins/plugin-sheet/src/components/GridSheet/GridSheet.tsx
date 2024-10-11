@@ -10,44 +10,18 @@ import {
   type GridContentProps,
   type GridScopedProps,
   useGridContext,
+  editorKeys,
+  type EditorKeysProps,
+  GridCellEditor,
 } from '@dxos/react-ui-grid';
 
 import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
 import { rangeToA1Notation, type CellRange } from '../../defs';
+import { rangeExtension, sheetExtension, type CellRangeNotifier } from '../../extensions';
 import { type ComputeGraph } from '../../graph';
 import { useFormattingModel, useSheetModel, type UseSheetModelOptions } from '../../hooks';
 import { type SheetModel, type FormattingModel } from '../../model';
 import { type SheetType } from '../../types';
-import {
-  CellEditor,
-  type CellEditorProps,
-  type CellRangeNotifier,
-  editorKeys,
-  type EditorKeysProps,
-  rangeExtension,
-  sheetExtension,
-} from '../CellEditor';
-
-const GridSheetCellEditor = ({
-  model,
-  extension,
-  __gridScope,
-}: GridScopedProps<Pick<CellEditorProps, 'extension'> & { model: SheetModel }>) => {
-  const { id, editing, setEditing, editBox } = useGridContext('GridSheetCellEditor', __gridScope);
-  const cell = dxGridCellIndexToSheetCellAddress(editing);
-
-  return editing ? (
-    <CellEditor
-      variant='grid'
-      value={editing.initialContent ?? (cell ? model.getCellText(cell) : undefined)}
-      autoFocus
-      box={editBox}
-      onBlur={() => setEditing(null)}
-      extension={extension}
-      gridId={id}
-    />
-  ) : null;
-};
 
 const initialCells = {
   grid: {},
@@ -82,7 +56,7 @@ const GridSheetImpl = ({
   const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
     (value, { key, shift }) => {
       if (value !== undefined) {
-        model.setValue(dxGridCellIndexToSheetCellAddress(editing)!, value);
+        model.setValue(dxGridCellIndexToSheetCellAddress(editing!.index), value);
       }
       setEditing(null);
       const axis = ['Enter', 'ArrowUp', 'ArrowDown'].includes(key)
@@ -136,9 +110,17 @@ const GridSheetImpl = ({
     [model, handleClose, editing],
   );
 
+  const getCellContent = useCallback(
+    (index: string) => {
+      const cell = dxGridCellIndexToSheetCellAddress(index);
+      return model.getCellText(cell);
+    },
+    [model],
+  );
+
   return (
     <>
-      <GridSheetCellEditor model={model} extension={extension} />
+      <GridCellEditor getCellContent={getCellContent} extension={extension} />
       <Grid.Content
         initialCells={initialCells}
         columns={columns}

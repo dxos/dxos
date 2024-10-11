@@ -7,14 +7,14 @@ import { type RefObject, useCallback, useEffect, useMemo } from 'react';
 
 import { type DxGridElement, type DxGridAxisMeta } from '@dxos/react-ui-grid';
 
-import { type TableEvent, type ColumnDefinition, createTable, updateTable } from '../table';
+import { type TableAction, type ColumnDefinition, createTable, updateTable } from '../table';
 
 // TODO(Zan): Take ordering here (or order based on some stored property).
 // When the order changes, we should notify the consumer.
 export const useTable = (columnDefinitions: ColumnDefinition[], data: any[], gridRef: RefObject<DxGridElement>) => {
   const table = useMemo(() => createTable(columnDefinitions, data), [columnDefinitions, data]);
 
-  const dispatch = useCallback((event: TableEvent) => {
+  const dispatch = useCallback((event: TableAction) => {
     updateTable(table, event);
   }, []);
 
