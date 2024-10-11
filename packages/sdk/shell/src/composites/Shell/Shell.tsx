@@ -110,7 +110,8 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
           onJoinNewIdentity={async () => {
             runtime.setLayout({ layout: ShellLayout.STATUS });
             await client.reset();
-            return runtime.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION });
+            // TODO(wittjosiah): Enter join flow without reloading.
+            return runtime.setAppContext({ display: ShellDisplay.NONE, reset: true, target: 'deviceInvitation' });
           }}
           onDone={async () => {
             blurActiveElement();

@@ -216,8 +216,12 @@ const main = async () => {
             LegacyTypes.ThreadType,
           ]);
 
-          client.shell.onReset(() => {
-            window.location.pathname = '/';
+          client.shell.onReset((target) => {
+            if (target === 'deviceInvitation') {
+              window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
+            } else {
+              window.location.pathname = '/';
+            }
           });
         },
       }),
