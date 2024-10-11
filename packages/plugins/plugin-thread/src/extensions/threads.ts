@@ -80,7 +80,6 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Inten
         });
       },
       onDelete: ({ id }) => {
-        // Remove draft.
         const draft = state.drafts[fullyQualifiedId(doc)];
         if (draft) {
           const index = draft.findIndex((thread) => fullyQualifiedId(thread) === id);
