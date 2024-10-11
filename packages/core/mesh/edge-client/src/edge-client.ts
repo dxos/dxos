@@ -17,6 +17,7 @@ import { protocol } from './defs';
 import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors';
 import { PersistentLifecycle } from './persistent-lifecycle';
 import { type Protocol, toUint8Array } from './protocol';
+import { getEdgeUrlWithProtocol } from './utils';
 
 const DEFAULT_TIMEOUT = 10_000;
 const SIGNAL_KEEPALIVE_INTERVAL = 5_000;
@@ -74,11 +75,14 @@ export class EdgeClient extends Resource implements EdgeConnection {
   private _keepaliveCtx?: Context = undefined;
   private _heartBeatContext?: Context = undefined;
 
+  private _baseUrl: string;
+
   constructor(
     private _identity: EdgeIdentity,
     private readonly _config: MessengerConfig,
   ) {
     super();
+    this._baseUrl = getEdgeUrlWithProtocol(_config.socketEndpoint, 'ws');
   }
 
   // TODO(burdon): Attach logging.
@@ -140,7 +144,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
       protocolHeader = encodePresentationIntoAuthHeader(credential);
     }
 
-    const url = new URL(`/ws/${this._identity.identityKey}/${this._identity.peerKey}`, this._config.socketEndpoint);
+    const url = new URL(`/ws/${this._identity.identityKey}/${this._identity.peerKey}`, this._baseUrl);
     log('Opening websocket', { url: url.toString(), protocolHeader });
     this._ws = new WebSocket(url, protocolHeader ? [protocolHeader] : []);
 
