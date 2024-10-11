@@ -7,7 +7,7 @@ import { effect, type ReadonlySignal } from '@preact/signals-core';
 import { create } from '@dxos/echo-schema';
 
 // TODO(Zan): Take in the current visible bounds and only subscribe to cells within that range.
-export class CellUpdateTracker {
+export class CellUpdateListener {
   public readonly updatedCells = create({ value: [] as string[] });
   private cellEffectsUnsubscribes: (() => void)[] = [];
   private topLevelEffectUnsubscribe: (() => void) | null = null;

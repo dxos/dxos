@@ -4,10 +4,9 @@
 
 import { computed, type ReadonlySignal } from '@preact/signals-core';
 
-import { create } from '@dxos/echo-schema';
 import { type DxGridPlaneCells, type DxGridCells } from '@dxos/react-ui-grid';
 
-import { CellUpdateTracker } from './CellUpdateTracker';
+import { CellUpdateListener } from './CellUpdateListener';
 
 const DEFAULT_WIDTH = 256; // px
 
@@ -27,7 +26,6 @@ export type ColumnDefinition = {
 };
 
 export type SortConfig = { columnId: ColumnId; direction: SortDirection };
-export type Table = ReturnType<typeof createTable>;
 
 export type TableAction =
   | { type: 'SetSort'; columnId: ColumnId; direction: SortDirection }
@@ -39,148 +37,132 @@ export type TableAction =
   | { type: 'DeselectAllRows' }
   | { type: 'ModifyColumnWidth'; columnIndex: number; width: number };
 
-export const updateTable = (table: Table, action: TableAction): Table => {
-  switch (action.type) {
-    case 'SetSort': {
-      table.sorting = [{ columnId: action.columnId, direction: action.direction }];
-      break;
-    }
-    case 'MoveColumn': {
-      const currentIndex = table.columnOrdering.indexOf(action.columnId);
-      if (currentIndex !== -1) {
-        table.columnOrdering.splice(currentIndex, 1);
-        table.columnOrdering.splice(action.newIndex, 0, action.columnId);
+export class TableModel {
+  public columnDefinitions: ColumnDefinition[];
+  private data: any[];
+
+  // Ephermeral view concerns.
+  public columnOrdering: ColumnId[];
+  public columnWidths: Record<ColumnId, number>;
+  public sorting: SortConfig[];
+  public pinnedRows: { top: number[]; bottom: number[] };
+  public rowSelection: number[];
+
+  public cells: ReadonlySignal<DxGridCells>;
+  public cellUpdateListener: CellUpdateListener;
+
+  // TODO(Zan): Take `TableType` directly.
+  constructor(columnDefinitions: ColumnDefinition[], data: any[]) {
+    this.columnDefinitions = columnDefinitions;
+    this.data = data;
+    this.columnOrdering = columnDefinitions.map((column) => column.id);
+    this.columnWidths = Object.fromEntries(columnDefinitions.map((column) => [column.id, DEFAULT_WIDTH]));
+    this.sorting = [];
+    this.pinnedRows = { top: [], bottom: [] };
+    this.rowSelection = [];
+
+    // Construct the header cells based on the column definitions.
+    const headerCells: DxGridPlaneCells = Object.fromEntries(
+      this.columnDefinitions.map((col, index) => {
+        return [`${index},0`, { value: col.headerLabel, resizeHandle: 'col' }];
+      }),
+    );
+
+    // Map the data to grid cells.
+    const cellValues: ReadonlySignal<DxGridPlaneCells> = computed(() => {
+      const values: DxGridPlaneCells = {};
+      this.data.forEach((row, rowIndex) => {
+        this.columnDefinitions.forEach((col, colIndex) => {
+          const cellValueSignal = computed(() => `${col.accessor(row)}`);
+          values[`${colIndex},${rowIndex}`] = {
+            get value() {
+              return cellValueSignal.value;
+            },
+          };
+        });
+      });
+      return values;
+    });
+
+    this.cells = computed(() => {
+      return { grid: cellValues.value, frozenRowsStart: headerCells };
+    });
+
+    this.cellUpdateListener = new CellUpdateListener(cellValues);
+  }
+
+  public dispatch(action: TableAction): void {
+    switch (action.type) {
+      case 'SetSort': {
+        this.sorting = [{ columnId: action.columnId, direction: action.direction }];
+        break;
       }
-      break;
-    }
-    case 'PinRow': {
-      table.pinnedRows[action.side].push(action.rowIndex);
-      break;
-    }
-    case 'UnpinRow': {
-      table.pinnedRows.top = table.pinnedRows.top.filter((index: number) => index !== action.rowIndex);
-      table.pinnedRows.bottom = table.pinnedRows.bottom.filter((index: number) => index !== action.rowIndex);
-      break;
-    }
-    case 'SelectRow': {
-      if (!table.rowSelection.includes(action.rowIndex)) {
-        table.rowSelection.push(action.rowIndex);
+      case 'MoveColumn': {
+        const currentIndex = this.columnOrdering.indexOf(action.columnId);
+        if (currentIndex !== -1) {
+          this.columnOrdering.splice(currentIndex, 1);
+          this.columnOrdering.splice(action.newIndex, 0, action.columnId);
+        }
+        break;
       }
-      break;
-    }
-    case 'DeselectRow': {
-      table.rowSelection = table.rowSelection.filter((index: number) => index !== action.rowIndex);
-      break;
-    }
-    case 'DeselectAllRows': {
-      table.rowSelection = [];
-      break;
-    }
-    case 'ModifyColumnWidth': {
-      const columnId = table.columnOrdering.at(action.columnIndex);
-      if (columnId) {
-        const newWidth = Math.max(0, action.width);
-        table.columnWidths[columnId] = newWidth;
+      case 'PinRow': {
+        this.pinnedRows[action.side].push(action.rowIndex);
+        break;
       }
-      break;
+      case 'UnpinRow': {
+        this.pinnedRows.top = this.pinnedRows.top.filter((index: number) => index !== action.rowIndex);
+        this.pinnedRows.bottom = this.pinnedRows.bottom.filter((index: number) => index !== action.rowIndex);
+        break;
+      }
+      case 'SelectRow': {
+        if (!this.rowSelection.includes(action.rowIndex)) {
+          this.rowSelection.push(action.rowIndex);
+        }
+        break;
+      }
+      case 'DeselectRow': {
+        this.rowSelection = this.rowSelection.filter((index: number) => index !== action.rowIndex);
+        break;
+      }
+      case 'DeselectAllRows': {
+        this.rowSelection = [];
+        break;
+      }
+      case 'ModifyColumnWidth': {
+        const columnId = this.columnOrdering.at(action.columnIndex);
+        if (columnId) {
+          const newWidth = Math.max(0, action.width);
+          this.columnWidths[columnId] = newWidth;
+        }
+        break;
+      }
     }
   }
-  return table;
-};
 
-// TODO(Zan): Take widths + callbacks for width changes, column ordering.
-export const createTable = (columnDefinitions: ColumnDefinition[], data: any[]) => {
-  const getCellData = (colIndex: number, rowIndex: number): any => {
-    if (rowIndex < 0 || rowIndex >= data.length || colIndex < 0 || colIndex >= columnDefinitions.length) {
+  public getCellData = (colIndex: number, rowIndex: number): any => {
+    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= this.columnDefinitions.length) {
       return undefined;
     }
-    const column = columnDefinitions[colIndex];
-    return column.accessor(data[rowIndex]);
+    const column = this.columnDefinitions[colIndex];
+    return column.accessor(this.data[rowIndex]);
   };
 
-  const setCellData = (colIndex: number, rowIndex: number, value: any): void => {
-    if (rowIndex < 0 || rowIndex >= data.length || colIndex < 0 || colIndex >= columnDefinitions.length) {
+  public setCellData = (colIndex: number, rowIndex: number, value: any): void => {
+    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= this.columnDefinitions.length) {
       return;
     }
-    const column = columnDefinitions[colIndex];
-    const row = data[rowIndex];
+    const column = this.columnDefinitions[colIndex];
+    const row = this.data[rowIndex];
 
-    // Find the property that the accessor is reading
     for (const key in row) {
       if (column.accessor(row) === row[key]) {
-        // TODO(Zan): We should coerce the string to the correct type based on the column definition.
         row[key] = value;
         break;
       }
     }
   };
 
-  /**
-   * Creates a computed signal structure for table cells.
-   *
-   * This structure is optimized for reactive collaboration on cell edits:
-   *
-   * 1. Outer computed:
-   *    - Tracks changes to the entire data array (additions, removals, reordering)
-   *    - Recreates all cell computed signals when triggered
-   *
-   * 2. Inner computed (one per cell):
-   *    - Tracks changes to individual cell data
-   *    - Recalculates only when its specific cell data changes
-   *
-   * Benefits:
-   * - Highly efficient for cell-level edits (most common in collaborative editing)
-   * - Maintains reactivity at the cell level
-   * - Automatically updates UI for all users on any collaborative change
-   * - Eliminates the need for a separate row structure
-   *
-   * Performance characteristics:
-   * - Cell edits: Optimal (only affected cell recalculates)
-   * - Array-level changes: More expensive (all cell `computed` recreated)
-   */
-  const columnHeaderCells: DxGridPlaneCells = Object.fromEntries(
-    columnDefinitions.map((col, index) => {
-      return [`${index},0`, { value: col.headerLabel, resizeHandle: 'col' }];
-    }),
-  );
-
-  const dxCellValues: ReadonlySignal<DxGridPlaneCells> = computed(() => {
-    const cellValues: DxGridPlaneCells = {};
-    data.forEach((row, rowIndex) => {
-      columnDefinitions.forEach((col, colIndex) => {
-        // TODO(Zan): Stringifying the value is a temporary solution. Base on column type?
-        const cellValueSignal = computed(() => `${col.accessor(row)}`);
-        cellValues[`${colIndex},${rowIndex}`] = {
-          get value() {
-            return cellValueSignal.value;
-          },
-          // Can implement per cell class names in this object
-        };
-      });
-    });
-
-    return cellValues;
-  });
-
-  const cells: ReadonlySignal<DxGridCells> = computed(() => {
-    return { grid: dxCellValues.value, frozenRowsStart: columnHeaderCells };
-  });
-
-  const updateTracker = new CellUpdateTracker(dxCellValues);
-
-  return create({
-    columnDefinitions,
-    columnOrdering: columnDefinitions.map((column) => column.id),
-    columnWidths: Object.fromEntries(columnDefinitions.map((column) => [column.id, DEFAULT_WIDTH])),
-    sorting: [] as SortConfig[],
-    pinnedRows: { top: [], bottom: [] } as { top: number[]; bottom: number[] },
-    rowSelection: [] as number[],
-    cells,
-    getCellData,
-    setCellData,
-    __cellUpdateTracker: updateTracker as CellUpdateTracker,
-    dispose: () => {
-      updateTracker.dispose();
-    },
-  });
-};
+  public dispose(): void {
+    this.cellUpdateListener.dispose();
+  }
+}

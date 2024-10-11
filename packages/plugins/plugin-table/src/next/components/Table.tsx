@@ -15,7 +15,7 @@ import {
   useGridContext,
 } from '@dxos/react-ui-grid';
 
-import { useTable } from '../hooks';
+import { useTableModel } from '../hooks';
 import { type ColumnDefinition } from '../table';
 
 const TableCellEditor = ({
@@ -100,26 +100,26 @@ const frozen = { frozenRowsStart: 1 };
 // TODO(Zan): Custom header labels and buttons.
 export const Table = ({ columnDefinitions, data }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
-  const { table, columnMeta, dispatch } = useTable(columnDefinitions, data, gridRef);
+  const { tableModel, columnMeta } = useTableModel(columnDefinitions, data, gridRef);
 
   const handleAxisResize = useCallback(
     (event: DxAxisResize) => {
       if (event.axis === 'col') {
         const columnIndex = parseInt(event.index, 10);
-        dispatch({ type: 'ModifyColumnWidth', columnIndex, width: event.size });
+        tableModel.dispatch({ type: 'ModifyColumnWidth', columnIndex, width: event.size });
       }
     },
-    [dispatch],
+    [tableModel],
   );
 
   return (
     <Grid.Root id='table-next'>
-      <TableCellEditor getCellData={table.getCellData} setCellData={table.setCellData} gridRef={gridRef} />
+      <TableCellEditor getCellData={tableModel.getCellData} setCellData={tableModel.setCellData} gridRef={gridRef} />
       <Grid.Content
         ref={gridRef}
         limitRows={data.length}
-        limitColumns={table.columnDefinitions.length}
-        initialCells={table.cells.value}
+        limitColumns={tableModel.columnDefinitions.length}
+        initialCells={tableModel.cells.value}
         columns={columnMeta}
         frozen={frozen}
         onAxisResize={handleAxisResize}
