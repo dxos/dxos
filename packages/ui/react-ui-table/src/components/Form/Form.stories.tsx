@@ -28,13 +28,12 @@ const Form = ({ schema }: FormProps) => {
 
   return (
     <div className='flex flex-col w-full gap-2'>
-      {props.map((prop, i) => {
-        const { name, annotations } = prop;
-        const a = AST.getDescriptionAnnotation(prop);
-        console.log(a, annotations);
+      {props.map(({ type, name }, i) => {
+        const description = AST.getDescriptionAnnotation(type).;
+        console.log(description);
         return (
           <Input.Root key={i}>
-            <Input.Label>{name.toString()}</Input.Label>
+            <Input.Label>{description.value?.toString() ?? name.toString()}</Input.Label>
             <Input.TextInput
               placeholder={name.toString()}
               // value={formState.label ?? ''}
@@ -47,10 +46,21 @@ const Form = ({ schema }: FormProps) => {
   );
 };
 
-const schema = S.Struct({
-  name: S.String.annotations({ [AST.DescriptionAnnotationId]: 'Name' }),
+const dataSchema = S.Struct({
+  name: S.String.annotations({ [AST.DescriptionAnnotationId]: 'Full name' }),
   email: S.String,
   age: S.Number,
+});
+
+const columnSchema = S.Struct({
+  prop: S.String,
+  label: S.String,
+  width: S.Number,
+});
+
+const tableSchema = S.Struct({
+  schema: dataSchema,
+  columns: S.Array(columnSchema),
 });
 
 export default {
@@ -64,6 +74,6 @@ export default {
 
 export const Default = {
   args: {
-    schema,
+    schema: dataSchema,
   },
 };
