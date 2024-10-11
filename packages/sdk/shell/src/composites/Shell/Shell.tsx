@@ -88,9 +88,9 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
           }
           initialInvitationCode={invitationCode}
           onCancelResetStorage={() => runtime.setLayout({ layout: ShellLayout.IDENTITY })}
-          onDone={() => {
+          onDone={async () => {
             blurActiveElement();
-            void runtime.setAppContext({ display: ShellDisplay.NONE });
+            await runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
         />
