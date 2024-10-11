@@ -23,10 +23,11 @@ import translations from './translations';
 import { FileType } from './types';
 import { type WnfsPluginProvides } from './types';
 import { wnfsUrl } from './wnfs-url';
+import { upload } from './upload';
 
 export const WnfsPlugin = (): PluginDefinition<WnfsPluginProvides> => {
   const config = useConfig();
-  const apiHost = config.values.runtime?.services?.blobstore?.endpoint || 'http://localhost:8787';
+  const apiHost = config.values.runtime?.services?.edge?.url || 'http://localhost:8787';
   const blockstore = Blockstore.create(apiHost);
 
   return {
@@ -50,37 +51,7 @@ export const WnfsPlugin = (): PluginDefinition<WnfsPluginProvides> => {
       // TODO(burdon): Add intent to upload file.
       file: {
         upload: async (file: File, space: Space) => {
-          const { directory, forest } = await loadWnfs(space, blockstore);
-          const wnfsStore = store(blockstore);
-          const path = filePath(file.name, space);
-
-          // Given the root directory of the private file system,
-          // write the file contents to `path` in said directory.
-          const result = await directory.write(
-            path,
-            true,
-            new Uint8Array(await file.arrayBuffer()),
-            new Date(),
-            forest,
-            wnfsStore,
-            new Rng(),
-          );
-
-          // Given the new immutable instance of the root directory after writing to it,
-          // **store** the changes in the "dark forest" and the associated (block) store.
-          const [_, updatedForest] = await result.rootDir.store(result.forest, wnfsStore, new Rng());
-          const cidBytes = await updatedForest.store(wnfsStore);
-
-          // Update the forest pointer on the associated space.
-          space.properties.wnfs_private_forest_cid = CID.decode(cidBytes).toString();
-
-          // Generate `wnfs://` URL & return the info.
-          const info = {
-            url: wnfsUrl(path),
-          };
-
-          log('upload', { file, info });
-          return info;
+          return await upload({ blockstore, file, space });
         },
       },
       markdown: {
