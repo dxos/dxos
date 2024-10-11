@@ -120,7 +120,7 @@ export const useTextEditor = (
         dispatchTransactions: debug ? debugDispatcher : undefined,
       });
 
-      // Move to end of line after document loaded (unless selection is set).
+      // Move to end of line after document loaded (unless selection is specified).
       if (moveToEndOfLine && !initialSelection) {
         const { to } = view.state.doc.lineAt(0);
         if (to) {
@@ -139,14 +139,13 @@ export const useTextEditor = (
 
   useEffect(() => {
     if (view) {
-      // NOTE: Set selection after the view has rendered decorations.
-      if (scrollTo || selection) {
-        view.dispatch(createEditorStateTransaction(view.state, { scrollTo, selection }));
-      }
-
       // Remove tabster attribute (rely on custom keymap).
       if (view.state.facet(editorInputMode).noTabster) {
         parentRef.current?.removeAttribute('data-tabster');
+      }
+
+      if (scrollTo || selection) {
+        view.dispatch(createEditorStateTransaction(view.state, { scrollTo, selection }));
       }
     }
   }, [view, scrollTo, selection]);
