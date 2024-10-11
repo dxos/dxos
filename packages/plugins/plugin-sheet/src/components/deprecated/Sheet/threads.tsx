@@ -12,8 +12,8 @@ import { Icon, useTranslation } from '@dxos/react-ui';
 
 import { type Decoration } from './decorations';
 import { useSheetContext } from './sheet-context';
-import { addressFromIndex, addressToIndex, type CellAddress, closest } from '../../defs';
-import { SHEET_PLUGIN } from '../../meta';
+import { addressFromIndex, addressToIndex, type CellAddress, closest } from '../../../defs';
+import { SHEET_PLUGIN } from '../../../meta';
 
 // TODO(burdon): Move into folder; split hooks.
 

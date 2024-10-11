@@ -16,13 +16,13 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Sheet } from './Sheet';
 import { type SizeMap } from './grid';
 import { useSheetContext } from './sheet-context';
-import { addressToIndex, rangeToIndex } from '../../defs';
-import { type ComputeGraph } from '../../graph';
-import { testFunctionPlugins } from '../../graph/testing';
-import { useComputeGraph } from '../../hooks';
-import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
-import { SheetType, ValueTypeEnum } from '../../types';
-import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
+import { addressToIndex, rangeToIndex } from '../../../defs';
+import { type ComputeGraph } from '../../../graph';
+import { testFunctionPlugins } from '../../../graph/testing';
+import { useComputeGraph } from '../../../hooks';
+import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../../testing';
+import { SheetType, ValueTypeEnum } from '../../../types';
+import { Toolbar, type ToolbarActionHandler } from '../../Toolbar';
 
 // TODO(burdon): Allow toolbar to access sheet context; provide state for current cursor/range.
 const SheetWithToolbar = ({ graph, debug }: { graph: ComputeGraph; debug?: boolean }) => {

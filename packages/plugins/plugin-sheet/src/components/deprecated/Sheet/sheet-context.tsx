@@ -7,11 +7,11 @@ import React, { type PropsWithChildren, createContext, useContext, useMemo, useS
 import { invariant } from '@dxos/invariant';
 
 import { createDecorations } from './decorations';
-import { type CellAddress, type CellRange } from '../../defs';
-import { type ComputeGraph } from '../../graph';
-import { useSheetModel, useFormattingModel } from '../../hooks';
-import { type FormattingModel, type SheetModel } from '../../model';
-import { type SheetType } from '../../types';
+import { type CellAddress, type CellRange } from '../../../defs';
+import { type ComputeGraph } from '../../../graph';
+import { useSheetModel, useFormattingModel } from '../../../hooks';
+import { type FormattingModel, type SheetModel } from '../../../model';
+import { type SheetType } from '../../../types';
 
 export type SheetContextType = {
   model: SheetModel;

@@ -72,7 +72,7 @@ import {
   rangeToA1Notation,
   addressToIndex,
   addressFromIndex,
-} from '../../defs';
+} from '../../../defs';
 import {
   CellEditor,
   type CellRangeNotifier,
@@ -80,7 +80,7 @@ import {
   editorKeys,
   rangeExtension,
   sheetExtension,
-} from '../CellEditor';
+} from '../../CellEditor';
 
 // TODO(burdon): Virtualization bug.
 // TODO(burdon): Toolbar styles and formatting.
