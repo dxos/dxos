@@ -12,30 +12,5 @@
     "data/*.ts",
     "src"
   ],
-  "references": [
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/node-std"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-theme"
-    },
-    {
-      "path": "../../ui/storybook-utils"
-    },
-    {
-      "path": "../gem-core"
-    }
-  ]
+  "references": []
 }

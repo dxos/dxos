@@ -14,9 +14,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../../apps/templates/bare-template"
-    }
-  ]
+  "references": []
 }
