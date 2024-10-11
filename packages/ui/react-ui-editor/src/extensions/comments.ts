@@ -547,9 +547,13 @@ export const scrollThreadIntoView = (view: EditorView, id: string, center = true
  * Query the editor state for the active formatting at the selection.
  */
 export const selectionOverlapsComment = (state: EditorState): boolean => {
-  const { selection } = state;
-  const commentState = state.field(commentsState);
+  // May not be defined if thread plugin not installed.
+  const commentState = state.field(commentsState, false);
+  if (commentState === undefined) {
+    return false;
+  }
 
+  const { selection } = state;
   for (const range of selection.ranges) {
     if (commentState.comments.some(({ range: commentRange }) => overlap(commentRange, range))) {
       return true;
@@ -591,6 +595,7 @@ class ExternalCommentSync implements PluginValue {
   };
 }
 
+// TODO(burdon): Needs comment.
 export const createExternalCommentSync = (
   id: string,
   subscribe: (sink: () => void) => UnsubscribeCallback,

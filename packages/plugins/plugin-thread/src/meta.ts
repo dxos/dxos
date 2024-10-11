@@ -10,7 +10,6 @@ export const THREAD_ITEM = `${THREAD_PLUGIN}/item`;
 export default pluginMeta({
   id: THREAD_PLUGIN,
   name: 'Threads',
-  // TODO(wittjosiah): Update once scope of threads expands.
   description: 'Comment threads on documents.',
   icon: 'ph--chat--regular',
 });
