@@ -4,13 +4,13 @@
 
 import '@dxos-theme';
 
+import { DescriptionAnnotationId } from '@effect/schema/AST';
 import React from 'react';
 
-import { S } from '@dxos/echo-schema';
+import { AST, S } from '@dxos/echo-schema';
 import { Input } from '@dxos/react-ui';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { getColumnTypes } from '../../schema';
 import translations from '../../translations';
 
 const Story = (props: FormProps) => (
@@ -24,25 +24,32 @@ type FormProps = {
 };
 
 const Form = ({ schema }: FormProps) => {
-  const types = getColumnTypes(schema);
+  // const types = getColumnTypes(schema);
+  const props = AST.getPropertySignatures(schema.ast);
+
   return (
     <div className='flex flex-col w-full gap-2'>
-      {types.map(([prop]) => (
-        <Input.Root key={prop}>
-          <Input.Label>{prop}</Input.Label>
-          <Input.TextInput
-            placeholder={prop}
-            // value={formState.label ?? ''}
-            // onChange={(event) => setFormState((prevState) => ({ ...prevState, label: event.target.value }))}
-          />
-        </Input.Root>
-      ))}
+      {props.map((prop, i) => {
+        const { name, annotations } = prop;
+        const a = AST.getDescriptionAnnotation(prop);
+        console.log(a, annotations);
+        return (
+          <Input.Root key={i}>
+            <Input.Label>{name.toString()}</Input.Label>
+            <Input.TextInput
+              placeholder={name.toString()}
+              // value={formState.label ?? ''}
+              // onChange={(event) => setFormState((prevState) => ({ ...prevState, label: event.target.value }))}
+            />
+          </Input.Root>
+        );
+      })}
     </div>
   );
 };
 
 const schema = S.Struct({
-  name: S.String,
+  name: S.String.annotations({ [DescriptionAnnotationId]: 'Name' }),
   email: S.String,
   age: S.Number,
 });
