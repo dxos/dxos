@@ -13,6 +13,8 @@ import {
   type PostNotarizationRequestBody,
 } from '@dxos/protocols';
 
+import { getEdgeUrlWithProtocol } from './utils';
+
 const DEFAULT_RETRY_TIMEOUT = 1500;
 const DEFAULT_RETRY_JITTER = 500;
 const DEFAULT_MAX_RETRIES_COUNT = 3;
@@ -21,9 +23,7 @@ export class EdgeHttpClient {
   private readonly _baseUrl: string;
 
   constructor(baseUrl: string) {
-    const url = new URL(baseUrl);
-    url.protocol = 'https';
-    this._baseUrl = url.toString();
+    this._baseUrl = getEdgeUrlWithProtocol(baseUrl, 'http');
     log('created', { url: this._baseUrl });
   }
 
