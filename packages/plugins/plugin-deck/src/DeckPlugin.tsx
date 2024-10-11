@@ -110,7 +110,7 @@ export const DeckPlugin = ({
   let handleNavigation: () => Promise<void> | undefined;
 
   const settings = new LocalStorageStore<DeckSettingsProps>('dxos.org/settings/layout', {
-    showFooter: false,
+    showHints: true,
     customSlots: false,
     flatDeck: false,
     enableNativeRedirect: false,
@@ -243,7 +243,7 @@ export const DeckPlugin = ({
       );
 
       settings
-        .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
+        .prop({ key: 'showHints', storageKey: 'show-hints', type: LocalStorageStore.bool() })
         .prop({ key: 'customSlots', storageKey: 'customSlots', type: LocalStorageStore.bool() })
         .prop({ key: 'flatDeck', storageKey: 'flatDeck', type: LocalStorageStore.bool() })
         .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
@@ -355,7 +355,7 @@ export const DeckPlugin = ({
         return (
           <DeckLayout
             layoutParts={location.values.active}
-            showHintsFooter={settings.values.showFooter}
+            showHints={settings.values.showHints}
             overscroll={settings.values.overscroll}
             flatDeck={settings.values.flatDeck}
             slots={settings.values.customSlots ? customSlots : undefined}

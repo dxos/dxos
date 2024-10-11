@@ -5,7 +5,6 @@
 import React, { type ReactNode } from 'react';
 
 import { LocalStorageStore } from '@dxos/local-storage';
-import { debug } from '@dxos/log';
 
 import { PluginContainer } from './PluginContainer';
 import { type PluginContext, PluginProvider } from './PluginContext';
@@ -68,8 +67,6 @@ export const PluginHost = ({
     provides: {
       plugins: state.values,
       context: ({ children }) => {
-        // TODO(burdon): Called multiple times (even with strict off).
-        debug('PluginProvider', { enabled: state.values.enabled.length });
         return <PluginProvider value={state.values}>{children}</PluginProvider>;
       },
       root: () => {

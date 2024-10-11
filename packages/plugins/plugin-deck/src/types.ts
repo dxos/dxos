@@ -20,7 +20,7 @@ export const OverscrollOptions = ['none', 'centering'] as const;
 export type Overscroll = (typeof OverscrollOptions)[number];
 
 export type DeckSettingsProps = {
-  showFooter: boolean;
+  showHints: boolean;
   customSlots: boolean;
   flatDeck: boolean;
   enableNativeRedirect: boolean;
