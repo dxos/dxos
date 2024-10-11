@@ -6,13 +6,13 @@ import { type ColumnDef } from '@tanstack/react-table';
 
 import { type S } from '@dxos/echo-schema';
 
-import { classifySchemaProperties } from './schema';
+import { getColumnTypes } from './schema';
 import { createColumnBuilder } from '../helpers';
 
 export const schemaToColumnDefs = <T>(schema: S.Schema<T, any>): ColumnDef<T, any>[] => {
   const { helper, builder } = createColumnBuilder<T>();
 
-  const classified = classifySchemaProperties(schema);
+  const classified = getColumnTypes(schema);
   return classified.map(([name, type]) => {
     const propertyKey = name.toString();
 
@@ -34,8 +34,8 @@ export const schemaToColumnDefs = <T>(schema: S.Schema<T, any>): ColumnDef<T, an
         column = builder.date({ label: propertyKey });
         break;
       }
-      case 'display': {
-        column = builder.display({ label: propertyKey, id: propertyKey });
+      case 'json': {
+        column = builder.json({ label: propertyKey, id: propertyKey });
         break;
       }
       default: {
