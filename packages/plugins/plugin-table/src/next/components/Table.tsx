@@ -16,11 +16,7 @@ import {
 
 import { useTable } from '../hooks';
 import { type ColumnDefinition } from '../table';
-
-type TableProps = {
-  columnDefinitions: ColumnDefinition[];
-  data: any[];
-};
+import { DxAxisResize } from 'packages/ui/lit-grid/src';
 
 const TableCellEditor = ({
   __gridScope,
@@ -64,6 +60,13 @@ const TableCellEditor = ({
   return <GridCellEditor extension={extension} getCellContent={getCellContent} />;
 };
 
+type TableProps = {
+  columnDefinitions: ColumnDefinition[];
+  data: any[];
+};
+
+const frozen = { frozenRowsStart: 1 };
+
 // NOTE: The table model manages both ephemeral and persistent state.
 // - Ephemeral state (e.g., sorting, filtering, selection) is handled internally.
 // - Persistent state (e.g., column order, widths) is propagated to the parent for storage.
@@ -77,29 +80,28 @@ export const Table = ({ columnDefinitions, data }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
   const { table, columnMeta, dispatch } = useTable(columnDefinitions, data, gridRef);
 
+  const handleAxisResize = useCallback(
+    (event: DxAxisResize) => {
+      if (event.axis === 'col') {
+        const columnIndex = parseInt(event.index, 10);
+        dispatch({ type: 'ModifyColumnWidth', columnIndex, width: event.size });
+      }
+    },
+    [dispatch],
+  );
+
   return (
-    <>
-      <Grid.Root id='table-v2'>
-        <TableCellEditor getCellData={table.getCellData} setCellData={table.setCellData} gridRef={gridRef} />
-        <Grid.Content
-          ref={gridRef}
-          limitRows={data.length}
-          limitColumns={table.columnDefinitions.length}
-          initialCells={table.cells.value}
-          columns={columnMeta}
-          frozen={{ frozenRowsStart: 1 }}
-          onAxisResize={(event) => {
-            if (event.axis === 'col') {
-              const columnIndex = parseInt(event.index, 10);
-              dispatch({
-                type: 'ModifyColumnWidth',
-                columnIndex,
-                width: event.size,
-              });
-            }
-          }}
-        />
-      </Grid.Root>
-    </>
+    <Grid.Root id='table-next'>
+      <TableCellEditor getCellData={table.getCellData} setCellData={table.setCellData} gridRef={gridRef} />
+      <Grid.Content
+        ref={gridRef}
+        limitRows={data.length}
+        limitColumns={table.columnDefinitions.length}
+        initialCells={table.cells.value}
+        columns={columnMeta}
+        frozen={frozen}
+        onAxisResize={handleAxisResize}
+      />
+    </Grid.Root>
   );
 };
