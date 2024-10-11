@@ -6,7 +6,7 @@ import { ArrowClockwise } from '@phosphor-icons/react';
 import React, { type FC, useState } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceState, Space as SpaceData } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useMulticastObservable } from '@dxos/react-hooks';
 import { Toolbar } from '@dxos/react-ui';
@@ -44,6 +44,7 @@ export const SpaceInfoPanel: FC = () => {
         ? EdgeReplicationSetting.DISABLED
         : EdgeReplicationSetting.ENABLED,
     );
+    setTimeout(() => forceUpdate({}), 500); // Refresh the panel.
   };
 
   return (
