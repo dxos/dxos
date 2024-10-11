@@ -16,28 +16,26 @@ import {
 } from '@dxos/react-ui-grid';
 
 import { useTableModel } from '../hooks';
-import { type ColumnDefinition } from '../table';
+import { type TableModel, type ColumnDefinition } from '../table-model';
 
 const TableCellEditor = ({
   __gridScope,
-  getCellData,
-  setCellData,
   gridRef,
+  tableModel,
 }: GridScopedProps<{
   gridRef: RefObject<DxGridElement>;
-  getCellData: (colIndex: number, rowIndex: number) => any;
-  setCellData: (colIndex: number, rowIndex: number, value: any) => void;
+  tableModel?: TableModel;
 }>) => {
   const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
 
   const updateCell = useCallback(
     (value: any) => {
-      if (value !== undefined && editing) {
+      if (value !== undefined && editing && tableModel) {
         const [col, row] = editing.index.split(',').map(Number);
-        setCellData(col, row, value);
+        tableModel.setCellData(col, row, value);
       }
     },
-    [editing, setCellData],
+    [editing, tableModel],
   );
 
   const determineNavigationAxis = (key: string): 'row' | 'col' | undefined => {
@@ -73,11 +71,11 @@ const TableCellEditor = ({
   const extension = [editorKeys({ onClose: handleClose, ...(editing?.initialContent && { onNav: handleClose }) })];
 
   const getCellContent = useCallback(() => {
-    if (editing) {
+    if (editing && tableModel) {
       const [col, row] = editing.index.split(',').map(Number);
-      return `${getCellData(col, row)}`;
+      return `${tableModel.getCellData(col, row)}`;
     }
-  }, [editing, getCellData]);
+  }, [editing, tableModel]);
 
   return <GridCellEditor extension={extension} getCellContent={getCellContent} />;
 };
@@ -96,8 +94,6 @@ const frozen = { frozenRowsStart: 1 };
 // TODO(Zan): Callback for changing column width.
 // TODO(Zan): Callback for re-arranging columns.
 // TODO(Zan): Callbacks for editing column schema.
-// TODO(Zan): Remove column axis labels.
-// TODO(Zan): Custom header labels and buttons.
 export const Table = ({ columnDefinitions, data }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
   const { tableModel, columnMeta } = useTableModel(columnDefinitions, data, gridRef);
@@ -106,7 +102,7 @@ export const Table = ({ columnDefinitions, data }: TableProps) => {
     (event: DxAxisResize) => {
       if (event.axis === 'col') {
         const columnIndex = parseInt(event.index, 10);
-        tableModel.dispatch({ type: 'ModifyColumnWidth', columnIndex, width: event.size });
+        tableModel?.dispatch({ type: 'ModifyColumnWidth', columnIndex, width: event.size });
       }
     },
     [tableModel],
@@ -114,12 +110,12 @@ export const Table = ({ columnDefinitions, data }: TableProps) => {
 
   return (
     <Grid.Root id='table-next'>
-      <TableCellEditor getCellData={tableModel.getCellData} setCellData={tableModel.setCellData} gridRef={gridRef} />
+      <TableCellEditor tableModel={tableModel} gridRef={gridRef} />
       <Grid.Content
         ref={gridRef}
         limitRows={data.length}
-        limitColumns={tableModel.columnDefinitions.length}
-        initialCells={tableModel.cells.value}
+        limitColumns={tableModel?.columnDefinitions.length}
+        initialCells={tableModel?.cells.value}
         columns={columnMeta}
         frozen={frozen}
         onAxisResize={handleAxisResize}

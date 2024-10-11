@@ -4,6 +4,8 @@
 
 import { computed, type ReadonlySignal } from '@preact/signals-core';
 
+import { Resource } from '@dxos/context';
+import { PublicKey } from '@dxos/react-client';
 import { type DxGridPlaneCells, type DxGridCells } from '@dxos/react-ui-grid';
 
 import { CellUpdateListener } from './CellUpdateListener';
@@ -37,30 +39,27 @@ export type TableAction =
   | { type: 'DeselectAllRows' }
   | { type: 'ModifyColumnWidth'; columnIndex: number; width: number };
 
-export class TableModel {
-  public columnDefinitions: ColumnDefinition[];
-  private data: any[];
+export class TableModel extends Resource {
+  public readonly id = `table-model-${PublicKey.random().truncate()}`;
 
-  // Ephermeral view concerns.
-  public columnOrdering: ColumnId[];
-  public columnWidths: Record<ColumnId, number>;
-  public sorting: SortConfig[];
-  public pinnedRows: { top: number[]; bottom: number[] };
-  public rowSelection: number[];
+  public cells!: ReadonlySignal<DxGridCells>;
+  public cellUpdateListener!: CellUpdateListener;
 
-  public cells: ReadonlySignal<DxGridCells>;
-  public cellUpdateListener: CellUpdateListener;
+  constructor(
+    public readonly columnDefinitions: ColumnDefinition[],
+    public readonly data: any[],
+    public columnOrdering: ColumnId[] = columnDefinitions.map((column) => column.id),
+    public columnWidths: Record<ColumnId, number> = Object.fromEntries(
+      columnDefinitions.map((column) => [column.id, DEFAULT_WIDTH]),
+    ),
+    public sorting: SortConfig[] = [],
+    public pinnedRows: { top: number[]; bottom: number[] } = { top: [], bottom: [] },
+    public rowSelection: number[] = [],
+  ) {
+    super();
+  }
 
-  // TODO(Zan): Take `TableType` directly.
-  constructor(columnDefinitions: ColumnDefinition[], data: any[]) {
-    this.columnDefinitions = columnDefinitions;
-    this.data = data;
-    this.columnOrdering = columnDefinitions.map((column) => column.id);
-    this.columnWidths = Object.fromEntries(columnDefinitions.map((column) => [column.id, DEFAULT_WIDTH]));
-    this.sorting = [];
-    this.pinnedRows = { top: [], bottom: [] };
-    this.rowSelection = [];
-
+  protected override async _open() {
     // Construct the header cells based on the column definitions.
     const headerCells: DxGridPlaneCells = Object.fromEntries(
       this.columnDefinitions.map((col, index) => {
@@ -89,6 +88,7 @@ export class TableModel {
     });
 
     this.cellUpdateListener = new CellUpdateListener(cellValues);
+    this._ctx.onDispose(this.cellUpdateListener.dispose);
   }
 
   public dispatch(action: TableAction): void {
@@ -161,8 +161,4 @@ export class TableModel {
       }
     }
   };
-
-  public dispose(): void {
-    this.cellUpdateListener.dispose();
-  }
 }

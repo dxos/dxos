@@ -3,7 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { type RefObject, useEffect, useMemo } from 'react';
+import { type RefObject, useEffect, useMemo, useState } from 'react';
 
 import { type DxGridElement, type DxGridAxisMeta } from '@dxos/react-ui-grid';
 
@@ -16,9 +16,30 @@ export const useTableModel = (
   data: any[],
   gridRef: RefObject<DxGridElement>,
 ) => {
-  const tableModel = useMemo(() => new TableModel(columnDefinitions, data), [columnDefinitions, data]);
+  const [tableModel, setTableModel] = useState<TableModel>();
+
+  useEffect(() => {
+    if (!columnDefinitions || !data) {
+      return;
+    }
+
+    let model: TableModel | undefined;
+    const t = setTimeout(async () => {
+      model = new TableModel(columnDefinitions, data);
+      await model.open();
+      setTableModel(model);
+    });
+
+    return () => {
+      clearTimeout(t);
+      void model?.close();
+    };
+  }, [columnDefinitions, data]);
 
   const columnMeta: DxGridAxisMeta = useMemo(() => {
+    if (!tableModel) {
+      return { grid: {} };
+    }
     const headings = Object.fromEntries(
       tableModel.columnDefinitions.map((col, index) => [
         index,
@@ -27,12 +48,16 @@ export const useTableModel = (
     );
 
     return { grid: headings };
-  }, [tableModel.columnDefinitions, tableModel.columnWidths]);
+  }, [tableModel]);
 
   // TODO(Zan): Table should take a callback like onCellUpdated. Move this effect into TableModel
   useEffect(() => {
+    if (!tableModel || !gridRef.current) {
+      return;
+    }
+
     return effect(() => {
-      if (!gridRef.current) {
+      if (!gridRef.current || !tableModel.cellUpdateListener) {
         return;
       }
 
@@ -49,10 +74,7 @@ export const useTableModel = (
         }
       }
     });
-  }, [tableModel.cellUpdateListener.updatedCells]);
-
-  // Clean up table on unmount.
-  useEffect(() => () => tableModel.dispose(), []);
+  }, [tableModel, gridRef]);
 
   return { tableModel, columnMeta };
 };
