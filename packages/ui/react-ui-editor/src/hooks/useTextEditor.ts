@@ -20,8 +20,8 @@ import { log } from '@dxos/log';
 import { getProviderValue, isNotFalsy, type MaybeProvider } from '@dxos/util';
 
 import { editorInputMode } from '../extensions';
-import { type EditorSelection, createEditorStateTransaction, documentId } from '../state';
-import { logChanges } from '../util';
+import { type EditorSelection, documentId, createEditorStateTransaction } from '../state';
+import { debugDispatcher } from '../util';
 
 export type UseTextEditor = {
   // TODO(burdon): Rename.
@@ -97,17 +97,18 @@ export const useTextEditor = (
           EditorView.exceptionSink.of((err) => {
             log.catch(err);
           }),
-          ViewPlugin.fromClass(
-            class {
-              constructor(_view: EditorView) {
-                log('construct', { id });
-              }
-
-              destroy() {
-                log('destroy', { id });
-              }
-            },
-          ),
+          // TODO(burdon): Factor out debug inspector.
+          // ViewPlugin.fromClass(
+          //   class {
+          //     constructor(_view: EditorView) {
+          //       log('construct', { id });
+          //     }
+          //
+          //     destroy() {
+          //       log('destroy', { id });
+          //     }
+          //   },
+          // ),
         ].filter(isNotFalsy),
       });
 
@@ -115,27 +116,15 @@ export const useTextEditor = (
       view = new EditorView({
         parent: parentRef.current,
         state,
-        // NOTE: Uncomment to debug/monitor all transactions.
-        // https://codemirror.net/docs/ref/#view.EditorView.dispatch
-        dispatchTransactions: debug
-          ? (trs, view) => {
-              if (debug) {
-                logChanges(trs);
-              }
-              view.update(trs);
-            }
-          : undefined,
+        scrollTo: scrollTo ? EditorView.scrollIntoView(scrollTo, { yMargin: 96 }) : undefined,
+        dispatchTransactions: debug ? debugDispatcher : undefined,
       });
 
-      // Move to end of line after document loaded.
-      if (initialValue && moveToEndOfLine) {
+      // Move to end of line after document loaded (unless selection is specified).
+      if (moveToEndOfLine && !initialSelection) {
         const { to } = view.state.doc.lineAt(0);
         if (to) {
-          try {
-            view.dispatch({ selection: { anchor: to } });
-          } catch (err) {
-            log.catch(err);
-          }
+          view.dispatch({ selection: { anchor: to } });
         }
       }
 
@@ -150,12 +139,13 @@ export const useTextEditor = (
 
   useEffect(() => {
     if (view) {
-      // NOTE: Set selection after first update (since content may rerender due to decorations).
-      view.dispatch(createEditorStateTransaction({ scrollTo, selection }));
-
       // Remove tabster attribute (rely on custom keymap).
       if (view.state.facet(editorInputMode).noTabster) {
         parentRef.current?.removeAttribute('data-tabster');
+      }
+
+      if (scrollTo || selection) {
+        view.dispatch(createEditorStateTransaction(view.state, { scrollTo, selection }));
       }
     }
   }, [view, scrollTo, selection]);

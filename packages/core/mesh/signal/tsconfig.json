@@ -4,15 +4,5 @@
   "include": [
     "src/**/*"
   ],
-  "references": [
-    {
-      "path": "../../../common/async"
-    },
-    {
-      "path": "../../../common/log"
-    },
-    {
-      "path": "../../../common/util"
-    }
-  ]
+  "references": []
 }

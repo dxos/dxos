@@ -14,9 +14,10 @@ import { nonNullable } from '@dxos/util';
 
 import { ThreadAction, type ThreadState } from '../types';
 
-// TODO(burdon): This is quite expensive.
-const getName = (doc: DocumentType, start: string, end: string): string | undefined => {
+// TODO(burdon): Factor out.
+const getName = (doc: DocumentType, anchor: string): string | undefined => {
   if (doc.content) {
+    const [start, end] = anchor.split(':');
     return getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
   }
 };
@@ -34,7 +35,7 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Inten
 
   // TODO(Zan): When we have the deepsignal specific equivalent of this we should use that instead.
   const threads = computed(() =>
-    [...doc.threads.filter(nonNullable), ...(state.staging[fullyQualifiedId(doc)] ?? [])].filter(
+    [...doc.threads.filter(nonNullable), ...(state.drafts[fullyQualifiedId(doc)] ?? [])].filter(
       (thread) => !(thread?.status === 'resolved'),
     ),
   );
@@ -44,12 +45,9 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Inten
       if (update.docChanged) {
         doc.threads.forEach((thread) => {
           if (thread?.anchor) {
-            const [start, end] = thread.anchor.split(':');
-            const name = getName(doc, start, end);
-            console.log('docChanged', name, start, end);
-            // TODO(burdon): This seems unsafe; review.
             // Only update if the name has changed, otherwise this will cause an infinite loop.
             // Skip if the name is empty; this means comment text was deleted, but thread name should remain.
+            const name = getName(doc, thread.anchor);
             if (name && name !== thread.name) {
               thread.name = name;
             }
@@ -70,9 +68,7 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Inten
     comments({
       id: fullyQualifiedId(doc),
       onCreate: ({ cursor }) => {
-        const [start, end] = cursor.split(':');
-        const name = getName(doc, start, end);
-        console.log('onCreate', cursor, name);
+        const name = getName(doc, cursor);
         void dispatch({
           action: ThreadAction.CREATE,
           data: {
@@ -83,12 +79,12 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Inten
         });
       },
       onDelete: ({ id }) => {
-        // If the thread is in the staging area, remove it.
-        const stagingArea = state.staging[fullyQualifiedId(doc)];
-        if (stagingArea) {
-          const index = stagingArea.findIndex((thread) => fullyQualifiedId(thread) === id);
+        // Remove draft.
+        const draft = state.drafts[fullyQualifiedId(doc)];
+        if (draft) {
+          const index = draft.findIndex((thread) => fullyQualifiedId(thread) === id);
           if (index !== -1) {
-            stagingArea.splice(index, 1);
+            draft.splice(index, 1);
           }
         }
 
@@ -99,21 +95,21 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Inten
       },
       onUpdate: ({ id, cursor }) => {
         const thread =
-          state.staging[fullyQualifiedId(doc)]?.find((thread) => fullyQualifiedId(thread) === id) ??
+          state.drafts[fullyQualifiedId(doc)]?.find((thread) => fullyQualifiedId(thread) === id) ??
           doc.threads.find((thread) => thread?.id === id);
 
         if (thread instanceof ThreadType && thread.anchor) {
-          const [start, end] = thread.anchor.split(':');
-          const name = getName(doc, start, end);
-          console.log('onUpdate', id, cursor, name);
-          thread.name = name;
+          thread.name = getName(doc, thread.anchor);
           thread.anchor = cursor;
         }
       },
       onSelect: ({ selection: { current, closest } }) => {
         void dispatch({
           action: ThreadAction.SELECT,
-          data: { current: current ?? closest, skipOpen: true },
+          data: {
+            current: current ?? closest,
+            skipOpen: true,
+          },
         });
       },
     }),
