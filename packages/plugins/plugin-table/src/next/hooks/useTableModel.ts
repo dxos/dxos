@@ -7,7 +7,7 @@ import { type RefObject, useEffect, useMemo } from 'react';
 
 import { type DxGridElement, type DxGridAxisMeta } from '@dxos/react-ui-grid';
 
-import { type ColumnDefinition, TableModel } from '../table';
+import { type ColumnDefinition, TableModel } from '../table-model';
 
 // TODO(Zan): Take ordering here (or order based on some stored property).
 // When the order changes, we should notify the consumer.

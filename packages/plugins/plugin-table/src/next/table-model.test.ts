@@ -9,7 +9,7 @@ import { create } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 
-import { TableModel, type TableAction } from './table';
+import { TableModel, type TableAction } from './table-model';
 
 registerSignalsRuntime();
 
