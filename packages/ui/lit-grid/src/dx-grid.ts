@@ -36,7 +36,7 @@ import {
   type DxGridAxis,
   type DxGridSelectionProps,
 } from './types';
-import { separator, toCellIndex } from './util';
+import { separator } from './util';
 
 /**
  * The size in pixels of the gap between cells
@@ -370,7 +370,7 @@ export class DxGrid extends LitElement {
     queueMicrotask(() =>
       this.dispatchEvent(
         new DxEditRequest({
-          cellIndex: toCellIndex(this.focusedCell),
+          position: this.focusedCell,
           cellBox: this.focusedCellBox(),
           initialContent,
         }),

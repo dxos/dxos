@@ -13,7 +13,7 @@ import { FunctionType } from '@dxos/plugin-script/types';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
-import { SheetContainer } from './components';
+import { SheetContainer, ComputeGraphProvider } from './components';
 import { compareIndexPositions, createSheet } from './defs';
 import { computeGraphFacet } from './extensions';
 import { type ComputeGraphRegistry } from './graph';
@@ -44,7 +44,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
     provides: {
       context: ({ children }) => {
         invariant(computeGraphRegistry);
-        return <ComputeGraphContext registry={computeGraphRegistry}>{children}</ComputeGraphContext>;
+        return <ComputeGraphProvider registry={computeGraphRegistry}>{children}</ComputeGraphProvider>;
       },
       metadata: {
         records: {

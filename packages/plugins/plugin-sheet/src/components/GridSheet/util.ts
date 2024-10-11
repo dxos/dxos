@@ -19,18 +19,13 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 
 import { type CellAddress } from '../../defs';
-import { type SheetModel, type FormattingModel } from '../../model';
-import { type Decorations } from '../Sheet/decorations';
+import { type SheetModel, type FormattingModel, type Decorations } from '../../model';
 
 export const dxGridCellIndexToSheetCellAddress = (gridEditing: GridEditing): CellAddress | null => {
   if (!gridEditing) {
     return null;
   }
-  const [colStr, rowStr] = gridEditing.index.split(',');
-  return {
-    col: parseInt(colStr),
-    row: parseInt(rowStr),
-  };
+  return gridEditing.position;
 };
 
 const createDxGridColumns = (model: SheetModel): DxGridAxisMeta => {
@@ -67,7 +62,7 @@ const gridCellGetter = (model: SheetModel, formatting: FormattingModel, decorati
         const row = nextBounds.start.row + r0;
         const index = `${col},${row}`;
         const decorationsForCell = decorations.getDecorationsForCell(index);
-        const cell = formatting.getFormatting({ col, row });
+        const cell = formatting.getFormatting({ col, row, plane: 'grid' });
         if (cell.value) {
           cachedGridCells;
           cachedGridCells[`${col},${row}`] = {

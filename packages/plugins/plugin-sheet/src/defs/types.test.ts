@@ -14,7 +14,7 @@ describe('cell', () => {
   });
 
   test('rangeToA1Notation', () => {
-    expect(rangeToA1Notation({ from: addressFromA1Notation('A1'), to: addressFromA1Notation('A5') })).to.eq('A1:A5');
+    expect(rangeToA1Notation({ start: addressFromA1Notation('A1'), end: addressFromA1Notation('A5') })).to.eq('A1:A5');
   });
 
   test('inRange', () => {

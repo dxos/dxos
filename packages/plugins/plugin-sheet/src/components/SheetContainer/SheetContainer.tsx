@@ -18,7 +18,7 @@ import { Toolbar, type ToolbarAction } from '../Toolbar';
 // TODO(Zan): Factor out, copied this from MarkdownPlugin.
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
 
-const SheetContainer = ({ graph, sheet, role }: { graph: ComputeGraph; sheet: SheetType; role?: string }) => {
+export const SheetContainer = ({ graph, sheet, role }: { graph: ComputeGraph; sheet: SheetType; role?: string }) => {
   const dispatch = useIntentDispatcher();
 
   const id = fullyQualifiedId(sheet);
@@ -80,5 +80,3 @@ const SheetContainer = ({ graph, sheet, role }: { graph: ComputeGraph; sheet: Sh
     </SheetProvider>
   );
 };
-
-export default SheetContainer;

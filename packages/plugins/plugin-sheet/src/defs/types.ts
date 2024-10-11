@@ -13,7 +13,7 @@ export const MAX_COLUMNS = 26 * 2;
 
 export type CellAddress = DxGridPosition;
 
-export type CellRange = DxGridRange;
+export type CellRange = Omit<DxGridRange, 'end'> & Partial<Pick<DxGridRange, 'end'>>;
 
 export type CellIndex = string;
 
@@ -31,7 +31,7 @@ export const columnLetter = (col: number): string => {
   );
 };
 
-export const addressToA1Notation = ({ col, row }: CellAddress): string => {
+export const addressToA1Notation = ({ col, row }: Omit<CellAddress, 'plane'>): string => {
   return `${columnLetter(col)}${row + 1}`;
 };
 
@@ -47,7 +47,7 @@ export const addressFromA1Notation = (ref: string): CellAddress => {
 };
 
 export const rangeToA1Notation = (range: CellRange) => {
-  return [range?.start && addressToA1Notation(range?.end), range?.end && addressToA1Notation(range?.end)]
+  return [range?.start && addressToA1Notation(range?.start), range?.end && addressToA1Notation(range?.end)]
     .filter(Boolean)
     .join(':');
 };

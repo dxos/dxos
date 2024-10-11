@@ -22,7 +22,7 @@ import {
   type EditorKeysProps,
   rangeExtension,
   sheetExtension,
-} from '../CellEditor';
+} from '../Editors';
 import { useSheetContext } from '../SheetContext';
 
 const GridSheetCellEditor = ({ model, extension }: Pick<CellEditorProps, 'extension'> & { model: SheetModel }) => {
@@ -109,11 +109,15 @@ const GridSheetImpl = ({ model, formatting }: { model: SheetModel; formatting: F
   );
 
   const handleSelect = useCallback<NonNullable<GridContentProps['onSelect']>>(
-    ({ minCol, maxCol, minRow, maxRow }) => {
-      if (editing) {
-        const range: CellRange = { from: { col: minCol, row: minRow } };
+    ({ start, end }) => {
+      if (editing && start.plane === 'grid' && end.plane === 'grid') {
+        const minCol = Math.min(start.col, end.col);
+        const maxCol = Math.max(start.col, end.col);
+        const minRow = Math.min(start.row, end.row);
+        const maxRow = Math.max(start.row, end.row);
+        const range: CellRange = { start: { col: minCol, row: minRow, plane: 'grid' } };
         if (minCol !== maxCol || minRow !== maxRow) {
-          range.to = { col: maxCol, row: maxRow };
+          range.end = { col: maxCol, row: maxRow, plane: 'grid' };
         }
         setRange(range);
         // Update range selection in formula.

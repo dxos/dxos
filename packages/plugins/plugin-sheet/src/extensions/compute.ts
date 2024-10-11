@@ -57,7 +57,7 @@ export const compute = (options: ComputeOptions = {}): Extension => {
                       builder.add(node.from, node.to, iter.value);
                     } else {
                       // TODO(burdon): Create ordered list of cells on each decoration run.
-                      const cell: CellAddress = { col: node.node.from, row: 0 };
+                      const cell: CellAddress = { col: node.node.from, row: 0, plane: 'grid' };
                       invariant(computeNode);
                       // NOTE: This triggers re-render (below).
                       computeNode.setValue(cell, formula);

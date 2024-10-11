@@ -3,7 +3,6 @@
 //
 
 import { type DxGrid } from './dx-grid';
-import { toCellIndex } from './util';
 
 export type DxGridCellIndex = `${string},${string}`;
 
@@ -117,15 +116,15 @@ export class DxAxisResizeInternal extends Event {
   }
 }
 
-export type DxEditRequestProps = Pick<DxEditRequest, 'cellIndex' | 'cellBox' | 'initialContent'>;
+export type DxEditRequestProps = Pick<DxEditRequest, 'position' | 'cellBox' | 'initialContent'>;
 
 export class DxEditRequest extends Event {
-  public readonly cellIndex: DxGridCellIndex;
+  public readonly position: DxGridPosition;
   public readonly cellBox: Record<'insetInlineStart' | 'insetBlockStart' | 'inlineSize' | 'blockSize', number>;
   public readonly initialContent?: string;
   constructor(props: DxEditRequestProps) {
     super('dx-edit-request');
-    this.cellIndex = props.cellIndex;
+    this.position = props.position;
     this.cellBox = props.cellBox;
     this.initialContent = props.initialContent;
   }
@@ -135,19 +134,11 @@ export type DxGridPlaneRange = { start: DxGridPlanePosition; end: DxGridPlanePos
 export type DxGridRange = { start: DxGridPosition; end: DxGridPosition };
 
 export class DxGridCellsSelect extends Event {
-  public readonly start: string;
-  public readonly end: string;
-  public readonly minCol: number;
-  public readonly maxCol: number;
-  public readonly minRow: number;
-  public readonly maxRow: number;
+  public readonly start: DxGridPosition;
+  public readonly end: DxGridPosition;
   constructor({ start, end }: DxGridRange) {
     super('dx-grid-cells-select');
-    this.start = toCellIndex(start);
-    this.end = toCellIndex(end);
-    this.minCol = Math.min(start.col, end.col);
-    this.maxCol = Math.max(start.col, end.col);
-    this.minRow = Math.min(start.row, end.row);
-    this.maxRow = Math.max(start.row, end.row);
+    this.start = start;
+    this.end = end;
   }
 }

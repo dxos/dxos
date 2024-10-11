@@ -8,7 +8,7 @@ import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import SheetContainer from './SheetContainer';
+import { SheetContainer } from './SheetContainer';
 import { useComputeGraph } from '../../hooks';
 import { useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { SheetType } from '../../types';
