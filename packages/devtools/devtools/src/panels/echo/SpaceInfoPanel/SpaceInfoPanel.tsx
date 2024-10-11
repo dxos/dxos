@@ -44,6 +44,7 @@ export const SpaceInfoPanel: FC = () => {
         ? EdgeReplicationSetting.DISABLED
         : EdgeReplicationSetting.ENABLED,
     );
+    setTimeout(() => forceUpdate({}), 500); // Refresh the panel.
   };
 
   return (
