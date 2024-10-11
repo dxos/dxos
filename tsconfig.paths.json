@@ -6,7 +6,7 @@
         "packages/plugins/experimental/plugin-chain/src/index.ts"
       ],
       "@dxos/plugin-chain/meta": [
-        "packages/plugins/experimental/plugin-chain/src/meta.tsx"
+        "packages/plugins/experimental/plugin-chain/src/meta.ts"
       ],
       "@dxos/plugin-chain/types": [
         "packages/plugins/experimental/plugin-chain/src/types/index.ts"
@@ -15,13 +15,13 @@
         "packages/plugins/experimental/plugin-excalidraw/src/index.ts"
       ],
       "@dxos/plugin-excalidraw/meta": [
-        "packages/plugins/experimental/plugin-excalidraw/src/meta.tsx"
+        "packages/plugins/experimental/plugin-excalidraw/src/meta.ts"
       ],
       "@dxos/plugin-explorer": [
         "packages/plugins/experimental/plugin-explorer/src/index.ts"
       ],
       "@dxos/plugin-explorer/meta": [
-        "packages/plugins/experimental/plugin-explorer/src/meta.tsx"
+        "packages/plugins/experimental/plugin-explorer/src/meta.ts"
       ],
       "@dxos/plugin-explorer/types": [
         "packages/plugins/experimental/plugin-explorer/src/types/index.ts"
@@ -30,19 +30,19 @@
         "packages/plugins/experimental/plugin-function/src/index.ts"
       ],
       "@dxos/plugin-function/meta": [
-        "packages/plugins/experimental/plugin-function/src/meta.tsx"
+        "packages/plugins/experimental/plugin-function/src/meta.ts"
       ],
       "@dxos/plugin-github": [
         "packages/plugins/experimental/plugin-github/src/index.ts"
       ],
       "@dxos/plugin-github/meta": [
-        "packages/plugins/experimental/plugin-github/src/meta.tsx"
+        "packages/plugins/experimental/plugin-github/src/meta.ts"
       ],
       "@dxos/plugin-grid": [
         "packages/plugins/experimental/plugin-grid/src/index.ts"
       ],
       "@dxos/plugin-grid/meta": [
-        "packages/plugins/experimental/plugin-grid/src/meta.tsx"
+        "packages/plugins/experimental/plugin-grid/src/meta.ts"
       ],
       "@dxos/plugin-grid/types": [
         "packages/plugins/experimental/plugin-grid/src/types/index.ts"
@@ -51,7 +51,7 @@
         "packages/plugins/experimental/plugin-inbox/src/index.ts"
       ],
       "@dxos/plugin-inbox/meta": [
-        "packages/plugins/experimental/plugin-inbox/src/meta.tsx"
+        "packages/plugins/experimental/plugin-inbox/src/meta.ts"
       ],
       "@dxos/plugin-inbox/types": [
         "packages/plugins/experimental/plugin-inbox/src/types/index.ts"
@@ -60,7 +60,7 @@
         "packages/plugins/experimental/plugin-ipfs/src/index.ts"
       ],
       "@dxos/plugin-ipfs/meta": [
-        "packages/plugins/experimental/plugin-ipfs/src/meta.tsx"
+        "packages/plugins/experimental/plugin-ipfs/src/meta.ts"
       ],
       "@dxos/plugin-ipfs/types": [
         "packages/plugins/experimental/plugin-ipfs/src/types/index.ts"
@@ -69,7 +69,7 @@
         "packages/plugins/experimental/plugin-kanban/src/index.ts"
       ],
       "@dxos/plugin-kanban/meta": [
-        "packages/plugins/experimental/plugin-kanban/src/meta.tsx"
+        "packages/plugins/experimental/plugin-kanban/src/meta.ts"
       ],
       "@dxos/plugin-kanban/types": [
         "packages/plugins/experimental/plugin-kanban/src/types/index.ts"
@@ -78,7 +78,7 @@
         "packages/plugins/experimental/plugin-map/src/index.ts"
       ],
       "@dxos/plugin-map/meta": [
-        "packages/plugins/experimental/plugin-map/src/meta.tsx"
+        "packages/plugins/experimental/plugin-map/src/meta.ts"
       ],
       "@dxos/plugin-map/types": [
         "packages/plugins/experimental/plugin-map/src/types/index.ts"
@@ -93,7 +93,7 @@
         "packages/plugins/experimental/plugin-outliner/src/index.ts"
       ],
       "@dxos/plugin-outliner/meta": [
-        "packages/plugins/experimental/plugin-outliner/src/meta.tsx"
+        "packages/plugins/experimental/plugin-outliner/src/meta.ts"
       ],
       "@dxos/plugin-outliner/types": [
         "packages/plugins/experimental/plugin-outliner/src/types/index.ts"
@@ -105,7 +105,7 @@
         "packages/plugins/experimental/plugin-script/src/index.ts"
       ],
       "@dxos/plugin-script/meta": [
-        "packages/plugins/experimental/plugin-script/src/meta.tsx"
+        "packages/plugins/experimental/plugin-script/src/meta.ts"
       ],
       "@dxos/plugin-script/types": [
         "packages/plugins/experimental/plugin-script/src/types/index.ts"
@@ -114,13 +114,13 @@
         "packages/plugins/experimental/plugin-search/src/index.ts"
       ],
       "@dxos/plugin-search/meta": [
-        "packages/plugins/experimental/plugin-search/src/meta.tsx"
+        "packages/plugins/experimental/plugin-search/src/meta.ts"
       ],
       "@dxos/plugin-template": [
         "packages/plugins/experimental/plugin-template/src/index.ts"
       ],
       "@dxos/plugin-template/meta": [
-        "packages/plugins/experimental/plugin-template/src/meta.tsx"
+        "packages/plugins/experimental/plugin-template/src/meta.ts"
       ],
       "@dxos/plugin-attention": [
         "packages/plugins/plugin-attention/src/index.ts"
@@ -132,7 +132,7 @@
         "packages/plugins/plugin-chess/src/index.ts"
       ],
       "@dxos/plugin-chess/meta": [
-        "packages/plugins/plugin-chess/src/meta.tsx"
+        "packages/plugins/plugin-chess/src/meta.ts"
       ],
       "@dxos/plugin-client": [
         "packages/plugins/plugin-client/src/index.ts"
@@ -144,7 +144,7 @@
         "packages/plugins/plugin-debug/src/index.ts"
       ],
       "@dxos/plugin-debug/meta": [
-        "packages/plugins/plugin-debug/src/meta.tsx"
+        "packages/plugins/plugin-debug/src/meta.ts"
       ],
       "@dxos/plugin-deck": [
         "packages/plugins/plugin-deck/src/index.ts"
@@ -156,7 +156,7 @@
         "packages/plugins/plugin-files/src/index.ts"
       ],
       "@dxos/plugin-files/meta": [
-        "packages/plugins/plugin-files/src/meta.tsx"
+        "packages/plugins/plugin-files/src/meta.ts"
       ],
       "@dxos/plugin-graph": [
         "packages/plugins/plugin-graph/src/index.ts"
@@ -168,13 +168,13 @@
         "packages/plugins/plugin-help/src/index.ts"
       ],
       "@dxos/plugin-help/meta": [
-        "packages/plugins/plugin-help/src/meta.tsx"
+        "packages/plugins/plugin-help/src/meta.ts"
       ],
       "@dxos/plugin-markdown": [
         "packages/plugins/plugin-markdown/src/index.ts"
       ],
       "@dxos/plugin-markdown/meta": [
-        "packages/plugins/plugin-markdown/src/meta.tsx"
+        "packages/plugins/plugin-markdown/src/meta.ts"
       ],
       "@dxos/plugin-markdown/types": [
         "packages/plugins/plugin-markdown/src/types/index.ts"
@@ -183,7 +183,7 @@
         "packages/plugins/plugin-mermaid/src/index.ts"
       ],
       "@dxos/plugin-mermaid/meta": [
-        "packages/plugins/plugin-mermaid/src/meta.tsx"
+        "packages/plugins/plugin-mermaid/src/meta.ts"
       ],
       "@dxos/plugin-metadata": [
         "packages/plugins/plugin-metadata/src/index.ts"
@@ -207,7 +207,7 @@
         "packages/plugins/plugin-presenter/src/index.ts"
       ],
       "@dxos/plugin-presenter/meta": [
-        "packages/plugins/plugin-presenter/src/meta.tsx"
+        "packages/plugins/plugin-presenter/src/meta.ts"
       ],
       "@dxos/plugin-pwa": [
         "packages/plugins/plugin-pwa/src/index.ts"
@@ -240,7 +240,7 @@
         "packages/plugins/plugin-sketch/src/index.ts"
       ],
       "@dxos/plugin-sketch/meta": [
-        "packages/plugins/plugin-sketch/src/meta.tsx"
+        "packages/plugins/plugin-sketch/src/meta.ts"
       ],
       "@dxos/plugin-sketch/sdk": [
         "packages/plugins/plugin-sketch/src/sdk.ts"
@@ -261,7 +261,7 @@
         "packages/plugins/plugin-stack/src/index.ts"
       ],
       "@dxos/plugin-stack/meta": [
-        "packages/plugins/plugin-stack/src/meta.tsx"
+        "packages/plugins/plugin-stack/src/meta.ts"
       ],
       "@dxos/plugin-stack/types": [
         "packages/plugins/plugin-stack/src/types/index.ts"
@@ -270,13 +270,13 @@
         "packages/plugins/plugin-status-bar/src/index.ts"
       ],
       "@dxos/plugin-status-bar/meta": [
-        "packages/plugins/plugin-status-bar/src/meta.tsx"
+        "packages/plugins/plugin-status-bar/src/meta.ts"
       ],
       "@dxos/plugin-table": [
         "packages/plugins/plugin-table/src/index.ts"
       ],
       "@dxos/plugin-table/meta": [
-        "packages/plugins/plugin-table/src/meta.tsx"
+        "packages/plugins/plugin-table/src/meta.ts"
       ],
       "@dxos/plugin-table/types": [
         "packages/plugins/plugin-table/src/types/index.ts"

@@ -37,7 +37,7 @@ export type DeckLayoutProps = {
   toasts: ToastSchema[];
   flatDeck?: boolean;
   overscroll: Overscroll;
-  showHintsFooter: boolean;
+  showHints: boolean;
   slots?: {
     wallpaper?: { classNames?: string };
   };
@@ -49,7 +49,7 @@ export const DeckLayout = ({
   toasts,
   flatDeck,
   overscroll,
-  showHintsFooter,
+  showHints,
   slots,
   onDismissToast,
 }: DeckLayoutProps) => {
@@ -234,15 +234,8 @@ export const DeckLayout = ({
           </Main.Content>
         )}
 
-        <StatusBar />
-
-        {/* Help hints. */}
-        {/* TODO(burdon): Need to make room for this in status bar. */}
-        {showHintsFooter && (
-          <div className='fixed bottom-0 left-0 right-0 h-[32px] z-[1] flex justify-center'>
-            <Surface role='hints' limit={1} />
-          </div>
-        )}
+        {/* Footer status. */}
+        <StatusBar showHints={showHints} />
 
         {/* Global popovers. */}
         <Popover.Portal>

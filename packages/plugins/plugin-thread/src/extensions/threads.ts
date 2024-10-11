@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { computed, effect } from '@preact/signals-core';
 
@@ -25,7 +26,7 @@ const getName = (doc: DocumentType, anchor: string): string | undefined => {
 /**
  * Construct plugins.
  */
-export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: IntentDispatcher) => {
+export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: IntentDispatcher): Extension => {
   const space = doc && getSpace(doc);
   if (!doc || !space || !dispatch) {
     // Include no-op comments extension here to ensure that the facets are always present when they are expected.
@@ -79,7 +80,6 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Inten
         });
       },
       onDelete: ({ id }) => {
-        // Remove draft.
         const draft = state.drafts[fullyQualifiedId(doc)];
         if (draft) {
           const index = draft.findIndex((thread) => fullyQualifiedId(thread) === id);

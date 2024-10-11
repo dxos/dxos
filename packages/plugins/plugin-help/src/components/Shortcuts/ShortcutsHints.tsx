@@ -2,16 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type KeyBinding, Keyboard } from '@dxos/keyboard';
-import { Button, DensityProvider, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { fixedBorder, groupSurface, mx } from '@dxos/react-ui-theme';
+import { Button, DensityProvider, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { Key } from './Key';
 
-export const ShortcutsHints = ({ onClose }: { onClose: () => void }) => {
+export const ShortcutsHints = ({ onClose }: { onClose?: () => void }) => {
   const { t } = useTranslation('os');
 
   // TODO(burdon): Display by context/weight/cycle.
@@ -30,13 +28,15 @@ export const ShortcutsHints = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <DensityProvider density='fine'>
-      <div className={mx('flex items-center border rounded px-2 gap-4', fixedBorder, groupSurface)}>
+      <div role='none' className='flex px-2 gap-4'>
         {hints.map((binding) => (
           <Shortcut key={binding.shortcut} binding={binding} />
         ))}
-        <Button variant='ghost' classNames='p-0 cursor-pointer' onClick={onClose}>
-          <X />
-        </Button>
+        {onClose && (
+          <Button variant='ghost' classNames='p-0 cursor-pointer' onClick={onClose}>
+            <Icon icon='ph--x--regular' size={4} />
+          </Button>
+        )}
       </div>
     </DensityProvider>
   );
