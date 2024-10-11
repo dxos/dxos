@@ -29,7 +29,7 @@ export type ColumnDefinition = {
 export type SortConfig = { columnId: ColumnId; direction: SortDirection };
 export type Table = ReturnType<typeof createTable>;
 
-export type TableEvent =
+export type TableAction =
   | { type: 'SetSort'; columnId: ColumnId; direction: SortDirection }
   | { type: 'MoveColumn'; columnId: ColumnId; newIndex: number }
   | { type: 'PinRow'; rowIndex: number; side: 'top' | 'bottom' }
@@ -39,37 +39,37 @@ export type TableEvent =
   | { type: 'DeselectAllRows' }
   | { type: 'ModifyColumnWidth'; columnIndex: number; width: number };
 
-export const updateTable = (table: Table, event: TableEvent): Table => {
-  switch (event.type) {
+export const updateTable = (table: Table, action: TableAction): Table => {
+  switch (action.type) {
     case 'SetSort': {
-      table.sorting = [{ columnId: event.columnId, direction: event.direction }];
+      table.sorting = [{ columnId: action.columnId, direction: action.direction }];
       break;
     }
     case 'MoveColumn': {
-      const currentIndex = table.columnOrdering.indexOf(event.columnId);
+      const currentIndex = table.columnOrdering.indexOf(action.columnId);
       if (currentIndex !== -1) {
         table.columnOrdering.splice(currentIndex, 1);
-        table.columnOrdering.splice(event.newIndex, 0, event.columnId);
+        table.columnOrdering.splice(action.newIndex, 0, action.columnId);
       }
       break;
     }
     case 'PinRow': {
-      table.pinnedRows[event.side].push(event.rowIndex);
+      table.pinnedRows[action.side].push(action.rowIndex);
       break;
     }
     case 'UnpinRow': {
-      table.pinnedRows.top = table.pinnedRows.top.filter((index: number) => index !== event.rowIndex);
-      table.pinnedRows.bottom = table.pinnedRows.bottom.filter((index: number) => index !== event.rowIndex);
+      table.pinnedRows.top = table.pinnedRows.top.filter((index: number) => index !== action.rowIndex);
+      table.pinnedRows.bottom = table.pinnedRows.bottom.filter((index: number) => index !== action.rowIndex);
       break;
     }
     case 'SelectRow': {
-      if (!table.rowSelection.includes(event.rowIndex)) {
-        table.rowSelection.push(event.rowIndex);
+      if (!table.rowSelection.includes(action.rowIndex)) {
+        table.rowSelection.push(action.rowIndex);
       }
       break;
     }
     case 'DeselectRow': {
-      table.rowSelection = table.rowSelection.filter((index: number) => index !== event.rowIndex);
+      table.rowSelection = table.rowSelection.filter((index: number) => index !== action.rowIndex);
       break;
     }
     case 'DeselectAllRows': {
@@ -77,9 +77,9 @@ export const updateTable = (table: Table, event: TableEvent): Table => {
       break;
     }
     case 'ModifyColumnWidth': {
-      const columnId = table.columnOrdering.at(event.columnIndex);
+      const columnId = table.columnOrdering.at(action.columnIndex);
       if (columnId) {
-        const newWidth = Math.max(0, event.width);
+        const newWidth = Math.max(0, action.width);
         table.columnWidths[columnId] = newWidth;
       }
       break;

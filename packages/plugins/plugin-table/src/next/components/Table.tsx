@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type DxAxisResize } from 'packages/ui/lit-grid/src';
-import React, { type Ref, useCallback, useEffect, useRef } from 'react';
+import React, { type RefObject, useCallback, useRef } from 'react';
 
 import {
   type DxGridElement,
+  type DxAxisResize,
   editorKeys,
   type EditorKeysProps,
   Grid,
@@ -22,13 +22,13 @@ const TableCellEditor = ({
   __gridScope,
   getCellData,
   setCellData,
+  gridRef,
 }: GridScopedProps<{
-  gridRef: Ref<DxGridElement>;
+  gridRef: RefObject<DxGridElement>;
   getCellData: (colIndex: number, rowIndex: number) => any;
   setCellData: (colIndex: number, rowIndex: number, value: any) => void;
 }>) => {
   const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
-  const dxGrid = useRef<DxGridElement | null>(null);
 
   const updateCell = useCallback(
     (value: any) => {
@@ -64,7 +64,8 @@ const TableCellEditor = ({
 
       const axis = determineNavigationAxis(key);
       const delta = determineNavigationDelta(key, shift);
-      dxGrid.current?.refocus(axis, delta);
+
+      gridRef.current?.refocus(axis, delta);
     },
     [updateCell, setEditing, determineNavigationAxis, determineNavigationDelta],
   );
