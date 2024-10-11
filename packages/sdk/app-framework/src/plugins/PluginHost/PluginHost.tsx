@@ -75,13 +75,7 @@ export const PluginHost = ({
       root: () => {
         return (
           <ErrorBoundary fallback={fallback}>
-            <PluginContainer
-              plugins={plugins}
-              core={core}
-              defaults={defaults}
-              state={state.values}
-              placeholder={placeholder}
-            />
+            <PluginContainer plugins={plugins} core={core} state={state.values} placeholder={placeholder} />
           </ErrorBoundary>
         );
       },

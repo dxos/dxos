@@ -10,23 +10,24 @@ import { safeParseInt } from '@dxos/util';
 import { type TableDef, type ColumnProps, type ColumnType } from '../../schema';
 import { translationKey } from '../../translations';
 
-export type ColumnSettingsFormProps = {
+export type ColumnSettingsProps = {
   column: ColumnProps;
   tableDef: TableDef;
+  // TODO(burdon): Rename.
   tablesToReference: TableDef[];
-  onUpdate?: ((id: string, column: ColumnProps) => void) | undefined;
-  onDelete?: ((id: string) => void) | undefined;
+  onUpdate?: (id: string, column: ColumnProps) => void;
+  onDelete?: (id: string) => void;
   onClose?: () => void;
 };
 
-export const ColumnSettingsForm = ({
+export const ColumnSettings = ({
   column,
   tableDef,
   tablesToReference,
   onUpdate,
   onDelete,
   onClose,
-}: ColumnSettingsFormProps) => {
+}: ColumnSettingsProps) => {
   const [formState, setFormState] = useState({
     prop: column.id,
     refTable: column.refTable,
@@ -76,9 +77,10 @@ export const ColumnSettingsForm = ({
     onClose?.();
   };
 
+  // TODO(burdon): Standardize dialog/popup.
   return (
-    <div className='p-1 space-y-2'>
-      <div className='space-y-1'>
+    <div className='flex flex-col w-full gap-4'>
+      <div className='flex flex-col gap-2'>
         <Input.Root>
           <Input.Label>{t('column label label')}</Input.Label>
           <Input.TextInput
@@ -89,8 +91,7 @@ export const ColumnSettingsForm = ({
             data-testid='table.column-settings.label'
           />
         </Input.Root>
-      </div>
-      <div className='space-y-1'>
+
         <Input.Root>
           <Input.Label>{t('property key label')}</Input.Label>
           <Input.TextInput
@@ -102,8 +103,7 @@ export const ColumnSettingsForm = ({
             }
           />
         </Input.Root>
-      </div>
-      <div className='space-y-1'>
+
         <Input.Root>
           <Input.Label>{t('column type label')}</Input.Label>
           <Select.Root
@@ -124,9 +124,8 @@ export const ColumnSettingsForm = ({
             </Select.Portal>
           </Select.Root>
         </Input.Root>
-      </div>
-      {formState.type === 'number' && (
-        <div className='space-y-1'>
+
+        {formState.type === 'number' && (
           <Input.Root>
             <Input.Label>{t('digits label')}</Input.Label>
             <Input.TextInput
@@ -134,12 +133,10 @@ export const ColumnSettingsForm = ({
               onChange={(event) => setFormState((prevState) => ({ ...prevState, digits: event.target.value }))}
             />
           </Input.Root>
-        </div>
-      )}
+        )}
 
-      {formState.type === 'ref' && (
-        <>
-          <div className='space-y-1'>
+        {formState.type === 'ref' && (
+          <>
             <Input.Root>
               <Input.Label>Table</Input.Label>
               <Select.Root
@@ -162,9 +159,8 @@ export const ColumnSettingsForm = ({
                 </Select.Portal>
               </Select.Root>
             </Input.Root>
-          </div>
-          {formState.refTable && (
-            <div className='space-y-1'>
+
+            {formState.refTable && (
               <Input.Root>
                 <Input.Label>Table property</Input.Label>
                 <Select.Root
@@ -187,20 +183,21 @@ export const ColumnSettingsForm = ({
                   </Select.Portal>
                 </Select.Root>
               </Input.Root>
-            </div>
-          )}
-        </>
-      )}
+            )}
+          </>
+        )}
+      </div>
 
-      <div role='none' className='h-1' />
-
-      <div className='flex flex-row justify-end gap-1'>
-        <Button onClick={handleDelete} data-testid='table.column-settings.delete'>
-          {t('delete label')}
-        </Button>
-        <Button variant='primary' onClick={handleSave} data-testid='table.column-settings.save'>
-          {t('save label')}
-        </Button>
+      <div>
+        {/* TODO(burdon): Change delete to cancel. Delete should be menu item. */}
+        <div className='flex flex-row justify-end gap-1'>
+          <Button onClick={handleDelete} data-testid='table.column-settings.delete'>
+            {t('delete label')}
+          </Button>
+          <Button variant='primary' onClick={handleSave} data-testid='table.column-settings.save'>
+            {t('save label')}
+          </Button>
+        </div>
       </div>
     </div>
   );

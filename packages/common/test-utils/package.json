@@ -42,7 +42,7 @@
     "@nx/devkit": "19.7.2",
     "@playwright/test": "^1.46.0",
     "pkg-up": "^3.1.0",
-    "vitest": "^2.1.1"
+    "vitest": "^2.1.2"
   },
   "publishConfig": {
     "access": "public"

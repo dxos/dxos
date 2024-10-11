@@ -13,7 +13,7 @@ runtime:
       echoReplicator: true
   services:
     edge:
-      url: wss://edge.dxos.workers.dev/
+      url: https://edge.dxos.workers.dev/
     agentHosting:
       type: LOCAL_TESTING
 ```
