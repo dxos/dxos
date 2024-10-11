@@ -19,6 +19,7 @@ import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from
 import { deferAsync } from '@dxos/util';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
+
 registerSignalsRuntime();
 
 describe('Integration tests', () => {
