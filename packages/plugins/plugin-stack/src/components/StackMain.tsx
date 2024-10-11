@@ -40,11 +40,12 @@ const SectionContent: StackProps['SectionContent'] = ({ data }) => {
 };
 
 type StackMainProps = {
+  id: string;
   collection: CollectionType;
   separation?: boolean;
 };
 
-const StackMain = ({ collection, separation }: StackMainProps) => {
+const StackMain = ({ id, collection, separation }: StackMainProps) => {
   const dispatch = useIntentDispatcher();
   const { graph } = useGraph();
   const { t } = useTranslation(STACK_PLUGIN);
@@ -59,7 +60,6 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
     }
   }, [collection, stack]);
 
-  const id = `stack-${collection.id}`;
   const items =
     collection.objects
       // TODO(wittjosiah): Should the database handle this differently?
@@ -173,7 +173,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
   };
 
   return (
-    <AttentionProvider id={fullyQualifiedId(collection)}>
+    <AttentionProvider id={id}>
       <Mosaic.Root>
         <Mosaic.DragOverlay />
         <Stack

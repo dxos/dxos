@@ -12,7 +12,7 @@ import {
   useGridContext,
 } from '@dxos/react-ui-grid';
 
-import { dxGridCellIndexToSheetCellAddress, useSheetModelDxGridProps } from './util';
+import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
 import { rangeToA1Notation, type CellRange } from '../../defs';
 import { type ComputeGraph } from '../../graph';
 import { useFormattingModel, useSheetModel, type UseSheetModelOptions } from '../../hooks';
@@ -49,8 +49,25 @@ const GridSheetCellEditor = ({
   ) : null;
 };
 
-const sheetRowDefault = { size: 32, resizeable: true };
-const sheetColDefault = { size: 180, resizeable: true };
+const initialCells = {
+  grid: {},
+  frozenColsStart: [...Array(64)].reduce((acc, _, i) => {
+    acc[`0,${i}`] = rowLabelCell(i);
+    return acc;
+  }, {}),
+  frozenRowsStart: [...Array(12)].reduce((acc, _, i) => {
+    acc[`${i},0`] = colLabelCell(i);
+    return acc;
+  }, {}),
+};
+
+const frozen = {
+  frozenColsStart: 1,
+  frozenRowsStart: 1,
+};
+
+const sheetRowDefault = { grid: { size: 32, resizeable: true } };
+const sheetColDefault = { frozenColsStart: { size: 48 }, grid: { size: 180, resizeable: true } };
 
 const GridSheetImpl = ({
   model,
@@ -123,13 +140,14 @@ const GridSheetImpl = ({
     <>
       <GridSheetCellEditor model={model} extension={extension} />
       <Grid.Content
-        initialCells={{}}
+        initialCells={initialCells}
         columns={columns}
         rows={rows}
         onAxisResize={handleAxisResize}
         onSelect={handleSelect}
         rowDefault={sheetRowDefault}
         columnDefault={sheetColDefault}
+        frozen={frozen}
         ref={dxGrid}
       />
     </>

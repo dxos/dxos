@@ -15,7 +15,7 @@ import {
   type Space,
 } from '@dxos/echo-pipeline';
 import { SpaceDocVersion } from '@dxos/echo-protocol';
-import { type EdgeConnection } from '@dxos/edge-client';
+import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { failedInvariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -80,6 +80,7 @@ export type DataSpaceParams = {
   callbacks?: DataSpaceCallbacks;
   cache?: SpaceCache;
   edgeConnection?: EdgeConnection;
+  edgeHttpClient?: EdgeHttpClient;
   edgeFeatures?: Runtime.Client.EdgeFeatures;
 };
 
@@ -101,7 +102,7 @@ export class DataSpace {
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _metadataStore: MetadataStore;
   private readonly _signingContext: SigningContext;
-  private readonly _notarizationPlugin = new NotarizationPlugin();
+  private readonly _notarizationPlugin: NotarizationPlugin;
   private readonly _callbacks: DataSpaceCallbacks;
   private readonly _cache?: SpaceCache = undefined;
   private readonly _echoHost: EchoHost;
@@ -141,6 +142,11 @@ export class DataSpace {
     this._signingContext = params.signingContext;
     this._callbacks = params.callbacks ?? {};
     this._echoHost = params.echoHost;
+    this._notarizationPlugin = new NotarizationPlugin({
+      spaceId: this._inner.id,
+      edgeClient: params.edgeHttpClient,
+      edgeFeatures: params.edgeFeatures,
+    });
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
       trustedKeysProvider: () =>
@@ -562,6 +568,10 @@ export class DataSpace {
     this._state = SpaceState.SPACE_INACTIVE;
     log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
+  }
+
+  getEdgeReplicationSetting() {
+    return this._metadataStore.getSpaceEdgeReplicationSetting(this.key);
   }
 
   private _onFeedAdded = async (feed: FeedWrapper<any>) => {

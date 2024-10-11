@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { create, type DynamicSchema, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -68,7 +68,7 @@ export const ObjectTable = ({ table, role, stickyHeader }: ObjectTableProps) => 
 
 const createTable = (table: TableType) => (table.schema ? create(table.schema, {}) : create({}));
 
-const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader }) => {
+const ObjectTableImpl = ({ table, role, stickyHeader }: ObjectTableProps) => {
   const space = getSpace(table);
 
   const objects = useTableObjects(space, table.schema);

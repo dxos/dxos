@@ -2,29 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type S } from '@dxos/echo-schema';
+import { AST, type S } from '@dxos/effect';
 
 import { type ColumnType } from './types';
 
-// TODO(burdon): Reconcile with react-ui-table.
-export type ClassifiedColumnType = ColumnType | 'display';
-
-// TODO(burdon): Rename getX? and return typed array?
-export const classifySchemaProperties = (schema: S.Schema<any, any>): [string, ClassifiedColumnType][] => {
-  const recurse = (node: AST.AST, path: string[], acc: [string, ClassifiedColumnType][]) => {
-    const properties = AST.getPropertySignatures(node);
-    properties.forEach((prop) => {
+// TODO(burdon): Factor out to @dxos/effect?
+// TODO(burdon): Return struct (with prop metadata).
+export const getColumnTypes = (schema: S.Schema<any, any>): [string, ColumnType][] => {
+  const visitNode = (node: AST.AST, path: string[] = [], acc: [string, ColumnType][] = []) => {
+    const props = AST.getPropertySignatures(node);
+    props.forEach((prop) => {
       const propName = prop.name.toString();
 
       if (prop.isOptional) {
         const unwrappedAst = unwrapOptionProperty(prop);
         if (isStruct(unwrappedAst)) {
-          return recurse(unwrappedAst, [...path, propName], acc);
+          return visitNode(unwrappedAst, [...path, propName], acc);
         }
       }
 
       if (isStruct(prop.type)) {
-        recurse(prop.type, [...path, propName], acc);
+        visitNode(prop.type, [...path, propName], acc);
       } else {
         acc.push([path.concat(propName).join('.'), propertyToColumn(prop)]);
       }
@@ -33,27 +31,31 @@ export const classifySchemaProperties = (schema: S.Schema<any, any>): [string, C
     return acc;
   };
 
-  return recurse(schema.ast, [], []);
+  return visitNode(schema.ast);
 };
 
+// TODO(burdon): Document AST?
 const isStruct = (node: AST.AST) => AST.isTypeLiteral(node);
 
-const isOptionalUnion = (prop: AST.PropertySignature) => AST.isUnion(prop.type) && prop.isOptional;
-
-const unwrapOptionProperty = (prop: AST.PropertySignature) => {
-  if (!isOptionalUnion(prop)) {
-    throw new Error(`Not an optional property: ${String(prop.name)}`);
+const propertyToColumn = (prop: AST.PropertySignature): ColumnType => {
+  let type = prop.type;
+  if (prop.isOptional) {
+    type = unwrapOptionProperty(prop);
   }
 
+  return typeToColumn(type);
+};
+
+const unwrapOptionProperty = (prop: AST.PropertySignature) => {
   if (!AST.isUnion(prop.type)) {
     throw new Error(`Not a union type: ${String(prop.name)}`);
   }
 
-  const [type, _undefinedCase] = prop.type.types;
+  const [type] = prop.type.types;
   return type;
 };
 
-const typeToColumn = (type: AST.AST): ClassifiedColumnType => {
+const typeToColumn = (type: AST.AST): ColumnType => {
   if (AST.isStringKeyword(type)) {
     return 'string';
   } else if (AST.isNumberKeyword(type)) {
@@ -79,14 +81,6 @@ const typeToColumn = (type: AST.AST): ClassifiedColumnType => {
     }
   }
 
-  return 'display';
-};
-
-const propertyToColumn = (prop: AST.PropertySignature): ClassifiedColumnType => {
-  let type = prop.type;
-  if (prop.isOptional) {
-    type = unwrapOptionProperty(prop);
-  }
-
-  return typeToColumn(type);
+  // TODO(burdon): Better fallback?
+  return 'json';
 };

@@ -10,12 +10,15 @@ import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { ref } from 'lit/directives/ref.js';
 
-import { DxAxisResizeInternal, type DxGridAxis } from './types';
+import { DxAxisResizeInternal, type DxGridAxis, type DxGridFrozenPlane } from './types';
 
 @customElement('dx-grid-axis-resize-handle')
 export class DxGridAxisResizeHandle extends LitElement {
   @property({ type: String })
   axis: DxGridAxis = 'row';
+
+  @property({ type: String })
+  plane: 'grid' | DxGridFrozenPlane = 'grid';
 
   @property({ type: String })
   index: string = '-1';
@@ -26,7 +29,7 @@ export class DxGridAxisResizeHandle extends LitElement {
   private dragStartSize: number = 128;
 
   override render() {
-    return html`<button class="dx-grid__resize-handle" ${ref(this.mount)}>
+    return html`<button class="dx-grid__resize-handle" data-dx-grid-axis=${this.axis} ${ref(this.mount)}>
       <span class="sr-only">Resize</span>
     </button>`;
   }
@@ -37,6 +40,7 @@ export class DxGridAxisResizeHandle extends LitElement {
     const client = this.axis === 'row' ? 'clientY' : 'clientX';
     const event = new DxAxisResizeInternal({
       axis: this.axis,
+      plane: this.plane,
       size: this.dragStartSize,
       index: this.index,
       delta: location.current.input[client] - location.initial.input[client],

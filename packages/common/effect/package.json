@@ -25,12 +25,11 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/node-std": "workspace:*",
-    "xcase": "^2.0.1"
+    "@dxos/node-std": "workspace:*"
   },
   "devDependencies": {
-    "@effect/schema": "^0.67.16",
-    "effect": "^3.2.7"
+    "@effect/schema": "^0.75.1",
+    "effect": "^3.9.1"
   },
   "peerDependencies": {
     "@effect/schema": "^0.67.16",

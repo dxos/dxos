@@ -4,12 +4,14 @@
 
 export type TableDef = {
   id: string;
-  name?: string; // TODO(burdon): Required?
+  name?: string;
   columns: ColumnProps[];
 };
 
-export type ColumnType = 'number' | 'boolean' | 'date' | 'string' | 'ref';
+// TODO(burdon): Use Effect defs?
+export type ColumnType = 'number' | 'boolean' | 'date' | 'string' | 'json' | 'ref';
 
+// TODO(burdon): Effect schema?
 export type ColumnProps = {
   id: string;
   prop: string;

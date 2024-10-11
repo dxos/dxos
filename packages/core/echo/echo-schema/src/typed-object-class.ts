@@ -48,7 +48,7 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
     options?: Options,
   ): AbstractTypedObject<Fields, S.Struct.Encoded<SchemaFields>> => {
     const fieldsSchema = options?.record ? S.Struct(fields, { key: S.String, value: S.Any }) : S.Struct(fields);
-    const schemaWithModifiers = S.mutable(options?.partial ? S.partial(fieldsSchema) : fieldsSchema);
+    const schemaWithModifiers = S.mutable(options?.partial ? S.partial(fieldsSchema as any) : fieldsSchema); // Ok to perform `as any` cast here since the types are explicitly defined.
     const typeSchema = S.extend(schemaWithModifiers, S.Struct({ id: S.String }));
     const annotatedSchema = typeSchema.annotations({
       [EchoObjectAnnotationId]: { typename: args.typename, version: args.version },
@@ -66,7 +66,7 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
       static readonly pipe = annotatedSchema.pipe.bind(annotatedSchema);
 
       private constructor() {
-        throw new Error('Use create(MyClass, fields) to instantiate an object.');
+        throw new Error('Use create(Typename, { ...fields }) to instantiate an object.');
       }
     } as any;
   };
