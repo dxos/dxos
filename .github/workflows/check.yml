@@ -86,6 +86,7 @@ jobs:
         uses: ./.github/actions/test-report
         with:
           name: '${{ github.job }}-${{ matrix.node-version }}'
+          result: ${{ job.status }}
 
   check:
     runs-on: ubuntu-latest
@@ -156,6 +157,7 @@ jobs:
         uses: ./.github/actions/test-report
         with:
           name: ${{ github.job }}
+          result: ${{ job.status }}
 
   dead-links:
     runs-on: ubuntu-latest

@@ -19,6 +19,12 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {

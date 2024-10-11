@@ -8,11 +8,9 @@ import { Trigger } from '@dxos/async';
 import { FunctionType } from '@dxos/plugin-script/types';
 
 import { SheetModel } from './sheet-model';
-import { createSheet, addressFromA1Notation } from '../defs';
+import { addressFromA1Notation, createSheet } from '../defs';
 import { TestBuilder, testFunctionPlugins } from '../graph/testing';
 import { type CellScalarValue } from '../types';
-
-// TODO(burdon): GPT("prompt", inputs); e.g., with large text cells.
 
 describe('SheetModel', () => {
   let testBuilder: TestBuilder;
