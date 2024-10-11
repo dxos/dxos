@@ -8,18 +8,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../debug"
-    },
-    {
-      "path": "../log"
-    },
-    {
-      "path": "../node-std"
-    },
-    {
-      "path": "../util"
-    }
-  ]
+  "references": []
 }
