@@ -5,7 +5,7 @@
 import { type DxGrid } from './dx-grid';
 import { toCellIndex } from './util';
 
-export type CellIndex = `${string},${string}`;
+export type DxGridCellIndex = `${string},${string}`;
 
 export type DxGridAxis = 'row' | 'col';
 
@@ -22,12 +22,12 @@ export type DxGridPlanePosition = Record<DxGridAxis, number>;
 export type DxGridPosition = DxGridPlanePosition & { plane: DxGridPlane };
 export type DxGridPositionNullable = DxGridPosition | null;
 
-export type DxGridPlaneCells = Record<CellIndex, DxGridCellValue>;
+export type DxGridPlaneCells = Record<DxGridCellIndex, DxGridCellValue>;
 export type DxGridCells = { grid: DxGridPlaneCells } & Partial<
   Record<DxGridFixedPlane | DxGridFrozenPlane, DxGridPlaneCells>
 >;
 
-export type DxGridPlaneAxisMeta = Record<string, AxisMeta>;
+export type DxGridPlaneAxisMeta = Record<string, DxGridAxisMetaProps>;
 export type DxGridAxisMeta = DxGridPlaneRecord<DxGridFrozenPlane, DxGridPlaneAxisMeta>;
 
 export type DxGridPointer =
@@ -61,13 +61,13 @@ export type DxGridCellValue = {
   resizeHandle?: DxGridAxis;
 };
 
-export type AxisMeta = {
+export type DxGridAxisMetaProps = {
   size: number;
   description?: string;
   resizeable?: boolean;
 };
 
-export type AxisSizes = DxGridPlaneRecord<DxGridFrozenPlane, Record<string, number>>;
+export type DxGridAxisSizes = DxGridPlaneRecord<DxGridFrozenPlane, Record<string, number>>;
 
 export type DxGridProps = Partial<
   Pick<
@@ -120,7 +120,7 @@ export class DxAxisResizeInternal extends Event {
 export type DxEditRequestProps = Pick<DxEditRequest, 'cellIndex' | 'cellBox' | 'initialContent'>;
 
 export class DxEditRequest extends Event {
-  public readonly cellIndex: CellIndex;
+  public readonly cellIndex: DxGridCellIndex;
   public readonly cellBox: Record<'insetInlineStart' | 'insetBlockStart' | 'inlineSize' | 'blockSize', number>;
   public readonly initialContent?: string;
   constructor(props: DxEditRequestProps) {
