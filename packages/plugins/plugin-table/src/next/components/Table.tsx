@@ -111,14 +111,6 @@ export const Table = ({ columnDefinitions, data }: TableProps) => {
     [dispatch],
   );
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      console.log('mode', gridRef.current?.mode);
-    }, 100);
-
-    return () => clearInterval(intervalId);
-  }, []);
-
   return (
     <Grid.Root id='table-next'>
       <TableCellEditor getCellData={table.getCellData} setCellData={table.setCellData} gridRef={gridRef} />
