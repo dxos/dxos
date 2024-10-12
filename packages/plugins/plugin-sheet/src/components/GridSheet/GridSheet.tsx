@@ -18,10 +18,7 @@ import {
 import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
 import { rangeToA1Notation, type CellRange } from '../../defs';
 import { rangeExtension, sheetExtension, type CellRangeNotifier } from '../../extensions';
-import { type ComputeGraph } from '../../graph';
-import { useFormattingModel, useSheetModel, type UseSheetModelOptions } from '../../hooks';
-import { type SheetModel, type FormattingModel } from '../../model';
-import { type SheetType } from '../../types';
+import { useSheetContext } from '../SheetContext';
 
 const initialCells = {
   grid: {},
@@ -43,11 +40,8 @@ const frozen = {
 const sheetRowDefault = { grid: { size: 32, resizeable: true } };
 const sheetColDefault = { frozenColsStart: { size: 48 }, grid: { size: 180, resizeable: true } };
 
-const GridSheetImpl = ({
-  model,
-  formatting,
-  __gridScope,
-}: GridScopedProps<{ model: SheetModel; formatting: FormattingModel }>) => {
+export const GridSheet = ({ __gridScope }: GridScopedProps<{}>) => {
+  const { model, formatting } = useSheetContext();
   const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
   const dxGrid = useRef<DxGridElement | null>(null);
   const rangeNotifier = useRef<CellRangeNotifier>();
@@ -133,21 +127,5 @@ const GridSheetImpl = ({
         ref={dxGrid}
       />
     </>
-  );
-};
-
-export type GridSheetProps = { graph?: ComputeGraph; sheet?: SheetType } & UseSheetModelOptions;
-
-export const GridSheet = ({ graph, sheet, ...options }: GridSheetProps) => {
-  const model = useSheetModel(graph, sheet, options);
-  const formatting = useFormattingModel(model);
-  if (!model || !formatting) {
-    return null;
-  }
-
-  return (
-    <Grid.Root id={model.id}>
-      <GridSheetImpl model={model} formatting={formatting} />
-    </Grid.Root>
   );
 };

@@ -5,6 +5,8 @@
 import React, { type PropsWithChildren, createContext, useContext, useMemo, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { Grid, useGridContext, type GridScopedProps, type GridEditing } from '@dxos/react-ui-grid';
 
 import { type CellAddress, type CellRange } from '../../defs';
 import { type ComputeGraph } from '../../graph';
@@ -12,7 +14,7 @@ import { useSheetModel, useFormattingModel } from '../../hooks';
 import { type FormattingModel, type SheetModel, createDecorations } from '../../model';
 import { type SheetType } from '../../types';
 
-export type SheetContextType = {
+export type SheetContextValue = {
   model: SheetModel;
   formatting: FormattingModel;
 
@@ -24,8 +26,8 @@ export type SheetContextType = {
   setRange: (range: CellRange | undefined) => void;
 
   // Editing state (undefined if not editing).
-  editing: boolean;
-  setEditing: (editing: boolean) => void;
+  editing: GridEditing;
+  setEditing: (editing: GridEditing) => void;
 
   // Events.
   // TODO(burdon): Generalize.
@@ -35,41 +37,41 @@ export type SheetContextType = {
   decorations: ReturnType<typeof createDecorations>;
 };
 
-const SheetContext = createContext<SheetContextType | null>(null);
+const SheetContext = createContext<SheetContextValue | null>(null);
 
-export const useSheetContext = (): SheetContextType => {
+export const useSheetContext = (): SheetContextValue => {
   const context = useContext(SheetContext);
   invariant(context);
   return context;
 };
 
-export type SheetContextProps = {
-  graph: ComputeGraph;
-  sheet: SheetType;
-  readonly?: boolean;
-} & Pick<SheetContextType, 'onInfo'>;
-
-export const SheetProvider = ({ children, graph, sheet, readonly, onInfo }: PropsWithChildren<SheetContextProps>) => {
-  const model = useSheetModel(graph, sheet, { readonly });
-  const formatting = useFormattingModel(model);
+const SheetProviderImpl = ({
+  model,
+  formatting,
+  onInfo,
+  children,
+  __gridScope,
+}: GridScopedProps<PropsWithChildren<Pick<SheetContextValue, 'onInfo' | 'model' | 'formatting'>>>) => {
+  const { editing, setEditing } = useGridContext('SheetProvider', __gridScope);
 
   // TODO(Zan): Impl. set range and set cursor that scrolls to that cell or range if it is not visible.
-  const [cursor, setCursor] = useState<CellAddress>();
-  const [range, setRange] = useState<CellRange>();
-  const [editing, setEditing] = useState<boolean>(false);
   const decorations = useMemo(() => createDecorations(), []);
 
-  return !model || !formatting ? null : (
+  // TODO(thure): Reconnect these.
+  const [cursor, setCursor] = useState<CellAddress>();
+  const [range, setRange] = useState<CellRange>();
+
+  return (
     <SheetContext.Provider
       value={{
         model,
         formatting,
+        editing,
+        setEditing,
         cursor,
         setCursor,
         range,
         setRange,
-        editing,
-        setEditing,
         // TODO(burdon): Change to event.
         onInfo,
         decorations,
@@ -77,5 +79,24 @@ export const SheetProvider = ({ children, graph, sheet, readonly, onInfo }: Prop
     >
       {children}
     </SheetContext.Provider>
+  );
+};
+
+export type SheetProviderProps = {
+  graph: ComputeGraph;
+  sheet: SheetType;
+  readonly?: boolean;
+} & Pick<SheetContextValue, 'onInfo'>;
+
+export const SheetProvider = ({ children, graph, sheet, readonly, onInfo }: PropsWithChildren<SheetProviderProps>) => {
+  const model = useSheetModel(graph, sheet, { readonly });
+  const formatting = useFormattingModel(model);
+
+  return !model || !formatting ? null : (
+    <Grid.Root id={fullyQualifiedId(sheet)}>
+      <SheetProviderImpl model={model} formatting={formatting} onInfo={onInfo}>
+        {children}
+      </SheetProviderImpl>
+    </Grid.Root>
   );
 };
