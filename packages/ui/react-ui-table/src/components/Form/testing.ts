@@ -14,6 +14,7 @@ export const TestSchema = S.Struct({
       zip: S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'ZIP code.' })),
     }),
   ),
+  admin: S.optional(S.Boolean),
 });
 
 export type TestType = S.Schema.Type<typeof TestSchema>;
@@ -34,6 +35,9 @@ export const table: TableType = {
     },
     {
       path: 'email',
+    },
+    {
+      path: 'admin',
     },
     {
       path: 'address.zip',

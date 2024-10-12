@@ -6,6 +6,7 @@ import '@dxos-theme';
 
 import React from 'react';
 
+import { create } from '@dxos/echo-schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Form, type FormProps } from './Form';
@@ -29,7 +30,7 @@ export default {
 
 export const Default = {
   args: {
-    data,
+    data: create(data),
     schema: TestSchema,
     fields: table.columns,
   } satisfies FormProps<TestType>,
@@ -44,7 +45,7 @@ export const Empty = {
 
 export const Readonly = {
   args: {
-    data,
+    data: create(data),
     schema: TestSchema,
     fields: table.columns,
     readonly: true,

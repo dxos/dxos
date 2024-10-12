@@ -46,7 +46,7 @@ export const getProperty = (schema: S.Schema<any>, field: FieldType): AST.AST | 
     }
 
     if (AST.isUnion(prop.type)) {
-      const n = prop.type.types.find((p) => AST.isTypeLiteral(p));
+      const n = prop.type.types.find((p) => isScalar(p) || AST.isTypeLiteral(p));
       if (!n) {
         return undefined;
       }
@@ -58,3 +58,5 @@ export const getProperty = (schema: S.Schema<any>, field: FieldType): AST.AST | 
 
   return node;
 };
+
+const isScalar = (p: AST.AST) => AST.isBooleanKeyword(p) || AST.isStringKeyword(p) || AST.isNumberKeyword(p);

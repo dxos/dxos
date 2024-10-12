@@ -10,6 +10,8 @@ import { AST } from '@dxos/echo-schema';
 import { data, table, TestSchema } from './testing';
 import { getColumnValue, getProperty } from './types';
 
+// TODO(burdon): Detect default annotation?
+
 describe('schema', () => {
   test('JSON path', () => {
     const [p1] = AST.getPropertySignatures(TestSchema.ast);
@@ -20,7 +22,6 @@ describe('schema', () => {
     expect(getColumnValue(data, col2)).to.eq('test@example.com');
     expect(getColumnValue(data, col3)).to.eq('11205');
 
-    // TODO(burdon): Detect default annotation?
     const p2 = getProperty(TestSchema, col2)!;
     expect(pipe(AST.getDescriptionAnnotation(p2), Option.getOrNull)).to.exist;
 
