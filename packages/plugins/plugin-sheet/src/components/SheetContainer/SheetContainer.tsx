@@ -9,17 +9,17 @@ import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
-import { Sheet, type SheetRootProps } from './Sheet';
-import { Toolbar, type ToolbarAction } from './Toolbar';
+import { GridSheet, type GridSheetProps } from '../GridSheet';
+import { Toolbar, type ToolbarAction } from '../Toolbar';
 
 // TODO(Zan): Factor out, copied this from MarkdownPlugin.
 export const sectionToolbarLayout =
   'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 __-block-start-px transition-opacity';
 
-const SheetContainer = ({ graph, sheet, role }: SheetRootProps & { role?: string }) => {
+export const SheetContainer = ({ graph, sheet, role }: GridSheetProps & { role?: string }) => {
   const dispatch = useIntentDispatcher();
 
-  const id = fullyQualifiedId(sheet);
+  const id = fullyQualifiedId(sheet!);
   const attendableAttrs = useAttendableAttributes(id);
   const { hasAttention } = useAttention(id);
 
@@ -49,38 +49,34 @@ const SheetContainer = ({ graph, sheet, role }: SheetRootProps & { role?: string
       className={role === 'article' ? 'row-span-2 grid grid-rows-subgrid' : undefined}
       {...(role === 'article' && attendableAttrs)}
     >
-      <Sheet.Root graph={graph} sheet={sheet}>
-        <div role='none' className={mx('flex flex-0 justify-center overflow-x-auto')}>
-          <Toolbar.Root
-            onAction={handleAction}
-            classNames={mx(
-              role === 'section'
-                ? ['z-[2] group-focus-within/section:visible', !hasAttention && 'invisible', sectionToolbarLayout]
-                : 'attention-surface',
-            )}
-          >
-            {/* TODO(Zan): Restore some of this functionality */}
-            {/* <Toolbar.Styles /> */}
-            {/* <Toolbar.Format /> */}
-            {/* <Toolbar.Alignment /> */}
-            <Toolbar.Separator />
-            <Toolbar.Actions />
-          </Toolbar.Root>
-        </div>
-        <div
-          role='none'
-          className={mx(
-            role === 'section' && 'aspect-square border-is border-bs border-be border-separator',
-            role === 'article' &&
-              'flex is-full overflow-hidden focus-visible:ring-inset row-span-1 data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2 border-bs border-separator attention-surface',
-            focusRing,
+      <div role='none' className={mx('flex flex-0 justify-center overflow-x-auto')}>
+        <Toolbar.Root
+          onAction={handleAction}
+          classNames={mx(
+            role === 'section'
+              ? ['z-[2] group-focus-within/section:visible', !hasAttention && 'invisible', sectionToolbarLayout]
+              : 'attention-surface',
           )}
         >
-          <Sheet.Main />
-        </div>
-      </Sheet.Root>
+          {/* TODO(Zan): Restore some of this functionality */}
+          {/* <Toolbar.Styles /> */}
+          {/* <Toolbar.Format /> */}
+          {/* <Toolbar.Alignment /> */}
+          <Toolbar.Separator />
+          <Toolbar.Actions />
+        </Toolbar.Root>
+      </div>
+      <div
+        role='none'
+        className={mx(
+          role === 'section' && 'aspect-square border-is border-bs border-be border-separator',
+          role === 'article' &&
+            'flex is-full overflow-hidden focus-visible:ring-inset row-span-1 data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2 border-bs border-separator attention-surface',
+          focusRing,
+        )}
+      >
+        <GridSheet />
+      </div>
     </div>
   );
 };
-
-export default SheetContainer;

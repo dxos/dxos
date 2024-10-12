@@ -6,11 +6,10 @@ import React, { type PropsWithChildren, createContext, useContext, useMemo, useS
 
 import { invariant } from '@dxos/invariant';
 
-import { createDecorations } from './decorations';
 import { type CellAddress, type CellRange } from '../../defs';
 import { type ComputeGraph } from '../../graph';
 import { useSheetModel, useFormattingModel } from '../../hooks';
-import { type FormattingModel, type SheetModel } from '../../model';
+import { type FormattingModel, type SheetModel, createDecorations } from '../../model';
 import { type SheetType } from '../../types';
 
 export type SheetContextType = {
@@ -50,13 +49,7 @@ export type SheetContextProps = {
   readonly?: boolean;
 } & Pick<SheetContextType, 'onInfo'>;
 
-export const SheetContextProvider = ({
-  children,
-  graph,
-  sheet,
-  readonly,
-  onInfo,
-}: PropsWithChildren<SheetContextProps>) => {
+export const SheetProvider = ({ children, graph, sheet, readonly, onInfo }: PropsWithChildren<SheetContextProps>) => {
   const model = useSheetModel(graph, sheet, { readonly });
   const formatting = useFormattingModel(model);
 
