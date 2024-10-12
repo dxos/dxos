@@ -13,7 +13,6 @@ export const getColumnTypes = (schema: S.Schema<any, any>): [string, ColumnType]
     const props = AST.getPropertySignatures(node);
     props.forEach((prop) => {
       const propName = prop.name.toString();
-
       if (prop.isOptional) {
         const unwrappedAst = unwrapOptionProperty(prop);
         if (isStruct(unwrappedAst)) {
