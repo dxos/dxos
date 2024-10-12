@@ -12,7 +12,7 @@ import { type WithClientProviderProps, withClientProvider } from '@dxos/react-cl
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
-import { type ColumnDefinition } from '../table';
+import { TableType } from '../../types';
 
 faker.seed(0);
 
@@ -28,18 +28,15 @@ const makeData = (n: number) => {
   return data;
 };
 
-const columnDefinitions: ColumnDefinition[] = [
-  { id: 'name', dataType: 'string', headerLabel: 'Name', accessor: (row: any) => row.name },
-  { id: 'age', dataType: 'number', headerLabel: 'Age', accessor: (row: any) => row.age },
-  { id: 'active', dataType: 'boolean', headerLabel: 'Active', accessor: (row: any) => row.active },
-] as const;
+const table = create(TableType, {
+  props: [
+    { id: 'name', label: 'Name' },
+    { id: 'age', label: 'Age' },
+    { id: 'active', label: 'Active' },
+  ],
+});
 
-const useSimulateCollaborativeUpdates = (
-  data: any[],
-  columnDefinitions: ColumnDefinition[],
-  intervalMs: number,
-  isEnabled: boolean,
-) => {
+const useSimulateCollaborativeUpdates = (data: any[], table: TableType, intervalMs: number, isEnabled: boolean) => {
   useEffect(() => {
     if (!isEnabled) {
       return;
@@ -47,21 +44,23 @@ const useSimulateCollaborativeUpdates = (
 
     const mutateRandomCell = () => {
       const rowIndex = Math.floor(Math.random() * data.length);
-      const columnIndex = Math.floor(Math.random() * columnDefinitions.length);
-      const column = columnDefinitions[columnIndex];
+      const columnIndex = Math.floor(Math.random() * table.props.length);
+      const column = table.props[columnIndex];
       const row = data[rowIndex];
 
-      switch (column.dataType) {
+      const columnId = column.id!;
+
+      switch (typeof row[columnId]) {
         case 'string': {
-          (row as any)[column.id] = `Updated ${Date.now()}`;
+          row[columnId] = `Updated ${Date.now()}`;
           break;
         }
         case 'number': {
-          (row as any)[column.id] = Math.floor(Math.random() * 100);
+          row[columnId] = Math.floor(Math.random() * 100);
           break;
         }
         case 'boolean': {
-          (row as any)[column.id] = !(row as any)[column.id];
+          row[columnId] = !row[columnId];
           break;
         }
       }
@@ -69,7 +68,7 @@ const useSimulateCollaborativeUpdates = (
 
     const intervalId = setInterval(mutateRandomCell, intervalMs);
     return () => clearInterval(intervalId);
-  }, [data, columnDefinitions, intervalMs, isEnabled]);
+  }, [data, table.props, intervalMs, isEnabled]);
 };
 
 const useSimulateRowAdditions = (data: any[], intervalMs: number, isEnabled: boolean) => {
@@ -93,7 +92,7 @@ const DefaultStory = () => {
 
   return (
     <div>
-      <Table columnDefinitions={columnDefinitions} data={data} />
+      <Table table={table} data={data} />
     </div>
   );
 };
@@ -108,9 +107,9 @@ const LargeDataStory = ({
   simulateCollaborativeCellUpdates: boolean;
 }) => {
   const data = useMemo(() => makeData(rowCount), [rowCount]);
-  useSimulateCollaborativeUpdates(data, columnDefinitions, updateIntervalMs, simulateCollaborativeCellUpdates);
+  useSimulateCollaborativeUpdates(data, table, updateIntervalMs, simulateCollaborativeCellUpdates);
 
-  return <Table columnDefinitions={columnDefinitions} data={data} />;
+  return <Table table={table} data={data} />;
 };
 
 export const LargeDataSet = {
@@ -137,7 +136,7 @@ const RowAdditionStory = ({
 
   useSimulateRowAdditions(data, updateIntervalMs, simulateRowAdditions);
 
-  return <Table columnDefinitions={columnDefinitions} data={data} />;
+  return <Table table={table} data={data} />;
 };
 
 export const RowAddition = {

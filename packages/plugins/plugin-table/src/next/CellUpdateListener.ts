@@ -4,15 +4,15 @@
 
 import { effect, type ReadonlySignal } from '@preact/signals-core';
 
-import { create } from '@dxos/echo-schema';
-
 // TODO(Zan): Take in the current visible bounds and only subscribe to cells within that range.
-export class CellUpdateTracker {
-  public readonly updatedCells = create({ value: [] as string[] });
+export class CellUpdateListener {
   private cellEffectsUnsubscribes: (() => void)[] = [];
   private topLevelEffectUnsubscribe: (() => void) | null = null;
 
-  constructor(private readonly cells: ReadonlySignal<{ [key: string]: any }>) {
+  constructor(
+    private readonly cells: ReadonlySignal<{ [key: string]: any }>,
+    private onCellUpdate?: (col: number, row: number) => void,
+  ) {
     this.setupCellListeners();
     this.createInitialCellEffects();
   }
@@ -43,12 +43,9 @@ export class CellUpdateTracker {
     this.cellEffectsUnsubscribes = [];
   };
 
-  public trackUpdate = (cellKey: string): void => {
-    this.updatedCells.value.push(cellKey);
-  };
-
-  public clearUpdates = (): void => {
-    this.updatedCells.value = [];
+  private trackUpdate = (cellKey: string): void => {
+    const [col, row] = cellKey.split(',').map(Number);
+    this.onCellUpdate?.(col, row);
   };
 
   public dispose = (): void => {

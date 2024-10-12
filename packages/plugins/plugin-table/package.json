@@ -50,6 +50,7 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/keys": "workspace:*",
