@@ -29,7 +29,7 @@ const Form = ({ schema }: FormProps) => {
   return (
     <div className='flex flex-col w-full gap-2'>
       {props.map(({ type, name }, i) => {
-        const description = AST.getDescriptionAnnotation(type).;
+        const description = AST.getDescriptionAnnotation(type);
         console.log(description);
         return (
           <Input.Root key={i}>
@@ -53,7 +53,8 @@ const dataSchema = S.Struct({
 });
 
 const columnSchema = S.Struct({
-  prop: S.String,
+  prop: S.keyof(dataSchema),
+  path: S.String,
   label: S.String,
   width: S.Number,
 });
