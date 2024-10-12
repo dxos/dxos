@@ -15,6 +15,8 @@ import { type FormattingModel, type SheetModel, createDecorations } from '../../
 import { type SheetType } from '../../types';
 
 export type SheetContextValue = {
+  id: string;
+
   model: SheetModel;
   formatting: FormattingModel;
 
@@ -52,7 +54,7 @@ const SheetProviderImpl = ({
   children,
   __gridScope,
 }: GridScopedProps<PropsWithChildren<Pick<SheetContextValue, 'onInfo' | 'model' | 'formatting'>>>) => {
-  const { editing, setEditing } = useGridContext('SheetProvider', __gridScope);
+  const { id, editing, setEditing } = useGridContext('SheetProvider', __gridScope);
 
   // TODO(Zan): Impl. set range and set cursor that scrolls to that cell or range if it is not visible.
   const decorations = useMemo(() => createDecorations(), []);
@@ -64,6 +66,7 @@ const SheetProviderImpl = ({
   return (
     <SheetContext.Provider
       value={{
+        id,
         model,
         formatting,
         editing,
