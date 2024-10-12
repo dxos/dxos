@@ -4,17 +4,24 @@
 
 import { AST, S } from '@dxos/echo-schema';
 
+import { EmailFormat, FormatAnnotationId } from './annotations';
 import { type TableType } from './types';
 
 export const TestSchema = S.Struct({
   name: S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Full name.' })),
-  email: S.String,
+  email: S.String.pipe(S.annotations({ [FormatAnnotationId]: EmailFormat })),
   address: S.optional(
     S.Struct({
-      zip: S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'ZIP code.' })),
+      zip: S.String.pipe(
+        S.annotations({
+          [AST.DescriptionAnnotationId]: 'ZIP code.',
+          [FormatAnnotationId]: { filter: /^[0-9]{0,5}(?:-[0-9]{0,4})?$/, valid: /^[0-9]{5}(?:-[0-9]{4})?$/ },
+        }),
+      ),
     }),
   ),
   admin: S.optional(S.Boolean),
+  rating: S.optional(S.Number),
 });
 
 export type TestType = S.Schema.Type<typeof TestSchema>;
@@ -37,11 +44,14 @@ export const table: TableType = {
       path: 'email',
     },
     {
-      path: 'admin',
-    },
-    {
       path: 'address.zip',
       label: 'ZIP',
+    },
+    {
+      path: 'rating',
+    },
+    {
+      path: 'admin',
     },
   ],
 };
