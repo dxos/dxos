@@ -11,7 +11,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { ColumnMenu } from './ColumnMenu';
 import { type ColumnSettingsProps } from './ColumnSettings';
-import { type ColumnProps } from '../../schema';
+import { type ColumnDef } from '../../schema';
 
 export default {
   title: 'react-ui-table/ColumnMenu',
@@ -49,7 +49,7 @@ export const Default = {
     column: {
       id: 'test',
       label: 'test',
-    } as ColumnProps,
+    } as ColumnDef,
 
     ...defs,
     ...functions,
@@ -89,7 +89,7 @@ export const ReactiveSort = {
       column: {
         id: 'test',
         label: 'test',
-      } as ColumnProps,
+      } as ColumnDef,
       context: {
         header: {
           column: {

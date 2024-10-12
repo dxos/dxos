@@ -12,13 +12,13 @@ import {
   S,
 } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
-import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
+import { type ColumnDef, type TableDef } from '@dxos/react-ui-table';
 
 import { type TableType } from '../types';
 
 const FIELD_META_NAMESPACE = 'plugin-table';
 
-const typeToSchema: Partial<{ [key in ColumnProps['type']]: S.Schema<any> }> = {
+const typeToSchema: Partial<{ [key in ColumnDef['type']]: S.Schema<any> }> = {
   boolean: S.Boolean,
   number: S.Number,
   date: S.Number,
@@ -30,7 +30,7 @@ interface ColumnAnnotation {
   refProp?: string;
 }
 
-export const getPropType = (type?: AST.AST): ColumnProps['type'] => {
+export const getPropType = (type?: AST.AST): ColumnDef['type'] => {
   if (type == null) {
     return 'string';
   }
@@ -48,7 +48,7 @@ export const getPropType = (type?: AST.AST): ColumnProps['type'] => {
 
 export const getSchema = (
   tables: TableType[],
-  type: ColumnProps['type'] | undefined,
+  type: ColumnDef['type'] | undefined,
   options: { digits?: number; refProp?: string; refTable?: string },
 ): S.Schema<any> => {
   let schema: S.Schema<any>;
@@ -58,6 +58,7 @@ export const getSchema = (
   } else {
     schema = (type && typeToSchema[type]) ?? S.String;
   }
+
   return schema.pipe(
     FieldMeta(FIELD_META_NAMESPACE, {
       refProp: options.refProp,
@@ -68,7 +69,7 @@ export const getSchema = (
 
 export const schemaPropMapper =
   (table: TableType) =>
-  (property: AST.PropertySignature): ColumnProps => {
+  (property: AST.PropertySignature): ColumnDef => {
     const { name: id, type } = property;
     const { label, refProp, size } = table.props?.find((prop) => prop.id === id) ?? {};
     const refAnnotation = property.type.annotations[ReferenceAnnotationId] as EchoObjectAnnotation;

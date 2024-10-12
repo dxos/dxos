@@ -8,18 +8,22 @@ import React from 'react';
 
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { type FormProps } from './Form';
-import { TestSchema } from './testing';
+import { Field, type FieldProps } from './Field';
+import { form, TestSchema, type TestType } from './testing';
+import { TestPopup } from './util';
 import translations from '../../translations';
 
-// TODO(burdon): Form editor.
-// TODO(burdon): Table editor.
-const Story = (props: FormProps) => <div className='flex w-[240px] m-2 p-2 border border-separator rounded'></div>;
+const Story = (props: FieldProps) => (
+  <TestPopup>
+    <Field {...props} />
+  </TestPopup>
+);
 
 export default {
-  title: 'react-ui-table/SchemaEditor',
+  title: 'react-ui-table/Field',
   decorators: [withTheme, withLayout()],
   parameters: {
+    layout: 'centered',
     translations,
   },
   render: Story,
@@ -27,6 +31,7 @@ export default {
 
 export const Default = {
   args: {
+    field: form.fields[0],
     schema: TestSchema,
-  }, // TODO(burdon): !!!
+  } satisfies FieldProps<TestType>,
 };

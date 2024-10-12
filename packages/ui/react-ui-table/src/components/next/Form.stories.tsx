@@ -10,19 +10,21 @@ import { create } from '@dxos/echo-schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Form, type FormProps } from './Form';
-import { data, table, TestSchema, type TestType } from './testing';
+import { data, form, TestSchema, type TestType } from './testing';
+import { TestPopup } from './util';
 import translations from '../../translations';
 
 const Story = (props: FormProps) => (
-  <div className='flex w-[240px] m-2 p-2 border border-separator rounded'>
+  <TestPopup>
     <Form {...props} />
-  </div>
+  </TestPopup>
 );
 
 export default {
   title: 'react-ui-table/Form',
   decorators: [withTheme, withLayout()],
   parameters: {
+    layout: 'centered',
     translations,
   },
   render: Story,
@@ -32,14 +34,14 @@ export const Default = {
   args: {
     data: create(data),
     schema: TestSchema,
-    fields: table.columns,
+    form,
   } satisfies FormProps<TestType>,
 };
 
 export const Empty = {
   args: {
     schema: TestSchema,
-    fields: table.columns,
+    form,
   } satisfies FormProps<TestType>,
 };
 
@@ -47,7 +49,7 @@ export const Readonly = {
   args: {
     data: create(data),
     schema: TestSchema,
-    fields: table.columns,
+    form,
     readonly: true,
   } satisfies FormProps<TestType>,
 };

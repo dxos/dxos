@@ -7,19 +7,22 @@ import React, { useRef, useState } from 'react';
 import { Button, Input, Select, useTranslation } from '@dxos/react-ui';
 import { safeParseInt } from '@dxos/util';
 
-import { type TableDef, type ColumnProps, type ColumnType } from '../../schema';
+import { type TableDef, type ColumnDef, type ColumnType } from '../../schema';
 import { translationKey } from '../../translations';
 
 export type ColumnSettingsProps = {
-  column: ColumnProps;
+  column: ColumnDef;
   tableDef: TableDef;
   // TODO(burdon): Rename.
   tablesToReference: TableDef[];
-  onUpdate?: (id: string, column: ColumnProps) => void;
+  onUpdate?: (id: string, column: ColumnDef) => void;
   onDelete?: (id: string) => void;
   onClose?: () => void;
 };
 
+/**
+ * @deprecated
+ */
 export const ColumnSettings = ({
   column,
   tableDef,
@@ -64,7 +67,7 @@ export const ColumnSettings = ({
       id: prop, // TODO(burdon): Make unique.
       prop,
       label,
-      type: type as ColumnProps['type'],
+      type: type as ColumnDef['type'],
       refTable,
       refProp,
       digits: safeParseInt(digits),

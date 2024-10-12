@@ -5,7 +5,7 @@
 import { AST, S } from '@dxos/echo-schema';
 
 import { EmailFormat, FormatAnnotationId } from './annotations';
-import { type TableType } from './types';
+import { type FormType, type TableType } from './types';
 
 export const TestSchema = S.Struct({
   name: S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Full name.' })),
@@ -37,6 +37,28 @@ export const data: TestType = {
 export const table: TableType = {
   schema: TestSchema,
   columns: [
+    {
+      path: 'name',
+    },
+    {
+      path: 'email',
+    },
+    {
+      path: 'address.zip',
+      label: 'ZIP',
+    },
+    {
+      path: 'rating',
+    },
+    {
+      path: 'admin',
+    },
+  ],
+};
+
+export const form: FormType = {
+  schema: TestSchema,
+  fields: [
     {
       path: 'name',
     },

@@ -6,17 +6,24 @@ import jp from 'jsonpath';
 
 import { AST, S } from '@dxos/effect';
 
-// TODO(burdon): FieldSchema for Form also.
+//
+// Field
+//
+
 export const FieldSchema = S.Struct({
   path: S.String,
   label: S.optional(S.String),
   defaultValue: S.optional(S.Any),
 
-  // Table specific, generic or union?
+  // TODO(burdon): Table specific, generic or union?
   size: S.optional(S.Number),
 });
 
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
+
+//
+// Table
+//
 
 export const TableSchema = S.Struct({
   schema: S.Any, // TODO(burdon): Serialized as typename.
@@ -25,12 +32,29 @@ export const TableSchema = S.Struct({
 
 export type TableType = S.Schema.Type<typeof TableSchema>;
 
-// TODO(burdon): Just use lodash.get?
-export const getColumnValue = <T>(data: any, field: FieldType, defaultValue?: T): T =>
-  jp.value(data, '$.' + field.path) as T;
+//
+// Form
+//
 
-// TODO(burdon): Determine if path can be written back.
+export const FormSchema = S.Struct({
+  schema: S.Any, // TODO(burdon): Serialized as typename.
+  fields: S.Array(FieldSchema),
+});
+
+export type FormType = S.Schema.Type<typeof FormSchema>;
+
+//
+// Utils
+//
+
+// TODO(burdon): Just use lodash.get?
+export const getColumnValue = <T>(data: any, field: FieldType, defaultValue?: T): T | undefined =>
+  (jp.value(data, '$.' + field.path) as T) ?? defaultValue;
+
+// TODO(burdon): Determine if path can be written back (or is a compute value).
 export const setColumnValue = <T>(data: any, field: FieldType, value: T): T => jp.value(data, '$.' + field.path, value);
+
+export const isScalar = (p: AST.AST) => AST.isBooleanKeyword(p) || AST.isStringKeyword(p) || AST.isNumberKeyword(p);
 
 /**
  * Get the AST node associated with the field.
@@ -58,5 +82,3 @@ export const getProperty = (schema: S.Schema<any>, field: FieldType): AST.AST | 
 
   return node;
 };
-
-const isScalar = (p: AST.AST) => AST.isBooleanKeyword(p) || AST.isStringKeyword(p) || AST.isNumberKeyword(p);

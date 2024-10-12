@@ -2,17 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(burdon): Effect schema
+
 export type TableDef = {
   id: string;
   name?: string;
-  columns: ColumnProps[];
+  columns: ColumnDef[];
 };
 
-// TODO(burdon): Use Effect defs?
 export type ColumnType = 'number' | 'boolean' | 'date' | 'string' | 'json' | 'ref';
 
-// TODO(burdon): Effect schema?
-export type ColumnProps = {
+export type ColumnDef = {
   id: string;
   prop: string;
   type: ColumnType;

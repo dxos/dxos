@@ -11,7 +11,7 @@ import { Button } from '@dxos/react-ui';
 import {
   type BaseColumnOptions,
   ColumnMenu,
-  type ColumnProps,
+  type ColumnDef,
   createColumnBuilder,
   type SearchListQueryModel,
   type TableColumnDef,
@@ -22,7 +22,7 @@ import { getSize } from '@dxos/react-ui-theme';
 import { createUniqueProp } from './types';
 
 type ColumnCreationOptions = {
-  onColumnUpdate?: (id: string, column: ColumnProps) => void;
+  onColumnUpdate?: (id: string, column: ColumnDef) => void;
   onColumnDelete?: (id: string) => void;
   onRowUpdate?: (object: any, key: string, value: any) => void;
   onRowDelete?: (object: any) => void;
