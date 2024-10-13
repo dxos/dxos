@@ -5,6 +5,7 @@
       "DOM",
       "ESNext"
     ],
+//  "moduleResolution": "NodeNext",
     "types": [
       "node"
     ]

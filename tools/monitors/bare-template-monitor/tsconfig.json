@@ -14,7 +14,7 @@
       "ESNext"
     ],
     "module": "CommonJS",
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "noImplicitOverride": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
