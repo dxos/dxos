@@ -3,29 +3,27 @@
 //
 
 import { Option, pipe } from 'effect';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 import { AST, type S } from '@dxos/effect';
 import { Input, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+import { TextInput } from './TextInput';
 import { getFormat, RealNumberFormat } from './annotations';
 import { getColumnValue, getProperty, setColumnValue, type FormType } from './types';
 
 export type FormProps<T = {}> = ThemedClassName<{
+  form: FormType;
   data?: T;
   schema?: S.Schema<T>;
-  form: FormType;
   readonly?: boolean;
 }>;
 
 /**
  * Schema-based object form.
  */
-export const Form = <T = {},>({ classNames, data, schema, form, readonly }: FormProps<T>) => {
-  const [invalid, setInvalid] = useState<Record<string, boolean>>({});
-  useEffect(() => {}, []);
-
+export const Form = <T = {},>({ classNames, form, data, schema, readonly }: FormProps<T>) => {
   return (
     <div role='none' className={mx('flex flex-col w-full gap-2', classNames)}>
       {form.fields.map((field) => {
@@ -63,28 +61,18 @@ export const Form = <T = {},>({ classNames, data, schema, form, readonly }: Form
         //  - Enum (single/multi-select)
         //
 
-        // TODO(burdon): Factor out with hook.
         const value = data ? getColumnValue(data, field) : undefined;
-        const onChange = (text: string) => {
-          if (!format?.filter || text.match(format.filter)) {
-            setColumnValue(data, field, text);
-            if (format?.valid) {
-              setInvalid((map) => ({ ...map, [field.path]: !format.valid!.test(text) }));
-            }
-          }
-        };
 
         return (
           <div key={field.path} className='flex flex-col w-full gap-1'>
             <Input.Root>
               <Input.Label classNames='px-1'>{label}</Input.Label>
-              <Input.TextInput
-                // TODO(burdon): Correct approach? Push down to component.
-                style={invalid[field.path] ? ({ '--tw-ring-color': 'red' } as any) : {}}
+              <TextInput
                 disabled={readonly}
                 placeholder={description}
+                format={format}
                 value={value ? String(value) : ''}
-                onChange={(event) => onChange(event.target.value)}
+                onChange={(event) => setColumnValue(data, field, event.target.value)}
               />
             </Input.Root>
           </div>

@@ -9,8 +9,7 @@ import React from 'react';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { type FormProps } from './Form';
-import { TestSchema } from './testing';
-import { TestPopup } from './util';
+import { TestSchema, TestPopup } from './testing';
 import translations from '../../translations';
 
 const Story = (props: FormProps) => <TestPopup></TestPopup>;

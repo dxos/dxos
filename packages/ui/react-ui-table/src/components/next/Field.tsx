@@ -6,29 +6,38 @@ import React from 'react';
 
 import { type S } from '@dxos/effect';
 import { Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-import { type FieldType } from './types';
+import { TextInput } from './TextInput';
+import { type FormatType } from './annotations';
+import { FieldScalarType, type FieldType } from './types';
 import { translationKey } from '../../translations';
+
+const PropertyFormat: FormatType = {
+  filter: /^\w*$/,
+  valid: /^\w+$/,
+};
 
 export type FieldProps<T = {}> = ThemedClassName<{
   field: FieldType;
-  schema: S.Schema<T>;
+  schema?: S.Schema<T>;
   readonly?: boolean;
 }>;
 
-export const Field = <T = {},>({ field, readonly }: FieldProps<T>) => {
+export const Field = <T = {},>({ classNames, field, readonly }: FieldProps<T>) => {
   const { t } = useTranslation(translationKey);
 
   return (
-    <div className='flex flex-col w-full gap-2'>
+    <div className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
       <div className='flex flex-col w-full gap-1'>
         <Input.Root>
           <Input.Label classNames='px-1'>{t('field path label')}</Input.Label>
-          <Input.TextInput
+          <TextInput
             disabled={readonly}
             placeholder={t('field path placeholder')}
+            format={PropertyFormat}
             value={field.path ?? ''}
-            // onChange={(event) => onChange(event.target.value)}
+            onChange={(event) => (field.path = event.target.value)}
           />
         </Input.Root>
       </div>
@@ -40,7 +49,7 @@ export const Field = <T = {},>({ field, readonly }: FieldProps<T>) => {
             disabled={readonly}
             placeholder={t('field label placeholder')}
             value={field.label ?? ''}
-            // onChange={(event) => onChange(event.target.value)}
+            onChange={(event) => (field.label = event.target.value)}
           />
         </Input.Root>
       </div>
@@ -49,14 +58,16 @@ export const Field = <T = {},>({ field, readonly }: FieldProps<T>) => {
         <Input.Root>
           <Input.Label classNames='px-1'>{t('field type label')}</Input.Label>
           <Select.Root
-          // value={field.type}
-          // onValueChange={(value) => setFormState((prevState) => ({ ...prevState, type: value }))}
+            value={field.type}
+            onValueChange={(value) => {
+              field.type = value as FieldScalarType;
+            }}
           >
             <Select.TriggerButton classNames='is-full' placeholder='Type' />
             <Select.Portal>
               <Select.Content>
                 <Select.Viewport>
-                  {types.map((type) => (
+                  {Object.values(FieldScalarType).map((type) => (
                     <Select.Option key={type} value={type}>
                       {t(`field type ${type} label`)}
                     </Select.Option>
@@ -70,5 +81,3 @@ export const Field = <T = {},>({ field, readonly }: FieldProps<T>) => {
     </div>
   );
 };
-
-const types = ['string', 'number', 'boolean', 'ref'];

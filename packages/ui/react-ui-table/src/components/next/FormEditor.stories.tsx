@@ -6,11 +6,12 @@ import '@dxos-theme';
 
 import React from 'react';
 
+import { create } from '@dxos/echo-schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { FormEditor, type FormEditorProps } from './FormEditor';
-import { table, TestSchema, type TestType } from './testing';
-import { TestPopup } from './util';
+import { form, TestSchema, type TestType } from './testing';
+import { TestPopup } from './testing';
 import translations from '../../translations';
 
 const Story = (props: FormEditorProps) => (
@@ -31,7 +32,7 @@ export default {
 
 export const Default = {
   args: {
+    form: create(form),
     schema: TestSchema,
-    fields: table.columns,
   } satisfies FormEditorProps<TestType>,
 };

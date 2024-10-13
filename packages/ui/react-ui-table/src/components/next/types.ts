@@ -10,14 +10,25 @@ import { AST, S } from '@dxos/effect';
 // Field
 //
 
-export const FieldSchema = S.Struct({
-  path: S.String,
-  label: S.optional(S.String),
-  defaultValue: S.optional(S.Any),
+export enum FieldScalarType {
+  String = 'string',
+  Number = 'number',
+  Boolean = 'boolean',
+  Ref = 'ref',
+}
 
-  // TODO(burdon): Table specific, generic or union?
-  size: S.optional(S.Number),
-});
+// TODO(burdon): Is S.mutable required?
+export const FieldSchema = S.mutable(
+  S.Struct({
+    path: S.String,
+    label: S.optional(S.String),
+    type: S.Enums(FieldScalarType),
+    defaultValue: S.optional(S.Any),
+
+    // TODO(burdon): Table specific, generic or union?
+    size: S.optional(S.Number),
+  }),
+);
 
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
 

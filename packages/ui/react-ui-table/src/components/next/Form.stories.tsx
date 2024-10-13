@@ -11,7 +11,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Form, type FormProps } from './Form';
 import { data, form, TestSchema, type TestType } from './testing';
-import { TestPopup } from './util';
+import { TestPopup } from './testing';
 import translations from '../../translations';
 
 const Story = (props: FormProps) => (
@@ -33,23 +33,23 @@ export default {
 export const Default = {
   args: {
     data: create(data),
+    form: create(form),
     schema: TestSchema,
-    form,
   } satisfies FormProps<TestType>,
 };
 
 export const Empty = {
   args: {
+    form: create(form),
     schema: TestSchema,
-    form,
   } satisfies FormProps<TestType>,
 };
 
 export const Readonly = {
   args: {
     data: create(data),
+    form: create(form),
     schema: TestSchema,
-    form,
     readonly: true,
   } satisfies FormProps<TestType>,
 };

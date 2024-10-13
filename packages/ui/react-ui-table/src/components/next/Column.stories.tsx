@@ -9,7 +9,7 @@ import React from 'react';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { type ColumnProps } from './Column';
-import { TestPopup } from './util';
+import { TestPopup } from './testing';
 import translations from '../../translations';
 
 const Story = (props: ColumnProps) => <TestPopup></TestPopup>;

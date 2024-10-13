@@ -4,8 +4,8 @@
 
 import { AST, S } from '@dxos/echo-schema';
 
-import { EmailFormat, FormatAnnotationId } from './annotations';
-import { type FormType, type TableType } from './types';
+import { EmailFormat, FormatAnnotationId } from '../annotations';
+import { FieldScalarType, type FormType, type TableType } from '../types';
 
 export const TestSchema = S.Struct({
   name: S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Full name.' })),
@@ -39,19 +39,24 @@ export const table: TableType = {
   columns: [
     {
       path: 'name',
+      type: FieldScalarType.String,
     },
     {
       path: 'email',
+      type: FieldScalarType.String,
     },
     {
       path: 'address.zip',
       label: 'ZIP',
+      type: FieldScalarType.String,
     },
     {
       path: 'rating',
+      type: FieldScalarType.Number,
     },
     {
       path: 'admin',
+      type: FieldScalarType.Boolean,
     },
   ],
 };
@@ -61,19 +66,24 @@ export const form: FormType = {
   fields: [
     {
       path: 'name',
+      type: FieldScalarType.String,
     },
     {
       path: 'email',
+      type: FieldScalarType.String,
     },
     {
       path: 'address.zip',
       label: 'ZIP',
+      type: FieldScalarType.String,
     },
     {
       path: 'rating',
+      type: FieldScalarType.Number,
     },
     {
       path: 'admin',
+      type: FieldScalarType.Boolean,
     },
   ],
 };
