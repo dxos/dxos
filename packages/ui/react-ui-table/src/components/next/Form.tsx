@@ -25,7 +25,7 @@ export type FormProps<T = {}> = ThemedClassName<{
  */
 export const Form = <T = {},>({ classNames, form, data, schema, readonly }: FormProps<T>) => {
   return (
-    <div role='none' className={mx('flex flex-col w-full gap-2', classNames)}>
+    <div role='none' className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
       {form.fields.map((field) => {
         const prop = schema && getProperty(schema, field);
         const label = field.label ?? (prop && pipe(AST.getTitleAnnotation(prop), Option.getOrUndefined));

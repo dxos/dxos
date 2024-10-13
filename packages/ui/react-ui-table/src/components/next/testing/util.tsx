@@ -4,6 +4,9 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-export const TestPopup = ({ children }: PropsWithChildren) => (
-  <div className='flex w-[240px] border border-separator rounded'>{children}</div>
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
+
+export const TestPopup = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
+  <div className={mx('flex border border-separator rounded w-[240px]', classNames)}>{children}</div>
 );
