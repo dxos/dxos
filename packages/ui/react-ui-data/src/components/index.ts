@@ -5,5 +5,5 @@
 export * from './Column';
 export * from './Field';
 export * from './Form';
-export * from './FormEditor';
+export * from './ViewEditor';
 export * from './TextInput';

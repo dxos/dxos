@@ -19,11 +19,12 @@ const PropertyFormat: FormatType = {
 
 export type FieldProps<T = {}> = ThemedClassName<{
   field: FieldType;
+  autoFocus?: boolean;
   schema?: S.Schema<T>;
   readonly?: boolean;
 }>;
 
-export const Field = <T = {},>({ classNames, field, readonly }: FieldProps<T>) => {
+export const Field = <T = {},>({ classNames, autoFocus, field, readonly }: FieldProps<T>) => {
   const { t } = useTranslation(translationKey);
 
   return (
@@ -32,6 +33,7 @@ export const Field = <T = {},>({ classNames, field, readonly }: FieldProps<T>) =
         <Input.Root>
           <Input.Label classNames='px-1'>{t('field path label')}</Input.Label>
           <TextInput
+            autoFocus={autoFocus}
             disabled={readonly}
             placeholder={t('field path placeholder')}
             format={PropertyFormat}

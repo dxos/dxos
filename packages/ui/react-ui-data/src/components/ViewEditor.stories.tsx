@@ -9,19 +9,19 @@ import React from 'react';
 import { create } from '@dxos/echo-schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { FormEditor, type FormEditorProps } from './FormEditor';
+import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 import { view, TestSchema, type TestType, TestPopup } from '../testing';
 import translations from '../translations';
-import type { ViewType } from '../types';
+import { type ViewType } from '../types';
 
-const Story = (props: FormEditorProps) => (
+const Story = (props: ViewEditorProps) => (
   <TestPopup>
-    <FormEditor {...props} />
+    <ViewEditor {...props} />
   </TestPopup>
 );
 
 export default {
-  title: 'react-ui-data/FormEditor',
+  title: 'react-ui-data/ViewEditor',
   decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'centered',
@@ -33,13 +33,11 @@ export default {
 export const Default = {
   args: {
     view: create(view),
-    schema: TestSchema,
-  } satisfies FormEditorProps<TestType>,
+  } satisfies ViewEditorProps<TestType>,
 };
 
 export const Empty = {
   args: {
     view: create<ViewType>({ schema: TestSchema, fields: [] }),
-    schema: TestSchema,
-  } satisfies FormEditorProps<TestType>,
+  } satisfies ViewEditorProps<TestType>,
 };

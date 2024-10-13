@@ -81,6 +81,18 @@ export const getFieldValue = <T>(data: any, field: FieldType, defaultValue?: T):
 // TODO(burdon): Determine if path can be written back (or is a compute value).
 export const setFieldValue = <T>(data: any, field: FieldType, value: T): T => jp.value(data, '$.' + field.path, value);
 
+// TODO(burdon): Check unique name against schema.
+export const getUniqueProperty = (view: ViewType) => {
+  let n = 1;
+  while (true) {
+    const path = `prop_${n++}`;
+    const idx = view.fields.findIndex((field) => field.path === path);
+    if (idx === -1) {
+      return path;
+    }
+  }
+};
+
 /**
  * Get the AST node associated with the field.
  */
