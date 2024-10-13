@@ -10,7 +10,7 @@ import { create } from '@dxos/echo-schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Form, type FormProps } from './Form';
-import { data, form, TestSchema, type TestType, TestPopup } from '../testing';
+import { data, view, TestSchema, type TestType, TestPopup } from '../testing';
 import translations from '../translations';
 
 const Story = (props: FormProps) => (
@@ -32,14 +32,14 @@ export default {
 export const Default = {
   args: {
     data: create(data),
-    form: create(form),
+    view: create(view),
     schema: TestSchema,
   } satisfies FormProps<TestType>,
 };
 
 export const Empty = {
   args: {
-    form: create(form),
+    view: create(view),
     schema: TestSchema,
   } satisfies FormProps<TestType>,
 };
@@ -47,7 +47,7 @@ export const Empty = {
 export const Readonly = {
   args: {
     data: create(data),
-    form: create(form),
+    view: create(view),
     schema: TestSchema,
     readonly: true,
   } satisfies FormProps<TestType>,

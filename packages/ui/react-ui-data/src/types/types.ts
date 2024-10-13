@@ -10,26 +10,45 @@ import { AST, S } from '@dxos/effect';
 // Field
 //
 
+export const isScalar = (p: AST.AST) => AST.isNumberKeyword(p) || AST.isBooleanKeyword(p) || AST.isStringKeyword(p);
+
+// TODO(burdon): Format vs. type?
+// TODO(burdon): String or numeric enum value.
 export enum FieldScalarType {
-  String = 'string',
   Number = 'number',
   Boolean = 'boolean',
+  String = 'string',
+
   Ref = 'ref',
 
   // TODO(burdon): Distinguish scalar types by decorated types.
   Percent = 'percent',
+  // TODO(burdon): Currency type.
   Currency = 'currency',
+
   DateTime = 'datetime',
   Date = 'date',
   Time = 'time',
+
+  // TODO(burdon): Other types:
+  //  - URL
+  //  - DID
 }
+
+// TODO(burdon): Single/multi-select enums?
 
 // TODO(burdon): Is S.mutable required?
 export const FieldSchema = S.mutable(
   S.Struct({
     path: S.String,
     type: S.Enums(FieldScalarType),
+
     label: S.optional(S.String),
+
+    /** Number of decimal digits. */
+    digits: S.optional(S.Number),
+
+    /** Default value for new records. */
     defaultValue: S.optional(S.Any),
 
     // TODO(burdon): Table specific, generic or union?
@@ -40,39 +59,27 @@ export const FieldSchema = S.mutable(
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
 
 //
-// Table
+// View
 //
 
-export const TableSchema = S.Struct({
-  schema: S.Any, // TODO(burdon): Serialized as typename.
-  columns: S.mutable(S.Array(FieldSchema)),
-});
-
-export type TableType = S.Schema.Type<typeof TableSchema>;
-
-//
-// Form
-//
-
-export const FormSchema = S.Struct({
-  schema: S.Any, // TODO(burdon): Serialized as typename.
+// TODO(burdon): Different type for Form/Table or common type?
+export const ViewSchema = S.Struct({
+  schema: S.Any, // TODO(burdon): Serialized as FQ typename.
   fields: S.mutable(S.Array(FieldSchema)),
 });
 
-export type FormType = S.Schema.Type<typeof FormSchema>;
+export type ViewType = S.Schema.Type<typeof ViewSchema>;
 
 //
 // Utils
 //
 
 // TODO(burdon): Just use lodash.get?
-export const getColumnValue = <T>(data: any, field: FieldType, defaultValue?: T): T | undefined =>
+export const getFieldValue = <T>(data: any, field: FieldType, defaultValue?: T): T | undefined =>
   (jp.value(data, '$.' + field.path) as T) ?? defaultValue;
 
 // TODO(burdon): Determine if path can be written back (or is a compute value).
-export const setColumnValue = <T>(data: any, field: FieldType, value: T): T => jp.value(data, '$.' + field.path, value);
-
-export const isScalar = (p: AST.AST) => AST.isBooleanKeyword(p) || AST.isStringKeyword(p) || AST.isNumberKeyword(p);
+export const setFieldValue = <T>(data: any, field: FieldType, value: T): T => jp.value(data, '$.' + field.path, value);
 
 /**
  * Get the AST node associated with the field.

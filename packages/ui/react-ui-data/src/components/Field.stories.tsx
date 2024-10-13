@@ -10,7 +10,7 @@ import { create } from '@dxos/echo-schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Field, type FieldProps } from './Field';
-import { form, TestSchema, TestPopup, type TestType } from '../testing';
+import { view, TestSchema, TestPopup, type TestType } from '../testing';
 import translations from '../translations';
 
 const Story = (props: FieldProps) => (
@@ -31,7 +31,7 @@ export default {
 
 export const Default = {
   args: {
-    field: create(form.fields[0]),
+    field: create(view.fields[0]),
     schema: TestSchema,
   } satisfies FieldProps<TestType>,
 };

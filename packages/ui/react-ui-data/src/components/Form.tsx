@@ -10,10 +10,10 @@ import { Input, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { TextInput } from './TextInput';
-import { RealNumberFormat, type FormType, getColumnValue, getFormat, getProperty, setColumnValue } from '../types';
+import { RealNumberFormat, type ViewType, getFieldValue, getFormat, getProperty, setFieldValue } from '../types';
 
 export type FormProps<T = {}> = ThemedClassName<{
-  form: FormType;
+  view: ViewType;
   data?: T;
   schema?: S.Schema<T>;
   readonly?: boolean;
@@ -22,10 +22,10 @@ export type FormProps<T = {}> = ThemedClassName<{
 /**
  * Schema-based object form.
  */
-export const Form = <T = {},>({ classNames, form, data, schema, readonly }: FormProps<T>) => {
+export const Form = <T = {},>({ classNames, view, data, schema, readonly }: FormProps<T>) => {
   return (
     <div role='none' className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
-      {form.fields.map((field) => {
+      {view.fields.map((field) => {
         const prop = schema && getProperty(schema, field);
         const label = field.label ?? (prop && pipe(AST.getTitleAnnotation(prop), Option.getOrUndefined));
         const description = (prop && pipe(AST.getDescriptionAnnotation(prop), Option.getOrUndefined)) ?? label;
@@ -36,9 +36,9 @@ export const Form = <T = {},>({ classNames, form, data, schema, readonly }: Form
         //
 
         if (prop && AST.isBooleanKeyword(prop)) {
-          const value = data && getColumnValue(data, field);
+          const value = data && getFieldValue(data, field);
           const onChange = (checked: boolean) => {
-            setColumnValue(data, field, checked);
+            setFieldValue(data, field, checked);
           };
 
           return (
@@ -60,7 +60,7 @@ export const Form = <T = {},>({ classNames, form, data, schema, readonly }: Form
         //  - Enum (single/multi-select)
         //
 
-        const value = data ? getColumnValue(data, field) : undefined;
+        const value = data ? getFieldValue(data, field) : undefined;
 
         return (
           <div key={field.path} className='flex flex-col w-full gap-1'>
@@ -71,7 +71,7 @@ export const Form = <T = {},>({ classNames, form, data, schema, readonly }: Form
                 placeholder={description}
                 format={format}
                 value={value ? String(value) : ''}
-                onChange={(event) => setColumnValue(data, field, event.target.value)}
+                onChange={(event) => setFieldValue(data, field, event.target.value)}
               />
             </Input.Root>
           </div>
