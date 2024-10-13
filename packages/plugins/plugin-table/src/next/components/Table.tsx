@@ -97,13 +97,13 @@ const frozen = { frozenRowsStart: 1 };
 // TODO(Zan): Callbacks for editing column schema.
 export const Table = ({ table, data }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
-  const { tableModel, columnMeta } = useTableModel(table, data, gridRef);
+  const { tableModel } = useTableModel(table, data, gridRef);
 
   const handleAxisResize = useCallback(
     (event: DxAxisResize) => {
       if (event.axis === 'col') {
         const columnIndex = parseInt(event.index, 10);
-        tableModel?.modifyColumnWidth(columnIndex, event.size);
+        tableModel?.setColumnWidth(columnIndex, event.size);
       }
     },
     [tableModel],
@@ -117,7 +117,7 @@ export const Table = ({ table, data }: TableProps) => {
         limitRows={data.length}
         limitColumns={table.props.length}
         initialCells={tableModel?.cells.value}
-        columns={columnMeta}
+        columns={tableModel?.columnMeta.value}
         frozen={frozen}
         onAxisResize={handleAxisResize}
       />
