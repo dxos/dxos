@@ -18,6 +18,7 @@ import {
 import { type TableType } from '../../types';
 import { useTableModel } from '../hooks';
 import { type TableModel } from '../table-model';
+import { cellKeyToCoords } from '../util/coords';
 
 const TableCellEditor = ({
   __gridScope,
@@ -32,7 +33,7 @@ const TableCellEditor = ({
   const updateCell = useCallback(
     (value: any) => {
       if (value !== undefined && editing && tableModel) {
-        const [col, row] = editing.index.split(',').map(Number);
+        const { col, row } = cellKeyToCoords(editing.index);
         tableModel.setCellData(col, row, value);
       }
     },

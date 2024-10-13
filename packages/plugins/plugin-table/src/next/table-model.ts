@@ -9,6 +9,7 @@ import { PublicKey } from '@dxos/react-client';
 import { type DxGridPlaneCells, type DxGridCells, type DxGridAxisMeta } from '@dxos/react-ui-grid';
 
 import { CellUpdateListener } from './CellUpdateListener';
+import { getCellKey } from './util/coords';
 import { type TableType } from '../types';
 
 export type ColumnId = string;
@@ -59,7 +60,7 @@ export class TableModel extends Resource {
     // Construct the header cells based on the table props.
     const headerCells: DxGridPlaneCells = Object.fromEntries(
       this.table.props.map((prop, index) => {
-        return [`${index},0`, { value: prop.id!, resizeHandle: 'col' }];
+        return [getCellKey(index, 0), { value: prop.id!, resizeHandle: 'col' }];
       }),
     );
 
@@ -69,7 +70,7 @@ export class TableModel extends Resource {
       this.data.forEach((row, rowIndex) => {
         this.table.props.forEach((prop, colIndex) => {
           const cellValueSignal = computed(() => `${row[prop.id!]}`);
-          values[`${colIndex},${rowIndex}`] = {
+          values[getCellKey(colIndex, rowIndex)] = {
             get value() {
               return cellValueSignal.value;
             },
