@@ -25,7 +25,7 @@ const createTableModel = (): TableModel => {
       { id: 'col3', label: 'Column 3' },
     ],
   });
-  return new TableModel(table as any, []);
+  return new TableModel({ table: table as any, data: [] });
 };
 
 describe('TableModel', () => {
@@ -124,7 +124,7 @@ describe('TableModel', () => {
           ],
         }));
 
-        model = new TableModel(table as any, data);
+        model = new TableModel({ table: table as any, data });
         await model.open();
       });
 
