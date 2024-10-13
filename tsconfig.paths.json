@@ -332,6 +332,9 @@
       "@dxos/react-ui-card": [
         "packages/ui/react-ui-card/src/index.ts"
       ],
+      "@dxos/react-ui-data": [
+        "packages/ui/react-ui-data/src/index.ts"
+      ],
       "@dxos/react-ui-deck": [
         "packages/ui/react-ui-deck/src/index.ts"
       ],

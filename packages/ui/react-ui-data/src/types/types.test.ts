@@ -7,10 +7,8 @@ import { describe, test, expect } from 'vitest';
 
 import { AST } from '@dxos/echo-schema';
 
-import { data, table, TestSchema } from './testing';
 import { getColumnValue, getProperty } from './types';
-
-// TODO(burdon): Detect default annotation?
+import { data, table, TestSchema } from '../testing';
 
 describe('schema', () => {
   test('JSON path', () => {

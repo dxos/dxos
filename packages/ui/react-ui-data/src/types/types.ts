@@ -15,6 +15,13 @@ export enum FieldScalarType {
   Number = 'number',
   Boolean = 'boolean',
   Ref = 'ref',
+
+  // TODO(burdon): Distinguish scalar types by decorated types.
+  Percent = 'percent',
+  Currency = 'currency',
+  DateTime = 'datetime',
+  Date = 'date',
+  Time = 'time',
 }
 
 // TODO(burdon): Is S.mutable required?

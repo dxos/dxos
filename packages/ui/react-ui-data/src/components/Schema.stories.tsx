@@ -9,13 +9,13 @@ import React from 'react';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { type FormProps } from './Form';
-import { TestSchema, TestPopup } from './testing';
-import translations from '../../translations';
+import { TestSchema, TestPopup } from '../testing';
+import translations from '../translations';
 
 const Story = (props: FormProps) => <TestPopup></TestPopup>;
 
 export default {
-  title: 'react-ui-table/SchemaEditor',
+  title: 'react-ui-data/SchemaEditor',
   decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'centered',

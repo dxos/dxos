@@ -10,8 +10,7 @@ import { Input, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { TextInput } from './TextInput';
-import { getFormat, RealNumberFormat } from './annotations';
-import { getColumnValue, getProperty, setColumnValue, type FormType } from './types';
+import { RealNumberFormat, type FormType, getColumnValue, getFormat, getProperty, setColumnValue } from '../types';
 
 export type FormProps<T = {}> = ThemedClassName<{
   form: FormType;

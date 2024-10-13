@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/react-ui-table",
+  "name": "@dxos/react-ui-data",
   "version": "0.6.11",
   "description": "A table component.",
   "homepage": "https://dxos.org",
@@ -34,14 +34,8 @@
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.1",
-    "@fluentui/react-tabster": "^9.19.0",
-    "@radix-ui/react-context": "^1.0.0",
-    "@radix-ui/react-primitive": "^1.0.2",
-    "@radix-ui/react-slot": "^1.0.1",
-    "@radix-ui/react-use-controllable-state": "^1.0.0",
-    "@tanstack/react-table": "^8.13.2",
-    "@tanstack/react-virtual": "^3.9.0",
-    "date-fns": "^3.3.1"
+    "date-fns": "^3.3.1",
+    "jsonpath": "^1.1.1"
   },
   "devDependencies": {
     "@dxos/echo-signals": "workspace:*",
@@ -49,6 +43,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
+    "@types/jsonpath": "~0.2.4",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "fast-check": "^3.19.0",

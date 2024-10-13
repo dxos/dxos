@@ -10,10 +10,9 @@ import { create } from '@dxos/echo-schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { FormEditor, type FormEditorProps } from './FormEditor';
-import { form, TestSchema, type TestType } from './testing';
-import { TestPopup } from './testing';
-import type { FormType } from './types';
-import translations from '../../translations';
+import { form, TestSchema, type TestType, TestPopup } from '../testing';
+import translations from '../translations';
+import type { FormType } from '../types';
 
 const Story = (props: FormEditorProps) => (
   <TestPopup>
@@ -22,7 +21,7 @@ const Story = (props: FormEditorProps) => (
 );
 
 export default {
-  title: 'react-ui-table/FormEditor',
+  title: 'react-ui-data/FormEditor',
   decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'centered',

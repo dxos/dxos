@@ -10,9 +10,8 @@ import { create } from '@dxos/echo-schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Field, type FieldProps } from './Field';
-import { form, TestSchema, type TestType } from './testing';
-import { TestPopup } from './testing';
-import translations from '../../translations';
+import { form, TestSchema, TestPopup, type TestType } from '../testing';
+import translations from '../translations';
 
 const Story = (props: FieldProps) => (
   <TestPopup>
@@ -21,7 +20,7 @@ const Story = (props: FieldProps) => (
 );
 
 export default {
-  title: 'react-ui-table/Field',
+  title: 'react-ui-data/Field',
   decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'centered',

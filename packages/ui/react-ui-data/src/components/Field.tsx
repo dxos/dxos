@@ -9,9 +9,8 @@ import { Input, Select, type ThemedClassName, useTranslation } from '@dxos/react
 import { mx } from '@dxos/react-ui-theme';
 
 import { TextInput } from './TextInput';
-import { type FormatType } from './annotations';
-import { FieldScalarType, type FieldType } from './types';
-import { translationKey } from '../../translations';
+import { translationKey } from '../translations';
+import { type FormatType, FieldScalarType, type FieldType } from '../types';
 
 const PropertyFormat: FormatType = {
   filter: /^\w*$/,

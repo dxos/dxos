@@ -764,6 +764,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-data/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-deck/package.json",
           "jsonpath": "$.version"
         },

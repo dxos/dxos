@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Input, type TextInputProps as NativeTextInputProps } from '@dxos/react-ui';
 
-import { type FormatType } from './annotations';
+import { type FormatType } from '../types';
 
 export type TextInputProps = {
   format?: FormatType;

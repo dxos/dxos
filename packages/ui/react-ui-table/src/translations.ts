@@ -20,17 +20,6 @@ export default [
         'column label label': 'Label',
         'property key label': 'Property',
         'column type label': 'Type',
-
-        // TODO(burdon): Factor out.
-        'field path label': 'Property',
-        'field path placeholder': 'Label name',
-        'field label label': 'Label',
-        'field label placeholder': 'Label',
-        'field type label': 'Type',
-        'field type string label': 'String',
-        'field type number label': 'Number',
-        'field type boolean label': 'Boolean',
-        'field type ref label': 'Reference',
       },
     },
   },

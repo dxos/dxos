@@ -9,7 +9,7 @@ import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Field } from './Field';
-import { FieldScalarType, type FormType } from './types';
+import { FieldScalarType, type FormType } from '../types';
 
 export type FormEditorProps<T = {}> = ThemedClassName<{
   form: FormType;
