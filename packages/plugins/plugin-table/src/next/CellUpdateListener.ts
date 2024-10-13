@@ -5,6 +5,14 @@
 import { effect, type ReadonlySignal } from '@preact/signals-core';
 
 // TODO(Zan): Take in the current visible bounds and only subscribe to cells within that range.
+
+/**
+ * CellUpdateListener monitors changes in table cell values.
+ * It efficiently tracks updates across the table's data structure,
+ * allowing for responsive UI updates and data synchronization.
+ * The listener is designed to handle dynamic cell additions and removals,
+ * making it suitable for tables with changing dimensions or content.
+ */
 export class CellUpdateListener {
   private cellEffectsUnsubscribes: (() => void)[] = [];
   private topLevelEffectUnsubscribe: (() => void) | null = null;

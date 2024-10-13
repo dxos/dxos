@@ -6,42 +6,61 @@ import { computed, type ReadonlySignal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
 import { PublicKey } from '@dxos/react-client';
-import { type DxGridPlaneCells, type DxGridCells } from '@dxos/react-ui-grid';
+import { type DxGridPlaneCells, type DxGridCells, type DxGridAxisMeta } from '@dxos/react-ui-grid';
 
 import { CellUpdateListener } from './CellUpdateListener';
+import { getCellKey } from './util/coords';
 import { type TableType } from '../types';
-
-const DEFAULT_WIDTH = 256; // px
 
 export type ColumnId = string;
 export type SortDirection = 'asc' | 'desc';
 export type SortConfig = { columnId: ColumnId; direction: SortDirection };
+
+export type TableModelProps = {
+  table: TableType;
+  data: any[];
+  onCellUpdate?: (col: number, row: number) => void;
+  sorting?: SortConfig[];
+  pinnedRows?: { top: number[]; bottom: number[] };
+  rowSelection?: number[];
+};
 
 export class TableModel extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
 
   public cells!: ReadonlySignal<DxGridCells>;
   public cellUpdateListener!: CellUpdateListener;
+  public columnMeta!: ReadonlySignal<DxGridAxisMeta>;
 
-  constructor(
-    public readonly table: TableType,
-    public readonly data: any[],
-    private onCellUpdate?: (col: number, row: number) => void,
-    public columnWidths: Record<ColumnId, number> = Object.fromEntries(
-      table.props.map((prop) => [prop.id, DEFAULT_WIDTH]),
-    ),
-    public sorting: SortConfig[] = [],
-    public pinnedRows: { top: number[]; bottom: number[] } = { top: [], bottom: [] },
-    public rowSelection: number[] = [],
-  ) {
+  public readonly table: TableType;
+  public readonly data: any[];
+  private onCellUpdate?: (col: number, row: number) => void;
+  public sorting: SortConfig[];
+  public pinnedRows: { top: number[]; bottom: number[] };
+  public rowSelection: number[];
+
+  constructor({
+    table,
+    data,
+    onCellUpdate,
+    sorting = [],
+    pinnedRows = { top: [], bottom: [] },
+    rowSelection = [],
+  }: TableModelProps) {
     super();
+    this.table = table;
+    this.data = data;
+    this.onCellUpdate = onCellUpdate;
+    this.sorting = sorting;
+    this.pinnedRows = pinnedRows;
+    this.rowSelection = rowSelection;
   }
 
   protected override async _open() {
     // Construct the header cells based on the table props.
     const headerCells: DxGridPlaneCells = Object.fromEntries(
       this.table.props.map((prop, index) => {
-        return [`${index},0`, { value: prop.id!, resizeHandle: 'col' }];
+        return [getCellKey(index, 0), { value: prop.id!, resizeHandle: 'col' }];
       }),
     );
 
@@ -51,7 +70,7 @@ export class TableModel extends Resource {
       this.data.forEach((row, rowIndex) => {
         this.table.props.forEach((prop, colIndex) => {
           const cellValueSignal = computed(() => `${row[prop.id!]}`);
-          values[`${colIndex},${rowIndex}`] = {
+          values[getCellKey(colIndex, rowIndex)] = {
             get value() {
               return cellValueSignal.value;
             },
@@ -63,6 +82,13 @@ export class TableModel extends Resource {
 
     this.cells = computed(() => {
       return { grid: cellValues.value, frozenRowsStart: headerCells };
+    });
+
+    this.columnMeta = computed(() => {
+      const headings = Object.fromEntries(
+        this.table.props.map((prop, index) => [index, { size: prop.size ?? 256, resizeable: true }]),
+      );
+      return { grid: headings };
     });
 
     this.cellUpdateListener = new CellUpdateListener(cellValues, this.onCellUpdate);
@@ -104,11 +130,11 @@ export class TableModel extends Resource {
     this.rowSelection = [];
   }
 
-  public modifyColumnWidth(columnIndex: number, width: number): void {
-    const propId = this.table.props[columnIndex]?.id;
-    if (propId) {
-      const newWidth = Math.max(0, width);
-      this.columnWidths[propId] = newWidth;
+  public setColumnWidth(columnIndex: number, width: number): void {
+    const newWidth = Math.max(0, width);
+    const prop = this.table.props.at(columnIndex);
+    if (prop) {
+      prop.size = newWidth;
     }
   }
 
