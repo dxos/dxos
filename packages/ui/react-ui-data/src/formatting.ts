@@ -7,6 +7,7 @@ import { FieldScalarType } from './types';
 /**
  * Format value by type.
  */
+// TODO(burdon): Reconcile with FormattingModel.
 export const formatValue = (type: FieldScalarType, value: any, locale: string | undefined = undefined): string => {
   switch (type) {
     case FieldScalarType.Boolean: {
