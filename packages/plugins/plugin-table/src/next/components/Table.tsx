@@ -98,7 +98,12 @@ const frozen = { frozenRowsStart: 1 };
 // TODO(Zan): Callbacks for editing column schema.
 export const Table = ({ table, data }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
-  const { tableModel } = useTableModel(table, data, gridRef);
+
+  const handleOnCellUpdate = useCallback((col: number, row: number) => {
+    gridRef.current?.updateIfWithinBounds({ col, row });
+  }, []);
+
+  const { tableModel } = useTableModel(table, data, handleOnCellUpdate);
 
   const handleAxisResize = useCallback(
     (event: DxAxisResize) => {

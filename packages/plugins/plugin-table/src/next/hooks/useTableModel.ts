@@ -2,24 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type RefObject, useEffect, useState } from 'react';
-
-import { type DxGridElement } from '@dxos/react-ui-grid';
+import { useEffect, useState } from 'react';
 
 import { type TableType } from '../../types';
 import { TableModel } from '../table-model';
 
-export const useTableModel = (table: TableType, data: any[], gridRef: RefObject<DxGridElement>) => {
+export const useTableModel = (table: TableType, data: any[], onCellUpdate: (col: number, row: number) => void) => {
   const [tableModel, setTableModel] = useState<TableModel>();
 
   useEffect(() => {
     if (!table || !data) {
       return;
     }
-
-    const onCellUpdate = (col: number, row: number) => {
-      gridRef.current?.updateIfWithinBounds({ col, row });
-    };
 
     let model: TableModel | undefined;
     const t = setTimeout(async () => {
@@ -36,7 +30,7 @@ export const useTableModel = (table: TableType, data: any[], gridRef: RefObject<
       clearTimeout(t);
       void model?.close();
     };
-  }, [data, table, gridRef]);
+  }, [data, table, onCellUpdate]);
 
   return { tableModel };
 };
