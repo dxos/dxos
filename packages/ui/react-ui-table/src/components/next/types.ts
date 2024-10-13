@@ -21,8 +21,8 @@ export enum FieldScalarType {
 export const FieldSchema = S.mutable(
   S.Struct({
     path: S.String,
-    label: S.optional(S.String),
     type: S.Enums(FieldScalarType),
+    label: S.optional(S.String),
     defaultValue: S.optional(S.Any),
 
     // TODO(burdon): Table specific, generic or union?
@@ -38,7 +38,7 @@ export type FieldType = S.Schema.Type<typeof FieldSchema>;
 
 export const TableSchema = S.Struct({
   schema: S.Any, // TODO(burdon): Serialized as typename.
-  columns: S.Array(FieldSchema),
+  columns: S.mutable(S.Array(FieldSchema)),
 });
 
 export type TableType = S.Schema.Type<typeof TableSchema>;
@@ -49,7 +49,7 @@ export type TableType = S.Schema.Type<typeof TableSchema>;
 
 export const FormSchema = S.Struct({
   schema: S.Any, // TODO(burdon): Serialized as typename.
-  fields: S.Array(FieldSchema),
+  fields: S.mutable(S.Array(FieldSchema)),
 });
 
 export type FormType = S.Schema.Type<typeof FormSchema>;

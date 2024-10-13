@@ -9,9 +9,7 @@ import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Field } from './Field';
-import { type FormType } from './types';
-
-// TODO(burdon): Reconcile with ColumnSettings.
+import { FieldScalarType, type FormType } from './types';
 
 export type FormEditorProps<T = {}> = ThemedClassName<{
   form: FormType;
@@ -23,7 +21,12 @@ export type FormEditorProps<T = {}> = ThemedClassName<{
  * Schema-based object form.
  */
 export const FormEditor = <T = {},>({ classNames, form, schema, readonly }: FormEditorProps<T>) => {
-  console.log(JSON.stringify(form, null, 2));
+  const handleAdd = () => {
+    // TODO(burdon): Check unique.
+    form.fields.push({ path: 'prop', type: FieldScalarType.String });
+  };
+
+  // TODO(burdon): Delete prop.
   return (
     <div role='none' className={mx('flex flex-col w-full gap-2 divide-y divide-separator', classNames)}>
       {form.fields.map((field, i) => (
@@ -32,7 +35,7 @@ export const FormEditor = <T = {},>({ classNames, form, schema, readonly }: Form
       ))}
       {!readonly && (
         <div className='flex justify-center'>
-          <Button>
+          <Button onClick={handleAdd}>
             <Icon icon='ph--plus--regular' size={4} />
           </Button>
         </div>
