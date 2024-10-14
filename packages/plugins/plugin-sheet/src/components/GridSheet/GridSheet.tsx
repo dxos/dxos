@@ -9,7 +9,6 @@ import {
   Grid,
   type GridContentProps,
   type GridScopedProps,
-  useGridContext,
   editorKeys,
   type EditorKeysProps,
   GridCellEditor,
@@ -41,8 +40,7 @@ const sheetRowDefault = { grid: { size: 32, resizeable: true } };
 const sheetColDefault = { frozenColsStart: { size: 48 }, grid: { size: 180, resizeable: true } };
 
 export const GridSheet = ({ __gridScope }: GridScopedProps<{}>) => {
-  const { model, formatting } = useSheetContext();
-  const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
+  const { model, formatting, editing, setEditing } = useSheetContext();
   const dxGrid = useRef<DxGridElement | null>(null);
   const rangeNotifier = useRef<CellRangeNotifier>();
 

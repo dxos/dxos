@@ -6,6 +6,7 @@ import React, { useCallback } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
 
+import { FunctionEditor } from '../FunctionEditor';
 import { GridSheet } from '../GridSheet';
 import { SheetProvider, type SheetProviderProps } from '../SheetContext';
 import { Toolbar, type ToolbarAction } from '../Toolbar';
@@ -43,6 +44,7 @@ export const SheetContainer = ({ graph, sheet, role }: SheetProviderProps & { ro
         <Toolbar.Actions />
       </Toolbar.Root>
       <GridSheet />
+      <FunctionEditor />
     </SheetProvider>
   );
 };
