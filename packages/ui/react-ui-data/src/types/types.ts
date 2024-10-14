@@ -40,6 +40,7 @@ export enum FieldScalarType {
 // TODO(burdon): Is S.mutable required?
 export const FieldSchema = S.mutable(
   S.Struct({
+    id: S.String,
     path: S.String,
     type: S.Enums(FieldScalarType),
 
@@ -64,7 +65,7 @@ export type FieldType = S.Schema.Type<typeof FieldSchema>;
 
 // TODO(burdon): Different type for Form/Table or common type?
 export const ViewSchema = S.Struct({
-  // schema: S.Any, // TODO(burdon): Serialized as FQ typename.
+  schema: S.Any, // TODO(burdon): Serialized as FQ typename.
   fields: S.mutable(S.Array(FieldSchema)),
 });
 

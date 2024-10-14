@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, S } from '@dxos/echo-schema';
+import { AST, S, generateEchoId } from '@dxos/echo-schema';
 
 import { EmailFormat, FormatAnnotationId, FieldScalarType, type ViewType } from '../types';
 
@@ -35,23 +35,28 @@ export const data: TestType = {
 
 const fields = [
   {
+    id: generateEchoId(),
     path: 'name',
     type: FieldScalarType.String,
   },
   {
+    id: generateEchoId(),
     path: 'email',
     type: FieldScalarType.String,
   },
   {
+    id: generateEchoId(),
     path: 'address.zip',
     label: 'ZIP',
     type: FieldScalarType.String,
   },
   {
+    id: generateEchoId(),
     path: 'rating',
     type: FieldScalarType.Number,
   },
   {
+    id: generateEchoId(),
     path: 'admin',
     type: FieldScalarType.Boolean,
   },

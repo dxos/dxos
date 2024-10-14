@@ -3,32 +3,47 @@
 //
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import { draggable, monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import {
+  draggable,
+  dropTargetForElements,
+  monitorForElements,
+} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { pointerOutsideOfPreview } from '@atlaskit/pragmatic-drag-and-drop/element/pointer-outside-of-preview';
+import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
+import {
+  type Edge,
+  attachClosestEdge,
+  extractClosestEdge,
+} from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
-import React, { useEffect, useRef } from 'react';
-import { flushSync } from 'react-dom';
+import React, { type HTMLAttributes, useEffect, useRef, useState } from 'react';
+import { createPortal, flushSync } from 'react-dom';
 
 import { S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Icon, type ThemedClassName, useControlledValue, useTranslation } from '@dxos/react-ui';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
+import { groupBorder, groupSurface } from '@dxos/react-ui-theme/src';
 
 import { translationKey } from '../translations';
 
-// TODO(burdon): Can we infer this?
+// TODO(burdon): Ref: https://github.com/alexreardon/pdnd-react-tailwind/blob/main/src/task.tsx
+
+// TODO(burdon): Factor out?
 export type BaseItem = { id: string };
 
 export type ListProps<T extends BaseItem> = ThemedClassName<{
-  schema: S.Schema<any>;
   items?: T[];
 }> &
-  Pick<ItemProps<T>, 'getLabel' | 'onSelect' | 'onDelete'>;
+  Pick<ItemProps<T>, 'schema' | 'getLabel' | 'onSelect' | 'onDelete'>;
 
+/**
+ * Draggable list.
+ */
+// TODO(burdon): Generalize.
 export const List = <T extends BaseItem>({ classNames, schema, items: _items = [], ...props }: ListProps<T>) => {
   const { t } = useTranslation(translationKey);
   const [items, setItems] = useControlledValue<T[]>(_items);
-
   useEffect(() => {
     const isItem = S.is(schema);
     return monitorForElements({
@@ -63,13 +78,6 @@ export const List = <T extends BaseItem>({ classNames, schema, items: _items = [
             }),
           );
         });
-
-        // TODO(burdon): ???
-        // console.log(sourceIdx, targetIdx);
-        // const element = document.querySelector(`[data-task-id="${sourceData.taskId}"]`);
-        // if (element instanceof HTMLElement) {
-        //   triggerPostMoveFlash(element);
-        // }
       },
     });
   }, [items]);
@@ -82,37 +90,126 @@ export const List = <T extends BaseItem>({ classNames, schema, items: _items = [
       </div>
       <div role='list' className={mx('flex flex-col w-full', classNames)}>
         {items.map((item) => (
-          <Item key={item.id} item={item} {...props} classNames={['grid grid-cols-[32px_1fr_32px]', ghostHover]} />
+          <Item
+            key={item.id}
+            {...props}
+            schema={schema}
+            item={item}
+            classNames={['grid grid-cols-[32px_1fr_32px]', ghostHover]}
+          />
         ))}
       </div>
     </div>
   );
 };
 
+type ItemState =
+  | {
+      type: 'idle';
+    }
+  | {
+      type: 'preview';
+      container: HTMLElement;
+    }
+  | {
+      type: 'is-dragging';
+    }
+  | {
+      type: 'is-dragging-over';
+      closestEdge: Edge | null;
+    };
+
+const idle: ItemState = { type: 'idle' };
+
+const stateStyles: { [Key in ItemState['type']]?: HTMLAttributes<HTMLDivElement>['className'] } = {
+  'is-dragging': 'opacity-50',
+  'is-dragging-over': 'opacity-50',
+};
+
 type ItemProps<T extends BaseItem> = ThemedClassName<{
+  schema: S.Schema<T>;
   item: T;
   getLabel: (item: T) => string;
   onSelect?: (field: T) => void;
   onDelete?: (field: T) => void;
 }>;
 
-// TODO(burdon): Render item. https://github.com/alexreardon/pdnd-react-tailwind/blob/main/src/task.tsx
-const Item = <T extends BaseItem>({ classNames, item, getLabel, onSelect, onDelete }: ItemProps<T>) => {
+/**
+ * Draggable list item.
+ */
+const Item = <T extends BaseItem>({ classNames, schema, item, getLabel, onSelect, onDelete }: ItemProps<T>) => {
   const ref = useRef<HTMLDivElement | null>(null);
+  const [state, setState] = useState<ItemState>(idle);
   useEffect(() => {
+    const isItem = S.is(schema);
     const element = ref.current;
     invariant(element);
-    return combine(draggable({ element }));
+    return combine(
+      draggable({
+        element,
+        getInitialData: () => item,
+        onGenerateDragPreview: ({ nativeSetDragImage }) => {
+          setCustomNativeDragPreview({
+            nativeSetDragImage,
+            getOffset: pointerOutsideOfPreview({
+              x: '0px',
+              y: '0px',
+            }),
+            render: ({ container }) => {
+              setState({ type: 'preview', container });
+            },
+          });
+        },
+        onDragStart: () => {
+          setState({ type: 'is-dragging' });
+        },
+        onDrop: () => {
+          setState(idle);
+        },
+      }),
+      dropTargetForElements({
+        element,
+        canDrop: ({ source }) => {
+          if (source.element === element) {
+            return false;
+          }
+          return isItem(source.data);
+        },
+        getData: ({ input }) => {
+          return attachClosestEdge(item, { element, input, allowedEdges: ['top', 'bottom'] });
+        },
+        getIsSticky: () => true,
+        onDragEnter: ({ self }) => {
+          const closestEdge = extractClosestEdge(self.data);
+          setState({ type: 'is-dragging-over', closestEdge });
+        },
+        onDrag: ({ self }) => {
+          const closestEdge = extractClosestEdge(self.data);
+          setState((current) => {
+            if (current.type === 'is-dragging-over' && current.closestEdge === closestEdge) {
+              return current;
+            }
+            return { type: 'is-dragging-over', closestEdge };
+          });
+        },
+        onDragLeave: () => {
+          setState(idle);
+        },
+        onDrop: () => {
+          setState(idle);
+        },
+      }),
+    );
   }, [item]);
 
   return (
     <>
       <div className='relative'>
-        <div ref={ref} className={mx(classNames)}>
+        <div ref={ref} className={mx('flex', classNames, stateStyles[state.type])}>
           <div className='flex items-center justify-center'>
             <Icon icon='ph--dots-six--regular' size={4} />
           </div>
-          <div className='flex min-bs-[2rem] items-center cursor-pointer' onClick={() => onSelect?.(item)}>
+          <div className='flex min-bs-[2.5rem] items-center cursor-pointer' onClick={() => onSelect?.(item)}>
             {getLabel(item)}
           </div>
           <div className='flex items-center justify-center' onClick={() => onDelete?.(item)}>
@@ -120,6 +217,14 @@ const Item = <T extends BaseItem>({ classNames, item, getLabel, onSelect, onDele
           </div>
         </div>
       </div>
+
+      {state.type === 'preview'
+        ? createPortal(<DragPreview<T> item={item} getLabel={getLabel} />, state.container)
+        : null}
     </>
   );
 };
+
+const DragPreview = <T extends BaseItem>({ item, getLabel }: Pick<ItemProps<T>, 'item' | 'getLabel'>) => (
+  <div className={mx('rounded p-2', groupSurface, groupBorder)}>{getLabel(item)}</div>
+);

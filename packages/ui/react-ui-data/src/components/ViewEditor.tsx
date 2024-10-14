@@ -4,6 +4,7 @@
 
 import React, { useState } from 'react';
 
+import { generateEchoId } from '@dxos/echo-schema';
 import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -24,23 +25,27 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
   const [field, setField] = useState<FieldType | undefined>();
 
   const handleAdd = () => {
-    const field: FieldType = { path: getUniqueProperty(view), type: FieldScalarType.String };
+    const field: FieldType = { id: generateEchoId(), path: getUniqueProperty(view), type: FieldScalarType.String };
     view.fields.push(field);
     setField(field);
   };
 
-  const handleDelete: ListProps<FieldType>['onDelete'] = (field: FieldType) => {
-    const idx = view.fields.findIndex(({ path }) => field.path === path);
+  const handleSelect: ListProps<FieldType>['onDelete'] = (field) => {
+    setField((f) => (f === field ? undefined : field));
+  };
+
+  const handleDelete: ListProps<FieldType>['onDelete'] = (field) => {
+    const idx = view.fields.findIndex((f) => field.id === f.id);
     view.fields.splice(idx, 1);
   };
 
   return (
-    <div role='none' className={mx('flex flex-col w-full gap-2 divide-y divide-separator', classNames)}>
+    <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
       <List<FieldType>
         items={view.fields}
         schema={FieldSchema}
         getLabel={(field) => field.path}
-        onSelect={(field) => setField(field)}
+        onSelect={handleSelect}
         onDelete={handleDelete}
       />
       {field && <Field classNames='p-2' autoFocus field={field} schema={view.schema} />}

@@ -13,7 +13,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 import { view, TestPopup } from '../testing';
 import translations from '../translations';
-import { type ViewType } from '../types';
+import { ViewSchema, type ViewType } from '../types';
 
 const Story = (props: ViewEditorProps) => (
   <TestPopup>
@@ -23,9 +23,8 @@ const Story = (props: ViewEditorProps) => (
 
 export default {
   title: 'react-ui-data/ViewEditor',
-  decorators: [withTheme, withLayout()],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],
   parameters: {
-    layout: 'centered',
     translations,
   },
   render: Story,
@@ -33,14 +32,12 @@ export default {
 
 export const Default = {
   args: {
-    // TODO(burdon): Unsupported type function for path /data/schema
     view: create(view),
   } satisfies ViewEditorProps,
 };
 
 export const Empty = {
   args: {
-    // schema: TestSchema,
-    view: create<ViewType>({ /* schema: TestSchema, */ fields: [] }),
+    view: create<ViewType>({ schema: ViewSchema, fields: [] }),
   } satisfies ViewEditorProps,
 };
