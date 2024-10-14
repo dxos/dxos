@@ -41,7 +41,7 @@ const sheetRowDefault = { grid: { size: 32, resizeable: true } };
 const sheetColDefault = { frozenColsStart: { size: 48 }, grid: { size: 180, resizeable: true } };
 
 export const GridSheet = () => {
-  const { model, formatting, editing, setEditing, setCursor } = useSheetContext();
+  const { model, formatting, editing, setEditing, setCursor, setRange } = useSheetContext();
   const dxGrid = useRef<DxGridElement | null>(null);
   const rangeNotifier = useRef<CellRangeNotifier>();
 
@@ -90,13 +90,16 @@ export const GridSheet = () => {
 
   const handleSelect = useCallback<NonNullable<GridContentProps['onSelect']>>(
     ({ minCol, maxCol, minRow, maxRow }) => {
+      const range: CellRange = { from: { col: minCol, row: minRow } };
+      if (minCol !== maxCol || minRow !== maxRow) {
+        range.to = { col: maxCol, row: maxRow };
+      }
       if (editing) {
-        const range: CellRange = { from: { col: minCol, row: minRow } };
-        if (minCol !== maxCol || minRow !== maxRow) {
-          range.to = { col: maxCol, row: maxRow };
-        }
         // Update range selection in formula.
         rangeNotifier.current?.(rangeToA1Notation(range));
+      } else {
+        // Setting range while editing causes focus to move to null, avoid doing so.
+        setRange(range.to ? range : undefined);
       }
     },
     [editing],
