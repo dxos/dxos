@@ -10,7 +10,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { FieldScalarType, FieldSchema, type FieldType, getUniqueProperty, type ViewType } from '../../types';
 import { Field } from '../Field';
-import { List, type ListProps } from '../List';
+import { List, type ListRootProps } from '../List';
 
 export type ViewEditorProps = ThemedClassName<{
   view: ViewType;
@@ -30,25 +30,25 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
     setField(field);
   };
 
-  const handleSelect: ListProps<FieldType>['onDelete'] = (field) => {
+  const handleSelect: ListRootProps<FieldType>['onDelete'] = (field) => {
     setField((f) => (f === field ? undefined : field));
   };
 
-  const handleDelete: ListProps<FieldType>['onDelete'] = (field) => {
+  const handleDelete: ListRootProps<FieldType>['onDelete'] = (field) => {
     const idx = view.fields.findIndex((f) => field.id === f.id);
     view.fields.splice(idx, 1);
   };
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
-      <List<FieldType>
+      <List.Root<FieldType>
         items={view.fields}
         schema={FieldSchema}
         getLabel={(field) => (field.label?.length ? field.label : field.path)}
         onSelect={handleSelect}
         onDelete={handleDelete}
       />
-      {field && <Field classNames='p-2' autoFocus field={field} schema={view.schema} />}
+      {field && <Field classNames='p-2' autoFocus field={field} schema={view.query.schema} />}
       {!readonly && (
         <div className='flex justify-center'>
           <Button onClick={handleAdd}>

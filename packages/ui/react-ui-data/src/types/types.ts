@@ -9,6 +9,10 @@ import { AST, S } from '@dxos/effect';
 export const isScalar = (ast: AST.AST) =>
   AST.isNumberKeyword(ast) || AST.isBooleanKeyword(ast) || AST.isStringKeyword(ast);
 
+// TODO(burdon): JSON path
+//  - https://datatracker.ietf.org/doc/html/rfc6901
+//  - https://blog.json-everything.net/posts/paths-and-pointers
+
 //
 // Field
 //
@@ -60,9 +64,14 @@ export type FieldType = S.Schema.Type<typeof FieldSchema>;
 // View
 //
 
+// TODO(burdon): Query DSL?
+export const QuerySchema = S.Struct({
+  schema: S.Any, // TODO(burdon): Serialized as FQ typename.
+});
+
 // TODO(burdon): Different type for Form/Table or common type?
 export const ViewSchema = S.Struct({
-  schema: S.Any, // TODO(burdon): Serialized as FQ typename.
+  query: QuerySchema, // TODO(burdon): Rename projection?
   fields: S.mutable(S.Array(FieldSchema)),
 });
 

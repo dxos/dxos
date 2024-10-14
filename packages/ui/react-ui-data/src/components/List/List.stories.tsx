@@ -6,18 +6,71 @@ import '@dxos-theme';
 
 import React from 'react';
 
+import { S } from '@dxos/echo-schema';
+import { useTranslation } from '@dxos/react-ui';
+import { ghostHover, mx } from '@dxos/react-ui-theme';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { List, type ListProps } from './List';
+import { List, type ListRootProps } from './List';
 import { view, TestPopup } from '../../testing';
-import translations from '../../translations';
+import translations, { translationKey } from '../../translations';
 import { FieldSchema, type FieldType } from '../../types';
 
-const Story = (props: ListProps<FieldType>) => (
-  <TestPopup>
-    <List {...props} />
-  </TestPopup>
-);
+const Story = (props: ListRootProps<FieldType>) => {
+  const { t } = useTranslation(translationKey);
+  return (
+    <TestPopup>
+      <List.Root<FieldType> {...props}>
+        {({ state, items }) => (
+          <>
+            <div className='w-full'>
+              <div className='grid grid-cols-[32px_1fr_32px]'>
+                <div />
+                <div className='text-sm'>{t('field path label')}</div>
+              </div>
+
+              <div role='list' className='flex flex-col w-full'>
+                {items.map((item) => (
+                  <List.Item<FieldType>
+                    key={item.id}
+                    item={item}
+                    classNames={mx('grid grid-cols-[32px_1fr_32px]', ghostHover)}
+                  >
+                    <List.ItemDragHandle />
+                    <div
+                      className='flex min-bs-[2.5rem] items-center cursor-pointer'
+                      onClick={() => {
+                        console.log('select', item.id);
+                      }}
+                    >
+                      {item.path}
+                    </div>
+                    {state.type === 'idle' && (
+                      <List.ItemDeleteButton
+                        onClick={() => {
+                          console.log('delete', item.id);
+                        }}
+                      />
+                    )}
+                  </List.Item>
+                ))}
+              </div>
+            </div>
+
+            <List.ItemDragPreview<FieldType>>
+              {({ item }) => (
+                <List.ItemWrapper classNames='grid grid-cols-[32px_1fr_32px] bg-modalSurface border border-separator'>
+                  <List.ItemDragHandle />
+                  <div className='flex min-bs-[2.5rem] items-center'>{item.path}</div>
+                </List.ItemWrapper>
+              )}
+            </List.ItemDragPreview>
+          </>
+        )}
+      </List.Root>
+    </TestPopup>
+  );
+};
 
 export default {
   title: 'react-ui-data/List',
@@ -31,7 +84,6 @@ export default {
 export const Default = {
   args: {
     items: view.fields,
-    schema: FieldSchema,
-    getLabel: (field) => field.path,
-  } satisfies ListProps<FieldType>,
+    isItem: S.is(FieldSchema),
+  } satisfies ListRootProps<FieldType>,
 };

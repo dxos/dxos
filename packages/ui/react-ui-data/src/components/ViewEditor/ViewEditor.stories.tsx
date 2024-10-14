@@ -37,6 +37,6 @@ export const Default = {
 
 export const Empty = {
   args: {
-    view: create<ViewType>({ schema: ViewSchema, fields: [] }),
+    view: create<ViewType>({ query: { schema: ViewSchema }, fields: [] }),
   } satisfies ViewEditorProps,
 };
