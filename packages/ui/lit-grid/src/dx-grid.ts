@@ -730,6 +730,14 @@ export class DxGrid extends LitElement {
 
   // Focus handlers
 
+  setFocus(coords: DxGridPosition, snap = true) {
+    this.focusedCell = coords;
+    this.focusActive = true;
+    if (snap) {
+      this.snapPosToFocusedCell();
+    }
+  }
+
   private handleFocus(event: FocusEvent) {
     const cellCoords = closestCell(event.target);
     if (cellCoords) {

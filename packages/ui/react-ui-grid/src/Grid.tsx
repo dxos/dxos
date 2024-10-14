@@ -144,4 +144,5 @@ export type {
   DxGridPlaneRange,
   DxGridPlaneCells,
   DxGridPlane,
+  DxGridPosition,
 } from '@dxos/lit-grid';

@@ -17,6 +17,7 @@ import {
 import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
 import { rangeToA1Notation, type CellRange, DEFAULT_COLUMNS, DEFAULT_ROWS } from '../../defs';
 import { rangeExtension, sheetExtension, type CellRangeNotifier } from '../../extensions';
+import { useUpdateFocusedCellOnThreadSelection } from '../../hooks';
 import { useSheetContext } from '../SheetContext';
 
 const initialCells = {
@@ -119,6 +120,8 @@ export const GridSheet = () => {
     },
     [model],
   );
+
+  useUpdateFocusedCellOnThreadSelection(model, dxGrid);
 
   return (
     <>

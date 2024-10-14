@@ -10,7 +10,7 @@ import { Grid, useGridContext, type GridScopedProps, type GridEditing } from '@d
 
 import { type CellAddress, type CellRange } from '../../defs';
 import { type ComputeGraph } from '../../graph';
-import { useSheetModel, useFormattingModel } from '../../hooks';
+import { useSheetModel, useFormattingModel, useSelectThreadOnCellFocus, useThreadDecorations } from '../../hooks';
 import { type FormattingModel, type SheetModel, createDecorations } from '../../model';
 import { type SheetType } from '../../types';
 
@@ -62,6 +62,9 @@ const SheetProviderImpl = ({
   // TODO(thure): Reconnect these.
   const [cursor, setCursor] = useState<CellAddress>();
   const [range, setRange] = useState<CellRange>();
+
+  useSelectThreadOnCellFocus(model, cursor);
+  useThreadDecorations(model, decorations);
 
   return (
     <SheetContext.Provider
