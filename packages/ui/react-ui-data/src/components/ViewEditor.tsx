@@ -44,7 +44,7 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
       <List<FieldType>
         items={view.fields}
         schema={FieldSchema}
-        getLabel={(field) => field.path}
+        getLabel={(field) => (field.label?.length ? field.label : field.path)}
         onSelect={handleSelect}
         onDelete={handleDelete}
       />
