@@ -85,6 +85,7 @@ export enum ValueTypeEnum {
 export const ValueType = S.Enums(ValueTypeEnum);
 
 export const Formatting = S.Struct({
+  range: S.String,
   type: S.optional(ValueType),
   format: S.optional(S.String),
   precision: S.optional(S.Number),
@@ -120,7 +121,7 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
   columnMeta: S.mutable(S.Record({ key: S.String, value: S.mutable(RowColumnMeta) })),
 
   // Cell formatting referenced by indexed range.
-  formatting: S.mutable(S.Record({ key: S.String, value: S.mutable(Formatting) })),
+  formatting: S.mutable(S.Array(Formatting)),
 
   // Threads associated with the sheet
   threads: S.optional(S.mutable(S.Array(ref(ThreadType)))),
