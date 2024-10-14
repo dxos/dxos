@@ -6,12 +6,12 @@ import React, { useState } from 'react';
 
 import { S, generateEchoId } from '@dxos/echo-schema';
 import { Button, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
 import { FieldScalarType, FieldSchema, type FieldType, getUniqueProperty, type ViewType } from '../../types';
 import { Field } from '../Field';
-import { List } from '../List';
 
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
 

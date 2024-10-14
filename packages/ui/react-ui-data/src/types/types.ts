@@ -18,27 +18,32 @@ export const isScalar = (ast: AST.AST) =>
 //
 
 // TODO(burdon): Format vs. type?
-// TODO(burdon): Change value to number.
 // TODO(burdon): Single/multi-select enums?
 export enum FieldScalarType {
   Number = 'number',
   Boolean = 'boolean',
   String = 'string',
+  Text = 'text',
 
   Ref = 'ref',
+  User = 'user',
+  Formula = 'formula',
 
-  Percent = 'percent',
-  Currency = 'currency',
-
-  // TODO(burdon): Date format?
+  Timestamp = 'timestamp',
   DateTime = 'datetime',
   Date = 'date',
   Time = 'time',
 
+  Percent = 'percent',
+  Currency = 'currency',
+
   // TODO(burdon): Other types:
-  //  - URL
-  //  - DID
+  //  - Email, URL, DID
+  //  - Duration, Rating
+  //  - Address, Phone number
 }
+
+export const FieldScalarTypes = Object.values(FieldScalarType).sort();
 
 export const FieldSchema = S.mutable(
   S.Struct({
@@ -64,13 +69,12 @@ export type FieldType = S.Schema.Type<typeof FieldSchema>;
 // View
 //
 
-// TODO(burdon): Query DSL?
+// TODO(burdon): ECHO Query DSL?
 export const QuerySchema = S.Struct({
   schema: S.Any, // TODO(burdon): Serialized as FQ typename.
 });
 
 // TODO(burdon): Are views always flat projections?
-// TODO(burdon): Different type for Form/Table or common type?
 export const ViewSchema = S.Struct({
   query: QuerySchema, // TODO(burdon): Rename projection?
   fields: S.mutable(S.Array(FieldSchema)),

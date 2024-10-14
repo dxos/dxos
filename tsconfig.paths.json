@@ -347,6 +347,9 @@
       "@dxos/react-ui-grid": [
         "packages/ui/react-ui-grid/src/index.ts"
       ],
+      "@dxos/react-ui-list": [
+        "packages/ui/react-ui-list/src/index.ts"
+      ],
       "@dxos/react-ui-mosaic": [
         "packages/ui/react-ui-mosaic/src/index.ts"
       ],
