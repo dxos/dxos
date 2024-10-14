@@ -6,11 +6,12 @@ import '@dxos-theme';
 
 import React from 'react';
 
+// import { createEchoObject } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
-import { view, TestSchema, type TestType, TestPopup } from '../testing';
+import { view, TestPopup } from '../testing';
 import translations from '../translations';
 import { type ViewType } from '../types';
 
@@ -32,12 +33,14 @@ export default {
 
 export const Default = {
   args: {
+    // TODO(burdon): Unsupported type function for path /data/schema
     view: create(view),
-  } satisfies ViewEditorProps<TestType>,
+  } satisfies ViewEditorProps,
 };
 
 export const Empty = {
   args: {
-    view: create<ViewType>({ schema: TestSchema, fields: [] }),
-  } satisfies ViewEditorProps<TestType>,
+    // schema: TestSchema,
+    view: create<ViewType>({ /* schema: TestSchema, */ fields: [] }),
+  } satisfies ViewEditorProps,
 };
