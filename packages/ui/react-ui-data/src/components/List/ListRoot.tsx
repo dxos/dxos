@@ -11,10 +11,11 @@ import { flushSync } from 'react-dom';
 
 import { type ThemedClassName, useControlledValue } from '@dxos/react-ui';
 
-import { type BaseListItem, idle, type ItemState } from './ListItem';
+import { type ListItemRecord, idle, type ItemState } from './ListItem';
 
-type ListContext<T extends BaseListItem> = {
+type ListContext<T extends ListItemRecord> = {
   isItem: (item: any) => boolean;
+  dragPreview?: boolean;
   state: ItemState & { item?: T };
   setState: (state: ItemState & { item?: T }) => void;
 };
@@ -23,22 +24,22 @@ const LIST_NAME = 'List';
 
 export const [ListProvider, useListContext] = createContext<ListContext<any>>(LIST_NAME);
 
-export type ListRendererProps<T extends BaseListItem> = {
+export type ListRendererProps<T extends ListItemRecord> = {
   state: ListContext<T>['state'];
   items: T[];
 };
 
-export type ListRootProps<T extends BaseListItem> = ThemedClassName<{
+export type ListRootProps<T extends ListItemRecord> = ThemedClassName<{
   children?: (props: ListRendererProps<T>) => ReactNode;
   items?: T[];
 }> &
-  Pick<ListContext<T>, 'isItem'>;
+  Pick<ListContext<T>, 'isItem' | 'dragPreview'>;
 
-export const ListRoot = <T extends BaseListItem>({
-  children,
+export const ListRoot = <T extends ListItemRecord>({
   classNames,
-  isItem,
+  children,
   items: _items = [],
+  isItem,
   ...props
 }: ListRootProps<T>) => {
   const [items, setItems] = useControlledValue<T[]>(_items);
@@ -80,5 +81,5 @@ export const ListRoot = <T extends BaseListItem>({
     });
   }, [items]);
 
-  return <ListProvider {...{ isItem, state, setState }}>{children?.({ state, items })}</ListProvider>;
+  return <ListProvider {...{ isItem, state, setState, ...props }}>{children?.({ state, items })}</ListProvider>;
 };

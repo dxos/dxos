@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React from 'react';
 
 import { create } from '@dxos/echo-schema';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withTheme, withLayout, withSignals } from '@dxos/storybook-utils';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 import { view, TestPopup } from '../../testing';
@@ -22,7 +22,7 @@ const Story = (props: ViewEditorProps) => (
 
 export default {
   title: 'react-ui-data/ViewEditor',
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],
+  decorators: [withTheme, withSignals, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],
   parameters: {
     translations,
   },

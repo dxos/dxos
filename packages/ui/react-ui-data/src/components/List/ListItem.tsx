@@ -9,6 +9,7 @@ import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge
 import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { createContext } from '@radix-ui/react-context';
 import React, {
+  type ComponentProps,
   type HTMLAttributes,
   type MutableRefObject,
   type PropsWithChildren,
@@ -17,7 +18,6 @@ import React, {
   useEffect,
   useRef,
   useState,
-  type DOMAttributes,
 } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -29,7 +29,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { DropIndicator } from './DropIndicator';
 import { useListContext } from './ListRoot';
 
-export type BaseListItem = { id: string };
+export type ListItemRecord = { id: string };
 
 export type ItemState =
   | {
@@ -53,9 +53,9 @@ const stateStyles: { [Key in ItemState['type']]?: HTMLAttributes<HTMLDivElement>
   'is-dragging': 'opacity-50',
 };
 
-type ListItemContext<T extends BaseListItem> = {
+type ListItemContext<T extends ListItemRecord> = {
   item: T;
-  dragHandleRef: MutableRefObject<HTMLDivElement | null>;
+  dragHandleRef: MutableRefObject<HTMLElement | null>;
 };
 
 /**
@@ -70,7 +70,7 @@ export const [ListItemProvider, useListItemContext] = createContext<ListItemCont
   defaultContext,
 );
 
-export type ListItemProps<T extends BaseListItem> = ThemedClassName<
+export type ListItemProps<T extends ListItemRecord> = ThemedClassName<
   PropsWithChildren<{
     item: T;
   }>
@@ -79,10 +79,10 @@ export type ListItemProps<T extends BaseListItem> = ThemedClassName<
 /**
  * Draggable list item.
  */
-export const ListItem = <T extends BaseListItem>({ children, classNames, item }: ListItemProps<T>) => {
-  const { isItem, setState: setRootState } = useListContext(LIST_ITEM_NAME);
+export const ListItem = <T extends ListItemRecord>({ children, classNames, item }: ListItemProps<T>) => {
+  const { isItem, dragPreview, setState: setRootState } = useListContext(LIST_ITEM_NAME);
   const ref = useRef<HTMLDivElement | null>(null);
-  const dragHandleRef = useRef<HTMLDivElement | null>(null);
+  const dragHandleRef = useRef<HTMLElement | null>(null);
   const [state, setState] = useState<ItemState>(idle);
   useEffect(() => {
     const element = ref.current;
@@ -95,24 +95,26 @@ export const ListItem = <T extends BaseListItem>({ children, classNames, item }:
         element,
         dragHandle: dragHandleRef.current!,
         getInitialData: () => item,
-        onGenerateDragPreview: ({ nativeSetDragImage, source }) => {
-          const rect = source.element.getBoundingClientRect();
-          setCustomNativeDragPreview({
-            nativeSetDragImage,
-            getOffset: ({ container }) => {
-              const { height } = container.getBoundingClientRect();
-              return {
-                x: 20,
-                y: height / 2,
-              };
-            },
-            render: ({ container }) => {
-              container.style.width = rect.width + 'px';
-              setState({ type: 'preview', container });
-              setRootState({ type: 'preview', container, item });
-            },
-          });
-        },
+        onGenerateDragPreview: dragPreview
+          ? ({ nativeSetDragImage, source }) => {
+              const rect = source.element.getBoundingClientRect();
+              setCustomNativeDragPreview({
+                nativeSetDragImage,
+                getOffset: ({ container }) => {
+                  const { height } = container.getBoundingClientRect();
+                  return {
+                    x: 20,
+                    y: height / 2,
+                  };
+                },
+                render: ({ container }) => {
+                  container.style.width = rect.width + 'px';
+                  setState({ type: 'preview', container });
+                  setRootState({ type: 'preview', container, item });
+                },
+              });
+            }
+          : undefined,
         onDragStart: () => {
           setState({ type: 'is-dragging' });
           setRootState({ type: 'is-dragging', item });
@@ -161,7 +163,7 @@ export const ListItem = <T extends BaseListItem>({ children, classNames, item }:
   return (
     <ListItemProvider item={item} dragHandleRef={dragHandleRef}>
       <div className='relative'>
-        <div ref={ref} className={mx('flex', classNames, stateStyles[state.type])}>
+        <div ref={ref} role='listitem' className={mx('flex', classNames, stateStyles[state.type])}>
           {children}
         </div>
         {state.type === 'is-dragging-over' && state.closestEdge ? <DropIndicator edge={state.closestEdge} /> : null}
@@ -170,29 +172,44 @@ export const ListItem = <T extends BaseListItem>({ children, classNames, item }:
   );
 };
 
-export type IconButtonProps = Pick<DOMAttributes<HTMLDivElement>, 'onClick'> & { icon: string };
+export type IconButtonProps = ThemedClassName<ComponentProps<'button'>> & { icon: string };
 
-export const IconButton = forwardRef<HTMLDivElement, IconButtonProps>(({ icon, ...props }, forwardedRef) => {
+export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
+  ({ classNames, icon, ...props }, forwardedRef) => {
+    return (
+      <button ref={forwardedRef} className={mx('flex items-center justify-center', classNames)} {...props}>
+        <Icon icon={icon} classNames='cursor-pointer' size={4} />
+      </button>
+    );
+  },
+);
+
+export const ListItemDeleteButton = ({
+  autoHide = true,
+  classNames,
+  ...props
+}: Omit<IconButtonProps, 'icon'> & { autoHide?: boolean }) => {
+  const { state } = useListContext('DELETE_BUTTON');
+  const disabled = state.type !== 'idle';
   return (
-    <div ref={forwardedRef} role='none' className='flex items-center justify-center' {...props}>
-      <Icon icon={icon} classNames='cursor-pointer' size={4} />
-    </div>
+    <IconButton
+      icon='ph--x--regular'
+      disabled={disabled}
+      classNames={[classNames, autoHide && disabled && 'hidden']}
+      {...props}
+    />
   );
-});
-
-export const ListItemDeleteButton = (props: Pick<IconButtonProps, 'onClick'>) => {
-  return <IconButton icon='ph--x--regular' {...props} />;
 };
 
 export const ListItemDragHandle = () => {
   const { dragHandleRef } = useListItemContext('DRAG_HANDLE');
-  return <IconButton ref={dragHandleRef} icon='ph--dots-six--regular' />;
+  return <IconButton ref={dragHandleRef as any} icon='ph--dots-six--regular' />;
 };
 
 // TODO(burdon): Animation.
 // TODO(burdon): Constrain axis.
 // TODO(burdon): Width.
-export const ListItemDragPreview = <T extends BaseListItem>({
+export const ListItemDragPreview = <T extends ListItemRecord>({
   children,
 }: {
   children: ({ item }: { item: T }) => ReactNode;
@@ -202,5 +219,15 @@ export const ListItemDragPreview = <T extends BaseListItem>({
 };
 
 export const ListItemWrapper = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
-  <div className={mx('w-full', classNames)}>{children}</div>
+  <div className={mx('flex w-full', classNames)}>{children}</div>
+);
+
+export const ListItemTitle = ({
+  classNames,
+  children,
+  ...props
+}: ThemedClassName<PropsWithChildren<ComponentProps<'div'>>>) => (
+  <div className={mx('flex w-full items-center', classNames)} {...props}>
+    {children}
+  </div>
 );

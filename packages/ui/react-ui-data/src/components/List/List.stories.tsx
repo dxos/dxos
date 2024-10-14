@@ -18,40 +18,34 @@ import { FieldSchema, type FieldType } from '../../types';
 
 const Story = (props: ListRootProps<FieldType>) => {
   const { t } = useTranslation(translationKey);
+  const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
   return (
     <TestPopup>
-      <List.Root<FieldType> {...props}>
-        {({ state, items }) => (
+      <List.Root<FieldType> {...props} dragPreview>
+        {({ items }) => (
           <>
             <div className='w-full'>
-              <div className='grid grid-cols-[32px_1fr_32px]'>
+              <div role='heading' className={grid}>
                 <div />
-                <div className='text-sm'>{t('field path label')}</div>
+                <div className='flex items-center text-sm'>{t('field path label')}</div>
               </div>
 
               <div role='list' className='flex flex-col w-full'>
                 {items.map((item) => (
-                  <List.Item<FieldType>
-                    key={item.id}
-                    item={item}
-                    classNames={mx('grid grid-cols-[32px_1fr_32px]', ghostHover)}
-                  >
+                  <List.Item<FieldType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
                     <List.ItemDragHandle />
-                    <div
-                      className='flex min-bs-[2.5rem] items-center cursor-pointer'
+                    <List.ItemTitle
                       onClick={() => {
                         console.log('select', item.id);
                       }}
                     >
                       {item.path}
-                    </div>
-                    {state.type === 'idle' && (
-                      <List.ItemDeleteButton
-                        onClick={() => {
-                          console.log('delete', item.id);
-                        }}
-                      />
-                    )}
+                    </List.ItemTitle>
+                    <List.ItemDeleteButton
+                      onClick={() => {
+                        console.log('delete', item.id);
+                      }}
+                    />
                   </List.Item>
                 ))}
               </div>
@@ -59,9 +53,9 @@ const Story = (props: ListRootProps<FieldType>) => {
 
             <List.ItemDragPreview<FieldType>>
               {({ item }) => (
-                <List.ItemWrapper classNames='grid grid-cols-[32px_1fr_32px] bg-modalSurface border border-separator'>
+                <List.ItemWrapper classNames={mx(grid, 'bg-modalSurface border border-separator')}>
                   <List.ItemDragHandle />
-                  <div className='flex min-bs-[2.5rem] items-center'>{item.path}</div>
+                  <div className='flex items-center'>{item.path}</div>
                 </List.ItemWrapper>
               )}
             </List.ItemDragPreview>

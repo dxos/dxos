@@ -3,15 +3,16 @@
 //
 
 import {
-  type BaseListItem,
   IconButton,
   type IconButtonProps,
   ListItem,
   ListItemDeleteButton,
   ListItemDragHandle,
   ListItemDragPreview,
-  ListItemWrapper,
   type ListItemProps,
+  type ListItemRecord,
+  ListItemTitle,
+  ListItemWrapper,
 } from './ListItem';
 import { ListRoot, type ListRootProps } from './ListRoot';
 
@@ -27,9 +28,10 @@ export const List = {
   ItemWrapper: ListItemWrapper,
   ItemDragHandle: ListItemDragHandle,
   ItemDeleteButton: ListItemDeleteButton,
+  ItemTitle: ListItemTitle,
   IconButton,
 };
 
-type ListItem = BaseListItem;
+type ListItem = ListItemRecord;
 
 export type { ListRootProps, ListItemProps, IconButtonProps, ListItem };

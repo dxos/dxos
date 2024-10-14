@@ -69,6 +69,7 @@ export const QuerySchema = S.Struct({
   schema: S.Any, // TODO(burdon): Serialized as FQ typename.
 });
 
+// TODO(burdon): Are views always flat projections?
 // TODO(burdon): Different type for Form/Table or common type?
 export const ViewSchema = S.Struct({
   query: QuerySchema, // TODO(burdon): Rename projection?
