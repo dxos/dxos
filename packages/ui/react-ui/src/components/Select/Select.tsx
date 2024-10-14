@@ -9,6 +9,7 @@ import React, { forwardRef } from 'react';
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Button, type ButtonProps } from '../Buttons';
+import { Icon } from '../Icon';
 
 type SelectRootProps = SelectPrimitive.SelectProps;
 
@@ -140,9 +141,9 @@ const SelectOption = forwardRef<HTMLDivElement, SelectItemProps>(({ children, cl
   return (
     <SelectPrimitive.Item {...props} className={tx('select.item', 'option', {}, classNames)} ref={forwardedRef}>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-      {/* TODO(burdon): Make left border primary. */}
+      <span className='grow w-1' />
       {/* <SelectPrimitive.ItemIndicator className={tx('select.itemIndicator', 'option__indicator', {})}> */}
-      {/*  <Check weight='bold' /> */}
+      <Icon icon='ph--check--regular' />
       {/* </SelectPrimitive.ItemIndicator> */}
     </SelectPrimitive.Item>
   );

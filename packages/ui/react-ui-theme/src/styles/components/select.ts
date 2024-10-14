@@ -30,9 +30,9 @@ export const selectContent: ComponentFunction<SelectStyleProps> = ({ elevation =
 
 export const selectItem: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx(
-    'flex items-center min-bs-[2rem] pli-3 plb-1',
+    'flex items-center min-bs-[2rem] pli-3 plb-1 gap-2',
     'text-baseText leading-none rounded-sm select-none outline-none',
-    '[data-state="checked"]:text-red-300',
+    '[&>svg]:invisible [&[data-state=checked]>svg]:visible',
     ghostHighlighted,
     ...etc,
   );

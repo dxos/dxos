@@ -6,15 +6,16 @@ import { type ComponentFragment } from '@dxos/react-ui-types';
 
 import { ghostHover } from './hover';
 
+// TODO(burdon): Use semantic tokens (e.g., accentSurfaceHover, bg-gridSelectionOverlay).
+
 export const ghostSelectedCurrent =
   ghostHover +
   ' aria-[current]:bg-input hover:aria-[current]:bg-hoverSurface' +
   ' aria-selected:bg-primary-100 dark:aria-selected:bg-primary-850 hover:aria-selected:bg-primary-150 hover:dark:aria-selected:bg-primary-800' +
   ' aria-[current]:aria-selected:bg-primary-200 dark:aria-[current]:aria-selected:bg-primary-750 hover:aria-[current]:aria-selected:bg-primary-200 hover:dark:aria-[current]:aria-selected:bg-primary-750';
 
-// TODO(burdon): Check colors for cursor highlight.
 export const ghostHighlighted =
-  'data-[highlighted]:bg-primary-100 dark:data-[highlighted]:bg-primary-850 hover:data-[highlighted]:bg-primary-150 hover:dark:data-[highlighted]:bg-primary-500';
+  'data-[highlighted]:bg-primary-100 dark:data-[highlighted]:bg-primary-600 hover:data-[highlighted]:bg-primary-150 hover:dark:data-[highlighted]:bg-primary-500';
 
 export const ghostSelectedTrackingInterFromNormal = 'tracking-[0.0092em]';
 
