@@ -58,9 +58,8 @@ export const CellValue = S.Struct({
 export type CellValue = S.Schema.Type<typeof CellValue>;
 
 /**
- * https://www.tutorialsteacher.com/typescript/typescript-number
+ * @deprecated see react-ui-data/FieldScalarType.
  */
-// TODO(burdon): Format vs. value.
 export enum ValueTypeEnum {
   Null = 0,
   Number = 1,
@@ -77,7 +76,6 @@ export enum ValueTypeEnum {
   Time = 22,
 
   // Validated string types.
-  // TODO(burdon): Define effect types.
   URL = 30,
   DID = 31,
 }

@@ -11,6 +11,7 @@ export const TestSchema = S.Struct({
   email: S.String.pipe(S.annotations({ [FormatAnnotationId]: EmailFormat })),
   address: S.optional(
     S.Struct({
+      city: S.optional(S.String),
       zip: S.String.pipe(
         S.annotations({
           [AST.DescriptionAnnotationId]: 'ZIP code.',

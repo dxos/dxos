@@ -65,6 +65,24 @@ const Story = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
   );
 };
 
+const SimpleStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
+  return (
+    <List.Root<TestItemType> dragPreview items={items} {...props}>
+      {({ items }) => (
+        <div role='list' className='w-full h-full overflow-auto'>
+          {items.map((item) => (
+            <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
+              <List.ItemDragHandle />
+              <List.ItemTitle>{item.name}</List.ItemTitle>
+              <List.ItemDeleteButton />
+            </List.Item>
+          ))}
+        </div>
+      )}
+    </List.Root>
+  );
+};
+
 export default {
   // TODO(burdon): Storybook collides with react-ui/List.
   title: 'react-ui-list/List',
@@ -75,6 +93,14 @@ export default {
 const list = create(createList(100));
 
 export const Default = {
+  args: {
+    items: list.items,
+    isItem: S.is(TestItemSchema),
+  } satisfies ListRootProps<TestItemType>,
+} as any; // TODO(burdon): TS2742: The inferred type of Default cannot be named without a reference to... (AST)
+
+export const Simple = {
+  render: SimpleStory,
   args: {
     items: list.items,
     isItem: S.is(TestItemSchema),

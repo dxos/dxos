@@ -14,6 +14,9 @@ export type CellFormat = {
   classNames?: ClassNameValue;
 };
 
+/**
+ * @deprecated See react-ui-data.
+ */
 export class FormattingModel {
   constructor(private readonly _model: SheetModel) {}
 

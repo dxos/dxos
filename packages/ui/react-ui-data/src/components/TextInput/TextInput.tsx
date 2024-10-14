@@ -29,7 +29,7 @@ export const TextInput = ({ format, onChange, ...props }: TextInputProps) => {
   return (
     <Input.TextInput
       {...props}
-      // TODO(burdon): Correct approach? Push down to component.
+      // TODO(burdon): validationValence on Input.
       style={valid ? {} : ({ '--tw-ring-color': 'red' } as any)}
       onChange={handleChange}
     />
