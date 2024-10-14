@@ -5,8 +5,8 @@
 import { describe, expect, test } from 'vitest';
 
 import { Context } from './context';
-import { cancelWithContext } from './promise-utils';
 import { ContextDeadlineExceededError } from './context-deadline-exceeded-error';
+import { cancelWithContext } from './promise-utils';
 
 describe('Context', () => {
   test('dispose calls dispose hooks', () => {
