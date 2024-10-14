@@ -4,7 +4,7 @@
 
 import { AST, S, generateEchoId } from '@dxos/echo-schema';
 
-import { EmailFormat, FormatAnnotationId, FieldScalarType, type ViewType } from '../types';
+import { EmailFormat, FormatAnnotationId, FieldValueType, type ViewType } from '../types';
 
 export const TestSchema = S.Struct({
   name: S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Full name.' })),
@@ -38,28 +38,28 @@ const fields = [
   {
     id: generateEchoId(),
     path: 'name',
-    type: FieldScalarType.String,
+    type: FieldValueType.String,
   },
   {
     id: generateEchoId(),
     path: 'email',
-    type: FieldScalarType.String,
+    type: FieldValueType.String,
   },
   {
     id: generateEchoId(),
     path: 'address.zip',
     label: 'ZIP',
-    type: FieldScalarType.String,
+    type: FieldValueType.String,
   },
   {
     id: generateEchoId(),
     path: 'rating',
-    type: FieldScalarType.Number,
+    type: FieldValueType.Number,
   },
   {
     id: generateEchoId(),
     path: 'admin',
-    type: FieldScalarType.Boolean,
+    type: FieldValueType.Boolean,
   },
 ];
 

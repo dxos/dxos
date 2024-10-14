@@ -9,7 +9,7 @@ import { Input, Select, type ThemedClassName, useTranslation } from '@dxos/react
 import { mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
-import { type FormatAnnotation, type FieldScalarType, type FieldType, FieldScalarTypes } from '../../types';
+import { type FormatAnnotation, type FieldValueType, type FieldType, FieldValueTypes } from '../../types';
 import { TextInput } from '../TextInput';
 
 const PropertyFormat: FormatAnnotation = {
@@ -61,14 +61,14 @@ export const Field = <T = {},>({ classNames, autoFocus, field, readonly }: Field
           <Select.Root
             value={field.type}
             onValueChange={(value) => {
-              field.type = value as FieldScalarType;
+              field.type = value as FieldValueType;
             }}
           >
             <Select.TriggerButton classNames='is-full' placeholder='Type' />
             <Select.Portal>
               <Select.Content>
                 <Select.Viewport>
-                  {FieldScalarTypes.map((type) => (
+                  {FieldValueTypes.map((type) => (
                     <Select.Option key={type} value={type}>
                       {t(`field type ${type}`)}
                     </Select.Option>

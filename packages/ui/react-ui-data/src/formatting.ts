@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FieldScalarType } from './types';
+import { FieldValueType } from './types';
 
 /**
  * Format value by type.
@@ -10,9 +10,9 @@ import { FieldScalarType } from './types';
  */
 // TODO(burdon): Reconcile with FormattingModel.
 // TODO(burdon): Handle parsing also.
-export const formatValue = (type: FieldScalarType, value: any, locale: string | undefined = undefined): string => {
+export const formatValue = (type: FieldValueType, value: any, locale: string | undefined = undefined): string => {
   switch (type) {
-    case FieldScalarType.Boolean: {
+    case FieldValueType.Boolean: {
       return (value as boolean).toLocaleString().toUpperCase();
     }
 
@@ -20,15 +20,15 @@ export const formatValue = (type: FieldScalarType, value: any, locale: string | 
     // Numbers.
     //
 
-    case FieldScalarType.Number: {
+    case FieldValueType.Number: {
       return value.toLocaleString(locale);
     }
 
-    case FieldScalarType.Percent: {
+    case FieldValueType.Percent: {
       return (value as number) * 100 + '%';
     }
 
-    case FieldScalarType.Currency: {
+    case FieldValueType.Currency: {
       return (value as number).toLocaleString(locale, {
         style: 'currency',
         currency: 'USD',
@@ -41,17 +41,17 @@ export const formatValue = (type: FieldScalarType, value: any, locale: string | 
     // Dates.
     //
 
-    case FieldScalarType.DateTime: {
+    case FieldValueType.DateTime: {
       const date = new Date(value as number);
       return date.toLocaleString(locale);
     }
 
-    case FieldScalarType.Date: {
+    case FieldValueType.Date: {
       const date = new Date(value as number);
       return date.toLocaleDateString(locale);
     }
 
-    case FieldScalarType.Time: {
+    case FieldValueType.Time: {
       const date = new Date(value as number);
       return date.toLocaleTimeString(locale);
     }

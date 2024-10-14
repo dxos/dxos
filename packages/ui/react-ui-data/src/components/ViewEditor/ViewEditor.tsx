@@ -10,7 +10,7 @@ import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
-import { FieldScalarType, FieldSchema, type FieldType, getUniqueProperty, type ViewType } from '../../types';
+import { FieldValueType, FieldSchema, type FieldType, getUniqueProperty, type ViewType } from '../../types';
 import { Field } from '../Field';
 
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
@@ -28,7 +28,7 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
   const [field, setField] = useState<FieldType | undefined>();
 
   const handleAdd = () => {
-    const field: FieldType = { id: generateEchoId(), path: getUniqueProperty(view), type: FieldScalarType.String };
+    const field: FieldType = { id: generateEchoId(), path: getUniqueProperty(view), type: FieldValueType.String };
     view.fields.push(field);
     setField(field);
   };

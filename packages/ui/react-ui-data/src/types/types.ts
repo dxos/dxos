@@ -17,9 +17,7 @@ export const isScalar = (ast: AST.AST) =>
 // Field
 //
 
-// TODO(burdon): Format vs. type?
-// TODO(burdon): Single/multi-select enums?
-export enum FieldScalarType {
+export enum FieldValueType {
   Number = 'number',
   Boolean = 'boolean',
   String = 'string',
@@ -43,13 +41,14 @@ export enum FieldScalarType {
   //  - Address, Phone number
 }
 
-export const FieldScalarTypes = Object.values(FieldScalarType).sort();
+export const FieldValueTypes = Object.values(FieldValueType).sort();
 
 export const FieldSchema = S.mutable(
   S.Struct({
     id: S.String,
     path: S.String,
-    type: S.Enums(FieldScalarType),
+    // TODO(burdon): Single/multi-select enums?
+    type: S.Enums(FieldValueType),
     label: S.optional(S.String),
 
     /** Default value for new records. */

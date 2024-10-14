@@ -15,6 +15,7 @@ import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { type StackProvides } from '@dxos/plugin-stack';
+import { FieldValueType } from '@dxos/react-ui-data';
 
 import { SHEET_PLUGIN } from './meta';
 
@@ -57,33 +58,8 @@ export const CellValue = S.Struct({
 
 export type CellValue = S.Schema.Type<typeof CellValue>;
 
-/**
- * @deprecated see react-ui-data/FieldScalarType.
- */
-export enum ValueTypeEnum {
-  Null = 0,
-  Number = 1,
-  Boolean = 2,
-  String = 3,
-
-  // Special numbers.
-  Percent = 10,
-  Currency = 11,
-
-  // Dates.
-  DateTime = 20,
-  Date = 21,
-  Time = 22,
-
-  // Validated string types.
-  URL = 30,
-  DID = 31,
-}
-
-export const ValueType = S.Enums(ValueTypeEnum);
-
 export const Formatting = S.Struct({
-  type: S.optional(ValueType),
+  type: S.optional(S.Enums(FieldValueType)),
   format: S.optional(S.String),
   precision: S.optional(S.Number),
   classNames: S.optional(S.Array(S.String)),
@@ -118,6 +94,7 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
   columnMeta: S.mutable(S.Record({ key: S.String, value: S.mutable(RowColumnMeta) })),
 
   // Cell formatting referenced by indexed range.
+  // TODO(burdon): Change to array.
   formatting: S.mutable(S.Record({ key: S.String, value: S.mutable(Formatting) })),
 
   // Threads associated with the sheet
