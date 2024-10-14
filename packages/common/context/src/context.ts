@@ -16,6 +16,7 @@ export type DisposeCallback = () => any | Promise<any>;
 
 export type CreateContextParams = {
   name?: string;
+  deadline?: number;
   parent?: Context;
   attributes?: Record<string, any>;
   onError?: ContextErrorHandler;
@@ -49,6 +50,11 @@ const CONTEXT_FLAG_IS_DISPOSED: ContextFlags = 1 << 0;
 const CONTEXT_FLAG_LEAK_DETECTED: ContextFlags = 1 << 1;
 
 /**
+ * Whether the context is scheduled to be disposed.
+ */
+const CONTEXT_FLAG_DEADLINE_DISPOSE_SCHEDULED: ContextFlags = 1 << 2;
+
+/**
  * NOTE: Context is not reusable after it is disposed.
  */
 @safeInstanceof('Context')
@@ -57,12 +63,30 @@ export class Context {
     return new Context();
   }
 
+  /**
+   * Context will automatically dispose itself when the deadline is reached.
+   */
+  static withDeadline(deadline: number): Context {
+    return new Context({ deadline });
+  }
+
+  /**
+   * Context will automatically dispose itself after the given timeout.
+   */
+  static withTimeout(timeout: number): Context {
+    return new Context({ deadline: Date.now() + timeout });
+  }
+
   readonly #disposeCallbacks: DisposeCallback[] = [];
 
   readonly #name?: string = undefined;
   readonly #parent?: Context = undefined;
   readonly #attributes: Record<string, any>;
   readonly #onError: ContextErrorHandler;
+  /**
+   * Unix timestamp in milliseconds when the context should be disposed.
+   */
+  readonly #deadline?: number = undefined;
 
   #flags: ContextFlags = 0;
   #disposePromise?: Promise<boolean> = undefined;
@@ -71,33 +95,68 @@ export class Context {
 
   constructor(params: CreateContextParams = {}, callMeta?: Partial<CallMetadata>) {
     this.#name = getContextName(params, callMeta);
+
+    if (params.deadline !== undefined) {
+      if (typeof params.deadline !== 'number') {
+        throw new TypeError('Deadline must be a number');
+      }
+      const now = Date.now();
+      if (params.deadline < now) {
+        throw new Error('Deadline is in the past');
+      }
+    }
+
+    this.#deadline = params.deadline;
     this.#parent = params.parent;
     this.#attributes = params.attributes ?? {};
     this.#onError = params.onError ?? DEFAULT_ERROR_HANDLER;
   }
 
-  get #isDisposed() {
-    return !!(this.#flags & CONTEXT_FLAG_IS_DISPOSED);
-  }
-
-  set #isDisposed(value: boolean) {
-    this.#flags = value ? this.#flags | CONTEXT_FLAG_IS_DISPOSED : this.#flags & ~CONTEXT_FLAG_IS_DISPOSED;
-  }
-
-  get #leakDetected() {
-    return !!(this.#flags & CONTEXT_FLAG_LEAK_DETECTED);
-  }
-
-  set #leakDetected(value: boolean) {
-    this.#flags = value ? this.#flags | CONTEXT_FLAG_LEAK_DETECTED : this.#flags & ~CONTEXT_FLAG_LEAK_DETECTED;
-  }
-
-  get disposed() {
-    return this.#isDisposed;
+  get disposed(): boolean {
+    return this.#isDisposed || this.deadlineReached;
   }
 
   get disposeCallbacksLength() {
     return this.#disposeCallbacks.length;
+  }
+
+  /**
+   * Unix timestamp in milliseconds as a deadline for the operation represented by the context.
+   * Context will be disposed automatically when the deadline is reached.
+   */
+  get deadline(): number | undefined {
+    return this.#deadline;
+  }
+
+  /**
+   * True if the context has a deadline.
+   */
+  get hasDeadline(): boolean {
+    return this.#deadline !== undefined;
+  }
+
+  /**
+   * Time in milliseconds until the deadline is reached.
+   */
+  get timeout(): number | undefined {
+    if (this.#deadline === undefined) {
+      return undefined;
+    }
+
+    const now = Date.now();
+    return this.#deadline - now;
+  }
+
+  /**
+   * True if the context has a deadline and the deadline has been reached.
+   */
+  get deadlineReached(): boolean {
+    if (this.#deadline === undefined) {
+      return false;
+    }
+
+    const now = Date.now();
+    return now >= this.#deadline;
   }
 
   /**
@@ -119,6 +178,11 @@ export class Context {
           log.catch(error, { context: this.#name });
         }
       })();
+    }
+
+    if (this.hasDeadline && !this.#deadlineDisposeScheduled) {
+      this.#deadlineDisposeScheduled = true;
+      setTimeout(this.#deadlineReached.bind(this), this.timeout!);
     }
 
     this.#disposeCallbacks.push(callback);
@@ -264,6 +328,43 @@ export class Context {
 
   async [Symbol.asyncDispose](): Promise<void> {
     await this.dispose();
+  }
+
+  //
+  // Flags.
+  //
+
+  get #isDisposed() {
+    return !!(this.#flags & CONTEXT_FLAG_IS_DISPOSED);
+  }
+
+  set #isDisposed(value: boolean) {
+    this.#flags = value ? this.#flags | CONTEXT_FLAG_IS_DISPOSED : this.#flags & ~CONTEXT_FLAG_IS_DISPOSED;
+  }
+
+  get #leakDetected() {
+    return !!(this.#flags & CONTEXT_FLAG_LEAK_DETECTED);
+  }
+
+  set #leakDetected(value: boolean) {
+    this.#flags = value ? this.#flags | CONTEXT_FLAG_LEAK_DETECTED : this.#flags & ~CONTEXT_FLAG_LEAK_DETECTED;
+  }
+
+  get #deadlineDisposeScheduled() {
+    return !!(this.#flags & CONTEXT_FLAG_DEADLINE_DISPOSE_SCHEDULED);
+  }
+
+  set #deadlineDisposeScheduled(value: boolean) {
+    this.#flags = value
+      ? this.#flags | CONTEXT_FLAG_DEADLINE_DISPOSE_SCHEDULED
+      : this.#flags & ~CONTEXT_FLAG_DEADLINE_DISPOSE_SCHEDULED;
+  }
+
+  /**
+   * Called when the deadline is reached.
+   */
+  #deadlineReached() {
+    void this.dispose();
   }
 }
 
