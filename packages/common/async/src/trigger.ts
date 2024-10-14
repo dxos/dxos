@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { cancelWithContext, Context } from '@dxos/context';
 import { TimeoutError } from './errors';
 import { asyncTimeout } from './timeout';
 
@@ -65,8 +66,14 @@ export class Trigger<T = void> {
   /**
    * Wait until wake is called, with optional timeout.
    */
-  async wait({ timeout }: { timeout?: number } = {}): Promise<T> {
-    if (timeout) {
+  async wait(ctx?: Context): Promise<T>;
+  async wait({ timeout }?: { timeout?: number }): Promise<T>;
+  async wait(paramsOrCtx?: Context | { timeout?: number }): Promise<T> {
+    if (paramsOrCtx instanceof Context) {
+      const ctx = paramsOrCtx;
+      return cancelWithContext(ctx, this._promise);
+    } else if (typeof paramsOrCtx?.timeout === 'number') {
+      const timeout = paramsOrCtx.timeout;
       return asyncTimeout(this._promise, timeout, new TimeoutError(timeout));
     } else {
       return this._promise;

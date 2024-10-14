@@ -12,7 +12,12 @@ import { ContextDisposedError } from './context-disposed-error';
 
 export type ContextErrorHandler = (error: Error, ctx: Context) => void;
 
-export type DisposeCallback = () => any | Promise<any>;
+export enum ContextDisposeReason {
+  DISPOSED = 1,
+  DEADLINE_EXCEEDED = 2,
+}
+
+export type DisposeCallback = (reason: ContextDisposeReason) => any | Promise<any>;
 
 export type CreateContextParams = {
   name?: string;
@@ -170,10 +175,15 @@ export class Context {
    */
   onDispose(callback: DisposeCallback): () => void {
     if (this.#isDisposed) {
+      let reason = ContextDisposeReason.DISPOSED;
+      if (this.deadlineReached) {
+        reason = ContextDisposeReason.DEADLINE_EXCEEDED;
+      }
+
       // Call the callback immediately if the context is already disposed.
       void (async () => {
         try {
-          await callback();
+          await callback(reason);
         } catch (error: any) {
           log.catch(error, { context: this.#name });
         }
@@ -213,7 +223,7 @@ export class Context {
    * Disposing context means that onDispose will throw an error and any errors raised will be logged and not propagated.
    * @returns true if there were no errors during the dispose process.
    */
-  async dispose(throwOnError = false): Promise<boolean> {
+  async dispose(reason: ContextDisposeReason = ContextDisposeReason.DISPOSED, throwOnError = false): Promise<boolean> {
     if (this.#disposePromise) {
       return this.#disposePromise;
     }
@@ -242,7 +252,7 @@ export class Context {
     const errors: Error[] = [];
     for (const callback of callbacks) {
       try {
-        await callback();
+        await callback(reason);
         i++;
       } catch (err: any) {
         clean = false;
