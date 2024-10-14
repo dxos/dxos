@@ -12,6 +12,7 @@ import {
   Tooltip,
   type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
   type ToolbarButtonProps as NaturalToolbarButtonProps,
+  type ToolbarToggleProps as NaturalToolbarToggleProps,
   type ThemedClassName,
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -27,49 +28,34 @@ import { useSheetContext } from '../SheetContext';
 //
 
 const buttonStyles = 'min-bs-0 p-2';
-const tooltipProps = { side: 'top' as const, classNames: 'z-10' };
+const tooltipProps = { side: 'bottom' as const, classNames: 'z-10' };
 
 const ToolbarSeparator = () => <div role='separator' className='grow' />;
 
 //
-// ToolbarButton
+// ToolbarItem
 //
 
-type ToolbarButtonProps = NaturalToolbarButtonProps & { icon: string };
+type ToolbarItemProps =
+  | (NaturalToolbarButtonProps & { itemType: 'button'; icon: string })
+  | (NaturalToolbarToggleGroupItemProps & { itemType: 'toggleGroupItem'; icon: string })
+  | (NaturalToolbarToggleProps & { itemType: 'toggle'; icon: string });
 
-export const ToolbarButton = ({ icon, children, ...props }: ToolbarButtonProps) => {
+export const ToolbarItem = ({ itemType, icon, children, ...props }: ToolbarItemProps) => {
+  const Invoker =
+    itemType === 'toggleGroupItem'
+      ? NaturalToolbar.ToggleGroupItem
+      : itemType === 'toggle'
+        ? NaturalToolbar.Toggle
+        : NaturalToolbar.Button;
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <NaturalToolbar.Button variant='ghost' {...props} classNames={buttonStyles}>
+        {/* TODO(thure): type the props spread better. */}
+        <Invoker variant='ghost' {...(props as any)} classNames={buttonStyles}>
           <Icon icon={icon} size={5} />
           <span className='sr-only'>{children}</span>
-        </NaturalToolbar.Button>
-      </Tooltip.Trigger>
-      <Tooltip.Portal>
-        <Tooltip.Content {...tooltipProps}>
-          {children}
-          <Tooltip.Arrow />
-        </Tooltip.Content>
-      </Tooltip.Portal>
-    </Tooltip.Root>
-  );
-};
-
-//
-// ToolbarToggleButton
-//
-
-export type ToolbarToggleButtonProps = NaturalToolbarToggleGroupItemProps & { icon: string };
-
-export const ToolbarToggleButton = ({ icon, children, ...props }: ToolbarToggleButtonProps) => {
-  return (
-    <Tooltip.Root>
-      <Tooltip.Trigger asChild>
-        <NaturalToolbar.ToggleGroupItem variant='ghost' {...props} classNames={buttonStyles}>
-          <Icon icon={icon} size={5} />
-          <span className='sr-only'>{children}</span>
-        </NaturalToolbar.ToggleGroupItem>
+        </Invoker>
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content {...tooltipProps}>
@@ -85,15 +71,18 @@ export const ToolbarToggleButton = ({ icon, children, ...props }: ToolbarToggleB
 // Root
 //
 
-export type ToolbarAction =
-  | { type: 'clear' }
-  | { type: 'highlight' }
-  | { type: 'left' }
-  | { type: 'center' }
-  | { type: 'right' }
-  | { type: 'date' }
-  | { type: 'currency' }
-  | { type: 'comment'; anchor: string; cellContent?: string };
+type AlignValue = 'left' | 'center' | 'right' | 'unset';
+type AlignAction = { type: 'align'; value: AlignValue };
+
+type CommentAction = { type: 'comment'; anchor: string; cellContent?: string };
+
+type FormatValue = 'date' | 'currency' | 'unset';
+type FormatAction = { type: 'format'; value: FormatValue };
+
+type StyleValue = 'highlight' | 'unset';
+type StyleAction = { type: 'style'; value: StyleValue };
+
+export type ToolbarAction = StyleAction | AlignAction | FormatAction | CommentAction;
 
 export type ToolbarActionType = ToolbarAction['type'];
 
@@ -134,8 +123,8 @@ const ToolbarRoot = ({ children, onAction, role, classNames }: ToolbarProps) => 
 
 // TODO(burdon): Generalize.
 // TODO(burdon): Detect and display current state.
-type ButtonProps = {
-  type: ToolbarActionType;
+type ButtonProps<T> = {
+  value: T;
   icon: string;
   getState: (state: Formatting) => boolean;
   disabled?: (state: Formatting) => boolean;
@@ -145,9 +134,9 @@ type ButtonProps = {
 // Alignment
 //
 
-const formatOptions: ButtonProps[] = [
-  { type: 'date', icon: 'ph--calendar--regular', getState: (state) => false },
-  { type: 'currency', icon: 'ph--currency-dollar--regular', getState: (state) => false },
+const formatOptions: ButtonProps<FormatValue>[] = [
+  { value: 'date', icon: 'ph--calendar--regular', getState: (state) => false },
+  { value: 'currency', icon: 'ph--currency-dollar--regular', getState: (state) => false },
 ];
 
 const Format = () => {
@@ -159,26 +148,25 @@ const Format = () => {
       type='single'
       // value={cellStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
     >
-      {formatOptions.map(({ type, getState, icon }) => (
-        <ToolbarToggleButton
-          key={type}
-          value={type}
+      {formatOptions.map(({ value, getState, icon }) => (
+        <ToolbarItem
+          itemType='toggleGroupItem'
+          key={value}
+          value={value}
           icon={icon}
-          // disabled={state?.blockType === 'codeblock'}
-          // onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
-          onClick={() => onAction?.({ type: type as Exclude<typeof type, 'comment'> })}
+          onClick={() => onAction?.({ type: 'format', value })}
         >
-          {t(`toolbar ${type} label`)}
-        </ToolbarToggleButton>
+          {t(`toolbar ${value} label`)}
+        </ToolbarItem>
       ))}
     </NaturalToolbar.ToggleGroup>
   );
 };
 
-const alignmentOptions: ButtonProps[] = [
-  { type: 'left', icon: 'ph--text-align-left--regular', getState: (state) => false },
-  { type: 'center', icon: 'ph--text-align-center--regular', getState: (state) => false },
-  { type: 'right', icon: 'ph--text-align-right--regular', getState: (state) => false },
+const alignmentOptions: ButtonProps<AlignValue>[] = [
+  { value: 'left', icon: 'ph--text-align-left--regular', getState: (state) => false },
+  { value: 'center', icon: 'ph--text-align-center--regular', getState: (state) => false },
+  { value: 'right', icon: 'ph--text-align-right--regular', getState: (state) => false },
 ];
 
 const Alignment = () => {
@@ -189,50 +177,41 @@ const Alignment = () => {
     <NaturalToolbar.ToggleGroup
       type='single'
       // value={cellStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
+      // disabled={state?.blockType === 'codeblock'}
+      onValueChange={(value: AlignValue) => onAction?.({ type: 'align', value })}
     >
-      {alignmentOptions.map(({ type, getState, icon }) => (
-        <ToolbarToggleButton
-          key={type}
-          value={type}
-          icon={icon}
-          // disabled={state?.blockType === 'codeblock'}
-          // onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
-          onClick={() => onAction?.({ type: type as Exclude<typeof type, 'comment'> })}
-        >
-          {t(`toolbar ${type} label`)}
-        </ToolbarToggleButton>
+      {alignmentOptions.map(({ value, getState, icon }) => (
+        <ToolbarItem itemType='toggleGroupItem' key={value} value={value} icon={icon}>
+          {t(`toolbar ${value} label`)}
+        </ToolbarItem>
       ))}
     </NaturalToolbar.ToggleGroup>
   );
 };
 
-const styleOptions: ButtonProps[] = [
-  { type: 'clear', icon: 'ph--eraser--regular', getState: (state) => false },
-  { type: 'highlight', icon: 'ph--highlighter--regular', getState: (state) => false },
+const styleOptions: ButtonProps<StyleValue>[] = [
+  { value: 'highlight', icon: 'ph--highlighter--regular', getState: (state) => false },
 ];
 
 const Styles = () => {
-  const { onAction } = useToolbarContext('Alignment');
+  const { onAction } = useToolbarContext('Styles');
   const { t } = useTranslation(SHEET_PLUGIN);
 
   return (
-    <NaturalToolbar.ToggleGroup
-      type='single'
-      // value={cellStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
-    >
-      {styleOptions.map(({ type, getState, icon }) => (
-        <ToolbarToggleButton
-          key={type}
-          value={type}
+    <>
+      {styleOptions.map(({ value, getState, icon }) => (
+        <ToolbarItem
+          itemType='toggle'
+          key={value}
+          onPressedChange={(nextPressed: boolean) =>
+            onAction?.({ type: 'style', value: nextPressed ? 'highlight' : 'unset' })
+          }
           icon={icon}
-          // disabled={state?.blockType === 'codeblock'}
-          // onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
-          onClick={() => onAction?.({ type: type as Exclude<typeof type, 'comment'> })}
         >
-          {t(`toolbar ${type} label`)}
-        </ToolbarToggleButton>
+          {t(`toolbar ${value} label`)}
+        </ToolbarItem>
       ))}
-    </NaturalToolbar.ToggleGroup>
+    </>
   );
 };
 
@@ -267,7 +246,8 @@ const Actions = () => {
         : 'comment label';
 
   return (
-    <ToolbarButton
+    <ToolbarItem
+      itemType='button'
       value='comment'
       icon='ph--chat-text--regular'
       data-testid='editor.toolbar.comment'
@@ -284,7 +264,7 @@ const Actions = () => {
       disabled={!cursorOnly || overlapsCommentAnchor}
     >
       {t(tooltipLabelKey)}
-    </ToolbarButton>
+    </ToolbarItem>
   );
 };
 
