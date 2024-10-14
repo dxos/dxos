@@ -375,7 +375,7 @@ export class Context {
    * Called when the deadline is reached.
    */
   #deadlineReached() {
-    void this.dispose();
+    void this.dispose(ContextDisposeReason.DEADLINE_EXCEEDED);
   }
 }
 

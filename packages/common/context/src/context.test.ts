@@ -5,6 +5,8 @@
 import { describe, expect, test } from 'vitest';
 
 import { Context } from './context';
+import { cancelWithContext } from './promise-utils';
+import { ContextDeadlineExceededError } from './context-deadline-exceeded-error';
 
 describe('Context', () => {
   test('dispose calls dispose hooks', () => {
@@ -128,5 +130,21 @@ describe('Context', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 200));
     expect(called).toBeTruthy();
+  });
+
+  test('timeout cancels promises', async () => {
+    const ctx = Context.withTimeout(100);
+
+    const promise = cancelWithContext(ctx, new Promise(() => {}));
+    await expect(promise).rejects.toThrowError(ContextDeadlineExceededError);
+  });
+
+  test('timeout with past deadline cancels promises', async () => {
+    const ctx = Context.withTimeout(100);
+
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    const promise = cancelWithContext(ctx, new Promise(() => {}));
+    await expect(promise).rejects.toThrowError(ContextDeadlineExceededError);
   });
 });
