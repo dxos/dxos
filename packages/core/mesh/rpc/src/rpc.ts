@@ -396,7 +396,8 @@ export class RpcPeer {
       });
 
       // Wait until send completes or throws an error (or response throws a timeout), the resume waiting.
-      const timeout = options?.timeout ?? this._params.timeout;
+      const timeout = options?.timeout ?? options?.ctx?.timeout ?? this._params.timeout;
+      // TODO(dmaretskyi): Throw ContextDeadlineExceeded error if the timeout comes from a deadline.
       const waiting =
         timeout === 0 ? responseReceived : asyncTimeout<any>(responseReceived, timeout ?? DEFAULT_TIMEOUT);
 
