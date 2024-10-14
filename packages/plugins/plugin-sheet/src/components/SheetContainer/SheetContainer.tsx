@@ -35,7 +35,7 @@ export const SheetContainer = ({ graph, sheet, role }: SheetProviderProps & { ro
 
   return (
     <SheetProvider sheet={sheet} graph={graph}>
-      <Toolbar.Root onAction={handleAction}>
+      <Toolbar.Root onAction={handleAction} role={role}>
         <Toolbar.Styles />
         <Toolbar.Format />
         <Toolbar.Alignment />

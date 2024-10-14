@@ -21,7 +21,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { nonNullable } from '@dxos/util';
 
 import { compute, computeGraphFacet } from './compute';
-import { GridSheet } from '../components';
+import { GridSheet, SheetProvider } from '../components';
 import { useComputeGraph, useSheetModel } from '../hooks';
 import { useTestSheet, withComputeGraphDecorator } from '../testing';
 import { SheetType } from '../types';
@@ -80,7 +80,9 @@ const Grid = () => {
 
   return (
     <div className='flex w-[40rem] overflow-hidden'>
-      <GridSheet graph={graph} sheet={sheet} />
+      <SheetProvider graph={graph} sheet={sheet}>
+        <GridSheet />
+      </SheetProvider>
     </div>
   );
 };
