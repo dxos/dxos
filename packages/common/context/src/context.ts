@@ -310,10 +310,11 @@ export class Context {
           }
         }
       },
+      deadline: this.#deadline,
       attributes,
     });
 
-    const clearDispose = this.onDispose(() => newCtx.dispose());
+    const clearDispose = this.onDispose((reason) => newCtx.dispose(reason));
     newCtx.onDispose(clearDispose);
     return newCtx;
   }
