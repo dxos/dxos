@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Mutex, type PushStream, scheduleTask, TimeoutError, type Trigger } from '@dxos/async';
+import { type PushStream, scheduleTask, TimeoutError, type Trigger } from '@dxos/async';
 import { INVITATION_TIMEOUT } from '@dxos/client-protocol';
 import { type Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
@@ -22,14 +22,12 @@ import { ComplexSet } from '@dxos/util';
 import { InvitationGuestExtension } from './invitation-guest-extenstion';
 import { InvitationHostExtension, isAuthenticationRequired, MAX_OTP_ATTEMPTS } from './invitation-host-extension';
 import { type InvitationProtocol } from './invitation-protocol';
+import { createGuardedInvitationState } from './invitation-state';
 import { InvitationTopology } from './invitation-topology';
-import { stateToString } from './utils';
 
 const metrics = _trace.metrics;
 
 const MAX_DELEGATED_INVITATION_HOST_TRIES = 3;
-
-type InvitationExtension = InvitationHostExtension | InvitationGuestExtension;
 
 /**
  * Generic handler for Halo and Space invitations.
@@ -75,7 +73,7 @@ export class InvitationsHandler {
     invitation: Invitation,
   ): void {
     metrics.increment('dxos.invitation.created');
-    const guardedState = this._createGuardedState(ctx, invitation, stream);
+    const guardedState = createGuardedInvitationState(ctx, invitation, stream);
     // Called for every connecting peer.
     const createExtension = (): InvitationHostExtension => {
       const extension = new InvitationHostExtension(guardedState.mutex, {
@@ -208,7 +206,7 @@ export class InvitationsHandler {
     }
 
     const triedPeersIds = new ComplexSet(PublicKey.hash);
-    const guardedState = this._createGuardedState(ctx, invitation, stream);
+    const guardedState = createGuardedInvitationState(ctx, invitation, stream);
 
     const shouldCancelInvitationFlow = (extension: InvitationGuestExtension) => {
       const isLockedByAnotherConnection = guardedState.mutex.isLocked() && !extension.hasFlowLock();
@@ -395,90 +393,6 @@ export class InvitationsHandler {
     });
     ctx.onDispose(() => swarmConnection.close());
     return swarmConnection;
-  }
-
-  /**
-   * A utility object for serializing invitation state changes by multiple concurrent
-   * invitation flow connections.
-   */
-  private _createGuardedState(ctx: Context, invitation: Invitation, stream: PushStream<Invitation>) {
-    // the mutex guards invitation flow on host and guest side, making sure only one flow is currently active
-    // deadlocks seem very unlikely because hosts don't initiate multiple connections
-    // even if this somehow happens that there are 2 guests (A, B) and 2 hosts (1, 2) and:
-    //  A has lock for flow with 1, B has lock for flow with 2
-    //  1 has lock for flow with B, 2 has lock for flow with A
-    // there'll be a 10-second introduction timeout after which connection will be closed and deadlock broken
-    const mutex = new Mutex();
-    let lastActiveExtension: any = null;
-    let currentInvitation = { ...invitation };
-    const isStateChangeAllowed = (extension: InvitationExtension | null) => {
-      if (ctx.disposed || (extension !== null && mutex.isLocked() && !extension.hasFlowLock())) {
-        return false;
-      }
-      // don't allow transitions from a terminal state unless a new extension acquired mutex
-      // handles a case when error occurs (e.g. connection is closed) after we completed the flow
-      // successfully or already reported another error
-      return extension == null || lastActiveExtension !== extension || this._isNotTerminal(currentInvitation.state);
-    };
-    return {
-      mutex,
-      get current() {
-        return currentInvitation;
-      },
-      // disposing context prevents any further state updates
-      complete: (newState: Partial<Invitation>) => {
-        currentInvitation = { ...currentInvitation, ...newState };
-        stream.next(currentInvitation);
-        return ctx.dispose();
-      },
-      set: (extension: InvitationExtension | null, newState: Invitation.State): boolean => {
-        if (isStateChangeAllowed(extension)) {
-          this._logStateUpdate(currentInvitation, extension, newState);
-          currentInvitation = { ...currentInvitation, state: newState };
-          stream.next(currentInvitation);
-          lastActiveExtension = extension;
-          return true;
-        }
-        return false;
-      },
-      error: (extension: InvitationExtension | null, error: any): boolean => {
-        if (isStateChangeAllowed(extension)) {
-          this._logStateUpdate(currentInvitation, extension, Invitation.State.ERROR);
-          currentInvitation = { ...currentInvitation, state: Invitation.State.ERROR };
-          stream.next(currentInvitation);
-          stream.error(error);
-          lastActiveExtension = extension;
-          return true;
-        }
-        return false;
-      },
-    };
-  }
-
-  private _logStateUpdate(invitation: Invitation, actor: any, newState: Invitation.State) {
-    if (this._isNotTerminal(newState)) {
-      log('invitation state update', {
-        actor: actor?.constructor.name,
-        newState: stateToString(newState),
-        oldState: stateToString(invitation.state),
-      });
-    } else {
-      log('invitation state update', {
-        actor: actor?.constructor.name,
-        newState: stateToString(newState),
-        oldState: stateToString(invitation.state),
-      });
-    }
-  }
-
-  private _isNotTerminal(currentState: Invitation.State): boolean {
-    return ![
-      Invitation.State.SUCCESS,
-      Invitation.State.ERROR,
-      Invitation.State.CANCELLED,
-      Invitation.State.TIMEOUT,
-      Invitation.State.EXPIRED,
-    ].includes(currentState);
   }
 
   private async _handleGuestOtpAuth(
