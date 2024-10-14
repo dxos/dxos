@@ -6,14 +6,16 @@ import jp from 'jsonpath';
 
 import { AST, S } from '@dxos/effect';
 
+export const isScalar = (ast: AST.AST) =>
+  AST.isNumberKeyword(ast) || AST.isBooleanKeyword(ast) || AST.isStringKeyword(ast);
+
 //
 // Field
 //
 
-export const isScalar = (p: AST.AST) => AST.isNumberKeyword(p) || AST.isBooleanKeyword(p) || AST.isStringKeyword(p);
-
 // TODO(burdon): Format vs. type?
-// TODO(burdon): String or numeric enum value.
+// TODO(burdon): Change value to number.
+// TODO(burdon): Single/multi-select enums?
 export enum FieldScalarType {
   Number = 'number',
   Boolean = 'boolean',
@@ -21,11 +23,10 @@ export enum FieldScalarType {
 
   Ref = 'ref',
 
-  // TODO(burdon): Distinguish scalar types by decorated types.
   Percent = 'percent',
-  // TODO(burdon): Currency type.
   Currency = 'currency',
 
+  // TODO(burdon): Date format?
   DateTime = 'datetime',
   Date = 'date',
   Time = 'time',
@@ -35,24 +36,20 @@ export enum FieldScalarType {
   //  - DID
 }
 
-// TODO(burdon): Single/multi-select enums?
-
-// TODO(burdon): Is S.mutable required?
 export const FieldSchema = S.mutable(
   S.Struct({
     id: S.String,
     path: S.String,
     type: S.Enums(FieldScalarType),
-
     label: S.optional(S.String),
-
-    /** Number of decimal digits. */
-    digits: S.optional(S.Number),
 
     /** Default value for new records. */
     defaultValue: S.optional(S.Any),
 
-    // TODO(burdon): Table specific, generic or union?
+    /** Number of decimal digits. */
+    digits: S.optional(S.Number),
+
+    // TODO(burdon): Table/form specific layout, or generic?
     size: S.optional(S.Number),
   }),
 );
