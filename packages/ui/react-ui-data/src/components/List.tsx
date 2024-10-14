@@ -22,8 +22,7 @@ import { createPortal, flushSync } from 'react-dom';
 import { S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Icon, type ThemedClassName, useControlledValue, useTranslation } from '@dxos/react-ui';
-import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { groupBorder, groupSurface } from '@dxos/react-ui-theme/src';
+import { ghostHover, mx, groupBorder, groupSurface } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../translations';
 
