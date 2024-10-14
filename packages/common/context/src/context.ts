@@ -182,7 +182,7 @@ export class Context {
 
     if (this.hasDeadline && !this.#deadlineDisposeScheduled) {
       this.#deadlineDisposeScheduled = true;
-      setTimeout(this.#deadlineReached.bind(this), this.timeout!);
+      unrefTimeout(setTimeout(this.#deadlineReached.bind(this), this.timeout!));
     }
 
     this.#disposeCallbacks.push(callback);
@@ -377,4 +377,14 @@ const getContextName = (params: CreateContextParams, callMeta?: Partial<CallMeta
     return `${pathSegments[pathSegments.length - 1]}#${callMeta?.L ?? 0}`;
   }
   return undefined;
+};
+
+/**
+ * In Node.JS, `unref` prevents the timeout from blocking the process from exiting. Not available in browsers.
+ * https://nodejs.org/api/timers.html#timeoutunref
+ */
+const unrefTimeout = (timeoutId: NodeJS.Timeout) => {
+  if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
+    timeoutId.unref();
+  }
 };
