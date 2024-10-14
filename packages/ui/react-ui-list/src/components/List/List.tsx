@@ -16,6 +16,13 @@ import {
 } from './ListItem';
 import { ListRoot, type ListRootProps } from './ListRoot';
 
+// TODO(burdon): Multi-select model.
+// TODO(burdon): Key nav.
+// TODO(burdon): Animation.
+// TODO(burdon): Constrain axis.
+// TODO(burdon): Tree view.
+// TODO(burdon): Fix autoscroll while dragging.
+
 /**
  * Draggable list.
  * Ref: https://github.com/atlassian/pragmatic-drag-and-drop

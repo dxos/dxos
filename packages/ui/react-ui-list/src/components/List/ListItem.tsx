@@ -166,11 +166,15 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item 
         <div ref={ref} role='listitem' className={mx('flex', classNames, stateStyles[state.type])}>
           {children}
         </div>
-        {state.type === 'is-dragging-over' && state.closestEdge ? <DropIndicator edge={state.closestEdge} /> : null}
+        {state.type === 'is-dragging-over' && state.closestEdge && <DropIndicator edge={state.closestEdge} />}
       </div>
     </ListItemProvider>
   );
 };
+
+//
+// List item components
+//
 
 export type IconButtonProps = ThemedClassName<ComponentProps<'button'>> & { icon: string };
 
@@ -206,9 +210,6 @@ export const ListItemDragHandle = () => {
   return <IconButton ref={dragHandleRef as any} icon='ph--dots-six--regular' />;
 };
 
-// TODO(burdon): Animation.
-// TODO(burdon): Constrain axis.
-// TODO(burdon): Width.
 export const ListItemDragPreview = <T extends ListItemRecord>({
   children,
 }: {

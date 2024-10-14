@@ -72,8 +72,8 @@ export const ListRoot = <T extends ListItemRecord>({
               list: items,
               startIndex: sourceIdx,
               indexOfTarget: targetIdx,
-              closestEdgeOfTarget,
               axis: 'vertical',
+              closestEdgeOfTarget,
             }),
           );
         });

@@ -5,18 +5,25 @@
 import { S } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
-export const TestSchema = S.Struct({
+export const TestItemSchema = S.Struct({
   id: S.String,
   name: S.String,
 });
 
-export type TestType = S.Schema.Type<typeof TestSchema>;
+export type TestItemType = S.Schema.Type<typeof TestItemSchema>;
 
-export const createItems = (n = 10): TestType[] =>
-  faker.helpers.multiple(
+export const TestList = S.Struct({
+  items: S.mutable(S.Array(TestItemSchema)),
+});
+
+export type TestList = S.Schema.Type<typeof TestList>;
+
+export const createList = (n = 10): TestList => ({
+  items: faker.helpers.multiple(
     () => ({
       id: faker.string.uuid(),
-      name: faker.lorem.sentence(),
+      name: faker.commerce.productName(),
     }),
     { count: n },
-  );
+  ),
+});

@@ -6,47 +6,52 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { S } from '@dxos/echo-schema';
+import { create, S } from '@dxos/echo-schema';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 import { withTheme, withLayout, withSignals } from '@dxos/storybook-utils';
 
 import { List, type ListRootProps } from './List';
-import { createItems, TestSchema, type TestType } from '../../testing';
+import { createList, TestItemSchema, type TestItemType } from '../../testing';
 
-const Story = (props: ListRootProps<TestType>) => {
-  const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
+// TODO(burdon): var-icon-size.
+const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2rem] rounded';
+
+const Story = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
+  const handleSelect = (item: TestItemType) => {
+    console.log('select', item);
+  };
+  const handleDelete = (item: TestItemType) => {
+    const idx = items.findIndex((i) => i.id === item.id);
+    items.splice(idx, 1);
+  };
+
   return (
-    <List.Root<TestType> classNames='w-[300px]' dragPreview {...props}>
+    <List.Root<TestItemType> dragPreview items={items} {...props}>
       {({ items }) => (
         <>
-          <div className='w-full'>
-            <div role='heading' className={grid}>
+          <div className='flex flex-col w-full'>
+            <div role='none' className={grid}>
               <div />
               <div className='flex items-center text-sm'>Items</div>
             </div>
 
-            <div role='list' className='flex flex-col w-full'>
+            <div role='list' className='w-full h-full overflow-auto'>
               {items.map((item) => (
-                <List.Item<TestType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
+                <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
                   <List.ItemDragHandle />
-                  <List.ItemTitle
-                    onClick={() => {
-                      console.log('select', item.id);
-                    }}
-                  >
-                    {item.name}
-                  </List.ItemTitle>
-                  <List.ItemDeleteButton
-                    onClick={() => {
-                      console.log('delete', item.id);
-                    }}
-                  />
+                  <List.ItemTitle onClick={() => handleSelect(item)}>{item.name}</List.ItemTitle>
+                  <List.ItemDeleteButton onClick={() => handleDelete(item)} />
                 </List.Item>
               ))}
             </div>
+
+            <div role='none' className={grid}>
+              <div />
+              <div className='flex items-center text-sm'>{items.length} Items</div>
+            </div>
           </div>
 
-          <List.ItemDragPreview<TestType>>
+          <List.ItemDragPreview<TestItemType>>
             {({ item }) => (
               <List.ItemWrapper classNames={mx(grid, 'bg-modalSurface border border-separator')}>
                 <List.ItemDragHandle />
@@ -61,16 +66,17 @@ const Story = (props: ListRootProps<TestType>) => {
 };
 
 export default {
+  // TODO(burdon): Storybook collides with react-ui/List.
   title: 'react-ui-list/List',
-  decorators: [withTheme, withSignals, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],
+  decorators: [withTheme, withSignals, withLayout({ fullscreen: true })],
   render: Story,
 };
 
-const items = createItems(10);
+const list = create(createList(100));
 
 export const Default = {
   args: {
-    items,
-    isItem: S.is(TestSchema),
-  } satisfies ListRootProps<TestType>,
+    items: list.items,
+    isItem: S.is(TestItemSchema),
+  } satisfies ListRootProps<TestItemType>,
 } as any; // TODO(burdon): TS2742: The inferred type of Default cannot be named without a reference to... (AST)
