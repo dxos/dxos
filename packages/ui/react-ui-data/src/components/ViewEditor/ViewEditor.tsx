@@ -8,9 +8,9 @@ import { generateEchoId } from '@dxos/echo-schema';
 import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Field } from './Field';
-import { List, type ListProps } from './List';
-import { FieldScalarType, FieldSchema, type FieldType, getUniqueProperty, type ViewType } from '../types';
+import { FieldScalarType, FieldSchema, type FieldType, getUniqueProperty, type ViewType } from '../../types';
+import { Field } from '../Field';
+import { List, type ListProps } from '../List';
 
 export type ViewEditorProps = ThemedClassName<{
   view: ViewType;

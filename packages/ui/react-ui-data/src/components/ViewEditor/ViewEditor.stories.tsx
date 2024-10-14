@@ -6,14 +6,13 @@ import '@dxos-theme';
 
 import React from 'react';
 
-// import { createEchoObject } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
-import { view, TestPopup } from '../testing';
-import translations from '../translations';
-import { ViewSchema, type ViewType } from '../types';
+import { view, TestPopup } from '../../testing';
+import translations from '../../translations';
+import { ViewSchema, type ViewType } from '../../types';
 
 const Story = (props: ViewEditorProps) => (
   <TestPopup>

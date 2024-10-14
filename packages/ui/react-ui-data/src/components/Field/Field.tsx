@@ -8,11 +8,11 @@ import { type S } from '@dxos/effect';
 import { Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { TextInput } from './TextInput';
-import { translationKey } from '../translations';
-import { type FormatType, FieldScalarType, type FieldType } from '../types';
+import { translationKey } from '../../translations';
+import { type FormatAnnotation, FieldScalarType, type FieldType } from '../../types';
+import { TextInput } from '../TextInput';
 
-const PropertyFormat: FormatType = {
+const PropertyFormat: FormatAnnotation = {
   filter: /^\w*$/,
   valid: /^\w+$/,
 };

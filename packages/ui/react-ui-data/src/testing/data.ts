@@ -21,7 +21,7 @@ export const TestSchema = S.Struct({
   ),
   admin: S.optional(S.Boolean),
   rating: S.optional(S.Number),
-});
+}).pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Test schema.' }));
 
 export type TestType = S.Schema.Type<typeof TestSchema>;
 

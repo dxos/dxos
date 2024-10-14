@@ -10,10 +10,10 @@ import { create } from '@dxos/echo-schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Field, type FieldProps } from './Field';
-import { view, TestSchema, TestPopup, type TestType } from '../testing';
-import translations from '../translations';
+import { view, TestSchema, TestPopup, type TestType } from '../../testing';
+import translations from '../../translations';
 
-const Story = (props: FieldProps) => (
+const Story = (props: FieldProps<TestType>) => (
   <TestPopup>
     <Field {...props} />
   </TestPopup>
@@ -21,7 +21,7 @@ const Story = (props: FieldProps) => (
 
 export default {
   title: 'react-ui-data/Field',
-  decorators: [withTheme, withLayout()],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],
   parameters: {
     layout: 'centered',
     translations,

@@ -9,8 +9,15 @@ import { AST, type S } from '@dxos/effect';
 import { Input, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { TextInput } from './TextInput';
-import { RealNumberFormat, type ViewType, getFieldValue, getFormat, getProperty, setFieldValue } from '../types';
+import {
+  RealNumberFormat,
+  type ViewType,
+  getFieldValue,
+  getFormatAnnotation,
+  getProperty,
+  setFieldValue,
+} from '../../types';
+import { TextInput } from '../TextInput';
 
 export type FormProps<T = {}> = ThemedClassName<{
   view: ViewType;
@@ -29,7 +36,8 @@ export const Form = <T = {},>({ classNames, view, data, schema, readonly }: Form
         const prop = schema && getProperty(schema, field);
         const label = field.label ?? (prop && pipe(AST.getTitleAnnotation(prop), Option.getOrUndefined));
         const description = (prop && pipe(AST.getDescriptionAnnotation(prop), Option.getOrUndefined)) ?? label;
-        const format = (prop && (getFormat(prop) ?? (AST.isNumberKeyword(prop) && RealNumberFormat))) || undefined;
+        const format =
+          (prop && (getFormatAnnotation(prop) ?? (AST.isNumberKeyword(prop) && RealNumberFormat))) || undefined;
 
         //
         // Boolean

@@ -24,7 +24,8 @@ import { invariant } from '@dxos/invariant';
 import { Icon, type ThemedClassName, useControlledValue, useTranslation } from '@dxos/react-ui';
 import { ghostHover, mx, groupBorder, groupSurface } from '@dxos/react-ui-theme';
 
-import { translationKey } from '../translations';
+import { DropIndicator } from './DropIndicator';
+import { translationKey } from '../../translations';
 
 // TODO(burdon): Ref: https://github.com/alexreardon/pdnd-react-tailwind/blob/main/src/task.tsx
 
@@ -122,7 +123,6 @@ const idle: ItemState = { type: 'idle' };
 
 const stateStyles: { [Key in ItemState['type']]?: HTMLAttributes<HTMLDivElement>['className'] } = {
   'is-dragging': 'opacity-50',
-  'is-dragging-over': 'opacity-50',
 };
 
 type ItemProps<T extends BaseItem> = ThemedClassName<{
@@ -215,6 +215,7 @@ const Item = <T extends BaseItem>({ classNames, schema, item, getLabel, onSelect
             <Icon icon='ph--x--regular' classNames='cursor-pointer' size={4} />
           </div>
         </div>
+        {state.type === 'is-dragging-over' && state.closestEdge ? <DropIndicator edge={state.closestEdge} /> : null}
       </div>
 
       {state.type === 'preview'
