@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { type SortDirection } from '@tanstack/react-table';
 import React, { useState } from 'react';
@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { ColumnMenu } from './ColumnMenu';
-import { type ColumnSettingsFormProps } from './ColumnSettingsForm';
+import { type ColumnSettingsProps } from './ColumnSettings';
 import { type ColumnProps } from '../../schema';
 
 export default {
@@ -19,27 +19,27 @@ export default {
   decorators: [withTheme],
 };
 
-const defs: Pick<ColumnSettingsFormProps, 'tableDef' | 'tablesToReference'> = {
+const defs: Pick<ColumnSettingsProps, 'tableDef' | 'tablesToReference'> = {
   tableDef: {
     id: '1',
     name: 'table 1',
-    columns: [{ id: 'col-1', prop: 'one-foo', type: 'string' }],
+    columns: [{ id: 'col-1', prop: 'one', type: 'string' }],
   },
   tablesToReference: [
     {
       id: '1',
       name: 'table 1',
-      columns: [{ id: 'col-1', prop: 'one-foo', type: 'string' }],
+      columns: [{ id: 'col-1', prop: 'one', type: 'string' }],
     },
     {
       id: '2',
       name: 'table 2',
-      columns: [{ id: 'col-1', prop: 'two-foo', type: 'string' }],
+      columns: [{ id: 'col-1', prop: 'two', type: 'string' }],
     },
   ],
 };
 
-const funcs: Pick<ColumnSettingsFormProps, 'onUpdate' | 'onDelete'> = {
+const functions: Pick<ColumnSettingsProps, 'onUpdate' | 'onDelete'> = {
   onUpdate: (...args: any) => console.log('onUpdate args', args),
   onDelete: (...args: any) => console.log('onDelete args', args),
 };
@@ -52,7 +52,7 @@ export const Default = {
     } as ColumnProps,
 
     ...defs,
-    ...funcs,
+    ...functions,
 
     context: {
       header: {
@@ -94,6 +94,8 @@ export const ReactiveSort = {
         header: {
           column: {
             getCanSort: () => true,
+            getIsSorted: () => sort,
+            clearSorting: () => setSort(false),
             toggleSorting: (desc?: boolean) => {
               if (desc === undefined) {
                 setSort(false);
@@ -103,8 +105,6 @@ export const ReactiveSort = {
                 setSort('asc');
               }
             },
-            getIsSorted: () => sort,
-            clearSorting: () => setSort(false),
             getToggleSortingHandler: () => () => {
               if (sort === 'asc') {
                 setSort('desc');

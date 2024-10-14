@@ -4,7 +4,7 @@
   "tags": [
     "scope:common"
   ],
-  "sourceRoot": "packages/common/random-access-storage/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
@@ -20,10 +20,10 @@
       }
     },
     "lint": {},
-    "vitest": {}
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",
-    "test"
+    "node-std"
   ]
 }

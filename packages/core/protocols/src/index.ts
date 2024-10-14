@@ -2,12 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './errors';
-export * from './indexing';
-export * from './proto';
-export * from './storage';
-export * from './testing';
-export * from './tracing';
-export * from './types';
-export * from './query';
-export * from './profile-archive';
+export * from './errors/index.js';
+export * from './indexing.js';
+export * from './storage.js';
+export * from './tracing.js';
+export * from './types.js';
+export * from './query.js';
+export * from './profile-archive.js';
+export * from './collection-sync.js';
+export * from './edge.js';

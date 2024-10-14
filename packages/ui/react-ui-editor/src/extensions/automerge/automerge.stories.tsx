@@ -2,25 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import '@preact/signals-react';
 import React, { useEffect, useState } from 'react';
 
-import { TextType } from '@braneframe/types';
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@dxos/automerge/automerge-repo-network-broadcastchannel';
-import { create, type Expando } from '@dxos/echo-schema';
-import { type PublicKey } from '@dxos/keys';
-import { Filter, DocAccessor, createDocAccessor, useSpace } from '@dxos/react-client/echo';
-import { ClientRepeater } from '@dxos/react-client/testing';
+import { Expando, create } from '@dxos/echo-schema';
+import { Filter, DocAccessor, createDocAccessor, useSpace, useQuery, type Space } from '@dxos/react-client/echo';
+import { useIdentity, type Identity } from '@dxos/react-client/halo';
+import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { automerge } from './automerge';
+import { editorContent } from '../../defaults';
 import { useTextEditor } from '../../hooks';
 import translations from '../../translations';
-import { createBasicExtensions, createThemeExtensions } from '../factories';
+import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '../factories';
 
 const initialContent = 'Hello world!';
 
@@ -31,17 +30,24 @@ type TestObject = {
 type EditorProps = {
   source: DocAccessor;
   autoFocus?: boolean;
+  space?: Space;
+  identity?: Identity;
 };
 
-const Editor = ({ source, autoFocus }: EditorProps) => {
+const Editor = ({ source, autoFocus, space, identity }: EditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(
     () => ({
-      doc: DocAccessor.getValue(source),
+      initialValue: DocAccessor.getValue(source),
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...' }),
-        createThemeExtensions({ themeMode, slots: { editor: { className: 'w-full p-2 bg-white dark:bg-black' } } }),
-        automerge(source),
+        createThemeExtensions({
+          themeMode,
+          slots: {
+            editor: { className: editorContent },
+          },
+        }),
+        createDataExtensions({ id: 'test', text: source, space, identity }),
       ],
       autoFocus,
     }),
@@ -88,31 +94,29 @@ const Story = () => {
 export default {
   title: 'react-ui-editor/Automerge',
   component: Editor,
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   render: () => <Story />,
-  parameters: { translations, layout: 'fullscreen' },
+  parameters: { translations },
 };
 
-const EchoStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
+const EchoStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
+  const identity = useIdentity();
   const space = useSpace(spaceKey);
   const [source, setSource] = useState<DocAccessor>();
+  const objects = useQuery<Expando>(space, Filter.from({ type: 'test' }));
+
   useEffect(() => {
-    setTimeout(async () => {
-      if (space) {
-        const { objects = [] } = await space.db.query<Expando>(Filter.from({ type: 'test' })).run();
-        if (objects.length) {
-          const source = createDocAccessor(objects[0].content, ['content']);
-          setSource(source);
-        }
-      }
-    });
-  }, [space]);
+    if (!source && objects.length) {
+      const source = createDocAccessor(objects[0].content, ['content']);
+      setSource(source);
+    }
+  }, [objects, source]);
 
   if (!source) {
     return null;
   }
 
-  return <Editor source={source} />;
+  return <Editor source={source} space={space} identity={identity ?? undefined} />;
 };
 
 export const Default = {};
@@ -125,11 +129,11 @@ export const WithEcho = {
         count={2}
         component={EchoStory}
         createSpace
-        onCreateSpace={async (space) => {
+        onSpaceCreated={async ({ space }) => {
           space.db.add(
             create({
               type: 'test',
-              content: create(TextType, { content: initialContent }),
+              content: create(Expando, { content: initialContent }),
             }),
           );
         }}

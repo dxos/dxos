@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { CollectionId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -14,7 +15,7 @@ import { ComplexSet, defaultMap } from '@dxos/util';
 import { type EchoReplicator, type EchoReplicatorContext, type ShouldAdvertiseParams } from './echo-replicator';
 import { MeshReplicatorConnection } from './mesh-echo-replicator-connection';
 import { getSpaceIdFromCollectionId } from './space-collection';
-import { createIdFromSpaceKey } from '../space';
+import { createIdFromSpaceKey } from '../common/space-id';
 
 // TODO(dmaretskyi): Move out of @dxos/echo-pipeline.
 
@@ -83,11 +84,19 @@ export class MeshEchoReplicator implements EchoReplicator {
         try {
           const spaceKey = await this._context.getContainingSpaceForDocument(params.documentId);
           if (!spaceKey) {
-            log('space key not found for share policy check', {
+            const remoteDocumentExists = await this._context.isDocumentInRemoteCollection({
+              documentId: params.documentId,
+              peerId: connection.peerId,
+            });
+            log('document not found locally for share policy check, accepting the remote document', {
               peerId: connection.peerId,
               documentId: params.documentId,
+              remoteDocumentExists,
             });
-            return false;
+            // If a document is not present locally return true if another peer claims to have it.
+            // Simply returning true will add the peer to "generous peers list" for this document which will
+            // start replication of the document after we receive, even if the peer is not in the corresponding space.
+            return remoteDocumentExists;
           }
 
           const spaceId = await createIdFromSpaceKey(spaceKey);
@@ -118,7 +127,7 @@ export class MeshEchoReplicator implements EchoReplicator {
         }
       },
       shouldSyncCollection: ({ collectionId }) => {
-        const spaceId = getSpaceIdFromCollectionId(collectionId);
+        const spaceId = getSpaceIdFromCollectionId(collectionId as CollectionId);
 
         const authorizedDevices = this._authorizedDevices.get(spaceId);
 

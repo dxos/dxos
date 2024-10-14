@@ -8,7 +8,7 @@ import { type FeedStore } from '@dxos/feed-store';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { MemoryTransportFactory, SwarmNetworkManager, createSimplePeerTransportFactory } from '@dxos/network-manager';
+import { MemoryTransportFactory, SwarmNetworkManager, createRtcTransportFactory } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -18,7 +18,6 @@ import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
 import { TestFeedBuilder } from './test-feed-builder';
-import { SnapshotStore } from '../db-host';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceManager, SpaceProtocol, type Space } from '../space';
 
@@ -37,7 +36,7 @@ export const WebsocketNetworkManagerProvider =
   () =>
     new SwarmNetworkManager({
       signalManager: new WebsocketSignalManager([{ server: signalUrl }]),
-      transportFactory: createSimplePeerTransportFactory(),
+      transportFactory: createRtcTransportFactory(),
     });
 
 export type TestAgentBuilderOptions = {
@@ -100,11 +99,6 @@ export class TestAgent {
     return (this._metadataStore ??= new MetadataStore(this.storage.createDirectory('metadata')));
   }
 
-  private _snapshotStore?: SnapshotStore;
-  get snapshotStore() {
-    return (this._snapshotStore ??= new SnapshotStore(this.storage.createDirectory('snapshots')));
-  }
-
   private _blobStore?: BlobStore;
   get blobStore() {
     return (this._blobStore ??= new BlobStore(this.storage.createDirectory('blobs')));
@@ -139,7 +133,6 @@ export class TestAgent {
       feedStore: this.feedStore,
       networkManager: this._networkManagerProvider(),
       metadataStore: this.metadataStore,
-      snapshotStore: this.snapshotStore,
       blobStore: this.blobStore,
     }));
   }
@@ -179,6 +172,7 @@ export class TestAgent {
     const space = await this.spaceManager.constructSpace({
       metadata,
       swarmIdentity: {
+        identityKey: this.identityKey,
         peerKey: this.deviceKey,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
@@ -206,6 +200,7 @@ export class TestAgent {
     return new SpaceProtocol({
       topic,
       swarmIdentity: {
+        identityKey: this.identityKey,
         peerKey: this.deviceKey,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER,

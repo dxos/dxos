@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { MessageType, TextType } from '@braneframe/types';
 import { createDocAccessor, createEchoObject } from '@dxos/echo-db';
-import { create } from '@dxos/echo-schema';
+import { create, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -27,10 +26,11 @@ import {
   automerge,
   listener,
 } from '@dxos/react-ui-editor';
+import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Thread, ThreadFooter, ThreadHeading } from './Thread';
-import { Message, MessageTextbox } from '../Message';
+import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity } from '../testing';
 import translations from '../translations';
 
@@ -44,7 +44,7 @@ const authorId = PublicKey.random().toHex();
 
 const Editor: FC<{
   id?: string;
-  item: TextType;
+  item: Expando;
   comments: Comment[];
   selected?: string;
   onCreateComment: CommentsOptions['onCreate'];
@@ -67,7 +67,7 @@ const Editor: FC<{
   const { parentRef, view } = useTextEditor(
     () => ({
       id,
-      doc: item.content,
+      initialValue: item.content,
       extensions: [
         createBasicExtensions(),
         createThemeExtensions({ themeMode }),
@@ -108,30 +108,6 @@ type StoryCommentThread = {
   messages: MessageEntity[];
 };
 
-type MessageTextProps = {
-  message: MessageEntity;
-};
-
-const StoryMessageText = ({ message }: MessageTextProps) => {
-  const { themeMode } = useThemeContext();
-  const doc = message.text;
-  const accessor = createDocAccessor(message, ['text']);
-  const { parentRef } = useTextEditor(
-    () => ({
-      doc,
-      extensions: [
-        // prettier-ignore
-        createBasicExtensions(),
-        createThemeExtensions({ themeMode }),
-        automerge(accessor),
-      ],
-    }),
-    [doc, accessor, themeMode],
-  );
-
-  return <div ref={parentRef} className='col-span-3' />;
-};
-
 const StoryThread: FC<{
   thread: StoryCommentThread;
   selected: boolean;
@@ -166,12 +142,12 @@ const StoryThread: FC<{
 
   const handleCreateMessage = () => {
     if (messageRef.current?.length) {
-      const message = create(MessageType, {
+      const message = create(Expando, {
         timestamp: new Date().toISOString(),
         sender: { identityKey: authorId },
         text: messageRef.current,
       });
-      thread.messages.push(message);
+      thread.messages.push(message as any);
 
       messageRef.current = '';
       setAutoFocus(true);
@@ -181,7 +157,7 @@ const StoryThread: FC<{
 
   return (
     <Thread current={selected} onClickCapture={onSelect}>
-      <div className='col-start-2 flex gap-1 text-xs fg-description'>
+      <div className='col-start-2 flex gap-1 text-xs text-description'>
         <span>id:{thread.id.slice(0, 4)}</span>
         <span>y:{thread.yPos}</span>
         <span className='grow' />
@@ -193,9 +169,10 @@ const StoryThread: FC<{
       </ThreadHeading>
 
       {thread.messages.map((message) => (
-        <Message key={message.id} {...message}>
-          <StoryMessageText message={message} />
-        </Message>
+        <MessageRoot key={message.id} classNames={[hoverableControls, hoverableFocusedWithinControls]} {...message}>
+          <MessageHeading authorName={message.authorName} timestamp={message.timestamp} />
+          <MessageBody>{message.text}</MessageBody>
+        </MessageRoot>
       ))}
 
       <div ref={containerRef} className='contents'>
@@ -255,7 +232,7 @@ type StoryProps = {
 };
 
 const Story = ({ text, autoCreate }: StoryProps) => {
-  const [item] = useState(createEchoObject(create(TextType, { content: text ?? '' })));
+  const [item] = useState(createEchoObject(create(Expando, { content: text ?? '' })));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
 

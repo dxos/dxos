@@ -1,9 +1,10 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import React, { forwardRef, useState } from 'react';
 
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -34,11 +35,7 @@ const DropComponent: MosaicTileComponent<NavTreeItemNode> = forwardRef(({ isOver
     >
       {item ? (
         <>
-          {item.node.properties?.iconSymbol && (
-            <svg>
-              <use href={`/icons.svg#${item.node.properties.iconSymbol}`} />
-            </svg>
-          )}
+          <Icon icon={item.node.properties?.icon ?? 'ph--placeholder--regular'} size={4} />
           {toLocalizedString(item.node.properties?.label ?? 'never', t)}
         </>
       ) : (

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/shell",
-  "version": "0.6.5",
+  "version": "0.6.11",
   "description": "DXOS’s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -61,23 +61,24 @@
     "@dxos/config": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "@types/react": "^18.0.21",
-    "@types/react-dom": "^18.0.6",
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
     "@vitejs/plugin-react": "^4.2.1",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
-    "vite": "^5.3.4"
+    "vite": "5.4.7"
   },
   "peerDependencies": {
     "@dxos/react-client": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   },
   "publishConfig": {
     "access": "public"

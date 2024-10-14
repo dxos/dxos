@@ -25,7 +25,7 @@ import {
   type StorageKey,
 } from '@dxos/automerge/automerge-repo';
 import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import { type CollectionId, type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -38,7 +38,7 @@ import { trace } from '@dxos/tracing';
 import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
-import { type EchoReplicator } from './echo-replicator';
+import { type EchoReplicator, type RemoteDocumentExistenceCheckParams } from './echo-replicator';
 import { HeadsStore } from './heads-store';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
 
@@ -82,6 +82,8 @@ export class AutomergeHost extends Resource {
   @trace.info()
   private _peerId!: PeerId;
 
+  public readonly collectionStateUpdated = new Event<{ collectionId: CollectionId }>();
+
   constructor({ db, indexMetadataStore, dataMonitor }: AutomergeHostParams) {
     super();
     this._db = db;
@@ -95,6 +97,7 @@ export class AutomergeHost extends Resource {
     });
     this._echoNetworkAdapter = new EchoNetworkAdapter({
       getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
+      isDocumentInRemoteCollection: this._isDocumentInRemoteCollection.bind(this),
       onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
       onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
       monitor: dataMonitor,
@@ -127,6 +130,7 @@ export class AutomergeHost extends Resource {
 
     this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId }) => {
       this._onRemoteCollectionStateUpdated(collectionId, peerId);
+      this.collectionStateUpdated.emit({ collectionId: collectionId as CollectionId });
     });
 
     await this._echoNetworkAdapter.open();
@@ -325,6 +329,17 @@ export class AutomergeHost extends Resource {
     return this._repo.peers;
   }
 
+  private async _isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckParams): Promise<boolean> {
+    for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
+      const remoteCollections = this._collectionSynchronizer.getRemoteCollectionStates(collectionId);
+      const remotePeerDocs = remoteCollections.get(params.peerId as PeerId)?.documents;
+      if (remotePeerDocs && params.documentId in remotePeerDocs) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private async _getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null> {
     const doc = this._repo.handles[documentId as any]?.docSync();
     if (!doc) {
@@ -404,7 +419,11 @@ export class AutomergeHost extends Resource {
       const diff = diffCollectionState(localState, state);
       result.peers.push({
         peerId,
+        missingOnRemote: diff.missingOnRemote.length,
+        missingOnLocal: diff.missingOnLocal.length,
         differentDocuments: diff.different.length,
+        localDocumentCount: Object.keys(localState.documents).length,
+        remoteDocumentCount: Object.keys(state.documents).length,
       });
     }
 
@@ -454,30 +473,36 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    const { different } = diffCollectionState(localState, remoteState);
+    const { different, missingOnLocal, missingOnRemote } = diffCollectionState(localState, remoteState);
+    const toReplicate = [...missingOnLocal, ...missingOnRemote, ...different];
 
-    if (different.length === 0) {
+    if (toReplicate.length === 0) {
       return;
     }
 
     log.info('replication documents after collection sync', {
-      count: different.length,
+      count: toReplicate.length,
     });
 
-    // Load the documents that are different.
-    for (const documentId of different) {
+    // Load the documents so they will start syncing.
+    for (const documentId of toReplicate) {
       this._repo.find(documentId);
     }
   }
 
   private _onHeadsChanged(documentId: DocumentId, heads: Heads) {
+    const collectionsChanged = new Set<CollectionId>();
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
       const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);
       if (state?.documents[documentId]) {
         const newState = structuredClone(state);
         newState.documents[documentId] = heads;
         this._collectionSynchronizer.setLocalCollectionState(collectionId, newState);
+        collectionsChanged.add(collectionId as CollectionId);
       }
+    }
+    for (const collectionId of collectionsChanged) {
+      this.collectionStateUpdated.emit({ collectionId });
     }
   }
 }
@@ -528,5 +553,28 @@ export type CollectionSyncState = {
 
 export type PeerSyncState = {
   peerId: PeerId;
+  /**
+   * Documents that are present locally but not on the remote peer.
+   */
+  missingOnRemote: number;
+
+  /**
+   * Documents that are present on the remote peer but not locally.
+   */
+  missingOnLocal: number;
+
+  /**
+   * Documents that are present on both peers but have different heads.
+   */
   differentDocuments: number;
+
+  /**
+   * Total number of documents locally.
+   */
+  localDocumentCount: number;
+
+  /**
+   * Total number of documents on the remote peer.
+   */
+  remoteDocumentCount: number;
 };

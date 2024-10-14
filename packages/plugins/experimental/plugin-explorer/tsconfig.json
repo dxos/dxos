@@ -1,0 +1,26 @@
+{
+  "extends": [
+    "../../../../tsconfig.json"
+  ],
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "data/*.js",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": []
+}

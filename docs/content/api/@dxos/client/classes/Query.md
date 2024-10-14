@@ -1,5 +1,5 @@
 # Class `Query`
-<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/query.d.ts:81]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/query.d.ts:72]()</sub>
 
 
 Predicate based query.
@@ -27,7 +27,7 @@ Type: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;any&gt;</code>
 
 
 ### [objects]()
-Type: <code>[EchoReactiveObject](/api/@dxos/client/types/EchoReactiveObject)&lt;T&gt;[]</code>
+Type: <code>T[]</code>
 
 
 
@@ -38,10 +38,23 @@ Type: <code>QueryResult&lt;T&gt;[]</code>
 
 
 ## Methods
+### [first()]()
+
+
+
+
+Returns: <code>Promise&lt;T&gt;</code>
+
+Arguments: none
+
+
+
+
 ### [run(\[timeout\])]()
 
 
-
+Execute the query once and return the results.
+Does not subscribe to updates.
 
 Returns: <code>Promise&lt;OneShotQueryResult&lt;T&gt;&gt;</code>
 

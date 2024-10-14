@@ -11,6 +11,7 @@ import { type Dispatch, type RefObject, type SetStateAction, useEffect, useRef, 
  *
  * @deprecated This function has been deprecated.
  */
+// TODO(burdon): Remove.
 export const useStateRef = <V>(
   initialValue?: V | (() => V),
 ): [V | undefined, Dispatch<SetStateAction<V | undefined>>, RefObject<V | undefined>] => {
@@ -29,6 +30,7 @@ export const useStateRef = <V>(
  * @param initialValue
  * @param deps
  */
+// TODO(burdon): Remove.
 export const useDynamicRef = <V>(initialValue: () => V, deps: any[]): RefObject<V> => {
   const [, setValue] = useState<V>(initialValue);
   const ref = useRef<V>(initialValue());

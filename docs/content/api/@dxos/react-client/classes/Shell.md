@@ -77,6 +77,18 @@ Arguments:
 `cb`: <code>function</code>
 
 
+### [onReset(cb)]()
+
+
+Listen for reset event.
+
+Returns: <code>UnsubscribeCallback</code>
+
+Arguments: 
+
+`cb`: <code>function</code>
+
+
 ### [open(\[layout\], \[options\])]()
 
 

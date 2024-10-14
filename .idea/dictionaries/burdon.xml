@@ -6,6 +6,7 @@
       <w>automerge</w>
       <w>blueyard</w>
       <w>bot's</w>
+      <w>bottombar</w>
       <w>braneframe</w>
       <w>brunicki</w>
       <w>burdon</w>
@@ -13,6 +14,7 @@
       <w>callbackfn</w>
       <w>codeblock</w>
       <w>collab</w>
+      <w>columnheader</w>
       <w>commentblock</w>
       <w>containerd</w>
       <w>crdt</w>
@@ -37,6 +39,7 @@
       <w>faasd</w>
       <w>frontmatter</w>
       <w>fullscreen</w>
+      <w>geojson</w>
       <w>hljs</w>
       <w>hypercard</w>
       <w>hypercore</w>
@@ -62,6 +65,7 @@
       <w>minsize</w>
       <w>mixtral</w>
       <w>mkcert</w>
+      <w>mkdist</w>
       <w>multipass</w>
       <w>multiuse</w>
       <w>nadella</w>
@@ -71,6 +75,7 @@
       <w>navtree</w>
       <w>nomic</w>
       <w>noreferrer</w>
+      <w>npmjs</w>
       <w>observablehq</w>
       <w>oclif</w>
       <w>ollama</w>
@@ -93,6 +98,7 @@
       <w>orgs</w>
       <w>outdir</w>
       <w>outliner</w>
+      <w>overscan</w>
       <w>packlets</w>
       <w>permissionless</w>
       <w>personalizations</w>
@@ -108,14 +114,17 @@
       <w>repurposable</w>
       <w>ridoculous</w>
       <w>riohacha</w>
+      <w>rowheader</w>
       <w>rpcs</w>
       <w>seedphrase</w>
       <w>seedrandom</w>
+      <w>sememes</w>
       <w>statable</w>
       <w>stockfish</w>
       <w>streamx</w>
       <w>stringified</w>
       <w>subtiles</w>
+      <w>sumproduct</w>
       <w>svg's</w>
       <w>tablecell</w>
       <w>tabster</w>
@@ -126,11 +135,13 @@
       <w>textblock</w>
       <w>textblocks</w>
       <w>textbox</w>
+      <w>textfield</w>
       <w>textract</w>
       <w>tldraw</w>
       <w>topbar</w>
       <w>treeitem</w>
       <w>truncatable</w>
+      <w>turbosnap</w>
       <w>typegen</w>
       <w>unbundle</w>
       <w>uncompiled</w>
@@ -138,6 +149,7 @@
       <w>unhave</w>
       <w>unproxy</w>
       <w>unwant</w>
+      <w>versor</w>
       <w>viewbox</w>
       <w>wittjosiah</w>
       <w>wnfs</w>

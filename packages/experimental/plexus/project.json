@@ -4,7 +4,7 @@
   "tags": [
     "scope:experimental"
   ],
-  "sourceRoot": "packages/experimental/plexus/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
   "targets": {
     "build": {},
@@ -15,16 +15,10 @@
         ]
       }
     },
-    "lint": {},
-    "test": {
-      "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ]
-      }
-    }
+    "lint": {}
   },
   "implicitDependencies": [
-    "test"
+    "esbuild",
+    "node-std"
   ]
 }

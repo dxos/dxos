@@ -4,7 +4,7 @@
 
 import { type Signer } from '@dxos/crypto';
 import { type PublicKey } from '@dxos/keys';
-import { type TypedMessage } from '@dxos/protocols';
+import { type TypedMessage } from '@dxos/protocols/proto';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
   AdmittedFeed,

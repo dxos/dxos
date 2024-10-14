@@ -353,8 +353,6 @@ export class InvitationsHandler {
         await ctx.dispose();
       } else {
         invariant(invitation.swarmKey);
-        await this._joinSwarm(ctx, invitation, InvitationOptions.Role.GUEST, createExtension);
-        guardedState.set(null, Invitation.State.CONNECTING);
 
         const timeoutInactive = () => {
           if (guardedState.mutex.isLocked()) {
@@ -363,8 +361,12 @@ export class InvitationsHandler {
             guardedState.set(null, Invitation.State.TIMEOUT);
           }
         };
+
         // Timeout if no connection is established.
         scheduleTask(ctx, timeoutInactive, timeout);
+
+        await this._joinSwarm(ctx, invitation, InvitationOptions.Role.GUEST, createExtension);
+        guardedState.set(null, Invitation.State.CONNECTING);
       }
     });
   }
@@ -385,7 +387,6 @@ export class InvitationsHandler {
     }
     const swarmConnection = await this._networkManager.joinSwarm({
       topic: invitation.swarmKey,
-      peerId: PublicKey.random(),
       protocolProvider: createTeleportProtocolFactory(async (teleport) => {
         teleport.addExtension('dxos.halo.invitations', extensionFactory());
       }, this._defaultTeleportParams),
@@ -462,7 +463,7 @@ export class InvitationsHandler {
         oldState: stateToString(invitation.state),
       });
     } else {
-      log.info('invitation state update', {
+      log('invitation state update', {
         actor: actor?.constructor.name,
         newState: stateToString(newState),
         oldState: stateToString(invitation.state),

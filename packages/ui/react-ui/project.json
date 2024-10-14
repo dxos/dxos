@@ -4,7 +4,7 @@
   "tags": [
     "scope:ui"
   ],
-  "sourceRoot": "packages/ui/react-ui/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
@@ -14,7 +14,8 @@
           "{projectRoot}/src/index.ts"
         ],
         "platforms": [
-          "browser"
+          "browser",
+          "node"
         ]
       }
     },
@@ -27,6 +28,7 @@
     }
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "node-std"
   ]
 }

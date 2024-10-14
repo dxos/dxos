@@ -4,15 +4,10 @@
   "tags": [
     "scope:experimental"
   ],
-  "sourceRoot": "packages/experimental/cf-labs/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
-    "lint": {},
-    "vitest": {}
-  },
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ]
+    "lint": {}
+  }
 }

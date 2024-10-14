@@ -2,13 +2,12 @@
 // Copyright 2019 DXOS.org
 //
 
-import { expect } from 'chai';
 import { type AbstractValueEncoding } from 'hypercore';
 import util from 'node:util';
+import { describe, expect, test } from 'vitest';
 
 import { type Codec } from '@dxos/codec-protobuf';
 import { createKeyPair } from '@dxos/crypto';
-import { describe, test } from '@dxos/test';
 
 import { createCodecEncoding } from './crypto';
 import { HypercoreFactory } from './hypercore-factory';

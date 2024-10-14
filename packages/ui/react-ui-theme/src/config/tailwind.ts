@@ -2,17 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import tailwindContainers from '@tailwindcss/container-queries';
 import tailwindcssForms from '@tailwindcss/forms';
 import merge from 'lodash.merge';
-import tailwindColors from 'tailwindcss/colors';
+import tailwindScrollbar from 'tailwind-scrollbar';
 import defaultConfig from 'tailwindcss/stubs/config.full.js';
 import { type Config, type ThemeConfig } from 'tailwindcss/types/config';
 import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
 
-import { physicalColors, semanticColors } from './colors';
-import { semanticColors as semanticColorsPlugin } from '../util/semanticColors';
-// TODO(burdon): from '../util'?
+import { tokensTailwindConfig } from './tokens';
 
 export type TailwindConfig = Config;
 export type TailwindThemeConfig = ThemeConfig;
@@ -39,22 +38,6 @@ export const tailwindConfig = ({
           'pointer-fine': { raw: '(pointer: fine)' },
           'hover-hover': { raw: '(hover: hover)' },
         },
-        colors: {
-          ...physicalColors,
-          slate: tailwindColors.slate,
-          gray: tailwindColors.gray,
-          zinc: tailwindColors.zinc,
-          stone: tailwindColors.stone,
-          success: physicalColors.emerald,
-          warning: physicalColors.amber,
-          error: physicalColors.rose,
-          info: physicalColors.cyan,
-          transparent: 'transparent',
-          current: 'currentColor',
-          white: '#ffffff',
-          black: '#000000',
-        },
-        semanticColors,
         fontSize: {
           // Base size 16px
           // Scale 1.125
@@ -159,6 +142,15 @@ export const tailwindConfig = ({
               width: '0%',
             },
           },
+
+          'progress-linear': {
+            '0%': {
+              transform: 'translateX(-100%)',
+            },
+            '85%, 100%': {
+              transform: `translateX(${(100 / 28) * 100}%)`,
+            },
+          },
         },
         animation: {
           // Popper chrome
@@ -179,12 +171,21 @@ export const tailwindConfig = ({
           shimmer: 'shimmer-loop 2s infinite',
           'halo-pulse': 'halo-pulse 2s ease-out infinite',
           'progress-indeterminate': 'progress-indeterminate 2s ease-out infinite',
+          'progress-linear': 'progress-linear 2s ease-out infinite',
         },
       },
+      tokensTailwindConfig,
       ...extensions,
     ),
   },
-  plugins: [semanticColorsPlugin, tailwindcssLogical, tailwindcssForms, tailwindcssRadix()],
+  plugins: [
+    tailwindcssLogical,
+    tailwindcssForms,
+    tailwindcssRadix(),
+    tailwindContainers,
+    // https://adoxography.github.io/tailwind-scrollbar/utilities
+    tailwindScrollbar,
+  ],
   ...(env === 'development' && { mode: 'jit' }),
   content,
   future: {

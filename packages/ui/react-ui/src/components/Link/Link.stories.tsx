@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { Link } from './Link';
 import { withTheme } from '../../testing';

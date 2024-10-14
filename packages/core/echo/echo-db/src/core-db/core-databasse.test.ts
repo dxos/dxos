@@ -3,24 +3,24 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { type AutomergeContext } from './automerge-context';
 import { type CoreDatabase } from './core-database';
 import { getObjectCore } from './types';
-import { type DocHandleProxy } from '../client';
+import { type DocHandleProxy, type RepoProxy } from '../client';
 import { type EchoDatabaseImpl, type EchoDatabase } from '../proxy-db';
-import { EchoTestBuilder } from '../testing';
+import { Filter } from '../query';
+import { EchoTestBuilder, Task } from '../testing';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
@@ -64,7 +64,7 @@ describe('CoreDatabase', () => {
     });
 
     test('effect nested reference access triggers document loading', async () => {
-      registerSignalRuntime();
+      registerSignalsRuntime();
 
       const document = createExpando({ text: createTextObject('Hello, world!') });
       const db = await createClientDbInSpaceWithObject(document);
@@ -117,7 +117,7 @@ describe('CoreDatabase', () => {
   describe('space root document change', () => {
     test('new inline objects are loaded', async () => {
       const db = await createClientDbInSpaceWithObject(createTextObject());
-      const newRootDocHandle = createTestRootDoc(db.coreDatabase.automerge);
+      const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       const newObject = addObjectToDoc(newRootDocHandle, { id: '123', title: 'title ' });
       await db.setSpaceRoot(newRootDocHandle.url);
       const retrievedObject = db.getObjectById(newObject.id);
@@ -127,10 +127,10 @@ describe('CoreDatabase', () => {
     test('objects are removed if not present in the new document', async () => {
       const oldObject = createExpando({ title: 'Hello' });
       const db = await createClientDbInSpaceWithObject(oldObject);
-      const newRootDocHandle = createTestRootDoc(db.coreDatabase.automerge);
+      const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       const beforeUpdate = await db.loadObjectById(oldObject.id);
       expect(beforeUpdate).not.to.be.undefined;
-      await db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
       const afterUpdate = db.getObjectById(oldObject.id);
       expect(afterUpdate).to.be.undefined;
     });
@@ -138,7 +138,7 @@ describe('CoreDatabase', () => {
     test('preserved objects are rebound to the new root', async () => {
       const originalObj = createExpando({ title: 'Hello' });
       const db = await createClientDbInSpaceWithObject(originalObj);
-      const newRootDocHandle = createTestRootDoc(db.coreDatabase.automerge);
+      const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = getDocHandles(db).spaceRootHandle.docSync().links;
       });
@@ -146,7 +146,7 @@ describe('CoreDatabase', () => {
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(
         getDocHandles(db).spaceRootHandle.docSync().links?.[beforeUpdate.id],
       );
-      await db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(newRootDocHandle.docSync().links?.[beforeUpdate.id]);
     });
 
@@ -157,7 +157,7 @@ describe('CoreDatabase', () => {
         partiallyLoadedDocument: createTextObject('text3'),
       });
       const db = await createClientDbInSpaceWithObject(stack);
-      const newRootDocHandle = createTestRootDoc(db.coreDatabase.automerge);
+      const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = getObjectDocHandle(stack).docSync().objects;
         newDoc.links = getDocHandles(db).spaceRootHandle.docSync().links;
@@ -181,7 +181,7 @@ describe('CoreDatabase', () => {
         text3: createTextObject('text3'),
       });
       const db = await createClientDbInSpaceWithObject(stack);
-      const newRootDocHandle = createTestRootDoc(db.coreDatabase.automerge);
+      const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
 
       for (const obj of [stack.text1, stack.text2, stack.text3]) {
         await db.loadObjectById(obj.id);
@@ -198,7 +198,7 @@ describe('CoreDatabase', () => {
         newDoc.objects[stack.text3.id] = getObjectDocHandle(stack.text3).docSync()?.objects?.[stack.text3.id];
       });
 
-      await db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
 
       expect((db.getObjectById(stack.text1.id) as any).content).to.eq(stack.text1.content);
       for (const obj of [stack.text1, stack.text2, stack.text3]) {
@@ -215,11 +215,11 @@ describe('CoreDatabase', () => {
       const beforeUpdate = addObjectToDoc(oldRootDocHandle, { id: '1', title: 'test' });
       expect((await (db.loadObjectById(beforeUpdate.id) as any)).title).to.eq(beforeUpdate.title);
 
-      const newRootDocHandle = createTestRootDoc(db.coreDatabase.automerge);
+      const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = getObjectDocHandle(obj).docSync().objects;
       });
-      await db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
 
       const afterUpdate = addObjectToDoc(oldRootDocHandle, { id: '2', title: 'test2' });
       expect(db.getObjectById(afterUpdate.id)).to.be.undefined;
@@ -229,7 +229,7 @@ describe('CoreDatabase', () => {
       const obj = createTextObject('Hello, world');
       const db = await createClientDbInSpaceWithObject(obj);
       const oldRootDocHandle = getDocHandles(db).spaceRootHandle;
-      const newRootDocHandle = createTestRootDoc(db.coreDatabase.automerge);
+      const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = oldRootDocHandle.docSync()?.links;
       });
@@ -240,7 +240,7 @@ describe('CoreDatabase', () => {
       const beforeUpdate = db.getObjectById(obj.id);
       expect(beforeUpdate).to.be.undefined;
 
-      await db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
 
       await db.loadObjectById(obj.id);
     });
@@ -260,7 +260,7 @@ describe('CoreDatabase', () => {
       const db = await createClientDbInSpaceWithObject(rootObject);
 
       const oldDoc = getDocHandles(db).spaceRootHandle.docSync();
-      const newRootDocHandle = createTestRootDoc(db.coreDatabase.automerge);
+      const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = oldDoc.objects ?? {};
         newDoc.links = oldDoc.links;
@@ -276,7 +276,7 @@ describe('CoreDatabase', () => {
       for (const obj of partiallyLoadedLinks) {
         db.getObjectById(obj.id);
       }
-      await db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
 
       for (const obj of linksToRemove) {
         expect(db.getObjectById(obj.id)).to.be.undefined;
@@ -364,6 +364,198 @@ describe('CoreDatabase', () => {
       });
     });
   });
+
+  describe('CRUD API', () => {
+    test('can query and mutate data', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { crud } = await testBuilder.createDatabase();
+
+      const { id } = await crud.insert({ kind: 'task', title: 'A' });
+      await crud.flush({ indexes: true });
+
+      {
+        const { objects } = await crud.query(Filter.all()).run();
+        expect(objects).to.deep.eq([
+          {
+            id,
+            __typename: null,
+            __meta: {
+              keys: [],
+            },
+            kind: 'task',
+            title: 'A',
+          },
+        ]);
+      }
+
+      await crud.update(
+        {
+          id,
+        },
+        {
+          title: 'B',
+        },
+      );
+
+      {
+        const { objects } = await crud.query(Filter.all()).run();
+        expect(objects).to.deep.eq([
+          {
+            id,
+            __typename: null,
+            __meta: {
+              keys: [],
+            },
+            kind: 'task',
+            title: 'B',
+          },
+        ]);
+      }
+    });
+
+    test('query with JSON filter', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { crud } = await testBuilder.createDatabase();
+
+      await crud.insert([
+        { __typename: Task.typename, title: 'Task 1', completed: true },
+        {
+          __typename: Task.typename,
+          title: 'Task 2',
+          completed: false,
+        },
+        { __typename: Task.typename, title: 'Task 3', completed: true },
+      ]);
+      await crud.flush({ indexes: true });
+
+      {
+        const { objects } = await crud.query({ __typename: Task.typename }).run();
+        expect(objects.length).to.eq(3);
+      }
+
+      {
+        const { objects } = await crud.query({ __typename: Task.typename, completed: true }).run();
+        expect(objects.length).to.eq(2);
+      }
+    });
+
+    test('query by id', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { crud } = await testBuilder.createDatabase();
+
+      const [{ id: id1 }] = await crud.insert([
+        { __typename: Task.typename, title: 'Task 1', completed: true },
+        {
+          __typename: Task.typename,
+          title: 'Task 2',
+          completed: false,
+        },
+      ]);
+      await crud.flush({ indexes: true });
+
+      {
+        const { objects } = await crud.query({ id: id1 }).run();
+        expect(objects.length).to.eq(1);
+        expect(objects[0].id).to.eq(id1);
+      }
+
+      {
+        const object = await crud.query({ id: id1 }).first();
+        expect(object.id).to.eq(id1);
+      }
+    });
+
+    test('insert typed objects & interop with proxies', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { db, crud } = await testBuilder.createDatabase();
+
+      const { id } = await crud.insert({ __typename: Task.typename, title: 'A' });
+      await crud.insert({ data: 'foo' }); // random object
+      await crud.flush({ indexes: true });
+
+      {
+        const { objects } = await crud.query({ __typename: Task.typename }).run();
+        expect(objects.length).to.eq(1);
+        expect(objects[0].id).to.eq(id);
+      }
+
+      {
+        const { objects } = await db.query(Filter.schema(Task)).run();
+        expect(objects.length).to.eq(1);
+        expect(objects[0].id).to.eq(id);
+      }
+    });
+
+    test('references in plain object notation', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { crud } = await testBuilder.createDatabase();
+
+      const { id: id1 } = await crud.insert({ title: 'Inner' });
+      const { id: id2 } = await crud.insert({ title: 'Outer', inner: { '/': id1 } });
+      await crud.flush({ indexes: true });
+
+      {
+        const object = await crud.query({ id: id2 }).first();
+        expect(object).to.deep.eq({
+          id: id2,
+          __typename: null,
+          __meta: {
+            keys: [],
+          },
+          title: 'Outer',
+          inner: { '/': `dxn:echo:@:${id1}` },
+        });
+
+        const inner = await crud.query({ id: object.inner }).first();
+        expect(inner).to.deep.eq({
+          id: id1,
+          __typename: null,
+          __meta: {
+            keys: [],
+          },
+          title: 'Inner',
+        });
+      }
+    });
+
+    test('query with join', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { crud } = await testBuilder.createDatabase();
+
+      const { id: id1 } = await crud.insert({ title: 'Inner' });
+      const { id: id2 } = await crud.insert({ title: 'Inner', nested: { '/': id1 } });
+      const { id: id3 } = await crud.insert({ title: 'Outer', inner: { '/': id2 } });
+      await crud.flush({ indexes: true });
+
+      {
+        const object = await crud.query({ id: id3 }, { include: { inner: { nested: true } } }).first();
+        expect(object).to.deep.eq({
+          id: id3,
+          __typename: null,
+          __meta: {
+            keys: [],
+          },
+          title: 'Outer',
+          inner: {
+            id: id2,
+            __typename: null,
+            __meta: {
+              keys: [],
+            },
+            title: 'Inner',
+            nested: {
+              id: id1,
+              __typename: null,
+              __meta: {
+                keys: [],
+              },
+              title: 'Inner',
+            },
+          },
+        });
+      }
+    });
+  });
 });
 
 const getDocHandles = (db: EchoDatabase): DocumentHandles => ({
@@ -416,6 +608,6 @@ const addObjectToDoc = <T extends { id: string }>(docHandle: DocHandleProxy<Spac
   return object;
 };
 
-const createTestRootDoc = (amContext: AutomergeContext): DocHandleProxy<SpaceDoc> => {
-  return amContext.repo.create<SpaceDoc>({ version: SpaceDocVersion.CURRENT });
+const createTestRootDoc = (repo: RepoProxy): DocHandleProxy<SpaceDoc> => {
+  return repo.create<SpaceDoc>({ version: SpaceDocVersion.CURRENT });
 };

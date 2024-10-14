@@ -28,6 +28,12 @@ Type: <code>[Dxns](/api/@dxos/config/interfaces/Dxns)</code>
 Options:
   - proto3_optional = true
 
+### [edge]()
+Type: <code>[Edge](/api/@dxos/config/interfaces/Edge)</code>
+
+Options:
+  - proto3_optional = true
+
 ### [faasd]()
 Type: <code>[Faasd](/api/@dxos/config/interfaces/Faasd)</code>
 
@@ -36,6 +42,11 @@ Options:
 
 ### [ice]()
 Type: <code>[Ice](/api/@dxos/config/interfaces/Ice)[]</code>
+
+
+
+### [iceProviders]()
+Type: <code>[IceProvider](/api/@dxos/config/interfaces/IceProvider)[]</code>
 
 
 

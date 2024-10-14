@@ -6,11 +6,12 @@ import { useEffect, useState } from 'react';
 
 import { type PublicKey } from '@dxos/keys';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { useClientServices } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 
 export const useCredentials = ({ spaceKey }: { spaceKey?: PublicKey }) => {
-  const services = useClientServices();
-  if (!services) {
+  const client = useClient();
+  const spacesService = client?.services?.services?.SpacesService;
+  if (!spacesService) {
     throw new Error('Client services not available.');
   }
 
@@ -22,7 +23,7 @@ export const useCredentials = ({ spaceKey }: { spaceKey?: PublicKey }) => {
     }
 
     const newCredentials: Credential[] = [];
-    const stream = services.SpacesService.queryCredentials({ spaceKey });
+    const stream = spacesService.queryCredentials({ spaceKey });
     stream.subscribe((credential) => {
       newCredentials.push(credential);
       setCredentials([...newCredentials]);

@@ -3,7 +3,7 @@
 //
 
 import { type Event } from '@dxos/async';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import type { FunctionRegistryService } from '@dxos/protocols/proto/dxos/agent/functions';
 import type {
   DevicesService,

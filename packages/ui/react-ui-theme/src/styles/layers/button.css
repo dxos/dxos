@@ -1,12 +1,13 @@
-/* TODO(thure): Focus is handled by .ch-focus-ring, but should ideally be applied as part of this component.*/
+/* TODO(thure): Focus is handled by .ch-focus-ring, but should ideally be applied as part of this component. */
 /* TODO(thure): This should be on the `components` layer, but utility classes like `pli-0` weren’t getting precedence like they should. */
+/* TODO(burdon): .ch-focus-ring z-[1] isn't working (e.g., focus ring eclipsed by current selection in settings tabs). */
 @layer base {
   /* Base styles */
   .ch-button {
-    @apply font-medium text-sm shrink-0 inline-flex select-none items-center justify-center overflow-hidden transition-colors duration-100 ease-linear surface-input min-bs-[2.5rem] pli-4;
+    @apply font-medium text-sm shrink-0 inline-flex select-none items-center justify-center overflow-hidden transition-colors duration-100 ease-linear bg-input min-bs-[2.5rem] pli-4;
     &[aria-pressed='true'],
     &[aria-checked='true'] {
-      @apply fg-accent surface-attention;
+      @apply text-accentText bg-attention;
     }
     /* Disabled styles */
     &[disabled]:not([disabled='false']) {
@@ -16,20 +17,20 @@
     &[data-variant='ghost'] {
       @apply bg-transparent;
       &:hover {
-        @apply surface-hover text-inherit;
+        @apply bg-hoverSurface text-inherit;
       }
       &[data-state='open'] {
-        @apply surface-input;
+        @apply bg-input;
       }
       &[aria-pressed='true'],
       &[aria-checked='true'] {
-        @apply surface-base fg-accent;
+        @apply bg-base text-accentText;
       }
     }
     &[data-variant='outline'] {
-      @apply border separator-base bg-transparent;
+      @apply border border-base bg-transparent;
       &:hover {
-        @apply surface-hover;
+        @apply bg-hoverSurface;
       }
     }
     /* Enabled styles */
@@ -37,23 +38,23 @@
     &[disabled='false'] {
       /* Hover */
       &:hover {
-        @apply surface-hover;
+        @apply bg-hoverSurface;
       }
       /* Variants */
       &[data-variant='primary'] {
-        @apply fg-inverse surface-accent;
+        @apply text-inverse bg-accentSurface;
         &:hover,
         &[aria-pressed='true'],
         &[aria-checked='true'] &[data-state='open'] {
-          @apply surface-accentHover;
+          @apply bg-accentSurfaceHover;
         }
       }
       &[data-variant='destructive'] {
-        @apply fg-inverse bg-error-550;
+        @apply text-inverse bg-rose-550;
         &:hover,
         &[aria-pressed='true'],
         &[aria-checked='true'] &[data-state='open'] {
-          @apply bg-error-500;
+          @apply bg-rose-500;
         }
       }
     }

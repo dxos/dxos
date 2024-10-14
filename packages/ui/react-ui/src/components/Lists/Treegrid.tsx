@@ -40,7 +40,7 @@ const TreegridRoot = forwardRef<HTMLDivElement, TreegridRootProps>(
   ({ asChild, classNames, children, style, gridTemplateColumns, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
-    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical' });
+    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', tabbable: false, circular: true });
     return (
       <Root
         role='treegrid'
@@ -90,7 +90,13 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
       onChange: propsOnOpenChange,
       defaultProp: defaultOpen,
     });
-    const focusableGroupAttrs = useFocusableGroup();
+    const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
+    const arrowGroupAttrs = useArrowNavigationGroup({
+      axis: 'horizontal',
+      tabbable: false,
+      circular: false,
+      memorizeCurrent: false,
+    });
     return (
       <TreegridRowProvider open={open} onOpenChange={onOpenChange} scope={__treegridRowScope}>
         <Root
@@ -104,7 +110,9 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
           id={id}
           ref={forwardedRef}
         >
-          {children}
+          <div role='none' className='contents' {...arrowGroupAttrs}>
+            {children}
+          </div>
         </Root>
       </TreegridRowProvider>
     );

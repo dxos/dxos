@@ -58,6 +58,10 @@ export class FunctionRegistry extends Resource {
     const { added } = diff(existing, functions, (a, b) => a.uri === b.uri);
     // TODO(burdon): Update existing templates.
     added.forEach((def) => space.db.add(create(FunctionDef, def)));
+
+    if (added.length > 0) {
+      await space.db.flush({ indexes: true, updates: true });
+    }
   }
 
   protected override async _open(): Promise<void> {

@@ -9,7 +9,7 @@ import { ClientProvider } from '@dxos/react-client';
 
 import { Main } from './Main';
 import { getConfig } from '../config';
-import { TodoListType, TodoType } from '../types';
+import { createTodoList, TodoListType, TodoType } from '../types';
 
 const createWorker = () =>
   new SharedWorker(new URL('../shared-worker', import.meta.url), {
@@ -24,13 +24,15 @@ export const Root = () => {
       config={getConfig}
       createWorker={createWorker}
       shell='./shell.html'
+      types={[TodoListType, TodoType]}
       onInitialized={async (client) => {
-        client.addTypes([TodoListType, TodoType]);
-
         const searchParams = new URLSearchParams(location.search);
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');
         if (!client.halo.identity.get() && !deviceInvitationCode) {
           await client.halo.createIdentity();
+          await client.spaces.isReady.wait();
+          await client.spaces.default.waitUntilReady();
+          createTodoList(client.spaces.default);
         }
 
         const spaceInvitationCode = searchParams.get('spaceInvitationCode');

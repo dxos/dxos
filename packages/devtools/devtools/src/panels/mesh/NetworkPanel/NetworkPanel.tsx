@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { SVG, SVGContextProvider, createSvgContext } from '@dxos/gem-core';
+import { SVG, SVGRoot, createSvgContext } from '@dxos/gem-core';
 import {
   Graph,
   type GraphData,
@@ -141,11 +141,11 @@ export const NetworkPanel = () => {
         </Toolbar.Root>
       }
     >
-      <SVGContextProvider context={context}>
+      <SVGRoot context={context}>
         <SVG>
           <Markers />
           <Graph
-            className={defaultStyles.links}
+            className={defaultStyles}
             model={model}
             drag
             arrows
@@ -173,7 +173,7 @@ export const NetworkPanel = () => {
             }}
           />
         </SVG>
-      </SVGContextProvider>
+      </SVGRoot>
     </PanelContainer>
   );
 };

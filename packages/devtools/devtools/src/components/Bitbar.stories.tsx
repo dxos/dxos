@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
+
 import React, { useEffect, useState } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';

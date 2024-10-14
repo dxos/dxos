@@ -4,7 +4,7 @@
   "tags": [
     "scope:echo"
   ],
-  "sourceRoot": "packages/core/echo/echo-schema/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
@@ -18,14 +18,10 @@
       }
     },
     "lint": {},
-    "test": {
-      "options": {
-        "forceExit": true
-      }
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",
-    "test"
+    "node-std"
   ]
 }

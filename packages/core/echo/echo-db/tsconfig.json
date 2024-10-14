@@ -1,84 +1,12 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/types",
     "types": [
-      "@dxos/test",
       "@dxos/typings"
     ]
   },
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../../../tools/executors/test"
-    },
-    {
-      "path": "../../../common/async"
-    },
-    {
-      "path": "../../../common/codec-protobuf"
-    },
-    {
-      "path": "../../../common/context"
-    },
-    {
-      "path": "../../../common/debug"
-    },
-    {
-      "path": "../../../common/invariant"
-    },
-    {
-      "path": "../../../common/keys"
-    },
-    {
-      "path": "../../../common/kv-store"
-    },
-    {
-      "path": "../../../common/log"
-    },
-    {
-      "path": "../../../common/node-std"
-    },
-    {
-      "path": "../../../common/random-access-storage"
-    },
-    {
-      "path": "../../../common/tracing"
-    },
-    {
-      "path": "../../../common/util"
-    },
-    {
-      "path": "../../mesh/teleport"
-    },
-    {
-      "path": "../../mesh/teleport-extension-automerge-replicator"
-    },
-    {
-      "path": "../../protocols"
-    },
-    {
-      "path": "../automerge"
-    },
-    {
-      "path": "../echo-pipeline"
-    },
-    {
-      "path": "../echo-protocol"
-    },
-    {
-      "path": "../echo-schema"
-    },
-    {
-      "path": "../echo-signals"
-    },
-    {
-      "path": "../echo-typegen"
-    },
-    {
-      "path": "../indexing"
-    }
-  ]
+  "references": []
 }

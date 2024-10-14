@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import React from 'react';
 
@@ -26,7 +26,7 @@ export const TaskList = {
 // const editor = await setupPeersInSpace({
 //   count: 2,
 //   schema: types,
-//   onCreateSpace: (space) => {
+//   onSpaceCreated: ({ space }) => {
 //     space.db.add(new Document());
 //   },
 // });

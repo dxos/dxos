@@ -14,7 +14,7 @@ import {
   WebsocketSignalManager,
   setIdentityTags,
 } from '@dxos/messaging';
-import { SimplePeerTransportProxyFactory } from '@dxos/network-manager';
+import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { type RpcPort } from '@dxos/rpc';
 import { type MaybePromise } from '@dxos/util';
 
@@ -46,7 +46,7 @@ export class WorkerRuntime {
   private readonly _acquireLock: () => Promise<void>;
   private readonly _releaseLock: () => void;
   private readonly _onStop?: () => Promise<void>;
-  private readonly _transportFactory = new SimplePeerTransportProxyFactory();
+  private readonly _transportFactory = new RtcTransportProxyFactory();
   private readonly _ready = new Trigger<Error | undefined>();
   private readonly _sessions = new Set<WorkerSession>();
   private readonly _clientServices!: ClientServicesHost;
@@ -96,9 +96,11 @@ export class WorkerRuntime {
       const signals = this._config.get('runtime.services.signaling');
       this._clientServices.initialize({
         config: this._config,
-        signalManager: signals
-          ? new WebsocketSignalManager(signals, () => (this._signalTelemetryEnabled ? this._signalMetadataTags : {}))
-          : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
+        signalManager: this._config.get('runtime.client.edgeFeatures')?.signaling
+          ? undefined
+          : signals
+            ? new WebsocketSignalManager(signals, () => (this._signalTelemetryEnabled ? this._signalMetadataTags : {}))
+            : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
         transportFactory: this._transportFactory,
       });
 

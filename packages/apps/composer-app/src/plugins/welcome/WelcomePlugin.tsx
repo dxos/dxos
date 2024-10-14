@@ -4,10 +4,6 @@
 
 import React from 'react';
 
-import { parseClientPlugin } from '@braneframe/plugin-client';
-import { CLIENT_PLUGIN, ClientAction } from '@braneframe/plugin-client/meta';
-import { HELP_PLUGIN, HelpAction } from '@braneframe/plugin-help/meta';
-import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   type SurfaceProvides,
   type TranslationsProvides,
@@ -20,6 +16,11 @@ import {
 import { type Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { parseClientPlugin } from '@dxos/plugin-client';
+import { CLIENT_PLUGIN, ClientAction } from '@dxos/plugin-client/meta';
+import { HELP_PLUGIN, HelpAction } from '@dxos/plugin-help/meta';
+import { ObservabilityAction } from '@dxos/plugin-observability/meta';
+import { SPACE_PLUGIN, SpaceAction } from '@dxos/plugin-space';
 
 import { BetaDialog, WelcomeScreen } from './components';
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
@@ -87,23 +88,48 @@ export const WelcomePlugin = ({
       }
 
       // TODO(burdon): Factor out credentials helpers to hub-client.
-      const skipAuth = client.config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'main' || !hubUrl;
+      const skipAuth = ['main', 'labs'].includes(client.config.values.runtime?.app?.env?.DX_ENVIRONMENT) || !hubUrl;
       const searchParams = new URLSearchParams(window.location.search);
       const token = searchParams.get('token') ?? undefined;
+      const deviceInvitationCode = searchParams.get('deviceInvitationCode') ?? undefined;
 
       // If identity already exists, continue with existing identity.
       // If not, only create identity if token is present.
       let identity = client.halo.identity.get();
-      if (!identity && (token || skipAuth)) {
+      if (!identity && !deviceInvitationCode && (token || skipAuth)) {
         const result = await dispatch({
           plugin: CLIENT_PLUGIN,
           action: ClientAction.CREATE_IDENTITY,
         });
         firstRun?.wake();
         identity = result?.data;
+      } else if (deviceInvitationCode) {
+        await dispatch({
+          plugin: CLIENT_PLUGIN,
+          action: ClientAction.JOIN_IDENTITY,
+          data: { invitationCode: deviceInvitationCode },
+        });
+
+        removeQueryParamByValue(deviceInvitationCode);
+        return;
       }
 
       if (skipAuth) {
+        const spaceInvitationCode = searchParams.get('spaceInvitationCode') ?? undefined;
+        if (spaceInvitationCode) {
+          await dispatch([
+            {
+              plugin: SPACE_PLUGIN,
+              action: SpaceAction.JOIN,
+              data: { invitationCode: spaceInvitationCode },
+            },
+            {
+              action: NavigationAction.OPEN,
+            },
+          ]);
+
+          removeQueryParamByValue(spaceInvitationCode);
+        }
         return;
       }
 
@@ -114,7 +140,17 @@ export const WelcomePlugin = ({
           await client.halo.writeCredentials([credential]);
           log('beta credential saved', { credential });
           token && removeQueryParamByValue(token);
-          await dispatch({ plugin: HELP_PLUGIN, action: HelpAction.START });
+          await dispatch([
+            {
+              action: LayoutAction.SET_LAYOUT_MODE,
+              data: { layoutMode: 'solo' },
+            },
+            {
+              action: NavigationAction.CLOSE,
+              data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
+            },
+            { plugin: HELP_PLUGIN, action: HelpAction.START },
+          ]);
           return;
         } catch {
           // No-op. This is expected for referred users who have an identity but no token yet.
@@ -122,6 +158,10 @@ export const WelcomePlugin = ({
       }
 
       await dispatch([
+        {
+          action: LayoutAction.SET_LAYOUT_MODE,
+          data: { layoutMode: 'fullscreen' },
+        },
         {
           action: NavigationAction.OPEN,
           // NOTE: Active parts cannot contain '/' characters currently.
@@ -138,10 +178,16 @@ export const WelcomePlugin = ({
         const credential = credentials.find(matchServiceCredential(['composer:beta']));
         if (credential) {
           log('beta credential found', { credential });
-          await dispatch({
-            action: NavigationAction.CLOSE,
-            data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
-          });
+          await dispatch([
+            {
+              action: LayoutAction.SET_LAYOUT_MODE,
+              data: { layoutMode: 'solo' },
+            },
+            {
+              action: NavigationAction.CLOSE,
+              data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
+            },
+          ]);
           subscription.unsubscribe();
         }
       });

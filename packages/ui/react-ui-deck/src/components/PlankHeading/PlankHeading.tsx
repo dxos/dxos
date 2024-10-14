@@ -8,16 +8,15 @@ import {
   CaretLineRight,
   CaretRight,
   Check,
-  type IconProps,
   Minus,
   ArrowsOut,
   ArrowsIn,
 } from '@phosphor-icons/react';
 import React, {
   type ComponentPropsWithRef,
-  type FC,
-  forwardRef,
+  Fragment,
   type PropsWithChildren,
+  forwardRef,
   useRef,
   useState,
 } from 'react';
@@ -29,12 +28,13 @@ import {
   type ButtonGroupProps,
   type ButtonProps,
   DropdownMenu,
+  Icon,
   type ThemedClassName,
   toLocalizedString,
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
-import { useHasAttention } from '@dxos/react-ui-attention';
+import { useAttention } from '@dxos/react-ui-attention';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
@@ -44,12 +44,9 @@ import { type PlankHeadingAction } from '../../types';
 
 type AttendableId = { attendableId?: string };
 
-type PlankHeadingButtonProps = Omit<ButtonProps, 'variant'> & AttendableId;
+type Related = { related?: boolean };
 
-const plankHeadingIconProps: IconProps = {
-  className: getSize(5),
-  weight: 'duotone',
-};
+type PlankHeadingButtonProps = Omit<ButtonProps, 'variant'> & AttendableId & Related;
 
 type PlankRootProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
 
@@ -90,12 +87,13 @@ const _MenuSignifierVertical = () => (
 );
 
 const PlankHeadingButton = forwardRef<HTMLButtonElement, PlankHeadingButtonProps>(
-  ({ attendableId, classNames, children, ...props }, forwardedRef) => {
-    const hasAttention = useHasAttention(attendableId);
+  ({ attendableId, classNames, related, children, ...props }, forwardedRef) => {
+    const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
+    const variant = (related && isRelated) || hasAttention || isAncestor ? 'primary' : 'ghost';
     return (
       <Button
         {...props}
-        variant={hasAttention ? 'primary' : 'ghost'}
+        variant={variant}
         classNames={['m-1 shrink-0 pli-0 min-bs-0 is-[--rail-action] bs-[--rail-action] relative', classNames]}
         ref={forwardedRef}
       >
@@ -106,16 +104,18 @@ const PlankHeadingButton = forwardRef<HTMLButtonElement, PlankHeadingButtonProps
   },
 );
 
-type PlankHeadingActionsMenuProps = PropsWithChildren<{
-  attendableId?: string;
-  triggerLabel: string;
-  actions?: PlankHeadingAction[];
-  Icon: FC<IconProps>;
-  onAction?: (action: PlankHeadingAction) => void;
-}>;
+type PlankHeadingActionsMenuProps = PropsWithChildren<
+  {
+    attendableId?: string;
+    triggerLabel: string;
+    actions?: PlankHeadingAction[][];
+    icon: string;
+    onAction?: (action: PlankHeadingAction) => void;
+  } & Related
+>;
 
 const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingActionsMenuProps>(
-  ({ actions, onAction, triggerLabel, attendableId, Icon, children }, forwardedRef) => {
+  ({ actions: actionGroups, onAction, triggerLabel, attendableId, icon, related, children }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const suppressNextTooltip = useRef(false);
 
@@ -147,53 +147,61 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
         >
           <Tooltip.Trigger asChild>
             <DropdownMenu.Trigger asChild ref={forwardedRef}>
-              <PlankHeadingButton attendableId={attendableId}>
+              <PlankHeadingButton attendableId={attendableId} related={related}>
                 <span className='sr-only'>{triggerLabel}</span>
-                <Icon {...plankHeadingIconProps} />
+                <Icon icon={icon} size={5} />
               </PlankHeadingButton>
             </DropdownMenu.Trigger>
           </Tooltip.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content classNames='z-[31]'>
               <DropdownMenu.Viewport>
-                {actions?.map((action) => {
-                  const shortcut =
-                    typeof action.properties.keyBinding === 'string'
-                      ? action.properties.keyBinding
-                      : action.properties.keyBinding?.[getHostPlatform()];
-
-                  const menuItemType = action.properties.menuItemType;
-                  const Root = menuItemType === 'toggle' ? DropdownMenu.CheckboxItem : DropdownMenu.Item;
-
+                {actionGroups?.map((actions, index) => {
+                  const separator = index > 0 ? <DropdownMenu.Separator /> : null;
                   return (
-                    <Root
-                      key={action.id}
-                      onClick={(event) => {
-                        if (action.properties.disabled) {
-                          return;
-                        }
-                        event.stopPropagation();
-                        // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                        suppressNextTooltip.current = true;
-                        setOptionsMenuOpen(false);
-                        onAction?.(action);
-                      }}
-                      classNames='gap-2'
-                      disabled={action.properties.disabled}
-                      checked={menuItemType === 'toggle' ? action.properties.isChecked : undefined}
-                      {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-                    >
-                      {action.properties.icon && <action.properties.icon className={mx(getSize(4), 'shrink-0')} />}
-                      <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
-                      {menuItemType === 'toggle' && (
-                        <DropdownMenu.ItemIndicator asChild>
-                          <Check className={getSize(4)} />
-                        </DropdownMenu.ItemIndicator>
-                      )}
-                      {shortcut && (
-                        <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
-                      )}
-                    </Root>
+                    <Fragment key={index}>
+                      {separator}
+                      {actions.map((action) => {
+                        const shortcut =
+                          typeof action.properties.keyBinding === 'string'
+                            ? action.properties.keyBinding
+                            : action.properties.keyBinding?.[getHostPlatform()];
+
+                        const menuItemType = action.properties.menuItemType;
+                        const Root = menuItemType === 'toggle' ? DropdownMenu.CheckboxItem : DropdownMenu.Item;
+
+                        return (
+                          <Root
+                            key={action.id}
+                            onClick={(event) => {
+                              if (action.properties.disabled) {
+                                return;
+                              }
+                              event.stopPropagation();
+                              // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                              suppressNextTooltip.current = true;
+                              setOptionsMenuOpen(false);
+                              onAction?.(action);
+                            }}
+                            classNames='gap-2'
+                            disabled={action.properties.disabled}
+                            checked={menuItemType === 'toggle' ? action.properties.isChecked : undefined}
+                            {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+                          >
+                            <Icon icon={action.properties.icon ?? 'ph--placeholder--regular'} size={4} />
+                            <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
+                            {menuItemType === 'toggle' && (
+                              <DropdownMenu.ItemIndicator asChild>
+                                <Check className={getSize(4)} />
+                              </DropdownMenu.ItemIndicator>
+                            )}
+                            {shortcut && (
+                              <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
+                            )}
+                          </Root>
+                        );
+                      })}
+                    </Fragment>
                   );
                 })}
                 {children}
@@ -213,17 +221,17 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
   },
 );
 
-type PlankHeadingLabelProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId;
+type PlankHeadingLabelProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId & Related;
 
 const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>(
-  ({ attendableId, classNames, ...props }, forwardedRef) => {
-    const hasAttention = useHasAttention(attendableId);
+  ({ attendableId, related, classNames, ...props }, forwardedRef) => {
+    const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
     return (
       <h1
         {...props}
-        data-attention={hasAttention.toString()}
+        data-attention={((related && isRelated) || hasAttention || isAncestor).toString()}
         className={mx(
-          'pli-1 min-is-0 is-0 grow truncate font-medium fg-base data-[attention=true]:fg-accent',
+          'pli-1 min-is-0 is-0 grow truncate font-medium text-baseText data-[attention=true]:text-accentText',
           classNames,
         )}
         ref={forwardedRef}
@@ -232,20 +240,21 @@ const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>
   },
 );
 
-// NOTE(Zan): This is duplicated in `common/navigation.ts` in `app-framework`. Keep in sync.
-export type LayoutPart = 'sidebar' | 'main' | 'complementary';
-type LayoutCoordinate = { part: LayoutPart; index: number; partSize: number; solo?: boolean };
-
 type PlankControlEvent = 'solo' | 'close' | `${'pin' | 'increment'}-${'start' | 'end'}`;
 type PlankControlHandler = (event: PlankControlEvent) => void;
 
+type PlankHeadingCapabilites = {
+  incrementStart?: boolean;
+  incrementEnd?: boolean;
+  solo?: boolean;
+};
+
 type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
-  layoutCoordinate: LayoutCoordinate;
   onClick?: PlankControlHandler;
   variant?: 'hide-disabled' | 'default';
   close?: boolean | 'minify-start' | 'minify-end';
-  canIncrement?: boolean;
-  canSolo?: boolean;
+  capabilities: PlankHeadingCapabilites;
+  isSolo?: boolean;
   pin?: 'start' | 'end' | 'both';
 };
 
@@ -269,17 +278,7 @@ const PlankHeadingControl = ({ children, label, ...props }: ButtonProps & { labe
 
 const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProps>(
   (
-    {
-      layoutCoordinate,
-      onClick,
-      variant = 'default',
-      canIncrement: increment = true,
-      canSolo,
-      pin,
-      close = false,
-      children,
-      ...props
-    },
+    { onClick, variant = 'default', capabilities: can, isSolo, pin, close = false, children, ...props },
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
@@ -289,7 +288,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
       <ButtonGroup {...props} ref={forwardedRef}>
         {children}
 
-        {pin && !layoutCoordinate.solo && ['both', 'start'].includes(pin) && (
+        {pin && !isSolo && ['both', 'start'].includes(pin) && (
           <PlankHeadingControl
             label={t('pin start label')}
             variant='ghost'
@@ -300,21 +299,21 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
           </PlankHeadingControl>
         )}
 
-        {canSolo && (
+        {can.solo && (
           <PlankHeadingControl
             label={t('solo plank label')}
             classNames={buttonClassNames}
             onClick={() => onClick?.('solo')}
           >
-            {layoutCoordinate.solo ? <ArrowsIn className={getSize(4)} /> : <ArrowsOut className={getSize(4)} />}
+            {isSolo ? <ArrowsIn className={getSize(4)} /> : <ArrowsOut className={getSize(4)} />}
           </PlankHeadingControl>
         )}
 
-        {!layoutCoordinate.solo && canSolo && (
+        {!isSolo && can.solo && (
           <>
             <PlankHeadingControl
               label={t('increment start label')}
-              disabled={layoutCoordinate.index < 1}
+              disabled={!can.incrementStart}
               classNames={buttonClassNames}
               onClick={() => onClick?.('increment-start')}
             >
@@ -322,7 +321,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             </PlankHeadingControl>
             <PlankHeadingControl
               label={t('increment end label')}
-              disabled={layoutCoordinate.index > layoutCoordinate.partSize - 2}
+              disabled={!can.incrementEnd}
               classNames={buttonClassNames}
               onClick={() => onClick?.('increment-end')}
             >
@@ -331,7 +330,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
           </>
         )}
 
-        {pin && !layoutCoordinate.solo && ['both', 'end'].includes(pin) && (
+        {pin && !isSolo && ['both', 'end'].includes(pin) && (
           <PlankHeadingControl
             label={t('pin end label')}
             classNames={buttonClassNames}
@@ -341,7 +340,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
           </PlankHeadingControl>
         )}
 
-        {close && !layoutCoordinate.solo && (
+        {close && !isSolo && (
           <PlankHeadingControl
             label={t(`${typeof close === 'string' ? 'minify' : 'close'} label`)}
             classNames={buttonClassNames}
@@ -369,7 +368,6 @@ export const PlankHeading = {
   ActionsMenu: PlankHeadingActionsMenu,
   Controls: PlankHeadingControls,
 };
-export { plankHeadingIconProps };
 
 export type {
   PlankHeadingAction,
@@ -378,5 +376,4 @@ export type {
   PlankHeadingControlsProps,
   PlankControlEvent as PlankControlEventType,
   PlankControlHandler,
-  LayoutCoordinate,
 };

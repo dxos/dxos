@@ -1,6 +1,6 @@
 {
   "name": "@dxos/lock-file",
-  "version": "0.6.5",
+  "version": "0.6.11",
   "description": "Lock file .",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,7 +9,8 @@
   "exports": {
     ".": {
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     }
@@ -24,15 +25,12 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "fs-ext": "^2.0.0"
   },
   "devDependencies": {
     "@types/fs-ext": "^2.0.0",
-    "@types/node": "^18.11.9",
-    "ts-node": "10.9.1",
-    "typescript": "^5.4.5"
+    "@types/node": "^22.7.4"
   },
   "publishConfig": {
     "access": "public"

@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Stack, type StackProps } from './Stack';
 import { DemoStack } from './testing';
@@ -32,7 +32,7 @@ export default {
       </Mosaic.Root>
     );
   },
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },

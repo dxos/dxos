@@ -1,6 +1,6 @@
 {
   "name": "@dxos/ridoculous",
-  "version": "0.6.5",
+  "version": "0.6.11",
   "private": true,
   "description": "Markdown processing CLI and library.",
   "homepage": "https://dxos.org",
@@ -23,7 +23,7 @@
     "@microsoft/tsdoc": "~0.14.1",
     "array-iterate": "~2.0.1",
     "chalk": "^4.1.0",
-    "glob": "~7.1.6",
+    "glob": "^7.2.3",
     "js-yaml": "^4.1.0",
     "mdast-util-to-markdown": "~1.3.0",
     "protocol-buffers-schema": "~3.6.0",
@@ -46,11 +46,9 @@
     "@types/diff": "^5.0.2",
     "@types/glob": "~7.1.3",
     "@types/js-yaml": "^4.0.5",
-    "@types/node": "^18.11.9",
+    "@types/node": "^22.7.4",
     "@types/protocol-buffers-schema": "^3.4.1",
     "@types/yargs": "~16.0.1",
-    "diff": "~5.1.0",
-    "ts-node": "10.9.1",
-    "typescript": "^5.4.5"
+    "diff": "~5.1.0"
   }
 }

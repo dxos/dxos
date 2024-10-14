@@ -5,7 +5,7 @@
     "composite": true,
     "emitDeclarationOnly": false,
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "outDir": "dist",
     "target": "ESNext"
   },
@@ -18,12 +18,5 @@
     "src/**/*",
     "testing/**/*"
   ],
-  "references": [
-    {
-      "path": "../../packages/common/esbuild-plugins"
-    },
-    {
-      "path": "../../packages/common/protobuf-compiler"
-    }
-  ]
+  "references": []
 }

@@ -7,11 +7,12 @@ import { useEffect, useState } from 'react';
 
 import { SpaceState } from '@dxos/client/echo';
 import { type NetworkStatus } from '@dxos/client/mesh';
-import { type EchoStatsDiagnostic, type EchoDataStats, type FilterParams, type QueryMetrics } from '@dxos/echo-db';
+import { type FilterParams } from '@dxos/echo-db';
+import { type EchoStatsDiagnostic, type EchoDataStats, type QueryMetrics } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
-import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
+import { useAsyncEffect } from '@dxos/react-hooks';
 import { type Diagnostics, TRACE_PROCESSOR, type DiagnosticsRequest } from '@dxos/tracing';
 import { DiagnosticsChannel } from '@dxos/tracing';
 
@@ -99,9 +100,8 @@ export const useStats = (): [Stats, () => void] => {
       const begin = performance.now();
 
       // TODO(burdon): Reconcile with diagnostics.
-      const objects = Object.values(
-        TRACE_PROCESSOR.findResourcesByClassName('AutomergeContext')[0]?.instance.deref().repo.handles,
-      )
+      const objects = TRACE_PROCESSOR.findResourcesByClassName('RepoProxy')
+        .flatMap((r) => Object.values(r.instance.deref()?.handles ?? {}))
         .map((handle: any) => handle.docSync())
         .filter(Boolean);
 
@@ -159,7 +159,7 @@ export const useStats = (): [Stats, () => void] => {
           .map((space) => space.db.coreDatabase.getSyncState()),
       );
       const documentsToReconcile = syncStates
-        .flatMap((s) => s.peers?.map((p) => p.documentsToReconcile) ?? [])
+        .flatMap((s) => s.peers?.map((p) => p.differentDocuments + p.missingOnLocal + p.missingOnRemote) ?? [])
         .reduce((acc, x) => acc + x, 0);
 
       log('collected stats', { elapsed: performance.now() - begin });
@@ -220,8 +220,10 @@ const useDiagnostic = <T>(request: DiagnosticsRequest, refreshInterval: number):
     const channel = new DiagnosticsChannel();
 
     const fetch = async () => {
-      const { data } = await channel.fetch(request);
-      setData(data);
+      try {
+        const { data } = await channel.fetch(request);
+        setData(data);
+      } catch (error) {}
     };
 
     void fetch();

@@ -6,6 +6,7 @@ import { asyncReturn, Event, scheduleTask, scheduleTaskInterval } from '@dxos/as
 import { next as am } from '@dxos/automerge/automerge';
 import type { DocumentId, PeerId } from '@dxos/automerge/automerge-repo';
 import { Resource, type Context } from '@dxos/context';
+import { log } from '@dxos/log';
 import { defaultMap } from '@dxos/util';
 
 const MIN_QUERY_INTERVAL = 5_000;
@@ -64,6 +65,7 @@ export class CollectionSynchronizer extends Resource {
   }
 
   setLocalCollectionState(collectionId: string, state: CollectionState) {
+    log('setLocalCollectionState', { collectionId, state });
     this._getPerCollectionState(collectionId).localState = state;
 
     queueMicrotask(async () => {
@@ -143,6 +145,8 @@ export class CollectionSynchronizer extends Resource {
    * Callback when a peer sends the state of a collection.
    */
   onRemoteStateReceived(collectionId: string, peerId: PeerId, state: CollectionState) {
+    log('onRemoteStateReceived', { collectionId, peerId, state });
+    validateCollectionState(state);
     const perCollectionState = this._getPerCollectionState(collectionId);
     perCollectionState.remoteStates.set(peerId, state);
     this.remoteStateUpdated.emit({ peerId, collectionId });
@@ -183,22 +187,45 @@ export type CollectionState = {
 };
 
 export type CollectionStateDiff = {
+  missingOnRemote: DocumentId[];
+  missingOnLocal: DocumentId[];
   different: DocumentId[];
 };
 
 export const diffCollectionState = (local: CollectionState, remote: CollectionState): CollectionStateDiff => {
   const allDocuments = new Set<DocumentId>([...Object.keys(local.documents), ...Object.keys(remote.documents)] as any);
 
+  const missingOnRemote: DocumentId[] = [];
+  const missingOnLocal: DocumentId[] = [];
   const different: DocumentId[] = [];
   for (const documentId of allDocuments) {
-    if (
-      !local.documents[documentId] ||
-      !remote.documents[documentId] ||
-      !am.equals(local.documents[documentId], remote.documents[documentId])
-    ) {
+    if (!local.documents[documentId]) {
+      missingOnLocal.push(documentId as DocumentId);
+    } else if (!remote.documents[documentId]) {
+      missingOnRemote.push(documentId as DocumentId);
+    } else if (!am.equals(local.documents[documentId], remote.documents[documentId])) {
       different.push(documentId as DocumentId);
     }
   }
 
-  return { different };
+  return {
+    missingOnRemote,
+    missingOnLocal,
+    different,
+  };
+};
+
+const validateCollectionState = (state: CollectionState) => {
+  Object.entries(state.documents).forEach(([documentId, heads]) => {
+    if (!isValidDocumentId(documentId as DocumentId)) {
+      throw new Error(`Invalid documentId: ${documentId}`);
+    }
+    if (Array.isArray(heads) && heads.some((head) => typeof head !== 'string')) {
+      throw new Error(`Invalid heads: ${heads}`);
+    }
+  });
+};
+
+const isValidDocumentId = (documentId: DocumentId) => {
+  return typeof documentId === 'string' && !documentId.includes(':');
 };

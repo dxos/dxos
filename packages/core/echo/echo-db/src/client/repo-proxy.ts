@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { UpdateScheduler } from '@dxos/async';
+import { Event, UpdateScheduler } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import {
   type DocumentId,
@@ -11,16 +11,17 @@ import {
   interpretAsDocumentId,
   type AnyDocumentId,
 } from '@dxos/automerge/automerge-repo';
-import { type Stream } from '@dxos/codec-protobuf';
-import { Resource } from '@dxos/context';
+import { type Stream } from '@dxos/codec-protobuf/stream';
+import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   type DataService,
   type BatchedDocumentUpdates,
   type DocumentUpdate,
 } from '@dxos/protocols/proto/dxos/echo/service';
+import { trace } from '@dxos/tracing';
 
 import { DocHandleProxy } from './doc-handle-proxy';
 
@@ -31,6 +32,7 @@ const RPC_TIMEOUT = 30_000;
  * A proxy (thin client) to the Automerge Repo.
  * Inspired by Automerge's `Repo`.
  */
+@trace.resource()
 export class RepoProxy extends Resource {
   // TODO(mykola): Change to Map<string, DocHandleProxy<unknown>>.
   private _handles: Record<string, DocHandleProxy<any>> = {};
@@ -62,7 +64,12 @@ export class RepoProxy extends Resource {
 
   private _sendUpdatesJob?: UpdateScheduler = undefined;
 
-  constructor(private readonly _dataService: DataService) {
+  readonly saveStateChanged = new Event<SaveStateChangedEvent>();
+
+  constructor(
+    private readonly _dataService: DataService,
+    private readonly _spaceId: SpaceId,
+  ) {
     super();
   }
 
@@ -101,7 +108,11 @@ export class RepoProxy extends Resource {
   }
 
   protected override async _open() {
-    this._subscription = this._dataService.subscribe({ subscriptionId: this._subscriptionId });
+    // TODO(dmaretskyi): Set proper space id.
+    this._subscription = this._dataService.subscribe({
+      subscriptionId: this._subscriptionId,
+      spaceId: this._spaceId,
+    });
     this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(), {
       maxFrequency: MAX_UPDATE_FREQ,
     });
@@ -155,6 +166,8 @@ export class RepoProxy extends Resource {
     isNew: boolean;
     initialValue?: T;
   }): DocHandleProxy<T> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+
     const handle = new DocHandleProxy<T>(
       documentId,
       { isNew, initialValue },
@@ -173,6 +186,7 @@ export class RepoProxy extends Resource {
     const onChange = () => {
       this._pendingUpdateIds.add(documentId);
       this._sendUpdatesJob!.trigger();
+      this._emitSaveStateEvent();
     };
     handle.on('change', onChange);
 
@@ -239,6 +253,7 @@ export class RepoProxy extends Resource {
           this._handles[documentId]._confirmSync();
         }
       }
+      this._emitSaveStateEvent();
     } catch (err) {
       // Restore the state of pending updates if the RPC call failed.
       createIds.forEach((id) => this._pendingCreateIds.add(id));
@@ -249,4 +264,13 @@ export class RepoProxy extends Resource {
       this._ctx.raise(err as Error);
     }
   }
+
+  private _emitSaveStateEvent() {
+    const unsavedDocuments = [...this._pendingCreateIds, ...this._pendingUpdateIds];
+    this.saveStateChanged.emit({ unsavedDocuments });
+  }
 }
+
+export type SaveStateChangedEvent = {
+  unsavedDocuments: DocumentId[];
+};

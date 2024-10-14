@@ -11,11 +11,12 @@ import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentProps,
-  type ComponentPropsWithRef,
+  type ComponentPropsWithoutRef,
   type Dispatch,
   type ElementRef,
   forwardRef,
   type ForwardRefExoticComponent,
+  type RefAttributes,
   type SetStateAction,
 } from 'react';
 
@@ -34,9 +35,8 @@ interface ListItemData {
   open?: boolean;
 }
 
-type ListItemProps = Omit<ListItemData, 'id'> & { collapsible?: boolean } & ComponentPropsWithRef<
-    typeof Primitive.li
-  > & {
+type ListItemProps = Omit<ListItemData, 'id'> & { collapsible?: boolean } & RefAttributes<HTMLLIElement> &
+  ComponentPropsWithoutRef<'li'> & {
     defaultOpen?: boolean;
     onOpenChange?: (nextOpen: boolean) => void;
   } & {
@@ -44,7 +44,7 @@ type ListItemProps = Omit<ListItemData, 'id'> & { collapsible?: boolean } & Comp
     defaultSelected?: CheckboxProps['defaultChecked'];
   };
 
-type ListItemElement = ElementRef<typeof Primitive.li>;
+type ListItemElement = ElementRef<'li'>;
 
 const [createListItemContext, createListItemScope] = createContextScope(LIST_ITEM_NAME, []);
 
@@ -57,9 +57,10 @@ type ListItemContextValue = {
 
 const [ListItemProvider, useListItemContext] = createListItemContext<ListItemContextValue>(LIST_ITEM_NAME);
 
-type ListItemHeadingProps = ListItemScopedProps<Omit<ComponentPropsWithRef<typeof Primitive.p>, 'id'>> & {
-  asChild?: boolean;
-};
+type ListItemHeadingProps = ListItemScopedProps<Omit<ComponentPropsWithoutRef<'p'>, 'id'>> &
+  RefAttributes<HTMLParagraphElement> & {
+    asChild?: boolean;
+  };
 
 const ListItemHeading = forwardRef<HTMLDivElement, ListItemHeadingProps>(
   ({ children, asChild, __listItemScope, ...props }, forwardedRef) => {

@@ -39,33 +39,28 @@ module.exports = {
   overrides: [
     {
       files: '**/*.{ts,mts,tsx,js,jsx}',
-      extends: [
-        'plugin:@dxos/recommended'
-      ]
+      extends: ['plugin:@dxos/recommended'],
+      rules: {
+        camelcase: 'off',
+      },
     },
     {
       files: '**/*.{ts,mts,tsx}',
-      extends: [
-        'plugin:@dxos/typescript'
-      ]
+      extends: ['plugin:@dxos/typescript'],
     },
     {
       files: '**/*.{tsx,jsx}',
-      extends: [
-        'plugin:@dxos/react'
-      ]
+      extends: ['plugin:@dxos/react'],
     },
     {
       files: '**/*.test.{ts,tsx,js,jsx}',
-      extends: [
-        'plugin:@dxos/test'
-      ]
+      extends: ['plugin:@dxos/test'],
     },
     {
-      "files": '**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}',
-      "rules": {
-        "no-console": "off"
-      }
+      files: '**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}',
+      rules: {
+        'no-console': 'off',
+      },
     },
-  ]
+  ],
 };

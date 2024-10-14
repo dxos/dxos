@@ -5,9 +5,6 @@
 import { extendTailwindMerge, validators } from 'tailwind-merge';
 
 import { withLogical, type WithLogicalClassGroups } from './withLogical';
-import { semanticColors } from '../config';
-
-const semanticColorClasses = Object.keys(semanticColors);
 
 type AdditionalClassGroups = 'foreground' | 'surface' | 'separator' | WithLogicalClassGroups;
 
@@ -30,9 +27,6 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>(
           // Arbitrary numbers
           validators.isArbitraryNumber,
         ],
-        foreground: semanticColorClasses.map((value) => `fg-${value}`),
-        surface: semanticColorClasses.map((value) => `surface-${value}`),
-        separator: semanticColorClasses.map((value) => `separator-${value}`),
       },
     },
   },

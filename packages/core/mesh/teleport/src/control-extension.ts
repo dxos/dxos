@@ -6,7 +6,8 @@ import { asyncTimeout, scheduleTaskInterval, TimeoutError as AsyncTimeoutError }
 import { Context } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema, RpcClosedError } from '@dxos/protocols';
+import { RpcClosedError } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';

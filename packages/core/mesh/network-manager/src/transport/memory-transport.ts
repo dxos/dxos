@@ -123,6 +123,7 @@ export class MemoryTransport implements Transport {
           this.errors.raise(err);
         });
     }
+    return this;
   }
 
   async close() {
@@ -155,6 +156,7 @@ export class MemoryTransport implements Transport {
 
     this.closed.emit();
     log('closed');
+    return this;
   }
 
   async onSignal({ payload }: Signal) {

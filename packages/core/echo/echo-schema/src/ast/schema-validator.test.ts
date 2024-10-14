@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import { expect } from 'chai';
-import get from 'lodash.get';
+import { describe, expect, test } from 'vitest';
 
-import { describe, test } from '@dxos/test';
+import { S } from '@dxos/effect';
+import { getDeep } from '@dxos/util';
 
 import { SchemaValidator } from './schema-validator';
 import { create } from '../handler';
@@ -59,7 +58,7 @@ describe('schema-validator', () => {
     }) => {
       const expectation = expect(() => {
         const nestedSchema = SchemaValidator.getPropertySchema(args.schema, args.path, (path) => {
-          return get(args.target, path);
+          return getDeep(args.target, path);
         });
         S.validateSync(nestedSchema)(args.valueToAssign);
       });
@@ -136,7 +135,7 @@ describe('schema-validator', () => {
           meta: S.optional(S.mutable(S.Any)),
           // NOTE: S.Record only supports shallow values.
           // https://www.npmjs.com/package/@effect/schema#mutable-records
-          // meta: S.optional(S.mutable(S.Record(S.String, S.Any))),
+          // meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
           // meta: S.optional(S.mutable(S.object)),
         }),
       );
@@ -166,7 +165,7 @@ describe('schema-validator', () => {
           typename: 'dxos.org/type/FunctionTrigger',
           version: '0.1.0',
         })({
-          meta: S.optional(S.mutable(S.Record(S.String, S.Any))),
+          meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
         }) {}
 
         const object = create(Test2, {});
@@ -181,6 +180,18 @@ describe('schema-validator', () => {
           schema: S.Struct({ field: S.String }, { key: S.String, value: S.Number }),
           target: {},
           path: ['unknownField'],
+          valueToAssign: value,
+          expectToThrow: typeof value !== 'number',
+        });
+      }
+    });
+
+    test('index signature from optional record', () => {
+      for (const value of [42, '42']) {
+        validateValueToAssign({
+          schema: S.Struct({ field: S.optional(S.Record({ key: S.String, value: S.Number })) }),
+          target: {},
+          path: ['field', 'unknownField'],
           valueToAssign: value,
           expectToThrow: typeof value !== 'number',
         });

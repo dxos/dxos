@@ -4,7 +4,7 @@
   "tags": [
     "scope:sdk"
   ],
-  "sourceRoot": "packages/sdk/shell/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
@@ -16,7 +16,7 @@
       "executor": "@nx/vite:build",
       "options": {
         "generatePackageJson": false,
-        "outputPath": "packages/sdk/shell/dist/bundle"
+        "outputPath": "{projectRoot}/dist/bundle"
       },
       "outputs": [
         "{options.outputPath}"
@@ -37,17 +37,7 @@
       "dependsOn": [
         "^compile",
         "stories:mkdist"
-      ],
-      "options": {
-        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
-        "serve": "stories:storybook-e2e",
-        "testPatterns": [
-          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "{projectRoot}/src/**/*"
-        ]
-      }
+      ]
     },
     "lint": {
       "options": {
@@ -58,6 +48,7 @@
     }
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "node-std"
   ]
 }

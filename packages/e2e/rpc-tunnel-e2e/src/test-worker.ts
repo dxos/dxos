@@ -3,7 +3,7 @@
 //
 
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 

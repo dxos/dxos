@@ -20,6 +20,7 @@ const main = async () => {
   const { ClientServicesProxy } = await import('@dxos/react-client');
   const { createIFramePort } = await import('@dxos/rpc-tunnel');
 
+  // Modules required by the script at runtime.
   // @ts-ignore
   window.__DXOS_SANDBOX_MODULES__ = await init(async () => ({
     // prettier-ignore
@@ -28,8 +29,7 @@ const main = async () => {
     '@dxos/client': await import('@dxos/client'),
     '@dxos/react-client': await import('@dxos/react-client'),
     '@dxos/react-client/echo': await import('@dxos/react-client/echo'),
-    '@braneframe/plugin-explorer': await import('@braneframe/plugin-explorer'),
-    '@braneframe/types': await import('@braneframe/types'), // TODO(burdon): Make runtime dep?
+    '@dxos/plugin-explorer': await import('@dxos/plugin-explorer'),
   }));
 
   const code = new URLSearchParams(window.location.hash.slice(1)).get('code');
@@ -48,7 +48,7 @@ const main = async () => {
   );
 
   createRoot(document.getElementById('root')!).render(
-    <ClientProvider services={() => services}>
+    <ClientProvider services={services}>
       <div className='flex fixed inset-0'>
         <Component />
       </div>

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import React from 'react';
 
@@ -39,7 +39,12 @@ const noOpProps: IdentityPanelImplProps = {
 export default {
   title: 'react-shell/IdentityPanel',
   decorators: [withTheme],
-  parameters: { translations: [osTranslations], chromatic: { disableSnapshot: false } },
+  parameters: {
+    translations: [osTranslations],
+    chromatic: {
+      disableSnapshot: false,
+    },
+  },
 };
 
 export const IdentityActionChooser = () => {

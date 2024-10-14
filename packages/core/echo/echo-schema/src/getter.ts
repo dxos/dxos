@@ -2,12 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as S from '@effect/schema/Schema';
-
 import { Reference } from '@dxos/echo-protocol';
+import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { getEchoObjectAnnotation } from './annotations';
+import { getEchoObjectAnnotation } from './ast';
 import { getProxyHandlerSlot, isReactiveObject } from './proxy';
 import { type ObjectMeta } from './types';
 
@@ -26,7 +25,7 @@ export const getSchema = <T extends {} = any>(obj: T | undefined): S.Schema<any>
   return undefined;
 };
 
-export const getTypeReference = (schema: S.Schema<any> | undefined): Reference | undefined => {
+export const getTypeReference = (schema: S.Schema.All | undefined): Reference | undefined => {
   if (!schema) {
     return undefined;
   }
@@ -70,7 +69,7 @@ export const getType = <T extends {}>(obj: T | undefined): Reference | undefined
 // TODO(burdon): AbstractTypedObject?
 export const getTypename = <T extends {}>(obj: T): string | undefined => getType(obj)?.objectId;
 
-export const requireTypeReference = (schema: S.Schema<any>): Reference => {
+export const requireTypeReference = (schema: S.Schema.All): Reference => {
   const typeReference = getTypeReference(schema);
   if (typeReference == null) {
     // TODO(burdon): Catalog user-facing errors (this is too verbose).

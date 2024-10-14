@@ -2,12 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { latch, asyncTimeout, sleep, untilError, untilPromise } from '@dxos/async';
 import { log } from '@dxos/log';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { FeedQueue } from './feed-queue';
@@ -69,44 +67,6 @@ describe('FeedQueue', () => {
     expect(queue.feed.properties.closed).to.be.false;
   });
 
-  test('works with webfs', async () => {
-    const localBuilder = builder.clone().setStorage(createStorage({ type: StorageType.WEBFS }));
-    const feedStore = localBuilder.createFeedStore();
-    const key = await localBuilder.keyring.createKey();
-    const feed = await feedStore.openFeed(key, { writable: true });
-
-    const queue = new FeedQueue<any>(feed);
-    await queue.open();
-
-    expect(queue.isOpen).to.be.true;
-    expect(queue.feed.properties.closed).to.be.false;
-
-    // Write blocks.
-    // TODO(burdon): Write slowly to test writing close feed.
-    await localBuilder._properties.generator!.writeBlocks(feed.createFeedWriter(), { count: 10 });
-
-    // Read until queue closed (pop throws exception).
-    const errorPromise = untilError(async () => {
-      while (true) {
-        const next = await queue.pop();
-        log('next', { next: next.seq });
-        await sleep(50);
-      }
-    });
-
-    // Close the queue.
-    await untilPromise(async () => {
-      await sleep(400);
-      await queue.close();
-    });
-
-    // Expect pop to throw error when queue is closed.
-    await errorPromise;
-
-    expect(queue.isOpen).to.be.false;
-    expect(queue.feed.properties.closed).to.be.false;
-  }).onlyEnvironments('chromium');
-
   test('feed closed while reading', async () => {
     const feedStore = builder.createFeedStore();
     const key = await builder.keyring.createKey();
@@ -145,58 +105,56 @@ describe('FeedQueue', () => {
   });
 
   // TODO(dmaretskyi): Fix.
-  test
-    .skip('responds immediately when feed is appended', async () => {
-      const key = await builder.keyring.createKey();
-      const feed = await factory.createFeed(key, { writable: true });
-      await feed.open();
+  test.skip('responds immediately when feed is appended', async () => {
+    const key = await builder.keyring.createKey();
+    const feed = await factory.createFeed(key, { writable: true });
+    await feed.open();
 
-      const queue = new FeedQueue<any>(feed);
-      await queue.open();
-      expect(queue.isOpen).to.be.true;
+    const queue = new FeedQueue<any>(feed);
+    await queue.open();
+    expect(queue.isOpen).to.be.true;
 
-      const numBlocks = 10;
-      const [done, received] = latch({ count: numBlocks });
+    const numBlocks = 10;
+    const [done, received] = latch({ count: numBlocks });
 
-      {
-        // Read blocks.
-        setTimeout(async () => {
-          expect(queue.peek()).to.be.undefined;
-          expect(queue.length).to.eq(0);
-          expect(feed.properties.length).to.eq(0);
+    {
+      // Read blocks.
+      setTimeout(async () => {
+        expect(queue.peek()).to.be.undefined;
+        expect(queue.length).to.eq(0);
+        expect(feed.properties.length).to.eq(0);
 
-          const next = await asyncTimeout(queue.pop(), 500);
+        const next = await asyncTimeout(queue.pop(), 500);
+        expect(next).not.to.be.undefined;
+        received();
+
+        // Check called immediately (i.e., after first block is written).
+        expect(queue.length).to.eq(1);
+        expect(feed.properties.length).to.eq(1);
+
+        for await (const _ of Array.from(Array(numBlocks - 1))) {
+          const next = await queue.pop();
           expect(next).not.to.be.undefined;
-          received();
+          const i = received();
+          expect(i).to.eq(queue.index);
+        }
+      });
 
-          // Check called immediately (i.e., after first block is written).
-          expect(queue.length).to.eq(1);
-          expect(feed.properties.length).to.eq(1);
-
-          for await (const _ of Array.from(Array(numBlocks - 1))) {
-            const next = await queue.pop();
-            expect(next).not.to.be.undefined;
-            const i = received();
-            expect(i).to.eq(queue.index);
-          }
+      // Write blocks.
+      setTimeout(async () => {
+        await builder.generator.writeBlocks(feed.createFeedWriter(), {
+          count: numBlocks,
         });
+        expect(feed.properties.length).to.eq(numBlocks);
+        expect(queue.length).to.eq(numBlocks);
+      }, 100); // Make sure reader waits.
+    }
 
-        // Write blocks.
-        setTimeout(async () => {
-          await builder.generator.writeBlocks(feed.createFeedWriter(), {
-            count: numBlocks,
-          });
-          expect(feed.properties.length).to.eq(numBlocks);
-          expect(queue.length).to.eq(numBlocks);
-        }, 100); // Make sure reader waits.
-      }
-
-      await done();
-      expect(queue.isOpen).to.be.true;
-      await queue.close();
-      expect(queue.isOpen).to.be.false;
-    })
-    .timeout(1000);
+    await done();
+    expect(queue.isOpen).to.be.true;
+    await queue.close();
+    expect(queue.isOpen).to.be.false;
+  });
 
   test('peeks ahead', async () => {
     const key = await builder.keyring.createKey();
@@ -240,7 +198,7 @@ describe('FeedQueue', () => {
     await queue.close();
   });
 
-  test('set a start sequence', async () => {
+  test('set a start sequence', { timeout: 1000 }, async () => {
     const numBlocks = 10;
     const start = 2;
 
@@ -273,5 +231,5 @@ describe('FeedQueue', () => {
     expect(queue.isOpen).to.be.true;
     await queue.close();
     expect(queue.isOpen).to.be.false;
-  }).timeout(1000);
+  });
 });

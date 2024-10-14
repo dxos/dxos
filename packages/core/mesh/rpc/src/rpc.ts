@@ -3,11 +3,12 @@
 //
 
 import { asyncTimeout, synchronized, Trigger } from '@dxos/async';
-import { type Any, Stream, type RequestOptions } from '@dxos/codec-protobuf';
+import { type Any, Stream, type RequestOptions, type ProtoCodec } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { encodeError, RpcClosedError, RpcNotOpenError, schema } from '@dxos/protocols';
+import { encodeError, RpcClosedError, RpcNotOpenError } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type Request, type Response, type RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { exponentialBackoffInterval } from '@dxos/util';
 
@@ -67,7 +68,9 @@ class PendingRpcRequest {
   ) {}
 }
 
-const RpcMessage = schema.getCodecForType('dxos.rpc.RpcMessage');
+// NOTE: Lazy so that code that doesn't use indexing doesn't need to load the codec (breaks in workerd).
+let RpcMessageCodec!: ProtoCodec<RpcMessage>;
+const getRpcMessageCodec = () => (RpcMessageCodec ??= schema.getCodecForType('dxos.rpc.RpcMessage'));
 
 enum RpcState {
   INITIAL = 'INITIAL',
@@ -256,7 +259,7 @@ export class RpcPeer {
    * Handle incoming message. Should be called as the result of other peer's `send` callback.
    */
   private async _receive(msg: Uint8Array): Promise<void> {
-    const decoded = RpcMessage.decode(msg, { preserveAny: true });
+    const decoded = getRpcMessageCodec().decode(msg, { preserveAny: true });
     DEBUG_CALLS && log('received message', { type: Object.keys(decoded)[0] });
 
     if (decoded.request) {
@@ -481,7 +484,7 @@ export class RpcPeer {
 
   private async _sendMessage(message: RpcMessage, timeout?: number) {
     DEBUG_CALLS && log('sending message', { type: Object.keys(message)[0] });
-    await this._params.port.send(RpcMessage.encode(message, { preserveAny: true }), timeout);
+    await this._params.port.send(getRpcMessageCodec().encode(message, { preserveAny: true }), timeout);
   }
 
   private async _callHandler(req: Request): Promise<Response> {

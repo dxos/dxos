@@ -18,6 +18,7 @@ import { type Size } from '@dxos/react-ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import { Icon } from '../Icon';
 
 type AvatarVariant = 'square' | 'circle';
 type AvatarStatus = 'active' | 'inactive' | 'current' | 'error' | 'warning' | 'internal';
@@ -261,6 +262,24 @@ const AvatarImage = forwardRef<SVGImageElement, AvatarImageProps>(
   },
 );
 
+type AvatarIconProps = {
+  icon: string;
+  onLoadingStatusChange?: (status: ImageLoadingStatus) => void;
+};
+
+const AvatarIcon = forwardRef<SVGSVGElement, AvatarIconProps>(({ onLoadingStatusChange, ...props }, forwardedRef) => {
+  const { size } = useAvatarContext('AvatarIcon');
+  const pxSize = size === 'px' ? 1 : size * 4;
+  if (pxSize <= 20) {
+    return null;
+  }
+  return (
+    <AvatarFallbackPrimitive asChild>
+      <Icon {...props} ref={forwardedRef} />
+    </AvatarFallbackPrimitive>
+  );
+});
+
 type AvatarFallbackProps = ComponentPropsWithRef<'image'> & {
   delayMs?: number;
   text?: string;
@@ -284,6 +303,7 @@ export const Avatar = {
   Root: AvatarRoot,
   Frame: AvatarFrame,
   Image: AvatarImage,
+  Icon: AvatarIcon,
   Fallback: AvatarFallback,
   Label: AvatarLabel,
   Description: AvatarDescription,

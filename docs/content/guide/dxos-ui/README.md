@@ -53,10 +53,10 @@ export default defineConfig({
 
 The content array should contain globs that match any other code which will contain `tailwind` css classes.
 
-Import the special DXOS theme stylesheet `@dxosTheme` anywhere in code such as `main.tsx`:
+Import the special DXOS theme stylesheet `@dxos-theme` anywhere in code such as `main.tsx`:
 
 ```tsx{1} file=./snippets/vite-main.tsx#L5-
-import '@dxosTheme';
+import '@dxos-theme';
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
@@ -65,14 +65,14 @@ createRoot(document.getElementById('root')!).render(<main></main>);
 ```
 
 ::: tip Tip
-For best results, load `@dxosTheme` ahead of any other stylesheets.
+For best results, load `@dxos-theme` ahead of any other stylesheets.
 :::
 
 ### With other bundlers
 
 ::: details Install with other bundlers
 
-The special `@dxosTheme` import will not be a available. Include the following stylesheet in your `index.html`:
+The special `@dxos-theme` import will not be a available. Include the following stylesheet in your `index.html`:
 
 ```
 node_modules/@dxos/react-ui/dist/plugin/node/theme.css

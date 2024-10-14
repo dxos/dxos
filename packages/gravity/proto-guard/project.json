@@ -4,7 +4,7 @@
   "tags": [
     "scope:gravity"
   ],
-  "sourceRoot": "packages/gravity/proto-guard/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
@@ -18,13 +18,6 @@
         "script": "storage"
       }
     },
-    "test": {
-      "options": {
-        "environments": [
-          "nodejs"
-        ],
-        "forceExit": true
-      }
-    }
+    "test": {}
   }
 }

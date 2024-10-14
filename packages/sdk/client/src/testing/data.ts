@@ -12,7 +12,7 @@ export class TextV0Type extends TypedObject({ typename: 'dxos.Text.v0', version:
 }) {}
 
 export class DocumentType extends TypedObject({ typename: 'braneframe.Document', version: '0.1.0' })({
-  title: S.optional(S.String),
+  title: S.optional(S.String), // TODO(burdon): Change to name.
   content: ref(TextV0Type),
 }) {}
 
@@ -35,7 +35,7 @@ const BlockSchema = S.Struct({
 });
 
 export interface BlockType extends S.Schema.Type<typeof BlockSchema> {}
-export const BlockType: S.Schema<BlockType> = BlockSchema;
+export const BlockType: S.Schema<BlockType, S.Schema.Encoded<typeof BlockSchema>> = BlockSchema;
 
 export class MessageType extends TypedObject({ typename: 'braneframe.Message', version: '0.1.0' })({
   type: S.optional(S.String),

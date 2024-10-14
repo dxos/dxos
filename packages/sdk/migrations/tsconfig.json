@@ -1,42 +1,12 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/types",
     "types": [
-      "@dxos/test",
       "@dxos/typings"
     ]
   },
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../common/invariant"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/automerge"
-    },
-    {
-      "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-protocol"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../client"
-    }
-  ]
+  "references": []
 }

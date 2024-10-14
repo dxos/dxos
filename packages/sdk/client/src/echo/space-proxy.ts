@@ -9,7 +9,7 @@ import { PropertiesType, type ClientServicesProvider, type Space, type SpaceInte
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType, type SpecificCredential } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
-import { Filter, type EchoClient, type EchoDatabase, type EchoDatabaseImpl } from '@dxos/echo-db';
+import { Filter, type CoreDatabase, type EchoClient, type EchoDatabase, type EchoDatabaseImpl } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -25,6 +25,7 @@ import {
   type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { SpaceMember as HaloSpaceMember, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -119,6 +120,7 @@ export class SpaceProxy implements Space {
       getEpochs: this._getEpochs.bind(this),
       removeMember: this._removeMember.bind(this),
       migrate: this._migrate.bind(this),
+      setEdgeReplicationPreference: this._setEdgeReplicationPreference.bind(this),
     };
 
     this._error = this._data.error ? decodeError(this._data.error) : undefined;
@@ -140,6 +142,10 @@ export class SpaceProxy implements Space {
 
   get db(): EchoDatabase {
     return this._db;
+  }
+
+  get crud(): CoreDatabase {
+    return this._db.coreDatabase;
   }
 
   @trace.info()
@@ -516,6 +522,16 @@ export class SpaceProxy implements Space {
         migration: CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT,
       });
     }
+  }
+
+  private async _setEdgeReplicationPreference(setting: EdgeReplicationSetting) {
+    await this._clientServices.services.SpacesService!.updateSpace(
+      {
+        spaceKey: this.key,
+        edgeReplication: setting,
+      },
+      { timeout: RPC_TIMEOUT },
+    );
   }
 
   private _throwIfNotInitialized() {

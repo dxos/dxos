@@ -1,0 +1,121 @@
+dx-grid, dx-grid-axis-resize-handle {
+  display: contents;
+}
+
+.dx-grid {
+  --dx-grid-gap: 1px;
+  --dx-plane-gap: 2px;
+
+  display: grid;
+  gap: var(--dx-plane-gap);
+  grid-template-columns: min-content 1fr min-content;
+  grid-template-rows: min-content 1fr min-content;
+  font-variant-numeric: tabular-nums;
+
+  min-inline-size: 4rem;
+  min-block-size: 4rem;
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: 100dvw;
+  max-block-size: 100dvh;
+
+  user-select: none;
+
+  background: var(--dx-grid-lines, var(--dx-separator));
+}
+
+.dx-grid__plane--frozen-row,
+.dx-grid__plane--frozen-col,
+.dx-grid__plane--grid {
+  overflow: hidden;
+  position: relative;
+  display: grid;
+  &:focus-visible {
+    outline: none;
+  }
+  &:focus-visible::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border: 1px solid var(--dx-accentSurface);
+  }
+}
+
+.dx-grid__plane--fixed,
+.dx-grid__plane--frozen-row__content,
+.dx-grid__plane--frozen-col__content,
+.dx-grid__plane--grid__content {
+  display: grid;
+  gap: var(--dx-grid-gap);
+}
+
+.dx-grid {
+  [role='gridcell'], [role='columnheader'], [role='rowheader'] {
+    background: var(--dx-grid-base, var(--dx-base));
+    padding: 2px;
+    box-sizing: border-box;
+    cursor: pointer;
+    border: 1px solid transparent;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    &[inert] {
+      visibility: hidden;
+    }
+    &:focus, &:focus-visible, &.dx-grid__cell--active {
+      cursor: text;
+      position: relative;
+      z-index: 2;
+      border-color: var(--dx-accentSurface);
+      outline: none;
+    }
+  }
+  &[data-grid-mode="edit"] {
+    [role='gridcell'], [role='columnheader'], [role='rowheader'] {
+      &.dx-grid__cell--active {
+        color: transparent !important;
+      }
+    }
+  }
+  &[data-grid-select] {
+    [role='gridcell'], [role='columnheader'], [role='rowheader'] {
+      &[aria-selected] {
+        background: var(--dx-gridSelectionOverlay);
+      }
+    }
+  }
+}
+
+.dx-grid__resize-handle {
+  position: absolute;
+  background: transparent;
+  &:hover {
+    background: var(--dx-grid-resizeHandleHover, var(--dx-hoverSurface));
+  }
+  &[data-dx-grid-axis='col'] {
+    inset-block: 0;
+    inset-inline-end: 0;
+    inline-size: .5rem;
+    cursor: col-resize;
+  }
+  &[data-dx-grid-axis='row'] {
+    inset-inline: 0;
+    inset-block-end: 0;
+    block-size: .5rem;
+    cursor: row-resize;
+  }
+}
+
+// todo(thure): Move this somewhere better.
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

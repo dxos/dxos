@@ -6,7 +6,8 @@ import { Trigger, sleep } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError, schema } from '@dxos/protocols';
+import { RpcClosedError } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import {
   type PeerInfo,
   type AutomergeReplicatorService,
@@ -89,7 +90,6 @@ export class AutomergeReplicator implements TeleportExtension {
             await this._callbacks.onStartReplication?.(info, context.remotePeerId);
           },
           sendSyncMessage: async (message: SyncMessage): Promise<void> => {
-            log('sendSyncMessage', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId, message });
             await this._callbacks.onSyncMessage?.(message);
           },
         },

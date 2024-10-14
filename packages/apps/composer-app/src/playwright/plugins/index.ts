@@ -4,5 +4,6 @@
 
 export * from './deck';
 export * from './markdown';
-export * from './stack';
+export * from './table';
 export * from './thread';
+export * from './stack';

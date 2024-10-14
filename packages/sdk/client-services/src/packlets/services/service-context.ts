@@ -2,12 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
+import { Mutex, scheduleMicroTask, Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
-import { failUndefined } from '@dxos/debug';
-import { EchoHost } from '@dxos/echo-db';
-import { MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import { failUndefined, warnAfterTimeout } from '@dxos/debug';
+import {
+  EchoEdgeReplicator,
+  EchoHost,
+  MeshEchoReplicator,
+  MetadataStore,
+  SpaceManager,
+  valueEncoding,
+} from '@dxos/echo-pipeline';
+import { createChainEdgeIdentity, createEphemeralEdgeIdentity } from '@dxos/edge-client';
+import type { EdgeHttpClient, EdgeConnection } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
@@ -18,6 +26,7 @@ import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Storage } from '@dxos/random-access-storage';
@@ -29,7 +38,7 @@ import { safeInstanceof } from '@dxos/util';
 import {
   IdentityManager,
   type CreateIdentityOptions,
-  type IdentityManagerRuntimeParams,
+  type IdentityManagerParams,
   type JoinIdentityParams,
 } from '../identity';
 import {
@@ -41,8 +50,14 @@ import {
 } from '../invitations';
 import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
 
-export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams &
-  DataSpaceManagerRuntimeParams & { invitationConnectionDefaultParams?: Partial<TeleportParams> };
+export type ServiceContextRuntimeParams = Pick<
+  IdentityManagerParams,
+  'devicePresenceOfflineTimeout' | 'devicePresenceAnnounceInterval'
+> &
+  DataSpaceManagerRuntimeParams & {
+    invitationConnectionDefaultParams?: Partial<TeleportParams>;
+    disableP2pReplication?: boolean;
+  };
 /**
  * Shared backend for all client services.
  */
@@ -51,12 +66,10 @@ export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams &
 @safeInstanceof('dxos.client-services.ServiceContext')
 @Trace.resource()
 export class ServiceContext extends Resource {
+  private readonly _edgeIdentityUpdateMutex = new Mutex();
+
   public readonly initialized = new Trigger();
   public readonly metadataStore: MetadataStore;
-  /**
-   * @deprecated
-   */
-  public readonly snapshotStore: SnapshotStore;
   public readonly blobStore: BlobStore;
   public readonly feedStore: FeedStore<FeedMessage>;
   public readonly keyring: Keyring;
@@ -65,6 +78,8 @@ export class ServiceContext extends Resource {
   public readonly invitations: InvitationsHandler;
   public readonly invitationsManager: InvitationsManager;
   public readonly echoHost: EchoHost;
+  private readonly _meshReplicator?: MeshEchoReplicator = undefined;
+  private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
@@ -83,13 +98,15 @@ export class ServiceContext extends Resource {
     public readonly level: LevelDB,
     public readonly networkManager: SwarmNetworkManager,
     public readonly signalManager: SignalManager,
+    private readonly _edgeConnection: EdgeConnection | undefined,
+    private readonly _edgeHttpClient: EdgeHttpClient | undefined,
     public readonly _runtimeParams?: ServiceContextRuntimeParams,
+    private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures,
   ) {
     super();
 
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
-    this.snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
     this.blobStore = new BlobStore(storage.createDirectory('blobs'));
 
     this.keyring = new Keyring(storage.createDirectory('keyring'));
@@ -109,20 +126,62 @@ export class ServiceContext extends Resource {
       networkManager: this.networkManager,
       blobStore: this.blobStore,
       metadataStore: this.metadataStore,
-      snapshotStore: this.snapshotStore,
+      disableP2pReplication: this._runtimeParams?.disableP2pReplication,
     });
 
-    this.identityManager = new IdentityManager(
-      this.metadataStore,
-      this.keyring,
-      this.feedStore,
-      this.spaceManager,
-      this._runtimeParams as IdentityManagerRuntimeParams,
-    );
+    this.identityManager = new IdentityManager({
+      metadataStore: this.metadataStore,
+      keyring: this.keyring,
+      feedStore: this.feedStore,
+      spaceManager: this.spaceManager,
+      devicePresenceOfflineTimeout: this._runtimeParams?.devicePresenceOfflineTimeout,
+      devicePresenceAnnounceInterval: this._runtimeParams?.devicePresenceAnnounceInterval,
+      edgeConnection: this._edgeConnection,
+      edgeFeatures: this._edgeFeatures,
+      callbacks: {
+        onIdentityConstruction: (identity) => {
+          if (this._edgeConnection) {
+            scheduleMicroTask(this._ctx, async () => {
+              using _ = await this._edgeIdentityUpdateMutex.acquire();
+
+              log.info('Setting identity on edge connection', {
+                identity: identity.identityKey.toHex(),
+                oldIdentity: this._edgeConnection!.identityKey,
+                swarms: this.networkManager.topics,
+              });
+
+              await warnAfterTimeout(10_000, 'Waiting for identity to be ready for edge connection', async () => {
+                await identity.ready();
+              });
+
+              invariant(identity.deviceCredentialChain);
+              this._edgeConnection!.setIdentity(
+                await createChainEdgeIdentity(
+                  identity.signer,
+                  identity.identityKey,
+                  identity.deviceKey,
+                  identity.deviceCredentialChain,
+                  [], // TODO(dmaretskyi): Service access credentials.
+                ),
+              );
+              this.networkManager.setPeerInfo({
+                identityKey: identity.identityKey.toHex(),
+                peerKey: identity.deviceKey.toHex(),
+              });
+            });
+          }
+        },
+      },
+    });
 
     this.echoHost = new EchoHost({ kv: this.level });
 
-    this.invitations = new InvitationsHandler(this.networkManager, _runtimeParams?.invitationConnectionDefaultParams);
+    this._meshReplicator = new MeshEchoReplicator();
+
+    this.invitations = new InvitationsHandler(
+      this.networkManager, //
+      _runtimeParams?.invitationConnectionDefaultParams,
+    );
     this.invitationsManager = new InvitationsManager(
       this.invitations,
       (invitation) => this.getInvitationHandler(invitation),
@@ -140,6 +199,15 @@ export class ServiceContext extends Resource {
           this._acceptIdentity.bind(this),
         ),
     );
+
+    if (!this._runtimeParams?.disableP2pReplication) {
+      this._meshReplicator = new MeshEchoReplicator();
+    }
+    if (this._edgeConnection && this._edgeFeatures?.echoReplicator) {
+      this._echoEdgeReplicator = new EchoEdgeReplicator({
+        edgeConnection: this._edgeConnection,
+      });
+    }
   }
 
   @Trace.span()
@@ -148,13 +216,27 @@ export class ServiceContext extends Resource {
 
     log('opening...');
     log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
+    if (this._edgeConnection) {
+      // TODO(dmaretskyi): Use device key.
+      this._edgeConnection.setIdentity(await createEphemeralEdgeIdentity());
+      await this._edgeConnection.open();
+    }
     await this.signalManager.open();
     await this.networkManager.open();
 
     await this.echoHost.open(ctx);
+
+    if (this._meshReplicator) {
+      await this.echoHost.addReplicator(this._meshReplicator);
+    }
+    if (this._echoEdgeReplicator) {
+      await this.echoHost.addReplicator(this._echoEdgeReplicator);
+    }
+
     await this.metadataStore.load();
     await this.spaceManager.open();
     await this.identityManager.open(ctx);
+
     if (this.identityManager.identity) {
       await this._initialize(ctx);
     }
@@ -176,9 +258,12 @@ export class ServiceContext extends Resource {
     await this.spaceManager.close();
     await this.feedStore.close();
     await this.metadataStore.close();
+
     await this.echoHost.close(ctx);
     await this.networkManager.close();
     await this.signalManager.close();
+    await this._edgeConnection?.close();
+
     log('closed');
   }
 
@@ -233,16 +318,21 @@ export class ServiceContext extends Resource {
       },
     };
 
-    this.dataSpaceManager = new DataSpaceManager(
-      this.spaceManager,
-      this.metadataStore,
-      this.keyring,
+    this.dataSpaceManager = new DataSpaceManager({
+      spaceManager: this.spaceManager,
+      metadataStore: this.metadataStore,
+      keyring: this.keyring,
       signingContext,
-      this.feedStore,
-      this.echoHost,
-      this.invitationsManager,
-      this._runtimeParams as DataSpaceManagerRuntimeParams,
-    );
+      feedStore: this.feedStore,
+      echoHost: this.echoHost,
+      invitationsManager: this.invitationsManager,
+      edgeConnection: this._edgeConnection,
+      edgeHttpClient: this._edgeHttpClient,
+      echoEdgeReplicator: this._echoEdgeReplicator,
+      meshReplicator: this._meshReplicator,
+      runtimeParams: this._runtimeParams as DataSpaceManagerRuntimeParams,
+      edgeFeatures: this._edgeFeatures,
+    });
     await this.dataSpaceManager.open();
 
     this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {

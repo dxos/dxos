@@ -2,17 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import { type Mutable } from 'effect/Types';
-
-import { Reference } from '@dxos/echo-protocol';
-import { type EchoReactiveObject, EXPANDO_TYPENAME, isReactiveObject, requireTypeReference } from '@dxos/echo-schema';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { isEncodedReference, Reference, type EncodedReference } from '@dxos/echo-protocol';
+import { requireTypeReference, type EchoReactiveObject } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
-import { type Filter as FilterProto, QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
+import { createBuf } from '@dxos/protocols/buf';
+import {
+  type Filter as FilterBuf,
+  FilterSchema,
+  type QueryOptions_DataLocation,
+  type QueryOptions_ShowDeletedOption,
+} from '@dxos/protocols/buf/dxos/echo/filter_pb';
+import { type QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { type ObjectCore } from '../core-db';
 import { getReferenceWithSpaceKey } from '../echo-handler';
 
 export const hasType =
@@ -21,7 +24,26 @@ export const hasType =
     object instanceof type;
 
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
-export type PropertyFilter = Record<string, any>;
+export interface PropertyFilter {
+  /**
+   * Filter by specific ID.
+   */
+  id?: string | EncodedReference | (string | EncodedReference)[];
+
+  /**
+   * Filter by specific typename.
+   * Examples:
+   *  - `dxos.org/type/Script`
+   *  - `dxn:type:dxos.org/type/Script`
+   *  - `dxn:echo:@:01J6WF55G5W3AQWJSC4TQWJNAE` - dynamic schema refrence.
+   */
+  __typename?: string | string[];
+
+  /**
+   * Filter by property.
+   */
+  [key: string]: any;
+}
 
 export type OperatorFilter<T extends {} = any> = (object: T) => boolean;
 
@@ -30,14 +52,25 @@ export type FilterSource<T extends {} = any> = PropertyFilter | OperatorFilter<T
 // TODO(burdon): Remove class.
 // TODO(burdon): Disambiguate if multiple are defined (i.e., AND/OR).
 export type FilterParams<T extends {} = any> = {
+  // TODO(dmaretskyi): Convert to DXN.
   type?: Reference;
   properties?: Record<string, any>;
+  objectIds?: string[];
   text?: string;
   predicate?: OperatorFilter<T>;
   not?: boolean;
   and?: Filter[];
   or?: Filter[];
 };
+
+/**
+ * Filter helper types.
+ * Note: Dollar sign suffix notation borrowed from `effect`'s Array$.
+ */
+export namespace Filter$ {
+  export type Any = Filter<any>;
+  export type Object<F extends Any> = F extends Filter<infer T> ? T : never;
+}
 
 export class Filter<T extends {} = any> {
   static from<T extends {}>(source?: FilterSource<T>, options?: QueryOptions): Filter<T> {
@@ -67,25 +100,57 @@ export class Filter<T extends {} = any> {
         options,
       );
     } else if (typeof source === 'object') {
-      return new Filter(
-        {
-          properties: source,
-        },
-        options,
-      );
+      return Filter.fromFilterJson(source, options);
     } else {
       throw new Error(`Invalid filter source: ${source}`);
     }
   }
 
+  static fromFilterJson<T extends {}>(source: PropertyFilter, options?: QueryOptions): Filter<T> {
+    const { id, __typename, ...properties } = source;
+
+    if (typeof id === 'string' || (Array.isArray(id) && id.length > 1)) {
+      if (__typename || Object.keys(properties).length > 0) {
+        throw new Error('Cannot specify id with other properties.');
+      }
+    }
+
+    let type: DXN | undefined;
+    if (__typename) {
+      if (Array.isArray(__typename) && __typename.length > 1) {
+        throw new Error('Multiple __typename values are not yet supported.');
+      }
+      const typeString = Array.isArray(__typename) ? __typename[0] : __typename;
+      if (typeString.startsWith('dxn:')) {
+        type = DXN.parse(typeString);
+      } else {
+        type = new DXN(DXN.kind.TYPE, [typeString]);
+      }
+    }
+
+    return new Filter(
+      {
+        objectIds: id !== undefined ? sanitizeIdArray(id) : undefined,
+        type: type ? Reference.fromDXN(type) : undefined,
+        properties,
+      },
+      options,
+    );
+  }
+
+  static all(): Filter {
+    return new Filter({});
+  }
+
   // TODO(burdon): Tighten to AbstractTypedObject.
-  static schema<T extends {} = any>(
-    schema: S.Schema<T>,
-    filter?: Record<string, any> | OperatorFilter<T>,
-  ): Filter<Mutable<T>>;
+  static schema<S extends S.Schema.All>(
+    schema: S,
+    filter?: Record<string, any> | OperatorFilter<S.Schema.Type<S>>,
+  ): Filter<S.Schema.Type<S>>;
 
   // TODO(burdon): Tighten to AbstractTypedObject.
   static schema(schema: S.Schema<any>, filter?: Record<string, any> | OperatorFilter): Filter {
+    // TODO(dmaretskyi): Make `getReferenceWithSpaceKey` work over abstract handlers to not depend on EchoHandler directly.
     const typeReference = S.isSchema(schema) ? requireTypeReference(schema) : getReferenceWithSpaceKey(schema);
     invariant(typeReference, 'Invalid schema; check persisted in the database.');
     return this._fromTypeWithPredicate(typeReference, filter);
@@ -151,6 +216,7 @@ export class Filter<T extends {} = any> {
   // TODO(dmaretskyi): Support expando.
   public readonly type?: Reference;
   public readonly properties?: Record<string, any>;
+  public readonly objectIds?: string[];
   public readonly text?: string;
   public readonly predicate?: OperatorFilter<any>;
   public readonly not: boolean;
@@ -161,6 +227,7 @@ export class Filter<T extends {} = any> {
   protected constructor(params: FilterParams<T>, options: QueryOptions = {}) {
     this.type = params.type;
     this.properties = params.properties;
+    this.objectIds = params.objectIds;
     this.text = params.text;
     this.predicate = params.predicate;
     this.not = params.not ?? false;
@@ -179,9 +246,14 @@ export class Filter<T extends {} = any> {
     return this.options.spaceIds as SpaceId[] | undefined;
   }
 
+  isObjectIdFilter(): boolean {
+    return this.objectIds !== undefined && this.objectIds.length > 0;
+  }
+
   toProto(): FilterProto {
     return {
       properties: this.properties,
+      objectIds: this.objectIds,
       type: this.type?.encode(),
       text: this.text,
       not: this.not,
@@ -190,139 +262,38 @@ export class Filter<T extends {} = any> {
       options: this.options,
     };
   }
+
+  toBufProto(): FilterBuf {
+    return createBuf(FilterSchema, {
+      properties: this.properties,
+      objectIds: this.objectIds,
+      type: this.type?.encode(),
+      text: this.text,
+      not: this.not,
+      and: this.and.map((filter) => filter.toBufProto()),
+      or: this.or.map((filter) => filter.toBufProto()),
+      options: {
+        ...this.options,
+        deleted: this.options.deleted as QueryOptions_ShowDeletedOption | undefined,
+        dataLocation: this.options.dataLocation as QueryOptions_DataLocation | undefined,
+        spaces: [],
+      },
+    });
+  }
 }
 
-// TODO(burdon): Move logic into Filter.
-/**
- * Query logic that checks if object complaint with a filter.
- * @param echoObject used for predicate filters only.
- * @returns
- */
-export const filterMatch = (
-  filter: Filter,
-  core: ObjectCore | undefined,
-  // TODO(mykola): Remove predicate filters from this level query. Move it to higher proxy level.
-  echoObject?: EchoReactiveObject<any> | undefined,
-): boolean => {
-  if (!core) {
-    return false;
-  }
-  invariant(!echoObject || isReactiveObject(echoObject));
-  const result = filterMatchInner(filter, core, echoObject);
-  // don't apply filter negation to deleted object handling, as it's part of filter options
-  return filter.not && !core.isDeleted() ? !result : result;
+const sanitizeIdArray = (ids: string | EncodedReference | (string | EncodedReference)[]): string[] => {
+  const items = Array.isArray(ids) ? ids : [ids];
+  return items.map((id) => {
+    if (typeof id === 'string' && !id.startsWith('dxn:')) {
+      return id;
+    }
+    const data = isEncodedReference(id) ? id['/'] : id;
+    invariant(typeof data === 'string');
+
+    const dxn = DXN.parse(data);
+    invariant(dxn.kind === DXN.kind.ECHO);
+    invariant(dxn.parts[0] === LOCAL_SPACE_TAG, 'Only local space references are supported');
+    return dxn.parts[1];
+  });
 };
-
-const filterMatchInner = (
-  filter: Filter,
-  core: ObjectCore,
-  echoObject?: EchoReactiveObject<any> | undefined,
-): boolean => {
-  const deleted = filter.options.deleted ?? QueryOptions.ShowDeletedOption.HIDE_DELETED;
-  if (core.isDeleted()) {
-    if (deleted === QueryOptions.ShowDeletedOption.HIDE_DELETED) {
-      return false;
-    }
-  } else {
-    if (deleted === QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY) {
-      return false;
-    }
-  }
-
-  if (filter.or.length) {
-    for (const orFilter of filter.or) {
-      if (filterMatch(orFilter, core, echoObject)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  if (filter.type) {
-    const type = core.getType();
-
-    /** @deprecated TODO(mykola): Remove */
-    const dynamicSchemaTypename = type?.objectId;
-
-    // Separate branch for objects with dynamic schema and typename filters.
-    // TODO(dmaretskyi): Better way to check if schema is dynamic.
-    if (filter.type.protocol === 'protobuf' && dynamicSchemaTypename) {
-      if (dynamicSchemaTypename !== filter.type.objectId) {
-        return false;
-      }
-    } else {
-      if (!type && filter.type.objectId !== EXPANDO_TYPENAME) {
-        return false;
-      } else if (type && !compareType(filter.type, type, core.database?.spaceKey)) {
-        // Compare if types are equal.
-        return false;
-      }
-    }
-  }
-
-  if (filter.properties) {
-    for (const key in filter.properties) {
-      invariant(key !== '@type');
-      const value = filter.properties[key];
-
-      // TODO(dmaretskyi): Should `id` be allowed in filter.properties?
-      const actualValue = key === 'id' ? core.id : core.getDecoded(['data', key]);
-
-      if (actualValue !== value) {
-        return false;
-      }
-    }
-  }
-
-  if (filter.text !== undefined) {
-    const objectText = legacyGetTextForMatch(core);
-
-    const text = filter.text.toLowerCase();
-    if (!objectText.toLowerCase().includes(text)) {
-      return false;
-    }
-  }
-
-  // Untracked will prevent signals in the callback from being subscribed to.
-  if (filter.predicate && !compositeRuntime.untracked(() => filter.predicate!(echoObject))) {
-    return false;
-  }
-
-  for (const andFilter of filter.and) {
-    if (!filterMatch(andFilter, core, echoObject)) {
-      return false;
-    }
-  }
-
-  return true;
-};
-
-// Type comparison is a bit weird due to backwards compatibility requirements.
-// TODO(dmaretskyi): Deprecate `protobuf` protocol to clean this up.
-export const compareType = (expected: Reference, actual: Reference, spaceKey?: PublicKey) => {
-  const host = actual.protocol !== 'protobuf' ? actual?.host ?? spaceKey?.toHex() : actual.host ?? 'dxos.org';
-
-  if (
-    actual.objectId !== expected.objectId ||
-    actual.protocol !== expected.protocol ||
-    (host !== expected.host && actual.host !== expected.host)
-  ) {
-    return false;
-  } else {
-    return true;
-  }
-};
-
-/**
- * @deprecated
- */
-// TODO(dmaretskyi): Cleanup.
-const legacyGetTextForMatch = (core: ObjectCore): string => '';
-// compositeRuntime.untracked(() => {
-//   if (!isTypedObject(core.rootProxy)) {
-//     return '';
-//   }
-
-//   return JSON.stringify(core.rootProxy.toJSON());
-// });

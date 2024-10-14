@@ -4,18 +4,18 @@
   "tags": [
     "scope:common"
   ],
-  "sourceRoot": "packages/common/esbuild-plugins/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "compile": {
       "executor": "@nx/js:tsc",
       "options": {
         "main": "{projectRoot}/src/index.ts",
-        "outputPath": "packages/common/esbuild-plugins/dist",
+        "outputPath": "{projectRoot}/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "packages/common/esbuild-plugins/tsconfig.json"
+        "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
     "lint": {}

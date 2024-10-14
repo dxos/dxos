@@ -7,7 +7,7 @@ import { Decoration, EditorView } from '@codemirror/view';
 
 import { isNotFalsy } from '@dxos/util';
 
-import { Cursor } from './cursor';
+import { Cursor } from '../state';
 
 type Annotation = {
   cursor: string;
@@ -69,10 +69,10 @@ export const annotations = (options: AnnotationOptions = {}): Extension => {
   ];
 };
 
-const styles = EditorView.baseTheme({
+const styles = EditorView.theme({
   '.cm-annotation': {
     textDecoration: 'underline',
     textDecorationStyle: 'wavy',
-    textDecorationColor: 'red',
+    textDecorationColor: 'var(--dx-error)',
   },
 });

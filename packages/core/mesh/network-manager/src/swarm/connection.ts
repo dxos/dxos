@@ -3,18 +3,18 @@
 //
 
 import { DeferredTask, Event, sleep, scheduleTask, scheduleTaskInterval, synchronized, Trigger } from '@dxos/async';
-import { Context, cancelWithContext } from '@dxos/context';
+import { Context, cancelWithContext, ContextDisposedError } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
+import { type PeerInfo } from '@dxos/messaging';
 import {
   CancelledError,
   ProtocolError,
   ConnectionResetError,
   ConnectivityError,
   TimeoutError,
-  UnknownProtocolError,
   trace,
 } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -125,8 +125,8 @@ export class Connection {
 
   constructor(
     public readonly topic: PublicKey,
-    public readonly ownId: PublicKey, // TODO(burdon): peerID?
-    public readonly remoteId: PublicKey,
+    public readonly localInfo: PeerInfo,
+    public readonly remoteInfo: PeerInfo,
     public readonly sessionId: PublicKey,
     public readonly initiator: boolean,
     private readonly _signalMessaging: SignalMessenger,
@@ -137,8 +137,8 @@ export class Connection {
     log.trace('dxos.mesh.connection.construct', {
       sessionId: this.sessionId,
       topic: this.topic,
-      localPeerId: this.ownId,
-      remotePeerId: this.remoteId,
+      localPeer: this.localInfo,
+      remotePeer: this.remoteInfo,
       initiator: this.initiator,
     });
   }
@@ -169,8 +169,8 @@ export class Connection {
     log.trace('dxos.mesh.connection.open', {
       sessionId: this.sessionId,
       topic: this.topic,
-      localPeerId: this.ownId,
-      remotePeerId: this.remoteId,
+      localPeerId: this.localInfo,
+      remotePeerId: this.remoteInfo,
       initiator: this.initiator,
     });
 
@@ -201,13 +201,14 @@ export class Connection {
 
     invariant(!this._transport);
     this._transport = this._transportFactory.createTransport({
+      ownPeerKey: this.localInfo.peerKey,
+      remotePeerKey: this.remoteInfo.peerKey,
+      topic: this.topic.toHex(),
       initiator: this.initiator,
       stream: this._protocol.stream,
       sendSignal: async (signal) => this._sendSignal(signal),
       sessionId: this.sessionId,
     });
-
-    await this._transport.open();
 
     this._transport.connected.once(async () => {
       this._changeState(ConnectionState.CONNECTED);
@@ -237,8 +238,6 @@ export class Connection {
       } else if (err instanceof ConnectivityError) {
         log.info('aborting due to transport ConnectivityError');
         this.abort().catch((err) => this.errors.raise(err));
-      } else if (err instanceof UnknownProtocolError) {
-        log.warn('unsure what to do with UnknownProtocolError, will keep on truckin', { err });
       }
 
       if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
@@ -246,6 +245,8 @@ export class Connection {
         this.errors.raise(err);
       }
     });
+
+    await this._transport.open();
 
     // Replay signals that were received before transport was created.
     for (const signal of this._incomingSignalBuffer) {
@@ -317,7 +318,7 @@ export class Connection {
     await this.connectedTimeoutContext.dispose();
     await this._ctx.dispose();
 
-    log('closing...', { peerId: this.ownId });
+    log('closing...', { peerId: this.localInfo });
 
     let abortProtocol = false;
     if (lastState !== ConnectionState.CONNECTED) {
@@ -336,7 +337,7 @@ export class Connection {
       log.catch(err);
     }
 
-    log('closed', { peerId: this.ownId });
+    log('closed', { peerId: this.localInfo });
     this._changeState(ConnectionState.CLOSED);
     this._callbacks?.onClosed?.(err);
   }
@@ -373,15 +374,19 @@ export class Connection {
       this._outgoingSignalBuffer.length = 0;
 
       await this._signalMessaging.signal({
-        author: this.ownId,
-        recipient: this.remoteId,
+        author: this.localInfo,
+        recipient: this.remoteInfo,
         sessionId: this.sessionId,
         topic: this.topic,
         data: { signalBatch: { signals } },
       });
     } catch (err) {
       // TODO(nf): determine why instanceof doesn't work here
-      if (err instanceof CancelledError || (err instanceof Error && err.message?.includes('CANCELLED'))) {
+      if (
+        err instanceof CancelledError ||
+        err instanceof ContextDisposedError ||
+        (err instanceof Error && err.message?.includes('CANCELLED'))
+      ) {
         return;
       }
 
@@ -401,8 +406,8 @@ export class Connection {
       return;
     }
     invariant(msg.data.signal || msg.data.signalBatch);
-    invariant(msg.author?.equals(this.remoteId));
-    invariant(msg.recipient?.equals(this.ownId));
+    invariant(msg.author.peerKey === this.remoteInfo.peerKey);
+    invariant(msg.recipient.peerKey === this.localInfo.peerKey);
 
     const signals = msg.data.signalBatch ? msg.data.signalBatch.signals ?? [] : [msg.data.signal];
     for (const signal of signals) {
@@ -411,11 +416,11 @@ export class Connection {
       }
 
       if ([ConnectionState.CREATED, ConnectionState.INITIAL].includes(this.state)) {
-        log('buffered signal', { peerId: this.ownId, remoteId: this.remoteId, msg: msg.data });
+        log('buffered signal', { peerId: this.localInfo, remoteId: this.remoteInfo, msg: msg.data });
         this._incomingSignalBuffer.push(signal);
       } else {
         invariant(this._transport, 'Connection not ready to accept signals.');
-        log('received signal', { peerId: this.ownId, remoteId: this.remoteId, msg: msg.data });
+        log('received signal', { peerId: this.localInfo, remoteId: this.remoteInfo, msg: msg.data });
         await this._transport.onSignal(signal);
       }
     }
@@ -426,7 +431,7 @@ export class Connection {
   }
 
   private _changeState(state: ConnectionState): void {
-    log('stateChanged', { from: this._state, to: state, peerId: this.ownId });
+    log('stateChanged', { from: this._state, to: state, peerId: this.localInfo });
     invariant(state !== this._state, 'Already in this state.');
     this._state = state;
     this.stateChanged.emit(state);

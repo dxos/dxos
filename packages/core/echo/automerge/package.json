@@ -1,6 +1,6 @@
 {
   "name": "@dxos/automerge",
-  "version": "0.6.5",
+  "version": "0.6.11",
   "description": "Automerge adapter.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,104 +8,117 @@
   "author": "info@dxos.org",
   "imports": {
     "#automerge-wasm": {
+      "types": "./dist/types/src/automerge-wasm.d.ts",
       "browser": "./exports/browser/automerge-wasm.mjs",
-      "import": "./exports/browser/automerge-wasm.mjs",
-      "require": "./exports/node/automerge-wasm.cjs",
-      "node": "./exports/node/automerge-wasm.cjs",
-      "types": "./dist/types/src/automerge-wasm.d.ts"
+      "node": {
+        "require": "./exports/node/automerge-wasm.cjs",
+        "import": "./exports/node/automerge-wasm.cjs"
+      }
     },
     "#automerge": {
+      "types": "./dist/types/src/automerge.d.ts",
       "browser": "./dist/lib/browser/automerge.js",
-      "import": "./dist/lib/browser/automerge.js",
-      "require": "./dist/lib/node/automerge.cjs",
-      "node": "./dist/lib/node/automerge.cjs",
-      "types": "./dist/types/src/automerge.d.ts"
+      "node": {
+        "require": "./dist/lib/node/automerge.cjs",
+        "import": "./dist/lib/node-esm/automerge.mjs"
+      }
     },
     "#automerge/next": {
+      "types": "./dist/types/src/automerge/next.d.ts",
       "browser": "./dist/lib/browser/automerge/next.js",
-      "import": "./dist/lib/browser/automerge/next.js",
-      "require": "./dist/lib/node/automerge/next.cjs",
-      "node": "./dist/lib/node/automerge/next.cjs",
-      "types": "./dist/types/src/automerge/next.d.ts"
+      "node": {
+        "require": "./dist/lib/node/automerge/next.cjs",
+        "import": "./dist/lib/node-esm/automerge/next.mjs"
+      }
     },
     "#automerge-repo": {
+      "types": "./dist/types/src/automerge-repo.d.ts",
       "browser": "./dist/lib/browser/automerge-repo.js",
-      "import": "./dist/lib/browser/automerge-repo.js",
-      "require": "./dist/lib/node/automerge-repo.cjs",
-      "node": "./dist/lib/node/automerge-repo.cjs",
-      "types": "./dist/types/src/automerge-repo.d.ts"
+      "node": {
+        "require": "./dist/lib/node/automerge-repo.cjs",
+        "import": "./dist/lib/node-esm/automerge-repo.mjs"
+      }
     },
     "#automerge-repo-storage-indexeddb": {
+      "types": "./dist/types/src/automerge-repo-storage-indexeddb.d.ts",
       "browser": "./dist/lib/browser/automerge-repo-storage-indexeddb.js",
-      "import": "./dist/lib/browser/automerge-repo-storage-indexeddb.js",
-      "require": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
-      "node": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
-      "types": "./dist/types/src/automerge-repo-storage-indexeddb.d.ts"
+      "node": {
+        "require": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
+        "import": "./dist/lib/node-esm/automerge-repo-storage-indexeddb.mjs"
+      }
     },
     "#automerge-repo-network-broadcastchannel": {
+      "types": "./dist/types/src/automerge-repo-network-broadcastchannel.d.ts",
       "browser": "./dist/lib/browser/automerge-repo-network-broadcastchannel.js",
-      "import": "./dist/lib/browser/automerge-repo-network-broadcastchannel.js",
-      "require": "./dist/lib/node/automerge-repo-network-broadcastchannel.cjs",
-      "node": "./dist/lib/node/automerge-repo-network-broadcastchannel.cjs",
-      "types": "./dist/types/src/automerge-repo-network-broadcastchannel.d.ts"
+      "node": {
+        "require": "./dist/lib/node/automerge-repo-network-broadcastchannel.cjs",
+        "import": "./dist/lib/node-esm/automerge-repo-network-broadcastchannel.mjs"
+      }
     },
     "#automerge-repo-network-websocket": {
+      "types": "./dist/types/src/automerge-repo-network-websocket.d.ts",
       "browser": "./dist/lib/browser/automerge-repo-network-websocket.js",
-      "import": "./dist/lib/browser/automerge-repo-network-websocket.js",
-      "require": "./dist/lib/node/automerge-repo-network-websocket.cjs",
-      "node": "./dist/lib/node/automerge-repo-network-websocket.cjs",
-      "types": "./dist/types/src/automerge-repo-network-websocket.d.ts"
+      "node": {
+        "require": "./dist/lib/node/automerge-repo-network-websocket.cjs",
+        "import": "./dist/lib/node-esm/automerge-repo-network-websocket.mjs"
+      }
     }
   },
   "exports": {
     "./automerge-wasm": {
+      "types": "./dist/types/src/automerge-wasm.d.ts",
       "browser": "./exports/browser/automerge-wasm.mjs",
-      "import": "./exports/browser/automerge-wasm.mjs",
-      "require": "./exports/node/automerge-wasm.cjs",
-      "node": "./exports/node/automerge-wasm.cjs",
-      "types": "./dist/types/src/automerge-wasm.d.ts"
+      "node": {
+        "require": "./exports/node/automerge-wasm.cjs"
+      }
     },
     "./automerge": {
+      "types": "./dist/types/src/automerge.d.ts",
       "browser": "./dist/lib/browser/automerge.js",
-      "import": "./dist/lib/browser/automerge.js",
-      "require": "./dist/lib/node/automerge.cjs",
-      "node": "./dist/lib/node/automerge.cjs",
-      "types": "./dist/types/src/automerge.d.ts"
+      "node": {
+        "require": "./dist/lib/node/automerge.cjs",
+        "default": "./dist/lib/node-esm/automerge.mjs"
+      }
     },
     "./automerge/next": {
+      "types": "./dist/types/src/automerge/next.d.ts",
       "browser": "./dist/lib/browser/automerge/next.js",
-      "import": "./dist/lib/browser/automerge/next.js",
-      "require": "./dist/lib/node/automerge/next.cjs",
-      "node": "./dist/lib/node/automerge/next.cjs",
-      "types": "./dist/types/src/automerge/next.d.ts"
+      "node": {
+        "require": "./dist/lib/node/automerge/next.cjs",
+        "default": "./dist/lib/node-esm/automerge/next.mjs"
+      }
     },
     "./automerge-repo": {
+      "types": "./dist/types/src/automerge-repo.d.ts",
       "browser": "./dist/lib/browser/automerge-repo.js",
-      "import": "./dist/lib/browser/automerge-repo.js",
-      "require": "./dist/lib/node/automerge-repo.cjs",
-      "node": "./dist/lib/node/automerge-repo.cjs",
-      "types": "./dist/types/src/automerge-repo.d.ts"
+      "node": {
+        "require": "./dist/lib/node/automerge-repo.cjs",
+        "default": "./dist/lib/node-esm/automerge-repo.mjs"
+      }
     },
     "./automerge-repo-storage-indexeddb": {
+      "types": "./dist/types/src/automerge-repo-storage-indexeddb.d.ts",
       "browser": "./dist/lib/browser/automerge-repo-storage-indexeddb.js",
-      "import": "./dist/lib/browser/automerge-repo-storage-indexeddb.js",
-      "require": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
-      "node": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
-      "types": "./dist/types/src/automerge-repo-storage-indexeddb.d.ts"
+      "node": {
+        "require": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
+        "default": "./dist/lib/node-esm/automerge-repo-storage-indexeddb.mjs"
+      }
     },
     "./automerge-repo-network-broadcastchannel": {
+      "types": "./dist/types/src/automerge-repo-network-broadcastchannel.d.ts",
       "browser": "./dist/lib/browser/automerge-repo-network-broadcastchannel.js",
-      "import": "./dist/lib/browser/automerge-repo-network-broadcastchannel.js",
-      "require": "./dist/lib/node/automerge-repo-network-broadcastchannel.cjs",
-      "node": "./dist/lib/node/automerge-repo-network-broadcastchannel.cjs",
-      "types": "./dist/types/src/automerge-repo-network-broadcastchannel.d.ts"
+      "node": {
+        "require": "./dist/lib/node/automerge-repo-network-broadcastchannel.cjs",
+        "default": "./dist/lib/node-esm/automerge-repo-network-broadcastchannel.mjs"
+      }
     },
     "./automerge-repo-network-websocket": {
+      "types": "./dist/types/src/automerge-repo-network-websocket.d.ts",
       "browser": "./dist/lib/browser/automerge-repo-network-websocket.js",
-      "import": "./dist/lib/browser/automerge-repo-network-websocket.js",
-      "require": "./dist/lib/node/automerge-repo-network-websocket.cjs",
-      "node": "./dist/lib/node/automerge-repo-network-websocket.cjs",
-      "types": "./dist/types/src/automerge-repo-network-websocket.d.ts"
+      "node": {
+        "require": "./dist/lib/node/automerge-repo-network-websocket.cjs",
+        "default": "./dist/lib/node-esm/automerge-repo-network-websocket.mjs"
+      }
     }
   },
   "typesVersions": {

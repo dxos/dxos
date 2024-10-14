@@ -18,9 +18,9 @@ import { type BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
 import { CredentialRetrieverExtension } from './admission-discovery-extension';
-import { Space, createIdFromSpaceKey } from './space';
+import { Space } from './space';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
-import { SnapshotManager, type SnapshotStore } from '../db-host';
+import { createIdFromSpaceKey } from '../common/space-id';
 import { type MetadataStore } from '../metadata';
 
 export type SpaceManagerParams = {
@@ -28,12 +28,9 @@ export type SpaceManagerParams = {
   networkManager: SwarmNetworkManager;
   metadataStore: MetadataStore;
 
-  /**
-   * @deprecated Replaced by BlobStore.
-   */
-  snapshotStore: SnapshotStore;
-
   blobStore: BlobStore;
+
+  disableP2pReplication?: boolean;
 };
 
 export type ConstructSpaceParams = {
@@ -65,17 +62,17 @@ export class SpaceManager {
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _networkManager: SwarmNetworkManager;
   private readonly _metadataStore: MetadataStore;
-  private readonly _snapshotStore: SnapshotStore;
   private readonly _blobStore: BlobStore;
   private readonly _instanceId = PublicKey.random().toHex();
+  private readonly _disableP2pReplication: boolean;
 
-  constructor({ feedStore, networkManager, metadataStore, snapshotStore, blobStore }: SpaceManagerParams) {
+  constructor({ feedStore, networkManager, metadataStore, blobStore, disableP2pReplication }: SpaceManagerParams) {
     // TODO(burdon): Assert.
     this._feedStore = feedStore;
     this._networkManager = networkManager;
     this._metadataStore = metadataStore;
-    this._snapshotStore = snapshotStore;
     this._blobStore = blobStore;
+    this._disableP2pReplication = disableP2pReplication ?? false;
   }
 
   // TODO(burdon): Remove.
@@ -115,8 +112,8 @@ export class SpaceManager {
       onSessionAuth: onAuthorizedConnection,
       onAuthFailure,
       blobStore: this._blobStore,
+      disableP2pReplication: this._disableP2pReplication,
     });
-    const snapshotManager = new SnapshotManager(this._snapshotStore, this._blobStore, protocol.blobSync);
 
     const space = new Space({
       id: spaceId,
@@ -125,7 +122,6 @@ export class SpaceManager {
       genesisFeed,
       feedProvider: (feedKey, opts) => this._feedStore.openFeed(feedKey, opts),
       metadataStore: this._metadataStore,
-      snapshotManager,
       memberKey,
       onDelegatedInvitationStatusChange,
       onMemberRolesChanged,
@@ -157,6 +153,7 @@ export class SpaceManager {
       },
       onAuthFailure: (session: Teleport) => session.close(),
       blobStore: this._blobStore,
+      disableP2pReplication: this._disableP2pReplication,
     });
 
     try {

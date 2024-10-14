@@ -7,7 +7,8 @@ import React, { type FC, useState } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { useMulticastObservable } from '@dxos/react-async';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { useMulticastObservable } from '@dxos/react-hooks';
 import { Toolbar } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
@@ -37,6 +38,15 @@ export const SpaceInfoPanel: FC = () => {
     }
   };
 
+  const toggleEdgeReplication = async () => {
+    await space?.internal.setEdgeReplicationPreference(
+      space?.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED
+        ? EdgeReplicationSetting.DISABLED
+        : EdgeReplicationSetting.ENABLED,
+    );
+    setTimeout(() => forceUpdate({}), 500); // Refresh the panel.
+  };
+
   return (
     <PanelContainer
       toolbar={
@@ -48,6 +58,11 @@ export const SpaceInfoPanel: FC = () => {
           <div className='grow' />
           <Toolbar.Button onClick={toggleActive}>
             {space?.state.get() === SpaceState.SPACE_INACTIVE ? 'Open' : 'Close'}
+          </Toolbar.Button>
+          <Toolbar.Button onClick={toggleEdgeReplication}>
+            {space?.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED
+              ? 'Disable backup to EDGE'
+              : 'Enable backup to EDGE'}
           </Toolbar.Button>
         </Toolbar.Root>
       }

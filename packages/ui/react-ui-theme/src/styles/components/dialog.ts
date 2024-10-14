@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { descriptionText, focusRing, surfaceElevation, dialogMotion, groupBorder } from '../fragments';
+import { descriptionText, focusRing, surfaceElevation, dialogMotion } from '../fragments';
 
 export type DialogStyleProps = {
   srOnly?: boolean;
@@ -13,21 +13,20 @@ export type DialogStyleProps = {
   elevation?: Elevation;
 };
 
-const dialogLayoutFragment = 'overflow-auto grid place-items-center p-2 md:p-4 lg:p-8';
+const dialogLayoutFragment = 'overflow-auto grid place-items-center sm:p-2 md:p-4 lg:p-8';
 
 export const dialogOverlay: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
-  mx('fixed z-[22] inset-inline-0 block-start-0 bs-[100dvh] surface-scrim', dialogLayoutFragment, ...etc);
+  mx('fixed z-[22] inset-inline-0 block-start-0 bs-[100dvh] bg-scrim', dialogLayoutFragment, ...etc);
 
 export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout, elevation = 'chrome' }, ...etc) =>
   mx(
     // TODO(thure): `flex` should not be default.
     'flex flex-col',
     !inOverlayLayout && 'fixed z-[22] top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
-    'is-[95vw] max-is-full md:max-is-[24rem] border rounded-lg p-4',
+    '@container is-dvw sm:is-[95vw] max-is-full md:max-is-[24rem] p-4 sm:border sm:rounded-lg sm:border-separator',
     dialogMotion,
     surfaceElevation({ elevation }),
-    'surface-baseGlass backdrop-blur',
-    groupBorder,
+    'bg-modalSurface backdrop-blur',
     focusRing,
     ...etc,
   );

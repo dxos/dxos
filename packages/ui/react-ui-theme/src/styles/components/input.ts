@@ -47,21 +47,21 @@ export type InputMetaStyleProps = Partial<{
 }>;
 
 export const neutralInputValence = '';
-export const successInputValence = 'shadow-success-500/50 dark:shadow-success-600/50';
-export const infoInputValence = 'shadow-info-500/50 dark:shadow-info-600/50';
-export const warningInputValence = 'shadow-warning-500/50 dark:shadow-warning-600/50';
-export const errorInputValence = 'shadow-error-500/50 dark:shadow-error-600/50';
+export const successInputValence = 'shadow-emerald-500/50 dark:shadow-emerald-600/50';
+export const infoInputValence = 'shadow-cyan-500/50 dark:shadow-cyan-600/50';
+export const warningInputValence = 'shadow-amber-500/50 dark:shadow-amber-600/50';
+export const errorInputValence = 'shadow-rose-500/50 dark:shadow-rose-600/50';
 
 const textInputSurfaceFocus =
-  'transition-colors surface-input focus:surface-attention border-transparent focus:border-transparent';
+  'transition-colors bg-input focus:bg-attention border-transparent focus:border-transparent';
 
-const textInputSurfaceHover = 'hover:surface-hover focus:hover:surface-attention';
+const textInputSurfaceHover = 'hover:bg-hoverSurface focus:hover:bg-attention';
 
 const booleanInputSurface =
-  'shadow-inner transition-colors surface-unAccent aria-checked:surface-accent aria-[checked=mixed]:surface-accent';
+  'shadow-inner transition-colors bg-unAccent aria-checked:bg-accentSurface aria-[checked=mixed]:bg-accentSurface';
 
 const booleanInputSurfaceHover =
-  'hover:surface-unAccentHover hover:aria-checked:surface-accentHover hover:aria-[checked=mixed]:surface-accentHover';
+  'hover:bg-unAccentHover hover:aria-checked:bg-accentSurfaceHover hover:aria-[checked=mixed]:bg-accentSurfaceHover';
 
 export const inputValence = (valence?: MessageValence) => {
   switch (valence) {
@@ -88,7 +88,7 @@ const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 ];
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'is-full text-base rounded text-[color:var(--surface-text)]',
+  'is-full text-baseText rounded text-[color:var(--surface-text)]',
   textInputSurfaceFocus,
   placeholderText,
   props.density === 'fine' ? fineDimensions : coarseDimensions,
@@ -96,10 +96,10 @@ const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 ];
 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'is-full text-base rounded text-[color:var(--surface-text)]',
+  'is-full text-baseText rounded text-[color:var(--surface-text)]',
   textInputSurfaceFocus,
   textInputSurfaceHover,
-  props.focused && 'surface-attention',
+  props.focused && 'bg-attention',
   placeholderText,
   inputValence(props.validationValence),
   props.disabled && staticDisabled,
@@ -139,7 +139,7 @@ export const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disa
 export const inputSwitchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx(
     getSize(size === 'px' ? 'px' : ((size - 2) as Size)),
-    'block bg-white rounded-full separator-separator transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%]',
+    'block bg-white rounded-full border-separator transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%]',
     ...etc,
   );
 

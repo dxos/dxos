@@ -115,6 +115,12 @@ message Runtime {
       optional string prefix = 2 [(env_var) = "LOG_PREFIX"];
     }
 
+    message EdgeFeatures {
+      optional bool feed_replicator = 1;
+      optional bool echo_replicator = 2;
+      optional bool signaling = 3;
+    }
+
     optional Log log = 1;
     optional Storage storage = 2;
 
@@ -140,6 +146,11 @@ message Runtime {
 
     /// Spaces will stay in SpaceState.CLOSED until explicitly opened. Speeds up client-services initialization.
     optional bool lazy_space_open = 9;
+
+    /// Disabled automerge & hypercore replication through P2P connections.
+    optional bool disable_p2p_replication = 10;
+
+    optional EdgeFeatures edge_features = 11;
   }
 
   message App {
@@ -402,6 +413,10 @@ message Runtime {
       optional string type = 2;
     }
 
+    message Edge {
+      optional string url = 1;
+    }
+
     optional Kube kube = 1;
     optional AppServer app = 2;
     optional Dxns dxns = 3;
@@ -416,6 +431,7 @@ message Runtime {
     optional Tunneling tunneling = 11;
     optional Faasd faasd = 12;
     optional AgentHosting agent_hosting = 13;
+    optional Edge edge = 15;
   }
 
   message Keys {

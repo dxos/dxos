@@ -12,10 +12,10 @@ The display mode that shell should use.
 Options:
   - proto3_optional = true
 
-### [reload]()
+### [reset]()
 Type: <code>boolean</code>
 
-Used after sign out/identity reset.
+Shell cannot reload the app from within an iframe.
 
 Options:
   - proto3_optional = true

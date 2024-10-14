@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, latch } from '@dxos/async';
 import { createAdmissionCredentials } from '@dxos/credentials';
@@ -10,7 +10,7 @@ import { AuthStatus } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { TestBuilder, type TestPeer } from '../testing';
 
@@ -43,6 +43,7 @@ describe('DataSpaceManager', () => {
     await peer2.createIdentity();
 
     await openAndClose(peer1.echoHost, peer1.dataSpaceManager, peer2.echoHost, peer2.dataSpaceManager);
+    await connectReplicators([peer1, peer2]);
 
     const space1 = await peer1.dataSpaceManager.createSpace();
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
@@ -112,6 +113,7 @@ describe('DataSpaceManager', () => {
     await peer2.dataSpaceManager.open();
 
     await openAndClose(peer1.echoHost, peer1.dataSpaceManager, peer2.echoHost, peer2.dataSpaceManager);
+    await connectReplicators([peer1, peer2]);
 
     const space1 = await peer1.dataSpaceManager.createSpace();
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
@@ -205,6 +207,10 @@ describe('DataSpaceManager', () => {
       expect(getFirstSpace(peer).state).to.eq(SpaceState.SPACE_INACTIVE);
     });
   });
+
+  const connectReplicators = (peers: TestPeer[]) => {
+    return Promise.all(peers.map((peer) => peer.echoHost.addReplicator(peer.meshEchoReplicator)));
+  };
 
   const reloadDataSpaces = async (peer: TestPeer) => {
     await peer.dataSpaceManager.close();

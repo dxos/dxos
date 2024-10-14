@@ -8,7 +8,7 @@ import { type Duplex } from 'node:stream';
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type TestServiceWithStreams } from '@dxos/protocols/proto/example/testing/rpc';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 
@@ -266,7 +266,7 @@ type TestStream = {
   bytesReceived: number;
   sendErrors: number;
   receiveErrors: number;
-  timer?: NodeJS.Timer;
+  timer?: NodeJS.Timeout;
   startTimestamp?: number;
-  reportingTimer?: NodeJS.Timer;
+  reportingTimer?: NodeJS.Timeout;
 };

@@ -12,6 +12,7 @@ import {
   ListBullets,
   ListChecks,
   ListNumbers,
+  MagnifyingGlass,
   Paragraph,
   Quotes,
   TextStrikethrough,
@@ -26,6 +27,9 @@ import {
   TextItalic,
   CaretDown,
   Check,
+  PencilSimpleSlash,
+  MarkdownLogo,
+  PencilSimple,
 } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
@@ -45,7 +49,7 @@ import {
 } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { type Action, type ActionType, type Formatting } from '../../extensions';
+import { type EditorViewMode, type Action, type ActionType, type Formatting, EditorViewModes } from '../../extensions';
 import { translationKey } from '../../translations';
 
 const iconStyles = getSize(5);
@@ -58,21 +62,24 @@ const ToolbarSeparator = () => <div role='separator' className='grow' />;
 // Root
 //
 
+const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>('Toolbar');
+
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
-    state: (Formatting & { comment?: boolean; selection?: boolean }) | undefined;
+    state: (Formatting & { comment?: boolean; mode?: EditorViewMode; selection?: boolean }) | undefined;
     onAction?: (action: Action) => void;
   }>
 >;
-
-const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>('Toolbar');
 
 const ToolbarRoot = ({ children, onAction, classNames, state }: ToolbarProps) => {
   return (
     <ToolbarContextProvider onAction={onAction} state={state}>
       <DensityProvider density='fine'>
         <ElevationProvider elevation='chrome'>
-          <NaturalToolbar.Root classNames={['is-full shrink-0 overflow-x-auto overflow-y-hidden p-1', classNames]}>
+          <NaturalToolbar.Root
+            classNames={['p-1 is-full shrink-0 overflow-x-auto overflow-y-hidden', classNames]}
+            style={{ contain: 'layout' }}
+          >
             {children}
           </NaturalToolbar.Root>
         </ElevationProvider>
@@ -231,11 +238,11 @@ const MarkdownHeading = () => {
 //
 
 const markdownStyles: ButtonProps[] = [
-  { type: 'strong', Icon: TextB, getState: (state) => state.strong },
-  { type: 'emphasis', Icon: TextItalic, getState: (state) => state.emphasis },
-  { type: 'strikethrough', Icon: TextStrikethrough, getState: (state) => state.strikethrough },
-  { type: 'code', Icon: Code, getState: (state) => state.code },
-  { type: 'link', Icon: Link, getState: (state) => state.link },
+  { type: 'strong', Icon: TextB, getState: (state) => !!state?.strong },
+  { type: 'emphasis', Icon: TextItalic, getState: (state) => !!state?.emphasis },
+  { type: 'strikethrough', Icon: TextStrikethrough, getState: (state) => !!state?.strikethrough },
+  { type: 'code', Icon: Code, getState: (state) => !!state?.code },
+  { type: 'link', Icon: Link, getState: (state) => !!state?.link },
 ];
 
 const MarkdownStyles = () => {
@@ -291,7 +298,7 @@ const markdownBlocks: ButtonProps[] = [
   {
     type: 'blockquote',
     Icon: Quotes,
-    getState: (state) => state.blockQuote,
+    getState: (state) => !!state?.blockQuote,
   },
   {
     type: 'codeblock',
@@ -386,19 +393,108 @@ const MarkdownCustom = ({ onUpload }: MarkdownCustomOptions = {}) => {
 };
 
 //
+// View Mode
+//
+
+const ViewModeIcons: Record<EditorViewMode, Icon> = {
+  preview: PencilSimple,
+  readonly: PencilSimpleSlash,
+  source: MarkdownLogo,
+};
+
+const MarkdownView = ({ mode }: { mode: EditorViewMode }) => {
+  const { t } = useTranslation(translationKey);
+  const { onAction } = useToolbarContext('ViewMode');
+  const ModeIcon = ViewModeIcons[mode ?? 'preview'];
+  const suppressNextTooltip = useRef<boolean>(false);
+  const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
+  const [selectOpen, setSelectOpen] = useState<boolean>(false);
+  return (
+    <Tooltip.Root
+      open={tooltipOpen}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen && suppressNextTooltip.current) {
+          suppressNextTooltip.current = false;
+          return setTooltipOpen(false);
+        } else {
+          return setTooltipOpen(nextOpen);
+        }
+      }}
+    >
+      {/* TODO(thure): `Select` encounters a ref error if used here (repro: select a heading, then select another
+            heading). Determine the root cause and fix or report to Radix. */}
+      <DropdownMenu.Root
+        open={selectOpen}
+        onOpenChange={(nextOpen: boolean) => {
+          if (!nextOpen) {
+            suppressNextTooltip.current = true;
+          }
+          return setSelectOpen(nextOpen);
+        }}
+      >
+        <Tooltip.Trigger asChild>
+          <NaturalToolbar.Button asChild>
+            <DropdownMenu.Trigger asChild>
+              <Button variant='ghost' classNames={buttonStyles}>
+                <span className='sr-only'>{t('mode label')}</span>
+                <ModeIcon className={iconStyles} />
+                <CaretDown />
+              </Button>
+            </DropdownMenu.Trigger>
+          </NaturalToolbar.Button>
+        </Tooltip.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content classNames='is-min md:is-min' onCloseAutoFocus={(e) => e.preventDefault()}>
+            <DropdownMenu.Viewport>
+              {EditorViewModes.map((value) => {
+                const Icon = ViewModeIcons[value];
+                return (
+                  <DropdownMenu.CheckboxItem
+                    key={value}
+                    checked={value === mode}
+                    onClick={() => onAction?.({ type: 'view-mode', data: value })}
+                  >
+                    <Icon className={iconStyles} />
+                    <span className='whitespace-nowrap grow'>{t(`${value} mode label`)}</span>
+                    <Check className={value === mode ? 'visible' : 'invisible'} />
+                  </DropdownMenu.CheckboxItem>
+                );
+              })}
+            </DropdownMenu.Viewport>
+            <DropdownMenu.Arrow />
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+      <Tooltip.Portal>
+        <Tooltip.Content {...tooltipProps}>
+          {t('view mode label')}
+          <Tooltip.Arrow />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  );
+};
+
+//
 // Actions
 //
 
-// TODO(burdon): Make extensible.
 const MarkdownActions = () => {
   const { onAction, state } = useToolbarContext('MarkdownActions');
   const { t } = useTranslation(translationKey);
+
+  let commentToolTipKey = 'comment label';
+  if (state?.comment) {
+    commentToolTipKey = 'selection overlaps existing comment label';
+  } else if (state?.selection === false) {
+    commentToolTipKey = 'select text to comment label';
+  }
+
   return (
     <>
-      {/* TODO(burdon): Toggle readonly state. */}
-      {/* <ToolbarButton value='comment' Icon={BookOpenText} onClick={() => onAction?.({ type: 'comment' })}> */}
-      {/*  {t('comment label')} */}
-      {/* </ToolbarButton> */}
+      <ToolbarButton value='search' Icon={MagnifyingGlass} onClick={() => onAction?.({ type: 'search' })}>
+        {t('search label')}
+      </ToolbarButton>
       <ToolbarButton
         value='comment'
         Icon={ChatText}
@@ -406,7 +502,7 @@ const MarkdownActions = () => {
         onClick={() => onAction?.({ type: 'comment' })}
         disabled={!state || state.comment || !state.selection}
       >
-        {t('comment label')}
+        {t(commentToolTipKey)}
       </ToolbarButton>
     </>
   );
@@ -420,6 +516,7 @@ export const Toolbar = {
   Root: ToolbarRoot,
   Button: ToolbarToggleButton,
   Separator: ToolbarSeparator,
+  View: MarkdownView,
   Markdown: MarkdownStandard,
   Custom: MarkdownCustom,
   Actions: MarkdownActions,

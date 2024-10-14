@@ -34,6 +34,14 @@ export type SpaceManagerImplProps = SpacePanelStepProps & {
 
 const activeActionKey = 'dxos:react-shell/space-manager/active-action';
 
+const handleInvitationEvent = (invitation: Invitation, subscription: ZenObservable.Subscription) => {
+  const invitationCode = InvitationEncoder.encode(invitation);
+  if (invitation.state === Invitation.State.CONNECTING) {
+    log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+    subscription.unsubscribe();
+  }
+};
+
 export type SpaceManagerProps = SpaceManagerImplProps & {};
 
 export const SpaceManager = (props: SpaceManagerProps) => {
@@ -42,13 +50,6 @@ export const SpaceManager = (props: SpaceManagerProps) => {
   const config = useConfig();
 
   const invitations = useSpaceInvitations(space?.key);
-
-  const onInvitationEvent = useCallback((invitation: Invitation) => {
-    const invitationCode = InvitationEncoder.encode(invitation);
-    if (invitation.state === Invitation.State.CONNECTING) {
-      log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
-    }
-  }, []);
 
   const inviteActions = {
     inviteOne: {
@@ -63,7 +64,9 @@ export const SpaceManager = (props: SpaceManagerProps) => {
           target,
         });
         if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
-          invitation.subscribe(onInvitationEvent);
+          const subscription: ZenObservable.Subscription = invitation.subscribe((invitation) =>
+            handleInvitationEvent(invitation, subscription),
+          );
         }
       }, [space]),
     },
@@ -79,7 +82,9 @@ export const SpaceManager = (props: SpaceManagerProps) => {
           target,
         });
         if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
-          invitation.subscribe(onInvitationEvent);
+          const subscription: ZenObservable.Subscription = invitation.subscribe((invitation) =>
+            handleInvitationEvent(invitation, subscription),
+          );
         }
       }, [space]),
     },

@@ -3,9 +3,9 @@
 //
 
 import fetch from 'isomorphic-fetch';
-import { invariant } from '@dxos/invariant';
-import urljoin from 'url-join';
+import urlJoin from 'url-join';
 
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { humanize } from '@dxos/util';
 
@@ -115,7 +115,7 @@ export class Spy {
 
   async _post(data: any) {
     const { hostname, port, path } = this._config;
-    const url = urljoin(`http://${hostname}:${port}`, path);
+    const url = urlJoin(`http://${hostname}:${port}`, path);
 
     try {
       // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch

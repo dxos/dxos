@@ -1,6 +1,6 @@
 {
   "name": "@dxos/codemods",
-  "version": "0.6.5",
+  "version": "0.6.11",
   "private": true,
   "description": "Code analyzer.",
   "homepage": "https://dxos.org",
@@ -19,7 +19,6 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@babel/preset-env": "^7.19.3",
-    "@types/jscodeshift": "^0.11.5",
-    "typescript": "^5.4.5"
+    "@types/jscodeshift": "^0.11.5"
   }
 }

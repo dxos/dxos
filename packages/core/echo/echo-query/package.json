@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-query",
-  "version": "0.6.5",
+  "version": "0.6.11",
   "description": "ECHO queries.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,8 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     }
@@ -24,10 +25,8 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/echo-db": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@orama/orama": "^2.0.8",
-    "lodash.get": "^4.4.2"
+    "@orama/orama": "^2.0.8"
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",

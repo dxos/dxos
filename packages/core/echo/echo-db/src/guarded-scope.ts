@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { registerSignalRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
+import { registerSignalsRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 
 //
 // This module is used to guard against ECHO subscribing to signals within it's internals.
@@ -38,7 +38,7 @@ class GuardSignal implements GenericSignal {
   }
 }
 
-registerSignalRuntime({
+registerSignalsRuntime({
   createSignal: (debugInfo) => new GuardSignal(debugInfo),
   batch: (cb) => {
     cb();

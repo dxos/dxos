@@ -27,7 +27,7 @@ Arguments:
 `meta`: <code>[PropertiesTypeProps](/api/@dxos/react-client/types/PropertiesTypeProps)</code>
 :::
 
-```tsx{10} file=./snippets/create-spaces.tsx#L5-
+```tsx{11} file=./snippets/create-spaces.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -38,7 +38,7 @@ export const App = () => {
   return (
     <button
       onClick={async () => {
-        const space = await client.spaces.create();
+        await client.spaces.create();
       }}
     ></button>
   );
@@ -57,7 +57,7 @@ root.render(
 These hooks are available from package [`@dxos/react-client`](https://www.npmjs.com/package/@dxos/react-client) and re-render reactively.
 
 :::apidoc[@dxos/react-client.useSpace]
-### [useSpace(\[spaceKeyLike\])](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/react-client/src/echo/useSpaces.ts#L21)
+### [useSpace(\[spaceKeyLike\])](https://github.com/dxos/dxos/blob/664e23dbe/packages/sdk/react-client/src/echo/useSpaces.ts#L21)
 
 Get a specific Space using its key.
 The space is not guaranteed to be in the ready state.
@@ -72,7 +72,7 @@ Arguments:
 :::
 
 :::apidoc[@dxos/react-client.useSpaces]
-### [useSpaces(options)](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/react-client/src/echo/useSpaces.ts#L62)
+### [useSpaces(options)](https://github.com/dxos/dxos/blob/664e23dbe/packages/sdk/react-client/src/echo/useSpaces.ts#L62)
 
 Get all Spaces available to current user.
 Requires a ClientProvider somewhere in the parent tree.
@@ -87,7 +87,7 @@ Arguments:
 
 ### Example
 
-```tsx{13,16,20} file=./snippets/use-spaces.tsx#L5-
+```tsx{14,17} file=./snippets/use-spaces.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 

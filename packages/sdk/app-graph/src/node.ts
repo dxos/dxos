@@ -8,6 +8,7 @@ import { type MaybePromise, type MakeOptional } from '@dxos/util';
  * Represents a node in the graph.
  */
 // TODO(wittjosiah): Use Effect Schema.
+// TODO(burdon): Rename GraphNode. Node is already in the global namespace.
 export type Node<TData = any, TProperties extends Record<string, any> = Record<string, any>> = Readonly<{
   /**
    * Globally unique ID.

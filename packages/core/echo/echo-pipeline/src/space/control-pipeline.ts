@@ -160,7 +160,7 @@ export class ControlPipeline {
     };
     await this._pipeline.unpause();
 
-    log('save snapshot', { key: this._spaceKey, snapshot });
+    log('save snapshot', { key: this._spaceKey, snapshot: getSnapshotLoggerContext(snapshot) });
     await this._metadata.setSpaceControlPipelineSnapshot(this._spaceKey, snapshot);
   }
 
@@ -229,3 +229,12 @@ export class ControlPipeline {
     }
   }
 }
+
+const getSnapshotLoggerContext = (snapshot: ControlPipelineSnapshot) => {
+  return snapshot.messages?.map((msg) => {
+    const issuer = msg.credential.issuer;
+    const subject = msg.credential.subject.id;
+    const type = msg.credential.subject.assertion['@type'];
+    return { issuer, subject, type };
+  });
+};

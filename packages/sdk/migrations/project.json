@@ -4,7 +4,7 @@
   "tags": [
     "scope:sdk"
   ],
-  "sourceRoot": "packages/sdk/migrations/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
@@ -16,14 +16,10 @@
       }
     },
     "lint": {},
-    "test": {
-      "options": {
-        "forceExit": true
-      }
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",
-    "test"
+    "node-std"
   ]
 }

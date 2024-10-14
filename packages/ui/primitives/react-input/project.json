@@ -4,7 +4,7 @@
   "tags": [
     "scope:primitives"
   ],
-  "sourceRoot": "packages/ui/primitives/react-input/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
@@ -28,7 +28,7 @@
         "entryPoints": [
           "{projectRoot}/src/index.ts"
         ],
-        "outputPath": "packages/ui/primitives/react-input/dist/lib",
+        "outputPath": "{projectRoot}/dist/lib",
         "platforms": [
           "browser",
           "node"
@@ -41,6 +41,7 @@
     "lint": {}
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "node-std"
   ]
 }

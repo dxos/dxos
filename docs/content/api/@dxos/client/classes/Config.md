@@ -48,7 +48,7 @@ Arguments:
 
 Returns the given config property.
 
-Returns: <code>[DeepIndex](/api/@dxos/config/types/DeepIndex)&lt;[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)&lt;K&gt;&gt;</code>
+Returns: <code>undefined | [DeepIndex](/api/@dxos/config/types/DeepIndex)&lt;[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)&lt;K&gt;&gt;</code>
 
 Arguments: 
 
@@ -67,19 +67,5 @@ Returns: <code>Exclude&lt;[DeepIndex](/api/@dxos/config/types/DeepIndex)&lt;[Con
 Arguments: 
 
 `key`: <code>K</code>
-
-
-### [getUnchecked(key, \[defaultValue\])]()
-
-
-Returns config key without type checking.
-
-Returns: <code>T</code>
-
-Arguments: 
-
-`key`: <code>string</code>
-
-`defaultValue`: <code>T</code>
 
 

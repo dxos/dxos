@@ -2,16 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Reference } from '@dxos/echo-protocol';
-import { create, generateEchoId, TypedObject } from '@dxos/echo-schema';
+import { create, generateEchoId, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-import { describe, test } from '@dxos/test';
 
-import { compareType, Filter, filterMatch } from './filter';
+import { Filter } from './filter';
+import { filterMatch, compareType } from './filter-match';
 import { getObjectCore, ObjectCore } from '../core-db';
 import { EchoTestBuilder } from '../testing';
 
@@ -128,6 +127,13 @@ describe('Filter', () => {
     const obj = db.add(create(schema, { title: 'test' }));
     const filter = Filter.typename(schema.id);
     expect(filterMatch(filter, getObjectCore(obj))).to.be.true;
+  });
+
+  test('__typename', () => {
+    const filter = Filter.from({ __typename: 'dxos.org/example/Type' });
+
+    expect(filter.type!.toDXN().toString()).to.equal('dxn:type:dxos.org/example/Type');
+    expect(filter.properties).to.deep.equal({});
   });
 });
 

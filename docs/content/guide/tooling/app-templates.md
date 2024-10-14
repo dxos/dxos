@@ -49,7 +49,7 @@ This template provides some opinions for app development:
 
 ## `tasks` template
 
-This is a basic tasks app template. Try out the [Tasks app hosted on dxos.org](https://tasks.dxos.org).
+This is a basic tasks app template. Try it out [online](https://tasks.dxos.network).
 
 ```bash
 npm init @dxos/tasks@latest

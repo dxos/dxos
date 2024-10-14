@@ -8,7 +8,7 @@ import { scheduleTaskInterval } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { AgentStatus, type DashboardService } from '@dxos/protocols/proto/dxos/agent/dashboard';
 import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
 

@@ -1,16 +1,16 @@
 {
   "name": "tasks",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/apps/tasks/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
         "main": "{projectRoot}/src/main.ts",
-        "outputPath": "packages/apps/tasks/dist",
+        "outputPath": "{projectRoot}/dist",
         "transformers": ["@dxos/log-hook/transformer"],
-        "tsConfig": "packages/apps/tasks/tsconfig.json"
+        "tsConfig": "{projectRoot}/tsconfig.json"
       },
       "outputs": ["{options.outputPath}"]
     },
@@ -18,7 +18,7 @@
       "dependsOn": ["^build", "^bundle"],
       "executor": "@nx/vite:build",
       "options": {
-        "outputPath": "packages/apps/tasks/out/tasks",
+        "outputPath": "{projectRoot}/out/tasks",
         "generatePackageJson": false
       },
       "outputs": ["{options.outputPath}"]
@@ -35,7 +35,7 @@
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "tasks:bundle",
-        "staticFilePath": "packages/apps/tasks/out/tasks"
+        "staticFilePath": "{projectRoot}/out/tasks"
       }
     },
     "serve": {
@@ -43,10 +43,6 @@
       "options": {
         "buildTarget": "tasks:bundle"
       }
-    },
-    "serve-with-vault": {
-      "executor": "@dxos/serve-with-vault:run"
     }
-  },
-  "implicitDependencies": ["serve-with-vault"]
+  }
 }

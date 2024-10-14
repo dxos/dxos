@@ -41,6 +41,7 @@ const TableBody = ({ rows }: TableBodyProps) => {
             key={keyAccessor ? keyAccessor(row.original) : row.id}
             className={classNames}
             data-index={row.index}
+            data-testid={'table.data-row'}
             ref={virtualizer.measureElement}
             {...(isCurrent && { 'aria-current': 'location' })}
             {...(isSelected && { 'aria-selected': 'true' })}
@@ -61,7 +62,7 @@ const TableBody = ({ rows }: TableBodyProps) => {
             {row.getVisibleCells().map((cell) => {
               return (
                 <Cell key={cell.id} cell={cell}>
-                  {flexRender(cell.column.columnDef.cell, { className: 'pli-2', ...cell.getContext() })}
+                  {flexRender(cell.column.columnDef.cell, { ...cell.getContext() })}
                 </Cell>
               );
             })}

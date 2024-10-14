@@ -2,76 +2,103 @@
 // Copyright 2023 DXOS.org
 //
 
+import { describe, test } from 'vitest';
+
 import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { describe, test } from '@dxos/test';
 
 import { Connection } from './connection';
 import { TestWireProtocol } from '../testing/test-wire-protocol';
-import { createLibDataChannelTransportFactory, createSimplePeerTransportFactory } from '../transport';
+import { createRtcTransportFactory } from '../transport';
+import { chooseInitiatorPeer } from '../transport/webrtc/utils';
 
 describe('Connection', () => {
+  test('responder opens after initiator', async () => {
+    const { initiator, responder } = createPeerKeys();
+    await connectionTest({
+      fastConnectionKey: initiator,
+      slowConnectionKey: responder,
+    });
+  });
+
   test('initiator opens after responder', async () => {
-    const [topic, peerId1, peerId2, sessionId] = PublicKey.randomSequence();
-    const protocol1 = new TestWireProtocol(peerId1);
-    const connection1 = new Connection(
+    const { initiator, responder } = createPeerKeys();
+    await connectionTest({
+      fastConnectionKey: responder,
+      slowConnectionKey: initiator,
+    });
+  });
+
+  const connectionTest = async (setup: { fastConnectionKey: PublicKey; slowConnectionKey: PublicKey }) => {
+    const [topic, sessionId] = PublicKey.randomSequence();
+    const slowPeer = { peerKey: setup.slowConnectionKey.toHex() };
+    const fastPeer = { peerKey: setup.fastConnectionKey.toHex() };
+
+    const slowPeerProtocol = new TestWireProtocol(PublicKey.from(slowPeer.peerKey));
+    const slowConnection = new Connection(
       topic,
-      peerId1,
-      peerId2,
+      slowPeer,
+      fastPeer,
       sessionId,
       true,
       {
-        offer: async (msg) => {
-          log('offer', { msg });
-
-          return { accept: true };
-        },
+        offer: async (msg) => ({ accept: true }),
         signal: async (msg) => {
-          await connection2.signal(msg);
+          await fastConnection.signal(msg);
         },
       },
-      protocol1.factory({
+      slowPeerProtocol.factory({
         initiator: true,
-        localPeerId: peerId1,
-        remotePeerId: peerId2,
+        localPeerId: PublicKey.from(slowPeer.peerKey),
+        remotePeerId: PublicKey.from(fastPeer.peerKey),
         topic,
       }),
-      // TODO(nf): configure better
-      process.env.MOCHA_ENV === 'nodejs' ? createLibDataChannelTransportFactory() : createSimplePeerTransportFactory(),
+      createRtcTransportFactory(),
     );
 
-    const protocol2 = new TestWireProtocol(peerId2);
-    const connection2 = new Connection(
+    const fastPeerProtocol = new TestWireProtocol(PublicKey.from(fastPeer.peerKey));
+    const fastConnection = new Connection(
       topic,
-      peerId2,
-      peerId1,
+      fastPeer,
+      slowPeer,
       sessionId,
       false,
       {
-        offer: async (msg) => {
-          log('offer', { msg });
-
-          return { accept: true };
-        },
+        offer: async (msg) => ({ accept: true }),
         signal: async (msg) => {
-          await connection1.signal(msg);
+          await slowConnection.signal(msg);
         },
       },
-      protocol2.factory({ initiator: false, localPeerId: peerId2, remotePeerId: peerId1, topic }),
-      // TODO(nf): configure better
-      process.env.MOCHA_ENV === 'nodejs' ? createLibDataChannelTransportFactory() : createSimplePeerTransportFactory(),
+      fastPeerProtocol.factory({
+        initiator: false,
+        localPeerId: PublicKey.from(fastPeer.peerKey),
+        remotePeerId: PublicKey.from(slowPeer.peerKey),
+        topic,
+      }),
+      createRtcTransportFactory(),
     );
 
-    connection2.initiate();
-    await connection2.openConnection();
-    await sleep(100);
+    fastConnection.initiate();
+    await fastConnection.openConnection();
+    await sleep(200);
 
-    connection1.initiate();
-    await connection1.openConnection();
+    slowConnection.initiate();
+    await slowConnection.openConnection();
+
     await Promise.all([
-      protocol1.testConnection(peerId2, 'test message 1'),
-      protocol2.testConnection(peerId1, 'test message 2'),
+      slowPeerProtocol.testConnection(PublicKey.from(fastPeer.peerKey), 'test message 1'),
+      fastPeerProtocol.testConnection(PublicKey.from(slowPeer.peerKey), 'test message 2'),
     ]);
-  });
+  };
+
+  const createPeerKeys = () => {
+    const peer1 = PublicKey.random();
+    const peer2 = PublicKey.random();
+    const initiator = PublicKey.fromHex(chooseInitiatorPeer(peer1.toHex(), peer2.toHex()));
+    if (initiator.equals(peer1)) {
+      return { initiator: peer1, responder: peer2 };
+    } else {
+      return { initiator: peer2, responder: peer1 };
+    }
+  };
 });

@@ -4,7 +4,7 @@
   "tags": [
     "scope:ui"
   ],
-  "sourceRoot": "packages/ui/react-ui-table/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
@@ -22,6 +22,7 @@
     "test": {}
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "node-std"
   ]
 }

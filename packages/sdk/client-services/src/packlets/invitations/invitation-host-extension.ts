@@ -8,7 +8,8 @@ import { randomBytes, verify } from '@dxos/crypto';
 import { invariant, InvariantViolation } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { InvalidInvitationExtensionRoleError, schema, trace } from '@dxos/protocols';
+import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
@@ -105,13 +106,11 @@ export class InvitationHostExtension extends RpcExtension<
 
         introduce: async (request) => {
           const { profile, invitationId } = request;
-
           const traceId = PublicKey.random().toHex();
           log.trace('dxos.sdk.invitation-handler.host.introduce', trace.begin({ id: traceId }));
 
           const invitation = this._requireActiveInvitation();
           this._assertInvitationState(Invitation.State.CONNECTED);
-
           if (invitationId !== invitation?.invitationId) {
             log.warn('incorrect invitationId', { expected: invitation.invitationId, actual: invitationId });
             this._callbacks.onError(new Error('Incorrect invitationId.'));
@@ -125,7 +124,6 @@ export class InvitationHostExtension extends RpcExtension<
           log('guest introduced themselves', { guestProfile: profile });
           this.guestProfile = profile;
           this._callbacks.onStateUpdate(Invitation.State.READY_FOR_AUTHENTICATION);
-
           this._challenge =
             invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY ? randomBytes(32) : undefined;
 

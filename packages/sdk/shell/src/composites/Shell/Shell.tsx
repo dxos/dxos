@@ -20,6 +20,8 @@ import { JoinDialog } from '../JoinDialog';
 import { SpaceDialog } from '../SpaceDialog';
 import { StatusDialog } from '../StatusDialog';
 
+const blurActiveElement = () => (document.activeElement as HTMLElement | undefined)?.blur?.();
+
 export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
   const [{ layout, invitationCode, spaceKey, spaceId, target }, setLayout] = useState<LayoutRequest>({
     layout: runtime.layout,
@@ -36,7 +38,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
     });
 
   const client = useClient();
-  const space = useSpace(spaceKey ?? spaceId);
+  const space = useSpace(spaceId ?? spaceKey);
 
   const createDeviceInvitationUrl = (invitationCode: string) => {
     const baseUrl = new URL(invitationUrl);
@@ -87,6 +89,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
           initialInvitationCode={invitationCode}
           onCancelResetStorage={() => runtime.setLayout({ layout: ShellLayout.IDENTITY })}
           onDone={() => {
+            blurActiveElement();
             void runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
@@ -110,6 +113,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
             return runtime.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION });
           }}
           onDone={async () => {
+            blurActiveElement();
             await runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
@@ -124,6 +128,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
           target={target}
           createInvitationUrl={createSpaceInvitationUrl}
           onDone={async () => {
+            blurActiveElement();
             await runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
@@ -135,6 +140,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
         <JoinDialog
           initialInvitationCode={invitationCode}
           onDone={async (result) => {
+            blurActiveElement();
             const target = result?.target ?? undefined;
             await runtime.setAppContext({
               display: ShellDisplay.NONE,
@@ -144,6 +150,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
             runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
           onExit={async () => {
+            blurActiveElement();
             await runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}

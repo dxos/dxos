@@ -9,5 +9,5 @@ html, body, #root {
 body {
   overscroll-behavior: none;
   overflow: hidden;
-  @apply font-body font-normal text-base;
+  @apply font-body font-normal text-baseText;
 }

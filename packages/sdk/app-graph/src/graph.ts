@@ -33,6 +33,9 @@ export type NodesOptions<T = any, U extends Record<string, any> = Record<string,
   type?: string;
 };
 
+// TODO(wittjosiah): Consider having default be undefined. This is current default for backwards compatibility.
+const DEFAULT_FILTER = (node: Node) => untracked(() => !isActionLike(node));
+
 export type GraphTraversalOptions = {
   /**
    * A callback which is called for each node visited during traversal.
@@ -141,9 +144,9 @@ export class Graph {
    * If a node is not found within the graph and an `onInitialNode` callback is provided,
    * it is called with the id and type of the node, potentially initializing the node.
    */
-  findNode(id: string): Node | undefined {
+  findNode(id: string, expansion = true): Node | undefined {
     const existingNode = this._nodes[id];
-    if (!existingNode) {
+    if (!existingNode && expansion) {
       void this._onInitialNode?.(id);
     }
 
@@ -177,9 +180,9 @@ export class Graph {
    * Nodes that this node is connected to in default order.
    */
   nodes<T = any, U extends Record<string, any> = Record<string, any>>(node: Node, options: NodesOptions<T, U> = {}) {
-    const { relation, expansion, filter, type } = options;
+    const { relation, expansion, filter = DEFAULT_FILTER, type } = options;
     const nodes = this._getNodes({ node, relation, expansion, type });
-    return nodes.filter((n) => untracked(() => !isActionLike(n))).filter((n) => filter?.(n, node) ?? true);
+    return nodes.filter((n) => filter(n, node));
   }
 
   /**
@@ -450,15 +453,15 @@ export class Graph {
 
         if (removeOrphans) {
           if (
-            this._edges[source].outbound.length === 0 &&
-            this._edges[source].inbound.length === 0 &&
+            this._edges[source]?.outbound.length === 0 &&
+            this._edges[source]?.inbound.length === 0 &&
             source !== ROOT_ID
           ) {
             this._removeNode(source, true);
           }
           if (
-            this._edges[target].outbound.length === 0 &&
-            this._edges[target].inbound.length === 0 &&
+            this._edges[target]?.outbound.length === 0 &&
+            this._edges[target]?.inbound.length === 0 &&
             target !== ROOT_ID
           ) {
             this._removeNode(target, true);

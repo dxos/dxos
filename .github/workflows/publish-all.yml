@@ -2,16 +2,14 @@ on:
   workflow_dispatch:
     inputs:
       publish_npm:
-        description: "Publish a non-production branch to NPM"
-        default: false
+        description: 'Publish a non-production branch to NPM'
+        default: 'false'
   push:
     branches:
-      - staging
-      - nf/publish-apps
+      - labs
       - main
       - production
-      - rc-*
-      - hotfix-*
+      - staging
   release:
     types:
       - published
@@ -44,6 +42,8 @@ jobs:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          DX_LOKI_ENDPOINT: ${{ secrets.DX_LOKI_ENDPOINT }}
+          DX_LOKI_AUTHORIZATION: ${{ secrets.DX_LOKI_AUTHORIZATION }}
 
       - name: Install system dependencies
         run: sudo apt-get install libxtst-dev libpng++-dev
@@ -51,7 +51,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -66,7 +66,7 @@ jobs:
           echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
       - name: Setup pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -88,19 +88,27 @@ jobs:
           DX_TELEMETRY_API_KEY: ${{ env.CLI_SEGMENT_API_KEY }}
           NODE_ENV: production
 
-      - name: Bundle Apps
-        run: pnpm nx run-many --target=bundle --parallel=3
+      # NOTE: Shell must be bundled before npm publish.
+      - name: Bundle Shell
+        run: pnpm nx bundle shell
         env:
           NODE_ENV: production
-          NODE_OPTIONS: "--max_old_space_size=12288"
-
-      - name: Publish Apps
-        run: .github/workflows/scripts/publish-apps.sh
 
       - name: Publish to NPM
         id: npm-publish
         run: .github/workflows/scripts/publish.sh
         if: env.BRANCH == 'production' || env.BRANCH == 'staging' || github.event.inputs.publish_npm == 'true'
+
+      - name: Publish Apps
+        run: .github/workflows/scripts/publish-apps.sh
+        env:
+          NODE_ENV: production
+          NODE_OPTIONS: '--max_old_space_size=12288'
+
+      - name: Bundle Devtools
+        run: pnpm nx bundle devtools-extension
+        env:
+          NODE_ENV: production
 
       - name: Gather Artifacts for Devtools extension
         run: |

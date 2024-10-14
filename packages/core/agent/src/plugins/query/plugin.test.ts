@@ -2,24 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { afterAll, onTestFinished, beforeAll, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { Filter, type Query } from '@dxos/echo-db';
-import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { type ReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
+import { TestSchemaType, createSpaceObjectGenerator } from '@dxos/echo-generator';
+import { type EchoReactiveObject, type ReactiveObject } from '@dxos/echo-schema';
 import { QUERY_CHANNEL } from '@dxos/protocols';
-import { type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity, type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { QueryPlugin } from './plugin';
 
 describe('QueryPlugin', () => {
-  test('search request/response', async () => {
+  test.skip('search request/response', async () => {
     //
     // 1. Test topology:
     //
@@ -36,7 +35,7 @@ describe('QueryPlugin', () => {
     //   d. client 1 responds with search results.
 
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
 
     const services1 = builder.createLocalClientServices();
     const client1 = new Client({
@@ -48,7 +47,7 @@ describe('QueryPlugin', () => {
       }),
     });
     await client1.initialize();
-    afterTest(() => client1.destroy());
+    onTestFinished(() => client1.destroy());
     await client1.halo.createIdentity({ displayName: 'user-with-index-plugin' });
 
     let org: ReactiveObject<any>;
@@ -65,12 +64,12 @@ describe('QueryPlugin', () => {
     await plugin.initialize({ client: client1, clientServices: services1 });
 
     await plugin.open();
-    afterTest(() => plugin.close());
+    onTestFinished(() => plugin.close());
 
     const services2 = builder.createLocalClientServices();
     const client2 = new Client({ services: services2 });
     await client2.initialize();
-    afterTest(() => client2.destroy());
+    onTestFinished(() => client2.destroy());
 
     await asyncTimeout(Promise.all(performInvitation({ host: client1.halo, guest: client2.halo })), 1000);
 
@@ -85,7 +84,7 @@ describe('QueryPlugin', () => {
         expect(message.payload.results).to.have.lengthOf(1);
         results.wake(message);
       });
-      afterTest(() => subs());
+      onTestFinished(() => subs());
     }
 
     // Send search request.
@@ -96,6 +95,7 @@ describe('QueryPlugin', () => {
           { models: ['*'], spaces: client1.spaces.get().map((s) => s.key) },
         ).toProto(),
         queryId: 'test-query-id',
+        reactivity: QueryReactivity.ONE_SHOT,
       };
 
       await client2.spaces.default.postMessage(QUERY_CHANNEL, {
@@ -105,7 +105,7 @@ describe('QueryPlugin', () => {
     }
 
     await asyncTimeout(results.wait(), 1000);
-  }).tag('e2e');
+  });
 
   describe.skip('Remote query', () => {
     let builder: TestBuilder;

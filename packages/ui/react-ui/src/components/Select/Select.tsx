@@ -30,9 +30,9 @@ type SelectPortalProps = SelectPrimitive.SelectPortalProps;
 
 const SelectPortal = SelectPrimitive.Portal;
 
-type SelectTriggerButtonProps = Omit<ButtonProps, 'children'> & Pick<SelectValueProps, 'placeholder'>;
+type SelectTriggerButtonProps = Omit<ButtonProps, 'children'> & Pick<SelectValueProps, 'placeholder' | 'children'>;
 
-const SelectTriggerButton = forwardRef<HTMLButtonElement, ButtonProps>(
+const SelectTriggerButton = forwardRef<HTMLButtonElement, SelectTriggerButtonProps>(
   ({ children, placeholder, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (

@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { Plugs, PlugsConnected } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
-import { registerSignalRuntime } from '@dxos/echo-signals/react';
+import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { Button, DensityProvider } from '@dxos/react-ui';
@@ -323,7 +323,7 @@ export const InsertDelete = {
     };
 
     return (
-      <div>
+      <div className='space-y-4'>
         <div className='flex flex-row gap-2'>
           <Button onClick={onInsertFirst}>Insert first</Button>
           <Button onClick={onInsertLast}>Insert last</Button>
@@ -331,7 +331,7 @@ export const InsertDelete = {
           <Button onClick={onDeleteLast}>Delete last</Button>
         </div>
         <Table.Root>
-          <Table.Viewport classNames='fixed inset-0'>
+          <Table.Viewport>
             <Table.Main<Item>
               role='grid'
               rowsSelectable='multi'
@@ -406,7 +406,7 @@ export const TenThousandRows = {
   },
 };
 
-registerSignalRuntime();
+registerSignalsRuntime();
 const state = create({ items: createItems(10) });
 
 export const RealTimeUpdates = {

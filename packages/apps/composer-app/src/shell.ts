@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { runShell } from '@dxos/shell/react';
 import { TRACE_PROCESSOR } from '@dxos/tracing';

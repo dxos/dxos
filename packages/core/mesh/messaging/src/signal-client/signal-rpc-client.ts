@@ -10,7 +10,8 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema, trace } from '@dxos/protocols';
+import { trace } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type Message as SignalMessage, type Signal } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 

@@ -4,6 +4,8 @@
 
 import type { D3DragEvent as DragEvent, Selection } from 'd3';
 
+// TODO(burdon): Check if these are needed.
+
 // Extends MouseEvent (e.g., subject).
 export type D3DragEvent = DragEvent<any, any, any>;
 

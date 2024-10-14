@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React from 'react';
 
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -18,19 +18,18 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
   const { send } = props;
   const client = useClient();
   const invitations = useHaloInvitations();
-  const onInvitationEvent = useCallback((invitation: Invitation) => {
-    const invitationCode = InvitationEncoder.encode(invitation);
-    if (invitation.state === Invitation.State.CONNECTING) {
-      log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
-    }
-  }, []);
   const createInvitation = () => {
     invitations.forEach((invitation) => invitation.cancel());
     // TODO(nf): allow user to make invitations non-persistent?
     const invitation = client.halo.share();
-    // TODO(wittjosiah): Don't depend on NODE_ENV.
-    if (process.env.NODE_ENV !== 'production') {
-      invitation.subscribe(onInvitationEvent);
+    if (client.config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
+      const subscription = invitation.subscribe((invitation: Invitation) => {
+        const invitationCode = InvitationEncoder.encode(invitation);
+        if (invitation.state === Invitation.State.CONNECTING) {
+          log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+          subscription.unsubscribe();
+        }
+      });
     }
     send?.({ type: 'selectInvitation', invitation });
   };

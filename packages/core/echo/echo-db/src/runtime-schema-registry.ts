@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { requireTypeReference, type S, StoredSchema } from '@dxos/echo-schema';
+import { requireTypeReference, StoredSchema } from '@dxos/echo-schema';
+import { type S } from '@dxos/echo-schema';
 
 // TODO(burdon): Typename?
-const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).objectId;
+const getTypenameOrThrow = (schema: S.Schema.All): string => requireTypeReference(schema).objectId;
 
 /**
  *
@@ -23,7 +24,7 @@ export class RuntimeSchemaRegistry {
     return Array.from(this._schemaMap.values());
   }
 
-  hasSchema<T>(schema: S.Schema<T>): boolean {
+  hasSchema<S extends S.Schema.All>(schema: S): boolean {
     const typename = getTypenameOrThrow(schema);
     return this._schemaMap.has(typename);
   }

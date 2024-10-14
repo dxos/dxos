@@ -3,15 +3,7 @@
 //
 
 import { useFocusableGroup, useTabsterAttributes } from '@fluentui/react-tabster';
-import {
-  ArrowLineDown,
-  ArrowLineUp,
-  ArrowSquareOut,
-  CaretUpDown,
-  DotsNine,
-  type IconProps,
-  Trash,
-} from '@phosphor-icons/react';
+import { ArrowLineDown, ArrowLineUp, ArrowSquareOut, CaretUpDown, Trash } from '@phosphor-icons/react';
 import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import React, {
   forwardRef,
@@ -26,16 +18,17 @@ import React, {
 import {
   Button,
   DropdownMenu,
+  Icon,
+  type Label,
   List,
   ListItem,
-  Toolbar,
-  useTranslation,
-  type ThemedClassName,
   ScrollArea,
+  type ThemedClassName,
+  Toolbar,
   toLocalizedString,
-  type Label,
+  useTranslation,
 } from '@dxos/react-ui';
-import { createAttendableAttributes } from '@dxos/react-ui-attention';
+import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
 import {
   type MosaicActiveType,
@@ -92,14 +85,14 @@ export type StackSectionItem = MosaicDataItem & {
   };
   // TODO(wittjosiah): Common type? Factor out?
   metadata?: {
-    icon?: FC<IconProps>;
+    icon?: string;
     placeholder?: Label;
     viewActions?: (item: StackSectionItem) => StackAction;
   };
 };
 
 export type StackAction = {
-  icon: FC<IconProps>;
+  icon: string;
   label: Label;
   onClick: () => void;
 };
@@ -133,7 +126,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
     {
       id,
       title,
-      icon: Icon = DotsNine,
+      icon = 'ph--placeholder--regular',
       size = 'intrinsic',
       collapsed,
       active,
@@ -157,7 +150,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       mover: { cyclic: true, direction: 1, memorizeCurrent: false },
     });
     const sectionContentGroup = useFocusableGroup({});
-    const attendableProps = createAttendableAttributes(id);
+    const attendableAttrs = useAttendableAttributes(id);
 
     return (
       <CollapsiblePrimitive.Root
@@ -168,7 +161,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
         <ListItem.Root
           ref={forwardedRef}
           id={id}
-          {...attendableProps}
+          {...attendableAttrs}
           classNames={[
             'grid col-span-2 group/section',
             active === 'overlay' ? stackColumns : 'grid-cols-subgrid snap-start',
@@ -178,12 +171,10 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           <div
             role='none'
             className={mx(
-              // TODO(burdon): Factor out `border border-transparent` out focus outline for semantic clarity?
-              //  Add to outside of article for consistency.
-              'grid col-span-2 grid-cols-subgrid mlb-px border border-transparent surface-base focus-within:separator-separator focus-within:surface-attention',
+              'grid col-span-2 grid-cols-subgrid',
+              'bg-base attention-surface',
               hoverableControls,
               hoverableFocusedWithinControls,
-              active && 'surface-attention separator-separator',
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
           >
@@ -193,7 +184,10 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               aria-label={t('section controls label')}
               {...(!active && { tabIndex: 0 })}
               {...(!active && sectionActionsToolbar)}
-              className='grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] m-1 group-has-[[role=toolbar][aria-orientation=horizontal]]/section:pbs-[--rail-action]'
+              className={mx(
+                'grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] m-1',
+                'group-has-[[role=toolbar][aria-orientation=horizontal]]/section:pbs-[--rail-action]',
+              )}
             >
               <div role='none' className='sticky -block-start-px bg-[--sticky-bg]'>
                 <DropdownMenu.Root
@@ -203,7 +197,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                   }}
                 >
                   <DropDownMenuDragHandleTrigger active={!!active} variant='ghost' classNames='m-0' {...draggableProps}>
-                    <Icon className={mx(getSize(5), 'transition-opacity')} />
+                    <Icon icon={icon} size={5} classNames='transition-opacity' />
                   </DropDownMenuDragHandleTrigger>
                   <DropdownMenu.Portal>
                     <DropdownMenu.Content>
@@ -265,10 +259,11 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               classNames={collapsed ? ['grid grid-rows-subgrid grid-cols-subgrid items-center', focusRing] : 'sr-only'}
               {...(collapsed && { ...sectionContentGroup, tabIndex: 0 })}
             >
-              {/* TODO(thure): This needs to be made extensible; Markdown document titles especially are difficult.
-                    Using `Surface` in a UI package like this would be unprecedented and needs motivation. Refactoring
-                    to use subcomponents is complicated by sections being a sortable Mosaic Tile. Reevaluate when
-                    work on collections (Folders, Stacks, etc) settles.
+              {/*
+                TODO(thure): This needs to be made extensible; Markdown document titles especially are difficult.
+                  Using `Surface` in a UI package like this would be unprecedented and needs motivation.
+                  Refactoring to use subcomponents is complicated by sections being a sortable Mosaic Tile.
+                  Reevaluate when work on collections (Folders, Stacks, etc) settles.
               */}
               <span className='truncate'>{title}</span>
             </ListItem.Heading>
@@ -278,7 +273,8 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                   ...sectionContentGroup,
                   tabIndex: 0,
                 })}
-                className={focusRing}
+                // TODO(burdon): Add margin to fragment?
+                className={mx(focusRing, 'm-[2px]')}
               >
                 {children}
               </CollapsiblePrimitive.Content>
@@ -318,7 +314,9 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
 
 export type SectionToolbarProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
 
-export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky -block-start-px transition-opacity';
+// TODO(burdon): block-start
+export const sectionToolbarLayout =
+  'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 __-block-start-px transition-opacity';
 
 export const SectionToolbar = ({ children, classNames }: SectionToolbarProps) => {
   return (

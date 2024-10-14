@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import '@fontsource/k2d/100-italic.css';
 
@@ -184,6 +184,23 @@ export const Spinner = {
     return (
       <div className='absolute inset-0 flex items-center justify-center'>
         <SpinnerContainer />
+      </div>
+    );
+  },
+};
+
+// https://github.com/grafana/grafana/blob/main/packages/grafana-ui/src/components/LoadingBar/LoadingBar.tsx
+export const Linear = {
+  render: () => {
+    return (
+      <div className='absolute flex flex-col inset-0 bg-black'>
+        <div
+          className={'h-[1px] translateX(-100%) animate-progress-linear'}
+          style={{
+            background:
+              'linear-gradient(90deg, rgba(110, 159, 255, 0) 0%, #6E9FFF 80.75%, rgba(110, 159, 255, 0) 100%)',
+          }}
+        />
       </div>
     );
   },

@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 // Copyright 2024 Automerge
 // Ref: https://github.com/automerge/automerge-codemirror
 //
@@ -13,7 +13,7 @@ import { type DocAccessor } from '@dxos/react-client/echo';
 import { cursorConverter } from './cursor';
 import { updateHeadsEffect, isReconcile, type State } from './defs';
 import { Syncer } from './sync';
-import { Cursor } from '../cursor';
+import { Cursor } from '../../state';
 
 export const automerge = (accessor: DocAccessor): Extension => {
   const syncState = StateField.define<State>({
@@ -54,6 +54,8 @@ export const automerge = (accessor: DocAccessor): Extension => {
 
   return [
     Cursor.converter.of(cursorConverter(accessor)),
+
+    // Track heads.
     syncState,
 
     // Reconcile external updates.

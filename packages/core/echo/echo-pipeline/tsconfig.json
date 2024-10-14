@@ -1,111 +1,12 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/types",
     "types": [
-      "@dxos/test",
       "@dxos/typings"
     ]
   },
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../../common/async"
-    },
-    {
-      "path": "../../../common/codec-protobuf"
-    },
-    {
-      "path": "../../../common/context"
-    },
-    {
-      "path": "../../../common/crypto"
-    },
-    {
-      "path": "../../../common/debug"
-    },
-    {
-      "path": "../../../common/feed-store"
-    },
-    {
-      "path": "../../../common/hypercore"
-    },
-    {
-      "path": "../../../common/invariant"
-    },
-    {
-      "path": "../../../common/keys"
-    },
-    {
-      "path": "../../../common/kv-store"
-    },
-    {
-      "path": "../../../common/log"
-    },
-    {
-      "path": "../../../common/node-std"
-    },
-    {
-      "path": "../../../common/random-access-storage"
-    },
-    {
-      "path": "../../../common/timeframe"
-    },
-    {
-      "path": "../../../common/tracing"
-    },
-    {
-      "path": "../../../common/typings"
-    },
-    {
-      "path": "../../../common/util"
-    },
-    {
-      "path": "../../halo/credentials"
-    },
-    {
-      "path": "../../halo/keyring"
-    },
-    {
-      "path": "../../mesh/messaging"
-    },
-    {
-      "path": "../../mesh/network-manager"
-    },
-    {
-      "path": "../../mesh/rpc"
-    },
-    {
-      "path": "../../mesh/teleport"
-    },
-    {
-      "path": "../../mesh/teleport-extension-automerge-replicator"
-    },
-    {
-      "path": "../../mesh/teleport-extension-gossip"
-    },
-    {
-      "path": "../../mesh/teleport-extension-object-sync"
-    },
-    {
-      "path": "../../mesh/teleport-extension-replicator"
-    },
-    {
-      "path": "../../protocols"
-    },
-    {
-      "path": "../automerge"
-    },
-    {
-      "path": "../echo-protocol"
-    },
-    {
-      "path": "../echo-schema"
-    },
-    {
-      "path": "../indexing"
-    }
-  ]
+  "references": []
 }

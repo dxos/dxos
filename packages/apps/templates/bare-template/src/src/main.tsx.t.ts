@@ -17,7 +17,7 @@ export default template.define.text({
       plate`
     // This includes css styles from @dxos/react-ui-theme.
     // This must precede all other style imports in the app.
-    import '@dxosTheme';`
+    import '@dxos-theme';`
     }
 
     ${

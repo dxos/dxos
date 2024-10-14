@@ -46,7 +46,7 @@ let runtimeUsed = false;
  * Registration is done at the module level (e.g., in the main module of the runtime).
  * Multiple runtimes can be registered at once.
  */
-export const registerSignalRuntime = (runtime: SignalRuntime) => {
+export const registerSignalsRuntime = (runtime: SignalRuntime) => {
   if (runtimeUsed) {
     // TODO(dmaretskyi): This is always taken because echo schema stuff creates typed objects when echo-schema package is imported.
     // log.warn(

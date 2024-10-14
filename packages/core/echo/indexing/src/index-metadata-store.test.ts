@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { IndexMetadataStore } from './index-metadata-store';
 

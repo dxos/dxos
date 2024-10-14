@@ -21,9 +21,10 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import pick from 'lodash.pick';
 import React, { createContext, type FC, type PropsWithChildren, useState } from 'react';
 import { createPortal } from 'react-dom';
+
+import { pick } from '@dxos/util';
 
 import {
   DEFAULT_TRANSITION,
@@ -147,11 +148,11 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   //
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveItem(pick(event.active.data.current as MosaicDraggedItem, 'path', 'type', 'item', 'position'));
+    setActiveItem(pick(event.active.data.current as MosaicDraggedItem, ['path', 'type', 'item', 'position']));
   };
 
   const handleDragMove = (event: DragMoveEvent) => {
-    const nextOverItem = pick(event.over?.data.current as MosaicDraggedItem, 'path', 'type', 'item', 'position');
+    const nextOverItem = pick(event.over?.data.current as MosaicDraggedItem, ['path', 'type', 'item', 'position']);
     const nextOverContainer =
       nextOverItem && nextOverItem?.path ? containers[Path.first(nextOverItem.path)] : undefined;
     if (!event.over || !nextOverItem || !nextOverContainer) {
@@ -185,7 +186,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   };
 
   const handleDragOver = (event: DragOverEvent) => {
-    const overItem = pick(event.over?.data.current as MosaicDraggedItem, 'path', 'type', 'item', 'position');
+    const overItem = pick(event.over?.data.current as MosaicDraggedItem, ['path', 'type', 'item', 'position']);
     const overContainer = overItem && overItem?.path ? containers[Path.first(overItem.path)] : undefined;
     // TODO(wittjosiah): This is over-prescriptive.
     if (overContainer?.onMove) {

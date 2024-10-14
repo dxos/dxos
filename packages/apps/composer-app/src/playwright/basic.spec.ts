@@ -6,7 +6,7 @@ import { test, expect } from '@playwright/test';
 
 import { log } from '@dxos/log';
 
-import { AppManager } from './app-manager';
+import { AppManager, INITIAL_URL } from './app-manager';
 import { Markdown } from './plugins';
 
 if (process.env.DX_PWA !== 'false') {
@@ -29,7 +29,7 @@ test.describe('Basic tests', () => {
   test('create identity, space is created by default', async () => {
     await expect(host.page.getByTestId('spacePlugin.spaces')).toBeVisible();
     const plank = host.deck.plank();
-    await expect(Markdown.getMarkdownTextboxWithLocator(plank.locator)).toHaveText(/.+/);
+    await expect(Markdown.getMarkdownTextboxWithLocator(plank.locator).first()).toHaveText(/.+/);
   });
 
   test('create space, which is displayed in tree', async () => {
@@ -38,9 +38,8 @@ test.describe('Basic tests', () => {
   });
 
   test('create document', async () => {
+    // NOTE: Document is automatically created when space is created.
     await host.createSpace();
-    await host.page.pause();
-    await host.createObject('markdownPlugin');
 
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
@@ -78,8 +77,7 @@ test.describe('Basic tests', () => {
     await host.openIdentityManager();
     await host.shell.resetDevice();
     // Wait for reset to complete and attempt to reload.
-    await host.page.waitForRequest(host.page.url(), { timeout: 30_000 });
-    await host.page.goto(host.initialUrl);
+    await host.page.waitForRequest(INITIAL_URL, { timeout: 30_000 });
     await expect(host.getSpaceItems()).toHaveCount(1);
   });
 });

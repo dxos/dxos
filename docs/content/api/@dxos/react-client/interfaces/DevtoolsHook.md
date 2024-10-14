@@ -3,6 +3,11 @@
 
 A hook bound to window.__DXOS__.
 ## Properties
+### [Filter]()
+Type: <code>typeof [Filter](/api/@dxos/react-client/classes/Filter)</code>
+
+
+
 ### [client]()
 Type: <code>[Client](/api/@dxos/react-client/classes/Client)</code>
 
@@ -24,6 +29,11 @@ Type: <code>Accessor&lt;unknown&gt;</code>
 
 
 ### [fetchDiagnostics]()
+Type: <code>function</code>
+
+
+
+### [getMeta]()
 Type: <code>function</code>
 
 

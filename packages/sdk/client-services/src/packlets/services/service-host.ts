@@ -6,15 +6,16 @@ import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, type ClientServices } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { EdgeClient, EdgeHttpClient, createStubEdgeIdentity, type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { WebsocketSignalManager, type SignalManager } from '@dxos/messaging';
+import { EdgeSignalManager, WebsocketSignalManager, type SignalManager } from '@dxos/messaging';
 import {
   SwarmNetworkManager,
   createIceProvider,
-  createSimplePeerTransportFactory,
+  createRtcTransportFactory,
   type TransportFactory,
 } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
@@ -28,9 +29,9 @@ import { ServiceRegistry } from './service-registry';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
 import {
-  type CollectDiagnosticsBroadcastHandler,
   createCollectDiagnosticsBroadcastHandler,
   createDiagnostics,
+  type CollectDiagnosticsBroadcastHandler,
 } from '../diagnostics';
 import { IdentityServiceImpl, type CreateIdentityOptions } from '../identity';
 import { ContactsServiceImpl } from '../identity/contacts-service';
@@ -87,6 +88,8 @@ export class ClientServicesHost {
   private _level?: LevelDB;
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
+  private _edgeConnection?: EdgeConnection = undefined;
+  private _edgeHttpClient?: EdgeHttpClient = undefined;
 
   private _serviceContext!: ServiceContext;
   private readonly _runtimeParams: ServiceContextRuntimeParams;
@@ -113,6 +116,10 @@ export class ClientServicesHost {
     this._level = level;
     this._callbacks = callbacks;
     this._runtimeParams = runtimeParams ?? {};
+
+    if (this._runtimeParams.disableP2pReplication === undefined) {
+      this._runtimeParams.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
+    }
 
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
@@ -203,22 +210,37 @@ export class ClientServicesHost {
     if (!options.signalManager) {
       log.warn('running signaling without telemetry metadata.');
     }
+
+    const edgeEndpoint = config?.get('runtime.services.edge.url');
+    if (edgeEndpoint) {
+      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: edgeEndpoint });
+      this._edgeHttpClient = new EdgeHttpClient(edgeEndpoint);
+    }
+
     const {
       connectionLog = true,
-      transportFactory = createSimplePeerTransportFactory(
+      transportFactory = createRtcTransportFactory(
         { iceServers: this._config?.get('runtime.services.ice') },
         this._config?.get('runtime.services.iceProviders') &&
           createIceProvider(this._config!.get('runtime.services.iceProviders')!),
       ),
-      signalManager = new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? []),
+      signalManager = this._edgeConnection && this._config?.get('runtime.client.edgeFeatures')?.signaling
+        ? new EdgeSignalManager({ edgeConnection: this._edgeConnection })
+        : new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? []),
     } = options;
     this._signalManager = signalManager;
 
     invariant(!this._networkManager, 'network manager already set');
     this._networkManager = new SwarmNetworkManager({
-      log: connectionLog,
+      enableDevtoolsLogging: connectionLog,
       transportFactory,
       signalManager,
+      peerInfo: this._edgeConnection
+        ? {
+            identityKey: this._edgeConnection.identityKey,
+            peerKey: this._edgeConnection.peerKey,
+          }
+        : undefined,
     });
 
     log('initialized');
@@ -256,7 +278,10 @@ export class ClientServicesHost {
       this._level,
       this._networkManager,
       this._signalManager,
+      this._edgeConnection,
+      this._edgeHttpClient,
       this._runtimeParams,
+      this._config.get('runtime.client.edgeFeatures'),
     );
 
     const dataSpaceManagerProvider = async () => {

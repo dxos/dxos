@@ -1,5 +1,5 @@
 # Class `Filter`
-<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/filter.d.ts:23]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/filter.d.ts:48]()</sub>
 
 
 
@@ -28,6 +28,11 @@ Type: <code>[Filter](/api/@dxos/react-client/classes/Filter)&lt;any&gt;[]</code>
 
 ### [not]()
 Type: <code>boolean</code>
+
+
+
+### [objectIds]()
+Type: <code>string[]</code>
 
 
 
@@ -73,12 +78,48 @@ Type: <code>undefined | [PublicKey](/api/@dxos/react-client/classes/PublicKey)[]
 
 
 ## Methods
+### [isObjectIdFilter()]()
+
+
+
+
+Returns: <code>boolean</code>
+
+Arguments: none
+
+
+
+
+### [toBufProto()]()
+
+
+
+
+Returns: <code>Filter</code>
+
+Arguments: none
+
+
+
+
 ### [toProto()]()
 
 
 
 
 Returns: <code>Filter</code>
+
+Arguments: none
+
+
+
+
+### [all()]()
+
+
+
+
+Returns: <code>[Filter](/api/@dxos/react-client/classes/Filter)&lt;any&gt;</code>
 
 Arguments: none
 
@@ -107,6 +148,20 @@ Returns: <code>[Filter](/api/@dxos/react-client/classes/Filter)&lt;T&gt;</code>
 Arguments: 
 
 `source`: <code>[FilterSource](/api/@dxos/react-client/types/FilterSource)&lt;T&gt;</code>
+
+`options`: <code>[QueryOptions](/api/@dxos/react-client/interfaces/QueryOptions)</code>
+
+
+### [fromFilterJson(source, \[options\])]()
+
+
+
+
+Returns: <code>[Filter](/api/@dxos/react-client/classes/Filter)&lt;T&gt;</code>
+
+Arguments: 
+
+`source`: <code>PropertyFilter</code>
 
 `options`: <code>[QueryOptions](/api/@dxos/react-client/interfaces/QueryOptions)</code>
 
@@ -152,13 +207,13 @@ Arguments:
 
 
 
-Returns: <code>[Filter](/api/@dxos/react-client/classes/Filter)&lt;Mutable&lt;T&gt;&gt;</code>
+Returns: <code>[Filter](/api/@dxos/react-client/classes/Filter)&lt;Type&lt;S&gt;&gt;</code>
 
 Arguments: 
 
-`schema`: <code>Schema&lt;T, T, never&gt;</code>
+`schema`: <code>S</code>
 
-`filter`: <code>Record&lt;string, any&gt; | OperatorFilter&lt;T&gt;</code>
+`filter`: <code>Record&lt;string, any&gt; | OperatorFilter&lt;Type&lt;S&gt;&gt;</code>
 
 
 ### [typename(typename, \[filter\])]()

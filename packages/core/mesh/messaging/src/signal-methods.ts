@@ -2,12 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type Event } from '@dxos/async';
+import { type Lifecycle } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
+import { type Peer } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 
+export type PeerInfo = Partial<Peer> & Required<Pick<Peer, 'peerKey'>>;
+export const PeerInfoHash = ({ peerKey }: PeerInfo) => peerKey;
+
 export interface Message {
-  author: PublicKey;
-  recipient: PublicKey;
+  author: PeerInfo;
+  recipient: PeerInfo;
   payload: {
     type_url: string;
     value: Uint8Array;
@@ -23,19 +29,48 @@ export type SignalStatus = {
   lastStateChange: Date;
 };
 
+export type SwarmEvent = {
+  topic: PublicKey;
+
+  /**
+   * The peer was announced as available on the swarm.
+   */
+  peerAvailable?: {
+    peer: PeerInfo;
+    since: Date;
+  };
+
+  /**
+   * The peer left, or their announcement timed out.
+   */
+  peerLeft?: {
+    peer: PeerInfo;
+  };
+};
+
 /**
  * Message routing interface.
  */
 export interface SignalMethods {
   /**
+   * Emits when other peers join or leave the swarm.
+   */
+  swarmEvent: Event<SwarmEvent>;
+
+  /**
+   * Emits when a message is received.
+   */
+  onMessage: Event<Message>;
+
+  /**
    * Join topic on signal network, to be discoverable by other peers.
    */
-  join: (params: { topic: PublicKey; peerId: PublicKey }) => Promise<void>;
+  join: (params: { topic: PublicKey; peer: PeerInfo }) => Promise<void>;
 
   /**
    * Leave topic on signal network, to stop being discoverable by other peers.
    */
-  leave: (params: { topic: PublicKey; peerId: PublicKey }) => Promise<void>;
+  leave: (params: { topic: PublicKey; peer: PeerInfo }) => Promise<void>;
 
   /**
    * Send message to peer.
@@ -46,19 +81,17 @@ export interface SignalMethods {
    * Start receiving messages from peer.
    */
   // TODO(burdon): Return unsubscribe function. Encapsulate callback/routing here.
-  subscribeMessages: (peerId: PublicKey) => Promise<void>;
+  subscribeMessages: (peer: PeerInfo) => Promise<void>;
 
   /**
    * Stop receiving messages from peer.
    */
-  unsubscribeMessages: (peerId: PublicKey) => Promise<void>;
+  unsubscribeMessages: (peer: PeerInfo) => Promise<void>;
 }
 
 /**
  * Signaling client.
  */
-export interface SignalClientMethods extends SignalMethods {
-  open(): Promise<this>;
-  close(): Promise<this>;
+export interface SignalClientMethods extends SignalMethods, Required<Lifecycle> {
   getStatus(): SignalStatus;
 }

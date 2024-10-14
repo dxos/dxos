@@ -4,17 +4,17 @@
   "tags": [
     "scope:apps"
   ],
-  "sourceRoot": "packages/apps/todomvc/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {
       "options": {
         "main": "{projectRoot}/src/index.ts",
-        "outputPath": "packages/apps/todomvc/dist",
+        "outputPath": "{projectRoot}/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "packages/apps/todomvc/tsconfig.json"
+        "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
     "bundle": {
@@ -25,30 +25,19 @@
       "executor": "@nx/vite:build",
       "options": {
         "generatePackageJson": false,
-        "outputPath": "packages/apps/todomvc/out/todomvc"
+        "outputPath": "{projectRoot}/out/todomvc"
       },
       "outputs": [
         "{options.outputPath}"
       ]
     },
-    "e2e": {
-      "options": {
-        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
-        "serve": "todomvc:preview",
-        "testPatterns": [
-          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "{projectRoot}/src/**/*"
-        ]
-      }
-    },
+    "e2e": {},
     "lint": {},
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "todomvc:bundle",
-        "staticFilePath": "packages/apps/todomvc/out/todomvc"
+        "staticFilePath": "{projectRoot}/out/todomvc"
       }
     },
     "serve": {
