@@ -2,20 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef, type FocusEvent } from 'react';
 
 import {
   type DxGridElement,
   Grid,
   type GridContentProps,
-  type GridScopedProps,
   editorKeys,
   type EditorKeysProps,
   GridCellEditor,
+  closestCell,
 } from '@dxos/react-ui-grid';
 
 import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
-import { rangeToA1Notation, type CellRange } from '../../defs';
+import { rangeToA1Notation, type CellRange, DEFAULT_COLUMNS, DEFAULT_ROWS } from '../../defs';
 import { rangeExtension, sheetExtension, type CellRangeNotifier } from '../../extensions';
 import { useSheetContext } from '../SheetContext';
 
@@ -39,10 +39,20 @@ const frozen = {
 const sheetRowDefault = { grid: { size: 32, resizeable: true } };
 const sheetColDefault = { frozenColsStart: { size: 48 }, grid: { size: 180, resizeable: true } };
 
-export const GridSheet = ({ __gridScope }: GridScopedProps<{}>) => {
-  const { model, formatting, editing, setEditing } = useSheetContext();
+export const GridSheet = () => {
+  const { model, formatting, editing, setEditing, setCursor } = useSheetContext();
   const dxGrid = useRef<DxGridElement | null>(null);
   const rangeNotifier = useRef<CellRangeNotifier>();
+
+  const handleFocus = useCallback(
+    (event: FocusEvent) => {
+      if (!editing) {
+        const cell = closestCell(event.target);
+        setCursor(cell && cell.plane === 'grid' ? { col: cell.col, row: cell.row } : undefined);
+      }
+    },
+    [editing],
+  );
 
   // TODO(burdon): Validate formula before closing: hf.validateFormula();
   const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
@@ -115,6 +125,8 @@ export const GridSheet = ({ __gridScope }: GridScopedProps<{}>) => {
       <GridCellEditor getCellContent={getCellContent} extension={extension} />
       <Grid.Content
         initialCells={initialCells}
+        limitColumns={DEFAULT_COLUMNS}
+        limitRows={DEFAULT_ROWS}
         columns={columns}
         rows={rows}
         onAxisResize={handleAxisResize}
@@ -122,6 +134,7 @@ export const GridSheet = ({ __gridScope }: GridScopedProps<{}>) => {
         rowDefault={sheetRowDefault}
         columnDefault={sheetColDefault}
         frozen={frozen}
+        onFocus={handleFocus}
         ref={dxGrid}
       />
     </>
