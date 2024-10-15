@@ -126,6 +126,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
             testId: 'sheetPlugin.createSection',
             type: ['plugin name', { ns: SHEET_PLUGIN }],
             label: ['create sheet section label', { ns: SHEET_PLUGIN }],
+            // TODO(thure): Refactor to use strings
             icon: (props: any) => <Icon icon='ph--grid-nine--regular' {...props} />,
             intent: {
               plugin: SHEET_PLUGIN,
