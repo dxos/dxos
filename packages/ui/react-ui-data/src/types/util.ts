@@ -2,14 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type S } from '@dxos/effect';
+import { AST, type S } from '@dxos/echo-schema';
 
-import { type ColumnType } from './types';
+import { FieldValueType } from './types';
 
-// TODO(burdon): Factor out to @dxos/effect?
-// TODO(burdon): Return struct (with prop metadata).
-export const getColumnTypes = (schema: S.Schema<any, any>): [string, ColumnType][] => {
-  const visitNode = (node: AST.AST, path: string[] = [], acc: [string, ColumnType][] = []) => {
+// TODO(burdon): Return Field objects.
+export const getColumnTypes = (schema: S.Schema<any, any>): [string, FieldValueType][] => {
+  const visitNode = (node: AST.AST, path: string[] = [], acc: [string, FieldValueType][] = []) => {
     const props = AST.getPropertySignatures(node);
     props.forEach((prop) => {
       const propName = prop.name.toString();
@@ -33,10 +32,9 @@ export const getColumnTypes = (schema: S.Schema<any, any>): [string, ColumnType]
   return visitNode(schema.ast);
 };
 
-// TODO(burdon): Document AST?
 const isStruct = (node: AST.AST) => AST.isTypeLiteral(node);
 
-const propertyToColumn = (prop: AST.PropertySignature): ColumnType => {
+const propertyToColumn = (prop: AST.PropertySignature): FieldValueType => {
   let type = prop.type;
   if (prop.isOptional) {
     type = unwrapOptionProperty(prop);
@@ -54,13 +52,15 @@ const unwrapOptionProperty = (prop: AST.PropertySignature) => {
   return type;
 };
 
-const typeToColumn = (type: AST.AST): ColumnType => {
-  if (AST.isStringKeyword(type)) {
-    return 'string';
+const typeToColumn = (type: AST.AST): FieldValueType => {
+  if (AST.isTypeLiteral(type)) {
+    return FieldValueType.Ref;
+  } else if (AST.isStringKeyword(type)) {
+    return FieldValueType.String;
   } else if (AST.isNumberKeyword(type)) {
-    return 'number';
+    return FieldValueType.Number;
   } else if (AST.isBooleanKeyword(type)) {
-    return 'boolean';
+    return FieldValueType.Boolean;
   }
 
   if (AST.isRefinement(type)) {
@@ -75,11 +75,11 @@ const typeToColumn = (type: AST.AST): ColumnType => {
     const identifier = AST.getIdentifierAnnotation(type);
     if (identifier._tag === 'Some') {
       if (identifier.value === 'DateFromString') {
-        return 'date';
+        return FieldValueType.Date;
       }
     }
   }
 
   // TODO(burdon): Better fallback?
-  return 'json';
+  return FieldValueType.JSON;
 };

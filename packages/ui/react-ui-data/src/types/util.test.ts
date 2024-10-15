@@ -5,7 +5,7 @@
 import { Schema as S } from '@effect/schema';
 import { describe, expect, test } from 'vitest';
 
-import { getColumnTypes } from './schema';
+import { getColumnTypes } from './util';
 
 // TODO(burdon): Realistic data.
 

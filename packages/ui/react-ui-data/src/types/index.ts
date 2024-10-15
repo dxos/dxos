@@ -5,3 +5,4 @@
 export * from './annotations';
 export * from './date';
 export * from './types';
+export * from './util';

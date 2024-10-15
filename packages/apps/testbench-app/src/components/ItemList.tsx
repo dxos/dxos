@@ -15,7 +15,7 @@ import {
   createThemeExtensions,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { getColumnTypes } from '@dxos/react-ui-table';
+import { getColumnTypes } from '@dxos/react-ui-data';
 import { mx, subtleHover } from '@dxos/react-ui-theme';
 
 const MAX_RENDERED_COUNT = 80;

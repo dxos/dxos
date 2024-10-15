@@ -12,13 +12,14 @@ import {
   S,
 } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
+import { FieldValueType } from '@dxos/react-ui-data';
 import { type ColumnDef, type TableDef } from '@dxos/react-ui-table';
 
 import { type TableType } from '../types';
 
 const FIELD_META_NAMESPACE = 'plugin-table';
 
-const typeToSchema: Partial<{ [key in ColumnDef['type']]: S.Schema<any> }> = {
+const typeToSchema: Partial<{ [key in FieldValueType]: S.Schema<any> }> = {
   boolean: S.Boolean,
   number: S.Number,
   date: S.Number,
@@ -30,19 +31,20 @@ interface ColumnAnnotation {
   refProp?: string;
 }
 
-export const getPropType = (type?: AST.AST): ColumnDef['type'] => {
+// TODO(burdon): Reconcile with react-ui-data/typeToColumn
+export const getPropType = (type?: AST.AST): FieldValueType => {
   if (type == null) {
-    return 'string';
+    return FieldValueType.String;
   }
 
   if (AST.isTypeLiteral(type)) {
-    return 'ref';
+    return FieldValueType.Ref;
   } else if (AST.isBooleanKeyword(type)) {
-    return 'boolean';
+    return FieldValueType.Boolean;
   } else if (AST.isNumberKeyword(type)) {
-    return 'number';
+    return FieldValueType.Number;
   } else {
-    return 'string';
+    return FieldValueType.String;
   }
 };
 

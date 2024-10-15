@@ -8,6 +8,7 @@ import React from 'react';
 import { type EchoReactiveObject, getType } from '@dxos/echo-schema';
 import { type EchoDatabase, type Space } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
+import { FieldValueType } from '@dxos/react-ui-data';
 import {
   type BaseColumnOptions,
   ColumnMenu,
@@ -89,18 +90,18 @@ export const createColumns = (
     };
 
     switch (type) {
-      case 'ref':
+      case FieldValueType.Ref:
         return helper.accessor(
           id,
           builder.combobox({ ...options, model: new QueryModel(space!.db, column.refTable!, column.refProp!) }),
         );
-      case 'number':
+      case FieldValueType.Number:
         return helper.accessor(id, builder.number(options));
-      case 'boolean':
+      case FieldValueType.Boolean:
         return helper.accessor(id, builder.switch(options));
-      case 'date':
+      case FieldValueType.Date:
         return helper.accessor(id, builder.date(options));
-      case 'string':
+      case FieldValueType.String:
       default:
         return helper.accessor(id, builder.string(options));
     }
@@ -121,7 +122,7 @@ export const createActionColumn = (
     onColumnUpdate?.(id, {
       id,
       prop: id,
-      type: 'string',
+      type: FieldValueType.String,
       editable: true,
       resizable: true,
     });

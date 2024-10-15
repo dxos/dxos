@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { type SortDirection } from '@tanstack/react-table';
 import React, { useState } from 'react';
 
+import { FieldValueType } from '@dxos/react-ui-data';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { ColumnMenu } from './ColumnMenu';
@@ -23,18 +24,18 @@ const defs: Pick<ColumnSettingsProps, 'tableDef' | 'tablesToReference'> = {
   tableDef: {
     id: '1',
     name: 'table 1',
-    columns: [{ id: 'col-1', prop: 'one', type: 'string' }],
+    columns: [{ id: 'col-1', prop: 'one', type: FieldValueType.String }],
   },
   tablesToReference: [
     {
       id: '1',
       name: 'table 1',
-      columns: [{ id: 'col-1', prop: 'one', type: 'string' }],
+      columns: [{ id: 'col-1', prop: 'one', type: FieldValueType.String }],
     },
     {
       id: '2',
       name: 'table 2',
-      columns: [{ id: 'col-1', prop: 'two', type: 'string' }],
+      columns: [{ id: 'col-1', prop: 'two', type: FieldValueType.String }],
     },
   ],
 };

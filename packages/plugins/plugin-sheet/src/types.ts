@@ -52,12 +52,12 @@ export const CellValue = S.Struct({
   // TODO(burdon): How to store dates (datetime, date, time), percentages, etc.
   //  Consider import/export; natural access for other plugins. Special handling for currency (precision).
   // TODO(burdon): Automerge (long string) or short string or number.
-  // TODO(burdon): Arrays?
   value: S.Any,
 });
 
 export type CellValue = S.Schema.Type<typeof CellValue>;
 
+// TODO(burdon): IMPORTANT: Reconcile with Field definition.
 export const Formatting = S.Struct({
   type: S.optional(S.Enums(FieldValueType)),
   format: S.optional(S.String),
@@ -73,8 +73,6 @@ export const RowColumnMeta = S.Struct({
 });
 
 // TODO(burdon): Index to all updates when rows/columns are inserted/deleted.
-// TODO(wittjosiah): Migrate typename to remove `Type` suffix.
-// TODO(wittjosiah): Rename title to name to align with other schemas.
 export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType', version: '0.1.0' })({
   name: S.optional(S.String),
 
@@ -93,8 +91,8 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
   // Column metadata referenced by index.
   columnMeta: S.mutable(S.Record({ key: S.String, value: S.mutable(RowColumnMeta) })),
 
-  // Cell formatting referenced by indexed range.
   // TODO(burdon): Change to array.
+  // Cell formatting referenced by indexed range.
   formatting: S.mutable(S.Record({ key: S.String, value: S.mutable(Formatting) })),
 
   // Threads associated with the sheet

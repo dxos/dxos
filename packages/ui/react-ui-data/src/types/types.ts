@@ -9,6 +9,8 @@ import { AST, S } from '@dxos/effect';
 export const isScalar = (ast: AST.AST) =>
   AST.isNumberKeyword(ast) || AST.isBooleanKeyword(ast) || AST.isStringKeyword(ast);
 
+// TODO(burdon): Move to @dxos/effect? (move from react-ui-xxx to core types).
+
 // TODO(burdon): JSON path
 //  - https://datatracker.ietf.org/doc/html/rfc6901
 //  - https://blog.json-everything.net/posts/paths-and-pointers
@@ -34,6 +36,7 @@ export enum FieldValueType {
 
   Percent = 'percent',
   Currency = 'currency',
+  JSON = 'json',
 
   // TODO(burdon): Other types:
   //  - Email, URL, DID
@@ -43,6 +46,7 @@ export enum FieldValueType {
 
 export const FieldValueTypes = Object.values(FieldValueType).sort();
 
+// TODO(burdon): Add string format.
 export const FieldSchema = S.mutable(
   S.Struct({
     id: S.String,
@@ -57,7 +61,7 @@ export const FieldSchema = S.mutable(
     /** Number of decimal digits. */
     digits: S.optional(S.Number),
 
-    // TODO(burdon): Table/form specific layout, or generic?
+    // TODO(burdon): Table/Form-specific layout, or keep generic?
     size: S.optional(S.Number),
   }),
 );
