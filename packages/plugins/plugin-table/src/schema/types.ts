@@ -12,8 +12,8 @@ import {
   S,
 } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
-import { FieldValueType } from '@dxos/react-ui-data';
 import { type ColumnDef, type TableDef } from '@dxos/react-ui-table';
+import { FieldValueType } from '@dxos/schema';
 
 import { type TableType } from '../types';
 
@@ -30,23 +30,6 @@ interface ColumnAnnotation {
   digits?: number;
   refProp?: string;
 }
-
-// TODO(burdon): Reconcile with react-ui-data/typeToColumn
-export const getPropType = (type?: AST.AST): FieldValueType => {
-  if (type == null) {
-    return FieldValueType.String;
-  }
-
-  if (AST.isTypeLiteral(type)) {
-    return FieldValueType.Ref;
-  } else if (AST.isBooleanKeyword(type)) {
-    return FieldValueType.Boolean;
-  } else if (AST.isNumberKeyword(type)) {
-    return FieldValueType.Number;
-  } else {
-    return FieldValueType.String;
-  }
-};
 
 export const getSchema = (
   tables: TableType[],
@@ -69,7 +52,8 @@ export const getSchema = (
   );
 };
 
-export const schemaPropMapper =
+// TODO(burdon): Reconcile with react-ui-data.
+export const mapTableToColumns =
   (table: TableType) =>
   (property: AST.PropertySignature): ColumnDef => {
     const { name: id, type } = property;
@@ -79,7 +63,7 @@ export const schemaPropMapper =
     return {
       id: String(id)!,
       prop: String(id)!,
-      type: getPropType(type),
+      type: toFieldValueType(type),
       refTable: refAnnotation?.schemaId,
       refProp: refProp ?? undefined,
       label: label ?? undefined,
@@ -91,7 +75,25 @@ export const schemaPropMapper =
     };
   };
 
-export const createUniqueProp = (table: TableDef) => {
+// TODO(burdon): Reconcile with react-ui-data/typeToColumn
+export const toFieldValueType = (type?: AST.AST): FieldValueType => {
+  if (type == null) {
+    return FieldValueType.String;
+  }
+
+  if (AST.isTypeLiteral(type)) {
+    return FieldValueType.Ref;
+  } else if (AST.isBooleanKeyword(type)) {
+    return FieldValueType.Boolean;
+  } else if (AST.isNumberKeyword(type)) {
+    return FieldValueType.Number;
+  } else {
+    return FieldValueType.String;
+  }
+};
+
+// TODO(burdon): Reconcile with react-ui-data.
+export const getUniqueProperty = (table: TableDef) => {
   for (let i = 1; i < 100; i++) {
     const prop = 'prop_' + i;
     if (!table.columns.find((column) => column.id === prop)) {

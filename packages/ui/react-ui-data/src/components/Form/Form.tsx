@@ -8,7 +8,6 @@ import React from 'react';
 import { AST, type S } from '@dxos/effect';
 import { Input, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-
 import {
   RealNumberFormat,
   type ViewType,
@@ -16,7 +15,8 @@ import {
   getFormatAnnotation,
   getProperty,
   setFieldValue,
-} from '../../types';
+} from '@dxos/schema';
+
 import { TextInput } from '../TextInput';
 
 export type FormProps<T = {}> = ThemedClassName<{

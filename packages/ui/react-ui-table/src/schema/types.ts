@@ -2,16 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type FieldValueType } from '@dxos/react-ui-data';
+import { type FieldValueType } from '@dxos/schema';
 
-// TODO(burdon): Reconcile with react-ui-data/View.
+// TODO(burdon): Reconcile with @dxos/schema/View.
 export type TableDef = {
   id: string;
   name?: string;
   columns: ColumnDef[];
 };
 
-// TODO(burdon): Reconcile with react-ui-data/Field.
+// TODO(burdon): Reconcile with @dxos/schema/Field.
 export type ColumnDef = {
   id: string;
   prop: string;

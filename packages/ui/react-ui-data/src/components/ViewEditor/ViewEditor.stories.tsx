@@ -7,12 +7,13 @@ import '@dxos-theme';
 import React from 'react';
 
 import { create } from '@dxos/echo-schema';
+import { ViewSchema, type ViewType } from '@dxos/schema';
 import { withTheme, withLayout, withSignals } from '@dxos/storybook-utils';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
-import { view, TestPopup } from '../../testing';
+import { testView } from '../../testing';
 import translations from '../../translations';
-import { ViewSchema, type ViewType } from '../../types';
+import { TestPopup } from '../testing';
 
 const Story = (props: ViewEditorProps) => (
   <TestPopup>
@@ -31,7 +32,7 @@ export default {
 
 export const Default = {
   args: {
-    view: create(view),
+    view: create(testView),
   } satisfies ViewEditorProps,
 };
 

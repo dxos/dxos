@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type SortDirection } from '@tanstack/react-table';
 import React, { useState } from 'react';
 
-import { FieldValueType } from '@dxos/react-ui-data';
+import { FieldValueType } from '@dxos/schema';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { ColumnMenu } from './ColumnMenu';
