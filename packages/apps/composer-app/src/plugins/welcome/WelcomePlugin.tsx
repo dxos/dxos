@@ -20,6 +20,7 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { CLIENT_PLUGIN, ClientAction } from '@dxos/plugin-client/meta';
 import { HELP_PLUGIN, HelpAction } from '@dxos/plugin-help/meta';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
+import { SPACE_PLUGIN, SpaceAction } from '@dxos/plugin-space';
 
 import { BetaDialog, WelcomeScreen } from './components';
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
@@ -87,14 +88,14 @@ export const WelcomePlugin = ({
       }
 
       // TODO(burdon): Factor out credentials helpers to hub-client.
-      const skipAuth = client.config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'main' || !hubUrl;
+      const skipAuth = ['main', 'labs'].includes(client.config.values.runtime?.app?.env?.DX_ENVIRONMENT) || !hubUrl;
       const searchParams = new URLSearchParams(window.location.search);
       const token = searchParams.get('token') ?? undefined;
+      const deviceInvitationCode = searchParams.get('deviceInvitationCode') ?? undefined;
 
       // If identity already exists, continue with existing identity.
       // If not, only create identity if token is present.
       let identity = client.halo.identity.get();
-      const deviceInvitationCode = searchParams.get('deviceInvitationCode');
       if (!identity && !deviceInvitationCode && (token || skipAuth)) {
         const result = await dispatch({
           plugin: CLIENT_PLUGIN,
@@ -102,9 +103,33 @@ export const WelcomePlugin = ({
         });
         firstRun?.wake();
         identity = result?.data;
+      } else if (deviceInvitationCode) {
+        await dispatch({
+          plugin: CLIENT_PLUGIN,
+          action: ClientAction.JOIN_IDENTITY,
+          data: { invitationCode: deviceInvitationCode },
+        });
+
+        removeQueryParamByValue(deviceInvitationCode);
+        return;
       }
 
       if (skipAuth) {
+        const spaceInvitationCode = searchParams.get('spaceInvitationCode') ?? undefined;
+        if (spaceInvitationCode) {
+          await dispatch([
+            {
+              plugin: SPACE_PLUGIN,
+              action: SpaceAction.JOIN,
+              data: { invitationCode: spaceInvitationCode },
+            },
+            {
+              action: NavigationAction.OPEN,
+            },
+          ]);
+
+          removeQueryParamByValue(spaceInvitationCode);
+        }
         return;
       }
 

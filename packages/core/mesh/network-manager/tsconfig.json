@@ -4,67 +4,12 @@
     "lib": [
       "DOM",
       "ESNext"
-    ],
-    "outDir": "dist/types"
+    ]
   },
   "include": [
+    "network-manager.d.ts",
     "src",
     "tests-setup.js"
   ],
-  "references": [
-    {
-      "path": "../../../common/async"
-    },
-    {
-      "path": "../../../common/codec-protobuf"
-    },
-    {
-      "path": "../../../common/context"
-    },
-    {
-      "path": "../../../common/crypto"
-    },
-    {
-      "path": "../../../common/debug"
-    },
-    {
-      "path": "../../../common/invariant"
-    },
-    {
-      "path": "../../../common/keys"
-    },
-    {
-      "path": "../../../common/log"
-    },
-    {
-      "path": "../../../common/node-std"
-    },
-    {
-      "path": "../../../common/util"
-    },
-    {
-      "path": "../../../sdk/config"
-    },
-    {
-      "path": "../../halo/credentials"
-    },
-    {
-      "path": "../../protocols"
-    },
-    {
-      "path": "../edge-client"
-    },
-    {
-      "path": "../messaging"
-    },
-    {
-      "path": "../rpc"
-    },
-    {
-      "path": "../signal"
-    },
-    {
-      "path": "../teleport"
-    }
-  ]
+  "references": []
 }

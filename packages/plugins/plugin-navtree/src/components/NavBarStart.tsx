@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { Fragment } from 'react';
 
 import { getGraph, type Node } from '@dxos/app-graph';
@@ -22,7 +21,6 @@ export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: Node;
       ? Popover.Anchor
       : Fragment;
 
-  const Icon = activeNode.properties?.icon ?? DotsThreeVertical;
   const graph = getGraph(activeNode);
   const actions = graph.actions(activeNode);
   const label = toLocalizedString(activeNode.properties?.label, t);
@@ -33,10 +31,10 @@ export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: Node;
     <>
       <ActionRoot>
         <PlankHeading.ActionsMenu
-          Icon={Icon}
+          icon={activeNode.properties?.icon ?? 'ph--dots-three-vertical--regular'}
           attendableId={activeNode.id}
           triggerLabel={menuTriggerLabel}
-          actions={actions}
+          actions={[actions]}
           onAction={(action) =>
             typeof action.data === 'function' && action.data({ node: action as Node, caller: TREE_ITEM_MAIN_HEADING })
           }

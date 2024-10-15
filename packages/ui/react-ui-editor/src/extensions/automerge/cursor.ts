@@ -5,7 +5,7 @@
 import { log } from '@dxos/log';
 import { type DocAccessor, fromCursor, toCursor } from '@dxos/react-client/echo';
 
-import { type CursorConverter } from '../cursor';
+import { type CursorConverter } from '../../state';
 
 export const cursorConverter = (accessor: DocAccessor): CursorConverter => ({
   toCursor: (pos, assoc) => {

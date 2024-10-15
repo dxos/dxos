@@ -17,11 +17,9 @@ const headings: Record<HeadingLevel, string> = {
 };
 
 export const theme = {
-  mark: 'opacity-50',
   code: 'font-mono !no-underline text-neutral-700 dark:text-neutral-300',
   codeMark: 'font-mono text-primary-500',
-  // TODO(burdon): Replace with widget.
-  blockquote: 'pl-1 mr-1 border-is-4 border-orange-500 dark:border-orange-500 dark:text-neutral-500',
+  mark: 'opacity-50',
   heading: (level: HeadingLevel) => {
     return mx(headings[level], 'dark:text-primary-400');
   },

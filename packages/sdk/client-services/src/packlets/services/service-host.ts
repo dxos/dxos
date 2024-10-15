@@ -6,7 +6,7 @@ import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, type ClientServices } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { EdgeClient, type EdgeConnection } from '@dxos/edge-client';
+import { EdgeClient, EdgeHttpClient, createStubEdgeIdentity, type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -15,7 +15,7 @@ import { EdgeSignalManager, WebsocketSignalManager, type SignalManager } from '@
 import {
   SwarmNetworkManager,
   createIceProvider,
-  createSimplePeerTransportFactory,
+  createRtcTransportFactory,
   type TransportFactory,
 } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
@@ -29,9 +29,9 @@ import { ServiceRegistry } from './service-registry';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
 import {
-  type CollectDiagnosticsBroadcastHandler,
   createCollectDiagnosticsBroadcastHandler,
   createDiagnostics,
+  type CollectDiagnosticsBroadcastHandler,
 } from '../diagnostics';
 import { IdentityServiceImpl, type CreateIdentityOptions } from '../identity';
 import { ContactsServiceImpl } from '../identity/contacts-service';
@@ -89,6 +89,7 @@ export class ClientServicesHost {
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
   private _edgeConnection?: EdgeConnection = undefined;
+  private _edgeHttpClient?: EdgeHttpClient = undefined;
 
   private _serviceContext!: ServiceContext;
   private readonly _runtimeParams: ServiceContextRuntimeParams;
@@ -212,13 +213,13 @@ export class ClientServicesHost {
 
     const edgeEndpoint = config?.get('runtime.services.edge.url');
     if (edgeEndpoint) {
-      const randomKey = PublicKey.random().toHex();
-      this._edgeConnection = new EdgeClient(randomKey, randomKey, { socketEndpoint: edgeEndpoint });
+      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: edgeEndpoint });
+      this._edgeHttpClient = new EdgeHttpClient(edgeEndpoint);
     }
 
     const {
       connectionLog = true,
-      transportFactory = createSimplePeerTransportFactory(
+      transportFactory = createRtcTransportFactory(
         { iceServers: this._config?.get('runtime.services.ice') },
         this._config?.get('runtime.services.iceProviders') &&
           createIceProvider(this._config!.get('runtime.services.iceProviders')!),
@@ -278,6 +279,7 @@ export class ClientServicesHost {
       this._networkManager,
       this._signalManager,
       this._edgeConnection,
+      this._edgeHttpClient,
       this._runtimeParams,
       this._config.get('runtime.client.edgeFeatures'),
     );

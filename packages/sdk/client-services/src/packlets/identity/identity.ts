@@ -14,10 +14,12 @@ import {
 } from '@dxos/credentials';
 import { type Signer } from '@dxos/crypto';
 import { type Space } from '@dxos/echo-pipeline';
-import { writeMessages } from '@dxos/feed-store';
+import { type EdgeConnection } from '@dxos/edge-client';
+import { writeMessages, type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
   AdmittedFeed,
@@ -32,6 +34,7 @@ import { type ComplexMap, ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from './authenticator';
 import { DefaultSpaceStateMachine } from './default-space-state-machine';
+import { EdgeFeedReplicator } from '../spaces';
 
 export type IdentityParams = {
   identityKey: PublicKey;
@@ -39,6 +42,9 @@ export type IdentityParams = {
   signer: Signer;
   space: Space;
   presence?: Presence;
+
+  edgeConnection?: EdgeConnection;
+  edgeFeatures?: Runtime.Client.EdgeFeatures;
 };
 
 /**
@@ -52,6 +58,8 @@ export class Identity {
   private readonly _deviceStateMachine: DeviceStateMachine;
   private readonly _profileStateMachine: ProfileStateMachine;
   private readonly _defaultSpaceStateMachine: DefaultSpaceStateMachine;
+  private readonly _edgeFeedReplicator?: EdgeFeedReplicator = undefined;
+
   public readonly authVerifier: TrustedKeySetAuthVerifier;
 
   public readonly identityKey: PublicKey;
@@ -59,15 +67,15 @@ export class Identity {
 
   public readonly stateUpdate = new Event();
 
-  constructor({ space, signer, identityKey, deviceKey, presence }: IdentityParams) {
-    this.space = space;
-    this._signer = signer;
-    this._presence = presence;
+  constructor(params: IdentityParams) {
+    this.space = params.space;
+    this._signer = params.signer;
+    this._presence = params.presence;
 
-    this.identityKey = identityKey;
-    this.deviceKey = deviceKey;
+    this.identityKey = params.identityKey;
+    this.deviceKey = params.deviceKey;
 
-    log.trace('dxos.halo.device', { deviceKey });
+    log.trace('dxos.halo.device', { deviceKey: params.deviceKey });
 
     this._deviceStateMachine = new DeviceStateMachine({
       identityKey: this.identityKey,
@@ -88,6 +96,10 @@ export class Identity {
       update: this.stateUpdate,
       authTimeout: AUTH_TIMEOUT,
     });
+
+    if (params.edgeConnection && params.edgeFeatures?.feedReplicator) {
+      this._edgeFeedReplicator = new EdgeFeedReplicator({ messenger: params.edgeConnection, spaceId: this.space.id });
+    }
   }
 
   // TODO(burdon): Expose state object?
@@ -105,7 +117,14 @@ export class Identity {
     await this.space.spaceState.addCredentialProcessor(this._deviceStateMachine);
     await this.space.spaceState.addCredentialProcessor(this._profileStateMachine);
     await this.space.spaceState.addCredentialProcessor(this._defaultSpaceStateMachine);
+
+    if (this._edgeFeedReplicator) {
+      this.space.protocol.feedAdded.append(this._onFeedAdded);
+    }
+
     await this.space.open(ctx);
+
+    await this._edgeFeedReplicator?.open();
   }
 
   @trace.span()
@@ -115,6 +134,13 @@ export class Identity {
     await this.space.spaceState.removeCredentialProcessor(this._defaultSpaceStateMachine);
     await this.space.spaceState.removeCredentialProcessor(this._profileStateMachine);
     await this.space.spaceState.removeCredentialProcessor(this._deviceStateMachine);
+
+    if (this._edgeFeedReplicator) {
+      this.space.protocol.feedAdded.remove(this._onFeedAdded);
+    }
+
+    await this._edgeFeedReplicator?.close();
+
     await this.space.close();
   }
 
@@ -149,6 +175,10 @@ export class Identity {
 
   get presence() {
     return this._presence;
+  }
+
+  get signer() {
+    return this._signer;
   }
 
   /**
@@ -223,4 +253,8 @@ export class Identity {
       ].map((credential): FeedMessage.Payload => ({ credential: { credential } })),
     );
   }
+
+  private _onFeedAdded = async (feed: FeedWrapper<any>) => {
+    await this._edgeFeedReplicator!.addFeed(feed);
+  };
 }

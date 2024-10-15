@@ -3,7 +3,8 @@
 //
 
 import '@dxos-theme';
-import React, { useMemo } from 'react';
+
+import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
 import {
@@ -13,8 +14,7 @@ import {
   decorateMarkdown,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
-import { type Meta, withTheme } from '@dxos/storybook-utils';
+import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { mermaid } from './mermaid';
 
@@ -26,79 +26,67 @@ type StoryProps = {
 
 const Story = ({ text }: StoryProps) => {
   const { themeMode } = useThemeContext();
-  const extensions = useMemo(
-    () => [
-      createBasicExtensions(),
-      createMarkdownExtensions({ themeMode }),
-      createThemeExtensions({ themeMode }),
-      // TODO(burdon): Bug if mermaid extension is provided after decorateMarkdown.
-      mermaid(),
-      decorateMarkdown(),
-    ],
-    [],
+  const { parentRef, focusAttributes } = useTextEditor(
+    () => ({
+      initialValue: text,
+      extensions: [
+        createBasicExtensions(),
+        createMarkdownExtensions({ themeMode }),
+        createThemeExtensions({ themeMode, syntaxHighlighting: true }),
+        // TODO(burdon): Bug if mermaid extension is provided after decorateMarkdown.
+        mermaid(),
+        decorateMarkdown(),
+      ],
+    }),
+    [themeMode],
   );
 
-  const { parentRef, focusAttributes } = useTextEditor(() => ({ initialValue: text, extensions }), [extensions]);
-
-  return (
-    <div className={mx(fixedInsetFlexLayout, groupSurface)}>
-      <div className='flex justify-center overflow-y-scroll'>
-        <div className='flex flex-col w-[800px] py-16'>
-          <div role='none' ref={parentRef} {...focusAttributes} />
-        </div>
-      </div>
-    </div>
-  );
+  return <div className='w-[50rem]' ref={parentRef} {...focusAttributes} />;
 };
 
-const meta: Meta = {
+export default {
   title: 'plugin-mermaid/extensions',
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
+  render: Story,
 };
 
-export default meta;
-
-export const Mermaid = {
-  render: () => (
-    <Story
-      text={str(
-        '# Mermaid',
-        '',
-        'This is a mermaid diagram:',
-        '',
-        '```mermaid',
-        'graph LR;',
-        'A-->B;',
-        'B-->C;',
-        'B-->D;',
-        'B-->E;',
-        'D-->E;',
-        'C-->D;',
-        '```',
-        '',
-        'Inside a markdown document.',
-        '',
-      )}
-    />
-  ),
+export const Default = {
+  args: {
+    text: str(
+      '# Mermaid',
+      '',
+      'This is a mermaid diagram:',
+      '',
+      '```mermaid',
+      'graph LR;',
+      'A-->B;',
+      'B-->C;',
+      'B-->D;',
+      'B-->E;',
+      'D-->E;',
+      'C-->D;',
+      '```',
+      '',
+      'Inside a markdown document.',
+      '',
+    ),
+  },
 };
 
 export const Error = {
-  render: () => (
-    <Story
-      text={str(
-        '# Mermaid',
-        '',
-        'This is a broken mermaid diagram:',
-        '',
-        '```mermaid',
-        'graph TD;',
-        'A- ->B;',
-        '```',
-        '',
-        '',
-        '',
-      )}
-    />
-  ),
+  args: {
+    text: str(
+      '# Mermaid',
+      '',
+      'This is a broken mermaid diagram:',
+      '',
+      '```mermaid',
+      'graph TD;',
+      'A- ->B;',
+      '```',
+      '',
+      '',
+      '',
+    ),
+  },
 };

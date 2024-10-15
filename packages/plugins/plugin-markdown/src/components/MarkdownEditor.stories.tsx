@@ -3,14 +3,15 @@
 //
 
 import '@dxos-theme';
+
 import React, { useMemo, type FC } from 'react';
 
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
-import { Tooltip } from '@dxos/react-ui';
-import { automerge } from '@dxos/react-ui-editor';
-import { withTheme } from '@dxos/storybook-utils';
+import { Main } from '@dxos/react-ui';
+import { editorWithToolbarLayout, automerge } from '@dxos/react-ui-editor';
+import { topbarBlockPaddingStart } from '@dxos/react-ui-theme';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { MainLayout } from './Layout';
 import { MarkdownEditor } from './MarkdownEditor';
 
 const Story: FC<{
@@ -21,20 +22,22 @@ const Story: FC<{
   const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
 
   return (
-    <Tooltip.Provider>
-      <MainLayout toolbar={toolbar}>
-        <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
-      </MainLayout>
-    </Tooltip.Provider>
+    <Main.Content
+      bounce
+      data-toolbar={toolbar ? 'enabled' : 'disabled'}
+      classNames={[topbarBlockPaddingStart, editorWithToolbarLayout]}
+    >
+      <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
+    </Main.Content>
   );
 };
 
 export default {
   title: 'plugin-markdown/EditorMain',
   component: MarkdownEditor,
-  decorators: [withTheme],
-  render: Story,
+  decorators: [withTheme, withLayout({ tooltips: true })],
   parameters: { layout: 'fullscreen' },
+  render: Story,
 };
 
 const content = Array.from({ length: 100 })

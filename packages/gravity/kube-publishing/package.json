@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kube-publishing",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "private": true,
   "description": "KUBE Publishing Testing.",
   "homepage": "https://dxos.org",
@@ -11,14 +11,16 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
     "./main": {
       "browser": "./dist/lib/browser/main.mjs",
       "node": {
-        "default": "./dist/lib/node/main.cjs"
+        "require": "./dist/lib/node/main.cjs",
+        "default": "./dist/lib/node-esm/main.mjs"
       },
       "types": "./dist/types/src/main.d.ts"
     }
@@ -41,9 +43,7 @@
   },
   "devDependencies": {
     "@dxos/cli": "workspace:*",
-    "@types/node": "^18.11.9",
-    "ts-node": "10.9.1",
-    "typescript": "^5.5.4"
+    "@types/node": "^22.7.4"
   },
   "publishConfig": {
     "access": "restricted"

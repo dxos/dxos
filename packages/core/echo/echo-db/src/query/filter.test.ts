@@ -2,14 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Reference } from '@dxos/echo-protocol';
-import { create, generateEchoId, TypedObject } from '@dxos/echo-schema';
+import { create, generateEchoId, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-import { describe, test } from '@dxos/test';
 
 import { Filter } from './filter';
 import { filterMatch, compareType } from './filter-match';

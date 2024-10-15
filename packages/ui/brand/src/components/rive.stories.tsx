@@ -7,13 +7,13 @@ import '@dxos-theme';
 import { type Rive, useRive } from '@rive-app/react-canvas';
 import React, { useEffect } from 'react';
 
-import { useAsyncCallback } from '@dxos/react-ui';
+import { useAsyncState } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 export default {
   title: 'brand/Rive',
-  decorators: [withTheme, withFullscreen({ classNames: ['absolute inset-0 bg-black'] })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: ['absolute inset-0 bg-black'] })],
 };
 
 const useFlash = (rive: Rive | null, name: string, delay: number, period: number) => {
@@ -46,7 +46,7 @@ const Component = ({ buffer }: { buffer: ArrayBuffer }) => {
 };
 
 export const Default = () => {
-  const buffer = useAsyncCallback<ArrayBuffer | undefined>(async () => {
+  const [buffer] = useAsyncState<ArrayBuffer>(async () => {
     // CORS set via dashboard.
     const response = await fetch('https://dxos.network/dxos.riv', { mode: 'cors' });
     if (response.ok) {

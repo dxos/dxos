@@ -4,31 +4,11 @@
     "lib": [
       "DOM",
       "ESNext"
-    ],
-    "outDir": "dist/types"
+    ]
   },
   "include": [
     "src",
     "stories"
   ],
-  "references": [
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/invariant"
-    },
-    {
-      "path": "../../common/node-std"
-    },
-    {
-      "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-theme"
-    },
-    {
-      "path": "../../ui/storybook-utils"
-    }
-  ]
+  "references": []
 }

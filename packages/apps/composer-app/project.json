@@ -18,14 +18,16 @@
       }
     },
     "bundle": {
-      "cache": false,
       "dependsOn": [
         "bundle-app"
       ],
       "executor": "nx:run-script",
       "options": {
         "script": "build:functions"
-      }
+      },
+      "outputs": [
+        "{projectRoot}/out/composer"
+      ]
     },
     "bundle-app": {
       "cache": true,
@@ -86,6 +88,12 @@
         {
           "env": "SENTRY_RELEASE_AUTH_TOKEN"
         },
+        {
+          "env": "DX_LOKI_AUTHORIZATION"
+        },
+        {
+          "env": "DX_LOKI_ENDPOINT"
+        },
         "^production",
         "production"
       ],
@@ -97,18 +105,7 @@
         "{options.outputPath}"
       ]
     },
-    "e2e": {
-      "options": {
-        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
-        "serve": "composer-app:preview",
-        "testPatterns": [
-          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "{projectRoot}/src/**/*"
-        ]
-      }
-    },
+    "e2e": {},
     "lint": {},
     "prebuild": {
       "executor": "nx:run-script",
@@ -142,6 +139,7 @@
       "options": {
         "configDir": "{projectRoot}/.storybook"
       }
-    }
+    },
+    "test": {}
   }
 }

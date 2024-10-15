@@ -111,10 +111,8 @@ export const App = () => {
       config={getConfig}
       createWorker={createWorker}
       shell='./shell.html'
+      types={[TaskType]}
       onInitialized={async (client) => {
-        // TODO(wittjosiah): ClientProvider should support adding schemas.
-        client.addTypes([TaskType]);
-
         const searchParams = new URLSearchParams(location.search);
         if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
           await client.halo.createIdentity();

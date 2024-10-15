@@ -2,13 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Placeholder } from '@phosphor-icons/react';
 import React, { Fragment, useEffect } from 'react';
 
 import {
   LayoutAction,
   NavigationAction,
-  SLUG_COLLECTION_INDICATOR,
   SLUG_PATH_SEPARATOR,
   Surface,
   useIntentDispatcher,
@@ -16,11 +14,10 @@ import {
   partLength,
   type LayoutParts,
   type LayoutPart,
-  type LayoutEntry,
 } from '@dxos/app-framework';
 import { type Node, useGraph } from '@dxos/plugin-graph';
-import { Popover, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
-import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
+import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import { PlankHeading, type PlankHeadingAction } from '@dxos/react-ui-deck';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { DECK_PLUGIN } from '../../meta';
@@ -30,24 +27,23 @@ export const NodePlankHeading = ({
   id,
   layoutParts,
   layoutPart,
-  // TODO(wittjosiah): Unused?
-  layoutEntry,
   popoverAnchorId,
   pending,
   flatDeck,
+  actions = [],
 }: {
   node?: Node;
   id?: string;
   layoutParts?: LayoutParts;
   layoutPart?: LayoutPart;
-  layoutEntry?: LayoutEntry;
   popoverAnchorId?: string;
   pending?: boolean;
   flatDeck?: boolean;
+  actions?: PlankHeadingAction[];
 }) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const { graph } = useGraph();
-  const Icon = node?.properties?.icon ?? Placeholder;
+  const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
   const label = pending
     ? t('pending heading')
     : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
@@ -80,10 +76,11 @@ export const NodePlankHeading = ({
       <ActionRoot>
         {node ? (
           <PlankHeading.ActionsMenu
-            Icon={Icon}
+            icon={icon}
+            related={layoutPart === 'complementary'}
             attendableId={attendableId}
             triggerLabel={t('actions menu label')}
-            actions={graph.actions(node)}
+            actions={[actions, graph.actions(node)].filter((a) => a.length > 0)}
             onAction={(action) =>
               typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
             }
@@ -93,12 +90,16 @@ export const NodePlankHeading = ({
         ) : (
           <PlankHeading.Button>
             <span className='sr-only'>{label}</span>
-            <Icon {...plankHeadingIconProps} />
+            <Icon icon={icon} size={5} />
           </PlankHeading.Button>
         )}
       </ActionRoot>
       <TextTooltip text={label} onlyWhenTruncating>
-        <PlankHeading.Label attendableId={node?.id} {...(pending && { classNames: 'text-description' })}>
+        <PlankHeading.Label
+          attendableId={attendableId}
+          related={layoutPart === 'complementary'}
+          {...(pending && { classNames: 'text-description' })}
+        >
           {label}
         </PlankHeading.Label>
       </TextTooltip>
@@ -143,7 +144,6 @@ export const NodePlankHeading = ({
                     action: NavigationAction.CLOSE,
                     data: {
                       activeParts: {
-                        complementary: [`${id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`],
                         [layoutPart]: [id],
                       },
                     },
@@ -151,7 +151,7 @@ export const NodePlankHeading = ({
               : { action: NavigationAction.ADJUST, data: { type: eventType, layoutCoordinate } },
           );
         }}
-        close={layoutCoordinate?.part === 'complementary' ? 'minify-end' : true}
+        close={layoutPart === 'complementary' ? 'minify-end' : true}
       />
     </PlankHeading.Root>
   );

@@ -4,19 +4,18 @@
 
 export type AsyncCallback<T> = (param: T) => Promise<void>;
 
-export type Provider<T> = () => T;
+export type Provider<T, V = void> = (arg: V) => T;
+
+export type MaybeProvider<T, V = void> = T | ((arg: V) => T);
 
 export type MaybePromise<T> = T | Promise<T>;
+
+export type MakeOptional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>;
 
 /**
  * All types that evaluate to false when cast to a boolean.
  */
 export type Falsy = false | 0 | '' | null | undefined;
-
-/**
- * A function returning a value or a value itself.
- */
-export type MaybeFunction<T> = T | (() => T);
 
 /**
  * Use with filter chaining instead of filter(Boolean) to preserve type.
@@ -30,18 +29,28 @@ export const isNotNullOrUndefined = <T>(value: T): value is Exclude<T, null | un
 // export const isNotNullish = <T>(value: T | null | undefined): value is T => value !== undefined && value !== null;
 export const boolGuard = <T>(value: T | null | undefined): value is T => Boolean(value);
 
+// TODO(burdon): Replace use of setTimeout everywhere?
+//  Would remove the need to cancel (and associated errors), but would change the operation of the code
+//  since the function would call immediately instead of waiting for the next tick.
+//  Could this affect performance? Otherwise replace with queueMicrotask?
+export const doAsync = async (fn: () => Promise<void>) => fn();
+
 /**
  * Get value from a provider.
  */
-export const getAsyncValue = async <T>(value: MaybeFunction<MaybePromise<T>>): Promise<T> => {
-  if (typeof value === 'function') {
-    return (value as Function)();
-  } else {
-    return value;
-  }
+export const getProviderValue = <T, V = void>(provider: MaybeProvider<T, V>, arg?: V): T => {
+  return typeof provider === 'function' ? (provider as Function)(arg) : provider;
 };
 
-export type MakeOptional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>;
+/**
+ * Get value from a provider, which may be async.
+ */
+export const getAsyncProviderValue = <T, V = void>(
+  provider: MaybeProvider<MaybePromise<T>, V>,
+  arg?: V,
+): MaybePromise<T> => {
+  return getProviderValue(provider, arg);
+};
 
 /**
  * Remove keys with undefined values.

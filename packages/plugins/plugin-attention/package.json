@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-attention",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "Plugin for attention",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,14 +10,16 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
     "./meta": {
       "browser": "./dist/lib/browser/meta.mjs",
       "node": {
-        "default": "./dist/lib/node/meta.cjs"
+        "require": "./dist/lib/node/meta.cjs",
+        "default": "./dist/lib/node-esm/meta.mjs"
       },
       "types": "./dist/types/src/meta.d.ts"
     }
@@ -48,8 +50,8 @@
     "react-dom": "~18.2.0"
   },
   "peerDependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   },
   "publishConfig": {
     "access": "public"

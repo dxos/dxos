@@ -12,8 +12,8 @@ export {
   getTypename,
   Expando,
   type EchoReactiveObject,
-  type ReactiveObject,
   type ObjectMeta,
+  type ReactiveObject,
 } from '@dxos/echo-schema';
 export {
   createDocAccessor,
@@ -49,5 +49,6 @@ export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
+export type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
 export { getSpace, isSpace, fullyQualifiedId } from './util';

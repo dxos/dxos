@@ -3,61 +3,47 @@
 //
 
 import { openSearchPanel } from '@codemirror/search';
-import { EditorView } from '@codemirror/view';
+import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 
-import {
-  type FileInfo,
-  LayoutAction,
-  type LayoutCoordinate,
-  useResolvePlugin,
-  useIntentResolver,
-  parseLayoutPlugin,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
-import { parseAttentionPlugin } from '@dxos/plugin-attention';
+import { type FileInfo, LayoutAction, type LayoutCoordinate, useIntentDispatcher } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
 import {
   type Action,
   type DNDOptions,
   type EditorViewMode,
   type EditorInputMode,
-  type UseTextEditorProps,
   Toolbar,
+  type UseTextEditorProps,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
+  editorContent,
+  editorGutter,
   processAction,
   useActionHandler,
   useCommentState,
   useCommentClickListener,
   useFormattingState,
   useTextEditor,
-  editorContent,
-  editorGutter,
-  Cursor,
-  setSelection,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
-import { nonNullable } from '@dxos/util';
+import { isNotFalsy, nonNullable } from '@dxos/util';
 
+import { useSelectCurrentThread } from '../hooks';
 import { MARKDOWN_PLUGIN } from '../meta';
-import type { MarkdownPluginState } from '../types';
-
-const attentionFragment = mx(
-  'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
-  'group-focus-within/editor:border-separator',
-);
+import { type MarkdownPluginState } from '../types';
 
 const DEFAULT_VIEW_MODE: EditorViewMode = 'preview';
 
 export type MarkdownEditorProps = {
   id: string;
+  role?: string;
   coordinate?: LayoutCoordinate;
   inputMode?: EditorInputMode;
-  role?: string;
   scrollPastEnd?: boolean;
   toolbar?: boolean;
   viewMode?: EditorViewMode;
@@ -66,6 +52,12 @@ export type MarkdownEditorProps = {
 } & Pick<UseTextEditorProps, 'initialValue' | 'scrollTo' | 'selection' | 'extensions'> &
   Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
 
+/**
+ * Base markdown editor component.
+ *
+ * This component provides all the features of the markdown editor that do no depend on ECHO.
+ * This allows it to be used as a common editor for markdown content on arbitrary backends (e.g. files).
+ */
 export const MarkdownEditor = ({
   id,
   role = 'article',
@@ -83,51 +75,26 @@ export const MarkdownEditor = ({
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
   const dispatch = useIntentDispatcher();
-  const attentionPlugin = useResolvePlugin(parseAttentionPlugin);
-  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
-  const attended = Array.from(attentionPlugin?.provides.attention?.attended ?? []);
-  const isDirectlyAttended = attended.length === 1 && attended[0] === id;
   const [formattingState, formattingObserver] = useFormattingState();
+  const attendableAttributes = useAttendableAttributes(id);
+  const { hasAttention } = useAttention(id);
 
   // Extensions from other plugins.
-  const providerExtensions = useMemo(() => extensionProviders?.map((provider) => provider({})), [extensionProviders]);
+  // TODO(burdon): Reconcile with DocumentEditor.useExtensions.
+  const providerExtensions = useMemo(
+    () => extensionProviders?.flatMap((provider) => provider({})).filter(nonNullable),
+    [extensionProviders],
+  );
 
   // TODO(Zan): Move these into thread plugin as well?
   const [commentsState, commentObserver] = useCommentState();
   const onCommentClick = useCallback(() => {
-    void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
+    void dispatch({
+      action: LayoutAction.SET_LAYOUT,
+      data: { element: 'complementary', state: true },
+    });
   }, [dispatch]);
   const commentClickObserver = useCommentClickListener(onCommentClick);
-
-  // Focus the space that references the comment.
-  useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
-    switch (action) {
-      // TODO(burdon): Use fully qualified ids everywhere.
-      case LayoutAction.SCROLL_INTO_VIEW: {
-        if (editorView && data?.id === id && data?.cursor) {
-          // TODO(burdon): We need typed intents.
-          const range = Cursor.getRangeFromCursor(editorView.state, data.cursor);
-          if (range) {
-            const selection = editorView.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
-            const effects = [
-              // NOTE: This does not use the DOM scrollIntoView function.
-              EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 }),
-            ];
-            if (selection) {
-              // Update the editor selection to get bi-directional highlighting.
-              effects.push(setSelection.of({ current: id }));
-            }
-
-            editorView.dispatch({
-              effects,
-              selection: selection ? { anchor: range.from } : undefined,
-            });
-          }
-        }
-        break;
-      }
-    }
-  });
 
   // Drag files.
   const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
@@ -155,18 +122,22 @@ export const MarkdownEditor = ({
           scrollPastEnd: role === 'section' ? false : scrollPastEnd,
         }),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode, slots: { content: { className: editorContent } } }),
+        createThemeExtensions({
+          themeMode,
+          syntaxHighlighting: true,
+          slots: { content: { className: editorContent } },
+        }),
         editorGutter,
-        role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
+        role !== 'section' && onFileUpload && dropFile({ onDrop: handleDrop }),
         providerExtensions,
         extensions,
-      ].filter(nonNullable),
+      ].filter(isNotFalsy),
       ...(role !== 'section' && {
         id,
         scrollTo,
         selection,
         // TODO(wittjosiah): Autofocus based on layout is racy.
-        autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
+        // autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
         moveToEndOfLine: true,
       }),
     }),
@@ -174,6 +145,7 @@ export const MarkdownEditor = ({
   );
 
   useTest(editorView);
+  useSelectCurrentThread(editorView, id);
 
   // Toolbar handler.
   const handleToolbarAction = useActionHandler(editorView);
@@ -201,25 +173,24 @@ export const MarkdownEditor = ({
       {...(role === 'section'
         ? { className: 'flex flex-col' }
         : {
-            className: 'contents group/editor',
-            ...(isDirectlyAttended && { 'aria-current': 'location' }),
+            className: 'contents',
+            // TODO(wittjosiah): Factor out to `useAttendableAttributes`?
+            ...(hasAttention && { 'aria-current': 'location' }),
+            ...attendableAttributes,
           })}
     >
       {toolbar && (
-        <div role='none' className={mx('flex shrink-0 justify-center overflow-x-auto', attentionFragment)}>
+        <div role='none' className='flex shrink-0 justify-center overflow-x-auto attention-surface'>
           <Toolbar.Root
             classNames={
               role === 'section'
                 ? [
                     textBlockWidth,
                     'z-[2] group-focus-within/section:visible',
-                    !isDirectlyAttended && 'invisible',
+                    !hasAttention && 'invisible',
                     sectionToolbarLayout,
                   ]
-                : [
-                    textBlockWidth,
-                    'group-focus-within/editor:border-separator group-[[aria-current]]/editor:border-separator',
-                  ]
+                : [textBlockWidth]
             }
             state={formattingState && { ...formattingState, ...commentsState }}
             onAction={handleAction}
@@ -243,8 +214,8 @@ export const MarkdownEditor = ({
             : mx(
                 'flex is-full bs-full overflow-hidden',
                 focusRing,
-                attentionFragment,
-                'focus-visible:ring-inset',
+                'focus-visible:ring-inset attention-surface',
+                'p-0.5', // TODO(burdon): Handle padding for focusRing consistently.
                 'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
               )
         }
@@ -264,5 +235,3 @@ const useTest = (view?: EditorView) => {
     }
   }, [view]);
 };
-
-export default MarkdownEditor;

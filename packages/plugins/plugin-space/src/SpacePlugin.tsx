@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type IconProps, Plus, SignIn, CardsThree, Warning } from '@phosphor-icons/react';
 import { effect, signal } from '@preact/signals-core';
 import React from 'react';
 
@@ -10,66 +9,67 @@ import {
   type IntentDispatcher,
   type IntentPluginProvides,
   LayoutAction,
-  Surface,
   type LocationProvides,
   NavigationAction,
   type Plugin,
   type PluginDefinition,
-  openIds,
+  Surface,
   firstIdInPart,
-  parseIntentPlugin,
-  parseNavigationPlugin,
-  parseMetadataResolverPlugin,
-  resolvePlugin,
+  openIds,
   parseGraphPlugin,
+  parseIntentPlugin,
+  parseMetadataResolverPlugin,
+  parseNavigationPlugin,
+  resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
-import { type Identifiable, isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, type Identifiable, isReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
 import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
-import { createExtension, isGraphNode, memoize, type Node, toSignal } from '@dxos/plugin-graph';
+import { type Node, createExtension, memoize, toSignal } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
-  type PropertiesTypeProps,
-  type Space,
-  create,
   Expando,
   Filter,
+  type PropertiesTypeProps,
+  type Space,
+  SpaceState,
+  create,
   fullyQualifiedId,
   getSpace,
   getTypename,
   isEchoObject,
   isSpace,
   loadObjectReferences,
-  SpaceState,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
-import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
+import { ClipboardProvider, InvitationManager, type InvitationManagerProps, osTranslations } from '@dxos/shell/react';
 import { ComplexMap, nonNullable, reduceGroupBy } from '@dxos/util';
 
 import {
   AwaitingObject,
   CollectionMain,
   CollectionSection,
-  EmptySpace,
-  EmptyTree,
+  FallbackSettings,
   MenuFooter,
   MissingObject,
   PopoverRenameObject,
   PopoverRenameSpace,
+  SaveStatus,
   ShareSpaceButton,
   SmallPresence,
   SmallPresenceLive,
   SpacePresence,
   SpaceSettings,
+  SyncStatus,
 } from './components';
 import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
 import translations from './translations';
-import { CollectionType, type SpacePluginProvides, type SpaceSettingsProps, type PluginState } from './types';
+import { CollectionType, type PluginState, type SpacePluginProvides, type SpaceSettingsProps } from './types';
 import {
   COMPOSER_SPACE_LOCK,
   SHARED,
@@ -118,7 +118,9 @@ export const SpacePlugin = ({
   firstRun,
   onFirstRun,
 }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
-  const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
+  const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN, {
+    onSpaceCreate: 'dxos.org/plugin/markdown/action/create',
+  });
   const state = new LocalStorageStore<PluginState>(SPACE_PLUGIN, {
     awaiting: undefined,
     spaceNames: {},
@@ -340,8 +342,7 @@ export const SpacePlugin = ({
         records: {
           [CollectionType.typename]: {
             placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
-            icon: (props: IconProps) => <CardsThree {...props} />,
-            iconSymbol: 'ph--cards-three--regular',
+            icon: 'ph--cards-three--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (collection: CollectionType) =>
               loadObjectReferences(collection, (collection) => [
@@ -362,22 +363,18 @@ export const SpacePlugin = ({
             case 'main':
               // TODO(wittjosiah): Need to avoid shotgun parsing space state everywhere.
               return isSpace(primary) && primary.state.get() === SpaceState.SPACE_READY ? (
-                <Surface data={{ active: primary.properties[CollectionType.typename] }} role={role} {...rest} />
+                <Surface
+                  data={{ active: primary.properties[CollectionType.typename], id: primary.id }}
+                  role={role}
+                  {...rest}
+                />
               ) : primary instanceof CollectionType ? (
                 { node: <CollectionMain collection={primary} />, disposition: 'fallback' }
               ) : typeof primary === 'string' && primary.length === OBJECT_ID_LENGTH ? (
                 <MissingObject id={primary} />
               ) : null;
-            // TODO(burdon): Add role name syntax to minimal plugin docs.
-            case 'tree--empty':
-              switch (true) {
-                case data.plugin === SPACE_PLUGIN:
-                  return <EmptyTree />;
-                case isGraphNode(data.activeNode) && isSpace(data.activeNode.data):
-                  return <EmptySpace />;
-                default:
-                  return null;
-              }
+            case 'complementary--settings':
+              return isEchoObject(data.subject) ? <FallbackSettings object={data.subject} /> : null;
             case 'dialog':
               if (data.component === 'dxos.org/plugin/space/InvitationManagerDialog') {
                 return (
@@ -398,6 +395,7 @@ export const SpacePlugin = ({
                 return <PopoverRenameObject object={data.subject} />;
               }
               return null;
+            // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
                 <SmallPresenceLive viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]} />
@@ -441,6 +439,14 @@ export const SpacePlugin = ({
               } else {
                 return <MenuFooter object={data.object} />;
               }
+            case 'status': {
+              return (
+                <>
+                  <SyncStatus />
+                  <SaveStatus />
+                </>
+              );
+            }
             default:
               return null;
           }
@@ -540,8 +546,7 @@ export const SpacePlugin = ({
                   },
                   properties: {
                     label: ['create space label', { ns: SPACE_PLUGIN }],
-                    icon: (props: IconProps) => <Plus {...props} />,
-                    iconSymbol: 'ph--plus--regular',
+                    icon: 'ph--plus--regular',
                     disposition: 'toolbar',
                     testId: 'spacePlugin.createSpace',
                   },
@@ -561,8 +566,7 @@ export const SpacePlugin = ({
                   },
                   properties: {
                     label: ['join space label', { ns: SPACE_PLUGIN }],
-                    icon: (props: IconProps) => <SignIn {...props} />,
-                    iconSymbol: 'ph--sign-in--regular',
+                    icon: 'ph--sign-in--regular',
                     testId: 'spacePlugin.joinSpace',
                   },
                 },
@@ -573,7 +577,12 @@ export const SpacePlugin = ({
                   () => client.spaces.get(),
                 );
 
-                if (!spaces) {
+                const isReady = toSignal(
+                  (onChange) => client.spaces.isReady.subscribe(() => onChange()).unsubscribe,
+                  () => client.spaces.isReady.get(),
+                );
+
+                if (!spaces || !isReady) {
                   return;
                 }
 
@@ -702,6 +711,52 @@ export const SpacePlugin = ({
                   .filter(nonNullable);
               },
             }),
+
+            // Create nodes for object settings.
+            createExtension({
+              id: `${SPACE_PLUGIN}/settings-for-subject`,
+              resolver: ({ id }) => {
+                if (!id.endsWith('~settings')) {
+                  return;
+                }
+
+                // TODO(Zan): Find util (or make one).
+                const subjectId = id.split('~').at(0);
+                const [spaceId, objectId] = subjectId?.split(':') ?? [];
+                const space = client.spaces.get().find((space) => space.id === spaceId);
+                const object = toSignal(
+                  (onChange) => {
+                    const timeout = setTimeout(async () => {
+                      await space?.db.loadObjectById(objectId);
+                      onChange();
+                    });
+
+                    return () => clearTimeout(timeout);
+                  },
+                  () => space?.db.getObjectById(objectId),
+                  subjectId,
+                );
+                if (!object || !subjectId) {
+                  return;
+                }
+
+                const meta = resolve(getTypename(object) ?? '');
+                const label = meta.label?.(object) ||
+                  object.name ||
+                  meta.placeholder || ['unnamed object settings label', { ns: SPACE_PLUGIN }];
+
+                return {
+                  id,
+                  type: 'orphan-settings-for-subject',
+                  data: null,
+                  properties: {
+                    icon: 'ph--gear--regular',
+                    label,
+                    object,
+                  },
+                };
+              },
+            }),
           ];
         },
         serializer: (plugins) => {
@@ -800,6 +855,15 @@ export const SpacePlugin = ({
                 data: { space, id: space.id, activeParts: { main: [space.id] } },
 
                 intents: [
+                  ...(settings.values.onSpaceCreate
+                    ? [
+                        [
+                          { action: settings.values.onSpaceCreate, data: { space } },
+                          { action: SpaceAction.ADD_OBJECT, data: { target: space } },
+                          { action: NavigationAction.EXPOSE },
+                        ],
+                      ]
+                    : []),
                   [
                     {
                       action: ObservabilityAction.SEND_EVENT,
@@ -1015,8 +1079,7 @@ export const SpacePlugin = ({
                             title: translations[0]['en-US'][SPACE_PLUGIN]['space limit label'],
                             description: translations[0]['en-US'][SPACE_PLUGIN]['space limit description'],
                             duration: 5_000,
-                            icon: (props: IconProps) => <Warning {...props} />,
-                            iconSymbol: 'ph--warning--regular',
+                            icon: 'ph--warning--regular',
                             actionLabel: translations[0]['en-US'][SPACE_PLUGIN]['remove deleted objects label'],
                             actionAlt: translations[0]['en-US'][SPACE_PLUGIN]['remove deleted objects alt'],
                             // TODO(wittjosiah): Use OS namespace.
@@ -1055,7 +1118,7 @@ export const SpacePlugin = ({
               }
 
               return {
-                data: { id: object.id, object, activeParts: { main: [fullyQualifiedId(object)] } },
+                data: { id: fullyQualifiedId(object), object, activeParts: { main: [fullyQualifiedId(object)] } },
                 intents: [
                   [
                     {
@@ -1110,7 +1173,6 @@ export const SpacePlugin = ({
                       activeParts: {
                         main: deletionData.wasActive,
                         sidebar: deletionData.wasActive,
-                        complementary: deletionData.wasActive,
                       },
                     },
                   });

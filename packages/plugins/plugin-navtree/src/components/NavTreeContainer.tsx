@@ -4,17 +4,10 @@
 
 import React, { type ReactNode, useCallback, useMemo } from 'react';
 
-import {
-  NavigationAction,
-  LayoutAction,
-  Surface,
-  SLUG_PATH_SEPARATOR,
-  SLUG_COLLECTION_INDICATOR,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { NavigationAction, LayoutAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { getGraph, isAction, isActionLike } from '@dxos/app-graph';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
-import { type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/react-ui-mosaic';
+import { type MosaicDropEvent, type MosaicMoveEvent, Mosaic, Path } from '@dxos/react-ui-mosaic';
 import {
   NavTree,
   type NavTreeItemNode,
@@ -58,7 +51,8 @@ export const NavTreeContainer = ({
   activeIds: Set<string>;
   openItemIds: Record<string, true>;
   onOpenItemIdsChange: (nextOpenItemIds: Record<string, true>) => void;
-  attended: Set<string>;
+  // TODO(wittjosiah): Use attention context directly?
+  attended: string[];
   popoverAnchorId?: string;
 }) => {
   const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
@@ -96,14 +90,9 @@ export const NavTreeContainer = ({
     await dispatch({
       action: NavigationAction.OPEN,
       data: {
-        activeParts: node.data?.comments
-          ? {
-              main: [node.id],
-              complementary: [`${node.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`],
-            }
-          : {
-              main: [node.id],
-            },
+        activeParts: {
+          main: [node.id],
+        },
       },
     });
 
@@ -345,34 +334,37 @@ export const NavTreeContainer = ({
   }, [onOpenItemIdsChange, openItemIds]);
 
   return (
-    <ElevationProvider elevation='chrome'>
-      <div
-        role='none'
-        className='bs-full overflow-hidden row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'
-      >
-        <Surface role='search-input' limit={1} />
-        {/* TODO(thure): what gives this an inline `overflow: initial`? */}
-        <div role='none' className='!overflow-y-auto'>
-          <NavTree
-            id={root.id}
-            items={items}
-            current={activeIds}
-            attended={attended}
-            type={NODE_TYPE}
-            open={openItemIds}
-            onNavigate={handleNavigate}
-            onItemOpenChange={handleItemOpenChange}
-            onMove={handleMove}
-            onDrop={handleDrop}
-            onDragEnd={handleDragEnd}
-            popoverAnchorId={popoverAnchorId}
-            renderPresence={renderPresence}
-            resolveItemLevel={resolveItemLevel}
-            loadDescendents={loadDescendents}
-          />
+    <Mosaic.Root>
+      <Mosaic.DragOverlay />
+      <ElevationProvider elevation='chrome'>
+        <div
+          role='none'
+          className='bs-full overflow-hidden row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'
+        >
+          <Surface role='search-input' limit={1} />
+          {/* TODO(thure): what gives this an inline `overflow: initial`? */}
+          <div role='none' className='!overflow-y-auto'>
+            <NavTree
+              id={root.id}
+              items={items}
+              current={activeIds}
+              attended={attended}
+              type={NODE_TYPE}
+              open={openItemIds}
+              onNavigate={handleNavigate}
+              onItemOpenChange={handleItemOpenChange}
+              onMove={handleMove}
+              onDrop={handleDrop}
+              onDragEnd={handleDragEnd}
+              popoverAnchorId={popoverAnchorId}
+              renderPresence={renderPresence}
+              resolveItemLevel={resolveItemLevel}
+              loadDescendents={loadDescendents}
+            />
+          </div>
+          <NavTreeFooter />
         </div>
-        <NavTreeFooter />
-      </div>
-    </ElevationProvider>
+      </ElevationProvider>
+    </Mosaic.Root>
   );
 };

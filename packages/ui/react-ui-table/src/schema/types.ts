@@ -2,18 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type FieldValueType } from '@dxos/schema';
+
+// TODO(burdon): Reconcile with @dxos/schema/View.
 export type TableDef = {
   id: string;
-  name?: string; // TODO(burdon): Required?
-  columns: ColumnProps[];
+  name?: string;
+  columns: ColumnDef[];
 };
 
-export type ColumnType = 'number' | 'boolean' | 'date' | 'string' | 'ref';
-
-export type ColumnProps = {
+// TODO(burdon): Reconcile with @dxos/schema/Field.
+export type ColumnDef = {
   id: string;
   prop: string;
-  type: ColumnType;
+  type: FieldValueType;
   size?: number;
   label?: string;
 

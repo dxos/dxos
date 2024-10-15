@@ -9,11 +9,11 @@ import { Canvas } from '@react-three/fiber';
 import { Leva, useControls } from 'leva';
 import React from 'react';
 
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 export default {
   title: 'gem-globe/drei',
-  decorators: [withTheme, withFullscreen({ classNames: 'bg-[#111]' })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#111]' })],
 };
 
 const Component = () => {

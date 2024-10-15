@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-
 import { isEncodedReference, Reference, type EncodedReference } from '@dxos/echo-protocol';
 import { requireTypeReference, type EchoReactiveObject } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
 import { createBuf } from '@dxos/protocols/buf';
@@ -66,8 +65,8 @@ export type FilterParams<T extends {} = any> = {
 
 /**
  * Filter helper types.
+ * Note: Dollar sign suffix notation borrowed from `effect`'s Array$.
  */
-// Dollar sign suffix notation borrowed from `effect`'s Array$.
 export namespace Filter$ {
   export type Any = Filter<any>;
   export type Object<F extends Any> = F extends Filter<infer T> ? T : never;

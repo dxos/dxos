@@ -42,11 +42,7 @@ export const App = () => {
 
 const root = createRoot(document.getElementById('root')!);
 root.render(
-  <ClientProvider
-    onInitialized={async (client) => {
-      client.addTypes([TaskType]);
-    }}
-  >
+  <ClientProvider types={[TaskType]}>
     <App />
   </ClientProvider>,
 );

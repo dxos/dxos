@@ -2,15 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
-import type { Simplify } from 'effect/Types';
+import { type Simplify } from 'effect/Types';
 
+import { AST, S } from '@dxos/effect';
 import { type Comparator, intersection } from '@dxos/util';
 
 import { getMeta } from './getter';
 
 export const data = Symbol.for('dxos.echo.data');
 
+// TODO(burdon): Move to client-protocol.
 export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
 
 // TODO(burdon): Use consistently (with serialization utils).
@@ -25,9 +26,11 @@ const _ForeignKeySchema = S.Struct({
 export type ForeignKey = S.Schema.Type<typeof _ForeignKeySchema>;
 export const ForeignKeySchema: S.Schema<ForeignKey> = _ForeignKeySchema;
 
-export const ObjectMetaSchema = S.Struct({
-  keys: S.mutable(S.Array(ForeignKeySchema)),
-});
+export const ObjectMetaSchema = S.mutable(
+  S.Struct({
+    keys: S.mutable(S.Array(ForeignKeySchema)),
+  }),
+);
 export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
 
 export type ExcludeId<T> = Simplify<Omit<T, 'id'>>;
@@ -44,7 +47,7 @@ export const RawObject = <S extends S.Schema.All>(
 };
 
 /**
- * Has `id`.
+ * Marker interface for object with an `id`.
  */
 // TODO(burdon): Rename BaseObject?
 export interface Identifiable {

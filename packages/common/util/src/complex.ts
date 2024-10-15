@@ -78,21 +78,21 @@ export class ComplexSet<T> implements Set<T> {
     return this._values.size;
   }
 
-  [Symbol.iterator](): IterableIterator<T> {
+  [Symbol.iterator](): SetIterator<T> {
     return this._values.values();
   }
 
-  *entries(): IterableIterator<[T, T]> {
+  *entries(): SetIterator<[T, T]> {
     for (const value of this._values.values()) {
       yield [value, value];
     }
   }
 
-  keys(): IterableIterator<T> {
+  keys(): SetIterator<T> {
     return this[Symbol.iterator]();
   }
 
-  values(): IterableIterator<T> {
+  values(): SetIterator<T> {
     return this[Symbol.iterator]();
   }
 
@@ -218,22 +218,22 @@ export class ComplexMap<K, V> implements Map<K, V> {
     return this._keys.size;
   }
 
-  *[Symbol.iterator](): IterableIterator<[K, V]> {
+  *[Symbol.iterator](): SetIterator<[K, V]> {
     for (const [primitive, key] of this._keys) {
       const value = this._values.get(primitive) ?? raise(new Error('Map corrupted.'));
       yield [key, value];
     }
   }
 
-  entries(): IterableIterator<[K, V]> {
+  entries(): SetIterator<[K, V]> {
     return this[Symbol.iterator]();
   }
 
-  keys(): IterableIterator<K> {
+  keys(): SetIterator<K> {
     return this._keys.values();
   }
 
-  values(): IterableIterator<V> {
+  values(): SetIterator<V> {
     return this._values.values();
   }
 

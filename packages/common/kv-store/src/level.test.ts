@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
 import { Level } from 'level';
 import { type MixedEncoding } from 'level-transcoder';
+import { describe, expect, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { type SublevelDB } from './level';
 import { createTestLevel } from './testing';

@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AddressBook, type IconProps } from '@phosphor-icons/react';
-import React, { useEffect, useState } from 'react';
+import { type Schema as S } from '@effect/schema';
+import React from 'react';
 
 import {
   filterPlugins,
@@ -16,11 +16,10 @@ import {
   type TranslationsProvides,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
-import { type S } from '@dxos/echo-schema';
-import { registerSignalRuntime } from '@dxos/echo-signals/react';
+import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { createExtension, type Node } from '@dxos/plugin-graph';
-import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
+import { Client, type ClientOptions, ClientProvider } from '@dxos/react-client';
 
 import meta, { CLIENT_PLUGIN, ClientAction } from './meta';
 import translations from './translations';
@@ -70,7 +69,7 @@ export const ClientPlugin = ({
   Omit<ClientPluginProvides, 'client'>,
   Pick<ClientPluginProvides, 'client'>
 > => {
-  registerSignalRuntime();
+  registerSignalsRuntime();
 
   let client: Client;
   let error: unknown = null;
@@ -99,19 +98,7 @@ export const ClientPlugin = ({
 
       return {
         client,
-        context: ({ children }) => {
-          const [status, setStatus] = useState<SystemStatus | null>(null);
-          useEffect(() => {
-            if (!client) {
-              return;
-            }
-
-            const subscription = client.status.subscribe((status) => setStatus(status));
-            return () => subscription.unsubscribe();
-          }, [client, setStatus]);
-
-          return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
-        },
+        context: ({ children }) => <ClientProvider client={client}>{children}</ClientProvider>,
       };
     },
     ready: async (plugins) => {
@@ -149,8 +136,7 @@ export const ClientPlugin = ({
                 },
                 properties: {
                   label: ['open shell label', { ns: CLIENT_PLUGIN }],
-                  icon: (props: IconProps) => <AddressBook {...props} />,
-                  iconSymbol: 'ph--address-book--regular',
+                  icon: 'ph--address-book--regular',
                   keyBinding: {
                     macos: 'meta+shift+.',
                     // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.

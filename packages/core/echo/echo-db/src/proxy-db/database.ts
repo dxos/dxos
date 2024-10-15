@@ -6,10 +6,10 @@ import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import {
   type EchoReactiveObject,
+  type ReactiveObject,
   getProxyHandlerSlot,
   getSchema,
   isReactiveObject,
-  type ReactiveObject,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -25,7 +25,7 @@ import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from 
 import { EchoReactiveHandler } from '../echo-handler/echo-handler';
 import { type ProxyTarget } from '../echo-handler/echo-proxy-target';
 import { type Hypergraph } from '../hypergraph';
-import { type FilterSource, type QueryFn } from '../query';
+import { optionsToProto, type FilterSource, type QueryFn } from '../query';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -272,11 +272,14 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   private _query(filter?: FilterSource, options?: QueryOptions) {
-    return this._coreDatabase.graph.query(filter, {
-      ...options,
-      spaceIds: [this.spaceId],
-      spaces: [this.spaceKey],
-    });
+    return this._coreDatabase.graph.query(
+      filter,
+      optionsToProto({
+        ...options,
+        spaceIds: [this.spaceId],
+        spaces: [this.spaceKey],
+      }),
+    );
   }
 
   async flush(opts?: FlushOptions): Promise<void> {

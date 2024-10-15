@@ -9,7 +9,7 @@ import React, { type FC, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { DensityProvider } from '@dxos/react-ui';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SearchResults } from './SearchResults';
 import { Searchbar } from './Searchbar';
@@ -46,7 +46,7 @@ export default {
   title: 'plugin-search/Search',
   component: Searchbar,
   render: Story,
-  decorators: [withTheme, withFullscreen(), SearchContextDecorator()],
+  decorators: [withTheme, withLayout({ fullscreen: true }), SearchContextDecorator()],
   parameters: {
     layout: 'fullscreen',
   },

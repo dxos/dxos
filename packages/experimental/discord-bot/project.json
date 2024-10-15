@@ -18,6 +18,7 @@
     "lint": {}
   },
   "implicitDependencies": [
-    "test"
+    "esbuild",
+    "node-std"
   ]
 }

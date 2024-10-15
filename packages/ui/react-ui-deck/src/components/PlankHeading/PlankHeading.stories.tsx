@@ -4,13 +4,13 @@
 
 import '@dxos-theme';
 
-import { Chat, ImageSquare, StackSimple, TextAa } from '@phosphor-icons/react';
 import React from 'react';
 
-import { AttentionProvider } from '@dxos/react-ui-attention';
+import { Icon } from '@dxos/react-ui';
+import { RootAttentionProvider } from '@dxos/react-ui-attention';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { PlankHeading, plankHeadingIconProps } from './PlankHeading';
+import { PlankHeading } from './PlankHeading';
 import translations from '../../translations';
 
 type StorybookPlankHeadingProps = {
@@ -18,39 +18,39 @@ type StorybookPlankHeadingProps = {
   label?: string;
 };
 
-const storybookAttended = new Set(['attended-story']);
+const storybookAttention = { attended: ['attended-story'] };
 
 const StorybookPlankHeading = ({
   attendableId = '',
   label = 'Plank heading Storybook story',
 }: StorybookPlankHeadingProps) => {
   return (
-    <AttentionProvider attended={storybookAttended}>
+    <RootAttentionProvider attention={storybookAttention}>
       <PlankHeading.Root>
         <PlankHeading.Button attendableId={attendableId}>
-          <Chat {...plankHeadingIconProps} />
+          <Icon icon='ph--chat--regular' size={5} />
         </PlankHeading.Button>
         <PlankHeading.Label attendableId={attendableId}>{label}</PlankHeading.Label>
       </PlankHeading.Root>
       <PlankHeading.Root>
         <PlankHeading.Button attendableId={attendableId}>
-          <StackSimple {...plankHeadingIconProps} />
+          <Icon icon='ph--stack-simple--regular' size={5} />
         </PlankHeading.Button>
         <PlankHeading.Label attendableId={attendableId}>{label}</PlankHeading.Label>
       </PlankHeading.Root>
       <PlankHeading.Root>
         <PlankHeading.Button attendableId={attendableId}>
-          <TextAa {...plankHeadingIconProps} />
+          <Icon icon='ph--text-aa--regular' size={5} />
         </PlankHeading.Button>
         <PlankHeading.Label attendableId={attendableId}>{label}</PlankHeading.Label>
       </PlankHeading.Root>
       <PlankHeading.Root>
         <PlankHeading.Button attendableId={attendableId}>
-          <ImageSquare {...plankHeadingIconProps} />
+          <Icon icon='ph--image-square--regular' size={5} />
         </PlankHeading.Button>
         <PlankHeading.Label attendableId={attendableId}>{label}</PlankHeading.Label>
       </PlankHeading.Root>
-    </AttentionProvider>
+    </RootAttentionProvider>
   );
 };
 

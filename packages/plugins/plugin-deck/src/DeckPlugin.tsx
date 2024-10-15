@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
 import { setAutoFreeze } from 'immer';
 import React, { type PropsWithChildren } from 'react';
@@ -41,7 +40,6 @@ import { createExtension, type Node } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { translations as deckTranslations } from '@dxos/react-ui-deck';
-import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import {
   DeckLayout,
@@ -71,7 +69,7 @@ const isSocket = !!(globalThis as any).__args;
 // TODO(mjamesderocher): Can we get this directly from Socket?
 const appScheme = 'composer://';
 
-// TODO(burdon): Evolve into customizable prefs,.
+// TODO(burdon): Evolve into customizable prefs.
 const customSlots: DeckLayoutProps['slots'] = {
   wallpaper: {
     classNames:
@@ -112,7 +110,7 @@ export const DeckPlugin = ({
   let handleNavigation: () => Promise<void> | undefined;
 
   const settings = new LocalStorageStore<DeckSettingsProps>('dxos.org/settings/layout', {
-    showFooter: false,
+    showHints: true,
     customSlots: false,
     flatDeck: false,
     enableNativeRedirect: false,
@@ -190,6 +188,25 @@ export const DeckPlugin = ({
     }
   };
 
+  /**
+   * Update the active state and ensure that attention is on an active element.
+   */
+  const handleSetLocation = (next: LayoutParts) => {
+    if (attentionPlugin) {
+      const attended = attentionPlugin.provides.attention.attended;
+      const [attendedId] = Array.from(attended);
+      const ids = (layout.values.layoutMode === 'deck' ? next.main : next.solo)?.map(({ id }) => id) ?? [];
+      const isAttendedAvailable = !!attendedId && ids.includes(attendedId);
+      if (!isAttendedAvailable) {
+        const nextAttended = next.main?.[0]?.id;
+        const article = document.querySelector<HTMLElement>(`article[data-attendable-id="${nextAttended}"]`);
+        article?.focus();
+      }
+    }
+
+    location.values.active = next;
+  };
+
   return {
     meta,
     ready: async (plugins) => {
@@ -198,16 +215,21 @@ export const DeckPlugin = ({
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
 
-      // prettier-ignore
       layout
         .prop({ key: 'layoutMode', storageKey: 'layout-mode', type: LocalStorageStore.enum<LayoutMode>() })
         .prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() })
-        .prop({ key: 'complementarySidebarOpen', storageKey: 'complementary-sidebar-open', type: LocalStorageStore.bool() });
+        .prop({
+          key: 'complementarySidebarOpen',
+          storageKey: 'complementary-sidebar-open',
+          type: LocalStorageStore.bool(),
+        });
 
-      // prettier-ignore
-      deck.prop({ key: 'plankSizing', storageKey: 'plank-sizing', type: LocalStorageStore.json<Record<string, number>>() });
+      deck.prop({
+        key: 'plankSizing',
+        storageKey: 'plank-sizing',
+        type: LocalStorageStore.json<Record<string, number>>(),
+      });
 
-      // prettier-ignore
       location
         .prop({ key: 'active', storageKey: 'active', type: LocalStorageStore.json<LayoutParts>() })
         .prop({ key: 'closed', storageKey: 'closed', type: LocalStorageStore.json<string[]>() });
@@ -220,14 +242,17 @@ export const DeckPlugin = ({
         }),
       );
 
-      // prettier-ignore
       settings
-        .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
+        .prop({ key: 'showHints', storageKey: 'show-hints', type: LocalStorageStore.bool() })
         .prop({ key: 'customSlots', storageKey: 'customSlots', type: LocalStorageStore.bool() })
         .prop({ key: 'flatDeck', storageKey: 'flatDeck', type: LocalStorageStore.bool() })
         .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
         .prop({ key: 'disableDeck', storageKey: 'disable-deck', type: LocalStorageStore.bool() }) // Deprecated.
-        .prop({ key: 'newPlankPositioning', storageKey: 'newPlankPositioning', type: LocalStorageStore.enum<NewPlankPositioning>() })
+        .prop({
+          key: 'newPlankPositioning',
+          storageKey: 'newPlankPositioning',
+          type: LocalStorageStore.enum<NewPlankPositioning>(),
+        })
         .prop({ key: 'overscroll', storageKey: 'overscroll', type: LocalStorageStore.enum<Overscroll>() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
@@ -237,7 +262,7 @@ export const DeckPlugin = ({
       handleNavigation = async () => {
         const pathname = window.location.pathname;
         if (pathname === '/reset') {
-          location.values.active = { sidebar: [{ id: NAV_ID }] };
+          handleSetLocation({ sidebar: [{ id: NAV_ID }] });
           location.values.closed = [];
           layout.values.layoutMode = 'solo';
           window.location.pathname = '/';
@@ -250,7 +275,7 @@ export const DeckPlugin = ({
         }
 
         const startingLayout = removePart(location.values.active, 'solo');
-        location.values.active = mergeLayoutParts(layoutFromUri, startingLayout);
+        handleSetLocation(mergeLayoutParts(layoutFromUri, startingLayout));
         layout.values.layoutMode = 'solo';
       };
 
@@ -310,8 +335,7 @@ export const DeckPlugin = ({
                 },
                 properties: {
                   label: ['toggle fullscreen label', { ns: DECK_PLUGIN }],
-                  icon: (props: IconProps) => <ArrowsOut {...props} />,
-                  iconSymbol: 'ph--arrows-out--regular',
+                  icon: 'ph--arrows-out--regular',
                   keyBinding: {
                     macos: 'ctrl+meta+f',
                     windows: 'shift+ctrl+f',
@@ -329,31 +353,27 @@ export const DeckPlugin = ({
       ),
       root: () => {
         return (
-          <Mosaic.Root>
-            <DeckLayout
-              attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
-              layoutParts={location.values.active}
-              showHintsFooter={settings.values.showFooter}
-              overscroll={settings.values.overscroll}
-              flatDeck={settings.values.flatDeck}
-              slots={settings.values.customSlots ? customSlots : undefined}
-              toasts={layout.values.toasts}
-              onDismissToast={(id) => {
-                const index = layout.values.toasts.findIndex((toast) => toast.id === id);
-                if (index !== -1) {
-                  // Allow time for the toast to animate out.
-                  // TODO(burdon): Factor out and unregister timeout.
-                  setTimeout(() => {
-                    if (layout.values.toasts[index].id === currentUndoId) {
-                      currentUndoId = undefined;
-                    }
-                    layout.values.toasts.splice(index, 1);
-                  }, 1_000);
-                }
-              }}
-            />
-            <Mosaic.DragOverlay />
-          </Mosaic.Root>
+          <DeckLayout
+            layoutParts={location.values.active}
+            showHints={settings.values.showHints}
+            overscroll={settings.values.overscroll}
+            flatDeck={settings.values.flatDeck}
+            slots={settings.values.customSlots ? customSlots : undefined}
+            toasts={layout.values.toasts}
+            onDismissToast={(id) => {
+              const index = layout.values.toasts.findIndex((toast) => toast.id === id);
+              if (index !== -1) {
+                // Allow time for the toast to animate out.
+                // TODO(burdon): Factor out and unregister timeout.
+                setTimeout(() => {
+                  if (layout.values.toasts[index].id === currentUndoId) {
+                    currentUndoId = undefined;
+                  }
+                  layout.values.toasts.splice(index, 1);
+                }, 1_000);
+              }
+            }}
+          />
         );
       },
       surface: {
@@ -472,7 +492,7 @@ export const DeckPlugin = ({
                   }
                 });
 
-                location.values.active = newLayout;
+                handleSetLocation(newLayout);
               });
 
               const ids = openIds(location.values.active);
@@ -522,10 +542,12 @@ export const DeckPlugin = ({
               const layoutEntry = { id: data.id };
               const effectivePart = getEffectivePart(data.part, layout.values.layoutMode);
 
-              location.values.active = openEntry(location.values.active, effectivePart, layoutEntry, {
-                positioning: data.positioning ?? settings.values.newPlankPositioning,
-                pivotId: data.pivotId,
-              });
+              handleSetLocation(
+                openEntry(location.values.active, effectivePart, layoutEntry, {
+                  positioning: data.positioning ?? settings.values.newPlankPositioning,
+                  pivotId: data.pivotId,
+                }),
+              );
 
               const intents = [];
               if (data.scrollIntoView && layout.values.layoutMode === 'deck') {
@@ -561,7 +583,11 @@ export const DeckPlugin = ({
                   }
                 });
 
-                location.values.active = newLayout;
+                handleSetLocation(newLayout);
+                // TODO(wittjosiah): This needs to also set the closed state.
+                //   The closed state should be the existing closed state plus the newly closed ids.
+                //   The closed state should also be updated when opening entries to remove the id from closed.
+                //   When SET is called the closed ids should also be calculated and set.
                 return { data: true };
               });
             }
@@ -570,7 +596,7 @@ export const DeckPlugin = ({
             case NavigationAction.SET: {
               return batch(() => {
                 if (isLayoutParts(intent.data?.activeParts)) {
-                  location.values.active = intent.data!.activeParts;
+                  handleSetLocation(intent.data!.activeParts);
                 }
                 return { data: true };
               });
@@ -581,10 +607,12 @@ export const DeckPlugin = ({
                 if (isLayoutAdjustment(intent.data)) {
                   const adjustment = intent.data;
                   if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {
-                    location.values.active = incrementPlank(location.values.active, {
-                      type: adjustment.type,
-                      layoutCoordinate: adjustment.layoutCoordinate,
-                    });
+                    handleSetLocation(
+                      incrementPlank(location.values.active, {
+                        type: adjustment.type,
+                        layoutCoordinate: adjustment.layoutCoordinate,
+                      }),
+                    );
                   }
 
                   if (adjustment.type === 'solo') {

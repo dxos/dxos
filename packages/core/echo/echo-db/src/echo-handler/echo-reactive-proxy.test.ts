@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { describe } from 'vitest';
+
 import { create, EchoObject } from '@dxos/echo-schema';
 import { TestSchema } from '@dxos/echo-schema/testing';
 

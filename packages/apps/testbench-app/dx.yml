@@ -13,6 +13,7 @@ runtime:
       dataStore: 1
     edgeFeatures:
       signaling: true
+      echoReplicator: true
   services:
     # signaling:
     #   - server: wss://kube.dxos.org/.well-known/dx/signal
@@ -21,6 +22,6 @@ runtime:
         username: dxos
         credential: dxos
     edge:
-      url: wss://edge-main.dxos.workers.dev/
+      url: https://edge-main.dxos.workers.dev/
     iceProviders:
       - urls: https://edge-production.dxos.workers.dev/ice

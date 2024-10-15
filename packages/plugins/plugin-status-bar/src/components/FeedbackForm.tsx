@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
 import { X, PaperPlaneTilt } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
-import { S } from '@dxos/echo-schema';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
@@ -16,16 +16,16 @@ import { mkTranslation } from '../translations';
 import { validate } from '../util';
 
 const Email = S.String.pipe(
-  S.nonEmpty({ message: () => 'Email is required.' }),
+  S.nonEmptyString({ message: () => 'Email is required.' }),
   S.pattern(/^(?!\.)(?!.*\.\.)([A-Z0-9_+-.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9-]*\.)+[A-Z]{2,}$/i, {
     message: () => 'Invalid email address.',
   }),
 );
 
-const nonEmpty = (field: string) => S.nonEmpty({ message: () => `${field} is required.` });
+const nonEmpty = (field: string) => S.nonEmptyString({ message: () => `${field} is required.` });
 const maxLength = (field: string, length: number) => S.maxLength(length, { message: () => `${field} is too long.` });
 
-// -- Types and validation.
+// Types and validation.
 const FeedbackFormSchema = S.Struct({
   name: S.String.pipe(nonEmpty('Name'), maxLength('Name', 256)),
   email: Email.pipe(maxLength('Email', 256)),

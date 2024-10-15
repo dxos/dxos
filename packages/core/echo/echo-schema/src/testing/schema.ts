@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { S } from '@dxos/effect';
 
-import { EchoObject } from '../annotations';
+import { EchoObject } from '../ast';
 import { TypedObject } from '../typed-object-class';
 
 // TODO(burdon): Clean up.

@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 
-import { Client, ClientServicesProxy, type ClientContextProps } from '@dxos/react-client';
+import { Client, ClientServicesProxy } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type RpcPort } from '@dxos/rpc';
 
@@ -12,16 +12,16 @@ import { type RpcPort } from '@dxos/rpc';
  * Creates Client with services opened on parent window.__DXOS__ hook.
  */
 export const useProxiedClient = () => {
-  const [client, setClient] = useState<ClientContextProps>();
+  const [client, setClient] = useState<Client>();
   useAsyncEffect(async () => {
-    const { client, services } = await createClientContext();
-    setClient({ client, services });
+    const client = await createClientProxy();
+    setClient(client);
   }, []);
 
   return client;
 };
 
-const createClientContext = async () => {
+const createClientProxy = async () => {
   const port: RpcPort = {
     send: async (message) =>
       window.parent.postMessage(
@@ -46,10 +46,8 @@ const createClientContext = async () => {
     },
   };
 
-  const servicesProvider = new ClientServicesProxy(port);
-  const client = new Client({ services: servicesProvider });
+  const services = new ClientServicesProxy(port);
+  const client = new Client({ services });
   await client.initialize();
-
-  // TODO(burdon): Why returning services if set in client?
-  return { client, services: servicesProvider.services };
+  return client;
 };

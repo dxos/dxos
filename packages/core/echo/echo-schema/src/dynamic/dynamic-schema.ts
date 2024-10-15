@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import * as AST from '@effect/schema/AST';
-
+import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { StoredSchema } from './stored-schema';
@@ -50,7 +48,6 @@ export class DynamicSchema extends DynamicSchemaBase() implements S.Schema<Ident
   private _schema: S.Schema<Identifiable> | undefined;
   private _isDirty = true;
 
-  // TODO(burdon): Rename property.
   constructor(public readonly serializedSchema: StoredSchema) {
     super();
   }
@@ -65,6 +62,10 @@ export class DynamicSchema extends DynamicSchemaBase() implements S.Schema<Ident
 
   public get Encoded() {
     return this.serializedSchema;
+  }
+
+  public get Context() {
+    return this._getSchema().Context;
   }
 
   public get ast() {

@@ -2,21 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useContext, useState, useEffect } from 'react';
+import React, { type PropsWithChildren, createContext, useContext, useMemo, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type FunctionType } from '@dxos/plugin-script';
-import { fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 
-import { FormattingModel } from './formatting';
-import { type CellAddress, type CellRange, defaultFunctions, SheetModel } from '../../model';
+import { createDecorations } from './decorations';
+import { type CellAddress, type CellRange } from '../../defs';
+import { type ComputeGraph } from '../../graph';
+import { useSheetModel, useFormattingModel } from '../../hooks';
+import { type FormattingModel, type SheetModel } from '../../model';
 import { type SheetType } from '../../types';
-import { type FunctionContextOptions } from '../ComputeGraph';
-// TODO(wittjosiah): Refactor. This is not exported from ./components due to depending on ECHO.
-import { useComputeGraph } from '../ComputeGraph/graph-context';
-
-// TODO(wittjosiah): Factor out.
-const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
 
 export type SheetContextType = {
   model: SheetModel;
@@ -36,6 +31,9 @@ export type SheetContextType = {
   // Events.
   // TODO(burdon): Generalize.
   onInfo?: () => void;
+
+  // Decorations.
+  decorations: ReturnType<typeof createDecorations>;
 };
 
 const SheetContext = createContext<SheetContextType | null>(null);
@@ -47,89 +45,28 @@ export const useSheetContext = (): SheetContextType => {
 };
 
 export type SheetContextProps = {
+  graph: ComputeGraph;
   sheet: SheetType;
-  space: Space;
   readonly?: boolean;
-} & Pick<SheetContextType, 'onInfo'> &
-  Partial<FunctionContextOptions>;
-
-/**
- * Map from binding to fully qualified ECHO ID.
- */
-const mapFormulaBindingToId =
-  (functions: FunctionType[]) =>
-  (formula: string): string => {
-    return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
-      if (defaultFunctions.find((fn) => fn.name === binding) || binding === 'EDGE') {
-        return match;
-      }
-
-      const fn = functions.find((fn) => fn.binding === binding);
-      if (fn) {
-        return `${fullyQualifiedId(fn)}(${args})`;
-      } else {
-        return match;
-      }
-    });
-  };
-
-/**
- * Map from fully qualified ECHO ID to binding.
- */
-const mapFormulaBindingFromId =
-  (functions: FunctionType[]) =>
-  (formula: string): string => {
-    return formula.replace(/([a-zA-Z0-9]+):([a-zA-Z0-9]+)\((.*)\)/g, (match, spaceId, objectId, args) => {
-      const id = `${spaceId}:${objectId}`;
-      if (id.length !== OBJECT_ID_LENGTH) {
-        return match;
-      }
-
-      const fn = functions.find((fn) => fullyQualifiedId(fn) === id);
-      if (fn?.binding) {
-        return `${fn.binding}(${args})`;
-      } else {
-        return match;
-      }
-    });
-  };
+} & Pick<SheetContextType, 'onInfo'>;
 
 export const SheetContextProvider = ({
   children,
+  graph,
   sheet,
-  space,
   readonly,
   onInfo,
-  ...options
 }: PropsWithChildren<SheetContextProps>) => {
-  const graph = useComputeGraph(space, options);
+  const model = useSheetModel(graph, sheet, { readonly });
+  const formatting = useFormattingModel(model);
 
+  // TODO(Zan): Impl. set range and set cursor that scrolls to that cell or range if it is not visible.
   const [cursor, setCursor] = useState<CellAddress>();
   const [range, setRange] = useState<CellRange>();
   const [editing, setEditing] = useState<boolean>(false);
+  const decorations = useMemo(() => createDecorations(), []);
 
-  const [[model, formatting] = [], setModels] = useState<[SheetModel, FormattingModel] | undefined>(undefined);
-  useEffect(() => {
-    let model: SheetModel | undefined;
-    let formatting;
-    const t = setTimeout(async () => {
-      model = new SheetModel(graph, sheet, space, { readonly, mapFormulaBindingToId, mapFormulaBindingFromId });
-      await model.initialize();
-      formatting = new FormattingModel(model);
-      setModels([model, formatting]);
-    });
-
-    return () => {
-      clearTimeout(t);
-      void model?.destroy();
-    };
-  }, [graph, readonly]);
-
-  if (!model || !formatting) {
-    return null;
-  }
-
-  return (
+  return !model || !formatting ? null : (
     <SheetContext.Provider
       value={{
         model,
@@ -142,6 +79,7 @@ export const SheetContextProvider = ({
         setEditing,
         // TODO(burdon): Change to event.
         onInfo,
+        decorations,
       }}
     >
       {children}

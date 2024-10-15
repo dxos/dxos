@@ -54,26 +54,17 @@ const setupNetworking = async (
   transportFactory: TransportFactory;
 }> => {
   const { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } = await import('@dxos/messaging');
-  const { createLibDataChannelTransportFactory, createSimplePeerTransportFactory, MemoryTransportFactory } =
-    await import('@dxos/network-manager');
+  const { createRtcTransportFactory, MemoryTransportFactory } = await import('@dxos/network-manager');
 
   const signals = config.get('runtime.services.signaling');
   const edgeFeatures = config.get('runtime.client.edgeFeatures');
   if (signals) {
     const {
       signalManager = edgeFeatures?.signaling ? undefined : new WebsocketSignalManager(signals, signalMetadata),
-      // TODO(nf): configure better
-      transportFactory = process.env.MOCHA_ENV === 'nodejs'
-        ? createLibDataChannelTransportFactory(
-            { iceServers: config.get('runtime.services.ice') },
-            config.get('runtime.services.iceProviders') &&
-              createIceProvider(config.get('runtime.services.iceProviders')!),
-          )
-        : createSimplePeerTransportFactory(
-            { iceServers: config.get('runtime.services.ice') },
-            config.get('runtime.services.iceProviders') &&
-              createIceProvider(config.get('runtime.services.iceProviders')!),
-          ),
+      transportFactory = createRtcTransportFactory(
+        { iceServers: config.get('runtime.services.ice') },
+        config.get('runtime.services.iceProviders') && createIceProvider(config.get('runtime.services.iceProviders')!),
+      ),
     } = options;
 
     return {
@@ -84,7 +75,7 @@ const setupNetworking = async (
 
   // TODO(burdon): Should not provide a memory signal manager since no shared context.
   //  Use TestClientBuilder for shared memory tests.
-  log.warn('P2P network is not configured.');
+  log('P2P network is not configured.');
   const signalManager = new MemorySignalManager(new MemorySignalManagerContext());
   const transportFactory = MemoryTransportFactory;
   return {

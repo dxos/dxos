@@ -9,7 +9,7 @@ import { resolve } from 'node:path';
 import { defineUserConfig, type UserConfig } from 'vuepress';
 import { hopeTheme, sidebar } from 'vuepress-theme-hope';
 
-import { MarkdownIt } from '@dxos/apidoc';
+import { apiDocRenderDirective, showcaseRenderDirective } from '@dxos/apidoc';
 
 import { apiSidebar, telemetryPlugin } from './src';
 
@@ -33,8 +33,8 @@ const config: UserConfig = defineUserConfig({
     '!specs',
   ],
   extendsMarkdown: (md) => {
-    md.use(MarkdownIt.apiDocRenderDirective);
-    md.use(MarkdownIt.showcaseRenderDirective);
+    md.use(apiDocRenderDirective);
+    md.use(showcaseRenderDirective);
   },
   markdown: {
     toc: {
@@ -115,7 +115,14 @@ const config: UserConfig = defineUserConfig({
       },
       // Do not try to resolve DXOS deps in ssr mode or bundling fails currently.
       ssr: {
-        external: ['@dxos/client', '@dxos/client-services/testing', '@dxos/react-client', '@dxos/echo-schema'],
+        external: [
+          '@dxos/client',
+          '@dxos/client-services/testing',
+          '@dxos/react-client',
+          '@dxos/echo-schema',
+          // TODO(wittjosiah): Why is this needed?
+          'node-domexception',
+        ],
       },
     },
   }),

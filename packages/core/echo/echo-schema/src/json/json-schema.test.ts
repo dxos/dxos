@@ -2,13 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
-import { describe, test } from '@dxos/test';
+import { S } from '@dxos/effect';
 
 import { effectToJsonSchema, jsonToEffectSchema } from './json-schema';
-import { FieldMeta } from '../annotations';
+import { FieldMeta } from '../ast';
 import { ref } from '../ref-annotation';
 import { TEST_SCHEMA_TYPE } from '../testing';
 import { TypedObject } from '../typed-object-class';
@@ -73,12 +72,12 @@ describe('json-to-effect', () => {
 
       class Schema extends TypedObject(TEST_SCHEMA_TYPE)(
         {
-          string: S.String.pipe(S.identifier('String')),
+          string: S.String.pipe(S.annotations({ identifier: 'String' })),
           number: S.Number.pipe(FieldMeta('dxos.test', { is_date: true })),
           boolean: S.Boolean,
           array: S.Array(S.String),
           twoDArray: S.Array(S.Array(S.String)),
-          record: S.Record(S.String, S.Number),
+          record: S.Record({ key: S.String, value: S.Number }),
           object: S.Struct({ id: S.String, field: ref(Nested) }),
           echoObject: ref(Nested),
           echoObjectArray: S.Array(ref(Nested)),

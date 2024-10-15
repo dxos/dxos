@@ -12,12 +12,14 @@ import {
   S,
 } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
-import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
+import { type ColumnDef, type TableDef } from '@dxos/react-ui-table';
+import { FieldValueType } from '@dxos/schema';
 
 import { type TableType } from '../types';
 
 const FIELD_META_NAMESPACE = 'plugin-table';
-const typeToSchema: Partial<{ [key in ColumnProps['type']]: S.Schema<any> }> = {
+
+const typeToSchema: Partial<{ [key in FieldValueType]: S.Schema<any> }> = {
   boolean: S.Boolean,
   number: S.Number,
   date: S.Number,
@@ -29,24 +31,9 @@ interface ColumnAnnotation {
   refProp?: string;
 }
 
-export const getPropType = (type?: AST.AST): ColumnProps['type'] => {
-  if (type == null) {
-    return 'string';
-  }
-  if (AST.isTypeLiteral(type)) {
-    return 'ref';
-  } else if (AST.isBooleanKeyword(type)) {
-    return 'boolean';
-  } else if (AST.isNumberKeyword(type)) {
-    return 'number';
-  } else {
-    return 'string';
-  }
-};
-
 export const getSchema = (
   tables: TableType[],
-  type: ColumnProps['type'] | undefined,
+  type: ColumnDef['type'] | undefined,
   options: { digits?: number; refProp?: string; refTable?: string },
 ): S.Schema<any> => {
   let schema: S.Schema<any>;
@@ -56,6 +43,7 @@ export const getSchema = (
   } else {
     schema = (type && typeToSchema[type]) ?? S.String;
   }
+
   return schema.pipe(
     FieldMeta(FIELD_META_NAMESPACE, {
       refProp: options.refProp,
@@ -64,9 +52,10 @@ export const getSchema = (
   );
 };
 
-export const schemaPropMapper =
+// TODO(burdon): Reconcile with react-ui-data.
+export const mapTableToColumns =
   (table: TableType) =>
-  (property: AST.PropertySignature): ColumnProps => {
+  (property: AST.PropertySignature): ColumnDef => {
     const { name: id, type } = property;
     const { label, refProp, size } = table.props?.find((prop) => prop.id === id) ?? {};
     const refAnnotation = property.type.annotations[ReferenceAnnotationId] as EchoObjectAnnotation;
@@ -74,7 +63,7 @@ export const schemaPropMapper =
     return {
       id: String(id)!,
       prop: String(id)!,
-      type: getPropType(type),
+      type: toFieldValueType(type),
       refTable: refAnnotation?.schemaId,
       refProp: refProp ?? undefined,
       label: label ?? undefined,
@@ -86,7 +75,25 @@ export const schemaPropMapper =
     };
   };
 
-export const createUniqueProp = (table: TableDef) => {
+// TODO(burdon): Reconcile with react-ui-data/typeToColumn
+export const toFieldValueType = (type?: AST.AST): FieldValueType => {
+  if (type == null) {
+    return FieldValueType.String;
+  }
+
+  if (AST.isTypeLiteral(type)) {
+    return FieldValueType.Ref;
+  } else if (AST.isBooleanKeyword(type)) {
+    return FieldValueType.Boolean;
+  } else if (AST.isNumberKeyword(type)) {
+    return FieldValueType.Number;
+  } else {
+    return FieldValueType.String;
+  }
+};
+
+// TODO(burdon): Reconcile with react-ui-data.
+export const getUniqueProperty = (table: TableDef) => {
   for (let i = 1; i < 100; i++) {
     const prop = 'prop_' + i;
     if (!table.columns.find((column) => column.id === prop)) {
@@ -94,5 +101,6 @@ export const createUniqueProp = (table: TableDef) => {
     }
   }
 
+  // TODO(burdon): Const for prefix.
   return 'prop_' + PublicKey.random().toHex().slice(0, 8);
 };

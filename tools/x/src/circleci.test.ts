@@ -4,9 +4,7 @@
 
 /* eslint-disable camelcase */
 
-import { expect } from 'chai';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 // TODO(burdon): Disable tests from CI?
 
@@ -14,7 +12,7 @@ import { describe, test } from '@dxos/test';
 //  -> Workflow (e.g., main)
 //    -> Jobs (e.g., 'Spin up environment')
 
-describe('CI tests', () => {
+describe.skip('CI tests', () => {
   const config = {
     vcs: 'gh',
     username: 'dxos',

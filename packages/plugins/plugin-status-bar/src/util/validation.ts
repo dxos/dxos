@@ -1,10 +1,9 @@
 //
 // Copyright 2024 DXOS.org
 //
-import { ArrayFormatter } from '@effect/schema';
-import { Effect } from 'effect';
 
-import { S } from '@dxos/echo-schema';
+import { ArrayFormatter, Schema as S } from '@effect/schema';
+import { Effect } from 'effect';
 
 export type ValidationError = { path: string; message: string };
 

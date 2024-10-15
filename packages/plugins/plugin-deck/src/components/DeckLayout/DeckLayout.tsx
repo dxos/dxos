@@ -3,11 +3,9 @@
 //
 
 import { Sidebar as MenuIcon } from '@phosphor-icons/react';
-import React, { useCallback, useEffect, useMemo, useRef, useState, useLayoutEffect, type UIEvent } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, type UIEvent } from 'react';
 
 import {
-  SLUG_PATH_SEPARATOR,
-  type Attention,
   type LayoutEntry,
   type LayoutParts,
   Surface,
@@ -15,7 +13,8 @@ import {
   firstIdInPart,
   usePlugin,
 } from '@dxos/app-framework';
-import { Button, Dialog, Main, Popover, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Main, Popover, useOnTransition, useTranslation } from '@dxos/react-ui';
+import { useAttended } from '@dxos/react-ui-attention';
 import { Deck } from '@dxos/react-ui-deck';
 import { getSize } from '@dxos/react-ui-theme';
 
@@ -35,11 +34,10 @@ import { useLayout } from '../LayoutContext';
 
 export type DeckLayoutProps = {
   layoutParts: LayoutParts;
-  attention: Attention;
   toasts: ToastSchema[];
   flatDeck?: boolean;
   overscroll: Overscroll;
-  showHintsFooter: boolean;
+  showHints: boolean;
   slots?: {
     wallpaper?: { classNames?: string };
   };
@@ -48,11 +46,10 @@ export type DeckLayoutProps = {
 
 export const DeckLayout = ({
   layoutParts,
-  attention,
   toasts,
   flatDeck,
   overscroll,
-  showHintsFooter,
+  showHints,
   slots,
   onDismissToast,
 }: DeckLayoutProps) => {
@@ -70,36 +67,42 @@ export const DeckLayout = ({
   } = context;
   const { t } = useTranslation(DECK_PLUGIN);
   const { plankSizing } = useDeckContext();
+  const attended = useAttended();
   const searchPlugin = usePlugin('dxos.org/plugin/search');
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
 
-  const [scrollLeft, setScrollLeft] = useState<number | null>(null);
-  const deckRef = useRef<HTMLDivElement | null>(null);
-  const restoreScrollRef = useRef<boolean>(false);
+  const scrollLeftRef = useRef<number | null>();
+  const deckRef = useRef<HTMLDivElement>(null);
+
+  // Ensure the first plank is attended when the deck is first rendered.
+  useEffect(() => {
+    const firstId = layoutMode === 'solo' ? firstIdInPart(layoutParts, 'solo') : firstIdInPart(layoutParts, 'main');
+    if (attended.length === 0 && firstId) {
+      // TODO(wittjosiah): Focusing the type button is a workaround.
+      //   If the plank is directly focused on first load the focus ring appears.
+      document.querySelector<HTMLElement>(`article[data-attendable-id="${firstId}"] button`)?.focus();
+    }
+  }, []);
 
   /**
    * Clear scroll restoration state if the window is resized
    */
   const handleResize = useCallback(() => {
-    setScrollLeft(null);
+    scrollLeftRef.current = null;
   }, []);
+
   useEffect(() => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [handleResize]);
 
-  /**
-   * Restore scroll when returning to deck mode
-   */
-  useLayoutEffect(() => {
-    if (layoutMode !== 'deck') {
-      restoreScrollRef.current = true;
-    } else if (restoreScrollRef.current && deckRef.current && scrollLeft) {
-      // console.log('[restoring scrollLeft]', scrollLeft);
-      deckRef.current.scrollLeft = scrollLeft;
-      restoreScrollRef.current = false;
+  const restoreScroll = useCallback(() => {
+    if (deckRef.current && scrollLeftRef.current != null) {
+      deckRef.current.scrollLeft = scrollLeftRef.current;
     }
-  }, [layoutMode, deckRef.current, scrollLeft]);
+  }, []);
+
+  useOnTransition(layoutMode, (mode) => mode !== 'deck', 'deck', restoreScroll);
 
   /**
    * Save scroll position as the user scrolls
@@ -107,22 +110,13 @@ export const DeckLayout = ({
   const handleScroll = useCallback(
     (event: UIEvent) => {
       if (layoutMode === 'deck' && event.currentTarget === event.target) {
-        // console.log('[save scroll left]', (event.target as HTMLDivElement).scrollLeft);
-        setScrollLeft((event.target as HTMLDivElement).scrollLeft);
+        scrollLeftRef.current = (event.target as HTMLDivElement).scrollLeft;
       }
     },
     [layoutMode],
   );
 
-  const complementarySlug = useMemo(() => {
-    const entry = layoutParts.complementary?.at(0);
-    if (entry) {
-      return entry.path ? `${entry.id}${SLUG_PATH_SEPARATOR}${entry.path}` : entry.id;
-    }
-  }, [layoutParts]);
-
-  const firstAttendedId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
-
+  const firstAttendedId = attended[0];
   useEffect(() => {
     // TODO(burdon): Can we prevent the need to re-scroll since the planks are preserved?
     //  E.g., hide the deck and just move the solo article?
@@ -145,10 +139,12 @@ export const DeckLayout = ({
     return parts;
   }, [layoutParts.main, layoutParts.solo]);
 
-  const padding =
-    layoutMode === 'deck' && overscroll === 'centering'
-      ? calculateOverscroll(layoutParts.main, plankSizing, sidebarOpen, complementarySidebarOpen)
-      : {};
+  const padding = useMemo(() => {
+    if (layoutMode === 'deck' && overscroll === 'centering') {
+      return calculateOverscroll(layoutParts.main, plankSizing, sidebarOpen, complementarySidebarOpen);
+    }
+    return {};
+  }, [layoutMode, overscroll, layoutParts.main, plankSizing, sidebarOpen, complementarySidebarOpen]);
 
   if (layoutMode === 'fullscreen') {
     return <Fullscreen id={fullScreenSlug} />;
@@ -173,25 +169,17 @@ export const DeckLayout = ({
       <Main.Root
         navigationSidebarOpen={context.sidebarOpen}
         onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
-        {...(complementarySidebarOpen !== null && {
-          complementarySidebarOpen: /* complementaryAvailable && */ context.complementarySidebarOpen as boolean,
-          onComplementarySidebarOpenChange: (next) => (context.complementarySidebarOpen = next),
-        })}
+        complementarySidebarOpen={context.complementarySidebarOpen}
+        onComplementarySidebarOpenChange={(next) => (context.complementarySidebarOpen = next)}
       >
         {/* Notch */}
         <Main.Notch classNames='z-[21]'>
           <Surface role='notch-start' />
-          <Button
-            // disabled={!sidebarAvailable}
-            onClick={() => (context.sidebarOpen = !context.sidebarOpen)}
-            variant='ghost'
-            classNames='p-1'
-          >
+          <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost' classNames='p-1'>
             <span className='sr-only'>{t('open navigation sidebar label')}</span>
             <MenuIcon weight='light' className={getSize(5)} />
           </Button>
           <Button
-            // disabled={!complementaryAvailable}
             onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
             variant='ghost'
             classNames='p-1'
@@ -203,10 +191,11 @@ export const DeckLayout = ({
         </Main.Notch>
 
         {/* Left sidebar. */}
-        <Sidebar attention={attention} layoutParts={layoutParts} />
+        <Sidebar layoutParts={layoutParts} />
 
         {/* Right sidebar. */}
-        <ComplementarySidebar id={complementarySlug} layoutParts={layoutParts} flatDeck={flatDeck} />
+        {/* TODO(wittjosiah): Get context from layout parts. */}
+        <ComplementarySidebar context='comments' layoutParts={layoutParts} flatDeck={flatDeck} />
 
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />
@@ -245,15 +234,8 @@ export const DeckLayout = ({
           </Main.Content>
         )}
 
-        <StatusBar />
-
-        {/* Help hints. */}
-        {/* TODO(burdon): Need to make room for this in status bar. */}
-        {showHintsFooter && (
-          <div className='fixed bottom-0 left-0 right-0 h-[32px] z-[1] flex justify-center'>
-            <Surface role='hints' limit={1} />
-          </div>
-        )}
+        {/* Footer status. */}
+        <StatusBar showHints={showHints} />
 
         {/* Global popovers. */}
         <Popover.Portal>

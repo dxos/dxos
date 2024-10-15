@@ -6,17 +6,18 @@ import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import sourceMaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import Inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
-import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { baseConfig } from '../../../vitest.shared';
 
 import { appKey } from './src/constants';
 
@@ -27,7 +28,8 @@ const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 
 // https://vitejs.dev/config
-export default defineConfig({
+export default defineConfig((env) => ({
+  test: baseConfig({ cwd: __dirname })['test'],
   server: {
     host: true,
     https:
@@ -47,9 +49,13 @@ export default defineConfig({
       ],
     },
   },
+  esbuild: {
+    keepNames: true,
+  },
   build: {
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
+    target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
     rollupOptions: {
       // NOTE: Set cache to fix to help debug flaky builds.
       // cache: false,
@@ -79,13 +85,15 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
-    plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
+    plugins: () => [WasmPlugin(), sourceMaps()],
   },
   plugins: [
+    sourceMaps(),
     // TODO(wittjosiah): Causing issues with bundle.
-    tsconfigPaths({
-      projects: ['../../../tsconfig.paths.json'],
-    }),
+    env.command === 'serve' &&
+      tsconfigPaths({
+        projects: ['../../../tsconfig.paths.json'],
+      }),
     ConfigPlugin(),
     ThemePlugin({
       root: __dirname,
@@ -113,7 +121,6 @@ export default defineConfig({
     // https://github.com/antfu-collective/vite-plugin-inspect#readme
     // localhost:5173/__inspect
     isTrue(process.env.DX_INSPECT) && Inspect(),
-    TopLevelAwaitPlugin(),
     WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({
@@ -239,7 +246,7 @@ export default defineConfig({
         ]
       : []),
   ], // Plugins
-});
+}));
 
 /**
  * Generate nicer chunk names.

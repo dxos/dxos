@@ -1,6 +1,6 @@
 {
   "name": "@dxos/chain",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "AI chain.",
   "homepage": "https://github.com/dxos/dxos/tree/master/packages/protocols",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -11,7 +11,8 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     }
@@ -25,15 +26,8 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "@types/node": "^18.11.9"
-  },
-  "devDependencies": {
-    "@dxos/random": "workspace:*"
+    "@types/node": "^22.7.4"
   },
   "publishConfig": {
     "access": "public"

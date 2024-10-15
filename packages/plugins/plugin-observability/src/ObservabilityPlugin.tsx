@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Info } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
 import React from 'react';
 
@@ -33,7 +32,6 @@ import {
 } from '@dxos/observability';
 import type { EventOptions } from '@dxos/observability/segment';
 import { parseClientPlugin } from '@dxos/plugin-client';
-import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { ObservabilitySettings, type ObservabilitySettingsProps } from './components';
 import meta, { OBSERVABILITY_PLUGIN, ObservabilityAction, type UserFeedback } from './meta';
@@ -85,7 +83,7 @@ export const ObservabilityPlugin = (options: {
       const sendPrivacyNotice = async () => {
         const environment = clientPlugin?.provides?.client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;
         const notify =
-          environment && environment !== 'circleci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
+          environment && environment !== 'ci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
         if (!state.values.notified && notify) {
           await dispatch({
             action: LayoutAction.SET_LAYOUT,
@@ -97,10 +95,7 @@ export const ObservabilityPlugin = (options: {
                 title: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast label'],
                 description: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast description'],
                 duration: Infinity,
-                icon: (props: IconProps) => (
-                  <Info className={mx(getSize(5), props.className)} weight='duotone' {...props} />
-                ),
-                iconSymbol: 'ph--info--duotone',
+                icon: 'ph--info--regular',
                 actionLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action label'],
                 actionAlt: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action alt'],
                 closeLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast close label'],

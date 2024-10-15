@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-protocol';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { afterTest, describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { IndexSchema } from './index-schema';
 import { IndexStore } from './index-store';
@@ -19,7 +19,9 @@ describe('IndexStore', () => {
 
     const index = new IndexSchema();
     await index.open();
-    afterTest(() => index.close());
+    onTestFinished(async () => {
+      await index.close();
+    });
 
     const schemaURI = '@example.org/schema/Contact';
     const objects: Partial<ObjectStructure>[] = [
@@ -56,7 +58,9 @@ describe('IndexStore', () => {
 
     const index = new IndexSchema();
     await index.open();
-    afterTest(() => index.close());
+    onTestFinished(async () => {
+      await index.close();
+    });
 
     const schemaURI = '@example.org/schema/Contact';
     const objects: Partial<ObjectStructure>[] = [

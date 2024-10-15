@@ -2,20 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { afterEach, onTestFinished, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { type Identity, type IdentityService } from '@dxos/protocols/proto/dxos/client/services';
-import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
 import { IdentityServiceImpl } from './identity-service';
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
-
-chai.use(chaiAsPromised);
 
 describe('IdentityService', () => {
   let serviceContext: ServiceContext;
@@ -49,7 +45,7 @@ describe('IdentityService', () => {
 
     test('fails to create identity if one already exists', async () => {
       await identityService.createIdentity({});
-      await expect(identityService.createIdentity({})).to.be.rejectedWith('Identity already exists');
+      await expect(identityService.createIdentity({})).rejects.toThrowError('Identity already exists');
     });
   });
 
@@ -72,7 +68,7 @@ describe('IdentityService', () => {
       query.subscribe(({ identity }) => {
         result.wake(identity);
       });
-      afterTest(() => query.close());
+      onTestFinished(() => query.close());
       expect(await result.wait()).to.be.undefined;
     });
 
@@ -82,7 +78,7 @@ describe('IdentityService', () => {
       query.subscribe(({ identity }) => {
         result.wake(identity);
       });
-      afterTest(() => query.close());
+      onTestFinished(() => query.close());
       expect(await result.wait()).to.be.undefined;
 
       result = new Trigger<Identity | undefined>();

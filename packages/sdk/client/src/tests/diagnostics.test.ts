@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
+import { beforeEach, onTestFinished, describe, expect, test } from 'vitest';
 
 import { DiagnosticsCollector } from '@dxos/client-services';
 import { Context } from '@dxos/context';
-import { afterTest, describe, test } from '@dxos/test';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { Client } from '../client';
@@ -19,7 +18,7 @@ describe.skip('DiagnosticsCollector', () => {
 
   test('collects configs and traces if client was not initialized', async () => {
     const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
 
     const diagnostics = await DiagnosticsCollector.collect();
     expect(diagnostics.client.config).not.to.be.undefined;
@@ -29,11 +28,11 @@ describe.skip('DiagnosticsCollector', () => {
 
   test('collects with local services', async () => {
     const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
 
     const client = new Client({ config: testBuilder.config, services: testBuilder.createLocalClientServices() });
     await client.initialize();
-    afterTest(() => client.destroy());
+    onTestFinished(() => client.destroy());
 
     const diagnostics = await DiagnosticsCollector.collect();
     expect(diagnostics.client.config).not.to.be.undefined;
@@ -42,14 +41,14 @@ describe.skip('DiagnosticsCollector', () => {
 
   test('collects with remote server', async () => {
     const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
 
     const peer = testBuilder.createClientServicesHost();
     await peer.open(new Context());
     const [client, server] = testBuilder.createClientServer(peer);
     void server.open();
     await client.initialize();
-    afterTest(() => client.destroy());
+    onTestFinished(() => client.destroy());
 
     const diagnostics = await DiagnosticsCollector.collect();
     expect(diagnostics.client.config).not.to.be.undefined;

@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Cpu } from '@phosphor-icons/react';
 import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
@@ -17,7 +16,7 @@ export const MemoryPanel = ({ memory, ...props }: CustomPanelProps<{ memory?: Me
   return (
     <Panel
       {...props}
-      icon={Cpu}
+      icon='ph--cpu--regular'
       title='Memory'
       info={
         <div className='flex items-center gap-2'>

@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { create, Expando, getSchema } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
@@ -186,7 +186,7 @@ describe('Serializer', () => {
       }
     });
 
-    test('loading many objects on db restart chunk load', async () => {
+    test('loading many objects on db restart chunk load', { timeout: 10_000 }, async () => {
       const totalObjects = 123;
       const serializer = new Serializer();
       let data: SerializedSpace;

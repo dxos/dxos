@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { test } from '@dxos/test';
+import { test } from 'vitest';
 
 import { TestStream } from './test-stream';
 

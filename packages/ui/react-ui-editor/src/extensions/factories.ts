@@ -4,9 +4,10 @@
 
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
-import { bracketMatching } from '@codemirror/language';
+import { bracketMatching, defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
+import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import {
   EditorView,
   type KeyBinding,
@@ -131,6 +132,7 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
 export type ThemeExtensionsOptions = {
   themeMode?: ThemeMode;
   styles?: ThemeStyles;
+  syntaxHighlighting?: boolean;
   slots?: {
     editor?: {
       className?: string;
@@ -147,13 +149,22 @@ const defaultThemeSlots = {
   },
 };
 
-// TODO(burdon): Should only have one baseTheme?
-// https://codemirror.net/examples/styling
-export const createThemeExtensions = ({ themeMode, styles, slots: _slots }: ThemeExtensionsOptions = {}): Extension => {
+/**
+ * https://codemirror.net/examples/styling
+ */
+export const createThemeExtensions = ({
+  themeMode,
+  styles,
+  syntaxHighlighting: _syntaxHighlighting,
+  slots: _slots,
+}: ThemeExtensionsOptions = {}): Extension => {
   const slots = defaultsDeep({}, _slots, defaultThemeSlots);
   return [
     EditorView.darkTheme.of(themeMode === 'dark'),
     EditorView.baseTheme(styles ? merge({}, defaultTheme, styles) : defaultTheme),
+    // https://github.com/codemirror/theme-one-dark
+    _syntaxHighlighting &&
+      (themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle)),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
   ].filter(isNotFalsy);

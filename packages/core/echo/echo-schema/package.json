@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-schema",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,14 +10,16 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
     "./testing": {
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": {
-        "default": "./dist/lib/node/testing/index.cjs"
+        "require": "./dist/lib/node/testing/index.cjs",
+        "default": "./dist/lib/node-esm/testing/index.mjs"
       },
       "types": "./dist/types/src/testing/index.d.ts"
     }
@@ -35,26 +37,17 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/schema": "^0.75.1",
     "@preact/signals-core": "^1.6.0",
-    "lodash.get": "^4.4.2",
+    "effect": "^3.9.1",
     "ulidx": "^2.3.0"
-  },
-  "devDependencies": {
-    "@effect/schema": "^0.67.16",
-    "effect": "^3.2.7"
-  },
-  "peerDependencies": {
-    "@effect/schema": "^0.67.16",
-    "effect": "^3.2.7"
   },
   "publishConfig": {
     "access": "public"

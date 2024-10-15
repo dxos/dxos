@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as S from '@effect/schema/Schema';
 import { ulid } from 'ulidx';
 
+import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
-import { getEchoObjectAnnotation } from '../annotations';
+import { getEchoObjectAnnotation } from '../ast';
 import { Expando } from '../expando';
 import { createReactiveProxy, getProxyHandlerSlot, isValidProxyTarget, type ReactiveHandler } from '../proxy';
 import { type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject } from '../types';

@@ -24,6 +24,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/composer-crx/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/templates/bare-template/package.json",
           "jsonpath": "$.version"
         },
@@ -80,6 +85,11 @@
         {
           "type": "json",
           "path": "packages/common/display-name/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/effect/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -179,6 +189,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/test-utils/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/timeframe/package.json",
           "jsonpath": "$.version"
         },
@@ -245,11 +260,6 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-signals/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/echo/echo-typegen/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -459,11 +469,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-debug/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/experimental/plugin-excalidraw/package.json",
           "jsonpath": "$.version"
         },
@@ -545,6 +550,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-debug/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -709,6 +719,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/schema/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/shell/package.json",
           "jsonpath": "$.version"
         },
@@ -754,6 +769,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-data/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-deck/package.json",
           "jsonpath": "$.version"
         },
@@ -765,6 +785,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-grid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-list/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -785,6 +810,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-stack/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-syntax-highlighter/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -850,16 +880,6 @@
         {
           "type": "json",
           "path": "tools/executors/nx-protobuf-compiler/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/executors/serve-with-vault/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/executors/test/package.json",
           "jsonpath": "$.version"
         },
         {

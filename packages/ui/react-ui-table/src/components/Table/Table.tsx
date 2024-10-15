@@ -16,13 +16,13 @@ import {
 } from '@tanstack/react-table';
 import React, {
   type ComponentPropsWithoutRef,
+  type ReactNode,
   Fragment,
+  memo,
   useCallback,
   useEffect,
   useState,
   useContext,
-  type ReactNode,
-  memo,
 } from 'react';
 
 import { DensityProvider, type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
@@ -55,7 +55,6 @@ const TableViewport = ({ children, classNames, asChild, ...props }: TableViewpor
   const { scrollContextRef } = useContext(TableRootContext);
 
   const classes = mx(classNames, 'overflow-auto');
-
   return asChild ? (
     <Slot ref={scrollContextRef} className={classes} {...props}>
       {children}
@@ -70,17 +69,17 @@ const TableViewport = ({ children, classNames, asChild, ...props }: TableViewpor
 export const TablePrimitive = <TData extends RowData>(props: TableProps<TData>) => {
   const {
     role,
-    onColumnResize,
-    columnVisibility,
     header = true,
     rowsSelectable,
     debug,
-    onDataSelectionChange,
     pinLastRow,
+    columnVisibility,
+    onColumnResize,
+    onDataSelectionChange,
   } = props;
 
-  const columns = useDefaultValue(props.columns, []);
-  const incomingData = useDefaultValue(props.data, []);
+  const columns = useDefaultValue(props.columns, () => []);
+  const incomingData = useDefaultValue(props.data, () => []);
 
   const [data, setData] = useState([...incomingData]);
 
@@ -110,7 +109,7 @@ export const TablePrimitive = <TData extends RowData>(props: TableProps<TData>) 
     // Columns
     columns,
     defaultColumn: {
-      size: 256, // Required in order remove default width.
+      size: 400, // Required in order remove default width.
       maxSize: 1024,
     },
 

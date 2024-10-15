@@ -2,13 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import type { SimplifyMutable, Struct } from '@effect/schema/Schema';
-
+import { S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { type EchoObjectAnnotation, EchoObjectAnnotationId } from './annotations';
-import { schemaVariance } from './ast';
+import { type EchoObjectAnnotation, EchoObjectAnnotationId, schemaVariance } from './ast';
 import { getSchema, getTypeReference } from './getter';
 
 type TypedObjectOptions = {
@@ -22,6 +19,7 @@ type TypedObjectOptions = {
 export interface AbstractTypedObject<Fields, I> extends S.Schema<Fields, I> {
   // Type constructor.
   new (): Fields;
+
   // Fully qualified type name.
   readonly typename: string;
 }
@@ -38,19 +36,19 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
 
   return <
     Options extends TypedObjectOptions,
-    SchemaFields extends Struct.Fields,
+    SchemaFields extends S.Struct.Fields,
     SimplifiedFields = Options['partial'] extends boolean
-      ? SimplifyMutable<Partial<Struct.Type<SchemaFields>>>
-      : SimplifyMutable<Struct.Type<SchemaFields>>,
+      ? S.SimplifyMutable<Partial<S.Struct.Type<SchemaFields>>>
+      : S.SimplifyMutable<S.Struct.Type<SchemaFields>>,
     Fields = SimplifiedFields & { id: string } & (Options['record'] extends boolean
-        ? SimplifyMutable<S.IndexSignature.Type<S.IndexSignature.Records>>
+        ? S.SimplifyMutable<S.IndexSignature.Type<S.IndexSignature.Records>>
         : {}),
   >(
     fields: SchemaFields,
     options?: Options,
-  ): AbstractTypedObject<Fields, Struct.Encoded<SchemaFields>> => {
+  ): AbstractTypedObject<Fields, S.Struct.Encoded<SchemaFields>> => {
     const fieldsSchema = options?.record ? S.Struct(fields, { key: S.String, value: S.Any }) : S.Struct(fields);
-    const schemaWithModifiers = S.mutable(options?.partial ? S.partial(fieldsSchema) : fieldsSchema);
+    const schemaWithModifiers = S.mutable(options?.partial ? S.partial(fieldsSchema as any) : fieldsSchema); // Ok to perform `as any` cast here since the types are explicitly defined.
     const typeSchema = S.extend(schemaWithModifiers, S.Struct({ id: S.String }));
     const annotatedSchema = typeSchema.annotations({
       [EchoObjectAnnotationId]: { typename: args.typename, version: args.version },
@@ -68,7 +66,7 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
       static readonly pipe = annotatedSchema.pipe.bind(annotatedSchema);
 
       private constructor() {
-        throw new Error('Use create(MyClass, fields) to instantiate an object.');
+        throw new Error('Use create(Typename, { ...fields }) to instantiate an object.');
       }
     } as any;
   };

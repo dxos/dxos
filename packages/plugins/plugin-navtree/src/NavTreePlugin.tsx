@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MagnifyingGlass, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import {
@@ -155,7 +154,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                     activeIds={data.activeIds as Set<string>}
                     openItemIds={state.values.openItemIds}
                     onOpenItemIdsChange={handleOpenItemIdsChange}
-                    attended={data.attended as Set<string>}
+                    attended={data.attended as string[]}
                     popoverAnchorId={data.popoverAnchorId as string}
                   />
                 );
@@ -243,8 +242,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                   },
                   properties: {
                     label: ['open commands label', { ns: NAVTREE_PLUGIN }],
-                    icon: (props: IconProps) => <MagnifyingGlass {...props} />,
-                    iconSymbol: 'ph--magnifying-glass--regular',
+                    icon: 'ph--magnifying-glass--regular',
                     keyBinding: {
                       macos: 'meta+k',
                       windows: 'ctrl+k',

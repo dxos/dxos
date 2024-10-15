@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AlignCenterHorizontalSimple } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type Span } from '@dxos/protocols/proto/dxos/tracing';
@@ -19,7 +18,7 @@ export const SpansPanel = ({ spans, ...props }: CustomPanelProps<{ spans?: Span[
   return (
     <Panel
       {...props}
-      icon={AlignCenterHorizontalSimple}
+      icon='ph--align-center-horizontal-simple--regular'
       title='Spans'
       info={<span>{spans?.length.toLocaleString()}</span>}
     >

@@ -16,7 +16,7 @@ export default [
         'content fallback description':
           'No plugin had a response for the address you navigated to. Double-check the URL, and ensure you’ve enabled a plugin that supports the object.',
         'toggle fullscreen label': 'Toggle fullscreen',
-        'settings show footer label': 'Show footer (experimental)',
+        'settings show hints label': 'Show hints',
         'settings native redirect label': 'Enable native url redirect (experimental)',
         'settings custom slots': 'Theme option (experimental)',
         'settings new plank position start label': 'Start',
@@ -41,6 +41,8 @@ export default [
         'settings overscroll centering label': 'Centering',
         'settings overscroll none label': 'None',
         'settings flat deck': 'Flatten deck appearance',
+        'comments label': 'Show Comments',
+        'settings label': 'Show Settings',
       },
     },
   },

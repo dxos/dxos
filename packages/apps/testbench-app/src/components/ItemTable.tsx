@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import type { S, EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, type S } from '@dxos/echo-schema';
 import { Table, schemaToColumnDefs } from '@dxos/react-ui-table';
 
 export type ItemTableProps<T> = {
@@ -23,7 +23,7 @@ export const ItemTable = <T extends EchoReactiveObject<any>>({ schema, objects =
         size: 60,
         minSize: 60,
         maxSize: 60,
-        cell: (cell) => <span className='px-2 font-mono'>{cell.getValue().slice(0, 8)}</span>,
+        cell: (cell) => <span className='px-2 font-mono'>{cell.getValue()?.slice(0, 8)}</span>,
       },
       ...rest,
     ];

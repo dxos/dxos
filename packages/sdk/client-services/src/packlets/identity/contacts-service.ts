@@ -5,7 +5,7 @@
 import { EventSubscriptions, scheduleTask, UpdateScheduler } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { type MemberInfo } from '@dxos/credentials';
-import type { SpaceManager } from '@dxos/echo-pipeline';
+import { type SpaceManager } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
 import { type Contact, type ContactBook, type ContactsService } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap, ComplexSet } from '@dxos/util';

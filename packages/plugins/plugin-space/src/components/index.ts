@@ -5,8 +5,7 @@
 export * from './AwaitingObject';
 export * from './CollectionMain';
 export * from './CollectionSection';
-export * from './EmptySpace';
-export * from './EmptyTree';
+export * from './FallbackSettings';
 export * from './MenuFooter';
 export * from './MissingObject';
 export * from './PersistenceStatus';
@@ -16,3 +15,5 @@ export * from './ShareSpaceButton';
 export * from './SpaceMain';
 export * from './SpacePresence';
 export * from './SpaceSettings';
+export * from './SaveStatus';
+export * from './SyncStatus';

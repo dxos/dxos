@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-generator",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "ECHO data generator for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,8 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     }
@@ -29,11 +30,14 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/node-std": "workspace:*",
-    "@dxos/random": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/node-std": "workspace:*"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@dxos/random": "workspace:*"
+  },
+  "peerDependencies": {
+    "@dxos/random": "workspace:*"
+  },
   "publishConfig": {
     "access": "public"
   }

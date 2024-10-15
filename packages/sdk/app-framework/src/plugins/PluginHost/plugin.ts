@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { IconProps } from '@phosphor-icons/react';
 import type { FC, PropsWithChildren } from 'react';
 
 /**
@@ -21,60 +20,56 @@ export type PluginProvides<TProvides> = TProvides & {
   root?: FC<PropsWithChildren>;
 };
 
+export type PluginMeta = {
+  /**
+   * Globally unique ID.
+   *
+   * Expected to be in the form of a valid URL.
+   *
+   * @example dxos.org/plugin/example
+   */
+  id: string;
+
+  /**
+   * Short ID for use in URLs.
+   *
+   * NOTE: This is especially experimental and likely to change.
+   */
+  // TODO(wittjosiah): How should these be managed?
+  shortId?: string;
+
+  /**
+   * Human-readable name.
+   */
+  name?: string;
+
+  /**
+   * Short description of plugin functionality.
+   */
+  description?: string;
+
+  /**
+   * URL of home page.
+   */
+  homePage?: string;
+
+  /**
+   * Tags to help categorize the plugin.
+   */
+  tags?: string[];
+
+  /**
+   * A grep-able symbol string which can be resolved to an icon asset by @ch-ui/icons, via @ch-ui/vite-plugin-icons.
+   */
+  icon?: string;
+};
+
 /**
  * A unit of containment of modular functionality that can be provided to an application.
  * Plugins provide things like components, state, actions, etc. to the application.
  */
 export type Plugin<TProvides = {}> = {
-  meta: {
-    /**
-     * Globally unique ID.
-     *
-     * Expected to be in the form of a valid URL.
-     *
-     * @example dxos.org/plugin/example
-     */
-    id: string;
-
-    /**
-     * Short ID for use in URLs.
-     *
-     * NOTE: This is especially experimental and likely to change.
-     */
-    // TODO(wittjosiah): How should these be managed?
-    shortId?: string;
-
-    /**
-     * Human-readable name.
-     */
-    name?: string;
-
-    /**
-     * Short description of plugin functionality.
-     */
-    description?: string;
-
-    /**
-     * URL of home page.
-     */
-    homePage?: string;
-
-    /**
-     * Tags to help categorize the plugin.
-     */
-    tags?: string[];
-
-    /**
-     * Component to render icon for the plugin when displayed in a list.
-     * @deprecated
-     */
-    iconComponent?: FC<IconProps>;
-
-    /**
-     * A grep-able symbol string which can be resolved to an icon asset by @ch-ui/icons, via @ch-ui/vite-plugin-icons.
-     */
-    iconSymbol?: string;
-  };
+  meta: PluginMeta;
 
   /**
    * Capabilities provided by the plugin.
@@ -113,8 +108,6 @@ export type PluginDefinition<TProvides = {}, TInitializeProvides = {}> = Omit<Pl
    */
   unload?: () => Promise<void>;
 };
-
-export const pluginMeta = (meta: Plugin['meta']) => meta;
 
 type LazyPlugin<T> = () => Promise<{ default: (props: T) => PluginDefinition }>;
 

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Table } from '@phosphor-icons/react';
+import { Table } from '@phosphor-icons/react';
 import React from 'react';
 
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
@@ -30,14 +30,22 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           [TableType.typename]: {
             label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
-            icon: (props: IconProps) => <Table {...props} />,
-            iconSymbol: 'ph--table--regular',
+            icon: 'ph--table--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (table: TableType) => [], // loadObjectReferences(table, (table) => [table.schema]),
           },
         },
       },
       translations,
+      echo: {
+        schema: [TableType],
+      },
+      space: {
+        onSpaceCreate: {
+          label: ['create object label', { ns: TABLE_PLUGIN }],
+          action: TableAction.CREATE,
+        },
+      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -71,8 +79,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                   },
                   properties: {
                     label: ['create object label', { ns: TABLE_PLUGIN }],
-                    icon: (props: IconProps) => <Table {...props} />,
-                    iconSymbol: 'ph--table--regular',
+                    icon: 'ph--table--regular',
                     testId: 'tablePlugin.createObject',
                   },
                 },

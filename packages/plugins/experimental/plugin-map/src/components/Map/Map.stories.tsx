@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Map } from './Map';
 
@@ -23,7 +23,7 @@ const Story = (props: any) => {
 export default {
   title: 'plugin-map/Map',
   component: Map,
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   render: (...args: any[]) => <Story {...args} />,
 };
 

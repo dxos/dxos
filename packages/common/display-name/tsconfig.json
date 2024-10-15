@@ -1,10 +1,8 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/types",
     "resolveJsonModule": true,
     "types": [
-      "@dxos/test",
       "@dxos/typings"
     ]
   },
@@ -12,9 +10,5 @@
     "scripts",
     "src"
   ],
-  "references": [
-    {
-      "path": "../keys"
-    }
-  ]
+  "references": []
 }

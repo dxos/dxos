@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Mesh } from './Mesh';
 
@@ -31,7 +31,7 @@ export default {
   title: 'gem-core/Mesh',
   component: Mesh,
   render: () => <Story />,
-  decorators: [withTheme, withFullscreen({ classNames: 'bg-[#111]' })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#111]' })],
 };
 
 export const Default = {};

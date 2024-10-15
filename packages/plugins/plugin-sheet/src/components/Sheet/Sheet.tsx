@@ -25,6 +25,7 @@ import { Resizable, type ResizeCallback, type ResizeStartCallback } from 're-res
 import React, {
   type CSSProperties,
   type DOMAttributes,
+  type KeyboardEventHandler,
   type PropsWithChildren,
   forwardRef,
   useEffect,
@@ -40,7 +41,8 @@ import { debounce } from '@dxos/async';
 import { fullyQualifiedId, createDocAccessor } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { createAttendableAttributes, useHasAttention } from '@dxos/react-ui-attention';
+import { ATTENABLE_ATTRIBUTE, useAttendableAttributes, useAttention, useAttentionPath } from '@dxos/react-ui-attention';
+import { CellEditor, type EditorKeysProps, editorKeys } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
@@ -60,6 +62,7 @@ import {
 } from './grid';
 import { type GridSize, handleArrowNav, handleNav, useRangeSelect } from './nav';
 import { type SheetContextProps, SheetContextProvider, useSheetContext } from './sheet-context';
+import { useThreads } from './threads';
 import { getRectUnion, getRelativeClientRect, scrollIntoView } from './util';
 import {
   type CellIndex,
@@ -68,15 +71,10 @@ import {
   columnLetter,
   posEquals,
   rangeToA1Notation,
-} from '../../model';
-import {
-  CellEditor,
-  type CellRangeNotifier,
-  type EditorKeysProps,
-  editorKeys,
-  rangeExtension,
-  sheetExtension,
-} from '../CellEditor';
+  addressToIndex,
+  addressFromIndex,
+} from '../../defs';
+import { rangeExtension, sheetExtension, type CellRangeNotifier } from '../../extensions';
 
 // TODO(burdon): Virtualization bug.
 // TODO(burdon): Toolbar styles and formatting.
@@ -135,11 +133,15 @@ const SheetRoot = ({ children, ...props }: PropsWithChildren<SheetContextProps>)
 
 type SheetMainProps = ThemedClassName<Partial<GridSize>>;
 
-const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numRows, numColumns }, forwardRef) => {
+const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numRows, numCols }, forwardRef) => {
   const { model, cursor, setCursor, setRange, setEditing } = useSheetContext();
 
   // Scrolling.
   const { rowsRef, columnsRef, contentRef } = useScrollHandlers();
+
+  // Threads.
+  // TODO(Zan): Move this to an extension once we have an extension model.
+  useThreads();
 
   //
   // Order of Row/columns.
@@ -170,21 +172,21 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
   }, [rows, columns]);
 
   const handleMoveRows: SheetRowsProps['onMove'] = (from, to, num = 1) => {
-    const cursorIdx = cursor ? model.addressToIndex(cursor) : undefined;
+    const cursorIdx = cursor ? addressToIndex(model.sheet, cursor) : undefined;
     const [rows] = model.sheet.rows.splice(from, num);
     model.sheet.rows.splice(to, 0, rows);
     if (cursorIdx) {
-      setCursor(model.addressFromIndex(cursorIdx));
+      setCursor(addressFromIndex(model.sheet, cursorIdx));
     }
     setRows([...model.sheet.rows]);
   };
 
   const handleMoveColumns: SheetColumnsProps['onMove'] = (from, to, num = 1) => {
-    const cursorIdx = cursor ? model.addressToIndex(cursor) : undefined;
+    const cursorIdx = cursor ? addressToIndex(model.sheet, cursor) : undefined;
     const columns = model.sheet.columns.splice(from, num);
     model.sheet.columns.splice(to, 0, ...columns);
     if (cursorIdx) {
-      setCursor(model.addressFromIndex(cursorIdx));
+      setCursor(addressFromIndex(model.sheet, cursorIdx));
     }
     setColumns([...model.sheet.columns]);
   };
@@ -256,8 +258,8 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
         ref={columnsRef}
         columns={columns}
         sizes={columnSizes}
-        selected={cursor?.column}
-        onSelect={(column) => setCursor(cursor?.column === column ? undefined : { row: -1, column })}
+        selected={cursor?.col}
+        onSelect={(col) => setCursor(cursor?.col === col ? undefined : { row: -1, col })}
         onResize={handleResizeColumn}
         onMove={handleMoveColumns}
       />
@@ -267,13 +269,13 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
         rows={rows}
         sizes={rowSizes}
         selected={cursor?.row}
-        onSelect={(row) => setCursor(cursor?.row === row ? undefined : { row, column: -1 })}
+        onSelect={(row) => setCursor(cursor?.row === row ? undefined : { row, col: -1 })}
         onResize={handleResizeRow}
         onMove={handleMoveRows}
       />
       <SheetGrid
         ref={contentRef}
-        size={{ numRows: numRows ?? rows.length, numColumns: numColumns ?? columns.length }}
+        size={{ numRows: numRows ?? rows.length, numCols: numCols ?? columns.length }}
         rows={rows}
         columns={columns}
         rowSizes={rowSizes}
@@ -854,10 +856,8 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
       columnSizes,
     });
 
-    // TODO(burdon): Prevent scroll if not attended.
     const id = fullyQualifiedId(model.sheet);
-    const attendableAttrs = createAttendableAttributes(id);
-    const hasAttention = useHasAttention(id);
+    const { hasAttention } = useAttention(id);
 
     return (
       <div ref={containerRef} role='grid' className='relative flex grow overflow-hidden'>
@@ -865,6 +865,7 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
         <div className={mx('z-20 absolute inset-0 border border-gridLine pointer-events-none')} />
 
         {/* Grid scroll container. */}
+        {/* NOTE: Prevents scroll if not attended. */}
         <div ref={scrollerRef} className={mx('grow', hasAttention && 'overflow-auto scrollbar-thin')}>
           {/* Scroll content. */}
           <div
@@ -878,11 +879,11 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
 
             {/* Grid cells. */}
             {rowRange.map(({ row, top, height }) => {
-              return columnRange.map(({ column, left, width }) => {
+              return columnRange.map(({ col, left, width }) => {
                 const style: CSSProperties = { position: 'absolute', top, left, width, height };
-                const cell = { row, column };
+                const cell: CellAddress = { row, col };
                 const id = addressToA1Notation(cell);
-                const idx = model.addressToIndex(cell);
+                const idx = addressToIndex(model.sheet, cell);
                 const active = posEquals(cursor, cell);
                 if (active && editing) {
                   const value = initialText.current ?? model.getCellText(cell) ?? '';
@@ -945,20 +946,36 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
         </div>
 
         {/* Hidden input for key navigation. */}
-        {createPortal(
-          <input
-            ref={inputRef}
-            autoFocus
-            className='absolute w-[1px] h-[1px] bg-transparent outline-none border-none caret-transparent'
-            onKeyDown={handleKeyDown}
-            {...attendableAttrs}
-          />,
-          document.body,
-        )}
+        {createPortal(<SheetInput ref={inputRef} id={id} onKeyDown={handleKeyDown} />, document.body)}
       </div>
     );
   },
 );
+
+type SheetInputProps = {
+  id: string;
+  onKeyDown?: KeyboardEventHandler<HTMLInputElement>;
+};
+
+const SheetInput = forwardRef<HTMLInputElement, SheetInputProps>(({ id, onKeyDown }, forwardedRef) => {
+  const path = useAttentionPath();
+  const attendableAttrs = useAttendableAttributes(id);
+
+  // TODO(wittjosiah): Consider factoring out as an attention util.
+  // Wrap input in attendable divs for each part of the path.
+  // This ensures that the sheet stays attended when the input is focused.
+  return path.toReversed().reduce(
+    (acc, part) => {
+      return <div {...{ [ATTENABLE_ATTRIBUTE]: part }}>{acc}</div>;
+    },
+    <input
+      ref={forwardedRef}
+      className='absolute w-[1px] h-[1px] bg-transparent outline-none border-none caret-transparent'
+      onKeyDown={onKeyDown}
+      {...attendableAttrs}
+    />,
+  );
+});
 
 //
 // Selection
@@ -1003,8 +1020,38 @@ type SheetCellProps = {
 };
 
 const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
-  const { formatting, editing, setRange } = useSheetContext();
+  const {
+    formatting,
+    editing,
+    setRange,
+    decorations,
+    model: { sheet },
+  } = useSheetContext();
   const { value, classNames } = formatting.getFormatting(cell);
+
+  const decorationsForCell = decorations.getDecorationsForCell(addressToIndex(sheet, cell)) ?? [];
+  const decorationAddedClasses = useMemo(
+    () => decorationsForCell.flatMap((d) => d.classNames ?? []),
+    [decorationsForCell],
+  );
+  const decoratedContent = decorationsForCell.reduce(
+    (children, { decorate }) => {
+      if (!decorate) {
+        return children;
+      }
+      const DecoratorComponent = decorate;
+      return <DecoratorComponent>{children}</DecoratorComponent>;
+    },
+    <div
+      role='none'
+      className={mx(
+        'flex flex-grow bs-full is-full px-2 items-center truncate cursor-pointer',
+        ...decorationAddedClasses,
+      )}
+    >
+      {value}
+    </div>,
+  );
 
   return (
     <div
@@ -1012,7 +1059,7 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       role='cell'
       style={style}
       className={mx(
-        'flex w-full h-full px-2 py-1 truncate items-center border border-gridLine cursor-pointer',
+        'border border-gridLine cursor-pointer',
         fragments.cell,
         active && ['z-20', fragments.cellSelected],
         classNames,
@@ -1026,7 +1073,7 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       }}
       onDoubleClick={() => onSelect?.(cell, true)}
     >
-      {value}
+      {decoratedContent}
     </div>
   );
 };
@@ -1045,10 +1092,11 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
       notifier.current?.(rangeToA1Notation(range));
     }
   }, [range]);
+
   const extension = useMemo(
     () => [
       editorKeys({ onNav, onClose }),
-      sheetExtension({ functions: model.functions }),
+      sheetExtension({ functions: model.graph.getFunctions() }),
       rangeExtension((fn) => (notifier.current = fn)),
     ],
     [model],
@@ -1072,12 +1120,13 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
 
 const SheetStatusBar = () => {
   const { model, cursor, range } = useSheetContext();
+
   let value;
   let isFormula = false;
   if (cursor) {
     value = model.getCellValue(cursor);
     if (typeof value === 'string' && value.charAt(0) === '=') {
-      value = model.mapFormulaBindingFromId(model.mapFormulaIndicesToRefs(value));
+      value = model.graph.mapFunctionBindingFromId(model.mapFormulaIndicesToRefs(value));
       isFormula = true;
     } else if (value != null) {
       value = String(value);

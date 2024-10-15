@@ -1,6 +1,6 @@
 {
   "name": "@dxos/testbench-app",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "private": true,
   "description": "DXOS Testing",
   "homepage": "https://dxos.org",
@@ -16,6 +16,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
@@ -24,6 +25,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -41,15 +43,15 @@
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/echo-typegen": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@sentry/vite-plugin": "^2.14.0",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "@vitejs/plugin-react": "^4.2.1",
     "partykit": "^0.0.103",
-    "vite": "^5.3.4",
+    "vite": "5.4.7",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0"
   }

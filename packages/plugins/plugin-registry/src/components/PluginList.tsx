@@ -2,37 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowClockwise, Circle } from '@phosphor-icons/react';
 import React from 'react';
 
-import type { Plugin } from '@dxos/app-framework';
-import {
-  Button,
-  // type ChromaticPalette,
-  // type NeutralPalette,
-  DensityProvider,
-  Input,
-  List,
-  ListItem,
-  useTranslation,
-  // Link,
-} from '@dxos/react-ui';
-import { descriptionText, fineBlockSize, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
+import { type PluginMeta } from '@dxos/app-framework';
+import { Button, DensityProvider, Icon, Input, List, ListItem, useTranslation } from '@dxos/react-ui';
+import { descriptionText, fineBlockSize, ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { REGISTRY_PLUGIN } from '../meta';
 
-// TODO(burdon): Reconcile with theme.
-// const palette: { [tag: string]: ChromaticPalette | NeutralPalette } = {
-//   default: 'neutral',
-//   new: 'green',
-//   beta: 'cyan',
-//   alpha: 'purple',
-//   experimental: 'indigo',
-//   新発売: 'red',
-// };
-
 export type PluginListProps = {
-  plugins?: Plugin['meta'][];
+  plugins?: PluginMeta[];
   loaded?: string[];
   enabled?: string[];
   onChange?: (id: string, enabled: boolean) => void;
@@ -45,7 +24,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange, 
   return (
     <DensityProvider density='fine'>
       <List classNames='mb-4 select-none'>
-        {plugins.map(({ id, name, description, homePage, iconComponent: Icon = Circle }) => {
+        {plugins.map(({ id, name, description, homePage, icon = 'ph--circle--regular' }) => {
           const isEnabled = enabled.includes(id);
           const isLoaded = loaded.includes(id);
           const reloadRequired = isEnabled !== isLoaded;
@@ -61,7 +40,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange, 
                 aria-describedby={descriptionId}
                 classNames={['flex gap-2 cursor-pointer plb-2 pli-2 -mli-2 rounded', ghostHover]}
               >
-                <Icon weight='duotone' className={mx('shrink-0 mbs-1', getSize(6))} />
+                <Icon icon={icon} size={6} classNames='shrink-0 mbs-1' />
                 <div role='none' className={mx(fineBlockSize, 'grow pbs-1 pl-1')}>
                   <label htmlFor={inputId} id={labelId} className='truncate'>
                     {name ?? id}
@@ -84,7 +63,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange, 
                       )} */}
                       {reloadRequired && (
                         <Button variant='ghost' classNames='p-0 gap-2' onClick={onReload}>
-                          <ArrowClockwise />
+                          <Icon size={4} icon='ph--arrow-clockwise--regular' />
                           <p className='text-sm font-medium'>{t('reload required message')}</p>
                         </Button>
                       )}
@@ -94,7 +73,7 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange, 
                 <div className='pbs-1'>
                   <Input.Switch
                     classNames='self-center'
-                    checked={!!isEnabled}
+                    checked={isEnabled}
                     onClick={() => onChange?.(id, !isEnabled)}
                   />
                 </div>

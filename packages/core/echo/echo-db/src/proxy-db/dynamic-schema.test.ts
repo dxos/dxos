@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
   create,
@@ -14,9 +13,9 @@ import {
   getTypeReference,
   ref,
   TypedObject,
+  S,
 } from '@dxos/echo-schema';
 import { EmptySchemaType, TEST_SCHEMA_TYPE } from '@dxos/echo-schema/testing';
-import { describe, test } from '@dxos/test';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';

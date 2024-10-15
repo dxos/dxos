@@ -9,33 +9,12 @@
     "noEmit": true,
     "outDir": "dist",
     "types": [
+      "node",
       "sharedworker"
     ]
   },
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/codec-protobuf"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../core/mesh/rpc"
-    },
-    {
-      "path": "../../core/mesh/rpc-tunnel"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../ui/primitives/react-hooks"
-    }
-  ]
+  "references": []
 }

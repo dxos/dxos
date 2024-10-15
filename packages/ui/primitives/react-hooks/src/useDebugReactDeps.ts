@@ -9,7 +9,7 @@ import { type DependencyList, useEffect, useRef } from 'react';
 /**
  * Util to log deps that have changed.
  */
-// TODO(burdon): Move to @dxos/react-ui.
+// TODO(burdon): Move to react-hooks.
 export const useDebugReactDeps = (deps: DependencyList = []) => {
   const lastDeps = useRef<DependencyList>([]);
   useEffect(() => {

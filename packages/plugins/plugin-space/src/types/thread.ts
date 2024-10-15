@@ -34,9 +34,18 @@ export const ActorSchema = S.mutable(
 
 export type ActorType = S.Schema.Type<typeof ActorSchema>;
 
+export enum MessageState {
+  NONE = 0,
+  ARCHIVED = 1,
+  DELETED = 2,
+  SPAM = 3,
+}
+
 export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message', version: '0.1.0' })({
   /** ISO date string when the message was sent. */
   timestamp: S.String,
+  /** Message state. */
+  state: S.optional(S.Enums(MessageState)),
   /** Identity of the message sender. */
   sender: ActorSchema,
   /** Text content of the message. */
@@ -44,7 +53,7 @@ export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message'
   /** Non-text content sent with a message (e.g. files, polls, etc.) */
   parts: S.optional(S.mutable(S.Array(ref(Expando)))),
   /** Custom properties for specific message types (e.g. email subject or cc fields). */
-  properties: S.optional(S.mutable(S.Record(S.String, S.Any))),
+  properties: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
   // TODO(wittjosiah): Add read status:
   //  - Read receipts need to be per space member.
   //  - Read receipts don't need to be added to schema until they being implemented.
@@ -57,6 +66,7 @@ export const ThreadStatus = S.Union(S.Literal('staged'), S.Literal('active'), S.
 
 export class ThreadType extends TypedObject({ typename: 'dxos.org/type/Thread', version: '0.1.0' })({
   name: S.optional(S.String),
+  /** AM cursor-range: 'from:to'. */
   anchor: S.optional(S.String),
   status: S.optional(ThreadStatus),
   messages: S.mutable(S.Array(ref(MessageType))),

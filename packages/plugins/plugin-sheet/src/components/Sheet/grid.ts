@@ -4,7 +4,7 @@
 
 import { type MouseEvent, useEffect, useState } from 'react';
 
-import { type CellAddress, type CellIndex, addressFromA1Notation, addressToA1Notation } from '../../model';
+import { type CellAddress, type CellIndex, addressFromA1Notation, addressToA1Notation } from '../../defs';
 
 // export type Bounds = Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
 // export type Dimension = Pick<DOMRect, 'width' | 'height'>;
@@ -12,7 +12,7 @@ import { type CellAddress, type CellIndex, addressFromA1Notation, addressToA1Not
 export type SizeMap = Record<string, number>;
 
 export type RowPosition = { row: number } & Pick<DOMRect, 'top' | 'height'>;
-export type ColumnPosition = { column: number } & Pick<DOMRect, 'left' | 'width'>;
+export type ColumnPosition = { col: number } & Pick<DOMRect, 'left' | 'width'>;
 
 export const axisWidth = 'calc(var(--rail-size)-2px)';
 export const axisHeight = 34;
@@ -88,7 +88,7 @@ export const useGridLayout = ({
         const width = columnSizes?.[idx] ?? defaultWidth;
         const left = x;
         x += width - 1;
-        return { column: i, left, width };
+        return { col: i, left, width };
       }),
     );
   }, [columns, columnSizes]);
