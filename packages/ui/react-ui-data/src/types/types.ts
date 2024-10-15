@@ -9,7 +9,7 @@ import { AST, S } from '@dxos/effect';
 export const isScalar = (ast: AST.AST) =>
   AST.isNumberKeyword(ast) || AST.isBooleanKeyword(ast) || AST.isStringKeyword(ast);
 
-// TODO(burdon): Move to core @dxos/types?
+// TODO(burdon): Move to core @dxos/scheme/types? (in sdk).
 //  Remove node package exports from here nad react-ui-list (added to support plugin-sheet tests).
 
 // TODO(burdon): JSON path
@@ -47,7 +47,6 @@ export enum FieldValueType {
 
 export const FieldValueTypes = Object.values(FieldValueType).sort();
 
-// TODO(burdon): Add string format.
 export const FieldSchema = S.mutable(
   S.Struct({
     id: S.String,
@@ -64,6 +63,8 @@ export const FieldSchema = S.mutable(
 
     // TODO(burdon): Table/Form-specific layout, or keep generic?
     size: S.optional(S.Number),
+
+    // TODO(burdon): Add format/template string (e.g., time format).
   }),
 );
 

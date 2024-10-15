@@ -7,7 +7,7 @@ import { AST, type S } from '@dxos/echo-schema';
 import { FieldValueType } from './types';
 
 // TODO(burdon): Return Field objects.
-export const getColumnTypes = (schema: S.Schema<any, any>): [string, FieldValueType][] => {
+export const toFieldValueType = (schema: S.Schema<any, any>): [string, FieldValueType][] => {
   const visitNode = (node: AST.AST, path: string[] = [], acc: [string, FieldValueType][] = []) => {
     const props = AST.getPropertySignatures(node);
     props.forEach((prop) => {

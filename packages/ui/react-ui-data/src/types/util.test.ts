@@ -5,11 +5,11 @@
 import { Schema as S } from '@effect/schema';
 import { describe, expect, test } from 'vitest';
 
-import { getColumnTypes } from './util';
+import { toFieldValueType } from './util';
 
 // TODO(burdon): Realistic data.
 
-describe('getColumnTypes', () => {
+describe('toFieldValueType', () => {
   test('basic', () => {
     const schema = S.Struct({
       field1: S.String,
@@ -17,7 +17,7 @@ describe('getColumnTypes', () => {
       field3: S.Date,
     });
 
-    const columns = getColumnTypes(schema);
+    const columns = toFieldValueType(schema);
     expect(columns).to.deep.equal([
       ['field1', 'string'],
       ['field2', 'number'],
@@ -31,7 +31,7 @@ describe('getColumnTypes', () => {
       field2: S.optional(S.Number),
     });
 
-    const columns = getColumnTypes(schema);
+    const columns = toFieldValueType(schema);
     expect(columns).to.deep.equal([
       ['field1', 'string'],
       ['field2', 'number'],
@@ -44,7 +44,7 @@ describe('getColumnTypes', () => {
       age: S.Number.pipe(S.negative()),
     });
 
-    const columns = getColumnTypes(schema);
+    const columns = toFieldValueType(schema);
     expect(columns).to.deep.equal([
       ['name', 'string'],
       ['age', 'number'],
@@ -65,7 +65,7 @@ describe('getColumnTypes', () => {
       }),
     });
 
-    const columns = getColumnTypes(schema);
+    const columns = toFieldValueType(schema);
     expect(columns).to.deep.equal([
       ['name', 'string'],
       ['nested1.age', 'number'],
