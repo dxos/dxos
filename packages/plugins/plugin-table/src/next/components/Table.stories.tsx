@@ -17,10 +17,10 @@ import { type SimulatorProps, makeData, table, useSimulator } from './testing';
 faker.seed(0);
 
 type StoryProps = {
-  rows: number;
+  rows?: number;
 } & Pick<SimulatorProps, 'interval' | 'insert' | 'update'>;
 
-const Story = ({ rows, interval, insert, update }: StoryProps) => {
+const Story = ({ rows = 10, interval, insert, update }: StoryProps) => {
   const items = useMemo(() => makeData(rows), [rows]);
   useSimulator({ items, table, interval, insert, update });
   return <Table table={table} data={items} />;
@@ -39,7 +39,7 @@ export default {
   ],
 };
 
-export const Default = {};
+export const Default: StoryObj<StoryProps> = {};
 
 export const LargeDataSet: StoryObj<StoryProps> = {
   args: {
