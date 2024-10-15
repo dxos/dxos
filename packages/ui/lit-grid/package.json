@@ -8,15 +8,13 @@
   "author": "DXOS.org",
   "exports": {
     ".": {
-      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/src/index.js",
       "types": "./dist/types/src/index.d.ts"
     },
     "./dx-grid.pcss": "./src/dx-grid.pcss"
   },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
     "src",
     "dist"
