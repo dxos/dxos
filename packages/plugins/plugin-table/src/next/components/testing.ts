@@ -9,6 +9,8 @@ import { faker } from '@dxos/random';
 
 import { TableType } from '../../types';
 
+// TODO(burdon): Factor out to @dxos/schema/testing.
+
 export const table = create(TableType, {
   props: [
     { id: 'name', label: 'Name' },
