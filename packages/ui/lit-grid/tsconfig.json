@@ -1,12 +1,12 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "module": "esnext",
     "emitDeclarationOnly": false,
     "lib": [
       "DOM",
       "ESNext"
     ],
+    "module": "esnext",
     "types": [
       "node"
     ]

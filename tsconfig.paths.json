@@ -320,9 +320,6 @@
       "@dxos/brand": [
         "packages/ui/brand/src/index.ts"
       ],
-      "@dxos/lit-grid": [
-        "packages/ui/lit-grid/src/index.ts"
-      ],
       "@dxos/react-ui": [
         "packages/ui/react-ui/src/index.ts"
       ],
