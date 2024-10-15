@@ -33,29 +33,28 @@ export const makeData = (n: number) => {
 };
 
 export type SimulatorProps = {
-  items: any[];
   table: TableType;
-  interval: number;
-  insert?: boolean;
-  update?: boolean;
+  items: any[];
+  insertInterval?: number;
+  updateInterval?: number;
 };
 
-export const useSimulator = ({ items, table, interval, insert, update }: SimulatorProps) => {
+export const useSimulator = ({ items, table, insertInterval, updateInterval }: SimulatorProps) => {
   useEffect(() => {
-    if (!insert) {
+    if (!insertInterval) {
       return;
     }
 
     const i = setInterval(() => {
-      const newRow = makeData(1)[0];
-      items.unshift(newRow);
-    }, interval);
+      const item = makeData(1)[0];
+      items.unshift(item);
+    }, insertInterval);
 
     return () => clearInterval(i);
-  }, [items, interval, insert]);
+  }, [items, insertInterval]);
 
   useEffect(() => {
-    if (!update) {
+    if (!updateInterval) {
       return;
     }
 
@@ -63,25 +62,25 @@ export const useSimulator = ({ items, table, interval, insert, update }: Simulat
       const rowIdx = Math.floor(Math.random() * items.length);
       const columnIdx = Math.floor(Math.random() * table.props.length);
       const column = table.props[columnIdx];
-      const row = items[rowIdx];
+      const item = items[rowIdx];
 
       const id = column.id!;
-      switch (typeof row[id]) {
+      switch (typeof item[id]) {
         case 'string': {
-          row[id] = `Updated ${Date.now()}`;
+          item[id] = `Updated ${Date.now()}`;
           break;
         }
         case 'number': {
-          row[id] = Math.floor(Math.random() * 100);
+          item[id] = Math.floor(Math.random() * 100);
           break;
         }
         case 'boolean': {
-          row[id] = !row[id];
+          item[id] = !item[id];
           break;
         }
       }
-    }, interval);
+    }, updateInterval);
 
     return () => clearInterval(i);
-  }, [items, table.props, interval, update]);
+  }, [items, table.props, updateInterval]);
 };

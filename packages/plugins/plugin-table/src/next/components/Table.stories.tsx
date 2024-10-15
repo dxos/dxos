@@ -18,11 +18,11 @@ faker.seed(0);
 
 type StoryProps = {
   rows?: number;
-} & Pick<SimulatorProps, 'interval' | 'insert' | 'update'>;
+} & Pick<SimulatorProps, 'table' | 'insertInterval' | 'updateInterval'>;
 
-const Story = ({ rows = 10, interval, insert, update }: StoryProps) => {
+const Story = ({ table, rows = 10, ...props }: StoryProps) => {
   const items = useMemo(() => makeData(rows), [rows]);
-  useSimulator({ items, table, interval, insert, update });
+  useSimulator({ table, items, ...props });
   return <Table table={table} data={items} />;
 };
 
@@ -39,20 +39,24 @@ export default {
   ],
 };
 
-export const Default: StoryObj<StoryProps> = {};
+export const Default: StoryObj<StoryProps> = {
+  args: {
+    table,
+  },
+};
 
 export const LargeDataSet: StoryObj<StoryProps> = {
   args: {
+    table,
     rows: 1000,
-    update: true,
-    interval: 1,
+    updateInterval: 1,
   },
 };
 
 export const RowAddition: StoryObj<StoryProps> = {
   args: {
+    table,
     rows: 1,
-    insert: true,
-    interval: 100,
+    insertInterval: 100,
   },
 };
