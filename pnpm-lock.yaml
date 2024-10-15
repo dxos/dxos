@@ -8210,9 +8210,6 @@ importers:
       '@lezer/generator':
         specifier: ^1.7.1
         version: 1.7.1
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@tldraw/indices':
         specifier: ^2.0.0-alpha.14
         version: 2.0.0-canary.e43b0103fdf5
@@ -20419,9 +20416,6 @@ packages:
 
   '@types/node@20.16.11':
     resolution: {integrity: sha512-y+cTCACu92FyA5fgQSAI8A1H429g7aSK2HsO7K4XYUWc4dY5IUz55JSDIYT6/VsOLfGy8vmvQYC2hfb0iF16Uw==}
-
-  '@types/node@20.8.3':
-    resolution: {integrity: sha512-jxiZQFpb+NlH5kjW49vXxvxTjeeqlbsnTAdBTKpzEdPs9itay7MscYXz3Fo9VYFEsfQ6LJFitHad3faerLAjCw==}
 
   '@types/node@22.7.4':
     resolution: {integrity: sha512-y+NPi1rFzDs1NdQHHToqeiX2TIS79SWEAw9GYhkkx8bD0ChpfqC+n2j5OXOCpzfojBEBt6DnEnnG9MY0zk1XLg==}
@@ -44878,9 +44872,6 @@ snapshots:
     dependencies:
       undici-types: 6.19.8
 
-  '@types/node@20.8.3':
-    optional: true
-
   '@types/node@22.7.4':
     dependencies:
       undici-types: 6.19.8
@@ -45158,7 +45149,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 20.8.3
+      '@types/node': 22.7.4
     optional: true
 
   '@types/yoga-layout@1.9.2': {}
