@@ -3,7 +3,8 @@
 //
 
 import { AST, S, generateEchoId } from '@dxos/echo-schema';
-import { EmailFormat, FormatAnnotationId, FieldValueType, type ViewType } from '@dxos/schema';
+
+import { EmailFormat, FormatAnnotationId, FieldValueType, type ViewType } from '../types';
 
 //
 // Schema

@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { FieldValueType } from '@dxos/react-ui-data';
+import { FieldValueType } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ColumnSettings, type ColumnSettingsProps } from './ColumnSettings';

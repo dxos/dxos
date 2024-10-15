@@ -20,18 +20,6 @@ export const getFieldValue = <T>(data: any, field: FieldType, defaultValue?: T):
 // TODO(burdon): Determine if path can be written back (or is a compute value).
 export const setFieldValue = <T>(data: any, field: FieldType, value: T): T => jp.value(data, '$.' + field.path, value);
 
-// TODO(burdon): Check unique name against schema.
-export const getUniqueProperty = (view: ViewType) => {
-  let n = 1;
-  while (true) {
-    const path = `prop_${n++}`;
-    const idx = view.fields.findIndex((field) => field.path === path);
-    if (idx === -1) {
-      return path;
-    }
-  }
-};
-
 /**
  * Get the AST node associated with the field.
  */
@@ -60,7 +48,7 @@ export const getProperty = (schema: S.Schema<any>, field: FieldType): AST.AST | 
 };
 
 // TODO(burdon): Return Field objects.
-export const toFieldValueType = (schema: S.Schema<any, any>): [string, FieldValueType][] => {
+export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FieldValueType][] => {
   const visitNode = (node: AST.AST, path: string[] = [], acc: [string, FieldValueType][] = []) => {
     const props = AST.getPropertySignatures(node);
     props.forEach((prop) => {
@@ -75,7 +63,7 @@ export const toFieldValueType = (schema: S.Schema<any, any>): [string, FieldValu
       if (isStruct(prop.type)) {
         visitNode(prop.type, [...path, propName], acc);
       } else {
-        acc.push([path.concat(propName).join('.'), propertyToColumn(prop)]);
+        acc.push([path.concat(propName).join('.'), propertyToFieldValueType(prop)]);
       }
     });
 
@@ -85,13 +73,13 @@ export const toFieldValueType = (schema: S.Schema<any, any>): [string, FieldValu
   return visitNode(schema.ast);
 };
 
-const propertyToColumn = (prop: AST.PropertySignature): FieldValueType => {
+const propertyToFieldValueType = (prop: AST.PropertySignature): FieldValueType => {
   let type = prop.type;
   if (prop.isOptional) {
     type = unwrapOptionProperty(prop);
   }
 
-  return typeToColumn(type);
+  return toFieldValueType(type);
 };
 
 const unwrapOptionProperty = (prop: AST.PropertySignature) => {
@@ -103,7 +91,7 @@ const unwrapOptionProperty = (prop: AST.PropertySignature) => {
   return type;
 };
 
-const typeToColumn = (type: AST.AST): FieldValueType => {
+const toFieldValueType = (type: AST.AST): FieldValueType => {
   if (AST.isTypeLiteral(type)) {
     return FieldValueType.Ref;
   } else if (AST.isStringKeyword(type)) {
@@ -115,7 +103,7 @@ const typeToColumn = (type: AST.AST): FieldValueType => {
   }
 
   if (AST.isRefinement(type)) {
-    return typeToColumn(type.from);
+    return toFieldValueType(type.from);
   }
 
   // TODO(zan): How should we be thinking about transformations?
@@ -133,4 +121,16 @@ const typeToColumn = (type: AST.AST): FieldValueType => {
 
   // TODO(burdon): Better fallback?
   return FieldValueType.JSON;
+};
+
+// TODO(burdon): Check unique name against schema.
+export const getUniqueProperty = (view: ViewType) => {
+  let n = 1;
+  while (true) {
+    const path = `prop_${n++}`;
+    const idx = view.fields.findIndex((field) => field.path === path);
+    if (idx === -1) {
+      return path;
+    }
+  }
 };

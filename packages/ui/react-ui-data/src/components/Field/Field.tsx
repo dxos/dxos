@@ -7,9 +7,9 @@ import React from 'react';
 import { type S } from '@dxos/effect';
 import { Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+import { type FormatAnnotation, type FieldValueType, type FieldType, FieldValueTypes } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
-import { type FormatAnnotation, type FieldValueType, type FieldType, FieldValueTypes } from '../../types';
 import { TextInput } from '../TextInput';
 
 const PropertyFormat: FormatAnnotation = {

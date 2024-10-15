@@ -5,7 +5,7 @@
 import { type Space } from '@dxos/react-client/echo';
 import { type ColumnDef, type TableDef } from '@dxos/react-ui-table';
 
-import { schemaPropMapper, createColumnsFromTableDef } from '../../schema';
+import { mapTableToColumns, createColumnsFromTableDef } from '../../schema';
 import { type TableType, type TableProp } from '../../types';
 
 /**
@@ -58,7 +58,7 @@ export const createColumns = (
     .map((table) => ({
       id: table.schema!.id,
       name: table.name ?? table.schema?.typename,
-      columns: table.schema!.getProperties().map(schemaPropMapper(table)),
+      columns: table.schema!.getProperties().map(mapTableToColumns(table)),
     }));
 
   const tableDef = tableDefs.find((tableDef) => tableDef.id === table.schema?.id);

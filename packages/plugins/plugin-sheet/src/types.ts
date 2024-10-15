@@ -15,7 +15,7 @@ import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { type StackProvides } from '@dxos/plugin-stack';
-import { FieldValueType } from '@dxos/react-ui-data';
+import { FieldValueType } from '@dxos/schema';
 
 import { SHEET_PLUGIN } from './meta';
 
