@@ -11,15 +11,16 @@ import { faker } from '@dxos/random';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
-import { type SimulatorProps, table, createItems, useSimulator } from './testing';
+import { type SimulatorProps, createTable, createItems, useSimulator } from './testing';
 
 faker.seed(0);
 
 type StoryProps = {
   rows?: number;
-} & Pick<SimulatorProps, 'table' | 'insertInterval' | 'updateInterval'>;
+} & Pick<SimulatorProps, 'insertInterval' | 'updateInterval'>;
 
-const Story = ({ table, rows = 10, ...props }: StoryProps) => {
+const Story = ({ rows = 10, ...props }: StoryProps) => {
+  const table = useMemo(() => createTable(), []);
   const items = useMemo(() => createItems(rows), [rows]);
   useSimulator({ table, items, ...props });
   return <Table table={table} data={items} />;
@@ -27,19 +28,15 @@ const Story = ({ table, rows = 10, ...props }: StoryProps) => {
 
 export default {
   title: 'plugin-table/table-next',
+  component: Table,
   render: Story,
   decorators: [withSignals, withTheme, withLayout({ fullscreen: true })],
 };
 
-export const Default: StoryObj<StoryProps> = {
-  args: {
-    table,
-  },
-};
+export const Default: StoryObj<StoryProps> = {};
 
 export const ManyItems: StoryObj<StoryProps> = {
   args: {
-    table,
     rows: 1000,
     updateInterval: 1,
   },
@@ -47,8 +44,7 @@ export const ManyItems: StoryObj<StoryProps> = {
 
 export const Mutations: StoryObj<StoryProps> = {
   args: {
-    table,
-    rows: 1,
-    updateInterval: 100,
+    rows: 0,
+    insertInterval: 100,
   },
 };
