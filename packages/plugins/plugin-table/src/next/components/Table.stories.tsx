@@ -45,7 +45,7 @@ export const Default: StoryObj<StoryProps> = {
   },
 };
 
-export const LargeDataSet: StoryObj<StoryProps> = {
+export const ManyItems: StoryObj<StoryProps> = {
   args: {
     table,
     rows: 1000,
@@ -53,10 +53,10 @@ export const LargeDataSet: StoryObj<StoryProps> = {
   },
 };
 
-export const RowAddition: StoryObj<StoryProps> = {
+export const Mutations: StoryObj<StoryProps> = {
   args: {
     table,
     rows: 1,
-    insertInterval: 100,
+    updateInterval: 100,
   },
 };
