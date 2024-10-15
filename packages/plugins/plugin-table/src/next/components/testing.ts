@@ -17,7 +17,7 @@ export const table = create(TableType, {
   ],
 });
 
-export const makeData = (n: number) => {
+export const createItems = (n: number) => {
   const { data } = create({
     data: Array.from({ length: n }, (_, i) => ({
       id: i + 1,
@@ -44,7 +44,7 @@ export const useSimulator = ({ items, table, insertInterval, updateInterval }: S
     }
 
     const i = setInterval(() => {
-      const item = makeData(1)[0];
+      const [item] = createItems(1);
       items.unshift(item);
     }, insertInterval);
 

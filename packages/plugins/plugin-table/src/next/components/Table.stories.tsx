@@ -12,7 +12,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
-import { type SimulatorProps, makeData, table, useSimulator } from './testing';
+import { type SimulatorProps, table, createItems, useSimulator } from './testing';
 
 faker.seed(0);
 
@@ -21,7 +21,7 @@ type StoryProps = {
 } & Pick<SimulatorProps, 'table' | 'insertInterval' | 'updateInterval'>;
 
 const Story = ({ table, rows = 10, ...props }: StoryProps) => {
-  const items = useMemo(() => makeData(rows), [rows]);
+  const items = useMemo(() => createItems(rows), [rows]);
   useSimulator({ table, items, ...props });
   return <Table table={table} data={items} />;
 };
