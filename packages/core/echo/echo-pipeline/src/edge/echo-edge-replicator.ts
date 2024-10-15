@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Mutex, Trigger } from '@dxos/async';
+import { Mutex, scheduleTask, Trigger } from '@dxos/async';
 import * as A from '@dxos/automerge/automerge';
-import { type Message as AutomergeMessage, cbor } from '@dxos/automerge/automerge-repo';
+import { cbor } from '@dxos/automerge/automerge-repo';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
 import type { CollectionId } from '@dxos/echo-protocol';
@@ -12,7 +12,7 @@ import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EdgeService, type PeerId } from '@dxos/protocols';
+import { EdgeService, type AutomergeProtocolMessage, type PeerId } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import {
   type Message as RouterMessage,
@@ -28,6 +28,11 @@ import {
   type ShouldAdvertiseParams,
   type ShouldSyncCollectionParams,
 } from '../automerge';
+
+/**
+ * Delay before restarting the connection after receiving a forbidden error.
+ */
+const RESTART_DELAY = 500;
 
 export type EchoEdgeReplicatorParams = {
   edgeConnection: EdgeConnection;
@@ -77,6 +82,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
 
   async disconnect(): Promise<void> {
     using _guard = await this._mutex.acquire();
+    await this._ctx?.dispose();
 
     for (const connection of this._connections.values()) {
       await connection.close();
@@ -121,6 +127,15 @@ export class EchoEdgeReplicator implements EchoReplicator {
       onRemoteDisconnected: async () => {
         this._context?.onConnectionClosed(connection);
       },
+      onRestartRequested: async () => {
+        const ctx = this._ctx;
+        this._context?.onConnectionClosed(connection);
+        await connection.close();
+        if (ctx?.disposed) {
+          return;
+        }
+        await this._openConnection(spaceId);
+      },
     });
     this._connections.set(spaceId, connection);
 
@@ -136,6 +151,7 @@ type EdgeReplicatorConnectionsParams = {
   sharedPolicyEnabled: boolean;
   onRemoteConnected: () => Promise<void>;
   onRemoteDisconnected: () => Promise<void>;
+  onRestartRequested: () => Promise<void>;
 };
 
 class EdgeReplicatorConnection extends Resource implements ReplicatorConnection {
@@ -148,12 +164,14 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   private readonly _sharedPolicyEnabled: boolean;
   private readonly _onRemoteConnected: () => Promise<void>;
   private readonly _onRemoteDisconnected: () => Promise<void>;
+  private readonly _onRestartRequested: () => Promise<void>;
 
   private _streamStarted = new Trigger();
-  private _readableStreamController!: ReadableStreamDefaultController<AutomergeMessage>;
+  private _readableStreamController!: ReadableStreamDefaultController<AutomergeProtocolMessage>;
+  private _restartScheduled = false;
 
-  public readable: ReadableStream<AutomergeMessage>;
-  public writable: WritableStream<AutomergeMessage>;
+  public readable: ReadableStream<AutomergeProtocolMessage>;
+  public writable: WritableStream<AutomergeProtocolMessage>;
 
   constructor({
     edgeConnection,
@@ -163,6 +181,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     sharedPolicyEnabled,
     onRemoteConnected,
     onRemoteDisconnected,
+    onRestartRequested,
   }: EdgeReplicatorConnectionsParams) {
     super();
     this._edgeConnection = edgeConnection;
@@ -179,8 +198,9 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     this._sharedPolicyEnabled = sharedPolicyEnabled;
     this._onRemoteConnected = onRemoteConnected;
     this._onRemoteDisconnected = onRemoteDisconnected;
+    this._onRestartRequested = onRestartRequested;
 
-    this.readable = new ReadableStream<AutomergeMessage>({
+    this.readable = new ReadableStream<AutomergeProtocolMessage>({
       start: (controller) => {
         this._readableStreamController = controller;
         this._ctx.onDispose(() => controller.close());
@@ -188,8 +208,8 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
       },
     });
 
-    this.writable = new WritableStream<AutomergeMessage>({
-      write: async (message: AutomergeMessage, controller) => {
+    this.writable = new WritableStream<AutomergeProtocolMessage>({
+      write: async (message: AutomergeProtocolMessage, controller) => {
         await this._sendMessage(message);
       },
     });
@@ -241,7 +261,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
       return;
     }
 
-    const payload = cbor.decode(message.payload!.value) as AutomergeMessage;
+    const payload = cbor.decode(message.payload!.value) as AutomergeProtocolMessage;
     log('recv', () => {
       const decodedData =
         payload.type === 'sync' && payload.data
@@ -256,19 +276,36 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     this._processMessage(payload);
   }
 
-  private _processMessage(message: AutomergeMessage) {
+  private _processMessage(message: AutomergeProtocolMessage) {
+    // There's a race between the credentials being replicated that are needed for access control and the data replication.
+    // AutomergeReplicator might return a Forbidden error if the credentials are not yet replicated.
+    // We restart the connection with some delay to account for that.
+    if (isForbiddenErrorMessage(message)) {
+      if (!this._restartScheduled) {
+        this._restartScheduled = true;
+        scheduleTask(
+          this._ctx,
+          async () => {
+            await this._onRestartRequested();
+          },
+          RESTART_DELAY,
+        );
+      }
+      return;
+    }
+
     this._readableStreamController.enqueue(message);
   }
 
-  private async _sendMessage(message: AutomergeMessage) {
+  private async _sendMessage(message: AutomergeProtocolMessage) {
     // Fix the peer id.
-    message.targetId = this._targetServiceId as PeerId;
+    (message as any).targetId = this._targetServiceId as PeerId;
 
     log('send', {
       type: message.type,
       senderId: message.senderId,
-      targetId: message.targetId,
-      documentId: message.documentId,
+      targetId: (message as any).targetId,
+      documentId: (message as any).documentId,
     });
     const encoded = cbor.encode(message);
 
@@ -284,3 +321,9 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     );
   }
 }
+
+/**
+ * This message is sent by EDGE AutomergeReplicator when the authorization is denied.
+ */
+const isForbiddenErrorMessage = (message: AutomergeProtocolMessage) =>
+  message.type === 'error' && message.message === 'Forbidden';
