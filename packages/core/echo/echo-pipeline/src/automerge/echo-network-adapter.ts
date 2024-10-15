@@ -24,6 +24,7 @@ import {
   type CollectionStateMessage,
 } from './network-protocol';
 import { createIdFromSpaceKey } from '../common/space-id';
+import type { AutomergeProtocolMessage } from '@dxos/protocols';
 
 export interface NetworkDataMonitor {
   recordPeerConnected(peerId: string): void;
@@ -179,7 +180,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     const writeStart = Date.now();
     // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
     connectionEntry.writer
-      .write(message)
+      .write(message as AutomergeProtocolMessage)
       .then(() => {
         const durationMs = Date.now() - writeStart;
         this._params.monitor?.recordMessageSent(message, durationMs);
@@ -220,7 +221,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
             break;
           }
 
-          this._onMessage(value);
+          this._onMessage(value as Message);
         }
       } catch (err) {
         if (connectionEntry.isOpen) {
@@ -282,8 +283,8 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
 type ConnectionEntry = {
   connection: ReplicatorConnection;
-  reader: ReadableStreamDefaultReader<Message>;
-  writer: WritableStreamDefaultWriter<Message>;
+  reader: ReadableStreamDefaultReader<AutomergeProtocolMessage>;
+  writer: WritableStreamDefaultWriter<AutomergeProtocolMessage>;
   isOpen: boolean;
 };
 
