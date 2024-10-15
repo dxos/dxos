@@ -117,7 +117,6 @@
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@lezer/generator": "^1.7.1",
-    "@phosphor-icons/react": "^2.1.5",
     "@tldraw/indices": "^2.0.0-alpha.14",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~18.2.0",
@@ -130,7 +129,6 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

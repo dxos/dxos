@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { CellEditor, type CellEditorProps } from '../CellEditor';
+import { CellEditor, type CellEditorProps } from './CellEditor';
 import { type GridScopedProps, useGridContext } from '../Grid';
 
 export const GridCellEditor = ({

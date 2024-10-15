@@ -4,10 +4,9 @@
 
 import React from 'react';
 
-import { AST, type S } from '@dxos/effect';
+import { AST, type S, getAnnotation } from '@dxos/effect';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { getAnnotation } from '@dxos/schema';
 
 export type SchemaEditorProps = ThemedClassName<{
   schema: S.Struct<any>;

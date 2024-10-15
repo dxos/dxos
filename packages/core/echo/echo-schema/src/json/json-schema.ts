@@ -39,19 +39,19 @@ export enum PropType {
   ENUM = 7,
 }
 
-// TODO(burdon): Reconcile with plugin-table.
+// TODO(burdon): Reconcile with @dxos/schema.
 export const toFieldValueType = (type?: PropType): string => {
   switch (type) {
-    case PropType.REF:
-      return 'ref';
-    case PropType.BOOLEAN:
-      return 'boolean';
-    case PropType.NUMBER:
-      return 'number';
-    case PropType.DATE:
-      return 'date';
     case PropType.STRING:
       return 'string';
+    case PropType.NUMBER:
+      return 'number';
+    case PropType.BOOLEAN:
+      return 'boolean';
+    case PropType.DATE:
+      return 'date';
+    case PropType.REF:
+      return 'ref';
     case PropType.RECORD:
       return 'object';
     default:

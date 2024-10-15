@@ -68,7 +68,7 @@ export const createSheet = ({ name, cells, ...size }: CreateSheetOptions = {}): 
     columns: [],
     rowMeta: {},
     columnMeta: {},
-    formatting: {},
+    formatting: [],
   });
 
   initialize(sheet, size);

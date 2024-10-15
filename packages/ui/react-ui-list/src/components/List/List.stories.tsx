@@ -8,7 +8,7 @@ import React from 'react';
 
 import { create, S } from '@dxos/echo-schema';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { withTheme, withLayout, withSignals } from '@dxos/storybook-utils';
+import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { List, type ListRootProps } from './List';
 import { createList, TestItemSchema, type TestItemType } from '../../testing';
@@ -86,7 +86,7 @@ const SimpleStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
 export default {
   // TODO(burdon): Storybook collides with react-ui/List.
   title: 'react-ui-list/List',
-  decorators: [withTheme, withSignals, withLayout({ fullscreen: true })],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   render: Story,
 };
 
