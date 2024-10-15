@@ -19,7 +19,7 @@ export default {
   decorators: [withTheme, withLayout()],
 };
 
-const exampleSchema = S.Struct({
+const TestSchema = S.Struct({
   field1: S.String,
   field2: S.Number,
   field3: S.Date,
@@ -32,20 +32,17 @@ const exampleSchema = S.Struct({
   ),
 });
 
-type ExampleSchema = S.Schema.Type<typeof exampleSchema>;
+type TestType = S.Schema.Type<typeof TestSchema>;
 
-const columns = schemaToColumnDefs(exampleSchema);
-
-const exampleSchemaArbitrary = Arbitrary.make(exampleSchema);
-
-const items = fc.sample(exampleSchemaArbitrary, 10);
+const columns = schemaToColumnDefs(TestSchema);
+const items = fc.sample(Arbitrary.make(TestSchema), 10);
 
 export const Default = {
   render: () => {
     return (
       <Table.Root>
         <Table.Viewport classNames='fixed inset-0'>
-          <Table.Main<ExampleSchema>
+          <Table.Main<TestType>
             role='grid'
             rowsSelectable='multi'
             keyAccessor={(row) => JSON.stringify(row)}
