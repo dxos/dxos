@@ -130,11 +130,11 @@ describe('Lazy Space Loading', () => {
   };
 
   const reload = async (client: Client) => {
-    await client.spaces.waitForReady();
+    await client.spaces.waitUntilReady();
     await client.destroy();
     log('restarted');
     await client.initialize();
-    await client.spaces.waitForReady();
+    await client.spaces.waitUntilReady();
     await client.spaces.default.waitUntilReady();
   };
 });

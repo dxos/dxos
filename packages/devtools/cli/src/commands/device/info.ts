@@ -17,7 +17,7 @@ export default class Info extends BaseCommand<typeof Info> {
   async run(): Promise<any> {
     return await this.execWithClient(async ({ client }) => {
       // TODO(mykola): Hack to wait for identity with `client.halo.identity.wait()`.
-      await asyncTimeout(client.spaces.waitForReady(), IDENTITY_WAIT_TIMEOUT, new IdentityWaitTimeoutError());
+      await asyncTimeout(client.spaces.waitUntilReady(), IDENTITY_WAIT_TIMEOUT, new IdentityWaitTimeoutError());
       const device = client.halo.device;
 
       if (!device) {

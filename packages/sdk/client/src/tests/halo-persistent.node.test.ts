@@ -36,7 +36,7 @@ describe('Halo', () => {
 
       await client.halo.createIdentity({ displayName: 'test-user' });
       expect(client.halo.identity).exist;
-      await client.spaces.waitForReady();
+      await client.spaces.waitUntilReady();
       await client.destroy();
     }
 
@@ -47,7 +47,7 @@ describe('Halo', () => {
 
       await waitForCondition({ condition: () => !!client.halo.identity });
       expect(client.halo.identity).exist;
-      await client.spaces.waitForReady();
+      await client.spaces.waitUntilReady();
       expect(client.halo.identity.get()?.profile?.displayName).to.eq('test-user');
       await client.destroy();
     }

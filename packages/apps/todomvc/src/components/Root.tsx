@@ -30,7 +30,7 @@ export const Root = () => {
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');
         if (!client.halo.identity.get() && !deviceInvitationCode) {
           await client.halo.createIdentity();
-          await client.spaces.waitForReady();
+          await client.spaces.waitUntilReady();
           await client.spaces.default.waitUntilReady();
           createTodoList(client.spaces.default);
         }

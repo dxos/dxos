@@ -20,7 +20,7 @@ export default class Update extends BaseCommand<typeof Update> {
   async run(): Promise<any> {
     return await this.execWithClient(async ({ client }) => {
       // TODO(mykola): Hack to wait for identity with `client.halo.identity.wait()`.
-      await asyncTimeout(client.spaces.waitForReady(), IDENTITY_WAIT_TIMEOUT, new IdentityWaitTimeoutError());
+      await asyncTimeout(client.spaces.waitUntilReady(), IDENTITY_WAIT_TIMEOUT, new IdentityWaitTimeoutError());
       // TODO(nf): should updateDevice also apply defaults?
       const updatedProfile = {
         ...client.halo.device?.profile,

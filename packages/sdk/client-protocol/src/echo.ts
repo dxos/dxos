@@ -22,7 +22,7 @@ export interface Echo extends MulticastObservable<Space[]> {
   /**
    * Resolves when the default space is available.
    */
-  waitForReady(): Promise<void>;
+  waitUntilReady(): Promise<void>;
 
   /**
    * Observable which resolves when the default space is available.

@@ -248,7 +248,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this._isReady;
   }
 
-  async waitForReady(): Promise<void> {
+  async waitUntilReady(): Promise<void> {
     return new Promise((resolve) => {
       const subscription = this._isReady.subscribe((isReady) => {
         if (isReady) {
