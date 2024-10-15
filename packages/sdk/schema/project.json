@@ -15,6 +15,7 @@
           "{projectRoot}/src/index.ts"
         ],
         "platforms": [
+          "browser",
           "node"
         ]
       }

@@ -8,6 +8,7 @@
   "author": "DXOS.org",
   "exports": {
     ".": {
+      "browser": "./dist/lib/browser/index.mjs",
       "node": {
         "require": "./dist/lib/node/index.cjs",
         "default": "./dist/lib/node-esm/index.mjs"
