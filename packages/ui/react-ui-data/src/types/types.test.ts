@@ -7,7 +7,7 @@ import { describe, test, expect } from 'vitest';
 
 import { AST } from '@dxos/echo-schema';
 
-import { getFieldValue, getProperty } from './types';
+import { getFieldValue, getProperty } from './util';
 import { data, view, TestSchema } from '../testing';
 
 describe('schema', () => {

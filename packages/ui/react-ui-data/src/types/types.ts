@@ -2,12 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import jp from 'jsonpath';
-
-import { AST, S } from '@dxos/effect';
-
-export const isScalar = (ast: AST.AST) =>
-  AST.isNumberKeyword(ast) || AST.isBooleanKeyword(ast) || AST.isStringKeyword(ast);
+import { S } from '@dxos/effect';
 
 // TODO(burdon): Move to core @dxos/scheme/types? (in sdk).
 //  Remove node package exports from here nad react-ui-list (added to support plugin-sheet tests).
@@ -86,53 +81,3 @@ export const ViewSchema = S.Struct({
 });
 
 export type ViewType = S.Schema.Type<typeof ViewSchema>;
-
-//
-// Utils
-//
-
-// TODO(burdon): Just use lodash.get?
-export const getFieldValue = <T>(data: any, field: FieldType, defaultValue?: T): T | undefined =>
-  (jp.value(data, '$.' + field.path) as T) ?? defaultValue;
-
-// TODO(burdon): Determine if path can be written back (or is a compute value).
-export const setFieldValue = <T>(data: any, field: FieldType, value: T): T => jp.value(data, '$.' + field.path, value);
-
-// TODO(burdon): Check unique name against schema.
-export const getUniqueProperty = (view: ViewType) => {
-  let n = 1;
-  while (true) {
-    const path = `prop_${n++}`;
-    const idx = view.fields.findIndex((field) => field.path === path);
-    if (idx === -1) {
-      return path;
-    }
-  }
-};
-
-/**
- * Get the AST node associated with the field.
- */
-export const getProperty = (schema: S.Schema<any>, field: FieldType): AST.AST | undefined => {
-  let node: AST.AST = schema.ast;
-  const parts = field.path.split('.');
-  for (const part of parts) {
-    const props = AST.getPropertySignatures(node);
-    const prop = props.find((prop) => prop.name === part);
-    if (!prop) {
-      return undefined;
-    }
-
-    if (AST.isUnion(prop.type)) {
-      const n = prop.type.types.find((p) => isScalar(p) || AST.isTypeLiteral(p));
-      if (!n) {
-        return undefined;
-      }
-      node = n;
-    } else {
-      node = prop.type;
-    }
-  }
-
-  return node;
-};
