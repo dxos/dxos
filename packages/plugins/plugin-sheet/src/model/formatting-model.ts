@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FieldValueType } from '@dxos/react-ui-data';
 import { type ClassNameValue } from '@dxos/react-ui-types';
+import { FieldValueType } from '@dxos/schema';
 
 import { type SheetModel } from './sheet-model';
 import { type CellAddress, inRange } from '../defs';

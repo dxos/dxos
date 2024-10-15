@@ -8,7 +8,6 @@ import React from 'react';
 import { type EchoReactiveObject, getType } from '@dxos/echo-schema';
 import { type EchoDatabase, type Space } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
-import { FieldValueType } from '@dxos/react-ui-data';
 import {
   type BaseColumnOptions,
   ColumnMenu,
@@ -19,6 +18,7 @@ import {
   type TableDef,
 } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
+import { FieldValueType } from '@dxos/schema';
 
 import { getUniqueProperty } from './types';
 

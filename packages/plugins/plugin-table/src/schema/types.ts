@@ -12,8 +12,8 @@ import {
   S,
 } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
-import { FieldValueType } from '@dxos/react-ui-data';
 import { type ColumnDef, type TableDef } from '@dxos/react-ui-table';
+import { FieldValueType } from '@dxos/schema';
 
 import { type TableType } from '../types';
 
@@ -53,7 +53,7 @@ export const getSchema = (
 };
 
 // TODO(burdon): Reconcile with react-ui-data.
-export const schemaPropMapper =
+export const mapTableToColumns =
   (table: TableType) =>
   (property: AST.PropertySignature): ColumnDef => {
     const { name: id, type } = property;

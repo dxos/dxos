@@ -8,9 +8,9 @@ import { S, generateEchoId } from '@dxos/echo-schema';
 import { Button, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
+import { FieldValueType, FieldSchema, type FieldType, getUniqueProperty, type ViewType } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
-import { FieldValueType, FieldSchema, type FieldType, getUniqueProperty, type ViewType } from '../../types';
 import { Field } from '../Field';
 
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';

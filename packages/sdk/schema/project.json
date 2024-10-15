@@ -1,7 +1,8 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "react-ui-data",
+  "name": "schema",
   "tags": [
+    "scope:sdk",
     "scope:ui"
   ],
   "sourceRoot": "{projectRoot}/src",
@@ -14,11 +15,12 @@
           "{projectRoot}/src/index.ts"
         ],
         "platforms": [
-          "browser"
+          "node"
         ]
       }
     },
-    "lint": {}
+    "lint": {},
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",

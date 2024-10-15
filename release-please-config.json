@@ -719,6 +719,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/schema/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/shell/package.json",
           "jsonpath": "$.version"
         },

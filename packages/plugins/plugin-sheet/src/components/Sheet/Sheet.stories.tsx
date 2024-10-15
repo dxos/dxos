@@ -10,8 +10,8 @@ import { log } from '@dxos/log';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
-import { FieldValueType } from '@dxos/react-ui-data';
 import { mx } from '@dxos/react-ui-theme';
+import { FieldValueType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Sheet } from './Sheet';

@@ -5,7 +5,7 @@
 import { type ColumnDef } from '@tanstack/react-table';
 
 import { type S } from '@dxos/echo-schema';
-import { FieldValueType, mapSchemaToFields } from '@dxos/react-ui-data';
+import { FieldValueType, mapSchemaToFields } from '@dxos/schema';
 
 import { createColumnBuilder } from '../helpers';
 

@@ -8,7 +8,6 @@ import React from 'react';
 import { type EchoReactiveObject, getMeta, getSchema } from '@dxos/echo-schema';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { Button, Input, useThemeContext } from '@dxos/react-ui';
-import { mapSchemaToFields } from '@dxos/react-ui-data';
 import {
   automerge,
   createBasicExtensions,
@@ -17,6 +16,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx, subtleHover } from '@dxos/react-ui-theme';
+import { mapSchemaToFields } from '@dxos/schema';
 
 const MAX_RENDERED_COUNT = 80;
 
