@@ -4,10 +4,7 @@
 
 import { S } from '@dxos/effect';
 
-// TODO(burdon): Move to core @dxos/scheme/types? (in sdk).
-//  Remove node package exports from here nad react-ui-list (added to support plugin-sheet tests).
-
-// TODO(burdon): JSON path
+// TODO(burdon): JSON path alternatives.
 //  - https://datatracker.ietf.org/doc/html/rfc6901
 //  - https://blog.json-everything.net/posts/paths-and-pointers
 

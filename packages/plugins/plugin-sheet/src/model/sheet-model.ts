@@ -12,7 +12,7 @@ import { getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FieldValueType } from '@dxos/react-ui-data';
+import { FieldValueType } from '@dxos/schema';
 
 import { DetailedCellError, ExportedCellChange } from '#hyperformula';
 import {

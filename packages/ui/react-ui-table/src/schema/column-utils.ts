@@ -5,14 +5,14 @@
 import { type ColumnDef } from '@tanstack/react-table';
 
 import { type S } from '@dxos/echo-schema';
-import { FieldValueType, toFieldValueType } from '@dxos/react-ui-data';
+import { FieldValueType, mapSchemaToFields } from '@dxos/schema';
 
 import { createColumnBuilder } from '../helpers';
 
 export const schemaToColumnDefs = <T>(schema: S.Schema<T, any>): ColumnDef<T, any>[] => {
   const { helper, builder } = createColumnBuilder<T>();
 
-  const classified = toFieldValueType(schema);
+  const classified = mapSchemaToFields(schema);
   return classified.map(([name, type]) => {
     const propertyKey = name.toString();
 

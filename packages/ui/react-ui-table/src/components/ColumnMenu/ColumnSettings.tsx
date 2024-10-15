@@ -5,7 +5,7 @@
 import React, { useRef, useState } from 'react';
 
 import { Button, Input, Select, useTranslation } from '@dxos/react-ui';
-import { FieldValueTypes } from '@dxos/react-ui-data';
+import { FieldValueTypes } from '@dxos/schema';
 import { safeParseInt } from '@dxos/util';
 
 import { type TableDef, type ColumnDef } from '../../schema';

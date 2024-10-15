@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Annotated } from '@effect/schema/AST';
 import { Option, pipe } from 'effect';
 
 import { AST } from '@dxos/effect';
@@ -10,7 +9,7 @@ import { AST } from '@dxos/effect';
 // TODO(burdon): Factor out.
 export const getAnnotation =
   <T>(annotationId: symbol) =>
-  (annotated: Annotated): T | undefined =>
+  (annotated: AST.Annotated): T | undefined =>
     pipe(AST.getAnnotation<T>(annotationId)(annotated), Option.getOrUndefined);
 
 //

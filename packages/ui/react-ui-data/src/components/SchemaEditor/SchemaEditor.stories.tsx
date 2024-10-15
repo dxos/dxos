@@ -9,8 +9,9 @@ import React from 'react';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { SchemaEditor, type SchemaEditorProps } from './SchemaEditor';
-import { TestSchema, TestPopup } from '../../testing';
+import { TestSchema } from '../../testing';
 import translations from '../../translations';
+import { TestPopup } from '../testing';
 
 // TODO(burdon): Hierarchical schema editor.
 
