@@ -8,11 +8,6 @@ import { AST, type S } from '@dxos/echo-schema';
 
 import { type FieldType, FieldValueType, type ViewType } from './types';
 
-export const isScalar = (ast: AST.AST) =>
-  AST.isNumberKeyword(ast) || AST.isBooleanKeyword(ast) || AST.isStringKeyword(ast);
-
-export const isStruct = (node: AST.AST) => AST.isTypeLiteral(node);
-
 // TODO(burdon): Just use lodash.get?
 export const getFieldValue = <T>(data: any, field: FieldType, defaultValue?: T): T | undefined =>
   (jp.value(data, '$.' + field.path) as T) ?? defaultValue;
@@ -34,7 +29,9 @@ export const getProperty = (schema: S.Schema<any>, field: FieldType): AST.AST | 
     }
 
     if (AST.isUnion(prop.type)) {
-      const n = prop.type.types.find((p) => isScalar(p) || AST.isTypeLiteral(p));
+      const n = prop.type.types.find(
+        (p) => AST.isTypeLiteral(p) || AST.isNumberKeyword(p) || AST.isBooleanKeyword(p) || AST.isStringKeyword(p),
+      );
       if (!n) {
         return undefined;
       }
@@ -55,15 +52,20 @@ export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FieldVal
       const propName = prop.name.toString();
       if (prop.isOptional) {
         const unwrappedAst = unwrapOptionProperty(prop);
-        if (isStruct(unwrappedAst)) {
+        if (AST.isTypeLiteral(unwrappedAst)) {
           return visitNode(unwrappedAst, [...path, propName], acc);
         }
       }
 
-      if (isStruct(prop.type)) {
+      if (AST.isTypeLiteral(prop.type)) {
         visitNode(prop.type, [...path, propName], acc);
       } else {
-        acc.push([path.concat(propName).join('.'), propertyToFieldValueType(prop)]);
+        let type: AST.AST = prop.type;
+        if (prop.isOptional) {
+          type = unwrapOptionProperty(prop);
+        }
+
+        acc.push([path.concat(propName).join('.'), toFieldValueType(type)]);
       }
     });
 
@@ -73,33 +75,27 @@ export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FieldVal
   return visitNode(schema.ast);
 };
 
-const propertyToFieldValueType = (prop: AST.PropertySignature): FieldValueType => {
-  let type = prop.type;
-  if (prop.isOptional) {
-    type = unwrapOptionProperty(prop);
-  }
-
-  return toFieldValueType(type);
-};
-
-const unwrapOptionProperty = (prop: AST.PropertySignature) => {
+const unwrapOptionProperty = (prop: AST.PropertySignature): AST.AST => {
   if (!AST.isUnion(prop.type)) {
     throw new Error(`Not a union type: ${String(prop.name)}`);
   }
 
+  // TODO(burdon): This is very likely a bug.
   const [type] = prop.type.types;
   return type;
 };
 
+// TODO(burdon): Reconcile with:
+//  - echo-schema/toFieldValueType
 const toFieldValueType = (type: AST.AST): FieldValueType => {
   if (AST.isTypeLiteral(type)) {
     return FieldValueType.Ref;
-  } else if (AST.isStringKeyword(type)) {
-    return FieldValueType.String;
   } else if (AST.isNumberKeyword(type)) {
     return FieldValueType.Number;
   } else if (AST.isBooleanKeyword(type)) {
     return FieldValueType.Boolean;
+  } else if (AST.isStringKeyword(type)) {
+    return FieldValueType.String;
   }
 
   if (AST.isRefinement(type)) {
