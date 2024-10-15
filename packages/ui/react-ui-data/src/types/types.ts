@@ -16,7 +16,7 @@ export const isScalar = (ast: AST.AST) =>
 //  - https://blog.json-everything.net/posts/paths-and-pointers
 
 //
-// Field
+// Fields
 //
 
 export enum FieldValueType {
