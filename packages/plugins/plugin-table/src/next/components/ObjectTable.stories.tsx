@@ -6,12 +6,12 @@ import '@dxos-theme';
 
 import React, { useEffect, useState } from 'react';
 
-import { TypedObject, S } from '@dxos/echo-schema';
-import { Filter, create, useSpaces, useQuery } from '@dxos/react-client/echo';
+import { Filter, useSpaces, useQuery } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ObjectTable } from './ObjectTable';
+import { createTable, TestSchema } from './testing';
 import { TableType } from '../../types';
 
 const Story = () => {
@@ -40,24 +40,8 @@ export default {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: ({ space }) => {
-        const table = space.db.add(
-          create(TableType, {
-            name: 'Test Table',
-            props: [
-              { id: 'title', label: 'Title' },
-              { id: 'description', label: 'Description' },
-              { id: 'count', label: 'Count' },
-            ],
-          }),
-        );
-
-        const schema = TypedObject({ typename: 'example.com/type/test', version: '0.1.0' })({
-          title: S.optional(S.String),
-          description: S.optional(S.String),
-          count: S.optional(S.Number),
-        });
-
-        table.schema = space.db.schema.addSchema(schema);
+        const schema = space.db.schema.addSchema(TestSchema);
+        space.db.add(createTable(schema));
       },
     }),
     withTheme,

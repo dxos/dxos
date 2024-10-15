@@ -4,25 +4,32 @@
 
 import { useEffect } from 'react';
 
-import { create } from '@dxos/echo-schema';
+import { type DynamicSchema, S, TypedObject, create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 import { TableType } from '../../types';
 
 // TODO(burdon): Factor out to @dxos/schema/testing.
 
-export const table = create(TableType, {
-  props: [
-    { id: 'name', label: 'Name' },
-    { id: 'age', label: 'Age' },
-    { id: 'active', label: 'Active' },
-  ],
+export const TestSchema = TypedObject({ typename: 'example.com/type/test', version: '0.1.0' })({
+  name: S.optional(S.String),
+  age: S.optional(S.Number),
+  active: S.optional(S.Boolean),
 });
+
+export const createTable = (schema?: DynamicSchema) =>
+  create(TableType, {
+    schema,
+    props: [
+      { id: 'name', label: 'Name' },
+      { id: 'age', label: 'Age' },
+      { id: 'active', label: 'Active' },
+    ],
+  });
 
 export const createItems = (n: number) => {
   const { data } = create({
-    data: Array.from({ length: n }, (_, i) => ({
-      id: i + 1,
+    data: Array.from({ length: n }, () => ({
       name: faker.person.fullName(),
       age: faker.number.int({ min: 20, max: 70 }),
       active: faker.datatype.boolean(),
