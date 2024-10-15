@@ -199,38 +199,38 @@ export class DxGrid extends LitElement {
   }
 
   @property({ type: String })
-  gridId: string = 'default-grid-id';
+  accessor gridId: string = 'default-grid-id';
 
   @property({ type: Object })
-  rowDefault: DxGridPlaneRecord<DxGridFrozenRowsPlane, DxGridAxisMetaProps> = {
+  accessor rowDefault: DxGridPlaneRecord<DxGridFrozenRowsPlane, DxGridAxisMetaProps> = {
     grid: { size: defaultRowSize },
   };
 
   @property({ type: Object })
-  columnDefault: DxGridPlaneRecord<DxGridFrozenColsPlane, DxGridAxisMetaProps> = {
+  accessor columnDefault: DxGridPlaneRecord<DxGridFrozenColsPlane, DxGridAxisMetaProps> = {
     grid: { size: defaultColSize },
   };
 
   @property({ type: Object })
-  rows: DxGridAxisMeta = { grid: {} };
+  accessor rows: DxGridAxisMeta = { grid: {} };
 
   @property({ type: Object })
-  columns: DxGridAxisMeta = { grid: {} };
+  accessor columns: DxGridAxisMeta = { grid: {} };
 
   @property({ type: Object })
-  initialCells: DxGridCells = { grid: {} };
+  accessor initialCells: DxGridCells = { grid: {} };
 
   @property({ type: String })
-  mode: DxGridMode = 'browse';
+  accessor mode: DxGridMode = 'browse';
 
   @property({ type: Number })
-  limitColumns: number = Infinity;
+  accessor limitColumns: number = Infinity;
 
   @property({ type: Number })
-  limitRows: number = Infinity;
+  accessor limitRows: number = Infinity;
 
   @property({ type: Object })
-  frozen: DxGridFrozenAxes = {};
+  accessor frozen: DxGridFrozenAxes = {};
 
   /**
    * When this function is defined, it is used first to try to get a value for a cell, and otherwise will fall back
@@ -239,53 +239,53 @@ export class DxGrid extends LitElement {
   getCells: ((nextRange: DxGridPlaneRange, plane: DxGridPlane) => DxGridPlaneCells) | null = null;
 
   @state()
-  private cells: DxGridCells = { grid: {} };
+  private accessor cells: DxGridCells = { grid: {} };
 
   //
   // `pos`, short for ‘position’, is the position in pixels of the viewport from the origin.
   //
 
   @state()
-  private posInline = 0;
+  private accessor posInline = 0;
 
   @state()
-  private posBlock = 0;
+  private accessor posBlock = 0;
 
   //
   // `size` (when not suffixed with ‘row’ or ‘col’, see above) is the size in pixels of the viewport.
   //
 
   @state()
-  private sizeInline = 0;
+  private accessor sizeInline = 0;
 
   @state()
-  private sizeBlock = 0;
+  private accessor sizeBlock = 0;
 
   //
   // `overscan` is the amount in pixels to offset the grid content due to the number of overscanned columns or rows.
   //
 
   @state()
-  private overscanInline = 0;
+  private accessor overscanInline = 0;
 
   @state()
-  private overscanBlock = 0;
+  private accessor overscanBlock = 0;
 
   //
   // `bin`, not short for anything, is the range in pixels within which virtualization does not need to reassess.
   //
 
   @state()
-  private binInlineMin = 0;
+  private accessor binInlineMin = 0;
 
   @state()
-  private binInlineMax = defaultColSize;
+  private accessor binInlineMax = defaultColSize;
 
   @state()
-  private binBlockMin = 0;
+  private accessor binBlockMin = 0;
 
   @state()
-  private binBlockMax = defaultRowSize;
+  private accessor binBlockMax = defaultRowSize;
 
   //
   // `vis`, short for ‘visible’, is the range in numeric index of the columns or rows which should be rendered within
@@ -293,72 +293,72 @@ export class DxGrid extends LitElement {
   //
 
   @state()
-  private visColMin = 0;
+  private accessor visColMin = 0;
 
   @state()
-  private visColMax = 1;
+  private accessor visColMax = 1;
 
   @state()
-  private visRowMin = 0;
+  private accessor visRowMin = 0;
 
   @state()
-  private visRowMax = 1;
+  private accessor visRowMax = 1;
 
   //
   // `template` is the rendered value of `grid-{axis}-template`.
   //
   @state()
-  private templateGridColumns = '0';
+  private accessor templateGridColumns = '0';
 
   @state()
-  private templatefrozenColsStart = '';
+  private accessor templatefrozenColsStart = '';
 
   @state()
-  private templatefrozenColsEnd = '';
+  private accessor templatefrozenColsEnd = '';
 
   @state()
-  private templateGridRows = '0';
+  private accessor templateGridRows = '0';
 
   @state()
-  private templatefrozenRowsStart = '';
+  private accessor templatefrozenRowsStart = '';
 
   @state()
-  private templatefrozenRowsEnd = '';
+  private accessor templatefrozenRowsEnd = '';
 
   //
   // Focus, selection, and resize states
   //
 
   @state()
-  private pointer: DxGridPointer = null;
+  private accessor pointer: DxGridPointer = null;
 
   @state()
-  private colSizes: DxGridAxisSizes = { grid: {} };
+  private accessor colSizes: DxGridAxisSizes = { grid: {} };
 
   @state()
-  private rowSizes: DxGridAxisSizes = { grid: {} };
+  private accessor rowSizes: DxGridAxisSizes = { grid: {} };
 
   @state()
-  private focusActive: boolean = false;
+  private accessor focusActive: boolean = false;
 
   @state()
-  private focusedCell: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
+  private accessor focusedCell: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
 
   @state()
-  private selectionStart: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
+  private accessor selectionStart: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
 
   @state()
-  private selectionEnd: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
+  private accessor selectionEnd: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
 
   //
   // Limits
   //
 
   @state()
-  private intrinsicInlineSize: number = Infinity;
+  private accessor intrinsicInlineSize: number = Infinity;
 
   @state()
-  private intrinsicBlockSize: number = Infinity;
+  private accessor intrinsicBlockSize: number = Infinity;
 
   //
   // Primary pointer and keyboard handlers
@@ -523,7 +523,7 @@ export class DxGrid extends LitElement {
   //
 
   @state()
-  private observer = new ResizeObserver((entries) => {
+  private accessor observer = new ResizeObserver((entries) => {
     const { inlineSize, blockSize } = entries?.[0]?.contentBoxSize?.[0] ?? {
       inlineSize: 0,
       blockSize: 0,

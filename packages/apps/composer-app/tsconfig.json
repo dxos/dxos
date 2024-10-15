@@ -4,6 +4,7 @@
   ],
   "compilerOptions": {
     "emitDeclarationOnly": false,
+    "experimentalDecorators": false,
     "lib": [
       "DOM",
       "ESNext"

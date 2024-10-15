@@ -124,6 +124,7 @@ export default defineConfig((env) => ({
     WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({
+      tsDecorators: true,
       plugins: [
         [
           '@dxos/swc-log-plugin',
