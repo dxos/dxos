@@ -7,30 +7,30 @@ import { useEffect, useState } from 'react';
 import { type TableType } from '../../types';
 import { TableModel } from '../table-model';
 
-export const useTableModel = (table: TableType, data: any[], onCellUpdate: (col: number, row: number) => void) => {
+// TODO(burdon): Create TableModel interface and useTableModel hook that manages query.
+export const useTableModel = (
+  table: TableType,
+  data: any[],
+  onCellUpdate: (col: number, row: number) => void,
+): TableModel | undefined => {
   const [tableModel, setTableModel] = useState<TableModel>();
-
   useEffect(() => {
     if (!table || !data) {
       return;
     }
 
-    let model: TableModel | undefined;
+    let tableModel: TableModel | undefined;
     const t = setTimeout(async () => {
-      model = new TableModel({
-        table,
-        data,
-        onCellUpdate,
-      });
-      await model.open();
-      setTableModel(model);
+      tableModel = new TableModel({ table, data, onCellUpdate });
+      await tableModel.open();
+      setTableModel(tableModel);
     });
 
     return () => {
       clearTimeout(t);
-      void model?.close();
+      void tableModel?.close();
     };
   }, [data, table, onCellUpdate]);
 
-  return { tableModel };
+  return tableModel;
 };
