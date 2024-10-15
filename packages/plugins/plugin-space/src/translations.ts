@@ -90,6 +90,8 @@ export default [
         'sync status title': 'Sync status',
         'dismiss label': 'Dismiss',
         'join success label': 'Successfully joined space',
+        'name label': 'Name',
+        'name placeholder': 'Name',
       },
     },
   },

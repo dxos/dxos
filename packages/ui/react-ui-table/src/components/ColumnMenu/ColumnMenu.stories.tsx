@@ -7,11 +7,12 @@ import '@dxos-theme';
 import { type SortDirection } from '@tanstack/react-table';
 import React, { useState } from 'react';
 
+import { FieldValueType } from '@dxos/schema';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { ColumnMenu } from './ColumnMenu';
 import { type ColumnSettingsProps } from './ColumnSettings';
-import { type ColumnProps } from '../../schema';
+import { type ColumnDef } from '../../schema';
 
 export default {
   title: 'react-ui-table/ColumnMenu',
@@ -23,18 +24,18 @@ const defs: Pick<ColumnSettingsProps, 'tableDef' | 'tablesToReference'> = {
   tableDef: {
     id: '1',
     name: 'table 1',
-    columns: [{ id: 'col-1', prop: 'one', type: 'string' }],
+    columns: [{ id: 'col-1', prop: 'one', type: FieldValueType.String }],
   },
   tablesToReference: [
     {
       id: '1',
       name: 'table 1',
-      columns: [{ id: 'col-1', prop: 'one', type: 'string' }],
+      columns: [{ id: 'col-1', prop: 'one', type: FieldValueType.String }],
     },
     {
       id: '2',
       name: 'table 2',
-      columns: [{ id: 'col-1', prop: 'two', type: 'string' }],
+      columns: [{ id: 'col-1', prop: 'two', type: FieldValueType.String }],
     },
   ],
 };
@@ -49,7 +50,7 @@ export const Default = {
     column: {
       id: 'test',
       label: 'test',
-    } as ColumnProps,
+    } as ColumnDef,
 
     ...defs,
     ...functions,
@@ -89,7 +90,7 @@ export const ReactiveSort = {
       column: {
         id: 'test',
         label: 'test',
-      } as ColumnProps,
+      } as ColumnDef,
       context: {
         header: {
           column: {

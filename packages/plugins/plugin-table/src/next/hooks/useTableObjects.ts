@@ -8,7 +8,9 @@ import { type Space, useQuery, Filter } from '@dxos/react-client/echo';
 
 /**
  * Retrieves objects for a given schema and filters them using a global filter.
+ * @deprecated
  */
+// TODO(burdon): Remove (just obfuscates useQuery?)
 export const useTableObjects = (space?: Space, schema?: S.Schema<any>): EchoReactiveObject<any>[] => {
   const objects = useQuery<EchoReactiveObject<any>>(
     space,

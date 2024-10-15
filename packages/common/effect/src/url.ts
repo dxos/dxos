@@ -4,13 +4,14 @@
 
 import { AST, type Schema as S } from '@effect/schema';
 import { Option, pipe } from 'effect';
-import { decamelize } from 'xcase';
+
+import { decamelize } from './decamelize';
 
 const ParamKeyAnnotationId = Symbol.for('@dxos/schema/annotation/ParamKey');
 
 type ParamKeyAnnotationValue = { key: string };
 
-const getParamKeyAnnotation: (annotated: AST.Annotated) => Option.Option<ParamKeyAnnotationValue> =
+export const getParamKeyAnnotation: (annotated: AST.Annotated) => Option.Option<ParamKeyAnnotationValue> =
   AST.getAnnotation<ParamKeyAnnotationValue>(ParamKeyAnnotationId);
 
 export const ParamKeyAnnotation =

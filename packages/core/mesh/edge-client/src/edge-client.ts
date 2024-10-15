@@ -17,6 +17,7 @@ import { protocol } from './defs';
 import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors';
 import { PersistentLifecycle } from './persistent-lifecycle';
 import { type Protocol, toUint8Array } from './protocol';
+import { getEdgeUrlWithProtocol } from './utils';
 
 const DEFAULT_TIMEOUT = 10_000;
 const SIGNAL_KEEPALIVE_INTERVAL = 5_000;
@@ -41,6 +42,7 @@ export type MessengerConfig = {
   socketEndpoint: string;
   timeout?: number;
   protocol?: Protocol;
+  disableAuth?: boolean;
 };
 
 export interface EdgeIdentity {
@@ -53,8 +55,6 @@ export interface EdgeIdentity {
    */
   presentCredentials({ challenge }: { challenge: Uint8Array }): Promise<Presentation>;
 }
-
-const DISABLE_AUTH = true;
 
 /**
  * Messenger client.
@@ -74,11 +74,14 @@ export class EdgeClient extends Resource implements EdgeConnection {
   private _keepaliveCtx?: Context = undefined;
   private _heartBeatContext?: Context = undefined;
 
+  private _baseUrl: string;
+
   constructor(
     private _identity: EdgeIdentity,
     private readonly _config: MessengerConfig,
   ) {
     super();
+    this._baseUrl = getEdgeUrlWithProtocol(_config.socketEndpoint, 'ws');
   }
 
   // TODO(burdon): Attach logging.
@@ -133,14 +136,14 @@ export class EdgeClient extends Resource implements EdgeConnection {
   private async _openWebSocket() {
     let protocolHeader: string | undefined;
 
-    if (!DISABLE_AUTH) {
+    if (!this._config.disableAuth) {
       // TODO(dmaretskyi): Get challenge from the WWW-Authenticate header returned by the endpoint.
       const challenge = randomBytes(32);
       const credential = await this._identity.presentCredentials({ challenge });
       protocolHeader = encodePresentationIntoAuthHeader(credential);
     }
 
-    const url = new URL(`/ws/${this._identity.identityKey}/${this._identity.peerKey}`, this._config.socketEndpoint);
+    const url = new URL(`/ws/${this._identity.identityKey}/${this._identity.peerKey}`, this._baseUrl);
     log('Opening websocket', { url: url.toString(), protocolHeader });
     this._ws = new WebSocket(url, protocolHeader ? [protocolHeader] : []);
 

@@ -39,6 +39,7 @@
         "packages/sdk/shell",
         "packages/ui/*"
       ]
-    }
+    },
+    "noProjectReferences": true
   }
 }

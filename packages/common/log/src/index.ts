@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-// Message helpers.
 import omit from 'lodash.omit';
 
 import { pick } from '@dxos/util';

@@ -42,6 +42,7 @@ import { fullyQualifiedId, createDocAccessor } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { ATTENABLE_ATTRIBUTE, useAttendableAttributes, useAttention, useAttentionPath } from '@dxos/react-ui-attention';
+import { CellEditor, type EditorKeysProps, editorKeys } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
@@ -73,14 +74,7 @@ import {
   addressToIndex,
   addressFromIndex,
 } from '../../defs';
-import {
-  CellEditor,
-  type CellRangeNotifier,
-  type EditorKeysProps,
-  editorKeys,
-  rangeExtension,
-  sheetExtension,
-} from '../CellEditor';
+import { rangeExtension, sheetExtension, type CellRangeNotifier } from '../../extensions';
 
 // TODO(burdon): Virtualization bug.
 // TODO(burdon): Toolbar styles and formatting.

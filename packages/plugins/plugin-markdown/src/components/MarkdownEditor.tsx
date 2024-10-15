@@ -89,7 +89,10 @@ export const MarkdownEditor = ({
   // TODO(Zan): Move these into thread plugin as well?
   const [commentsState, commentObserver] = useCommentState();
   const onCommentClick = useCallback(() => {
-    void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
+    void dispatch({
+      action: LayoutAction.SET_LAYOUT,
+      data: { element: 'complementary', state: true },
+    });
   }, [dispatch]);
   const commentClickObserver = useCommentClickListener(onCommentClick);
 
