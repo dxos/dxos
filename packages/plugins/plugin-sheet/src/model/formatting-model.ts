@@ -34,7 +34,7 @@ export class FormattingModel {
 
     // Cell-specific formatting.
     const idx = addressToIndex(this._model.sheet, cell);
-    let formatting = this._model.sheet.formatting?.[idx] ?? {};
+    let formatting = this._model.sheet.formatting.find(({ range }) => range === idx);
     const classNames = [...(formatting?.classNames ?? [])];
 
     // Range formatting.
