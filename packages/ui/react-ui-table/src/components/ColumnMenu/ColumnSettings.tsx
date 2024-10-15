@@ -5,21 +5,25 @@
 import React, { useRef, useState } from 'react';
 
 import { Button, Input, Select, useTranslation } from '@dxos/react-ui';
+import { FieldValueTypes } from '@dxos/react-ui-data';
 import { safeParseInt } from '@dxos/util';
 
-import { type TableDef, type ColumnProps, type ColumnType } from '../../schema';
+import { type TableDef, type ColumnDef } from '../../schema';
 import { translationKey } from '../../translations';
 
 export type ColumnSettingsProps = {
-  column: ColumnProps;
+  column: ColumnDef;
   tableDef: TableDef;
   // TODO(burdon): Rename.
   tablesToReference: TableDef[];
-  onUpdate?: (id: string, column: ColumnProps) => void;
+  onUpdate?: (id: string, column: ColumnDef) => void;
   onDelete?: (id: string) => void;
   onClose?: () => void;
 };
 
+/**
+ * @deprecated
+ */
 export const ColumnSettings = ({
   column,
   tableDef,
@@ -64,7 +68,7 @@ export const ColumnSettings = ({
       id: prop, // TODO(burdon): Make unique.
       prop,
       label,
-      type: type as ColumnProps['type'],
+      type: type as ColumnDef['type'],
       refTable,
       refProp,
       digits: safeParseInt(digits),
@@ -114,7 +118,7 @@ export const ColumnSettings = ({
             <Select.Portal>
               <Select.Content>
                 <Select.Viewport>
-                  {(['number', 'boolean', 'string', 'ref'] as ColumnType[]).map((type) => (
+                  {FieldValueTypes.map((type) => (
                     <Select.Option key={type} value={type}>
                       {t(`${type} column type label`)}
                     </Select.Option>

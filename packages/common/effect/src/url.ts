@@ -11,7 +11,7 @@ const ParamKeyAnnotationId = Symbol.for('@dxos/schema/annotation/ParamKey');
 
 type ParamKeyAnnotationValue = { key: string };
 
-const getParamKeyAnnotation: (annotated: AST.Annotated) => Option.Option<ParamKeyAnnotationValue> =
+export const getParamKeyAnnotation: (annotated: AST.Annotated) => Option.Option<ParamKeyAnnotationValue> =
   AST.getAnnotation<ParamKeyAnnotationValue>(ParamKeyAnnotationId);
 
 export const ParamKeyAnnotation =

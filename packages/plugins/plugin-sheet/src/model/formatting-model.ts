@@ -2,18 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
+import { FieldValueType } from '@dxos/react-ui-data';
 import { type ClassNameValue } from '@dxos/react-ui-types';
 
 import { type SheetModel } from './sheet-model';
 import { type CellAddress, inRange } from '../defs';
 import { addressToIndex, rangeFromIndex } from '../defs';
-import { ValueTypeEnum } from '../types';
 
 export type CellFormat = {
   value?: string;
   classNames?: ClassNameValue;
 };
 
+/**
+ * @deprecated See react-ui-data.
+ */
 export class FormattingModel {
   constructor(private readonly _model: SheetModel) {}
 
@@ -55,7 +58,7 @@ export class FormattingModel {
 
     const type = formatting?.type ?? this._model.getValueType(cell);
     switch (type) {
-      case ValueTypeEnum.Boolean: {
+      case FieldValueType.Boolean: {
         return {
           value: (value as boolean).toLocaleString().toUpperCase(),
           classNames: [...classNames, value ? '!text-greenText' : '!text-orangeText'],
@@ -66,15 +69,15 @@ export class FormattingModel {
       // Numbers.
       //
 
-      case ValueTypeEnum.Number: {
+      case FieldValueType.Number: {
         return { value: value.toLocaleString(locales), classNames: [...classNames, defaultNumber] };
       }
 
-      case ValueTypeEnum.Percent: {
+      case FieldValueType.Percent: {
         return { value: (value as number) * 100 + '%', classNames: [...classNames, defaultNumber] };
       }
 
-      case ValueTypeEnum.Currency: {
+      case FieldValueType.Currency: {
         return {
           value: (value as number).toLocaleString(locales, {
             style: 'currency',
@@ -90,17 +93,17 @@ export class FormattingModel {
       // Dates.
       //
 
-      case ValueTypeEnum.DateTime: {
+      case FieldValueType.DateTime: {
         const date = this._model.toLocalDate(value as number);
         return { value: date.toLocaleString(locales), classNames };
       }
 
-      case ValueTypeEnum.Date: {
+      case FieldValueType.Date: {
         const date = this._model.toLocalDate(value as number);
         return { value: date.toLocaleDateString(locales), classNames };
       }
 
-      case ValueTypeEnum.Time: {
+      case FieldValueType.Time: {
         const date = this._model.toLocalDate(value as number);
         return { value: date.toLocaleTimeString(locales), classNames };
       }

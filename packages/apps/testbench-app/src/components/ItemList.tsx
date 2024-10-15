@@ -8,6 +8,7 @@ import React from 'react';
 import { type EchoReactiveObject, getMeta, getSchema } from '@dxos/echo-schema';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { Button, Input, useThemeContext } from '@dxos/react-ui';
+import { toFieldValueType } from '@dxos/react-ui-data';
 import {
   automerge,
   createBasicExtensions,
@@ -15,7 +16,6 @@ import {
   createThemeExtensions,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { getColumnTypes } from '@dxos/react-ui-table';
 import { mx, subtleHover } from '@dxos/react-ui-theme';
 
 const MAX_RENDERED_COUNT = 80;
@@ -59,7 +59,7 @@ export const Item = ({ object, onDelete }: ItemProps<EchoReactiveObject<any>>) =
   }
 
   // TODO(burdon): Get additional metadata.
-  const props = getColumnTypes(schema);
+  const props = toFieldValueType(schema);
 
   // TODO(burdon): [API]: Type check?
   const getValue = (object: EchoReactiveObject<any>, prop: string) => (object as any)[prop];

@@ -14,33 +14,21 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { ObjectTable } from './ObjectTable';
 import { TableType } from '../../types';
 
-const useStoredTable = () => {
+const Story = () => {
   const spaces = useSpaces();
   const [table, setTable] = useState<TableType | undefined>();
   const objects = useQuery(spaces[spaces.length - 1], Filter.schema(TableType));
-
   useEffect(() => {
     if (objects.length) {
       setTable(objects[0]);
     }
   }, [objects]);
 
-  return table;
-};
-
-const Story = () => {
-  const table = useStoredTable();
   if (!table) {
     return null;
   }
 
   return <ObjectTable table={table} />;
-};
-
-export default {
-  title: 'plugin-table/ObjectTable-Next',
-  component: ObjectTable,
-  render: () => <Story />,
 };
 
 const clientProps: WithClientProviderProps = {
@@ -59,6 +47,7 @@ const clientProps: WithClientProviderProps = {
       }),
     );
 
+    // TODO(burdon): start-table-schema?
     const schema = TypedObject({ typename: 'example.com/type/start-table-schema', version: '0.1.0' })({
       title: S.optional(S.String),
       description: S.optional(S.String),
@@ -69,6 +58,11 @@ const clientProps: WithClientProviderProps = {
   },
 };
 
-export const Default = {
+export default {
+  title: 'plugin-table/ObjectTable-Next',
+  component: ObjectTable,
   decorators: [withClientProvider(clientProps), withTheme, withLayout({ fullscreen: true })],
+  render: () => <Story />,
 };
+
+export const Default = {};
