@@ -62,7 +62,6 @@ export const createColumns = (
 
   return tableDef.columns.map((column) => {
     const { type, id, label, fixed, resizable, ...props } = column;
-
     const columnIndex = tableDef.columns.indexOf(column);
     const columnPosition =
       columnIndex === 0 ? 'start' : columnIndex === tableDef.columns.length - 1 ? 'end' : undefined;

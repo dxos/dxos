@@ -9,7 +9,7 @@ import { AST, S } from '@dxos/effect';
 export const isScalar = (ast: AST.AST) =>
   AST.isNumberKeyword(ast) || AST.isBooleanKeyword(ast) || AST.isStringKeyword(ast);
 
-// TODO(burdon): Move to @dxos/effect? (move from react-ui-xxx to core types).
+// TODO(burdon): Move to core @dxos/types?
 
 // TODO(burdon): JSON path
 //  - https://datatracker.ietf.org/doc/html/rfc6901
