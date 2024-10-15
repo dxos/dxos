@@ -10,6 +10,7 @@ import { log } from '@dxos/log';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
+import { FieldValueType } from '@dxos/react-ui-data';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -21,7 +22,7 @@ import { type ComputeGraph } from '../../graph';
 import { testFunctionPlugins } from '../../graph/testing';
 import { useComputeGraph } from '../../hooks';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
-import { SheetType, ValueTypeEnum } from '../../types';
+import { SheetType } from '../../types';
 import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
 
 // TODO(burdon): Allow toolbar to access sheet context; provide state for current cursor/range.
@@ -69,12 +70,12 @@ const SheetWithToolbar = ({ graph, debug }: { graph: ComputeGraph; debug?: boole
       }
 
       case 'date': {
-        format.type = ValueTypeEnum.Date;
+        format.type = FieldValueType.Date;
         format.format = 'YYYY-MM-DD';
         break;
       }
       case 'currency': {
-        format.type = ValueTypeEnum.Currency;
+        format.type = FieldValueType.Currency;
         format.precision = 2;
         break;
       }

@@ -103,8 +103,7 @@ export const Table = ({ table, data }: TableProps) => {
     gridRef.current?.updateIfWithinBounds({ col, row });
   }, []);
 
-  const { tableModel } = useTableModel(table, data, handleOnCellUpdate);
-
+  const tableModel = useTableModel(table, data, handleOnCellUpdate);
   const handleAxisResize = useCallback(
     (event: DxAxisResize) => {
       if (event.axis === 'col') {

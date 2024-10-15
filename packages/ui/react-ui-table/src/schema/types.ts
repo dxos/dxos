@@ -2,20 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type FieldValueType } from '@dxos/react-ui-data';
+
+// TODO(burdon): Reconcile with react-ui-data/View.
 export type TableDef = {
   id: string;
   name?: string;
-  columns: ColumnProps[];
+  columns: ColumnDef[];
 };
 
-// TODO(burdon): Use Effect defs?
-export type ColumnType = 'number' | 'boolean' | 'date' | 'string' | 'json' | 'ref';
-
-// TODO(burdon): Effect schema?
-export type ColumnProps = {
+// TODO(burdon): Reconcile with react-ui-data/Field.
+export type ColumnDef = {
   id: string;
   prop: string;
-  type: ColumnType;
+  type: FieldValueType;
   size?: number;
   label?: string;
 

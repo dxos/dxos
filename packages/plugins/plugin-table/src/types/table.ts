@@ -5,6 +5,8 @@
 import { DynamicSchema, ref, S, TypedObject } from '@dxos/echo-schema';
 import { ThreadType } from '@dxos/plugin-space';
 
+// TODO(burdon): Reconcile with react-ui-date/View.
+
 const TablePropSchema = S.partial(
   S.mutable(
     S.Struct({

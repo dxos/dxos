@@ -3,7 +3,7 @@
 //
 
 import { type Space } from '@dxos/react-client/echo';
-import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
+import { type ColumnDef, type TableDef } from '@dxos/react-ui-table';
 
 import { schemaPropMapper, createColumnsFromTableDef } from '../../schema';
 import { type TableType, type TableProp } from '../../types';
@@ -47,7 +47,7 @@ export const createColumns = (
   space: Space | undefined,
   tables: TableType[],
   table: TableType,
-  onColumnUpdate: (oldId: string, column: ColumnProps) => void,
+  onColumnUpdate: (oldId: string, column: ColumnDef) => void,
   onColumnDelete: (id: string) => void,
   onRowUpdate: (object: any, prop: string, value: any) => void,
   onRowDelete: (object: any) => void,
