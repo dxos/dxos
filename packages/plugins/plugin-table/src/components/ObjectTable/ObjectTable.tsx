@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { create, type DynamicSchema, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
-import { type ColumnProps, Table, type TableProps } from '@dxos/react-ui-table';
+import { type ColumnDef, Table, type TableProps } from '@dxos/react-ui-table';
 import { arrayMove } from '@dxos/util';
 
 import { useTableObjects } from './hooks';
@@ -78,7 +78,7 @@ const ObjectTableImpl = ({ table, role, stickyHeader }: ObjectTableProps) => {
   const rows = useMemo(() => [...objects, newObject.current], [objects]);
 
   const onColumnUpdate = useCallback(
-    (oldId: string, column: ColumnProps) => {
+    (oldId: string, column: ColumnDef) => {
       const { id, type, refTable, refProp, digits, label } = column;
       updateTableProp(table.props, oldId, { id, refProp, label });
       table.schema?.updateColumns({

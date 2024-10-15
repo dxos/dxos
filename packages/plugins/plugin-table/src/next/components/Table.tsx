@@ -18,6 +18,7 @@ import {
 import { type TableType } from '../../types';
 import { useTableModel } from '../hooks';
 import { type TableModel } from '../table-model';
+import { cellKeyToCoords } from '../util/coords';
 
 const TableCellEditor = ({
   __gridScope,
@@ -32,7 +33,7 @@ const TableCellEditor = ({
   const updateCell = useCallback(
     (value: any) => {
       if (value !== undefined && editing && tableModel) {
-        const [col, row] = editing.index.split(',').map(Number);
+        const { col, row } = cellKeyToCoords(editing.index);
         tableModel.setCellData(col, row, value);
       }
     },
@@ -97,13 +98,17 @@ const frozen = { frozenRowsStart: 1 };
 // TODO(Zan): Callbacks for editing column schema.
 export const Table = ({ table, data }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
-  const { tableModel, columnMeta } = useTableModel(table, data, gridRef);
 
+  const handleOnCellUpdate = useCallback((col: number, row: number) => {
+    gridRef.current?.updateIfWithinBounds({ col, row });
+  }, []);
+
+  const tableModel = useTableModel(table, data, handleOnCellUpdate);
   const handleAxisResize = useCallback(
     (event: DxAxisResize) => {
       if (event.axis === 'col') {
         const columnIndex = parseInt(event.index, 10);
-        tableModel?.modifyColumnWidth(columnIndex, event.size);
+        tableModel?.setColumnWidth(columnIndex, event.size);
       }
     },
     [tableModel],
@@ -117,7 +122,7 @@ export const Table = ({ table, data }: TableProps) => {
         limitRows={data.length}
         limitColumns={table.props.length}
         initialCells={tableModel?.cells.value}
-        columns={columnMeta}
+        columns={tableModel?.columnMeta.value}
         frozen={frozen}
         onAxisResize={handleAxisResize}
       />
