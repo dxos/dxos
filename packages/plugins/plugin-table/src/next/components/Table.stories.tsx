@@ -8,7 +8,6 @@ import { type StoryObj } from '@storybook/react';
 import React, { useMemo } from 'react';
 
 import { faker } from '@dxos/random';
-import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
@@ -29,14 +28,7 @@ const Story = ({ table, rows = 10, ...props }: StoryProps) => {
 export default {
   title: 'plugin-table/table-next',
   render: Story,
-  decorators: [
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-    }),
-    withTheme,
-    withLayout({ fullscreen: true }),
-  ],
+  decorators: [withSignals, withTheme, withLayout({ fullscreen: true })],
 };
 
 export const Default: StoryObj<StoryProps> = {
