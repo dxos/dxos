@@ -10,6 +10,7 @@ export const isScalar = (ast: AST.AST) =>
   AST.isNumberKeyword(ast) || AST.isBooleanKeyword(ast) || AST.isStringKeyword(ast);
 
 // TODO(burdon): Move to core @dxos/types?
+//  Remove node package exports from here nad react-ui-list (added to support plugin-sheet tests).
 
 // TODO(burdon): JSON path
 //  - https://datatracker.ietf.org/doc/html/rfc6901
