@@ -8,7 +8,7 @@ import { type StoryObj } from '@storybook/react';
 import React, { useMemo } from 'react';
 
 import { faker } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
 import { type SimulatorProps, table, createItems, useSimulator } from './testing';
