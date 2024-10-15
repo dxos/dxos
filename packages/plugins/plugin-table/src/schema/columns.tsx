@@ -20,7 +20,7 @@ import {
 } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { createUniqueProp } from './types';
+import { getUniqueProperty } from './types';
 
 type ColumnCreationOptions = {
   onColumnUpdate?: (id: string, column: ColumnDef) => void;
@@ -117,7 +117,7 @@ export const createActionColumn = (
   const { helper } = createColumnBuilder<EchoReactiveObject<any>>();
 
   const handleAddColumn = () => {
-    const id = createUniqueProp(tableDef);
+    const id = getUniqueProperty(tableDef);
     onColumnUpdate?.(id, {
       id,
       prop: id,

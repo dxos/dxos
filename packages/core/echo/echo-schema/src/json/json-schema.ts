@@ -40,7 +40,7 @@ export enum PropType {
 }
 
 // TODO(burdon): Reconcile with plugin-table.
-export const getPropType = (type?: PropType): string => {
+export const toFieldValueType = (type?: PropType): string => {
   switch (type) {
     case PropType.REF:
       return 'ref';

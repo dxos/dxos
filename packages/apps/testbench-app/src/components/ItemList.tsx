@@ -8,7 +8,7 @@ import React from 'react';
 import { type EchoReactiveObject, getMeta, getSchema } from '@dxos/echo-schema';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { Button, Input, useThemeContext } from '@dxos/react-ui';
-import { toFieldValueType } from '@dxos/react-ui-data';
+import { mapSchemaToFields } from '@dxos/react-ui-data';
 import {
   automerge,
   createBasicExtensions,
@@ -59,7 +59,7 @@ export const Item = ({ object, onDelete }: ItemProps<EchoReactiveObject<any>>) =
   }
 
   // TODO(burdon): Get additional metadata.
-  const props = toFieldValueType(schema);
+  const props = mapSchemaToFields(schema);
 
   // TODO(burdon): [API]: Type check?
   const getValue = (object: EchoReactiveObject<any>, prop: string) => (object as any)[prop];
