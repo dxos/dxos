@@ -6,19 +6,18 @@ import React from 'react';
 
 import {
   type IntentPluginProvides,
-  NavigationAction,
   type LocationProvides,
+  NavigationAction,
   type Plugin,
   type PluginDefinition,
+  isLayoutParts,
   parseIntentPlugin,
   parseNavigationPlugin,
-  resolvePlugin,
-  isLayoutParts,
   parseMetadataResolverPlugin,
+  resolvePlugin,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
+import { create, type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
@@ -26,11 +25,17 @@ import { type ActionGroup, createExtension, isActionGroup, toSignal } from '@dxo
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { SpaceAction } from '@dxos/plugin-space';
 import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
-import { getSpace, fullyQualifiedId, loadObjectReferences } from '@dxos/react-client/echo';
+import { getSpace, fullyQualifiedId, loadObjectReferences, parseFullyQualifiedId } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
-import { ThreadMain, ThreadSettings, ChatContainer, ChatHeading, ThreadArticle } from './components';
-import { ThreadComplementary } from './components/ThreadComplementary';
+import {
+  ChatContainer,
+  ChatHeading,
+  ThreadArticle,
+  ThreadComplementary,
+  ThreadMain,
+  ThreadSettings,
+} from './components';
 import { threads } from './extensions';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
@@ -125,8 +130,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 }
 
                 // TODO(Zan): Find util (or make one).
-                const subjectId = id.split('~').at(0);
-                const [spaceId, objectId] = subjectId?.split(':') ?? [];
+                const [subjectId] = id.split('~');
+                const [spaceId, objectId] = parseFullyQualifiedId(subjectId);
                 const space = client.spaces.get().find((space) => space.id === spaceId);
                 const object = toSignal(
                   (onChange) => {

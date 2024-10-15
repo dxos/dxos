@@ -1130,7 +1130,7 @@
 * **plugin-space:** hide share button in personal space ([#5298](https://github.com/dxos/dxos/issues/5298)) ([55b2292](https://github.com/dxos/dxos/commit/55b2292854439c185105eed5ecf8cfa63c0e0360))
 * **plugin-thread:** fix flashing when creating a new thread ([#5477](https://github.com/dxos/dxos/issues/5477)) ([27967cf](https://github.com/dxos/dxos/commit/27967cf8d893317b5981b3af8b6ef6ab4a8701b7))
 * **plugin-thread:** only edit your own comments ([#5468](https://github.com/dxos/dxos/issues/5468)) ([5cbcf4e](https://github.com/dxos/dxos/commit/5cbcf4ec7d8b990af2173a20297b2e9d42c221ab))
-* **plugin-threads:** Fix comments UI & complimentary sidebar usability ([#5392](https://github.com/dxos/dxos/issues/5392)) ([5c52a13](https://github.com/dxos/dxos/commit/5c52a13d35bd39145886ead5ab211c06a5360fb6))
+* **plugin-threads:** Fix comments UI & complementary sidebar usability ([#5392](https://github.com/dxos/dxos/issues/5392)) ([5c52a13](https://github.com/dxos/dxos/commit/5c52a13d35bd39145886ead5ab211c06a5360fb6))
 * Polish NavBar and NavTree content ([#5309](https://github.com/dxos/dxos/issues/5309)) ([8352b25](https://github.com/dxos/dxos/commit/8352b25bc2f743285cb62385b5c3fd9768fc068a))
 * publish ([#5070](https://github.com/dxos/dxos/issues/5070)) ([6d5715f](https://github.com/dxos/dxos/commit/6d5715fe051140de9316ab74feaf0ec945724b2f))
 * **react-client:** ClientRepeater should not render component until setup is complete ([#5434](https://github.com/dxos/dxos/issues/5434)) ([5052d1a](https://github.com/dxos/dxos/commit/5052d1a84e93538c380a698f6831a263feca8d00))

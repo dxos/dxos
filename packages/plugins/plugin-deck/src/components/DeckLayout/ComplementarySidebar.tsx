@@ -30,7 +30,8 @@ export type ComplementarySidebarProps = {
   flatDeck?: boolean;
 };
 
-const panels = ['comments', 'settings'] as const;
+const panels = ['comments', 'settings', 'debug'] as const;
+
 type Panel = (typeof panels)[number];
 const getPanel = (part?: string): Panel => {
   if (part && panels.findIndex((panel) => panel === part) !== -1) {
@@ -48,7 +49,6 @@ export const ComplementarySidebar = ({ layoutParts, flatDeck }: ComplementarySid
   const { graph } = useGraph();
   const node = useNode(graph, id);
   const dispatch = useIntentDispatcher();
-
   useNodeActionExpander(node);
 
   const actions = useMemo(
@@ -77,6 +77,18 @@ export const ComplementarySidebar = ({ layoutParts, flatDeck }: ComplementarySid
           isChecked: part === 'comments',
         },
       },
+      {
+        id: 'complementary-debug',
+        data: () => {
+          void dispatch({ action: NavigationAction.OPEN, data: { activeParts: { complementary: 'debug' } } });
+        },
+        properties: {
+          label: ['comments label', { ns: DECK_PLUGIN }],
+          icon: 'ph--bug--regular',
+          menuItemType: 'toggle',
+          isChecked: part === 'debug',
+        },
+      },
     ],
     [part],
   );
@@ -93,7 +105,7 @@ export const ComplementarySidebar = ({ layoutParts, flatDeck }: ComplementarySid
           flatDeck={flatDeck}
           actions={actions}
         />
-        {/* TODO(wittjosiah): Render some placeholder when node is undefined. */}
+        {/* TODO(wittjosiah): Render placeholder when node is undefined. */}
         {node && (
           <Surface
             role={`complementary--${part}`}
