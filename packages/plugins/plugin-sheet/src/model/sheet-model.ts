@@ -12,6 +12,7 @@ import { getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { FieldValueType } from '@dxos/react-ui-data';
 
 import { DetailedCellError, ExportedCellChange } from '#hyperformula';
 import {
@@ -24,16 +25,17 @@ import {
 } from '../defs';
 import { addressFromIndex, addressToIndex, initialize, insertIndices, ReadonlyException } from '../defs';
 import { type ComputeNode, type ComputeGraph, createSheetName, type ComputeNodeEvent } from '../graph';
-import { type CellScalarValue, type CellValue, type SheetType, ValueTypeEnum } from '../types';
+import { type CellScalarValue, type CellValue, type SheetType } from '../types';
 
-const typeMap: Record<string, ValueTypeEnum> = {
-  BOOLEAN: ValueTypeEnum.Boolean,
-  NUMBER_RAW: ValueTypeEnum.Number,
-  NUMBER_PERCENT: ValueTypeEnum.Percent,
-  NUMBER_CURRENCY: ValueTypeEnum.Currency,
-  NUMBER_DATETIME: ValueTypeEnum.DateTime,
-  NUMBER_DATE: ValueTypeEnum.Date,
-  NUMBER_TIME: ValueTypeEnum.Time,
+// Map sheet types to system types.
+const typeMap: Record<string, FieldValueType> = {
+  BOOLEAN: FieldValueType.Boolean,
+  NUMBER_RAW: FieldValueType.Number,
+  NUMBER_PERCENT: FieldValueType.Percent,
+  NUMBER_CURRENCY: FieldValueType.Currency,
+  NUMBER_DATETIME: FieldValueType.DateTime,
+  NUMBER_DATE: FieldValueType.Date,
+  NUMBER_TIME: FieldValueType.Time,
 };
 
 const getTopLeft = (range: CellRange): CellAddress => {
@@ -269,7 +271,7 @@ export class SheetModel extends Resource {
   /**
    * Get value type.
    */
-  getValueType(cell: CellAddress): ValueTypeEnum {
+  getValueType(cell: CellAddress): FieldValueType {
     invariant(this._node);
     const addr = toSimpleCellAddress(this._node.sheetId, cell);
     const type = this._node.graph.hf.getCellValueDetailedType(addr);

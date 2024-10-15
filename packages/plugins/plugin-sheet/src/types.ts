@@ -15,6 +15,7 @@ import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { type StackProvides } from '@dxos/plugin-stack';
+import { FieldValueType } from '@dxos/react-ui-data';
 
 import { SHEET_PLUGIN } from './meta';
 
@@ -51,41 +52,14 @@ export const CellValue = S.Struct({
   // TODO(burdon): How to store dates (datetime, date, time), percentages, etc.
   //  Consider import/export; natural access for other plugins. Special handling for currency (precision).
   // TODO(burdon): Automerge (long string) or short string or number.
-  // TODO(burdon): Arrays?
   value: S.Any,
 });
 
 export type CellValue = S.Schema.Type<typeof CellValue>;
 
-/**
- * https://www.tutorialsteacher.com/typescript/typescript-number
- */
-// TODO(burdon): Format vs. value.
-export enum ValueTypeEnum {
-  Null = 0,
-  Number = 1,
-  Boolean = 2,
-  String = 3,
-
-  // Special numbers.
-  Percent = 10,
-  Currency = 11,
-
-  // Dates.
-  DateTime = 20,
-  Date = 21,
-  Time = 22,
-
-  // Validated string types.
-  // TODO(burdon): Define effect types.
-  URL = 30,
-  DID = 31,
-}
-
-export const ValueType = S.Enums(ValueTypeEnum);
-
+// TODO(burdon): IMPORTANT: Reconcile with Field definition.
 export const Formatting = S.Struct({
-  type: S.optional(ValueType),
+  type: S.optional(S.Enums(FieldValueType)),
   format: S.optional(S.String),
   precision: S.optional(S.Number),
   classNames: S.optional(S.Array(S.String)),
@@ -99,8 +73,6 @@ export const RowColumnMeta = S.Struct({
 });
 
 // TODO(burdon): Index to all updates when rows/columns are inserted/deleted.
-// TODO(wittjosiah): Migrate typename to remove `Type` suffix.
-// TODO(wittjosiah): Rename title to name to align with other schemas.
 export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType', version: '0.1.0' })({
   name: S.optional(S.String),
 
@@ -119,6 +91,7 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
   // Column metadata referenced by index.
   columnMeta: S.mutable(S.Record({ key: S.String, value: S.mutable(RowColumnMeta) })),
 
+  // TODO(burdon): Change to array.
   // Cell formatting referenced by indexed range.
   formatting: S.mutable(S.Record({ key: S.String, value: S.mutable(Formatting) })),
 

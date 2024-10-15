@@ -5,36 +5,36 @@
 import { type ColumnDef } from '@tanstack/react-table';
 
 import { type S } from '@dxos/echo-schema';
+import { FieldValueType, toFieldValueType } from '@dxos/react-ui-data';
 
-import { getColumnTypes } from './schema';
 import { createColumnBuilder } from '../helpers';
 
 export const schemaToColumnDefs = <T>(schema: S.Schema<T, any>): ColumnDef<T, any>[] => {
   const { helper, builder } = createColumnBuilder<T>();
 
-  const classified = getColumnTypes(schema);
+  const classified = toFieldValueType(schema);
   return classified.map(([name, type]) => {
     const propertyKey = name.toString();
 
     let column: Partial<ColumnDef<any, any>> | undefined;
     switch (type) {
-      case 'string': {
+      case FieldValueType.String: {
         column = builder.string({ label: propertyKey });
         break;
       }
-      case 'number': {
+      case FieldValueType.Number: {
         column = builder.number({ label: propertyKey });
         break;
       }
-      case 'boolean': {
+      case FieldValueType.Boolean: {
         column = builder.switch({ label: propertyKey });
         break;
       }
-      case 'date': {
+      case FieldValueType.Date: {
         column = builder.date({ label: propertyKey });
         break;
       }
-      case 'json': {
+      case FieldValueType.JSON: {
         column = builder.json({ label: propertyKey, id: propertyKey });
         break;
       }
