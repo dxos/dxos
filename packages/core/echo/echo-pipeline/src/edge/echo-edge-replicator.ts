@@ -282,6 +282,11 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     // We restart the connection with some delay to account for that.
     if (isForbiddenErrorMessage(message)) {
       if (!this._restartScheduled) {
+        log.warn('Forbidden error received, replicator will restart the connection', {
+          spaceId: this._spaceId,
+          delayMs: RESTART_DELAY,
+          remotePeerId: this._remotePeerId,
+        });
         this._restartScheduled = true;
         scheduleTask(
           this._ctx,
