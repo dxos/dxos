@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GridNine } from '@phosphor-icons/react';
 import React from 'react';
 
 import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
@@ -12,6 +11,7 @@ import { createExtension, isActionGroup, type ActionGroup } from '@dxos/plugin-g
 import { FunctionType } from '@dxos/plugin-script/types';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
+import { Icon } from '@dxos/react-ui';
 
 import { ComputeGraphContextProvider, SheetContainer } from './components';
 import { compareIndexPositions, createSheet } from './defs';
@@ -126,7 +126,8 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
             testId: 'sheetPlugin.createSection',
             type: ['plugin name', { ns: SHEET_PLUGIN }],
             label: ['create sheet section label', { ns: SHEET_PLUGIN }],
-            icon: (props: any) => <GridNine {...props} />,
+            // TODO(thure): Refactor to use strings
+            icon: (props: any) => <Icon icon='ph--grid-nine--regular' {...props} />,
             intent: {
               plugin: SHEET_PLUGIN,
               action: SheetAction.CREATE,
