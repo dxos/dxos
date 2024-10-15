@@ -9,13 +9,15 @@
   "targets": {
     "build": {},
     "compile": {
+      "cache": true,
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "@nx/js:tsc",
       "options": {
-        "entryPoints": [
-          "{projectRoot}/src/index.ts"
-        ],
-        "platforms": [
-          "browser"
-        ]
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "{projectRoot}/dist",
+        "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
     "lint": {
