@@ -7,16 +7,13 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "exports": {
     ".": {
-      "browser": "./dist/src/index.js",
+      "import": "./dist/src/index.js",
       "types": "./dist/types/src/index.d.ts"
     },
     "./dx-grid.pcss": "./src/dx-grid.pcss"
-  },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
   },
   "files": [
     "src",
