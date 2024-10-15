@@ -8,6 +8,7 @@ import { LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { nonNullable } from '@dxos/util';
 
 import {
@@ -24,7 +25,6 @@ import {
   type CollectionStateMessage,
 } from './network-protocol';
 import { createIdFromSpaceKey } from '../common/space-id';
-import type { AutomergeProtocolMessage } from '@dxos/protocols';
 
 export interface NetworkDataMonitor {
   recordPeerConnected(peerId: string): void;

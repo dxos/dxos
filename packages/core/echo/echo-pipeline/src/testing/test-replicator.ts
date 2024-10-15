@@ -6,9 +6,9 @@ import { sleep, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 
-import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import type {
   EchoReplicator,
   EchoReplicatorContext,
