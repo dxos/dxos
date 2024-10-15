@@ -4,7 +4,8 @@
 
 import { onTestFinished, describe, test } from 'vitest';
 
-import { createEphemeralEdgeIdentity, EdgeClient } from '@dxos/edge-client';
+import { createDeviceEdgeIdentity, EdgeClient } from '@dxos/edge-client';
+import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -13,8 +14,11 @@ import { createMessage, expectReceivedMessage, TestBuilder, type TestBuilderOpti
 
 // TODO(mykola): Expects wrangler dev in edge repo to run. Skip to pass CI.
 describe.skip('EdgeSignalManager', () => {
-  const edgeSignalFactory: TestBuilderOptions['signalManagerFactory'] = async (identityKey, deviceKey) => {
-    const client = new EdgeClient(await createEphemeralEdgeIdentity(), { socketEndpoint: 'ws://localhost:8787' });
+  const edgeSignalFactory: TestBuilderOptions['signalManagerFactory'] = async (peer) => {
+    const keyring = new Keyring();
+    const client = new EdgeClient(await createDeviceEdgeIdentity(keyring, peer.peerId), {
+      socketEndpoint: 'ws://localhost:8787',
+    });
     await openAndClose(client);
 
     return new EdgeSignalManager({ edgeConnection: client });
