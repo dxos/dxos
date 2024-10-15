@@ -8,20 +8,23 @@ import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { GridSheet } from './GridSheet';
+import { SheetContainer } from './SheetContainer';
 import { useComputeGraph } from '../../hooks';
 import { useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { SheetType } from '../../types';
-import { SheetProvider } from '../SheetContext';
 
 export default {
-  title: 'plugin-sheet/GridSheet',
-  component: GridSheet,
+  title: 'plugin-sheet/SheetContainer',
+  component: SheetContainer,
   decorators: [
     withClientProvider({ types: [SheetType], createSpace: true }),
     withComputeGraphDecorator(),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({
+      fullscreen: true,
+      tooltips: true,
+      classNames: 'grid grid-cols-1 grid-rows-[min-content_minmax(0,1fr)_min-content]',
+    }),
   ],
 };
 
@@ -33,9 +36,5 @@ export const Basic = () => {
     return null;
   }
 
-  return (
-    <SheetProvider graph={graph} sheet={sheet}>
-      <GridSheet />
-    </SheetProvider>
-  );
+  return <SheetContainer graph={graph} sheet={sheet} role='article' />;
 };
