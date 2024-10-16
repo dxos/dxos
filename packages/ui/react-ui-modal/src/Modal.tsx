@@ -25,7 +25,17 @@ import { useCallbackRef } from '@radix-ui/react-use-callback-ref';
 import { useLayoutEffect } from '@radix-ui/react-use-layout-effect';
 import { useSize } from '@radix-ui/react-use-size';
 import type { Measurable } from '@radix-ui/rect';
-import * as React from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type ElementRef,
+  type FC,
+  forwardRef,
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 const SIDE_OPTIONS = ['top', 'right', 'bottom', 'left'] as const;
 const ALIGN_OPTIONS = ['start', 'center', 'end'] as const;
@@ -49,11 +59,11 @@ type ModalContextValue = {
 const [ModalProvider, useModalContext] = createModalContext<ModalContextValue>(MODAL_NAME);
 
 interface ModalProps {
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
-const Modal: React.FC<ModalProps> = (props: ScopedProps<ModalProps>) => {
+const Modal: FC<ModalProps> = (props: ScopedProps<ModalProps>) => {
   const { __scopeModal, children } = props;
-  const [anchor, setAnchor] = React.useState<Measurable | null>(null);
+  const [anchor, setAnchor] = useState<Measurable | null>(null);
   return (
     <ModalProvider scope={__scopeModal} anchor={anchor} onAnchorChange={setAnchor}>
       {children}
@@ -69,20 +79,20 @@ Modal.displayName = MODAL_NAME;
 
 const ANCHOR_NAME = 'ModalAnchor';
 
-type ModalAnchorElement = React.ElementRef<typeof Primitive.div>;
-type PrimitiveDivProps = React.ComponentPropsWithoutRef<typeof Primitive.div>;
+type ModalAnchorElement = ElementRef<typeof Primitive.div>;
+type PrimitiveDivProps = ComponentPropsWithoutRef<typeof Primitive.div>;
 interface ModalAnchorProps extends PrimitiveDivProps {
-  virtualRef?: React.RefObject<Measurable>;
+  virtualRef?: RefObject<Measurable>;
 }
 
-const ModalAnchor = React.forwardRef<ModalAnchorElement, ModalAnchorProps>(
+const ModalAnchor = forwardRef<ModalAnchorElement, ModalAnchorProps>(
   (props: ScopedProps<ModalAnchorProps>, forwardedRef) => {
     const { __scopeModal, virtualRef, ...anchorProps } = props;
     const context = useModalContext(ANCHOR_NAME, __scopeModal);
-    const ref = React.useRef<ModalAnchorElement>(null);
+    const ref = useRef<ModalAnchorElement>(null);
     const composedRefs = useComposedRefs(forwardedRef, ref);
 
-    React.useEffect(() => {
+    useEffect(() => {
       // Consumer can anchor the popper to something that isn't
       // a DOM node e.g. pointer position, so we override the
       // `anchorRef` with their virtual ref in this case.
@@ -113,7 +123,7 @@ const [ModalContentProvider, useContentContext] = createModalContext<ModalConten
 
 type Boundary = Element | null;
 
-type ModalContentElement = React.ElementRef<typeof Primitive.div>;
+type ModalContentElement = ElementRef<typeof Primitive.div>;
 interface ModalContentProps extends PrimitiveDivProps {
   side?: Side;
   sideOffset?: number;
@@ -129,7 +139,7 @@ interface ModalContentProps extends PrimitiveDivProps {
   onPlaced?: () => void;
 }
 
-const ModalContent = React.forwardRef<ModalContentElement, ModalContentProps>(
+const ModalContent = forwardRef<ModalContentElement, ModalContentProps>(
   (props: ScopedProps<ModalContentProps>, forwardedRef) => {
     const {
       __scopeModal,
@@ -150,10 +160,10 @@ const ModalContent = React.forwardRef<ModalContentElement, ModalContentProps>(
 
     const context = useModalContext(CONTENT_NAME, __scopeModal);
 
-    const [content, setContent] = React.useState<HTMLDivElement | null>(null);
+    const [content, setContent] = useState<HTMLDivElement | null>(null);
     const composedRefs = useComposedRefs(forwardedRef, (node) => setContent(node));
 
-    const [arrow, setArrow] = React.useState<HTMLSpanElement | null>(null);
+    const [arrow, setArrow] = useState<HTMLSpanElement | null>(null);
     const arrowSize = useSize(arrow);
     const arrowWidth = arrowSize?.width ?? 0;
     const arrowHeight = arrowSize?.height ?? 0;
@@ -228,7 +238,7 @@ const ModalContent = React.forwardRef<ModalContentElement, ModalContentProps>(
     const arrowY = middlewareData.arrow?.y;
     const cannotCenterArrow = middlewareData.arrow?.centerOffset !== 0;
 
-    const [contentZIndex, setContentZIndex] = React.useState<string>();
+    const [contentZIndex, setContentZIndex] = useState<string>();
     useLayoutEffect(() => {
       if (content) {
         setContentZIndex(window.getComputedStyle(content).zIndex);
@@ -303,11 +313,11 @@ const OPPOSITE_SIDE: Record<Side, Side> = {
   left: 'right',
 };
 
-type ModalArrowElement = React.ElementRef<typeof ArrowPrimitive.Root>;
-type ArrowProps = React.ComponentPropsWithoutRef<typeof ArrowPrimitive.Root>;
+type ModalArrowElement = ElementRef<typeof ArrowPrimitive.Root>;
+type ArrowProps = ComponentPropsWithoutRef<typeof ArrowPrimitive.Root>;
 interface ModalArrowProps extends ArrowProps {}
 
-const ModalArrow = React.forwardRef<ModalArrowElement, ModalArrowProps>(
+const ModalArrow = forwardRef<ModalArrowElement, ModalArrowProps>(
   (props: ScopedProps<ModalArrowProps>, forwardedRef) => {
     const { __scopeModal, ...arrowProps } = props;
     const contentContext = useContentContext(ARROW_NAME, __scopeModal);
