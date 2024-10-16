@@ -34,52 +34,52 @@ type Side = (typeof SIDE_OPTIONS)[number];
 type Align = (typeof ALIGN_OPTIONS)[number];
 
 /* -------------------------------------------------------------------------------------------------
- * Popper
+ * Modal
  * ----------------------------------------------------------------------------------------------- */
 
-const POPPER_NAME = 'Popper';
+const MODAL_NAME = 'Modal';
 
-type ScopedProps<P> = P & { __scopePopper?: Scope };
-const [createPopperContext, createPopperScope] = createContextScope(POPPER_NAME);
+type ScopedProps<P> = P & { __scopeModal?: Scope };
+const [createModalContext, createModalScope] = createContextScope(MODAL_NAME);
 
-type PopperContextValue = {
+type ModalContextValue = {
   anchor: Measurable | null;
   onAnchorChange(anchor: Measurable | null): void;
 };
-const [PopperProvider, usePopperContext] = createPopperContext<PopperContextValue>(POPPER_NAME);
+const [ModalProvider, useModalContext] = createModalContext<ModalContextValue>(MODAL_NAME);
 
-interface PopperProps {
+interface ModalProps {
   children?: React.ReactNode;
 }
-const Popper: React.FC<PopperProps> = (props: ScopedProps<PopperProps>) => {
-  const { __scopePopper, children } = props;
+const Modal: React.FC<ModalProps> = (props: ScopedProps<ModalProps>) => {
+  const { __scopeModal, children } = props;
   const [anchor, setAnchor] = React.useState<Measurable | null>(null);
   return (
-    <PopperProvider scope={__scopePopper} anchor={anchor} onAnchorChange={setAnchor}>
+    <ModalProvider scope={__scopeModal} anchor={anchor} onAnchorChange={setAnchor}>
       {children}
-    </PopperProvider>
+    </ModalProvider>
   );
 };
 
-Popper.displayName = POPPER_NAME;
+Modal.displayName = MODAL_NAME;
 
 /* -------------------------------------------------------------------------------------------------
- * PopperAnchor
+ * ModalAnchor
  * ----------------------------------------------------------------------------------------------- */
 
-const ANCHOR_NAME = 'PopperAnchor';
+const ANCHOR_NAME = 'ModalAnchor';
 
-type PopperAnchorElement = React.ElementRef<typeof Primitive.div>;
+type ModalAnchorElement = React.ElementRef<typeof Primitive.div>;
 type PrimitiveDivProps = React.ComponentPropsWithoutRef<typeof Primitive.div>;
-interface PopperAnchorProps extends PrimitiveDivProps {
+interface ModalAnchorProps extends PrimitiveDivProps {
   virtualRef?: React.RefObject<Measurable>;
 }
 
-const PopperAnchor = React.forwardRef<PopperAnchorElement, PopperAnchorProps>(
-  (props: ScopedProps<PopperAnchorProps>, forwardedRef) => {
-    const { __scopePopper, virtualRef, ...anchorProps } = props;
-    const context = usePopperContext(ANCHOR_NAME, __scopePopper);
-    const ref = React.useRef<PopperAnchorElement>(null);
+const ModalAnchor = React.forwardRef<ModalAnchorElement, ModalAnchorProps>(
+  (props: ScopedProps<ModalAnchorProps>, forwardedRef) => {
+    const { __scopeModal, virtualRef, ...anchorProps } = props;
+    const context = useModalContext(ANCHOR_NAME, __scopeModal);
+    const ref = React.useRef<ModalAnchorElement>(null);
     const composedRefs = useComposedRefs(forwardedRef, ref);
 
     React.useEffect(() => {
@@ -93,15 +93,15 @@ const PopperAnchor = React.forwardRef<PopperAnchorElement, PopperAnchorProps>(
   },
 );
 
-PopperAnchor.displayName = ANCHOR_NAME;
+ModalAnchor.displayName = ANCHOR_NAME;
 
 /* -------------------------------------------------------------------------------------------------
- * PopperContent
+ * ModalContent
  * ----------------------------------------------------------------------------------------------- */
 
-const CONTENT_NAME = 'PopperContent';
+const CONTENT_NAME = 'ModalContent';
 
-type PopperContentContextValue = {
+type ModalContentContextValue = {
   placedSide: Side;
   onArrowChange(arrow: HTMLSpanElement | null): void;
   arrowX?: number;
@@ -109,12 +109,12 @@ type PopperContentContextValue = {
   shouldHideArrow: boolean;
 };
 
-const [PopperContentProvider, useContentContext] = createPopperContext<PopperContentContextValue>(CONTENT_NAME);
+const [ModalContentProvider, useContentContext] = createModalContext<ModalContentContextValue>(CONTENT_NAME);
 
 type Boundary = Element | null;
 
-type PopperContentElement = React.ElementRef<typeof Primitive.div>;
-interface PopperContentProps extends PrimitiveDivProps {
+type ModalContentElement = React.ElementRef<typeof Primitive.div>;
+interface ModalContentProps extends PrimitiveDivProps {
   side?: Side;
   sideOffset?: number;
   align?: Align;
@@ -129,10 +129,10 @@ interface PopperContentProps extends PrimitiveDivProps {
   onPlaced?: () => void;
 }
 
-const PopperContent = React.forwardRef<PopperContentElement, PopperContentProps>(
-  (props: ScopedProps<PopperContentProps>, forwardedRef) => {
+const ModalContent = React.forwardRef<ModalContentElement, ModalContentProps>(
+  (props: ScopedProps<ModalContentProps>, forwardedRef) => {
     const {
-      __scopePopper,
+      __scopeModal,
       side = 'bottom',
       sideOffset = 0,
       align = 'center',
@@ -148,7 +148,7 @@ const PopperContent = React.forwardRef<PopperContentElement, PopperContentProps>
       ...contentProps
     } = props;
 
-    const context = usePopperContext(CONTENT_NAME, __scopePopper);
+    const context = useModalContext(CONTENT_NAME, __scopeModal);
 
     const [content, setContent] = React.useState<HTMLDivElement | null>(null);
     const composedRefs = useComposedRefs(forwardedRef, (node) => setContent(node));
@@ -262,8 +262,8 @@ const PopperContent = React.forwardRef<PopperContentElement, PopperContentProps>
         // this is calculated when portalled as well as inline.
         dir={props.dir}
       >
-        <PopperContentProvider
-          scope={__scopePopper}
+        <ModalContentProvider
+          scope={__scopeModal}
           placedSide={placedSide}
           onArrowChange={setArrow}
           arrowX={arrowX}
@@ -277,24 +277,24 @@ const PopperContent = React.forwardRef<PopperContentElement, PopperContentProps>
             ref={composedRefs}
             style={{
               ...contentProps.style,
-              // if the PopperContent hasn't been placed yet (not all measurements done)
+              // if the ModalContent hasn't been placed yet (not all measurements done)
               // we prevent animations so that users's animation don't kick in too early referring wrong sides
               animation: !isPositioned ? 'none' : undefined,
             }}
           />
-        </PopperContentProvider>
+        </ModalContentProvider>
       </div>
     );
   },
 );
 
-PopperContent.displayName = CONTENT_NAME;
+ModalContent.displayName = CONTENT_NAME;
 
 /* -------------------------------------------------------------------------------------------------
- * PopperArrow
+ * ModalArrow
  * ----------------------------------------------------------------------------------------------- */
 
-const ARROW_NAME = 'PopperArrow';
+const ARROW_NAME = 'ModalArrow';
 
 const OPPOSITE_SIDE: Record<Side, Side> = {
   top: 'bottom',
@@ -303,14 +303,14 @@ const OPPOSITE_SIDE: Record<Side, Side> = {
   left: 'right',
 };
 
-type PopperArrowElement = React.ElementRef<typeof ArrowPrimitive.Root>;
+type ModalArrowElement = React.ElementRef<typeof ArrowPrimitive.Root>;
 type ArrowProps = React.ComponentPropsWithoutRef<typeof ArrowPrimitive.Root>;
-interface PopperArrowProps extends ArrowProps {}
+interface ModalArrowProps extends ArrowProps {}
 
-const PopperArrow = React.forwardRef<PopperArrowElement, PopperArrowProps>(
-  (props: ScopedProps<PopperArrowProps>, forwardedRef) => {
-    const { __scopePopper, ...arrowProps } = props;
-    const contentContext = useContentContext(ARROW_NAME, __scopePopper);
+const ModalArrow = React.forwardRef<ModalArrowElement, ModalArrowProps>(
+  (props: ScopedProps<ModalArrowProps>, forwardedRef) => {
+    const { __scopeModal, ...arrowProps } = props;
+    const contentContext = useContentContext(ARROW_NAME, __scopeModal);
     const baseSide = OPPOSITE_SIDE[contentContext.placedSide];
 
     return (
@@ -353,7 +353,7 @@ const PopperArrow = React.forwardRef<PopperArrowElement, PopperArrowProps>(
   },
 );
 
-PopperArrow.displayName = ARROW_NAME;
+ModalArrow.displayName = ARROW_NAME;
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -401,18 +401,18 @@ const getSideAndAlignFromPlacement = (placement: Placement) => {
   return [side as Side, align as Align] as const;
 };
 
-const Root = Popper;
-const Anchor = PopperAnchor;
-const Content = PopperContent;
-const Arrow = PopperArrow;
+const Root = Modal;
+const Anchor = ModalAnchor;
+const Content = ModalContent;
+const Arrow = ModalArrow;
 
 export {
-  createPopperScope,
+  createModalScope,
   //
-  Popper,
-  PopperAnchor,
-  PopperContent,
-  PopperArrow,
+  Modal,
+  ModalAnchor,
+  ModalContent,
+  ModalArrow,
   //
   Root,
   Anchor,
@@ -422,4 +422,4 @@ export {
   SIDE_OPTIONS,
   ALIGN_OPTIONS,
 };
-export type { PopperProps, PopperAnchorProps, PopperContentProps, PopperArrowProps };
+export type { ModalProps, ModalAnchorProps, ModalContentProps, ModalArrowProps };
