@@ -339,16 +339,10 @@ export const NavTreeContainer = ({
               items.map((item) => (
                 <List.Item<NavTreeItem> key={item.id} item={item} classNames={mx('p-2', ghostHover)}>
                   <List.ItemDragHandle />
-                  <List.ItemTitle
-                    classNames='p-2 text-sm'
-                    onClick={() => {
-                      handleItemOpenChange(item, true);
-                      handleNavigate(item);
-                    }}
-                  >
+                  <List.ItemTitle classNames='p-2 text-sm' onClick={() => handleNavigate(item)}>
                     {getLabel(item)}
                   </List.ItemTitle>
-                  <List.ItemDeleteButton />
+                  <List.IconButton icon='ph--caret-down--regular' onClick={() => handleItemOpenChange(item, true)} />
                 </List.Item>
               ))
             }
