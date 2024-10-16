@@ -44,9 +44,6 @@
       "meta": [
         "dist/types/src/meta.d.ts"
       ],
-      "testing": [
-        "dist/types/src/testing.d.ts"
-      ],
       "types": [
         "dist/types/src/types.d.ts"
       ]
