@@ -50,7 +50,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
   }
 
   async connect(context: EchoReplicatorContext): Promise<void> {
-    log.info('connect', { peerId: context.peerId });
+    log.info('connect', { peerId: context.peerId, connectedSpaces: this._connectedSpaces.size });
     this._context = context;
 
     this._ctx = Context.default();
