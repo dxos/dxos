@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import React from 'react';
 
 import {
@@ -14,7 +13,6 @@ import {
   type TranslationsProvides,
   resolvePlugin,
   parseIntentPlugin,
-  parseNavigationPlugin,
   LayoutAction,
   SettingsAction,
   parsePluginHost,
@@ -71,7 +69,6 @@ export const ObservabilityPlugin = (options: {
     },
     ready: async (plugins) => {
       const pluginHost = resolvePlugin(plugins, parsePluginHost);
-      const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 

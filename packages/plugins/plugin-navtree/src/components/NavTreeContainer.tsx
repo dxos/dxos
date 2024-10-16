@@ -4,7 +4,7 @@
 
 import React, { type ReactNode, useCallback, useMemo } from 'react';
 
-import { NavigationAction, LayoutAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
+import { NavigationAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { getGraph, isAction, isActionLike } from '@dxos/app-graph';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type MosaicDropEvent, type MosaicMoveEvent, Mosaic, Path } from '@dxos/react-ui-mosaic';
@@ -95,7 +95,6 @@ export const NavTreeContainer = ({
         },
       },
     });
-
 
     const defaultAction = actions?.find((action) => action.properties?.disposition === 'default');
     if (isAction(defaultAction)) {
