@@ -42,6 +42,7 @@ export type MessengerConfig = {
   socketEndpoint: string;
   timeout?: number;
   protocol?: Protocol;
+  disableAuth?: boolean;
 };
 
 export interface EdgeIdentity {
@@ -54,8 +55,6 @@ export interface EdgeIdentity {
    */
   presentCredentials({ challenge }: { challenge: Uint8Array }): Promise<Presentation>;
 }
-
-const DISABLE_AUTH = true;
 
 /**
  * Messenger client.
@@ -137,7 +136,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
   private async _openWebSocket() {
     let protocolHeader: string | undefined;
 
-    if (!DISABLE_AUTH) {
+    if (!this._config.disableAuth) {
       // TODO(dmaretskyi): Get challenge from the WWW-Authenticate header returned by the endpoint.
       const challenge = randomBytes(32);
       const credential = await this._identity.presentCredentials({ challenge });

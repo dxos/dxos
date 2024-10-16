@@ -11,18 +11,19 @@ import { Button } from '@dxos/react-ui';
 import {
   type BaseColumnOptions,
   ColumnMenu,
-  type ColumnProps,
+  type ColumnDef,
   createColumnBuilder,
   type SearchListQueryModel,
   type TableColumnDef,
   type TableDef,
 } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
+import { FieldValueType } from '@dxos/schema';
 
-import { createUniqueProp } from './types';
+import { getUniqueProperty } from './types';
 
 type ColumnCreationOptions = {
-  onColumnUpdate?: (id: string, column: ColumnProps) => void;
+  onColumnUpdate?: (id: string, column: ColumnDef) => void;
   onColumnDelete?: (id: string) => void;
   onRowUpdate?: (object: any, key: string, value: any) => void;
   onRowDelete?: (object: any) => void;
@@ -61,7 +62,6 @@ export const createColumns = (
 
   return tableDef.columns.map((column) => {
     const { type, id, label, fixed, resizable, ...props } = column;
-
     const columnIndex = tableDef.columns.indexOf(column);
     const columnPosition =
       columnIndex === 0 ? 'start' : columnIndex === tableDef.columns.length - 1 ? 'end' : undefined;
@@ -89,18 +89,18 @@ export const createColumns = (
     };
 
     switch (type) {
-      case 'ref':
+      case FieldValueType.Ref:
         return helper.accessor(
           id,
           builder.combobox({ ...options, model: new QueryModel(space!.db, column.refTable!, column.refProp!) }),
         );
-      case 'number':
+      case FieldValueType.Number:
         return helper.accessor(id, builder.number(options));
-      case 'boolean':
+      case FieldValueType.Boolean:
         return helper.accessor(id, builder.switch(options));
-      case 'date':
+      case FieldValueType.Date:
         return helper.accessor(id, builder.date(options));
-      case 'string':
+      case FieldValueType.String:
       default:
         return helper.accessor(id, builder.string(options));
     }
@@ -117,11 +117,11 @@ export const createActionColumn = (
   const { helper } = createColumnBuilder<EchoReactiveObject<any>>();
 
   const handleAddColumn = () => {
-    const id = createUniqueProp(tableDef);
+    const id = getUniqueProperty(tableDef);
     onColumnUpdate?.(id, {
       id,
       prop: id,
-      type: 'string',
+      type: FieldValueType.String,
       editable: true,
       resizable: true,
     });

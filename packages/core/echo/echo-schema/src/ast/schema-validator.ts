@@ -135,12 +135,14 @@ const getPropertyType = (
   if (anyOrObject != null) {
     return ast;
   }
+
   const typeOrDiscriminatedUnion = unwrapAst(ast, (t) => {
     return AST.isTypeLiteral(t) || (AST.isUnion(t) && t.types.some((t) => AST.isTypeLiteral(t)));
   });
   if (typeOrDiscriminatedUnion == null) {
     return null;
   }
+
   const targetProperty = getProperties(typeOrDiscriminatedUnion, getTargetPropertyFn).find(
     (p) => p.name === propertyName,
   );

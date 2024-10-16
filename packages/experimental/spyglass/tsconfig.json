@@ -4,7 +4,7 @@
     "allowSyntheticDefaultImports": true,
     "composite": true,
     "module": "CommonJS",
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "outDir": "dist",
     "target": "ESNext",
     "types": [

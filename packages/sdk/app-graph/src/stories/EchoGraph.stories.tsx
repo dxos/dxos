@@ -8,7 +8,6 @@ import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { type EchoReactiveObject, create } from '@dxos/echo-schema';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import {
@@ -34,8 +33,6 @@ import { type Node } from '../node';
 const DEFAULT_PERIOD = 500;
 
 const EMPTY_ARRAY: never[] = [];
-
-registerSignalsRuntime();
 
 enum Action {
   CREATE_SPACE = 'CREATE_SPACE',
