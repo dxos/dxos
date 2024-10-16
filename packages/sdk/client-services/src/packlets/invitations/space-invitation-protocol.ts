@@ -60,9 +60,13 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
   }
 
   getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'> {
+    invariant(this._spaceKey);
+    const space = this._spaceManager.spaces.get(this._spaceKey);
+    invariant(space);
     return {
       kind: Invitation.Kind.SPACE,
       spaceKey: this._spaceKey,
+      spaceId: space.id,
     };
   }
 
