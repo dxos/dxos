@@ -7,16 +7,18 @@ import React, { type ReactNode, useCallback, useMemo } from 'react';
 import { NavigationAction, LayoutAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { getGraph, isAction, isActionLike } from '@dxos/app-graph';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
+import { List } from '@dxos/react-ui-list';
 import { type MosaicDropEvent, type MosaicMoveEvent, Mosaic, Path } from '@dxos/react-ui-mosaic';
 import {
+  getLevel,
   NavTree,
+  type NavTreeActionsNode,
+  type NavTreeItemMoveDetails,
   type NavTreeItemNode,
   type NavTreeNode,
-  getLevel,
-  type NavTreeActionsNode,
   type NavTreeProps,
-  type NavTreeItemMoveDetails,
 } from '@dxos/react-ui-navtree';
+import { ghostHover, mx } from '@dxos/react-ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { NavTreeFooter } from './NavTreeFooter';
@@ -26,10 +28,10 @@ import {
   expandChildren,
   getChildren,
   getParent,
-  type NavTreeItem,
-  type NavTreeItemGraphNode,
   resolveMigrationOperation,
   treeItemsFromRootNode,
+  type NavTreeItem,
+  type NavTreeItemGraphNode,
 } from '../util';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
@@ -60,7 +62,6 @@ export const NavTreeContainer = ({
   const dispatch = useIntentDispatcher();
 
   const graph = useMemo(() => getGraph(root), [root]);
-
   const items = treeItemsFromRootNode(graph, root, openItemIds);
 
   const loadDescendents = useCallback(
@@ -97,7 +98,6 @@ export const NavTreeContainer = ({
     });
 
     await dispatch({ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: node.id } });
-
     const defaultAction = actions?.find((action) => action.properties?.disposition === 'default');
     if (isAction(defaultAction)) {
       void (defaultAction.data as () => void)();
@@ -150,7 +150,6 @@ export const NavTreeContainer = ({
     ({ active, over, details }: MosaicMoveEvent<number, NavTreeItemMoveDetails>) => {
       const levelOffset = Math.floor((details?.delta?.x ?? 0) / 16);
       const overPosition = over.position ?? 0;
-
       const nextItems = arrayMove(
         items,
         items.findIndex(({ id }) => id === active.item.id),
@@ -159,9 +158,7 @@ export const NavTreeContainer = ({
 
       const previousItem: NavTreeItem | undefined = nextItems[overPosition - 1];
       const nextItem: NavTreeItem | undefined = nextItems[overPosition + 1];
-
       const activeNode = 'node' in active.item ? (active.item as NavTreeItem).node : undefined;
-
       if (!activeNode || !previousItem || !previousItem.path) {
         // console.log('[reject]', !activeNode, !previousItem, !previousItem.path);
         // log.warn('Top-level rearrange before the first item of the NavTree is unsupported at this time.');
@@ -169,11 +166,8 @@ export const NavTreeContainer = ({
       }
 
       const overLevel = resolveItemLevel(overPosition, active.item.id, levelOffset);
-
       const previousLevel = getLevel(previousItem.path);
-
       // console.log('[over]', overLevel, previousLevel, levelOffset);
-
       if (previousLevel === overLevel - 1) {
         if (Path.hasChild(previousItem.id, active.item.id)) {
           // Previous is already parent of Active, rearrange.
@@ -240,9 +234,9 @@ export const NavTreeContainer = ({
       if (Path.first(over.path) !== root.id) {
         return undefined;
       }
+
       const { levelOffset = 0 } = details;
       const overPosition = over.position ?? 0;
-
       const nextItems = arrayMove(
         items,
         items.findIndex(({ id }) => id === active.item.id),
@@ -251,13 +245,11 @@ export const NavTreeContainer = ({
 
       const activeNode = 'node' in active.item ? (active.item as NavTreeItem).node : undefined;
       const activeParentId = Path.parent(active.item.id);
-
       if (!activeNode) {
         return undefined;
       }
 
       const activeParent = getParent(graph, activeNode, (active.item as NavTreeItem).path ?? []);
-
       if (operation === 'rearrange') {
         void activeParent?.properties.onRearrangeChildren?.(
           nextItems.filter(({ id }) => Path.hasChild(activeParentId, id)).map(({ node }) => node.data),
@@ -266,11 +258,8 @@ export const NavTreeContainer = ({
       } else {
         const previousItem: NavTreeItem | undefined = nextItems[overPosition - 1];
         const nextItem: NavTreeItem | undefined = nextItems[overPosition + 1];
-
         const overLevel = resolveItemLevel(overPosition, active.item.id, levelOffset);
-
         const previousLevel = getLevel(previousItem.path);
-
         if (operation === 'copy') {
           if (previousLevel === overLevel - 1) {
             void previousItem.node.properties.onCopy?.(activeNode, 0);
@@ -333,6 +322,40 @@ export const NavTreeContainer = ({
     onOpenItemIdsChange({ ...openItemIds });
   }, [onOpenItemIdsChange, openItemIds]);
 
+  const getLabel = (item: NavTreeItem) => {
+    const label = item.node?.properties?.label;
+    return typeof label === 'string' ? label : item.id;
+  };
+
+  return (
+    <div className='bs-full overflow-hidden row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'>
+      <div className='flex items-center p-2'>Items: {items.length}</div>
+      <div role='none' className='!overflow-y-auto'>
+        <List.Root items={items} isItem={() => true}>
+          {({ items }) =>
+            items.map((item) => (
+              <List.Item key={item.id} classNames={mx('p-2', ghostHover)}>
+                <List.ItemDragHandle />
+                <List.ItemTitle
+                  classNames='p-2 text-sm'
+                  onClick={() => {
+                    console.log(JSON.stringify(item, null, 2));
+                    handleItemOpenChange(item, true);
+                    handleNavigate({ node: item.node, actions: item.actions });
+                  }}
+                >
+                  {getLabel(item)}
+                </List.ItemTitle>
+                <List.ItemDeleteButton />
+              </List.Item>
+            ))
+          }
+        </List.Root>
+      </div>
+      <NavTreeFooter />
+    </div>
+  );
+
   return (
     <Mosaic.Root>
       <Mosaic.DragOverlay />
@@ -342,6 +365,7 @@ export const NavTreeContainer = ({
           className='bs-full overflow-hidden row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'
         >
           <Surface role='search-input' limit={1} />
+
           {/* TODO(thure): what gives this an inline `overflow: initial`? */}
           <div role='none' className='!overflow-y-auto'>
             <NavTree
@@ -350,18 +374,19 @@ export const NavTreeContainer = ({
               current={activeIds}
               attended={attended}
               type={NODE_TYPE}
+              loadDescendents={loadDescendents}
+              popoverAnchorId={popoverAnchorId}
+              renderPresence={renderPresence}
+              resolveItemLevel={resolveItemLevel}
               open={openItemIds}
               onNavigate={handleNavigate}
               onItemOpenChange={handleItemOpenChange}
               onMove={handleMove}
               onDrop={handleDrop}
               onDragEnd={handleDragEnd}
-              popoverAnchorId={popoverAnchorId}
-              renderPresence={renderPresence}
-              resolveItemLevel={resolveItemLevel}
-              loadDescendents={loadDescendents}
             />
           </div>
+
           <NavTreeFooter />
         </div>
       </ElevationProvider>
