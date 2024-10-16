@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { S } from '@dxos/effect';
 
-import { getProperty } from './ast';
+import { getProperty, visitNode } from './ast';
 
 describe('AST', () => {
   test('getProperty', () => {
@@ -26,5 +26,22 @@ describe('AST', () => {
       const prop = getProperty(TestSchema, 'address.city');
       expect(prop).not.to.exist;
     }
+  });
+
+  test('visitNode', () => {
+    const TestSchema = S.Struct({
+      name: S.optional(S.String),
+      address: S.optional(
+        S.Struct({
+          zip: S.String,
+        }),
+      ),
+    });
+
+    const props: string[] = [];
+    visitNode(TestSchema.ast, (_node, prop) => {
+      props.push(prop.join('.'));
+    });
+    expect(props).to.deep.eq(['name', 'address.zip']);
   });
 });

@@ -3,33 +3,67 @@
 //
 
 import { AST, type S } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
+
+// TODO(burdon): Move to @dxos/effect (in common with echo-schema).
+
+export const getType = (node: AST.AST): AST.AST | undefined => {
+  if (AST.isUnion(node)) {
+    return node.types.find((type) => getType(type));
+  } else if (AST.isRefinement(node)) {
+    // TODO(burdon): Document refinements.
+    return getType(node.from);
+  } else {
+    return node;
+  }
+};
+
+export const isType = (node: AST.AST): boolean => isScalar(node) || AST.isTypeLiteral(node);
+
+// TODO(burdon): Other primitive types? Any, BigInt, Arrays, etc.
+export const isScalar = (node: AST.AST) =>
+  AST.isNumberKeyword(node) || AST.isBooleanKeyword(node) || AST.isStringKeyword(node);
 
 /**
  * Get the AST node for the given property (dot-path).
  */
 export const getProperty = (schema: S.Schema<any>, path: string): AST.AST | undefined => {
   let node: AST.AST = schema.ast;
-  const parts = path.split('.');
-  for (const part of parts) {
+  for (const part of path.split('.')) {
     const props = AST.getPropertySignatures(node);
     const prop = props.find((prop) => prop.name === part);
     if (!prop) {
       return undefined;
     }
 
-    // TODO(burdon): Check if leaf path.
-    if (AST.isUnion(prop.type)) {
-      const n = prop.type.types.find(
-        (p) => AST.isTypeLiteral(p) || AST.isNumberKeyword(p) || AST.isBooleanKeyword(p) || AST.isStringKeyword(p),
-      );
-      if (!n) {
-        return undefined;
-      }
-      node = n;
-    } else {
-      node = prop.type;
-    }
+    // TODO(burdon): Check if leaf.
+    const type = getType(prop.type);
+    invariant(type, `invalid type: ${path}`);
+    node = type;
   }
 
   return node;
+};
+
+export type Visitor = (node: AST.AST, path: string[]) => void;
+
+/**
+ * Visit leaf nodes.
+ */
+// TODO(burdon): Ref udist.
+// TODO(burdon): Hide path from args or start from path.
+export const visitNode = (node: AST.AST, visitor: Visitor, path: string[] = []) => {
+  const props = AST.getPropertySignatures(node);
+  props.forEach((prop) => {
+    const propPath = [...path, prop.name.toString()];
+    const type = getType(prop.type);
+    if (type) {
+      if (AST.isTypeLiteral(type)) {
+        visitNode(type, visitor, propPath);
+      } else {
+        // NOTE: Only visits leaf nodes.
+        visitor(type, propPath);
+      }
+    }
+  });
 };

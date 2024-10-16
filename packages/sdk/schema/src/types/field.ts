@@ -6,6 +6,7 @@ import jp from 'jsonpath';
 
 import { AST, type S } from '@dxos/echo-schema';
 
+import { visitNode } from './ast';
 import { type FieldType, FieldValueType, type ViewType } from './types';
 
 // TODO(burdon): Just use lodash.get?
@@ -17,43 +18,9 @@ export const setFieldValue = <T>(data: any, field: FieldType, value: T): T => jp
 
 // TODO(burdon): Return Field objects.
 export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FieldValueType][] => {
-  const visitNode = (node: AST.AST, path: string[] = [], acc: [string, FieldValueType][] = []) => {
-    const props = AST.getPropertySignatures(node);
-    props.forEach((prop) => {
-      const propName = prop.name.toString();
-      if (prop.isOptional) {
-        const unwrappedAst = unwrapOptionProperty(prop);
-        if (AST.isTypeLiteral(unwrappedAst)) {
-          return visitNode(unwrappedAst, [...path, propName], acc);
-        }
-      }
-
-      if (AST.isTypeLiteral(prop.type)) {
-        visitNode(prop.type, [...path, propName], acc);
-      } else {
-        let type: AST.AST = prop.type;
-        if (prop.isOptional) {
-          type = unwrapOptionProperty(prop);
-        }
-
-        acc.push([path.concat(propName).join('.'), toFieldValueType(type)]);
-      }
-    });
-
-    return acc;
-  };
-
-  return visitNode(schema.ast);
-};
-
-const unwrapOptionProperty = (prop: AST.PropertySignature): AST.AST => {
-  if (!AST.isUnion(prop.type)) {
-    throw new Error(`Not a union type: ${String(prop.name)}`);
-  }
-
-  // TODO(burdon): This is very likely a bug.
-  const [type] = prop.type.types;
-  return type;
+  const fields: [string, FieldValueType][] = [];
+  visitNode(schema.ast, (node, path) => fields.push([path.join('.'), toFieldValueType(node)]));
+  return fields;
 };
 
 // TODO(burdon): Reconcile with:
