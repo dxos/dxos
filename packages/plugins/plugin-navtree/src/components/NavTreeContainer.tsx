@@ -96,7 +96,6 @@ export const NavTreeContainer = ({
       },
     });
 
-    await dispatch({ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: node.id } });
 
     const defaultAction = actions?.find((action) => action.properties?.disposition === 'default');
     if (isAction(defaultAction)) {

@@ -125,17 +125,6 @@ export const ObservabilityPlugin = (options: {
           return;
         }
 
-        subscriptions.add(
-          effect(() => {
-            // Read active to subscribe to changes.
-            const _ = navigationPlugin?.provides?.location?.active;
-
-            observability?.page({
-              identityId: getTelemetryIdentifier(client),
-            });
-          }),
-        );
-
         await dispatch({
           action: ObservabilityAction.SEND_EVENT,
           data: {
