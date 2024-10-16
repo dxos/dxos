@@ -14,26 +14,31 @@ import { S } from '@dxos/effect';
 
 // TODO(burdon): Kind vs. echo-schema PropType.
 export enum FieldValueType {
-  Number = 'number',
-  Boolean = 'boolean',
   String = 'string',
-  Text = 'text',
 
+  Boolean = 'boolean',
+
+  Number = 'number',
+  Percent = 'percent',
+  Currency = 'currency',
+
+  Text = 'text',
   Ref = 'ref',
   User = 'user',
-  Formula = 'formula',
+
+  JSON = 'json',
 
   Timestamp = 'timestamp',
   DateTime = 'datetime',
   Date = 'date',
   Time = 'time',
 
-  Percent = 'percent',
-  Currency = 'currency',
-  JSON = 'json',
+  Formula = 'formula',
+  Email = 'email',
+  URL = 'url',
+  DID = 'did',
 
   // TODO(burdon): Other types:
-  //  - Email, URL, DID
   //  - Duration, Rating
   //  - Address, Phone number
 }
