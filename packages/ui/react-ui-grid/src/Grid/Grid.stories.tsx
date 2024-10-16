@@ -4,52 +4,43 @@
 
 import '@dxos-theme';
 
-import { type Scope } from '@radix-ui/react-context';
-import React, { type MouseEvent, type MutableRefObject, useCallback } from 'react';
+import React, { type MouseEvent, useCallback, useRef, useState } from 'react';
 
-import { DropdownMenu, useDropdownMenuContext } from '@dxos/react-ui';
+import { DropdownMenu } from '@dxos/react-ui';
+import * as ModalPrimitive from '@dxos/react-ui-modal';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Grid, type GridContentProps, type GridRootProps } from './Grid';
 
 type StoryGridProps = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
 
-type ScopedProps<P> = P & { __scopeDropdownMenu?: Scope };
+const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const triggerRef = useRef<HTMLDivElement | null>(null);
 
-const StoryGridImpl = ({ onEditingChange, __scopeDropdownMenu, ...props }: ScopedProps<StoryGridProps>) => {
-  const { triggerRef, onOpenToggle } = useDropdownMenuContext('StoryGridImpl', __scopeDropdownMenu);
-  const handleClick = useCallback(
-    (event: MouseEvent) => {
-      const closestAction = (event.target as HTMLElement).closest('button[data-story-action]');
-      if (closestAction) {
-        console.log('[setting trigger ref]');
-        (triggerRef as MutableRefObject<HTMLButtonElement>).current = closestAction as HTMLButtonElement;
-        onOpenToggle();
-      }
-    },
-    [onOpenToggle],
-  );
+  const handleClick = useCallback((event: MouseEvent) => {
+    const closestAction = (event.target as HTMLElement).closest('button[data-story-action]');
+    if (closestAction) {
+      triggerRef.current = closestAction as HTMLDivElement;
+      setMenuOpen(true);
+    }
+  }, []);
+
   return (
-    <>
+    <ModalPrimitive.Root>
       <Grid.Root id='story' onEditingChange={onEditingChange}>
         <Grid.Content {...props} onClick={handleClick} />
       </Grid.Root>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content classNames='z-90'>
-          <DropdownMenu.Viewport>
-            <DropdownMenu.Item>Hello</DropdownMenu.Item>
-          </DropdownMenu.Viewport>
+      <ModalPrimitive.Anchor virtualRef={triggerRef} />
+      <DropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
+        <DropdownMenu.Content classNames='contents'>
+          <ModalPrimitive.Content>
+            <DropdownMenu.Item onClick={() => console.log('[Click on dropdown menu item]')}>Hello</DropdownMenu.Item>
+            <ModalPrimitive.Arrow />
+          </ModalPrimitive.Content>
         </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </>
-  );
-};
-
-const StoryGrid = (props: StoryGridProps) => {
-  return (
-    <DropdownMenu.Root>
-      <StoryGridImpl {...props} />
-    </DropdownMenu.Root>
+      </DropdownMenu.Root>
+    </ModalPrimitive.Root>
   );
 };
 

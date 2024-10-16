@@ -37,6 +37,8 @@ import React, {
   useState,
 } from 'react';
 
+import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
+
 const SIDE_OPTIONS = ['top', 'right', 'bottom', 'left'] as const;
 const ALIGN_OPTIONS = ['start', 'center', 'end'] as const;
 
@@ -124,7 +126,7 @@ const [ModalContentProvider, useContentContext] = createModalContext<ModalConten
 type Boundary = Element | null;
 
 type ModalContentElement = ElementRef<typeof Primitive.div>;
-interface ModalContentProps extends PrimitiveDivProps {
+interface ModalContentProps extends ThemedClassName<PrimitiveDivProps> {
   side?: Side;
   sideOffset?: number;
   align?: Align;
@@ -155,8 +157,11 @@ const ModalContent = forwardRef<ModalContentElement, ModalContentProps>(
       hideWhenDetached = false,
       updatePositionStrategy = 'optimized',
       onPlaced,
+      classNames,
       ...contentProps
     } = props;
+
+    const { tx } = useThemeContext();
 
     const context = useModalContext(CONTENT_NAME, __scopeModal);
 
@@ -284,6 +289,7 @@ const ModalContent = forwardRef<ModalContentElement, ModalContentProps>(
             data-side={placedSide}
             data-align={placedAlign}
             {...contentProps}
+            className={tx('menu.content', 'menu__content', {}, classNames)}
             ref={composedRefs}
             style={{
               ...contentProps.style,
@@ -314,14 +320,16 @@ const OPPOSITE_SIDE: Record<Side, Side> = {
 };
 
 type ModalArrowElement = ElementRef<typeof ArrowPrimitive.Root>;
-type ArrowProps = ComponentPropsWithoutRef<typeof ArrowPrimitive.Root>;
+type ArrowProps = ThemedClassName<ComponentPropsWithoutRef<typeof ArrowPrimitive.Root>>;
 interface ModalArrowProps extends ArrowProps {}
 
 const ModalArrow = forwardRef<ModalArrowElement, ModalArrowProps>(
   (props: ScopedProps<ModalArrowProps>, forwardedRef) => {
-    const { __scopeModal, ...arrowProps } = props;
+    const { __scopeModal, classNames, ...arrowProps } = props;
     const contentContext = useContentContext(ARROW_NAME, __scopeModal);
     const baseSide = OPPOSITE_SIDE[contentContext.placedSide];
+
+    const { tx } = useThemeContext();
 
     return (
       // we have to use an extra wrapper because `ResizeObserver` (used by `useSize`)
@@ -351,6 +359,7 @@ const ModalArrow = forwardRef<ModalArrowElement, ModalArrowProps>(
       >
         <ArrowPrimitive.Root
           {...arrowProps}
+          className={tx('menu.arrow', 'menu__arrow', {}, classNames)}
           ref={forwardedRef}
           style={{
             ...arrowProps.style,

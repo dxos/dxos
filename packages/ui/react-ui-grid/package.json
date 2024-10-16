@@ -26,6 +26,7 @@
     "@dxos/lit-grid": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-modal": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@lit/react": "^1.0.5",
