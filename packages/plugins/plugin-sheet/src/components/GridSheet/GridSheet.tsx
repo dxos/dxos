@@ -141,6 +141,7 @@ export const GridSheet = () => {
         columnDefault={sheetColDefault}
         frozen={frozen}
         onFocus={handleFocus}
+        className='[--dx-grid-base:var(--surface-bg)]'
         ref={dxGrid}
       />
     </>
