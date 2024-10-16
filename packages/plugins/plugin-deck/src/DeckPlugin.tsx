@@ -198,7 +198,7 @@ export const DeckPlugin = ({
       const ids = (layout.values.layoutMode === 'deck' ? next.main : next.solo)?.map(({ id }) => id) ?? [];
       const isAttendedAvailable = !!attendedId && ids.includes(attendedId);
       if (!isAttendedAvailable) {
-        const nextAttended = next.main?.[0]?.id;
+        const nextAttended = layout.values.layoutMode === 'solo' ? next.solo?.[0].id : next.main?.[0]?.id;
         const article = document.querySelector<HTMLElement>(`article[data-attendable-id="${nextAttended}"]`);
         article?.focus();
       }
