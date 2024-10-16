@@ -13,6 +13,11 @@ type PropType<T> = {
   set: (key: string, value: T | undefined) => void;
 };
 
+type PropParams = {
+  // TODO(burdon): Default to true.
+  allowUndefined?: boolean;
+};
+
 /**
  * Local storage backed store.
  * https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage
@@ -20,8 +25,8 @@ type PropType<T> = {
  */
 export class LocalStorageStore<T extends object> {
   static string(): PropType<string>;
-  static string(params: { allowUndefined: boolean }): PropType<string | undefined>;
-  static string(params?: { allowUndefined: boolean }) {
+  static string(params: PropParams): PropType<string | undefined>;
+  static string(params?: PropParams) {
     const prop: PropType<string | undefined> = {
       get: (key) => {
         const value = localStorage.getItem(key);
@@ -40,16 +45,16 @@ export class LocalStorageStore<T extends object> {
   }
 
   static enum<U>(): PropType<U>;
-  static enum<U>(params: { allowUndefined: boolean }): PropType<U | undefined>;
-  static enum<U>(params?: { allowUndefined: boolean }) {
+  static enum<U>(params: PropParams): PropType<U | undefined>;
+  static enum<U>(params?: PropParams) {
     return params?.allowUndefined
       ? (LocalStorageStore.string(params) as PropType<U | undefined>)
       : (LocalStorageStore.string() as unknown as PropType<U>);
   }
 
   static number(): PropType<number>;
-  static number(params: { allowUndefined: boolean }): PropType<number | undefined>;
-  static number(params?: { allowUndefined: boolean }) {
+  static number(params: PropParams): PropType<number | undefined>;
+  static number(params?: PropParams) {
     const prop: PropType<number | undefined> = {
       get: (key) => {
         const value = parseInt(localStorage.getItem(key) ?? '');
@@ -68,8 +73,8 @@ export class LocalStorageStore<T extends object> {
   }
 
   static bool(): PropType<boolean>;
-  static bool(params: { allowUndefined: boolean }): PropType<boolean | undefined>;
-  static bool(params?: { allowUndefined: boolean }) {
+  static bool(params: PropParams): PropType<boolean | undefined>;
+  static bool(params?: PropParams) {
     const prop: PropType<boolean | undefined> = {
       get: (key) => {
         const value = localStorage.getItem(key);

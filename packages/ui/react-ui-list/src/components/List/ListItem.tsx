@@ -163,7 +163,7 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item 
   return (
     <ListItemProvider item={item} dragHandleRef={dragHandleRef}>
       <div className='relative'>
-        <div ref={ref} role='listitem' className={mx('flex', classNames, stateStyles[state.type])}>
+        <div ref={ref} role='listitem' className={mx('flex overflow-hidden', classNames, stateStyles[state.type])}>
           {children}
         </div>
         {state.type === 'is-dragging-over' && state.closestEdge && <DropIndicator edge={state.closestEdge} />}
@@ -228,7 +228,7 @@ export const ListItemTitle = ({
   children,
   ...props
 }: ThemedClassName<PropsWithChildren<ComponentProps<'div'>>>) => (
-  <div className={mx('flex w-full items-center', classNames)} {...props}>
+  <div className={mx('grow items-center truncate', classNames)} {...props}>
     {children}
   </div>
 );
