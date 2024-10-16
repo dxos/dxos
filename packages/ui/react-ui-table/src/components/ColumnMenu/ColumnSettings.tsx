@@ -5,7 +5,7 @@
 import React, { useRef, useState } from 'react';
 
 import { Button, Input, Select, useTranslation } from '@dxos/react-ui';
-import { FieldValueTypes } from '@dxos/schema';
+import { FieldValueTypes, type FieldValueType } from '@dxos/schema';
 import { safeParseInt } from '@dxos/util';
 
 import { type TableDef, type ColumnDef } from '../../schema';
@@ -32,6 +32,8 @@ export const ColumnSettings = ({
   onDelete,
   onClose,
 }: ColumnSettingsProps) => {
+  const { t } = useTranslation(translationKey);
+  const propRef = useRef<HTMLInputElement>(null);
   const [formState, setFormState] = useState({
     prop: column.id,
     refTable: column.refTable,
@@ -40,9 +42,6 @@ export const ColumnSettings = ({
     label: column.label,
     digits: String(column.digits ?? '0'),
   });
-
-  const propRef = useRef<HTMLInputElement>(null);
-  const { t } = useTranslation(translationKey);
 
   const handleSave = () => {
     const { prop, refTable, refProp, type, label, digits } = formState;
@@ -68,7 +67,7 @@ export const ColumnSettings = ({
       id: prop, // TODO(burdon): Make unique.
       prop,
       label,
-      type: type as ColumnDef['type'],
+      type: type as FieldValueType,
       refTable,
       refProp,
       digits: safeParseInt(digits),

@@ -42,7 +42,7 @@
       },
       "types": "./dist/types/src/testing/index.d.ts"
     },
-    "./tcp": {
+    "./transport/tcp": {
       "browser": "./dist/lib/browser/transport/tcp/index.mjs",
       "node": {
         "require": "./dist/lib/node/transport/tcp/index.cjs",
@@ -60,7 +60,7 @@
       "testing": [
         "dist/types/src/testing/index.d.ts"
       ],
-      "tcp": [
+      "transport/tcp": [
         "dist/types/src/transport/tcp/index.d.ts"
       ]
     }

@@ -9,8 +9,9 @@ export const ThreadMain = React.lazy(() => import('./ThreadMain'));
 export const ThreadArticle = React.lazy(() => import('./ThreadArticle'));
 
 // TODO(wittjosiah): Suspense boundary for sidebar?
-export * from './ThreadSettings';
 export * from './CommentContainer';
-export * from './MessageContainer';
 export * from './CommentsContainer';
 export * from './ChatContainer';
+export * from './MessageContainer';
+export * from './ThreadComplementary';
+export * from './ThreadSettings';

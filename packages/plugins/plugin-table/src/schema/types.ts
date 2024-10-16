@@ -33,11 +33,11 @@ interface ColumnAnnotation {
 
 export const getSchema = (
   tables: TableType[],
-  type: ColumnDef['type'] | undefined,
+  type: FieldValueType | undefined,
   options: { digits?: number; refProp?: string; refTable?: string },
 ): S.Schema<any> => {
   let schema: S.Schema<any>;
-  if (type === 'ref') {
+  if (FieldValueType.Ref) {
     const referencedSchema = tables.find((table) => table.schema?.id === options.refTable)?.schema;
     schema = referencedSchema ? ref(referencedSchema) : S.String;
   } else {
