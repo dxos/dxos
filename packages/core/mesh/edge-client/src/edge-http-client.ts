@@ -11,6 +11,9 @@ import {
   type EdgeHttpResponse,
   type GetNotarizationResponseBody,
   type PostNotarizationRequestBody,
+  type JoinSpaceRequest,
+  type JoinSpaceResponseBody,
+  EdgeAuthChallengeError,
 } from '@dxos/protocols';
 
 import { getEdgeUrlWithProtocol } from './utils';
@@ -39,6 +42,14 @@ export class EdgeHttpClient {
     await this._call(`/spaces/${spaceId}/notarization`, { ...args, body, method: 'POST' });
   }
 
+  public async joinSpaceByInvitation(
+    spaceId: SpaceId,
+    body: JoinSpaceRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<JoinSpaceResponseBody> {
+    return this._call(`/spaces/${spaceId}/join`, { ...args, body, method: 'POST' });
+  }
+
   private async _call<T>(path: string, args: EdgeHttpCallArgs): Promise<T> {
     const requestContext = args.context ?? new Context();
     const shouldRetry = createRetryHandler(args);
@@ -61,23 +72,19 @@ export class EdgeHttpClient {
             return body.data;
           }
 
-          const isNonRetryable = body.errorData != null;
-          if (isNonRetryable) {
-            throw new EdgeCallFailedError(body.reason, body.errorData);
+          if (body.errorData?.type === 'auth_challenge' && typeof body.errorData?.challenge === 'string') {
+            processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);
+          } else {
+            processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
           }
-
-          processingError = new EdgeCallFailedError(body.reason);
         } else {
-          processingError = EdgeCallFailedError.fromFailureResponse(response);
-          if (!isRetryable(response.status)) {
-            throw processingError;
-          }
+          processingError = EdgeCallFailedError.fromHttpFailure(response);
         }
       } catch (error: any) {
         processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
       }
 
-      if (await shouldRetry(requestContext, retryAfterHeaderValue)) {
+      if (processingError.isRetryable && (await shouldRetry(requestContext, retryAfterHeaderValue))) {
         log.info('retrying edge request', { path, processingError });
       } else {
         throw processingError;
@@ -91,15 +98,6 @@ const createRequest = (args: EdgeHttpCallArgs): RequestInit => {
     method: args.method,
     body: args.body && JSON.stringify(args.body),
   };
-};
-
-const isRetryable = (status: number) => {
-  if (status === 501) {
-    // Not Implemented
-    return false;
-  }
-  // TODO: handle 401 Not Authorized
-  return !(status >= 400 && status < 500);
 };
 
 const createRetryHandler = (args: EdgeHttpCallArgs) => {

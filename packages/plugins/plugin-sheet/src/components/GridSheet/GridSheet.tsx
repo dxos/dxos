@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef, type FocusEvent } from 'react';
+import React, { useCallback, useMemo, useRef, type FocusEvent, type WheelEvent } from 'react';
 
+import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridElement,
   Grid,
@@ -41,9 +42,10 @@ const sheetRowDefault = { grid: { size: 32, resizeable: true } };
 const sheetColDefault = { frozenColsStart: { size: 48 }, grid: { size: 180, resizeable: true } };
 
 export const GridSheet = () => {
-  const { model, formatting, editing, setEditing, setCursor, setRange } = useSheetContext();
+  const { id, model, formatting, editing, setEditing, setCursor, setRange } = useSheetContext();
   const dxGrid = useRef<DxGridElement | null>(null);
   const rangeNotifier = useRef<CellRangeNotifier>();
+  const { hasAttention } = useAttention(id);
 
   const handleFocus = useCallback(
     (event: FocusEvent) => {
@@ -105,6 +107,15 @@ export const GridSheet = () => {
     [editing],
   );
 
+  const handleWheel = useCallback(
+    (event: WheelEvent) => {
+      if (!hasAttention) {
+        event.stopPropagation();
+      }
+    },
+    [hasAttention],
+  );
+
   const { columns, rows } = useSheetModelDxGridProps(dxGrid, model, formatting);
 
   const extension = useMemo(
@@ -141,6 +152,8 @@ export const GridSheet = () => {
         columnDefault={sheetColDefault}
         frozen={frozen}
         onFocus={handleFocus}
+        onWheelCapture={handleWheel}
+        className='[--dx-grid-base:var(--surface-bg)]'
         ref={dxGrid}
       />
     </>

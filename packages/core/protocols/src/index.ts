@@ -9,5 +9,5 @@ export * from './tracing.js';
 export * from './types.js';
 export * from './query.js';
 export * from './profile-archive.js';
-export * from './collection-sync.js';
+export * from './automerge.js';
 export * from './edge.js';
