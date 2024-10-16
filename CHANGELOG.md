@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.12](https://github.com/dxos/dxos/compare/v0.6.11...v0.6.12) (2024-10-16)
+
+
+### Bug Fixes
+
+* composer edge config ([#7939](https://github.com/dxos/dxos/issues/7939)) ([c544820](https://github.com/dxos/dxos/commit/c5448208d5c0be4098a59f29d088bc5c28bb7022))
+
 ## [0.6.11](https://github.com/dxos/dxos/compare/v0.6.10...v0.6.11) (2024-09-23)
 
 
