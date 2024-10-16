@@ -34,10 +34,8 @@ export const ObjectTable = ({ table }: ObjectTableProps) => {
   }
 
   return (
-    <div>
-      <div className='border-t border-b border-separator'>
-        <Table table={table} data={objects} />
-      </div>
+    <div className='border border-separator is-full max-is-max min-is-0 mli-auto'>
+      <Table table={table} data={objects} />
       <Button classNames='w-full' onClick={() => handleAdd()}>
         <Icon icon='ph--plus--regular' size={4} />
       </Button>

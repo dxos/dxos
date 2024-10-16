@@ -7,7 +7,6 @@ import React, { useCallback } from 'react';
 import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Table } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ObjectTable, type ObjectTableProps } from './ObjectTable';
