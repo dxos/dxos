@@ -5,14 +5,7 @@
 import { Sidebar as MenuIcon } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useRef, type UIEvent } from 'react';
 
-import {
-  type LayoutEntry,
-  type LayoutParts,
-  Surface,
-  type Toast as ToastSchema,
-  firstIdInPart,
-  usePlugin,
-} from '@dxos/app-framework';
+import { type LayoutParts, Surface, type Toast as ToastSchema, firstIdInPart, usePlugin } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, useOnTransition, useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Deck } from '@dxos/react-ui-deck';
