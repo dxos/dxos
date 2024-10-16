@@ -12,6 +12,7 @@ export type ListenerOptions = {
 
 /**
  * Event listener.
+ * @deprecated Use EditorView.updateListener and listen for specific update events.
  */
 export const listener = ({ onFocus, onChange }: ListenerOptions): Extension => {
   const extensions: Extension[] = [];

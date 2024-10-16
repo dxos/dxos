@@ -66,6 +66,7 @@ export const ThreadStatus = S.Union(S.Literal('staged'), S.Literal('active'), S.
 
 export class ThreadType extends TypedObject({ typename: 'dxos.org/type/Thread', version: '0.1.0' })({
   name: S.optional(S.String),
+  /** AM cursor-range: 'from:to'. */
   anchor: S.optional(S.String),
   status: S.optional(ThreadStatus),
   messages: S.mutable(S.Array(ref(MessageType))),

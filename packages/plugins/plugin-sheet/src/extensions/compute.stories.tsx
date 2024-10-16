@@ -21,7 +21,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { nonNullable } from '@dxos/util';
 
 import { compute, computeGraphFacet } from './compute';
-import { Sheet } from '../components';
+import { GridSheet, SheetProvider } from '../components';
 import { useComputeGraph, useSheetModel } from '../hooks';
 import { useTestSheet, withComputeGraphDecorator } from '../testing';
 import { SheetType } from '../types';
@@ -80,9 +80,9 @@ const Grid = () => {
 
   return (
     <div className='flex w-[40rem] overflow-hidden'>
-      <Sheet.Root graph={graph} sheet={sheet}>
-        <Sheet.Main classNames='border border-separator' />
-      </Sheet.Root>
+      <SheetProvider graph={graph} sheet={sheet}>
+        <GridSheet />
+      </SheetProvider>
     </div>
   );
 };

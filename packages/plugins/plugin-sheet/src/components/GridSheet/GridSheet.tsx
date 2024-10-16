@@ -2,52 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef, type FocusEvent, type WheelEvent } from 'react';
 
+import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridElement,
   Grid,
   type GridContentProps,
-  type GridScopedProps,
-  useGridContext,
+  editorKeys,
+  type EditorKeysProps,
+  GridCellEditor,
+  closestCell,
 } from '@dxos/react-ui-grid';
 
 import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
-import { rangeToA1Notation, type CellRange } from '../../defs';
-import { type ComputeGraph } from '../../graph';
-import { useFormattingModel, useSheetModel, type UseSheetModelOptions } from '../../hooks';
-import { type SheetModel, type FormattingModel } from '../../model';
-import { type SheetType } from '../../types';
-import {
-  CellEditor,
-  type CellEditorProps,
-  type CellRangeNotifier,
-  editorKeys,
-  type EditorKeysProps,
-  rangeExtension,
-  sheetExtension,
-} from '../CellEditor';
-
-const GridSheetCellEditor = ({
-  model,
-  extension,
-  __gridScope,
-}: GridScopedProps<Pick<CellEditorProps, 'extension'> & { model: SheetModel }>) => {
-  const { id, editing, setEditing, editBox } = useGridContext('GridSheetCellEditor', __gridScope);
-  const cell = dxGridCellIndexToSheetCellAddress(editing);
-
-  return editing ? (
-    <CellEditor
-      variant='grid'
-      value={editing.initialContent ?? (cell ? model.getCellText(cell) : undefined)}
-      autoFocus
-      box={editBox}
-      onBlur={() => setEditing(null)}
-      extension={extension}
-      gridId={id}
-    />
-  ) : null;
-};
+import { rangeToA1Notation, type CellRange, DEFAULT_COLUMNS, DEFAULT_ROWS } from '../../defs';
+import { rangeExtension, sheetExtension, type CellRangeNotifier } from '../../extensions';
+import { useUpdateFocusedCellOnThreadSelection } from '../../hooks';
+import { useSheetContext } from '../SheetContext';
 
 const initialCells = {
   grid: {},
@@ -69,20 +41,27 @@ const frozen = {
 const sheetRowDefault = { grid: { size: 32, resizeable: true } };
 const sheetColDefault = { frozenColsStart: { size: 48 }, grid: { size: 180, resizeable: true } };
 
-const GridSheetImpl = ({
-  model,
-  formatting,
-  __gridScope,
-}: GridScopedProps<{ model: SheetModel; formatting: FormattingModel }>) => {
-  const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
+export const GridSheet = () => {
+  const { id, model, formatting, editing, setEditing, setCursor, setRange } = useSheetContext();
   const dxGrid = useRef<DxGridElement | null>(null);
   const rangeNotifier = useRef<CellRangeNotifier>();
+  const { hasAttention } = useAttention(id);
+
+  const handleFocus = useCallback(
+    (event: FocusEvent) => {
+      if (!editing) {
+        const cell = closestCell(event.target);
+        setCursor(cell && cell.plane === 'grid' ? { col: cell.col, row: cell.row } : undefined);
+      }
+    },
+    [editing],
+  );
 
   // TODO(burdon): Validate formula before closing: hf.validateFormula();
   const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
     (value, { key, shift }) => {
       if (value !== undefined) {
-        model.setValue(dxGridCellIndexToSheetCellAddress(editing)!, value);
+        model.setValue(dxGridCellIndexToSheetCellAddress(editing!.index), value);
       }
       setEditing(null);
       const axis = ['Enter', 'ArrowUp', 'ArrowDown'].includes(key)
@@ -113,16 +92,28 @@ const GridSheetImpl = ({
 
   const handleSelect = useCallback<NonNullable<GridContentProps['onSelect']>>(
     ({ minCol, maxCol, minRow, maxRow }) => {
+      const range: CellRange = { from: { col: minCol, row: minRow } };
+      if (minCol !== maxCol || minRow !== maxRow) {
+        range.to = { col: maxCol, row: maxRow };
+      }
       if (editing) {
-        const range: CellRange = { from: { col: minCol, row: minRow } };
-        if (minCol !== maxCol || minRow !== maxRow) {
-          range.to = { col: maxCol, row: maxRow };
-        }
         // Update range selection in formula.
         rangeNotifier.current?.(rangeToA1Notation(range));
+      } else {
+        // Setting range while editing causes focus to move to null, avoid doing so.
+        setRange(range.to ? range : undefined);
       }
     },
     [editing],
+  );
+
+  const handleWheel = useCallback(
+    (event: WheelEvent) => {
+      if (!hasAttention) {
+        event.stopPropagation();
+      }
+    },
+    [hasAttention],
   );
 
   const { columns, rows } = useSheetModelDxGridProps(dxGrid, model, formatting);
@@ -136,11 +127,23 @@ const GridSheetImpl = ({
     [model, handleClose, editing],
   );
 
+  const getCellContent = useCallback(
+    (index: string) => {
+      const cell = dxGridCellIndexToSheetCellAddress(index);
+      return model.getCellText(cell);
+    },
+    [model],
+  );
+
+  useUpdateFocusedCellOnThreadSelection(model, dxGrid);
+
   return (
     <>
-      <GridSheetCellEditor model={model} extension={extension} />
+      <GridCellEditor getCellContent={getCellContent} extension={extension} />
       <Grid.Content
         initialCells={initialCells}
+        limitColumns={DEFAULT_COLUMNS}
+        limitRows={DEFAULT_ROWS}
         columns={columns}
         rows={rows}
         onAxisResize={handleAxisResize}
@@ -148,24 +151,11 @@ const GridSheetImpl = ({
         rowDefault={sheetRowDefault}
         columnDefault={sheetColDefault}
         frozen={frozen}
+        onFocus={handleFocus}
+        onWheelCapture={handleWheel}
+        className='[--dx-grid-base:var(--surface-bg)]'
         ref={dxGrid}
       />
     </>
-  );
-};
-
-export type GridSheetProps = { graph?: ComputeGraph; sheet?: SheetType } & UseSheetModelOptions;
-
-export const GridSheet = ({ graph, sheet, ...options }: GridSheetProps) => {
-  const model = useSheetModel(graph, sheet, options);
-  const formatting = useFormattingModel(model);
-  if (!model || !formatting) {
-    return null;
-  }
-
-  return (
-    <Grid.Root id={model.id}>
-      <GridSheetImpl model={model} formatting={formatting} />
-    </Grid.Root>
   );
 };

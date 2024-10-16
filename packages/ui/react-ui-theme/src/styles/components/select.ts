@@ -9,10 +9,10 @@ import {
   arrow,
   blockSeparator,
   getSize,
+  ghostHighlighted,
   modalSurface,
   surfaceElevation,
   separatorBorderColor,
-  ghostHighlighted,
 } from '../fragments';
 
 export type SelectStyleProps = Partial<{
@@ -20,19 +20,24 @@ export type SelectStyleProps = Partial<{
 }>;
 
 export const selectContent: ComponentFunction<SelectStyleProps> = ({ elevation = 'chrome' }, ...etc) => {
-  return mx('p-1 z-[50] rounded', modalSurface, surfaceElevation({ elevation }), ...etc);
+  return mx(
+    'z-[50] min-w-[--radix-select-trigger-width] rounded',
+    modalSurface,
+    surfaceElevation({ elevation }),
+    ...etc,
+  );
 };
 
 export const selectItem: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx(
-    'relative flex items-center pis-6 pie-3 plb-1',
+    'flex items-center min-bs-[2rem] pli-3 plb-1 gap-2',
     'text-baseText leading-none rounded-sm select-none outline-none',
+    '[&>svg]:invisible [&[data-state=checked]>svg]:visible',
     ghostHighlighted,
     ...etc,
   );
 
-export const selectItemIndicator: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
-  mx('absolute inline-start-0 is-6 inline-flex items-center justify-center', ...etc);
+export const selectItemIndicator: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx('items-center', ...etc);
 
 export const selectArrow: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(arrow, ...etc);
 
