@@ -48,7 +48,7 @@ export const Table = ({ table, data }: TableProps) => {
       <Grid.Content
         ref={gridRef}
         limitRows={data.length}
-        limitColumns={table.props.length}
+        limitColumns={table.view?.fields?.length ?? 0}
         initialCells={tableModel?.cells.value}
         columns={tableModel?.columnMeta.value}
         frozen={frozen}

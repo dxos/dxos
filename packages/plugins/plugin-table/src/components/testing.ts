@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 
 import { type DynamicSchema, S, TypedObject, create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
+import { FieldValueType } from '@dxos/schema';
 
 import { TableType } from '../types';
 
@@ -20,11 +21,14 @@ export const TestSchema = TypedObject({ typename: 'example.com/type/test', versi
 export const createTable = (schema?: DynamicSchema) =>
   create(TableType, {
     schema,
-    props: [
-      { id: 'name', label: 'Name' },
-      { id: 'age', label: 'Age' },
-      { id: 'active', label: 'Active' },
-    ],
+    view: {
+      query: { schema: {} },
+      fields: [
+        { id: 'name', path: 'name', label: 'Name', type: FieldValueType.String },
+        { id: 'age', path: 'age', label: 'Age', type: FieldValueType.Number },
+        { id: 'active', path: 'active', label: 'Active', type: FieldValueType.Boolean },
+      ],
+    },
   });
 
 export const createItems = (n: number) => {
@@ -67,27 +71,30 @@ export const useSimulator = ({ items, table, insertInterval, updateInterval }: S
 
     const i = setInterval(() => {
       const rowIdx = Math.floor(Math.random() * items.length);
-      const columnIdx = Math.floor(Math.random() * table.props.length);
-      const column = table.props[columnIdx];
+      const fields = table.view?.fields ?? [];
+      const columnIdx = Math.floor(Math.random() * fields.length);
+      const field = fields[columnIdx];
       const item = items[rowIdx];
 
-      const id = column.id!;
-      switch (typeof item[id]) {
-        case 'string': {
-          item[id] = `Updated ${Date.now()}`;
-          break;
-        }
-        case 'number': {
-          item[id] = Math.floor(Math.random() * 100);
-          break;
-        }
-        case 'boolean': {
-          item[id] = !item[id];
-          break;
+      if (field) {
+        const path = field.path;
+        switch (field.type) {
+          case FieldValueType.String: {
+            item[path] = `Updated ${Date.now()}`;
+            break;
+          }
+          case FieldValueType.Number: {
+            item[path] = Math.floor(Math.random() * 100);
+            break;
+          }
+          case FieldValueType.Boolean: {
+            item[path] = !item[path];
+            break;
+          }
         }
       }
     }, updateInterval);
 
     return () => clearInterval(i);
-  }, [items, table.props, updateInterval]);
+  }, [items, table.view?.fields, updateInterval]);
 };

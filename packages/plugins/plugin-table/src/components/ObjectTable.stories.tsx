@@ -28,7 +28,11 @@ const Story = () => {
     return null;
   }
 
-  return <ObjectTable table={table} />;
+  return (
+    <div>
+      <ObjectTable table={table} />
+    </div>
+  );
 };
 
 export default {

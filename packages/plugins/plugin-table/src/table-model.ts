@@ -57,10 +57,12 @@ export class TableModel extends Resource {
   }
 
   protected override async _open() {
-    // Construct the header cells based on the table props.
+    const fields = this.table.view?.fields ?? [];
+
+    // Construct the header cells based on the table fields.
     const headerCells: DxGridPlaneCells = Object.fromEntries(
-      this.table.props.map((prop, index) => {
-        return [getCellKey(index, 0), { value: prop.id!, resizeHandle: 'col' }];
+      fields.map((field, index: number) => {
+        return [getCellKey(index, 0), { value: field.label ?? field.path, resizeHandle: 'col' }];
       }),
     );
 
@@ -68,10 +70,8 @@ export class TableModel extends Resource {
     const cellValues: ReadonlySignal<DxGridPlaneCells> = computed(() => {
       const values: DxGridPlaneCells = {};
       this.data.forEach((row, rowIndex) => {
-        this.table.props.forEach((prop, colIndex) => {
-          // TODO(Zan): Coercing to empty string on null/undefined values is temporary util
-          // we deeply integrate with fields.
-          const cellValueSignal = computed(() => `${row[prop.id!] ?? ''}`);
+        fields.forEach((field, colIndex: number) => {
+          const cellValueSignal = computed(() => `${row[field.path] ?? ''}`);
           values[getCellKey(colIndex, rowIndex)] = {
             get value() {
               return cellValueSignal.value;
@@ -88,7 +88,7 @@ export class TableModel extends Resource {
 
     this.columnMeta = computed(() => {
       const headings = Object.fromEntries(
-        this.table.props.map((prop, index) => [index, { size: prop.size ?? 256, resizeable: true }]),
+        fields.map((field, index: number) => [index, { size: field.size ?? 256, resizeable: true }]),
       );
       return { grid: headings };
     });
@@ -102,10 +102,11 @@ export class TableModel extends Resource {
   }
 
   public moveColumn(columnId: ColumnId, newIndex: number): void {
-    const currentIndex = this.table.props.findIndex((prop) => prop.id === columnId);
-    if (currentIndex !== -1) {
-      const [removed] = this.table.props.splice(currentIndex, 1);
-      this.table.props.splice(newIndex, 0, removed);
+    const fields = this.table.view?.fields ?? [];
+    const currentIndex = fields.findIndex((field) => field.id === columnId);
+    if (currentIndex !== -1 && this.table.view) {
+      const [removed] = fields.splice(currentIndex, 1);
+      fields.splice(newIndex, 0, removed);
     }
   }
 
@@ -134,25 +135,28 @@ export class TableModel extends Resource {
 
   public setColumnWidth(columnIndex: number, width: number): void {
     const newWidth = Math.max(0, width);
-    const prop = this.table.props.at(columnIndex);
-    if (prop) {
-      prop.size = newWidth;
+    const fields = this.table.view?.fields ?? [];
+    const field = fields[columnIndex];
+    if (field) {
+      field.size = newWidth;
     }
   }
 
   public getCellData = (colIndex: number, rowIndex: number): any => {
-    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= this.table.props.length) {
+    const fields = this.table.view?.fields ?? [];
+    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= fields.length) {
       return undefined;
     }
-    const propId = this.table.props[colIndex].id!;
-    return this.data[rowIndex][propId];
+    const field = fields[colIndex];
+    return this.data[rowIndex][field.path];
   };
 
   public setCellData = (colIndex: number, rowIndex: number, value: any): void => {
-    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= this.table.props.length) {
+    const fields = this.table.view?.fields ?? [];
+    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= fields.length) {
       return;
     }
-    const propId = this.table.props[colIndex].id!;
-    this.data[rowIndex][propId] = value;
+    const field = fields[colIndex];
+    this.data[rowIndex][field.path] = value;
   };
 }

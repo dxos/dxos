@@ -121,7 +121,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           switch (intent.action) {
             case TableAction.CREATE: {
               return {
-                data: create(TableType, { name: '', props: [] }),
+                data: create(TableType, { name: '' }),
               };
             }
           }
