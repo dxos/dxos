@@ -107,7 +107,7 @@ export class TestBuilder {
         ...(options?.fastPeerPresenceUpdate
           ? { spaceMemberPresenceAnnounceInterval: 200, spaceMemberPresenceOfflineTimeout: 400 }
           : {}),
-        invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
+        invitationConnectionDefaultParams: { teleport: { controlHeartbeatInterval: 200 } },
       },
       ...this.networking,
     });
