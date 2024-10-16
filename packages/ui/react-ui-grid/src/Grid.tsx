@@ -134,7 +134,7 @@ export { GridRoot, GridContent, useGridContext, createGridScope };
 
 export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps, DxGridElement };
 
-export { colToA1Notation, rowToA1Notation } from '@dxos/lit-grid';
+export { colToA1Notation, rowToA1Notation, closestCell } from '@dxos/lit-grid';
 
 export type {
   DxGridRange,
@@ -144,4 +144,5 @@ export type {
   DxGridPlaneRange,
   DxGridPlaneCells,
   DxGridPlane,
+  DxGridPosition,
 } from '@dxos/lit-grid';

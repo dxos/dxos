@@ -8,13 +8,10 @@ import { registerSignalsRuntime as registerRuntimeForEcho } from './runtime';
 
 let registered = false;
 
-// TODO(burdon): Document.
 export const registerSignalsRuntime = () => {
   if (registered) {
     return false;
   }
-
-  registered = true;
 
   registerRuntimeForEcho({
     createSignal: (debugInfo) => {
@@ -34,5 +31,6 @@ export const registerSignalsRuntime = () => {
     untracked,
   });
 
+  registered = true;
   return true;
 };
