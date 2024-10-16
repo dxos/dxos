@@ -7,10 +7,11 @@ import { computed, type ReadonlySignal } from '@preact/signals-core';
 import { Resource } from '@dxos/context';
 import { PublicKey } from '@dxos/react-client';
 import { type DxGridPlaneCells, type DxGridCells, type DxGridAxisMeta } from '@dxos/react-ui-grid';
+import { parseValue, formatValue } from '@dxos/schema';
 
 import { CellUpdateListener } from './CellUpdateListener';
 import { type TableType } from './types';
-import { classesForFieldType, convertCellValue, formatCellValue } from './util/cell';
+import { tableCellClassesForFieldType } from './util/cell';
 import { getCellKey } from './util/coords';
 
 export type ColumnId = string;
@@ -72,12 +73,12 @@ export class TableModel extends Resource {
       const values: DxGridPlaneCells = {};
       this.data.forEach((row, rowIndex) => {
         fields.forEach((field, colIndex: number) => {
-          const cellValueSignal = computed(() => formatCellValue(row[field.path], field.type));
+          const cellValueSignal = computed(() => formatValue(row[field.path], field.type));
           values[getCellKey(colIndex, rowIndex)] = {
             get value() {
               return cellValueSignal.value;
             },
-            className: classesForFieldType(field.type),
+            className: tableCellClassesForFieldType(field.type),
           };
         });
       });
@@ -159,6 +160,6 @@ export class TableModel extends Resource {
       return;
     }
     const field = fields[colIndex];
-    this.data[rowIndex][field.path] = convertCellValue(value, field.type);
+    this.data[rowIndex][field.path] = parseValue(field.type, value);
   };
 }
