@@ -742,8 +742,14 @@ export class DxGrid extends LitElement {
   private handleFocus(event: FocusEvent) {
     const cellCoords = closestCell(event.target);
     if (cellCoords) {
-      this.focusedCell = cellCoords;
       this.focusActive = true;
+      if (
+        this.focusedCell.plane !== cellCoords.plane ||
+        this.focusedCell.col !== cellCoords.col ||
+        this.focusedCell.row !== cellCoords.row
+      ) {
+        this.focusedCell = cellCoords;
+      }
     }
   }
 
@@ -754,10 +760,12 @@ export class DxGrid extends LitElement {
     }
   }
 
+  private focusedCellQuery() {
+    return `[data-dx-grid-plane=${this.focusedCell.plane}] > [aria-colindex="${this.focusedCell.col}"][aria-rowindex="${this.focusedCell.row}"]`;
+  }
+
   private focusedCellElement() {
-    return this.viewportRef.value?.querySelector(
-      `[data-dx-grid-plane=${this.focusedCell.plane}] > [aria-colindex="${this.focusedCell.col}"][aria-rowindex="${this.focusedCell.row}"]`,
-    ) as HTMLElement | null;
+    return this.viewportRef.value?.querySelector(this.focusedCellQuery()) as HTMLElement | null;
   }
 
   //
@@ -812,9 +820,14 @@ export class DxGrid extends LitElement {
     }
     queueMicrotask(() => {
       const outOfVis = this.focusedCellOutOfVis(overscanCol, overscanRow);
-      (outOfVis.col !== 0 || outOfVis.row !== 0 ? this.viewportRef.value : this.focusedCellElement())?.focus({
-        preventScroll: true,
-      });
+      if (outOfVis.col !== 0 || outOfVis.row !== 0) {
+        this.viewportRef.value?.focus({ preventScroll: true });
+      } else {
+        const activeFocusedCell = document.activeElement?.closest(this.focusedCellQuery());
+        if (!activeFocusedCell) {
+          this.focusedCellElement()?.focus({ preventScroll: true });
+        }
+      }
     });
   }
 
