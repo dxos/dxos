@@ -1015,9 +1015,7 @@ export class DxGrid extends LitElement {
     const active = this.cellActive(col, row, plane);
     const resizeIndex = cell?.resizeHandle ? (cell.resizeHandle === 'col' ? col : row) : undefined;
     const resizePlane = cell?.resizeHandle ? resolveResizePlane(cell.resizeHandle, plane) : undefined;
-    const accessory = cell?.accessoryHtml
-      ? staticHtml`<${unsafeStatic(cell.accessoryHtml)}>hi</${unsafeStatic(cell.accessoryHtml)}>`
-      : null;
+    const accessory = cell?.accessoryHtml ? staticHtml`${unsafeStatic(cell.accessoryHtml)}` : null;
     return html`<div
       role="gridcell"
       tabindex="0"

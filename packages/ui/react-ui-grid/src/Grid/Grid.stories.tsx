@@ -33,7 +33,8 @@ export const Basic = {
     initialCells: {
       grid: {
         '1,1': {
-          accessoryHtml: 'button',
+          accessoryHtml:
+            '<button class="ch-button is-4 min-bs-0 absolute inset-block-1 inline-end-1"><svg><use href="/icons.svg#ph--arrow-right--regular"/></svg></button>',
           value: 'Weekly sales report',
         },
       },
