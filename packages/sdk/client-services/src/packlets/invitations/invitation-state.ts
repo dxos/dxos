@@ -92,7 +92,7 @@ const logStateUpdate = (invitation: Invitation, actor: any, newState: Invitation
       oldState: stateToString(invitation.state),
     });
   } else {
-    log('invitation state update', {
+    log.info('invitation state update', {
       actor: actor?.constructor.name,
       newState: stateToString(newState),
       oldState: stateToString(invitation.state),

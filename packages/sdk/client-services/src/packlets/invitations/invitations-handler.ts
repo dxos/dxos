@@ -6,6 +6,7 @@ import { type PushStream, scheduleTask, TimeoutError, type Trigger } from '@dxos
 import { INVITATION_TIMEOUT } from '@dxos/client-protocol';
 import { type Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -19,6 +20,7 @@ import { type ExtensionContext, type TeleportExtension, type TeleportParams } fr
 import { trace as _trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
+import { type EdgeInvitationConfig, EdgeInvitationHandler } from './edge-invitation-handler';
 import { InvitationGuestExtension } from './invitation-guest-extenstion';
 import { InvitationHostExtension, isAuthenticationRequired, MAX_OTP_ATTEMPTS } from './invitation-host-extension';
 import { type InvitationProtocol } from './invitation-protocol';
@@ -28,6 +30,11 @@ import { InvitationTopology } from './invitation-topology';
 const metrics = _trace.metrics;
 
 const MAX_DELEGATED_INVITATION_HOST_TRIES = 3;
+
+export type InvitationConnectionParams = {
+  teleport: Partial<TeleportParams>;
+  edgeInvitations?: EdgeInvitationConfig;
+};
 
 /**
  * Generic handler for Halo and Space invitations.
@@ -63,7 +70,8 @@ export class InvitationsHandler {
    */
   constructor(
     private readonly _networkManager: SwarmNetworkManager,
-    private readonly _defaultTeleportParams?: Partial<TeleportParams>,
+    private readonly _edgeClient?: EdgeHttpClient,
+    private readonly _connectionParams?: InvitationConnectionParams,
   ) {}
 
   handleInvitationFlow(
@@ -308,7 +316,7 @@ export class InvitationsHandler {
 
               // 5. Success.
               log('admitted by host', { ...protocol.toJSON() });
-              await guardedState.complete({
+              guardedState.complete({
                 ...guardedState.current,
                 ...result,
                 state: Invitation.State.SUCCESS,
@@ -343,6 +351,15 @@ export class InvitationsHandler {
 
       return extension;
     };
+
+    const edgeInvitationHandler = new EdgeInvitationHandler(this._connectionParams?.edgeInvitations, this._edgeClient, {
+      onInvitationSuccess: async (admissionResponse, admissionRequest) => {
+        const result = await protocol.accept(admissionResponse, admissionRequest);
+        log('admitted by edge', { ...protocol.toJSON() });
+        guardedState.complete({ ...guardedState.current, ...result, state: Invitation.State.SUCCESS });
+      },
+    });
+    edgeInvitationHandler.handle(ctx, guardedState, protocol, deviceProfile);
 
     scheduleTask(ctx, async () => {
       const error = protocol.checkInvitation(invitation);
@@ -387,7 +404,7 @@ export class InvitationsHandler {
       topic: invitation.swarmKey,
       protocolProvider: createTeleportProtocolFactory(async (teleport) => {
         teleport.addExtension('dxos.halo.invitations', extensionFactory());
-      }, this._defaultTeleportParams),
+      }, this._connectionParams?.teleport),
       topology: new InvitationTopology(role),
       label,
     });
