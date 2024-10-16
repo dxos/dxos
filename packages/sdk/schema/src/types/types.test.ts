@@ -7,7 +7,8 @@ import { describe, test, expect } from 'vitest';
 
 import { AST } from '@dxos/echo-schema';
 
-import { getFieldValue, getProperty } from './field';
+import { getProperty } from './ast';
+import { getFieldValue } from './field';
 import { testData, testView, TestSchema } from '../testing';
 
 describe('schema', () => {
@@ -20,10 +21,10 @@ describe('schema', () => {
     expect(getFieldValue(testData, col2)).to.eq('test@example.com');
     expect(getFieldValue(testData, col3)).to.eq('11205');
 
-    const p2 = getProperty(TestSchema, col2)!;
+    const p2 = getProperty(TestSchema, col2.path)!;
     expect(pipe(AST.getDescriptionAnnotation(p2), Option.getOrNull)).to.exist;
 
-    const p3 = getProperty(TestSchema, col3)!;
+    const p3 = getProperty(TestSchema, col3.path)!;
     expect(pipe(AST.getDescriptionAnnotation(p3), Option.getOrNull)).to.eq('ZIP code.');
   });
 });

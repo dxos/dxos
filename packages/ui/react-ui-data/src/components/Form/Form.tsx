@@ -33,7 +33,7 @@ export const Form = <T = {},>({ classNames, view, data, schema, readonly }: Form
   return (
     <div role='none' className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
       {view.fields.map((field) => {
-        const prop = schema && getProperty(schema, field);
+        const prop = schema && getProperty(schema, field.path);
         const label = field.label ?? (prop && pipe(AST.getTitleAnnotation(prop), Option.getOrUndefined));
         const description = (prop && pipe(AST.getDescriptionAnnotation(prop), Option.getOrUndefined)) ?? label;
         const format =

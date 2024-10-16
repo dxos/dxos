@@ -15,35 +15,6 @@ export const getFieldValue = <T>(data: any, field: FieldType, defaultValue?: T):
 // TODO(burdon): Determine if path can be written back (or is a compute value).
 export const setFieldValue = <T>(data: any, field: FieldType, value: T): T => jp.value(data, '$.' + field.path, value);
 
-/**
- * Get the AST node associated with the field.
- */
-export const getProperty = (schema: S.Schema<any>, field: FieldType): AST.AST | undefined => {
-  let node: AST.AST = schema.ast;
-  const parts = field.path.split('.');
-  for (const part of parts) {
-    const props = AST.getPropertySignatures(node);
-    const prop = props.find((prop) => prop.name === part);
-    if (!prop) {
-      return undefined;
-    }
-
-    if (AST.isUnion(prop.type)) {
-      const n = prop.type.types.find(
-        (p) => AST.isTypeLiteral(p) || AST.isNumberKeyword(p) || AST.isBooleanKeyword(p) || AST.isStringKeyword(p),
-      );
-      if (!n) {
-        return undefined;
-      }
-      node = n;
-    } else {
-      node = prop.type;
-    }
-  }
-
-  return node;
-};
-
 // TODO(burdon): Return Field objects.
 export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FieldValueType][] => {
   const visitNode = (node: AST.AST, path: string[] = [], acc: [string, FieldValueType][] = []) => {
