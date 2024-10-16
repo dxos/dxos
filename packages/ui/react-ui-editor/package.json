@@ -26,7 +26,11 @@
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "state": [
+        "dist/types/src/state/index.d.ts"
+      ]
+    }
   },
   "files": [
     "dist",
