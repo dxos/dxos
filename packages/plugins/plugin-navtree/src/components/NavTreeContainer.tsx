@@ -339,7 +339,6 @@ export const NavTreeContainer = ({
                 <List.ItemTitle
                   classNames='p-2 text-sm'
                   onClick={() => {
-                    console.log(JSON.stringify(item, null, 2));
                     handleItemOpenChange(item, true);
                     handleNavigate({ node: item.node, actions: item.actions });
                   }}
