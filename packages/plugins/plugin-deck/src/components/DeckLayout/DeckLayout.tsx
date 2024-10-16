@@ -128,16 +128,7 @@ export const DeckLayout = ({
     }
   }, [layoutMode, firstAttendedId]);
 
-  // TODO(burdon): Needs cleaning up.
-  const parts: LayoutEntry[] = useMemo(() => {
-    const parts = [...(layoutParts.main ?? [])];
-    for (const part of layoutParts.solo ?? []) {
-      if (!parts.find((entry) => entry.id === part.id)) {
-        parts.push(part);
-      }
-    }
-    return parts;
-  }, [layoutParts.main, layoutParts.solo]);
+  const isEmpty = layoutParts.main?.length === 0 && layoutParts.solo?.length === 0;
 
   const padding = useMemo(() => {
     if (layoutMode === 'deck' && overscroll === 'centering') {
@@ -201,14 +192,14 @@ export const DeckLayout = ({
         <Main.Overlay />
 
         {/* No content. */}
-        {parts.length === 0 && (
+        {isEmpty && (
           <Main.Content handlesFocus>
             <ContentEmpty />
           </Main.Content>
         )}
 
         {/* Solo/deck mode. */}
-        {parts.length !== 0 && (
+        {!isEmpty && (
           <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
             <div role='none' className='relative'>
               <Deck.Root
@@ -218,12 +209,20 @@ export const DeckLayout = ({
                 onScroll={handleScroll}
                 ref={deckRef}
               >
-                {parts.map((layoutEntry) => (
+                <Plank
+                  entry={layoutParts.solo?.[0] ?? { id: 'unknown-solo' }}
+                  layoutParts={layoutParts}
+                  part='solo'
+                  layoutMode={layoutMode}
+                  flatDeck={flatDeck}
+                  searchEnabled={!!searchPlugin}
+                />
+                {layoutParts.main?.map((layoutEntry) => (
                   <Plank
                     key={layoutEntry.id}
                     entry={layoutEntry}
                     layoutParts={layoutParts}
-                    part={layoutMode === 'solo' && layoutEntry.id === layoutParts.solo?.[0]?.id ? 'solo' : 'main'}
+                    part='main'
                     layoutMode={layoutMode}
                     flatDeck={flatDeck}
                     searchEnabled={!!searchPlugin}
