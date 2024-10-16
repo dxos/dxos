@@ -69,7 +69,7 @@ export const ObjectTable = ({ table }: ObjectTableProps) => {
   return (
     <div className='border border-separator is-full max-is-max min-is-0 mli-auto'>
       <Table table={table} data={filteredObjects} />
-      <Button classNames='w-full' onClick={() => handleAdd()}>
+      <Button classNames='w-full' onClick={() => handleNewRow()}>
         <Icon icon='ph--plus--regular' size={4} />
       </Button>
     </div>
