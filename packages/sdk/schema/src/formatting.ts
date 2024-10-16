@@ -4,6 +4,12 @@
 
 import { FieldValueType } from './types';
 
+/**
+ * Parse value by field value type.
+ * Used by Table, Sheet, etc.
+ * Handles various data types including booleans, numbers, dates, and strings.
+ * Returns undefined for empty or null inputs.
+ */
 export const parseValue = (type: FieldValueType, value: any) => {
   if (value === undefined || value === null || value === '') {
     return undefined;
