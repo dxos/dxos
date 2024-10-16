@@ -9,8 +9,8 @@ import { PublicKey } from '@dxos/react-client';
 import { type DxGridPlaneCells, type DxGridCells, type DxGridAxisMeta } from '@dxos/react-ui-grid';
 
 import { CellUpdateListener } from './CellUpdateListener';
+import { type TableType } from './types';
 import { getCellKey } from './util/coords';
-import { type TableType } from '../types';
 
 export type ColumnId = string;
 export type SortDirection = 'asc' | 'desc';
@@ -69,7 +69,9 @@ export class TableModel extends Resource {
       const values: DxGridPlaneCells = {};
       this.data.forEach((row, rowIndex) => {
         this.table.props.forEach((prop, colIndex) => {
-          const cellValueSignal = computed(() => `${row[prop.id!]}`);
+          // TODO(Zan): Coercing to empty string on null/undefined values is temporary util
+          // we deeply integrate with fields.
+          const cellValueSignal = computed(() => `${row[prop.id!] ?? ''}`);
           values[getCellKey(colIndex, rowIndex)] = {
             get value() {
               return cellValueSignal.value;

@@ -8,8 +8,8 @@ import { create, getSpace } from '@dxos/react-client/echo';
 import { Button, Icon } from '@dxos/react-ui';
 
 import { Table } from './Table';
-import { type TableType } from '../../types';
 import { useTableObjects } from '../hooks';
+import { type TableType } from '../types';
 
 export type ObjectTableProps = {
   table: TableType;
@@ -34,9 +34,11 @@ export const ObjectTable = ({ table }: ObjectTableProps) => {
   }
 
   return (
-    <div className='flex flex-col w-full'>
-      <Table table={table} data={objects} />
-      <Button onClick={() => handleAdd()}>
+    <div>
+      <div className='border-t border-b border-separator'>
+        <Table table={table} data={objects} />
+      </div>
+      <Button classNames='w-full' onClick={() => handleAdd()}>
         <Icon icon='ph--plus--regular' size={4} />
       </Button>
     </div>

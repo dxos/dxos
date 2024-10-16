@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { type DynamicSchema, S, TypedObject, create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
-import { TableType } from '../../types';
+import { TableType } from '../types';
 
 // TODO(burdon): Factor out to @dxos/schema/testing.
 

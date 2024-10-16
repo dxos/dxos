@@ -4,8 +4,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { type TableType } from '../../types';
 import { TableModel } from '../table-model';
+import { type TableType } from '../types';
 
 // TODO(burdon): Create TableModel interface and useTableModel hook that manages query.
 export const useTableModel = (

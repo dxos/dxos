@@ -55,15 +55,22 @@ const TableContainer = ({ role, table }: LayoutContainerProps<Omit<ObjectTablePr
           <Toolbar.Actions />
         </Toolbar.Root>
       </div>
-      <div
-        className={mx(
-          role === 'article' && 'block-start-[--topbar-size] max-bs-full row-span-2 sticky-top-0 -mbs-px',
-          role === 'section' && 'max-bs-96 is-full sticky-top-0 !bg-[--surface-bg] -mis-px -mbs-px',
-          role === 'slide' && 'bs-full overflow-auto grid place-items-center',
-        )}
-      >
-        <ObjectTable key={table.id} table={table} />
-      </div>
+      <Table.Root>
+        <Table.Viewport
+          classNames={mx(
+            role === 'article' && 'block-start-[--topbar-size] max-bs-full row-span-2 is-full sticky-top-0 -mbs-px',
+            role === 'section' && 'max-bs-96 is-full sticky-top-0 !bg-[--surface-bg] -mis-px -mbs-px',
+            role === 'slide' && 'bs-full overflow-auto grid place-items-center',
+          )}
+        >
+          <ObjectTable
+            key={table.id} // New component instance per table.
+            table={table}
+            role='grid'
+            stickyHeader
+          />
+        </Table.Viewport>
+      </Table.Root>
     </div>
   );
 };
