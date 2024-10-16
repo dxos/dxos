@@ -14,6 +14,7 @@ export const useTableModel = (
   onCellUpdate: (col: number, row: number) => void,
 ): TableModel | undefined => {
   const [tableModel, setTableModel] = useState<TableModel>();
+
   useEffect(() => {
     if (!table || !data) {
       return;

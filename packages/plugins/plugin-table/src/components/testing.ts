@@ -16,6 +16,7 @@ export const TestSchema = TypedObject({ typename: 'example.com/type/test', versi
   name: S.optional(S.String),
   age: S.optional(S.Number),
   active: S.optional(S.Boolean),
+  netWorth: S.optional(S.Number),
 });
 
 export const createTable = (schema?: DynamicSchema) =>
@@ -27,6 +28,7 @@ export const createTable = (schema?: DynamicSchema) =>
         { id: 'name', path: 'name', label: 'Name', type: FieldValueType.String },
         { id: 'age', path: 'age', label: 'Age', type: FieldValueType.Number },
         { id: 'active', path: 'active', label: 'Active', type: FieldValueType.Boolean },
+        { id: 'netWorth', path: 'netWorth', label: 'Net Worth', type: FieldValueType.Currency },
       ],
     },
   });
@@ -37,6 +39,7 @@ export const createItems = (n: number) => {
       name: faker.person.fullName(),
       age: faker.number.int({ min: 20, max: 70 }),
       active: faker.datatype.boolean(),
+      netWorth: faker.number.int(),
     })),
   });
 
@@ -89,6 +92,10 @@ export const useSimulator = ({ items, table, insertInterval, updateInterval }: S
           }
           case FieldValueType.Boolean: {
             item[path] = !item[path];
+            break;
+          }
+          case FieldValueType.Currency: {
+            item[path] = Math.floor(Math.random() * 1000);
             break;
           }
         }
