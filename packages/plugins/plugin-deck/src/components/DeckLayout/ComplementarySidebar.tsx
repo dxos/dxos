@@ -32,6 +32,12 @@ export type ComplementarySidebarProps = {
 
 const panels = ['comments', 'settings', 'debug'] as const;
 
+const nodes = [
+  { id: 'comments', icon: 'ph--chat-text--regular' },
+  { id: 'settings', icon: 'ph--gear--regular' },
+  { id: 'debug', icon: 'ph--bug--regular' },
+];
+
 type Panel = (typeof panels)[number];
 const getPanel = (part?: string): Panel => {
   if (part && panels.findIndex((panel) => panel === part) !== -1) {
@@ -52,44 +58,19 @@ export const ComplementarySidebar = ({ layoutParts, flatDeck }: ComplementarySid
   useNodeActionExpander(node);
 
   const actions = useMemo(
-    () => [
-      {
-        id: 'complementary-settings',
+    () =>
+      nodes.map(({ id, icon }) => ({
+        id: `complementary-${id}`,
         data: () => {
-          void dispatch({ action: NavigationAction.OPEN, data: { activeParts: { complementary: 'settings' } } });
+          void dispatch({ action: NavigationAction.OPEN, data: { activeParts: { complementary: id } } });
         },
         properties: {
-          label: ['settings label', { ns: DECK_PLUGIN }],
-          icon: 'ph--gear--regular',
+          label: [`${id} label`, { ns: DECK_PLUGIN }],
+          icon,
           menuItemType: 'toggle',
-          isChecked: part === 'settings',
+          isChecked: part === id,
         },
-      },
-      {
-        id: 'complementary-comments',
-        data: () => {
-          void dispatch({ action: NavigationAction.OPEN, data: { activeParts: { complementary: 'comments' } } });
-        },
-        properties: {
-          label: ['comments label', { ns: DECK_PLUGIN }],
-          icon: 'ph--chat-text--regular',
-          menuItemType: 'toggle',
-          isChecked: part === 'comments',
-        },
-      },
-      {
-        id: 'complementary-debug',
-        data: () => {
-          void dispatch({ action: NavigationAction.OPEN, data: { activeParts: { complementary: 'debug' } } });
-        },
-        properties: {
-          label: ['comments label', { ns: DECK_PLUGIN }],
-          icon: 'ph--bug--regular',
-          menuItemType: 'toggle',
-          isChecked: part === 'debug',
-        },
-      },
-    ],
+      })),
     [part],
   );
 
