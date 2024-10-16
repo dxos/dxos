@@ -8,17 +8,18 @@ import { registerSignalsRuntime as registerRuntimeForEcho } from './runtime';
 
 let registered = false;
 
+/**
+ * Idempotent function that registers preact signals for module.
+ */
 export const registerSignalsRuntime = () => {
   if (registered) {
     return false;
   }
-  registered = true;
 
   registerRuntimeForEcho({
     createSignal: (debugInfo) => {
       const thisSignal = signal({});
       (thisSignal as any).__debugInfo = debugInfo;
-
       return {
         notifyRead: () => {
           const _ = thisSignal.value;
@@ -32,5 +33,6 @@ export const registerSignalsRuntime = () => {
     untracked,
   });
 
+  registered = true;
   return true;
 };

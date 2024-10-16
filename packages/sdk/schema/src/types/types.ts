@@ -12,7 +12,10 @@ import { S } from '@dxos/effect';
 // Fields
 //
 
-// TODO(burdon): Kind vs. echo-schema PropType.
+// TODO(burdon): Reconcile with echo-schema/PropType... (which uses enum integers).
+//  PropType = low-level primitives.
+//  FieldValueType = higher-level "kind".
+//  { type: 'number', kind: 'percent' }
 export enum FieldValueType {
   String = 'string',
 

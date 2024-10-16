@@ -42,7 +42,7 @@ export enum PropType {
   ENUM = 7,
 }
 
-// TODO(burdon): Reconcile with plugin-table.
+// TODO(burdon): Reconcile with @dxos/schema.
 export const toPropType = (type?: PropType): string => {
   switch (type) {
     case PropType.STRING:
