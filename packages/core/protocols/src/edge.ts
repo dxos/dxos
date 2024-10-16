@@ -45,20 +45,97 @@ export type PostNotarizationRequestBody = {
   credentials: string[];
 };
 
+export type JoinSpaceRequest = {
+  invitationId: string;
+  identityKey: string;
+  /**
+   * Base64 encoded signed challenge.
+   * Used to verify the IdentityKey in case of `invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY`
+   */
+  signature?: string;
+};
+
+export type JoinSpaceResponseBody = {
+  spaceMemberCredential: string;
+  spaceGenesisFeedKey: string;
+};
+
 export class EdgeCallFailedError extends Error {
   public static fromProcessingFailureCause(cause: Error) {
-    return new EdgeCallFailedError('Error processing request.', undefined, cause);
+    return new EdgeCallFailedError({
+      reason: 'Error processing request.',
+      isRetryable: true,
+      cause,
+    });
   }
 
-  public static fromFailureResponse(response: { status: number; statusText: string }) {
-    return new EdgeCallFailedError(`HTTP code ${response.status}: ${response.statusText}.`);
+  public static fromHttpFailure(response: Response) {
+    return new EdgeCallFailedError({
+      reason: `HTTP code ${response.status}: ${response.statusText}.`,
+      isRetryable: isRetryableCode(response.status),
+      retryAfterMs: getRetryAfterMillis(response),
+    });
   }
 
-  constructor(
-    readonly reason: string,
-    readonly errorData?: EdgeErrorData,
-    cause?: Error,
-  ) {
-    super(reason, { cause });
+  public static fromUnsuccessfulResponse(response: Response, body: EdgeHttpFailure) {
+    return new EdgeCallFailedError({
+      reason: body.reason,
+      errorData: body.errorData,
+      isRetryable: body.errorData == null && response.headers.has('Retry-After'),
+      retryAfterMs: getRetryAfterMillis(response),
+    });
+  }
+
+  readonly reason: string;
+  readonly errorData?: EdgeErrorData;
+  readonly isRetryable?: boolean;
+  readonly retryAfterMs?: number;
+
+  constructor(args: {
+    reason: string;
+    isRetryable?: boolean;
+    errorData?: EdgeErrorData;
+    retryAfterMs?: number;
+    cause?: Error;
+  }) {
+    super(args.reason, { cause: args.cause });
+    this.reason = args.reason;
+    this.errorData = args.errorData;
+    this.retryAfterMs = args.retryAfterMs;
+    this.isRetryable = Boolean(args.isRetryable);
   }
 }
+
+export class EdgeAuthChallengeError extends EdgeCallFailedError {
+  constructor(
+    public readonly challenge: string,
+    errorData: EdgeErrorData,
+  ) {
+    super({ reason: 'Auth challenge.', errorData });
+  }
+}
+
+export type EdgeAuthChallenge = {
+  type: 'auth_challenge';
+  challenge: string;
+};
+
+const getRetryAfterMillis = (response: Response) => {
+  const retryAfter = Number(response.headers.get('Retry-After'));
+  return Number.isNaN(retryAfter) ? undefined : retryAfter * 1000;
+};
+
+export const createRetryableHttpFailure = (args: { reason: any; retryAfterSeconds: number }) => {
+  return new Response(JSON.stringify({ success: false, reason: args.reason }), {
+    headers: { 'Retry-After': String(args.retryAfterSeconds) },
+  });
+};
+
+const isRetryableCode = (status: number) => {
+  if (status === 501) {
+    // Not Implemented
+    return false;
+  }
+  // TODO: handle 401 Not Authorized
+  return !(status >= 400 && status < 500);
+};

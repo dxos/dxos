@@ -21,6 +21,7 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
+import type { FlowLockHolder } from './invitation-state';
 import { stateToString, tryAcquireBeforeContextDisposed } from './utils';
 
 /// Timeout for the options exchange.
@@ -43,10 +44,13 @@ type InvitationHostExtensionCallbacks = {
 /**
  * Host's side for a connection to a concrete peer in p2p network during invitation.
  */
-export class InvitationHostExtension extends RpcExtension<
-  { InvitationHostService: InvitationHostService },
-  { InvitationHostService: InvitationHostService }
-> {
+export class InvitationHostExtension
+  extends RpcExtension<
+    { InvitationHostService: InvitationHostService },
+    { InvitationHostService: InvitationHostService }
+  >
+  implements FlowLockHolder
+{
   /**
    * @internal
    */
