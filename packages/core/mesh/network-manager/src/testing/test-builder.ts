@@ -203,7 +203,7 @@ export class TestSwarmConnection {
   ) {
     // TODO(burdon): Configure plugins.
     // TODO(burdon): Prevent reuse?
-    this.protocol = new TestWireProtocol(this.peer.peerId, this.extensionFactory);
+    this.protocol = new TestWireProtocol(this.extensionFactory);
   }
 
   // TODO(burdon): Need to create new plugin instance per swarm?
