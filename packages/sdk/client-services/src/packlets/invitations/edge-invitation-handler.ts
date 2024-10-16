@@ -119,8 +119,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
     try {
       log('edge invitation flow');
       this._flowLock = await tryAcquireBeforeContextDisposed(ctx, guardedState.mutex);
-
-      log('edge invitation flow acquired a lock');
+      log('edge invitation flow acquired the lock');
 
       guardedState.set(this, Invitation.State.CONNECTING);
 
