@@ -45,6 +45,7 @@ import {
   isEchoObject,
   isSpace,
   loadObjectReferences,
+  parseFullyQualifiedId,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { ClipboardProvider, InvitationManager, type InvitationManagerProps, osTranslations } from '@dxos/shell/react';
@@ -716,13 +717,13 @@ export const SpacePlugin = ({
             createExtension({
               id: `${SPACE_PLUGIN}/settings-for-subject`,
               resolver: ({ id }) => {
+                // TODO(Zan): Find util (or make one).
                 if (!id.endsWith('~settings')) {
                   return;
                 }
 
-                // TODO(Zan): Find util (or make one).
-                const subjectId = id.split('~').at(0);
-                const [spaceId, objectId] = subjectId?.split(':') ?? [];
+                const [subjectId] = id.split('~');
+                const [spaceId, objectId] = parseFullyQualifiedId(subjectId);
                 const space = client.spaces.get().find((space) => space.id === spaceId);
                 const object = toSignal(
                   (onChange) => {
