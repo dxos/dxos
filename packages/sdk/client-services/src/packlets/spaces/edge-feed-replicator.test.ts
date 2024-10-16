@@ -116,9 +116,11 @@ describe('EdgeFeedReplicator', () => {
     admitConnection.wake();
 
     await expect.poll(() => sendSpy.mock.calls.length).toEqual(2);
+    sendSpy.mockRestore();
     expect(messageSink.length).toEqual(0);
     await updateIdentity(messenger);
 
+    await messenger.reconnect.waitForCount(1);
     await expect.poll(() => messageSink.find((msg) => msg.type === 'data')).toBeDefined();
   });
 

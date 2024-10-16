@@ -383,7 +383,7 @@ describe('Invitations', () => {
           edgeConnection,
           undefined,
           {
-            invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
+            invitationConnectionDefaultParams: { teleport: { controlHeartbeatInterval: 200 } },
           },
         );
         await openAndClose(peer);
