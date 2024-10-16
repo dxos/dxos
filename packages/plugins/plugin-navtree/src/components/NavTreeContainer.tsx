@@ -322,38 +322,42 @@ export const NavTreeContainer = ({
     onOpenItemIdsChange({ ...openItemIds });
   }, [onOpenItemIdsChange, openItemIds]);
 
-  const getLabel = (item: NavTreeItem) => {
-    const label = item.node?.properties?.label;
-    return typeof label === 'string' ? label : item.id;
-  };
+  // TODO(burdon): Remove.
+  const debug = false;
+  if (debug) {
+    const getLabel = (item: NavTreeItem) => {
+      const label = item.node?.properties?.label;
+      return typeof label === 'string' ? label : item.id;
+    };
 
-  return (
-    <div className='bs-full overflow-hidden row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'>
-      <div className='flex items-center p-2'>Items: {items.length}</div>
-      <div role='none' className='!overflow-y-auto'>
-        <List.Root items={items} isItem={() => true}>
-          {({ items }) =>
-            items.map((item) => (
-              <List.Item key={item.id} classNames={mx('p-2', ghostHover)}>
-                <List.ItemDragHandle />
-                <List.ItemTitle
-                  classNames='p-2 text-sm'
-                  onClick={() => {
-                    handleItemOpenChange(item, true);
-                    handleNavigate({ node: item.node, actions: item.actions });
-                  }}
-                >
-                  {getLabel(item)}
-                </List.ItemTitle>
-                <List.ItemDeleteButton />
-              </List.Item>
-            ))
-          }
-        </List.Root>
+    return (
+      <div className='bs-full overflow-hidden row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'>
+        <div className='flex items-center p-2'>Items: {items.length}</div>
+        <div role='none' className='!overflow-y-auto'>
+          <List.Root<NavTreeItem> items={items} isItem={() => true}>
+            {({ items }) =>
+              items.map((item) => (
+                <List.Item<NavTreeItem> key={item.id} item={item} classNames={mx('p-2', ghostHover)}>
+                  <List.ItemDragHandle />
+                  <List.ItemTitle
+                    classNames='p-2 text-sm'
+                    onClick={() => {
+                      handleItemOpenChange(item, true);
+                      handleNavigate(item);
+                    }}
+                  >
+                    {getLabel(item)}
+                  </List.ItemTitle>
+                  <List.ItemDeleteButton />
+                </List.Item>
+              ))
+            }
+          </List.Root>
+        </div>
+        <NavTreeFooter />
       </div>
-      <NavTreeFooter />
-    </div>
-  );
+    );
+  }
 
   return (
     <Mosaic.Root>

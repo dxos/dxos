@@ -17,41 +17,44 @@ import {
 import { createEchoReferenceSchema } from '../ref-annotation';
 
 const ECHO_REFINEMENT_KEY = '$echo';
+
 interface EchoRefinement {
   type?: EchoObjectAnnotation;
   reference?: EchoObjectAnnotation;
   fieldMeta?: FieldMetaAnnotation;
 }
+
 const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
   [EchoObjectAnnotationId]: 'type',
   [ReferenceAnnotationId]: 'reference',
   [FieldMetaAnnotationId]: 'fieldMeta',
 };
 
+// TODO(burdon): Are these values stored (can they be changed?)
 export enum PropType {
   NONE = 0,
   STRING = 1, // TODO(burdon): vs TEXT?
   NUMBER = 2,
   BOOLEAN = 3,
   DATE = 4,
-  REF = 5, // TODO(burdon): Add RICH text separately?
+  REF = 5,
   RECORD = 6,
   ENUM = 7,
 }
 
 // TODO(burdon): Reconcile with plugin-table.
-export const toFieldValueType = (type?: PropType): string => {
+export const toPropType = (type?: PropType): string => {
   switch (type) {
-    case PropType.REF:
-      return 'ref';
-    case PropType.BOOLEAN:
-      return 'boolean';
-    case PropType.NUMBER:
-      return 'number';
-    case PropType.DATE:
-      return 'date';
     case PropType.STRING:
       return 'string';
+    case PropType.NUMBER:
+      return 'number';
+    case PropType.BOOLEAN:
+      return 'boolean';
+    case PropType.DATE:
+      return 'date';
+    case PropType.REF:
+      return 'ref';
     case PropType.RECORD:
       return 'object';
     default:

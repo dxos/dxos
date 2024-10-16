@@ -12,6 +12,7 @@ import { S } from '@dxos/effect';
 // Fields
 //
 
+// TODO(burdon): Kind vs. echo-schema PropType.
 export enum FieldValueType {
   Number = 'number',
   Boolean = 'boolean',
