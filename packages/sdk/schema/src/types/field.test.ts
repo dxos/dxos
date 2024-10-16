@@ -5,7 +5,7 @@
 import { Schema as S } from '@effect/schema';
 import { describe, expect, test } from 'vitest';
 
-import { mapSchemaToFields } from './util';
+import { mapSchemaToFields } from './field';
 
 // TODO(burdon): Realistic data.
 

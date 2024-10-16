@@ -54,7 +54,7 @@ export const createServiceContext = async ({
   await level.open();
 
   return new ServiceContext(storage, level, networkManager, signalManager, undefined, undefined, {
-    invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
+    invitationConnectionDefaultParams: { teleport: { controlHeartbeatInterval: 200 } },
     ...runtimeParams,
   });
 };
