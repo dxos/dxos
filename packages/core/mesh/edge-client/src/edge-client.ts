@@ -143,6 +143,10 @@ export class EdgeClient extends Resource implements EdgeConnection {
       protocolHeader = encodePresentationIntoAuthHeader(credential);
     }
 
+    if (this._ctx.disposed) {
+      return;
+    }
+
     const url = new URL(`/ws/${this._identity.identityKey}/${this._identity.peerKey}`, this._baseUrl);
     log('Opening websocket', { url: url.toString(), protocolHeader });
     this._ws = new WebSocket(url, protocolHeader ? [protocolHeader] : []);
