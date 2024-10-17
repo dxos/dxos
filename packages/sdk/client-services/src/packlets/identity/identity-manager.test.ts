@@ -53,6 +53,7 @@ describe('identity/identity-manager', () => {
     const identityManager = new IdentityManager({ metadataStore, keyring, feedStore, spaceManager });
 
     return {
+      networkManager,
       metadataStore,
       identityManager,
       feedStore,
@@ -107,6 +108,11 @@ describe('identity/identity-manager', () => {
 
     const peer1 = await setupPeer({ signalContext });
     const identity1 = await peer1.identityManager.createIdentity();
+    peer1.networkManager.setPeerInfo({
+      peerKey: identity1.deviceKey.toHex(),
+      identityKey: identity1.identityKey.toHex(),
+    });
+    await identity1.joinNetwork();
 
     const peer2 = await setupPeer({ signalContext });
 
@@ -138,6 +144,11 @@ describe('identity/identity-manager', () => {
       dataFeedKey,
       authorizedDeviceCredential: credential,
     });
+    peer2.networkManager.setPeerInfo({
+      peerKey: identity2.deviceKey.toHex(),
+      identityKey: identity2.identityKey.toHex(),
+    });
+    await identity2.joinNetwork();
 
     // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.
     await peer2.identityManager.acceptIdentity(identity2, identityRecord);
