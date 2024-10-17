@@ -8,7 +8,6 @@ import { getObjectAnnotation } from '../ast';
 import { TypedObject } from '../object';
 import { requireTypeReference } from '../proxy';
 
-// TODO(burdon): Enforce typename in constructor.
 export class StoredSchema extends TypedObject({ typename: 'dxos.org/type/StoredSchema', version: '0.1.0' })({
   typename: S.String,
   version: S.String,

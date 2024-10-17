@@ -24,16 +24,15 @@ export type TypedObjectOptions = {
   record?: true;
 };
 
+const SCHEMA_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
+
 /**
  * Base class factory for typed objects.
  */
-// TODO(burdon): Check format of typename string.
 // TODO(burdon): Support pipe(S.default({}))
 export const TypedObject = <Klass>(args: ObjectAnnotation) => {
-  invariant(
-    typeof args.typename === 'string' && args.typename.length > 0 && !args.typename.includes(':'),
-    'Invalid typename.',
-  );
+  const { typename } = args;
+  invariant(SCHEMA_REGEX.test(typename), `Invalid typename: ${typename}`);
 
   return <
     Options extends TypedObjectOptions,

@@ -38,7 +38,7 @@ describe('EchoObject class dsl', () => {
   });
 
   describe('class options', () => {
-    class Person extends TypedObject<Person>({ typename: 'Person', version: '1.0.0' })(
+    class Person extends TypedObject<Person>({ typename: 'example.com/type/Person', version: '1.0.0' })(
       {
         name: S.String,
       },

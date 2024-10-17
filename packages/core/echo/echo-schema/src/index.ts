@@ -12,7 +12,7 @@ export { AST, JSONSchema, S } from '@dxos/effect';
 // TODO(burdon): Organize subfolders to minimize cross-folder deps.
 // TODO(burdon): Rename EchoReactiveObject (remove ECHO prefix).
 // TODO(burdon): Consistent Symbol.for names.
-// TODO(burdon): S.Schema<any> everywhere.
+// TODO(burdon): S.Schema<HasId> everywhere?
 
 export * from './ast';
 export * from './handler';
