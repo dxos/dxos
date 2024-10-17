@@ -9,7 +9,7 @@ import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { AST, S } from '@dxos/effect';
 
 import { DynamicSchema } from './dynamic-schema';
-import { StoredSchema } from './stored-schema';
+import { StoredSchema } from './types';
 import { FieldMeta, getObjectAnnotation, getFieldMetaAnnotation } from '../ast';
 import { create } from '../handler';
 import { effectToJsonSchema } from '../json';

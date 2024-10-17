@@ -7,10 +7,12 @@
  */
 export { AST, JSONSchema, S } from '@dxos/effect';
 
-// TODO(burdon): Clean ./types.
-// TODO(burdon): Consolidate proxies (object, proxy dirs).
-// TODO(burdon): Organize json.
+// TODO(burdon): Clean-up ./types (remove import deps from this file).
+// TODO(burdon): Organize subfolders to minimize cross-folder deps.
+// TODO(burdon): Rename EchoReactiveObject (remove ECHO prefix).
 // TODO(burdon): Consistent Symbol.for names.
+// TODO(burdon): MutableSchema => MutableSchema.
+// TODO(burdon): S.Schema<Identifiable> everywhere.
 
 export * from './ast';
 export * from './dynamic';

@@ -5,7 +5,7 @@
 import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { StoredSchema } from './stored-schema';
+import { StoredSchema } from './types';
 import { type Identifiable, schemaVariance } from '../ast';
 import { effectToJsonSchema, jsonToEffectSchema } from '../json';
 

@@ -68,31 +68,15 @@ export type Ref<T> = T | undefined;
  * Reactive object marker interface (does not change the shape of the object.)
  * Accessing properties triggers signal semantics.
  */
+// TODO(burdon): How is this reactive?
 export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
-// TODO(burdon): Rename to just EchoObject?
+// TODO(burdon): Remove Echo prefix from public API.
 export type EchoReactiveObject<T> = ReactiveObject<T> & Identifiable;
 
-export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
-  const proxyHandlerSlot = getProxyHandlerSlot(obj);
-  const meta = proxyHandlerSlot.handler?.getMeta(obj);
-  invariant(meta);
-  return meta;
-};
-
-/**
- * Utility to split meta property from raw object.
- */
-export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMeta } => {
-  const meta = object[ECHO_ATTR_META];
-  delete object[ECHO_ATTR_META];
-  return { meta, object };
-};
-
-export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
-export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
-export const compareForeignKeys: Comparator<ReactiveObject<any>> = (a: ReactiveObject<any>, b: ReactiveObject<any>) =>
-  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;
+//
+// Data
+//
 
 export interface CommonObjectData {
   id: string;
@@ -115,3 +99,28 @@ export interface AnyObjectData extends CommonObjectData {
  * Meta is added under `__meta` key.
  */
 export type ObjectData<S> = S.Schema.Encoded<S> & CommonObjectData;
+
+//
+// Utils
+//
+
+export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
+  const proxyHandlerSlot = getProxyHandlerSlot(obj);
+  const meta = proxyHandlerSlot.handler?.getMeta(obj);
+  invariant(meta);
+  return meta;
+};
+
+/**
+ * Utility to split meta property from raw object.
+ */
+export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMeta } => {
+  const meta = object[ECHO_ATTR_META];
+  delete object[ECHO_ATTR_META];
+  return { meta, object };
+};
+
+export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
+export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
+export const compareForeignKeys: Comparator<ReactiveObject<any>> = (a: ReactiveObject<any>, b: ReactiveObject<any>) =>
+  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;

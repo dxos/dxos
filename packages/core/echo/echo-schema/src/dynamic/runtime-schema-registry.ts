@@ -4,7 +4,7 @@
 
 import { type Schema as S } from '@effect/schema';
 
-import { StoredSchema } from './stored-schema';
+import { StoredSchema } from './types';
 import { requireTypeReference } from '../proxy';
 
 // TODO(burdon): Make async.
@@ -14,7 +14,7 @@ export type SchemaResolver = (type: string) => S.Schema<any> | undefined;
 const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).objectId;
 
 /**
- * Runtime registry of schema objects.
+ * Runtime registry of static schema objects (i.e., not Dynamic .
  */
 export class RuntimeSchemaRegistry {
   private readonly _schema = new Map<string, S.Schema<any>>();

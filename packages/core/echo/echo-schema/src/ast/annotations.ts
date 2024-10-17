@@ -12,7 +12,7 @@ import { checkIdNotPresentOnSchema } from './schema-validator';
 /**
  * Marker interface for object with an `id`.
  */
-// TODO(burdon): Rename BaseObject?
+// TODO(burdon): Rename HadId?
 export interface Identifiable {
   readonly id: string;
 }

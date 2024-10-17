@@ -7,6 +7,8 @@ import { invariant } from '@dxos/invariant';
 
 import { getSchemaTypename } from './annotations';
 
+// TODO(burdon): Reconcile with @dxos/effect visit().
+
 export const symbolSchema = Symbol.for('@dxos/schema');
 
 export class SchemaValidator {
@@ -15,7 +17,7 @@ export class SchemaValidator {
    * Validates there are no ambiguous discriminated union types.
    */
   public static validateSchema(schema: S.Schema<any>) {
-    const visitAll = (astList: AST.AST[]) => astList.forEach((ast) => this.validateSchema(S.make(ast)));
+    const visitAll = (nodes: AST.AST[]) => nodes.forEach((node) => this.validateSchema(S.make(node)));
     if (AST.isUnion(schema.ast)) {
       const typeAstList = schema.ast.types.filter((type) => AST.isTypeLiteral(type)) as AST.TypeLiteral[];
       // Check we can handle a discriminated union.
@@ -38,6 +40,7 @@ export class SchemaValidator {
       if (AST.isTupleType(type.ast)) {
         type = this.getPropertySchema(rootObjectSchema, [property, '0']);
       }
+
       return type.ast.annotations[annotation] != null;
     } catch (err) {
       return false;
@@ -63,9 +66,11 @@ export class SchemaValidator {
           const type = getSchemaTypename(rootObjectSchema);
           invariant(propertyType, `unknown property: ${String(propertyName)} on ${type}. Path: ${propertyPath}`);
         }
+
         schema = S.make(propertyType).annotations(propertyType.annotations);
       }
     }
+
     return schema;
   }
 
