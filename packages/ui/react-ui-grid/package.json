@@ -30,6 +30,7 @@
     "@dxos/util": "workspace:*",
     "@lit/react": "^1.0.5",
     "@radix-ui/react-context": "^1.0.0",
+    "@radix-ui/react-popper": "^1.1.2",
     "@radix-ui/react-use-controllable-state": "^1.0.0"
   },
   "devDependencies": {
