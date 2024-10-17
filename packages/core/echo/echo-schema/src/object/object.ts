@@ -7,10 +7,11 @@ import { ulid } from 'ulidx';
 import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
+import { Expando } from './expando';
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
+import { defineHiddenProperty } from './utils';
 import { getObjectAnnotation } from '../ast';
-import { Expando, defineHiddenProperty } from '../object';
 import { createReactiveProxy, getProxyHandlerSlot, isValidProxyTarget, type ReactiveHandler } from '../proxy';
 import { type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject } from '../types';
 

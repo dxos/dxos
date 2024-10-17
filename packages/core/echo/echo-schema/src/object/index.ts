@@ -3,16 +3,11 @@
 //
 
 export * from './expando';
-export {
-  type SchemaResolver,
-  getSchema,
-  getType,
-  getTypename,
-  getMeta,
-  getTypeReference,
-  isDeleted,
-  requireTypeReference,
-} from './getter';
-export { createEchoReferenceSchema, ref } from './ref-annotation';
-export * from './typed-object-class';
+export * from './getter';
+export * from './logging-handler';
+export { create } from './object';
+export * from './ref';
+export * from './typed-handler';
+export * from './typed-object';
+export * from './untyped-handler';
 export * from './utils';

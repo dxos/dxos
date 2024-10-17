@@ -8,11 +8,6 @@ import { invariant } from '@dxos/invariant';
 import { getSchema, getTypeReference } from './getter';
 import { type ObjectAnnotation, ObjectAnnotationId, schemaVariance } from '../ast';
 
-type TypedObjectOptions = {
-  partial?: true;
-  record?: true;
-};
-
 /**
  * Marker interface for typed objects (for type inference).
  */
@@ -23,6 +18,11 @@ export interface AbstractTypedObject<Fields, I> extends S.Schema<Fields, I> {
   // Fully qualified type name.
   readonly typename: string;
 }
+
+export type TypedObjectOptions = {
+  partial?: true;
+  record?: true;
+};
 
 /**
  * Base class factory for typed objects.

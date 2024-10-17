@@ -30,7 +30,7 @@ export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHa
     return existingProxy;
   }
 
-  // TODO(dmaretskyi): in future this should be mutable to allow replacing the handler on the fly while maintaining the proxy identity
+  // TODO(dmaretskyi): In future this should be mutable to allow replacing the handler on the fly while maintaining the proxy identity
   const handlerSlot = new ProxyHandlerSlot<T>();
   handlerSlot.handler = handler;
   handlerSlot.target = target;
@@ -99,6 +99,7 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
     }
   }
 }
+
 export const isReactiveObject = (value: unknown): value is ReactiveObject<any> => !!(value as any)?.[symbolIsProxy];
 
 export const getProxyHandlerSlot = <T extends object>(proxy: ReactiveObject<any>): ProxyHandlerSlot<T> => {

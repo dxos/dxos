@@ -8,12 +8,12 @@
 export { AST, JSONSchema, S } from '@dxos/effect';
 
 // TODO(burdon): Clean ./types.
+// TODO(burdon): Consolidate proxies (object, proxy dirs).
 // TODO(burdon): Organize json.
-// TODO(burdon): Check symbol names.
+// TODO(burdon): Consistent Symbol.for names.
 
 export * from './ast';
 export * from './dynamic';
-export * from './handler';
 export * from './json';
 export * from './object';
 export * from './proxy';

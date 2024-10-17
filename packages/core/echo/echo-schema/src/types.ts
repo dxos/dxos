@@ -19,12 +19,22 @@ export const ECHO_ATTR_ID = '@id';
 export const ECHO_ATTR_TYPE = '@type';
 export const ECHO_ATTR_META = '@meta';
 
+//
+// ForeignKey
+//
+
 const _ForeignKeySchema = S.Struct({
   source: S.String,
   id: S.String,
 });
+
 export type ForeignKey = S.Schema.Type<typeof _ForeignKeySchema>;
+
 export const ForeignKeySchema: S.Schema<ForeignKey> = _ForeignKeySchema;
+
+//
+// ObjectMeta
+//
 
 export const ObjectMetaSchema = S.mutable(
   S.Struct({

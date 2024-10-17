@@ -14,10 +14,7 @@ import { type ObjectMeta } from '../types';
  * Returns the schema for the given object if one is defined.
  */
 export const getSchema = <T extends {} = any>(obj: T | undefined): S.Schema<any> | undefined => {
-  if (obj == null) {
-    return undefined;
-  }
-  if (isReactiveObject(obj)) {
+  if (obj && isReactiveObject(obj)) {
     const proxyHandlerSlot = getProxyHandlerSlot(obj);
     return proxyHandlerSlot.handler?.getSchema(obj);
   }
