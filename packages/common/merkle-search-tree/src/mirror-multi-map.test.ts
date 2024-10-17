@@ -6,6 +6,7 @@ import { test } from 'vitest';
 
 import type { ActorID } from './common';
 import { MirrorMultiMap } from './mirror-multi-map';
+import { inspect } from 'util';
 
 test('insert and diff', async ({ expect }) => {
   const map: MirrorMultiMap<string> = await MirrorMultiMap.new({ actor: 'peer1' as ActorID });
@@ -90,7 +91,7 @@ test('sync', async ({ expect }) => {
   );
 });
 
-const sync = async (peer1: MirrorMultiMap<string>, peer2: MirrorMultiMap<string>) => {
+const sync = async (peer1: MirrorMultiMap<string>, peer2: MirrorMultiMap<string>, spy = false) => {
   const msg1 = await peer1.generateSyncMessage(peer2.localActorId);
   if (msg1) {
     await peer2.receiveSyncMessage(peer1.localActorId, msg1);
@@ -99,6 +100,20 @@ const sync = async (peer1: MirrorMultiMap<string>, peer2: MirrorMultiMap<string>
   const msg2 = await peer2.generateSyncMessage(peer1.localActorId);
   if (msg2) {
     await peer1.receiveSyncMessage(peer2.localActorId, msg2);
+  }
+
+  if (spy) {
+    console.log(
+      inspect(
+        {
+          msg1,
+          msg2,
+        },
+        false,
+        null,
+        true,
+      ),
+    );
   }
 
   return msg1 || msg2;

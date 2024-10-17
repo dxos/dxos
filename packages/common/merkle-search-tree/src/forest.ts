@@ -212,14 +212,15 @@ export class Forest {
   async insertNodes(nodes: Iterable<NodeData>): Promise<DigestHex[]> {
     const result: DigestHex[] = [];
     for (const node of nodes) {
+      const items = await Promise.all(node.items.map((item) => makeItem(item.key, item.value)));
       // Validation.
-      const { digest } = await makeNode(node.level, node.items, node.children);
+      const { digest } = await makeNode(node.level, items, node.children);
       invariant(digest === node.digest);
 
       this.#nodes.set(node.digest, {
         level: node.level,
         digest: node.digest,
-        items: node.items,
+        items,
         children: node.children,
       });
       result.push(node.digest);
@@ -238,7 +239,10 @@ export class Forest {
       result.push({
         level: node.level,
         digest: node.digest,
-        items: node.items,
+        items: node.items.map((item) => ({
+          key: item.key,
+          value: item.value,
+        })),
         children: node.children,
       });
     }
@@ -435,12 +439,16 @@ export type NodeData = {
   /**
    * Sorted by key
    */
-  // TODO(dmaretskyi): Send key values only.
-  readonly items: readonly Item[];
+  readonly items: readonly ItemData[];
   /**
    * {items.length + 1} child digests.
    */
   readonly children: readonly DigestHex[];
+};
+
+export type ItemData = {
+  readonly key: string;
+  readonly value: Uint8Array;
 };
 
 /**
