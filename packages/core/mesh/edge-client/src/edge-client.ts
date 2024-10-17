@@ -106,9 +106,11 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   setIdentity(identity: EdgeIdentity) {
-    log.info('Setting identity', { identity });
-    this._identity = identity;
-    this._persistentLifecycle.scheduleRestart();
+    if (identity.identityKey !== this._identity.identityKey || identity.peerKey !== this._identity.peerKey) {
+      log.info('Edge identity changed', { identity, oldIdentity: this._identity });
+      this._identity = identity;
+      this._persistentLifecycle.scheduleRestart();
+    }
   }
 
   public addListener(listener: MessageListener): () => void {
