@@ -30,7 +30,6 @@ import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Storage } from '@dxos/random-access-storage';
-import type { TeleportParams } from '@dxos/teleport';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { safeInstanceof } from '@dxos/util';
@@ -43,6 +42,7 @@ import {
 } from '../identity';
 import {
   DeviceInvitationProtocol,
+  type InvitationConnectionParams,
   InvitationsHandler,
   InvitationsManager,
   SpaceInvitationProtocol,
@@ -55,7 +55,7 @@ export type ServiceContextRuntimeParams = Pick<
   'devicePresenceOfflineTimeout' | 'devicePresenceAnnounceInterval'
 > &
   DataSpaceManagerRuntimeParams & {
-    invitationConnectionDefaultParams?: Partial<TeleportParams>;
+    invitationConnectionDefaultParams?: InvitationConnectionParams;
     disableP2pReplication?: boolean;
   };
 /**
@@ -146,6 +146,7 @@ export class ServiceContext extends Resource {
 
     this.invitations = new InvitationsHandler(
       this.networkManager, //
+      this._edgeHttpClient,
       _runtimeParams?.invitationConnectionDefaultParams,
     );
     this.invitationsManager = new InvitationsManager(
