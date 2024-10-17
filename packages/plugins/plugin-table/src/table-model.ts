@@ -7,12 +7,12 @@ import { computed, type ReadonlySignal } from '@preact/signals-core';
 import { Resource } from '@dxos/context';
 import { PublicKey } from '@dxos/react-client';
 import { type DxGridPlaneCells, type DxGridCells, type DxGridAxisMeta } from '@dxos/react-ui-grid';
-import { parseValue, formatValue } from '@dxos/schema';
+import { mx } from '@dxos/react-ui-theme';
+import { parseValue, formatValue, cellClassesForFieldType } from '@dxos/schema';
 
 import { CellUpdateListener } from './CellUpdateListener';
 import { type TableType } from './types';
-import { tableCellClassesForFieldType } from './util/cell';
-import { getCellKey } from './util/coords';
+import { getCellKey } from './util';
 
 export type ColumnId = string;
 export type SortDirection = 'asc' | 'desc';
@@ -81,7 +81,7 @@ export class TableModel extends Resource {
             get value() {
               return cellValueSignal.value;
             },
-            className: tableCellClassesForFieldType(field.type),
+            className: mx(cellClassesForFieldType(field.type)),
           };
         });
       });

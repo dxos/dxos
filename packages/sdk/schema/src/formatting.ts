@@ -138,3 +138,29 @@ export const formatValue = (type: FieldValueType, value: any, locale: string | u
     }
   }
 };
+
+// TODO(Zan): Consider moving this to react-ui-data.
+export const cellClassesForFieldType = (type: FieldValueType): string[] | undefined => {
+  switch (type) {
+    case FieldValueType.Number:
+      return ['text-right', 'font-mono'];
+    case FieldValueType.Boolean:
+      return ['text-right', 'font-mono'];
+    case FieldValueType.String:
+    case FieldValueType.Text:
+      return [];
+    case FieldValueType.Timestamp:
+    case FieldValueType.DateTime:
+    case FieldValueType.Date:
+    case FieldValueType.Time:
+      return ['font-mono'];
+    case FieldValueType.Percent:
+      return ['text-right'];
+    case FieldValueType.Currency:
+      return ['text-right'];
+    case FieldValueType.JSON:
+      return ['font-mono'];
+    default:
+      return undefined;
+  }
+};
