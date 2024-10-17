@@ -41,23 +41,20 @@ const TableContainer = ({ role, table }: LayoutContainerProps<Omit<ObjectTablePr
 
   return (
     <div role='none' className={role === 'article' ? 'row-span-2 grid grid-rows-subgrid' : undefined}>
-      <div role='none' className={mx('flex flex-0 justify-center overflow-x-auto')}>
-        <Toolbar.Root
-          onAction={handleAction}
-          classNames={mx(
-            role === 'section'
-              ? ['z-[2] group-focus-within/section:visible', !hasAttention && 'invisible', sectionToolbarLayout]
-              : 'group-focus-within/editor:border-separator group-[[aria-current]]/editor:border-separator',
-          )}
-        >
-          <Toolbar.Separator />
-          <Toolbar.Actions />
-        </Toolbar.Root>
-      </div>
+      <Toolbar.Root
+        onAction={handleAction}
+        classNames={mx(
+          role === 'section'
+            ? ['z-[2] group-focus-within/section:visible', !hasAttention && 'invisible', sectionToolbarLayout]
+            : 'border-be border-separator',
+        )}
+      >
+        <Toolbar.Separator />
+        <Toolbar.Actions />
+      </Toolbar.Root>
       <div
         className={mx(
-          role === 'article' &&
-            'block-start-[--topbar-size] is-full max-is-max min-is-0 min-bs-0 max-bs-max flex flex-col border-ie border-separator mie-[-1px] flex-1',
+          role === 'article' && 'block-start-[--topbar-size] is-full max-is-max min-is-0 min-bs-0',
           role === 'section' && 'max-bs-96 is-full sticky-top-0 !bg-[--surface-bg] -mis-px -mbs-px',
           role === 'slide' && 'bs-full overflow-auto grid place-items-center',
         )}

@@ -5,6 +5,7 @@
 import React, { useCallback, useRef } from 'react';
 
 import { type DxGridElement, type DxAxisResize, Grid } from '@dxos/react-ui-grid';
+import { mx } from '@dxos/react-ui-theme';
 
 import { TableCellEditor } from './TableCellEditor';
 import { useTableModel } from '../hooks';
@@ -14,6 +15,12 @@ type TableProps = {
   table: TableType;
   data: any[];
 };
+
+const inlineEndLine =
+  '[&>.dx-grid]:relative [&>.dx-grid]:after:absolute [&>.dx-grid]:after:inset-block-0 [&>.dx-grid]:after:-inline-end-px [&>.dx-grid]:after:is-px [&>.dx-grid]:after:bg-separator';
+
+const blockEndLine =
+  '[&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-inline-0 [&>.dx-grid]:before:-block-end-px [&>.dx-grid]:before:bs-px [&>.dx-grid]:before:bg-separator';
 
 const frozen = { frozenRowsStart: 1 };
 
@@ -53,6 +60,11 @@ export const Table = ({ table, data }: TableProps) => {
         columns={tableModel?.columnMeta.value}
         frozen={frozen}
         onAxisResize={handleAxisResize}
+        className={mx(
+          '[&>.dx-grid]:min-bs-0 [&>.dx-grid]:bs-full [&>.dx-grid]:max-bs-max',
+          inlineEndLine,
+          blockEndLine,
+        )}
       />
     </Grid.Root>
   );

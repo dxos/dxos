@@ -7,7 +7,6 @@ import React, { useCallback } from 'react';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { create, getSpace, useQuery, Filter } from '@dxos/react-client/echo';
-import { Button, Icon } from '@dxos/react-ui';
 
 import { Table } from './Table';
 import { useStarterTable } from '../hooks/useStarterTable';
