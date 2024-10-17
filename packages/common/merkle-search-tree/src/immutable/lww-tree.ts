@@ -7,6 +7,9 @@ export type LLWTreeParams = {
   actor: ActorID;
 };
 
+/**
+ * Replicated Key-Value Store with Last-Write-Wins semantics.
+ */
 export class LWWTree<T> {
   static async new<T>(params: LLWTreeParams): Promise<LWWTree<T>> {
     const tree = new LWWTree<T>(params);

@@ -264,6 +264,9 @@ export class Forest {
     return string;
   }
 
+  /**
+   * Items iterator ordered by key.
+   */
   *items(digest: DigestHex): Iterable<Item> {
     const node = this.#requireNode(digest);
     for (let i = 0; i < node.items.length; i++) {
