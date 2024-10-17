@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Mutex, scheduleTask, Trigger } from '@dxos/async';
+import { Mutex, scheduleTask } from '@dxos/async';
 import * as A from '@dxos/automerge/automerge';
 import { cbor } from '@dxos/automerge/automerge-repo';
 import { Context, Resource } from '@dxos/context';

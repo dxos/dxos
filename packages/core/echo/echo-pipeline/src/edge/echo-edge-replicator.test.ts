@@ -1,21 +1,26 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { describe, test } from 'vitest';
-import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
-import { createEphemeralEdgeIdentity, EdgeClient, MessageSchema } from '@dxos/edge-client';
-import { createBuf } from '@dxos/protocols/buf';
-import { openAndClose } from '@dxos/test-utils';
-import { EchoEdgeReplicator } from './echo-edge-replicator';
-import { PublicKey, SpaceId } from '@dxos/keys';
-import type { EchoReplicatorContext } from '../automerge';
+
 import { Event } from '@dxos/async';
-import { EdgeService } from '@dxos/protocols';
-import * as A from '@dxos/automerge/automerge';
-import type { AutomergeProtocolMessage } from '@dxos/protocols/src';
 import { cbor } from '@dxos/automerge/automerge-repo';
+import { createEphemeralEdgeIdentity, EdgeClient, MessageSchema } from '@dxos/edge-client';
+import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
+import { PublicKey, SpaceId } from '@dxos/keys';
+import { EdgeService } from '@dxos/protocols';
+import type { AutomergeProtocolMessage } from '@dxos/protocols';
+import { createBuf } from '@dxos/protocols/buf';
 import type { Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { openAndClose } from '@dxos/test-utils';
+
+import { EchoEdgeReplicator } from './echo-edge-replicator';
+import type { EchoReplicatorContext } from '../automerge';
 
 describe('EchoEdgeReplicator', () => {
   test.only('reconnects', async ({ onTestFinished }) => {
-    const { closeConnection, endpoint, cleanup, sendMessage } = await createTestEdgeWsServer(8001);
+    const { endpoint, cleanup, sendMessage } = await createTestEdgeWsServer(8001);
     onTestFinished(cleanup);
     const client = new EdgeClient(await createEphemeralEdgeIdentity(), { socketEndpoint: endpoint });
     await openAndClose(client);
@@ -62,18 +67,12 @@ const createMockContext = () => {
   const connectionOpen = new Event();
   return {
     context: {
-      async getContainingSpaceIdForDocument(documentId) {
-        return null;
-      },
-      async getContainingSpaceForDocument(documentId) {
-        return null;
-      },
-      onConnectionAuthScopeChanged(connection) {},
-      async isDocumentInRemoteCollection(params) {
-        return false;
-      },
-      onConnectionClosed(connection) {},
-      onConnectionOpen(connection) {
+      getContainingSpaceIdForDocument: async (documentId) => null,
+      getContainingSpaceForDocument: async (documentId) => null,
+      onConnectionAuthScopeChanged: (connection) => {},
+      isDocumentInRemoteCollection: async (params) => false,
+      onConnectionClosed: (connection) => {},
+      onConnectionOpen: (connection) => {
         connectionOpen.emit();
       },
 
