@@ -73,7 +73,7 @@ export class TableModel extends Resource {
       const values: DxGridPlaneCells = {};
       this.data.forEach((row, rowIndex) => {
         fields.forEach((field, colIndex: number) => {
-          const cellValueSignal = computed(() => formatValue(row[field.path], field.type));
+          const cellValueSignal = computed(() => formatValue(field.type, row[field.path]));
           values[getCellKey(colIndex, rowIndex)] = {
             get value() {
               return cellValueSignal.value;
