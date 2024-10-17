@@ -89,6 +89,9 @@ export class RepoProxy extends Resource {
   }
 
   find<T>(id: AnyDocumentId): DocHandleProxy<T> {
+    if (typeof id !== 'string') {
+      throw new TypeError(`Invalid documentId ${id}`);
+    }
     const documentId = interpretAsDocumentId(id);
     const handle = this._getHandle<T>({
       documentId,

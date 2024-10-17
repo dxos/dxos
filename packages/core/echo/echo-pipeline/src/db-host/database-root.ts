@@ -73,7 +73,8 @@ export class DatabaseRoot {
     const doc = this.docSync();
     invariant(doc);
 
-    return Object.values(doc.links ?? {}) as AutomergeUrl[];
+    // .toString() to handle RawString.
+    return Object.values(doc.links ?? {}).map((s) => s.toString()) as AutomergeUrl[];
   }
 
   measureMetrics(): DocMetrics | null {

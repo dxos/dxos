@@ -312,7 +312,7 @@ describe('Spaces', () => {
     await hostSpace.db.flush();
     await waitForObject(guestSpace, hostDocument);
 
-    (hostDocument.content as any).content = 'Hello, world!';
+    hostDocument.content!.content = 'Hello, world!';
 
     await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
   });
