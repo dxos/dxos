@@ -1,8 +1,14 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { test } from 'vitest';
-import { initLWWTreeSyncState, LWWTree, type LWWTreeSyncMessage } from './immutable/lww-tree';
+
 import { range } from '@dxos/util';
-import { randomKey } from './testing';
+
 import type { ActorID } from './common';
+import { initLWWTreeSyncState, LWWTree, type LWWTreeSyncMessage } from './lww-tree';
+import { randomKey } from './testing';
 
 test('basic', async ({ expect }) => {
   const peer1: LWWTree<string> = await LWWTree.new({ actor: 'peer1' as ActorID });
@@ -24,9 +30,9 @@ test('basic', async ({ expect }) => {
 });
 
 test('sim', { timeout: 60_000 }, async ({ expect }) => {
-  const NUM_KEYS = 5_000,
-    NUM_ITERS = 5,
-    NUM_MUTATIONS = 5;
+  const NUM_KEYS = 5_000;
+  const NUM_ITERS = 5;
+  const NUM_MUTATIONS = 5;
   const keys = range(NUM_KEYS).map((i) => `key${i}`);
 
   const peer1 = await LWWTree.new<string>({ actor: 'peer1' as ActorID });
@@ -53,15 +59,15 @@ test('sim', { timeout: 60_000 }, async ({ expect }) => {
 });
 
 const sync = async (peer1: LWWTree<string>, peer2: LWWTree<string>) => {
-  let state1 = initLWWTreeSyncState(),
-    state2 = initLWWTreeSyncState();
+  let state1 = initLWWTreeSyncState();
+  let state2 = initLWWTreeSyncState();
 
-  let nodes = 0,
-    items = 0;
+  let nodes = 0;
+  let items = 0;
 
   for (let i = 0; i < 15; i++) {
-    let message1: LWWTreeSyncMessage | null = null,
-      message2: LWWTreeSyncMessage | null = null;
+    let message1: LWWTreeSyncMessage | null = null;
+    let message2: LWWTreeSyncMessage | null = null;
     // console.log('state1', state1);
     [state1, message1] = await peer1.generateSyncMessage(state1);
     if (message1) {

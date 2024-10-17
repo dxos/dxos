@@ -1,6 +1,11 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { arraysEqual } from '@dxos/util';
-import { Forest, type DigestHex, type Key, type NodeData } from './forest';
+
 import type { ActorID } from './common';
+import { Forest, type DigestHex, type Key, type NodeData } from './forest';
 
 export type MirrorMultiMapParams = {
   actor: ActorID;
@@ -42,7 +47,7 @@ export class MirrorMultiMap<T> {
       case 'missing':
         return undefined;
       case 'not-available':
-        throw new Error(`Unexpected local entry not available`);
+        throw new Error('Unexpected local entry not available');
     }
   }
 
@@ -67,7 +72,7 @@ export class MirrorMultiMap<T> {
       case 'missing':
         return undefined;
       case 'not-available':
-        throw new Error(`Unexpected remote entry not available`);
+        throw new Error('Unexpected remote entry not available');
     }
   }
 
@@ -88,7 +93,7 @@ export class MirrorMultiMap<T> {
   async getAll(key: Key): Promise<Map<ActorID, T | undefined>> {
     const result = new Map<ActorID, T | undefined>();
     result.set(this.#actor, await this.getLocal(key));
-    for (const [actorId, state] of this.#remoteStates) {
+    for (const [actorId, _state] of this.#remoteStates) {
       result.set(actorId, await this.getFor(actorId, key));
     }
     return result;

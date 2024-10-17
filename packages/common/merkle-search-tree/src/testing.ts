@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 export const createValue = (source: string) => new Uint8Array(textEncoder.encode(source));
 
 const textEncoder = new TextEncoder();

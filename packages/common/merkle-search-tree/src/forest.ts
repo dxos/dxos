@@ -1,6 +1,11 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { invariant } from '@dxos/invariant';
-import { formatDigest, getLevelHex } from './common';
 import { arrayToHex, arraysEqual } from '@dxos/util';
+
+import { formatDigest, getLevelHex } from './common';
 
 export class Forest {
   #nodes = new Map<DigestHex, Node>();
@@ -117,13 +122,13 @@ export class Forest {
     //  # A #   | D |    #    G   # | K | # L #
     //
 
-    const resultItems: Item[] = [],
-      resultChildren: DigestHex[] = [];
+    const resultItems: Item[] = [];
+    const resultChildren: DigestHex[] = [];
 
-    let carry1: DigestHex | null = null,
-      carry2: DigestHex | null = null;
+    let carry1: DigestHex | null = null;
+    let carry2: DigestHex | null = null;
 
-    for (let i1 = 0, i2 = 0; i1 < node1.items.length || i2 < node2.items.length; ) {
+    for (let i1 = 0, i2 = 0; i1 < node1.items.length || i2 < node2.items.length; undefined) {
       invariant(i1 <= node1.items.length);
       invariant(i2 <= node2.items.length);
 
@@ -225,9 +230,11 @@ export class Forest {
   async getNodes(digests: Iterable<DigestHex>): Promise<NodeData[]> {
     const result: NodeData[] = [];
 
-    for (let digest of digests) {
+    for (const digest of digests) {
       const node = this.#nodes.get(digest);
-      if (!node) continue;
+      if (!node) {
+        continue;
+      }
       result.push({
         level: node.level,
         digest: node.digest,
@@ -335,7 +342,6 @@ export class Forest {
     let splitIndex = node.items.length;
     for (let i = 0; i < node.items.length; i++) {
       if (node.items[i].key === key) {
-        console.log('fo');
         return [
           await this.#makeNode(node.level, node.items.slice(0, i), node.children.slice(0, i + 1)),
           await this.#makeNode(node.level, node.items.slice(i + 1), node.children.slice(i + 2)),
@@ -461,11 +467,6 @@ type Node = {
   readonly children: readonly DigestHex[];
 };
 
-type NodeSlice = {
-  readonly items: readonly Item[];
-  readonly children: readonly DigestHex[];
-};
-
 const makeNode = async (level: number, items: readonly Item[], children: readonly DigestHex[]): Promise<Node> => {
   invariant(level > 0 ? items.length + 1 === children.length : children.length === 0);
 
@@ -486,13 +487,6 @@ type Item = {
   readonly value: Uint8Array;
   readonly keyDigest: DigestHex;
   readonly itemDigest: DigestHex;
-};
-
-const keyDigest = async (key: string): Promise<DigestHex> => {
-  const keyBytes = textEncoder.encode(key);
-  const keyDigest = await crypto.subtle.digest({ name: 'SHA-256' }, keyBytes);
-
-  return formatDigest(new Uint8Array(keyDigest)) as DigestHex;
 };
 
 const makeItem = async (key: string, value: Uint8Array): Promise<Item> => {

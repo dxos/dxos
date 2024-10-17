@@ -1,5 +1,11 @@
-import { numericalValues, range } from '@dxos/util';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { describe, test } from 'vitest';
+
+import { numericalValues, range } from '@dxos/util';
+
 import { Forest, type DigestHex, type TreeMut } from './forest';
 import { createValue, randomKey, randomSample } from './testing';
 
@@ -105,7 +111,7 @@ test('builds a sorted tree', { timeout: 60_000 }, async ({ expect }) => {
           validate(tree.root);
         } catch (err) {
           console.log(`\nLast node inserted: ${key}\n\n`);
-          console.log(`\Tree before insertion:\n${treeBefore}\n\n`);
+          console.log(`\nTree before insertion:\n${treeBefore}\n\n`);
           throw err;
         }
       }
@@ -137,7 +143,7 @@ describe('insertion order does not change the root hash', () => {
     const forest = new Forest();
 
     const pairs = range(NUM_ITEMS).map(() => [randomKey(), createValue(randomKey())] as const);
-    let firstTree: TreeMut | undefined = undefined;
+    let firstTree: TreeMut | undefined;
     for (const _ in range(NUM_SAMPLES)) {
       const tree = forest.treeMut(await forest.createTree(pairs.sort(() => Math.random() - 0.5)));
       if (!firstTree) {
@@ -158,12 +164,12 @@ describe('insertion order does not change the root hash', () => {
 });
 
 test.skip('sync', async ({ expect }) => {
-  const NUM_ITERS = 100,
-    NUM_ITEMS = 10_000,
-    MUTATIONS_PER_ITER = 1;
+  const NUM_ITERS = 100;
+  const NUM_ITEMS = 10_000;
+  const MUTATIONS_PER_ITER = 1;
 
-  const forest1 = new Forest(),
-    forest2 = new Forest();
+  const forest1 = new Forest();
+  const forest2 = new Forest();
 
   const pairs = range(NUM_ITEMS).map(() => [randomKey(), createValue(randomKey())] as const);
   const tree = forest1.treeMut(await forest1.createTree(pairs));

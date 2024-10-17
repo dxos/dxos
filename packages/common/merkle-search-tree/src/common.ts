@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { arrayToHex } from '@dxos/util';
 
 export type ActorID = string & { __ActorID: never };
