@@ -7,6 +7,7 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithKey, CredentialGenerator } from '@dxos/credentials';
 import { type MetadataStore, type SpaceManager, type SwarmIdentity } from '@dxos/echo-pipeline';
+import { type EdgeConnection } from '@dxos/edge-client';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -14,6 +15,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
@@ -63,9 +65,20 @@ export type CreateIdentityOptions = {
   deviceProfile?: DeviceProfileDocument;
 };
 
-export type IdentityManagerRuntimeParams = {
+export type IdentityManagerCallbacks = {
+  onIdentityConstruction?: (identity: Identity) => void;
+};
+
+export type IdentityManagerParams = {
+  metadataStore: MetadataStore;
+  keyring: Keyring;
+  feedStore: FeedStore<FeedMessage>;
+  spaceManager: SpaceManager;
+  edgeConnection?: EdgeConnection;
+  edgeFeatures?: Runtime.Client.EdgeFeatures;
   devicePresenceAnnounceInterval?: number;
   devicePresenceOfflineTimeout?: number;
+  callbacks?: IdentityManagerCallbacks;
 };
 
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
@@ -73,25 +86,29 @@ export type IdentityManagerRuntimeParams = {
 export class IdentityManager {
   readonly stateUpdate = new Event();
 
-  private _identity?: Identity;
+  private readonly _metadataStore: MetadataStore;
+  private readonly _keyring: Keyring;
+  private readonly _feedStore: FeedStore<FeedMessage>;
+  private readonly _spaceManager: SpaceManager;
   private readonly _devicePresenceAnnounceInterval: number;
   private readonly _devicePresenceOfflineTimeout: number;
+  private readonly _edgeConnection: EdgeConnection | undefined;
+  private readonly _edgeFeatures: Runtime.Client.EdgeFeatures | undefined;
+  private readonly _callbacks: IdentityManagerCallbacks | undefined;
 
-  // TODO(burdon): IdentityManagerParams.
+  private _identity?: Identity;
+
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
-  constructor(
-    private readonly _metadataStore: MetadataStore,
-    private readonly _keyring: Keyring,
-    private readonly _feedStore: FeedStore<FeedMessage>,
-    private readonly _spaceManager: SpaceManager,
-    params?: IdentityManagerRuntimeParams,
-  ) {
-    const {
-      devicePresenceAnnounceInterval = DEVICE_PRESENCE_ANNOUNCE_INTERVAL,
-      devicePresenceOfflineTimeout = DEVICE_PRESENCE_OFFLINE_TIMEOUT,
-    } = params ?? {};
-    this._devicePresenceAnnounceInterval = devicePresenceAnnounceInterval;
-    this._devicePresenceOfflineTimeout = devicePresenceOfflineTimeout;
+  constructor(params: IdentityManagerParams) {
+    this._metadataStore = params.metadataStore;
+    this._keyring = params.keyring;
+    this._feedStore = params.feedStore;
+    this._spaceManager = params.spaceManager;
+    this._edgeConnection = params.edgeConnection;
+    this._edgeFeatures = params.edgeFeatures;
+    this._devicePresenceAnnounceInterval = params.devicePresenceAnnounceInterval ?? DEVICE_PRESENCE_ANNOUNCE_INTERVAL;
+    this._devicePresenceOfflineTimeout = params.devicePresenceOfflineTimeout ?? DEVICE_PRESENCE_OFFLINE_TIMEOUT;
+    this._callbacks = params.callbacks;
   }
 
   get identity() {
@@ -340,6 +357,7 @@ export class IdentityManager {
     const space = await this._constructSpace({
       spaceRecord: identityRecord.haloSpace,
       swarmIdentity: {
+        identityKey: identityRecord.identityKey,
         peerKey: identityRecord.deviceKey,
         credentialProvider: createAuthProvider(createCredentialSignerWithKey(this._keyring, identityRecord.deviceKey)),
         credentialAuthenticator: deferFunction(() => identity.authVerifier.verifier),
@@ -356,8 +374,11 @@ export class IdentityManager {
       signer: this._keyring,
       identityKey: identityRecord.identityKey,
       deviceKey: identityRecord.deviceKey,
+      edgeConnection: this._edgeConnection,
+      edgeFeatures: this._edgeFeatures,
     });
     log('done', { identityKey: identityRecord.identityKey });
+    this._callbacks?.onIdentityConstruction?.(identity);
 
     // TODO(mykola): Set new timeframe on a write to a feed.
     if (identityRecord.haloSpace.controlTimeframe) {

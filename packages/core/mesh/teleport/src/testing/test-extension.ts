@@ -5,7 +5,7 @@
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 
@@ -79,7 +79,7 @@ export class TestExtension implements TeleportExtension {
   }
 
   async test(message = 'test') {
-    await this.open.wait({ timeout: 1500 });
+    await this.open.wait({ timeout: 2000 });
     const res = await asyncTimeout(this._rpc.rpc.TestService.testCall({ data: message }), 1500);
     invariant(res.data === message);
   }

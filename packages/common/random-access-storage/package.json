@@ -1,6 +1,6 @@
 {
   "name": "@dxos/random-access-storage",
-  "version": "0.6.5",
+  "version": "0.6.12",
   "description": "Multiple random storage types.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,8 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     }
@@ -28,7 +29,6 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -44,8 +44,7 @@
     "pify": "~5.0.0",
     "random-access-file": "^2.2.1",
     "random-access-memory": "^4.1.0",
-    "random-access-storage": "^1.3.0",
-    "random-access-web": "^2.0.3"
+    "random-access-storage": "^1.3.0"
   },
   "devDependencies": {
     "@types/pify": "^3.0.2",

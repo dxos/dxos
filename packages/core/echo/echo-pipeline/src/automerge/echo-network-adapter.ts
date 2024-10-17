@@ -8,10 +8,12 @@ import { LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { nonNullable } from '@dxos/util';
 
 import {
   type EchoReplicator,
+  type RemoteDocumentExistenceCheckParams,
   type ReplicatorConnection,
   type ShouldAdvertiseParams,
   type ShouldSyncCollectionParams,
@@ -22,6 +24,7 @@ import {
   type CollectionQueryMessage,
   type CollectionStateMessage,
 } from './network-protocol';
+import { createIdFromSpaceKey } from '../common/space-id';
 
 export interface NetworkDataMonitor {
   recordPeerConnected(peerId: string): void;
@@ -33,6 +36,7 @@ export interface NetworkDataMonitor {
 
 export type EchoNetworkAdapterParams = {
   getContainingSpaceForDocument: (documentId: string) => Promise<PublicKey | null>;
+  isDocumentInRemoteCollection: (params: RemoteDocumentExistenceCheckParams) => Promise<boolean>;
   onCollectionStateQueried: (collectionId: string, peerId: PeerId) => void;
   onCollectionStateReceived: (collectionId: string, peerId: PeerId, state: unknown) => void;
   monitor?: NetworkDataMonitor;
@@ -111,7 +115,12 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       onConnectionOpen: this._onConnectionOpen.bind(this),
       onConnectionClosed: this._onConnectionClosed.bind(this),
       onConnectionAuthScopeChanged: this._onConnectionAuthScopeChanged.bind(this),
+      isDocumentInRemoteCollection: this._params.isDocumentInRemoteCollection,
       getContainingSpaceForDocument: this._params.getContainingSpaceForDocument,
+      getContainingSpaceIdForDocument: async (documentId) => {
+        const key = await this._params.getContainingSpaceForDocument(documentId);
+        return key ? createIdFromSpaceKey(key) : null;
+      },
     });
   }
 
@@ -171,7 +180,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     const writeStart = Date.now();
     // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
     connectionEntry.writer
-      .write(message)
+      .write(message as AutomergeProtocolMessage)
       .then(() => {
         const durationMs = Date.now() - writeStart;
         this._params.monitor?.recordMessageSent(message, durationMs);
@@ -212,7 +221,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
             break;
           }
 
-          this._onMessage(value);
+          this._onMessage(value as Message);
         }
       } catch (err) {
         if (connectionEntry.isOpen) {
@@ -274,8 +283,8 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
 type ConnectionEntry = {
   connection: ReplicatorConnection;
-  reader: ReadableStreamDefaultReader<Message>;
-  writer: WritableStreamDefaultWriter<Message>;
+  reader: ReadableStreamDefaultReader<AutomergeProtocolMessage>;
+  writer: WritableStreamDefaultWriter<AutomergeProtocolMessage>;
   isOpen: boolean;
 };
 

@@ -25,6 +25,7 @@ import {
 import { createComment } from '../comments';
 
 export type ActionType =
+  | 'view-mode'
   | 'blockquote'
   | 'strong'
   | 'codeblock'
@@ -39,6 +40,7 @@ export type ActionType =
   | 'list-task'
   | 'mention'
   | 'prompt'
+  | 'search'
   | 'strikethrough'
   | 'table';
 

@@ -7,11 +7,10 @@ import { Filter } from '@dxos/client/echo';
 
 import { TaskType } from './schema';
 
-const client = new Client();
+const client = new Client({ types: [TaskType] });
 
 async () => {
   await client.initialize();
-  client.addTypes([TaskType]);
 
   // get a list of all spaces
   const spaces = client.spaces.get();

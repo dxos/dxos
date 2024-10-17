@@ -2,20 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { TestBuilder, TestPeer } from '@dxos/teleport/testing';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { GossipExtension } from './gossip-extension';
 
 describe('GossipExtension', () => {
   test('Two peers discover each other', async () => {
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
     const [peer1, peer2] = builder.createPeers({ factory: () => new TestPeer() });
     const [connection1, connection2] = await builder.connect(peer1, peer2);
 
@@ -59,7 +58,7 @@ describe('GossipExtension', () => {
       },
     });
 
-    expect((await trigger1.wait({ timeout: 50 })).peerId).toEqual(peer2.peerId);
-    expect((await trigger2.wait({ timeout: 50 })).peerId).toEqual(peer1.peerId);
+    expect((await trigger1.wait({ timeout: 50 })).peerId.toHex()).toEqual(peer2.peerId.toHex());
+    expect((await trigger2.wait({ timeout: 50 })).peerId.toHex()).toEqual(peer1.peerId.toHex());
   });
 });

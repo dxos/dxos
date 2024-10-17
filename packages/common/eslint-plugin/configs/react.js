@@ -3,7 +3,12 @@
 //
 
 module.exports = {
-  extends: ['plugin:react/recommended'],
+  extends: [
+    'plugin:react/recommended',
+    // TODO(burdon): Carefully test before enabling.
+    // https://github.com/facebook/react/tree/main/packages/eslint-plugin-react-hooks
+    // 'plugin:react-hooks/recommended',
+  ],
   rules: {
     'jsx-quotes': ['error', 'prefer-single'],
     'react/display-name': 'off',

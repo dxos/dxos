@@ -4,7 +4,7 @@
   "tags": [
     "scope:devtools"
   ],
-  "sourceRoot": "packages/devtools/cli/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
   "targets": {
     "bin": {
@@ -17,27 +17,18 @@
       }
     },
     "build": {
+      "dependsOn": [
+        "^build"
+      ],
       "options": {
-        "main": "{projectRoot}/src/index.ts",
-        "outputPath": "packages/devtools/cli/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/devtools/cli/tsconfig.json"
+        "outputPath": "{projectRoot}/dist"
       }
     },
     "lint": {},
-    "test": {
-      "options": {
-        "checkLeaks": false,
-        "ciEnvironments": [
-          "nodejs"
-        ]
-      }
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",
-    "test"
+    "node-std"
   ]
 }

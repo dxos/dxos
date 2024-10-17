@@ -8,7 +8,7 @@ import { verifyCredential, type CredentialSigner } from '@dxos/credentials';
 import { type AuthProvider, type AuthVerifier } from '@dxos/echo-pipeline';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type ComplexSet } from '@dxos/util';
 
 const Credential = schema.getCodecForType('dxos.halo.credentials.Credential');
@@ -67,7 +67,7 @@ export class TrustedKeySetAuthVerifier {
       }
 
       if (this._isTrustedKey(credential.issuer)) {
-        log('key is not currently in trusted set, waiting...', { key: credential.issuer });
+        log('key is trusted -- auth success', { key: credential.issuer });
         return true;
       }
 
@@ -81,7 +81,10 @@ export class TrustedKeySetAuthVerifier {
           log('auth success', { key: credential.issuer });
           trigger.wake(true);
         } else {
-          log('key is not currently in trusted set, waiting...', { key: credential.issuer });
+          log('key is not currently in trusted set, waiting...', {
+            key: credential.issuer,
+            trusted: [...this._params.trustedKeysProvider()],
+          });
         }
       });
 

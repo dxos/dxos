@@ -4,7 +4,7 @@
   "tags": [
     "scope:experimental"
   ],
-  "sourceRoot": "packages/experimental/gem-core/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
@@ -15,9 +15,11 @@
         ]
       }
     },
-    "lint": {}
+    "lint": {},
+    "test": {}
   },
   "implicitDependencies": [
-    "test"
+    "esbuild",
+    "node-std"
   ]
 }

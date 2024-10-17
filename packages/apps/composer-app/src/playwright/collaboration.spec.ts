@@ -47,7 +47,6 @@ test.describe('Collaboration tests', () => {
   test('guest joins host’s space', async () => {
     // Host creates a space and adds a markdown object
     await host.createSpace();
-    await host.createObject('markdownPlugin');
 
     {
       // Focus new editor before space invitation.
@@ -64,8 +63,7 @@ test.describe('Collaboration tests', () => {
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1);
     await expect(guest.getObjectLinks()).toHaveCount(1);
-
-    await guest.page.pause();
+    await guest.getObjectLinks().last().click();
 
     {
       // Update to use plank locator
@@ -85,7 +83,6 @@ test.describe('Collaboration tests', () => {
 
   test('host and guest can see each others’ presence when same document is in focus', async () => {
     await host.createSpace();
-    await host.createObject('markdownPlugin');
 
     const hostPlank = host.deck.plank();
     await Markdown.waitForMarkdownTextboxWithLocator(hostPlank.locator);
@@ -94,10 +91,6 @@ test.describe('Collaboration tests', () => {
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1);
     await expect(guest.getObjectLinks()).toHaveCount(1);
-
-    // Close the space collection in guest.
-    const guestSpaceCollectionPlank = guest.deck.plank();
-    await guestSpaceCollectionPlank.close();
 
     // Open the shared markdown plank in the guest.
     await guest.getObjectLinks().last().click();
@@ -119,7 +112,6 @@ test.describe('Collaboration tests', () => {
 
   test('host and guest can see each others’ changes in same document', async () => {
     await host.createSpace();
-    await host.createObject('markdownPlugin');
 
     // Focus on host's textbox and wait for it to be ready
     const hostPlank = host.deck.plank();
@@ -187,10 +179,13 @@ test.describe('Collaboration tests', () => {
     test.setTimeout(60_000);
 
     await host.createSpace();
-    await host.createObject('markdownPlugin');
+    await host.getObjectLinks().last().click();
 
     const hostPlank = host.deck.plank();
-    await Markdown.waitForMarkdownTextboxWithLocator(hostPlank.locator);
+    const hostTextbox = await Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
+    await hostTextbox.waitFor();
+    // TODO(thure): Autofocus not working for solo mode when creating a new document.
+    await hostTextbox.focus();
 
     await perfomInvitation(host, guest);
     await guest.waitForSpaceReady();
@@ -201,7 +196,10 @@ test.describe('Collaboration tests', () => {
     await guest.getObjectLinks().last().click();
 
     const guestPlank = guest.deck.plank();
-    await Markdown.waitForMarkdownTextboxWithLocator(guestPlank.locator);
+    const guestTextbox = await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator);
+    await guestTextbox.waitFor();
+    // TODO(thure): Autofocus not working for solo mode when creating a new document.
+    await guestTextbox.focus();
 
     const hostPresence = hostPlank.membersPresence();
     const guestPresence = guestPlank.membersPresence();

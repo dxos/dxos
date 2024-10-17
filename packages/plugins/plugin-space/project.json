@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-space",
+  "tags": [
+    "scope:plugins"
+  ],
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/meta.ts",
+          "{projectRoot}/src/types/index.ts"
+        ],
+        "platforms": [
+          "browser",
+          "node"
+        ]
+      }
+    },
+    "lint": {
+      "options": {
+        "lintFilePatterns": [
+          "{projectRoot}/src/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "node-std"
+  ]
+}

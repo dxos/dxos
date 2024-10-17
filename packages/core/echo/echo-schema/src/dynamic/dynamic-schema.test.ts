@@ -2,24 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import * as AST from '@effect/schema/AST';
 import { effect } from '@preact/signals-core';
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
-import { registerSignalRuntime } from '@dxos/echo-signals';
-import { describe, test } from '@dxos/test';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { AST, S } from '@dxos/effect';
 
 import { DynamicSchema } from './dynamic-schema';
 import { StoredSchema } from './stored-schema';
-import { FieldMeta, getEchoObjectAnnotation, getFieldMetaAnnotation } from '../annotations';
+import { FieldMeta, getEchoObjectAnnotation, getFieldMetaAnnotation } from '../ast';
 import { getTypeReference } from '../getter';
 import { create } from '../handler';
 import { effectToJsonSchema } from '../json';
 import { EmptySchemaType, TEST_SCHEMA_TYPE } from '../testing';
 import { TypedObject } from '../typed-object-class';
 
-registerSignalRuntime();
+registerSignalsRuntime();
 
 describe('dynamic schema', () => {
   test('getProperties filters out id and unwraps optionality', async () => {
@@ -30,8 +28,8 @@ describe('dynamic schema', () => {
 
     const registered = createDynamicSchema(GeneratedSchema);
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
-      ['field2', AST.booleanKeyword],
       ['field1', AST.stringKeyword],
+      ['field2', AST.booleanKeyword],
     ]);
   });
 

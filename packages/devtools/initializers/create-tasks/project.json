@@ -4,12 +4,15 @@
   "tags": [
     "scope:initializers"
   ],
-  "sourceRoot": "packages/devtools/initializers/create-tasks/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": [
+        "^build"
+      ],
       "options": {
-        "outputPath": "packages/devtools/initializers/create-tasks/dist"
+        "outputPath": "{projectRoot}/dist"
       }
     },
     "lint": {}

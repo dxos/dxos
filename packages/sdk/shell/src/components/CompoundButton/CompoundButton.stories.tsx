@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { ArrowRight, ClockCounterClockwise } from '@phosphor-icons/react';
 import React, { type PropsWithChildren } from 'react';

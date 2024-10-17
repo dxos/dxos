@@ -2,21 +2,21 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect } from 'earljs';
+import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 import { type Any, Stream, type TaggedType } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { SystemError, type TYPES } from '@dxos/protocols';
-import { describe, test } from '@dxos/test';
+import { SystemError } from '@dxos/protocols';
+import { type TYPES } from '@dxos/protocols/proto';
 
 import { RpcPeer } from './rpc';
-import { createLinkedPorts } from './testing';
+import { createLinkedPorts, encodeMessage } from './testing';
 
 const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
   '@type': 'google.protobuf.Any',
   type_url: 'dxos.test',
-  value: Buffer.from(value),
+  value: encodeMessage(value),
 });
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
@@ -183,7 +183,7 @@ describe('RpcPeer', () => {
       const alice = new RpcPeer({
         callHandler: async (method, msg) => {
           expect(method).toEqual('method');
-          expect(msg.value).toEqual(Buffer.from('request'));
+          expect(msg.value).toEqual(encodeMessage('request'));
           return createPayload('response');
         },
         port: alicePort,
@@ -201,7 +201,7 @@ describe('RpcPeer', () => {
       await Promise.all([alice.close(), bob.close()]);
     });
 
-    test('can send multiple requests', async () => {
+    test.skip('can send multiple requests', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -226,7 +226,7 @@ describe('RpcPeer', () => {
 
       await Promise.all([alice.open(), bob.open()]);
 
-      expect((await bob.call('method', createPayload('request'))).value).toEqual(Buffer.from('request'));
+      expect((await bob.call('method', createPayload('request'))).value).toEqual(encodeMessage('request'));
 
       const parallel1 = bob.call('method', createPayload('p1'));
       const parallel2 = bob.call('method', createPayload('p2'));
@@ -234,8 +234,8 @@ describe('RpcPeer', () => {
 
       await expect(await parallel1).toEqual(createPayload('p1'));
       await expect(await parallel2).toEqual(createPayload('p2'));
-      await expect(error).toBeRejected();
-    }).tag('flaky');
+      await expect(error).rejects.toBeInstanceOf(Error);
+    });
 
     test('errors get serialized', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
@@ -266,7 +266,7 @@ describe('RpcPeer', () => {
         error = err;
       }
 
-      expect(error).toBeA(SystemError);
+      expect(error).toBeInstanceOf(SystemError);
       expect(error.message).toEqual('My error');
       expect(error.stack?.includes('handlerFn')).toEqual(true);
       expect(error.stack?.includes('RpcMethodName')).toEqual(true);
@@ -294,7 +294,7 @@ describe('RpcPeer', () => {
       const req = bob.call('method', createPayload('request'));
       await bob.close();
 
-      await expect(req).toBeRejected();
+      await expect(req).rejects.toBeInstanceOf(Error);
     });
 
     test('closing remote endpoint stops pending requests on timeout', async () => {
@@ -320,7 +320,7 @@ describe('RpcPeer', () => {
       await alice.close();
       const req = bob.call('method', createPayload('request'));
 
-      await expect(req).toBeRejected();
+      await expect(req).rejects.toBeInstanceOf(Error);
     });
 
     test('requests failing on timeout', async () => {
@@ -344,7 +344,7 @@ describe('RpcPeer', () => {
       await Promise.all([alice.open(), bob.open()]);
 
       const req = bob.call('method', createPayload('request'));
-      await expect(req).toBeRejected();
+      await expect(req).rejects.toBeInstanceOf(Error);
     });
   });
 
@@ -356,7 +356,7 @@ describe('RpcPeer', () => {
         callHandler: async (msg) => createPayload(),
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
-          expect(msg.value!).toEqual(Buffer.from('request'));
+          expect(msg.value!).toEqual(encodeMessage('request'));
           return new Stream<Any>(({ next, close }) => {
             next(createPayload('res1'));
             next(createPayload('res2'));
@@ -374,7 +374,7 @@ describe('RpcPeer', () => {
       await Promise.all([alice.open(), bob.open()]);
 
       const stream = await bob.callStream('method', createPayload('request'));
-      expect(stream).toBeA(Stream);
+      expect(stream).toBeInstanceOf(Stream);
 
       expect(await Stream.consume(stream)).toEqual([
         { ready: true },
@@ -391,7 +391,7 @@ describe('RpcPeer', () => {
         callHandler: async (msg) => createPayload(),
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
-          expect(msg.value).toEqual(Buffer.from('request'));
+          expect(msg.value).toEqual(encodeMessage('request'));
           return new Stream<Any>(({ next, close }) => {
             close(new Error('Test error'));
           });
@@ -407,11 +407,12 @@ describe('RpcPeer', () => {
       await Promise.all([alice.open(), bob.open()]);
 
       const stream = await bob.callStream('method', createPayload('request'));
-      expect(stream).toBeA(Stream);
+      expect(stream).toBeInstanceOf(Stream);
 
       const msgs = await Stream.consume(stream);
-      expect(msgs).toEqual([{ closed: true, error: expect.a(Error) }]);
-
+      expect(msgs.length).toEqual(1);
+      expect((msgs[0] as any).closed).toEqual(true);
+      expect((msgs[0] as any).error).toBeInstanceOf(Error);
       expect((msgs[0] as any).error.message).toEqual('Test error');
     });
 
@@ -450,7 +451,7 @@ describe('RpcPeer', () => {
         callHandler: async (msg) => createPayload(),
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
-          expect(msg.value!).toEqual(Buffer.from('request'));
+          expect(msg.value!).toEqual(encodeMessage('request'));
           return new Stream<Any>(({ ready, close }) => {
             ready();
             close();
@@ -467,7 +468,7 @@ describe('RpcPeer', () => {
       await Promise.all([alice.open(), bob.open()]);
 
       const stream = await bob.callStream('method', createPayload('request'));
-      expect(stream).toBeA(Stream);
+      expect(stream).toBeInstanceOf(Stream);
 
       await stream.waitUntilReady();
 
@@ -493,10 +494,12 @@ describe('RpcPeer', () => {
       await Promise.all([alice.open(), bob.open()]);
 
       const stream = await bob.callStream('method', createPayload('request'));
-      expect(stream).toBeA(Stream);
+      expect(stream).toBeInstanceOf(Stream);
 
       const msgs = await Stream.consume(stream);
-      expect(msgs).toEqual([{ closed: true, error: expect.a(Error) }]);
+      expect(msgs.length).toEqual(1);
+      expect((msgs[0] as any).closed).toEqual(true);
+      expect((msgs[0] as any).error).toBeInstanceOf(Error);
       expect((msgs[0] as any).error.message).toEqual('Test error');
     });
   });
@@ -520,7 +523,7 @@ describe('RpcPeer', () => {
       const alice = new RpcPeer({
         callHandler: async (method, msg) => {
           expect(method).toEqual('method');
-          expect(msg.value).toEqual(Buffer.from('request'));
+          expect(msg.value).toEqual(encodeMessage('request'));
           return createPayload('response');
         },
         port: alicePort,

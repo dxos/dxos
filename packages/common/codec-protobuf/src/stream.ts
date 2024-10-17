@@ -157,6 +157,21 @@ export class Stream<T> {
     });
   }
 
+  static fromPromise<T>(promise: Promise<T>): Stream<T> {
+    return new Stream(({ ready, next, close }) => {
+      promise.then(
+        (data) => {
+          ready();
+          next(data);
+          close();
+        },
+        (err) => {
+          close(err);
+        },
+      );
+    });
+  }
+
   private readonly _ctx: Context;
   private _messageHandler?: (msg: T) => void = undefined;
   private _closeHandler?: (error?: Error) => void = undefined;

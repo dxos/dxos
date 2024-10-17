@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MemorySignalManagerContext } from '@dxos/messaging';
+import { describe, test } from 'vitest';
+
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { createServiceContext, performInvitation } from '../testing';
 
@@ -48,7 +50,9 @@ describe('services/ServiceContext', () => {
   });
 
   const createOpenServiceContext = async (networkContext: MemorySignalManagerContext) => {
-    const serviceContext = await createServiceContext({ signalContext: networkContext });
+    const serviceContext = await createServiceContext({
+      signalManagerFactory: async () => new MemorySignalManager(networkContext),
+    });
     await openAndClose(serviceContext);
     return serviceContext;
   };

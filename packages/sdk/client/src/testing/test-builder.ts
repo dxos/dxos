@@ -5,7 +5,7 @@
 import { Trigger } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
 import { ClientServicesHost } from '@dxos/client-services';
-import { type ServiceContextRuntimeParams } from '@dxos/client-services/src';
+import { type ServiceContextRuntimeParams } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
@@ -17,13 +17,12 @@ import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
   createIceProvider,
-  createLibDataChannelTransportFactory,
-  createSimplePeerTransportFactory,
+  createRtcTransportFactory,
   MemoryTransportFactory,
-  TcpTransportFactory,
   type TransportFactory,
   TransportKind,
 } from '@dxos/network-manager';
+import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
@@ -49,12 +48,14 @@ export const testConfigWithLocalSignal = new Config({
 /**
  * Client builder supports different configurations, incl. signaling, transports, storage.
  */
+// TODO(burdon): Make extensible.
+// TODO(burdon): Implement as Resource.
 export class TestBuilder {
   private readonly _ctx = new Context({ name: 'TestBuilder' });
 
   public config: Config;
-  public storage?: Storage;
-  public level?: LevelDB;
+  public storage?: () => Storage;
+  public level?: () => LevelDB;
 
   _transport: TransportKind;
 
@@ -63,7 +64,7 @@ export class TestBuilder {
     config?: Config,
     public signalManagerContext = new MemorySignalManagerContext(),
     // TODO(nf): Configure better.
-    transport = process.env.MOCHA_ENV === 'nodejs' ? TransportKind.LIBDATACHANNEL : TransportKind.SIMPLE_PEER,
+    transport = TransportKind.WEB_RTC,
   ) {
     this.config = config ?? new Config();
     this._transport = transport;
@@ -71,6 +72,65 @@ export class TestBuilder {
 
   public get ctx() {
     return this._ctx;
+  }
+
+  async destroy() {
+    await this._ctx.dispose(false); // TODO(burdon): Set to true to check clean shutdown.
+  }
+
+  /**
+   * Create backend service handlers.
+   */
+  createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
+    const services = new ClientServicesHost({
+      config: this.config,
+      storage: this?.storage?.(),
+      level: this?.level?.(),
+      runtimeParams,
+      ...this.networking,
+    });
+
+    this._ctx.onDispose(() => services.close());
+    return services;
+  }
+
+  /**
+   * Create local services host.
+   * @param options - fastPeerPresenceUpdate: enable for faster space-member online/offline status changes.
+   */
+  createLocalClientServices(options?: { fastPeerPresenceUpdate?: boolean }): LocalClientServices {
+    const services = new LocalClientServices({
+      config: this.config,
+      storage: this?.storage?.(),
+      level: this?.level?.(),
+      runtimeParams: {
+        ...(options?.fastPeerPresenceUpdate
+          ? { spaceMemberPresenceAnnounceInterval: 200, spaceMemberPresenceOfflineTimeout: 400 }
+          : {}),
+        invitationConnectionDefaultParams: { teleport: { controlHeartbeatInterval: 200 } },
+      },
+      ...this.networking,
+    });
+
+    this._ctx.onDispose(() => services.close());
+    return services;
+  }
+
+  /**
+   * Create client/server.
+   */
+  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ProtoRpcPeer<{}>] {
+    const [proxyPort, hostPort] = createLinkedPorts();
+    const client = new Client({ config: this.config, services: new ClientServicesProxy(proxyPort) });
+    const server = createProtoRpcPeer({
+      exposed: host.descriptors,
+      handlers: host.services as ClientServices,
+      port: hostPort,
+    });
+
+    this._ctx.onDispose(() => server.close());
+    this._ctx.onDispose(() => client.destroy());
+    return [client, server];
   }
 
   /**
@@ -82,16 +142,8 @@ export class TestBuilder {
       log.info(`using transport ${this._transport}`);
       let transportFactory: TransportFactory;
       switch (this._transport) {
-        case TransportKind.SIMPLE_PEER:
-          transportFactory = createSimplePeerTransportFactory(
-            { iceServers: this.config.get('runtime.services.ice') },
-            this.config.get('runtime.services.iceProviders') &&
-              createIceProvider(this.config.get('runtime.services.iceProviders')!),
-          );
-          break;
-
-        case TransportKind.LIBDATACHANNEL:
-          transportFactory = createLibDataChannelTransportFactory(
+        case TransportKind.WEB_RTC:
+          transportFactory = createRtcTransportFactory(
             { iceServers: this.config.get('runtime.services.ice') },
             this.config.get('runtime.services.iceProviders') &&
               createIceProvider(this.config.get('runtime.services.iceProviders')!),
@@ -120,66 +172,6 @@ export class TestBuilder {
       signalManager: new MemorySignalManager(this.signalManagerContext),
       transportFactory: MemoryTransportFactory,
     };
-  }
-
-  /**
-   * Create backend service handlers.
-   */
-  createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
-    const services = new ClientServicesHost({
-      config: this.config,
-      storage: this.storage,
-      level: this.level,
-      runtimeParams,
-      ...this.networking,
-    });
-
-    this._ctx.onDispose(() => services.close());
-    return services;
-  }
-
-  /**
-   * Create local services host.
-   * @param options - fastPeerPresenceUpdate: enable for faster space-member online/offline status changes.
-   */
-  createLocalClientServices(options?: { fastPeerPresenceUpdate?: boolean }): LocalClientServices {
-    const services = new LocalClientServices({
-      config: this.config,
-      storage: this.storage,
-      level: this.level,
-      runtimeParams: {
-        ...(options?.fastPeerPresenceUpdate
-          ? { spaceMemberPresenceAnnounceInterval: 200, spaceMemberPresenceOfflineTimeout: 400 }
-          : {}),
-        invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
-      },
-      ...this.networking,
-    });
-
-    this._ctx.onDispose(() => services.close());
-    return services;
-  }
-
-  /**
-   * Create client/server.
-   */
-  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ProtoRpcPeer<{}>] {
-    const [proxyPort, hostPort] = createLinkedPorts();
-    const client = new Client({ config: this.config, services: new ClientServicesProxy(proxyPort) });
-    const server = createProtoRpcPeer({
-      exposed: host.descriptors,
-      handlers: host.services as ClientServices,
-      port: hostPort,
-    });
-
-    this._ctx.onDispose(() => server.close());
-    this._ctx.onDispose(() => client.destroy());
-    return [client, server];
-  }
-
-  async destroy() {
-    await this._ctx.dispose(false); // TODO(burdon): Set to true to check clean shutdown.
-    await this.level?.close();
   }
 }
 

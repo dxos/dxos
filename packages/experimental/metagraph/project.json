@@ -4,7 +4,7 @@
   "tags": [
     "scope:experimental"
   ],
-  "sourceRoot": "packages/experimental/metagraph/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
@@ -29,7 +29,7 @@
         "entryPoints": [
           "{projectRoot}/src/index.ts"
         ],
-        "outputPath": "packages/experimental/metagraph/dist/lib"
+        "outputPath": "{projectRoot}/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -44,7 +44,7 @@
         "entryPoints": [
           "{projectRoot}/src/testing/index.ts"
         ],
-        "outputPath": "packages/experimental/metagraph/dist/testing",
+        "outputPath": "{projectRoot}/dist/testing",
         "platforms": [
           "node"
         ]
@@ -58,6 +58,6 @@
   },
   "implicitDependencies": [
     "esbuild",
-    "test"
+    "node-std"
   ]
 }

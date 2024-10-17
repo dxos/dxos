@@ -220,7 +220,7 @@ Let's add a button to update the count of the counter.
 
 At this point, your `Counter` component should look like this, with a `<button>` added for incrementing the count:
 
-```tsx{21-28} file=./tutorial-snippets/counter-2.tsx#L5-
+```tsx{22-29} file=./tutorial-snippets/counter-2.tsx#L5-
 import React, { useEffect } from 'react';
 
 import { Expando, create, useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -320,7 +320,7 @@ For more info on using DXOS, see:
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 
-* Join the DXOS [Discord](https://discord.gg/eXVfryv3sW)
+* Join the DXOS [Discord](https://dxos.org/discord)
 * DXOS [repository on GitHub](https://github.com/dxos/dxos)
 * File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
 

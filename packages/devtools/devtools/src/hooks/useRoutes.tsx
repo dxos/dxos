@@ -26,6 +26,7 @@ import {
   SwarmPanel,
   TracingPanel,
   DashboardPanel,
+  EdgeDashboardPanel,
   SearchPanel,
   AutomergePanel,
 } from '../panels';
@@ -148,6 +149,15 @@ export const useRoutes = () => {
             {
               path: '/agent/search',
               element: <SearchPanel />,
+            },
+          ],
+        },
+        {
+          path: '/edge',
+          children: [
+            {
+              path: '/edge/dashboard',
+              element: <EdgeDashboardPanel />,
             },
           ],
         },

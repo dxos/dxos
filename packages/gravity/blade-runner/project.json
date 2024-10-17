@@ -4,7 +4,7 @@
   "tags": [
     "scope:gravity"
   ],
-  "sourceRoot": "packages/gravity/blade-runner/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "compile": {
@@ -12,19 +12,6 @@
         "entryPoints": [
           "{projectRoot}/src/index.ts",
           "{projectRoot}/src/main.ts"
-        ]
-      }
-    },
-    "e2e": {
-      "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ],
-        "testPatterns": [
-          "{projectRoot}/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "{projectRoot}/src/**/*"
         ]
       }
     },

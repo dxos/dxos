@@ -2,15 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
-import type { Simplify } from 'effect/Types';
+import { type Simplify } from 'effect/Types';
 
+import { AST, S } from '@dxos/effect';
 import { type Comparator, intersection } from '@dxos/util';
 
 import { getMeta } from './getter';
 
 export const data = Symbol.for('dxos.echo.data');
 
+// TODO(burdon): Move to client-protocol.
 export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
 
 // TODO(burdon): Use consistently (with serialization utils).
@@ -25,9 +26,11 @@ const _ForeignKeySchema = S.Struct({
 export type ForeignKey = S.Schema.Type<typeof _ForeignKeySchema>;
 export const ForeignKeySchema: S.Schema<ForeignKey> = _ForeignKeySchema;
 
-export const ObjectMetaSchema = S.Struct({
-  keys: S.mutable(S.Array(ForeignKeySchema)),
-});
+export const ObjectMetaSchema = S.mutable(
+  S.Struct({
+    keys: S.mutable(S.Array(ForeignKeySchema)),
+  }),
+);
 export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
 
 export type ExcludeId<T> = Simplify<Omit<T, 'id'>>;
@@ -44,7 +47,7 @@ export const RawObject = <S extends S.Schema.All>(
 };
 
 /**
- * Has `id`.
+ * Marker interface for object with an `id`.
  */
 // TODO(burdon): Rename BaseObject?
 export interface Identifiable {
@@ -80,13 +83,24 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
   return { meta, object };
 };
 
+export interface CommonObjectData {
+  id: string;
+  // TODO(dmaretskyi): Document cases when this can be null.
+  __typename: string | null;
+  __meta: ObjectMeta;
+}
+
+export interface AnyObjectData extends CommonObjectData {
+  /**
+   * Fields of the object.
+   */
+  [key: string]: any;
+}
+
 /**
  * Object data type in JSON-encodable format.
  * References are encoded in the IPLD format.
- * `@type` is the string DXN of the object type.
- * Meta is added under `@meta` key.
+ * `__typename` is the string DXN of the object type.
+ * Meta is added under `__meta` key.
  */
-export type ObjectData<S> = S.Schema.Encoded<S> & {
-  __typename: string;
-  __meta: ObjectMeta;
-};
+export type ObjectData<S> = S.Schema.Encoded<S> & CommonObjectData;

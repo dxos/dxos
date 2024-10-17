@@ -3,11 +3,11 @@
 //
 
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
-import React, { type ComponentPropsWithRef, forwardRef, useMemo, type PropsWithChildren } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, type ComponentPropsWithoutRef } from 'react';
 
 // TODO(burdon): Remove dep.
 import { Avatar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { type TextEditorProps, keymap, listener, TextEditor } from '@dxos/react-ui-editor';
+import { type UseTextEditorProps, keymap, listener, useTextEditor } from '@dxos/react-ui-editor';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 import { hexToEmoji, hexToHue, isNotFalsy } from '@dxos/util';
 
@@ -16,16 +16,17 @@ import { type MessageMetadata } from '../types';
 
 const avatarSize = 7;
 
-export type MessageMetaProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
+export type MessageRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   MessageMetadata &
   Partial<{ continues: boolean }>;
 
-export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
+export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
   (
     { authorImgSrc, authorId, authorName, authorAvatarProps, continues = true, children, classNames, ...rootProps },
     forwardedRef,
   ) => {
     return (
+      // Must wrap the message since Avatar.Label may be used in the content.
       <Avatar.Root size={avatarSize} hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}>
         <div
           role='none'
@@ -34,12 +35,12 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
           className={mx('grid grid-cols-subgrid col-span-2', classNames)}
           ref={forwardedRef}
         >
-          <div role='none' className={mx('flex flex-col items-center gap-2 plb-2')}>
+          <div role='none' className='flex flex-col items-center gap-2 pbs-2'>
             <Avatar.Frame>
               <Avatar.Fallback text={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')} />
               {authorImgSrc && <Avatar.Image href={authorImgSrc} />}
             </Avatar.Frame>
-            {continues && <div role='none' className='is-px grow surface-separator' />}
+            {continues && <div role='none' className='is-px grow bg-bg-separator' />}
           </div>
           <div role='none' className='plb-1 min-is-0'>
             {children}
@@ -50,27 +51,46 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
   },
 );
 
-export type MessageProps = PropsWithChildren<MessageMetadata>;
+export type MessageHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
+  Pick<MessageMetadata, 'authorName' | 'timestamp'>;
 
-export const Message = ({ timestamp, children, ...messageMeta }: MessageProps) => {
-  const { t, dtLocale } = useTranslation(translationKey);
-  const dt = timestamp ? new Date(timestamp) : undefined;
-
+export const MessageHeading = ({ children, classNames, timestamp, authorName, ...props }: MessageHeadingProps) => {
   return (
-    <MessageMeta {...messageMeta} continues>
-      <p className='grid grid-cols-[1fr_max-content] gap-2 pie-2'>
-        <Avatar.Label classNames={['truncate text-sm', messageMeta.authorName ? 'fg-subdued' : 'fg-description']}>
-          {messageMeta.authorName ?? t('anonymous label')}
-        </Avatar.Label>
-        <time className='fg-description text-xs pbs-0.5' dateTime={dt?.toISOString()}>
-          {dt ? formatDistanceToNow(dt, { locale: dtLocale, addSuffix: true }) : ''}
-        </time>
+    <div role='none' {...props} className={mx('flex gap-2 items-start', classNames)}>
+      <p className='grow'>
+        <MessageAuthorName authorName={authorName} />
+        {timestamp && <MessageTime timestamp={timestamp} />}
       </p>
-      <div role='none' className='grid gap-y-1 grid-cols-[min-content_1fr_min-content]'>
-        {children}
-      </div>
-    </MessageMeta>
+      {children}
+    </div>
   );
+};
+
+export type MessageAuthorNameProps = Pick<MessageMetadata, 'authorName'>;
+
+export const MessageAuthorName = ({ authorName }: MessageAuthorNameProps) => {
+  const { t } = useTranslation(translationKey);
+  return (
+    <Avatar.Label classNames='block truncate text-sm text-subdued'>{authorName ?? t('anonymous label')}</Avatar.Label>
+  );
+};
+
+export type MessageTimeProps = Pick<MessageMetadata, 'timestamp'>;
+
+export const MessageTime = ({ timestamp }: MessageTimeProps) => {
+  const { dtLocale } = useTranslation(translationKey);
+  const dt = timestamp ? new Date(timestamp) : undefined;
+  return (
+    <time className='block text-subdued text-xs pbe-0.5' dateTime={dt?.toISOString()}>
+      {dt ? formatDistanceToNow(dt, { locale: dtLocale, addSuffix: true }) : ''}
+    </time>
+  );
+};
+
+export type MessageBodyProps = ComponentPropsWithoutRef<'p'>;
+
+export const MessageBody = ({ children, ...props }: MessageBodyProps) => {
+  return <p {...props}>{children}</p>;
 };
 
 export type MessageTextboxProps = {
@@ -79,7 +99,7 @@ export type MessageTextboxProps = {
   onClear?: () => void;
   onEditorFocus?: () => void;
 } & MessageMetadata &
-  TextEditorProps;
+  UseTextEditorProps;
 
 const keyBindings = ({ onSend, onClear }: Pick<MessageTextboxProps, 'onSend' | 'onClear'>) => [
   {
@@ -109,39 +129,44 @@ const keyBindings = ({ onSend, onClear }: Pick<MessageTextboxProps, 'onSend' | '
 
 export const MessageTextbox = ({
   id,
-  onSend,
-  onClear,
-  onEditorFocus,
   authorId,
   authorName,
   authorImgSrc,
   authorAvatarProps,
   disabled,
-  extensions: _extensions,
+  extensions,
+  onSend,
+  onClear,
+  onEditorFocus,
   ...editorProps
 }: MessageTextboxProps) => {
-  const extensions = useMemo<TextEditorProps['extensions']>(() => {
-    return [
-      keymap.of(keyBindings({ onSend, onClear })),
-      listener({
-        onFocus: (focusing) => {
-          if (focusing) {
-            onEditorFocus?.();
-          }
-        },
-      }),
-      _extensions,
-    ].filter(isNotFalsy);
-    // TODO(wittjosiah): Should probably include callbacks in the dependency array.
-  }, [_extensions]);
+  const { parentRef, focusAttributes } = useTextEditor(
+    () => ({
+      id,
+      extensions: [
+        keymap.of(keyBindings({ onSend, onClear })),
+        listener({
+          onFocus: (focusing) => {
+            if (focusing) {
+              onEditorFocus?.();
+            }
+          },
+        }),
+        extensions,
+      ].filter(isNotFalsy),
+      ...editorProps,
+    }),
+    [id, extensions],
+  );
 
   return (
-    <MessageMeta {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
-      <TextEditor
-        {...editorProps}
-        extensions={extensions}
+    <MessageRoot {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
+      <div
+        role='none'
+        ref={parentRef}
         className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')}
+        {...focusAttributes}
       />
-    </MessageMeta>
+    </MessageRoot>
   );
 };

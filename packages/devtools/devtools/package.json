@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.6.5",
+  "version": "0.6.12",
   "private": true,
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
@@ -11,7 +11,8 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     }
@@ -28,7 +29,9 @@
     "@dxos/client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/display-name": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/gem-core": "workspace:*",
@@ -39,9 +42,10 @@
     "@dxos/network-manager": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/rpc": "workspace:*",
@@ -84,15 +88,14 @@
     "@dxos/storybook-utils": "workspace:*",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.get": "^4.4.7",
-    "@types/react": "^18.0.21",
-    "@types/react-dom": "^18.0.6",
-    "@types/react-syntax-highlighter": "^15.5.5",
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "@types/react-vis": "^1.11.11",
     "@vitejs/plugin-react": "^4.2.1",
-    "postcss": "^8.4.21",
+    "postcss": "^8.4.41",
     "tailwindcss": "~3.4.1",
-    "typescript": "^5.4.5",
-    "vite": "^5.3.4",
+    "vite": "5.4.7",
     "vite-plugin-fonts": "^0.7.0",
     "vite-plugin-pwa": "^0.18.2",
     "vite-plugin-top-level-await": "^1.4.1",

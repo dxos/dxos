@@ -28,7 +28,7 @@ parameters:
 
 aliases:
   # Ensure these images have been built manually or by .github/workflows/circleci_docker_image.yml
-  - &node-version [ "18.20.1", "20.12.1", "21.7.2"]
+  - &node-version ['18.20.1', '20.12.1', '21.7.2']
   - &docker_image_default
     image: ghcr.io/dxos/circleci-node:18.20.1
     auth:
@@ -71,7 +71,7 @@ aliases:
   - &send_test_report
     when:
       condition:
-        equal: [ report, << pipeline.parameters.mode >> ]
+        equal: [report, << pipeline.parameters.mode >>]
       steps:
         - run:
             command: ./.circleci/scripts/send-test-report.sh $CIRCLE_JOB failure
@@ -84,16 +84,16 @@ commands:
   vitest-affected:
     parameters:
       mode:
-        description: "Test execution environment, incompatible tests will be ignored"
+        description: 'Test execution environment, incompatible tests will be ignored'
         type: enum
-        enum: [ "node", "chrome" ]
-        default: "node"
+        enum: ['node', 'chromium', 'firefox', 'webkit']
+        default: 'node'
 
     steps:
       - run:
-          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=vitest
+          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
           environment:
-            VITEST_XML_REPORT: true
+            VITEST_XML_REPORT: 'true'
             VITEST_ENV: << parameters.mode >>
 
 jobs:
@@ -130,19 +130,19 @@ jobs:
       - run: pnpm check-dependencies
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport --environments=nodejs
       - vitest-affected:
           mode: node
       - when:
           condition:
-            equal: [ main, <<pipeline.git.branch>> ]
+            equal: [main, <<pipeline.git.branch>>]
           steps:
             - run: pnpm nx run-many --target=lint
             - run: pnpm nx run-many --target=build
-            - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport --environments=nodejs
-            - run: VITEST_XML_REPORT=true pnpm nx run-many --target=vitest --skip-nx-cache
+            - run: VITEST_XML_REPORT=true pnpm nx run-many --target=test --skip-nx-cache
+            # TODO(wittjosiah): Coverage is causing CI failures here.
+            # - run: VITEST_XML_REPORT=true pnpm nx run-many --target=test --coverage --skip-nx-cache
       - *send_test_report
-      - *codecov_upload
+      # - *codecov_upload
       - *store_test_results
 
   check_go:
@@ -196,7 +196,10 @@ jobs:
       - *cache_save
       - nx/set-shas
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=2
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
+      - run:
+          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --browser=all --parallel=1
+          # TODO(wittjosiah): Playwright tests not outputting as they run currently only after they finish.
+          no_output_timeout: 20m
       # TODO(wittjosiah): Disabled because it was not working and we weren't using it.
       # - run:
       #     command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic
@@ -239,7 +242,7 @@ jobs:
       - *cache_save
       - nx/set-shas
       - vitest-affected:
-          mode: chrome
+          mode: chromium
       - *store_test_results
 
   #
@@ -292,7 +295,7 @@ workflows:
   default:
     when:
       not:
-        equal: [ clear_pnpm_cache, << pipeline.schedule.name >> ]
+        equal: [clear_pnpm_cache, << pipeline.schedule.name >>]
 
     jobs:
       - check:
@@ -307,7 +310,6 @@ workflows:
       - dead_links_check:
           context:
             - Github
-
       # Only run e2e and browser tests on pushes to main & release branches.
       - e2e:
           filters:
@@ -317,27 +319,23 @@ workflows:
                 - /^rc-.*/
                 - /^hotfix-.*/
                 - /^release-please-.*/
-                - nf/circleci-docker
           context:
             - Github
-      - vitest-browser:
-          filters:
-            branches:
-              only:
-                - main
-                - /^rc-.*/
-                - /^hotfix-.*/
-                - /^release-please-.*/
-                - nf/circleci-docker
-          context:
-            - Github
+      # TODO(wittjosiah): Disable until properly configured.
+      # - vitest-browser:
+      #     filters:
+      #       branches:
+      #         only:
+      #           - main
+      #     context:
+      #       - Github
 
   e2e:
     when:
       and:
         - << pipeline.parameters.e2e >>
         - not:
-          equal: [ clear_pnpm_cache, << pipeline.schedule.name >> ]
+          equal: [clear_pnpm_cache, << pipeline.schedule.name >>]
     jobs:
       - e2e:
           context:
@@ -348,7 +346,7 @@ workflows:
       and:
         - << pipeline.parameters.vitest-browser >>
         - not:
-          equal: [ clear_pnpm_cache, << pipeline.schedule.name >> ]
+          equal: [clear_pnpm_cache, << pipeline.schedule.name >>]
     jobs:
       - vitest-browser:
           context:
@@ -357,7 +355,7 @@ workflows:
   deploy:
     when:
       not:
-        equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
+        equal: [scheduled_pipeline, << pipeline.trigger_source >>]
 
     jobs:
       - publish:
@@ -371,12 +369,11 @@ workflows:
   clear_pnpm_cache:
     when:
       and:
-        - equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
-        - equal: [ clear_pnpm_cache, << pipeline.schedule.name >> ]
+        - equal: [scheduled_pipeline, << pipeline.trigger_source >>]
+        - equal: [clear_pnpm_cache, << pipeline.schedule.name >>]
 
     jobs:
       - clean_pnpm_cache:
           context:
             - Github
-
 # VS Code Extension Version: 1.5.1

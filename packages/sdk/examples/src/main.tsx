@@ -2,18 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { TextType, DocumentType } from '@braneframe/types';
-import type { S } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
-import { registerSignalFactory } from '@dxos/echo-signals';
+import { create, type S } from '@dxos/echo-schema';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { TextType, DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
-import { Client, ClientContext } from '@dxos/react-client';
+import { Client, ClientProvider } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
@@ -30,19 +29,19 @@ const testBuilder = new TestBuilder();
 type PeersInSpaceProps = {
   count?: number;
   types?: S.Schema<any>[];
-  registerSignalFactory?: boolean; // TODO(burdon): Document.
-  onCreateSpace?: (space: Space) => MaybePromise<void>;
+  onSpaceCreated?: (props: { space: Space }) => MaybePromise<void>;
 };
 
 const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
-  const { count = 1, registerSignalFactory: register = true, types, onCreateSpace } = options;
-  register && registerSignalFactory();
-  const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocalClientServices() }));
+  const { count = 1, types, onSpaceCreated } = options;
+  registerSignalsRuntime();
+  const clients = [...Array(count)].map(
+    (_) => new Client({ services: testBuilder.createLocalClientServices(), types }),
+  );
   await Promise.all(clients.map((client) => client.initialize()));
   await Promise.all(clients.map((client) => client.halo.createIdentity()));
-  types && clients.map((client) => client.addTypes(types));
   const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
-  await onCreateSpace?.(space);
+  await onSpaceCreated?.({ space });
   await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space, guest: client.spaces })));
   return { spaceKey: space.key, clients };
 };
@@ -52,7 +51,7 @@ const main = async () => {
   const { clients, spaceKey } = await setupPeersInSpace({
     count: 2,
     types: [DocumentType, TextType],
-    onCreateSpace: (space) => {
+    onSpaceCreated: ({ space }) => {
       space.db.add(
         create(DocumentType, {
           content: create(TextType, { content: '## Type here...\n\ntry the airplane mode switch.' }),
@@ -130,9 +129,9 @@ const main = async () => {
             </div>
           </Tooltip.Provider>
           {clients.map((client, index) => (
-            <ClientContext.Provider key={index} value={{ client }}>
+            <ClientProvider key={index} client={client}>
               <TaskList id={index} spaceKey={spaceKey} />
-            </ClientContext.Provider>
+            </ClientProvider>
           ))}
         </div>
       </ThemeProvider>

@@ -1,50 +1,29 @@
 @layer utilities {
+  /* If an element should apply attention-related color tokens, it should use this class. */
   .attention-surface {
-    background-color: white;
-    --surface-bg: white;
-  }
-
-  .dark .attention-surface {
-    background-color: theme(colors.neutral.900);
-    --surface-bg: theme(colors.neutral.900);
+    --surface-separator: transparent;
+    background-color: var(--surface-bg);
+    border-color: var(--surface-separator);
   }
 }
 
+/* Utilities below control _how_ an element becomes attended. */
 @layer components {
-  .attention {
-    --surface-bg: transparent;
-    --surface-separator: transparent;
+  /* If an element is attended this attribute will be set. */
+  [data-is-attention-source] {
+    --surface-bg: var(--dx-attention);
+    --surface-separator: var(--dx-separator);
   }
 
-  .attention-within:focus-within {
-    --surface-bg: white;
-    --surface-separator: theme(colors.neutral.75);
-  }
-
-  .dark .attention-within:focus-within {
-    --surface-bg: theme(colors.neutral.900);
-    --surface-separator: theme(colors.neutral.750);
-  }
-
-  .group\/attention:not(:focus-within) .attention-current[aria-current] {
-    --surface-bg: white;
-    --surface-separator: theme(colors.neutral.75);
-  }
-
-  .dark .group\/attention:not(:focus-within) .attention-current[aria-current] {
-    --surface-bg: theme(colors.neutral.900);
-    --surface-separator: theme(colors.neutral.750);
-  }
-
-  .attention-static,
-  .attention-within.attention-static {
-    --surface-bg: white;
-    --surface-separator: theme(colors.neutral.75);
-  }
-
-  .dark .attention-static,
-  .dark .attention-within.attention-static {
-    --surface-bg: theme(colors.neutral.900);
-    --surface-separator: theme(colors.neutral.750);
+  /* Used to style elements which are _related_ to the currently attended element. */
+  .current-related[aria-current] {
+    /*
+      NOTE(wittjosiah): Current these colors are the same, but they could be different.
+        If they are different, a background transition is likely required to avoid flashing.
+    */
+    --surface-bg: var(--dx-currentRelated);
+    &:focus-within {
+      --surface-bg: var(--dx-attention);
+    }
   }
 }

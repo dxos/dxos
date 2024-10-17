@@ -2,11 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
-import { describe, test } from '@dxos/test';
-
-import { schema } from './proto';
+import { schema } from './proto/index.js';
 
 describe('Codec', () => {
   test('encodes and decodes messages', async () => {

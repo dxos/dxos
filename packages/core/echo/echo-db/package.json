@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "0.6.5",
+  "version": "0.6.12",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,14 +10,16 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
     "./testing": {
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": {
-        "default": "./dist/lib/node/testing/index.cjs"
+        "require": "./dist/lib/node/testing/index.cjs",
+        "default": "./dist/lib/node-esm/testing/index.mjs"
       },
       "types": "./dist/types/src/testing/index.d.ts"
     }
@@ -39,42 +41,33 @@
     "@dxos/automerge": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
-    "@dxos/indexing": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/kv-store": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/random-access-storage": "workspace:*",
     "@dxos/teleport": "workspace:*",
-    "@dxos/teleport-extension-automerge-replicator": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.67.16",
-    "@orama/orama": "^2.0.8",
-    "effect": "^3.2.7",
+    "effect": "^3.9.1",
     "eventemitter3": "^5.0.1",
-    "level": "^8.0.1",
-    "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
     "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {
-    "@dxos/echo-pipeline": "workspace:*",
-    "@dxos/echo-typegen": "workspace:*",
-    "@dxos/test": "workspace:*",
+    "@dxos/indexing": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.get": "^4.4.7",
-    "@types/lodash.isequal": "^4.5.0",
-    "fast-check": "^3.19.0",
-    "wait-for-expect": "^3.0.2"
+    "@types/lodash.isequal": "^4.5.0"
   },
   "publishConfig": {
     "access": "public"

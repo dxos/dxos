@@ -5,9 +5,16 @@
 import { ArrowClockwise } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
+import { generateName } from '@dxos/display-name';
 import { type PublicKey } from '@dxos/keys';
-import { type SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type Contact } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  type SubscribeToFeedBlocksResponse,
+  type SubscribeToFeedsResponse,
+} from '@dxos/protocols/proto/dxos/devtools/host';
+import { type Client, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
+import { useContacts } from '@dxos/react-client/halo';
 import { Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
@@ -16,8 +23,15 @@ import { Bitbar, MasterDetailTable, PanelContainer, PublicKeySelector } from '..
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../../hooks';
 
-const { helper, builder } = createColumnBuilder<SubscribeToFeedBlocksResponse.Block>();
-const columns: TableColumnDef<SubscribeToFeedBlocksResponse.Block, any>[] = [
+type FeedTableRow = SubscribeToFeedBlocksResponse.Block & {
+  type: string;
+  issuer: string;
+};
+
+const { helper, builder } = createColumnBuilder<FeedTableRow>();
+const columns: TableColumnDef<FeedTableRow, any>[] = [
+  helper.accessor('type', builder.string({})),
+  helper.accessor('issuer', builder.string({})),
   helper.accessor('feedKey', builder.key({ header: 'key', tooltip: true })),
   helper.accessor('seq', builder.number({})),
 ];
@@ -26,7 +40,9 @@ export const FeedsPanel = () => {
   const devtoolsHost = useDevtools();
   const setContext = useDevtoolsDispatch();
   const { space, feedKey } = useDevtoolsState();
-  const messages = useFeedMessages({ feedKey }).reverse();
+  const feedMessages = useFeedMessages({ feedKey }).reverse();
+  const contacts = useContacts();
+  const client = useClient();
 
   const [refreshCount, setRefreshCount] = useState(0);
   const feedKeys = [
@@ -35,6 +51,7 @@ export const FeedsPanel = () => {
   ];
   const { feeds } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
   const feed = feeds?.find((feed) => feedKey && feed.feedKey.equals(feedKey));
+  const tableRows = mapToRows(client, space?.key, contacts, feedMessages);
 
   // TODO(burdon): Not updated in realtime.
   // Hack to select and refresh first feed.
@@ -56,6 +73,9 @@ export const FeedsPanel = () => {
 
   const handleSelect = (feedKey?: PublicKey) => {
     setContext((state) => ({ ...state, feedKey }));
+    setTimeout(() => {
+      handleRefresh();
+    });
   };
 
   const handleRefresh = () => {
@@ -63,13 +83,9 @@ export const FeedsPanel = () => {
   };
 
   const getLabel = (key: PublicKey) => {
-    const type = space?.internal.data.pipeline?.controlFeeds?.includes(key) ? 'control' : 'data';
-    const meta = feeds?.find((feed) => feed.feedKey.equals(key));
-    if (meta) {
-      return `${type} (${meta.length})`;
-    } else {
-      return type;
-    }
+    const feed = feeds?.find((feed) => feed.feedKey.equals(key));
+    const feedLength = feed ? ` (${feed.length})` : '';
+    return `${formatIdentity(client, contacts, feed?.owner)}${feedLength}`;
   };
 
   return (
@@ -93,8 +109,44 @@ export const FeedsPanel = () => {
     >
       <div className='flex flex-col overflow-hidden'>
         <Bitbar value={feed?.downloaded ?? new Uint8Array()} length={feed?.length ?? 0} className='m-4' />
-        <MasterDetailTable<SubscribeToFeedBlocksResponse.Block> columns={columns} data={messages} />
+        <MasterDetailTable<FeedTableRow> columns={columns} data={tableRows} />
       </div>
     </PanelContainer>
   );
+};
+
+const mapToRows = (
+  client: Client,
+  spaceKey: PublicKey | undefined,
+  contacts: Contact[],
+  blocks: SubscribeToFeedBlocksResponse.Block[],
+): FeedTableRow[] => {
+  return blocks.map((block) => {
+    const credential = block.data.payload.credential?.credential;
+    const type = (credential?.subject?.assertion?.['@type'] as string) ?? 'unknown_type';
+    const issuerKeys = credential ? { identity: credential.issuer, device: credential.proof!.signer } : undefined;
+    return {
+      type,
+      issuer: issuerKeys ? formatIdentity(client, contacts, issuerKeys) : 'unknown',
+      ...block,
+    };
+  });
+};
+
+const formatIdentity = (
+  client: Client,
+  contacts: Contact[],
+  identityInfo: SubscribeToFeedsResponse.FeedOwner | undefined,
+): string => {
+  if (!identityInfo) {
+    return 'unknown';
+  }
+  let identityName;
+  if (client.halo.identity.get()?.identityKey?.equals(identityInfo.identity)) {
+    identityName = client.halo.device?.deviceKey.equals(identityInfo.device) ? 'this device' : 'my device';
+  } else {
+    const ownerContact = identityInfo && contacts.find((contact) => contact.identityKey.equals(identityInfo.identity));
+    identityName = ownerContact?.profile?.displayName ?? generateName(identityInfo.identity.toHex());
+  }
+  return `${identityName} (${identityInfo.device.truncate()})`;
 };

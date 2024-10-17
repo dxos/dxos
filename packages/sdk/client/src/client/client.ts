@@ -36,17 +36,17 @@ import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
 
-// TODO(burdon): Reconcile with ClientContextProps.
 /**
  * This options object configures the DXOS Client.
  */
+// TODO(burdon): Reconcile with ClientProviderProps.
 export type ClientOptions = {
   /** Client configuration object. */
   config?: Config;
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
-  /** Custom model factory. @deprecated */
-  modelFactory?: any;
+  /** ECHO schema. */
+  types?: S.Schema<any>[];
   /** Shell path. */
   shell?: string;
   /** Create client worker. */
@@ -124,6 +124,9 @@ export class Client {
     }
 
     this._echoClient.graph.schemaRegistry.addSchema([PropertiesType]);
+    if (options.types) {
+      this.addTypes(options.types);
+    }
   }
 
   [inspect.custom]() {

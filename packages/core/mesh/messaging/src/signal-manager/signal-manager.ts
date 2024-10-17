@@ -3,20 +3,14 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type PublicKey } from '@dxos/keys';
-import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { type Lifecycle } from '@dxos/context';
 
-import { type Message, type SignalMethods, type SignalStatus } from '../signal-methods';
+import { type SignalStatus, type SignalMethods } from '../signal-methods';
 
 /**
  * Manages a collection of signaling clients.
  */
-export interface SignalManager extends SignalMethods {
-  open(): Promise<void>;
-  close(): Promise<void>;
-  getStatus(): SignalStatus[];
-
-  statusChanged: Event<SignalStatus[]>;
-  swarmEvent: Event<{ topic: PublicKey; swarmEvent: SwarmEvent }>;
-  onMessage: Event<Message>;
+export interface SignalManager extends SignalMethods, Required<Lifecycle> {
+  statusChanged?: Event<SignalStatus[]>;
+  getStatus?: () => SignalStatus[];
 }

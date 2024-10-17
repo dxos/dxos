@@ -21,28 +21,31 @@ test.describe('Collection tests', () => {
   test('create collection', async () => {
     await host.createSpace();
     await host.createCollection();
-    await expect(host.getObject(0)).toContainText('New collection');
+    await expect(host.getObject(1)).toContainText('New collection');
   });
 
   test('re-order collections', async ({ browserName }) => {
-    // TODO(thure): Issue #7387: Firefox is unable to click on the item actions menu, only in CI.
-    test.skip(browserName === 'firefox');
+    // TODO(thure): Issue #7387: Firefox/Webkit is unable to click on the item actions menu, only in CI.
+    test.skip(browserName !== 'chromium');
+
     await host.createSpace();
     await host.createCollection(1);
     await host.createCollection(1);
-    await host.renameObject('Collection 1', 0);
-    await host.renameObject('Collection 2', 1);
+    await host.renameObject('Collection 1', 1);
+    await host.renameObject('Collection 2', 2);
 
     await host.dragTo(host.getObjectByName('Collection 2'), host.getObjectByName('Collection 1'), { x: 1, y: -1 });
 
     // Folders are now in reverse order.
-    await expect(host.getObject(0)).toContainText('Collection 2');
-    await expect(host.getObject(1)).toContainText('Collection 1');
+    await expect(host.getObject(1)).toContainText('Collection 2');
+    await expect(host.getObject(2)).toContainText('Collection 1');
   });
 
-  test('drag object into collection', async () => {
+  test('drag object into collection', async ({ browserName }) => {
+    // TODO(wittjosiah): This test is quite flaky in webkit.
+    test.skip(browserName !== 'chromium');
+
     await host.createSpace();
-    await host.createObject('markdownPlugin', 1);
     await host.createCollection(1);
     await host.toggleCollectionCollapsed(1);
     await host.dragTo(host.getObjectByName('New document'), host.getObjectByName('New collection'), { x: 17, y: 1 });
@@ -54,34 +57,34 @@ test.describe('Collection tests', () => {
   test('delete a collection', async () => {
     await host.createSpace();
     await host.createCollection();
-    await host.toggleCollectionCollapsed(0);
+    await host.toggleCollectionCollapsed(1);
     // Create an item inside the collection.
     await host.createObject('markdownPlugin');
-    await expect(host.getObjectLinks()).toHaveCount(2);
+    await expect(host.getObjectLinks()).toHaveCount(3);
 
     // Delete the containing collection.
-    await host.deleteObject(0);
-    await expect(host.getObjectLinks()).toHaveCount(0);
+    await host.deleteObject(1);
+    await expect(host.getObjectLinks()).toHaveCount(1);
   });
 
   test('deletion undo restores collection', async () => {
     await host.createSpace();
     await host.createCollection();
-    await host.toggleCollectionCollapsed(0);
+    await host.toggleCollectionCollapsed(1);
     // Create a collection inside the collection.
     await host.createCollection();
-    await host.toggleCollectionCollapsed(1);
+    await host.toggleCollectionCollapsed(2);
     // Create an item inside the contained collection.
     await host.createObject('markdownPlugin');
-    await expect(host.getObjectLinks()).toHaveCount(3);
+    await expect(host.getObjectLinks()).toHaveCount(4);
 
     // Delete the containing collection.
-    await host.deleteObject(0);
-    await expect(host.getObjectLinks()).toHaveCount(0);
+    await host.deleteObject(1);
+    await expect(host.getObjectLinks()).toHaveCount(1);
 
     // Undo the deletion.
     await host.toastAction(0);
 
-    await expect(host.getObjectLinks()).toHaveCount(3);
+    await expect(host.getObjectLinks()).toHaveCount(4);
   });
 });

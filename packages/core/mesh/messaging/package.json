@@ -1,6 +1,6 @@
 {
   "name": "@dxos/messaging",
-  "version": "0.6.5",
+  "version": "0.6.12",
   "description": "Messaging",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,14 +10,27 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
+    },
+    "./testing": {
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": {
+        "require": "./dist/lib/node/testing/index.cjs",
+        "default": "./dist/lib/node-esm/testing/index.mjs"
+      },
+      "types": "./dist/types/src/testing/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
   },
   "files": [
     "dist",
@@ -28,6 +41,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -40,11 +54,10 @@
     "ws": "^8.14.2"
   },
   "devDependencies": {
+    "@dxos/keyring": "workspace:*",
     "@dxos/signal": "workspace:*",
-    "@types/node": "^18.11.9",
-    "earljs": "~0.1.10",
-    "typescript": "^5.4.5",
-    "wait-for-expect": "^3.0.2"
+    "@dxos/test-utils": "workspace:*",
+    "@types/node": "^22.7.4"
   },
   "publishConfig": {
     "access": "public"

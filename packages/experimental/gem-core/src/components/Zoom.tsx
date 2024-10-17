@@ -5,7 +5,6 @@
 import React, { type ReactNode } from 'react';
 
 import { useZoom, type ZoomExtent } from '../hooks';
-import { defaultGridStyles } from '../styles';
 
 export interface ZoomProps {
   extent?: ZoomExtent;
@@ -15,9 +14,8 @@ export interface ZoomProps {
 
 /**
  * SVG zoomable component wrapper.
- * @constructor
  */
-export const Zoom = ({ extent, className = defaultGridStyles, children }: ZoomProps) => {
+export const Zoom = ({ extent, className, children }: ZoomProps) => {
   const zoom = useZoom({ extent });
 
   return (

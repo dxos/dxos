@@ -6,13 +6,12 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { EchoHost } from '@dxos/echo-db';
-import { MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import { EchoHost, MetadataStore, SpaceManager, valueEncoding, MeshEchoReplicator } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createStorage, StorageType, type Storage } from '@dxos/random-access-storage';
@@ -35,15 +34,18 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
 };
 
 export const createServiceContext = async ({
-  signalContext = new MemorySignalManagerContext(),
+  signalManagerFactory = async () => {
+    const signalContext = new MemorySignalManagerContext();
+    return new MemorySignalManager(signalContext);
+  },
   storage = createStorage({ type: StorageType.RAM }),
   runtimeParams,
 }: {
-  signalContext?: MemorySignalManagerContext;
+  signalManagerFactory?: () => Promise<SignalManager>;
   storage?: Storage;
   runtimeParams?: ServiceContextRuntimeParams;
 } = {}) => {
-  const signalManager = new MemorySignalManager(signalContext);
+  const signalManager = await signalManagerFactory();
   const networkManager = new SwarmNetworkManager({
     signalManager,
     transportFactory: MemoryTransportFactory,
@@ -51,18 +53,20 @@ export const createServiceContext = async ({
   const level = createTestLevel();
   await level.open();
 
-  return new ServiceContext(storage, level, networkManager, signalManager, {
-    invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
+  return new ServiceContext(storage, level, networkManager, signalManager, undefined, undefined, {
+    invitationConnectionDefaultParams: { teleport: { controlHeartbeatInterval: 200 } },
     ...runtimeParams,
   });
 };
 
-export const createPeers = async (numPeers: number) => {
-  const signalContext = new MemorySignalManagerContext();
-
+export const createPeers = async (numPeers: number, signalManagerFactory?: () => Promise<SignalManager>) => {
+  if (!signalManagerFactory) {
+    const signalContext = new MemorySignalManagerContext();
+    signalManagerFactory = async () => new MemorySignalManager(signalContext);
+  }
   return await Promise.all(
     Array.from(Array(numPeers)).map(async () => {
-      const peer = await createServiceContext({ signalContext });
+      const peer = await createServiceContext({ signalManagerFactory });
       await peer.open(new Context());
       return peer;
     }),
@@ -103,10 +107,10 @@ export type TestPeerProps = {
   networkManager?: SwarmNetworkManager;
   spaceManager?: SpaceManager;
   dataSpaceManager?: DataSpaceManager;
-  snapshotStore?: SnapshotStore;
   signingContext?: SigningContext;
   blobStore?: BlobStore;
   echoHost?: EchoHost;
+  meshEchoReplicator?: MeshEchoReplicator;
   invitationsManager?: InvitationsManager;
 };
 
@@ -154,10 +158,6 @@ export class TestPeer {
     return (this._props.blobStore ??= new BlobStore(this.storage.createDirectory('blobs')));
   }
 
-  get snapshotStore() {
-    return (this._props.snapshotStore ??= new SnapshotStore(this.storage.createDirectory('snapshots')));
-  }
-
   get networkManager() {
     return (this._props.networkManager ??= new SwarmNetworkManager({
       signalManager: new MemorySignalManager(this._signalContext),
@@ -170,7 +170,6 @@ export class TestPeer {
       feedStore: this.feedStore,
       networkManager: this.networkManager,
       metadataStore: this.metadataStore,
-      snapshotStore: this.snapshotStore,
       blobStore: this.blobStore,
     }));
   }
@@ -183,17 +182,24 @@ export class TestPeer {
     return (this._props.echoHost ??= new EchoHost({ kv: this.level }));
   }
 
+  get meshEchoReplicator() {
+    return (this._props.meshEchoReplicator ??= new MeshEchoReplicator());
+  }
+
   get dataSpaceManager(): DataSpaceManager {
-    return (this._props.dataSpaceManager ??= new DataSpaceManager(
-      this.spaceManager,
-      this.metadataStore,
-      this.keyring,
-      this.identity,
-      this.feedStore,
-      this.echoHost,
-      this.invitationsManager,
-      this._opts.dataSpaceParams,
-    ));
+    return (this._props.dataSpaceManager ??= new DataSpaceManager({
+      spaceManager: this.spaceManager,
+      metadataStore: this.metadataStore,
+      keyring: this.keyring,
+      signingContext: this.identity,
+      feedStore: this.feedStore,
+      echoHost: this.echoHost,
+      invitationsManager: this.invitationsManager,
+      edgeConnection: undefined,
+      meshReplicator: this.meshEchoReplicator,
+      echoEdgeReplicator: undefined,
+      runtimeParams: this._opts.dataSpaceParams,
+    }));
   }
 
   get invitationsManager() {

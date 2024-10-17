@@ -8,7 +8,6 @@
     ],
     "outDir": "dist",
     "types": [
-      "@dxos/test",
       "node"
     ]
   },
@@ -16,12 +15,5 @@
     "src",
     "test"
   ],
-  "references": [
-    {
-      "path": "../../../common/plate"
-    },
-    {
-      "path": "../bare-template"
-    }
-  ]
+  "references": []
 }

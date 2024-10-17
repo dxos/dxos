@@ -7,6 +7,7 @@ import { type Signal, effect, signal } from '@preact/signals-core';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { isNode, type MaybePromise, nonNullable } from '@dxos/util';
 
 import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph } from './graph';
@@ -288,11 +289,20 @@ export class GraphBuilder {
           if (!resolver) {
             continue;
           }
+
           this._dispatcher.currentExtension = id;
           this._dispatcher.stateIndex = 0;
           BuilderInternal.currentDispatcher = this._dispatcher;
-          const node = resolver({ id: nodeId });
-          BuilderInternal.currentDispatcher = undefined;
+          let node: NodeArg<any> | undefined;
+          try {
+            node = resolver({ id: nodeId });
+          } catch (err) {
+            log.catch(err, { extension: id });
+            log.error(`Previous error occurred in extension: ${id}`);
+          } finally {
+            BuilderInternal.currentDispatcher = undefined;
+          }
+
           if (node) {
             this.graph._addNodes([node]);
             if (this._nodeChanged[node.id]) {
@@ -339,9 +349,16 @@ export class GraphBuilder {
           this._dispatcher.currentExtension = id;
           this._dispatcher.stateIndex = 0;
           BuilderInternal.currentDispatcher = this._dispatcher;
-          nodes.push(...(connector({ node }) ?? []));
-          BuilderInternal.currentDispatcher = undefined;
+          try {
+            nodes.push(...(connector({ node }) ?? []));
+          } catch (err) {
+            log.catch(err, { extension: id });
+            log.error(`Previous error occurred in extension: ${id}`);
+          } finally {
+            BuilderInternal.currentDispatcher = undefined;
+          }
         }
+
         const ids = nodes.map((n) => n.id);
         const removed = previous.filter((id) => !ids.includes(id));
         previous = ids;

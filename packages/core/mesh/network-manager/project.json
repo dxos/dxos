@@ -4,7 +4,7 @@
   "tags": [
     "scope:mesh"
   ],
-  "sourceRoot": "packages/core/mesh/network-manager/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
@@ -12,32 +12,17 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/testing/index.ts"
+          "{projectRoot}/src/testing/index.ts",
+          "{projectRoot}/src/transport/tcp/index.ts"
         ],
         "injectGlobals": true
       }
     },
     "lint": {},
-    "test": {
-      "options": {
-        "ciEnvironments": [
-          "chromium",
-          "firefox",
-          "nodejs"
-        ],
-        "envVariables": {
-          "SIGNAL_PORT": 12005
-        },
-        "forceExit": true,
-        "setup": "packages/core/mesh/signal/testing/setup.js",
-        "setupOptions": {
-          "port": 12005
-        }
-      }
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",
-    "test"
+    "node-std"
   ]
 }

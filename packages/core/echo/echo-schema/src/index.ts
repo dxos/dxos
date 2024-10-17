@@ -2,20 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './dynamic';
+/**
+ * Peer dependencies re-exported symbols that are effectively part of the ECHO API.
+ */
+export { AST, JSONSchema, S } from '@dxos/effect';
+
 export * from './ast';
+export * from './dynamic';
+export * from './expando';
+export { getSchema, getType, getTypename, getMeta, getTypeReference, isDeleted, requireTypeReference } from './getter';
 export * from './handler';
 export * from './json';
 export * from './proxy';
-export * from './annotations';
-export * from './expando';
-export { isDeleted, getSchema, getType, getTypename, getMeta, getTypeReference, requireTypeReference } from './getter';
+export { ref } from './ref-annotation';
 export * from './typed-object-class';
 export * from './types';
-export { ref } from './ref-annotation';
 export { defineHiddenProperty } from './utils';
-
-export * as S from '@effect/schema/Schema';
-export * as AST from '@effect/schema/AST';
-
-// This comment is here to bust NX cache. Remove it after the code changes.

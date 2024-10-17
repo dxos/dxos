@@ -4,7 +4,7 @@
   "tags": [
     "scope:sdk"
   ],
-  "sourceRoot": "packages/sdk/observability/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
@@ -46,14 +46,10 @@
         "{projectRoot}/src/cli-observability-secrets.json"
       ]
     },
-    "test": {
-      "options": {
-        "checkLeaks": false
-      }
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",
-    "test"
+    "node-std"
   ]
 }

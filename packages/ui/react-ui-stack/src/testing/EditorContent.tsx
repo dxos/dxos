@@ -4,8 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { TextType } from '@braneframe/types';
-import { create } from '@dxos/echo-schema';
+import { create, Expando } from '@dxos/echo-schema';
 import { useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
@@ -13,8 +12,6 @@ import {
   createThemeExtensions,
   decorateMarkdown,
   formattingKeymap,
-  image,
-  table,
   Toolbar,
   useActionHandler,
   useFormattingState,
@@ -26,23 +23,20 @@ import type { StackSectionContent } from '../components/Section';
 
 export const EditorContent = ({ data: { content = '' } }: { data: StackSectionContent & { content?: string } }) => {
   const { themeMode } = useThemeContext();
-  const [text] = useState(create(TextType, { content }));
+  const [text] = useState(create(Expando, { content }));
   const id = text.id;
-  const doc = text.content;
   const [formattingState, formattingObserver] = useFormattingState();
   const { parentRef, view, focusAttributes } = useTextEditor(() => {
     return {
       id,
-      doc,
+      initialValue: text.content,
       extensions: [
         formattingObserver,
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2' } } }),
+        createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: { editor: { className: 'p-2' } } }),
         decorateMarkdown(),
         formattingKeymap(),
-        image(),
-        table(),
       ],
     };
   }, [id, formattingObserver, themeMode]);

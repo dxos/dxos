@@ -2,11 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Expando, TypedObject, ref, S } from '@dxos/echo-schema';
 
-import { Expando, TypedObject, ref } from '@dxos/echo-schema';
-
-export class Contact extends TypedObject({
+export class Contact extends TypedObject<Contact>({
   typename: 'example.test.Contact',
   version: '0.1.0',
 })(

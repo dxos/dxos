@@ -9,8 +9,8 @@ import { type SyntaxNode } from '@lezer/common';
 
 import { tooltipContent } from '@dxos/react-ui-theme';
 
-export const linkTooltip = (render: (el: Element, url: string) => void) =>
-  hoverTooltip((view, pos, side) => {
+export const linkTooltip = (render: (el: HTMLElement, url: string) => void) => {
+  return hoverTooltip((view, pos, side) => {
     const syntax = syntaxTree(view.state).resolveInner(pos, side);
     let link = null;
     for (let i = 0, node: SyntaxNode | null = syntax; !link && node && i < 5; node = node.parent, i++) {
@@ -35,3 +35,4 @@ export const linkTooltip = (render: (el: Element, url: string) => void) =>
       },
     };
   });
+};

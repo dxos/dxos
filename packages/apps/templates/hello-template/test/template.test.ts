@@ -2,23 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import { readFile } from 'fs/promises';
-import path from 'path';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import tmp from 'tmp-promise';
+import { describe, test } from 'vitest';
 
 import { scenarios } from './scenarios';
 import template from '../src/template.t';
 
-chai.use(chaiAsPromised);
-
 describe('hello template', () => {
-  it('exists', () => {
-    expect(true).to.be.true;
-  });
-
-  it('execute with permuted inputs', async () => {
+  test('execute with permuted inputs', async () => {
     console.log('executing', scenarios.length, 'configurations');
     const tempFolder = await tmp.dir({ unsafeCleanup: false, keep: true, prefix: 'hello-template' });
     const packageJson = JSON.parse(

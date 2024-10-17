@@ -211,6 +211,11 @@ message SubscribeToFeedsRequest {
 }
 
 message SubscribeToFeedsResponse {
+  message FeedOwner {
+    dxos.keys.PublicKey identity = 1;
+    dxos.keys.PublicKey device = 2;
+  }
+
   message Feed {
     dxos.keys.PublicKey feed_key = 1;
     int32 length = 2;
@@ -218,6 +223,7 @@ message SubscribeToFeedsResponse {
 
     /// Bitfield of downloaded blocks.
     bytes downloaded = 4;
+    optional FeedOwner owner = 5;
   }
 
   repeated Feed feeds = 1;

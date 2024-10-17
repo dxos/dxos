@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import React, { type PropsWithChildren } from 'react';
 
@@ -20,10 +20,9 @@ import {
 
 import { withTheme } from '../testing';
 
-const Surface = ({
-  children,
-  level,
-}: PropsWithChildren & { level: 'base' | 'group' | 'chrome' | 'fixed' | 'input' | 'accent' }) => {
+type SurfaceLevel = 'base' | 'group' | 'chrome' | 'fixed' | 'input' | 'accent';
+
+const Surface = ({ children, level }: PropsWithChildren & { level: SurfaceLevel }) => {
   const surface =
     level === 'chrome'
       ? [modalSurface, surfaceElevation({ elevation: 'chrome' })]

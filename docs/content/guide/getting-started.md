@@ -206,7 +206,7 @@ For example, with [Netlify](https://netlify.com):
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 
-* Join the DXOS [Discord](https://discord.gg/eXVfryv3sW)
+* Join the DXOS [Discord](https://dxos.org/discord)
 * DXOS [repository on GitHub](https://github.com/dxos/dxos)
 * File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
 

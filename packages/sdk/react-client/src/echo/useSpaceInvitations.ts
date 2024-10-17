@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/client';
-import { useMulticastObservable } from '@dxos/react-async';
+import { useMulticastObservable } from '@dxos/react-hooks';
 
 import { useSpace } from './useSpaces';
 import { type CancellableInvitationObservable, useInvitationStatus } from '../invitations';

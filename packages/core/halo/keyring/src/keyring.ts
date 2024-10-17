@@ -8,7 +8,7 @@ import { subtleCrypto, type Signer } from '@dxos/crypto';
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { createStorage, type Directory, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap, arrayToBuffer } from '@dxos/util';

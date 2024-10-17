@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 // NOTE(thure): This unused import resolves the “likely not portable” TS error.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -11,7 +11,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation, Path } from '@dxos/react-ui-mosaic';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type StackSectionContent, type StackSectionItem } from './Section';
 import { Stack, type StackProps } from './Stack';
@@ -95,7 +95,7 @@ export const Transfer = {
       </Mosaic.Root>
     );
   },
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export const Copy = {
@@ -117,7 +117,7 @@ export const Copy = {
       </Mosaic.Root>
     );
   },
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export type DemoStackProps = StackProps & {

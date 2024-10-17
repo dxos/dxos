@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
-import { describe, test } from '@dxos/test';
+import { S } from '@dxos/effect';
 
 import { getSchema } from './getter';
 import { create } from './handler';
@@ -16,7 +15,7 @@ class Organization extends TypedObject(TEST_SCHEMA_TYPE)({
   name: S.String,
 }) {}
 
-const DEFAULT_ORG: Omit<Organization, 'id'> = { name: 'FooCorp' };
+const DEFAULT_ORG: Omit<Organization, 'id'> = { name: 'Test' };
 
 describe('EchoObject class dsl', () => {
   test('type is a valid schema', async () => {

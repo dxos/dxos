@@ -3,8 +3,7 @@
 //
 
 import { type Tool } from 'modelfusion';
-
-import { describe, test } from '@dxos/test';
+import { describe, test } from 'vitest';
 
 import { type Contact, createPlan, Directory, directory, execPlan, scheduler } from './tools';
 
@@ -41,7 +40,7 @@ const contacts: Contact[] = [
 
 // https://github.com/vercel/modelfusion/tree/main/examples/middle-school-math-agent
 describe.skip('agent', () => {
-  test('simple loop', async () => {
+  test('simple loop', { timeout: 30_000 }, async () => {
     const tools: Tool<any, any, any>[] = [
       //
       directory(await new Directory().upsert(contacts)),
@@ -51,5 +50,5 @@ describe.skip('agent', () => {
     const objective = 'schedule a meeting with the eng team for monday';
     const plan = await createPlan({ tools, objective });
     await execPlan({ tools, plan });
-  }).timeout(30_000);
+  });
 });

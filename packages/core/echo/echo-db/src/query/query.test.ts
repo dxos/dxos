@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
@@ -12,7 +11,7 @@ import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-import { afterAll, afterTest, beforeAll, beforeEach, describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { Filter } from './filter';
@@ -23,8 +22,6 @@ import { Contact, EchoTestBuilder, type EchoTestPeer } from '../testing';
 const createTestObject = (idx: number, label?: string) => {
   return create(Expando, { idx, title: `Task ${idx}`, label });
 };
-
-chai.use(chaiAsPromised);
 
 describe('Queries', () => {
   describe('Query with different filters', () => {
@@ -46,8 +43,7 @@ describe('Queries', () => {
         db.add(object);
       }
 
-      await db.flush();
-      await setup.host.updateIndexes();
+      await db.flush({ indexes: true });
     });
 
     afterEach(async () => {
@@ -155,7 +151,9 @@ describe('Queries', () => {
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
-    afterTest(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     let root: AutomergeUrl;
     {
@@ -182,7 +180,9 @@ describe('Queries', () => {
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
-    afterTest(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     let root: AutomergeUrl;
     let expectedObjectId: string;
@@ -214,7 +214,9 @@ describe('Queries', () => {
   test('objects url changes, the latest document is loaded', async () => {
     const spaceKey = PublicKey.random();
     const builder = new EchoTestBuilder();
-    afterTest(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     const peer = await builder.createPeer();
 
@@ -257,7 +259,9 @@ describe('Queries', () => {
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
-    afterTest(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     const peer = await builder.createPeer(kv);
 
@@ -275,7 +279,9 @@ describe('Queries', () => {
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
-    afterTest(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     const peer = await builder.createPeer();
 
@@ -285,12 +291,12 @@ describe('Queries', () => {
     const obj2Core = getObjectCore(obj1);
     obj2Core.docHandle!.delete(); // Deleted handle access throws an exception.
 
-    await expect(db.query().run()).to.be.rejected;
+    await expect(db.query().run()).rejects.toBeInstanceOf(Error);
   });
 });
 
 // TODO(wittjosiah): 2/3 of these tests fail. They reproduce issues that we want to fix.
-describe.skip('Query updates', () => {
+describe('Query reactivity', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
   let objects: EchoReactiveObject<any>[];
@@ -312,20 +318,25 @@ describe.skip('Query updates', () => {
     await builder.close();
   });
 
-  test('fires only once when new objects are added', async () => {
+  // TODO(dmaretskyi): Fires twice.
+  test.skip('fires only once when new objects are added', async () => {
     const query = db.query({ label: 'red' });
-    expect(query.objects).to.have.length(3);
+
     let count = 0;
+    let lastResult;
     query.subscribe(() => {
       count++;
-      expect(query.objects).to.have.length(4);
+      lastResult = query.objects;
     });
+    expect(count).to.equal(0);
+
     db.add(createTestObject(3, 'red'));
-    await sleep(10);
-    expect(count).to.equal(1);
+    await db.flush({ updates: true });
+    expect(count).to.be.greaterThan(1);
+    expect(lastResult).to.have.length(4);
   });
 
-  test('fires only once when objects are removed', async () => {
+  test.skip('fires only once when objects are removed', async () => {
     const query = db.query({ label: 'red' });
     expect(query.objects).to.have.length(3);
     let count = 0;
@@ -338,7 +349,7 @@ describe.skip('Query updates', () => {
     expect(count).to.equal(1);
   });
 
-  test('does not fire on object updates', async () => {
+  test.skip('does not fire on object updates', async () => {
     const query = db.query({ label: 'red' });
     expect(query.objects).to.have.length(3);
     query.subscribe(() => {
@@ -347,25 +358,49 @@ describe.skip('Query updates', () => {
     objects[0].title = 'Task 0a';
     await sleep(10);
   });
-});
 
-test.skip('query with model filters', async () => {
-  const testBuilder = new EchoTestBuilder();
-  await openAndClose(testBuilder);
+  test('can unsubscribe and resubscribe', async () => {
+    const query = db.query({ label: 'red' });
 
-  const { db } = await testBuilder.createDatabase();
+    let count = 0;
+    let lastCount = 0;
+    let lastResult;
+    const unsubscribe = query.subscribe(() => {
+      count++;
+      lastResult = query.objects;
+    });
+    expect(count, 'Does not fire updates immediately.').to.equal(0);
 
-  const obj = db.add(
-    create(Expando, {
-      title: 'title',
-      description: create(Expando, { content: 'description' }),
-    }),
-  );
+    {
+      db.add(createTestObject(3, 'red'));
+      await db.flush({ updates: true });
+      expect(count).to.be.greaterThan(lastCount);
+      lastCount = count;
+      expect(lastResult).to.have.length(4);
+    }
 
-  expect(db.query().objects).to.have.length(1);
-  expect(db.query().objects[0]).to.eq(obj);
+    unsubscribe();
 
-  expect(db.query(undefined, { models: ['*'] }).objects).to.have.length(2);
+    {
+      db.add(createTestObject(4, 'red'));
+      await db.flush({ updates: true });
+      expect(count).to.be.equal(lastCount);
+      lastCount = count;
+    }
+
+    query.subscribe(() => {
+      count++;
+      lastResult = query.objects;
+    });
+
+    {
+      db.add(createTestObject(5, 'red'));
+      await db.flush({ updates: true });
+      expect(count).to.be.greaterThan(lastCount);
+      lastCount = count;
+      expect(lastResult).to.have.length(6);
+    }
+  });
 });
 
 describe('Queries with types', () => {
@@ -393,7 +428,7 @@ describe('Queries with types', () => {
         anotherContactAdded.wake();
       }
     });
-    afterTest(() => unsub());
+    onTestFinished(() => unsub());
 
     contact.name = name;
     db.add(create(Contact, {}));
@@ -441,7 +476,6 @@ test('map over refs in query result', async () => {
 
 const createObjects = async (peer: EchoTestPeer, db: EchoDatabase, options: { count: number }) => {
   const objects = range(options.count, (v) => db.add(createTestObject(v, String(v))));
-  await db.flush();
-  await peer.host.updateIndexes();
+  await db.flush({ indexes: true });
   return objects;
 };

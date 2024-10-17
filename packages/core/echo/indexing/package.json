@@ -1,6 +1,6 @@
 {
   "name": "@dxos/indexing",
-  "version": "0.6.5",
+  "version": "0.6.12",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,8 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     }
@@ -26,6 +27,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
@@ -43,9 +45,9 @@
     "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {
+    "@dxos/test-utils": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
-    "fast-check": "^3.19.0",
-    "wait-for-expect": "^3.0.2"
+    "@types/node": "^22.7.4"
   },
   "publishConfig": {
     "access": "public"

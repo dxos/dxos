@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 // import { Minus, Plus } from '@phosphor-icons/react';
 //
-// import { SmallPresence } from '@braneframe/plugin-space';
+// import { SmallPresence } from '@dxos/plugin-space';
 // import { Surface, SurfaceProvider } from '@dxos/app-framework';
 // import { isGraphNode, Graph, type NodeArg, type ActionData, ACTION_TYPE } from '@dxos/app-graph';
 // import { PublicKey } from '@dxos/keys';

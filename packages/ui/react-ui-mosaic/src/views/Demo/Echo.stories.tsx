@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React from 'react';
 
 import { faker } from '@dxos/random';
-import { type PublicKey } from '@dxos/react-client';
 import { create } from '@dxos/react-client/echo';
-import { ClientRepeater } from '@dxos/react-client/testing';
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Mosaic } from '../../mosaic';
 import { TestObjectGenerator, range, Status, Priority } from '../../testing';
@@ -26,7 +25,7 @@ const columnValues: { [property: string]: any[] } = {
   priority: ['unknown', ...Priority],
 };
 
-const Story: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
+const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
   return (
     <Mosaic.Root debug={debug}>
       <Mosaic.DragOverlay />
@@ -45,7 +44,7 @@ export default {
   render: () => (
     <ClientRepeater
       component={Story}
-      onCreateSpace={async (space) => {
+      onSpaceCreated={async ({ space }) => {
         const factory = generator.factories.project;
         const objects = [
           factory.schema,
@@ -67,7 +66,7 @@ export default {
       createSpace
     />
   ),
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 // TODO(wittjosiah): This currently has a bug where empty over events are fired when dragging from tree onto kanban.

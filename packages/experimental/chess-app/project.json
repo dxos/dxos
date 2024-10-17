@@ -4,7 +4,7 @@
   "tags": [
     "scope:experimental"
   ],
-  "sourceRoot": "packages/experimental/chess-app/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
   "targets": {
     "build": {},
@@ -22,16 +22,10 @@
       "options": {
         "buildTarget": "kai:bundle"
       }
-    },
-    "test": {
-      "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ]
-      }
     }
   },
   "implicitDependencies": [
-    "test"
+    "esbuild",
+    "node-std"
   ]
 }

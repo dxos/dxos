@@ -1,6 +1,6 @@
 {
   "name": "@dxos/rpc-tunnel-e2e",
-  "version": "0.6.5",
+  "version": "0.6.12",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,19 +15,18 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/react-async": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
-    "@emotion/react": "^11.9.0",
-    "@emotion/styled": "^11.8.1",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "react-json-tree": "^0.18.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@types/react": "^18.0.21",
-    "@types/react-dom": "^18.0.6",
-    "vite": "^5.3.4"
+    "@dxos/test-utils": "workspace:*",
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
+    "vite": "5.4.7"
   }
 }

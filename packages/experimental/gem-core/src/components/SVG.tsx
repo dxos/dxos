@@ -2,14 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { type ReactNode } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { useSvgContext } from '../hooks';
 
-export interface SVGProps {
-  children?: ReactNode;
-  className?: string;
-}
+export type SVGProps = PropsWithChildren<{ className?: string }>;
 
 /**
  * SVG wrapper.

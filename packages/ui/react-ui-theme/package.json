@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-theme",
-  "version": "0.6.5",
+  "version": "0.6.12",
   "description": "A set of design system tokens to use with DXOS UI.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,18 +15,20 @@
     "plugin.d.ts"
   ],
   "dependencies": {
-    "@ch-ui/colors": "^0.4.4",
+    "@ch-ui/tailwind-tokens": "^0.5.5",
+    "@ch-ui/tokens": "^0.5.6",
     "@dxos/node-std": "workspace:*",
     "@fontsource-variable/inter": "5.0.16",
     "@fontsource-variable/jetbrains-mono": "5.0.21",
+    "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/forms": "^0.5.3",
     "autoprefixer": "^10.4.12",
     "esbuild-style-plugin": "^1.6.1",
-    "glob": "~7.1.6",
+    "glob": "^7.2.3",
     "lodash.get": "^4.4.2",
     "lodash.merge": "^4.6.2",
-    "postcss": "^8.4.21",
     "tailwind-merge": "^2.2.1",
+    "tailwind-scrollbar": "^3.1.0",
     "tailwindcss": "~3.4.1",
     "tailwindcss-logical": "^3.0.0",
     "tailwindcss-radix": "^2.8.0"
@@ -35,8 +37,9 @@
     "@dxos/react-ui-types": "workspace:*",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.merge": "^4.6.6",
-    "esbuild": "^0.19.6",
-    "vite": "^5.3.4"
+    "esbuild": "^0.23.1",
+    "postcss": "^8.4.41",
+    "vite": "5.4.7"
   },
   "publishConfig": {
     "access": "public"

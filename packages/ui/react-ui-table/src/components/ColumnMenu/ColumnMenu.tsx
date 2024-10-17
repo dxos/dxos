@@ -6,25 +6,28 @@ import { X, GearSix, CaretDown, ArrowDown, ArrowUp, ArrowRight, ArrowLeft } from
 import { type SortDirection, type HeaderContext, type RowData } from '@tanstack/react-table';
 import React, { useRef, useState, useCallback } from 'react';
 
-import { Button, DensityProvider, Popover, DropdownMenu } from '@dxos/react-ui';
+import { Button, Popover, DropdownMenu } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { ColumnSettingsForm } from './ColumnSettingsForm';
+import { ColumnSettings } from './ColumnSettings';
 import { useSortColumn } from '../../hooks';
-import { type TableDef, type ColumnProps } from '../../schema';
+import { type TableDef, type ColumnDef } from '../../schema';
 
 export type ColumnMenuProps<TData extends RowData, TValue> = {
   context: HeaderContext<TData, TValue>;
   tablesToReference: TableDef[];
   tableDef: TableDef;
-  column: ColumnProps;
+  column: ColumnDef;
   columnOrderable: boolean;
   columnPosition: 'start' | 'end' | undefined;
   onColumnReorder: (columnId: string, direction: 'left' | 'right') => void;
-  onUpdate?: (id: string, column: ColumnProps) => void;
+  onUpdate?: (id: string, column: ColumnDef) => void;
   onDelete?: (id: string) => void;
 };
 
+/**
+ * @deprecated
+ */
 export const ColumnMenu = <TData extends RowData, TValue>({
   column,
   columnOrderable,
@@ -59,7 +62,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({
   );
 
   return (
-    <div className='flex items-center justify-center justify-between'>
+    <div className='flex items-center justify-between'>
       <div className='flex items-center gap-1 truncate' title={title}>
         <SortIndicator direction={sortDirection} onClick={onToggleSort} />
         <div className='truncate'>{title}</div>
@@ -69,7 +72,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({
         <Popover.Root open={isColumnSettingsOpen} onOpenChange={setIsColumnSettingsOpen} modal={false}>
           <DropdownMenu.Trigger ref={columnSettingsAnchorRef} asChild>
             <Popover.Anchor asChild>
-              <Button variant='ghost'>
+              <Button variant='ghost' data-testid='table.column-menu'>
                 <CaretDown className={getSize(4)} />
               </Button>
             </Popover.Anchor>
@@ -124,7 +127,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({
                   </>
                 )}
 
-                <DropdownMenu.Item onClick={onOpenColumnSettings}>
+                <DropdownMenu.Item onClick={onOpenColumnSettings} data-testid='table.open-column-settings'>
                   <span className='grow'>Column settings</span>
                   <span className='opacity-50'>
                     <GearSix className={mx(getSize(4), 'rotate-90')} />
@@ -137,10 +140,8 @@ export const ColumnMenu = <TData extends RowData, TValue>({
 
           <Popover.Portal>
             <Popover.Content>
-              <Popover.Viewport classNames='w-60'>
-                <DensityProvider density='fine'>
-                  <ColumnSettingsForm {...props} column={column} onClose={() => setIsColumnSettingsOpen(false)} />
-                </DensityProvider>
+              <Popover.Viewport>
+                <ColumnSettings {...props} column={column} onClose={() => setIsColumnSettingsOpen(false)} />
               </Popover.Viewport>
               <Popover.Arrow />
             </Popover.Content>

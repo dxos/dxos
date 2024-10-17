@@ -50,6 +50,8 @@ export type PerformInvitationParams = {
 
 export type Result = { invitation?: Invitation; error?: Error };
 
+// TODO(burdon): Make async.
+// TODO(burdon): Rename startInvitation.
 export const performInvitation = ({
   host,
   guest,

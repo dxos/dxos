@@ -13,17 +13,17 @@ export const baseSurface = 'base-surface';
 
 // Sidebars, main heading (“topbar”), and nothing else.
 export const fixedSurface = 'base-surface md:fixed-surface backdrop-blur-md dark:backdrop-blur-lg';
-export const fixedBorder = 'separator-separator';
+export const fixedBorder = 'border-separator';
 
 // Generic grouping style.
 export const groupSurface = 'base-surface';
-export const groupBorder = 'separator-separator';
+export const groupBorder = 'border-separator';
 
 // Tooltips, popovers, menus, dialogs, etc.
-export const modalSurface = 'modal-surface';
+export const modalSurface = 'modal-surface backdrop-blur-md';
 
 // Elements that actively have the user’s “attention”; prefer to select with CSS-native selectors like focus-within,
 // but may be applied by app state. ⚠️ Do not apply statically.
 export const attentionSurface = 'attention-surface';
 
-export const accentSurface = 'surface-accent fg-inverse';
+export const accentSurface = 'bg-accentSurface text-inverse';

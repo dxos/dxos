@@ -2,11 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { cbor, type Message } from '@dxos/automerge/automerge-repo';
+import * as A from '@dxos/automerge/automerge';
+import { cbor } from '@dxos/automerge/automerge-repo';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 
 import type { ReplicatorConnection, ShouldAdvertiseParams, ShouldSyncCollectionParams } from './echo-replicator';
@@ -23,8 +25,8 @@ export type MeshReplicatorConnectionParams = {
 };
 
 export class MeshReplicatorConnection extends Resource implements ReplicatorConnection {
-  public readable: ReadableStream<Message>;
-  public writable: WritableStream<Message>;
+  public readable: ReadableStream<AutomergeProtocolMessage>;
+  public writable: WritableStream<AutomergeProtocolMessage>;
   public remoteDeviceKey: PublicKey | null = null;
 
   public readonly replicatorExtension: AutomergeReplicator;
@@ -35,18 +37,19 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
   constructor(private readonly _params: MeshReplicatorConnectionParams) {
     super();
 
-    let readableStreamController!: ReadableStreamDefaultController<Message>;
-    this.readable = new ReadableStream<Message>({
+    let readableStreamController!: ReadableStreamDefaultController<AutomergeProtocolMessage>;
+    this.readable = new ReadableStream<AutomergeProtocolMessage>({
       start: (controller) => {
         readableStreamController = controller;
         this._ctx.onDispose(() => controller.close());
       },
     });
 
-    this.writable = new WritableStream<Message>({
-      write: async (message: Message, controller) => {
+    this.writable = new WritableStream<AutomergeProtocolMessage>({
+      write: async (message: AutomergeProtocolMessage, controller) => {
         invariant(this._isEnabled, 'Writing to a disabled connection');
         try {
+          logSendSync(message);
           await this.replicatorExtension.sendSyncMessage({ payload: cbor.encode(message) });
         } catch (err) {
           controller.error(err);
@@ -87,7 +90,7 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
           if (!this._isEnabled) {
             return;
           }
-          const message = cbor.decode(payload) as Message;
+          const message = cbor.decode(payload) as AutomergeProtocolMessage;
           // Note: automerge Repo dedup messages.
           readableStreamController.enqueue(message);
         },
@@ -133,3 +136,19 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
     this._isEnabled = false;
   }
 }
+
+const logSendSync = (message: AutomergeProtocolMessage) => {
+  log('sendSyncMessage', () => {
+    const decodedSyncMessage = message.type === 'sync' && message.data ? A.decodeSyncMessage(message.data) : undefined;
+    return {
+      sync: decodedSyncMessage && {
+        headsLength: decodedSyncMessage.heads.length,
+        requesting: decodedSyncMessage.need.length > 0,
+        sendingChanges: decodedSyncMessage.changes.length > 0,
+      },
+      type: message.type,
+      from: message.senderId,
+      to: message.targetId,
+    };
+  });
+};

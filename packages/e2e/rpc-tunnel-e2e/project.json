@@ -4,41 +4,30 @@
   "tags": [
     "scope:e2e"
   ],
-  "sourceRoot": "packages/e2e/rpc-tunnel-e2e/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {
       "options": {
         "main": "{projectRoot}/src/index.ts",
-        "outputPath": "packages/e2e/rpc-tunnel-e2e/dist",
+        "outputPath": "{projectRoot}/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
+        "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
     "bundle": {
       "executor": "@nx/vite:build",
       "options": {
         "generatePackageJson": false,
-        "outputPath": "packages/e2e/rpc-tunnel-e2e/out"
+        "outputPath": "{projectRoot}/out"
       },
       "outputs": [
         "{options.outputPath}"
       ]
     },
-    "e2e": {
-      "options": {
-        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
-        "serve": "rpc-tunnel-e2e:serve",
-        "testPatterns": [
-          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "{projectRoot}/src/**/*"
-        ]
-      }
-    },
+    "e2e": {},
     "lint": {},
     "serve": {
       "executor": "@nx/vite:dev-server",
@@ -46,8 +35,5 @@
         "buildTarget": "rpc-tunnel-e2e:bundle"
       }
     }
-  },
-  "implicitDependencies": [
-    "test"
-  ]
+  }
 }

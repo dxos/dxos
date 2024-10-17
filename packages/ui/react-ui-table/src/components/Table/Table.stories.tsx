@@ -2,17 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { Plugs, PlugsConnected } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
-import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Button, DensityProvider } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withSignals, withTheme } from '@dxos/storybook-utils';
 import { range } from '@dxos/util';
 
 import { Table } from './Table';
@@ -323,7 +323,7 @@ export const InsertDelete = {
     };
 
     return (
-      <div>
+      <div className='space-y-4'>
         <div className='flex flex-row gap-2'>
           <Button onClick={onInsertFirst}>Insert first</Button>
           <Button onClick={onInsertLast}>Insert last</Button>
@@ -331,7 +331,7 @@ export const InsertDelete = {
           <Button onClick={onDeleteLast}>Delete last</Button>
         </div>
         <Table.Root>
-          <Table.Viewport classNames='fixed inset-0'>
+          <Table.Viewport>
             <Table.Main<Item>
               role='grid'
               rowsSelectable='multi'
@@ -406,10 +406,109 @@ export const TenThousandRows = {
   },
 };
 
-registerSignalRuntime();
-const state = create({ items: createItems(10) });
+// TODO(burdon): Warning: Encountered two children with the same key.
+
+type StoryProps = {
+  periodicMutations: boolean;
+  mutationInterval: number;
+  periodicDeletions: boolean;
+  deletionInterval: number;
+  periodicInsertions: boolean;
+  insertionInterval: number;
+};
+
+const Story = ({
+  periodicMutations,
+  mutationInterval,
+  periodicDeletions,
+  deletionInterval,
+  periodicInsertions,
+  insertionInterval,
+}: StoryProps) => {
+  const [state] = useState(() => create({ items: createItems(10) }));
+
+  useEffect(() => {
+    if (!periodicMutations) {
+      return;
+    }
+
+    const i = setInterval(() => {
+      if (state.items.length === 0) {
+        return;
+      }
+
+      const idx = Math.floor(Math.random() * state.items.length);
+      log('mutating', { idx });
+      state.items[idx].name = faker.commerce.productName();
+      state.items[idx].count = Math.floor(Math.random() * 1000);
+      state.items[idx].started = new Date();
+    }, mutationInterval);
+
+    return () => clearInterval(i);
+  }, [periodicMutations, mutationInterval, state.items]);
+
+  useEffect(() => {
+    if (!periodicInsertions) {
+      return;
+    }
+
+    const i = setInterval(() => {
+      log('inserting...');
+      state.items.push(createItems(1)[0]);
+    }, insertionInterval);
+
+    return () => clearInterval(i);
+  }, [periodicInsertions, insertionInterval, state.items]);
+
+  useEffect(() => {
+    if (!periodicDeletions) {
+      return;
+    }
+
+    const i = setInterval(() => {
+      if (state.items.length === 0) {
+        return;
+      }
+
+      log('deleting...');
+      const randomIndex = Math.floor(Math.random() * state.items.length);
+      state.items.splice(randomIndex, 1);
+    }, deletionInterval);
+
+    return () => clearInterval(i);
+  }, [periodicDeletions, deletionInterval, state.items]);
+
+  const onUpdate = useCallback((...args: any[]) => {}, []);
+  const columns = useMemo(() => makeColumns(onUpdate), []);
+
+  return (
+    <Table.Root>
+      <Table.Viewport classNames='fixed inset-0'>
+        <Table.Main<Item>
+          role='grid'
+          rowsSelectable='multi'
+          keyAccessor={(row) => row.publicKey.toHex()}
+          columns={columns}
+          data={state.items}
+          fullWidth
+          stickyHeader
+          border
+          pinLastRow
+        />
+      </Table.Viewport>
+    </Table.Root>
+  );
+};
 
 export const RealTimeUpdates = {
+  argTypes: {
+    periodicMutations: { control: 'boolean' },
+    mutationInterval: { control: 'number' },
+    periodicDeletions: { control: 'boolean' },
+    deletionInterval: { control: 'number' },
+    periodicInsertions: { control: 'boolean' },
+    insertionInterval: { control: 'number' },
+  },
   args: {
     periodicMutations: true,
     mutationInterval: 1000,
@@ -417,94 +516,7 @@ export const RealTimeUpdates = {
     deletionInterval: 5000,
     periodicInsertions: false,
     insertionInterval: 3000,
-  },
-  argTypes: {
-    mutationInterval: { control: 'number' },
-    periodicDeletions: { control: 'boolean' },
-    deletionInterval: { control: 'number' },
-    periodicInsertions: { control: 'boolean' },
-    insertionInterval: { control: 'number' },
-  },
-  render: ({
-    periodicMutations,
-    mutationInterval,
-    periodicDeletions,
-    deletionInterval,
-    periodicInsertions,
-    insertionInterval,
-  }: any) => {
-    useEffect(() => {
-      if (!periodicMutations) {
-        return;
-      }
-
-      const interval = setInterval(() => {
-        if (state.items.length === 0) {
-          return;
-        }
-
-        const randomIndex = Math.floor(Math.random() * state.items.length);
-        console.log('Mutating row', randomIndex);
-        state.items[randomIndex].name = faker.commerce.productName();
-        state.items[randomIndex].count = Math.floor(Math.random() * 1000);
-        state.items[randomIndex].started = new Date();
-      }, mutationInterval);
-
-      return () => clearInterval(interval);
-    }, [periodicMutations, mutationInterval, state.items]);
-
-    useEffect(() => {
-      if (!periodicInsertions) {
-        return;
-      }
-
-      const interval = setInterval(() => {
-        console.log('Inserting...');
-        state.items.push(createItems(1)[0]);
-      }, insertionInterval);
-
-      return () => clearInterval(interval);
-    }, [periodicInsertions, insertionInterval, state.items]);
-
-    useEffect(() => {
-      if (!periodicDeletions) {
-        return;
-      }
-
-      const interval = setInterval(() => {
-        if (state.items.length === 0) {
-          return;
-        }
-
-        console.log('Deleting');
-
-        // Randomly delete a row from state.items
-        const randomIndex = Math.floor(Math.random() * state.items.length);
-        state.items.splice(randomIndex, 1);
-      }, deletionInterval);
-
-      return () => clearInterval(interval);
-    }, [periodicDeletions, deletionInterval, state.items]);
-
-    const onUpdate = useCallback((...args: any[]) => {}, []);
-    const columns = useMemo(() => makeColumns(onUpdate), []);
-
-    return (
-      <Table.Root>
-        <Table.Viewport classNames='fixed inset-0'>
-          <Table.Main<Item>
-            role='grid'
-            rowsSelectable='multi'
-            keyAccessor={(row) => row.publicKey.toHex()}
-            columns={columns}
-            data={state.items}
-            fullWidth
-            stickyHeader
-            border
-            pinLastRow
-          />
-        </Table.Viewport>
-      </Table.Root>
-    );
-  },
+  } satisfies StoryProps,
+  decorators: [withSignals],
+  render: Story,
 };

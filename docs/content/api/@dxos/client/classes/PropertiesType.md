@@ -1,5 +1,5 @@
 # Class `PropertiesType`
-<sub>Declared in [packages/sdk/client-protocol/dist/types/src/schema.d.ts:8]()</sub>
+<sub>Declared in [packages/sdk/client-protocol/dist/types/src/schema.d.ts:11]()</sub>
 
 
 
@@ -30,7 +30,7 @@ Type: <code>string</code>
 
 
 ### [Encoded]()
-Type: <code>object & object & object</code>
+Type: <code>Encoded&lt;object&gt;</code>
 
 
 
@@ -61,7 +61,7 @@ Type: <code>string</code>
 
 
 
-Returns: <code>Schema&lt;object & object & object, object & object & object, never&gt;</code>
+Returns: <code>Schema&lt;object & object & object, Encoded&lt;object&gt;, never&gt;</code>
 
 Arguments: 
 

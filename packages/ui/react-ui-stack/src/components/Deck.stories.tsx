@@ -2,25 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
-import {
-  Books,
-  CardsThree,
-  CaretLeft,
-  CaretLineLeft,
-  CaretLineRight,
-  CaretRight,
-  SidebarSimple,
-  TextAa,
-  X,
-} from '@phosphor-icons/react';
+import { CaretLeft, CaretLineLeft, CaretLineRight, CaretRight, SidebarSimple, X } from '@phosphor-icons/react';
 import React, { type PropsWithChildren, useState, type ComponentProps } from 'react';
 
 import { faker } from '@dxos/random';
-import { Button, Main } from '@dxos/react-ui';
-import { AttentionProvider } from '@dxos/react-ui-attention';
-import { PlankHeading, plankHeadingIconProps, Deck as NaturalDeck, Plank } from '@dxos/react-ui-deck';
+import { Button, Icon, Main } from '@dxos/react-ui';
+import { RootAttentionProvider } from '@dxos/react-ui-attention';
+import { PlankHeading, Deck as NaturalDeck, Plank } from '@dxos/react-ui-deck';
 import { Mosaic, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
 import { arrayMove } from '@dxos/util';
@@ -51,7 +41,7 @@ const SimpleContent = ({ data }: { data: MosaicDataItem & { title?: string; body
 const rollItems = (n: number): StackSectionItem[] => {
   return [...Array(n)].map(() => ({
     id: faker.string.uuid(),
-    icon: TextAa,
+    icon: 'ph--text-aa--regular',
     isResizable: true,
     object: {
       id: faker.string.uuid(),
@@ -74,7 +64,7 @@ const StackPlank = ({ label, items, id, children }: PropsWithChildren<PlankProps
     <>
       <PlankHeading.Root classNames='pli-px'>
         <PlankHeading.Button>
-          <CardsThree {...plankHeadingIconProps} />
+          <Icon icon='ph--cards-three--regular' size={5} />
         </PlankHeading.Button>
         <PlankHeading.Label classNames='flex-1 truncate'>{label}</PlankHeading.Label>
         {children}
@@ -112,10 +102,10 @@ export default {
 export const StaticBasicStacks = {
   args: {},
   render: () => {
-    const [attended] = useState(new Set<string>());
+    const [attention] = useState({ attended: [] });
     return (
       <Mosaic.Root>
-        <AttentionProvider attended={attended}>
+        <RootAttentionProvider attention={attention}>
           <Mosaic.DragOverlay />
           <NaturalDeck.Root classNames='fixed inset-0 z-0'>
             <DemoStackPlank />
@@ -126,7 +116,7 @@ export const StaticBasicStacks = {
             <DemoStackPlank />
             <DemoStackPlank />
           </NaturalDeck.Root>
-        </AttentionProvider>
+        </RootAttentionProvider>
       </Mosaic.Root>
     );
   },
@@ -135,21 +125,21 @@ export const StaticBasicStacks = {
 export const StaticBasicStacksWithOverscrolling = {
   args: {},
   render: () => {
-    const [attended] = useState(new Set<string>());
+    const [attention] = useState({ attended: [] });
     return (
       <Mosaic.Root>
-        <AttentionProvider attended={attended}>
+        <RootAttentionProvider attention={attention}>
           <Mosaic.DragOverlay />
-          <NaturalDeck.Root overscroll classNames='fixed inset-0 z-0'>
-            <DemoStackPlank boundary={'start'} />
+          <NaturalDeck.Root classNames='fixed inset-0 z-0'>
             <DemoStackPlank />
             <DemoStackPlank />
             <DemoStackPlank />
             <DemoStackPlank />
             <DemoStackPlank />
-            <DemoStackPlank boundary={'end'} />
+            <DemoStackPlank />
+            <DemoStackPlank />
           </NaturalDeck.Root>
-        </AttentionProvider>
+        </RootAttentionProvider>
       </Mosaic.Root>
     );
   },
@@ -205,7 +195,7 @@ export const DynamicBasicStacks = () => {
         return acc;
       }, {}),
   );
-  const [attended] = useState(new Set<string>());
+  const [attention] = useState({ attended: [] });
 
   const [navOpen, setNavOpen] = useState(true);
   const [c11yOpen, setC11yOpen] = useState(false);
@@ -244,7 +234,7 @@ export const DynamicBasicStacks = () => {
     <>
       <PlankHeading.Root classNames='pli-px'>
         <PlankHeading.Button>
-          <Books {...plankHeadingIconProps} />
+          <Icon icon='ph--books--regular' size={5} />
         </PlankHeading.Button>
         <PlankHeading.Label classNames='grow'>Menu</PlankHeading.Label>
         {c11yContent === MENU ? (
@@ -295,7 +285,7 @@ export const DynamicBasicStacks = () => {
 
   return (
     <Mosaic.Root>
-      <AttentionProvider attended={attended}>
+      <RootAttentionProvider attention={attention}>
         <Main.Root complementarySidebarOpen={c11yOpen} navigationSidebarOpen={navOpen}>
           <Main.Overlay />
           <Mosaic.DragOverlay />
@@ -369,7 +359,7 @@ export const DynamicBasicStacks = () => {
             )}
           </NaturalDeck.Root>
         </Main.Root>
-      </AttentionProvider>
+      </RootAttentionProvider>
     </Mosaic.Root>
   );
 };

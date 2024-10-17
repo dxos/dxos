@@ -2,14 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DeferredTask, Event, scheduleTask, sleep, TimeoutError, Trigger } from '@dxos/async';
-import { Context, rejectOnDispose } from '@dxos/context';
-import { type CredentialProcessor } from '@dxos/credentials';
+import { DeferredTask, Event, scheduleTask, sleep, TimeoutError, Trigger, scheduleMicroTask } from '@dxos/async';
+import { type Context, rejectOnDispose, Resource } from '@dxos/context';
+import { type CredentialProcessor, verifyCredential } from '@dxos/credentials';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { type SpaceId } from '@dxos/keys';
+import { logInfo, log } from '@dxos/log';
+import { EdgeCallFailedError } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type NotarizationService, type NotarizeRequest } from '@dxos/protocols/proto/dxos/mesh/teleport/notarization';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
@@ -21,7 +25,17 @@ const DEFAULT_SUCCESS_DELAY = 1_000;
 
 const DEFAULT_NOTARIZE_TIMEOUT = 10_000;
 
+const MAX_EDGE_RETRIES = 2;
+
 const WRITER_NOT_SET_ERROR_CODE = 'WRITER_NOT_SET';
+
+const credentialCodec = schema.getCodecForType('dxos.halo.credentials.Credential');
+
+export type NotarizationPluginParams = {
+  spaceId: SpaceId;
+  edgeClient?: EdgeHttpClient;
+  edgeFeatures?: Runtime.Client.EdgeFeatures;
+};
 
 export type NotarizeParams = {
   /**
@@ -53,13 +67,17 @@ export type NotarizeParams = {
    * @default {@link DEFAULT_SUCCESS_DELAY}
    */
   successDelay?: number;
+
+  /**
+   * A random amount of time before making or retrying an edge request to help prevent large bursts of requests.
+   */
+  edgeRetryJitter?: number;
 };
 
 /**
  * See NotarizationService proto.
  */
-export class NotarizationPlugin implements CredentialProcessor {
-  private readonly _ctx = new Context();
+export class NotarizationPlugin extends Resource implements CredentialProcessor {
   private readonly _extensionOpened = new Event();
 
   private _writer: FeedWriter<Credential> | undefined;
@@ -67,13 +85,30 @@ export class NotarizationPlugin implements CredentialProcessor {
   private readonly _processedCredentials = new ComplexSet<PublicKey>(PublicKey.hash);
   private readonly _processCredentialsTriggers = new ComplexMap<PublicKey, Trigger>(PublicKey.hash);
 
+  @logInfo
+  private readonly _spaceId: SpaceId;
+
+  private readonly _edgeClient: EdgeHttpClient | undefined;
+
+  constructor(params: NotarizationPluginParams) {
+    super();
+    this._spaceId = params.spaceId;
+    if (params.edgeClient && params.edgeFeatures?.feedReplicator) {
+      this._edgeClient = params.edgeClient;
+    }
+  }
+
   get hasWriter() {
     return !!this._writer;
   }
 
-  async open() {}
+  protected override async _open() {
+    if (this._edgeClient && this._writer) {
+      this._notarizePendingEdgeCredentials(this._edgeClient, this._writer);
+    }
+  }
 
-  async close() {
+  protected override async _close() {
     await this._ctx.dispose();
   }
 
@@ -86,6 +121,7 @@ export class NotarizationPlugin implements CredentialProcessor {
     timeout = DEFAULT_NOTARIZE_TIMEOUT,
     retryTimeout = DEFAULT_RETRY_TIMEOUT,
     successDelay = DEFAULT_SUCCESS_DELAY,
+    edgeRetryJitter,
   }: NotarizeParams) {
     log('notarize', { credentials });
     invariant(
@@ -103,24 +139,35 @@ export class NotarizationPlugin implements CredentialProcessor {
     });
     opCtx?.onDispose(() => ctx.dispose());
 
-    // Timeout/
     if (timeout !== 0) {
-      scheduleTask(
-        ctx,
-        () => {
-          log.warn('Notarization timeout', {
-            timeout,
-            peers: Array.from(this._extensions).map((extension) => extension.remotePeerId),
-          });
-          void ctx.dispose();
-          errors.throw(new TimeoutError(timeout, 'Notarization timed out'));
-        },
-        timeout,
-      );
+      this._scheduleTimeout(ctx, errors, timeout);
     }
 
     const allNotarized = Promise.all(credentials.map((credential) => this._waitUntilProcessed(credential.id!)));
 
+    this._tryNotarizeCredentialsWithPeers(ctx, credentials, { retryTimeout, successDelay });
+
+    if (this._edgeClient) {
+      this._tryNotarizeCredentialsWithEdge(ctx, this._edgeClient, credentials, {
+        retryTimeout,
+        successDelay,
+        jitter: edgeRetryJitter,
+      });
+    }
+
+    try {
+      await Promise.race([rejectOnDispose(ctx), allNotarized, errors.wait()]);
+      log('done');
+    } finally {
+      await ctx.dispose();
+    }
+  }
+
+  private _tryNotarizeCredentialsWithPeers(
+    ctx: Context,
+    credentials: Credential[],
+    { retryTimeout, successDelay }: NotarizationTimeouts,
+  ) {
     const peersTried = new Set<NotarizationTeleportExtension>();
 
     // Repeatable task that tries to notarize credentials with one of the available peers.
@@ -145,6 +192,7 @@ export class NotarizationPlugin implements CredentialProcessor {
           credentials: credentials.filter((credential) => !this._processedCredentials.has(credential.id!)),
         });
         log('success');
+
         await sleep(successDelay); // wait before trying with a new peer
       } catch (err: any) {
         if (!ctx.disposed && !err.message.includes(WRITER_NOT_SET_ERROR_CODE)) {
@@ -156,13 +204,31 @@ export class NotarizationPlugin implements CredentialProcessor {
 
     notarizeTask.schedule();
     this._extensionOpened.on(ctx, () => notarizeTask.schedule());
+  }
 
-    try {
-      await Promise.race([rejectOnDispose(ctx), allNotarized, errors.wait()]);
-      log('done');
-    } finally {
-      await ctx.dispose();
-    }
+  private _tryNotarizeCredentialsWithEdge(
+    ctx: Context,
+    client: EdgeHttpClient,
+    credentials: Credential[],
+    timeouts: NotarizationTimeouts & { jitter?: number },
+  ) {
+    const encodedCredentials = credentials.map((credential) => {
+      const binary = credentialCodec.encode(credential);
+      return Buffer.from(binary).toString('base64');
+    });
+    scheduleTask(ctx, async () => {
+      try {
+        await client.notarizeCredentials(
+          this._spaceId,
+          { credentials: encodedCredentials },
+          { retry: { count: MAX_EDGE_RETRIES, timeout: timeouts.retryTimeout, jitter: timeouts.jitter } },
+        );
+
+        log('edge notarization success');
+      } catch (error: any) {
+        handleEdgeError(error);
+      }
+    });
   }
 
   /**
@@ -180,6 +246,44 @@ export class NotarizationPlugin implements CredentialProcessor {
   setWriter(writer: FeedWriter<Credential>) {
     invariant(!this._writer, 'Writer already set.');
     this._writer = writer;
+    if (this._edgeClient) {
+      this._notarizePendingEdgeCredentials(this._edgeClient, writer);
+    }
+  }
+
+  /**
+   * The method is used only for adding agent feeds to spaces.
+   * When an agent is created we can admit them into all the existing spaces. In case the operation fails
+   * this method will fix it on the next space open.
+   * Given how rarely this happens there's no need to poll the endpoint.
+   */
+  private _notarizePendingEdgeCredentials(client: EdgeHttpClient, writer: FeedWriter<Credential>) {
+    scheduleMicroTask(this._ctx, async () => {
+      try {
+        const response = await client.getCredentialsForNotarization(this._spaceId, {
+          retry: { count: MAX_EDGE_RETRIES },
+        });
+
+        const credentials = response.awaitingNotarization.credentials;
+        if (!credentials.length) {
+          log('edge did not return credentials for notarization');
+          return;
+        }
+
+        log('got edge credentials for notarization', { count: credentials.length });
+
+        const decodedCredentials = credentials.map((credential) => {
+          const binary = Buffer.from(credential, 'base64');
+          return credentialCodec.decode(binary);
+        });
+
+        await this._notarizeCredentials(writer, decodedCredentials);
+
+        log.info('notarized edge credentials', { count: decodedCredentials.length });
+      } catch (error: any) {
+        handleEdgeError(error);
+      }
+    });
   }
 
   private async _waitUntilProcessed(id: PublicKey) {
@@ -196,12 +300,20 @@ export class NotarizationPlugin implements CredentialProcessor {
     if (!this._writer) {
       throw new Error(WRITER_NOT_SET_ERROR_CODE);
     }
-    for (const credential of request.credentials ?? []) {
+    await this._notarizeCredentials(this._writer, request.credentials ?? []);
+  }
+
+  private async _notarizeCredentials(writer: FeedWriter<Credential>, credentials: Credential[]) {
+    for (const credential of credentials) {
       invariant(credential.id, 'Credential must have an id');
       if (this._processedCredentials.has(credential.id)) {
         continue;
       }
-      await this._writer.write(credential);
+      const verificationResult = await verifyCredential(credential);
+      if (verificationResult.kind === 'fail') {
+        throw new Error(`Credential verification failed: ${verificationResult.errors.join('\n')}.`);
+      }
+      await writer.write(credential);
     }
   }
 
@@ -220,7 +332,30 @@ export class NotarizationPlugin implements CredentialProcessor {
     });
     return extension;
   }
+
+  private _scheduleTimeout(ctx: Context, errors: Trigger, timeout: number) {
+    scheduleTask(
+      ctx,
+      () => {
+        log.warn('Notarization timeout', {
+          timeout,
+          peers: Array.from(this._extensions).map((extension) => extension.remotePeerId),
+        });
+        void ctx.dispose();
+        errors.throw(new TimeoutError(timeout, 'Notarization timed out'));
+      },
+      timeout,
+    );
+  }
 }
+
+const handleEdgeError = (error: any) => {
+  if (!(error instanceof EdgeCallFailedError) || error.errorData) {
+    log.catch(error);
+  } else {
+    log.info('Edge notarization failure', { reason: error.reason });
+  }
+};
 
 export type NotarizationTeleportExtensionParams = {
   onOpen: () => Promise<void>;
@@ -260,6 +395,11 @@ export class NotarizationTeleportExtension extends RpcExtension<Services, Servic
     await super.onClose(err);
   }
 }
+
+type NotarizationTimeouts = {
+  retryTimeout: number;
+  successDelay: number;
+};
 
 type Services = {
   NotarizationService: NotarizationService;

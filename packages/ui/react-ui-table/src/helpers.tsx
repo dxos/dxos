@@ -21,8 +21,7 @@ import { log } from '@dxos/log';
 import { type ClassNameValue, Input, Tooltip } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { CellCombobox } from './components';
-import { useTableContext } from './components/Table/TableContext';
+import { CellCombobox, useTableContext } from './components';
 import { textPadding } from './theme';
 
 export type ValueUpdater<TData extends RowData, TValue> = (row: TData, id: string, value: TValue) => void;
@@ -144,6 +143,7 @@ const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
         onBlur={handleSave}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={(event) => (event.key === 'Enter' && handleSave()) || (event.key === 'Escape' && handleCancel())}
+        autoComplete='off'
       />
     </Input.Root>
   );
@@ -208,6 +208,7 @@ const NumberBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
           // TODO(thure): `Escape` is reserved for blurring the input and moving focus to the cell
           return /* (event.key === 'Escape' && handleCancel()) || */ event.key === 'Enter' && handleSave();
         }}
+        autoComplete='off'
       />
     </Input.Root>
   );
@@ -468,7 +469,7 @@ export class ColumnBuilder<TData extends RowData> {
       size: 50,
       minSize: 50,
       header: (column) => label ?? column.header.id,
-      // TODO(zan): Implement sort algorithm
+      // TODO(zan): Implement sort algorithm.
       enableSorting: true,
       cell: SwitchBuilderCell,
       ...props,
@@ -484,7 +485,7 @@ export class ColumnBuilder<TData extends RowData> {
     const IconOff = off?.Icon ?? X;
     return {
       size: size ?? 32,
-      // TODO(zan): Implement sort algorithm
+      // TODO(zan): Implement sort algorithm.
       enableSorting: false,
       header: (column) => <div className={'justify-center'}>{label ?? column.header.id}</div>,
       cell: (cell) => {
@@ -504,14 +505,13 @@ export class ColumnBuilder<TData extends RowData> {
   /**
    * This display column type is for nested/unhandled data to appear as JSON.
    */
-  display({ label, classNames, ...props }: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
+  json({ label, classNames, ...props }: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
     return {
       size: 120,
       minSize: 120,
       header: (cell) => label ?? cell.header.id,
       cell: (cell) => {
         const value = cell.getValue();
-
         return (
           <div className='overflow-scroll'>
             <code className='text-xs'>{JSON.stringify(value)}</code>

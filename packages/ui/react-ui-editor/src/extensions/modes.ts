@@ -2,35 +2,39 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Extension, Facet } from '@codemirror/state';
+import { type Extension } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { vim } from '@replit/codemirror-vim';
 import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
 
+import { singleValueFacet } from '../state';
+
 export const focusEvent = 'focus.container';
 
-export type EditorMode = 'default' | 'vim' | 'vscode' | undefined;
+export const EditorViewModes = ['preview', 'readonly', 'source'] as const;
+export type EditorViewMode = (typeof EditorViewModes)[number];
 
-export type EditorConfig = {
-  type: string;
+export const EditorInputModes = ['default', 'vim', 'vscode'] as const;
+export type EditorInputMode = (typeof EditorInputModes)[number];
+
+export type EditorInputConfig = {
+  type?: string;
   noTabster?: boolean;
 };
 
-export const editorMode = Facet.define<EditorConfig, EditorConfig>({
-  combine: (modes) => modes[0] ?? {},
-});
+export const editorInputMode = singleValueFacet<EditorInputConfig>({});
 
-export const EditorModes: { [mode: string]: Extension } = {
+export const InputModeExtensions: { [mode: string]: Extension } = {
   default: [],
   vscode: [
     // https://github.com/replit/codemirror-vscode-keymap
-    editorMode.of({ type: 'vscode' }),
+    editorInputMode.of({ type: 'vscode' }),
     keymap.of(vscodeKeymap),
   ],
   vim: [
     // https://github.com/replit/codemirror-vim
     vim(),
-    editorMode.of({ type: 'vim', noTabster: true }),
+    editorInputMode.of({ type: 'vim', noTabster: true }),
     keymap.of([
       {
         key: 'Alt-Escape',

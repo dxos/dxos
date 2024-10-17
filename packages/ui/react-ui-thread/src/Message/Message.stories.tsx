@@ -2,15 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { withTheme } from '@dxos/storybook-utils';
+import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Message } from './Message';
-import { DefaultMessageText, type MessageEntity } from '../testing';
+import { MessageRoot } from './Message';
+import { threadLayout } from '../Thread';
+import { ThreadStoryContainer, MessageStoryText, type MessageEntity } from '../testing';
 import translations from '../translations';
 
 const Story = () => {
@@ -23,19 +25,21 @@ const Story = () => {
   });
 
   return (
-    <div className='grid grid-cols-[var(--rail-size)_1fr]'>
-      <Message {...message}>
-        <DefaultMessageText text={message.text} onDelete={() => console.log('delete')} />
-      </Message>
-    </div>
+    <ThreadStoryContainer>
+      <div className={threadLayout}>
+        <MessageRoot {...message} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
+          <MessageStoryText {...message} onDelete={() => console.log('delete')} />
+        </MessageRoot>
+      </div>
+    </ThreadStoryContainer>
   );
 };
 
 export default {
   title: 'react-ui-thread/Message',
-  component: Message,
+  component: MessageRoot,
   render: Story,
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { translations },
 };
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/log-hook",
-  "version": "0.6.5",
+  "version": "0.6.12",
   "private": true,
   "description": "Logger",
   "homepage": "https://dxos.org",
@@ -24,7 +24,6 @@
     "source-map": "^0.6.1"
   },
   "devDependencies": {
-    "@types/node": "^18.11.9",
-    "typescript": "^5.4.5"
+    "@types/node": "^22.7.4"
   }
 }

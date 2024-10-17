@@ -62,6 +62,8 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
           state: this._localState,
         } satisfies ProtocolMessage);
 
+        // TODO(burdon): Replace with throttle.
+        // TODO(burdon): Send heads?
         await sleep(DEBOUNCE_INTERVAL);
       }
     });

@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { describe, test } from 'vitest';
+
 import { PublicKey } from '@dxos/keys';
-import { describe, test } from '@dxos/test';
 
 import { treeLogger, type TreeNode } from './tree';
 

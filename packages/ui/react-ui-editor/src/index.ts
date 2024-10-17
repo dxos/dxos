@@ -11,9 +11,10 @@ export { tags } from '@lezer/highlight';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 export * from './components';
+export * from './defaults';
 export * from './extensions';
 export * from './hooks';
-export { getToken, editorWithToolbarLayout, editorFillLayoutRoot, editorFillLayoutEditor } from './styles';
-export * from './themes';
+export * from './state';
 export * from './util';
+
 export { translations };

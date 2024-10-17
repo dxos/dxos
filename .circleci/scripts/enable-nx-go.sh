@@ -14,3 +14,4 @@ index 987374c4e1..8adba05057 100644
 +  "plugins": ["@nx-go/nx-go"]
  }
 EOF
+rm -f nx.json.orig

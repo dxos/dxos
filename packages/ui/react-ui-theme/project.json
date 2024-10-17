@@ -4,7 +4,7 @@
   "tags": [
     "scope:ui"
   ],
-  "sourceRoot": "packages/ui/react-ui-theme/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
@@ -29,7 +29,7 @@
         "entryPoints": [
           "{projectRoot}/src/index.ts"
         ],
-        "outputPath": "packages/ui/react-ui-theme/dist/lib",
+        "outputPath": "{projectRoot}/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -45,11 +45,11 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/esbuild-plugin.ts",
-          "{projectRoot}/src/plugin.ts",
+          "{projectRoot}/src/plugins/esbuild-plugin.ts",
+          "{projectRoot}/src/plugins/plugin.ts",
           "{projectRoot}/src/theme.css"
         ],
-        "outputPath": "packages/ui/react-ui-theme/dist/plugin",
+        "outputPath": "{projectRoot}/dist/plugin",
         "platforms": [
           "node"
         ]
@@ -67,6 +67,7 @@
     }
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "node-std"
   ]
 }

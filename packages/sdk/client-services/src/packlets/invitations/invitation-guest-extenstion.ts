@@ -6,11 +6,13 @@ import { type Mutex, type MutexGuard, Trigger } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { InvalidInvitationExtensionRoleError, schema } from '@dxos/protocols';
+import { InvalidInvitationExtensionRoleError } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type InvitationHostService, InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
+import { type FlowLockHolder } from './invitation-state';
 import { tryAcquireBeforeContextDisposed } from './utils';
 
 const OPTIONS_TIMEOUT = 10_000;
@@ -26,10 +28,13 @@ type InvitationGuestExtensionCallbacks = {
 /**
  * Guest's side for a connection to a concrete peer in p2p network during invitation.
  */
-export class InvitationGuestExtension extends RpcExtension<
-  { InvitationHostService: InvitationHostService },
-  { InvitationHostService: InvitationHostService }
-> {
+export class InvitationGuestExtension
+  extends RpcExtension<
+    { InvitationHostService: InvitationHostService },
+    { InvitationHostService: InvitationHostService }
+  >
+  implements FlowLockHolder
+{
   private _ctx = new Context();
   private _remoteOptions?: InvitationOptions;
   private _remoteOptionsTrigger = new Trigger();

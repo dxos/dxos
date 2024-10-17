@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
+import { describe, expect, test, onTestFinished } from 'vitest';
 
 import { Event, sleep } from '@dxos/async';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
@@ -62,7 +61,7 @@ describe('pipeline/Pipeline', () => {
 
   test('reading and writing with cursor changes', async () => {
     const pipeline = new Pipeline();
-    afterTest(() => pipeline.stop());
+    onTestFinished(() => pipeline.stop());
 
     const builder = new TestFeedBuilder();
     const feedStore = builder.createFeedStore();
@@ -105,7 +104,7 @@ describe('pipeline/Pipeline', () => {
 
   test('cursor change while polling', async () => {
     const pipeline = new Pipeline();
-    afterTest(() => pipeline.stop());
+    onTestFinished(() => pipeline.stop());
 
     const builder = new TestFeedBuilder();
     const feedStore = builder.createFeedStore();

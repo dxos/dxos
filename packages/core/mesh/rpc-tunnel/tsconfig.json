@@ -4,18 +4,10 @@
     "lib": [
       "DOM",
       "ESNext"
-    ],
-    "outDir": "dist/types"
+    ]
   },
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../../common/log"
-    },
-    {
-      "path": "../rpc"
-    }
-  ]
+  "references": []
 }

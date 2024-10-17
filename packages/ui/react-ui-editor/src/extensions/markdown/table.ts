@@ -25,9 +25,9 @@ export type TableOptions = {};
  * https://github.github.com/gfm/#tables-extension
  */
 export const table = (options: TableOptions = {}): Extension => {
-  return StateField.define<RangeSet<any>>({
+  return StateField.define<RangeSet<Decoration>>({
     create: (state) => update(state, options),
-    update: (_: RangeSet<any>, tr: Transaction) => update(tr.state, options),
+    update: (_: RangeSet<Decoration>, tr: Transaction) => update(tr.state, options),
     provide: (field) => EditorView.decorations.from(field),
   });
 };
@@ -39,8 +39,8 @@ type Table = {
   rows?: string[][];
 };
 
-const update = (state: EditorState, options: TableOptions) => {
-  const builder = new RangeSetBuilder();
+const update = (state: EditorState, _options: TableOptions) => {
+  const builder = new RangeSetBuilder<Decoration>();
   const cursor = state.selection.main.head;
 
   const tables: Table[] = [];
@@ -114,31 +114,28 @@ class TableWidget extends WidgetType {
   }
 
   override toDOM(view: EditorView) {
-    const table = document.createElement('table');
+    const div = document.createElement('div');
+    const table = div.appendChild(document.createElement('table'));
 
-    {
-      const header = table.appendChild(document.createElement('thead'));
-      const tr = header.appendChild(document.createElement('tr'));
-      this._table.header?.forEach((cell) => {
-        const th = document.createElement('th');
-        th.setAttribute('class', 'cm-table-head');
-        tr.appendChild(th).textContent = cell;
+    const header = table.appendChild(document.createElement('thead'));
+    const tr = header.appendChild(document.createElement('tr'));
+    this._table.header?.forEach((cell) => {
+      const th = document.createElement('th');
+      th.setAttribute('class', 'cm-table-head');
+      tr.appendChild(th).textContent = cell;
+    });
+
+    const body = table.appendChild(document.createElement('tbody'));
+    this._table.rows?.forEach((row) => {
+      const tr = body.appendChild(document.createElement('tr'));
+      row.forEach((cell) => {
+        const td = document.createElement('td');
+        td.setAttribute('class', 'cm-table-cell');
+        tr.appendChild(td).textContent = cell;
       });
-    }
+    });
 
-    {
-      const body = table.appendChild(document.createElement('tbody'));
-      this._table.rows?.forEach((row) => {
-        const tr = body.appendChild(document.createElement('tr'));
-        row.forEach((cell) => {
-          const td = document.createElement('td');
-          td.setAttribute('class', 'cm-table-cell');
-          tr.appendChild(td).textContent = cell;
-        });
-      });
-    }
-
-    return table;
+    return div;
   }
 
   override ignoreEvent(e: Event) {

@@ -6,7 +6,7 @@ import { Event, synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Messenger, type SignalManager } from '@dxos/messaging';
+import { Messenger, type PeerInfo, type SignalManager } from '@dxos/messaging';
 import { trace } from '@dxos/protocols';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap } from '@dxos/util';
@@ -32,9 +32,9 @@ export type SwarmOptions = {
   topic: PublicKey;
 
   /**
-   * This node's peer id.
+   * This node's peer info.
    */
-  peerId: PublicKey;
+  peerInfo?: PeerInfo;
 
   /**
    * Protocol to use for every connection.
@@ -56,7 +56,8 @@ export type SwarmOptions = {
 export type SwarmNetworkManagerOptions = {
   transportFactory: TransportFactory;
   signalManager: SignalManager;
-  log?: boolean; // Log to devtools.
+  enableDevtoolsLogging?: boolean; // Log to devtools.
+  peerInfo?: PeerInfo;
 };
 
 /**
@@ -76,26 +77,28 @@ export class SwarmNetworkManager {
   private readonly _connectionLimiter: ConnectionLimiter;
   private readonly _connectionLog?: ConnectionLog;
   private readonly _instanceId = PublicKey.random().toHex();
+  private _peerInfo?: PeerInfo = undefined;
 
   private _connectionState = ConnectionState.ONLINE;
   public readonly connectionStateChanged = new Event<ConnectionState>();
   public readonly topicsUpdated = new Event<void>();
 
-  constructor({ transportFactory, signalManager, log }: SwarmNetworkManagerOptions) {
+  constructor({ transportFactory, signalManager, enableDevtoolsLogging, peerInfo }: SwarmNetworkManagerOptions) {
     this._transportFactory = transportFactory;
 
     // Listen for signal manager events.
     this._signalManager = signalManager;
-    this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) => this._swarms.get(topic)?.onSwarmEvent(event));
+    this._signalManager.swarmEvent.on((event) => this._swarms.get(event.topic)?.onSwarmEvent(event));
     this._messenger = new Messenger({ signalManager: this._signalManager });
     this._signalConnection = {
       join: (opts) => this._signalManager.join(opts),
       leave: (opts) => this._signalManager.leave(opts),
     };
+    this._peerInfo = peerInfo;
 
     this._connectionLimiter = new ConnectionLimiter();
     // TODO(burdon): Inject listener (generic pattern).
-    if (log) {
+    if (enableDevtoolsLogging) {
       this._connectionLog = new ConnectionLog();
     }
   }
@@ -122,6 +125,10 @@ export class SwarmNetworkManager {
     return this._swarms.get(topic);
   }
 
+  setPeerInfo(peerInfo: PeerInfo) {
+    this._peerInfo = peerInfo;
+  }
+
   async open() {
     log.trace('dxos.mesh.network-manager.open', trace.begin({ id: this._instanceId }));
     await this._messenger.open();
@@ -146,23 +153,30 @@ export class SwarmNetworkManager {
   @synchronized
   async joinSwarm({
     topic,
-    peerId,
+    peerInfo,
     topology,
     protocolProvider: protocol,
     label,
   }: SwarmOptions): Promise<SwarmConnection> {
     invariant(PublicKey.isPublicKey(topic));
-    invariant(PublicKey.isPublicKey(peerId));
+    if (!peerInfo) {
+      peerInfo = {
+        peerKey: this._peerInfo?.peerKey ?? PublicKey.random().toHex(),
+        identityKey: this._peerInfo?.identityKey ?? PublicKey.random().toHex(),
+      };
+    }
+    invariant(PublicKey.from(peerInfo.peerKey));
+    invariant(PublicKey.from(peerInfo.identityKey!));
     invariant(topology);
     invariant(typeof protocol === 'function');
     if (this._swarms.has(topic)) {
       throw new Error(`Already connected to swarm: ${PublicKey.from(topic)}`);
     }
 
-    log('joining', { topic: PublicKey.from(topic), peerId, topology: topology.toString() }); // TODO(burdon): Log peerId.
+    log('joining', { topic: PublicKey.from(topic), peerInfo, topology: topology.toString() }); // TODO(burdon): Log peerId.
     const swarm = new Swarm(
       topic,
-      peerId,
+      peerInfo,
       topology,
       protocol,
       this._messenger,
@@ -181,7 +195,7 @@ export class SwarmNetworkManager {
     // Open before joining.
     await swarm.open();
 
-    this._signalConnection.join({ topic, peerId }).catch((error) => log.catch(error));
+    this._signalConnection.join({ topic, peer: peerInfo }).catch((error) => log.catch(error));
 
     this.topicsUpdated.emit();
     this._connectionLog?.joinedSwarm(swarm);
@@ -204,7 +218,7 @@ export class SwarmNetworkManager {
 
     log('leaving', { topic: PublicKey.from(topic) });
     const swarm = this._swarms.get(topic)!;
-    await this._signalConnection.leave({ topic, peerId: swarm.ownPeerId });
+    await this._signalConnection.leave({ topic, peer: swarm.ownPeer });
 
     const map = this._mappers.get(topic)!;
     map.destroy();

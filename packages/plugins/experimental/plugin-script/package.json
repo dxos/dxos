@@ -1,0 +1,134 @@
+{
+  "name": "@dxos/plugin-script",
+  "version": "0.6.12",
+  "description": "Braneframe notebook plugin",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    "./edge": {
+      "browser": "./dist/lib/browser/edge/index.mjs",
+      "node": {
+        "require": "./dist/lib/node/edge/index.cjs",
+        "default": "./dist/lib/node-esm/edge/index.mjs"
+      },
+      "types": "./dist/types/src/edge/index.d.ts"
+    },
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./meta": {
+      "browser": "./dist/lib/browser/meta.mjs",
+      "node": {
+        "require": "./dist/lib/node/meta.cjs",
+        "default": "./dist/lib/node-esm/meta.mjs"
+      },
+      "types": "./dist/types/src/meta.d.ts"
+    },
+    "./types": {
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": {
+        "require": "./dist/lib/node/types/index.cjs",
+        "default": "./dist/lib/node-esm/types/index.mjs"
+      },
+      "types": "./dist/types/src/types/index.d.ts"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "edge": [
+        "dist/types/src/edge/index.d.ts"
+      ],
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ],
+      "types": [
+        "dist/types/src/types/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@codemirror/autocomplete": "^6.18.1",
+    "@codemirror/lang-javascript": "^6.2.2",
+    "@codemirror/language": "^6.10.3",
+    "@codemirror/lint": "^6.8.2",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "@codemirror/view": "^6.34.1",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
+    "@dxos/crypto": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-explorer": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-settings": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-stack": "workspace:*",
+    "@dxos/plugin-theme": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/rpc-tunnel": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/schema": "^0.75.1",
+    "@lezer/common": "^1.2.2",
+    "@preact/signals-core": "^1.6.0",
+    "@typescript/vfs": "^1.6.0",
+    "@valtown/codemirror-ts": "^2.2.0",
+    "codemirror": "^6.0.1",
+    "esbuild-wasm": "^0.16.14",
+    "iso-did": "^1.6.0",
+    "lodash.get": "^4.4.2",
+    "prettier": "^3.2.4",
+    "react-syntax-highlighter": "^15.5.0",
+    "typescript": "^5.6.2"
+  },
+  "devDependencies": {
+    "@dxos/echo-generator": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
+    "@types/lodash.get": "^4.4.7",
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
+    "vite": "5.4.7"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

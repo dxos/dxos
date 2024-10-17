@@ -15,39 +15,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../apps/types"
-    },
-    {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/echo-typegen"
-    },
-    {
-      "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-editor"
-    },
-    {
-      "path": "../../ui/react-ui-theme"
-    },
-    {
-      "path": "../../ui/storybook-utils"
-    },
-    {
-      "path": "../react-client"
-    }
-  ]
+  "references": []
 }

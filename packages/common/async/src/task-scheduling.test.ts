@@ -2,11 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
+import { describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { describe, test } from '@dxos/test';
 
 import { DeferredTask, scheduleTask } from './task-scheduling';
 import { sleep } from './timeout';
@@ -25,9 +23,7 @@ describe('task-scheduling', () => {
         throw new Error('test');
       });
 
-      await waitForExpect(() => {
-        expect(error.message).to.eq('test');
-      });
+      await expect.poll(() => error.message).toBe('test');
     });
 
     test('cancelation', async () => {

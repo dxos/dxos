@@ -6,10 +6,19 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type MutableRefObject, type PropsWithChildren, useRef, useState } from 'react';
 
 import { keySymbols } from '@dxos/keyboard';
-import { Button, Dialog, DropdownMenu, ContextMenu, Tooltip, useTranslation, toLocalizedString } from '@dxos/react-ui';
+import {
+  Button,
+  Dialog,
+  DropdownMenu,
+  ContextMenu,
+  Tooltip,
+  useTranslation,
+  toLocalizedString,
+  Icon,
+} from '@dxos/react-ui';
 import { type MosaicActiveType, useMosaic } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { descriptionText, getSize, hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
+import { descriptionText, hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { translationKey } from '../translations';
@@ -36,10 +45,12 @@ const getShortcut = (action: NavTreeItemActionNode) => {
     : action.properties?.keyBinding?.[getHostPlatform()];
 };
 
+const fallbackIcon = 'ph--placeholder--regular';
+
 export const NavTreeItemActionDropdownMenu = ({
   active,
   label,
-  iconSymbol,
+  icon,
   testId,
   menuActions,
   suppressNextTooltip,
@@ -83,9 +94,7 @@ export const NavTreeItemActionDropdownMenu = ({
             aria-label={t('tree item actions label')}
           >
             <span className='sr-only'>{toLocalizedString(label, t)}</span>
-            <svg className={getSize(4)}>
-              <use href={`/icons.svg#${iconSymbol}`} />
-            </svg>
+            <Icon icon={icon ?? fallbackIcon} size={4} />
           </Button>
         </DropdownMenu.Trigger>
       </Tooltip.Trigger>
@@ -113,11 +122,7 @@ export const NavTreeItemActionDropdownMenu = ({
                   disabled={action.properties?.disabled}
                   {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                 >
-                  {action.properties?.iconSymbol && (
-                    <svg className={mx(getSize(4), 'shrink-0')}>
-                      <use href={`/icons.svg#${action.properties!.iconSymbol}`} />
-                    </svg>
-                  )}
+                  {action.properties?.icon && <Icon icon={action.properties!.icon} size={4} />}
                   <span className='grow truncate'>{toLocalizedString(action.properties!.label, t)}</span>
                   {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
                 </DropdownMenu.Item>
@@ -168,11 +173,7 @@ const NavTreeItemActionContextMenuImpl = ({
                   disabled={action.properties?.disabled}
                   {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                 >
-                  {action.properties?.iconSymbol && (
-                    <svg className={mx(getSize(4), 'shrink-0')}>
-                      <use href={`/icons.svg#${action.properties?.iconSymbol}`} />
-                    </svg>
-                  )}
+                  {action.properties?.icon && <Icon icon={action.properties?.icon} size={4} />}
                   <span className='grow truncate'>{toLocalizedString(action.properties!.label, t)}</span>
                   {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
                 </ContextMenu.Item>
@@ -188,7 +189,7 @@ const NavTreeItemActionContextMenuImpl = ({
 
 export const NavTreeItemActionSearchList = ({
   menuActions,
-  iconSymbol,
+  icon,
   active,
   label,
   testId,
@@ -196,7 +197,7 @@ export const NavTreeItemActionSearchList = ({
   onAction,
 }: Pick<
   NavTreeItemActionMenuProps,
-  'iconSymbol' | 'menuActions' | 'testId' | 'active' | 'label' | 'onAction' | 'suppressNextTooltip'
+  'icon' | 'menuActions' | 'testId' | 'active' | 'label' | 'onAction' | 'suppressNextTooltip'
 >) => {
   const { t } = useTranslation(translationKey);
 
@@ -251,9 +252,7 @@ export const NavTreeItemActionSearchList = ({
             }}
             ref={button}
           >
-            <svg className={getSize(4)}>
-              <use href={`/icons.svg#${iconSymbol}`} />
-            </svg>
+            <Icon icon={icon ?? fallbackIcon} size={4} />
           </Button>
         </Dialog.Trigger>
       </Tooltip.Trigger>
@@ -285,11 +284,7 @@ export const NavTreeItemActionSearchList = ({
                       disabled={action.properties?.disabled}
                       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                     >
-                      {action.properties?.iconSymbol && (
-                        <svg className={mx(getSize(4), 'shrink-0')}>
-                          <use href={`/icons.svg#${action.properties?.iconSymbol}`} />
-                        </svg>
-                      )}
+                      {action.properties?.icon && <Icon icon={action.properties?.icon} size={4} />}
                       <span className='grow truncate'>{label}</span>
                       {shortcut && (
                         <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
@@ -311,7 +306,7 @@ export const NavTreeItemActionSearchList = ({
 
 export const NavTreeItemMonolithicAction = ({
   active,
-  properties: { disabled, caller, testId, label, iconSymbol } = { label: 'never' },
+  properties: { disabled, caller, testId, label, icon } = { label: 'never' },
   data: invoke,
 }: NavTreeItemActionNode & { active?: MosaicActiveType; onAction?: (action: NavTreeItemActionNode) => void }) => {
   const { t } = useTranslation(translationKey);
@@ -337,9 +332,7 @@ export const NavTreeItemMonolithicAction = ({
         data-testid={testId}
       >
         <span className='sr-only'>{toLocalizedString(label, t)}</span>
-        <svg className={getSize(4)}>
-          <use href={`/icons.svg#${iconSymbol}`} />
-        </svg>
+        <Icon icon={icon ?? fallbackIcon} size={4} />
       </Button>
     </Tooltip.Trigger>
   );

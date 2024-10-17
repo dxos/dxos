@@ -2,17 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, Fragment, useEffect, useRef, useState } from 'react';
+import React, { forwardRef, Fragment, useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
 
-import { Tooltip, Popover, Treegrid, useTranslation, toLocalizedString, Button } from '@dxos/react-ui';
+import { Tooltip, Popover, Treegrid, useTranslation, toLocalizedString, Button, Icon } from '@dxos/react-ui';
 import { type MosaicTileComponentProps, Path, useMosaic } from '@dxos/react-ui-mosaic';
 import {
   focusRing,
-  getSize,
   hoverableControls,
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
-  mx,
 } from '@dxos/react-ui-theme';
 
 import { useNavTree } from './NavTreeContext';
@@ -42,7 +40,7 @@ const isAction = (o: unknown): o is NavTreeActionNode =>
   typeof o === 'object' && !!o && 'data' in o && typeof o.data === 'function';
 
 const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
-  ({ item, draggableProps, draggableStyle, active }, forwardedRef) => {
+  ({ item, draggableProps, active }, forwardedRef) => {
     const { id, node, parentOf = [], actions: itemActions = [] } = item;
     const isBranch = node.properties?.role === 'branch' || parentOf.length > 0;
 
@@ -107,7 +105,20 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
 
     const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${node.id}` ? Popover.Anchor : Fragment;
 
-    const openTriggerIcon = open ? 'ph--caret-down--regular' : 'ph--caret-right--regular';
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.target === event.currentTarget) {
+          if (event.key === ' ') {
+            event.preventDefault();
+            event.stopPropagation();
+            return onNavigate?.(item);
+          } else if (open ? event.key === 'ArrowLeft' : event.key === 'ArrowRight') {
+            return onItemOpenChange?.(item, !open);
+          }
+        }
+      },
+      [open, item],
+    );
 
     return (
       <Tooltip.Root
@@ -123,9 +134,10 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
       >
         <Treegrid.Row
           id={id}
+          aria-labelledby={`${node.id}__label`}
           parentOf={item.parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
           classNames={[
-            'relative transition-opacity grid grid-cols-subgrid col-[navtree-row] select-none aria-[current]:surface-input ring-inset pie-1',
+            'relative transition-opacity grid grid-cols-subgrid col-[navtree-row] select-none aria-[current]:bg-input ring-inset pie-1',
             hoverableControls,
             hoverableFocusedKeyboardControls,
             hoverableFocusedWithinControls,
@@ -142,7 +154,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
             ...(current?.has(node.id) && {
               'aria-current': '' as 'page',
-              'data-attention': attended?.has(node.id) ?? false,
+              'data-attention': attended?.includes(node.id) ?? false,
             })
           }
           onContextMenu={(event) => {
@@ -150,6 +162,9 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             setMenuOpen(true);
           }}
           {...draggableProps}
+          // TODO(thure): See #7585; `draggableProps` links to a description with instructions on how to drag the item using the keyboard, but that is broken here currently, possibly by tabster arrow focus movement.
+          aria-describedby=''
+          onKeyDown={handleKeyDown}
           role='row'
           ref={forwardedRef}
         >
@@ -170,16 +185,18 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
               }}
               onClick={() => onItemOpenChange?.(item, !open)}
             >
-              <svg className={mx('shrink-0 text-[--icons-color]', getSize(3))}>
-                <use href={`/icons.svg#${openTriggerIcon}`} />
-              </svg>
+              <Icon
+                icon='ph--caret-right--regular'
+                size={3}
+                classNames={['transition duration-200', open && 'rotate-90']}
+              />
             </Button>
             <NavTreeItemHeading
               {...{
                 id: node.id,
                 level,
                 label: node.properties ? toLocalizedString(node.properties.label, t) : 'never',
-                iconSymbol: node.properties?.iconSymbol,
+                icon: node.properties?.icon,
                 open,
                 onItemOpenChange,
                 current: current?.has(node.id),
@@ -195,7 +212,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
           {!active && primaryAction?.properties?.disposition === 'toolbar' ? (
             <NavTreeItemAction
               label={toLocalizedString(primaryAction.properties?.label, t)}
-              iconSymbol={primaryAction.properties?.iconSymbol ?? 'ph--placeholder--regular'}
+              icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
               actionsNode={primaryAction}
               menuActions={isAction(primaryAction) ? [primaryAction] : item.groupedActions?.[primaryAction.id]}
               active={active}
@@ -211,7 +228,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             <ActionRoot>
               <NavTreeItemActionDropdownMenu
                 label={t('tree item actions label')}
-                iconSymbol='ph--dots-three-vertical--regular'
+                icon='ph--dots-three-vertical--regular'
                 actionsNode={primaryAction}
                 menuActions={actions}
                 suppressNextTooltip={suppressNextTooltip}

@@ -2,15 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
+import { inspect } from 'node:util';
+import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { createReadable } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { defaultValueEncoding, TestBuilder, TestItemBuilder } from './testing';
@@ -239,12 +238,49 @@ describe('FeedWrapper', () => {
           throw err;
         }
       });
-      await waitForExpect(async () => {
-        expect(feed2.has(start)).to.be.true;
-      }, 500);
+      await expect.poll(() => feed2.has(start), { timeout: 500 }).toBe(true);
       for (const i of range(numBlocks)) {
         expect(feed2.has(i)).to.eq(i >= start);
       }
     }
+  });
+
+  test('proofs', async () => {
+    const numBlocks = 10;
+    const builder1 = new TestItemBuilder();
+    const builder2 = new TestItemBuilder();
+    const feedFactory1 = builder1.createFeedFactory();
+    const feedFactory2 = builder2.createFeedFactory();
+
+    const key1 = await builder1.keyring!.createKey();
+    const feed1 = await feedFactory1.createFeed(key1, { writable: true });
+    const feed2 = await feedFactory2.createFeed(key1);
+
+    await feed1.open();
+    await feed2.open();
+
+    for (const i of range(numBlocks)) {
+      await feed1.append(`block-${i}`);
+    }
+
+    for (const i of range(numBlocks)) {
+      const data = await feed1.get(i);
+
+      console.log({ data });
+
+      const proof = await feed1.proof(i);
+
+      // proof.signature[2] = 0xff;
+
+      console.log('proof', inspect({ proof }, { depth: null, colors: true }));
+
+      await feed2.core.put(i, data, proof);
+
+      console.log({ data2: await feed2.get(i) });
+    }
+
+    feed2.core.audit((err, valid) => {
+      console.log('audit', { err, valid });
+    });
   });
 });

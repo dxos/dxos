@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Icon, IconBase, type IconWeight } from '@phosphor-icons/react';
+import { IconBase, type IconProps, type IconWeight } from '@phosphor-icons/react';
 import React, { forwardRef, type ReactElement } from 'react';
 
 const weights = new Map<IconWeight, ReactElement>([
@@ -20,6 +20,8 @@ const weights = new Map<IconWeight, ReactElement>([
   ],
 ]);
 
-export const HALO: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
+export const HALO = forwardRef<SVGSVGElement, IconProps>((props, ref) => (
+  <IconBase ref={ref} {...props} weights={weights} />
+));
 
 HALO.displayName = 'HALO';

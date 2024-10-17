@@ -1,6 +1,6 @@
 {
   "name": "@dxos/functions",
-  "version": "0.6.5",
+  "version": "0.6.12",
   "description": "Functions API and runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,21 +10,24 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
     "./testing": {
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": {
-        "default": "./dist/lib/node/testing/index.cjs"
+        "require": "./dist/lib/node/testing/index.cjs",
+        "default": "./dist/lib/node-esm/testing/index.mjs"
       },
       "types": "./dist/types/src/testing/index.d.ts"
     },
     "./types": {
       "browser": "./dist/lib/browser/types.mjs",
       "node": {
-        "default": "./dist/lib/node/types.cjs"
+        "require": "./dist/lib/node/types.cjs",
+        "default": "./dist/lib/node-esm/types.mjs"
       },
       "types": "./dist/types/src/types.d.ts"
     }
@@ -49,7 +52,6 @@
     "gen-schema": "ts-node ./tools/schema.ts"
   },
   "dependencies": {
-    "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -62,9 +64,10 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/schema": "^0.75.1",
     "@preact/signals-core": "^1.6.0",
     "cron": "^3.1.6",
-    "effect": "^3.2.7",
+    "effect": "^3.9.1",
     "express": "^4.19.2",
     "get-port-please": "^3.1.1",
     "ws": "^8.14.2"

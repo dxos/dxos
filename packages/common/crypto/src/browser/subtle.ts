@@ -5,3 +5,5 @@
 // Replacement implementation for the browser (see package.json).
 
 export const subtleCrypto = crypto.subtle;
+
+export const webcrypto = crypto;

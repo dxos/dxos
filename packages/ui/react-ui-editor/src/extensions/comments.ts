@@ -5,7 +5,6 @@
 import { invertedEffects } from '@codemirror/commands';
 import {
   type Extension,
-  Facet,
   StateEffect,
   StateField,
   type Text,
@@ -25,22 +24,18 @@ import {
 import sortBy from 'lodash.sortby';
 import { useEffect, useMemo, useState } from 'react';
 
-import { type ThreadType } from '@braneframe/types';
 import { debounce, type UnsubscribeCallback } from '@dxos/async';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
-import { Cursor } from './cursor';
-import { type Comment, type Range } from './types';
 import { overlap } from './util';
-import { getToken } from '../styles';
+import { Cursor, documentId, singleValueFacet } from '../state';
+import { type Comment, type Range } from '../state';
 import { callbackWrapper } from '../util';
 
 //
 // State management.
 //
-
-const documentId = Facet.define<string | undefined, string | undefined>({ combine: (values) => values[0] });
 
 type CommentState = {
   comment: Comment;
@@ -106,53 +101,20 @@ export const commentsState = StateField.define<CommentsState>({
   },
 });
 
-//
-// UX
-//
-
-const styles = EditorView.baseTheme({
+/**
+ * NOTE: Matches search.
+ */
+const styles = EditorView.theme({
   '.cm-comment, .cm-comment-current': {
+    margin: '0 -3px',
+    padding: '3px',
+    borderRadius: '3px',
+    backgroundColor: 'var(--dx-cmCommentSurface)',
+    color: 'var(--dx-cmComment)',
     cursor: 'pointer',
-    borderWidth: '1px',
-    borderStyle: 'solid',
-    borderRadius: '2px',
-    transition: 'background-color 0.1s ease',
   },
-  // Light theme.
-  '&light .cm-comment': {
-    backgroundColor: getToken('extend.colors.yellow.50'),
-    mixBlendMode: 'darken',
-    borderColor: getToken('extend.colors.yellow.100'),
-  },
-  '&light .cm-comment:hover': { backgroundColor: getToken('extend.colors.yellow.100') },
-  '&light .cm-comment-current': {
-    backgroundColor: getToken('extend.colors.primary.100'),
-    borderColor: getToken('extend.colors.primary.200'),
-  },
-  '&light .cm-comment-current:hover': {
-    backgroundColor: getToken('extend.colors.primary.150'),
-    borderColor: getToken('extend.colors.primary.250'),
-  },
-
-  // Dark theme.
-  '&dark .cm-comment': {
-    color: getToken('extend.colors.yellow.50'),
-    backgroundColor: getToken('extend.colors.yellow.800'),
-    borderColor: getToken('extend.colors.yellow.700'),
-    mixBlendMode: 'plus-lighter',
-  },
-  '&dark .cm-comment:hover': {
-    backgroundColor: getToken('extend.colors.yellow.700'),
-    borderColor: getToken('extend.colors.yellow.650'),
-  },
-  '&dark .cm-comment-current': {
-    color: getToken('extend.colors.primary.50'),
-    backgroundColor: getToken('extend.colors.primary.800'),
-    borderColor: getToken('extend.colors.primary.700'),
-  },
-  '&dark .cm-comment-current:hover': {
-    backgroundColor: getToken('extend.colors.primary.700'),
-    borderColor: getToken('extend.colors.primary.650'),
+  '.cm-comment:hover, .cm-comment-current': {
+    textDecoration: 'underline',
   },
 });
 
@@ -361,16 +323,8 @@ export const createComment: Command = (view) => {
   const cursor = Cursor.getCursorFromRange(view.state, { from, to });
   if (cursor) {
     // Create thread via callback.
-    const id = options.onCreate?.({ cursor, from, location: view.coordsAtPos(from) });
-    if (id) {
-      // Update range.
-      view.dispatch({
-        effects: setSelection.of({ current: id }),
-        selection: { anchor: to },
-      });
-
-      return true;
-    }
+    options.onCreate?.({ cursor, from, location: view.coordsAtPos(from) });
+    return true;
   }
 
   return false;
@@ -392,7 +346,7 @@ export type CommentsOptions = {
   /**
    * Called to create a new thread and return the thread id.
    */
-  onCreate?: (params: { cursor: string; from: number; location?: Rect | null }) => string | undefined;
+  onCreate?: (params: { cursor: string; from: number; location?: Rect | null }) => void;
   /**
    * Selection cut/deleted.
    */
@@ -411,7 +365,7 @@ export type CommentsOptions = {
   onHover?: (el: Element, shortcut: string) => void;
 };
 
-const optionsFacet = Facet.define<CommentsOptions, CommentsOptions>({ combine: (providers) => providers[0] });
+const optionsFacet = singleValueFacet<CommentsOptions>();
 
 /**
  * Comment threads.
@@ -431,7 +385,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 
   return [
     optionsFacet.of(options),
-    documentId.of(options.id),
+    options.id ? documentId.of(options.id) : undefined,
     commentsState,
     commentsDecorations,
     handleCommentClick,
@@ -440,45 +394,43 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     //
     // Keymap.
     //
-    options.onCreate
-      ? keymap.of([
-          {
-            key: shortcut,
-            run: callbackWrapper(createComment),
-          },
-        ])
-      : [],
+    options.onCreate &&
+      keymap.of([
+        {
+          key: shortcut,
+          run: callbackWrapper(createComment),
+        },
+      ]),
 
     //
     // Hover tooltip (for key shortcut hints, etc.)
     // TODO(burdon): Factor out to generic hints extension for current selection/line.
     //
-    options.onHover
-      ? hoverTooltip(
-          (view, pos) => {
-            const selection = view.state.selection.main;
-            if (selection && pos >= selection.from && pos <= selection.to) {
-              return {
-                pos: selection.from,
-                end: selection.to,
-                above: true,
-                create: () => {
-                  const el = document.createElement('div');
-                  options.onHover!(el, shortcut);
-                  return { dom: el, offset: { x: 0, y: 8 } };
-                },
-              };
-            }
+    options.onHover &&
+      hoverTooltip(
+        (view, pos) => {
+          const selection = view.state.selection.main;
+          if (selection && pos >= selection.from && pos <= selection.to) {
+            return {
+              pos: selection.from,
+              end: selection.to,
+              above: true,
+              create: () => {
+                const el = document.createElement('div');
+                options.onHover!(el, shortcut);
+                return { dom: el, offset: { x: 0, y: 8 } };
+              },
+            };
+          }
 
-            return null;
-          },
-          {
-            // TODO(burdon): Hide on change triggered immediately?
-            // hideOnChange: true,
-            hoverTime: 1_000,
-          },
-        )
-      : [],
+          return null;
+        },
+        {
+          // TODO(burdon): Hide on change triggered immediately?
+          // hideOnChange: true,
+          hoverTime: 1_000,
+        },
+      ),
 
     //
     // Track deleted ranges and update ranges for decorations.
@@ -553,8 +505,8 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       }
     }),
 
-    options.onUpdate ? trackPastedComments(options.onUpdate) : [],
-  ];
+    options.onUpdate && trackPastedComments(options.onUpdate),
+  ].filter(nonNullable);
 };
 
 //
@@ -595,9 +547,13 @@ export const scrollThreadIntoView = (view: EditorView, id: string, center = true
  * Query the editor state for the active formatting at the selection.
  */
 export const selectionOverlapsComment = (state: EditorState): boolean => {
-  const { selection } = state;
-  const commentState = state.field(commentsState);
+  // May not be defined if thread plugin not installed.
+  const commentState = state.field(commentsState, false);
+  if (commentState === undefined) {
+    return false;
+  }
 
+  const { selection } = state;
   for (const range of selection.ranges) {
     if (commentState.comments.some(({ range: commentRange }) => overlap(commentRange, range))) {
       return true;
@@ -611,22 +567,21 @@ const hasActiveSelection = (state: EditorState): boolean => {
   return state.selection.ranges.some((range) => !range.empty);
 };
 
+/**
+ * Manages external comment synchronization for the editor.
+ * This class subscribes to external comment updates and applies them to the editor view.
+ */
 class ExternalCommentSync implements PluginValue {
-  private unsubscribe: () => void;
+  private readonly unsubscribe: () => void;
 
   constructor(
     view: EditorView,
     id: string,
     subscribe: (sink: () => void) => UnsubscribeCallback,
-    getThreads: () => ThreadType[],
+    getComments: () => Comment[],
   ) {
     const updateComments = () => {
-      const threads = getThreads();
-      const comments = threads
-        .filter(nonNullable)
-        .filter((thread) => thread.anchor)
-        .map((thread) => ({ id: thread.id, cursor: thread.anchor! }));
-
+      const comments = getComments();
       if (id === view.state.facet(documentId)) {
         queueMicrotask(() => view.dispatch({ effects: setComments.of({ id, comments }) }));
       }
@@ -640,15 +595,16 @@ class ExternalCommentSync implements PluginValue {
   };
 }
 
+// TODO(burdon): Needs comment.
 export const createExternalCommentSync = (
   id: string,
   subscribe: (sink: () => void) => UnsubscribeCallback,
-  getThreads: () => ThreadType[],
+  getComments: () => Comment[],
 ): Extension =>
   ViewPlugin.fromClass(
     class {
       constructor(view: EditorView) {
-        return new ExternalCommentSync(view, id, subscribe, getThreads);
+        return new ExternalCommentSync(view, id, subscribe, getComments);
       }
     },
   );
@@ -697,7 +653,7 @@ export const useComments = (view: EditorView | null | undefined, id: string, com
  * Hook provides an extension to listen for comment clicks and invoke a handler.
  */
 export const useCommentClickListener = (onCommentClick: (commentId: string) => void): Extension => {
-  const observer = useMemo(
+  return useMemo(
     () =>
       EditorView.updateListener.of((update) => {
         update.transactions.forEach((transaction) => {
@@ -710,6 +666,4 @@ export const useCommentClickListener = (onCommentClick: (commentId: string) => v
       }),
     [onCommentClick],
   );
-
-  return observer;
 };

@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
+import { describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
@@ -11,8 +10,9 @@ import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
 import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
 import { IndexMetadataStore } from '@dxos/indexing';
+import { SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { describe, test, openAndClose } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { type DocHandleProxy } from './doc-handle-proxy';
 import { RepoProxy } from './repo-proxy';
@@ -178,9 +178,7 @@ describe('RepoProxy', () => {
 
     const hostHandle = host.repo!.find<{ text: string }>(cloneHandle.url);
 
-    await waitForExpect(() => {
-      expect(hostHandle.docSync()?.text).to.equal(text);
-    });
+    await expect.poll(() => hostHandle.docSync()?.text).toEqual(text);
   });
 
   test('create N documents', async () => {
@@ -211,11 +209,9 @@ describe('RepoProxy', () => {
     const hostHandles = handles.map((handle) => host.repo!.find<{ text: string }>(handle.url));
     await Promise.all(hostHandles.map((handle) => handle.whenReady()));
 
-    await waitForExpect(async () => {
-      for (const handle of hostHandles) {
-        expect(handle.docSync()?.text).to.equal(text);
-      }
-    }, 1000);
+    for (const handle of hostHandles) {
+      await expect.poll(() => handle.docSync()?.text, { timeout: 1000 }).toEqual(text);
+    }
   });
 
   test('multiple clients one worker repo', async () => {
@@ -266,13 +262,11 @@ describe('RepoProxy', () => {
       handles1.push(repo1.find<DocStruct>(handle.url));
     }
 
-    await waitForExpect(async () => {
-      // Check that all documents are replicated.
-      for (const handle of [...handles1, ...handles2]) {
-        expect(handle.docSync()?.text1).to.equal(text1);
-        expect(handle.docSync()?.text2).to.equal(text2);
-      }
-    }, 1000);
+    // Check that all documents are replicated.
+    for (const handle of [...handles1, ...handles2]) {
+      await expect.poll(async () => handle.docSync()?.text1, { timeout: 1000 }).toEqual(text1);
+      await expect.poll(async () => handle.docSync()?.text2, { timeout: 1000 }).toEqual(text2);
+    }
   });
 });
 
@@ -291,7 +285,7 @@ const setup = async (kv = createTestLevel()) => {
 function* createProxyRepos(dataService: DataServiceImpl): Generator<RepoProxy> {
   for (let i = 0; i < 1_0000; i++) {
     // Counter just to protect against infinite loops.
-    yield new RepoProxy(dataService);
+    yield new RepoProxy(dataService, SpaceId.random());
   }
   throw new Error('Too many keys requested');
 }

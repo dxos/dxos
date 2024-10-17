@@ -1,6 +1,6 @@
 {
   "name": "@dxos/rpc",
-  "version": "0.6.5",
+  "version": "0.6.12",
   "description": "A lightweight, transport-agnostic RPC implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,8 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
     }
@@ -32,10 +33,6 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*"
-  },
-  "devDependencies": {
-    "earljs": "~0.1.10",
-    "typescript": "^5.4.5"
   },
   "publishConfig": {
     "access": "public"

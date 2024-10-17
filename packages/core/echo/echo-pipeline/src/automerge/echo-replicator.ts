@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Message } from '@dxos/automerge/automerge-repo';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
+import type { AutomergeProtocolMessage } from '@dxos/protocols';
 
 export interface EchoReplicator {
   /**
@@ -23,7 +23,12 @@ export interface EchoReplicatorContext {
    */
   get peerId(): string;
 
+  /**
+   * @deprecated Use `getContainingSpaceIdForDocument`.
+   */
   getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null>;
+  getContainingSpaceIdForDocument(documentId: string): Promise<SpaceId | null>;
+  isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckParams): Promise<boolean>;
 
   onConnectionOpen(connection: ReplicatorConnection): void;
   onConnectionClosed(connection: ReplicatorConnection): void;
@@ -39,12 +44,12 @@ export interface ReplicatorConnection {
   /**
    * Stream to read messages coming from the remote peer.
    */
-  readable: ReadableStream<Message>;
+  readable: ReadableStream<AutomergeProtocolMessage>;
 
   /**
    * Stream to write messages to the remote peer.
    */
-  writable: WritableStream<Message>;
+  writable: WritableStream<AutomergeProtocolMessage>;
 
   /**
    * @returns true if the document should be advertised to this peer.
@@ -64,4 +69,9 @@ export type ShouldAdvertiseParams = {
 
 export type ShouldSyncCollectionParams = {
   collectionId: string;
+};
+
+export type RemoteDocumentExistenceCheckParams = {
+  peerId: string;
+  documentId: string;
 };

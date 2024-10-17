@@ -5,7 +5,6 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist/types",
     "types": [
       "node"
     ]
@@ -15,45 +14,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/invariant"
-    },
-    {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../react-ui"
-    },
-    {
-      "path": "../react-ui-searchlist"
-    },
-    {
-      "path": "../react-ui-theme"
-    },
-    {
-      "path": "../react-ui-types"
-    },
-    {
-      "path": "../storybook-utils"
-    }
-  ]
+  "references": []
 }

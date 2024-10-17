@@ -11,7 +11,7 @@ The simplest way to read the items in a space is to use the `space.db.query()` m
 
 Once access is obtained to a [space](./README.md), objects can be retrieved:
 
-```ts{12,14,16} file=./snippets/read-items.ts#L5-
+```ts{15,18,21-23} file=./snippets/read-items.ts#L5-
 import { Client } from '@dxos/client';
 
 const client = new Client();
@@ -52,7 +52,8 @@ It's possible to receive strongly typed results from `query`. This is done by de
 Consider this expression of schema declared with Effect Schema:
 
 ```ts file=./snippets/schema.ts#L5-
-import { S, TypedObject } from '@dxos/echo-schema';
+import { Schema as S } from '@effect/schema';
+import { TypedObject } from '@dxos/echo-schema';
 
 export class TaskType extends TypedObject({
   typename: 'dxos.org/type/Task',
@@ -65,7 +66,7 @@ export class TaskType extends TypedObject({
 
 Types can be used to make queries as well:
 
-```ts file=./snippets/read-items-typed-2.ts#L5-
+```ts{10,19} file=./snippets/read-items-typed-2.ts#L5-
 import { Client } from '@dxos/client';
 import { Filter } from '@dxos/client/echo';
 

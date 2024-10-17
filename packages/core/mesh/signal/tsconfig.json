@@ -1,23 +1,8 @@
 {
   "extends": "../../../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "dist/types"
-  },
+  "compilerOptions": {},
   "include": [
     "src/**/*"
   ],
-  "references": [
-    {
-      "path": "../../../common/async"
-    },
-    {
-      "path": "../../../common/log"
-    },
-    {
-      "path": "../../../common/util"
-    },
-    {
-      "path": "../../protocols"
-    }
-  ]
+  "references": []
 }

@@ -20,6 +20,8 @@ type SpaceDocumentLinks = SpaceDoc['links'];
 export interface AutomergeDocumentLoader {
   onObjectDocumentLoaded: Event<ObjectDocumentLoaded>;
 
+  get hasRootHandle(): boolean;
+
   getAllHandles(): DocHandleProxy<SpaceDoc>[];
   /**
    * @returns Handles linked from the space root handle.
@@ -74,6 +76,10 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     private readonly _spaceKey: PublicKey,
   ) {}
 
+  get hasRootHandle(): boolean {
+    return this._spaceRootDocHandle != null;
+  }
+
   getAllHandles(): DocHandleProxy<SpaceDoc>[] {
     return this._spaceRootDocHandle != null
       ? [this._spaceRootDocHandle, ...new Set(this._objectDocumentHandles.values())]
@@ -108,7 +114,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     let hasUrlsToLoad = false;
     const urlsToLoad: SpaceDoc['links'] = {};
     for (const objectId of objectIds) {
-      invariant(this._spaceRootDocHandle);
+      invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
       if (this._objectDocumentHandles.has(objectId) || this._objectsPendingDocumentLoad.has(objectId)) {
         continue;
       }
@@ -129,7 +135,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   }
 
   public getObjectDocumentId(objectId: string): string | undefined {
-    invariant(this._spaceRootDocHandle);
+    invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
     const spaceRootDoc = this._spaceRootDocHandle.docSync();
     invariant(spaceRootDoc);
     if (spaceRootDoc.objects?.[objectId]) {
@@ -151,12 +157,12 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   }
 
   public getSpaceRootDocHandle(): DocHandleProxy<SpaceDoc> {
-    invariant(this._spaceRootDocHandle);
+    invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
     return this._spaceRootDocHandle;
   }
 
   public createDocumentForObject(objectId: string): DocHandleProxy<SpaceDoc> {
-    invariant(this._spaceRootDocHandle);
+    invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
     const spaceDocHandle = this._repo.create<SpaceDoc>({
       version: SpaceDocVersion.CURRENT,
       access: { spaceKey: this._spaceKey.toHex() },
