@@ -168,7 +168,7 @@ export class SwarmNetworkManager {
 
     const peer = peerInfo ?? this._peerInfo!;
 
-    log.info('joining', { topic: PublicKey.from(topic), peerInfo: this._peerInfo, topology: topology.toString() }); // TODO(burdon): Log peerId.
+    log('joining', { topic: PublicKey.from(topic), peerInfo: this._peerInfo, topology: topology.toString() }); // TODO(burdon): Log peerId.
     const swarm = new Swarm(
       topic,
       peer,

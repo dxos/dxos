@@ -598,7 +598,7 @@ describe('Invitations', () => {
         hostContext = peers[0];
         guestContext = peers[1];
 
-        await hostContext.identityManager.createIdentity();
+        await hostContext.createIdentity();
 
         const { service: hostService } = createInvitationsApi(hostContext);
         const { service: guestService } = createInvitationsApi(guestContext);
