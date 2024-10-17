@@ -26,6 +26,7 @@ import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
 import { ServiceRegistry } from './service-registry';
+import { EdgeAgentServiceImpl } from '../agents';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
 import {
@@ -330,6 +331,8 @@ export class ClientServicesHost {
         config: this._config,
         context: this._serviceContext,
       }),
+
+      EdgeAgentService: new EdgeAgentServiceImpl(this._serviceContext.edgeAgentManager),
     });
 
     await this._serviceContext.open(ctx);
