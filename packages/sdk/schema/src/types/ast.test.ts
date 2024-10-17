@@ -18,7 +18,10 @@ describe('AST', () => {
     });
 
     {
-      // TODO(burdon): Check type.
+      const prop = getProperty(TestSchema, 'name');
+      expect(prop).to.exist;
+    }
+    {
       const prop = getProperty(TestSchema, 'address.zip');
       expect(prop).to.exist;
     }
@@ -39,9 +42,7 @@ describe('AST', () => {
     });
 
     const props: string[] = [];
-    visitNode(TestSchema.ast, (_node, prop) => {
-      props.push(prop.join('.'));
-    });
+    visitNode(TestSchema.ast, (_node, prop) => props.push(prop.join('.')));
     expect(props).to.deep.eq(['name', 'address.zip']);
   });
 });

@@ -49,17 +49,18 @@ export type Visitor = (node: AST.AST, path: string[]) => void;
 
 /**
  * Visit leaf nodes.
+ * Ref: https://www.npmjs.com/package/unist-util-visit#visitor
  */
-// TODO(burdon): Ref udist.
-// TODO(burdon): Hide path from args or start from path.
-export const visitNode = (node: AST.AST, visitor: Visitor, path: string[] = []) => {
+export const visitNode = (node: AST.AST, visitor: Visitor) => visit(node, visitor);
+
+const visit = (node: AST.AST, visitor: Visitor, path: string[] = []) => {
   const props = AST.getPropertySignatures(node);
   props.forEach((prop) => {
     const propPath = [...path, prop.name.toString()];
     const type = getType(prop.type);
     if (type) {
       if (AST.isTypeLiteral(type)) {
-        visitNode(type, visitor, propPath);
+        visit(type, visitor, propPath);
       } else {
         // NOTE: Only visits leaf nodes.
         visitor(type, propPath);
