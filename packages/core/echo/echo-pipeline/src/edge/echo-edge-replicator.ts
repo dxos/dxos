@@ -115,6 +115,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
 
   private async _openConnection(spaceId: SpaceId) {
     invariant(this._context);
+    invariant(!this._connections.has(spaceId));
     const connection = new EdgeReplicatorConnection({
       edgeConnection: this._edgeConnection,
       ownPeerId: this._context.peerId,
@@ -128,9 +129,11 @@ export class EchoEdgeReplicator implements EchoReplicator {
         this._context?.onConnectionClosed(connection);
       },
       onRestartRequested: async () => {
+        using _guard = await this._mutex.acquire();
+
         const ctx = this._ctx;
-        this._context?.onConnectionClosed(connection);
-        await connection.close();
+        await connection.close(); // Will call onRemoteDisconnected
+        this._connections.delete(spaceId);
         if (ctx?.disposed) {
           return;
         }
@@ -166,7 +169,6 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   private readonly _onRemoteDisconnected: () => Promise<void>;
   private readonly _onRestartRequested: () => Promise<void>;
 
-  private _streamStarted = new Trigger();
   private _readableStreamController!: ReadableStreamDefaultController<AutomergeProtocolMessage>;
   private _restartScheduled = false;
 
@@ -203,8 +205,6 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     this.readable = new ReadableStream<AutomergeProtocolMessage>({
       start: (controller) => {
         this._readableStreamController = controller;
-        this._ctx.onDispose(() => controller.close());
-        this._streamStarted.wake();
       },
     });
 
@@ -227,6 +227,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   }
 
   protected override async _close(): Promise<void> {
+    this._readableStreamController.close();
     await this._onRemoteDisconnected();
   }
 
