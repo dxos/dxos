@@ -164,7 +164,7 @@ export class ServiceContext extends Resource {
                   [], // TODO(dmaretskyi): Service access credentials.
                 ),
               );
-              this.networkManager.setPeerInfo({
+              await this.networkManager.setPeerInfo({
                 identityKey: identity.identityKey.toHex(),
                 peerKey: identity.deviceKey.toHex(),
               });

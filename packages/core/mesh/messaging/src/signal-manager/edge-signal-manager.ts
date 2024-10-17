@@ -47,6 +47,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
    * Warning: PeerInfo is inferred from edgeConnection.
    */
   async join({ topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
+    log.info('join', { topic, peer });
     if (!this._matchSelfPeerInfo(peer)) {
       // NOTE: Could only join swarm with the same peer info as the edge connection.
       log.warn('ignoring peer info on join request', {
@@ -55,7 +56,9 @@ export class EdgeSignalManager extends Resource implements SignalManager {
           peerKey: this._edgeConnection.peerKey,
           identityKey: this._edgeConnection.identityKey,
         },
+        connected: this._edgeConnection.isConnected,
       });
+      console.trace();
     }
 
     this._swarmPeers.set(topic, new ComplexSet<PeerInfo>(PeerInfoHash));
@@ -67,7 +70,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     );
   }
 
-  async leave({ topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
+  async leave({ topic, peer }: { topic: PublicKey; peer?: PeerInfo }): Promise<void> {
     this._swarmPeers.delete(topic);
     await this._edgeConnection.send(
       protocol.createMessage(SwarmRequestSchema, {
@@ -78,6 +81,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   }
 
   async sendMessage(message: Message): Promise<void> {
+    log.info('send message', { message });
     if (!this._matchSelfPeerInfo(message.author)) {
       // NOTE: Could only join swarm with the same peer info as the edge connection.
       log.warn('ignoring author on send request', {
@@ -120,6 +124,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     invariant(protocol.getPayloadType(message) === SwarmResponseSchema.typeName, 'Wrong payload type');
     const payload = protocol.getPayload(message, SwarmResponseSchema);
     const topic = PublicKey.from(payload.swarmKey);
+    log.info('received swarm', { topic, payload });
     if (!this._swarmPeers.has(topic)) {
       log.warn('Received message from wrong topic', { topic });
       return;
@@ -159,6 +164,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     invariant(message.source, 'source is missing');
     invariant(message.target, 'target is missing');
     invariant(message.target.length === 1, 'target should have exactly one item');
+    log.info('received message', { source: message.source, target: message.target[0], payload });
 
     this.onMessage.emit({
       author: message.source,

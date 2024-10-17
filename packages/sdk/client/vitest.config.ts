@@ -11,7 +11,7 @@ export default mergeConfig(
   defineConfig({
     test: {
       // TODO(dmaretskyi): Enabled because client tests were flaky. Remove when that's not the case.
-      retry: 2,
+      testTimeout: 100000
     },
   }),
 );

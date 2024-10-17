@@ -76,7 +76,7 @@ export class Swarm {
   // TODO(burdon): Pass in object.
   constructor(
     private readonly _topic: PublicKey,
-    private readonly _ownPeer: PeerInfo,
+    private _ownPeer: PeerInfo,
     private _topology: Topology,
     private readonly _protocolProvider: WireProtocolProvider,
     private readonly _messenger: Messenger,
@@ -130,16 +130,7 @@ export class Swarm {
 
   async open() {
     invariant(!this._listeningHandle);
-    this._listeningHandle = await this._messenger.listen({
-      peer: this._ownPeer,
-      payloadType: 'dxos.mesh.swarm.SwarmMessage',
-      onMessage: async (message) => {
-        await this._swarmMessenger
-          .receiveMessage(message)
-          // TODO(nf): discriminate between errors
-          .catch((err) => log.info('Error while receiving message', { err }));
-      },
-    });
+    await this._startListenMessages();
   }
 
   async destroy() {
@@ -167,6 +158,37 @@ export class Swarm {
     this._topology = topology;
     this._topology.init(this._getSwarmController());
     this._topology.update();
+  }
+
+  async setPeerInfo(peerInfo: PeerInfo) {
+    log.info('swarm peer info changed', { peerInfo, previous: this._ownPeer });
+    await this._listeningHandle?.unsubscribe();
+    this._listeningHandle = undefined;
+    this._ownPeer = peerInfo;
+    for (const peer of this._peers.values()) {
+      if (peer.connection && peer.connection.state === ConnectionState.CONNECTED) {
+        continue;
+      }
+      log.info('destroying peer', { peer: peer.remoteInfo });
+      this._destroyPeer(peer.remoteInfo, 'peer info changed').catch((err) => log.catch(err));
+    }
+
+    await this._startListenMessages();
+  }
+
+  @synchronized
+  private async _startListenMessages() {
+    invariant(!this._listeningHandle, 'Listening handle is not set');
+    this._listeningHandle = await this._messenger.listen({
+      peer: this._ownPeer,
+      payloadType: 'dxos.mesh.swarm.SwarmMessage',
+      onMessage: async (message) => {
+        await this._swarmMessenger
+          .receiveMessage(message)
+          // TODO(nf): discriminate between errors
+          .catch((err) => log.info('Error while receiving message', { err }));
+      },
+    });
   }
 
   @synchronized
