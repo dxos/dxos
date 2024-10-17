@@ -75,19 +75,6 @@ export interface JsonSchema {
   items?: JsonSchema;
 }
 
-/**
- * @deprecated
- */
-// TODO(burdon): Remove.
-// export const getSchemaTypename = (schema: JsonSchema): string | undefined => {
-//   const match = schema.$ref?.match(/#\/\$defs\/(.+)/);
-//   if (match) {
-//     return match[1];
-//   } else {
-//     return undefined;
-//   }
-// };
-
 export const effectToJsonSchema = (schema: S.Schema<any>): any => {
   const withEchoRefinements = (ast: AST.AST): AST.AST => {
     let recursiveResult: AST.AST = ast;
