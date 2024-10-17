@@ -104,7 +104,7 @@ export class TableModel extends Resource {
     this.columnMeta = computed(() => {
       const headings = Object.fromEntries(
         (this.table.view?.fields ?? []).map((field, index: number) => {
-          return [index, { size: 1000, resizeable: true }];
+          return [index, { size: field.size ?? 256, resizeable: true }];
         }),
       );
       return { grid: headings };
