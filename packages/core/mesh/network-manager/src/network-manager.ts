@@ -152,26 +152,23 @@ export class SwarmNetworkManager {
    */
   @synchronized
   async joinSwarm({
-    topic,
-    peerInfo,
+    topic, //
     topology,
     protocolProvider: protocol,
     label,
   }: SwarmOptions): Promise<SwarmConnection> {
     invariant(PublicKey.isPublicKey(topic));
     invariant(topology);
-    invariant(peerInfo || this._peerInfo);
+    invariant(this._peerInfo);
     invariant(typeof protocol === 'function');
     if (this._swarms.has(topic)) {
       throw new Error(`Already connected to swarm: ${PublicKey.from(topic)}`);
     }
 
-    const peer = peerInfo ?? this._peerInfo!;
-
     log('joining', { topic: PublicKey.from(topic), peerInfo: this._peerInfo, topology: topology.toString() }); // TODO(burdon): Log peerId.
     const swarm = new Swarm(
       topic,
-      peer,
+      this._peerInfo,
       topology,
       protocol,
       this._messenger,
@@ -190,7 +187,7 @@ export class SwarmNetworkManager {
     // Open before joining.
     await swarm.open();
 
-    this._signalConnection.join({ topic, peer }).catch((error) => log.catch(error));
+    this._signalConnection.join({ topic, peer: this._peerInfo }).catch((error) => log.catch(error));
 
     this.topicsUpdated.emit();
     this._connectionLog?.joinedSwarm(swarm);
