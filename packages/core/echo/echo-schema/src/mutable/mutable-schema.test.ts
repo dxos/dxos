@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { AST, S } from '@dxos/effect';
 
-import { DynamicSchema } from './dynamic-schema';
+import { MutableSchema } from './mutable-schema';
 import { StoredSchema } from './types';
 import { FieldMeta, getObjectAnnotation, getFieldMetaAnnotation } from '../ast';
 import { create } from '../handler';
@@ -26,7 +26,7 @@ describe('dynamic schema', () => {
       field2: S.Boolean,
     }) {}
 
-    const registered = createDynamicSchema(GeneratedSchema);
+    const registered = createMutableSchema(GeneratedSchema);
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', AST.stringKeyword],
       ['field2', AST.booleanKeyword],
@@ -38,7 +38,7 @@ describe('dynamic schema', () => {
       field1: S.String,
     }) {}
 
-    const registered = createDynamicSchema(GeneratedSchema);
+    const registered = createMutableSchema(GeneratedSchema);
     registered.addColumns({ field2: S.Boolean });
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', AST.stringKeyword],
@@ -47,7 +47,7 @@ describe('dynamic schema', () => {
   });
 
   test('updateColumns preserves order of existing and appends new fields', async () => {
-    const registered = createDynamicSchema(EmptySchemaType);
+    const registered = createMutableSchema(EmptySchemaType);
     registered.addColumns({ field1: S.String });
     registered.addColumns({ field2: S.Boolean });
     registered.addColumns({ field3: S.Number });
@@ -61,7 +61,7 @@ describe('dynamic schema', () => {
   });
 
   test('removeColumns', async () => {
-    const registered = createDynamicSchema(EmptySchemaType);
+    const registered = createMutableSchema(EmptySchemaType);
     registered.addColumns({ field1: S.String });
     registered.addColumns({ field2: S.Boolean });
     registered.addColumns({ field3: S.Number });
@@ -75,7 +75,7 @@ describe('dynamic schema', () => {
   test('schema manipulations preserve annotations', async () => {
     const metaNamespace = 'dxos.test';
     const metaInfo = { maxLength: 10 };
-    const registered = createDynamicSchema(EmptySchemaType);
+    const registered = createMutableSchema(EmptySchemaType);
     registered.addColumns({
       field1: S.String.pipe(FieldMeta(metaNamespace, metaInfo)),
       field2: S.String,
@@ -87,8 +87,8 @@ describe('dynamic schema', () => {
     expect(getFieldMetaAnnotation(registered.getProperties()[0], metaNamespace)).to.deep.eq(metaInfo);
   });
 
-  const createDynamicSchema = (schema: S.Schema<any>): DynamicSchema => {
-    const dynamicSchema = new DynamicSchema(
+  const createMutableSchema = (schema: S.Schema<any>): MutableSchema => {
+    const mutableSchema = new MutableSchema(
       create(StoredSchema, {
         typename: getTypeReference(schema)!.objectId,
         version: TEST_SCHEMA_TYPE.version,
@@ -97,10 +97,10 @@ describe('dynamic schema', () => {
     );
 
     effect(() => {
-      const _ = dynamicSchema.serializedSchema.jsonSchema;
-      dynamicSchema.invalidate();
+      const _ = mutableSchema.serializedSchema.jsonSchema;
+      mutableSchema.invalidate();
     });
 
-    return dynamicSchema;
+    return mutableSchema;
   };
 });

@@ -7,7 +7,7 @@ import { S } from '@dxos/effect';
 
 import { EXPANDO_TYPENAME } from './expando';
 import { type HasId, type ObjectAnnotation, getObjectAnnotation, ReferenceAnnotationId } from '../ast';
-import { DynamicSchema, StoredSchema } from '../dynamic';
+import { MutableSchema, StoredSchema } from '../mutable';
 import { getTypename, isReactiveObject } from '../proxy';
 import { type Ref } from '../types';
 
@@ -36,9 +36,11 @@ export const createEchoReferenceSchema = (annotation: ObjectAnnotation): S.Schem
           // Unresolved reference.
           return true;
         }
-        if (obj instanceof DynamicSchema) {
+
+        if (obj instanceof MutableSchema) {
           return annotation.typename === StoredSchema.typename;
         }
+
         return isReactiveObject(obj) && typePredicate(obj);
       },
       { jsonSchema: {} },
