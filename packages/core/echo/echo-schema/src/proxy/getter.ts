@@ -20,7 +20,7 @@ export const getSchema = <T extends {} = any>(obj: T | undefined): S.Schema<any>
   return undefined;
 };
 
-export const getTypeReference = (schema: S.Schema.All | undefined): Reference | undefined => {
+export const getTypeReference = (schema: S.Schema<any> | undefined): Reference | undefined => {
   if (!schema) {
     return undefined;
   }
@@ -56,7 +56,7 @@ export const getType = <T extends {}>(obj: T | undefined): Reference | undefined
 
 export const getTypename = <T extends {}>(obj: T): string | undefined => getType(obj)?.objectId;
 
-export const requireTypeReference = (schema: S.Schema.All): Reference => {
+export const requireTypeReference = (schema: S.Schema<any>): Reference => {
   const typeReference = getTypeReference(schema);
   if (typeReference == null) {
     // TODO(burdon): Catalog user-facing errors (this is too verbose).

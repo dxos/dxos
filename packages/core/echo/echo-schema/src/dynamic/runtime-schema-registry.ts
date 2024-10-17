@@ -11,7 +11,7 @@ import { requireTypeReference } from '../proxy';
 export type SchemaResolver = (type: string) => S.Schema<any> | undefined;
 
 // TODO(burdon): Typename?
-const getTypenameOrThrow = (schema: S.Schema.All): string => requireTypeReference(schema).objectId;
+const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).objectId;
 
 /**
  * Runtime registry of schema objects.
@@ -27,7 +27,7 @@ export class RuntimeSchemaRegistry {
     return Array.from(this._schema.values());
   }
 
-  hasSchema<S extends S.Schema.All>(schema: S): boolean {
+  hasSchema<S extends S.Schema<S>>(schema: S): boolean {
     const typename = getTypenameOrThrow(schema);
     return this._schema.has(typename);
   }
