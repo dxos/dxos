@@ -19,7 +19,7 @@ export type MainStyleProps = Partial<{
 export const mainSidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
     'fixed block-start-0 block-end-0 is-[100vw] z-10 data-[side=ie]:z-20 overscroll-contain overflow-x-hidden overflow-y-auto',
-    'transition-[inset-inline-start,inset-inline-end] duration-0 data-[resizing=false]:duration-200 ease-in-out',
+    'transition-[inset-inline-start,inset-inline-end] duration-200 data-[resizing=false]:duration-200 ease-in-out-symmetric',
     'data-[side=is]:-inline-start-[100vw] sm:data-[side=is]:is-[--nav-sidebar-size] sm:data-[side=is]:-inline-start-[--nav-sidebar-size]',
     'data-[side=ie]:-inline-end-[100vw] sm:data-[side=ie]:is-[--complementary-sidebar-size] sm:data-[side=ie]:-inline-end-[--complementary-sidebar-size]',
     'data-[side=is]:data-[state=open]:inline-start-0 data-[side=ie]:data-[state=open]:inline-end-0',
@@ -37,17 +37,14 @@ export const mainPadding = mx(
   'lg:data-[sidebar-inline-end-state=open]:scroll-pe-[--complementary-sidebar-size]',
 );
 
+export const mainPaddingTransitions =
+  'transition-[padding-inline-start,padding-inline-end,scroll-padding-start,scroll-padding-end] duration-200 ease-in-out-symmetric';
+
 export const mainContent: ComponentFunction<MainStyleProps> = ({ bounce, handlesFocus }, ...etc) =>
-  mx(
-    'transition-[padding-inline-start,padding-inline-end,scroll-padding-start,scroll-padding-end] duration-200 ease-in-out',
-    mainPadding,
-    handlesFocus && 'ch-focus-ring-main',
-    bounce && bounceLayout,
-    ...etc,
-  );
+  mx(mainPadding, mainPaddingTransitions, handlesFocus && 'ch-focus-ring-main', bounce && bounceLayout, ...etc);
 
 export const mainIntrinsicSize = mx(
-  'is-dvw lg:data-[sidebar-inline-start-state=open]:is-[calc(100dvw-var(--nav-sidebar-size))]',
+  'is-dvw transition-[inline-size] ease-in-out-symmetric duration-200 lg:data-[sidebar-inline-start-state=open]:is-[calc(100dvw-var(--nav-sidebar-size))]',
   'lg:data-[sidebar-inline-end-state=open]:is-[calc(100dvw-var(--complementary-sidebar-size))]',
   'lg:data-[sidebar-inline-start-state=open]:data-[sidebar-inline-end-state=open]:is-[calc(100dvw-var(--nav-sidebar-size)-var(--complementary-sidebar-size))]',
 );
@@ -55,7 +52,7 @@ export const mainIntrinsicSize = mx(
 export const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
     'fixed inset-0 z-[9] bg-scrim',
-    'transition-opacity duration-200 ease-in-out',
+    'transition-opacity duration-200 ease-in-out-symmetric',
     'opacity-0 data-[state=open]:opacity-100 lg:data-[state=open]:opacity-100',
     'hidden data-[state=open]:block lg:data-[state=open]:hidden',
     ...etc,
