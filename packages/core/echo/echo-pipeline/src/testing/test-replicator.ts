@@ -3,10 +3,10 @@
 //
 
 import { sleep, synchronized } from '@dxos/async';
-import { type Message } from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 
 import type {
@@ -159,8 +159,8 @@ export class TestReplicatorConnection implements ReplicatorConnection {
 
   constructor(
     public readonly peerId: string,
-    public readonly readable: ReadableStream<Message>,
-    public readonly writable: WritableStream<Message>,
+    public readonly readable: ReadableStream<AutomergeProtocolMessage>,
+    public readonly writable: WritableStream<AutomergeProtocolMessage>,
   ) {}
 
   async shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean> {

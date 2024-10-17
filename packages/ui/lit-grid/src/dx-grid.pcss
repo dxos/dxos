@@ -52,6 +52,7 @@ dx-grid, dx-grid-axis-resize-handle {
 
 .dx-grid {
   [role='gridcell'], [role='columnheader'], [role='rowheader'] {
+    position: relative;
     background: var(--dx-grid-base, var(--dx-base));
     padding: 2px;
     box-sizing: border-box;
@@ -60,12 +61,12 @@ dx-grid, dx-grid-axis-resize-handle {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    align-content: center;
     &[inert] {
       visibility: hidden;
     }
     &:focus, &:focus-visible, &.dx-grid__cell--active {
       cursor: text;
-      position: relative;
       z-index: 2;
       border-color: var(--dx-accentSurface);
       outline: none;
@@ -75,6 +76,9 @@ dx-grid, dx-grid-axis-resize-handle {
     [role='gridcell'], [role='columnheader'], [role='rowheader'] {
       &.dx-grid__cell--active {
         color: transparent !important;
+        & > * {
+          opacity: 0 !important;
+        }
       }
     }
   }
