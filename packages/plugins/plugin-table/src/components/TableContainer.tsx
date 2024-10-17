@@ -56,7 +56,8 @@ const TableContainer = ({ role, table }: LayoutContainerProps<Omit<ObjectTablePr
       </div>
       <div
         className={mx(
-          role === 'article' && 'block-start-[--topbar-size] max-bs-full row-span-2 sticky-top-0 -mbs-px',
+          role === 'article' &&
+            'block-start-[--topbar-size] is-full max-is-max min-is-0 min-bs-0 max-bs-max flex flex-col border-ie border-separator mie-[-1px] flex-1',
           role === 'section' && 'max-bs-96 is-full sticky-top-0 !bg-[--surface-bg] -mis-px -mbs-px',
           role === 'slide' && 'bs-full overflow-auto grid place-items-center',
         )}

@@ -28,7 +28,7 @@ export const ObjectTable = ({ table }: ObjectTableProps) => {
   );
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
-  const handleNewRow = useCallback(() => {
+  const _handleNewRow = useCallback(() => {
     if (!table.schema || !space) {
       return;
     }
@@ -42,12 +42,5 @@ export const ObjectTable = ({ table }: ObjectTableProps) => {
     return <p>No schema</p>;
   }
 
-  return (
-    <div className='border border-separator is-full max-is-max min-is-0 mli-auto'>
-      <Table table={table} data={filteredObjects} />
-      <Button classNames='w-full' onClick={() => handleNewRow()}>
-        <Icon icon='ph--plus--regular' size={4} />
-      </Button>
-    </div>
-  );
+  return <Table table={table} data={filteredObjects} />;
 };
