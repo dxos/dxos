@@ -191,7 +191,7 @@ export class Swarm {
 
   @synchronized
   onSwarmEvent(swarmEvent: SwarmEvent) {
-    log.info('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
+    log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
 
     if (this._ctx.disposed) {
       log('swarm event ignored for disposed swarm');
@@ -223,7 +223,7 @@ export class Swarm {
 
   @synchronized
   async onOffer(message: OfferMessage): Promise<Answer> {
-    log.info('offer', { message });
+    log('offer', { message });
     if (this._ctx.disposed) {
       log('ignored for disposed swarm');
       return { accept: false };
@@ -404,7 +404,7 @@ export class Swarm {
       return;
     }
 
-    log.info('initiating connection...', { remotePeer });
+    log('initiating connection...', { remotePeer });
     await peer.initiateConnection();
     this._topology.update();
     log('initiated', { remotePeer });
