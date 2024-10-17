@@ -11,12 +11,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../invariant"
-    },
-    {
-      "path": "../util"
-    }
-  ]
+  "references": []
 }
