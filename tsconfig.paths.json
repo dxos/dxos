@@ -347,9 +347,6 @@
       "@dxos/react-ui-list": [
         "packages/ui/react-ui-list/src/index.ts"
       ],
-      "@dxos/react-ui-modal": [
-        "packages/ui/react-ui-modal/src/index.ts"
-      ],
       "@dxos/react-ui-mosaic": [
         "packages/ui/react-ui-mosaic/src/index.ts"
       ],
