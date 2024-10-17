@@ -161,32 +161,19 @@ export class SwarmNetworkManager {
    * Join the swarm.
    */
   @synchronized
-  async joinSwarm({
-    topic,
-    peerInfo,
-    topology,
-    protocolProvider: protocol,
-    label,
-  }: SwarmOptions): Promise<SwarmConnection> {
+  async joinSwarm({ topic, topology, protocolProvider: protocol, label }: SwarmOptions): Promise<SwarmConnection> {
     invariant(PublicKey.isPublicKey(topic));
-    if (!peerInfo) {
-      peerInfo = {
-        peerKey: this._peerInfo?.peerKey ?? PublicKey.random().toHex(),
-        identityKey: this._peerInfo?.identityKey ?? PublicKey.random().toHex(),
-      };
-    }
-    invariant(PublicKey.from(peerInfo.peerKey));
-    invariant(PublicKey.from(peerInfo.identityKey!));
     invariant(topology);
+    invariant(this._peerInfo);
     invariant(typeof protocol === 'function');
     if (this._swarms.has(topic)) {
       throw new Error(`Already connected to swarm: ${PublicKey.from(topic)}`);
     }
 
-    log('joining', { topic: PublicKey.from(topic), peerInfo, topology: topology.toString() }); // TODO(burdon): Log peerId.
+    log.info('joining', { topic: PublicKey.from(topic), peerInfo: this._peerInfo, topology: topology.toString() }); // TODO(burdon): Log peerId.
     const swarm = new Swarm(
       topic,
-      peerInfo,
+      this._peerInfo,
       topology,
       protocol,
       this._messenger,
@@ -205,7 +192,7 @@ export class SwarmNetworkManager {
     // Open before joining.
     await swarm.open();
 
-    this._signalConnection.join({ topic, peer: peerInfo }).catch((error) => log.catch(error));
+    this._signalConnection.join({ topic, peer: this._peerInfo }).catch((error) => log.catch(error));
 
     this.topicsUpdated.emit();
     this._connectionLog?.joinedSwarm(swarm);

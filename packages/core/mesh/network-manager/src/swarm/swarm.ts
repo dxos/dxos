@@ -160,35 +160,6 @@ export class Swarm {
     this._topology.update();
   }
 
-  async setPeerInfo(peerInfo: PeerInfo) {
-    await this._listeningHandle?.unsubscribe();
-    this._listeningHandle = undefined;
-    this._ownPeer = peerInfo;
-    for (const peer of this._peers.values()) {
-      if (peer.connection && peer.connection.state === ConnectionState.CONNECTED) {
-        continue;
-      }
-      this._destroyPeer(peer.remoteInfo, 'peer info changed').catch((err) => log.catch(err));
-    }
-
-    await this._startListenMessages();
-  }
-
-  @synchronized
-  private async _startListenMessages() {
-    invariant(!this._listeningHandle, 'Listening handle is not set');
-    this._listeningHandle = await this._messenger.listen({
-      peer: this._ownPeer,
-      payloadType: 'dxos.mesh.swarm.SwarmMessage',
-      onMessage: async (message) => {
-        await this._swarmMessenger
-          .receiveMessage(message)
-          // TODO(nf): discriminate between errors
-          .catch((err) => log.info('Error while receiving message', { err }));
-      },
-    });
-  }
-
   @synchronized
   onSwarmEvent(swarmEvent: SwarmEvent) {
     log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
