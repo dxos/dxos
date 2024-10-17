@@ -148,7 +148,7 @@ export const cellClassesForFieldType = (type: FieldValueType): string[] | undefi
       return ['text-right', 'font-mono'];
     case FieldValueType.String:
     case FieldValueType.Text:
-      return [];
+      return undefined;
     case FieldValueType.Timestamp:
     case FieldValueType.DateTime:
     case FieldValueType.Date:

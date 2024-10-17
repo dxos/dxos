@@ -6,7 +6,12 @@ import { computed, type ReadonlySignal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
 import { PublicKey } from '@dxos/react-client';
-import { type DxGridPlaneCells, type DxGridCells, type DxGridAxisMeta } from '@dxos/react-ui-grid';
+import {
+  type DxGridPlaneCells,
+  type DxGridCells,
+  type DxGridAxisMeta,
+  type DxGridCellValue,
+} from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { parseValue, formatValue, cellClassesForFieldType } from '@dxos/schema';
 
@@ -77,12 +82,16 @@ export class TableModel extends Resource {
           const cellValueSignal = computed(() =>
             row[field.path] !== undefined ? formatValue(field.type, row[field.path]) : '',
           );
-          values[getCellKey(colIndex, rowIndex)] = {
+          const cellClasses = cellClassesForFieldType(field.type);
+          const cell: DxGridCellValue = {
             get value() {
               return cellValueSignal.value;
             },
-            className: mx(cellClassesForFieldType(field.type)),
           };
+          if (cellClasses) {
+            cell.className = mx(cellClasses);
+          }
+          values[getCellKey(colIndex, rowIndex)] = cell;
         });
       });
       return values;

@@ -173,11 +173,11 @@ describe('TableModel', () => {
 
         expect(Object.entries(model.cells.value.grid)).toEqual([
           ['0,0', expect.objectContaining({ value: 'Updated A' })],
-          ['1,0', expect.objectContaining({ value: 1 })],
-          ['2,0', expect.objectContaining({ value: true })],
+          ['1,0', expect.objectContaining({ value: '1' })],
+          ['2,0', expect.objectContaining({ value: 'true' })],
           ['0,1', expect.objectContaining({ value: 'C' })],
-          ['1,1', expect.objectContaining({ value: 3 })],
-          ['2,1', expect.objectContaining({ value: true })],
+          ['1,1', expect.objectContaining({ value: '3' })],
+          ['2,1', expect.objectContaining({ value: 'true' })],
         ]);
       });
     });
