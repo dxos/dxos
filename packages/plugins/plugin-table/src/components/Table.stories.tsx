@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type StoryObj } from '@storybook/react';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { faker } from '@dxos/random';
 import { useDefaultValue } from '@dxos/react-ui';
