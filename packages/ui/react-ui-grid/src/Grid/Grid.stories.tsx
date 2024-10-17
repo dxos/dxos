@@ -4,10 +4,10 @@
 
 import '@dxos-theme';
 
+import * as ModalPrimitive from '@radix-ui/react-popper';
 import React, { type MouseEvent, useCallback, useRef, useState } from 'react';
 
-import { DropdownMenu } from '@dxos/react-ui';
-import * as ModalPrimitive from '@dxos/react-ui-modal';
+import { DropdownMenu, useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Grid, type GridContentProps, type GridRootProps } from './Grid';
@@ -17,6 +17,7 @@ type StoryGridProps = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
 const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement | null>(null);
+  const { tx } = useThemeContext();
 
   const handleClick = useCallback((event: MouseEvent) => {
     const closestAction = (event.target as HTMLElement).closest('button[data-story-action]');
@@ -34,9 +35,9 @@ const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
       <ModalPrimitive.Anchor virtualRef={triggerRef} />
       <DropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenu.Content classNames='contents'>
-          <ModalPrimitive.Content>
+          <ModalPrimitive.Content className={tx('menu.content', 'menu__content', {})}>
             <DropdownMenu.Item onClick={() => console.log('[Click on dropdown menu item]')}>Hello</DropdownMenu.Item>
-            <ModalPrimitive.Arrow />
+            <ModalPrimitive.Arrow className={tx('menu.arrow', 'menu__arrow', {})} />
           </ModalPrimitive.Content>
         </DropdownMenu.Content>
       </DropdownMenu.Root>
