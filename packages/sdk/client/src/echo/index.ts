@@ -10,8 +10,8 @@ export {
   getSchema,
   getType,
   getTypename,
-  Expando,
   type EchoReactiveObject,
+  Expando,
   type ObjectMeta,
   type ReactiveObject,
 } from '@dxos/echo-schema';
@@ -20,21 +20,21 @@ export {
   createEchoObject,
   createSubscription,
   fromCursor,
-  getRangeFromCursor,
   getObjectCore,
+  getRangeFromCursor,
   getTextInRange,
   hasType,
   isEchoObject,
+  loadObjectReferences,
   toCursor,
   toCursorRange,
   DocAccessor,
+  type EchoDatabase,
   Filter,
+  type FilterSource,
+  type IDocHandle,
   Query,
   RuntimeSchemaRegistry,
-  loadObjectReferences,
-  type IDocHandle,
-  type EchoDatabase,
-  type FilterSource,
   type Selection,
   type Subscription,
   type SubscriptionHandle,
@@ -49,6 +49,6 @@ export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-export type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
-export { getSpace, isSpace, fullyQualifiedId } from './util';
+export { getSpace, isSpace, fullyQualifiedId, parseFullyQualifiedId } from './util';

@@ -120,7 +120,7 @@ Main area to render a thing
 
 Discuss identity, device joins, etcs
 
-## Complimentary Sidebar
+## Complementary Sidebar
 
 - Search
 - Threads
