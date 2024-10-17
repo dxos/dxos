@@ -6,7 +6,7 @@ import jp from 'jsonpath';
 
 import { AST, type S } from '@dxos/echo-schema';
 
-import { visitNode } from './ast';
+import { visit } from './ast';
 import { type FieldType, FieldValueType, type ViewType } from './types';
 
 // TODO(burdon): Just use lodash.get?
@@ -19,7 +19,7 @@ export const setFieldValue = <T>(data: any, field: FieldType, value: T): T => jp
 // TODO(burdon): Return Field objects.
 export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FieldValueType][] => {
   const fields: [string, FieldValueType][] = [];
-  visitNode(schema.ast, (node, path) => fields.push([path.join('.'), toFieldValueType(node)]));
+  visit(schema.ast, (node, path) => fields.push([path.join('.'), toFieldValueType(node)]));
   return fields;
 };
 
@@ -42,8 +42,9 @@ export const toFieldValueType = (type: AST.AST): FieldValueType => {
   }
 
   // TODO(zan): How should we be thinking about transformations?
-  // - Which of these are we storing in the database?
-  // - For types that aren't the 'DateFromString' transformation, should we be using the 'from' or 'to' type?
+  //  See https://effect.website/docs/guides/schema/projections
+  //  - Which of these are we storing in the database?
+  //  - For types that aren't the 'DateFromString' transformation, should we be using the 'from' or 'to' type?
   if (AST.isTransformation(type)) {
     const identifier = AST.getIdentifierAnnotation(type);
     if (identifier._tag === 'Some') {

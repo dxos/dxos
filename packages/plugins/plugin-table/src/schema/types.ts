@@ -17,9 +17,6 @@ import { FieldValueType } from '@dxos/schema';
 
 import { type TableType } from '../types';
 
-/**
- * @deprecated
- */
 const FIELD_META_NAMESPACE = 'plugin-table';
 
 /**
@@ -94,7 +91,7 @@ export const mapTableToColumns =
  * @deprecated
  */
 // TODO(burdon): Reconcile with react-ui-data/typeToColumn
-export const toFieldValueType = (type?: AST.AST): FieldValueType => {
+const toFieldValueType = (type?: AST.AST): FieldValueType => {
   if (type == null) {
     return FieldValueType.String;
   }

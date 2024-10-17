@@ -133,7 +133,7 @@ const ObjectTableImpl = ({ table, role, stickyHeader }: ObjectTableProps) => {
 
   const columns = useMemo(
     () =>
-      createColumns(space, tables, table, onColumnUpdate, onColumnDelete, onRowUpdate, onRowDelete, onColumnReorder),
+      createColumns(space, tables, table, onColumnUpdate, onColumnDelete, onColumnReorder, onRowUpdate, onRowDelete),
     [space, tables, table, onColumnUpdate, onColumnDelete, onRowUpdate, onRowDelete],
   );
 
@@ -144,12 +144,11 @@ const ObjectTableImpl = ({ table, role, stickyHeader }: ObjectTableProps) => {
     [updateTableProp],
   );
 
-  const debug = false;
-
   if (!space) {
     return null;
   }
 
+  const debug = false;
   return (
     <>
       <Table.Main<any>

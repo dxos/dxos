@@ -7,6 +7,13 @@ import { invariant } from '@dxos/invariant';
 
 // TODO(burdon): Refactor to @dxos/effect (in common with echo-schema).
 
+//
+// Refs
+// https://effect.website/docs/guides/schema
+// https://www.npmjs.com/package/@effect/schema
+// https://effect-ts.github.io/effect/schema/AST.ts.html
+//
+
 export const getType = (node: AST.AST): AST.AST | undefined => {
   if (AST.isUnion(node)) {
     return node.types.find((type) => getType(type));
@@ -38,26 +45,29 @@ export const getProperty = (schema: S.Schema<any>, path: string): AST.AST | unde
   return node;
 };
 
-export type Visitor = (node: AST.AST, path: string[]) => void;
+export type Visitor = (node: AST.AST, path: string[]) => boolean | void;
 
 /**
  * Visit leaf nodes.
  * Ref: https://www.npmjs.com/package/unist-util-visit#visitor
  */
-export const visitNode = (node: AST.AST, visitor: Visitor) => visit(node, visitor);
+export const visit = (node: AST.AST, visitor: Visitor) => visitNode(node, visitor);
 
-const visit = (node: AST.AST, visitor: Visitor, path: string[] = []) => {
+const visitNode = (node: AST.AST, visitor: Visitor, path: string[] = []) => {
   const props = AST.getPropertySignatures(node);
-  props.forEach((prop) => {
-    const propPath = [...path, prop.name.toString()];
+  for (const prop of props) {
+    const currentPath = [...path, prop.name.toString()];
     const type = getType(prop.type);
     if (type) {
       if (AST.isTypeLiteral(type)) {
-        visit(type, visitor, propPath);
+        visitNode(type, visitor, currentPath);
       } else {
         // NOTE: Only visits leaf nodes.
-        visitor(type, propPath);
+        const ok = visitor(type, currentPath);
+        if (ok === false) {
+          return;
+        }
       }
     }
-  });
+  }
 };

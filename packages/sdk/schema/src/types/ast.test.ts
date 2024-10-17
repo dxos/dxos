@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { S } from '@dxos/effect';
 
-import { getProperty, visitNode } from './ast';
+import { getProperty, visit } from './ast';
 
 describe('AST', () => {
   test('getProperty', () => {
@@ -42,7 +42,7 @@ describe('AST', () => {
     });
 
     const props: string[] = [];
-    visitNode(TestSchema.ast, (_node, prop) => props.push(prop.join('.')));
+    visit(TestSchema.ast, (_node, prop) => props.push(prop.join('.')));
     expect(props).to.deep.eq(['name', 'address.zip']);
   });
 });

@@ -41,6 +41,9 @@ export const deleteTableProp = (props: TableProp[], id: string) => {
   props.splice(idx, 1);
 };
 
+/**
+ * @deprecated
+ */
 export const createColumns = (
   space: Space | undefined,
   tables: TableType[],
@@ -60,7 +63,6 @@ export const createColumns = (
     }));
 
   const tableDef = tableDefs.find((tableDef) => tableDef.id === table.schema?.id);
-
   if (!tableDef || !space) {
     return [];
   }
@@ -73,7 +75,6 @@ export const createColumns = (
     try {
       const aIdx = getColumnIndex(a.id!);
       const bIdx = getColumnIndex(b.id!);
-
       if (aIdx === -1 || bIdx === -1) {
         return 0;
       }
