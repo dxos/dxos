@@ -125,18 +125,8 @@ export class SwarmNetworkManager {
     return this._swarms.get(topic);
   }
 
-  async setPeerInfo(peerInfo: PeerInfo) {
+  setPeerInfo(peerInfo: PeerInfo) {
     this._peerInfo = peerInfo;
-    await Promise.all(
-      Array.from(this._swarms.entries()).map(async ([topic, swarm]) => {
-        if (swarm.ownPeer.peerKey === peerInfo.peerKey && swarm.ownPeer.identityKey === peerInfo.identityKey) {
-          return;
-        }
-        // await this._signalManager.leave({ topic, peer: swarm.ownPeer }).catch((error) => log.catch(error));
-        await swarm.setPeerInfo(peerInfo);
-        this._signalManager.join({ topic, peer: peerInfo }).catch((error) => log.catch(error));
-      }),
-    );
   }
 
   async open() {
@@ -161,19 +151,27 @@ export class SwarmNetworkManager {
    * Join the swarm.
    */
   @synchronized
-  async joinSwarm({ topic, topology, protocolProvider: protocol, label }: SwarmOptions): Promise<SwarmConnection> {
+  async joinSwarm({
+    topic,
+    peerInfo,
+    topology,
+    protocolProvider: protocol,
+    label,
+  }: SwarmOptions): Promise<SwarmConnection> {
     invariant(PublicKey.isPublicKey(topic));
     invariant(topology);
-    invariant(this._peerInfo);
+    invariant(peerInfo || this._peerInfo);
     invariant(typeof protocol === 'function');
     if (this._swarms.has(topic)) {
       throw new Error(`Already connected to swarm: ${PublicKey.from(topic)}`);
     }
 
+    const peer = peerInfo ?? this._peerInfo!;
+
     log.info('joining', { topic: PublicKey.from(topic), peerInfo: this._peerInfo, topology: topology.toString() }); // TODO(burdon): Log peerId.
     const swarm = new Swarm(
       topic,
-      this._peerInfo,
+      peer,
       topology,
       protocol,
       this._messenger,
@@ -192,7 +190,7 @@ export class SwarmNetworkManager {
     // Open before joining.
     await swarm.open();
 
-    this._signalConnection.join({ topic, peer: this._peerInfo }).catch((error) => log.catch(error));
+    this._signalConnection.join({ topic, peer }).catch((error) => log.catch(error));
 
     this.topicsUpdated.emit();
     this._connectionLog?.joinedSwarm(swarm);

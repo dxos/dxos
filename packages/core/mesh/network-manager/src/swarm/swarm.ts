@@ -76,7 +76,7 @@ export class Swarm {
   // TODO(burdon): Pass in object.
   constructor(
     private readonly _topic: PublicKey,
-    private _ownPeer: PeerInfo,
+    private readonly _ownPeer: PeerInfo,
     private _topology: Topology,
     private readonly _protocolProvider: WireProtocolProvider,
     private readonly _messenger: Messenger,
@@ -130,7 +130,16 @@ export class Swarm {
 
   async open() {
     invariant(!this._listeningHandle);
-    await this._startListenMessages();
+    this._listeningHandle = await this._messenger.listen({
+      peer: this._ownPeer,
+      payloadType: 'dxos.mesh.swarm.SwarmMessage',
+      onMessage: async (message) => {
+        await this._swarmMessenger
+          .receiveMessage(message)
+          // TODO(nf): discriminate between errors
+          .catch((err) => log.info('Error while receiving message', { err }));
+      },
+    });
   }
 
   async destroy() {
