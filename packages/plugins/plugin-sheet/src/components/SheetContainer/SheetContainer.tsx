@@ -43,8 +43,10 @@ export const SheetContainer = ({ graph, sheet, role }: SheetProviderProps & { ro
         <Toolbar.Separator />
         <Toolbar.Actions />
       </Toolbar.Root>
-      <GridSheet />
-      <FunctionEditor />
+      <div role='none' className='border-bs border-separator grid cols-1 rows-[1fr_min-content] min-bs-0'>
+        <GridSheet />
+        <FunctionEditor />
+      </div>
     </SheetProvider>
   );
 };

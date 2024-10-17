@@ -377,20 +377,20 @@ describe.skip('EDGE signaling', () => {
       const level = createTestLevel();
       await openAndClose(level);
 
-      const peer = new ServiceContext(
-        createStorage({ type: StorageType.RAM }),
-        level,
-        networkManager,
-        signalManager,
-        edgeConnection,
-        undefined,
-        {
-          invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
-        },
-      );
-      await openAndClose(peer);
-      return peer;
-    };
+        const peer = new ServiceContext(
+          createStorage({ type: StorageType.RAM }),
+          level,
+          networkManager,
+          signalManager,
+          edgeConnection,
+          undefined,
+          {
+            invitationConnectionDefaultParams: { teleport: { controlHeartbeatInterval: 200 } },
+          },
+        );
+        await openAndClose(peer);
+        return peer;
+      };
 
     let host: ServiceContext;
     let guest: ServiceContext;

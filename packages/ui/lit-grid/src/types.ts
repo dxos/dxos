@@ -48,6 +48,10 @@ export type DxGridCellValue = {
    */
   value: string;
   /**
+   * Accessory HTML to render alongside the value.
+   */
+  accessoryHtml?: string;
+  /**
    * If this is a merged cell, the bottomright-most of the range in numeric notation, otherwise undefined.
    */
   end?: string;

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect, signal } from '@preact/signals-core';
+import { signal } from '@preact/signals-core';
 import React from 'react';
 
 import {
@@ -24,6 +24,7 @@ import {
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, type Identifiable, isReactiveObject } from '@dxos/echo-schema';
+import { scheduledEffect } from '@dxos/echo-signals/core';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
@@ -45,6 +46,7 @@ import {
   isEchoObject,
   isSpace,
   loadObjectReferences,
+  parseFullyQualifiedId,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { ClipboardProvider, InvitationManager, type InvitationManagerProps, osTranslations } from '@dxos/shell/react';
@@ -173,9 +175,10 @@ export const SpacePlugin = ({
           .filter((space) => space.state.get() === SpaceState.SPACE_READY)
           .forEach((space) => {
             subscriptions.add(
-              effect(() => {
-                state.values.spaceNames[space.id] = space.properties.name;
-              }),
+              scheduledEffect(
+                () => ({ name: space.properties.name }),
+                ({ name }) => (state.values.spaceNames[space.id] = name),
+              ),
             );
           });
       }).unsubscribe,
@@ -183,54 +186,56 @@ export const SpacePlugin = ({
 
     // Broadcast active node to other peers in the space.
     subscriptions.add(
-      effect(() => {
-        const send = () => {
-          const spaces = client.spaces.get();
-          const identity = client.halo.identity.get();
-          if (identity && location.active) {
-            const ids = openIds(location.active);
+      scheduledEffect(
+        () => ({
+          ids: openIds(location.active),
+          removed: location.closed ? [location.closed].flat() : [],
+        }),
+        ({ ids, removed }) => {
+          const send = () => {
+            const spaces = client.spaces.get();
+            const identity = client.halo.identity.get();
+            if (identity && location.active) {
+              // Group parts by space for efficient messaging.
+              const idsBySpace = reduceGroupBy(ids, (id) => {
+                const [spaceId] = id.split(':'); // TODO(burdon): Factor out.
+                return spaceId;
+              });
 
-            // Group parts by space for efficient messaging.
-            const idsBySpace = reduceGroupBy(ids, (id) => {
-              const [spaceId] = id.split(':'); // TODO(burdon): Factor out.
-              return spaceId;
-            });
-
-            // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
-            for (const space of spaces) {
-              if (!idsBySpace.has(space.id)) {
-                idsBySpace.set(space.id, []);
-              }
-            }
-
-            for (const [spaceId, ids] of idsBySpace) {
-              const space = spaces.find((space) => space.id === spaceId);
-              if (!space) {
-                continue;
+              // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
+              for (const space of spaces) {
+                if (!idsBySpace.has(space.id)) {
+                  idsBySpace.set(space.id, []);
+                }
               }
 
-              const removed = location.closed ? [location.closed].flat() : [];
+              for (const [spaceId, ids] of idsBySpace) {
+                const space = spaces.find((space) => space.id === spaceId);
+                if (!space) {
+                  continue;
+                }
 
-              void space
-                .postMessage('viewing', {
-                  identityKey: identity.identityKey.toHex(),
-                  attended: attention.attended ? [...attention.attended] : [],
-                  added: ids,
-                  // TODO(Zan): When we re-open a part, we should remove it from the removed list in the navigation plugin.
-                  removed: removed.filter((id) => !ids.includes(id)),
-                })
-                // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
-                .catch((err) => {
-                  log.warn('Failed to broadcast active node for presence.', { err: err.message });
-                });
+                void space
+                  .postMessage('viewing', {
+                    identityKey: identity.identityKey.toHex(),
+                    attended: attention.attended ? [...attention.attended] : [],
+                    added: ids,
+                    // TODO(Zan): When we re-open a part, we should remove it from the removed list in the navigation plugin.
+                    removed: removed.filter((id) => !ids.includes(id)),
+                  })
+                  // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
+                  .catch((err) => {
+                    log.warn('Failed to broadcast active node for presence.', { err: err.message });
+                  });
+              }
             }
-          }
-        };
+          };
 
-        send();
-        const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
-        return () => clearInterval(interval);
-      }),
+          send();
+          const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
+          return () => clearInterval(interval);
+        },
+      ),
     );
 
     // Listen for active nodes from other peers in the space.
@@ -716,13 +721,13 @@ export const SpacePlugin = ({
             createExtension({
               id: `${SPACE_PLUGIN}/settings-for-subject`,
               resolver: ({ id }) => {
+                // TODO(Zan): Find util (or make one).
                 if (!id.endsWith('~settings')) {
                   return;
                 }
 
-                // TODO(Zan): Find util (or make one).
-                const subjectId = id.split('~').at(0);
-                const [spaceId, objectId] = subjectId?.split(':') ?? [];
+                const [subjectId] = id.split('~');
+                const [spaceId, objectId] = parseFullyQualifiedId(subjectId);
                 const space = client.spaces.get().find((space) => space.id === spaceId);
                 const object = toSignal(
                   (onChange) => {

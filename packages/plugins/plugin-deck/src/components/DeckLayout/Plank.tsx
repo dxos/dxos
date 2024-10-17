@@ -78,7 +78,7 @@ export const Plank = ({ entry, layoutParts, part, flatDeck, searchEnabled, layou
   }, [scrollIntoView, layoutMode]);
 
   const isSolo = layoutMode === 'solo' && part === 'solo';
-  const isSuppressed = layoutMode === 'solo' && part !== 'solo';
+  const isSuppressed = (layoutMode === 'solo' && part !== 'solo') || (layoutMode === 'deck' && part === 'solo');
 
   const sizeAttrs = useMainSize();
 
