@@ -242,6 +242,7 @@ export class DataSpace {
     }
 
     await this._inner.open(new Context());
+    await this._inner.startProtocol();
 
     await this._edgeFeedReplicator?.open();
 

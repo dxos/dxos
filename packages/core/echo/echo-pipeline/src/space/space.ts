@@ -176,10 +176,15 @@ export class Space extends Resource {
 
     // Order is important.
     await this._controlPipeline.start();
-    await this.protocol.start();
-    await this.protocol.addFeed(await this._feedProvider(this._genesisFeedKey));
 
     log('opened');
+  }
+
+  @synchronized
+  public async startProtocol() {
+    invariant(this.isOpen);
+    await this.protocol.start();
+    await this.protocol.addFeed(await this._feedProvider(this._genesisFeedKey));
   }
 
   @synchronized

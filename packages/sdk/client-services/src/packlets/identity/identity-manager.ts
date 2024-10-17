@@ -23,6 +23,7 @@ import {
   type DeviceProfileDocument,
   DeviceType,
   type ProfileDocument,
+  type Credential,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
@@ -49,6 +50,7 @@ export type JoinIdentityParams = {
   haloGenesisFeedKey: PublicKey;
   controlFeedKey: PublicKey;
   dataFeedKey: PublicKey;
+  authorizedDeviceCredential: Credential;
 
   /**
    * Latest known timeframe for the control pipeline.
@@ -65,10 +67,6 @@ export type CreateIdentityOptions = {
   deviceProfile?: DeviceProfileDocument;
 };
 
-export type IdentityManagerCallbacks = {
-  onIdentityConstruction?: (identity: Identity) => void;
-};
-
 export type IdentityManagerParams = {
   metadataStore: MetadataStore;
   keyring: Keyring;
@@ -78,7 +76,6 @@ export type IdentityManagerParams = {
   edgeFeatures?: Runtime.Client.EdgeFeatures;
   devicePresenceAnnounceInterval?: number;
   devicePresenceOfflineTimeout?: number;
-  callbacks?: IdentityManagerCallbacks;
 };
 
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
@@ -94,7 +91,6 @@ export class IdentityManager {
   private readonly _devicePresenceOfflineTimeout: number;
   private readonly _edgeConnection: EdgeConnection | undefined;
   private readonly _edgeFeatures: Runtime.Client.EdgeFeatures | undefined;
-  private readonly _callbacks: IdentityManagerCallbacks | undefined;
 
   private _identity?: Identity;
 
@@ -108,7 +104,6 @@ export class IdentityManager {
     this._edgeFeatures = params.edgeFeatures;
     this._devicePresenceAnnounceInterval = params.devicePresenceAnnounceInterval ?? DEVICE_PRESENCE_ANNOUNCE_INTERVAL;
     this._devicePresenceOfflineTimeout = params.devicePresenceOfflineTimeout ?? DEVICE_PRESENCE_OFFLINE_TIMEOUT;
-    this._callbacks = params.callbacks;
   }
 
   get identity() {
@@ -198,10 +193,6 @@ export class IdentityManager {
       }
     }
 
-    // TODO(burdon): ???
-    // await this._keyring.deleteKey(identityRecord.identity_key);
-    // await this._keyring.deleteKey(identityRecord.halo_space.space_key);
-
     await this._metadataStore.setIdentityRecord(identityRecord);
     this._identity = identity;
     await this._identity.ready();
@@ -216,6 +207,7 @@ export class IdentityManager {
       deviceKey: identity.deviceKey,
       profile: identity.profileDocument,
     });
+
     return identity;
   }
 
@@ -246,9 +238,9 @@ export class IdentityManager {
   }
 
   /**
-   * Accept an existing identity. Expects its device key to be authorized (now or later).
+   * Prepare an identity object as the first step of acceptIdentity flow.
    */
-  async acceptIdentity(params: JoinIdentityParams) {
+  async prepareIdentity(params: JoinIdentityParams) {
     log('accepting identity', { params });
     invariant(!this._identity, 'Identity already exists.');
 
@@ -263,24 +255,31 @@ export class IdentityManager {
         controlTimeframe: params.controlTimeframe,
       },
     };
-
     const identity = await this._constructIdentity(identityRecord);
     await identity.open(new Context());
+    return { identity, identityRecord };
+  }
+
+  /**
+   * Accept an existing identity. Expects its device key to be authorized (now or later).
+   */
+  public async acceptIdentity(identity: Identity, identityRecord: IdentityRecord, profile?: DeviceProfileDocument) {
     this._identity = identity;
     await this._metadataStore.setIdentityRecord(identityRecord);
+
     await this._identity.ready();
     log.trace('dxos.halo.identity', {
-      identityKey: identityRecord.identityKey,
+      identityKey: this._identity!.identityKey,
       displayName: this._identity.profileDocument?.displayName,
     });
 
     await this.updateDeviceProfile({
       ...this.createDefaultDeviceProfile(),
-      ...params.deviceProfile,
+      ...profile,
     });
     this.stateUpdate.emit();
+
     log('accepted identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
-    return identity;
   }
 
   /**
@@ -378,7 +377,6 @@ export class IdentityManager {
       edgeFeatures: this._edgeFeatures,
     });
     log('done', { identityKey: identityRecord.identityKey });
-    this._callbacks?.onIdentityConstruction?.(identity);
 
     // TODO(mykola): Set new timeframe on a write to a feed.
     if (identityRecord.haloSpace.controlTimeframe) {

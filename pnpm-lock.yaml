@@ -3098,6 +3098,12 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
     devDependencies:
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../edge-client
+      '@dxos/keyring':
+        specifier: workspace:*
+        version: link:../../halo/keyring
       '@dxos/signal':
         specifier: workspace:*
         version: link:../signal
@@ -20419,6 +20425,9 @@ packages:
 
   '@types/node@20.16.11':
     resolution: {integrity: sha512-y+cTCACu92FyA5fgQSAI8A1H429g7aSK2HsO7K4XYUWc4dY5IUz55JSDIYT6/VsOLfGy8vmvQYC2hfb0iF16Uw==}
+
+  '@types/node@20.8.3':
+    resolution: {integrity: sha512-jxiZQFpb+NlH5kjW49vXxvxTjeeqlbsnTAdBTKpzEdPs9itay7MscYXz3Fo9VYFEsfQ6LJFitHad3faerLAjCw==}
 
   '@types/node@22.7.4':
     resolution: {integrity: sha512-y+NPi1rFzDs1NdQHHToqeiX2TIS79SWEAw9GYhkkx8bD0ChpfqC+n2j5OXOCpzfojBEBt6DnEnnG9MY0zk1XLg==}
@@ -44875,6 +44884,9 @@ snapshots:
     dependencies:
       undici-types: 6.19.8
 
+  '@types/node@20.8.3':
+    optional: true
+
   '@types/node@22.7.4':
     dependencies:
       undici-types: 6.19.8
@@ -45152,7 +45164,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 22.7.4
+      '@types/node': 20.8.3
     optional: true
 
   '@types/yoga-layout@1.9.2': {}

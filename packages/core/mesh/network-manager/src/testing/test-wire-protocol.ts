@@ -29,10 +29,7 @@ export class TestWireProtocol {
     ({ remotePeerId, extension }) => remotePeerId.toHex() + extension,
   );
 
-  constructor(
-    public readonly peerId: PublicKey,
-    private readonly _extensionFactory: TestTeleportExtensionFactory = () => [],
-  ) {}
+  constructor(private readonly _extensionFactory: TestTeleportExtensionFactory = () => []) {}
 
   readonly factory = createTeleportProtocolFactory(async (teleport) => {
     log('create', { remotePeerId: teleport.remotePeerId });
