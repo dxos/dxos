@@ -216,6 +216,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   }
 
   protected override async _open(ctx: Context): Promise<void> {
+    log('open');
     // TODO: handle reconnects
     this._ctx.onDispose(
       this._edgeConnection.addListener((msg: RouterMessage) => {
@@ -227,6 +228,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   }
 
   protected override async _close(): Promise<void> {
+    log('close');
     this._readableStreamController.close();
     await this._onRemoteDisconnected();
   }
