@@ -50,7 +50,7 @@ export const getObjectAnnotation = (schema: S.Schema.All): ObjectAnnotation | un
     Option.getOrElse(() => undefined),
   );
 
-export const getTypename = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.typename;
+export const getSchemaTypename = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.typename;
 
 //
 // Reference

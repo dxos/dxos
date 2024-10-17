@@ -15,5 +15,6 @@ export * from './ast';
 export * from './dynamic';
 export * from './handler';
 export * from './json';
+export * from './object';
 export * from './proxy';
 export * from './types';
