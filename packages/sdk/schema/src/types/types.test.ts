@@ -5,9 +5,8 @@
 import { Option, pipe } from 'effect';
 import { describe, test, expect } from 'vitest';
 
-import { AST } from '@dxos/echo-schema';
+import { AST, getProperty } from '@dxos/effect';
 
-import { getProperty } from './ast';
 import { getFieldValue } from './field';
 import { testData, testView, TestSchema } from '../testing';
 

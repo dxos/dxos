@@ -4,11 +4,10 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { S, getAnnotation } from '@dxos/effect';
+import { S, getAnnotation, getProperty } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { EmailFormat, type FormatAnnotation, FormatAnnotationId } from './annotations';
-import { getProperty } from './ast';
 
 describe('Annotations', () => {
   test('numbers', () => {
@@ -19,7 +18,7 @@ describe('Annotations', () => {
     const field = getProperty(Test, 'value');
     invariant(field);
 
-    const { filter } = getAnnotation<FormatAnnotation>(FormatAnnotationId)(field) ?? {};
+    const { filter } = getAnnotation<FormatAnnotation>(FormatAnnotationId, field) ?? {};
     invariant(filter);
     expect(filter.test(value.value)).to.exist;
   });

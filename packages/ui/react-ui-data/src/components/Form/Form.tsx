@@ -5,17 +5,10 @@
 import { Option, pipe } from 'effect';
 import React from 'react';
 
-import { AST, type S } from '@dxos/effect';
+import { AST, type S, getProperty } from '@dxos/effect';
 import { Input, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import {
-  RealNumberFormat,
-  type ViewType,
-  getFieldValue,
-  getFormatAnnotation,
-  getProperty,
-  setFieldValue,
-} from '@dxos/schema';
+import { RealNumberFormat, type ViewType, getFormatAnnotation, getFieldValue, setFieldValue } from '@dxos/schema';
 
 import { TextInput } from '../TextInput';
 

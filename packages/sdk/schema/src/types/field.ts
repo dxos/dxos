@@ -4,9 +4,8 @@
 
 import jp from 'jsonpath';
 
-import { AST, type S } from '@dxos/echo-schema';
+import { AST, type S, visit } from '@dxos/effect';
 
-import { visit } from './ast';
 import { type FieldType, FieldValueType, type ViewType } from './types';
 
 // TODO(burdon): Just use lodash.get?
@@ -19,7 +18,9 @@ export const setFieldValue = <T>(data: any, field: FieldType, value: T): T => jp
 // TODO(burdon): Return Field objects.
 export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FieldValueType][] => {
   const fields: [string, FieldValueType][] = [];
-  visit(schema.ast, (node, path) => fields.push([path.join('.'), toFieldValueType(node)]));
+  visit(schema.ast, (node, path) => {
+    fields.push([path.join('.'), toFieldValueType(node)]);
+  });
   return fields;
 };
 

@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type S } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
+import { AST, type Schema as S } from '@effect/schema';
+import { Option, pipe } from 'effect';
 
-// TODO(burdon): Refactor to @dxos/effect (in common with echo-schema).
+import { invariant } from '@dxos/invariant';
 
 //
 // Refs
@@ -14,6 +14,15 @@ import { invariant } from '@dxos/invariant';
 // https://effect-ts.github.io/effect/schema/AST.ts.html
 //
 
+/**
+ * Get annotation or return undefined.
+ */
+export const getAnnotation = <T>(annotationId: symbol, node: AST.Annotated): T | undefined =>
+  pipe(AST.getAnnotation<T>(annotationId)(node), Option.getOrUndefined);
+
+/**
+ * Get type node.
+ */
 export const getType = (node: AST.AST): AST.AST | undefined => {
   if (AST.isUnion(node)) {
     return node.types.find((type) => getType(type));
@@ -54,8 +63,7 @@ export type Visitor = (node: AST.AST, path: string[]) => boolean | void;
 export const visit = (node: AST.AST, visitor: Visitor) => visitNode(node, visitor);
 
 const visitNode = (node: AST.AST, visitor: Visitor, path: string[] = []) => {
-  const props = AST.getPropertySignatures(node);
-  for (const prop of props) {
+  for (const prop of AST.getPropertySignatures(node)) {
     const currentPath = [...path, prop.name.toString()];
     const type = getType(prop.type);
     if (type) {

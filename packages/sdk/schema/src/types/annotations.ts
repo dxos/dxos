@@ -18,11 +18,8 @@ export type FormatAnnotation = {
   valid?: RegExp;
 };
 
-/**
- * @deprecated Use getAnnotation.
- */
 export const getFormatAnnotation = (annotated: AST.Annotated) =>
-  getAnnotation<FormatAnnotation>(FormatAnnotationId)(annotated);
+  getAnnotation<FormatAnnotation>(FormatAnnotationId, annotated);
 
 //
 // Number

@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
 import { describe, expect, test } from 'vitest';
-
-import { S } from '@dxos/effect';
 
 import { getProperty, visit } from './ast';
 
@@ -42,7 +41,9 @@ describe('AST', () => {
     });
 
     const props: string[] = [];
-    visit(TestSchema.ast, (_node, prop) => props.push(prop.join('.')));
+    visit(TestSchema.ast, (_node, prop) => {
+      props.push(prop.join('.'));
+    });
     expect(props).to.deep.eq(['name', 'address.zip']);
   });
 });
