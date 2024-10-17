@@ -24,15 +24,14 @@ export type TypedObjectOptions = {
   record?: true;
 };
 
-const SCHEMA_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
+const TYPENAME_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
 
 /**
  * Base class factory for typed objects.
  */
 // TODO(burdon): Support pipe(S.default({}))
-export const TypedObject = <Klass>(args: ObjectAnnotation) => {
-  const { typename } = args;
-  invariant(SCHEMA_REGEX.test(typename), `Invalid typename: ${typename}`);
+export const TypedObject = <Klass>({ typename, version }: ObjectAnnotation) => {
+  invariant(TYPENAME_REGEX.test(typename), `Invalid typename: ${typename}`);
 
   return <
     Options extends TypedObjectOptions,
@@ -48,16 +47,17 @@ export const TypedObject = <Klass>(args: ObjectAnnotation) => {
     options?: Options,
   ): AbstractTypedObject<Fields, S.Struct.Encoded<SchemaFields>> => {
     const fieldsSchema = options?.record ? S.Struct(fields, { key: S.String, value: S.Any }) : S.Struct(fields);
-    const schemaWithModifiers = S.mutable(options?.partial ? S.partial(fieldsSchema as any) : fieldsSchema); // Ok to perform `as any` cast here since the types are explicitly defined.
+    // Ok to perform `as any` cast here since the types are explicitly defined.
+    const schemaWithModifiers = S.mutable(options?.partial ? S.partial(fieldsSchema as any) : fieldsSchema);
     const typeSchema = S.extend(schemaWithModifiers, S.Struct({ id: S.String }));
     const annotatedSchema = typeSchema.annotations({
-      [ObjectAnnotationId]: { typename: args.typename, version: args.version },
+      [ObjectAnnotationId]: { typename, version },
     });
 
     return class {
-      static readonly typename = args.typename;
+      static readonly typename = typename;
       static [Symbol.hasInstance](obj: unknown): obj is Klass {
-        return obj != null && getTypeReference(getSchema(obj))?.objectId === args.typename;
+        return obj != null && getTypeReference(getSchema(obj))?.objectId === typename;
       }
 
       static readonly ast = annotatedSchema.ast;

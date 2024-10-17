@@ -13,6 +13,7 @@ export { AST, JSONSchema, S } from '@dxos/effect';
 // TODO(burdon): Rename EchoReactiveObject (remove ECHO prefix).
 // TODO(burdon): Consistent Symbol.for names.
 // TODO(burdon): S.Schema<HasId> everywhere?
+// TODO(burdon): Fix defaults.
 
 export * from './ast';
 export * from './handler';
