@@ -1,6 +1,8 @@
 import { arrayToHex } from '@dxos/util';
 import { TextEncoder } from 'util';
 
+export type ActorID = string & { __ActorID: never };
+
 export type Item = {
   key: string;
   value: Uint8Array;

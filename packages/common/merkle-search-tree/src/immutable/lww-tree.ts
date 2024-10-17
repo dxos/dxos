@@ -1,7 +1,5 @@
-import { arrayToString } from '@dxos/util';
+import type { ActorID } from '../common';
 import { Forest, type DigestHex, type Key, type NodeData } from './forest';
-
-export type ActorID = string & { __ActorID: never };
 
 export type LLWTreeParams = {
   actor: ActorID;
@@ -55,7 +53,7 @@ export class LWWTree<T> {
     await this.setBatch([[key, value]]);
   }
 
-  async receiveSyncMessage(state: SyncState, message: SyncMessage): Promise<SyncState> {
+  async receiveSyncMessage(state: LWWTreeSyncState, message: LWWTreeSyncMessage): Promise<LWWTreeSyncState> {
     await this.#forest.insertNodes(message.nodes);
 
     const remoteRoot = message.root ?? state.remoteRoot;
@@ -85,7 +83,7 @@ export class LWWTree<T> {
     };
   }
 
-  async generateSyncMessage(state: SyncState): Promise<[SyncState, SyncMessage | null]> {
+  async generateSyncMessage(state: LWWTreeSyncState): Promise<[LWWTreeSyncState, LWWTreeSyncMessage | null]> {
     if (state.remoteRoot === this.#currentRoot && state.remoteWant.length === 0 && !state.needsAck) {
       return [state, null];
     }
@@ -153,19 +151,19 @@ export class LWWTree<T> {
   }
 }
 
-export type SyncMessage = {
+export type LWWTreeSyncMessage = {
   root: DigestHex | null;
   want: DigestHex[];
   nodes: NodeData[];
 };
 
-export type SyncState = {
+export type LWWTreeSyncState = {
   remoteRoot: DigestHex | null;
   remoteWant: DigestHex[];
   needsAck: boolean;
 };
 
-export const initSyncState = (): SyncState => ({ remoteRoot: null, remoteWant: [], needsAck: false });
+export const initLWWTreeSyncState = (): LWWTreeSyncState => ({ remoteRoot: null, remoteWant: [], needsAck: false });
 
 type VersionClock = readonly [actor: ActorID, version: number];
 

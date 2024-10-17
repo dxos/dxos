@@ -157,7 +157,7 @@ describe('insertion order does not change the root hash', () => {
   });
 });
 
-test.skip('sync', async () => {
+test.skip('sync', async ({ expect }) => {
   const NUM_ITERS = 100,
     NUM_ITEMS = 10_000,
     MUTATIONS_PER_ITER = 1;

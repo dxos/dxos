@@ -1,7 +1,6 @@
 import { arraysEqual } from '@dxos/util';
 import { Forest, type DigestHex, type Key, type NodeData } from './forest';
-
-export type ActorID = string & { __ActorID: never };
+import type { ActorID } from '../common';
 
 export type MirrorMultiMapParams = {
   actor: ActorID;
@@ -80,6 +79,7 @@ export class MirrorMultiMap<T> {
 
     this.#remoteStates.set(actorId, {
       remoteRoot: nextRoot,
+      myRoot: null,
       remoteWant: remoteState.remoteWant,
       needsAck: remoteState.needsAck,
     });

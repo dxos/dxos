@@ -1,7 +1,8 @@
 import { test } from 'vitest';
-import { LWWTree, initSyncState, type ActorID, type SyncMessage } from './lww-tree';
+import { initLWWTreeSyncState, LWWTree, type LWWTreeSyncMessage } from './lww-tree';
 import { range } from '@dxos/util';
 import { randomKey } from '../testing';
+import type { ActorID } from '../common';
 
 test('basic', async ({ expect }) => {
   const peer1: LWWTree<string> = await LWWTree.new({ actor: 'peer1' as ActorID });
@@ -52,15 +53,15 @@ test.only('sim', { timeout: 60_000 }, async ({ expect }) => {
 });
 
 const sync = async (peer1: LWWTree<string>, peer2: LWWTree<string>) => {
-  let state1 = initSyncState(),
-    state2 = initSyncState();
+  let state1 = initLWWTreeSyncState(),
+    state2 = initLWWTreeSyncState();
 
   let nodes = 0,
     items = 0;
 
   for (let i = 0; i < 15; i++) {
-    let message1: SyncMessage | null = null,
-      message2: SyncMessage | null = null;
+    let message1: LWWTreeSyncMessage | null = null,
+      message2: LWWTreeSyncMessage | null = null;
     // console.log('state1', state1);
     [state1, message1] = await peer1.generateSyncMessage(state1);
     if (message1) {
