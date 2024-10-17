@@ -6,9 +6,9 @@ import { Reference } from '@dxos/echo-protocol';
 import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { getEchoObjectAnnotation } from './ast';
-import { getProxyHandlerSlot, isReactiveObject } from './proxy';
-import { type ObjectMeta } from './types';
+import { getObjectAnnotation } from '../ast';
+import { getProxyHandlerSlot, isReactiveObject } from '../proxy';
+import { type ObjectMeta } from '../types';
 
 /**
  * Returns the schema for the given object if one is defined.
@@ -29,7 +29,7 @@ export const getTypeReference = (schema: S.Schema.All | undefined): Reference | 
   if (!schema) {
     return undefined;
   }
-  const annotation = getEchoObjectAnnotation(schema);
+  const annotation = getObjectAnnotation(schema);
   if (annotation == null) {
     return undefined;
   }
@@ -78,3 +78,6 @@ export const requireTypeReference = (schema: S.Schema.All): Reference => {
 
   return typeReference;
 };
+
+// TODO(burdon): Make async.
+export type SchemaResolver = (type: string) => S.Schema<any> | undefined;

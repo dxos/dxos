@@ -7,10 +7,8 @@ import { describe, expect, test } from 'vitest';
 import { S } from '@dxos/effect';
 
 import { create } from './object';
-import { getMeta } from '../getter';
-import { ref } from '../ref-annotation';
+import { getMeta, ref, TypedObject } from '../object';
 import { TEST_SCHEMA_TYPE } from '../testing';
-import { TypedObject } from '../typed-object-class';
 import { foreignKey } from '../types';
 
 describe('complex schema validations', () => {

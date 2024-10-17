@@ -8,9 +8,9 @@ import {
   create,
   DynamicSchema,
   EchoObject,
-  EchoObjectAnnotationId,
+  ObjectAnnotationId,
   effectToJsonSchema,
-  getEchoObjectAnnotation,
+  getObjectAnnotation,
   ref,
   StoredSchema,
   S,
@@ -37,14 +37,14 @@ export enum TestSchemaType {
 
 const createDynamicSchema = (typename: string, fields: S.Struct.Fields): DynamicSchema => {
   const typeSchema = S.partial(S.Struct(fields)).pipe(EchoObject(typename, '1.0.0'));
-  const typeAnnotation = getEchoObjectAnnotation(typeSchema);
+  const typeAnnotation = getObjectAnnotation(typeSchema);
   const schemaToStore = create(StoredSchema, {
     typename,
     version: '1.0.0',
     jsonSchema: {},
   });
   const updatedSchema = typeSchema.annotations({
-    [EchoObjectAnnotationId]: { ...typeAnnotation, schemaId: schemaToStore.id },
+    [ObjectAnnotationId]: { ...typeAnnotation, schemaId: schemaToStore.id },
   });
   schemaToStore.jsonSchema = effectToJsonSchema(updatedSchema);
   return new DynamicSchema(schemaToStore);

@@ -10,8 +10,6 @@ import { AST, S } from '@dxos/effect';
 import { checkIdNotPresentOnSchema } from './schema-validator';
 import { type Identifiable } from '../types';
 
-// TODO(burdon): Standardize names.
-
 export type ToMutable<T> = T extends {}
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
   : T;
@@ -20,9 +18,10 @@ export type ToMutable<T> = T extends {}
 // Object
 //
 
-export const EchoObjectAnnotationId = Symbol.for('@dxos/schema/annotation/EchoObject');
+// TODO(burdon): Ideally change to /Object.
+export const ObjectAnnotationId = Symbol.for('@dxos/schema/annotation/Object');
 
-export type EchoObjectAnnotation = {
+export type ObjectAnnotation = {
   schemaId?: string;
   typename: string;
   version: string;
@@ -41,19 +40,17 @@ export const EchoObject =
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
     const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
-    const ast = AST.annotations(schemaWithId.ast, { [EchoObjectAnnotationId]: { typename, version } });
+    const ast = AST.annotations(schemaWithId.ast, { [ObjectAnnotationId]: { typename, version } });
     return S.make(ast) as S.Schema<Simplify<Identifiable & ToMutable<A>>>;
   };
 
-export const getEchoObjectAnnotation = (schema: S.Schema.All): EchoObjectAnnotation | undefined =>
+export const getObjectAnnotation = (schema: S.Schema.All): ObjectAnnotation | undefined =>
   pipe(
-    AST.getAnnotation<EchoObjectAnnotation>(EchoObjectAnnotationId)(schema.ast),
+    AST.getAnnotation<ObjectAnnotation>(ObjectAnnotationId)(schema.ast),
     Option.getOrElse(() => undefined),
   );
 
-// TODO(burdon): Rename getTypename.
-export const getEchoObjectTypename = (schema: S.Schema.All): string | undefined =>
-  getEchoObjectAnnotation(schema)?.typename;
+export const getTypename = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.typename;
 
 //
 // Reference
@@ -61,7 +58,7 @@ export const getEchoObjectTypename = (schema: S.Schema.All): string | undefined 
 
 export const ReferenceAnnotationId = Symbol.for('@dxos/schema/annotation/Reference');
 
-export type ReferenceAnnotationValue = EchoObjectAnnotation;
+export type ReferenceAnnotationValue = ObjectAnnotation;
 
 export const getReferenceAnnotation = (schema: S.Schema.All) =>
   pipe(

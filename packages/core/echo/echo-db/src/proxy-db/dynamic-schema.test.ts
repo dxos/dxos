@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import {
   create,
   DynamicSchema,
-  EchoObjectAnnotationId,
+  ObjectAnnotationId,
   getSchema,
   getType,
   getTypeReference,
@@ -44,7 +44,7 @@ describe('DynamicSchema', () => {
 
     instanceWithSchemaRef.schema = db.schema.addSchema(GeneratedSchema);
     const schemaWithId = GeneratedSchema.annotations({
-      [EchoObjectAnnotationId]: { ...TEST_SCHEMA_TYPE, schemaId: instanceWithSchemaRef.schema?.id },
+      [ObjectAnnotationId]: { ...TEST_SCHEMA_TYPE, schemaId: instanceWithSchemaRef.schema?.id },
     });
     expect(instanceWithSchemaRef.schema?.ast).to.deep.eq(schemaWithId.ast);
 

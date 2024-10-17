@@ -2,47 +2,45 @@
 // Copyright 2022 DXOS.org
 //
 
-import { requireTypeReference, StoredSchema } from '@dxos/echo-schema';
-import { type S } from '@dxos/echo-schema';
+import { type Schema as S } from '@effect/schema';
+
+import { StoredSchema } from './stored-schema';
+import { requireTypeReference } from '../object';
 
 // TODO(burdon): Typename?
 const getTypenameOrThrow = (schema: S.Schema.All): string => requireTypeReference(schema).objectId;
 
 /**
- *
+ * Runtime registry of schema objects.
  */
-// TODO(burdon): Reconcile type vs. schema.
-// TODO(burdon): Tighten S.Schema to AbstractTypedObject
 export class RuntimeSchemaRegistry {
-  private readonly _schemaMap = new Map<string, S.Schema<any>>();
+  private readonly _schema = new Map<string, S.Schema<any>>();
 
   constructor() {
-    this._schemaMap.set(StoredSchema.typename, StoredSchema);
+    this._schema.set(StoredSchema.typename, StoredSchema);
   }
 
   get schemas(): S.Schema<any>[] {
-    return Array.from(this._schemaMap.values());
+    return Array.from(this._schema.values());
   }
 
   hasSchema<S extends S.Schema.All>(schema: S): boolean {
     const typename = getTypenameOrThrow(schema);
-    return this._schemaMap.has(typename);
+    return this._schema.has(typename);
   }
 
   getSchema(typename: string): S.Schema<any> | undefined {
-    return this._schemaMap.get(typename);
+    return this._schema.get(typename);
   }
 
   addSchema(types: S.Schema<any>[]) {
     types.forEach((schema) => {
       const typename = getTypenameOrThrow(schema);
-      if (this._schemaMap.has(typename)) {
+      if (this._schema.has(typename)) {
         throw new Error(`Schema was already registered: ${typename}`);
       }
 
-      this._schemaMap.set(typename, schema);
+      this._schema.set(typename, schema);
     });
-
-    return this;
   }
 }

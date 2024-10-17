@@ -10,12 +10,11 @@ import { AST, S } from '@dxos/effect';
 
 import { DynamicSchema } from './dynamic-schema';
 import { StoredSchema } from './stored-schema';
-import { FieldMeta, getEchoObjectAnnotation, getFieldMetaAnnotation } from '../ast';
-import { getTypeReference } from '../getter';
+import { FieldMeta, getObjectAnnotation, getFieldMetaAnnotation } from '../ast';
 import { create } from '../handler';
 import { effectToJsonSchema } from '../json';
+import { getTypeReference, TypedObject } from '../object';
 import { EmptySchemaType, TEST_SCHEMA_TYPE } from '../testing';
-import { TypedObject } from '../typed-object-class';
 
 registerSignalsRuntime();
 
@@ -83,7 +82,7 @@ describe('dynamic schema', () => {
     registered.addColumns({ field3: S.String });
     registered.updateColumns({ field3: S.Boolean });
     registered.removeColumns(['field2']);
-    expect(getEchoObjectAnnotation(registered)).to.deep.contain(TEST_SCHEMA_TYPE);
+    expect(getObjectAnnotation(registered)).to.deep.contain(TEST_SCHEMA_TYPE);
     expect(getFieldMetaAnnotation(registered.getProperties()[0], metaNamespace)).to.deep.eq(metaInfo);
   });
 

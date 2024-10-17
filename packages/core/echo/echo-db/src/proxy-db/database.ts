@@ -142,7 +142,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
     });
-    this.schema = new DynamicSchemaRegistry({ db: this, reactiveQuery: params.reactiveSchemaQuery });
+
+    this.schema = new DynamicSchemaRegistry(this, { reactiveQuery: params.reactiveSchemaQuery });
   }
 
   get graph(): Hypergraph {

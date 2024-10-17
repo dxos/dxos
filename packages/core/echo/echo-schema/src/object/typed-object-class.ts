@@ -5,8 +5,8 @@
 import { S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { type EchoObjectAnnotation, EchoObjectAnnotationId, schemaVariance } from './ast';
 import { getSchema, getTypeReference } from './getter';
+import { type ObjectAnnotation, ObjectAnnotationId, schemaVariance } from '../ast';
 
 type TypedObjectOptions = {
   partial?: true;
@@ -27,8 +27,9 @@ export interface AbstractTypedObject<Fields, I> extends S.Schema<Fields, I> {
 /**
  * Base class factory for typed objects.
  */
+// TODO(burdon): Check format of typename string.
 // TODO(burdon): Support pipe(S.default({}))
-export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
+export const TypedObject = <Klass>(args: ObjectAnnotation) => {
   invariant(
     typeof args.typename === 'string' && args.typename.length > 0 && !args.typename.includes(':'),
     'Invalid typename.',
@@ -51,7 +52,7 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
     const schemaWithModifiers = S.mutable(options?.partial ? S.partial(fieldsSchema as any) : fieldsSchema); // Ok to perform `as any` cast here since the types are explicitly defined.
     const typeSchema = S.extend(schemaWithModifiers, S.Struct({ id: S.String }));
     const annotatedSchema = typeSchema.annotations({
-      [EchoObjectAnnotationId]: { typename: args.typename, version: args.version },
+      [ObjectAnnotationId]: { typename: args.typename, version: args.version },
     });
 
     return class {

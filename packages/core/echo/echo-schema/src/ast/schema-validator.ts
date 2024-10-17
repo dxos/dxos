@@ -5,7 +5,7 @@
 import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { getEchoObjectTypename } from './annotations';
+import { getTypename } from './annotations';
 
 export const symbolSchema = Symbol.for('@dxos/schema');
 
@@ -60,7 +60,7 @@ export class SchemaValidator {
           getPropertyFn([...propertyPath.slice(0, i), propertyName]),
         );
         if (!propertyType) {
-          const type = getEchoObjectTypename(rootObjectSchema);
+          const type = getTypename(rootObjectSchema);
           invariant(propertyType, `unknown property: ${String(propertyName)} on ${type}. Path: ${propertyPath}`);
         }
         schema = S.make(propertyType).annotations(propertyType.annotations);

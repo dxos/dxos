@@ -7,7 +7,7 @@ import {
   type EchoReactiveObject,
   DynamicSchema,
   type ReactiveObject,
-  getEchoObjectAnnotation,
+  getObjectAnnotation,
   getSchema,
   isReactiveObject,
   type S,
@@ -42,7 +42,7 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
   }
 
   getSchema(type: T): DynamicSchema | S.Schema<any> | undefined {
-    return this.schemas.find((schema) => getEchoObjectAnnotation(schema)!.typename === type);
+    return this.schemas.find((schema) => getObjectAnnotation(schema)!.typename === type);
   }
 
   protected setSchema(type: T, schema: DynamicSchema | S.Schema<any>) {
@@ -130,7 +130,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
   async mutateObject(object: EchoReactiveObject<any>, params: MutationsProviderParams) {
     invariant(this._mutations, 'Mutations not defined.');
-    const type = getEchoObjectAnnotation(getSchema(object)!)!.typename as T;
+    const type = getObjectAnnotation(getSchema(object)!)!.typename as T;
     invariant(type && this._mutations?.[type], 'Invalid object type.');
 
     await this._mutations![type](object, params);

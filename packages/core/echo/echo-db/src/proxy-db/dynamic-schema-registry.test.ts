@@ -7,8 +7,8 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import {
   create,
   DynamicSchema,
-  type EchoObjectAnnotation,
-  EchoObjectAnnotationId,
+  type ObjectAnnotation,
+  ObjectAnnotationId,
   effectToJsonSchema,
   makeStaticSchema,
   StoredSchema,
@@ -20,7 +20,7 @@ import { TestSchemaType } from '@dxos/echo-schema/testing';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
-const TestType: EchoObjectAnnotation = { typename: 'TestType', version: '1.0.0' };
+const TestType: ObjectAnnotation = { typename: 'TestType', version: '1.0.0' };
 const createTestSchemas = () => [
   create(StoredSchema, {
     ...TestType,
@@ -54,7 +54,7 @@ describe('schema registry', () => {
     class TestClass extends TypedObject(TestType)({}) {}
     const dynamicSchema = registry.addSchema(TestClass);
     const expectedSchema = TestClass.annotations({
-      [EchoObjectAnnotationId]: { ...TestType, schemaId: dynamicSchema.id },
+      [ObjectAnnotationId]: { ...TestType, schemaId: dynamicSchema.id },
     });
     console.log(dynamicSchema.ast);
     console.log(expectedSchema.ast);

@@ -9,7 +9,7 @@ import { getDeep } from '@dxos/util';
 
 import { SchemaValidator } from './schema-validator';
 import { create } from '../handler';
-import { TypedObject } from '../typed-object-class';
+import { TypedObject } from '../object';
 
 describe('schema-validator', () => {
   describe('validateSchema', () => {

@@ -6,10 +6,10 @@ import { type UnsubscribeCallback } from '@dxos/async';
 import {
   create,
   DynamicSchema,
-  type EchoObjectAnnotation,
-  EchoObjectAnnotationId,
+  type ObjectAnnotation,
+  ObjectAnnotationId,
   effectToJsonSchema,
-  getEchoObjectAnnotation,
+  getObjectAnnotation,
   makeStaticSchema,
   type StaticSchema,
   StoredSchema,
@@ -24,8 +24,7 @@ import { Filter } from '../query';
 
 type SchemaListChangedCallback = (schema: DynamicSchema[]) => void;
 
-export type DynamicSchemaRegistryParams = {
-  db: EchoDatabase;
+export type DynamicSchemaRegistryOptions = {
   /**
    * Run a reactive query for dynamic schemas.
    * @default true
@@ -37,16 +36,17 @@ export type DynamicSchemaRegistryParams = {
  * Per-space set of mutable schemas.
  */
 export class DynamicSchemaRegistry {
-  private readonly _db: EchoDatabase;
   private readonly _schemaById: Map<string, DynamicSchema> = new Map();
   private readonly _schemaByType: Map<string, DynamicSchema> = new Map();
-  private readonly _unsubscribeFnById: Map<string, UnsubscribeCallback> = new Map();
+  private readonly _unsubscribeById: Map<string, UnsubscribeCallback> = new Map();
   private readonly _schemaListChangeListeners: SchemaListChangedCallback[] = [];
 
-  constructor({ db, reactiveQuery = true }: DynamicSchemaRegistryParams) {
-    this._db = db;
+  constructor(
+    private readonly _db: EchoDatabase,
+    { reactiveQuery = true }: DynamicSchemaRegistryOptions = {},
+  ) {
     if (reactiveQuery) {
-      db.query(Filter.schema(StoredSchema)).subscribe(({ objects }) => {
+      this._db.query(Filter.schema(StoredSchema)).subscribe(({ objects }) => {
         const currentObjectIds = new Set(objects.map((o) => o.id));
         const newObjects = objects.filter((o) => !this._schemaById.has(o.id));
         const removedObjects = [...this._schemaById.keys()].filter((oid) => !currentObjectIds.has(oid));
@@ -60,7 +60,7 @@ export class DynamicSchemaRegistry {
   }
 
   public hasSchema(schema: S.Schema<any>): boolean {
-    const schemaId = schema instanceof DynamicSchema ? schema.id : getEchoObjectAnnotation(schema)?.schemaId;
+    const schemaId = schema instanceof DynamicSchema ? schema.id : getObjectAnnotation(schema)?.schemaId;
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
@@ -124,7 +124,7 @@ export class DynamicSchemaRegistry {
   }
 
   public addSchema(schema: S.Schema<any>): DynamicSchema {
-    const typeAnnotation = getEchoObjectAnnotation(schema);
+    const typeAnnotation = getObjectAnnotation(schema);
     invariant(typeAnnotation, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');
     const schemaToStore = create(StoredSchema, {
       typename: typeAnnotation.typename,
@@ -133,7 +133,7 @@ export class DynamicSchemaRegistry {
     });
 
     const updatedSchema = schema.annotations({
-      [EchoObjectAnnotationId]: { ...typeAnnotation, schemaId: schemaToStore.id } satisfies EchoObjectAnnotation,
+      [ObjectAnnotationId]: { ...typeAnnotation, schemaId: schemaToStore.id } satisfies ObjectAnnotation,
     });
 
     schemaToStore.jsonSchema = effectToJsonSchema(updatedSchema);
@@ -167,7 +167,7 @@ export class DynamicSchemaRegistry {
 
     this._schemaById.set(schema.id, dynamicSchema);
     this._schemaByType.set(schema.typename, dynamicSchema);
-    this._unsubscribeFnById.set(schema.id, subscription);
+    this._unsubscribeById.set(schema.id, subscription);
     return dynamicSchema;
   }
 
@@ -176,8 +176,8 @@ export class DynamicSchemaRegistry {
     if (schema != null) {
       this._schemaById.delete(id);
       this._schemaByType.delete(schema.typename);
-      this._unsubscribeFnById.get(schema.id)?.();
-      this._unsubscribeFnById.delete(schema.id);
+      this._unsubscribeById.get(schema.id)?.();
+      this._unsubscribeById.delete(schema.id);
     }
   }
 

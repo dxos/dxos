@@ -11,10 +11,9 @@ import { invariant } from '@dxos/invariant';
 
 import { getTargetMeta } from './object';
 import { SchemaValidator, symbolSchema } from '../ast';
-import { getTypeReference } from '../getter';
+import { getTypeReference, defineHiddenProperty } from '../object';
 import { createReactiveProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from '../proxy';
 import { data, type ObjectMeta } from '../types';
-import { defineHiddenProperty } from '../utils';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');

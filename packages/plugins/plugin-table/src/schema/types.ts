@@ -4,7 +4,7 @@
 
 import {
   AST,
-  type EchoObjectAnnotation,
+  type ObjectAnnotation,
   FieldMeta,
   getFieldMetaAnnotation,
   ref,
@@ -70,7 +70,7 @@ export const mapTableToColumns =
   (property: AST.PropertySignature): ColumnDef => {
     const { name: id, type } = property;
     const { label, refProp, size } = table.props?.find((prop) => prop.id === id) ?? {};
-    const refAnnotation = property.type.annotations[ReferenceAnnotationId] as EchoObjectAnnotation;
+    const refAnnotation = property.type.annotations[ReferenceAnnotationId] as ObjectAnnotation;
     const digits = getFieldMetaAnnotation<ColumnAnnotation>(property, FIELD_META_NAMESPACE)?.digits;
     return {
       id: String(id),

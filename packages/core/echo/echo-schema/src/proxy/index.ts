@@ -3,5 +3,5 @@
 //
 
 export * from './proxy';
-export * from './types';
 export * from './reactive-array';
+export * from './types';

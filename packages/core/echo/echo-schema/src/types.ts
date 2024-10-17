@@ -7,7 +7,7 @@ import { type Simplify } from 'effect/Types';
 import { AST, S } from '@dxos/effect';
 import { type Comparator, intersection } from '@dxos/util';
 
-import { getMeta } from './getter';
+import { getMeta } from './object';
 
 export const data = Symbol.for('dxos.echo.data');
 

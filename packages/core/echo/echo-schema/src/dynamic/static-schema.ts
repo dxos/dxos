@@ -4,8 +4,8 @@
 
 import { type S } from '@dxos/effect';
 
-import { getEchoObjectAnnotation } from '../ast';
-import { requireTypeReference } from '../getter';
+import { getObjectAnnotation } from '../ast';
+import { requireTypeReference } from '../object';
 
 export type StaticSchema = {
   id?: string;
@@ -16,7 +16,7 @@ export type StaticSchema = {
 
 export const makeStaticSchema = (schema: S.Schema<any>): StaticSchema => {
   requireTypeReference(schema);
-  const schemaAnnotation = getEchoObjectAnnotation(schema)!;
+  const schemaAnnotation = getObjectAnnotation(schema)!;
   return {
     typename: schemaAnnotation.typename,
     version: schemaAnnotation.version,

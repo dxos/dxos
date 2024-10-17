@@ -5,17 +5,17 @@
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { S } from '@dxos/effect';
 
-import { type EchoObjectAnnotation, getEchoObjectAnnotation, ReferenceAnnotationId } from './ast';
-import { DynamicSchema, StoredSchema } from './dynamic';
 import { EXPANDO_TYPENAME } from './expando';
 import { getTypename } from './getter';
-import { isReactiveObject } from './proxy';
-import type { Identifiable, Ref } from './types';
+import { type ObjectAnnotation, getObjectAnnotation, ReferenceAnnotationId } from '../ast';
+import { DynamicSchema, StoredSchema } from '../dynamic';
+import { isReactiveObject } from '../proxy';
+import type { Identifiable, Ref } from '../types';
 
 export interface ref<T> extends S.Schema<Ref<T>, EncodedReference> {}
 
 export const ref = <T extends Identifiable>(schema: S.Schema<T, any>): ref<T> => {
-  const annotation = getEchoObjectAnnotation(schema);
+  const annotation = getObjectAnnotation(schema);
   if (annotation == null) {
     throw new Error('Reference target must be an ECHO object.');
   }
@@ -23,7 +23,8 @@ export const ref = <T extends Identifiable>(schema: S.Schema<T, any>): ref<T> =>
   return createEchoReferenceSchema(annotation);
 };
 
-export const createEchoReferenceSchema = (annotation: EchoObjectAnnotation): S.Schema<any> => {
+// TODO(burdon): Move to json schema and make private.
+export const createEchoReferenceSchema = (annotation: ObjectAnnotation): S.Schema<any> => {
   const typePredicate =
     annotation.typename === EXPANDO_TYPENAME
       ? () => true
