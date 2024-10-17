@@ -94,15 +94,16 @@ export const ComplementarySidebar = ({ layoutParts, flatDeck }: ComplementarySid
           actions={actions}
         />
         {/* TODO(wittjosiah): Render some placeholder when node is undefined. */}
-        {node && (
-          <Surface
-            role={`complementary--${part}`}
-            data={{ subject: node.properties.object, popoverAnchorId }}
-            limit={1}
-            fallback={PlankContentError}
-            placeholder={<PlankLoading />}
-          />
-        )}
+        <div className='row-span-2'>
+          {node && (
+            <Surface
+              role={`complementary--${part}`}
+              data={{ subject: node.properties.object, popoverAnchorId }}
+              fallback={PlankContentError}
+              placeholder={<PlankLoading />}
+            />
+          )}
+        </div>
       </div>
     </Main.ComplementarySidebar>
   );

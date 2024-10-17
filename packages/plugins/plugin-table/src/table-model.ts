@@ -59,21 +59,24 @@ export class TableModel extends Resource {
   }
 
   protected override async _open() {
-    const fields = this.table.view?.fields ?? [];
-
     // Construct the header cells based on the table fields.
-    const headerCells: DxGridPlaneCells = Object.fromEntries(
-      fields.map((field, index: number) => {
-        return [getCellKey(index, 0), { value: field.label ?? field.path, resizeHandle: 'col' }];
-      }),
-    );
+    const headerCells: ReadonlySignal<DxGridPlaneCells> = computed(() => {
+      const fields = this.table.view?.fields ?? [];
+      return Object.fromEntries(
+        fields.map((field, index: number) => {
+          return [getCellKey(index, 0), { value: field.label ?? field.path, resizeHandle: 'col' }];
+        }),
+      );
+    });
 
     // Map the data to grid cells.
     const cellValues: ReadonlySignal<DxGridPlaneCells> = computed(() => {
       const values: DxGridPlaneCells = {};
       this.data.forEach((row, rowIndex) => {
-        fields.forEach((field, colIndex: number) => {
-          const cellValueSignal = computed(() => formatValue(field.type, row[field.path]));
+        (this.table.view?.fields ?? []).forEach((field, colIndex: number) => {
+          const cellValueSignal = computed(() =>
+            row[field.path] !== undefined ? formatValue(field.type, row[field.path]) : '',
+          );
           values[getCellKey(colIndex, rowIndex)] = {
             get value() {
               return cellValueSignal.value;
@@ -86,12 +89,14 @@ export class TableModel extends Resource {
     });
 
     this.cells = computed(() => {
-      return { grid: cellValues.value, frozenRowsStart: headerCells };
+      return { grid: cellValues.value, frozenRowsStart: headerCells.value };
     });
 
     this.columnMeta = computed(() => {
       const headings = Object.fromEntries(
-        fields.map((field, index: number) => [index, { size: field.size ?? 256, resizeable: true }]),
+        (this.table.view?.fields ?? []).map((field, index: number) => {
+          return [index, { size: 1000, resizeable: true }];
+        }),
       );
       return { grid: headings };
     });
@@ -138,8 +143,7 @@ export class TableModel extends Resource {
 
   public setColumnWidth(columnIndex: number, width: number): void {
     const newWidth = Math.max(0, width);
-    const fields = this.table.view?.fields ?? [];
-    const field = fields[columnIndex];
+    const field = this.table?.view?.fields[columnIndex];
     if (field) {
       field.size = newWidth;
     }

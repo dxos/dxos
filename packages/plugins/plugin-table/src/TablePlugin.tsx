@@ -10,6 +10,7 @@ import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
+import { ViewEditor } from '@dxos/react-ui-data';
 
 import { TableContainer } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
@@ -96,6 +97,20 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             case 'section':
             case 'article':
               return isTable(data.object) ? <TableContainer role={role} table={data.object} /> : null;
+            case 'complementary--settings': {
+              if (!(data.subject instanceof TableType)) {
+                return null;
+              }
+              if (!data.subject.view) {
+                return null;
+              }
+
+              return (
+                <div>
+                  <ViewEditor view={data.subject.view} />
+                </div>
+              );
+            }
             default:
               return null;
           }
