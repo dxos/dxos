@@ -19,7 +19,7 @@ import { EchoEdgeReplicator } from './echo-edge-replicator';
 import type { EchoReplicatorContext } from '../automerge';
 
 describe('EchoEdgeReplicator', () => {
-  test.only('reconnects', async ({ onTestFinished }) => {
+  test('reconnects', async ({ onTestFinished }) => {
     const { endpoint, cleanup, sendMessage } = await createTestEdgeWsServer(8001);
     onTestFinished(cleanup);
     const client = new EdgeClient(await createEphemeralEdgeIdentity(), { socketEndpoint: endpoint });
