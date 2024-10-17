@@ -10,7 +10,7 @@ import {
   createAdmissionKeypair,
   type DataSpace,
   InvitationsServiceImpl,
-  ServiceContext,
+  type ServiceContext,
   InvitationsManager,
 } from '@dxos/client-services';
 import {
@@ -21,16 +21,11 @@ import {
   performInvitation,
 } from '@dxos/client-services/testing';
 import { MetadataStore } from '@dxos/echo-pipeline';
-import { createEphemeralEdgeIdentity, EdgeClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
-import { EdgeSignalManager } from '@dxos/messaging';
-import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { openAndClose } from '@dxos/test-utils';
 
 import { Client } from '../client';
 import { InvitationsProxy } from '../invitations';
@@ -353,116 +348,6 @@ describe('Invitations', () => {
 
       testSuite(
         () => ({ host, guest, options: { kind: Invitation.Kind.DEVICE } }),
-        () => [host, guest],
-      );
-    });
-  });
-
-  // TODO(mykola): Expects wrangler dev in edge repo to run. Skip to pass CI.
-  describe.skip('EDGE signaling', () => {
-    describe('space', () => {
-      const createPeer = async () => {
-        const identity = await createEphemeralEdgeIdentity();
-        const edgeConnection = new EdgeClient(identity, {
-          socketEndpoint: 'ws://localhost:8787',
-        });
-        await openAndClose(edgeConnection);
-        const signalManager = new EdgeSignalManager({ edgeConnection });
-        await openAndClose(signalManager);
-        const networkManager = new SwarmNetworkManager({
-          signalManager,
-          transportFactory: MemoryTransportFactory,
-          peerInfo: { peerKey: identity.peerKey, identityKey: identity.identityKey },
-        });
-        const level = createTestLevel();
-        await openAndClose(level);
-
-        const peer = new ServiceContext(
-          createStorage({ type: StorageType.RAM }),
-          level,
-          networkManager,
-          signalManager,
-          edgeConnection,
-          undefined,
-          {
-            invitationConnectionDefaultParams: { teleport: { controlHeartbeatInterval: 200 } },
-          },
-        );
-        await openAndClose(peer);
-        return peer;
-      };
-
-      let host: ServiceContext;
-      let guest: ServiceContext;
-      let space: DataSpace;
-
-      beforeEach(async () => {
-        host = await createPeer();
-        await host.createIdentity();
-        space = await host.dataSpaceManager!.createSpace();
-
-        guest = await createPeer();
-        await guest.createIdentity();
-      });
-
-      testSuite(
-        () => ({
-          host,
-          guest,
-          options: { kind: Invitation.Kind.SPACE, spaceKey: space.key },
-        }),
-        () => [host, guest],
-      );
-    });
-
-    describe('device', () => {
-      const createPeer = async () => {
-        const identity = await createEphemeralEdgeIdentity();
-        const edgeConnection = new EdgeClient(identity, {
-          socketEndpoint: 'ws://localhost:8787',
-        });
-        await openAndClose(edgeConnection);
-        const signalManager = new EdgeSignalManager({ edgeConnection });
-        await openAndClose(signalManager);
-        const networkManager = new SwarmNetworkManager({
-          signalManager,
-          transportFactory: MemoryTransportFactory,
-          peerInfo: { peerKey: identity.peerKey, identityKey: identity.identityKey },
-        });
-        const level = createTestLevel();
-        await openAndClose(level);
-
-        const peer = new ServiceContext(
-          createStorage({ type: StorageType.RAM }),
-          level,
-          networkManager,
-          signalManager,
-          edgeConnection,
-          undefined,
-          {
-            invitationConnectionDefaultParams: { teleport: { controlHeartbeatInterval: 200 } },
-          },
-        );
-        await openAndClose(peer);
-        return peer;
-      };
-
-      let host: ServiceContext;
-      let guest: ServiceContext;
-
-      beforeEach(async () => {
-        host = await createPeer();
-        await host.createIdentity();
-
-        guest = await createPeer();
-      });
-
-      testSuite(
-        () => ({
-          host,
-          guest,
-          options: { kind: Invitation.Kind.DEVICE },
-        }),
         () => [host, guest],
       );
     });
