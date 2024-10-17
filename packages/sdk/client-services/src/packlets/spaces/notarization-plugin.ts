@@ -98,6 +98,8 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     }
   }
 
+  setActiveEdgePollingEnabled(enabled: boolean) {}
+
   get hasWriter() {
     return !!this._writer;
   }
