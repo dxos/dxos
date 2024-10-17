@@ -125,18 +125,8 @@ export class SwarmNetworkManager {
     return this._swarms.get(topic);
   }
 
-  async setPeerInfo(peerInfo: PeerInfo) {
+  setPeerInfo(peerInfo: PeerInfo) {
     this._peerInfo = peerInfo;
-    await Promise.all(
-      Array.from(this._swarms.entries()).map(async ([topic, swarm]) => {
-        if (swarm.ownPeer.peerKey === peerInfo.peerKey && swarm.ownPeer.identityKey === peerInfo.identityKey) {
-          return;
-        }
-        // await this._signalManager.leave({ topic, peer: swarm.ownPeer }).catch((error) => log.catch(error));
-        await swarm.setPeerInfo(peerInfo);
-        this._signalManager.join({ topic, peer: peerInfo }).catch((error) => log.catch(error));
-      }),
-    );
   }
 
   async open() {
@@ -171,7 +161,6 @@ export class SwarmNetworkManager {
     }
 
     log.info('joining', { topic: PublicKey.from(topic), peerInfo: this._peerInfo, topology: topology.toString() }); // TODO(burdon): Log peerId.
-    console.trace();
     const swarm = new Swarm(
       topic,
       this._peerInfo,
