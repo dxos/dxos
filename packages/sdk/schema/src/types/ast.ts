@@ -5,24 +5,17 @@
 import { AST, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-// TODO(burdon): Move to @dxos/effect (in common with echo-schema).
+// TODO(burdon): Refactor to @dxos/effect (in common with echo-schema).
 
 export const getType = (node: AST.AST): AST.AST | undefined => {
   if (AST.isUnion(node)) {
     return node.types.find((type) => getType(type));
   } else if (AST.isRefinement(node)) {
-    // TODO(burdon): Document refinements.
     return getType(node.from);
   } else {
     return node;
   }
 };
-
-export const isType = (node: AST.AST): boolean => isScalar(node) || AST.isTypeLiteral(node);
-
-// TODO(burdon): Other primitive types? Any, BigInt, Arrays, etc.
-export const isScalar = (node: AST.AST) =>
-  AST.isNumberKeyword(node) || AST.isBooleanKeyword(node) || AST.isStringKeyword(node);
 
 /**
  * Get the AST node for the given property (dot-path).

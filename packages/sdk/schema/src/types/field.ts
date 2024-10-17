@@ -25,8 +25,9 @@ export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FieldVal
 
 // TODO(burdon): Reconcile with:
 //  - echo-schema/toFieldValueType
-const toFieldValueType = (type: AST.AST): FieldValueType => {
+export const toFieldValueType = (type: AST.AST): FieldValueType => {
   if (AST.isTypeLiteral(type)) {
+    // TODO(burdon): ???
     return FieldValueType.Ref;
   } else if (AST.isNumberKeyword(type)) {
     return FieldValueType.Number;
@@ -43,7 +44,6 @@ const toFieldValueType = (type: AST.AST): FieldValueType => {
   // TODO(zan): How should we be thinking about transformations?
   // - Which of these are we storing in the database?
   // - For types that aren't the 'DateFromString' transformation, should we be using the 'from' or 'to' type?
-
   if (AST.isTransformation(type)) {
     const identifier = AST.getIdentifierAnnotation(type);
     if (identifier._tag === 'Some') {

@@ -15,7 +15,6 @@ import { type TableType, type TableProp } from '../../types';
  */
 export const updateTableProp = (props: TableProp[], oldId: string, update: TableProp) => {
   const idx = props.findIndex((prop) => prop.id === oldId);
-
   if (idx !== -1) {
     const current = props![idx];
     props.splice(idx, 1, { ...current, ...update });
@@ -35,7 +34,6 @@ export const deleteTableProp = (props: TableProp[], id: string) => {
   }
 
   const idx = props.findIndex((prop) => prop.id === id);
-
   if (idx === -1) {
     return;
   }
@@ -49,9 +47,9 @@ export const createColumns = (
   table: TableType,
   onColumnUpdate: (oldId: string, column: ColumnDef) => void,
   onColumnDelete: (id: string) => void,
+  onColumnReorder: (columnId: string, direction: 'right' | 'left') => void,
   onRowUpdate: (object: any, prop: string, value: any) => void,
   onRowDelete: (object: any) => void,
-  onColumnReorder: (columnId: string, direction: 'right' | 'left') => void,
 ) => {
   const tableDefs: TableDef[] = tables
     .filter((table) => table.schema)

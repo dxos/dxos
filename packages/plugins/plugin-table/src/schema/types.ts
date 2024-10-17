@@ -17,20 +17,32 @@ import { FieldValueType } from '@dxos/schema';
 
 import { type TableType } from '../types';
 
+/**
+ * @deprecated
+ */
 const FIELD_META_NAMESPACE = 'plugin-table';
 
+/**
+ * @deprecated
+ */
 const typeToSchema: Partial<{ [key in FieldValueType]: S.Schema<any> }> = {
-  boolean: S.Boolean,
   number: S.Number,
-  date: S.Number,
+  boolean: S.Boolean,
   string: S.String,
+  date: S.Number,
 };
 
+/**
+ * @deprecated
+ */
 interface ColumnAnnotation {
   digits?: number;
   refProp?: string;
 }
 
+/**
+ * @deprecated
+ */
 export const getSchema = (
   tables: TableType[],
   type: FieldValueType | undefined,
@@ -52,6 +64,9 @@ export const getSchema = (
   );
 };
 
+/**
+ * @deprecated
+ */
 // TODO(burdon): Reconcile with react-ui-data.
 export const mapTableToColumns =
   (table: TableType) =>
@@ -61,8 +76,8 @@ export const mapTableToColumns =
     const refAnnotation = property.type.annotations[ReferenceAnnotationId] as EchoObjectAnnotation;
     const digits = getFieldMetaAnnotation<ColumnAnnotation>(property, FIELD_META_NAMESPACE)?.digits;
     return {
-      id: String(id)!,
-      prop: String(id)!,
+      id: String(id),
+      prop: String(id),
       type: toFieldValueType(type),
       refTable: refAnnotation?.schemaId,
       refProp: refProp ?? undefined,
@@ -75,6 +90,9 @@ export const mapTableToColumns =
     };
   };
 
+/**
+ * @deprecated
+ */
 // TODO(burdon): Reconcile with react-ui-data/typeToColumn
 export const toFieldValueType = (type?: AST.AST): FieldValueType => {
   if (type == null) {
@@ -92,6 +110,9 @@ export const toFieldValueType = (type?: AST.AST): FieldValueType => {
   }
 };
 
+/**
+ * @deprecated
+ */
 // TODO(burdon): Reconcile with react-ui-data.
 export const getUniqueProperty = (table: TableDef) => {
   for (let i = 1; i < 100; i++) {
@@ -101,6 +122,5 @@ export const getUniqueProperty = (table: TableDef) => {
     }
   }
 
-  // TODO(burdon): Const for prefix.
   return 'prop_' + PublicKey.random().toHex().slice(0, 8);
 };
