@@ -1,7 +1,7 @@
 import { numericalValues, range } from '@dxos/util';
 import { describe, test } from 'vitest';
 import { Forest, type DigestHex, type TreeMut } from './forest';
-import { createValue, randomKey, randomSample } from '../testing';
+import { createValue, randomKey, randomSample } from './testing';
 
 test('empty', async ({ expect }) => {
   const forest = new Forest();

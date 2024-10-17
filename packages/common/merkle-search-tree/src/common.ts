@@ -1,5 +1,4 @@
 import { arrayToHex } from '@dxos/util';
-import { TextEncoder } from 'util';
 
 export type ActorID = string & { __ActorID: never };
 

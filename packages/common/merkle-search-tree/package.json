@@ -24,11 +24,10 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/invariant": "workspace:*"
-  },
-  "devDependencies": {
+    "@dxos/invariant": "workspace:*",
     "@dxos/util": "workspace:*"
   },
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

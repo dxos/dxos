@@ -1,6 +1,6 @@
 import { test } from 'vitest';
-import { MirrorMultiMap } from './mirror-multi-map';
-import type { ActorID } from '../common';
+import { MirrorMultiMap } from './immutable/mirror-multi-map';
+import type { ActorID } from './common';
 
 test('insert and diff', async ({ expect }) => {
   const map: MirrorMultiMap<string> = await MirrorMultiMap.new({ actor: 'peer1' as ActorID });

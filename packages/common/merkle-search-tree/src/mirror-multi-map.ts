@@ -1,6 +1,6 @@
 import { arraysEqual } from '@dxos/util';
-import { Forest, type DigestHex, type Key, type NodeData } from '../forest';
-import type { ActorID } from '../common';
+import { Forest, type DigestHex, type Key, type NodeData } from './forest';
+import type { ActorID } from './common';
 
 export type MirrorMultiMapParams = {
   actor: ActorID;

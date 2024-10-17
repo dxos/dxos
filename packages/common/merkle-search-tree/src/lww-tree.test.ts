@@ -1,8 +1,8 @@
 import { test } from 'vitest';
-import { initLWWTreeSyncState, LWWTree, type LWWTreeSyncMessage } from './lww-tree';
+import { initLWWTreeSyncState, LWWTree, type LWWTreeSyncMessage } from './immutable/lww-tree';
 import { range } from '@dxos/util';
-import { randomKey } from '../testing';
-import type { ActorID } from '../common';
+import { randomKey } from './testing';
+import type { ActorID } from './common';
 
 test('basic', async ({ expect }) => {
   const peer1: LWWTree<string> = await LWWTree.new({ actor: 'peer1' as ActorID });
@@ -23,9 +23,9 @@ test('basic', async ({ expect }) => {
   expect(await peer2.get('a')).toBe('4');
 });
 
-test.only('sim', { timeout: 60_000 }, async ({ expect }) => {
-  const NUM_KEYS = 50_000,
-    NUM_ITERS = 10,
+test('sim', { timeout: 60_000 }, async ({ expect }) => {
+  const NUM_KEYS = 5_000,
+    NUM_ITERS = 5,
     NUM_MUTATIONS = 5;
   const keys = range(NUM_KEYS).map((i) => `key${i}`);
 

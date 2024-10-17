@@ -1,5 +1,5 @@
-import type { ActorID } from '../common';
-import { Forest, type DigestHex, type Key, type NodeData } from '../forest';
+import type { ActorID } from './common';
+import { Forest, type DigestHex, type Key, type NodeData } from './forest';
 
 export type LLWTreeParams = {
   actor: ActorID;

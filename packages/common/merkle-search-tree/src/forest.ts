@@ -1,5 +1,5 @@
 import { invariant } from '@dxos/invariant';
-import { formatDigest, getLevelHex } from '../common';
+import { formatDigest, getLevelHex } from './common';
 import { arrayToHex, arraysEqual } from '@dxos/util';
 
 export class Forest {
