@@ -4,17 +4,17 @@
 
 import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
 import type { SpecificCredential } from '@dxos/credentials';
-import { type CoreDatabase, type EchoDatabase } from '@dxos/echo-db';
+import { type EchoDatabase, CrudDatabase } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
+  type Contact,
   type CreateEpochRequest,
   type Invitation,
   type Space as SpaceData,
   type SpaceMember,
   type SpaceState,
   type UpdateMemberRoleRequest,
-  type Contact,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -66,7 +66,7 @@ export interface Space {
   /**
    * Echo database CRUD API.
    */
-  get crud(): CoreDatabase;
+  get crud(): CrudDatabase;
 
   get isOpen(): boolean;
 
