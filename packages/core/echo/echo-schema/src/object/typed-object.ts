@@ -25,6 +25,7 @@ export type TypedObjectOptions = {
 };
 
 const TYPENAME_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
+const VERSION_REGEX = /^\d+.\d+.\d+$/;
 
 /**
  * Base class factory for typed objects.
@@ -32,6 +33,7 @@ const TYPENAME_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
 // TODO(burdon): Support pipe(S.default({}))
 export const TypedObject = <Klass>({ typename, version }: ObjectAnnotation) => {
   invariant(TYPENAME_REGEX.test(typename), `Invalid typename: ${typename}`);
+  invariant(VERSION_REGEX.test(version), `Invalid version: ${version}`);
 
   return <
     Options extends TypedObjectOptions,
