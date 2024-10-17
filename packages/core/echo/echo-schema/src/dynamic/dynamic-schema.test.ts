@@ -11,8 +11,10 @@ import { AST, S } from '@dxos/effect';
 import { DynamicSchema } from './dynamic-schema';
 import { StoredSchema } from './stored-schema';
 import { FieldMeta, getObjectAnnotation, getFieldMetaAnnotation } from '../ast';
+import { create } from '../handler';
 import { effectToJsonSchema } from '../json';
-import { create, getTypeReference, TypedObject } from '../object';
+import { TypedObject } from '../object';
+import { getTypeReference } from '../proxy';
 import { EmptySchemaType, TEST_SCHEMA_TYPE } from '../testing';
 
 registerSignalsRuntime();

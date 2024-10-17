@@ -5,7 +5,7 @@
 import { type S } from '@dxos/effect';
 
 import { getObjectAnnotation } from '../ast';
-import { requireTypeReference } from '../object';
+import { requireTypeReference } from '../proxy';
 
 export type StaticSchema = {
   id?: string;

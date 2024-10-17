@@ -6,9 +6,8 @@ import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { StoredSchema } from './stored-schema';
-import { schemaVariance } from '../ast';
+import { type Identifiable, schemaVariance } from '../ast';
 import { effectToJsonSchema, jsonToEffectSchema } from '../json';
-import { type Identifiable } from '../types';
 
 export interface DynamicSchemaConstructor extends S.Schema<DynamicSchema> {
   new (): Identifiable;

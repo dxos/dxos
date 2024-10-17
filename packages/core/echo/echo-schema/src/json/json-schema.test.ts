@@ -8,7 +8,8 @@ import { S } from '@dxos/effect';
 
 import { effectToJsonSchema, jsonToEffectSchema } from './json-schema';
 import { FieldMeta } from '../ast';
-import { ref, TypedObject } from '../object';
+import { ref } from '../handler';
+import { TypedObject } from '../object';
 import { TEST_SCHEMA_TYPE } from '../testing';
 
 describe('effect-to-json', () => {

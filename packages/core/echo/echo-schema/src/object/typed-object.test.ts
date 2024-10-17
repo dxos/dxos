@@ -6,9 +6,9 @@ import { describe, expect, test } from 'vitest';
 
 import { S } from '@dxos/effect';
 
-import { getSchema } from './getter';
-import { create } from './object';
 import { TypedObject } from './typed-object';
+import { create } from '../handler';
+import { getSchema } from '../proxy';
 import { TEST_SCHEMA_TYPE } from '../testing';
 
 class Organization extends TypedObject(TEST_SCHEMA_TYPE)({

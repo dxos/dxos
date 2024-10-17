@@ -5,8 +5,8 @@
 import { S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { getSchema, getTypeReference } from './getter';
 import { type ObjectAnnotation, ObjectAnnotationId, schemaVariance } from '../ast';
+import { getSchema, getTypeReference } from '../proxy';
 
 /**
  * Marker interface for typed objects (for type inference).

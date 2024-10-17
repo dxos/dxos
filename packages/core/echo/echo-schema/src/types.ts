@@ -5,9 +5,11 @@
 import { type Simplify } from 'effect/Types';
 
 import { AST, S } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
-import { getMeta } from './object';
+import { type Identifiable } from './ast';
+import { getProxyHandlerSlot } from './proxy';
 
 export const data = Symbol.for('dxos.echo.data');
 
@@ -41,6 +43,7 @@ export const ObjectMetaSchema = S.mutable(
     keys: S.mutable(S.Array(ForeignKeySchema)),
   }),
 );
+
 export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
 
 export type ExcludeId<T> = Simplify<Omit<T, 'id'>>;
@@ -57,14 +60,6 @@ export const RawObject = <S extends S.Schema.All>(
 };
 
 /**
- * Marker interface for object with an `id`.
- */
-// TODO(burdon): Rename BaseObject?
-export interface Identifiable {
-  readonly id: string;
-}
-
-/**
  * Reference to another ECHO object.
  */
 export type Ref<T> = T | undefined;
@@ -78,11 +73,12 @@ export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 // TODO(burdon): Rename to just EchoObject?
 export type EchoReactiveObject<T> = ReactiveObject<T> & Identifiable;
 
-export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
-export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
-
-export const compareForeignKeys: Comparator<ReactiveObject<any>> = (a: ReactiveObject<any>, b: ReactiveObject<any>) =>
-  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;
+export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
+  const proxyHandlerSlot = getProxyHandlerSlot(obj);
+  const meta = proxyHandlerSlot.handler?.getMeta(obj);
+  invariant(meta);
+  return meta;
+};
 
 /**
  * Utility to split meta property from raw object.
@@ -92,6 +88,11 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
   delete object[ECHO_ATTR_META];
   return { meta, object };
 };
+
+export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
+export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
+export const compareForeignKeys: Comparator<ReactiveObject<any>> = (a: ReactiveObject<any>, b: ReactiveObject<any>) =>
+  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;
 
 export interface CommonObjectData {
   id: string;

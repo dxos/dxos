@@ -8,7 +8,14 @@ import { type Simplify } from 'effect/Types';
 import { AST, S } from '@dxos/effect';
 
 import { checkIdNotPresentOnSchema } from './schema-validator';
-import { type Identifiable } from '../types';
+
+/**
+ * Marker interface for object with an `id`.
+ */
+// TODO(burdon): Rename BaseObject?
+export interface Identifiable {
+  readonly id: string;
+}
 
 export type ToMutable<T> = T extends {}
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }

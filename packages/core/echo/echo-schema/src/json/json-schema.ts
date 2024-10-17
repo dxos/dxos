@@ -14,7 +14,7 @@ import {
   ObjectAnnotationId,
   ReferenceAnnotationId,
 } from '../ast';
-import { createEchoReferenceSchema } from '../object';
+import { createEchoReferenceSchema } from '../handler';
 
 const ECHO_REFINEMENT_KEY = '$echo';
 

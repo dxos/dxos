@@ -8,7 +8,8 @@ import { S } from '@dxos/effect';
 import { getDeep } from '@dxos/util';
 
 import { SchemaValidator } from './schema-validator';
-import { create, TypedObject } from '../object';
+import { create } from '../handler';
+import { TypedObject } from '../object';
 
 describe('schema-validator', () => {
   describe('validateSchema', () => {
@@ -16,6 +17,7 @@ describe('schema-validator', () => {
       const schema = S.Struct({
         union: S.Union(S.Struct({ a: S.Number }), S.Struct({ b: S.String })),
       });
+
       expect(() => SchemaValidator.validateSchema(schema)).to.throw();
     });
   });

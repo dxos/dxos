@@ -4,11 +4,12 @@
 
 import { Reference } from '@dxos/echo-protocol';
 import { type S } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
 
+import { getProxyHandlerSlot, isReactiveObject } from './proxy';
 import { getObjectAnnotation } from '../ast';
-import { getProxyHandlerSlot, isReactiveObject } from '../proxy';
-import { type ObjectMeta } from '../types';
+
+// TODO(burdon): Make async.
+export type SchemaResolver = (type: string) => S.Schema<any> | undefined;
 
 /**
  * Returns the schema for the given object if one is defined.
@@ -37,13 +38,6 @@ export const getTypeReference = (schema: S.Schema.All | undefined): Reference | 
   return Reference.fromLegacyTypename(annotation.typename);
 };
 
-export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
-  const proxyHandlerSlot = getProxyHandlerSlot(obj);
-  const meta = proxyHandlerSlot.handler?.getMeta(obj);
-  invariant(meta);
-  return meta;
-};
-
 export const isDeleted = <T extends {}>(obj: T): boolean => {
   const proxyHandlerSlot = getProxyHandlerSlot(obj);
   return proxyHandlerSlot.handler?.isDeleted(obj) ?? false;
@@ -63,7 +57,6 @@ export const getType = <T extends {}>(obj: T | undefined): Reference | undefined
   return undefined;
 };
 
-// TODO(burdon): AbstractTypedObject?
 export const getTypename = <T extends {}>(obj: T): string | undefined => getType(obj)?.objectId;
 
 export const requireTypeReference = (schema: S.Schema.All): Reference => {
@@ -75,6 +68,3 @@ export const requireTypeReference = (schema: S.Schema.All): Reference => {
 
   return typeReference;
 };
-
-// TODO(burdon): Make async.
-export type SchemaResolver = (type: string) => S.Schema<any> | undefined;

@@ -187,6 +187,7 @@ const unwrapAst = (rootAst: AST.AST, predicate?: (ast: AST.AST) => boolean): AST
     if (predicate?.(ast)) {
       return ast;
     }
+
     if (AST.isUnion(ast)) {
       const next: any = ast.types.find((t) => (predicate != null && predicate(t)) || AST.isSuspend(t));
       if (next != null) {
@@ -194,6 +195,7 @@ const unwrapAst = (rootAst: AST.AST, predicate?: (ast: AST.AST) => boolean): AST
         continue;
       }
     }
+
     if (AST.isSuspend(ast)) {
       ast = ast.f();
     } else {

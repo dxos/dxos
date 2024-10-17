@@ -17,6 +17,7 @@ export const isValidProxyTarget = (value: any): value is object => {
   if (value instanceof ReactiveArray) {
     return true;
   }
+
   return typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype;
 };
 

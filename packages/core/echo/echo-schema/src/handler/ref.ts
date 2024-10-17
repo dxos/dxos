@@ -6,11 +6,10 @@ import { type EncodedReference } from '@dxos/echo-protocol';
 import { S } from '@dxos/effect';
 
 import { EXPANDO_TYPENAME } from './expando';
-import { getTypename } from './getter';
-import { type ObjectAnnotation, getObjectAnnotation, ReferenceAnnotationId } from '../ast';
+import { type Identifiable, type ObjectAnnotation, getObjectAnnotation, ReferenceAnnotationId } from '../ast';
 import { DynamicSchema, StoredSchema } from '../dynamic';
-import { isReactiveObject } from '../proxy';
-import type { Identifiable, Ref } from '../types';
+import { getTypename, isReactiveObject } from '../proxy';
+import { type Ref } from '../types';
 
 export interface ref<T> extends S.Schema<Ref<T>, EncodedReference> {}
 
