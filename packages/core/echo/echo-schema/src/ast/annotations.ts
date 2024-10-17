@@ -13,7 +13,7 @@ import { checkIdNotPresentOnSchema } from './schema-validator';
  * Marker interface for object with an `id`.
  */
 // TODO(burdon): Rename HadId?
-export interface Identifiable {
+export interface HasId {
   readonly id: string;
 }
 
@@ -38,7 +38,7 @@ export type ObjectAnnotation = {
 // TODO(dmaretskyi): Add `id` field to the schema type.
 export const EchoObject =
   (typename: string, version: string) =>
-  <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<Identifiable & ToMutable<A>>> => {
+  <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<HasId & ToMutable<A>>> => {
     if (!AST.isTypeLiteral(self.ast)) {
       throw new Error('EchoObject can only be applied to an S.Struct type.');
     }
@@ -48,7 +48,7 @@ export const EchoObject =
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
     const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
     const ast = AST.annotations(schemaWithId.ast, { [ObjectAnnotationId]: { typename, version } });
-    return S.make(ast) as S.Schema<Simplify<Identifiable & ToMutable<A>>>;
+    return S.make(ast) as S.Schema<Simplify<HasId & ToMutable<A>>>;
   };
 
 export const getObjectAnnotation = (schema: S.Schema<any>): ObjectAnnotation | undefined =>

@@ -8,7 +8,7 @@ import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
-import { type Identifiable } from './ast';
+import { type HasId } from './ast';
 import { getProxyHandlerSlot } from './proxy';
 
 export const data = Symbol.for('dxos.echo.data');
@@ -72,7 +72,7 @@ export type Ref<T> = T | undefined;
 export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
 // TODO(burdon): Remove Echo prefix from public API.
-export type EchoReactiveObject<T> = ReactiveObject<T> & Identifiable;
+export type EchoReactiveObject<T> = ReactiveObject<T> & HasId;
 
 //
 // Data

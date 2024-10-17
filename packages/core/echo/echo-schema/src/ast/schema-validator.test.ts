@@ -14,11 +14,11 @@ import { TypedObject } from '../object';
 describe('schema-validator', () => {
   describe('validateSchema', () => {
     test('throws on ambiguous discriminated type union', () => {
-      const schema = S.Struct({
+      const TestSchema = S.Struct({
         union: S.Union(S.Struct({ a: S.Number }), S.Struct({ b: S.String })),
       });
 
-      expect(() => SchemaValidator.validateSchema(schema)).to.throw();
+      expect(() => SchemaValidator.validateSchema(TestSchema)).to.throw();
     });
   });
 
@@ -26,14 +26,14 @@ describe('schema-validator', () => {
     test('has annotation', () => {
       const annotationId = Symbol('foo');
       const annotationValue = 'bar';
-      const human: S.Schema<any> = S.Struct({
+      const TestSchema: S.Schema<any> = S.Struct({
         name: S.String.annotations({ [annotationId]: annotationValue }),
-        parent: S.optional(S.suspend(() => human.annotations({ [annotationId]: annotationValue }))),
-        friends: S.suspend(() => S.mutable(S.Array(human.annotations({ [annotationId]: annotationValue })))),
+        parent: S.optional(S.suspend(() => TestSchema.annotations({ [annotationId]: annotationValue }))),
+        friends: S.suspend(() => S.mutable(S.Array(TestSchema.annotations({ [annotationId]: annotationValue })))),
       });
-      expect(SchemaValidator.hasTypeAnnotation(human, 'name', annotationId)).to.be.true;
-      expect(SchemaValidator.hasTypeAnnotation(human, 'parent', annotationId)).to.be.true;
-      expect(SchemaValidator.hasTypeAnnotation(human, 'friends', annotationId)).to.be.true;
+      expect(SchemaValidator.hasTypeAnnotation(TestSchema, 'name', annotationId)).to.be.true;
+      expect(SchemaValidator.hasTypeAnnotation(TestSchema, 'parent', annotationId)).to.be.true;
+      expect(SchemaValidator.hasTypeAnnotation(TestSchema, 'friends', annotationId)).to.be.true;
     });
 
     test('no annotation', () => {

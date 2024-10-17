@@ -6,11 +6,11 @@ import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { StoredSchema } from './types';
-import { type Identifiable, schemaVariance } from '../ast';
+import { type HasId, schemaVariance } from '../ast';
 import { effectToJsonSchema, jsonToEffectSchema } from '../json';
 
 export interface DynamicSchemaConstructor extends S.Schema<DynamicSchema> {
-  new (): Identifiable;
+  new (): HasId;
 }
 
 // TODO(burdon): Why is this a function?
@@ -43,8 +43,8 @@ export const DynamicSchemaBase = (): DynamicSchemaConstructor => {
  * Schema that can be modified at runtime via the API.
  */
 // TODO(burdon): Rename MutableSchema.
-export class DynamicSchema extends DynamicSchemaBase() implements S.Schema<Identifiable> {
-  private _schema: S.Schema<Identifiable> | undefined;
+export class DynamicSchema extends DynamicSchemaBase() implements S.Schema<any> {
+  private _schema: S.Schema<any> | undefined;
   private _isDirty = true;
 
   constructor(public readonly serializedSchema: StoredSchema) {
@@ -86,7 +86,7 @@ export class DynamicSchema extends DynamicSchemaBase() implements S.Schema<Ident
     return schemaVariance;
   }
 
-  public get schema(): S.Schema<Identifiable> {
+  public get schema(): S.Schema<any> {
     return this._getSchema();
   }
 
@@ -105,7 +105,7 @@ export class DynamicSchema extends DynamicSchemaBase() implements S.Schema<Ident
     const schemaExtension = S.partial(S.Struct(fields));
     const extended = S.extend(oldSchema, schemaExtension).annotations(
       oldSchema.ast.annotations,
-    ) as any as S.Schema<Identifiable>;
+    ) as any as S.Schema<any>;
     this.serializedSchema.jsonSchema = effectToJsonSchema(extended);
   }
 

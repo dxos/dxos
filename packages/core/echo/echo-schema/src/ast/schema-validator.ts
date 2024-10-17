@@ -50,7 +50,7 @@ export class SchemaValidator {
   public static getPropertySchema(
     rootObjectSchema: S.Schema<any>,
     propertyPath: KeyPath,
-    getPropertyFn: (path: KeyPath) => any = () => null,
+    getProperty: (path: KeyPath) => any = () => null,
   ): S.Schema<any> {
     let schema: S.Schema<any> = rootObjectSchema;
     for (let i = 0; i < propertyPath.length; i++) {
@@ -60,7 +60,7 @@ export class SchemaValidator {
         schema = getArrayElementSchema(tupleAst, propertyName);
       } else {
         const propertyType = getPropertyType(schema.ast, propertyName.toString(), (propertyName) =>
-          getPropertyFn([...propertyPath.slice(0, i), propertyName]),
+          getProperty([...propertyPath.slice(0, i), propertyName]),
         );
         if (!propertyType) {
           const type = getSchemaTypename(rootObjectSchema);

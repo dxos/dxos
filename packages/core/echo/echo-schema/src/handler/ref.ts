@@ -6,14 +6,14 @@ import { type EncodedReference } from '@dxos/echo-protocol';
 import { S } from '@dxos/effect';
 
 import { EXPANDO_TYPENAME } from './expando';
-import { type Identifiable, type ObjectAnnotation, getObjectAnnotation, ReferenceAnnotationId } from '../ast';
+import { type HasId, type ObjectAnnotation, getObjectAnnotation, ReferenceAnnotationId } from '../ast';
 import { DynamicSchema, StoredSchema } from '../dynamic';
 import { getTypename, isReactiveObject } from '../proxy';
 import { type Ref } from '../types';
 
 export interface ref<T> extends S.Schema<Ref<T>, EncodedReference> {}
 
-export const ref = <T extends Identifiable>(schema: S.Schema<T, any>): ref<T> => {
+export const ref = <T extends HasId>(schema: S.Schema<T, any>): ref<T> => {
   const annotation = getObjectAnnotation(schema);
   if (annotation == null) {
     throw new Error('Reference target must be an ECHO object.');
