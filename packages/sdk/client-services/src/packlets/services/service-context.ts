@@ -154,6 +154,10 @@ export class ServiceContext extends Resource {
                 await identity.ready();
               });
 
+              const reconnected = this._edgeConnection!.reconnect.waitForCondition(
+                () => this._edgeConnection!.identityKey === identity.identityKey.toHex(),
+              );
+
               invariant(identity.deviceCredentialChain);
               this._edgeConnection!.setIdentity(
                 await createChainEdgeIdentity(
@@ -164,9 +168,11 @@ export class ServiceContext extends Resource {
                   [], // TODO(dmaretskyi): Service access credentials.
                 ),
               );
-              this.networkManager.setPeerInfo({
-                identityKey: identity.identityKey.toHex(),
-                peerKey: identity.deviceKey.toHex(),
+
+              await reconnected;
+              await this.networkManager.setPeerInfo({
+                peerKey: this._edgeConnection!.peerKey,
+                identityKey: this._edgeConnection!.identityKey,
               });
             });
           }
@@ -218,7 +224,15 @@ export class ServiceContext extends Resource {
     log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
     if (this._edgeConnection) {
       // TODO(dmaretskyi): Use device key.
+      const identity = await createEphemeralEdgeIdentity();
       this._edgeConnection.setIdentity(await createEphemeralEdgeIdentity());
+      this._edgeConnection!.setIdentity(identity);
+
+      await this.networkManager.setPeerInfo({
+        peerKey: this._edgeConnection.peerKey,
+        identityKey: this._edgeConnection.identityKey,
+      });
+
       await this._edgeConnection.open();
     }
     await this.signalManager.open();

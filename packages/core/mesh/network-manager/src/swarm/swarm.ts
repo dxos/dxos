@@ -76,7 +76,7 @@ export class Swarm {
   // TODO(burdon): Pass in object.
   constructor(
     private readonly _topic: PublicKey,
-    private readonly _ownPeer: PeerInfo,
+    private _ownPeer: PeerInfo,
     private _topology: Topology,
     private readonly _protocolProvider: WireProtocolProvider,
     private readonly _messenger: Messenger,
@@ -130,16 +130,7 @@ export class Swarm {
 
   async open() {
     invariant(!this._listeningHandle);
-    this._listeningHandle = await this._messenger.listen({
-      peer: this._ownPeer,
-      payloadType: 'dxos.mesh.swarm.SwarmMessage',
-      onMessage: async (message) => {
-        await this._swarmMessenger
-          .receiveMessage(message)
-          // TODO(nf): discriminate between errors
-          .catch((err) => log.info('Error while receiving message', { err }));
-      },
-    });
+    await this._startListenMessages();
   }
 
   async destroy() {
@@ -169,9 +160,38 @@ export class Swarm {
     this._topology.update();
   }
 
+  async setPeerInfo(peerInfo: PeerInfo) {
+    await this._listeningHandle?.unsubscribe();
+    this._listeningHandle = undefined;
+    this._ownPeer = peerInfo;
+    for (const peer of this._peers.values()) {
+      if (peer.connection && peer.connection.state === ConnectionState.CONNECTED) {
+        continue;
+      }
+      this._destroyPeer(peer.remoteInfo, 'peer info changed').catch((err) => log.catch(err));
+    }
+
+    await this._startListenMessages();
+  }
+
+  @synchronized
+  private async _startListenMessages() {
+    invariant(!this._listeningHandle, 'Listening handle is not set');
+    this._listeningHandle = await this._messenger.listen({
+      peer: this._ownPeer,
+      payloadType: 'dxos.mesh.swarm.SwarmMessage',
+      onMessage: async (message) => {
+        await this._swarmMessenger
+          .receiveMessage(message)
+          // TODO(nf): discriminate between errors
+          .catch((err) => log.info('Error while receiving message', { err }));
+      },
+    });
+  }
+
   @synchronized
   onSwarmEvent(swarmEvent: SwarmEvent) {
-    log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
+    log.info('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
 
     if (this._ctx.disposed) {
       log('swarm event ignored for disposed swarm');
@@ -203,7 +223,7 @@ export class Swarm {
 
   @synchronized
   async onOffer(message: OfferMessage): Promise<Answer> {
-    log('offer', { message });
+    log.info('offer', { message });
     if (this._ctx.disposed) {
       log('ignored for disposed swarm');
       return { accept: false };
@@ -384,7 +404,7 @@ export class Swarm {
       return;
     }
 
-    log('initiating connection...', { remotePeer });
+    log.info('initiating connection...', { remotePeer });
     await peer.initiateConnection();
     this._topology.update();
     log('initiated', { remotePeer });

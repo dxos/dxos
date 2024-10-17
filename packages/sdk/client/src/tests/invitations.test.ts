@@ -358,75 +358,111 @@ describe('Invitations', () => {
     });
   });
 
-  // TODO(mykola): Expects wrangler dev in edge repo to run. Skip to pass CI.
-  describe.skip('EDGE signaling', () => {
-    describe('space', () => {
-      const createPeer = async () => {
-        const edgeConnection = new EdgeClient(await createEphemeralEdgeIdentity(), {
-          socketEndpoint: 'ws://localhost:8787',
-        });
-        await openAndClose(edgeConnection);
-        const signalManager = new EdgeSignalManager({ edgeConnection });
-        await openAndClose(signalManager);
-        const networkManager = new SwarmNetworkManager({
-          signalManager,
-          transportFactory: MemoryTransportFactory,
-        });
-        const level = createTestLevel();
-        await openAndClose(level);
-
-        const peer = new ServiceContext(
-          createStorage({ type: StorageType.RAM }),
-          level,
-          networkManager,
-          signalManager,
-          edgeConnection,
-          undefined,
-          {
-            invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
-          },
-        );
-        await openAndClose(peer);
-        return peer;
-      };
-
-      let host: ServiceContext;
-      let guest: ServiceContext;
-      let space: DataSpace;
-
-      beforeEach(async () => {
-        host = await createPeer();
-        await host.createIdentity();
-        space = await host.dataSpaceManager!.createSpace();
-
-        guest = await createPeer();
-        await guest.createIdentity();
+// TODO(mykola): Expects wrangler dev in edge repo to run. Skip to pass CI.
+describe.skip('EDGE signaling', () => {
+  describe('space', () => {
+    const createPeer = async () => {
+      const identity = await createEphemeralEdgeIdentity();
+      const edgeConnection = new EdgeClient(identity, {
+        socketEndpoint: 'ws://localhost:8787',
       });
+      await openAndClose(edgeConnection);
+      const signalManager = new EdgeSignalManager({ edgeConnection });
+      await openAndClose(signalManager);
+      const networkManager = new SwarmNetworkManager({
+        signalManager,
+        transportFactory: MemoryTransportFactory,
+        peerInfo: { peerKey: identity.peerKey, identityKey: identity.identityKey },
+      });
+      const level = createTestLevel();
+      await openAndClose(level);
 
-      testSuite(
-        () => ({
-          host,
-          guest,
-          options: { kind: Invitation.Kind.SPACE, spaceKey: space.key },
-        }),
-        () => [host, guest],
+      const peer = new ServiceContext(
+        createStorage({ type: StorageType.RAM }),
+        level,
+        networkManager,
+        signalManager,
+        edgeConnection,
+        undefined,
+        {
+          invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
+        },
       );
+      await openAndClose(peer);
+      return peer;
+    };
+
+    let host: ServiceContext;
+    let guest: ServiceContext;
+    let space: DataSpace;
+
+    beforeEach(async () => {
+      host = await createPeer();
+      await host.createIdentity();
+      space = await host.dataSpaceManager!.createSpace();
+
+      guest = await createPeer();
+      await guest.createIdentity();
     });
+
+    testSuite(
+      () => ({
+        host,
+        guest,
+        options: { kind: Invitation.Kind.SPACE, spaceKey: space.key },
+      }),
+      () => [host, guest],
+    );
   });
 
   describe('device', () => {
+    const createPeer = async () => {
+      const identity = await createEphemeralEdgeIdentity();
+      const edgeConnection = new EdgeClient(identity, {
+        socketEndpoint: 'ws://localhost:8787',
+      });
+      await openAndClose(edgeConnection);
+      const signalManager = new EdgeSignalManager({ edgeConnection });
+      await openAndClose(signalManager);
+      const networkManager = new SwarmNetworkManager({
+        signalManager,
+        transportFactory: MemoryTransportFactory,
+        peerInfo: { peerKey: identity.peerKey, identityKey: identity.identityKey },
+      });
+      const level = createTestLevel();
+      await openAndClose(level);
+
+      const peer = new ServiceContext(
+        createStorage({ type: StorageType.RAM }),
+        level,
+        networkManager,
+        signalManager,
+        edgeConnection,
+        undefined,
+        {
+          invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
+        },
+      );
+      await openAndClose(peer);
+      return peer;
+    };
+
     let host: ServiceContext;
     let guest: ServiceContext;
 
     beforeEach(async () => {
-      const peers = await asyncChain<ServiceContext>([closeAfterTest])(createPeers(2));
-      host = peers[0];
-      guest = peers[1];
+      host = await createPeer();
       await host.createIdentity();
+
+      guest = await createPeer();
     });
 
     testSuite(
-      () => ({ host, guest, options: { kind: Invitation.Kind.DEVICE } }),
+      () => ({
+        host,
+        guest,
+        options: { kind: Invitation.Kind.DEVICE },
+      }),
       () => [host, guest],
     );
   });
