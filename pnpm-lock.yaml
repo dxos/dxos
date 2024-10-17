@@ -1859,7 +1859,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
-    devDependencies:
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
