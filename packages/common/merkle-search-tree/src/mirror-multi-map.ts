@@ -35,8 +35,16 @@ export class MirrorMultiMap<T> {
     this.#actor = params.actor;
   }
 
-  get localActorId() {
+  get localActorId(): ActorID {
     return this.#actor;
+  }
+
+  get currentRoot(): DigestHex {
+    return this.#currentRoot;
+  }
+
+  get forest(): Forest {
+    return this.#forest;
   }
 
   async getLocal(key: Key): Promise<T | undefined> {
@@ -51,7 +59,7 @@ export class MirrorMultiMap<T> {
     }
   }
 
-  async setLocalBatch(pairs: [Key, T][]) {
+  async setLocalBatch(pairs: (readonly [Key, T])[]) {
     const updates = pairs.map(([key, value]) => [key, this.#encode(value)] as const);
     this.#currentRoot = await this.#forest.setBatch(this.#currentRoot, updates);
   }
