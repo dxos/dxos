@@ -15,6 +15,7 @@ export { AST, JSONSchema, S } from '@dxos/effect';
 export * from './ast';
 export * from './dynamic';
 export * from './json';
+export * from './handler';
 export * from './object';
 export * from './proxy';
 export * from './types';

@@ -8,9 +8,6 @@ import { type S } from '@dxos/effect';
 import { getProxyHandlerSlot, isReactiveObject } from './proxy';
 import { getObjectAnnotation } from '../ast';
 
-// TODO(burdon): Make async.
-export type SchemaResolver = (type: string) => S.Schema<any> | undefined;
-
 /**
  * Returns the schema for the given object if one is defined.
  */

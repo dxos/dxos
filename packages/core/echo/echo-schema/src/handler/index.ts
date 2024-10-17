@@ -4,7 +4,7 @@
 
 export * from './expando';
 export * from './logging-handler';
-export { create } from './object';
+export * from './object';
 export * from './ref';
 export * from './typed-handler';
 export * from './untyped-handler';

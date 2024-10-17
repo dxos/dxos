@@ -7,6 +7,9 @@ import { type Schema as S } from '@effect/schema';
 import { StoredSchema } from './stored-schema';
 import { requireTypeReference } from '../proxy';
 
+// TODO(burdon): Make async.
+export type SchemaResolver = (type: string) => S.Schema<any> | undefined;
+
 // TODO(burdon): Typename?
 const getTypenameOrThrow = (schema: S.Schema.All): string => requireTypeReference(schema).objectId;
 
