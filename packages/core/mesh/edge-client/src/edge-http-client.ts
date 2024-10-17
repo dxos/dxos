@@ -4,7 +4,7 @@
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type SpaceId } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   EdgeCallFailedError,
@@ -14,6 +14,9 @@ import {
   type JoinSpaceRequest,
   type JoinSpaceResponseBody,
   EdgeAuthChallengeError,
+  type CreateAgentResponseBody,
+  type CreateAgentRequestBody,
+  type GetAgentStatusResponseBody,
 } from '@dxos/protocols';
 
 import { getEdgeUrlWithProtocol } from './utils';
@@ -28,6 +31,17 @@ export class EdgeHttpClient {
   constructor(baseUrl: string) {
     this._baseUrl = getEdgeUrlWithProtocol(baseUrl, 'http');
     log('created', { url: this._baseUrl });
+  }
+
+  public createAgent(body: CreateAgentRequestBody, args?: EdgeHttpGetArgs): Promise<CreateAgentResponseBody> {
+    return this._call('/agents/create', { ...args, method: 'POST', body });
+  }
+
+  public getAgentStatus(
+    request: { ownerIdentityKey: PublicKey },
+    args?: EdgeHttpGetArgs,
+  ): Promise<GetAgentStatusResponseBody> {
+    return this._call(`/users/${request.ownerIdentityKey.toHex()}/agent/status`, { ...args, method: 'GET' });
   }
 
   public getCredentialsForNotarization(spaceId: SpaceId, args?: EdgeHttpGetArgs): Promise<GetNotarizationResponseBody> {

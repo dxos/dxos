@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type SpaceId } from '@dxos/keys';
+
 export enum EdgeService {
   AUTOMERGE_REPLICATOR = 'automerge-replicator',
   FEED_REPLICATOR = 'feed-replicator',
@@ -59,6 +61,29 @@ export type JoinSpaceResponseBody = {
   spaceMemberCredential: string;
   spaceGenesisFeedKey: string;
 };
+
+export type CreateAgentRequestBody = {
+  identityKey: string;
+  haloSpaceId: SpaceId;
+  haloSpaceKey: string;
+};
+
+export type CreateAgentResponseBody = {
+  deviceKey: string;
+  feedKey: string;
+};
+
+export type GetAgentStatusResponseBody = {
+  agent: {
+    status: EdgeAgentStatus;
+  };
+};
+
+export enum EdgeAgentStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  NOT_FOUND = 'not_found',
+}
 
 export class EdgeCallFailedError extends Error {
   public static fromProcessingFailureCause(cause: Error) {
