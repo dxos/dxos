@@ -38,6 +38,7 @@ import {
   createExternalCommentSync,
   createMarkdownExtensions,
   createThemeExtensions,
+  debugTree,
   decorateMarkdown,
   defaultOptions,
   dropFile,
@@ -51,7 +52,6 @@ import {
   typewriter,
   type CommandAction,
   type CommentsOptions,
-  debugTree,
   type DebugNode,
 } from './extensions';
 import { renderRoot } from './extensions/util';
