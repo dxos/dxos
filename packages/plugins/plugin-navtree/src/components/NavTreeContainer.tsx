@@ -238,9 +238,9 @@ export const NavTreeContainer = ({
       if (Path.first(over.path) !== root.id) {
         return undefined;
       }
+
       const { levelOffset = 0 } = details;
       const overPosition = over.position ?? 0;
-
       const nextItems = arrayMove(
         items,
         items.findIndex(({ id }) => id === active.item.id),
@@ -249,7 +249,6 @@ export const NavTreeContainer = ({
 
       const activeNode = 'node' in active.item ? (active.item as NavTreeItem).node : undefined;
       const activeParentId = Path.parent(active.item.id);
-
       if (!activeNode) {
         return undefined;
       }
@@ -266,7 +265,6 @@ export const NavTreeContainer = ({
         const nextItem: NavTreeItem | undefined = nextItems[overPosition + 1];
 
         const overLevel = resolveItemLevel(overPosition, active.item.id, levelOffset);
-
         const previousLevel = getLevel(previousItem.path);
 
         if (operation === 'copy') {
