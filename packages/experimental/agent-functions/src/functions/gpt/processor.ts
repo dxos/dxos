@@ -87,7 +87,6 @@ export class RequestProcessor {
               .join('\n') ?? '';
 
           const parts = blocks?.map(({ object }) => object).filter(nonNullable) ?? [];
-
           log.info('response', { blocks });
           return { success: true, text, parts };
         }

@@ -121,7 +121,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
                 sender: { identityKey: resources.identityKey },
                 timestamp: new Date().toISOString(),
                 text,
-                parts,
+                // parts, // TODO(burdon): Type.
               },
               {
                 keys: [metaKey],
