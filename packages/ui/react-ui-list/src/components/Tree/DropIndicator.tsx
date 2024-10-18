@@ -25,14 +25,15 @@ const edgeToOrientationMap: Record<InstructionType, Orientation> = {
 };
 
 const orientationStyles: Record<Orientation, HTMLAttributes<HTMLElement>['className']> = {
+  // TODO(wittjosiah): Stop using left/right here.
   sibling:
-    'h-[--line-thickness] left-[--terminal-radius] right-0 left-[--horizontal-indent] bg-[--line-color] before:left-[--negative-terminal-size]',
-  child: 'w-full top-0 bottom-0 border-[length:--line-thickness] before:invisible',
+    'bs-[--line-thickness] left-[--horizontal-indent] right-0 bg-[--line-color] before:left-[--negative-terminal-size]',
+  child: 'is-full block-start-0 block-end-0 border-[length:--line-thickness] before:invisible',
 };
 
 const instructionStyles: Record<InstructionType, HTMLAttributes<HTMLElement>['className']> = {
-  'reorder-above': 'top-[--line-offset] before:top-[--offset-terminal]',
-  'reorder-below': 'bottom-[--line-offset] before:bottom-[--offset-terminal]',
+  'reorder-above': 'block-start-[--line-offset] before:block-start-[--offset-terminal]',
+  'reorder-below': 'block-end-[--line-offset] before:block-end-[--offset-terminal]',
   'make-child': 'border-[--line-color]',
   // TODO(wittjosiah): This is not occurring in the current implementation.
   reparent: '',
@@ -55,7 +56,7 @@ export const DropIndicator = ({ instruction }: DropIndicatorProps) => {
         {
           '--line-thickness': `${strokeSize}px`,
           '--line-offset': `${lineOffset}`,
-          '--line-color': isBlocked ? 'var(--dx-blocked)' : 'var(--dx-accentSurface)',
+          '--line-color': isBlocked ? 'var(--dx-warning)' : 'var(--dx-accentSurface)',
           '--terminal-size': `${terminalSize}px`,
           '--terminal-radius': `${terminalSize / 2}px`,
           '--negative-terminal-size': `-${terminalSize}px`,
@@ -65,8 +66,8 @@ export const DropIndicator = ({ instruction }: DropIndicatorProps) => {
       }
       className={mx(
         'absolute z-10 pointer-events-none',
-        "before:content-[''] before:w-[--terminal-size] before:h-[--terminal-size] box-border before:absolute",
-        'before:border-[length:--line-thickness] before:border-solid before:border-blue-700 before:rounded-full',
+        'before:is-[--terminal-size] before:bs-[--terminal-size] box-border before:absolute',
+        'before:border-[length:--line-thickness] before:border-solid before:border-accentSurface before:rounded-full',
         orientationStyles[orientation],
         instructionStyles[desiredInstruction.type],
       )}
