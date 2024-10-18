@@ -13,6 +13,7 @@ import { type JoinPanelImplProps } from './JoinPanelProps';
 import { IdentityInputImpl } from './steps';
 import { StorybookDialog } from '../../components/StorybookDialog';
 import { ConfirmResetImpl } from '../../steps';
+import { osTranslations as translations } from '../../translations';
 
 const noOpProps: JoinPanelImplProps = {
   titleId: 'storybookJoinPanel__title',
@@ -32,7 +33,7 @@ export default {
   title: 'react-shell/JoinPanel',
   component: JoinDialog,
   decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { translations, chromatic: { disableSnapshot: false } },
 };
 
 export const AdditionMethodChooser = () => <JoinDialog mode='halo-only' activeView='addition method chooser' />;

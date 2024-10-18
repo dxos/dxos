@@ -78,25 +78,17 @@ export const InvitationInput = (props: InvitationInputProps) => {
         />
       </div>
       <Actions>
-        {Kind === 'Halo' ? (
-          <Action
-            variant='ghost'
-            disabled={disabled}
-            onClick={() => send({ type: 'deselectAuthMethod' })}
-            data-testid={`${Kind.toLowerCase()}-invitation-input-back`}
-          >
-            {t('back label')}
-          </Action>
-        ) : exitActionParent ? (
-          cloneElement(exitActionParent, {}, exitAction)
-        ) : doneActionParent ? (
-          cloneElement(doneActionParent, {}, exitAction)
-        ) : (
-          exitAction
-        )}
+        {/* TODO(wittjosiah): This disables returning to deprecated identity creation flow. */}
+        {Kind === 'Halo'
+          ? null
+          : exitActionParent
+            ? cloneElement(exitActionParent, {}, exitAction)
+            : doneActionParent
+              ? cloneElement(doneActionParent, {}, exitAction)
+              : exitAction}
         <Action
           variant='primary'
-          disabled={disabled}
+          disabled={disabled || inputValue.trim().length === 0}
           onClick={handleNext}
           data-testid={`${Kind.toLowerCase()}-invitation-input-continue`}
         >

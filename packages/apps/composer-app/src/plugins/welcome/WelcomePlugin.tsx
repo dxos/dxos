@@ -96,14 +96,14 @@ export const WelcomePlugin = ({
       // If identity already exists, continue with existing identity.
       // If not, only create identity if token is present.
       let identity = client.halo.identity.get();
-      if (!identity && !deviceInvitationCode && (token || skipAuth)) {
+      if (!identity && deviceInvitationCode === undefined && (token || skipAuth)) {
         const result = await dispatch({
           plugin: CLIENT_PLUGIN,
           action: ClientAction.CREATE_IDENTITY,
         });
         firstRun?.wake();
         identity = result?.data;
-      } else if (deviceInvitationCode) {
+      } else if (deviceInvitationCode !== undefined) {
         await dispatch({
           plugin: CLIENT_PLUGIN,
           action: ClientAction.JOIN_IDENTITY,
@@ -116,7 +116,7 @@ export const WelcomePlugin = ({
 
       if (skipAuth) {
         const spaceInvitationCode = searchParams.get('spaceInvitationCode') ?? undefined;
-        if (spaceInvitationCode) {
+        if (spaceInvitationCode !== undefined) {
           await dispatch([
             {
               plugin: SPACE_PLUGIN,

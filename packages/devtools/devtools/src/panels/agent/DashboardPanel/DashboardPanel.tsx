@@ -28,7 +28,7 @@ export const DashboardPanel = () => {
     let stream: Stream<AgentStatus>;
 
     scheduleMicroTask(context, async () => {
-      await client.spaces.isReady.wait();
+      await client.spaces.waitUntilReady();
       await client.spaces.default.waitUntilReady();
 
       dashboard = new DashboardProxy({ client });

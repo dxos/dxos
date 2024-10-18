@@ -507,8 +507,9 @@ export class Client {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
     await this._services?.services.SystemService.reset();
     await this._close();
-    await this._open();
-    this._resetting = false;
+    // TODO(wittjosiah): Re-open after reset.
+    // await this._open();
+    // this._resetting = false;
     this.reloaded.emit();
     log('reset complete');
   }

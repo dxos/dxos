@@ -474,7 +474,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
       wait = true,
     }: { spaceKeys?: string[]; includeHalo?: boolean; wait?: boolean } = {},
   ): Promise<Space[]> {
-    await client.spaces.isReady.wait();
+    await client.spaces.waitUntilReady();
     const spaces = client.spaces
       .get()
       .filter(
@@ -499,7 +499,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
    * Get or select space.
    */
   async getSpace(client: Client, key?: string, wait = true): Promise<Space> {
-    await client.spaces.isReady.wait();
+    await client.spaces.waitUntilReady();
     const spaces = await this.getSpaces(client, { wait });
     if (!spaces.length) {
       throw new Error('No spaces found.');

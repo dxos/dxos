@@ -88,6 +88,8 @@ export default [
         'copy link label': 'Copy link',
         'default on space create label': 'On space create',
         'sync status title': 'Sync status',
+        'dismiss label': 'Dismiss',
+        'join success label': 'Successfully joined space',
         'name label': 'Name',
         'name placeholder': 'Name',
       },

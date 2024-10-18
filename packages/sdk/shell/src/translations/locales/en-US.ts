@@ -34,7 +34,7 @@ export const os = {
   'recover identity input label': 'Type or paste your seed phrase',
   'failed to create identity message': 'Failed to create an identity.',
   'failed to recover identity message': 'Failed to recover an identity from the provided seed phrase.',
-  'failed to authenticate message': 'Incorrect PIN.',
+  'failed to authenticate message': 'Incorrect code.',
   'identity added label': 'Created identity & added to this device:',
   'join space as identity heading': '<part>as </part><part><icon/><label>{{labelValue}}</label></part>',
   'error status label': 'Failed',
@@ -42,8 +42,8 @@ export const os = {
   'cancelled status label': 'Cancelled',
   'init status label': 'Ready to connect',
   'connecting status label': 'Connecting…',
-  'connected status label': 'Enter confirmation PIN',
-  'authenticating status label': 'Enter confirmation PIN',
+  'connected status label': 'Enter authentication code',
+  'authenticating status label': 'Enter authentication code',
   'success status label': 'Success',
   'cancel label': 'Cancel',
   'done label': 'Done',
@@ -152,4 +152,5 @@ export const os = {
   'agent requested label': 'Agent requested',
   'agent requested description':
     'The agent service is creating an agent for you. Once the agent connects, it will display in the devices list.',
+  'authenticating label': 'Authenticating…',
 };

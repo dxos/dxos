@@ -89,10 +89,10 @@ export class Shell {
   /**
    * Listen for reset event.
    */
-  onReset(cb: () => void) {
+  onReset(cb: (target?: string) => void) {
     return this._shellManager.contextUpdate.on((data) => {
       if ('reset' in data && data.reset) {
-        cb();
+        cb(data.target);
       }
     });
   }

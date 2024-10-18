@@ -30,7 +30,7 @@ export const useSpace = (spaceKeyLike?: PublicKeyLike): Space | undefined => {
     }
 
     const timeout = setTimeout(async () => {
-      await client.spaces.isReady.wait();
+      await client.spaces.waitUntilReady();
       setReady(true);
     });
 

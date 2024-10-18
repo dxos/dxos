@@ -316,6 +316,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           { target: 'acceptingSpaceInvitation', actions: 'log' },
         ],
       },
+      // TODO(wittjosiah): Remove.
       choosingIdentity: {
         initial: 'unknownAuthMethod',
         states: {
@@ -343,6 +344,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           deselectAuthMethod: { target: '.choosingAuthMethod', actions: 'log' },
         },
       },
+      // TODO(wittjosiah): Factor out to a machine handling recovery and device invitations.
       resettingIdentity: {},
       acceptingSpaceInvitation: acceptingInvitationTemplate('Space', '#join.finishingJoiningSpace'),
       finishingJoiningSpace: {

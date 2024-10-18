@@ -55,7 +55,7 @@ Whenever an Identity is created, a Space is automatically created and marked as 
 
 ```ts file=./snippets/default-space.ts#L10-
   // ensure the spaces are loaded before trying to load a space
-  await client.spaces.isReady.wait();
+  await client.spaces.waitUntilReady();
 
   // get the default space
   const defaultSpace = client.spaces.default;

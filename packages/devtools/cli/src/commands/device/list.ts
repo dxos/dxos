@@ -17,7 +17,7 @@ export default class List extends BaseCommand<typeof List> {
 
   async run(): Promise<any> {
     return await this.execWithClient(async ({ client }) => {
-      await asyncTimeout(client.spaces.isReady.wait(), IDENTITY_WAIT_TIMEOUT, new IdentityWaitTimeoutError());
+      await asyncTimeout(client.spaces.waitUntilReady(), IDENTITY_WAIT_TIMEOUT, new IdentityWaitTimeoutError());
       const devices = client.halo.devices.get();
       printDevices(devices, this.flags);
       return devices;
