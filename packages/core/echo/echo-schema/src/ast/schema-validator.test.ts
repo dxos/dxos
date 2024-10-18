@@ -10,6 +10,7 @@ import { getDeep } from '@dxos/util';
 import { SchemaValidator } from './schema-validator';
 import { create } from '../handler';
 import { TypedObject } from '../object';
+import { ObjectId } from './object-id';
 
 describe('schema-validator', () => {
   describe('validateSchema', () => {
@@ -168,6 +169,7 @@ describe('schema-validator', () => {
           typename: 'dxos.org/type/FunctionTrigger',
           version: '0.1.0',
         })({
+          id: ObjectId,
           meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
         }) {}
 

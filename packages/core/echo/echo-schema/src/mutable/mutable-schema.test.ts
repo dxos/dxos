@@ -16,12 +16,14 @@ import { effectToJsonSchema } from '../json';
 import { TypedObject } from '../object';
 import { getTypeReference } from '../proxy';
 import { EmptySchemaType, TEST_SCHEMA_TYPE } from '../testing';
+import { ObjectId } from '../ast/object-id';
 
 registerSignalsRuntime();
 
 describe('dynamic schema', () => {
   test('getProperties filters out id and unwraps optionality', async () => {
     class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({
+      id: ObjectId,
       field1: S.String,
       field2: S.Boolean,
     }) {}
@@ -35,6 +37,7 @@ describe('dynamic schema', () => {
 
   test('addColumns', async () => {
     class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({
+      id: ObjectId,
       field1: S.String,
     }) {}
 

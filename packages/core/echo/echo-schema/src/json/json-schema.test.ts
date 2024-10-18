@@ -26,6 +26,7 @@ describe('effect-to-json', () => {
     const meta = { maxLength: 0 };
     const metaNamespace = 'dxos.test';
     class Schema extends TypedObject(TEST_SCHEMA_TYPE)({
+      id: ObjectId,
       field: S.String.pipe(FieldMeta(metaNamespace, meta)),
     }) {}
     const jsonSchema = effectToJsonSchema(Schema);

@@ -11,6 +11,7 @@ import { ref } from './ref';
 import { TypedObject } from '../object';
 import { TEST_SCHEMA_TYPE } from '../testing';
 import { getMeta, foreignKey } from '../types';
+import { ObjectId } from '../ast/object-id';
 
 describe('complex schema validations', () => {
   const setValue = (target: any, prop: string, value: any) => {
@@ -37,8 +38,8 @@ describe('complex schema validations', () => {
   });
 
   test('references', () => {
-    class Foo extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
-    class Bar extends TypedObject(TEST_SCHEMA_TYPE)({ fooRef: ref(Foo) }) {}
+    class Foo extends TypedObject(TEST_SCHEMA_TYPE)({ id: ObjectId, field: S.String }) {}
+    class Bar extends TypedObject(TEST_SCHEMA_TYPE)({ id: ObjectId, fooRef: ref(Foo) }) {}
     const field = 'hello';
     expect(() => create(Bar, { fooRef: { id: '1', field } })).to.throw();
     expect(() => create(Bar, { fooRef: undefined as any })).not.to.throw(); // Unresolved reference.

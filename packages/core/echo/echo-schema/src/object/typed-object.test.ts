@@ -10,8 +10,10 @@ import { TypedObject } from './typed-object';
 import { create } from '../handler';
 import { getSchema } from '../proxy';
 import { TEST_SCHEMA_TYPE } from '../testing';
+import { ObjectId } from '../ast/object-id';
 
 class Organization extends TypedObject(TEST_SCHEMA_TYPE)({
+  id: ObjectId,
   name: S.String,
 }) {}
 
@@ -40,6 +42,7 @@ describe('EchoObject class dsl', () => {
   describe('class options', () => {
     class Person extends TypedObject<Person>({ typename: 'example.com/type/Person', version: '1.0.0' })(
       {
+        id: ObjectId,
         name: S.String,
       },
       { partial: true, record: true },
