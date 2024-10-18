@@ -3,4 +3,3 @@
 //
 
 export * from './useTableModel';
-export * from './useTableObjects';

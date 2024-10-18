@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { type MutableSchema } from '@dxos/echo-schema';
 import { Button, type ButtonProps, Input, Select, useTranslation } from '@dxos/react-ui';
 
-import { TABLE_PLUGIN } from '../../meta';
+import { TABLE_PLUGIN } from '../../../meta';
 import { type TableType } from '../../types';
 
 const NEW_ID = '__new';

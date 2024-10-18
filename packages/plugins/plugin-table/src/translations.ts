@@ -19,6 +19,8 @@ export default [
         'new schema': 'New schema',
         'continue label': 'Continue',
         'create stack section label': 'Create table',
+        'add row': 'Add row',
+        'create comment': 'Create thread',
       },
     },
   },
