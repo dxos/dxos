@@ -25,6 +25,7 @@ import {
   AdmittedFeed,
   type DeviceProfileDocument,
   type ProfileDocument,
+  type Credential,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type Presence } from '@dxos/teleport-extension-gossip';
@@ -117,13 +118,14 @@ export class Identity {
     await this.space.spaceState.addCredentialProcessor(this._deviceStateMachine);
     await this.space.spaceState.addCredentialProcessor(this._profileStateMachine);
     await this.space.spaceState.addCredentialProcessor(this._defaultSpaceStateMachine);
+    await this.space.open(ctx);
+  }
 
+  public async joinNetwork() {
     if (this._edgeFeedReplicator) {
       this.space.protocol.feedAdded.append(this._onFeedAdded);
     }
-
-    await this.space.open(ctx);
-
+    await this.space.startProtocol();
     await this._edgeFeedReplicator?.open();
   }
 
@@ -214,7 +216,7 @@ export class Identity {
     await this.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
   }
 
-  async admitDevice({ deviceKey, controlFeedKey, dataFeedKey }: DeviceAdmissionRequest) {
+  async admitDevice({ deviceKey, controlFeedKey, dataFeedKey }: DeviceAdmissionRequest): Promise<Credential> {
     log('Admitting device:', {
       identityKey: this.identityKey,
       hostDevice: this.deviceKey,
@@ -223,17 +225,18 @@ export class Identity {
       dataFeedKey,
     });
     const signer = this.getIdentityCredentialSigner();
+    const deviceCredential = await signer.createCredential({
+      subject: deviceKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.AuthorizedDevice',
+        identityKey: this.identityKey,
+        deviceKey,
+      },
+    });
     await writeMessages(
       this.controlPipeline.writer,
       [
-        await signer.createCredential({
-          subject: deviceKey,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            identityKey: this.identityKey,
-            deviceKey,
-          },
-        }),
+        deviceCredential,
         await signer.createCredential({
           subject: controlFeedKey,
           assertion: {
@@ -256,6 +259,8 @@ export class Identity {
         }),
       ].map((credential): FeedMessage.Payload => ({ credential: { credential } })),
     );
+
+    return deviceCredential;
   }
 
   private _onFeedAdded = async (feed: FeedWrapper<any>) => {

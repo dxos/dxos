@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { mainPadding, mx } from '@dxos/react-ui-theme';
+import { mainPadding, mainPaddingTransitions, mx } from '@dxos/react-ui-theme';
 
 import { useMainSize } from '../../hooks';
 
@@ -18,6 +18,7 @@ export const StatusBar = ({ showHints }: { showHints?: boolean }) => {
       className={mx(
         'fixed flex justify-between block-end-0 inset-inline-0 items-center border-bs border-separator z-[2]',
         mainPadding,
+        mainPaddingTransitions,
       )}
     >
       <div role='none'>{showHints && <Surface role='hints' limit={1} />}</div>
