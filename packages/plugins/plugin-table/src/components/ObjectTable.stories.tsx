@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ObjectTable } from './ObjectTable';
 import { Toolbar } from './Toolbar';
-import { createTable } from './testing';
+import { createEmptyTable } from './testing';
 import { TableType } from '../types';
 
 const Story = () => {
@@ -72,7 +72,7 @@ export default {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: ({ space }) => {
-        space.db.add(createTable());
+        space.db.add(createEmptyTable());
       },
     }),
     withTheme,
