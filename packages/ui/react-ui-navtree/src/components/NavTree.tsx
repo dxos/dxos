@@ -66,6 +66,7 @@ const defaultIndentation = (level: number): CSSProperties => {
 };
 
 export const NavTree = ({
+  classNames,
   id,
   items,
   current,
@@ -73,17 +74,16 @@ export const NavTree = ({
   open,
   type = DEFAULT_TYPE,
   popoverAnchorId,
+  renderPresence,
+  resolveItemLevel,
+  indentation = defaultIndentation,
+  loadDescendents,
   onNavigate,
   onItemOpenChange,
-  renderPresence,
   onOver,
   onDrop,
   onMove = defaultOnMove,
   onDragEnd,
-  resolveItemLevel,
-  indentation = defaultIndentation,
-  loadDescendents,
-  classNames,
 }: NavTreeProps) => {
   const Container = Mosaic.Container as NavTreeMosaicContainer;
   const { activeItem } = useMosaic();
@@ -103,13 +103,14 @@ export const NavTree = ({
         id,
         Component: NavTreeItemComponent,
         type,
+        getOverlayStyle,
         onOver,
         onDrop,
         onMove,
         onDragEnd,
-        getOverlayStyle,
       }}
     >
+      {/* TODO(burdon): onCallbacks at end. */}
       <NavTreeProvider
         current={current}
         attended={attended}

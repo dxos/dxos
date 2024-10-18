@@ -89,7 +89,7 @@ export const useTextEditor = (
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
       const state = EditorState.create({
         doc: initialValue,
-        selection: initialSelection,
+        // selection: initialSelection,
         extensions: [
           id && documentId.of(id),
           extensions,
@@ -116,7 +116,7 @@ export const useTextEditor = (
       view = new EditorView({
         parent: parentRef.current,
         state,
-        scrollTo: scrollTo ? EditorView.scrollIntoView(scrollTo, { yMargin: 96 }) : undefined,
+        scrollTo: scrollTo ? EditorView.scrollIntoView(scrollTo, { yMargin: 96 }) : undefined, // TODO(burdon): Const.
         dispatchTransactions: debug ? debugDispatcher : undefined,
       });
 
@@ -145,6 +145,11 @@ export const useTextEditor = (
       }
 
       if (scrollTo || selection) {
+        if (selection && selection.anchor > view.state.doc.length) {
+          log.warn('invalid selection', { length: view.state.doc.length, scrollTo, selection });
+          return;
+        }
+
         view.dispatch(createEditorStateTransaction(view.state, { scrollTo, selection }));
       }
     }
