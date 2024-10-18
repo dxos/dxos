@@ -56,9 +56,9 @@ export const calculateOverscroll = (
   plankSizing: Record<string, number>,
   sidebarOpen: boolean,
   complementarySidebarOpen: boolean,
-): Pick<CSSProperties, 'paddingLeft' | 'paddingRight'> | undefined => {
+): Pick<CSSProperties, 'paddingInlineStart' | 'paddingInlineEnd'> | undefined => {
   if (!planks?.length) {
-    return;
+    return { paddingInlineStart: 0, paddingInlineEnd: 0 };
   }
 
   // TODO(Zan): Move complementary sidebar size (360px), sidebar size (270px), plank resize handle size (20px) to CSS variables.
@@ -73,7 +73,7 @@ export const calculateOverscroll = (
     const plankSize = getPlankSize(plank.id);
     const overscrollPadding = `max(0px, calc(((100dvw - ${sidebarWidth} - ${complementarySidebarWidth} - (${plankSize} + 20px)) / 2)))`;
 
-    return { paddingLeft: overscrollPadding, paddingRight: overscrollPadding };
+    return { paddingInlineStart: overscrollPadding, paddingInlineEnd: overscrollPadding };
   } else {
     // Center the plank on the screen.
     const first = planks[0];
@@ -83,8 +83,8 @@ export const calculateOverscroll = (
     const lastSize = getPlankSize(last.id);
 
     return {
-      paddingLeft: `max(0px, calc(((100dvw - (${firstSize} + 20px)) / 2) - ${sidebarWidth}))`,
-      paddingRight: `max(0px, calc(((100dvw - (${lastSize} + 20px)) / 2) - ${complementarySidebarWidth}))`,
+      paddingInlineStart: `max(0px, calc(((100dvw - (${firstSize} + 20px)) / 2) - ${sidebarWidth}))`,
+      paddingInlineEnd: `max(0px, calc(((100dvw - (${lastSize} + 20px)) / 2) - ${complementarySidebarWidth}))`,
     };
   }
 };
