@@ -8,22 +8,24 @@ import { AST, JSONSchema, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import {
-  type EchoObjectAnnotation,
-  EchoObjectAnnotationId,
   type FieldMetaAnnotation,
   FieldMetaAnnotationId,
+  type ObjectAnnotation,
+  ObjectAnnotationId,
   ReferenceAnnotationId,
 } from '../ast';
-import { createEchoReferenceSchema } from '../ref-annotation';
+import { createEchoReferenceSchema } from '../handler';
 
 const ECHO_REFINEMENT_KEY = '$echo';
+
 interface EchoRefinement {
-  type?: EchoObjectAnnotation;
-  reference?: EchoObjectAnnotation;
+  type?: ObjectAnnotation;
+  reference?: ObjectAnnotation;
   fieldMeta?: FieldMetaAnnotation;
 }
+
 const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
-  [EchoObjectAnnotationId]: 'type',
+  [ObjectAnnotationId]: 'type',
   [ReferenceAnnotationId]: 'reference',
   [FieldMetaAnnotationId]: 'fieldMeta',
 };
@@ -73,19 +75,6 @@ export interface JsonSchema {
   items?: JsonSchema;
 }
 
-/**
- * @deprecated
- */
-// TODO(burdon): Remove.
-export const getSchemaTypename = (schema: JsonSchema): string | undefined => {
-  const match = schema.$ref?.match(/#\/\$defs\/(.+)/);
-  if (match) {
-    return match[1];
-  } else {
-    return undefined;
-  }
-};
-
 export const effectToJsonSchema = (schema: S.Schema<any>): any => {
   const withEchoRefinements = (ast: AST.AST): AST.AST => {
     let recursiveResult: AST.AST = ast;
@@ -117,7 +106,7 @@ export const effectToJsonSchema = (schema: S.Schema<any>): any => {
       );
     }
     const refinement: EchoRefinement = {};
-    for (const annotation of [EchoObjectAnnotationId, ReferenceAnnotationId, FieldMetaAnnotationId]) {
+    for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, FieldMetaAnnotationId]) {
       if (ast.annotations[annotation] != null) {
         refinement[annotationToRefinementKey[annotation]] = ast.annotations[annotation] as any;
       }
@@ -181,7 +170,7 @@ const jsonToEffectTypeSchema = (
   invariant(immutableIdField, 'no id in echo type');
   const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
   const annotations: Mutable<S.Annotations.Schema<any>> = {};
-  for (const annotation of [EchoObjectAnnotationId, ReferenceAnnotationId, FieldMetaAnnotationId]) {
+  for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, FieldMetaAnnotationId]) {
     if (echoRefinement[annotationToRefinementKey[annotation]]) {
       annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
     }

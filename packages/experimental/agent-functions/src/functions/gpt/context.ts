@@ -4,13 +4,13 @@
 
 import { type Space } from '@dxos/client/echo';
 import { createDocAccessor, getTextInRange, loadObjectReferences } from '@dxos/echo-db';
-import { type DynamicSchema, type EchoReactiveObject, effectToJsonSchema } from '@dxos/echo-schema';
+import { type MutableSchema, type EchoReactiveObject, effectToJsonSchema } from '@dxos/echo-schema';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
 
 // TODO(burdon): Evolve.
 export type RequestContext = {
-  schema?: Map<string, DynamicSchema>;
+  schema?: Map<string, MutableSchema>;
   object?: EchoReactiveObject<any>;
   text?: string;
 };
@@ -45,7 +45,7 @@ export const createContext = async (
   // Create schema registry.
   // TODO(burdon): Filter?
   const schemaList = await space.db.schema.list();
-  const schema = schemaList.reduce<Map<string, DynamicSchema>>((map, schema) => {
+  const schema = schemaList.reduce<Map<string, MutableSchema>>((map, schema) => {
     const jsonSchema = effectToJsonSchema(schema);
     if (jsonSchema.title) {
       map.set(jsonSchema.title, schema);

@@ -5,7 +5,7 @@
 import { Expando, TypedObject, ref, S } from '@dxos/echo-schema';
 
 export class Contact extends TypedObject<Contact>({
-  typename: 'example.test.Contact',
+  typename: 'example.com/type/Contact',
   version: '0.1.0',
 })(
   {
@@ -26,15 +26,8 @@ export class Contact extends TypedObject<Contact>({
   { partial: true },
 ) {}
 
-export class Todo extends TypedObject({
-  typename: 'example.test.Task.Todo',
-  version: '0.1.0',
-})({
-  name: S.optional(S.String),
-}) {}
-
 export class Task extends TypedObject({
-  typename: 'example.test.Task',
+  typename: 'example.com/type/Task',
   version: '0.1.0',
 })({
   title: S.optional(S.String),
@@ -43,7 +36,6 @@ export class Task extends TypedObject({
   previous: S.optional(S.suspend((): ref<Task> => ref(Task))),
   subTasks: S.optional(S.mutable(S.Array(S.suspend((): ref<Task> => ref(Task))))),
   description: S.optional(S.String),
-  todos: S.optional(S.Array(ref(Todo))),
 }) {}
 
 export enum RecordType {
@@ -53,7 +45,7 @@ export enum RecordType {
 }
 
 export class Container extends TypedObject({
-  typename: 'example.test.Container',
+  typename: 'example.com/type/' + 'Container',
   version: '0.1.0',
 })(
   {

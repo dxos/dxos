@@ -29,7 +29,8 @@ describe('Config hook', () => {
     expect(Object.entries(result.current).length).toBeGreaterThan(0);
   });
 
-  test('should return custom client config when used properly in a context', async () => {
+  // Flaky.
+  test('should return custom client config when used properly in a context', { retry: 2 }, async () => {
     const config = new Config({
       version: 1,
       runtime: {

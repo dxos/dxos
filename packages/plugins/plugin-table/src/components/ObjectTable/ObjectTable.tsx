@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { create, type DynamicSchema, S, TypedObject } from '@dxos/echo-schema';
+import { create, type MutableSchema, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type ColumnDef, Table, type TableProps } from '@dxos/react-ui-table';
@@ -31,7 +31,7 @@ export const ObjectTable = ({ table, role, stickyHeader }: ObjectTableProps) => 
   const [showSettings, setShowSettings] = useState(false);
   useEffect(() => setShowSettings(!table.schema), [table.schema]);
 
-  const [schemas, setSchemas] = useState<DynamicSchema[]>([]);
+  const [schemas, setSchemas] = useState<MutableSchema[]>([]);
   useEffect(() => {
     const t = setTimeout(async () => {
       if (space) {
@@ -133,7 +133,7 @@ const ObjectTableImpl = ({ table, role, stickyHeader }: ObjectTableProps) => {
 
   const columns = useMemo(
     () =>
-      createColumns(space, tables, table, onColumnUpdate, onColumnDelete, onRowUpdate, onRowDelete, onColumnReorder),
+      createColumns(space, tables, table, onColumnUpdate, onColumnDelete, onColumnReorder, onRowUpdate, onRowDelete),
     [space, tables, table, onColumnUpdate, onColumnDelete, onRowUpdate, onRowDelete],
   );
 
@@ -144,12 +144,11 @@ const ObjectTableImpl = ({ table, role, stickyHeader }: ObjectTableProps) => {
     [updateTableProp],
   );
 
-  const debug = false;
-
   if (!space) {
     return null;
   }
 
+  const debug = false;
   return (
     <>
       <Table.Main<any>

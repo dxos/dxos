@@ -6,9 +6,9 @@ import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime
 import { invariant } from '@dxos/invariant';
 
 import { getTargetMeta } from './object';
+import { defineHiddenProperty } from './utils';
 import { createReactiveProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler } from '../proxy';
 import { data, type ObjectMeta } from '../types';
-import { defineHiddenProperty } from '../utils';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
@@ -22,7 +22,6 @@ type ProxyTarget = {
 
   /**
    * For modifying the structure of the object.
-   *
    * This is a separate signal so that getter properties are supported.
    */
   [symbolPropertySignal]: GenericSignal;

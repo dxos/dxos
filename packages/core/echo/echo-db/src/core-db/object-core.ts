@@ -13,7 +13,7 @@ import {
   Reference,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import { generateEchoId, isReactiveObject, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
+import { createObjectId, isReactiveObject, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { setDeep, defer, getDeep, throwUnhandledError, deepMapValues } from '@dxos/util';
@@ -49,7 +49,7 @@ export class ObjectCore {
   /**
    * Id of the ECHO object.
    */
-  public id = generateEchoId();
+  public id = createObjectId();
 
   // TODO(dmaretskyi): Create a discriminated union for the bound/not bound states.
 

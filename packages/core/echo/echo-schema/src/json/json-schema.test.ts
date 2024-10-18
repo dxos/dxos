@@ -8,9 +8,9 @@ import { S } from '@dxos/effect';
 
 import { effectToJsonSchema, jsonToEffectSchema } from './json-schema';
 import { FieldMeta } from '../ast';
-import { ref } from '../ref-annotation';
+import { ref } from '../handler';
+import { TypedObject } from '../object';
 import { TEST_SCHEMA_TYPE } from '../testing';
-import { TypedObject } from '../typed-object-class';
 
 describe('effect-to-json', () => {
   const ECHO_KEY = '$echo';

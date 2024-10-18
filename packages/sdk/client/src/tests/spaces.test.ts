@@ -9,7 +9,7 @@ import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { getObjectCore } from '@dxos/echo-db';
-import { create, Expando, type Identifiable, type ReactiveObject, TYPE_PROPERTIES } from '@dxos/echo-schema';
+import { create, Expando, type HasId, type ReactiveObject, TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
@@ -502,7 +502,7 @@ describe('Spaces', () => {
     return create(Expando, props);
   };
 
-  const waitForObject = async (space: Space, object: Identifiable) => {
+  const waitForObject = async (space: Space, object: HasId) => {
     await expect.poll(() => space.db.getObjectById(object.id)).not.toEqual(undefined);
   };
 

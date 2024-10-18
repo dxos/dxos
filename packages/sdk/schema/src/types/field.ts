@@ -4,7 +4,7 @@
 
 import jp from 'jsonpath';
 
-import { AST, type S } from '@dxos/echo-schema';
+import { AST, type S, visit } from '@dxos/effect';
 
 import { type FieldType, FieldValueType, type ViewType } from './types';
 
@@ -15,80 +15,20 @@ export const getFieldValue = <T>(data: any, field: FieldType, defaultValue?: T):
 // TODO(burdon): Determine if path can be written back (or is a compute value).
 export const setFieldValue = <T>(data: any, field: FieldType, value: T): T => jp.value(data, '$.' + field.path, value);
 
-/**
- * Get the AST node associated with the field.
- */
-export const getProperty = (schema: S.Schema<any>, field: FieldType): AST.AST | undefined => {
-  let node: AST.AST = schema.ast;
-  const parts = field.path.split('.');
-  for (const part of parts) {
-    const props = AST.getPropertySignatures(node);
-    const prop = props.find((prop) => prop.name === part);
-    if (!prop) {
-      return undefined;
-    }
-
-    if (AST.isUnion(prop.type)) {
-      const n = prop.type.types.find(
-        (p) => AST.isTypeLiteral(p) || AST.isNumberKeyword(p) || AST.isBooleanKeyword(p) || AST.isStringKeyword(p),
-      );
-      if (!n) {
-        return undefined;
-      }
-      node = n;
-    } else {
-      node = prop.type;
-    }
-  }
-
-  return node;
-};
-
 // TODO(burdon): Return Field objects.
 export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FieldValueType][] => {
-  const visitNode = (node: AST.AST, path: string[] = [], acc: [string, FieldValueType][] = []) => {
-    const props = AST.getPropertySignatures(node);
-    props.forEach((prop) => {
-      const propName = prop.name.toString();
-      if (prop.isOptional) {
-        const unwrappedAst = unwrapOptionProperty(prop);
-        if (AST.isTypeLiteral(unwrappedAst)) {
-          return visitNode(unwrappedAst, [...path, propName], acc);
-        }
-      }
-
-      if (AST.isTypeLiteral(prop.type)) {
-        visitNode(prop.type, [...path, propName], acc);
-      } else {
-        let type: AST.AST = prop.type;
-        if (prop.isOptional) {
-          type = unwrapOptionProperty(prop);
-        }
-
-        acc.push([path.concat(propName).join('.'), toFieldValueType(type)]);
-      }
-    });
-
-    return acc;
-  };
-
-  return visitNode(schema.ast);
-};
-
-const unwrapOptionProperty = (prop: AST.PropertySignature): AST.AST => {
-  if (!AST.isUnion(prop.type)) {
-    throw new Error(`Not a union type: ${String(prop.name)}`);
-  }
-
-  // TODO(burdon): This is very likely a bug.
-  const [type] = prop.type.types;
-  return type;
+  const fields: [string, FieldValueType][] = [];
+  visit(schema.ast, (node, path) => {
+    fields.push([path.join('.'), toFieldValueType(node)]);
+  });
+  return fields;
 };
 
 // TODO(burdon): Reconcile with:
 //  - echo-schema/toFieldValueType
-const toFieldValueType = (type: AST.AST): FieldValueType => {
+export const toFieldValueType = (type: AST.AST): FieldValueType => {
   if (AST.isTypeLiteral(type)) {
+    // TODO(burdon): ???
     return FieldValueType.Ref;
   } else if (AST.isNumberKeyword(type)) {
     return FieldValueType.Number;
@@ -103,9 +43,9 @@ const toFieldValueType = (type: AST.AST): FieldValueType => {
   }
 
   // TODO(zan): How should we be thinking about transformations?
-  // - Which of these are we storing in the database?
-  // - For types that aren't the 'DateFromString' transformation, should we be using the 'from' or 'to' type?
-
+  //  See https://effect.website/docs/guides/schema/projections
+  //  - Which of these are we storing in the database?
+  //  - For types that aren't the 'DateFromString' transformation, should we be using the 'from' or 'to' type?
   if (AST.isTransformation(type)) {
     const identifier = AST.getIdentifierAnnotation(type);
     if (identifier._tag === 'Some') {
