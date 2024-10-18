@@ -3,3 +3,4 @@
 //
 
 export * from './coords';
+export * from './seed';

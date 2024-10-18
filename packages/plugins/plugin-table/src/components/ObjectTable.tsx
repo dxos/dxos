@@ -2,15 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { create, getSpace, useQuery, Filter } from '@dxos/react-client/echo';
 
 import { Table } from './Table';
-import { useStarterTable } from '../hooks/useStarterTable';
+import { useStarterTable } from '../hooks';
 import { type TableType } from '../types';
+import { createStarterTable as addStarterSchema, addStarterView } from '../util';
 
 export type ObjectTableProps = {
   table: TableType;
@@ -34,7 +35,12 @@ export const ObjectTable = ({ table }: ObjectTableProps) => {
     space.db.add(create(table.schema, {}));
   }, [table.schema, space]);
 
-  useStarterTable({ table, space });
+  useEffect(() => {
+    if (space && !table.schema && !table.view) {
+      addStarterSchema(space, table);
+      addStarterView(table);
+    }
+  }, [space, table.schema]);
 
   // TODO(Zan): Do we need this?
   if (!table.schema) {
