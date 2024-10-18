@@ -15,6 +15,7 @@ import {
   parseNavigationPlugin,
   parseMetadataResolverPlugin,
   resolvePlugin,
+  LayoutAction,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { create, type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
@@ -352,6 +353,15 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         action: NavigationAction.OPEN,
                         data: {
                           activeParts: { complementary: 'comments' },
+                        },
+                      },
+                    ],
+                    [
+                      {
+                        action: LayoutAction.SET_LAYOUT,
+                        data: {
+                          element: 'complementary',
+                          state: true,
                         },
                       },
                     ],

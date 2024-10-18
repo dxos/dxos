@@ -110,7 +110,6 @@ export class ShellManager extends ScopedShellManager {
     // Wait for focus to shift before typing.
     await sleep(1500);
     await this.authenticateInvitation('space', authCode, this.shell);
-    await this.doneInvitation('space', this.shell);
   }
 
   private async _onConsoleMessage(message: ConsoleMessage) {
