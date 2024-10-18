@@ -26,16 +26,15 @@ export const create: {
   <T extends {}>(schema: S.Schema<T, any>, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T>;
 } = <T extends {}>(objOrSchema: S.Schema<T, any> | T, obj?: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T> => {
   if (obj && (objOrSchema as any) !== Expando) {
-    return _create<T>({ ...obj } as T, meta, objOrSchema as S.Schema<T, any>);
+    return createObject<T>({ ...obj } as T, meta, objOrSchema as S.Schema<T, any>);
   } else if (obj && (objOrSchema as any) === Expando) {
-    return _create<T>({ ...obj } as T, meta, undefined, { expando: true });
+    return createObject<T>({ ...obj } as T, meta, undefined, { expando: true });
   } else {
-    // TODO(burdon): Breaks if cloned?
-    return _create<T>(objOrSchema as T, meta);
+    return createObject<T>(objOrSchema as T, meta);
   }
 };
 
-const _create = <T extends {}>(
+const createObject = <T extends {}>(
   obj: T,
   meta?: ObjectMeta,
   schema?: S.Schema<T>,
@@ -73,7 +72,7 @@ const setIdOnTarget = (target: any) => {
   target.id = createObjectId();
 };
 
-const symbolMeta = Symbol.for('@dxos/meta');
+const symbolMeta = Symbol.for('@dxos/schema/ObjectMeta');
 
 /**
  * Set metadata on object.
@@ -87,9 +86,9 @@ const initMeta = <T>(obj: T, meta: ObjectMeta = { keys: [] }) => {
  * Get metadata from object.
  * @internal
  */
-export const getTargetMeta = (object: any): ObjectMeta => {
+export const getObjectMeta = (object: any): ObjectMeta => {
   const metadata = object[symbolMeta];
-  invariant(metadata, 'Metadata not found.');
+  invariant(metadata, 'ObjectMeta not found.');
   return metadata;
 };
 
