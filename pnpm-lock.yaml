@@ -1462,6 +1462,9 @@ importers:
 
   packages/common/effect:
     dependencies:
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../invariant
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
@@ -10350,6 +10353,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -10365,6 +10371,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
