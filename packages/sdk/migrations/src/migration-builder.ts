@@ -125,7 +125,7 @@ export class MigrationBuilder {
   }
 
   private async _findObjectContainingHandle(id: string): Promise<DocHandleProxy<SpaceDoc> | undefined> {
-    const documentId = (this._rootDoc.links?.[id] || this._newLinks[id]) as AnyDocumentId | undefined;
+    const documentId = (this._rootDoc.links?.[id] || this._newLinks[id])?.toString() as AnyDocumentId | undefined;
     const docHandle = documentId && this._repo.find(documentId);
     if (!docHandle) {
       return undefined;
