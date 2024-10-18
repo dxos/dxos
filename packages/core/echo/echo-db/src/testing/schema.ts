@@ -34,6 +34,7 @@ export class Task extends TypedObject({
   completed: S.optional(S.Boolean),
   assignee: S.optional(Contact),
   previous: S.optional(S.suspend((): ref<Task> => ref(Task))),
+  // TODO(burdon): Document S.suspend.
   subTasks: S.optional(S.mutable(S.Array(S.suspend((): ref<Task> => ref(Task))))),
   description: S.optional(S.String),
 }) {}
@@ -45,7 +46,7 @@ export enum RecordType {
 }
 
 export class Container extends TypedObject({
-  typename: 'example.com/type/' + 'Container',
+  typename: 'example.com/type/Container',
   version: '0.1.0',
 })(
   {
