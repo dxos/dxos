@@ -63,10 +63,15 @@ export const TypedObject = <Klass>({
     options?: Options,
   ): AbstractTypedObject<Fields, S.Struct.Encoded<SchemaFields>> => {
     const fieldsSchema = options?.record ? S.Struct(fields, { key: S.String, value: S.Any }) : S.Struct(fields);
+
+    if (!fieldsSchema.fields['id']) {
+      // TODO(dmaretskyi): Check id field type.
+      throw new Error('Schema must have an `id` field.');
+    }
+
     // Ok to perform `as any` cast here since the types are explicitly defined.
     const schemaWithModifiers = S.mutable(options?.partial ? S.partial(fieldsSchema as any) : fieldsSchema);
-    const typeSchema = S.extend(schemaWithModifiers, S.Struct({ id: S.String }));
-    const annotatedSchema = typeSchema.annotations({
+    const annotatedSchema = schemaWithModifiers.annotations({
       [ObjectAnnotationId]: { typename, version },
     });
 

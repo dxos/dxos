@@ -213,11 +213,11 @@ const unwrapAst = (rootAst: AST.AST, predicate?: (ast: AST.AST) => boolean): AST
 
 const unwrapArray = (ast: AST.AST) => unwrapAst(ast, AST.isTupleType) as AST.TupleType | null;
 
-export const checkIdNotPresentOnSchema = (schema: S.Schema<any, any, any>) => {
+export const checkIdIsPresentOnSchema = (schema: S.Schema<any, any, any>) => {
   invariant(AST.isTypeLiteral(schema.ast));
   const idProperty = AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'id');
-  if (idProperty != null) {
-    throw new Error('"id" property name is reserved');
+  if (idProperty == null) {
+    throw new Error('Schema must have an `id` field.');
   }
 };
 

@@ -6,6 +6,7 @@ import { S } from '@dxos/effect';
 
 import { EchoObject } from '../ast';
 import { TypedObject } from '../object';
+import { ObjectId } from '../ast/object-id';
 
 // TODO(burdon): Clean up.
 
@@ -21,7 +22,7 @@ const Shape = S.Union(Circle, Square);
 // Simple types
 //
 
-const TestNestedSchema = S.mutable(S.Struct({ field: S.String }));
+const TestNestedSchema = S.mutable(S.Struct({ id: ObjectId, field: S.String }));
 export type TestNestedSchema = S.Schema.Type<typeof TestNestedSchema>;
 export const TestNestedType = TestNestedSchema.pipe(EchoObject('example.com/type/TestNested', '0.1.0'));
 
@@ -53,7 +54,7 @@ const fields = {
 // Manually create ECHO object.
 //
 
-export const TestSchema = S.mutable(S.partial(S.Struct(fields)));
+export const TestSchema = S.mutable(S.partial(S.Struct({ id: ObjectId, ...fields })));
 export type TestSchema = S.Schema.Type<typeof TestSchema>;
 export const TestType = TestSchema.pipe(EchoObject('example.com/type/Test', '0.1.0'));
 
@@ -61,9 +62,12 @@ export const TestType = TestSchema.pipe(EchoObject('example.com/type/Test', '0.1
 // TODO(burdon): ???
 //
 
-export class EmptySchemaType extends TypedObject(TEST_SCHEMA_TYPE)({}) {}
+export class EmptySchemaType extends TypedObject(TEST_SCHEMA_TYPE)({ id: ObjectId }) {}
 
-export class TestSchemaType extends TypedObject<TestSchemaType>(TEST_SCHEMA_TYPE)(fields, { partial: true }) {}
+export class TestSchemaType extends TypedObject<TestSchemaType>(TEST_SCHEMA_TYPE)(
+  { id: ObjectId, ...fields },
+  { partial: true },
+) {}
 
 //
 //

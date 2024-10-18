@@ -7,8 +7,10 @@ import { S } from '@dxos/effect';
 import { getObjectAnnotation } from '../ast';
 import { TypedObject } from '../object';
 import { requireTypeReference } from '../proxy';
+import { ObjectId } from '../ast/object-id';
 
 export class StoredSchema extends TypedObject({ typename: 'dxos.org/type/StoredSchema', version: '0.1.0' })({
+  id: ObjectId,
   typename: S.String,
   version: S.String,
   jsonSchema: S.Any,

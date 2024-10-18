@@ -7,14 +7,8 @@ import { type Simplify } from 'effect/Types';
 
 import { AST, S } from '@dxos/effect';
 
-import { checkIdNotPresentOnSchema } from './schema-validator';
-
-/**
- * Marker interface for object with an `id`.
- */
-export interface HasId {
-  readonly id: string;
-}
+import { checkIdIsPresentOnSchema } from './schema-validator';
+import type { HasId } from './object-id';
 
 export type ToMutable<T> = T extends {}
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
@@ -42,11 +36,10 @@ export const EchoObject =
       throw new Error('EchoObject can only be applied to an S.Struct type.');
     }
 
-    checkIdNotPresentOnSchema(self);
+    checkIdIsPresentOnSchema(self);
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
-    const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
-    const ast = AST.annotations(schemaWithId.ast, { [ObjectAnnotationId]: { typename, version } });
+    const ast = AST.annotations(S.mutable(self).ast, { [ObjectAnnotationId]: { typename, version } });
     return S.make(ast) as S.Schema<Simplify<HasId & ToMutable<A>>>;
   };
 

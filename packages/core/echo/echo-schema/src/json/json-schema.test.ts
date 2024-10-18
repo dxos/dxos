@@ -11,12 +11,13 @@ import { FieldMeta } from '../ast';
 import { ref } from '../handler';
 import { TypedObject } from '../object';
 import { TEST_SCHEMA_TYPE } from '../testing';
+import { ObjectId } from '../ast/object-id';
 
 describe('effect-to-json', () => {
   const ECHO_KEY = '$echo';
 
   test('type annotation', () => {
-    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
+    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ id: ObjectId, field: S.String }) {}
     const jsonSchema = effectToJsonSchema(Schema);
     expect(jsonSchema[ECHO_KEY].type).to.deep.eq(TEST_SCHEMA_TYPE);
   });
@@ -32,23 +33,23 @@ describe('effect-to-json', () => {
   });
 
   test('reference annotation', () => {
-    class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
-    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: ref(Nested) }) {}
+    class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ id: ObjectId, field: S.String }) {}
+    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ id: ObjectId, field: ref(Nested) }) {}
     const jsonSchema = effectToJsonSchema(Schema);
     const nested = jsonSchema.properties.field;
     expectReferenceAnnotation(nested);
   });
 
   test('array of references', () => {
-    class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
-    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.Array(ref(Nested)) }) {}
+    class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ id: ObjectId, field: S.String }) {}
+    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ id: ObjectId, field: S.Array(ref(Nested)) }) {}
     const jsonSchema = effectToJsonSchema(Schema);
     expectReferenceAnnotation(jsonSchema.properties.field.items);
   });
 
   test('optional references', () => {
-    class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
-    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.optional(ref(Nested)) }) {}
+    class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ id: ObjectId, field: S.String }) {}
+    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ id: ObjectId, field: S.optional(ref(Nested)) }) {}
     const jsonSchema = effectToJsonSchema(Schema);
     expectReferenceAnnotation(jsonSchema.properties.field);
   });
@@ -68,10 +69,11 @@ describe('effect-to-json', () => {
 describe('json-to-effect', () => {
   for (const partial of [false, true]) {
     test('deserialized equals original', () => {
-      class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
+      class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ id: ObjectId, field: S.String }) {}
 
       class Schema extends TypedObject(TEST_SCHEMA_TYPE)(
         {
+          id: ObjectId,
           string: S.String.pipe(S.annotations({ identifier: 'String' })),
           number: S.Number.pipe(FieldMeta('dxos.test', { is_date: true })),
           boolean: S.Boolean,

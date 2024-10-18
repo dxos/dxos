@@ -5,6 +5,7 @@
 import { S } from '@dxos/effect';
 
 import { EchoObject } from '../ast';
+import { ObjectId } from '../ast/object-id';
 
 export const EXPANDO_TYPENAME = 'dxos.org/type/Expando';
 
@@ -13,7 +14,12 @@ export const EXPANDO_TYPENAME = 'dxos.org/type/Expando';
  */
 export const ExpandoMarker = Symbol.for('@dxos/echo-schema/Expando');
 
-const ExpandoSchema = S.Struct({}, { key: S.String, value: S.Any }).pipe(EchoObject(EXPANDO_TYPENAME, '0.1.0'));
+const ExpandoSchema = S.Struct(
+  {
+    id: ObjectId,
+  },
+  { key: S.String, value: S.Any },
+).pipe(EchoObject(EXPANDO_TYPENAME, '0.1.0'));
 
 export interface Expando extends S.Schema.Type<typeof ExpandoSchema> {}
 
