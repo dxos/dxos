@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { computed, type ReadonlySignal } from '@preact/signals-core';
+import { computed, signal, type ReadonlySignal } from '@preact/signals-core';
+import sortBy from 'lodash.sortby';
 
 import { Resource } from '@dxos/context';
 import { PublicKey } from '@dxos/react-client';
@@ -37,7 +38,8 @@ export type TableModelProps = {
 export const columnSettingsButtonAttr = 'data-table-column-settings-button';
 const columnSettingsButtonClasses = 'ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2';
 const columnSettingsIcon = 'ph--caret-down--regular';
-const columnSettingsButtonHtml = `<button class="${columnSettingsButtonClasses}" ${columnSettingsButtonAttr}=true><svg><use href="/icons.svg#${columnSettingsIcon}"/></svg></button>`;
+const columnSettingsButtonHtml = (columnId: string) =>
+  `<button class="${columnSettingsButtonClasses}" ${columnSettingsButtonAttr}="${columnId}"><svg><use href="/icons.svg#${columnSettingsIcon}"/></svg></button>`;
 
 export class TableModel extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
@@ -49,7 +51,7 @@ export class TableModel extends Resource {
   public readonly table: TableType;
   public readonly data: any[];
   private onCellUpdate?: (col: number, row: number) => void;
-  public sorting: SortConfig[];
+  public sorting = signal<SortConfig | undefined>(undefined);
   public pinnedRows: { top: number[]; bottom: number[] };
   public rowSelection: number[];
 
@@ -65,7 +67,7 @@ export class TableModel extends Resource {
     this.table = table;
     this.data = data;
     this.onCellUpdate = onCellUpdate;
-    this.sorting = sorting;
+    this.sorting.value = sorting[0] ?? null;
     this.pinnedRows = pinnedRows;
     this.rowSelection = rowSelection;
   }
@@ -81,17 +83,32 @@ export class TableModel extends Resource {
             {
               value: field.label ?? field.path,
               resizeHandle: 'col',
-              accessoryHtml: columnSettingsButtonHtml,
+              accessoryHtml: columnSettingsButtonHtml(field.id),
             },
           ];
         }),
       );
     });
 
+    const sortedData = computed(() => {
+      const sort = this.sorting.value;
+      if (!sort) {
+        return this.data;
+      }
+
+      const field = this.table.view?.fields.find((f) => f.id === sort.columnId);
+      if (!field) {
+        return this.data;
+      }
+
+      const sorted = sortBy(this.data, [field.path]);
+      return sort.direction === 'desc' ? sorted.reverse() : sorted;
+    });
+
     // Map the data to grid cells.
     const cellValues: ReadonlySignal<DxGridPlaneCells> = computed(() => {
       const values: DxGridPlaneCells = {};
-      this.data.forEach((row, rowIndex) => {
+      sortedData.value.forEach((row, rowIndex) => {
         (this.table.view?.fields ?? []).forEach((field, colIndex: number) => {
           const cellValueSignal = computed(() =>
             row[field.path] !== undefined ? formatValue(field.type, row[field.path]) : '',
@@ -129,7 +146,11 @@ export class TableModel extends Resource {
   }
 
   public setSort(columnId: ColumnId, direction: SortDirection): void {
-    this.sorting = [{ columnId, direction }];
+    this.sorting.value = { columnId, direction };
+  }
+
+  public clearSort(): void {
+    this.sorting.value = undefined;
   }
 
   public moveColumn(columnId: ColumnId, newIndex: number): void {

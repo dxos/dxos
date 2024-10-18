@@ -68,7 +68,9 @@
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.1",
     "@preact/signals-core": "^1.6.0",
-    "@radix-ui/react-context": "^1.0.0"
+    "@radix-ui/react-context": "^1.0.0",
+    "@radix-ui/react-popper": "^1.1.2",
+    "lodash.sortby": "^4.7.0"
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",
@@ -77,6 +79,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
+    "@types/lodash.sortby": "^4.7.7",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
