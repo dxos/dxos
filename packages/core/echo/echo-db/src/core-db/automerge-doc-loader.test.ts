@@ -38,7 +38,7 @@ describe('AutomergeDocumentLoader', () => {
     const objectDocHandle = loader.createDocumentForObject(objectId);
     const handle = spaceRootDocHandle.docSync();
     expect(objectDocHandle.docSync()?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
-    expect(handle?.links?.[objectId]).to.eq(objectDocHandle.url);
+    expect(handle?.links?.[objectId].toString()).to.eq(objectDocHandle.url);
   });
 
   test('listener is invoked after a document is loaded', async () => {
