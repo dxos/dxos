@@ -4,40 +4,56 @@
 
 import '@dxos-theme';
 
+import { type StoryObj } from '@storybook/react';
 import React from 'react';
 
 import { create } from '@dxos/echo-schema';
-import { ViewSchema, type ViewType } from '@dxos/schema';
+import { type ViewType } from '@dxos/schema';
 import { withTheme, withLayout, withSignals } from '@dxos/storybook-utils';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
+import { useSchemaResolver } from '../../hooks';
 import { testView } from '../../testing';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
 
-const Story = (props: ViewEditorProps) => (
-  <TestPopup>
-    <ViewEditor {...props} />
-  </TestPopup>
-);
+type StoryProps = Omit<ViewEditorProps, 'schemaResolver'>;
+
+const Story = (props: StoryProps) => {
+  const resolver = useSchemaResolver();
+  if (!resolver) {
+    return null;
+  }
+
+  return (
+    <TestPopup>
+      <ViewEditor schemaResolver={resolver} {...props} />
+    </TestPopup>
+  );
+};
 
 export default {
   title: 'react-ui-data/ViewEditor',
   decorators: [withTheme, withSignals, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],
+  render: Story,
   parameters: {
     translations,
   },
-  render: Story,
 };
 
-export const Default = {
+export const Default: StoryObj<StoryProps> = {
   args: {
     view: create(testView),
-  } satisfies ViewEditorProps,
+  },
 };
 
-export const Empty = {
+export const Empty: StoryObj<StoryProps> = {
   args: {
-    view: create<ViewType>({ query: { schema: ViewSchema }, fields: [] }),
-  } satisfies ViewEditorProps,
+    view: create<ViewType>({
+      query: {
+        schema: 'example.com/schema/TestSchema',
+      },
+      fields: [],
+    }),
+  },
 };

@@ -26,7 +26,8 @@ export const addStarterSchema = (space: Space, table: TableType) => {
 
 export const addStarterView = (table: TableType) => {
   table.view = {
-    query: { schema: {} },
+    // TODO(Zan): What is the appropriate schema value for the query here?
+    query: { schema: '' },
     fields: [
       { id: 'name', path: 'name', label: 'Name', type: FieldValueType.String },
       { id: 'description', path: 'description', label: 'Description', type: FieldValueType.String },

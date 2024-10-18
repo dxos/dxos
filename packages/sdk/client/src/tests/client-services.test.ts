@@ -112,12 +112,12 @@ describe('Client services', () => {
     onTestFinished(() => testBuilder.destroy());
 
     const peer1 = testBuilder.createClientServicesHost({
-      devicePresenceAnnounceInterval: 1_000,
-      devicePresenceOfflineTimeout: 2_000,
+      devicePresenceAnnounceInterval: 250,
+      devicePresenceOfflineTimeout: 500,
     });
     const peer2 = testBuilder.createClientServicesHost({
-      devicePresenceAnnounceInterval: 1_000,
-      devicePresenceOfflineTimeout: 2_000,
+      devicePresenceAnnounceInterval: 250,
+      devicePresenceOfflineTimeout: 500,
     });
 
     await peer1.open(new Context());
@@ -158,10 +158,14 @@ describe('Client services', () => {
     await expect.poll(() => client2.halo.devices.get()).toHaveLength(2);
 
     await expect
-      .poll(() => client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence)
+      .poll(() => client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence, {
+        timeout: 2000,
+      })
       .toEqual(Device.PresenceState.ONLINE);
     await expect
-      .poll(() => client2.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence)
+      .poll(() => client2.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence, {
+        timeout: 2000,
+      })
       .toEqual(Device.PresenceState.ONLINE);
 
     // Ensure peer2 shows up as offline to peer1.
@@ -170,7 +174,9 @@ describe('Client services', () => {
     await peer2.close();
 
     await expect
-      .poll(() => client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence)
+      .poll(() => client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence, {
+        timeout: 2000,
+      })
       .toEqual(Device.PresenceState.OFFLINE);
   });
 

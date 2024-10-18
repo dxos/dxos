@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 
-import { type DynamicSchema, S, TypedObject, create } from '@dxos/echo-schema';
+import { type MutableSchema, S, TypedObject, create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { FieldValueType } from '@dxos/schema';
 
@@ -19,11 +19,12 @@ export const TestSchema = TypedObject({ typename: 'example.com/type/test', versi
   netWorth: S.optional(S.Number),
 });
 
-export const createTable = (schema?: DynamicSchema) =>
+export const createTable = (schema?: MutableSchema) =>
   create(TableType, {
     schema,
     view: {
-      query: { schema: {} },
+      // TODO(Zan): What is the appropriate schema value for the query here?
+      query: { schema: '' },
       fields: [
         { id: 'name', path: 'name', label: 'Name', type: FieldValueType.String },
         { id: 'age', path: 'age', label: 'Age', type: FieldValueType.Number },

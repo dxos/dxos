@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { type DynamicSchema } from '@dxos/echo-schema';
+import { type MutableSchema } from '@dxos/echo-schema';
 import { Button, type ButtonProps, Input, Select, useTranslation } from '@dxos/react-ui';
 
 import { TABLE_PLUGIN } from '../../../meta';
@@ -14,7 +14,7 @@ const NEW_ID = '__new';
 
 export type TableSettingsProps = {
   table: TableType;
-  schemas?: DynamicSchema[];
+  schemas?: MutableSchema[];
   onClickContinue?: ButtonProps['onClick'];
 };
 

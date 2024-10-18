@@ -6,10 +6,10 @@ import { describe, expect, test } from 'vitest';
 
 import { S } from '@dxos/effect';
 
-import { getSchema } from './getter';
-import { create } from './handler';
-import { TEST_SCHEMA_TYPE } from './testing';
-import { TypedObject } from './typed-object-class';
+import { TypedObject } from './typed-object';
+import { create } from '../handler';
+import { getSchema } from '../proxy';
+import { TEST_SCHEMA_TYPE } from '../testing';
 
 class Organization extends TypedObject(TEST_SCHEMA_TYPE)({
   name: S.String,
@@ -38,7 +38,7 @@ describe('EchoObject class dsl', () => {
   });
 
   describe('class options', () => {
-    class Person extends TypedObject<Person>({ typename: 'Person', version: '1.0.0' })(
+    class Person extends TypedObject<Person>({ typename: 'example.com/type/Person', version: '1.0.0' })(
       {
         name: S.String,
       },

@@ -5,17 +5,15 @@
 import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { StoredSchema } from './stored-schema';
-import { schemaVariance } from '../ast';
+import { StoredSchema } from './types';
+import { type HasId, schemaVariance } from '../ast';
 import { effectToJsonSchema, jsonToEffectSchema } from '../json';
-import { type Identifiable } from '../types';
 
-export interface DynamicSchemaConstructor extends S.Schema<DynamicSchema> {
-  new (): Identifiable;
+export interface MutableSchemaConstructor extends S.Schema<MutableSchema> {
+  new (): HasId;
 }
 
-// TODO(burdon): Why is this a function?
-export const DynamicSchemaBase = (): DynamicSchemaConstructor => {
+export const MutableSchemaBase = (): MutableSchemaConstructor => {
   return class {
     static get ast() {
       return this._schema.ast;
@@ -35,7 +33,7 @@ export const DynamicSchemaBase = (): DynamicSchemaConstructor => {
 
     private static get _schema() {
       // The field is DynamicEchoSchema in runtime, but is serialized as StoredEchoSchema in automerge.
-      return S.Union(StoredSchema, S.instanceOf(DynamicSchema)).annotations(StoredSchema.ast.annotations);
+      return S.Union(StoredSchema, S.instanceOf(MutableSchema)).annotations(StoredSchema.ast.annotations);
     }
   } as any;
 };
@@ -43,9 +41,8 @@ export const DynamicSchemaBase = (): DynamicSchemaConstructor => {
 /**
  * Schema that can be modified at runtime via the API.
  */
-// TODO(burdon): Rename MutableSchema.
-export class DynamicSchema extends DynamicSchemaBase() implements S.Schema<Identifiable> {
-  private _schema: S.Schema<Identifiable> | undefined;
+export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> {
+  private _schema: S.Schema<any> | undefined;
   private _isDirty = true;
 
   constructor(public readonly serializedSchema: StoredSchema) {
@@ -87,7 +84,7 @@ export class DynamicSchema extends DynamicSchemaBase() implements S.Schema<Ident
     return schemaVariance;
   }
 
-  public get schema(): S.Schema<Identifiable> {
+  public get schema(): S.Schema<any> {
     return this._getSchema();
   }
 
@@ -106,7 +103,7 @@ export class DynamicSchema extends DynamicSchemaBase() implements S.Schema<Ident
     const schemaExtension = S.partial(S.Struct(fields));
     const extended = S.extend(oldSchema, schemaExtension).annotations(
       oldSchema.ast.annotations,
-    ) as any as S.Schema<Identifiable>;
+    ) as any as S.Schema<any>;
     this.serializedSchema.jsonSchema = effectToJsonSchema(extended);
   }
 
@@ -172,7 +169,7 @@ const unwrapOptionality = (property: AST.PropertySignature): AST.PropertySignatu
 
   return {
     ...property,
-    type: property.type.types.find((p) => !AST.isUndefinedKeyword(p))!,
+    type: property.type.types.find((type) => !AST.isUndefinedKeyword(type))!,
   } as any;
 };
 

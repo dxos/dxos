@@ -10,9 +10,8 @@ import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
-import { ViewEditor } from '@dxos/react-ui-data';
 
-import { TableContainer } from './components';
+import { TableContainer, TableViewEditor } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
 import translations from './translations';
 import { TableType } from './types';
@@ -105,11 +104,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                 return null;
               }
 
-              return (
-                <div>
-                  <ViewEditor view={data.subject.view} />
-                </div>
-              );
+              return <TableViewEditor view={data.subject.view} />;
             }
             default:
               return null;

@@ -3,15 +3,9 @@
 //
 
 import { S } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
 
-import { type EchoObjectAnnotation, EchoObjectAnnotationId, schemaVariance } from './ast';
-import { getSchema, getTypeReference } from './getter';
-
-type TypedObjectOptions = {
-  partial?: true;
-  record?: true;
-};
+import { type ObjectAnnotation, ObjectAnnotationId, schemaVariance } from '../ast';
+import { getSchema, getTypeReference } from '../proxy';
 
 /**
  * Marker interface for typed objects (for type inference).
@@ -24,15 +18,36 @@ export interface AbstractTypedObject<Fields, I> extends S.Schema<Fields, I> {
   readonly typename: string;
 }
 
+export type TypedObjectOptions = {
+  partial?: true;
+  record?: true;
+};
+
+const TYPENAME_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
+const VERSION_REGEX = /^\d+.\d+.\d+$/;
+
+type TypeObjectOptions = {
+  // TODO(dmaretskyi): Remove after all legacy types has been removed.
+  skipTypenameFormatCheck?: boolean;
+};
+
 /**
  * Base class factory for typed objects.
  */
 // TODO(burdon): Support pipe(S.default({}))
-export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
-  invariant(
-    typeof args.typename === 'string' && args.typename.length > 0 && !args.typename.includes(':'),
-    'Invalid typename.',
-  );
+export const TypedObject = <Klass>({
+  typename,
+  version,
+  skipTypenameFormatCheck,
+}: ObjectAnnotation & TypeObjectOptions) => {
+  if (!skipTypenameFormatCheck) {
+    if (!TYPENAME_REGEX.test(typename)) {
+      throw new TypeError(`Invalid typename: ${typename}`);
+    }
+    if (!VERSION_REGEX.test(version)) {
+      throw new TypeError(`Invalid version: ${version}`);
+    }
+  }
 
   return <
     Options extends TypedObjectOptions,
@@ -48,16 +63,17 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
     options?: Options,
   ): AbstractTypedObject<Fields, S.Struct.Encoded<SchemaFields>> => {
     const fieldsSchema = options?.record ? S.Struct(fields, { key: S.String, value: S.Any }) : S.Struct(fields);
-    const schemaWithModifiers = S.mutable(options?.partial ? S.partial(fieldsSchema as any) : fieldsSchema); // Ok to perform `as any` cast here since the types are explicitly defined.
+    // Ok to perform `as any` cast here since the types are explicitly defined.
+    const schemaWithModifiers = S.mutable(options?.partial ? S.partial(fieldsSchema as any) : fieldsSchema);
     const typeSchema = S.extend(schemaWithModifiers, S.Struct({ id: S.String }));
     const annotatedSchema = typeSchema.annotations({
-      [EchoObjectAnnotationId]: { typename: args.typename, version: args.version },
+      [ObjectAnnotationId]: { typename, version },
     });
 
     return class {
-      static readonly typename = args.typename;
+      static readonly typename = typename;
       static [Symbol.hasInstance](obj: unknown): obj is Klass {
-        return obj != null && getTypeReference(getSchema(obj))?.objectId === args.typename;
+        return obj != null && getTypeReference(getSchema(obj))?.objectId === typename;
       }
 
       static readonly ast = annotatedSchema.ast;
@@ -68,6 +84,6 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
       private constructor() {
         throw new Error('Use create(Typename, { ...fields }) to instantiate an object.');
       }
-    } as any;
+    } as any; // TODO(burdon): ???
   };
 };
