@@ -322,6 +322,7 @@ export const NavTreeContainer = ({
   }, [onOpenItemIdsChange, openItemIds]);
 
   // TODO(burdon): Remove.
+  // Debug list.
   const debug = false;
   if (debug) {
     const getLabel = (item: NavTreeItem) => {
