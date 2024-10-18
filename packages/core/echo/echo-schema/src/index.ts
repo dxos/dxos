@@ -7,14 +7,18 @@
  */
 export { AST, JSONSchema, S } from '@dxos/effect';
 
+// TODO(burdon): Clean-up ./types (remove import deps from this file).
+// TODO(burdon): Change TypedObject to piped effector (not base class).
+// TODO(burdon): Organize subfolders to minimize cross-folder deps.
+// TODO(burdon): Rename EchoReactiveObject (remove ECHO prefix).
+// TODO(burdon): Consistent Symbol.for names.
+// TODO(burdon): S.Schema<HasId> everywhere?
+// TODO(burdon): Fix defaults.
+
 export * from './ast';
-export * from './dynamic';
-export * from './expando';
-export { getSchema, getType, getTypename, getMeta, getTypeReference, isDeleted, requireTypeReference } from './getter';
 export * from './handler';
 export * from './json';
+export * from './mutable';
+export * from './object';
 export * from './proxy';
-export { ref } from './ref-annotation';
-export * from './typed-object-class';
 export * from './types';
-export { defineHiddenProperty } from './utils';

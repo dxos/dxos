@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 
-import { type DynamicSchema, S, TypedObject, create } from '@dxos/echo-schema';
+import { type MutableSchema, S, TypedObject, create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 import { TableType } from '../../types';
@@ -17,7 +17,7 @@ export const TestSchema = TypedObject({ typename: 'example.com/type/test', versi
   active: S.optional(S.Boolean),
 });
 
-export const createTable = (schema?: DynamicSchema) =>
+export const createTable = (schema?: MutableSchema) =>
   create(TableType, {
     schema,
     props: [

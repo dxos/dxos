@@ -12,7 +12,6 @@ describe('Object', () => {
     const amountToGenerate = 10_000;
 
     const generators = [ulid];
-
     for (const generator of generators) {
       const start = Date.now();
       for (let i = 0; i < amountToGenerate; i++) {

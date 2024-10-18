@@ -32,13 +32,12 @@ export {
   type EchoDatabase,
   Filter,
   type FilterSource,
+  type Hypergraph,
   type IDocHandle,
   Query,
-  RuntimeSchemaRegistry,
   type Selection,
   type Subscription,
   type SubscriptionHandle,
-  type Hypergraph,
 } from '@dxos/echo-db';
 
 // TODO(dmaretskyi): Remove this export.

@@ -4,7 +4,7 @@
 
 import {
   createReactiveProxy,
-  DynamicSchema,
+  MutableSchema,
   type EchoReactiveObject,
   type ObjectMeta,
   getMeta,
@@ -135,7 +135,7 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
     if (value === undefined) {
       delete target[key];
     } else if (typeof value === 'object') {
-      if (value instanceof DynamicSchema) {
+      if (value instanceof MutableSchema) {
         target[key] = value.serializedSchema;
         validateInitialProps(value.serializedSchema, seen);
       } else if (isEchoObject(value)) {

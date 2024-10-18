@@ -7,13 +7,13 @@ import { ulid } from 'ulidx';
 import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
+import { Expando } from './expando';
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
-import { getEchoObjectAnnotation } from '../ast';
-import { Expando } from '../expando';
+import { defineHiddenProperty } from './utils';
+import { getObjectAnnotation } from '../ast';
 import { createReactiveProxy, getProxyHandlerSlot, isValidProxyTarget, type ReactiveHandler } from '../proxy';
 import { type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject } from '../types';
-import { defineHiddenProperty } from '../utils';
 
 /**
  * Creates a reactive object from a plain Javascript object.
@@ -46,7 +46,7 @@ const _create = <T extends {}>(
   }
 
   if (schema) {
-    const shouldGenerateId = options?.expando || getEchoObjectAnnotation(schema);
+    const shouldGenerateId = options?.expando || getObjectAnnotation(schema);
     if (shouldGenerateId) {
       setIdOnTarget(obj);
     }
@@ -62,7 +62,7 @@ const _create = <T extends {}>(
   }
 };
 
-export const generateEchoId = () => ulid();
+export const createObjectId = () => ulid();
 
 /**
  * Set ID on ECHO object targets during creation.
@@ -70,7 +70,7 @@ export const generateEchoId = () => ulid();
  */
 const setIdOnTarget = (target: any) => {
   invariant(!('id' in target), 'Object already has an `id` field, which is reserved.');
-  target.id = generateEchoId();
+  target.id = createObjectId();
 };
 
 const symbolMeta = Symbol.for('@dxos/meta');
@@ -95,7 +95,6 @@ export const getTargetMeta = (object: any): ObjectMeta => {
 
 /**
  * Unsafe method to override id for debugging/testing and migration purposes.
- *
  * @deprecated
  */
 export const dangerouslyAssignProxyId = <T>(obj: ReactiveObject<T>, id: string) => {

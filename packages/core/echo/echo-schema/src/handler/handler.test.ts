@@ -125,7 +125,8 @@ describe('getters', () => {
     });
 
     using updates = updateCounter(() => {
-      obj.getter;
+      const value = obj.getter;
+      expect(value).to.exist;
     });
 
     innerObj.string = 'baz';

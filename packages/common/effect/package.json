@@ -25,6 +25,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*"
   },
   "devDependencies": {

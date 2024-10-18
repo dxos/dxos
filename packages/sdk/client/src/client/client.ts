@@ -20,7 +20,7 @@ import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject, raise } from '@dxos/debug';
 import { EchoClient } from '@dxos/echo-db';
-import { getEchoObjectTypename, type S } from '@dxos/echo-schema';
+import { getTypename, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -224,7 +224,7 @@ export class Client {
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
   addTypes(types: S.Schema<any>[]) {
-    log('addTypes', { schema: types.map((type) => getEchoObjectTypename(type)) });
+    log('addTypes', { schema: types.map((type) => getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
     // if (!this._initialized) {

@@ -10,11 +10,11 @@ import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { getTargetMeta } from './object';
+import { defineHiddenProperty } from './utils';
 import { SchemaValidator, symbolSchema } from '../ast';
-import { getTypeReference } from '../getter';
+import { getTypeReference } from '../proxy';
 import { createReactiveProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from '../proxy';
 import { data, type ObjectMeta } from '../types';
-import { defineHiddenProperty } from '../utils';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');

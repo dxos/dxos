@@ -413,7 +413,7 @@ describe('Queries with types', () => {
     const contact = db.add(create(Contact, {}));
     const name = 'Rich Ivanov';
 
-    const query = db.query(Filter.typename('example.test.Contact'));
+    const query = db.query(Filter.typename('example.com/type/Contact'));
     const result = await query.run();
     expect(result.objects).to.have.length(1);
     expect(result.objects[0]).to.eq(contact);

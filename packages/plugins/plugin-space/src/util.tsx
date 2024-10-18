@@ -10,7 +10,7 @@ import {
   getTypename,
   type Expando,
   getSchema,
-  getEchoObjectAnnotation,
+  getObjectAnnotation,
   EXPANDO_TYPENAME,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -598,7 +598,7 @@ export const getNestedObjects = async (
 // TODO(burdon): Remove.
 export const cloneObject = async (object: Expando, resolve: MetadataResolver): Promise<Expando> => {
   const schema = getSchema(object);
-  const typename = schema ? getEchoObjectAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
+  const typename = schema ? getObjectAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
   const metadata = resolve(typename);
   const serializer = metadata.serializer;
   invariant(serializer, `No serializer for type: ${typename}`);

@@ -5,13 +5,13 @@
 import { type Runnable, RunnablePassthrough } from '@langchain/core/runnables';
 import get from 'lodash.get';
 
-import { type ChainInput, ChainInputType, ChainPromptType } from '@dxos/plugin-chain/types';
-import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
 import { type Space } from '@dxos/client/echo';
 import { todo } from '@dxos/debug';
 import { Filter } from '@dxos/echo-db';
-import { type EchoReactiveObject, type JsonSchema } from '@dxos/echo-schema';
+import { type ReactiveObject, type JsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
+import { type ChainInput, ChainInputType, ChainPromptType } from '@dxos/plugin-chain/types';
+import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
 import { nonNullable } from '@dxos/util';
 
 import { createContext, type RequestContext } from './context';
@@ -51,7 +51,7 @@ export type RequestProcessorProps = {
 export type ProcessThreadResult = {
   success: boolean;
   text?: string;
-  parts?: EchoReactiveObject<any>[];
+  parts?: ReactiveObject<any>[];
 };
 
 export class RequestProcessor {
@@ -85,8 +85,8 @@ export class RequestProcessor {
               ?.map(({ content }) => content)
               .filter(nonNullable)
               .join('\n') ?? '';
-          const parts = blocks?.map(({ object }) => object).filter(nonNullable) ?? [];
 
+          const parts = blocks?.map(({ object }) => object).filter(nonNullable) ?? [];
           log.info('response', { blocks });
           return { success: true, text, parts };
         }
