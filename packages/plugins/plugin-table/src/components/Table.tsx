@@ -8,11 +8,11 @@ import React, { useCallback, useRef, useState, type MouseEvent } from 'react';
 import { type DxGridElement, type DxAxisResize, Grid } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
+import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { TableCellEditor } from './TableCellEditor';
 import { useTableModel } from '../hooks';
 import { columnSettingsButtonAttr } from '../table-model';
 import { type TableType } from '../types';
-import { ColumnActionsMenu } from './ColumnActionsMenu';
 
 // NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
 // These are offset by 1px to avoid double borders in planks.

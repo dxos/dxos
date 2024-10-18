@@ -3,7 +3,7 @@
 //
 
 import * as ModalPrimitive from '@radix-ui/react-popper';
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { DropdownMenu, useThemeContext, useTranslation } from '@dxos/react-ui';
 
