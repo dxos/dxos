@@ -15,3 +15,4 @@ export {
   createDocAccessor,
   getObjectCore,
 } from './types';
+export * from './crud-api';
