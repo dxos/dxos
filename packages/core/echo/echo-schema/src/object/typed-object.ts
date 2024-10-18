@@ -26,16 +26,27 @@ export type TypedObjectOptions = {
 const TYPENAME_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
 const VERSION_REGEX = /^\d+.\d+.\d+$/;
 
+type TypeObjectOptions = {
+  // TODO(dmaretskyi): Remove after all legacy types has been removed.
+  skipTypenameFormatCheck?: boolean;
+};
+
 /**
  * Base class factory for typed objects.
  */
 // TODO(burdon): Support pipe(S.default({}))
-export const TypedObject = <Klass>({ typename, version }: ObjectAnnotation) => {
-  if (!TYPENAME_REGEX.test(typename)) {
-    throw new TypeError(`Invalid typename: ${typename}`);
-  }
-  if (!VERSION_REGEX.test(version)) {
-    throw new TypeError(`Invalid version: ${version}`);
+export const TypedObject = <Klass>({
+  typename,
+  version,
+  skipTypenameFormatCheck,
+}: ObjectAnnotation & TypeObjectOptions) => {
+  if (!skipTypenameFormatCheck) {
+    if (!TYPENAME_REGEX.test(typename)) {
+      throw new TypeError(`Invalid typename: ${typename}`);
+    }
+    if (!VERSION_REGEX.test(version)) {
+      throw new TypeError(`Invalid version: ${version}`);
+    }
   }
 
   return <
