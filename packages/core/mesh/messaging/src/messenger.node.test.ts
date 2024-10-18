@@ -5,12 +5,10 @@
 import { afterAll, onTestFinished, beforeAll, test, describe } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
-import { createEphemeralEdgeIdentity, EdgeClient } from '@dxos/edge-client';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
-import { openAndClose } from '@dxos/test-utils';
 
 import { messengerTests } from './messenger.blueprint-test';
-import { EdgeSignalManager, WebsocketSignalManager } from './signal-manager';
+import { WebsocketSignalManager } from './signal-manager';
 import { type Message } from './signal-methods';
 import { PAYLOAD_1, TestBuilder } from './testing';
 
@@ -48,16 +46,4 @@ describe('Messenger with WebsocketSignalManager', () => {
       await asyncTimeout(receivePromise, 1_000);
     }
   });
-});
-
-// TODO(mykola): Expects wrangler dev in edge repo to run. Skip to pass CI.
-describe.skip('Messenger with EdgeSignalManager', () => {
-  const edgeSignalFactory = async () => {
-    const client = new EdgeClient(await createEphemeralEdgeIdentity(), { socketEndpoint: 'ws://localhost:8787' });
-    await openAndClose(client);
-
-    return new EdgeSignalManager({ edgeConnection: client });
-  };
-
-  messengerTests(edgeSignalFactory);
 });

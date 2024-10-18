@@ -20,7 +20,11 @@ import { TestSchemaType } from '@dxos/echo-schema/testing';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
+<<<<<<< HEAD
 const TestType: ObjectAnnotation = { typename: 'TestType', version: '1.0.0' };
+=======
+const TestType: ObjectAnnotation = { typename: 'example.com/TestType', version: '1.0.0' };
+>>>>>>> origin/main
 const createTestSchemas = () => [
   create(StoredSchema, {
     ...TestType,

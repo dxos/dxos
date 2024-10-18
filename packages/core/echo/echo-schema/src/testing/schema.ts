@@ -7,6 +7,8 @@ import { S } from '@dxos/effect';
 import { EchoObject } from '../ast';
 import { TypedObject } from '../object';
 
+// TODO(burdon): Clean up.
+
 //
 // Primitives
 //

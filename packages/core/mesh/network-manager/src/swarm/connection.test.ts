@@ -34,7 +34,7 @@ describe('Connection', () => {
     const slowPeer = { peerKey: setup.slowConnectionKey.toHex() };
     const fastPeer = { peerKey: setup.fastConnectionKey.toHex() };
 
-    const slowPeerProtocol = new TestWireProtocol(PublicKey.from(slowPeer.peerKey));
+    const slowPeerProtocol = new TestWireProtocol();
     const slowConnection = new Connection(
       topic,
       slowPeer,
@@ -56,7 +56,7 @@ describe('Connection', () => {
       createRtcTransportFactory(),
     );
 
-    const fastPeerProtocol = new TestWireProtocol(PublicKey.from(fastPeer.peerKey));
+    const fastPeerProtocol = new TestWireProtocol();
     const fastConnection = new Connection(
       topic,
       fastPeer,

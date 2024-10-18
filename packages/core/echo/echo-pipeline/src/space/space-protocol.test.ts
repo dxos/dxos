@@ -68,6 +68,10 @@ describe('space/space-protocol', () => {
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory,
+        peerInfo: {
+          peerKey: peerId1.toHex(),
+          identityKey: peerId1.toHex(),
+        },
       }),
     });
 
@@ -83,6 +87,10 @@ describe('space/space-protocol', () => {
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory,
+        peerInfo: {
+          peerKey: peerId2.toHex(),
+          identityKey: peerId2.toHex(),
+        },
       }),
     });
 

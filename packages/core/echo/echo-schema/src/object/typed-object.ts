@@ -3,7 +3,6 @@
 //
 
 import { S } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
 
 import { type ObjectAnnotation, ObjectAnnotationId, schemaVariance } from '../ast';
 import { getSchema, getTypeReference } from '../proxy';
@@ -27,13 +26,37 @@ export type TypedObjectOptions = {
 const TYPENAME_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
 const VERSION_REGEX = /^\d+.\d+.\d+$/;
 
+<<<<<<< HEAD
+=======
+type TypeObjectOptions = {
+  // TODO(dmaretskyi): Remove after all legacy types has been removed.
+  skipTypenameFormatCheck?: boolean;
+};
+
+>>>>>>> origin/main
 /**
  * Base class factory for typed objects.
  */
 // TODO(burdon): Support pipe(S.default({}))
+<<<<<<< HEAD
 export const TypedObject = <Klass>({ typename, version }: ObjectAnnotation) => {
   invariant(TYPENAME_REGEX.test(typename), `Invalid typename: ${typename}`);
   invariant(VERSION_REGEX.test(version), `Invalid version: ${version}`);
+=======
+export const TypedObject = <Klass>({
+  typename,
+  version,
+  skipTypenameFormatCheck,
+}: ObjectAnnotation & TypeObjectOptions) => {
+  if (!skipTypenameFormatCheck) {
+    if (!TYPENAME_REGEX.test(typename)) {
+      throw new TypeError(`Invalid typename: ${typename}`);
+    }
+    if (!VERSION_REGEX.test(version)) {
+      throw new TypeError(`Invalid version: ${version}`);
+    }
+  }
+>>>>>>> origin/main
 
   return <
     Options extends TypedObjectOptions,

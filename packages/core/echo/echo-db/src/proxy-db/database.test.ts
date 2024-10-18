@@ -309,7 +309,7 @@ describe('Database', () => {
     const task = db.add(
       create(Task, {
         title: 'Main task',
-        subTasks: [create(Task, { name: 'Sub task' })],
+        subTasks: [create(Task, { title: 'Sub task' })],
       }),
     );
 

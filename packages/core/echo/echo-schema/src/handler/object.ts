@@ -20,6 +20,7 @@ import { type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject 
  * Optionally provides a TS-effect schema.
  */
 // TODO(dmaretskyi): Deep mutability.
+// TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 export const create: {
   <T extends {}>(obj: T): ReactiveObject<T>;
   <T extends {}>(schema: typeof Expando, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<Expando>;

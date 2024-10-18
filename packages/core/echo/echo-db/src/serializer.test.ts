@@ -30,14 +30,14 @@ describe('Serializer', () => {
       const { db, graph } = await builder.createDatabase();
       graph.schemaRegistry.addSchema([Task]);
 
-      const task = db.add(create(Task, { name: 'Testing' }));
+      const task = db.add(create(Task, { title: 'Testing' }));
       const data = serializer.exportObject(task);
 
       expect(data).to.deep.include({
         '@id': task.id,
         '@meta': { keys: [] },
         '@type': { '/': `dxn:type:${Task.typename}` },
-        name: 'Testing',
+        title: 'Testing',
       });
     });
   });
