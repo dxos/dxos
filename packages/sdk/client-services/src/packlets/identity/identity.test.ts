@@ -173,6 +173,7 @@ describe('identity/identity', () => {
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(args?.signalContext ?? new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory,
+        peerInfo: { identityKey: identityKey.toHex(), peerKey: deviceKey.toHex() },
       }),
     });
 
@@ -202,6 +203,7 @@ describe('identity/identity', () => {
     });
 
     await identity.open(new Context());
+    await identity.joinNetwork();
     onTestFinished(() => identity.close(new Context()));
     return { identity, identityKey, keyring, deviceKey, controlFeed, spaceKey, dataFeed };
   };
