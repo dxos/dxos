@@ -8,7 +8,7 @@ import { ReactiveArray } from './reactive-array';
 import { type ReactiveHandler } from './types';
 import { type ReactiveObject } from '../types';
 
-export const symbolIsProxy = Symbol.for('@dxos/echo-schema/isProxy');
+export const symbolIsProxy = Symbol.for('@dxos/schema/Proxy');
 
 export const isValidProxyTarget = (value: any): value is object => {
   if (value == null || value[symbolIsProxy]) {
@@ -17,6 +17,7 @@ export const isValidProxyTarget = (value: any): value is object => {
   if (value instanceof ReactiveArray) {
     return true;
   }
+
   return typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype;
 };
 
@@ -30,7 +31,7 @@ export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHa
     return existingProxy;
   }
 
-  // TODO(dmaretskyi): in future this should be mutable to allow replacing the handler on the fly while maintaining the proxy identity
+  // TODO(dmaretskyi): In future this should be mutable to allow replacing the handler on the fly while maintaining the proxy identity
   const handlerSlot = new ProxyHandlerSlot<T>();
   handlerSlot.handler = handler;
   handlerSlot.target = target;
@@ -99,6 +100,7 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
     }
   }
 }
+
 export const isReactiveObject = (value: unknown): value is ReactiveObject<any> => !!(value as any)?.[symbolIsProxy];
 
 export const getProxyHandlerSlot = <T extends object>(proxy: ReactiveObject<any>): ProxyHandlerSlot<T> => {

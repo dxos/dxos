@@ -182,10 +182,11 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
 
       if (doc.links) {
         for (const id of Object.values(doc.links as { [echoId: string]: string })) {
-          if (visited.has(id)) {
+          const urlString = id.toString();
+          if (visited.has(urlString)) {
             continue;
           }
-          const linkHandle = await automergeHost.loadDoc(Context.default(), id as DocumentId);
+          const linkHandle = await automergeHost.loadDoc(Context.default(), urlString as DocumentId);
           for await (const result of getObjectsFromHandle(linkHandle)) {
             yield result;
           }

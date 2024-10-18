@@ -6,53 +6,44 @@ import { Schema as S } from '@effect/schema';
 import { describe, expect, test } from 'vitest';
 
 import { mapSchemaToFields } from './field';
+import { FieldValueType } from './types';
 
 // TODO(burdon): Realistic data.
+// TODO(burdon): Handle Any, arrays, etc.
+
+// TODO(burdon): Only is ignored.
 
 describe('mapSchemaToFields', () => {
   test('basic', () => {
-    const schema = S.Struct({
+    const TestSchema = S.Struct({
       field1: S.String,
       field2: S.Number,
       field3: S.Date,
     });
 
-    const columns = mapSchemaToFields(schema);
-    expect(columns).to.deep.equal([
-      ['field1', 'string'],
-      ['field2', 'number'],
-      ['field3', 'date'],
+    const fields = mapSchemaToFields(TestSchema);
+    expect(fields).to.deep.equal([
+      ['field1', FieldValueType.String],
+      ['field2', FieldValueType.Number],
+      ['field3', FieldValueType.Date],
     ]);
   });
 
   test('optional properties', () => {
-    const schema = S.Struct({
+    const TestSchema = S.Struct({
       field1: S.optional(S.String),
       field2: S.optional(S.Number),
     });
 
-    const columns = mapSchemaToFields(schema);
-    expect(columns).to.deep.equal([
-      ['field1', 'string'],
-      ['field2', 'number'],
-    ]);
-  });
-
-  test('piped validators', () => {
-    const schema = S.Struct({
-      name: S.optional(S.String.pipe(S.nonEmptyString(), S.maxLength(10))),
-      age: S.Number.pipe(S.negative()),
-    });
-
-    const columns = mapSchemaToFields(schema);
-    expect(columns).to.deep.equal([
-      ['name', 'string'],
-      ['age', 'number'],
+    const fields = mapSchemaToFields(TestSchema);
+    expect(fields).to.deep.equal([
+      ['field1', FieldValueType.String],
+      ['field2', FieldValueType.Number],
     ]);
   });
 
   test('nested schema', () => {
-    const schema = S.Struct({
+    const TestSchema = S.Struct({
       name: S.String,
       nested1: S.Struct({
         age: S.Number,
@@ -65,12 +56,25 @@ describe('mapSchemaToFields', () => {
       }),
     });
 
-    const columns = mapSchemaToFields(schema);
-    expect(columns).to.deep.equal([
-      ['name', 'string'],
-      ['nested1.age', 'number'],
-      ['nested1.deeplyNested.height', 'number'],
-      ['nested2.height', 'number'],
+    const fields = mapSchemaToFields(TestSchema);
+    expect(fields).to.deep.equal([
+      ['name', FieldValueType.String],
+      ['nested1.age', FieldValueType.Number],
+      ['nested1.deeplyNested.height', FieldValueType.Number],
+      ['nested2.height', FieldValueType.Number],
+    ]);
+  });
+
+  test('piped validators', () => {
+    const TestSchema = S.Struct({
+      name: S.optional(S.String.pipe(S.nonEmptyString(), S.maxLength(10))),
+      age: S.Number.pipe(S.negative()),
+    });
+
+    const fields = mapSchemaToFields(TestSchema);
+    expect(fields).to.deep.equal([
+      ['name', FieldValueType.String],
+      ['age', FieldValueType.Number],
     ]);
   });
 });

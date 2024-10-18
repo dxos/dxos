@@ -2,23 +2,39 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DynamicSchema, Expando, ref, S, TypedObject } from '@dxos/echo-schema';
+import { MutableSchema, Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 
-export class FolderType extends TypedObject({ typename: 'braneframe.Folder', version: '0.1.0' })({
+export class FolderType extends TypedObject({
+  typename: 'braneframe.Folder',
+  version: '0.1.0',
+  skipTypenameFormatCheck: true,
+})({
   name: S.optional(S.String),
   objects: S.mutable(S.Array(ref(Expando))),
 }) {}
 
-export class SectionType extends TypedObject({ typename: 'braneframe.Stack.Section', version: '0.1.0' })({
+export class SectionType extends TypedObject({
+  typename: 'braneframe.Stack.Section',
+  version: '0.1.0',
+  skipTypenameFormatCheck: true,
+})({
   object: ref(Expando),
 }) {}
 
-export class StackType extends TypedObject({ typename: 'braneframe.Stack', version: '0.1.0' })({
+export class StackType extends TypedObject({
+  typename: 'braneframe.Stack',
+  version: '0.1.0',
+  skipTypenameFormatCheck: true,
+})({
   title: S.optional(S.String),
   sections: S.mutable(S.Array(ref(SectionType))),
 }) {}
 
-export class FileType extends TypedObject({ typename: 'braneframe.File', version: '0.1.0' })({
+export class FileType extends TypedObject({
+  typename: 'braneframe.File',
+  version: '0.1.0',
+  skipTypenameFormatCheck: true,
+})({
   filename: S.String,
   type: S.String,
   timestamp: S.optional(S.String),
@@ -26,7 +42,11 @@ export class FileType extends TypedObject({ typename: 'braneframe.File', version
   cid: S.optional(S.String),
 }) {}
 
-export class SketchType extends TypedObject({ typename: 'braneframe.Sketch', version: '0.1.0' })({
+export class SketchType extends TypedObject({
+  typename: 'braneframe.Sketch',
+  version: '0.1.0',
+  skipTypenameFormatCheck: true,
+})({
   title: S.optional(S.String),
   data: ref(Expando),
 }) {}
@@ -35,7 +55,11 @@ export class SketchType extends TypedObject({ typename: 'braneframe.Sketch', ver
 // Documents
 //
 
-export class TextType extends TypedObject({ typename: 'dxos.Text.v0', version: '0.1.0' })({
+export class TextType extends TypedObject({
+  typename: 'dxos.Text.v0',
+  version: '0.1.0',
+  skipTypenameFormatCheck: true,
+})({
   content: S.String,
 }) {}
 
@@ -46,7 +70,11 @@ const CommentSchema = S.mutable(
   }),
 );
 
-export class DocumentType extends TypedObject({ typename: 'braneframe.Document', version: '0.1.0' })({
+export class DocumentType extends TypedObject({
+  typename: 'braneframe.Document',
+  version: '0.1.0',
+  skipTypenameFormatCheck: true,
+})({
   title: S.optional(S.String),
   content: ref(TextType),
   comments: S.optional(S.mutable(S.Array(CommentSchema))),
@@ -69,9 +97,13 @@ const TablePropSchema = S.partial(
   ),
 );
 
-export class TableType extends TypedObject({ typename: 'braneframe.Table', version: '0.1.0' })({
+export class TableType extends TypedObject({
+  typename: 'braneframe.Table',
+  version: '0.1.0',
+  skipTypenameFormatCheck: true,
+})({
   title: S.String,
-  schema: S.optional(ref(DynamicSchema)),
+  schema: S.optional(ref(MutableSchema)),
   props: S.mutable(S.Array(TablePropSchema)),
 }) {}
 
@@ -98,7 +130,11 @@ const BlockSchema = S.Struct({
 
 export interface BlockType extends S.Schema.Type<typeof BlockSchema> {}
 
-export class MessageType extends TypedObject({ typename: 'braneframe.Message', version: '0.1.0' })({
+export class MessageType extends TypedObject({
+  typename: 'braneframe.Message',
+  version: '0.1.0',
+  skipTypenameFormatCheck: true,
+})({
   type: S.optional(S.String),
   date: S.optional(S.String),
   from: RecipientSchema,
@@ -117,7 +153,11 @@ export class MessageType extends TypedObject({ typename: 'braneframe.Message', v
   ),
 }) {}
 
-export class ThreadType extends TypedObject({ typename: 'braneframe.Thread', version: '0.1.0' })({
+export class ThreadType extends TypedObject({
+  typename: 'braneframe.Thread',
+  version: '0.1.0',
+  skipTypenameFormatCheck: true,
+})({
   title: S.optional(S.String),
   messages: S.mutable(S.Array(ref(MessageType))),
   context: S.optional(

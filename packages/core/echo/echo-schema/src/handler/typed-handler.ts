@@ -9,12 +9,12 @@ import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime
 import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { getTargetMeta } from './object';
+import { getObjectMeta } from './object';
+import { defineHiddenProperty } from './utils';
 import { SchemaValidator, symbolSchema } from '../ast';
-import { getTypeReference } from '../getter';
+import { getTypeReference } from '../proxy';
 import { createReactiveProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from '../proxy';
 import { data, type ObjectMeta } from '../types';
-import { defineHiddenProperty } from '../utils';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
@@ -141,7 +141,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   getMeta(target: any): ObjectMeta {
-    return getTargetMeta(target);
+    return getObjectMeta(target);
   }
 
   private _validateValue(target: any, prop: string | symbol, value: any) {

@@ -1462,6 +1462,9 @@ importers:
 
   packages/common/effect:
     dependencies:
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../invariant
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
@@ -1853,6 +1856,15 @@ importers:
       '@types/node':
         specifier: ^22.7.4
         version: 22.7.4
+
+  packages/common/merkle-search-tree:
+    dependencies:
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../invariant
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../util
 
   packages/common/node-std:
     dependencies:
@@ -10350,6 +10362,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -10365,6 +10380,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -20425,9 +20443,6 @@ packages:
 
   '@types/node@20.16.11':
     resolution: {integrity: sha512-y+cTCACu92FyA5fgQSAI8A1H429g7aSK2HsO7K4XYUWc4dY5IUz55JSDIYT6/VsOLfGy8vmvQYC2hfb0iF16Uw==}
-
-  '@types/node@20.8.3':
-    resolution: {integrity: sha512-jxiZQFpb+NlH5kjW49vXxvxTjeeqlbsnTAdBTKpzEdPs9itay7MscYXz3Fo9VYFEsfQ6LJFitHad3faerLAjCw==}
 
   '@types/node@22.7.4':
     resolution: {integrity: sha512-y+NPi1rFzDs1NdQHHToqeiX2TIS79SWEAw9GYhkkx8bD0ChpfqC+n2j5OXOCpzfojBEBt6DnEnnG9MY0zk1XLg==}
@@ -44884,9 +44899,6 @@ snapshots:
     dependencies:
       undici-types: 6.19.8
 
-  '@types/node@20.8.3':
-    optional: true
-
   '@types/node@22.7.4':
     dependencies:
       undici-types: 6.19.8
@@ -45164,7 +45176,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 20.8.3
+      '@types/node': 22.7.4
     optional: true
 
   '@types/yoga-layout@1.9.2': {}

@@ -5,11 +5,13 @@
 import { type Simplify } from 'effect/Types';
 
 import { AST, S } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
-import { getMeta } from './getter';
+import { type HasId } from './ast';
+import { getProxyHandlerSlot } from './proxy';
 
-export const data = Symbol.for('dxos.echo.data');
+export const data = Symbol.for('@dxos/schema/Data');
 
 // TODO(burdon): Move to client-protocol.
 export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
@@ -19,18 +21,29 @@ export const ECHO_ATTR_ID = '@id';
 export const ECHO_ATTR_TYPE = '@type';
 export const ECHO_ATTR_META = '@meta';
 
+//
+// ForeignKey
+//
+
 const _ForeignKeySchema = S.Struct({
   source: S.String,
   id: S.String,
 });
+
 export type ForeignKey = S.Schema.Type<typeof _ForeignKeySchema>;
+
 export const ForeignKeySchema: S.Schema<ForeignKey> = _ForeignKeySchema;
+
+//
+// ObjectMeta
+//
 
 export const ObjectMetaSchema = S.mutable(
   S.Struct({
     keys: S.mutable(S.Array(ForeignKeySchema)),
   }),
 );
+
 export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
 
 export type ExcludeId<T> = Simplify<Omit<T, 'id'>>;
@@ -40,19 +53,11 @@ type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 /**
  * The raw object should not include the ECHO id, but may include metadata.
  */
-export const RawObject = <S extends S.Schema.All>(
+export const RawObject = <S extends S.Schema<any>>(
   schema: S,
 ): S.Schema<ExcludeId<S.Schema.Type<S>> & WithMeta, S.Schema.Encoded<S>> => {
   return S.make(AST.omit(schema.ast, ['id']));
 };
-
-/**
- * Marker interface for object with an `id`.
- */
-// TODO(burdon): Rename BaseObject?
-export interface Identifiable {
-  readonly id: string;
-}
 
 /**
  * Reference to another ECHO object.
@@ -63,25 +68,15 @@ export type Ref<T> = T | undefined;
  * Reactive object marker interface (does not change the shape of the object.)
  * Accessing properties triggers signal semantics.
  */
+// TODO(burdon): How is this reactive?
 export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
-// TODO(burdon): Rename to just EchoObject?
-export type EchoReactiveObject<T> = ReactiveObject<T> & Identifiable;
+// TODO(burdon): Remove Echo prefix from public API.
+export type EchoReactiveObject<T> = ReactiveObject<T> & HasId;
 
-export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
-export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
-
-export const compareForeignKeys: Comparator<ReactiveObject<any>> = (a: ReactiveObject<any>, b: ReactiveObject<any>) =>
-  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;
-
-/**
- * Utility to split meta property from raw object.
- */
-export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMeta } => {
-  const meta = object[ECHO_ATTR_META];
-  delete object[ECHO_ATTR_META];
-  return { meta, object };
-};
+//
+// Data
+//
 
 export interface CommonObjectData {
   id: string;
@@ -104,3 +99,28 @@ export interface AnyObjectData extends CommonObjectData {
  * Meta is added under `__meta` key.
  */
 export type ObjectData<S> = S.Schema.Encoded<S> & CommonObjectData;
+
+//
+// Utils
+//
+
+export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
+  const proxyHandlerSlot = getProxyHandlerSlot(obj);
+  const meta = proxyHandlerSlot.handler?.getMeta(obj);
+  invariant(meta);
+  return meta;
+};
+
+/**
+ * Utility to split meta property from raw object.
+ */
+export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMeta } => {
+  const meta = object[ECHO_ATTR_META];
+  delete object[ECHO_ATTR_META];
+  return { meta, object };
+};
+
+export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
+export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
+export const compareForeignKeys: Comparator<ReactiveObject<any>> = (a: ReactiveObject<any>, b: ReactiveObject<any>) =>
+  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;

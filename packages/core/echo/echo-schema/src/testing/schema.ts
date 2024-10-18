@@ -5,7 +5,7 @@
 import { S } from '@dxos/effect';
 
 import { EchoObject } from '../ast';
-import { TypedObject } from '../typed-object-class';
+import { TypedObject } from '../object';
 
 // TODO(burdon): Clean up.
 
@@ -31,8 +31,10 @@ export const TestNestedType = TestNestedSchema.pipe(EchoObject('example.com/type
 
 export const TEST_SCHEMA_TYPE = {
   typename: 'example.com/type/Test',
-  version: '1.0.0',
+  version: '0.1.0',
 };
+
+export class EmptySchemaType extends TypedObject(TEST_SCHEMA_TYPE)({}) {}
 
 const fields = {
   string: S.String,
@@ -49,25 +51,12 @@ const fields = {
   other: S.Any,
 };
 
-//
-// Manually create ECHO object.
-//
-
 export const TestSchema = S.mutable(S.partial(S.Struct(fields)));
 export type TestSchema = S.Schema.Type<typeof TestSchema>;
-export const TestType = TestSchema.pipe(EchoObject('example.com/type/Test', '0.1.0'));
-
-//
-// TODO(burdon): ???
-//
-
-export class EmptySchemaType extends TypedObject(TEST_SCHEMA_TYPE)({}) {}
 
 export class TestSchemaType extends TypedObject<TestSchemaType>(TEST_SCHEMA_TYPE)(fields, { partial: true }) {}
 
-//
-//
-//
+export const TestType = TestSchema.pipe(EchoObject('example.com/type/Test', '0.1.0'));
 
 export class TestClass {
   field = 'value';

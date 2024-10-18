@@ -5,9 +5,13 @@
 import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { getEchoObjectTypename } from './annotations';
+import { getSchemaTypename } from './annotations';
 
-export const symbolSchema = Symbol.for('@dxos/schema');
+// TODO(burdon): Reconcile with @dxos/effect visit().
+
+// TODO(burdon): Reconcile with @dxos/effect visit().
+
+export const symbolSchema = Symbol.for('@dxos/schema/Schema');
 
 export class SchemaValidator {
   /**
@@ -15,7 +19,7 @@ export class SchemaValidator {
    * Validates there are no ambiguous discriminated union types.
    */
   public static validateSchema(schema: S.Schema<any>) {
-    const visitAll = (astList: AST.AST[]) => astList.forEach((ast) => this.validateSchema(S.make(ast)));
+    const visitAll = (nodes: AST.AST[]) => nodes.forEach((node) => this.validateSchema(S.make(node)));
     if (AST.isUnion(schema.ast)) {
       const typeAstList = schema.ast.types.filter((type) => AST.isTypeLiteral(type)) as AST.TypeLiteral[];
       // Check we can handle a discriminated union.
@@ -38,6 +42,7 @@ export class SchemaValidator {
       if (AST.isTupleType(type.ast)) {
         type = this.getPropertySchema(rootObjectSchema, [property, '0']);
       }
+
       return type.ast.annotations[annotation] != null;
     } catch (err) {
       return false;
@@ -47,7 +52,7 @@ export class SchemaValidator {
   public static getPropertySchema(
     rootObjectSchema: S.Schema<any>,
     propertyPath: KeyPath,
-    getPropertyFn: (path: KeyPath) => any = () => null,
+    getProperty: (path: KeyPath) => any = () => null,
   ): S.Schema<any> {
     let schema: S.Schema<any> = rootObjectSchema;
     for (let i = 0; i < propertyPath.length; i++) {
@@ -57,15 +62,17 @@ export class SchemaValidator {
         schema = getArrayElementSchema(tupleAst, propertyName);
       } else {
         const propertyType = getPropertyType(schema.ast, propertyName.toString(), (propertyName) =>
-          getPropertyFn([...propertyPath.slice(0, i), propertyName]),
+          getProperty([...propertyPath.slice(0, i), propertyName]),
         );
         if (!propertyType) {
-          const type = getEchoObjectTypename(rootObjectSchema);
+          const type = getSchemaTypename(rootObjectSchema);
           invariant(propertyType, `unknown property: ${String(propertyName)} on ${type}. Path: ${propertyPath}`);
         }
+
         schema = S.make(propertyType).annotations(propertyType.annotations);
       }
     }
+
     return schema;
   }
 
@@ -187,6 +194,7 @@ const unwrapAst = (rootAst: AST.AST, predicate?: (ast: AST.AST) => boolean): AST
     if (predicate?.(ast)) {
       return ast;
     }
+
     if (AST.isUnion(ast)) {
       const next: any = ast.types.find((t) => (predicate != null && predicate(t)) || AST.isSuspend(t));
       if (next != null) {
@@ -194,6 +202,7 @@ const unwrapAst = (rootAst: AST.AST, predicate?: (ast: AST.AST) => boolean): AST
         continue;
       }
     }
+
     if (AST.isSuspend(ast)) {
       ast = ast.f();
     } else {

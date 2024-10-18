@@ -4,20 +4,15 @@
 
 import { Reference } from '@dxos/echo-protocol';
 import { type S } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
 
-import { getEchoObjectAnnotation } from './ast';
 import { getProxyHandlerSlot, isReactiveObject } from './proxy';
-import { type ObjectMeta } from './types';
+import { getObjectAnnotation } from '../ast';
 
 /**
  * Returns the schema for the given object if one is defined.
  */
 export const getSchema = <T extends {} = any>(obj: T | undefined): S.Schema<any> | undefined => {
-  if (obj == null) {
-    return undefined;
-  }
-  if (isReactiveObject(obj)) {
+  if (obj && isReactiveObject(obj)) {
     const proxyHandlerSlot = getProxyHandlerSlot(obj);
     return proxyHandlerSlot.handler?.getSchema(obj);
   }
@@ -25,11 +20,11 @@ export const getSchema = <T extends {} = any>(obj: T | undefined): S.Schema<any>
   return undefined;
 };
 
-export const getTypeReference = (schema: S.Schema.All | undefined): Reference | undefined => {
+export const getTypeReference = (schema: S.Schema<any> | undefined): Reference | undefined => {
   if (!schema) {
     return undefined;
   }
-  const annotation = getEchoObjectAnnotation(schema);
+  const annotation = getObjectAnnotation(schema);
   if (annotation == null) {
     return undefined;
   }
@@ -38,13 +33,6 @@ export const getTypeReference = (schema: S.Schema.All | undefined): Reference | 
   }
 
   return Reference.fromLegacyTypename(annotation.typename);
-};
-
-export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
-  const proxyHandlerSlot = getProxyHandlerSlot(obj);
-  const meta = proxyHandlerSlot.handler?.getMeta(obj);
-  invariant(meta);
-  return meta;
 };
 
 export const isDeleted = <T extends {}>(obj: T): boolean => {
@@ -66,10 +54,9 @@ export const getType = <T extends {}>(obj: T | undefined): Reference | undefined
   return undefined;
 };
 
-// TODO(burdon): AbstractTypedObject?
 export const getTypename = <T extends {}>(obj: T): string | undefined => getType(obj)?.objectId;
 
-export const requireTypeReference = (schema: S.Schema.All): Reference => {
+export const requireTypeReference = (schema: S.Schema<any>): Reference => {
   const typeReference = getTypeReference(schema);
   if (typeReference == null) {
     // TODO(burdon): Catalog user-facing errors (this is too verbose).
