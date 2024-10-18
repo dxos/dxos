@@ -5,6 +5,7 @@
 import * as ModalPrimitive from '@radix-ui/react-popper';
 import React from 'react';
 
+import { LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { DropdownMenu, useThemeContext, useTranslation } from '@dxos/react-ui';
 
 import { TABLE_PLUGIN } from '../meta';
@@ -20,6 +21,7 @@ type ColumnActionsMenuProps = {
 export const ColumnActionsMenu: React.FC<ColumnActionsMenuProps> = ({ tableModel, columnId, open, onOpenChange }) => {
   const { tx } = useThemeContext();
   const { t } = useTranslation(TABLE_PLUGIN);
+  const dispatch = useIntentDispatcher();
 
   if (!tableModel || !columnId) {
     return null;
@@ -49,7 +51,12 @@ export const ColumnActionsMenu: React.FC<ColumnActionsMenuProps> = ({ tableModel
           )}
           <DropdownMenu.Item
             onClick={() => {
-              // TODO(Zan): Implement column settings action.
+              // TODO(Zan): Implement inline field editor.
+              // Currently we'll just show the view editor in the c11y sidebar.
+              void dispatch({
+                action: LayoutAction.SET_LAYOUT,
+                data: { element: 'complementary', state: true },
+              });
             }}
           >
             {t('column action settings')}
