@@ -51,9 +51,16 @@ export class TableModel extends Resource {
   public readonly table: TableType;
   public readonly data: any[];
   private onCellUpdate?: (col: number, row: number) => void;
-  public sorting = signal<SortConfig | undefined>(undefined);
   public pinnedRows: { top: number[]; bottom: number[] };
   public rowSelection: number[];
+
+  public sorting = signal<SortConfig | undefined>(undefined);
+  /**
+   * Maps display indices to data indices.
+   * Used for translating between sorted/displayed order and original data order.
+   * Keys are display indices, values are corresponding data indices.
+   */
+  private displayToDataIndex: Map<number, number> = new Map();
 
   constructor({
     table,
@@ -67,7 +74,7 @@ export class TableModel extends Resource {
     this.table = table;
     this.data = data;
     this.onCellUpdate = onCellUpdate;
-    this.sorting.value = sorting[0] ?? null;
+    this.sorting.value = sorting[0] ?? undefined;
     this.pinnedRows = pinnedRows;
     this.rowSelection = rowSelection;
   }
@@ -90,7 +97,8 @@ export class TableModel extends Resource {
       );
     });
 
-    const sortedData = computed(() => {
+    const updateDisplayToDataIndex = () => {
+      this.displayToDataIndex.clear();
       const sort = this.sorting.value;
       if (!sort) {
         return this.data;
@@ -101,14 +109,27 @@ export class TableModel extends Resource {
         return this.data;
       }
 
-      const sorted = sortBy(this.data, [field.path]);
-      return sort.direction === 'desc' ? sorted.reverse() : sorted;
-    });
+      const sorted = sortBy(
+        this.data.map((row, index) => ({ row, index })),
+        [(item) => item.row[field.path]],
+      );
+      if (sort.direction === 'desc') {
+        sorted.reverse();
+      }
+      sorted.forEach(({ index }, displayIndex) => {
+        if (displayIndex !== index) {
+          this.displayToDataIndex.set(displayIndex, index);
+        }
+      });
+      return sorted.map(({ row }) => row);
+    };
+
+    const sortedData = computed(updateDisplayToDataIndex);
 
     // Map the data to grid cells.
     const cellValues: ReadonlySignal<DxGridPlaneCells> = computed(() => {
       const values: DxGridPlaneCells = {};
-      sortedData.value.forEach((row, rowIndex) => {
+      sortedData.value.forEach((row, displayIndex) => {
         (this.table.view?.fields ?? []).forEach((field, colIndex: number) => {
           const cellValueSignal = computed(() =>
             row[field.path] !== undefined ? formatValue(field.type, row[field.path]) : '',
@@ -122,7 +143,7 @@ export class TableModel extends Resource {
           if (cellClasses) {
             cell.className = mx(cellClasses);
           }
-          values[getCellKey(colIndex, rowIndex)] = cell;
+          values[getCellKey(colIndex, displayIndex)] = cell;
         });
       });
       return values;
@@ -195,19 +216,21 @@ export class TableModel extends Resource {
 
   public getCellData = (colIndex: number, rowIndex: number): any => {
     const fields = this.table.view?.fields ?? [];
-    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= fields.length) {
+    if (colIndex < 0 || colIndex >= fields.length) {
       return undefined;
     }
     const field = fields[colIndex];
-    return this.data[rowIndex][field.path];
+    const dataIndex = this.displayToDataIndex.get(rowIndex) ?? rowIndex;
+    return this.data[dataIndex][field.path];
   };
 
   public setCellData = (colIndex: number, rowIndex: number, value: any): void => {
     const fields = this.table.view?.fields ?? [];
-    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= fields.length) {
+    if (colIndex < 0 || colIndex >= fields.length) {
       return;
     }
     const field = fields[colIndex];
-    this.data[rowIndex][field.path] = parseValue(field.type, value);
+    const dataIndex = this.displayToDataIndex.get(rowIndex) ?? rowIndex;
+    this.data[dataIndex][field.path] = parseValue(field.type, value);
   };
 }
