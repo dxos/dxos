@@ -6,6 +6,7 @@ import { computed, type ReadonlySignal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
 import { PublicKey } from '@dxos/react-client';
+import { parseValue, cellClassesForFieldType } from '@dxos/react-ui-data';
 import {
   type DxGridPlaneCells,
   type DxGridCells,
@@ -13,7 +14,7 @@ import {
   type DxGridCellValue,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { parseValue, formatValue, cellClassesForFieldType } from '@dxos/schema';
+import { formatValue } from '@dxos/schema';
 
 import { CellUpdateListener } from './CellUpdateListener';
 import { type TableType } from './types';
