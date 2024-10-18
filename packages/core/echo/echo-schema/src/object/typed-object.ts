@@ -32,8 +32,12 @@ const VERSION_REGEX = /^\d+.\d+.\d+$/;
  */
 // TODO(burdon): Support pipe(S.default({}))
 export const TypedObject = <Klass>({ typename, version }: ObjectAnnotation) => {
-  invariant(TYPENAME_REGEX.test(typename), `Invalid typename: ${typename}`);
-  invariant(VERSION_REGEX.test(version), `Invalid version: ${version}`);
+  if (!TYPENAME_REGEX.test(typename)) {
+    throw new TypeError(`Invalid typename: ${typename}`);
+  }
+  if (!VERSION_REGEX.test(version)) {
+    throw new TypeError(`Invalid version: ${version}`);
+  }
 
   return <
     Options extends TypedObjectOptions,
