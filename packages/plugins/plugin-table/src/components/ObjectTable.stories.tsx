@@ -4,14 +4,15 @@
 
 import '@dxos-theme';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { Filter, useSpaces, useQuery } from '@dxos/react-client/echo';
+import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ObjectTable } from './ObjectTable';
-import { createTable, TestSchema } from './testing';
+import { Toolbar } from './Toolbar';
+import { createTable } from './testing';
 import { TableType } from '../types';
 
 const Story = () => {
@@ -24,13 +25,40 @@ const Story = () => {
     }
   }, [objects]);
 
+  const handleAction = useCallback(
+    (action: { type: string }) => {
+      switch (action.type) {
+        case 'on-thread-create': {
+          console.log('Thread creation triggered');
+          break;
+        }
+        case 'add-row': {
+          const lastSpace = spaces[spaces.length - 1];
+          if (table?.schema && lastSpace) {
+            lastSpace.db.add(create(table.schema, {}));
+          }
+          break;
+        }
+      }
+    },
+    [table, spaces],
+  );
+
   if (!table) {
     return null;
   }
 
   return (
     <div>
-      <ObjectTable table={table} />
+      <div className='border-b border-separator'>
+        <Toolbar.Root onAction={handleAction}>
+          <Toolbar.Separator />
+          <Toolbar.Actions />
+        </Toolbar.Root>
+      </div>
+      <div className='relative is-full max-is-max min-is-0 min-bs-0'>
+        <ObjectTable table={table} />
+      </div>
     </div>
   );
 };
@@ -44,12 +72,11 @@ export default {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: ({ space }) => {
-        const schema = space.db.schema.addSchema(TestSchema);
-        space.db.add(createTable(schema));
+        space.db.add(createTable());
       },
     }),
     withTheme,
-    withLayout({ fullscreen: true }),
+    withLayout({ fullscreen: true, tooltips: true }),
   ],
   render: Story,
 };

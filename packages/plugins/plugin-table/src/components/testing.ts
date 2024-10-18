@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 
-import { type MutableSchema, S, TypedObject, create } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { FieldValueType } from '@dxos/schema';
 
@@ -12,27 +12,7 @@ import { TableType } from '../types';
 
 // TODO(burdon): Factor out to @dxos/schema/testing.
 
-export const TestSchema = TypedObject({ typename: 'example.com/type/test', version: '0.1.0' })({
-  name: S.optional(S.String),
-  age: S.optional(S.Number),
-  active: S.optional(S.Boolean),
-  netWorth: S.optional(S.Number),
-});
-
-export const createTable = (schema?: MutableSchema) =>
-  create(TableType, {
-    schema,
-    view: {
-      // TODO(Zan): What is the appropriate schema value for the query here?
-      query: { schema: '' },
-      fields: [
-        { id: 'name', path: 'name', label: 'Name', type: FieldValueType.String },
-        { id: 'age', path: 'age', label: 'Age', type: FieldValueType.Number },
-        { id: 'active', path: 'active', label: 'Active', type: FieldValueType.Boolean },
-        { id: 'netWorth', path: 'netWorth', label: 'Net Worth', type: FieldValueType.Currency },
-      ],
-    },
-  });
+export const createTable = () => create(TableType, {});
 
 export const createItems = (n: number) => {
   const { data } = create({
