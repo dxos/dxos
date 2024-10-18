@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
   create,
-  DynamicSchema,
+  MutableSchema,
   ObjectAnnotationId,
   getSchema,
   getType,
@@ -21,10 +21,10 @@ import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
 class ClassWithSchemaField extends TypedObject(TEST_SCHEMA_TYPE)({
-  schema: S.optional(ref(DynamicSchema)),
+  schema: S.optional(ref(MutableSchema)),
 }) {}
 
-describe('DynamicSchema', () => {
+describe('MutableSchema', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -35,7 +35,7 @@ describe('DynamicSchema', () => {
     await builder.close();
   });
 
-  test('set DynamicSchema as echo object field', async () => {
+  test('set MutableSchema as echo object field', async () => {
     const { db } = await setupTest();
     const instanceWithSchemaRef = db.add(create(ClassWithSchemaField, {}));
     class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({
@@ -53,7 +53,7 @@ describe('DynamicSchema', () => {
     expect(() => validator({ id: instanceWithSchemaRef.id, field: 1 })).to.throw();
   });
 
-  test('create echo object with DynamicSchema', async () => {
+  test('create echo object with MutableSchema', async () => {
     const { db } = await setupTest();
     class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
     const schema = db.schema.addSchema(GeneratedSchema);

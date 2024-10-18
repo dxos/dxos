@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj } from '@storybook/react';
 import React, { useMemo } from 'react';
 
-import { DynamicSchemaRegistry } from '@dxos/echo-db';
+import { MutableSchemaRegistry } from '@dxos/echo-db';
 import { create, type SchemaResolver } from '@dxos/echo-schema';
 import { useSpace } from '@dxos/react-client/echo';
 import { type ViewType } from '@dxos/schema';
@@ -24,7 +24,7 @@ const Story = (props: StoryProps) => {
   const space = useSpace();
   const resolver = useMemo<SchemaResolver | undefined>(() => {
     if (space) {
-      const registry = new DynamicSchemaRegistry(space.db);
+      const registry = new MutableSchemaRegistry(space.db);
       return (typename: string) => registry.getSchemaByTypename(typename);
     }
   }, [space]);

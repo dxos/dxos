@@ -19,7 +19,7 @@ import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
-import { DynamicSchemaRegistry } from './dynamic-schema-registry';
+import { MutableSchemaRegistry } from './mutable-schema-registry';
 import { CoreDatabase, type FlushOptions, getObjectCore, type LoadObjectOptions, type ObjectCore } from '../core-db';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from '../echo-handler';
 import { EchoReactiveHandler } from '../echo-handler/echo-handler';
@@ -36,7 +36,7 @@ export interface EchoDatabase {
 
   get spaceId(): SpaceId;
 
-  get schema(): DynamicSchemaRegistry;
+  get schema(): MutableSchemaRegistry;
 
   /**
    * All loaded objects.
@@ -122,7 +122,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   _coreDatabase: CoreDatabase;
 
-  public readonly schema: DynamicSchemaRegistry;
+  public readonly schema: MutableSchemaRegistry;
 
   private _rootUrl: string | undefined = undefined;
 
@@ -143,7 +143,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       spaceKey: params.spaceKey,
     });
 
-    this.schema = new DynamicSchemaRegistry(this, { reactiveQuery: params.reactiveSchemaQuery });
+    this.schema = new MutableSchemaRegistry(this, { reactiveQuery: params.reactiveSchemaQuery });
   }
 
   get graph(): Hypergraph {

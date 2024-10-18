@@ -38,14 +38,14 @@ describe('schema-validator', () => {
 
     test('no annotation', () => {
       const annotationId = Symbol('foo');
-      const human: S.Schema<any> = S.Struct({
+      const Person: S.Schema<any> = S.Struct({
         name: S.String,
-        parent: S.optional(S.suspend(() => human)),
-        friends: S.suspend(() => S.mutable(S.Array(human))),
+        parent: S.optional(S.suspend(() => Person)),
+        friends: S.suspend(() => S.mutable(S.Array(Person))),
       });
-      expect(SchemaValidator.hasTypeAnnotation(human, 'name', annotationId)).to.be.false;
-      expect(SchemaValidator.hasTypeAnnotation(human, 'parent', annotationId)).to.be.false;
-      expect(SchemaValidator.hasTypeAnnotation(human, 'friends', annotationId)).to.be.false;
+      expect(SchemaValidator.hasTypeAnnotation(Person, 'name', annotationId)).to.be.false;
+      expect(SchemaValidator.hasTypeAnnotation(Person, 'parent', annotationId)).to.be.false;
+      expect(SchemaValidator.hasTypeAnnotation(Person, 'friends', annotationId)).to.be.false;
     });
   });
 
@@ -85,12 +85,14 @@ describe('schema-validator', () => {
     test('preserves annotations', () => {
       const annotationId = Symbol('foo');
       const annotationValue = 'bar';
-      const human: S.Schema<any> = S.Struct({
-        parent: S.optional(S.suspend(() => human.annotations({ [annotationId]: annotationValue }))),
-        friends: S.suspend(() => S.mutable(S.Array(human.annotations({ [annotationId]: annotationValue })))),
+      const Person: S.Schema<any> = S.Struct({
+        parent: S.optional(S.suspend(() => Person.annotations({ [annotationId]: annotationValue }))),
+        friends: S.suspend(() => S.mutable(S.Array(Person.annotations({ [annotationId]: annotationValue })))),
       });
-      expect(SchemaValidator.getPropertySchema(human, ['parent']).ast.annotations[annotationId]).to.eq(annotationValue);
-      expect(SchemaValidator.getPropertySchema(human, ['friends', '0']).ast.annotations[annotationId]).to.eq(
+      expect(SchemaValidator.getPropertySchema(Person, ['parent']).ast.annotations[annotationId]).to.eq(
+        annotationValue,
+      );
+      expect(SchemaValidator.getPropertySchema(Person, ['friends', '0']).ast.annotations[annotationId]).to.eq(
         annotationValue,
       );
     });

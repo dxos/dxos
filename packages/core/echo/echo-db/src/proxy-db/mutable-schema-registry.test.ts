@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
   create,
-  DynamicSchema,
+  MutableSchema,
   type ObjectAnnotation,
   ObjectAnnotationId,
   effectToJsonSchema,
@@ -52,15 +52,15 @@ describe('schema registry', () => {
   test('add new schema', async () => {
     const { registry } = await setupTest();
     class TestClass extends TypedObject(TestType)({}) {}
-    const dynamicSchema = registry.addSchema(TestClass);
+    const mutableSchema = registry.addSchema(TestClass);
     const expectedSchema = TestClass.annotations({
-      [ObjectAnnotationId]: { ...TestType, schemaId: dynamicSchema.id },
+      [ObjectAnnotationId]: { ...TestType, schemaId: mutableSchema.id },
     });
-    console.log(dynamicSchema.ast);
+    console.log(mutableSchema.ast);
     console.log(expectedSchema.ast);
-    expect(dynamicSchema.ast).to.deep.eq(expectedSchema.ast);
-    expect(registry.hasSchema(dynamicSchema)).to.be.true;
-    expect(registry.getSchemaById(dynamicSchema.id)?.ast).to.deep.eq(expectedSchema.ast);
+    expect(mutableSchema.ast).to.deep.eq(expectedSchema.ast);
+    expect(registry.hasSchema(mutableSchema)).to.be.true;
+    expect(registry.getSchemaById(mutableSchema.id)?.ast).to.deep.eq(expectedSchema.ast);
   });
 
   test('can store the same schema multiple times', async () => {
@@ -97,9 +97,9 @@ describe('schema registry', () => {
       ...TestType,
       jsonSchema: effectToJsonSchema(S.Struct({ field: S.Number })),
     });
-    expect(registry.hasSchema(new DynamicSchema(schemaToStore))).to.be.false;
+    expect(registry.hasSchema(new MutableSchema(schemaToStore))).to.be.false;
     const storedSchema = db.add(schemaToStore);
-    expect(registry.hasSchema(new DynamicSchema(storedSchema))).to.be.true;
+    expect(registry.hasSchema(new MutableSchema(storedSchema))).to.be.true;
   });
 
   test("can't register schema if not stored in db", async () => {
@@ -116,10 +116,10 @@ describe('schema registry', () => {
   test('schema is invalidated on update', async () => {
     const { db, registry } = await setupTest();
     const storedSchema = db.add(createTestSchemas()[0]);
-    const dynamicSchema = registry.getSchemaById(storedSchema.id)!;
-    expect(dynamicSchema.getProperties().length).to.eq(1);
-    dynamicSchema.addColumns({ newField: S.Number });
-    expect(dynamicSchema.getProperties().length).to.eq(2);
+    const mutableSchema = registry.getSchemaById(storedSchema.id)!;
+    expect(mutableSchema.getProperties().length).to.eq(1);
+    mutableSchema.addColumns({ newField: S.Number });
+    expect(mutableSchema.getProperties().length).to.eq(2);
   });
 
   test('list returns static and dynamic schemas', async () => {
@@ -134,7 +134,7 @@ describe('schema registry', () => {
       typename: storedSchema.typename,
       version: storedSchema.version,
     });
-    const dynamicSchema = registry.getSchemaById(storedSchema.id)!;
-    expect(listed[2].schema.ast).to.deep.eq(dynamicSchema.schema.ast);
+    const mutableSchema = registry.getSchemaById(storedSchema.id)!;
+    expect(listed[2].schema.ast).to.deep.eq(mutableSchema.schema.ast);
   });
 });

@@ -70,6 +70,6 @@ export const TypedObject = <Klass>({ typename, version }: ObjectAnnotation) => {
       private constructor() {
         throw new Error('Use create(Typename, { ...fields }) to instantiate an object.');
       }
-    } as any;
+    } as any; // TODO(burdon): ???
   };
 };

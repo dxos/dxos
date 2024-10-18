@@ -5,7 +5,7 @@
 import { type UnsubscribeCallback } from '@dxos/async';
 import {
   create,
-  DynamicSchema,
+  MutableSchema,
   type ObjectAnnotation,
   ObjectAnnotationId,
   effectToJsonSchema,
@@ -22,9 +22,9 @@ import { type EchoDatabase } from './database';
 import { getObjectCore } from '../core-db';
 import { Filter } from '../query';
 
-type SchemaListChangedCallback = (schema: DynamicSchema[]) => void;
+type SchemaListChangedCallback = (schema: MutableSchema[]) => void;
 
-export type DynamicSchemaRegistryOptions = {
+export type MutableSchemaRegistryOptions = {
   /**
    * Run a reactive query for dynamic schemas.
    * @default true
@@ -35,15 +35,15 @@ export type DynamicSchemaRegistryOptions = {
 /**
  * Per-space set of mutable schemas.
  */
-export class DynamicSchemaRegistry {
-  private readonly _schemaById: Map<string, DynamicSchema> = new Map();
-  private readonly _schemaByType: Map<string, DynamicSchema> = new Map();
+export class MutableSchemaRegistry {
+  private readonly _schemaById: Map<string, MutableSchema> = new Map();
+  private readonly _schemaByType: Map<string, MutableSchema> = new Map();
   private readonly _unsubscribeById: Map<string, UnsubscribeCallback> = new Map();
   private readonly _schemaListChangeListeners: SchemaListChangedCallback[] = [];
 
   constructor(
     private readonly _db: EchoDatabase,
-    { reactiveQuery = true }: DynamicSchemaRegistryOptions = {},
+    { reactiveQuery = true }: MutableSchemaRegistryOptions = {},
   ) {
     if (reactiveQuery) {
       this._db.query(Filter.schema(StoredSchema)).subscribe(({ objects }) => {
@@ -60,15 +60,15 @@ export class DynamicSchemaRegistry {
   }
 
   public hasSchema(schema: S.Schema<any>): boolean {
-    const schemaId = schema instanceof DynamicSchema ? schema.id : getObjectAnnotation(schema)?.schemaId;
+    const schemaId = schema instanceof MutableSchema ? schema.id : getObjectAnnotation(schema)?.schemaId;
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
-  public getSchemaByTypename(typename: string): DynamicSchema | undefined {
+  public getSchemaByTypename(typename: string): MutableSchema | undefined {
     return this._schemaByType.get(typename);
   }
 
-  public getSchemaById(id: string): DynamicSchema | undefined {
+  public getSchemaById(id: string): MutableSchema | undefined {
     const existing = this._schemaById.get(id);
     if (existing != null) {
       return existing;
@@ -88,7 +88,7 @@ export class DynamicSchemaRegistry {
   }
 
   // TODO(burdon): Remove?
-  public async list(): Promise<DynamicSchema[]> {
+  public async list(): Promise<MutableSchema[]> {
     const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
     return objects.map((stored) => {
       return this._register(stored);
@@ -99,7 +99,7 @@ export class DynamicSchemaRegistry {
   public async listAll(): Promise<StaticSchema[]> {
     const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
     const storedSchemas = objects.map((storedSchema) => {
-      const schema = new DynamicSchema(storedSchema);
+      const schema = new MutableSchema(storedSchema);
       return {
         id: storedSchema.id,
         version: storedSchema.version,
@@ -123,7 +123,7 @@ export class DynamicSchemaRegistry {
     };
   }
 
-  public addSchema(schema: S.Schema<any>): DynamicSchema {
+  public addSchema(schema: S.Schema<any>): MutableSchema {
     const typeAnnotation = getObjectAnnotation(schema);
     invariant(typeAnnotation, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');
     const schemaToStore = create(StoredSchema, {
@@ -143,7 +143,7 @@ export class DynamicSchemaRegistry {
     return result;
   }
 
-  public registerSchema(schema: StoredSchema): DynamicSchema {
+  public registerSchema(schema: StoredSchema): MutableSchema {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;
@@ -154,21 +154,21 @@ export class DynamicSchemaRegistry {
     return registered;
   }
 
-  private _register(schema: StoredSchema): DynamicSchema {
+  private _register(schema: StoredSchema): MutableSchema {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;
     }
 
-    const dynamicSchema = new DynamicSchema(schema);
+    const mutableSchema = new MutableSchema(schema);
     const subscription = getObjectCore(schema).updates.on(() => {
-      dynamicSchema.invalidate();
+      mutableSchema.invalidate();
     });
 
-    this._schemaById.set(schema.id, dynamicSchema);
-    this._schemaByType.set(schema.typename, dynamicSchema);
+    this._schemaById.set(schema.id, mutableSchema);
+    this._schemaByType.set(schema.typename, mutableSchema);
     this._unsubscribeById.set(schema.id, subscription);
-    return dynamicSchema;
+    return mutableSchema;
   }
 
   private _unregisterById(id: string) {

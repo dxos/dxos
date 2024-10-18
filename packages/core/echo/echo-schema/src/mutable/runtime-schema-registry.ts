@@ -27,7 +27,7 @@ export class RuntimeSchemaRegistry {
     return Array.from(this._schema.values());
   }
 
-  hasSchema<S extends S.Schema<S>>(schema: S): boolean {
+  hasSchema<S extends S.Schema<any>>(schema: S): boolean {
     const typename = getTypenameOrThrow(schema);
     return this._schema.has(typename);
   }
