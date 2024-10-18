@@ -2,25 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type RefObject, useCallback, useRef } from 'react';
+import React, { type RefObject, useCallback } from 'react';
 
 import {
   type DxGridElement,
-  type DxAxisResize,
   editorKeys,
   type EditorKeysProps,
-  Grid,
   GridCellEditor,
   type GridScopedProps,
   useGridContext,
 } from '@dxos/react-ui-grid';
 
-import { type TableType } from '../../types';
-import { useTableModel } from '../hooks';
 import { type TableModel } from '../table-model';
 import { cellKeyToCoords } from '../util/coords';
 
-const TableCellEditor = ({
+export const TableCellEditor = ({
   __gridScope,
   gridRef,
   tableModel,
@@ -75,57 +71,12 @@ const TableCellEditor = ({
   const getCellContent = useCallback(() => {
     if (editing && tableModel) {
       const [col, row] = editing.index.split(',').map(Number);
-      return `${tableModel.getCellData(col, row)}`;
+
+      // TODO(Zan): Coercing to empty string on null/undefined values is temporary util
+      // we deeply integrate with fields.
+      return `${tableModel.getCellData(col, row) ?? ''}`;
     }
   }, [editing, tableModel]);
 
   return <GridCellEditor extension={extension} getCellContent={getCellContent} />;
-};
-
-type TableProps = {
-  table: TableType;
-  data: any[];
-};
-
-const frozen = { frozenRowsStart: 1 };
-
-// NOTE: The table model manages both ephemeral and persistent state.
-// - Ephemeral state (e.g., sorting, filtering, selection) is handled internally.
-// - Persistent state (e.g., column order, widths) is propagated to the parent for storage.
-
-// TODO(Zan): Callback for changing column width.
-// TODO(Zan): Callback for re-arranging columns.
-// TODO(Zan): Callbacks for editing column schema.
-export const Table = ({ table, data }: TableProps) => {
-  const gridRef = useRef<DxGridElement>(null);
-
-  const handleOnCellUpdate = useCallback((col: number, row: number) => {
-    gridRef.current?.updateIfWithinBounds({ col, row });
-  }, []);
-
-  const tableModel = useTableModel(table, data, handleOnCellUpdate);
-  const handleAxisResize = useCallback(
-    (event: DxAxisResize) => {
-      if (event.axis === 'col') {
-        const columnIndex = parseInt(event.index, 10);
-        tableModel?.setColumnWidth(columnIndex, event.size);
-      }
-    },
-    [tableModel],
-  );
-
-  return (
-    <Grid.Root id='table-next'>
-      <TableCellEditor tableModel={tableModel} gridRef={gridRef} />
-      <Grid.Content
-        ref={gridRef}
-        limitRows={data.length}
-        limitColumns={table.props.length}
-        initialCells={tableModel?.cells.value}
-        columns={tableModel?.columnMeta.value}
-        frozen={frozen}
-        onAxisResize={handleAxisResize}
-      />
-    </Grid.Root>
-  );
 };
