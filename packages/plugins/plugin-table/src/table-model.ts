@@ -97,7 +97,7 @@ export class TableModel extends Resource {
       );
     });
 
-    const updateDisplayToDataIndex = () => {
+    const sortedData = computed(() => {
       this.displayToDataIndex.clear();
       const sort = this.sorting.value;
       if (!sort) {
@@ -109,22 +109,22 @@ export class TableModel extends Resource {
         return this.data;
       }
 
-      const sorted = sortBy(
-        this.data.map((row, index) => ({ row, index })),
-        [(item) => item.row[field.path]],
-      );
+      const dataWithIndices = this.data.map((item, index) => ({ item, index }));
+      const sorted = sortBy(dataWithIndices, [(wrapper) => wrapper.item[field.path]]);
+
       if (sort.direction === 'desc') {
         sorted.reverse();
       }
-      sorted.forEach(({ index }, displayIndex) => {
-        if (displayIndex !== index) {
-          this.displayToDataIndex.set(displayIndex, index);
-        }
-      });
-      return sorted.map(({ row }) => row);
-    };
 
-    const sortedData = computed(updateDisplayToDataIndex);
+      for (let displayIndex = 0; displayIndex < sorted.length; displayIndex++) {
+        const { index: dataIndex } = sorted[displayIndex];
+        if (displayIndex !== dataIndex) {
+          this.displayToDataIndex.set(displayIndex, dataIndex);
+        }
+      }
+
+      return sorted.map(({ item }) => item);
+    });
 
     // Map the data to grid cells.
     const cellValues: ReadonlySignal<DxGridPlaneCells> = computed(() => {
