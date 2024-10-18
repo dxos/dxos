@@ -59,18 +59,26 @@ export class EdgeAgentManager extends Resource {
       haloSpaceKey: this._identity.haloSpaceKey.toHex(),
     });
 
+    const deviceKey = PublicKey.fromHex(response.deviceKey);
+
     await this._identity.admitDevice({
-      deviceKey: PublicKey.fromHex(response.deviceKey),
+      deviceKey,
       controlFeedKey: PublicKey.fromHex(response.feedKey),
       // TODO: agents don't have data feed, should be removed
       dataFeedKey: PublicKey.random(),
     });
 
-    this._updateStatus(EdgeAgentStatus.ACTIVE);
+    log('agent created', response);
+
+    this._updateStatus(EdgeAgentStatus.ACTIVE, deviceKey);
   }
 
   protected override async _open() {
-    if (!this._edgeHttpClient || !this._edgeFeatures?.agents) {
+    const isEnabled = this._edgeHttpClient && this._edgeFeatures?.agents;
+
+    log('edge agent manager open', { isEnabled });
+
+    if (!isEnabled) {
       return;
     }
 
@@ -81,7 +89,9 @@ export class EdgeAgentManager extends Resource {
     this._fetchAgentStatusTask.schedule();
 
     this._dataSpaceManager.updated.on(this._ctx, () => {
-      this._ensureAgentIsInSpaces();
+      if (this._agentDeviceKey) {
+        this._ensureAgentIsInSpaces(this._agentDeviceKey);
+      }
     });
 
     this._identity.stateUpdate.on(this._ctx, () => {
@@ -102,10 +112,12 @@ export class EdgeAgentManager extends Resource {
   protected async _fetchAgentStatus() {
     invariant(this._edgeHttpClient);
     try {
+      log('fetching agent status');
       const { agent } = await this._edgeHttpClient.getAgentStatus({ ownerIdentityKey: this._identity.identityKey });
       const wasAgentCreatedDuringQuery = this._agentStatus === EdgeAgentStatus.ACTIVE;
       if (!wasAgentCreatedDuringQuery) {
-        this._updateStatus(agent.status);
+        const deviceKey = agent.deviceKey ? PublicKey.fromHex(agent.deviceKey) : undefined;
+        this._updateStatus(agent.status, deviceKey);
       }
     } catch (err) {
       if (err instanceof EdgeCallFailedError) {
@@ -115,6 +127,7 @@ export class EdgeAgentManager extends Resource {
         }
       }
       const retryAfterMs = AGENT_STATUS_QUERY_RETRY_INTERVAL + Math.random() * AGENT_STATUS_QUERY_RETRY_JITTER;
+      log.info('agent status fetching failed', { err, retryAfterMs });
       scheduleTask(this._ctx, () => this._fetchAgentStatusTask?.schedule(), retryAfterMs);
     }
   }
@@ -124,11 +137,7 @@ export class EdgeAgentManager extends Resource {
    * because most of the time we'll be getting an empty response.
    * Instead, we stay in active polling mode while there are spaces where we don't see our agent's feed.
    */
-  protected _ensureAgentIsInSpaces() {
-    const agentDeviceKey = this._agentDeviceKey;
-    if (!agentDeviceKey) {
-      return;
-    }
+  protected _ensureAgentIsInSpaces(agentDeviceKey: PublicKey) {
     for (const space of this._dataSpaceManager.spaces.values()) {
       if ([SpaceState.SPACE_INACTIVE, SpaceState.SPACE_CLOSED].includes(space.state)) {
         continue;
@@ -137,14 +146,18 @@ export class EdgeAgentManager extends Resource {
         .values()
         .some((feed) => feed.assertion.deviceKey.equals(agentDeviceKey));
       space.notarizationPlugin.setActiveEdgePollingEnabled(agentFeedNeedsNotarization);
+
+      log.info('set active edge polling', { enabled: agentFeedNeedsNotarization, spaceId: space.id });
     }
   }
 
-  private _updateStatus(status: EdgeAgentStatus) {
+  private _updateStatus(status: EdgeAgentStatus, deviceKey: PublicKey | undefined) {
     this._agentStatus = status;
-    if (status !== EdgeAgentStatus.NOT_FOUND) {
-      this._ensureAgentIsInSpaces();
-    }
+    this._agentDeviceKey = deviceKey;
     this.agentStatusChanged.emit(status);
+    if (deviceKey) {
+      this._ensureAgentIsInSpaces(deviceKey);
+    }
+    log.info('agent status update', { status });
   }
 }
