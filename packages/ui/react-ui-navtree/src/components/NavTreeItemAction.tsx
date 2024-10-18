@@ -52,10 +52,10 @@ export const NavTreeItemActionDropdownMenu = ({
   label,
   icon,
   testId,
-  menuActions,
-  suppressNextTooltip,
-  menuOpen,
   defaultMenuOpen,
+  menuActions,
+  menuOpen,
+  suppressNextTooltip,
   onChangeMenuOpen,
   onAction,
 }: NavTreeItemActionMenuProps) => {
