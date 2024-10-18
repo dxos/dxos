@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Patch } from '@dxos/automerge/automerge';
+import { type Patch, next as A } from '@dxos/automerge/automerge';
 import { isValidAutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 
@@ -23,8 +23,11 @@ export const getInlineAndLinkChanges = (event: ChangeEvent<SpaceDoc>) => {
         }
         break;
       case 'links':
-        if (path.length >= 2 && typeof value === 'string' && isValidAutomergeUrl(value)) {
-          linkedDocuments[path[1]] = value;
+        if (path.length >= 2 && (typeof value === 'string' || value instanceof A.RawString)) {
+          const valueStr = value.toString();
+          if (isValidAutomergeUrl(valueStr)) {
+            linkedDocuments[path[1]] = valueStr;
+          }
         }
         break;
     }

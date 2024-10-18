@@ -35,7 +35,7 @@ import {
   type ObjectStructure,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES, generateEchoId, getTypeReference } from '@dxos/echo-schema';
+import { TYPE_PROPERTIES, createObjectId, getTypeReference } from '@dxos/echo-schema';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages, type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -296,7 +296,7 @@ export class DataSpaceManager extends Resource {
       },
     };
 
-    const propertiesId = generateEchoId();
+    const propertiesId = createObjectId();
     document.change((doc: SpaceDoc) => {
       setDeep(doc, ['objects', propertiesId], properties);
     });
@@ -512,6 +512,8 @@ export class DataSpaceManager extends Resource {
       const setting = dataSpace.getEdgeReplicationSetting();
       if (setting === EdgeReplicationSetting.ENABLED) {
         await this._echoEdgeReplicator?.connectToSpace(dataSpace.id);
+      } else if (this._echoEdgeReplicator) {
+        log('not connecting EchoEdgeReplicator because of EdgeReplicationSetting', { spaceId: dataSpace.id });
       }
     });
     dataSpace.preClose.append(async () => {

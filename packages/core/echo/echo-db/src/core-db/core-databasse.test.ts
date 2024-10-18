@@ -49,7 +49,9 @@ describe('CoreDatabase', () => {
       expect(docHandles.linkedDocHandles.length).to.eq(1);
       const rootDoc = docHandles.spaceRootHandle.docSync();
       expect(rootDoc?.objects?.[object.id]).to.be.undefined;
-      expect(docHandles.spaceRootHandle.docSync()?.links?.[object.id]).to.eq(docHandles.linkedDocHandles[0].url);
+      expect(docHandles.spaceRootHandle.docSync()?.links?.[object.id].toString()).to.eq(
+        docHandles.linkedDocHandles[0].url,
+      );
     });
 
     test('text objects are created in a separate doc and link from the root doc is added', async () => {
@@ -60,7 +62,9 @@ describe('CoreDatabase', () => {
       db.add(object);
       const docHandles = getDocHandles(db);
       expect(docHandles.linkedDocHandles.length).to.eq(1);
-      expect(docHandles.spaceRootHandle.docSync()?.links?.[object.id]).to.eq(docHandles.linkedDocHandles[0].url);
+      expect(docHandles.spaceRootHandle.docSync()?.links?.[object.id].toString()).to.eq(
+        docHandles.linkedDocHandles[0].url,
+      );
     });
 
     test('effect nested reference access triggers document loading', async () => {
@@ -144,10 +148,12 @@ describe('CoreDatabase', () => {
       });
       const beforeUpdate = (await db.loadObjectById(originalObj.id))!;
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(
-        getDocHandles(db).spaceRootHandle.docSync().links?.[beforeUpdate.id],
+        getDocHandles(db).spaceRootHandle.docSync().links?.[beforeUpdate.id].toString(),
       );
       await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
-      expect(getObjectDocHandle(beforeUpdate).url).to.eq(newRootDocHandle.docSync().links?.[beforeUpdate.id]);
+      expect(getObjectDocHandle(beforeUpdate).url).to.eq(
+        newRootDocHandle.docSync().links?.[beforeUpdate.id].toString(),
+      );
     });
 
     test('linked objects are loaded on update only if they were loaded before', async () => {

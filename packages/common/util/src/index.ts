@@ -40,3 +40,6 @@ export * from './tracer';
 export * from './types';
 export * from './uint8array';
 export * from './weak';
+export * from './sliding-window-summary';
+export * from './chunk-array';
+export * from './array-to-hex';

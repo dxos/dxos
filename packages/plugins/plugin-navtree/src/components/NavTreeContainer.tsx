@@ -4,7 +4,7 @@
 
 import React, { type ReactNode, useCallback, useMemo } from 'react';
 
-import { NavigationAction, LayoutAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
+import { NavigationAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { getGraph, isAction, isActionLike } from '@dxos/app-graph';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
@@ -97,7 +97,6 @@ export const NavTreeContainer = ({
       },
     });
 
-    await dispatch({ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: node.id } });
     const defaultAction = actions?.find((action) => action.properties?.disposition === 'default');
     if (isAction(defaultAction)) {
       void (defaultAction.data as () => void)();

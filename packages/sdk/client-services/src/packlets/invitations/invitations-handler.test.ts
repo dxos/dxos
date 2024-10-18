@@ -257,8 +257,8 @@ describe('InvitationHandler', () => {
       const space = await peer.dataSpaceManager.createSpace();
       spaceKey = space.key;
     }
-    const invitationHandler = new InvitationsHandler(peer.networkManager, {
-      controlHeartbeatInterval: 250, // faster peer failure detection
+    const invitationHandler = new InvitationsHandler(peer.networkManager, undefined, {
+      teleport: { controlHeartbeatInterval: 250 }, // faster peer failure detection
     });
     const protocol = new SpaceInvitationProtocol(peer.dataSpaceManager, peer.identity, peer.keyring, spaceKey);
     const ctx = new Context();

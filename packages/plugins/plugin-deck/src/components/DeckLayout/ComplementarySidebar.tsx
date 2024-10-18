@@ -30,7 +30,14 @@ export type ComplementarySidebarProps = {
   flatDeck?: boolean;
 };
 
-const panels = ['comments', 'settings'] as const;
+const panels = ['comments', 'settings', 'debug'] as const;
+
+const nodes = [
+  { id: 'comments', icon: 'ph--chat-text--regular' },
+  { id: 'settings', icon: 'ph--gear--regular' },
+  { id: 'debug', icon: 'ph--bug--regular' },
+];
+
 type Panel = (typeof panels)[number];
 const getPanel = (part?: string): Panel => {
   if (part && panels.findIndex((panel) => panel === part) !== -1) {
@@ -48,36 +55,22 @@ export const ComplementarySidebar = ({ layoutParts, flatDeck }: ComplementarySid
   const { graph } = useGraph();
   const node = useNode(graph, id);
   const dispatch = useIntentDispatcher();
-
   useNodeActionExpander(node);
 
   const actions = useMemo(
-    () => [
-      {
-        id: 'complementary-settings',
+    () =>
+      nodes.map(({ id, icon }) => ({
+        id: `complementary-${id}`,
         data: () => {
-          void dispatch({ action: NavigationAction.OPEN, data: { activeParts: { complementary: 'settings' } } });
+          void dispatch({ action: NavigationAction.OPEN, data: { activeParts: { complementary: id } } });
         },
         properties: {
-          label: ['settings label', { ns: DECK_PLUGIN }],
-          icon: 'ph--gear--regular',
+          label: [`${id} label`, { ns: DECK_PLUGIN }],
+          icon,
           menuItemType: 'toggle',
-          isChecked: part === 'settings',
+          isChecked: part === id,
         },
-      },
-      {
-        id: 'complementary-comments',
-        data: () => {
-          void dispatch({ action: NavigationAction.OPEN, data: { activeParts: { complementary: 'comments' } } });
-        },
-        properties: {
-          label: ['comments label', { ns: DECK_PLUGIN }],
-          icon: 'ph--chat-text--regular',
-          menuItemType: 'toggle',
-          isChecked: part === 'comments',
-        },
-      },
-    ],
+      })),
     [part],
   );
 
@@ -94,15 +87,16 @@ export const ComplementarySidebar = ({ layoutParts, flatDeck }: ComplementarySid
           actions={actions}
         />
         {/* TODO(wittjosiah): Render some placeholder when node is undefined. */}
-        {node && (
-          <Surface
-            role={`complementary--${part}`}
-            data={{ subject: node.properties.object, popoverAnchorId }}
-            limit={1}
-            fallback={PlankContentError}
-            placeholder={<PlankLoading />}
-          />
-        )}
+        <div className='row-span-2'>
+          {node && (
+            <Surface
+              role={`complementary--${part}`}
+              data={{ subject: node.properties.object, popoverAnchorId }}
+              fallback={PlankContentError}
+              placeholder={<PlankLoading />}
+            />
+          )}
+        </div>
       </div>
     </Main.ComplementarySidebar>
   );

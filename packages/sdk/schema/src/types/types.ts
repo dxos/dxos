@@ -77,12 +77,13 @@ export type FieldType = S.Schema.Type<typeof FieldSchema>;
 
 // TODO(burdon): ECHO Query DSL?
 export const QuerySchema = S.Struct({
-  schema: S.Any, // TODO(burdon): Serialized as FQ typename.
+  // TODO(burdon): Schema DXN annotation.
+  schema: S.String,
 });
 
 // TODO(burdon): Are views always flat projections?
 export const ViewSchema = S.Struct({
-  query: QuerySchema, // TODO(burdon): Rename projection?
+  query: QuerySchema,
   fields: S.mutable(S.Array(FieldSchema)),
 });
 

@@ -6,6 +6,7 @@
 import { type Space } from '@dxos/client-protocol';
 import { getDatabaseFromObject } from '@dxos/echo-db';
 import { type ReactiveObject } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 
 import { SpaceProxy } from './space-proxy';
 
@@ -35,4 +36,10 @@ export const getSpace = (object?: ReactiveObject<any>): Space | undefined => {
 export const fullyQualifiedId = (object: ReactiveObject<any>): string => {
   const space = getSpace(object);
   return space ? `${space.id}:${object.id}` : object.id;
+};
+
+export const parseFullyQualifiedId = (id: string): [string, string] => {
+  const [spaceId, objectId] = id.split(':');
+  invariant(objectId, 'invalid id');
+  return [spaceId, objectId];
 };

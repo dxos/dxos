@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-sheet",
-  "version": "0.6.11",
+  "version": "0.6.12",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -43,9 +43,6 @@
     "*": {
       "meta": [
         "dist/types/src/meta.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing.d.ts"
       ],
       "types": [
         "dist/types/src/types.d.ts"

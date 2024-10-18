@@ -106,8 +106,11 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   setIdentity(identity: EdgeIdentity) {
-    this._identity = identity;
-    this._persistentLifecycle.scheduleRestart();
+    if (identity.identityKey !== this._identity.identityKey || identity.peerKey !== this._identity.peerKey) {
+      log('Edge identity changed', { identity, oldIdentity: this._identity });
+      this._identity = identity;
+      this._persistentLifecycle.scheduleRestart();
+    }
   }
 
   public addListener(listener: MessageListener): () => void {
@@ -141,6 +144,10 @@ export class EdgeClient extends Resource implements EdgeConnection {
       const challenge = randomBytes(32);
       const credential = await this._identity.presentCredentials({ challenge });
       protocolHeader = encodePresentationIntoAuthHeader(credential);
+    }
+
+    if (this._ctx.disposed) {
+      return;
     }
 
     const url = new URL(`/ws/${this._identity.identityKey}/${this._identity.peerKey}`, this._baseUrl);
@@ -184,6 +191,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
 
     // TODO(dmaretskyi): Potential race condition here since web socket errors don't resolve this trigger.
     await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
+    log('Websocket is ready', { identity: this._identity.identityKey, peer: this._identity.peerKey });
 
     // TODO(dmaretskyi): Potential leak: context re-assigned without disposing the previous one.
     this._keepaliveCtx = new Context();
