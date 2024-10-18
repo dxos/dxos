@@ -12,7 +12,6 @@ export const registerSignalsRuntime = () => {
   if (registered) {
     return false;
   }
-  registered = true;
 
   registerRuntimeForEcho({
     createSignal: (debugInfo) => {
@@ -31,4 +30,7 @@ export const registerSignalsRuntime = () => {
     batch,
     untracked,
   });
+
+  registered = true;
+  return true;
 };

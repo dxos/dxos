@@ -3098,6 +3098,12 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
     devDependencies:
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../edge-client
+      '@dxos/keyring':
+        specifier: workspace:*
+        version: link:../../halo/keyring
       '@dxos/signal':
         specifier: workspace:*
         version: link:../signal
@@ -7161,6 +7167,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -8210,9 +8219,6 @@ importers:
       '@lezer/generator':
         specifier: ^1.7.1
         version: 1.7.1
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@tldraw/indices':
         specifier: ^2.0.0-alpha.14
         version: 2.0.0-canary.e43b0103fdf5
@@ -8382,6 +8388,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -10341,9 +10350,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -10365,9 +10371,6 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../react-ui-list
-      '@dxos/react-ui-searchlist':
-        specifier: workspace:*
-        version: link:../react-ui-searchlist
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -10755,6 +10758,9 @@ importers:
       '@radix-ui/react-context':
         specifier: ^1.0.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
+      '@radix-ui/react-popper':
+        specifier: ^1.1.2
+        version: 1.2.0(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@radix-ui/react-use-controllable-state':
         specifier: ^1.0.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)

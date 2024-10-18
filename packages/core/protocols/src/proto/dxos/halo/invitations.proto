@@ -102,6 +102,8 @@ message DeviceAdmissionCredentials {
   dxos.keys.PublicKey halo_space_key = 2;
   dxos.keys.PublicKey genesis_feed_key = 3;
   optional dxos.echo.timeframe.TimeframeVector control_timeframe = 4;
+  /// Credential of type `AuthorizedDevice` that allows guest device to act as the identity it was added to.
+  dxos.halo.credentials.Credential credential = 5;
 }
 
 message SpaceAdmissionCredentials {

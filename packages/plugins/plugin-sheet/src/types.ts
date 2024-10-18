@@ -59,6 +59,7 @@ export type CellValue = S.Schema.Type<typeof CellValue>;
 
 // TODO(burdon): IMPORTANT: Reconcile with Field definition.
 export const Formatting = S.Struct({
+  range: S.String,
   type: S.optional(S.Enums(FieldValueType)),
   format: S.optional(S.String),
   precision: S.optional(S.Number),
@@ -93,7 +94,7 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
 
   // TODO(burdon): Change to array.
   // Cell formatting referenced by indexed range.
-  formatting: S.mutable(S.Record({ key: S.String, value: S.mutable(Formatting) })),
+  formatting: S.mutable(S.Array(Formatting)),
 
   // Threads associated with the sheet
   threads: S.optional(S.mutable(S.Array(ref(ThreadType)))),
