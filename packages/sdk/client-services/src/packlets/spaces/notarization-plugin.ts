@@ -25,6 +25,8 @@ const DEFAULT_SUCCESS_DELAY = 1_000;
 
 const DEFAULT_NOTARIZE_TIMEOUT = 10_000;
 
+const DEFAULT_ACTIVE_EDGE_POLLING_INTERVAL = 3_000;
+
 const MAX_EDGE_RETRIES = 2;
 
 const WRITER_NOT_SET_ERROR_CODE = 'WRITER_NOT_SET';
@@ -35,6 +37,7 @@ export type NotarizationPluginParams = {
   spaceId: SpaceId;
   edgeClient?: EdgeHttpClient;
   edgeFeatures?: Runtime.Client.EdgeFeatures;
+  activeEdgePollingInterval?: number;
 };
 
 export type NotarizeParams = {
@@ -85,6 +88,9 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
   private readonly _processedCredentials = new ComplexSet<PublicKey>(PublicKey.hash);
   private readonly _processCredentialsTriggers = new ComplexMap<PublicKey, Trigger>(PublicKey.hash);
 
+  private _activeEdgePollingIntervalHandle: any | undefined = undefined;
+  private readonly _activeEdgePollingInterval: number;
+
   @logInfo
   private readonly _spaceId: SpaceId;
 
@@ -93,8 +99,25 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
   constructor(params: NotarizationPluginParams) {
     super();
     this._spaceId = params.spaceId;
+    this._activeEdgePollingInterval = params.activeEdgePollingInterval ?? DEFAULT_ACTIVE_EDGE_POLLING_INTERVAL;
     if (params.edgeClient && params.edgeFeatures?.feedReplicator) {
       this._edgeClient = params.edgeClient;
+    }
+  }
+
+  setActiveEdgePollingEnabled(enabled: boolean) {
+    invariant(this.isOpen);
+    const client = this._edgeClient;
+    invariant(client);
+    if (enabled && !this._activeEdgePollingIntervalHandle) {
+      this._activeEdgePollingIntervalHandle = setInterval(() => {
+        if (this._writer) {
+          this._notarizePendingEdgeCredentials(client, this._writer);
+        }
+      }, this._activeEdgePollingInterval);
+    } else if (!enabled && this._activeEdgePollingIntervalHandle) {
+      clearInterval(this._activeEdgePollingIntervalHandle);
+      this._activeEdgePollingIntervalHandle = undefined;
     }
   }
 
@@ -109,6 +132,10 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
   }
 
   protected override async _close() {
+    if (this._activeEdgePollingIntervalHandle) {
+      clearInterval(this._activeEdgePollingIntervalHandle);
+      this._activeEdgePollingIntervalHandle = undefined;
+    }
     await this._ctx.dispose();
   }
 

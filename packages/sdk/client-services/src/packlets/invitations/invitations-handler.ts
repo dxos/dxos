@@ -355,7 +355,7 @@ export class InvitationsHandler {
     const edgeInvitationHandler = new EdgeInvitationHandler(this._connectionParams?.edgeInvitations, this._edgeClient, {
       onInvitationSuccess: async (admissionResponse, admissionRequest) => {
         const result = await protocol.accept(admissionResponse, admissionRequest);
-        log('admitted by edge', { ...protocol.toJSON() });
+        log.info('admitted by edge', { ...protocol.toJSON() });
         guardedState.complete({ ...guardedState.current, ...result, state: Invitation.State.SUCCESS });
       },
     });
@@ -454,7 +454,6 @@ export class InvitationsHandler {
       throw new Error('challenge missing in the introduction');
     }
     log('sending authentication request');
-    setState(Invitation.State.AUTHENTICATING);
     const signature = sign(Buffer.from(introductionResponse.challenge), invitation.guestKeypair.privateKey);
     const response = await extension.rpc.InvitationHostService.authenticate({
       signedChallenge: signature,

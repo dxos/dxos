@@ -11,3 +11,4 @@ export * from './packlets/services';
 export * from './packlets/spaces';
 export * from './packlets/storage';
 export * from './packlets/worker';
+export * from './packlets/agents';

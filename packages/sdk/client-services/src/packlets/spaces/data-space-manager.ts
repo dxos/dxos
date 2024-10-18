@@ -120,6 +120,7 @@ export type DataSpaceManagerParams = {
 export type DataSpaceManagerRuntimeParams = {
   spaceMemberPresenceAnnounceInterval?: number;
   spaceMemberPresenceOfflineTimeout?: number;
+  activeEdgeNotarizationPollingInterval?: number;
   disableP2pReplication?: boolean;
 };
 
@@ -507,6 +508,7 @@ export class DataSpaceManager extends Resource {
       edgeConnection: this._edgeConnection,
       edgeHttpClient: this._edgeHttpClient,
       edgeFeatures: this._edgeFeatures,
+      activeEdgeNotarizationPollingInterval: this._runtimeParams?.activeEdgeNotarizationPollingInterval,
     });
     dataSpace.postOpen.append(async () => {
       const setting = dataSpace.getEdgeReplicationSetting();

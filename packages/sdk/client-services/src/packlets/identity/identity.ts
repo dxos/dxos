@@ -163,6 +163,10 @@ export class Identity {
     return this.space.controlPipeline;
   }
 
+  get haloSpaceId() {
+    return this.space.id;
+  }
+
   get haloSpaceKey() {
     return this.space.key;
   }
