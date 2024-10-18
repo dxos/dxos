@@ -265,9 +265,11 @@ export class IdentityManager {
    */
   public async acceptIdentity(identity: Identity, identityRecord: IdentityRecord, profile?: DeviceProfileDocument) {
     this._identity = identity;
+
+    // Identity becomes ready after device chain is replicated. Wait for it before storing the record.
+    await this._identity.ready();
     await this._metadataStore.setIdentityRecord(identityRecord);
 
-    await this._identity.ready();
     log.trace('dxos.halo.identity', {
       identityKey: this._identity!.identityKey,
       displayName: this._identity.profileDocument?.displayName,
