@@ -17,13 +17,13 @@ export const SheetContainer = ({ graph, sheet, role }: SheetProviderProps & { ro
   // TODO(Zan): Centralise the toolbar action handler. Current implementation in stories.
   const handleAction = useCallback(
     (action: ToolbarAction) => {
-      switch (action.type) {
+      switch (action.key) {
         case 'comment': {
           // TODO(Zan): We shouldn't hardcode the action ID.
           void dispatch({
             action: 'dxos.org/plugin/thread/action/create',
             data: {
-              cursor: action.anchor,
+              cursor: action.value,
               name: action.cellContent,
               subject: sheet,
             },
@@ -38,7 +38,6 @@ export const SheetContainer = ({ graph, sheet, role }: SheetProviderProps & { ro
     <SheetProvider sheet={sheet} graph={graph}>
       <Toolbar.Root onAction={handleAction} role={role}>
         <Toolbar.Styles />
-        <Toolbar.Format />
         <Toolbar.Alignment />
         <Toolbar.Separator />
         <Toolbar.Actions />
