@@ -30,9 +30,11 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.6.0",
     "@radix-ui/react-context": "^1.0.0",
     "effect": "^3.9.1"
   },
