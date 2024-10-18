@@ -6,7 +6,7 @@ import { asyncTimeout, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Reference } from '@dxos/echo-protocol';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, RuntimeSchemaRegistry } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -19,10 +19,10 @@ import { getObjectCore, type ItemsUpdatedEvent } from './core-db';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
-  Filter,
   filterMatch,
-  type FilterSource,
   optionsToProto,
+  Filter,
+  type FilterSource,
   Query,
   type QueryContext,
   type QueryFn,
@@ -30,7 +30,6 @@ import {
   type QueryResult,
   type QueryRunOptions,
 } from './query';
-import { RuntimeSchemaRegistry } from './runtime-schema-registry';
 
 /**
  * Manages cross-space database interactions.

@@ -9,7 +9,7 @@ import { encodeReference, Reference } from '@dxos/echo-protocol';
 import {
   createReactiveProxy,
   defineHiddenProperty,
-  DynamicSchema,
+  MutableSchema,
   type EchoReactiveObject,
   getProxyHandlerSlot,
   isReactiveObject,
@@ -280,7 +280,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
-    const unwrappedValue = value instanceof DynamicSchema ? value.serializedSchema : value;
+    const unwrappedValue = value instanceof MutableSchema ? value.serializedSchema : value;
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) => {
       return target[symbolInternals].core.getDecoded([getNamespace(target), ...path]);
     });
@@ -654,7 +654,7 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
   if (value == null || Array.isArray(value)) {
     return;
   }
-  if (value instanceof DynamicSchema) {
+  if (value instanceof MutableSchema) {
     return;
   }
   const proto = Object.getPrototypeOf(value);

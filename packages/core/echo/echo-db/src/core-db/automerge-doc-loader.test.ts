@@ -8,7 +8,7 @@ import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
-import { generateEchoId } from '@dxos/echo-schema';
+import { createObjectId } from '@dxos/echo-schema';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -23,7 +23,7 @@ import { RepoProxy } from '../client';
 
 const ctx = new Context();
 const SPACE_KEY = PublicKey.random();
-const randomId = () => generateEchoId();
+const randomId = () => createObjectId();
 
 describe('AutomergeDocumentLoader', () => {
   test('space access is set on root doc handle and it is accessible', async () => {
