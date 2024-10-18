@@ -33,6 +33,12 @@ export type TableModelProps = {
   rowSelection?: number[];
 };
 
+// TODO(Zan): Is there a better place for this to live?
+export const columnSettingsButtonAttr = 'data-table-column-settings-button';
+const columnSettingsButtonClasses = 'ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2';
+const columnSettingsIcon = 'ph--caret-down--regular';
+const columnSettingsButtonHtml = `<button class="${columnSettingsButtonClasses}" ${columnSettingsButtonAttr}=true><svg><use href="/icons.svg#${columnSettingsIcon}"/></svg></button>`;
+
 export class TableModel extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
 
@@ -70,7 +76,14 @@ export class TableModel extends Resource {
       const fields = this.table.view?.fields ?? [];
       return Object.fromEntries(
         fields.map((field, index: number) => {
-          return [getCellKey(index, 0), { value: field.label ?? field.path, resizeHandle: 'col' }];
+          return [
+            getCellKey(index, 0),
+            {
+              value: field.label ?? field.path,
+              resizeHandle: 'col',
+              accessoryHtml: columnSettingsButtonHtml,
+            },
+          ];
         }),
       );
     });

@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, type MouseEvent } from 'react';
 
 import { type DxGridElement, type DxAxisResize, Grid } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
 import { TableCellEditor } from './TableCellEditor';
 import { useTableModel } from '../hooks';
+import { columnSettingsButtonAttr } from '../table-model';
 import { type TableType } from '../types';
 
 type TableProps = {
@@ -33,6 +34,7 @@ const frozen = { frozenRowsStart: 1 };
 // TODO(Zan): Callbacks for editing column schema.
 export const Table = ({ table, data }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   const handleOnCellUpdate = useCallback((col: number, row: number) => {
     gridRef.current?.updateIfWithinBounds({ col, row });
@@ -49,6 +51,15 @@ export const Table = ({ table, data }: TableProps) => {
     [tableModel],
   );
 
+  const handleClick = useCallback((event: MouseEvent) => {
+    const closestButton = (event.target as HTMLButtonElement).closest(`button[${columnSettingsButtonAttr}]`);
+    if (closestButton) {
+      triggerRef.current = closestButton as HTMLButtonElement;
+      console.log('Button pressed!', closestButton);
+      // setMenuOpen(true);
+    }
+  }, []);
+
   return (
     <Grid.Root id='table-next'>
       <TableCellEditor tableModel={tableModel} gridRef={gridRef} />
@@ -60,6 +71,7 @@ export const Table = ({ table, data }: TableProps) => {
         columns={tableModel?.columnMeta.value}
         frozen={frozen}
         onAxisResize={handleAxisResize}
+        onClick={handleClick}
         className={mx(
           '[&>.dx-grid]:min-bs-0 [&>.dx-grid]:bs-full [&>.dx-grid]:max-bs-max [--dx-grid-base:var(--surface-bg)]',
           inlineEndLine,
