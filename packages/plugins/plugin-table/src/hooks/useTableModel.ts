@@ -4,8 +4,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { type TableType } from '../../types';
 import { TableModel } from '../table-model';
+import { type TableType } from '../types';
 
 // TODO(burdon): Create TableModel interface and useTableModel hook that manages query.
 export const useTableModel = (
@@ -14,6 +14,7 @@ export const useTableModel = (
   onCellUpdate: (col: number, row: number) => void,
 ): TableModel | undefined => {
   const [tableModel, setTableModel] = useState<TableModel>();
+
   useEffect(() => {
     if (!table || !data) {
       return;
