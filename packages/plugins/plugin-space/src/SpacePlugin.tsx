@@ -23,7 +23,7 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject, type Identifiable, isReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, type HasId, isReactiveObject } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
@@ -1110,14 +1110,14 @@ export const SpacePlugin = ({
               }
 
               if (intent.data?.target instanceof CollectionType) {
-                intent.data?.target.objects.push(object as Identifiable);
+                intent.data?.target.objects.push(object as HasId);
               } else if (isSpace(intent.data?.target)) {
                 const collection = space.properties[CollectionType.typename];
                 if (collection instanceof CollectionType) {
-                  collection.objects.push(object as Identifiable);
+                  collection.objects.push(object as HasId);
                 } else {
                   // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-                  const collection = create(CollectionType, { objects: [object as Identifiable], views: {} });
+                  const collection = create(CollectionType, { objects: [object as HasId], views: {} });
                   space.properties[CollectionType.typename] = collection;
                 }
               }

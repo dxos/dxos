@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Reference } from '@dxos/echo-protocol';
-import { create, generateEchoId, S, TypedObject } from '@dxos/echo-schema';
+import { create, createObjectId, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
@@ -87,7 +87,7 @@ describe('Filter', () => {
 
   test('compare types', () => {
     const spaceKey = PublicKey.random();
-    const objectId = generateEchoId();
+    const objectId = createObjectId();
 
     expect(compareType(new Reference(objectId, undefined, spaceKey.toHex()), new Reference(objectId), spaceKey)).to.be
       .true;
@@ -121,7 +121,9 @@ describe('Filter', () => {
   });
 
   test('dynamic schema', async () => {
-    class GeneratedSchema extends TypedObject({ typename: 'dynamic', version: '0.1.0' })({ title: S.String }) {}
+    class GeneratedSchema extends TypedObject({ typename: 'example.com/dynamic', version: '0.1.0' })({
+      title: S.String,
+    }) {}
     const { db } = await builder.createDatabase();
     const schema = db.schema.addSchema(GeneratedSchema);
     const obj = db.add(create(schema, { title: 'test' }));

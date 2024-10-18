@@ -19,12 +19,12 @@ const PropertyFormat: FormatAnnotation = {
 
 export type FieldProps<T = {}> = ThemedClassName<{
   field: FieldType;
-  autoFocus?: boolean;
   schema?: S.Schema<T>;
+  autoFocus?: boolean;
   readonly?: boolean;
 }>;
 
-export const Field = <T = {},>({ classNames, autoFocus, field, readonly }: FieldProps<T>) => {
+export const Field = <T = {},>({ classNames, field, autoFocus, readonly }: FieldProps<T>) => {
   const { t } = useTranslation(translationKey);
 
   return (
