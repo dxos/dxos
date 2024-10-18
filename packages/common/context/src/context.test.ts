@@ -5,6 +5,8 @@
 import { describe, expect, test } from 'vitest';
 
 import { Context } from './context';
+import { ContextDeadlineExceededError } from './context-deadline-exceeded-error';
+import { cancelWithContext } from './promise-utils';
 
 describe('Context', () => {
   test('dispose calls dispose hooks', () => {
@@ -105,5 +107,44 @@ describe('Context', () => {
 
     triggerLeak();
     triggerLeak();
+  });
+
+  test('timeout sets the disposed property', async () => {
+    const ctx = Context.withTimeout(100);
+    expect(ctx.timeout).toEqual(expect.closeTo(100, 5));
+    expect(ctx.deadlineReached).toBeFalsy();
+    expect(ctx.disposed).toBeFalsy();
+
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(ctx.deadlineReached).toBeTruthy();
+    expect(ctx.disposed).toBeTruthy();
+  });
+
+  test('timeout runs dispose hooks', async () => {
+    const ctx = Context.withTimeout(100);
+
+    let called = false;
+    ctx.onDispose(() => {
+      called = true;
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(called).toBeTruthy();
+  });
+
+  test('timeout cancels promises', async () => {
+    const ctx = Context.withTimeout(100);
+
+    const promise = cancelWithContext(ctx, new Promise(() => {}));
+    await expect(promise).rejects.toThrowError(ContextDeadlineExceededError);
+  });
+
+  test('timeout with past deadline cancels promises', async () => {
+    const ctx = Context.withTimeout(100);
+
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    const promise = cancelWithContext(ctx, new Promise(() => {}));
+    await expect(promise).rejects.toThrowError(ContextDeadlineExceededError);
   });
 });
