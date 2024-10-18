@@ -15,7 +15,9 @@ export const arrayToHex = (buf: ArrayBuffer) => {
   const buff = new Uint8Array(buf);
   const hexOctets = []; // new Array(buff.length) is even faster (preallocates necessary array size), then use hexOctets[i] instead of .push()
 
-  for (let i = 0; i < buff.length; ++i) hexOctets.push(byteToHex[buff[i]]);
+  for (let i = 0; i < buff.length; ++i) {
+    hexOctets.push(byteToHex[buff[i]]);
+  }
 
   return hexOctets.join('');
 };
