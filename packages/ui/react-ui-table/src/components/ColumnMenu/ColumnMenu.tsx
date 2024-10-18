@@ -11,20 +11,23 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { ColumnSettings } from './ColumnSettings';
 import { useSortColumn } from '../../hooks';
-import { type TableDef, type ColumnProps } from '../../schema';
+import { type TableDef, type ColumnDef } from '../../schema';
 
 export type ColumnMenuProps<TData extends RowData, TValue> = {
   context: HeaderContext<TData, TValue>;
   tablesToReference: TableDef[];
   tableDef: TableDef;
-  column: ColumnProps;
+  column: ColumnDef;
   columnOrderable: boolean;
   columnPosition: 'start' | 'end' | undefined;
   onColumnReorder: (columnId: string, direction: 'left' | 'right') => void;
-  onUpdate?: (id: string, column: ColumnProps) => void;
+  onUpdate?: (id: string, column: ColumnDef) => void;
   onDelete?: (id: string) => void;
 };
 
+/**
+ * @deprecated
+ */
 export const ColumnMenu = <TData extends RowData, TValue>({
   column,
   columnOrderable,

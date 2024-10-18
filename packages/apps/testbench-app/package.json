@@ -1,6 +1,6 @@
 {
   "name": "@dxos/testbench-app",
-  "version": "0.6.11",
+  "version": "0.6.12",
   "private": true,
   "description": "DXOS Testing",
   "homepage": "https://dxos.org",
@@ -25,6 +25,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",

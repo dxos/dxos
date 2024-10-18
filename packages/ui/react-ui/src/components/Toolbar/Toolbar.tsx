@@ -7,7 +7,15 @@ import React, { forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
-import { Button, ButtonGroup, type ButtonGroupProps, type ButtonProps, type ToggleGroupItemProps } from '../Buttons';
+import {
+  Button,
+  ButtonGroup,
+  type ButtonGroupProps,
+  type ButtonProps,
+  Toggle,
+  type ToggleGroupItemProps,
+  type ToggleProps,
+} from '../Buttons';
 import { Link, type LinkProps } from '../Link';
 import { Separator, type SeparatorProps } from '../Separator';
 
@@ -28,6 +36,16 @@ const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>((props, 
   return (
     <ToolbarPrimitive.Button asChild>
       <Button {...props} ref={forwardedRef} />
+    </ToolbarPrimitive.Button>
+  );
+});
+
+type ToolbarToggleProps = ToggleProps;
+
+const ToolbarToggle = forwardRef<HTMLButtonElement, ToolbarToggleProps>((props, forwardedRef) => {
+  return (
+    <ToolbarPrimitive.Button asChild>
+      <Toggle {...props} ref={forwardedRef} />
     </ToolbarPrimitive.Button>
   );
 });
@@ -84,6 +102,7 @@ export const Toolbar = {
   Root: ToolbarRoot,
   Button: ToolbarButton,
   Link: ToolbarLink,
+  Toggle: ToolbarToggle,
   ToggleGroup: ToolbarToggleGroup,
   ToggleGroupItem: ToolbarToggleGroupItem,
   Separator: ToolbarSeparator,
@@ -93,6 +112,7 @@ export type {
   ToolbarRootProps,
   ToolbarButtonProps,
   ToolbarLinkProps,
+  ToolbarToggleProps,
   ToolbarToggleGroupProps,
   ToolbarToggleGroupItemProps,
   ToolbarSeparatorProps,

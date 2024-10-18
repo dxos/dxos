@@ -168,4 +168,7 @@ message Invitation {
 
   /// Role of the admitted member, defaults to ADMIN.
   optional dxos.halo.credentials.SpaceMember.Role role = 18;
+
+  /// Id of a the space to join (only present if kind is SPACE).
+  optional string space_id = 19;
 }

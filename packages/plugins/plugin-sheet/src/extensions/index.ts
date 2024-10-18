@@ -3,3 +3,4 @@
 //
 
 export * from './compute';
+export * from './editor';

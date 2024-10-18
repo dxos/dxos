@@ -2,20 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type FieldValueType } from '@dxos/schema';
+
+/**
+ * @deprecated
+ */
+// TODO(burdon): Reconcile with @dxos/schema/View.
 export type TableDef = {
   id: string;
   name?: string;
-  columns: ColumnProps[];
+  columns: ColumnDef[];
 };
 
-// TODO(burdon): Use Effect defs?
-export type ColumnType = 'number' | 'boolean' | 'date' | 'string' | 'json' | 'ref';
-
-// TODO(burdon): Effect schema?
-export type ColumnProps = {
+/**
+ * @deprecated
+ */
+// TODO(burdon): Reconcile with @dxos/schema/Field.
+export type ColumnDef = {
   id: string;
   prop: string;
-  type: ColumnType;
+  type: FieldValueType;
   size?: number;
   label?: string;
 

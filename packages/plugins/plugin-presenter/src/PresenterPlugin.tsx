@@ -38,7 +38,7 @@ type PresenterState = {
 };
 
 export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => {
-  const settings = new LocalStorageStore<PresenterSettingsProps>(PRESENTER_PLUGIN, {});
+  const settings = new LocalStorageStore<PresenterSettingsProps>(PRESENTER_PLUGIN);
 
   // TODO(burdon): Do we need context providers if we can get the state from the plugin?
   const state = create<PresenterState>({ presenting: false });

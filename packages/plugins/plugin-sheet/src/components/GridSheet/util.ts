@@ -6,7 +6,6 @@ import { type MutableRefObject, useEffect, useLayoutEffect, useState } from 'rea
 
 import { createDocAccessor } from '@dxos/react-client/echo';
 import {
-  type GridEditing,
   type GridContentProps,
   type DxGridElement,
   type DxGridAxisMeta,
@@ -21,11 +20,8 @@ import { mx } from '@dxos/react-ui-theme';
 import { type CellAddress } from '../../defs';
 import { type SheetModel, type FormattingModel } from '../../model';
 
-export const dxGridCellIndexToSheetCellAddress = (gridEditing: GridEditing): CellAddress | null => {
-  if (!gridEditing) {
-    return null;
-  }
-  const [colStr, rowStr] = gridEditing.index.split(',');
+export const dxGridCellIndexToSheetCellAddress = (index: string): CellAddress => {
+  const [colStr, rowStr] = index.split(',');
   return {
     col: parseInt(colStr),
     row: parseInt(rowStr),

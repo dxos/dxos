@@ -2,14 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type PublicKey } from '@dxos/keys';
-
 import { TestPeer } from './test-peer';
 import { type SignalManager, MemorySignalManager, MemorySignalManagerContext } from '../signal-manager';
 import { type Message } from '../signal-methods';
 
 export type TestBuilderOptions = {
-  signalManagerFactory?: (identityKey: PublicKey, deviceKey: PublicKey) => Promise<SignalManager>;
+  signalManagerFactory?: (peer: TestPeer) => Promise<SignalManager>;
   messageDisruption?: (msg: Message) => Message[];
 };
 
@@ -19,10 +17,9 @@ export class TestBuilder {
 
   constructor(public options: TestBuilderOptions) {}
 
-  async createSignalManager(identityKey: PublicKey, deviceKey: PublicKey) {
+  async createSignalManager(peer: TestPeer): Promise<SignalManager> {
     const signalManager =
-      (await this.options.signalManagerFactory?.(identityKey, deviceKey)) ??
-      new MemorySignalManager(this._signalContext);
+      (await this.options.signalManagerFactory?.(peer)) ?? new MemorySignalManager(this._signalContext);
 
     if (this.options.messageDisruption) {
       // Imitates signal network disruptions (e. g. message doubling, ).

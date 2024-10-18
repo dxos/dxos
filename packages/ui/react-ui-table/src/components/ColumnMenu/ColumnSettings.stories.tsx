@@ -6,6 +6,7 @@ import '@dxos-theme';
 
 import React from 'react';
 
+import { FieldValueType } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ColumnSettings, type ColumnSettingsProps } from './ColumnSettings';
@@ -32,8 +33,8 @@ const sampleTableDef: TableDef = {
   id: '1',
   name: 'Sample Table',
   columns: [
-    { id: 'col-1', prop: 'name', type: 'string', label: 'Name' },
-    { id: 'col-2', prop: 'age', type: 'number', label: 'Age', digits: 0 },
+    { id: 'col-1', prop: 'name', type: FieldValueType.String, label: 'Name' },
+    { id: 'col-2', prop: 'age', type: FieldValueType.Number, label: 'Age', digits: 0 },
   ],
 };
 
@@ -43,8 +44,8 @@ const sampleTablesToReference: TableDef[] = [
     id: '2',
     name: 'Reference Table',
     columns: [
-      { id: 'ref-col-1', prop: 'id', type: 'string', label: 'ID' },
-      { id: 'ref-col-2', prop: 'description', type: 'string', label: 'Description' },
+      { id: 'ref-col-1', prop: 'id', type: FieldValueType.String, label: 'ID' },
+      { id: 'ref-col-2', prop: 'description', type: FieldValueType.String, label: 'Description' },
     ],
   },
 ];
@@ -53,7 +54,7 @@ const defaultArgs: ColumnSettingsProps = {
   column: {
     id: 'col-1',
     prop: 'name',
-    type: 'string',
+    type: FieldValueType.String,
     label: 'Name',
   },
   tableDef: sampleTableDef,
@@ -73,7 +74,7 @@ export const NumberColumn = {
     column: {
       id: 'col-2',
       prop: 'age',
-      type: 'number',
+      type: FieldValueType.Number,
       label: 'Age',
       digits: 0,
     },
@@ -86,7 +87,7 @@ export const ReferenceColumn = {
     column: {
       id: 'col-3',
       prop: 'reference',
-      type: 'ref',
+      type: FieldValueType.Ref,
       label: 'Reference',
       refTable: '2',
       refProp: 'ref-col-1',
@@ -100,7 +101,7 @@ export const NewColumn = {
     column: {
       id: 'new-col',
       prop: '',
-      type: 'string',
+      type: FieldValueType.String,
       label: '',
     },
   },

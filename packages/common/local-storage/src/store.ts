@@ -4,7 +4,7 @@
 
 import { effect } from '@preact/signals-core';
 
-import type { UnsubscribeCallback } from '@dxos/async';
+import { type UnsubscribeCallback } from '@dxos/async';
 import { type ReactiveObject, create } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 
@@ -105,14 +105,18 @@ export class LocalStorageStore<T extends object> {
 
   private readonly _subscriptions = new Map<string, UnsubscribeCallback>();
 
-  public readonly values: ReactiveObject<T>;
+  private readonly _values: ReactiveObject<T>;
 
   constructor(
     private readonly _prefix: string,
     defaults?: T,
   ) {
     registerSignalsRuntime();
-    this.values = create(defaults ?? ({} as T));
+    this._values = create(defaults ?? ({} as T));
+  }
+
+  get values(): ReactiveObject<T> {
+    return this._values;
   }
 
   // TODO(burdon): Reset method (keep track of binders).
@@ -136,14 +140,14 @@ export class LocalStorageStore<T extends object> {
 
     const current = type.get(storageKey);
     if (current !== undefined) {
-      this.values[key] = current;
+      this._values[key] = current;
     }
 
     // The subscribe callback is always called.
     this._subscriptions.set(
       storageKey,
       effect(() => {
-        const value = this.values[key];
+        const value = this._values[key];
         const current = type.get(storageKey);
         if (value !== current) {
           type.set(storageKey, value);

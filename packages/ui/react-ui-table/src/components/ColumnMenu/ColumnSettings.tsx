@@ -5,21 +5,25 @@
 import React, { useRef, useState } from 'react';
 
 import { Button, Input, Select, useTranslation } from '@dxos/react-ui';
+import { FieldValueTypes, type FieldValueType } from '@dxos/schema';
 import { safeParseInt } from '@dxos/util';
 
-import { type TableDef, type ColumnProps, type ColumnType } from '../../schema';
+import { type TableDef, type ColumnDef } from '../../schema';
 import { translationKey } from '../../translations';
 
 export type ColumnSettingsProps = {
-  column: ColumnProps;
+  column: ColumnDef;
   tableDef: TableDef;
   // TODO(burdon): Rename.
   tablesToReference: TableDef[];
-  onUpdate?: (id: string, column: ColumnProps) => void;
+  onUpdate?: (id: string, column: ColumnDef) => void;
   onDelete?: (id: string) => void;
   onClose?: () => void;
 };
 
+/**
+ * @deprecated
+ */
 export const ColumnSettings = ({
   column,
   tableDef,
@@ -28,6 +32,8 @@ export const ColumnSettings = ({
   onDelete,
   onClose,
 }: ColumnSettingsProps) => {
+  const { t } = useTranslation(translationKey);
+  const propRef = useRef<HTMLInputElement>(null);
   const [formState, setFormState] = useState({
     prop: column.id,
     refTable: column.refTable,
@@ -36,9 +42,6 @@ export const ColumnSettings = ({
     label: column.label,
     digits: String(column.digits ?? '0'),
   });
-
-  const propRef = useRef<HTMLInputElement>(null);
-  const { t } = useTranslation(translationKey);
 
   const handleSave = () => {
     const { prop, refTable, refProp, type, label, digits } = formState;
@@ -64,7 +67,7 @@ export const ColumnSettings = ({
       id: prop, // TODO(burdon): Make unique.
       prop,
       label,
-      type: type as ColumnProps['type'],
+      type: type as FieldValueType,
       refTable,
       refProp,
       digits: safeParseInt(digits),
@@ -114,7 +117,7 @@ export const ColumnSettings = ({
             <Select.Portal>
               <Select.Content>
                 <Select.Viewport>
-                  {(['number', 'boolean', 'string', 'ref'] as ColumnType[]).map((type) => (
+                  {FieldValueTypes.map((type) => (
                     <Select.Option key={type} value={type}>
                       {t(`${type} column type label`)}
                     </Select.Option>

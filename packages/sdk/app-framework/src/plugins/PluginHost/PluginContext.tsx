@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Context, type Provider, createContext, useContext, useMemo } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 
+import { raise } from '@dxos/debug';
 import { nonNullable } from '@dxos/util';
 
-import { type Plugin } from './plugin';
+import { type Plugin, type PluginMeta } from './plugin';
 import { findPlugin, resolvePlugin } from '../helpers';
 
 export type PluginContext = {
@@ -32,9 +33,9 @@ export type PluginContext = {
 
   /**
    * All available plugins.
+   * NOTE: This is metadata rather than just ids because it includes plugins which have not been fully loaded yet.
    */
-  // This is metadata rather then just ids because it includes plugins which have not been fully loaded yet.
-  available: Plugin['meta'][];
+  available: PluginMeta[];
 
   /**
    * Mark plugin as enabled.
@@ -43,19 +44,12 @@ export type PluginContext = {
   setPlugin: (id: string, enabled: boolean) => void;
 };
 
-const PluginContext: Context<PluginContext> = createContext<PluginContext>({
-  ready: false,
-  core: [],
-  enabled: [],
-  plugins: [],
-  available: [],
-  setPlugin: () => {},
-});
+const PluginContext = createContext<PluginContext | undefined>(undefined);
 
 /**
  * Get all plugins.
  */
-export const usePlugins = (): PluginContext => useContext(PluginContext);
+export const usePlugins = (): PluginContext => useContext(PluginContext) ?? raise(new Error('Missing PluginContext'));
 
 /**
  * Get a plugin by ID.
@@ -81,4 +75,4 @@ export const useResolvePlugins = <T,>(predicate: (plugin: Plugin) => Plugin<T> |
   return useMemo(() => plugins.map(predicate).filter(nonNullable), [plugins, predicate]);
 };
 
-export const PluginProvider: Provider<PluginContext> = PluginContext.Provider;
+export const PluginProvider = PluginContext.Provider;

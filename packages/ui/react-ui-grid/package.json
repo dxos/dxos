@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-grid",
-  "version": "0.6.11",
+  "version": "0.6.12",
   "description": "React component which manages a `dx-grid` Lit web component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -21,12 +21,16 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/view": "^6.34.1",
     "@dxos/lit-grid": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@lit/react": "^1.0.5",
     "@radix-ui/react-context": "^1.0.0",
+    "@radix-ui/react-popper": "^1.1.2",
     "@radix-ui/react-use-controllable-state": "^1.0.0"
   },
   "devDependencies": {

@@ -3,6 +3,4 @@
 //
 
 export * from './column-utils';
-export * from './schema';
 export * from './types';
-export * from './schema';

@@ -15,12 +15,5 @@
     "src",
     "test"
   ],
-  "references": [
-    {
-      "path": "../../../common/plate"
-    },
-    {
-      "path": "../bare-template"
-    }
-  ]
+  "references": []
 }

@@ -15,8 +15,8 @@ import {
   createThemeExtensions,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { getColumnTypes } from '@dxos/react-ui-table';
 import { mx, subtleHover } from '@dxos/react-ui-theme';
+import { mapSchemaToFields } from '@dxos/schema';
 
 const MAX_RENDERED_COUNT = 80;
 
@@ -59,7 +59,7 @@ export const Item = ({ object, onDelete }: ItemProps<EchoReactiveObject<any>>) =
   }
 
   // TODO(burdon): Get additional metadata.
-  const props = getColumnTypes(schema);
+  const props = mapSchemaToFields(schema);
 
   // TODO(burdon): [API]: Type check?
   const getValue = (object: EchoReactiveObject<any>, prop: string) => (object as any)[prop];

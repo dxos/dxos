@@ -2,17 +2,92 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef } from 'react';
+import React, { type RefObject, useCallback, useRef } from 'react';
 
-import { type DxGridElement, Grid } from '@dxos/react-ui-grid';
+import {
+  type DxGridElement,
+  type DxAxisResize,
+  editorKeys,
+  type EditorKeysProps,
+  Grid,
+  GridCellEditor,
+  type GridScopedProps,
+  useGridContext,
+} from '@dxos/react-ui-grid';
 
-import { useTable } from '../hooks';
-import { type ColumnDefinition } from '../table';
+import { type TableType } from '../../types';
+import { useTableModel } from '../hooks';
+import { type TableModel } from '../table-model';
+import { cellKeyToCoords } from '../util/coords';
+
+const TableCellEditor = ({
+  __gridScope,
+  gridRef,
+  tableModel,
+}: GridScopedProps<{
+  gridRef: RefObject<DxGridElement>;
+  tableModel?: TableModel;
+}>) => {
+  const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
+
+  const updateCell = useCallback(
+    (value: any) => {
+      if (value !== undefined && editing && tableModel) {
+        const { col, row } = cellKeyToCoords(editing.index);
+        tableModel.setCellData(col, row, value);
+      }
+    },
+    [editing, tableModel],
+  );
+
+  const determineNavigationAxis = (key: string): 'row' | 'col' | undefined => {
+    if (['Enter', 'ArrowUp', 'ArrowDown'].includes(key)) {
+      return 'row';
+    }
+    if (['Tab', 'ArrowLeft', 'ArrowRight'].includes(key)) {
+      return 'col';
+    }
+    return undefined;
+  };
+
+  const determineNavigationDelta = (key: string, shift?: boolean): -1 | 1 => {
+    if (key.startsWith('Arrow')) {
+      return ['ArrowUp', 'ArrowLeft'].includes(key) ? -1 : 1;
+    }
+    return shift ? -1 : 1;
+  };
+
+  const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
+    (value, { key, shift }) => {
+      updateCell(value);
+      setEditing(null);
+
+      const axis = determineNavigationAxis(key);
+      const delta = determineNavigationDelta(key, shift);
+
+      gridRef.current?.refocus(axis, delta);
+    },
+    [updateCell, setEditing, determineNavigationAxis, determineNavigationDelta],
+  );
+
+  const extension = [editorKeys({ onClose: handleClose, ...(editing?.initialContent && { onNav: handleClose }) })];
+
+  const getCellContent = useCallback(() => {
+    if (editing && tableModel) {
+      const [col, row] = editing.index.split(',').map(Number);
+      return `${tableModel.getCellData(col, row)}`;
+    }
+  }, [editing, tableModel]);
+
+  return <GridCellEditor extension={extension} getCellContent={getCellContent} />;
+};
 
 type TableProps = {
-  columnDefinitions: ColumnDefinition[];
+  table: TableType;
   data: any[];
 };
+
+const frozen = { frozenRowsStart: 1 };
 
 // NOTE: The table model manages both ephemeral and persistent state.
 // - Ephemeral state (e.g., sorting, filtering, selection) is handled internally.
@@ -21,34 +96,36 @@ type TableProps = {
 // TODO(Zan): Callback for changing column width.
 // TODO(Zan): Callback for re-arranging columns.
 // TODO(Zan): Callbacks for editing column schema.
-// TODO(Zan): Remove column axis labels.
-// TODO(Zan): Custom header labels and buttons.
-export const Table = ({ columnDefinitions, data }: TableProps) => {
+export const Table = ({ table, data }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
-  const { table, columnMeta, dispatch } = useTable(columnDefinitions, data, gridRef);
+
+  const handleOnCellUpdate = useCallback((col: number, row: number) => {
+    gridRef.current?.updateIfWithinBounds({ col, row });
+  }, []);
+
+  const tableModel = useTableModel(table, data, handleOnCellUpdate);
+  const handleAxisResize = useCallback(
+    (event: DxAxisResize) => {
+      if (event.axis === 'col') {
+        const columnIndex = parseInt(event.index, 10);
+        tableModel?.setColumnWidth(columnIndex, event.size);
+      }
+    },
+    [tableModel],
+  );
 
   return (
-    <>
-      <Grid.Root id='table-v2'>
-        <Grid.Content
-          ref={gridRef}
-          limitRows={data.length}
-          limitColumns={table.columnDefinitions.length}
-          initialCells={table.cells.value}
-          columns={columnMeta}
-          frozen={{ frozenRowsStart: 1 }}
-          onAxisResize={(event) => {
-            if (event.axis === 'col') {
-              const columnIndex = parseInt(event.index, 10);
-              dispatch({
-                type: 'ModifyColumnWidth',
-                columnIndex,
-                width: event.size,
-              });
-            }
-          }}
-        />
-      </Grid.Root>
-    </>
+    <Grid.Root id='table-next'>
+      <TableCellEditor tableModel={tableModel} gridRef={gridRef} />
+      <Grid.Content
+        ref={gridRef}
+        limitRows={data.length}
+        limitColumns={table.props.length}
+        initialCells={tableModel?.cells.value}
+        columns={tableModel?.columnMeta.value}
+        frozen={frozen}
+        onAxisResize={handleAxisResize}
+      />
+    </Grid.Root>
   );
 };

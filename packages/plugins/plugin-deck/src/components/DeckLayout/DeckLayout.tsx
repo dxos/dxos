@@ -5,18 +5,11 @@
 import { Sidebar as MenuIcon } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useRef, type UIEvent } from 'react';
 
-import {
-  type LayoutEntry,
-  type LayoutParts,
-  Surface,
-  type Toast as ToastSchema,
-  firstIdInPart,
-  usePlugin,
-} from '@dxos/app-framework';
+import { type LayoutParts, Surface, type Toast as ToastSchema, firstIdInPart, usePlugin } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, useOnTransition, useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Deck } from '@dxos/react-ui-deck';
-import { getSize } from '@dxos/react-ui-theme';
+import { getSize, mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
 import { ComplementarySidebar } from './ComplementarySidebar';
@@ -37,7 +30,7 @@ export type DeckLayoutProps = {
   toasts: ToastSchema[];
   flatDeck?: boolean;
   overscroll: Overscroll;
-  showHintsFooter: boolean;
+  showHints: boolean;
   slots?: {
     wallpaper?: { classNames?: string };
   };
@@ -49,7 +42,7 @@ export const DeckLayout = ({
   toasts,
   flatDeck,
   overscroll,
-  showHintsFooter,
+  showHints,
   slots,
   onDismissToast,
 }: DeckLayoutProps) => {
@@ -128,16 +121,7 @@ export const DeckLayout = ({
     }
   }, [layoutMode, firstAttendedId]);
 
-  // TODO(burdon): Needs cleaning up.
-  const parts: LayoutEntry[] = useMemo(() => {
-    const parts = [...(layoutParts.main ?? [])];
-    for (const part of layoutParts.solo ?? []) {
-      if (!parts.find((entry) => entry.id === part.id)) {
-        parts.push(part);
-      }
-    }
-    return parts;
-  }, [layoutParts.main, layoutParts.solo]);
+  const isEmpty = layoutParts.main?.length === 0 && layoutParts.solo?.length === 0;
 
   const padding = useMemo(() => {
     if (layoutMode === 'deck' && overscroll === 'centering') {
@@ -201,29 +185,42 @@ export const DeckLayout = ({
         <Main.Overlay />
 
         {/* No content. */}
-        {parts.length === 0 && (
+        {isEmpty && (
           <Main.Content handlesFocus>
             <ContentEmpty />
           </Main.Content>
         )}
 
         {/* Solo/deck mode. */}
-        {parts.length !== 0 && (
+        {!isEmpty && (
           <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
             <div role='none' className='relative'>
               <Deck.Root
                 style={padding}
-                classNames={[!flatDeck && 'bg-deck', 'absolute inset-0', slots?.wallpaper?.classNames]}
+                classNames={[
+                  !flatDeck && 'bg-deck',
+                  mainPaddingTransitions,
+                  'absolute inset-0',
+                  slots?.wallpaper?.classNames,
+                ]}
                 solo={layoutMode === 'solo'}
                 onScroll={handleScroll}
                 ref={deckRef}
               >
-                {parts.map((layoutEntry) => (
+                <Plank
+                  entry={layoutParts.solo?.[0] ?? { id: 'unknown-solo' }}
+                  layoutParts={layoutParts}
+                  part='solo'
+                  layoutMode={layoutMode}
+                  flatDeck={flatDeck}
+                  searchEnabled={!!searchPlugin}
+                />
+                {layoutParts.main?.map((layoutEntry) => (
                   <Plank
                     key={layoutEntry.id}
                     entry={layoutEntry}
                     layoutParts={layoutParts}
-                    part={layoutMode === 'solo' && layoutEntry.id === layoutParts.solo?.[0]?.id ? 'solo' : 'main'}
+                    part='main'
                     layoutMode={layoutMode}
                     flatDeck={flatDeck}
                     searchEnabled={!!searchPlugin}
@@ -234,15 +231,8 @@ export const DeckLayout = ({
           </Main.Content>
         )}
 
-        <StatusBar />
-
-        {/* Help hints. */}
-        {/* TODO(burdon): Need to make room for this in status bar. */}
-        {showHintsFooter && (
-          <div className='fixed bottom-0 left-0 right-0 h-[32px] z-[1] flex justify-center'>
-            <Surface role='hints' limit={1} />
-          </div>
-        )}
+        {/* Footer status. */}
+        <StatusBar showHints={showHints} />
 
         {/* Global popovers. */}
         <Popover.Portal>

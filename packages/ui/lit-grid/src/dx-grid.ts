@@ -6,6 +6,7 @@ import { LitElement, html, nothing } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 import { styleMap } from 'lit/directives/style-map.js';
+import { unsafeStatic, html as staticHtml } from 'lit/static-html.js';
 
 // eslint-disable-next-line unused-imports/no-unused-imports
 import './dx-grid-axis-resize-handle';
@@ -100,7 +101,7 @@ const closestAction = (target: EventTarget | null): { action: string | null; act
   return { actionEl, action: actionEl?.getAttribute('data-dx-grid-action') ?? null };
 };
 
-const closestCell = (target: EventTarget | null, actionEl?: HTMLElement | null): DxGridPositionNullable => {
+export const closestCell = (target: EventTarget | null, actionEl?: HTMLElement | null): DxGridPositionNullable => {
   let cellElement = actionEl;
   if (!cellElement) {
     const { action, actionEl } = closestAction(target);
@@ -730,11 +731,25 @@ export class DxGrid extends LitElement {
 
   // Focus handlers
 
+  setFocus(coords: DxGridPosition, snap = true) {
+    this.focusedCell = coords;
+    this.focusActive = true;
+    if (snap) {
+      this.snapPosToFocusedCell();
+    }
+  }
+
   private handleFocus(event: FocusEvent) {
     const cellCoords = closestCell(event.target);
     if (cellCoords) {
-      this.focusedCell = cellCoords;
       this.focusActive = true;
+      if (
+        this.focusedCell.plane !== cellCoords.plane ||
+        this.focusedCell.col !== cellCoords.col ||
+        this.focusedCell.row !== cellCoords.row
+      ) {
+        this.focusedCell = cellCoords;
+      }
     }
   }
 
@@ -745,10 +760,12 @@ export class DxGrid extends LitElement {
     }
   }
 
+  private focusedCellQuery() {
+    return `[data-dx-grid-plane=${this.focusedCell.plane}] > [aria-colindex="${this.focusedCell.col}"][aria-rowindex="${this.focusedCell.row}"]`;
+  }
+
   private focusedCellElement() {
-    return this.viewportRef.value?.querySelector(
-      `[data-dx-grid-plane=${this.focusedCell.plane}] > [aria-colindex="${this.focusedCell.col}"][aria-rowindex="${this.focusedCell.row}"]`,
-    ) as HTMLElement | null;
+    return this.viewportRef.value?.querySelector(this.focusedCellQuery()) as HTMLElement | null;
   }
 
   //
@@ -803,9 +820,14 @@ export class DxGrid extends LitElement {
     }
     queueMicrotask(() => {
       const outOfVis = this.focusedCellOutOfVis(overscanCol, overscanRow);
-      (outOfVis.col !== 0 || outOfVis.row !== 0 ? this.viewportRef.value : this.focusedCellElement())?.focus({
-        preventScroll: true,
-      });
+      if (outOfVis.col !== 0 || outOfVis.row !== 0) {
+        this.viewportRef.value?.focus({ preventScroll: true });
+      } else {
+        const activeFocusedCell = document.activeElement?.closest(this.focusedCellQuery());
+        if (!activeFocusedCell) {
+          this.focusedCellElement()?.focus({ preventScroll: true });
+        }
+      }
     });
   }
 
@@ -1006,6 +1028,7 @@ export class DxGrid extends LitElement {
     const active = this.cellActive(col, row, plane);
     const resizeIndex = cell?.resizeHandle ? (cell.resizeHandle === 'col' ? col : row) : undefined;
     const resizePlane = cell?.resizeHandle ? resolveResizePlane(cell.resizeHandle, plane) : undefined;
+    const accessory = cell?.accessoryHtml ? staticHtml`${unsafeStatic(cell.accessoryHtml)}` : null;
     return html`<div
       role="gridcell"
       tabindex="0"
@@ -1019,7 +1042,8 @@ export class DxGrid extends LitElement {
       data-dx-grid-action="cell"
       style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
     >
-      ${cell?.value}${cell?.resizeHandle && this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
+      ${cell?.value}${accessory}${cell?.resizeHandle &&
+      this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
         ? html`<dx-grid-axis-resize-handle
             axis=${cell.resizeHandle}
             plane=${resizePlane}
