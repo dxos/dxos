@@ -16,7 +16,7 @@ const createStarterSchema = () => {
   });
 };
 
-export const addStarterSchema = (table: TableType, space: Space) => {
+export const addStarterSchema = (space: Space, table: TableType) => {
   const schema = space.db.schema.addSchema(createStarterSchema());
   table.schema = schema;
 

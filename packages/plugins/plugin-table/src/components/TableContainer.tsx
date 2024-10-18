@@ -5,19 +5,21 @@
 import React, { useCallback } from 'react';
 
 import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { create, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 import { Toolbar, type ToolbarAction } from './Toolbar';
 
-// TODO(Zan): Factor out, copied this from MarkdownPlugin.
+// TODO(zantonio): Factor out, copied this from MarkdownPlugin.
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
 
+// TODO(zantonio): Move toolbar action handling to a more appropriate location.
 const TableContainer = ({ role, table }: LayoutContainerProps<Omit<ObjectTableProps, 'role' | 'getScrollElement'>>) => {
   const { hasAttention } = useAttention(fullyQualifiedId(table));
   const dispatch = useIntentDispatcher();
+  const space = getSpace(table);
 
   const onThreadCreate = useCallback(() => {
     void dispatch({
@@ -30,14 +32,24 @@ const TableContainer = ({ role, table }: LayoutContainerProps<Omit<ObjectTablePr
     });
   }, [dispatch, table]);
 
-  const handleAction = (action: ToolbarAction) => {
-    switch (action.type) {
-      case 'comment': {
-        onThreadCreate();
-        break;
+  const handleAction = useCallback(
+    (action: ToolbarAction) => {
+      switch (action.type) {
+        case 'comment': {
+          onThreadCreate();
+          break;
+        }
       }
-    }
-  };
+      switch (action.type) {
+        case 'add-row': {
+          if (table.schema && space) {
+            space.db.add(create(table.schema, {}));
+          }
+        }
+      }
+    },
+    [onThreadCreate, table.schema, space],
+  );
 
   return (
     <div role='none' className={role === 'article' ? 'row-span-2 grid grid-rows-subgrid' : undefined}>
