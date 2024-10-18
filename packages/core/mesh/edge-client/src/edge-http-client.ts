@@ -70,7 +70,7 @@ export class EdgeHttpClient {
     const request = createRequest(args);
     const url = `${this._baseUrl}${path.startsWith('/') ? path.slice(1) : path}`;
 
-    log.info('call', { method: args.method, path });
+    log.info('call', { method: args.method, path, request: args.body });
 
     while (true) {
       let processingError: EdgeCallFailedError;
@@ -85,6 +85,8 @@ export class EdgeHttpClient {
           if (body.success) {
             return body.data;
           }
+
+          log.info('unsuccessful edge response', { path, body });
 
           if (body.errorData?.type === 'auth_challenge' && typeof body.errorData?.challenge === 'string') {
             processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);

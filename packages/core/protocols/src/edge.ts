@@ -75,6 +75,7 @@ export type CreateAgentResponseBody = {
 
 export type GetAgentStatusResponseBody = {
   agent: {
+    deviceKey?: string;
     status: EdgeAgentStatus;
   };
 };
@@ -136,7 +137,7 @@ export class EdgeAuthChallengeError extends EdgeCallFailedError {
     public readonly challenge: string,
     errorData: EdgeErrorData,
   ) {
-    super({ reason: 'Auth challenge.', errorData });
+    super({ reason: 'Auth challenge.', errorData, isRetryable: false });
   }
 }
 
@@ -147,7 +148,7 @@ export type EdgeAuthChallenge = {
 
 const getRetryAfterMillis = (response: Response) => {
   const retryAfter = Number(response.headers.get('Retry-After'));
-  return Number.isNaN(retryAfter) ? undefined : retryAfter * 1000;
+  return Number.isNaN(retryAfter) || retryAfter === 0 ? undefined : retryAfter * 1000;
 };
 
 export const createRetryableHttpFailure = (args: { reason: any; retryAfterSeconds: number }) => {
