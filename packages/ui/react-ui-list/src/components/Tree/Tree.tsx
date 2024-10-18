@@ -14,11 +14,12 @@ export type TreeProps = {
   open: string[];
   current: string[];
   draggable?: boolean;
+  canDrop?: (data: unknown) => boolean;
   onOpenChange?: (id: string, nextOpen: boolean) => void;
   onSelect?: (id: string, nextState: boolean) => void;
 };
 
-export const Tree = ({ items, open, current, draggable = false, onOpenChange, onSelect }: TreeProps) => {
+export const Tree = ({ items, open, current, draggable = false, canDrop, onOpenChange, onSelect }: TreeProps) => {
   return (
     <Treegrid.Root gridTemplateColumns='1fr'>
       {items.map((item) => (
@@ -28,6 +29,7 @@ export const Tree = ({ items, open, current, draggable = false, onOpenChange, on
           open={open.includes(item.id)}
           draggable={draggable}
           current={current.includes(item.id)}
+          canDrop={canDrop}
           onOpenChange={onOpenChange}
           onSelect={onSelect}
         />

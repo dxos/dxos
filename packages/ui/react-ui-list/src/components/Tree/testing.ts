@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+
 import { S } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 
 import { type ItemType } from './types';
@@ -67,4 +70,96 @@ export const flattenTree = (tree: TestItem, open: string[], getItem: (tree: Test
       isOpen: ({ id }) => open.includes(id),
     }),
   );
+};
+
+// Ensures that the same item is not created multiple times, causing the tree to be re-rendered.
+const itemsCache: Record<string, ItemType> = {};
+
+export const getItem = (testItem: TestItem, parent?: string[]): ItemType => {
+  const cachedItem = itemsCache[testItem.id];
+  if (cachedItem) {
+    return cachedItem;
+  }
+
+  const item = {
+    id: testItem.id,
+    name: testItem.name,
+    icon: testItem.icon,
+    path: parent ? [...parent, testItem.id] : [testItem.id],
+    ...((testItem.items?.length ?? 0) > 0 && {
+      parentOf: testItem.items!.map(({ id }) => id),
+    }),
+  };
+  itemsCache[testItem.id] = item;
+  return item;
+};
+
+export const invalidateCache = (id: string) => {
+  delete itemsCache[id];
+};
+
+const removeItem = (tree: TestItem, source: ItemType) => {
+  const parent = getTestItem(tree, source.path.slice(1, -1));
+  const index = parent.items!.findIndex(({ id }) => id === source.id);
+  const item = parent.items[index];
+  parent.items!.splice(index, 1);
+  return item;
+};
+
+const getTestItem = (tree: TestItem, path: string[]) => {
+  let item = tree;
+  for (const part of path) {
+    item = item.items!.find(({ id }) => id === part)!;
+  }
+  return item;
+};
+
+export const updateState = ({
+  state,
+  instruction,
+  source,
+  target,
+}: {
+  state: TestItem;
+  instruction: Instruction;
+  source: ItemType;
+  target: ItemType;
+}) => {
+  switch (instruction.type) {
+    case 'reorder-above': {
+      invalidateCache(source.id);
+      const item = removeItem(state, source);
+      const parent = getTestItem(state, target.path.slice(1, -1));
+      const index = parent.items!.findIndex(({ id }) => id === target.id);
+      invalidateCache(target.id);
+      parent.items!.splice(index, 0, item);
+      break;
+    }
+
+    case 'reorder-below': {
+      invalidateCache(source.id);
+      const item = removeItem(state, source);
+      const parent = getTestItem(state, target.path.slice(1, -1));
+      const index = parent.items!.findIndex(({ id }) => id === target.id);
+      invalidateCache(target.id);
+      parent.items!.splice(index + 1, 0, item);
+      break;
+    }
+
+    case 'make-child': {
+      invalidateCache(source.id);
+      const item = removeItem(state, source);
+      const parent = getTestItem(state, target.path.slice(1));
+      invalidateCache(target.id);
+      parent.items!.push(item);
+      break;
+    }
+
+    case 'instruction-blocked':
+      break;
+
+    default:
+      log.warn('Unsupported instruction', instruction);
+      break;
+  }
 };

@@ -66,6 +66,7 @@ export const systemSememes = {
     light: ['neutral', '450/.1'],
     dark: ['neutral', '450/.1'],
   },
+
   //
   // Borders (border-, divide-)
   //
@@ -73,6 +74,10 @@ export const systemSememes = {
   separator: {
     light: ['neutral', surfaceCadence.light[4]],
     dark: ['neutral', surfaceCadence.dark[6]],
+  },
+  blocked: {
+    light: ['amber', 500],
+    dark: ['amber', 500],
   },
 
   //
