@@ -42,7 +42,7 @@ const sheetRowDefault = { grid: { size: 32, resizeable: true } };
 const sheetColDefault = { frozenColsStart: { size: 48 }, grid: { size: 180, resizeable: true } };
 
 export const GridSheet = () => {
-  const { id, model, formatting, editing, setEditing, setCursor, setRange } = useSheetContext();
+  const { id, model, editing, setEditing, setCursor, setRange } = useSheetContext();
   const dxGrid = useRef<DxGridElement | null>(null);
   const rangeNotifier = useRef<CellRangeNotifier>();
   const { hasAttention } = useAttention(id);
@@ -116,7 +116,7 @@ export const GridSheet = () => {
     [hasAttention],
   );
 
-  const { columns, rows } = useSheetModelDxGridProps(dxGrid, model, formatting);
+  const { columns, rows } = useSheetModelDxGridProps(dxGrid, model);
 
   const extension = useMemo(
     () => [

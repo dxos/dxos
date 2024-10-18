@@ -19,8 +19,15 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
 
 import { addressToIndex } from '../../defs';
+import {
+  type AlignKey,
+  type AlignValue,
+  type CommentKey,
+  type CommentValue,
+  type StyleKey,
+  type StyleValue,
+} from '../../defs/sheet-range-types';
 import { SHEET_PLUGIN } from '../../meta';
-import { type Formatting } from '../../types';
 import { useSheetContext } from '../SheetContext';
 
 //
@@ -71,20 +78,13 @@ export const ToolbarItem = ({ itemType, icon, children, ...props }: ToolbarItemP
 // Root
 //
 
-type AlignValue = 'left' | 'center' | 'right' | 'unset';
-type AlignAction = { type: 'align'; value: AlignValue };
+type AlignAction = { key: AlignKey; value: AlignValue };
+type CommentAction = { key: CommentKey; value: CommentValue; cellContent?: string };
+type StyleAction = { key: StyleKey; value: StyleValue };
 
-type CommentAction = { type: 'comment'; anchor: string; cellContent?: string };
+export type ToolbarAction = StyleAction | AlignAction | CommentAction;
 
-type FormatValue = 'date' | 'currency' | 'unset';
-type FormatAction = { type: 'format'; value: FormatValue };
-
-type StyleValue = 'highlight' | 'unset';
-type StyleAction = { type: 'style'; value: StyleValue };
-
-export type ToolbarAction = StyleAction | AlignAction | FormatAction | CommentAction;
-
-export type ToolbarActionType = ToolbarAction['type'];
+export type ToolbarActionType = ToolbarAction['key'];
 
 export type ToolbarActionHandler = (action: ToolbarAction) => void;
 
@@ -126,47 +126,18 @@ const ToolbarRoot = ({ children, onAction, role, classNames }: ToolbarProps) => 
 type ButtonProps<T> = {
   value: T;
   icon: string;
-  getState: (state: Formatting) => boolean;
-  disabled?: (state: Formatting) => boolean;
+  getState: (state: Range) => boolean;
+  disabled?: (state: Range) => boolean;
 };
 
 //
 // Alignment
 //
 
-const formatOptions: ButtonProps<FormatValue>[] = [
-  { value: 'date', icon: 'ph--calendar--regular', getState: (state) => false },
-  { value: 'currency', icon: 'ph--currency-dollar--regular', getState: (state) => false },
-];
-
-const Format = () => {
-  const { onAction } = useToolbarContext('Format');
-  const { t } = useTranslation(SHEET_PLUGIN);
-
-  return (
-    <NaturalToolbar.ToggleGroup
-      type='single'
-      // value={cellStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
-    >
-      {formatOptions.map(({ value, getState, icon }) => (
-        <ToolbarItem
-          itemType='toggleGroupItem'
-          key={value}
-          value={value}
-          icon={icon}
-          onClick={() => onAction?.({ type: 'format', value })}
-        >
-          {t(`toolbar ${value} label`)}
-        </ToolbarItem>
-      ))}
-    </NaturalToolbar.ToggleGroup>
-  );
-};
-
 const alignmentOptions: ButtonProps<AlignValue>[] = [
-  { value: 'left', icon: 'ph--text-align-left--regular', getState: (state) => false },
+  { value: 'start', icon: 'ph--text-align-left--regular', getState: (state) => false },
   { value: 'center', icon: 'ph--text-align-center--regular', getState: (state) => false },
-  { value: 'right', icon: 'ph--text-align-right--regular', getState: (state) => false },
+  { value: 'end', icon: 'ph--text-align-right--regular', getState: (state) => false },
 ];
 
 const Alignment = () => {
@@ -178,7 +149,7 @@ const Alignment = () => {
       type='single'
       // value={cellStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
       // disabled={state?.blockType === 'codeblock'}
-      onValueChange={(value: AlignValue) => onAction?.({ type: 'align', value })}
+      onValueChange={(value: AlignValue) => onAction?.({ key: 'align', value })}
     >
       {alignmentOptions.map(({ value, getState, icon }) => (
         <ToolbarItem itemType='toggleGroupItem' key={value} value={value} icon={icon}>
@@ -204,7 +175,7 @@ const Styles = () => {
           itemType='toggle'
           key={value}
           onPressedChange={(nextPressed: boolean) =>
-            onAction?.({ type: 'style', value: nextPressed ? 'highlight' : 'unset' })
+            onAction?.({ key: 'style', value: nextPressed ? 'highlight' : 'unset' })
           }
           icon={icon}
         >
@@ -256,8 +227,8 @@ const Actions = () => {
           return;
         }
         return onAction?.({
-          type: 'comment',
-          anchor: addressToIndex(model.sheet, cursor),
+          key: 'comment',
+          value: addressToIndex(model.sheet, cursor),
           cellContent: model.getCellText(cursor),
         });
       }}
@@ -272,7 +243,6 @@ export const Toolbar = {
   Root: ToolbarRoot,
   Separator: ToolbarSeparator,
   Alignment,
-  Format,
   Styles,
   Actions,
 };
