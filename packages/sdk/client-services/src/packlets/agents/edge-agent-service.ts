@@ -9,17 +9,20 @@ import { QueryAgentStatusResponse, type EdgeAgentService } from '@dxos/protocols
 import { type EdgeAgentManager } from './edge-agent-manager';
 
 export class EdgeAgentServiceImpl implements EdgeAgentService {
-  constructor(private _agentManager: EdgeAgentManager) {}
+  constructor(private readonly _agentManagerProvider: () => Promise<EdgeAgentManager>) {}
 
   public async createAgent(): Promise<void> {
-    return this._agentManager.createAgent();
+    return (await this._agentManagerProvider()).createAgent();
   }
 
   queryAgentStatus(): Stream<QueryAgentStatusResponse> {
     return new Stream(({ ctx, next }) => {
-      next({ status: mapStatus(this._agentManager.agentStatus) });
-      this._agentManager.agentStatusChanged.on(ctx, (newStatus) => {
-        next({ status: mapStatus(newStatus) });
+      next({ status: QueryAgentStatusResponse.AgentStatus.UNKNOWN });
+      void this._agentManagerProvider().then((agentManager) => {
+        next({ status: mapStatus(agentManager.agentStatus) });
+        agentManager.agentStatusChanged.on(ctx, (newStatus) => {
+          next({ status: mapStatus(newStatus) });
+        });
       });
     });
   }

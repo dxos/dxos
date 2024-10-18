@@ -290,6 +290,11 @@ export class ClientServicesHost {
       return this._serviceContext.dataSpaceManager!;
     };
 
+    const agentManagerProvider = async () => {
+      await this._serviceContext.initialized.wait();
+      return this._serviceContext.edgeAgentManager!;
+    };
+
     const identityService = new IdentityServiceImpl(
       this._serviceContext.identityManager,
       this._serviceContext.keyring,
@@ -332,7 +337,7 @@ export class ClientServicesHost {
         context: this._serviceContext,
       }),
 
-      EdgeAgentService: new EdgeAgentServiceImpl(this._serviceContext.edgeAgentManager),
+      EdgeAgentService: new EdgeAgentServiceImpl(agentManagerProvider),
     });
 
     await this._serviceContext.open(ctx);
