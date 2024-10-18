@@ -7,6 +7,9 @@ import React, { type HTMLAttributes, type CSSProperties } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
+// Tree item hitbox
+// https://github.com/atlassian/pragmatic-drag-and-drop/blob/main/packages/hitbox/constellation/index/about.mdx#tree-item
+
 export type DropIndicatorProps = {
   instruction: Instruction;
 };

@@ -9,6 +9,7 @@ import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/el
 import {
   attachInstruction,
   extractInstruction,
+  type ItemMode,
   type Instruction,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
@@ -24,6 +25,7 @@ type TreeItemState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 
 export type TreeItemProps = {
   item: ItemType;
+  mode: ItemMode;
   open: boolean;
   current: boolean;
   draggable: boolean;
@@ -36,7 +38,7 @@ export type TreeItemProps = {
 // TODO(wittjosiah): Port data, aria, keynav, etc. props over from navtree.
 
 export const TreeItem = memo(
-  ({ item, open, current, draggable: _draggable, canDrop, onOpenChange, onSelect }: TreeItemProps) => {
+  ({ item, mode, open, current, draggable: _draggable, canDrop, onOpenChange, onSelect }: TreeItemProps) => {
     const { id, name, icon, path } = item;
     const parentOf = useDefaultValue(item.parentOf, () => []);
     const level = path.length - 1;
@@ -93,7 +95,7 @@ export const TreeItem = memo(
               element,
               indentPerLevel: DEFAULT_INDENTATION,
               currentLevel: level,
-              mode: 'standard',
+              mode,
               block: isBranch ? [] : ['make-child'],
             });
           },
@@ -122,7 +124,7 @@ export const TreeItem = memo(
           },
         }),
       );
-    }, [draggable, item, canDrop]);
+    }, [draggable, item, mode, canDrop]);
 
     const handleOpenChange = useCallback(() => onOpenChange?.(id, !open), [onOpenChange, id, open]);
     const handleSelect = useCallback(() => onSelect?.(id, !current), [onSelect, id, current]);
