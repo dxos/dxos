@@ -3,16 +3,15 @@
 //
 
 import { decode as decodeCbor, encode as encodeCbor } from 'cbor-x';
-import { getRandomPort } from 'get-port-please';
-import { describe, test, onTestFinished, vi, expect } from 'vitest';
+import { getPort } from 'get-port-please';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { Trigger, sleep } from '@dxos/async';
+import { sleep, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { valueEncoding } from '@dxos/echo-pipeline';
 import { createEphemeralEdgeIdentity, EdgeClient, EdgeIdentityChangedError } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
-import { FeedFactory, FeedStore } from '@dxos/feed-store';
-import { type FeedWrapper } from '@dxos/feed-store';
+import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { SpaceId } from '@dxos/keys';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -188,7 +187,7 @@ describe('EdgeFeedReplicator', () => {
   });
 
   const createEdge = async () => {
-    const port = await getRandomPort('127.0.0.1');
+    const port = await getPort({ host: 'localhost', port: 7200, portRange: [7200, 7299] });
     let lastBlockIndex = -1;
     const admitConnection = new Trigger();
     const { cleanup, endpoint, messageSink, sendResponseMessage } = await createTestEdgeWsServer(port, {
