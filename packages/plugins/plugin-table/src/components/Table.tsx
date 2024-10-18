@@ -61,7 +61,7 @@ export const Table = ({ table, data }: TableProps) => {
         frozen={frozen}
         onAxisResize={handleAxisResize}
         className={mx(
-          '[&>.dx-grid]:min-bs-0 [&>.dx-grid]:bs-full [&>.dx-grid]:max-bs-max',
+          '[&>.dx-grid]:min-bs-0 [&>.dx-grid]:bs-full [&>.dx-grid]:max-bs-max [--dx-grid-base:var(--surface-bg)]',
           inlineEndLine,
           blockEndLine,
         )}
