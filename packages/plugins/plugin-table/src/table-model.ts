@@ -6,11 +6,19 @@ import { computed, type ReadonlySignal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
 import { PublicKey } from '@dxos/react-client';
-import { type DxGridPlaneCells, type DxGridCells, type DxGridAxisMeta } from '@dxos/react-ui-grid';
+import { parseValue, cellClassesForFieldType } from '@dxos/react-ui-data';
+import {
+  type DxGridPlaneCells,
+  type DxGridCells,
+  type DxGridAxisMeta,
+  type DxGridCellValue,
+} from '@dxos/react-ui-grid';
+import { mx } from '@dxos/react-ui-theme';
+import { formatValue } from '@dxos/schema';
 
 import { CellUpdateListener } from './CellUpdateListener';
-import { getCellKey } from './util/coords';
-import { type TableType } from '../types';
+import { type TableType } from './types';
+import { getCellKey } from './util';
 
 export type ColumnId = string;
 export type SortDirection = 'asc' | 'desc';
@@ -57,36 +65,48 @@ export class TableModel extends Resource {
   }
 
   protected override async _open() {
-    // Construct the header cells based on the table props.
-    const headerCells: DxGridPlaneCells = Object.fromEntries(
-      this.table.props.map((prop, index) => {
-        return [getCellKey(index, 0), { value: prop.id!, resizeHandle: 'col' }];
-      }),
-    );
+    // Construct the header cells based on the table fields.
+    const headerCells: ReadonlySignal<DxGridPlaneCells> = computed(() => {
+      const fields = this.table.view?.fields ?? [];
+      return Object.fromEntries(
+        fields.map((field, index: number) => {
+          return [getCellKey(index, 0), { value: field.label ?? field.path, resizeHandle: 'col' }];
+        }),
+      );
+    });
 
     // Map the data to grid cells.
     const cellValues: ReadonlySignal<DxGridPlaneCells> = computed(() => {
       const values: DxGridPlaneCells = {};
       this.data.forEach((row, rowIndex) => {
-        this.table.props.forEach((prop, colIndex) => {
-          const cellValueSignal = computed(() => `${row[prop.id!]}`);
-          values[getCellKey(colIndex, rowIndex)] = {
+        (this.table.view?.fields ?? []).forEach((field, colIndex: number) => {
+          const cellValueSignal = computed(() =>
+            row[field.path] !== undefined ? formatValue(field.type, row[field.path]) : '',
+          );
+          const cellClasses = cellClassesForFieldType(field.type);
+          const cell: DxGridCellValue = {
             get value() {
               return cellValueSignal.value;
             },
           };
+          if (cellClasses) {
+            cell.className = mx(cellClasses);
+          }
+          values[getCellKey(colIndex, rowIndex)] = cell;
         });
       });
       return values;
     });
 
     this.cells = computed(() => {
-      return { grid: cellValues.value, frozenRowsStart: headerCells };
+      return { grid: cellValues.value, frozenRowsStart: headerCells.value };
     });
 
     this.columnMeta = computed(() => {
       const headings = Object.fromEntries(
-        this.table.props.map((prop, index) => [index, { size: prop.size ?? 256, resizeable: true }]),
+        (this.table.view?.fields ?? []).map((field, index: number) => {
+          return [index, { size: field.size ?? 256, resizeable: true }];
+        }),
       );
       return { grid: headings };
     });
@@ -100,10 +120,11 @@ export class TableModel extends Resource {
   }
 
   public moveColumn(columnId: ColumnId, newIndex: number): void {
-    const currentIndex = this.table.props.findIndex((prop) => prop.id === columnId);
-    if (currentIndex !== -1) {
-      const [removed] = this.table.props.splice(currentIndex, 1);
-      this.table.props.splice(newIndex, 0, removed);
+    const fields = this.table.view?.fields ?? [];
+    const currentIndex = fields.findIndex((field) => field.id === columnId);
+    if (currentIndex !== -1 && this.table.view) {
+      const [removed] = fields.splice(currentIndex, 1);
+      fields.splice(newIndex, 0, removed);
     }
   }
 
@@ -132,25 +153,27 @@ export class TableModel extends Resource {
 
   public setColumnWidth(columnIndex: number, width: number): void {
     const newWidth = Math.max(0, width);
-    const prop = this.table.props.at(columnIndex);
-    if (prop) {
-      prop.size = newWidth;
+    const field = this.table?.view?.fields[columnIndex];
+    if (field) {
+      field.size = newWidth;
     }
   }
 
   public getCellData = (colIndex: number, rowIndex: number): any => {
-    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= this.table.props.length) {
+    const fields = this.table.view?.fields ?? [];
+    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= fields.length) {
       return undefined;
     }
-    const propId = this.table.props[colIndex].id!;
-    return this.data[rowIndex][propId];
+    const field = fields[colIndex];
+    return this.data[rowIndex][field.path];
   };
 
   public setCellData = (colIndex: number, rowIndex: number, value: any): void => {
-    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= this.table.props.length) {
+    const fields = this.table.view?.fields ?? [];
+    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= fields.length) {
       return;
     }
-    const propId = this.table.props[colIndex].id!;
-    this.data[rowIndex][propId] = value;
+    const field = fields[colIndex];
+    this.data[rowIndex][field.path] = parseValue(field.type, value);
   };
 }

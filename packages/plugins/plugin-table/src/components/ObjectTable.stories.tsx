@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ObjectTable } from './ObjectTable';
 import { createTable, TestSchema } from './testing';
-import { TableType } from '../../types';
+import { TableType } from '../types';
 
 const Story = () => {
   const spaces = useSpaces();
@@ -28,7 +28,11 @@ const Story = () => {
     return null;
   }
 
-  return <ObjectTable table={table} />;
+  return (
+    <div>
+      <ObjectTable table={table} />
+    </div>
+  );
 };
 
 export default {

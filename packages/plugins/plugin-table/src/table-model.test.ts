@@ -19,12 +19,15 @@ registerSignalsRuntime();
 const createTableModel = (): TableModel => {
   // TODO(Zan): Restore schema specification when importing TableType doesn't break bundling.
   const table = create({
-    props: [
-      { id: 'col1', label: 'Column 1' },
-      { id: 'col2', label: 'Column 2' },
-      { id: 'col3', label: 'Column 3' },
-    ],
+    view: {
+      fields: [
+        { id: 'col1', path: 'col1', label: 'Column 1', type: 'string' },
+        { id: 'col2', path: 'col2', label: 'Column 2', type: 'string' },
+        { id: 'col3', path: 'col3', label: 'Column 3', type: 'string' },
+      ],
+    },
   });
+
   return new TableModel({ table: table as any, data: [] });
 };
 
@@ -109,12 +112,15 @@ describe('TableModel', () => {
       let data: any[];
 
       beforeEach(async () => {
+        // TODO(Zan): Restore schema specification when importing TableType doesn't break bundling.
         const table = create({
-          props: [
-            { id: 'col1', label: 'Column 1' },
-            { id: 'col2', label: 'Column 2' },
-            { id: 'col3', label: 'Column 3' },
-          ],
+          view: {
+            fields: [
+              { id: 'col1', path: 'col1', label: 'Column 1', type: 'string' },
+              { id: 'col2', path: 'col2', label: 'Column 2', type: 'string' },
+              { id: 'col3', path: 'col3', label: 'Column 3', type: 'string' },
+            ],
+          },
         });
 
         ({ data } = create({

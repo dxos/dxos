@@ -7,7 +7,6 @@ import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/clo
 import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
 import { createContext } from '@radix-ui/react-context';
 import React, { type ReactNode, useEffect, useState } from 'react';
-import { flushSync } from 'react-dom';
 
 import { type ThemedClassName, useControlledValue } from '@dxos/react-ui';
 
@@ -66,17 +65,15 @@ export const ListRoot = <T extends ListItemRecord>({
         }
 
         const closestEdgeOfTarget = extractClosestEdge(targetData);
-        flushSync(() => {
-          setItems(
-            reorderWithEdge({
-              list: items,
-              startIndex: sourceIdx,
-              indexOfTarget: targetIdx,
-              axis: 'vertical',
-              closestEdgeOfTarget,
-            }),
-          );
-        });
+        setItems(
+          reorderWithEdge({
+            list: items,
+            startIndex: sourceIdx,
+            indexOfTarget: targetIdx,
+            axis: 'vertical',
+            closestEdgeOfTarget,
+          }),
+        );
       },
     });
   }, [items]);
