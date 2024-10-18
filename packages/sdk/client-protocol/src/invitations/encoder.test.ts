@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import { InvitationEncoder } from './encoder';
@@ -17,6 +17,7 @@ const baseInvitation: Invitation = {
   state: Invitation.State.INIT,
   swarmKey: PublicKey.random(),
   spaceKey: PublicKey.random(),
+  spaceId: SpaceId.random(),
 };
 
 describe('Invitation utils', () => {
