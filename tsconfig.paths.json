@@ -326,6 +326,9 @@
       "@dxos/react-ui-attention": [
         "packages/ui/react-ui-attention/src/index.ts"
       ],
+      "@dxos/react-ui-attention/testing": [
+        "packages/ui/react-ui-attention/src/testing/index.ts"
+      ],
       "@dxos/react-ui-card": [
         "packages/ui/react-ui-card/src/index.ts"
       ],
