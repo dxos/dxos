@@ -11,7 +11,7 @@ import { type Comparator, intersection } from '@dxos/util';
 import { type HasId } from './ast';
 import { getProxyHandlerSlot } from './proxy';
 
-export const data = Symbol.for('dxos.echo.data');
+export const data = Symbol.for('@dxos/schema/Data');
 
 // TODO(burdon): Move to client-protocol.
 export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
