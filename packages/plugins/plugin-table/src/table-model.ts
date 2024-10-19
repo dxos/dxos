@@ -54,7 +54,7 @@ export class TableModel extends Resource {
   public pinnedRows: { top: number[]; bottom: number[] };
   public rowSelection: number[];
 
-  public sorting = signal<SortConfig | undefined>(undefined);
+  public readonly sorting = signal<SortConfig | undefined>(undefined);
   /**
    * Maps display indices to data indices.
    * Used for translating between sorted/displayed order and original data order.
@@ -111,7 +111,6 @@ export class TableModel extends Resource {
 
       const dataWithIndices = this.data.map((item, index) => ({ item, index }));
       const sorted = sortBy(dataWithIndices, [(wrapper) => wrapper.item[field.path]]);
-
       if (sort.direction === 'desc') {
         sorted.reverse();
       }
