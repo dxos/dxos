@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import React, { useMemo, type FC } from 'react';
 
-import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
+import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { editorWithToolbarLayout, automerge } from '@dxos/react-ui-editor';
 import { topbarBlockPaddingStart } from '@dxos/react-ui-theme';
@@ -18,7 +18,7 @@ const Story: FC<{
   content: string;
   toolbar?: boolean;
 }> = ({ content = '# Test', toolbar }) => {
-  const doc = useMemo(() => createEchoObject({ content }), [content]);
+  const doc = useMemo(() => createObject({ content }), [content]);
   const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
 
   return (

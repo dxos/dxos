@@ -15,13 +15,16 @@ import { create } from '../handler';
 import { effectToJsonSchema } from '../json';
 import { TypedObject } from '../object';
 import { getTypeReference } from '../proxy';
-import { EmptySchemaType, TEST_SCHEMA_TYPE } from '../testing';
+import { EmptySchemaType } from '../testing';
 
 registerSignalsRuntime();
 
 describe('dynamic schema', () => {
   test('getProperties filters out id and unwraps optionality', async () => {
-    class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({
+    class GeneratedSchema extends TypedObject({
+      typename: 'example.com/type/Test',
+      version: '0.1.0',
+    })({
       field1: S.String,
       field2: S.Boolean,
     }) {}
@@ -34,7 +37,10 @@ describe('dynamic schema', () => {
   });
 
   test('addColumns', async () => {
-    class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({
+    class GeneratedSchema extends TypedObject({
+      typename: 'example.com/type/Test',
+      version: '0.1.0',
+    })({
       field1: S.String,
     }) {}
 
@@ -83,7 +89,10 @@ describe('dynamic schema', () => {
     registered.addColumns({ field3: S.String });
     registered.updateColumns({ field3: S.Boolean });
     registered.removeColumns(['field2']);
-    expect(getObjectAnnotation(registered)).to.deep.contain(TEST_SCHEMA_TYPE);
+    expect(getObjectAnnotation(registered)).to.deep.contain({
+      typename: 'example.com/type/Empty',
+      version: '0.1.0',
+    });
     expect(getFieldMetaAnnotation(registered.getProperties()[0], metaNamespace)).to.deep.eq(metaInfo);
   });
 
@@ -91,7 +100,7 @@ describe('dynamic schema', () => {
     const mutableSchema = new MutableSchema(
       create(StoredSchema, {
         typename: getTypeReference(schema)!.objectId,
-        version: TEST_SCHEMA_TYPE.version,
+        version: '0.1.0',
         jsonSchema: effectToJsonSchema(schema),
       }),
     );

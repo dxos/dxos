@@ -4,13 +4,13 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { create, type EchoReactiveObject, Expando, ref, TypedObject } from '@dxos/echo-schema';
-import { S } from '@dxos/echo-schema';
+import { create, Expando, ref, TypedObject, S } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { loadObjectReferences } from './load-object';
+import { type EchoReactiveObject } from '../echo-handler';
 import { EchoTestBuilder } from '../testing';
 
 describe('loadObjectReferences', () => {

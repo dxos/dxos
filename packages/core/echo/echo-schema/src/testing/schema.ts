@@ -29,12 +29,10 @@ export const TestNestedType = TestNestedSchema.pipe(EchoObject('example.com/type
 // Complex types
 //
 
-export const TEST_SCHEMA_TYPE = {
-  typename: 'example.com/type/Test',
+export class EmptySchemaType extends TypedObject({
+  typename: 'example.com/type/Empty',
   version: '0.1.0',
-};
-
-export class EmptySchemaType extends TypedObject(TEST_SCHEMA_TYPE)({}) {}
+})({}) {}
 
 const fields = {
   string: S.String,
@@ -54,7 +52,10 @@ const fields = {
 export const TestSchema = S.mutable(S.partial(S.Struct(fields)));
 export type TestSchema = S.Schema.Type<typeof TestSchema>;
 
-export class TestSchemaType extends TypedObject<TestSchemaType>(TEST_SCHEMA_TYPE)(fields, { partial: true }) {}
+export class TestSchemaType extends TypedObject<TestSchemaType>({
+  typename: 'example.com/type/Test',
+  version: '0.1.0',
+})(fields, { partial: true }) {}
 
 export const TestType = TestSchema.pipe(EchoObject('example.com/type/Test', '0.1.0'));
 

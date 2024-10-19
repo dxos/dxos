@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import React, { useState } from 'react';
 
-import { createEchoObject } from '@dxos/echo-db';
+import { createObject } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -14,7 +14,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { SketchComponent } from './SketchComponent';
 
 const createSketch = () => {
-  return createEchoObject(create(DiagramType, { canvas: createEchoObject(create(CanvasType, { content: {} })) }));
+  return createObject(create(DiagramType, { canvas: createObject(create(CanvasType, { content: {} })) }));
 };
 
 const Story = () => {

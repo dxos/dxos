@@ -34,6 +34,7 @@ type TypeObjectOptions = {
 /**
  * Base class factory for typed objects.
  */
+// TODO(burdon): Document what is really going on here.
 // TODO(burdon): Support pipe(S.default({}))
 export const TypedObject = <Klass>({
   typename,
@@ -76,14 +77,16 @@ export const TypedObject = <Klass>({
         return obj != null && getTypeReference(getSchema(obj))?.objectId === typename;
       }
 
-      static readonly ast = annotatedSchema.ast;
+      // TODO(burdon): Comment.
       static readonly [S.TypeId] = schemaVariance;
+      static readonly ast = annotatedSchema.ast;
       static readonly annotations = annotatedSchema.annotations.bind(annotatedSchema);
       static readonly pipe = annotatedSchema.pipe.bind(annotatedSchema);
 
       private constructor() {
+        // TODO(burdon): Throw APIError.
         throw new Error('Use create(Typename, { ...fields }) to instantiate an object.');
       }
-    } as any; // TODO(burdon): ???
+    } as any; // TODO(burdon): Comment.
   };
 };

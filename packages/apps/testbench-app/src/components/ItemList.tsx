@@ -5,8 +5,8 @@
 import { X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type EchoReactiveObject, getMeta, getSchema } from '@dxos/echo-schema';
-import { createDocAccessor } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, createDocAccessor } from '@dxos/client/echo';
+import { getMeta, getSchema } from '@dxos/echo-schema';
 import { Button, Input, useThemeContext } from '@dxos/react-ui';
 import {
   automerge,
