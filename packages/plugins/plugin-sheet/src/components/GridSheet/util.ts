@@ -60,9 +60,9 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
   if (rawValue === undefined || rawValue === null) {
     return { value: '' };
   }
-  const ranges = model.sheet.ranges.filter(({ range }) => inRange(range, address));
+  const ranges = model.sheet.ranges?.filter(({ range }) => inRange(range, address));
   const type = model.getValueType(address);
-  const classNames = ranges.map(cellClassNameForRange).reverse();
+  const classNames = ranges?.map(cellClassNameForRange).reverse();
 
   return { value: parseValue(type, rawValue), className: mx(cellClassesForFieldType(type), classNames) };
 };
