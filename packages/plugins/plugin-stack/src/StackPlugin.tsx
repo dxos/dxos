@@ -72,7 +72,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
 
           const primary = data.active ?? data.object;
           // This allows the id to be overridden by the surface for situations where the id of the collection
-          // is not the same as the id of what is being represented (e.g. a space with a root collection).
+          // is not the same as the id of what is being represented (e.g., a space with a root collection).
           const id = typeof data.id === 'string' ? data.id : undefined;
           switch (role) {
             case 'main':
