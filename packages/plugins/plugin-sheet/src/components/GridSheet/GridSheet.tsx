@@ -51,7 +51,9 @@ export const GridSheet = () => {
     (event: FocusEvent) => {
       if (!editing) {
         const cell = closestCell(event.target);
-        setCursor(cell && cell.plane === 'grid' ? { col: cell.col, row: cell.row } : undefined);
+        if (cell && cell.plane === 'grid') {
+          setCursor({ col: cell.col, row: cell.row });
+        }
       }
     },
     [editing],
