@@ -3,14 +3,15 @@
 //
 
 import { type Reference } from '@dxos/echo-protocol';
-import { EXPANDO_TYPENAME, isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
+import { EXPANDO_TYPENAME, isReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import type { Filter } from './filter';
+import { type Filter } from './filter';
 import { type ObjectCore } from '../core-db';
+import { type EchoReactiveObject } from '../echo-handler';
 
 /**
  * Query logic that checks if object complaint with a filter.

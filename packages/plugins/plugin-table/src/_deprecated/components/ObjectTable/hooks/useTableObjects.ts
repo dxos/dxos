@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EchoReactiveObject, type S } from '@dxos/echo-schema';
+import { type S } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { type Space, useQuery, Filter } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, type Space, useQuery, Filter } from '@dxos/react-client/echo';
 
 /**
  * Retrieves objects for a given schema and filters them using a global filter.

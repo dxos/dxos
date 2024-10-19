@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
-import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
+import { create, Expando } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -16,8 +16,8 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { type CoreDatabase } from './core-database';
-import { getObjectCore } from './types';
 import { type DocHandleProxy, type RepoProxy } from '../client';
+import { type EchoReactiveObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabaseImpl, type EchoDatabase } from '../proxy-db';
 import { Filter } from '../query';
 import { EchoTestBuilder, Task } from '../testing';

@@ -8,7 +8,7 @@ import { create, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
-import { getObjectCore } from './core-db';
+import { getObjectCore } from './echo-handler';
 import { EchoTestBuilder } from './testing';
 
 describe('HyperGraph', () => {

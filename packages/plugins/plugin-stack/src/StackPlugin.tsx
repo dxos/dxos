@@ -5,10 +5,9 @@
 import React from 'react';
 
 import { type Plugin, type PluginDefinition } from '@dxos/app-framework';
-import { create, type EchoReactiveObject } from '@dxos/echo-schema';
+import { create, type EchoReactiveObject, fullyQualifiedId } from '@dxos/client/echo';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, bottombarBlockPaddingEnd } from '@dxos/react-ui-theme';
 
@@ -73,7 +72,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
 
           const primary = data.active ?? data.object;
           // This allows the id to be overridden by the surface for situations where the id of the collection
-          // is not the same as the id of what is being represented (e.g. a space with a root collection).
+          // is not the same as the id of what is being represented (e.g., a space with a root collection).
           const id = typeof data.id === 'string' ? data.id : undefined;
           switch (role) {
             case 'main':

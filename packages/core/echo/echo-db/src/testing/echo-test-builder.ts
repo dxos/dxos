@@ -9,7 +9,6 @@ import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type Context, Resource } from '@dxos/context';
 import { EchoHost } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -17,6 +16,7 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
+import { type EchoReactiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 
 export class EchoTestBuilder extends Resource {

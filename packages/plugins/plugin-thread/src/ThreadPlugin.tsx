@@ -17,7 +17,6 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { create, type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
@@ -25,6 +24,7 @@ import { type ActionGroup, createExtension, isActionGroup, toSignal } from '@dxo
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { SpaceAction } from '@dxos/plugin-space';
 import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
+import { create, type EchoReactiveObject, getTypename } from '@dxos/react-client/echo';
 import { getSpace, fullyQualifiedId, loadObjectReferences, parseFullyQualifiedId } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 

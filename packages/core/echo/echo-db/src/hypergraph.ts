@@ -6,7 +6,7 @@ import { asyncTimeout, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Reference } from '@dxos/echo-protocol';
-import { type EchoReactiveObject, RuntimeSchemaRegistry } from '@dxos/echo-schema';
+import { RuntimeSchemaRegistry } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -15,7 +15,9 @@ import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/ec
 import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
-import { getObjectCore, type ItemsUpdatedEvent } from './core-db';
+import { type ItemsUpdatedEvent } from './core-db';
+import { type EchoReactiveObject } from './echo-handler';
+import { getObjectCore } from './echo-handler';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {

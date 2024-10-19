@@ -3,8 +3,7 @@
 //
 
 import { isEncodedReference, Reference, type EncodedReference } from '@dxos/echo-protocol';
-import { requireTypeReference, type EchoReactiveObject } from '@dxos/echo-schema';
-import { S } from '@dxos/echo-schema';
+import { requireTypeReference, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
 import { createBuf } from '@dxos/protocols/buf';
@@ -16,7 +15,7 @@ import {
 } from '@dxos/protocols/buf/dxos/echo/filter_pb';
 import { type QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { getReferenceWithSpaceKey } from '../echo-handler';
+import { type EchoReactiveObject, getReferenceWithSpaceKey } from '../echo-handler';
 
 export const hasType =
   <T extends EchoReactiveObject<T>>(type: { new (): T }) =>

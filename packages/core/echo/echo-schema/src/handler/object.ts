@@ -12,8 +12,10 @@ import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 import { defineHiddenProperty } from './utils';
 import { getObjectAnnotation } from '../ast';
-import { createReactiveProxy, getProxyHandlerSlot, isValidProxyTarget, type ReactiveHandler } from '../proxy';
+import { createProxy, isValidProxyTarget } from '../proxy';
 import { type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject } from '../types';
+
+export const createObjectId = () => ulid();
 
 /**
  * Creates a reactive object from a plain Javascript object.
@@ -27,15 +29,15 @@ export const create: {
   <T extends {}>(schema: S.Schema<T, any>, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T>;
 } = <T extends {}>(objOrSchema: S.Schema<T, any> | T, obj?: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T> => {
   if (obj && (objOrSchema as any) !== Expando) {
-    return createObject<T>({ ...obj } as T, meta, objOrSchema as S.Schema<T, any>);
+    return createReactiveObject<T>({ ...obj } as T, meta, objOrSchema as S.Schema<T, any>);
   } else if (obj && (objOrSchema as any) === Expando) {
-    return createObject<T>({ ...obj } as T, meta, undefined, { expando: true });
+    return createReactiveObject<T>({ ...obj } as T, meta, undefined, { expando: true });
   } else {
-    return createObject<T>(objOrSchema as T, meta);
+    return createReactiveObject<T>(objOrSchema as T, meta);
   }
 };
 
-const createObject = <T extends {}>(
+const createReactiveObject = <T extends {}>(
   obj: T,
   meta?: ObjectMeta,
   schema?: S.Schema<T>,
@@ -52,17 +54,15 @@ const createObject = <T extends {}>(
     }
     initMeta(obj, meta);
     prepareTypedTarget(obj, schema);
-    return createReactiveProxy<T>(obj, TypedReactiveHandler.instance as ReactiveHandler<any>);
+    return createProxy<T>(obj, TypedReactiveHandler.instance);
   } else {
     if (options?.expando) {
       setIdOnTarget(obj);
     }
     initMeta(obj, meta);
-    return createReactiveProxy<T>(obj, UntypedReactiveHandler.instance as ReactiveHandler<any>);
+    return createProxy<T>(obj, UntypedReactiveHandler.instance);
   }
 };
-
-export const createObjectId = () => ulid();
 
 /**
  * Set ID on ECHO object targets during creation.
@@ -80,7 +80,7 @@ const symbolMeta = Symbol.for('@dxos/schema/ObjectMeta');
  */
 const initMeta = <T>(obj: T, meta: ObjectMeta = { keys: [] }) => {
   prepareTypedTarget(meta, ObjectMetaSchema);
-  defineHiddenProperty(obj, symbolMeta, createReactiveProxy(meta, TypedReactiveHandler.instance as any));
+  defineHiddenProperty(obj, symbolMeta, createProxy(meta, TypedReactiveHandler.instance as any));
 };
 
 /**
@@ -91,12 +91,4 @@ export const getObjectMeta = (object: any): ObjectMeta => {
   const metadata = object[symbolMeta];
   invariant(metadata, 'ObjectMeta not found.');
   return metadata;
-};
-
-/**
- * Unsafe method to override id for debugging/testing and migration purposes.
- * @deprecated
- */
-export const dangerouslyAssignProxyId = <T>(obj: ReactiveObject<T>, id: string) => {
-  (getProxyHandlerSlot(obj).target as any).id = id;
 };

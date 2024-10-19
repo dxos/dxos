@@ -5,8 +5,7 @@
 import { Plus, X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type EchoReactiveObject, getType } from '@dxos/echo-schema';
-import { type EchoDatabase, type Space } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, type EchoDatabase, type Space, getType } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import {
   type BaseColumnOptions,

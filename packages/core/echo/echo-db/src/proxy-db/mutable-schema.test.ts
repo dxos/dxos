@@ -15,12 +15,12 @@ import {
   TypedObject,
   S,
 } from '@dxos/echo-schema';
-import { EmptySchemaType, TEST_SCHEMA_TYPE } from '@dxos/echo-schema/testing';
+import { EmptySchemaType } from '@dxos/echo-schema/testing';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
-class ClassWithSchemaField extends TypedObject(TEST_SCHEMA_TYPE)({
+class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
   schema: S.optional(ref(MutableSchema)),
 }) {}
 
@@ -37,14 +37,18 @@ describe('MutableSchema', () => {
 
   test('set MutableSchema as echo object field', async () => {
     const { db } = await setupTest();
-    const instanceWithSchemaRef = db.add(create(ClassWithSchemaField, {}));
-    class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({
+    const instanceWithSchemaRef = db.add(create(TestSchema, {}));
+    class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
       field: S.String,
     }) {}
 
     instanceWithSchemaRef.schema = db.schema.addSchema(GeneratedSchema);
     const schemaWithId = GeneratedSchema.annotations({
-      [ObjectAnnotationId]: { ...TEST_SCHEMA_TYPE, schemaId: instanceWithSchemaRef.schema?.id },
+      [ObjectAnnotationId]: {
+        typename: 'example.com/type/Test',
+        version: '0.1.0',
+        schemaId: instanceWithSchemaRef.schema?.id,
+      },
     });
     expect(instanceWithSchemaRef.schema?.ast).to.deep.eq(schemaWithId.ast);
 
@@ -55,10 +59,13 @@ describe('MutableSchema', () => {
 
   test('create echo object with MutableSchema', async () => {
     const { db } = await setupTest();
-    class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
+    class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+      field: S.String,
+    }) {}
+
     const schema = db.schema.addSchema(GeneratedSchema);
-    const instanceWithSchemaRef = db.add(create(ClassWithSchemaField, { schema }));
-    expect(instanceWithSchemaRef.schema!.serializedSchema.typename).to.eq(TEST_SCHEMA_TYPE.typename);
+    const instanceWithSchemaRef = db.add(create(TestSchema, { schema }));
+    expect(instanceWithSchemaRef.schema!.serializedSchema.typename).to.eq('example.com/type/Test');
   });
 
   test('can be used to create objects', async () => {
@@ -92,7 +99,7 @@ describe('MutableSchema', () => {
 
   const setupTest = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.addSchema([ClassWithSchemaField]);
+    graph.schemaRegistry.addSchema([TestSchema]);
     return { db };
   };
 });

@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 
 import { getObjectMeta } from './object';
 import { defineHiddenProperty } from './utils';
-import { createReactiveProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler } from '../proxy';
+import { createProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler } from '../proxy';
 import { data, type ObjectMeta } from '../types';
 
 const symbolSignal = Symbol('signal');
@@ -32,7 +32,7 @@ type ProxyTarget = {
  * Target can be an array or object with any type of values including other reactive proxies.
  */
 export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
-  public static instance = new UntypedReactiveHandler();
+  public static readonly instance: ReactiveHandler<any> = new UntypedReactiveHandler();
 
   private constructor() {}
 
@@ -79,8 +79,8 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const value = Reflect.get(target, prop);
 
     if (isValidProxyTarget(value)) {
-      // Note: Need to pass in `this` instance to createReactiveProxy to ensure that the same proxy is used for target.
-      return createReactiveProxy(value, this);
+      // Note: Need to pass in `this` instance to createProxy to ensure that the same proxy is used for target.
+      return createProxy(value, this);
     }
 
     return value;

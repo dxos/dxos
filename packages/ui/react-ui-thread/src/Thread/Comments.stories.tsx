@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { createDocAccessor, createEchoObject } from '@dxos/echo-db';
+import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { create, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -232,7 +232,7 @@ type StoryProps = {
 };
 
 const Story = ({ text, autoCreate }: StoryProps) => {
-  const [item] = useState(createEchoObject(create(Expando, { content: text ?? '' })));
+  const [item] = useState(createObject(create(Expando, { content: text ?? '' })));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
 
