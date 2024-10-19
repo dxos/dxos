@@ -4,13 +4,15 @@
 
 import { useEffect } from 'react';
 
-import { type MutableSchema, S, TypedObject, create } from '@dxos/echo-schema';
+import { create, type MutableSchema, S, TypedObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { FieldValueType } from '@dxos/schema';
 
 import { TableType } from '../types';
 
 // TODO(burdon): Factor out to @dxos/schema/testing.
+
+export const createEmptyTable = () => create(TableType, {});
 
 export const TestSchema = TypedObject({ typename: 'example.com/type/test', version: '0.1.0' })({
   name: S.optional(S.String),
