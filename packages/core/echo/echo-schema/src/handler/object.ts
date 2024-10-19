@@ -12,7 +12,7 @@ import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 import { defineHiddenProperty } from './utils';
 import { getObjectAnnotation } from '../ast';
-import { createReactiveProxy, getProxyHandlerSlot, isValidProxyTarget, type ReactiveHandler } from '../proxy';
+import { createProxy, getProxyHandlerSlot, isValidProxyTarget, type ReactiveHandler } from '../proxy';
 import { type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject } from '../types';
 
 /**
@@ -52,13 +52,13 @@ const createObject = <T extends {}>(
     }
     initMeta(obj, meta);
     prepareTypedTarget(obj, schema);
-    return createReactiveProxy<T>(obj, TypedReactiveHandler.instance as ReactiveHandler<any>);
+    return createProxy<T>(obj, TypedReactiveHandler.instance as ReactiveHandler<any>);
   } else {
     if (options?.expando) {
       setIdOnTarget(obj);
     }
     initMeta(obj, meta);
-    return createReactiveProxy<T>(obj, UntypedReactiveHandler.instance as ReactiveHandler<any>);
+    return createProxy<T>(obj, UntypedReactiveHandler.instance as ReactiveHandler<any>);
   }
 };
 
@@ -80,7 +80,7 @@ const symbolMeta = Symbol.for('@dxos/schema/ObjectMeta');
  */
 const initMeta = <T>(obj: T, meta: ObjectMeta = { keys: [] }) => {
   prepareTypedTarget(meta, ObjectMetaSchema);
-  defineHiddenProperty(obj, symbolMeta, createReactiveProxy(meta, TypedReactiveHandler.instance as any));
+  defineHiddenProperty(obj, symbolMeta, createProxy(meta, TypedReactiveHandler.instance as any));
 };
 
 /**

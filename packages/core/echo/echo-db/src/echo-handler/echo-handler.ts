@@ -7,7 +7,7 @@ import { inspect, type InspectOptionsStylized } from 'node:util';
 import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
 import { encodeReference, Reference } from '@dxos/echo-protocol';
 import {
-  createReactiveProxy,
+  createProxy,
   defineHiddenProperty,
   MutableSchema,
   type EchoReactiveObject,
@@ -155,7 +155,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         array[symbolHandler] = this;
         return array;
       });
-      return createReactiveProxy(newTarget, this);
+      return createProxy(newTarget, this);
     }
     if (typeof decoded === 'object') {
       const targetKey = TargetKey.new(dataPath, namespace, 'record');
@@ -169,7 +169,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           [symbolNamespace]: namespace,
         }),
       );
-      return createReactiveProxy(newTarget, this);
+      return createProxy(newTarget, this);
     }
 
     return decoded;
@@ -454,7 +454,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       [symbolNamespace]: META_NAMESPACE,
     };
 
-    return createReactiveProxy(metaTarget, this) as any;
+    return createProxy(metaTarget, this) as any;
   }
 
   setDatabase(target: ProxyTarget, database: EchoDatabase): void {

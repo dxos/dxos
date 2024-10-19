@@ -3,15 +3,15 @@
 //
 
 import {
-  createReactiveProxy,
-  MutableSchema,
-  type EchoReactiveObject,
-  type ObjectMeta,
+  createProxy,
   getMeta,
   getProxyHandlerSlot,
   getSchema,
   isReactiveObject,
   requireTypeReference,
+  type EchoReactiveObject,
+  MutableSchema,
+  type ObjectMeta,
   type S,
   SchemaValidator,
 } from '@dxos/echo-schema';
@@ -62,9 +62,9 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, proxy);
 
-    // Note: This call is recursively linking all nested objects
-    //       which can cause recursive loops of `createEchoObject` if `EchoReactiveHandler` is not set prior to this call.
-    //       Do not change order.
+    // NOTE: This call is recursively linking all nested objects
+    //  which can cause recursive loops of `createEchoObject` if `EchoReactiveHandler` is not set prior to this call.
+    //  Do not change order.
     initCore(core, target);
     slot.handler.init(target);
 
@@ -86,7 +86,7 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
     core.updates.on(() => target[symbolInternals].signal.notifyWrite());
 
     initCore(core, target);
-    const proxy = createReactiveProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
+    const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
     saveTypeInAutomerge(target[symbolInternals], schema);
     return proxy;
   }
@@ -111,7 +111,7 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
   // TODO(dmaretskyi): Does this need to be disposed?
   core.updates.on(() => target[symbolInternals].signal.notifyWrite());
 
-  return createReactiveProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
+  return createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
 };
 
 const validateSchema = (schema: S.Schema<any>) => {

@@ -24,6 +24,7 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
   if (!schema) {
     return undefined;
   }
+
   const annotation = getObjectAnnotation(schema);
   if (annotation == null) {
     return undefined;

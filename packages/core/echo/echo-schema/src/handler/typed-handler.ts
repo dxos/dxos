@@ -13,7 +13,7 @@ import { getObjectMeta } from './object';
 import { defineHiddenProperty } from './utils';
 import { SchemaValidator, symbolSchema } from '../ast';
 import { getTypeReference } from '../proxy';
-import { createReactiveProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from '../proxy';
+import { createProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from '../proxy';
 import { data, type ObjectMeta } from '../types';
 
 const symbolSignal = Symbol('signal');
@@ -90,7 +90,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const value = Reflect.get(target, prop, receiver);
     if (isValidProxyTarget(value)) {
-      return createReactiveProxy(value, this);
+      return createProxy(value, this);
     }
 
     return value;
