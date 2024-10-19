@@ -141,6 +141,7 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
   if (seen.has(target)) {
     return;
   }
+
   seen.add(target);
   for (const key in target) {
     const value = target[key];
@@ -150,9 +151,7 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
       if (value instanceof MutableSchema) {
         target[key] = value.serializedSchema;
         validateInitialProps(value.serializedSchema, seen);
-      } else if (isEchoObject(value)) {
-        continue;
-      } else {
+      } else if (!isEchoObject(value)) {
         throwIfCustomClass(key, value);
         validateInitialProps(target[key], seen);
       }
@@ -165,6 +164,7 @@ const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryVa
     if (isReactiveObject(value) as boolean) {
       return EchoReactiveHandler.instance.createRef(target, value);
     }
+
     return recurse(value);
   });
 };

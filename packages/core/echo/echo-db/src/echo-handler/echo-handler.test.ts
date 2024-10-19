@@ -55,7 +55,7 @@ const TEST_OBJECT: TestSchema = {
 
 test('id property name is reserved', () => {
   const invalidSchema = S.Struct({ id: S.Number });
-  expect(() => createEchoObject(create(invalidSchema, { id: 42 }))).to.throw();
+  expect(() => createObject(create(invalidSchema, { id: 42 }))).to.throw();
 });
 
 // Pass undefined to test untyped proxy.
