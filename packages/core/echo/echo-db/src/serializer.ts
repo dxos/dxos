@@ -9,11 +9,12 @@ import {
   type LegacyEncodedReferenceObject,
   Reference,
 } from '@dxos/echo-protocol';
-import { type EchoReactiveObject, TYPE_PROPERTIES } from '@dxos/echo-schema';
+import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues, nonNullable, stripUndefinedValues } from '@dxos/util';
 
 import { ObjectCore } from './core-db';
+import { type EchoReactiveObject } from './echo-handler';
 import { getObjectCore } from './echo-handler';
 import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';

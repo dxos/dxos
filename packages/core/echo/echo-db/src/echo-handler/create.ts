@@ -11,9 +11,10 @@ import {
   getSchema,
   isReactiveObject,
   requireTypeReference,
-  type EchoReactiveObject,
+  type HasId,
   MutableSchema,
   type ObjectMeta,
+  type ReactiveObject,
   type S,
   SchemaValidator,
 } from '@dxos/echo-schema';
@@ -21,7 +22,7 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { ComplexMap, deepMapValues } from '@dxos/util';
 
-import { DATA_NAMESPACE, EchoReactiveHandler, PROPERTY_ID, throwIfCustomClass } from './echo-handler';
+import { DATA_NAMESPACE, PROPERTY_ID, EchoReactiveHandler, throwIfCustomClass } from './echo-handler';
 import {
   type ObjectInternals,
   type ProxyTarget,
@@ -32,6 +33,8 @@ import {
 import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
+export type EchoReactiveObject<T> = ReactiveObject<T> & HasId;
+
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
   isReactiveObject(value) && getProxyHandler(value) instanceof EchoReactiveHandler;
 
@@ -40,7 +43,7 @@ export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =
  * @internal
  */
 // TODO(burdon): Document.
-// TODO(burdon): Remove from public API (should just use `create()`).
+// TODO(burdon): Remove from public API (just use `create()`?).
 export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
   invariant(!isEchoObject(init));
   const schema = getSchema(init);
@@ -107,6 +110,9 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
   core.initNewObject(linkAllNestedProperties(target));
 };
 
+/**
+ * @internal
+ */
 export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): EchoReactiveObject<any> => {
   const target: ProxyTarget = {
     [symbolInternals]: initInternals(core, database),

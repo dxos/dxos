@@ -4,13 +4,7 @@
 
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
-import {
-  type EchoReactiveObject,
-  type ReactiveObject,
-  getProxyTarget,
-  getSchema,
-  isReactiveObject,
-} from '@dxos/echo-schema';
+import { type ReactiveObject, getProxyTarget, getSchema, isReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -21,9 +15,15 @@ import { defaultMap } from '@dxos/util';
 
 import { MutableSchemaRegistry } from './mutable-schema-registry';
 import { CoreDatabase, type FlushOptions, type LoadObjectOptions, type ObjectCore } from '../core-db';
-import { getObjectCore, createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from '../echo-handler';
-import { EchoReactiveHandler } from '../echo-handler/echo-handler';
-import { type ProxyTarget } from '../echo-handler/echo-proxy-target';
+import {
+  EchoReactiveHandler,
+  type EchoReactiveObject,
+  type ProxyTarget,
+  getObjectCore,
+  createEchoObject,
+  initEchoReactiveObjectRootProxy,
+  isEchoObject,
+} from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { optionsToProto, type FilterSource, type QueryFn } from '../query';
 

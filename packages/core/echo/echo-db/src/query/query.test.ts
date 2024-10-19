@@ -7,7 +7,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFin
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
-import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
+import { create, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -15,7 +15,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { Filter } from './filter';
-import { getObjectCore } from '../echo-handler';
+import { type EchoReactiveObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { Contact, EchoTestBuilder, type EchoTestPeer } from '../testing';
 

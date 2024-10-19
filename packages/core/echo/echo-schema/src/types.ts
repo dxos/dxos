@@ -8,7 +8,6 @@ import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
-import { type HasId } from './ast';
 import { getProxyHandler } from './proxy';
 
 export const data = Symbol.for('@dxos/schema/Data');
@@ -68,11 +67,7 @@ export type Ref<T> = T | undefined;
  * Reactive object marker interface (does not change the shape of the object.)
  * Accessing properties triggers signal semantics.
  */
-// TODO(burdon): How is this reactive?
 export type ReactiveObject<T> = { [K in keyof T]: T[K] };
-
-// TODO(burdon): Remove Echo prefix from public API.
-export type EchoReactiveObject<T> = ReactiveObject<T> & HasId;
 
 //
 // Data

@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createObjectId, type EchoReactiveObject } from '@dxos/echo-schema';
+import { createObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { initEchoReactiveObjectRootProxy, isEchoObject } from './create';
+import { type EchoReactiveObject, initEchoReactiveObjectRootProxy, isEchoObject } from './create';
 import { getObjectCore } from './echo-handler';
 import { symbolInternals } from './echo-proxy-target';
 import { ObjectCore } from '../core-db';

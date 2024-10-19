@@ -41,7 +41,7 @@ type ProxyTarget = {
  * Typed in-memory reactive store (with Schema).
  */
 export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
-  public static readonly instance = new TypedReactiveHandler();
+  public static readonly instance: ReactiveHandler<any> = new TypedReactiveHandler();
 
   private constructor() {}
 

@@ -29,6 +29,7 @@ export const isValidProxyTarget = (value: any): value is object => {
 /**
  * @deprecated
  */
+// TODO(burdon): Required by echo-db/create (can we remove).
 export const getProxySlot = <T extends object>(proxy: ReactiveObject<any>): ProxyHandlerSlot<T> => {
   const value = (proxy as any)[symbolIsProxy];
   invariant(value instanceof ProxyHandlerSlot);
@@ -58,8 +59,8 @@ export const dangerouslySetProxyId = <T>(obj: ReactiveObject<T>, id: string) => 
  * @param target Object or array. Passing in array will enable array methods.
  * @param handler ReactiveHandler instance.
  */
-// TODO(burdon): Document HOW this is reactive.
-// TODO(burdon): Tests to illustrate.
+// TODO(burdon): Document.
+// TODO(burdon): Tests for low-level functions.
 export const createProxy = <T extends {}>(target: T, handler: ReactiveHandler<T>): ReactiveObject<T> => {
   const existingProxy = handler._proxyMap.get(target);
   if (existingProxy) {
@@ -86,7 +87,7 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
    */
   constructor(
     readonly target: T,
-    private _handler?: ReactiveHandler<T>,
+    private _handler: ReactiveHandler<T>,
   ) {}
 
   get handler() {
@@ -95,7 +96,7 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
   }
 
   // TODO(burdon): Document (reconcile with TODO ("in the future") above).
-  setHandler(handler?: ReactiveHandler<T>) {
+  setHandler(handler: ReactiveHandler<T>) {
     this._handler = handler;
   }
 

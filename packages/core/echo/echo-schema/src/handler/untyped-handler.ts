@@ -32,7 +32,7 @@ type ProxyTarget = {
  * Target can be an array or object with any type of values including other reactive proxies.
  */
 export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
-  public static instance = new UntypedReactiveHandler();
+  public static instance: ReactiveHandler<any> = new UntypedReactiveHandler();
 
   private constructor() {}
 

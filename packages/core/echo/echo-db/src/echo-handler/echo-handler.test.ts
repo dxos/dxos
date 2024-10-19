@@ -8,10 +8,11 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
 import {
-  create,
   EchoObject,
-  type EchoReactiveObject,
   Expando,
+  TypedObject,
+  S,
+  create,
   foreignKey,
   getMeta,
   getSchema,
@@ -19,9 +20,7 @@ import {
   getTypeReference,
   isDeleted,
   ref,
-  TypedObject,
 } from '@dxos/echo-schema';
-import { S } from '@dxos/echo-schema';
 import {
   TestClass,
   TestNestedType,
@@ -36,7 +35,7 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
-import { createEchoObject, isEchoObject } from './create';
+import { type EchoReactiveObject, createEchoObject, isEchoObject } from './create';
 import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
 import { loadObjectReferences } from '../proxy-db';
@@ -319,13 +318,13 @@ describe('Reactive Object with ECHO database', () => {
   describe('references', () => {
     const Org = S.Struct({
       name: S.String,
-    }).pipe(EchoObject('example.Org', '1.0.0'));
+    }).pipe(EchoObject('example.Org', '0.1.0'));
 
     const Person = S.Struct({
       name: S.String,
       worksAt: ref(Org),
       previousEmployment: S.optional(S.Array(ref(Org))),
-    }).pipe(EchoObject('example.Person', '1.0.0'));
+    }).pipe(EchoObject('example.Person', '0.1.0'));
 
     test('references', async () => {
       const { db, graph } = await builder.createDatabase();
@@ -612,7 +611,6 @@ describe('Reactive Object with ECHO database', () => {
 
   test('typed object is linked with the database on assignment to another db-linked object', async () => {
     const { db, graph } = await builder.createDatabase();
-
     graph.schemaRegistry.addSchema([TestSchemaType]);
 
     const obj = db.add(create(TestSchemaType, { string: 'Object 1' }));

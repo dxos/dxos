@@ -6,10 +6,10 @@ import get from 'lodash.get';
 
 import type { ChangeFn, ChangeOptions, Doc, Heads } from '@dxos/automerge/automerge';
 import { type Reference } from '@dxos/echo-protocol';
-import { type EchoReactiveObject, getProxyTarget, isReactiveObject } from '@dxos/echo-schema';
+import { isReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { getObjectCoreFromTarget } from '../echo-handler';
+import { type EchoReactiveObject, getObjectCore } from '../echo-handler';
 
 /**
  * @deprecated Use DecodedAutomergePrimaryValue instead.
@@ -65,6 +65,6 @@ export const isValidKeyPath = (value: unknown): value is KeyPath =>
 export const createDocAccessor = <T extends object>(obj: EchoReactiveObject<T>, path: KeyPath): DocAccessor<T> => {
   invariant(isReactiveObject(obj));
   invariant(path === undefined || isValidKeyPath(path));
-  const core = getObjectCoreFromTarget(getProxyTarget(obj));
+  const core = getObjectCore(obj);
   return core.getDocAccessor(path);
 };

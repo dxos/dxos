@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type EchoReactiveObject, type S } from '@dxos/echo-schema';
+import { type EchoReactiveObject, type S } from '@dxos/client/echo';
 import { Table, schemaToColumnDefs } from '@dxos/react-ui-table';
 
 export type ItemTableProps<T> = {

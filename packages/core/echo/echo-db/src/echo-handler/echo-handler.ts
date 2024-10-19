@@ -11,7 +11,6 @@ import {
   defineHiddenProperty,
   getProxyTarget,
   MutableSchema,
-  type EchoReactiveObject,
   isReactiveObject,
   type ObjectMeta,
   ObjectMetaSchema,
@@ -25,7 +24,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { setDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
 
-import { createEchoObject, isEchoObject } from './create';
+import { type EchoReactiveObject, createEchoObject, isEchoObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
@@ -36,7 +35,7 @@ import {
   symbolPath,
   TargetKey,
 } from './echo-proxy-target';
-import { type KeyPath, META_NAMESPACE, type ObjectCore } from '../core-db';
+import { META_NAMESPACE, type KeyPath, type ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 export const PROPERTY_ID = 'id';
@@ -623,6 +622,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           if (value instanceof Reference) {
             return this.lookupRef(target, value);
           }
+
           return recurse(value);
         });
         if (isRootDataObject(target)) {
@@ -651,34 +651,32 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 }
 
 export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
-  if (value == null || Array.isArray(value)) {
+  if (value == null || Array.isArray(value) || value instanceof MutableSchema) {
     return;
   }
-  if (value instanceof MutableSchema) {
-    return;
-  }
+
   const proto = Object.getPrototypeOf(value);
   if (typeof value === 'object' && proto !== Object.prototype) {
     throw new Error(`class instances are not supported: setting ${proto} on ${String(prop)}`);
   }
 };
 
-// TODO(burdon): Reconcile with getObjectCore.
-export const getObjectCoreFromTarget = (target: ProxyTarget): ObjectCore => target[symbolInternals].core;
-
+// TODO(burdon): Move ProxyTarget def to echo-schema and make EchoReactiveObject inherit?
 export const getObjectCore = <T extends object>(obj: EchoReactiveObject<T>): ObjectCore => {
-  return getObjectCoreFromTarget(getProxyTarget<T>(obj) as ProxyTarget); // TODO(burdon): Remove cast?
+  const { core } = (obj as unknown as ProxyTarget)[symbolInternals];
+  return core;
 };
-
-const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
 
 const isRootDataObject = (target: ProxyTarget) => {
   const path = target[symbolPath];
   if (!Array.isArray(path) || path.length > 0) {
     return false;
   }
+
   return getNamespace(target) === DATA_NAMESPACE;
 };
+
+const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
 
 interface DecodedValueAtPath {
   value: any;

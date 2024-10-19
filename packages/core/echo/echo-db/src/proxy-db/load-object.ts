@@ -3,8 +3,8 @@
 //
 
 import { asyncTimeout } from '@dxos/async';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
 
+import { type EchoReactiveObject } from '../echo-handler';
 import { getObjectCore } from '../echo-handler';
 
 /**
