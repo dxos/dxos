@@ -12,7 +12,7 @@ import { useDefaultValue } from '@dxos/react-ui';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
-import { type SimulatorProps, createTable, createItems, useSimulator } from './testing';
+import { type SimulatorProps, createItems, createTable, useSimulator } from './testing';
 
 faker.seed(0);
 
@@ -28,7 +28,11 @@ const Story = (props: StoryProps) => {
   const simulatorProps = useMemo(() => ({ table, items, ...props }), [table, items, props]);
   useSimulator(simulatorProps);
 
-  return <Table table={table} data={items} />;
+  return (
+    <div className='relative is-full max-is-max min-is-0 min-bs-0'>
+      <Table table={table} data={items} />
+    </div>
+  );
 };
 
 export default {

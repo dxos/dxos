@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { computed, type ReadonlySignal } from '@preact/signals-core';
+import { computed, signal, type ReadonlySignal } from '@preact/signals-core';
+import sortBy from 'lodash.sortby';
 
 import { Resource } from '@dxos/context';
 import { PublicKey } from '@dxos/react-client';
@@ -33,6 +34,13 @@ export type TableModelProps = {
   rowSelection?: number[];
 };
 
+// TODO(Zan): Is there a better place for this to live?
+export const columnSettingsButtonAttr = 'data-table-column-settings-button';
+const columnSettingsButtonClasses = 'ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2';
+const columnSettingsIcon = 'ph--caret-down--regular';
+const columnSettingsButtonHtml = (columnId: string) =>
+  `<button class="${columnSettingsButtonClasses}" ${columnSettingsButtonAttr}="${columnId}"><svg><use href="/icons.svg#${columnSettingsIcon}"/></svg></button>`;
+
 export class TableModel extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
 
@@ -43,9 +51,16 @@ export class TableModel extends Resource {
   public readonly table: TableType;
   public readonly data: any[];
   private onCellUpdate?: (col: number, row: number) => void;
-  public sorting: SortConfig[];
   public pinnedRows: { top: number[]; bottom: number[] };
   public rowSelection: number[];
+
+  public readonly sorting = signal<SortConfig | undefined>(undefined);
+  /**
+   * Maps display indices to data indices.
+   * Used for translating between sorted/displayed order and original data order.
+   * Keys are display indices, values are corresponding data indices.
+   */
+  private displayToDataIndex: Map<number, number> = new Map();
 
   constructor({
     table,
@@ -59,7 +74,7 @@ export class TableModel extends Resource {
     this.table = table;
     this.data = data;
     this.onCellUpdate = onCellUpdate;
-    this.sorting = sorting;
+    this.sorting.value = sorting[0] ?? undefined;
     this.pinnedRows = pinnedRows;
     this.rowSelection = rowSelection;
   }
@@ -70,15 +85,50 @@ export class TableModel extends Resource {
       const fields = this.table.view?.fields ?? [];
       return Object.fromEntries(
         fields.map((field, index: number) => {
-          return [getCellKey(index, 0), { value: field.label ?? field.path, resizeHandle: 'col' }];
+          return [
+            getCellKey(index, 0),
+            {
+              value: field.label ?? field.path,
+              resizeHandle: 'col',
+              accessoryHtml: columnSettingsButtonHtml(field.id),
+            },
+          ];
         }),
       );
+    });
+
+    const sortedData = computed(() => {
+      this.displayToDataIndex.clear();
+      const sort = this.sorting.value;
+      if (!sort) {
+        return this.data;
+      }
+
+      const field = this.table.view?.fields.find((f) => f.id === sort.columnId);
+      if (!field) {
+        return this.data;
+      }
+
+      const dataWithIndices = this.data.map((item, index) => ({ item, index }));
+      const sorted = sortBy(dataWithIndices, [(wrapper) => wrapper.item[field.path]]);
+      if (sort.direction === 'desc') {
+        sorted.reverse();
+      }
+
+      for (let displayIndex = 0; displayIndex < sorted.length; displayIndex++) {
+        const { index: dataIndex } = sorted[displayIndex];
+        if (displayIndex !== dataIndex) {
+          this.displayToDataIndex.set(displayIndex, dataIndex);
+        }
+      }
+
+      return sorted.map(({ item }) => item);
     });
 
     // Map the data to grid cells.
     const cellValues: ReadonlySignal<DxGridPlaneCells> = computed(() => {
       const values: DxGridPlaneCells = {};
-      this.data.forEach((row, rowIndex) => {
+      sortedData.value.forEach((row, displayIndex) => {
         (this.table.view?.fields ?? []).forEach((field, colIndex: number) => {
           const cellValueSignal = computed(() =>
             row[field.path] !== undefined ? formatValue(field.type, row[field.path]) : '',
@@ -92,7 +142,7 @@ export class TableModel extends Resource {
           if (cellClasses) {
             cell.className = mx(cellClasses);
           }
-          values[getCellKey(colIndex, rowIndex)] = cell;
+          values[getCellKey(colIndex, displayIndex)] = cell;
         });
       });
       return values;
@@ -116,7 +166,11 @@ export class TableModel extends Resource {
   }
 
   public setSort(columnId: ColumnId, direction: SortDirection): void {
-    this.sorting = [{ columnId, direction }];
+    this.sorting.value = { columnId, direction };
+  }
+
+  public clearSort(): void {
+    this.sorting.value = undefined;
   }
 
   public moveColumn(columnId: ColumnId, newIndex: number): void {
@@ -161,19 +215,21 @@ export class TableModel extends Resource {
 
   public getCellData = (colIndex: number, rowIndex: number): any => {
     const fields = this.table.view?.fields ?? [];
-    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= fields.length) {
+    if (colIndex < 0 || colIndex >= fields.length) {
       return undefined;
     }
     const field = fields[colIndex];
-    return this.data[rowIndex][field.path];
+    const dataIndex = this.displayToDataIndex.get(rowIndex) ?? rowIndex;
+    return this.data[dataIndex][field.path];
   };
 
   public setCellData = (colIndex: number, rowIndex: number, value: any): void => {
     const fields = this.table.view?.fields ?? [];
-    if (rowIndex < 0 || rowIndex >= this.data.length || colIndex < 0 || colIndex >= fields.length) {
+    if (colIndex < 0 || colIndex >= fields.length) {
       return;
     }
     const field = fields[colIndex];
-    this.data[rowIndex][field.path] = parseValue(field.type, value);
+    const dataIndex = this.displayToDataIndex.get(rowIndex) ?? rowIndex;
+    this.data[dataIndex][field.path] = parseValue(field.type, value);
   };
 }
