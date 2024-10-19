@@ -35,7 +35,7 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
-import { type EchoReactiveObject, createEchoObject, isEchoObject } from './create';
+import { type EchoReactiveObject, createObject, isEchoObject } from './create';
 import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
 import { loadObjectReferences } from '../proxy-db';
@@ -60,19 +60,18 @@ test('id property name is reserved', () => {
 
 // Pass undefined to test untyped proxy.
 for (const schema of [undefined, TestType, TestSchemaType]) {
-  const createObject = (props: Partial<TestSchemaWithClass> = {}): EchoReactiveObject<TestSchemaWithClass> => {
-    return createEchoObject(schema ? create(schema as any, props) : create(props));
+  const createTestObject = (props: Partial<TestSchemaWithClass> = {}): EchoReactiveObject<TestSchemaWithClass> => {
+    return createObject(schema ? create(schema as any, props) : create(props));
   };
 
   describe(`Echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
     test('has id', () => {
-      const obj = createObject({ string: 'bar' });
+      const obj = createTestObject({ string: 'bar' });
       expect(obj.id).not.to.be.undefined;
     });
 
     test('inspect', () => {
-      const obj = createObject({ string: 'bar' });
-
+      const obj = createTestObject({ string: 'bar' });
       const str = inspect(obj, { colors: false });
       expect(str.startsWith(`${schema == null ? '' : 'Typed'}EchoObject`)).to.be.true;
       expect(str.includes("string: 'bar'")).to.be.true;
@@ -83,23 +82,23 @@ for (const schema of [undefined, TestType, TestSchemaType]) {
 
     test('throws when assigning a class instances', () => {
       expect(() => {
-        createObject().classInstance = new TestClass();
+        createTestObject().classInstance = new TestClass();
       }).to.throw();
     });
 
     test('throws when creates with a class instances', () => {
       expect(() => {
-        createObject({ classInstance: new TestClass() });
+        createTestObject({ classInstance: new TestClass() });
       }).to.throw();
     });
 
     test('removes undefined fields on creation', () => {
-      const obj = createObject({ undefined });
+      const obj = createTestObject({ undefined });
       expect(obj).to.deep.eq({ id: obj.id });
     });
 
     test('isEchoObject', () => {
-      const obj = createObject({ string: 'bar' });
+      const obj = createTestObject({ string: 'bar' });
       expect(isEchoObject(obj)).to.be.true;
     });
   });

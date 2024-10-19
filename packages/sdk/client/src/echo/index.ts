@@ -17,7 +17,7 @@ export {
 } from '@dxos/echo-schema';
 export {
   createDocAccessor,
-  createEchoObject,
+  createObject,
   createSubscription,
   fromCursor,
   getObjectCore,

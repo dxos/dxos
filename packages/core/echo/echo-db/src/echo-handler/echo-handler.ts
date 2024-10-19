@@ -24,7 +24,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { setDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
 
-import { type EchoReactiveObject, createEchoObject, isEchoObject } from './create';
+import { type EchoReactiveObject, createObject, isEchoObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
@@ -46,7 +46,7 @@ export const DATA_NAMESPACE = 'data';
  * Shared for all targets within one ECHO object.
  */
 export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
-  public static instance = new EchoReactiveHandler();
+  public static readonly instance = new EchoReactiveHandler();
 
   _proxyMap = new WeakMap<object, any>();
 
@@ -467,7 +467,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * @param proxy - the proxy that was passed to the method
    */
   createRef(target: ProxyTarget, proxy: any): Reference {
-    const otherEchoObj = !isEchoObject(proxy) ? createEchoObject(proxy) : proxy;
+    const otherEchoObj = !isEchoObject(proxy) ? createObject(proxy) : proxy;
     const otherObjId = otherEchoObj.id;
     invariant(typeof otherObjId === 'string' && otherObjId.length > 0);
 

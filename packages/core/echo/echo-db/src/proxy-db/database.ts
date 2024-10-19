@@ -20,7 +20,7 @@ import {
   type EchoReactiveObject,
   type ProxyTarget,
   getObjectCore,
-  createEchoObject,
+  createObject,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
 } from '../echo-handler';
@@ -248,7 +248,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
           throw createSchemaNotRegisteredError(schema);
         }
       }
-      echoObject = createEchoObject(obj);
+      echoObject = createObject(obj);
     }
     invariant(isEchoObject(echoObject));
     this._rootProxies.set(getObjectCore(echoObject), echoObject);

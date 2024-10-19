@@ -20,7 +20,7 @@ import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
+import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { Button, DensityProvider, Input, useThemeContext } from '@dxos/react-ui';
 import { baseSurface, mx, getSize } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -277,7 +277,7 @@ const Story = ({
   lineNumbers,
   onReady,
 }: StoryProps) => {
-  const [object] = useState(createEchoObject(create(Expando, { content: text ?? '' })));
+  const [object] = useState(createObject(create(Expando, { content: text ?? '' })));
   const { themeMode } = useThemeContext();
   const [tree, setTree] = useState<DebugNode>();
   const { parentRef, focusAttributes, view } = useTextEditor(

@@ -43,9 +43,8 @@ export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =
  * Creates a reactive object.
  * @internal
  */
-// TODO(burdon): Document.
 // TODO(burdon): Remove from public API (just use `create()`?).
-export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
+export const createObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
   invariant(!isEchoObject(init));
   const schema = getSchema(init);
   if (schema != null) {
@@ -72,7 +71,7 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
     slot.handler._proxyMap.set(target, proxy);
 
     // NOTE: This call is recursively linking all nested objects
-    //  which can cause recursive loops of `createEchoObject` if `EchoReactiveHandler` is not set prior to this call.
+    //  which can cause recursive loops of `createObject` if `EchoReactiveHandler` is not set prior to this call.
     //  Do not change order.
     initCore(core, target);
     slot.handler.init(target);
