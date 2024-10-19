@@ -60,6 +60,10 @@ export type CoreDatabaseParams = {
  */
 const THROTTLED_UPDATE_FREQUENCY = 10;
 
+/**
+ *
+ */
+// TODO(burdon): Document.
 @trace.resource()
 export class CoreDatabase {
   private readonly _hypergraph: Hypergraph;
@@ -89,15 +93,15 @@ export class CoreDatabase {
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
-  constructor(params: CoreDatabaseParams) {
-    this._hypergraph = params.graph;
-    this._dataService = params.dataService;
-    this._queryService = params.queryService;
-    this._spaceId = params.spaceId;
-    this._spaceKey = params.spaceKey;
+  constructor({ graph, dataService, queryService, spaceId, spaceKey }: CoreDatabaseParams) {
+    this._hypergraph = graph;
+    this._dataService = dataService;
+    this._queryService = queryService;
+    this._spaceId = spaceId;
+    this._spaceKey = spaceKey;
     this._repoProxy = new RepoProxy(this._dataService, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
-    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(params.spaceId, this._repoProxy, params.spaceKey);
+    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this._repoProxy, spaceId, spaceKey);
   }
 
   get graph(): Hypergraph {
@@ -874,8 +878,8 @@ const createCoreFromInsertData = (data: InsertData): ObjectCore => {
   if ('id' in data) {
     throw new Error('Cannot insert object with id');
   }
-  const { __typename, ...rest } = data;
 
+  const { __typename, ...rest } = data;
   let type: DXN | undefined;
   if (__typename) {
     type = sanitizeTypename(__typename);

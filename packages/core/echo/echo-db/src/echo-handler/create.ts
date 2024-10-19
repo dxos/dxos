@@ -107,6 +107,7 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
     target[symbolInternals].core.id = target[PROPERTY_ID];
     delete target[PROPERTY_ID];
   }
+
   core.initNewObject(linkAllNestedProperties(target));
 };
 

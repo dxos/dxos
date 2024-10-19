@@ -471,16 +471,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const otherObjId = otherEchoObj.id;
     invariant(typeof otherObjId === 'string' && otherObjId.length > 0);
 
-    const database = target[symbolInternals].database;
-
     // Note: Save proxy in `.linkCache` if the object is not yet saved in the database.
+    const database = target[symbolInternals].database;
     if (!database) {
       invariant(target[symbolInternals].linkCache);
 
       // Can be caused not using `object(Expando, { ... })` constructor.
       // TODO(dmaretskyi): Add better validation.
       invariant(otherObjId != null);
-
       target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as EchoReactiveObject<any>);
       return new Reference(otherObjId);
     }

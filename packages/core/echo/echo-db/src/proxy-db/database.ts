@@ -31,6 +31,11 @@ export type GetObjectByIdOptions = {
   deleted?: boolean;
 };
 
+/**
+ *
+ */
+// TODO(burdon): Document.
+// TODO(burdon): Rename DatabaseProxy.
 export interface EchoDatabase {
   get spaceKey(): PublicKey;
 
@@ -242,14 +247,15 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     let echoObject = obj;
     if (!isEchoObject(echoObject)) {
       const schema = getSchema(obj);
-
       if (schema != null) {
         if (!this.schema.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
           throw createSchemaNotRegisteredError(schema);
         }
       }
+
       echoObject = createObject(obj);
     }
+
     invariant(isEchoObject(echoObject));
     this._rootProxies.set(getObjectCore(echoObject), echoObject);
 

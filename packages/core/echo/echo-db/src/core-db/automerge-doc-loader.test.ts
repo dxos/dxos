@@ -89,7 +89,7 @@ describe('AutomergeDocumentLoader', () => {
     const repo = new RepoProxy(dataService, SpaceId.random());
     await openAndClose(repo);
 
-    const loader = new AutomergeDocumentLoaderImpl(spaceId, repo, SPACE_KEY);
+    const loader = new AutomergeDocumentLoaderImpl(repo, spaceId, SPACE_KEY);
     const spaceRootDocHandle = createRootDoc(repo);
     await loader.loadSpaceRootDocHandle(ctx, { rootUrl: spaceRootDocHandle.url });
     return { loader, spaceRootDocHandle, repo };

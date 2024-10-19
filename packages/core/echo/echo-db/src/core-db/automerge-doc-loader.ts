@@ -71,8 +71,8 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   public readonly onObjectDocumentLoaded = new Event<ObjectDocumentLoaded>();
 
   constructor(
-    private readonly _spaceId: SpaceId,
     private readonly _repo: RepoProxy,
+    private readonly _spaceId: SpaceId,
     /** Legacy Id */
     private readonly _spaceKey: PublicKey,
   ) {}
