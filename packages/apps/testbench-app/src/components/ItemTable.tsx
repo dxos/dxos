@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type EchoReactiveObject, type S } from '@dxos/client/echo';
+import { type ReactiveObject, type S } from '@dxos/echo-schema';
 import { Table, schemaToColumnDefs } from '@dxos/react-ui-table';
 
 export type ItemTableProps<T> = {
@@ -12,7 +12,7 @@ export type ItemTableProps<T> = {
   objects?: T[];
 };
 
-export const ItemTable = <T extends EchoReactiveObject<any>>({ schema, objects = [] }: ItemTableProps<T>) => {
+export const ItemTable = <T extends ReactiveObject<any>>({ schema, objects = [] }: ItemTableProps<T>) => {
   const columns = useMemo(() => {
     // TODO(burdon): [API]: id is added to schema?
     const [id, ...rest] = schemaToColumnDefs(schema);

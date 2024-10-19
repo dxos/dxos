@@ -7,8 +7,8 @@ import { describe, onTestFinished, expect, test } from 'vitest';
 
 import { asyncTimeout, Trigger, TriggerState } from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
-import { Filter, type Query } from '@dxos/echo-db';
-import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
+import { type EchoReactiveObject, Filter, type Query } from '@dxos/echo-db';
+import { create, Expando } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';

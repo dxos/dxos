@@ -33,6 +33,7 @@ import {
 import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
+// TODO(burdon): Rename EchoObject (clashes with proto def).
 export type EchoReactiveObject<T> = ReactiveObject<T> & HasId;
 
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>

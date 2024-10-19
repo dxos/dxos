@@ -8,16 +8,15 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   LayoutAction,
   NavigationAction,
-  parseMetadataResolverPlugin,
   Surface,
+  parseMetadataResolverPlugin,
   useIntentDispatcher,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { create, getType, isReactiveObject } from '@dxos/echo-schema';
+import { create, getType, fullyQualifiedId, isReactiveObject } from '@dxos/client/echo';
 import { useGraph } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { type CollectionType } from '@dxos/plugin-space/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
 import { type MosaicDataItem, type MosaicDropEvent, type MosaicMoveEvent, Mosaic, Path } from '@dxos/react-ui-mosaic';
