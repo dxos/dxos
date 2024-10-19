@@ -5,7 +5,7 @@
 import { Reference } from '@dxos/echo-protocol';
 import { type S } from '@dxos/effect';
 
-import { getProxyHandlerSlot, isReactiveObject } from './proxy';
+import { getProxyHandler, isReactiveObject } from './proxy';
 import { getObjectAnnotation } from '../ast';
 
 /**
@@ -13,8 +13,7 @@ import { getObjectAnnotation } from '../ast';
  */
 export const getSchema = <T extends {} = any>(obj: T | undefined): S.Schema<any> | undefined => {
   if (obj && isReactiveObject(obj)) {
-    const proxyHandlerSlot = getProxyHandlerSlot(obj);
-    return proxyHandlerSlot.handler?.getSchema(obj);
+    return getProxyHandler(obj).getSchema(obj);
   }
 
   return undefined;
@@ -24,6 +23,7 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
   if (!schema) {
     return undefined;
   }
+
   const annotation = getObjectAnnotation(schema);
   if (annotation == null) {
     return undefined;
@@ -36,8 +36,7 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
 };
 
 export const isDeleted = <T extends {}>(obj: T): boolean => {
-  const proxyHandlerSlot = getProxyHandlerSlot(obj);
-  return proxyHandlerSlot.handler?.isDeleted(obj) ?? false;
+  return getProxyHandler(obj).isDeleted(obj) ?? false;
 };
 
 // TODO(burdon): Replace most uses with getTypename.
@@ -47,8 +46,7 @@ export const getType = <T extends {}>(obj: T | undefined): Reference | undefined
   }
 
   if (isReactiveObject(obj)) {
-    const proxyHandlerSlot = getProxyHandlerSlot(obj);
-    return proxyHandlerSlot.handler?.getTypeReference(obj);
+    return getProxyHandler(obj).getTypeReference(obj);
   }
 
   return undefined;

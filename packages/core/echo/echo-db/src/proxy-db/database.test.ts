@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import {
   create,
-  dangerouslyAssignProxyId,
+  dangerouslySetProxyId,
   Expando,
   getMeta,
   getSchema,
@@ -21,8 +21,7 @@ import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { getObjectCore } from '../core-db';
-import { clone } from '../echo-handler';
+import { getObjectCore, clone } from '../echo-handler';
 import { Filter } from '../query';
 import { Contact, Container, EchoTestBuilder, RecordType, Task } from '../testing';
 
@@ -280,7 +279,7 @@ describe('Database', () => {
     // Old format
     const oldId = PublicKey.random().toHex();
     const reactiveObjWithOldId = create(Expando, { string: 'foo' });
-    dangerouslyAssignProxyId(reactiveObjWithOldId, oldId);
+    dangerouslySetProxyId(reactiveObjWithOldId, oldId);
     const expandoWithOldId = db.add(reactiveObjWithOldId);
 
     // get by id

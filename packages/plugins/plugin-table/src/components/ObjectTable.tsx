@@ -4,9 +4,8 @@
 
 import React, { useEffect } from 'react';
 
-import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { getSpace, useQuery, Filter } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 
 import { Table } from './Table';
 import { type TableType } from '../types';

@@ -9,7 +9,6 @@ import { S } from '@dxos/effect';
 import { create } from './object';
 import { ref } from './ref';
 import { TypedObject } from '../object';
-import { TEST_SCHEMA_TYPE } from '../testing';
 import { getMeta, foreignKey } from '../types';
 
 describe('complex schema validations', () => {
@@ -37,8 +36,8 @@ describe('complex schema validations', () => {
   });
 
   test('references', () => {
-    class Foo extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
-    class Bar extends TypedObject(TEST_SCHEMA_TYPE)({ fooRef: ref(Foo) }) {}
+    class Foo extends TypedObject({ typename: 'example.com/type/Foo', version: '0.1.0' })({ field: S.String }) {}
+    class Bar extends TypedObject({ typename: 'example.com/type/Bar', version: '0.1.0' })({ fooRef: ref(Foo) }) {}
     const field = 'hello';
     expect(() => create(Bar, { fooRef: { id: '1', field } })).to.throw();
     expect(() => create(Bar, { fooRef: undefined as any })).not.to.throw(); // Unresolved reference.

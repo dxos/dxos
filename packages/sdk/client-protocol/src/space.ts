@@ -4,8 +4,7 @@
 
 import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
 import type { SpecificCredential } from '@dxos/credentials';
-import { type CoreDatabase, type EchoDatabase } from '@dxos/echo-db';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type CoreDatabase, type EchoDatabase, type EchoReactiveObject } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
   type CreateEpochRequest,

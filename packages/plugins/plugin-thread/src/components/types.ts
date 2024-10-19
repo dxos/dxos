@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject } from '@dxos/client/echo';
 import { type ThreadType } from '@dxos/plugin-space/types';
-import type { ThreadProps } from '@dxos/react-ui-thread';
+import { type ThreadProps } from '@dxos/react-ui-thread';
 
 /**
  * Props for components which connect an ECHO Thread object to the UI component Thread.

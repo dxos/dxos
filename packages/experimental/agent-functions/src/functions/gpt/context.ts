@@ -3,8 +3,8 @@
 //
 
 import { type Space } from '@dxos/client/echo';
-import { createDocAccessor, getTextInRange, loadObjectReferences } from '@dxos/echo-db';
-import { type MutableSchema, type EchoReactiveObject, effectToJsonSchema } from '@dxos/echo-schema';
+import { type EchoReactiveObject, createDocAccessor, getTextInRange, loadObjectReferences } from '@dxos/echo-db';
+import { type MutableSchema, effectToJsonSchema } from '@dxos/echo-schema';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
 

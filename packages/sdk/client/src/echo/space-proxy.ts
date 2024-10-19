@@ -9,8 +9,14 @@ import { PropertiesType, type ClientServicesProvider, type Space, type SpaceInte
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType, type SpecificCredential } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
-import { Filter, type CoreDatabase, type EchoClient, type EchoDatabase, type EchoDatabaseImpl } from '@dxos/echo-db';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import {
+  type CoreDatabase,
+  type EchoClient,
+  type EchoDatabase,
+  type EchoDatabaseImpl,
+  type EchoReactiveObject,
+  Filter,
+} from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

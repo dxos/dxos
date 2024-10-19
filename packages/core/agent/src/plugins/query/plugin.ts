@@ -5,10 +5,10 @@
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { getObjectCore, QueryOptions } from '@dxos/client/echo';
+import { type EchoReactiveObject } from '@dxos/client/echo';
 import { type WithTypeUrl, type Any } from '@dxos/codec-protobuf';
 import { cancelWithContext } from '@dxos/context';
 import { Filter } from '@dxos/echo-db';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';

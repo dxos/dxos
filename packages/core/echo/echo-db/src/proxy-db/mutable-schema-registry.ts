@@ -19,7 +19,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type EchoDatabase } from './database';
-import { getObjectCore } from '../core-db';
+import { getObjectCore } from '../echo-handler';
 import { Filter } from '../query';
 
 type SchemaListChangedCallback = (schema: MutableSchema[]) => void;

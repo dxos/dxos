@@ -4,8 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { createDocAccessor } from '@dxos/echo-db';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type DiagramType, EXCALIDRAW_SCHEMA } from '@dxos/plugin-sketch/types';

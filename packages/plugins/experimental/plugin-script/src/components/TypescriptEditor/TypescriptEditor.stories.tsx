@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import React, { useMemo } from 'react';
 
-import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
+import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { createDataExtensions } from '@dxos/react-ui-editor';
 
 import { TypescriptEditor } from './TypescriptEditor';
@@ -23,7 +23,7 @@ import { templates } from '../../templates';
 // TODO(burdon): react-buddy for storybook?
 
 const Story = () => {
-  const object = useMemo(() => createEchoObject({ content: templates[0].source }), []);
+  const object = useMemo(() => createObject({ content: templates[0].source }), []);
   const initialValue = useMemo(() => object.content, [object]);
   const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
   const extensions = useMemo(() => [createDataExtensions({ id: object.id, text: accessor })], [object.id, accessor]);

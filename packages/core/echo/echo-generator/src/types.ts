@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EchoReactiveObject, type MutableSchema, type ReactiveObject, type S } from '@dxos/echo-schema';
+import { type EchoReactiveObject } from '@dxos/echo-db';
+import { type MutableSchema, type ReactiveObject, type S } from '@dxos/echo-schema';
 
 export type TestObject = { id: string } & Record<string, any>;
 

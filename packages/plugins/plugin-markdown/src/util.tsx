@@ -5,7 +5,7 @@
 import { type Plugin } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
-import { create, createEchoObject, isEchoObject, loadObjectReferences } from '@dxos/react-client/echo';
+import { create, createObject, isEchoObject, loadObjectReferences } from '@dxos/react-client/echo';
 
 import { DocumentType, type MarkdownProperties, type MarkdownExtensionProvides, TextType } from './types';
 
@@ -43,6 +43,6 @@ export const serializer: TypedObjectSerializer<DocumentType> = {
 
   deserialize: async ({ content: serialized }) => {
     const { name, content } = JSON.parse(serialized);
-    return createEchoObject(create(DocumentType, { name, content: create(TextType, { content }), threads: [] }));
+    return createObject(create(DocumentType, { name, content: create(TextType, { content }), threads: [] }));
   },
 };
