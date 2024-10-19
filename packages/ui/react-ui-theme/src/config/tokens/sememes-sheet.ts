@@ -44,4 +44,12 @@ export const sheetSememes = {
     light: ['primary', '500/.2'],
     dark: ['primary', '500/.2'],
   },
+  gridComment: {
+    light: ['emerald', '500/.2'],
+    dark: ['emerald', '500/.2'],
+  },
+  gridHighlight: {
+    light: ['amber', '200/.2'],
+    dark: ['amber', '200/.2'],
+  },
 } satisfies ColorSememes;

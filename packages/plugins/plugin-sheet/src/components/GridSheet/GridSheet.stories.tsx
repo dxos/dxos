@@ -10,7 +10,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { GridSheet } from './GridSheet';
 import { useComputeGraph } from '../../hooks';
-import { useTestSheet, withComputeGraphDecorator } from '../../testing';
+import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { SheetType } from '../../types';
 import { SheetProvider } from '../SheetContext';
 
@@ -28,7 +28,7 @@ export default {
 export const Basic = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
-  const sheet = useTestSheet(space, graph);
+  const sheet = useTestSheet(space, graph, { cells: createTestCells() });
   if (!sheet || !graph) {
     return null;
   }
