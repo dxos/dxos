@@ -7,7 +7,7 @@ import { LifecycleState, Resource } from '@dxos/context';
 import {
   type EchoReactiveObject,
   type ReactiveObject,
-  getProxyHandlerSlot,
+  getProxyTarget,
   getSchema,
   isReactiveObject,
 } from '@dxos/echo-schema';
@@ -15,13 +15,13 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import type { DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
+import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
 import { MutableSchemaRegistry } from './mutable-schema-registry';
-import { CoreDatabase, type FlushOptions, getObjectCore, type LoadObjectOptions, type ObjectCore } from '../core-db';
-import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from '../echo-handler';
+import { CoreDatabase, type FlushOptions, type LoadObjectOptions, type ObjectCore } from '../core-db';
+import { getObjectCore, createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from '../echo-handler';
 import { EchoReactiveHandler } from '../echo-handler/echo-handler';
 import { type ProxyTarget } from '../echo-handler/echo-proxy-target';
 import { type Hypergraph } from '../hypergraph';
@@ -253,7 +253,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     invariant(isEchoObject(echoObject));
     this._rootProxies.set(getObjectCore(echoObject), echoObject);
 
-    const target = getProxyHandlerSlot(echoObject).target as ProxyTarget;
+    const target = getProxyTarget(echoObject) as ProxyTarget;
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
     this._coreDatabase.addCore(getObjectCore(echoObject));

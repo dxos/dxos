@@ -12,7 +12,7 @@ import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 import { defineHiddenProperty } from './utils';
 import { getObjectAnnotation } from '../ast';
-import { createProxy, getProxyHandlerSlot, isValidProxyTarget, type ReactiveHandler } from '../proxy';
+import { createProxy, isValidProxyTarget, type ReactiveHandler } from '../proxy';
 import { type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject } from '../types';
 
 /**
@@ -91,12 +91,4 @@ export const getObjectMeta = (object: any): ObjectMeta => {
   const metadata = object[symbolMeta];
   invariant(metadata, 'ObjectMeta not found.');
   return metadata;
-};
-
-/**
- * Unsafe method to override id for debugging/testing and migration purposes.
- * @deprecated
- */
-export const dangerouslyAssignProxyId = <T>(obj: ReactiveObject<T>, id: string) => {
-  (getProxyHandlerSlot(obj).target as any).id = id;
 };

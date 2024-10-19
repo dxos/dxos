@@ -71,6 +71,7 @@ export type ObjectInternals = {
  */
 export type ProxyTarget = {
   [symbolInternals]: ObjectInternals;
+
   /**
    * `data` or `meta` namespace.
    */

@@ -5,7 +5,9 @@
 import {
   createProxy,
   getMeta,
-  getProxyHandlerSlot,
+  getProxyHandler,
+  getProxySlot,
+  getProxyTarget,
   getSchema,
   isReactiveObject,
   requireTypeReference,
@@ -31,31 +33,34 @@ import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
-  isReactiveObject(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
+  isReactiveObject(value) && getProxyHandler(value) instanceof EchoReactiveHandler;
 
+/**
+ * Creates a reactive object.
+ * @internal
+ */
+// TODO(burdon): Document.
+// TODO(burdon): Remove from public API (should just use `create()`).
 export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
   invariant(!isEchoObject(init));
-
   const schema = getSchema(init);
   if (schema != null) {
     validateSchema(schema);
   }
   validateInitialProps(init);
 
+  const core = new ObjectCore();
   if (isReactiveObject(init)) {
     const proxy = init as any;
+    const meta = getProxyTarget<ObjectMeta>(getMeta(proxy));
 
-    const slot = getProxyHandlerSlot(proxy);
-    const meta = getProxyHandlerSlot<ObjectMeta>(getMeta(proxy)).target!;
-
-    const core = new ObjectCore();
-
-    slot.handler = EchoReactiveHandler.instance;
+    // TODO(burdon): Document.
+    const slot = getProxySlot(proxy);
+    slot.setHandler(EchoReactiveHandler.instance);
     const target = slot.target as ProxyTarget;
-
     target[symbolInternals] = initInternals(core);
 
-    // TODO(dmaretskyi): Does this need to be disposed?
+    // TODO(dmaretskyi): Does this need to be disposed? RB: Probably!
     core.updates.on(() => target[symbolInternals].signal.notifyWrite());
 
     target[symbolPath] = [];
@@ -72,9 +77,9 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
     if (meta && meta.keys.length > 0) {
       target[symbolInternals].core.setMeta(meta);
     }
+
     return proxy;
   } else {
-    const core = new ObjectCore();
     const target: ProxyTarget = {
       [symbolInternals]: initInternals(core),
       [symbolPath]: [],
@@ -82,12 +87,13 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
       ...(init as any),
     };
 
-    // TODO(dmaretskyi): Does this need to be disposed?
+    // TODO(dmaretskyi): Does this need to be disposed? RB: Probably!
     core.updates.on(() => target[symbolInternals].signal.notifyWrite());
 
     initCore(core, target);
     const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
     saveTypeInAutomerge(target[symbolInternals], schema);
+
     return proxy;
   }
 };

@@ -27,27 +27,47 @@ export const isValidProxyTarget = (value: any): value is object => {
 };
 
 /**
- *
+ * @deprecated
  */
-export const getProxyHandlerSlot = <T extends object>(proxy: ReactiveObject<any>): ProxyHandlerSlot<T> => {
+export const getProxySlot = <T extends object>(proxy: ReactiveObject<any>): ProxyHandlerSlot<T> => {
   const value = (proxy as any)[symbolIsProxy];
   invariant(value instanceof ProxyHandlerSlot);
   return value;
 };
 
+export const getProxyTarget = <T extends object>(proxy: ReactiveObject<any>): T => {
+  return getProxySlot<T>(proxy).target;
+};
+
+export const getProxyHandler = <T extends object>(proxy: ReactiveObject<any>): ReactiveHandler<T> => {
+  return getProxySlot<T>(proxy).handler;
+};
+
+/**
+ * Unsafe method to override id for debugging/testing and migration purposes.
+ * @deprecated
+ */
+export const dangerouslySetProxyId = <T>(obj: ReactiveObject<T>, id: string) => {
+  (getProxySlot(obj).target as any).id = id;
+};
+
 /**
  * Create a reactive proxy object.
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
+ *
  * @param target Object or array. Passing in array will enable array methods.
  * @param handler ReactiveHandler instance.
  */
+// TODO(burdon): Document HOW this is reactive.
+// TODO(burdon): Tests to illustrate.
 export const createProxy = <T extends {}>(target: T, handler: ReactiveHandler<T>): ReactiveObject<T> => {
   const existingProxy = handler._proxyMap.get(target);
   if (existingProxy) {
     return existingProxy;
   }
 
-  // TODO(dmaretskyi): In future this should be mutable to allow replacing the handler on-the-fly while maintaining the proxy identity.
-  const proxy = new Proxy(target, new ProxyHandlerSlot<T>(handler, target));
+  // TODO(dmaretskyi): In the future this should be mutable to allow replacing the handler on-the-fly while maintaining the proxy identity.
+  const proxy = new Proxy(target, new ProxyHandlerSlot<T>(target, handler));
   handler.init(target);
 
   // TODO(dmaretskyi): Check if this will actually work; maybe a global WeakMap is better?
@@ -60,21 +80,38 @@ export const createProxy = <T extends {}>(target: T, handler: ReactiveHandler<T>
  * Maintains a mutable slot for the actual handler.
  */
 class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
+  /**
+   * @param target Original object.
+   * @param _handler Handles intercepted operations.
+   */
   constructor(
-    public handler?: ReactiveHandler<T>,
-    public readonly target?: T,
+    readonly target: T,
+    private _handler?: ReactiveHandler<T>,
   ) {}
 
+  get handler() {
+    invariant(this._handler);
+    return this._handler;
+  }
+
+  // TODO(burdon): Document (reconcile with TODO ("in the future") above).
+  setHandler(handler?: ReactiveHandler<T>) {
+    this._handler = handler;
+  }
+
+  /**
+   * Get value.
+   */
   get(target: T, prop: string | symbol, receiver: any): any {
     if (prop === symbolIsProxy) {
       return this;
     }
 
-    if (!this.handler || !this.handler.get) {
+    if (!this._handler || !this._handler.get) {
       return Reflect.get(target, prop, receiver);
     }
 
-    return this.handler.get(target, prop, receiver);
+    return this._handler.get(target, prop, receiver);
   }
 
   static {
@@ -103,11 +140,11 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
         enumerable: false,
         value: function (this: ProxyHandlerSlot<any>, ...args: any[]) {
           // log.info('trap', { trap, args });
-          if (!this.handler || !this.handler[trap]) {
+          if (!this._handler || !this._handler[trap]) {
             return (Reflect[trap] as Function)(...args);
           }
 
-          return (this.handler[trap] as Function).apply(this.handler, args);
+          return (this._handler[trap] as Function).apply(this._handler, args);
         },
       });
     }

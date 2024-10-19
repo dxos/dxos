@@ -16,8 +16,8 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { type CoreDatabase } from './core-database';
-import { getObjectCore } from './types';
 import { type DocHandleProxy, type RepoProxy } from '../client';
+import { getObjectCore } from '../echo-handler';
 import { type EchoDatabaseImpl, type EchoDatabase } from '../proxy-db';
 import { Filter } from '../query';
 import { EchoTestBuilder, Task } from '../testing';

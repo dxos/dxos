@@ -18,7 +18,7 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { nonNullable } from '@dxos/util';
 
-import { getObjectCore } from '../core-db';
+import { getObjectCore } from '../echo-handler';
 import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '../hypergraph';
 import { type Filter, type QueryResult } from '../query';
 

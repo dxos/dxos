@@ -9,9 +9,9 @@ import { encodeReference, Reference } from '@dxos/echo-protocol';
 import {
   createProxy,
   defineHiddenProperty,
+  getProxyTarget,
   MutableSchema,
   type EchoReactiveObject,
-  getProxyHandlerSlot,
   isReactiveObject,
   type ObjectMeta,
   ObjectMetaSchema,
@@ -487,7 +487,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     // TODO(burdon): Remote?
-    const foreignDatabase = (getProxyHandlerSlot(otherEchoObj).target as ProxyTarget)[symbolInternals].database;
+    const foreignDatabase = (getProxyTarget(otherEchoObj) as ProxyTarget)[symbolInternals].database;
     if (!foreignDatabase) {
       database.add(otherEchoObj);
       return new Reference(otherObjId);
@@ -663,7 +663,12 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
   }
 };
 
-export const getObjectCoreFromEchoTarget = (target: ProxyTarget): ObjectCore => target[symbolInternals].core;
+// TODO(burdon): Reconcile with getObjectCore.
+export const getObjectCoreFromTarget = (target: ProxyTarget): ObjectCore => target[symbolInternals].core;
+
+export const getObjectCore = <T extends object>(obj: EchoReactiveObject<T>): ObjectCore => {
+  return getObjectCoreFromTarget(getProxyTarget<T>(obj) as ProxyTarget); // TODO(burdon): Remove cast?
+};
 
 const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
 

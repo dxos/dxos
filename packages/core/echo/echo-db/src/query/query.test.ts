@@ -15,7 +15,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { Filter } from './filter';
-import { getObjectCore } from '../core-db';
+import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { Contact, EchoTestBuilder, type EchoTestPeer } from '../testing';
 

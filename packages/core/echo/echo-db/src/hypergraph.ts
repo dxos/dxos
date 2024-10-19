@@ -15,7 +15,8 @@ import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/ec
 import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
-import { getObjectCore, type ItemsUpdatedEvent } from './core-db';
+import { type ItemsUpdatedEvent } from './core-db';
+import { getObjectCore } from './echo-handler';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {

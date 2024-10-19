@@ -6,12 +6,10 @@ import get from 'lodash.get';
 
 import type { ChangeFn, ChangeOptions, Doc, Heads } from '@dxos/automerge/automerge';
 import { type Reference } from '@dxos/echo-protocol';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
-import { getProxyHandlerSlot, isReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, getProxyTarget, isReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { type ObjectCore } from './object-core';
-import { getObjectCoreFromEchoTarget } from '../echo-handler';
+import { getObjectCoreFromTarget } from '../echo-handler';
 
 /**
  * @deprecated Use DecodedAutomergePrimaryValue instead.
@@ -64,15 +62,9 @@ export const DocAccessor = {
 export const isValidKeyPath = (value: unknown): value is KeyPath =>
   Array.isArray(value) && value.every((v) => typeof v === 'string' || typeof v === 'number');
 
-export const createDocAccessor = <T>(obj: EchoReactiveObject<T>, path: KeyPath): DocAccessor<T> => {
+export const createDocAccessor = <T extends object>(obj: EchoReactiveObject<T>, path: KeyPath): DocAccessor<T> => {
   invariant(isReactiveObject(obj));
   invariant(path === undefined || isValidKeyPath(path));
-
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const core = getObjectCoreFromEchoTarget(getProxyHandlerSlot(obj).target as any);
+  const core = getObjectCoreFromTarget(getProxyTarget(obj));
   return core.getDocAccessor(path);
-};
-
-export const getObjectCore = <T>(obj: EchoReactiveObject<T>): ObjectCore => {
-  return getObjectCoreFromEchoTarget(getProxyHandlerSlot(obj).target as any);
 };

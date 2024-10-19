@@ -4,7 +4,7 @@
 
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { getProxyHandlerSlot, getSchema, getType, getTypeReference } from '@dxos/echo-schema';
+import { getProxyHandler, getSchema, getType, getTypeReference } from '@dxos/echo-schema';
 import { type S } from '@dxos/echo-schema';
 import { TestSchema, TestSchemaType, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -50,8 +50,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
     describe(`Proxy properties(schema=${schema != null})`, () => {
       test('handler type', async () => {
         const obj = await createObject();
-        const slot = getProxyHandlerSlot(obj);
-        console.log('handler =', Object.getPrototypeOf(slot.handler).constructor.name);
+        console.log('handler =', Object.getPrototypeOf(getProxyHandler(obj)).constructor.name);
       });
 
       test('object initializer', async () => {

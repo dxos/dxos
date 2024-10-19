@@ -7,18 +7,18 @@ import {
   type ForeignKey,
   type EchoReactiveObject,
   type ReactiveObject,
-  getProxyHandlerSlot,
   getMeta,
+  getProxyTarget,
 } from '@dxos/echo-schema';
 
 import { isEchoObject } from './create';
 import { symbolInternals, type ProxyTarget } from './echo-proxy-target';
-import type { EchoDatabase } from '../proxy-db';
+import { type EchoDatabase } from '../proxy-db';
 
 export const getDatabaseFromObject = (obj: ReactiveObject<any>): EchoDatabase | undefined => {
   if (isEchoObject(obj)) {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const target = getProxyHandlerSlot(obj).target as ProxyTarget;
+    const target = getProxyTarget(obj) as ProxyTarget;
     return target[symbolInternals].database;
   }
   return undefined;
