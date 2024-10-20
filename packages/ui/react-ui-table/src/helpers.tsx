@@ -469,7 +469,7 @@ export class ColumnBuilder<TData extends RowData> {
       size: 50,
       minSize: 50,
       header: (column) => label ?? column.header.id,
-      // TODO(zan): Implement sort algorithm.
+      // TODO(ZaymonFC): Implement sort algorithm.
       enableSorting: true,
       cell: SwitchBuilderCell,
       ...props,
@@ -485,7 +485,7 @@ export class ColumnBuilder<TData extends RowData> {
     const IconOff = off?.Icon ?? X;
     return {
       size: size ?? 32,
-      // TODO(zan): Implement sort algorithm.
+      // TODO(ZaymonFC): Implement sort algorithm.
       enableSorting: false,
       header: (column) => <div className={'justify-center'}>{label ?? column.header.id}</div>,
       cell: (cell) => {

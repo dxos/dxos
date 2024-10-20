@@ -15,7 +15,7 @@ import { TABLE_PLUGIN } from '../../../meta';
 // Root
 //
 
-// TODO(Zan): This should become a union later.
+// TODO(ZaymonFC): This should become a union later.
 export type ToolbarAction = { type: 'comment' };
 
 export type ToolbarActionType = ToolbarAction['type'];

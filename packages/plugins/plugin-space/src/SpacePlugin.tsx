@@ -221,7 +221,7 @@ export const SpacePlugin = ({
                     identityKey: identity.identityKey.toHex(),
                     attended: attention.attended ? [...attention.attended] : [],
                     added: ids,
-                    // TODO(Zan): When we re-open a part, we should remove it from the removed list in the navigation plugin.
+                    // TODO(ZaymonFC): When we re-open a part, we should remove it from the removed list in the navigation plugin.
                     removed: removed.filter((id) => !ids.includes(id)),
                   })
                   // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
@@ -722,7 +722,7 @@ export const SpacePlugin = ({
             createExtension({
               id: `${SPACE_PLUGIN}/settings-for-subject`,
               resolver: ({ id }) => {
-                // TODO(Zan): Find util (or make one).
+                // TODO(ZaymonFC): Find util (or make one).
                 if (!id.endsWith('~settings')) {
                   return;
                 }
@@ -1185,7 +1185,7 @@ export const SpacePlugin = ({
                 }
 
                 if (parentCollection instanceof CollectionType) {
-                  // TODO(Zan): Is there a nicer way to do this without casting to Expando?
+                  // TODO(ZaymonFC): Is there a nicer way to do this without casting to Expando?
                   const index = parentCollection.objects.indexOf(object as Expando);
                   if (index !== -1) {
                     parentCollection.objects.splice(index, 1);

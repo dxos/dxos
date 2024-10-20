@@ -4,7 +4,7 @@
 
 import { effect, type ReadonlySignal } from '@preact/signals-core';
 
-// TODO(Zan): Take in the current visible bounds and only subscribe to cells within that range.
+// TODO(ZaymonFC): Take in the current visible bounds and only subscribe to cells within that range.
 
 /**
  * CellUpdateListener monitors changes in table cell values.

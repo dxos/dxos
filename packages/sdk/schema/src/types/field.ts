@@ -42,7 +42,7 @@ export const toFieldValueType = (type: AST.AST): FieldValueType => {
     return toFieldValueType(type.from);
   }
 
-  // TODO(zan): How should we be thinking about transformations?
+  // TODO(ZaymonFC): How should we be thinking about transformations?
   //  See https://effect.website/docs/guides/schema/projections
   //  - Which of these are we storing in the database?
   //  - For types that aren't the 'DateFromString' transformation, should we be using the 'from' or 'to' type?

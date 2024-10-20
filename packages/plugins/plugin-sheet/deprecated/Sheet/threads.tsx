@@ -87,7 +87,7 @@ const useUpdateCursorOnThreadSelection = () => {
             return;
           }
 
-          // TODO(Zan): Everywhere we refer to the cursor in a thread context should change to `anchor`.
+          // TODO(ZaymonFC): Everywhere we refer to the cursor in a thread context should change to `anchor`.
           const cellAddress = addressFromIndex(model.sheet, data.cursor);
           setCursor(cellAddress);
         }

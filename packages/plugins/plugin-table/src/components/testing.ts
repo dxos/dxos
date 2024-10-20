@@ -25,7 +25,7 @@ export const createTable = (schema?: MutableSchema) =>
   create(TableType, {
     schema,
     view: {
-      // TODO(Zan): What is the appropriate schema value for the query here?
+      // TODO(ZaymonFC): What is the appropriate schema value for the query here?
       query: { schema: '' },
       fields: [
         { id: 'name', path: 'name', label: 'Name', type: FieldValueType.String },

@@ -34,7 +34,7 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Inten
     return [comments()];
   }
 
-  // TODO(Zan): When we have the deepsignal specific equivalent of this we should use that instead.
+  // TODO(ZaymonFC): When we have the deepsignal specific equivalent of this we should use that instead.
   const threads = computed(() =>
     [...doc.threads.filter(nonNullable), ...(state.drafts[fullyQualifiedId(doc)] ?? [])].filter(
       (thread) => !(thread?.status === 'resolved'),

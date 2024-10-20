@@ -101,7 +101,7 @@ const [ToolbarContextProvider, useToolbarContext] = createContext<{ onAction: (a
   'Toolbar',
 );
 
-// TODO(Zan): Factor out, copied this from MarkdownPlugin.
+// TODO(ZaymonFC): Factor out, copied this from MarkdownPlugin.
 const sectionToolbarLayout =
   'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 __-block-start-px transition-opacity';
 
@@ -112,7 +112,7 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
   const { hasAttention } = useAttention(id);
   const dispatch = useIntentDispatcher();
 
-  // TODO(Zan): Centralise the toolbar action handler. Current implementation in stories.
+  // TODO(ZaymonFC): Centralise the toolbar action handler. Current implementation in stories.
   const handleAction = useCallback(
     (action: ToolbarAction) => {
       switch (action.key) {
@@ -150,7 +150,7 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
           }
           break;
         case 'comment': {
-          // TODO(Zan): We shouldn't hardcode the action ID.
+          // TODO(ZaymonFC): We shouldn't hardcode the action ID.
           void dispatch({
             action: 'dxos.org/plugin/thread/action/create',
             data: {

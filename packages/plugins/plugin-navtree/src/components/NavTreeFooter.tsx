@@ -146,7 +146,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
             incrementEnd: false,
           }}
           onClick={(_type) => {
-            // TODO(Zan): If we inmplement pinning again, we should dispatch here.
+            // TODO(ZaymonFC): If we inmplement pinning again, we should dispatch here.
           }}
         />
       )}

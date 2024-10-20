@@ -26,7 +26,7 @@ export const addStarterSchema = (space: Space, table: TableType) => {
 
 export const addStarterView = (table: TableType) => {
   table.view = {
-    // TODO(Zan): What is the appropriate schema value for the query here?
+    // TODO(ZaymonFC): What is the appropriate schema value for the query here?
     query: { schema: '' },
     fields: [
       { id: 'name', path: 'name', label: 'Name', type: FieldValueType.String },

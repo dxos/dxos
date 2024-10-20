@@ -155,7 +155,7 @@ export const Sketch = ({
         newTools[threadToolId] = {
           id: threadToolId,
           icon: 'thread-icon',
-          label: 'Comment', // TODO(Zan): Use translation lookup here.
+          label: 'Comment', // TODO(ZaymonFC): Use translation lookup here.
           onSelect: () => onThreadCreate?.(),
         };
         return newTools;

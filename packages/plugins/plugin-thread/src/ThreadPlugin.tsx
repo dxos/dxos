@@ -47,7 +47,7 @@ const initialViewState = { showResolvedThreads: false };
 
 type ViewStore = Record<SubjectId, typeof initialViewState>;
 
-// TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
+// TODO(ZaymonFC): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
@@ -125,7 +125,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             createExtension({
               id: `${THREAD_PLUGIN}/comments-for-subject`,
               resolver: ({ id }) => {
-                // TODO(Zan): Find util (or make one).
+                // TODO(ZaymonFC): Find util (or make one).
                 if (!id.endsWith('~comments')) {
                   return;
                 }
@@ -258,7 +258,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
               if (data.object instanceof ChannelType && data.object.threads[0]) {
                 const channel = data.object;
-                // TODO(zan): Maybe we should have utility for positional main object ids.
+                // TODO(ZaymonFC): Maybe we should have utility for positional main object ids.
                 if (isLayoutParts(location?.active) && location.active.main) {
                   const layoutEntries = location.active.main;
                   const currentPosition = layoutEntries.findIndex((entry) => channel.id === entry.id);

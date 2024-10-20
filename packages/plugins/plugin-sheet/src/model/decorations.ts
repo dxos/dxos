@@ -22,8 +22,8 @@ export type Decoration = {
 
 export const createDecorations = () => {
   // Reactive object to hold decorations
-  // TODO(Zan): Use CELL ID's to key the decoration map.
-  // TODO(Zan): Consider maintaining an index of decorations by type.
+  // TODO(ZaymonFC): Use CELL ID's to key the decoration map.
+  // TODO(ZaymonFC): Consider maintaining an index of decorations by type.
   const { decorations } = create<{ decorations: Record<string, Decoration[]> }>({ decorations: {} });
 
   const addDecoration = (cellIndex: string, decorator: Decoration) => {
@@ -38,7 +38,7 @@ export const createDecorations = () => {
     }
   };
 
-  // TODO(Zan): I should check if returning the a value from a map in a deep signal is a reactive slice.
+  // TODO(ZaymonFC): I should check if returning the a value from a map in a deep signal is a reactive slice.
   const getDecorationsForCell = (cellIndex: string): Decoration[] | undefined => {
     return decorations[cellIndex];
   };

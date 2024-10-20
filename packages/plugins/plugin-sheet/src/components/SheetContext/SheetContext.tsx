@@ -54,7 +54,7 @@ const SheetProviderImpl = ({
 }: GridScopedProps<PropsWithChildren<Pick<SheetContextValue, 'onInfo' | 'model'>>>) => {
   const { id, editing, setEditing } = useGridContext('SheetProvider', __gridScope);
 
-  // TODO(Zan): Impl. set range and set cursor that scrolls to that cell or range if it is not visible.
+  // TODO(ZaymonFC): Impl. set range and set cursor that scrolls to that cell or range if it is not visible.
   const decorations = useMemo(() => createDecorations(), []);
 
   // TODO(thure): Reconnect these.

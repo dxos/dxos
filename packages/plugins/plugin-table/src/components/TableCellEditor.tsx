@@ -72,7 +72,7 @@ export const TableCellEditor = ({
     if (editing && tableModel) {
       const [col, row] = editing.index.split(',').map(Number);
 
-      // TODO(Zan): Coercing to empty string on null/undefined values is temporary util
+      // TODO(ZaymonFC): Coercing to empty string on null/undefined values is temporary util
       // we deeply integrate with fields.
       return `${tableModel.getCellData(col, row) ?? ''}`;
     }

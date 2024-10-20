@@ -24,7 +24,7 @@ export type EditorKeysProps = {
   onNav?: (value: string | undefined, event: EditorKeyEvent) => void;
 };
 
-// TODO(Zan): Should each consumer be responsible for defining these?
+// TODO(ZaymonFC): Should each consumer be responsible for defining these?
 export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
   return keymap.of([
     {
