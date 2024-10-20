@@ -4,7 +4,7 @@
 
 import { type MutexGuard, scheduleMicroTask, scheduleTask } from '@dxos/async';
 import { type Context } from '@dxos/context';
-import { ed25519Signature } from '@dxos/crypto';
+import { sign } from '@dxos/crypto';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -159,15 +159,16 @@ export class EdgeInvitationHandler implements FlowLockHolder {
       return await this._client.joinSpaceByInvitation(spaceId, request);
     } catch (error: any) {
       if (error instanceof EdgeAuthChallengeError) {
-        guardedState.set(this, Invitation.State.AUTHENTICATING);
         const publicKey = guardedState.current.guestKeypair?.publicKey;
         const privateKey = guardedState.current.guestKeypair?.privateKey;
         if (!privateKey || !publicKey) {
           throw error;
         }
-        const signature = await ed25519Signature(privateKey, Buffer.from(error.challenge, 'base64'));
-        request.signature = Buffer.from(signature).toString('base64');
-        return this._client.joinSpaceByInvitation(spaceId, request);
+        const signature = sign(Buffer.from(error.challenge, 'base64'), privateKey);
+        return this._client.joinSpaceByInvitation(spaceId, {
+          ...request,
+          signature: Buffer.from(signature).toString('base64'),
+        });
       } else {
         throw error;
       }
