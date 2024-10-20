@@ -5,8 +5,10 @@
 import '@dxos-theme';
 
 import * as ModalPrimitive from '@radix-ui/react-popper';
+import { type StoryObj } from '@storybook/react';
 import React, { type MouseEvent, useCallback, useRef, useState } from 'react';
 
+import { button } from '@dxos/lit-grid';
 import { DropdownMenu, useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -52,15 +54,25 @@ export default {
   parameters: { layout: 'fullscreen' },
 };
 
-export const Basic = {
+export const Basic: StoryObj<StoryGridProps> = {
   args: {
     id: 'story',
     initialCells: {
       grid: {
+        // TODO(burdon): Change to ":" delim.
         '1,1': {
-          accessoryHtml:
-            '<button class="ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-1" data-story-action="menu"><svg><use href="/icons.svg#ph--arrow-right--regular"/></svg></button>',
           value: 'Weekly sales report',
+
+          // TODO(burdon): This doesn't work in the storybook, but works in the table plugin.
+          //  Throws Internal Error: expected template strings to be an array with a 'raw' field.
+          // accessoryHtml:
+          //   '<button class="ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-1" data-story-action="menu"><svg><use href="/icons.svg#ph--arrow-right--regular"/></svg></button>',
+          accessory: button({
+            // TODO(burdon): Space for resize button.
+            className: 'ch-button is-4 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-3',
+            icon: 'ph--caret-down--regular',
+            'data-story-action': 'menu',
+          }),
         },
       },
     },
@@ -91,5 +103,5 @@ export const Basic = {
     onEditingChange: (event) => {
       console.log('[edit]', event);
     },
-  } satisfies StoryGridProps,
+  },
 };

@@ -2,9 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+// TODO(burdon): Move to grid-cell.
+
 /**
  * Generates a string key for a cell based on its column and row indices.
  */
+// TODO(burdon): Change delim to ":".
 export const getCellKey = (col: number, row: number) => {
   return `${col},${row}` as const;
 };

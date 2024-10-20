@@ -10,6 +10,7 @@ import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
+import { translations as dataTranslations } from '@dxos/react-ui-data';
 
 import { TableContainer, TableViewEditor } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
@@ -36,7 +37,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           },
         },
       },
-      translations,
+      translations: [...translations, ...dataTranslations],
       echo: {
         schema: [TableType],
       },

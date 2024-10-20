@@ -6,6 +6,7 @@ import { computed, signal, type ReadonlySignal } from '@preact/signals-core';
 import sortBy from 'lodash.sortby';
 
 import { Resource } from '@dxos/context';
+import { button } from '@dxos/lit-grid';
 import { PublicKey } from '@dxos/react-client';
 import { parseValue, cellClassesForFieldType } from '@dxos/react-ui-data';
 import {
@@ -34,12 +35,8 @@ export type TableModelProps = {
   rowSelection?: number[];
 };
 
-// TODO(Zan): Is there a better place for this to live?
-export const columnSettingsButtonAttr = 'data-table-column-settings-button';
-const columnSettingsButtonClasses = 'ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2';
-const columnSettingsIcon = 'ph--caret-down--regular';
-const columnSettingsButtonHtml = (columnId: string) =>
-  `<button class="${columnSettingsButtonClasses}" ${columnSettingsButtonAttr}="${columnId}"><svg><use href="/icons.svg#${columnSettingsIcon}"/></svg></button>`;
+// TODO(Zan): Move.
+export const tableColumnAttr = 'data-table-column';
 
 export class TableModel extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
@@ -50,11 +47,10 @@ export class TableModel extends Resource {
 
   public readonly table: TableType;
   public readonly data: any[];
-  private onCellUpdate?: (col: number, row: number) => void;
+  public readonly sorting = signal<SortConfig | undefined>(undefined);
   public pinnedRows: { top: number[]; bottom: number[] };
   public rowSelection: number[];
 
-  public readonly sorting = signal<SortConfig | undefined>(undefined);
   /**
    * Maps display indices to data indices.
    * Used for translating between sorted/displayed order and original data order.
@@ -79,6 +75,8 @@ export class TableModel extends Resource {
     this.rowSelection = rowSelection;
   }
 
+  private readonly onCellUpdate?: (col: number, row: number) => void;
+
   protected override async _open() {
     // Construct the header cells based on the table fields.
     const headerCells: ReadonlySignal<DxGridPlaneCells> = computed(() => {
@@ -90,7 +88,12 @@ export class TableModel extends Resource {
             {
               value: field.label ?? field.path,
               resizeHandle: 'col',
-              accessoryHtml: columnSettingsButtonHtml(field.id),
+              accessory: button({
+                // TODO(burdon): Space for resize button.
+                className: 'ch-button is-4 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-3',
+                icon: 'ph--caret-down--regular',
+                [tableColumnAttr]: field.id,
+              }),
             },
           ];
         }),
