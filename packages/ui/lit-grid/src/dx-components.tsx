@@ -3,7 +3,7 @@
 //
 
 import { html } from 'lit';
-import { directive, type AttributePart, Directive, type DirectiveParameters } from 'lit/directive.js';
+import { type AttributePart, Directive, type DirectiveParameters, directive } from 'lit/directive.js';
 
 // TODO(burdon): Factor out to lit-components.
 // TODO(burdon): Use with codemirror and other non-react ux.

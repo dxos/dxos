@@ -8,7 +8,6 @@ import * as ModalPrimitive from '@radix-ui/react-popper';
 import { type StoryObj } from '@storybook/react';
 import React, { type MouseEvent, useCallback, useRef, useState } from 'react';
 
-import { button } from '@dxos/lit-grid';
 import { DropdownMenu, useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -19,10 +18,10 @@ type StoryGridProps = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
 const CUSTOM_PROP = 'data-story-action';
 
 const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const triggerRef = useRef<HTMLDivElement | null>(null);
   const { tx } = useThemeContext();
+  const triggerRef = useRef<HTMLDivElement | null>(null);
 
+  const [menuOpen, setMenuOpen] = useState(false);
   const handleClick = useCallback((event: MouseEvent) => {
     const closestAction = (event.target as HTMLElement).closest(`button[${CUSTOM_PROP}]`);
     if (closestAction) {
@@ -56,26 +55,37 @@ export default {
   parameters: { layout: 'fullscreen' },
 };
 
+// TODO(burdon): This doesn't work in the storybook, but works in the table plugin.
+//  Throws Internal Error: expected template strings to be an array with a 'raw' field.
+const debug = false;
+const accessoryHtml =
+  '<dx-button class="ch-button is-4 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-1" icon="ph--caret-down--regular">' +
+  '</dx-button>';
+// const accessory = debug
+//   ? button({
+//       className: 'ch-button is-4 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-3',
+//       icon: 'ph--caret-down--regular',
+//       [CUSTOM_PROP]: 'menu',
+//     })
+//   : undefined;
+// TODO(burdon): Space for resize button.
+// TODO(burdon): Disappears after resize. Resize doesn't work after menu popup.
+// const accessoryHtml = !debug
+//   ? '<button class="ch-button is-4 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-1" data-story-action="menu">' +
+//     '<svg><use href="/icons.svg#ph--caret-down--regular"/></svg>' +
+//     '</button>'
+//   : undefined;
+
 export const Basic: StoryObj<StoryGridProps> = {
   args: {
     id: 'story',
     initialCells: {
       grid: {
         '1,1': {
-          value: 'Weekly sales report',
+          value: String(100),
           resizeHandle: 'col',
-
-          // TODO(burdon): This doesn't work in the storybook, but works in the table plugin.
-          //  Throws Internal Error: expected template strings to be an array with a 'raw' field.
-          //  Does this have to be serialized?
-          // accessoryHtml:
-          //   '<button class="ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-1" data-story-action="menu"><svg><use href="/icons.svg#ph--arrow-right--regular"/></svg></button>',
-          accessory: button({
-            // TODO(burdon): Space for resize button.
-            className: 'ch-button is-4 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-3',
-            icon: 'ph--caret-down--regular',
-            [CUSTOM_PROP]: 'menu',
-          }),
+          accessoryHtml,
+          // accessory,
         },
       },
     },

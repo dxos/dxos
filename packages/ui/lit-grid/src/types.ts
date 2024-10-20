@@ -57,7 +57,6 @@ export type DxGridCellValue = {
    * Accessory HTML to render alongside the value.
    * @deprecated
    */
-  // TODO(burdon): Remove.
   accessoryHtml?: string;
   /**
    * If this is a merged cell, the bottom-right-most of the range in numeric notation, otherwise undefined.
