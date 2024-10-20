@@ -4,7 +4,7 @@
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type SpaceId } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   EdgeCallFailedError,
@@ -14,6 +14,9 @@ import {
   type JoinSpaceRequest,
   type JoinSpaceResponseBody,
   EdgeAuthChallengeError,
+  type CreateAgentResponseBody,
+  type CreateAgentRequestBody,
+  type GetAgentStatusResponseBody,
 } from '@dxos/protocols';
 
 import { getEdgeUrlWithProtocol } from './utils';
@@ -28,6 +31,17 @@ export class EdgeHttpClient {
   constructor(baseUrl: string) {
     this._baseUrl = getEdgeUrlWithProtocol(baseUrl, 'http');
     log('created', { url: this._baseUrl });
+  }
+
+  public createAgent(body: CreateAgentRequestBody, args?: EdgeHttpGetArgs): Promise<CreateAgentResponseBody> {
+    return this._call('/agents/create', { ...args, method: 'POST', body });
+  }
+
+  public getAgentStatus(
+    request: { ownerIdentityKey: PublicKey },
+    args?: EdgeHttpGetArgs,
+  ): Promise<GetAgentStatusResponseBody> {
+    return this._call(`/users/${request.ownerIdentityKey.toHex()}/agent/status`, { ...args, method: 'GET' });
   }
 
   public getCredentialsForNotarization(spaceId: SpaceId, args?: EdgeHttpGetArgs): Promise<GetNotarizationResponseBody> {
@@ -56,7 +70,7 @@ export class EdgeHttpClient {
     const request = createRequest(args);
     const url = `${this._baseUrl}${path.startsWith('/') ? path.slice(1) : path}`;
 
-    log.info('call', { method: args.method, path });
+    log.info('call', { method: args.method, path, request: args.body });
 
     while (true) {
       let processingError: EdgeCallFailedError;
@@ -71,6 +85,8 @@ export class EdgeHttpClient {
           if (body.success) {
             return body.data;
           }
+
+          log.info('unsuccessful edge response', { path, body });
 
           if (body.errorData?.type === 'auth_challenge' && typeof body.errorData?.challenge === 'string') {
             processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);

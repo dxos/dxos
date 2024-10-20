@@ -9,16 +9,15 @@ import { describe, expect, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 
-import { createKeyPair } from './keys';
-import { ed25519Signature, verifySignature } from './verify';
+import { createKeyPair, sign } from './keys';
+import { verifySignature } from './verify';
 
 describe('verify', () => {
   test('keypair conversion', async () => {
     const keypair = createKeyPair();
     const message = Buffer.from('hello');
-    const signature = await ed25519Signature(keypair.secretKey, message);
     expect(
-      await verifySignature(PublicKey.from(keypair.publicKey), message, signature, {
+      await verifySignature(PublicKey.from(keypair.publicKey), message, sign(message, keypair.secretKey), {
         name: 'Ed25519',
       }),
     ).toBeTruthy();
