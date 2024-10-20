@@ -24,7 +24,7 @@ export enum SheetAction {
   CREATE = `${SHEET_ACTION}/create`,
 }
 
-// TODO(Zan): Move this to the plugin-space plugin or another common location
+// TODO(ZaymonFC): Move this to the plugin-space plugin or another common location
 // when we implement comments in sheets.
 // This is currently duplicated in a few places.
 type ThreadProvides<T> = {

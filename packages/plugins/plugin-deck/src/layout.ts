@@ -214,7 +214,7 @@ export const uriToActiveParts = (uri: string): LayoutParts => {
   return slug.split(SLUG_ENTRY_SEPARATOR).reduce((acc: LayoutParts, partDescriptor) => {
     const [part, layoutEntry] = partDescriptor.split(SLUG_KEY_VALUE_SEPARATOR);
     if (part && layoutEntry) {
-      // TODO(Zan): Remove this cast.
+      // TODO(ZaymonFC): Remove this cast.
       acc[part as LayoutPart] = layoutEntry.split(SLUG_LIST_SEPARATOR).map(parseLayoutEntry);
     }
     return acc;
@@ -222,7 +222,7 @@ export const uriToActiveParts = (uri: string): LayoutParts => {
 };
 
 const formatLayoutEntry = ({ id, path }: LayoutEntry): string => {
-  // NOTE(Zan): Format = `[SOLO_INDICATOR] ID [PATH_SEPARATOR PATH]`.
+  // NOTE(ZaymonFC): Format = `[SOLO_INDICATOR] ID [PATH_SEPARATOR PATH]`.
   let entry = '';
   entry += id;
   if (path) {

@@ -7,7 +7,7 @@ import { Buffer } from 'buffer/';
 import { process } from './process';
 
 (() => {
-  // NOTE(Zan): When running in native context `globalThis.global` is an immutable property.
+  // NOTE(ZaymonFC): When running in native context `globalThis.global` is an immutable property.
   // - Socket already polyfills it.
 
   // Check if `globalThis` is defined and if `global` can be assigned.

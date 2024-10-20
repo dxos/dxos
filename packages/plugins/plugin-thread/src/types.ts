@@ -26,7 +26,7 @@ export enum ThreadAction {
   TOGGLE_RESOLVED = `${THREAD_ACTION}/toggle-resolved`,
 }
 
-// TODO(Zan): Move this to the plugin-space plugin or another common location when we implement threads in sheets.
+// TODO(ZaymonFC): Move this to the plugin-space plugin or another common location when we implement threads in sheets.
 export type ThreadProvides<T> = {
   thread: {
     predicate: (obj: any) => obj is T;

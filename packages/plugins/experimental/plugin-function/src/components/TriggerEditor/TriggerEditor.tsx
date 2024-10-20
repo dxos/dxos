@@ -100,7 +100,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
     void space.db.schema
       .list()
       .then((schemas) => {
-        // TODO(zan): We should solve double adding of stored schemas in the schema registry.
+        // TODO(ZaymonFC): We should solve double adding of stored schemas in the schema registry.
         state.schemas = distinctBy([...state.schemas, ...schemas], (schema) => schema.typename).sort((a, b) =>
           a.typename < b.typename ? -1 : 1,
         );

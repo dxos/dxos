@@ -61,7 +61,7 @@ test.describe('Comments tests', () => {
 
     const editedText = 'Edited';
 
-    // NOTE(Zan): The input is autofocused, so we need to clear the text content and
+    // NOTE(ZaymonFC): The input is autofocused, so we need to clear the text content and
     // type the new text instead of using `fill`.
     await host.page.keyboard.press('ControlOrMeta+A');
     await host.page.keyboard.press('Backspace');

@@ -14,7 +14,7 @@ import { useTableModel } from '../hooks';
 import { columnSettingsButtonAttr } from '../table-model';
 import { type TableType } from '../types';
 
-// NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
+// NOTE(ZaymonFC): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
 // These are offset by 1px to avoid double borders in planks.
 const inlineEndLine =
   '[&>.dx-grid]:relative [&>.dx-grid]:after:absolute [&>.dx-grid]:after:inset-block-0 [&>.dx-grid]:after:-inline-end-px [&>.dx-grid]:after:is-px [&>.dx-grid]:after:bg-separator';

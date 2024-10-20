@@ -86,7 +86,7 @@ export const MarkdownEditor = ({
     [extensionProviders],
   );
 
-  // TODO(Zan): Move these into thread plugin as well?
+  // TODO(ZaymonFC): Move these into thread plugin as well?
   const [commentsState, commentObserver] = useCommentState();
   const onCommentClick = useCallback(() => {
     void dispatch({

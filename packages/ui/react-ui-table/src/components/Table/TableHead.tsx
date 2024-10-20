@@ -52,7 +52,7 @@ const TableHead = (_props: TableHeadProps) => {
                   {resizable && (
                     <div
                       className={theadResizeRoot({ isResizing })}
-                      onDoubleClick={header.column.resetSize} // TODO(zan): How should non-pointer users reset column sizing?
+                      onDoubleClick={header.column.resetSize} // TODO(ZaymonFC): How should non-pointer users reset column sizing?
                       onMouseDown={onResize}
                       onTouchStart={onResize}
                     />

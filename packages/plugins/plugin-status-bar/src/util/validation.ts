@@ -13,7 +13,7 @@ export const validate = <T>(schema: S.Schema<T>, data: any): ValidationError[] |
 
   if (result._tag === 'Left') {
     const errors = Effect.runSync(ArrayFormatter.formatError(result.left));
-    // TODO(Zan): Path.join is an assumption...
+    // TODO(ZaymonFC): Path.join is an assumption...
     return errors.map(({ message, path }) => ({ message, path: path.join('.') }));
   }
 

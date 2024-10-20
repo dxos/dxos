@@ -60,7 +60,7 @@ export const NodePlankHeading = ({
     return () => cancelAnimationFrame(frame);
   }, [node]);
 
-  // NOTE(Zan): Node ids may now contain a path like `${space}:${id}~comments`
+  // NOTE(ZaymonFC): Node ids may now contain a path like `${space}:${id}~comments`
   const attendableId = id?.split(SLUG_PATH_SEPARATOR).at(0);
 
   const layoutCoordinate = layoutPart !== undefined && id !== undefined ? { part: layoutPart, entryId: id } : undefined;
@@ -104,7 +104,7 @@ export const NodePlankHeading = ({
         </PlankHeading.Label>
       </TextTooltip>
       {node && layoutPart !== 'complementary' && (
-        // TODO(Zan): What are we doing with layout coordinate here?
+        // TODO(ZaymonFC): What are we doing with layout coordinate here?
         <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data }} />
       )}
       {/* NOTE(thure): Pinning & unpinning are temporarily disabled */}
@@ -129,7 +129,7 @@ export const NodePlankHeading = ({
             ]);
           }
 
-          // TODO(Zan): Update this to use the new layout actions.
+          // TODO(ZaymonFC): Update this to use the new layout actions.
           return dispatch(
             eventType === 'close'
               ? layoutPart === 'complementary'

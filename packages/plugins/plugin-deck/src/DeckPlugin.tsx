@@ -78,9 +78,9 @@ const customSlots: DeckLayoutProps['slots'] = {
   },
 };
 
-// NOTE(Zan): When producing values with immer, we shouldn't auto-freeze them because
+// NOTE(ZaymonFC): When producing values with immer, we shouldn't auto-freeze them because
 // our signal implementation needs to add some hidden properties to the produced values.
-// TODO(Zan): Move this to a more global location if we use immer more broadly.
+// TODO(ZaymonFC): Move this to a more global location if we use immer more broadly.
 setAutoFreeze(false);
 
 //
@@ -142,7 +142,7 @@ export const DeckPlugin = ({
     closed: [],
   });
 
-  // TODO(Zan): Cap depth!
+  // TODO(ZaymonFC): Cap depth!
   const layoutModeHistory = create({ values: [] as LayoutMode[] });
 
   const handleSetLayout = ({
@@ -314,8 +314,8 @@ export const DeckPlugin = ({
           // TODO(burdon): Root menu isn't visible so nothing bound.
           return createExtension({
             id: DECK_PLUGIN,
-            // NOTE(Zan): This is currently disabled.
-            // TODO(Zan): Fullscreen needs to know the active node and provide that to the layout part.
+            // NOTE(ZaymonFC): This is currently disabled.
+            // TODO(ZaymonFC): Fullscreen needs to know the active node and provide that to the layout part.
             filter: (node): node is Node<null> => false,
             actions: () => [
               {

@@ -11,13 +11,13 @@ import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 import { TableModel } from './table-model';
 
-// TODO(Zan): Restore this when importing the type doesn't break bundling.
+// TODO(ZaymonFC): Restore this when importing the type doesn't break bundling.
 // import { TableType } from '../types';
 
 registerSignalsRuntime();
 
 const createTableModel = (): TableModel => {
-  // TODO(Zan): Restore schema specification when importing TableType doesn't break bundling.
+  // TODO(ZaymonFC): Restore schema specification when importing TableType doesn't break bundling.
   const table = create({
     view: {
       fields: [
@@ -112,7 +112,7 @@ describe('TableModel', () => {
       let data: any[];
 
       beforeEach(async () => {
-        // TODO(Zan): Restore schema specification when importing TableType doesn't break bundling.
+        // TODO(ZaymonFC): Restore schema specification when importing TableType doesn't break bundling.
         const table = create({
           view: {
             fields: [

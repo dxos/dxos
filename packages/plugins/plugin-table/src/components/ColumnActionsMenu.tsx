@@ -51,7 +51,7 @@ export const ColumnActionsMenu: React.FC<ColumnActionsMenuProps> = ({ tableModel
           )}
           <DropdownMenu.Item
             onClick={() => {
-              // TODO(Zan): Implement inline field editor.
+              // TODO(ZaymonFC): Implement inline field editor.
               // Currently we'll just show the view editor in the c11y sidebar.
               void dispatch({
                 action: LayoutAction.SET_LAYOUT,

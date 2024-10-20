@@ -4,7 +4,7 @@
 
 import { type Page, type Locator } from '@playwright/test';
 
-// TODO(Zan): Extend this with other plank types.
+// TODO(ZaymonFC): Extend this with other plank types.
 type PlankKind = 'markdown' | 'collection' | 'unknown';
 
 // Define a plank manager that takes a page and provides a way to interact with planks.

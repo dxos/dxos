@@ -11,7 +11,7 @@ import { PLANK_DEFAULTS } from '@dxos/react-ui-deck';
  * ┌────────────────────────────────────────────────────────────────────────────────────────────────────┐
  * | Overscroll Padding Calculation for Centering Planks on Screen.                                     │
  * ├────────────────────────────────────────────────────────────────────────────────────────────────────┤
- * │ NOTE(Zan): I found the way you calculate the overscroll padding to center a plank on the screen    │
+ * │ NOTE(ZaymonFC): I found the way you calculate the overscroll padding to center a plank on the screen    │
  * │ at the edges of the scroll context a bit confusing, so I've diagrammed it here.                    │
  * │                                                                                                    │
  * │ Multiple Planks:                                                                                   │
@@ -61,7 +61,7 @@ export const calculateOverscroll = (
     return { paddingInlineStart: 0, paddingInlineEnd: 0 };
   }
 
-  // TODO(Zan): Move complementary sidebar size (360px), sidebar size (270px), plank resize handle size (20px) to CSS variables.
+  // TODO(ZaymonFC): Move complementary sidebar size (360px), sidebar size (270px), plank resize handle size (20px) to CSS variables.
   const sidebarWidth = sidebarOpen ? '270px' : '0px';
   const complementarySidebarWidth = complementarySidebarOpen ? '360px' : '0px';
 

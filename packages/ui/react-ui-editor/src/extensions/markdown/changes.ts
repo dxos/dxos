@@ -126,7 +126,7 @@ export const createLinkLabel = (url: URL): string => {
     protocol = '';
   }
 
-  // NOTE(Zan): Consult: https://github.com/dxos/dxos/issues/7331 before changing this.
+  // NOTE(ZaymonFC): Consult: https://github.com/dxos/dxos/issues/7331 before changing this.
   // Remove 'www.' if at the beginning of the URL
   host = host.replace(/^www\./, '');
 

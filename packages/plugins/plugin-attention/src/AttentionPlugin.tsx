@@ -52,7 +52,7 @@ export const AttentionPlugin = (): PluginDefinition<AttentionPluginProvides> => 
         <RootAttentionProvider
           attention={attention}
           onChange={(nextAttended) => {
-            // TODO(Zan): Workout why this was in deck plugin. It didn't seem to work?
+            // TODO(ZaymonFC): Workout why this was in deck plugin. It didn't seem to work?
             // if (layout.values.scrollIntoView && nextAttended.has(layout.values.scrollIntoView)) {
             //   layout.values.scrollIntoView = undefined;
             // }

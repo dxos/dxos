@@ -579,7 +579,7 @@ export class Observability {
    * The default implementation uses Sentry.
    */
   captureUserFeedback(name: string, email: string, message: string) {
-    // TODO(Zan): Should this respect telemetry mode? Sending feedback is explicitly user-initiated.
+    // TODO(ZaymonFC): Should this respect telemetry mode? Sending feedback is explicitly user-initiated.
     // - Maybe if telemetry is disable we shouldn't enable replay.
     // - (Check the browser.ts implementation for reference).
     void this._captureUserFeedback?.(name, email, message);

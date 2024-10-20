@@ -20,7 +20,7 @@ const GRID_STEPS = [
 // on the same page interfere with each other due to shared IDs. Our solution uses React.useId()
 // to generate unique IDs for each grid instance, preventing conflicts.
 //
-// TODO(Zan): Revert this to the default implementation once the issue has been fixed upstream in tldraw.
+// TODO(ZaymonFC): Revert this to the default implementation once the issue has been fixed upstream in tldraw.
 export const DottedGrid = ({ x, y, z, size }: TLGridProps) => {
   const theme = useDefaultColorTheme();
   const stroke = theme.grey.solid;

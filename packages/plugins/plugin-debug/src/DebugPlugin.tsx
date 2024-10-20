@@ -105,7 +105,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               filter: (node): node is Node<null> => !!settings.values.devtools && node.id === 'root',
               connector: () => [
                 {
-                  // TODO(zan): Removed `/` because it breaks deck layout reload. Fix?
+                  // TODO(ZaymonFC): Removed `/` because it breaks deck layout reload. Fix?
                   id: 'dxos.org.plugin.debug.devtools',
                   data: 'devtools',
                   type: 'dxos.org/plugin/debug/devtools',

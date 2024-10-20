@@ -34,7 +34,7 @@ export type TableModelProps = {
   rowSelection?: number[];
 };
 
-// TODO(Zan): Is there a better place for this to live?
+// TODO(ZaymonFC): Is there a better place for this to live?
 export const columnSettingsButtonAttr = 'data-table-column-settings-button';
 const columnSettingsButtonClasses = 'ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2';
 const columnSettingsIcon = 'ph--caret-down--regular';

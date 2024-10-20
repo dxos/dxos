@@ -140,7 +140,7 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
   const { rowsRef, columnsRef, contentRef } = useScrollHandlers();
 
   // Threads.
-  // TODO(Zan): Move this to an extension once we have an extension model.
+  // TODO(ZaymonFC): Move this to an extension once we have an extension model.
   useThreads();
 
   //

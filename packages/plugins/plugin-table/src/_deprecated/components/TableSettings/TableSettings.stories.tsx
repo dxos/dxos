@@ -24,8 +24,8 @@ const Story = () => {
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
 
-    // TODO(zan): This can be moved to `onSpaceCreated` on `clientRepeater` after client is made available
-    // TODO(zan): Currently we need to cast as any since `_graph` is marked @internal.
+    // TODO(ZaymonFC): This can be moved to `onSpaceCreated` on `clientRepeater` after client is made available
+    // TODO(ZaymonFC): Currently we need to cast as any since `_graph` is marked @internal.
     setTable(space.db.add(create(TableType, { name: 'Table', props: [] })));
     void space.db.schema.list().then(setSchemas).catch();
   }, []);

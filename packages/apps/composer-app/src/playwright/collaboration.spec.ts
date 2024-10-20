@@ -71,7 +71,7 @@ test.describe('Collaboration tests', () => {
       const guestMarkdownDoc = Markdown.getMarkdownTextboxWithLocator(plank.locator);
       await expect(guestMarkdownDoc).toHaveText('Hello from the host', { timeout: 10_000 });
 
-      // TODO(Zan): How should we handle URL comparisons now that we're in decklandia?
+      // TODO(ZaymonFC): How should we handle URL comparisons now that we're in decklandia?
 
       // Verify URLs and object links match between host and guest.
       // expect(await host.page.url()).to.equal(await guest.page.url());
@@ -210,7 +210,7 @@ test.describe('Collaboration tests', () => {
     await expect(hostPresence.first()).toHaveAttribute('data-status', 'current');
     await expect(guestPresence.first()).toHaveAttribute('data-status', 'current');
 
-    // TODO(zan): We need to update deck presence indications for this to be a valid test.
+    // TODO(ZaymonFC): We need to update deck presence indications for this to be a valid test.
 
     // await host.createObject('markdownPlugin');
     // const newDocId = (await hostPlankManager.getPlanks({ filter: 'markdown' }))[0].qualifiedId;

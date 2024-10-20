@@ -19,11 +19,11 @@ const SketchContainer = ({ classNames, sketch, ...props }: SketchProps) => {
 
   const onThreadCreate = useCallback(() => {
     void dispatch({
-      // TODO(Zan): We shouldn't hardcode the action ID.
+      // TODO(ZaymonFC): We shouldn't hardcode the action ID.
       action: 'dxos.org/plugin/thread/action/create',
       data: {
         subject: sketch,
-        cursor: Date.now().toString(), // TODO(Zan): Consider a more appropriate anchor format.
+        cursor: Date.now().toString(), // TODO(ZaymonFC): Consider a more appropriate anchor format.
       },
     });
   }, [dispatch, sketch]);

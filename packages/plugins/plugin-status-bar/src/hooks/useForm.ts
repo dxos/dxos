@@ -6,7 +6,7 @@ import { type ChangeEvent, useCallback, useState } from 'react';
 
 import { type ValidationError } from '../util';
 
-// TODO(Zan): This module will be generally useful and we should factor it out after the
+// TODO(ZaymonFC): This module will be generally useful and we should factor it out after the
 // API crystallizes a bit more.
 
 interface FormOptions<T> {
@@ -59,7 +59,7 @@ export const useForm = <T extends object>({ initialValues, validate, onSubmit }:
       const { name } = event.target;
       setTouched((touched) => ({ ...touched, [name]: true }));
 
-      // TODO(Zan): This should be configurable behavior.
+      // TODO(ZaymonFC): This should be configurable behavior.
       if (event.relatedTarget?.getAttribute('type') === 'submit') {
         // NOTE: We do this here instead of onSubmit, because the blur event is triggered before the submit event
         //       and results in the submit button being disabled when the form is invalid.
@@ -112,7 +112,7 @@ const mkAllTouched = <T extends Record<keyof T, any>>(values: T) => {
 const collapseErrorArray = <T>(errors: ValidationError[]) =>
   errors.reduce(
     (acc, { path, message }) => {
-      // TODO(Zan): This won't play well with nesting.
+      // TODO(ZaymonFC): This won't play well with nesting.
       acc[path as keyof T] = message;
       return acc;
     },

@@ -172,7 +172,7 @@ export const TablePrimitive = <TData extends RowData>(props: TableProps<TData>) 
   );
 };
 
-// TODO(zan): Smush this into the Table component.
+// TODO(ZaymonFC): Smush this into the Table component.
 /**
  * Pure implementation of table outside of context set-up.
  */
@@ -221,7 +221,7 @@ const VirtualizedTableContent = () => {
   }, [centerRows.length]);
 
   try {
-    // TODO(zan): Work out how to sync the row pinning with rendering
+    // TODO(ZaymonFC): Work out how to sync the row pinning with rendering
     // This is a hack because the first call to this function after a row is deleted will throw an error
     // because the row index is no longer in the table
     // The pin last row hook updates the pinned row key after the row is deleted

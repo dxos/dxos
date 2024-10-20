@@ -124,7 +124,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
             <PrensenceAvatar
               identity={member.identity}
               group
-              match={member.currentlyAttended} // TODO(Zan): Match always true now we're showing 'members viewing current object'.
+              match={member.currentlyAttended} // TODO(ZaymonFC): Match always true now we're showing 'members viewing current object'.
               index={members.length - i}
               onClick={() => onMemberClick?.(member)}
             />
@@ -159,7 +159,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
                     onClick={() => onMemberClick?.(member)}
                     data-testid='identity-list-item'
                   >
-                    {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
+                    {/* TODO(ZaymonFC): Match always true now we're showing 'members viewing current object'. */}
                     <PrensenceAvatar identity={member.identity} showName match={member.currentlyAttended} />
                   </ListItem.Root>
                 ))}
