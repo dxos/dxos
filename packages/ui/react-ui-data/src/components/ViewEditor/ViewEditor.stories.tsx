@@ -5,15 +5,14 @@
 import '@dxos-theme';
 
 import { type StoryObj } from '@storybook/react';
-import React, { useMemo } from 'react';
+import React from 'react';
 
-import { MutableSchemaRegistry } from '@dxos/echo-db';
-import { create, type SchemaResolver } from '@dxos/echo-schema';
-import { useSpace } from '@dxos/react-client/echo';
+import { create } from '@dxos/echo-schema';
 import { type ViewType } from '@dxos/schema';
 import { withTheme, withLayout, withSignals } from '@dxos/storybook-utils';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
+import { useSchemaResolver } from '../../hooks';
 import { testView } from '../../testing';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
@@ -21,13 +20,7 @@ import { TestPopup } from '../testing';
 type StoryProps = Omit<ViewEditorProps, 'schemaResolver'>;
 
 const Story = (props: StoryProps) => {
-  const space = useSpace();
-  const resolver = useMemo<SchemaResolver | undefined>(() => {
-    if (space) {
-      const registry = new MutableSchemaRegistry(space.db);
-      return (typename: string) => registry.getSchemaByTypename(typename);
-    }
-  }, [space]);
+  const resolver = useSchemaResolver();
   if (!resolver) {
     return null;
   }

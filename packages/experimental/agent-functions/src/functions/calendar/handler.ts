@@ -7,14 +7,14 @@ import { google } from 'googleapis';
 import path from 'node:path';
 import process from 'node:process';
 
-import { EventType } from '@dxos/plugin-inbox/types';
-import { TextType } from '@dxos/plugin-markdown/types';
-import { type ActorType } from '@dxos/plugin-space/types';
-import { Filter } from '@dxos/echo-db';
-import { create, type EchoReactiveObject, getMeta } from '@dxos/echo-schema';
+import { type EchoReactiveObject, Filter } from '@dxos/echo-db';
+import { create, getMeta } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { EventType } from '@dxos/plugin-inbox/types';
+import { TextType } from '@dxos/plugin-markdown/types';
+import { type ActorType } from '@dxos/plugin-space/types';
 
 import { ObjectSyncer } from '../../sync';
 import { getYaml } from '../../util';

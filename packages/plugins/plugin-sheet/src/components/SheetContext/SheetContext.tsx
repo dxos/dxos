@@ -10,15 +10,14 @@ import { Grid, useGridContext, type GridScopedProps, type GridEditing } from '@d
 
 import { type CellAddress, type CellRange } from '../../defs';
 import { type ComputeGraph } from '../../graph';
-import { useSheetModel, useFormattingModel, useSelectThreadOnCellFocus, useThreadDecorations } from '../../hooks';
-import { type FormattingModel, type SheetModel, createDecorations } from '../../model';
+import { useSheetModel, useSelectThreadOnCellFocus, useThreadDecorations } from '../../hooks';
+import { type SheetModel, createDecorations } from '../../model';
 import { type SheetType } from '../../types';
 
 export type SheetContextValue = {
   id: string;
 
   model: SheetModel;
-  formatting: FormattingModel;
 
   // Cursor state.
   // TODO(burdon): Cursor and range should use indices.
@@ -49,11 +48,10 @@ export const useSheetContext = (): SheetContextValue => {
 
 const SheetProviderImpl = ({
   model,
-  formatting,
   onInfo,
   children,
   __gridScope,
-}: GridScopedProps<PropsWithChildren<Pick<SheetContextValue, 'onInfo' | 'model' | 'formatting'>>>) => {
+}: GridScopedProps<PropsWithChildren<Pick<SheetContextValue, 'onInfo' | 'model'>>>) => {
   const { id, editing, setEditing } = useGridContext('SheetProvider', __gridScope);
 
   // TODO(Zan): Impl. set range and set cursor that scrolls to that cell or range if it is not visible.
@@ -71,7 +69,6 @@ const SheetProviderImpl = ({
       value={{
         id,
         model,
-        formatting,
         editing,
         setEditing,
         cursor,
@@ -96,11 +93,10 @@ export type SheetProviderProps = {
 
 export const SheetProvider = ({ children, graph, sheet, readonly, onInfo }: PropsWithChildren<SheetProviderProps>) => {
   const model = useSheetModel(graph, sheet, { readonly });
-  const formatting = useFormattingModel(model);
 
-  return !model || !formatting ? null : (
+  return !model ? null : (
     <Grid.Root id={fullyQualifiedId(sheet)}>
-      <SheetProviderImpl model={model} formatting={formatting} onInfo={onInfo}>
+      <SheetProviderImpl model={model} onInfo={onInfo}>
         {children}
       </SheetProviderImpl>
     </Grid.Root>

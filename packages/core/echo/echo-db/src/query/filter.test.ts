@@ -11,7 +11,8 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { Filter } from './filter';
 import { filterMatch, compareType } from './filter-match';
-import { getObjectCore, ObjectCore } from '../core-db';
+import { ObjectCore } from '../core-db';
+import { getObjectCore } from '../echo-handler';
 import { EchoTestBuilder } from '../testing';
 
 describe('Filter', () => {
@@ -132,9 +133,8 @@ describe('Filter', () => {
   });
 
   test('__typename', () => {
-    const filter = Filter.from({ __typename: 'dxos.org/example/Type' });
-
-    expect(filter.type!.toDXN().toString()).to.equal('dxn:type:dxos.org/example/Type');
+    const filter = Filter.from({ __typename: 'example.com/type/Type' });
+    expect(filter.type!.toDXN().toString()).to.equal('dxn:type:example.com/type/Type');
     expect(filter.properties).to.deep.equal({});
   });
 });

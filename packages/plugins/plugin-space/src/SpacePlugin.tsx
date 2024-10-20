@@ -23,7 +23,7 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject, type HasId, isReactiveObject } from '@dxos/echo-schema';
+import { type HasId, isReactiveObject } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
@@ -35,6 +35,7 @@ import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
   Expando,
+  type EchoReactiveObject,
   Filter,
   type PropertiesTypeProps,
   type Space,

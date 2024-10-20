@@ -3,8 +3,9 @@
 //
 
 import { type Space, Filter } from '@dxos/client/echo';
+import { type EchoReactiveObject } from '@dxos/echo-db';
 import {
-  type EchoReactiveObject,
+  create,
   MutableSchema,
   type ReactiveObject,
   getObjectAnnotation,
@@ -12,7 +13,6 @@ import {
   isReactiveObject,
   type S,
 } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 

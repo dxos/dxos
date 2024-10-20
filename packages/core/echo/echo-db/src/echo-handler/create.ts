@@ -3,15 +3,18 @@
 //
 
 import {
-  createReactiveProxy,
-  MutableSchema,
-  type EchoReactiveObject,
-  type ObjectMeta,
+  createProxy,
   getMeta,
-  getProxyHandlerSlot,
+  getProxyHandler,
+  getProxySlot,
+  getProxyTarget,
   getSchema,
   isReactiveObject,
   requireTypeReference,
+  type HasId,
+  MutableSchema,
+  type ObjectMeta,
+  type ReactiveObject,
   type S,
   SchemaValidator,
 } from '@dxos/echo-schema';
@@ -19,7 +22,7 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { ComplexMap, deepMapValues } from '@dxos/util';
 
-import { DATA_NAMESPACE, EchoReactiveHandler, PROPERTY_ID, throwIfCustomClass } from './echo-handler';
+import { DATA_NAMESPACE, PROPERTY_ID, EchoReactiveHandler, throwIfCustomClass } from './echo-handler';
 import {
   type ObjectInternals,
   type ProxyTarget,
@@ -30,41 +33,46 @@ import {
 import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
+// TODO(burdon): Rename EchoObject (clashes with proto def).
+export type EchoReactiveObject<T> = ReactiveObject<T> & HasId;
+
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
-  isReactiveObject(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
+  isReactiveObject(value) && getProxyHandler(value) instanceof EchoReactiveHandler;
 
-export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
+/**
+ * Creates a reactive object.
+ * @internal
+ */
+// TODO(burdon): Remove from public API (just use `create()`?).
+export const createObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
   invariant(!isEchoObject(init));
-
   const schema = getSchema(init);
   if (schema != null) {
     validateSchema(schema);
   }
   validateInitialProps(init);
 
+  const core = new ObjectCore();
   if (isReactiveObject(init)) {
     const proxy = init as any;
+    const meta = getProxyTarget<ObjectMeta>(getMeta(proxy));
 
-    const slot = getProxyHandlerSlot(proxy);
-    const meta = getProxyHandlerSlot<ObjectMeta>(getMeta(proxy)).target!;
-
-    const core = new ObjectCore();
-
-    slot.handler = EchoReactiveHandler.instance;
+    // TODO(burdon): Document.
+    const slot = getProxySlot(proxy);
+    slot.setHandler(EchoReactiveHandler.instance);
     const target = slot.target as ProxyTarget;
-
     target[symbolInternals] = initInternals(core);
 
-    // TODO(dmaretskyi): Does this need to be disposed?
+    // TODO(dmaretskyi): Does this need to be disposed? RB: Probably!
     core.updates.on(() => target[symbolInternals].signal.notifyWrite());
 
     target[symbolPath] = [];
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, proxy);
 
-    // Note: This call is recursively linking all nested objects
-    //       which can cause recursive loops of `createEchoObject` if `EchoReactiveHandler` is not set prior to this call.
-    //       Do not change order.
+    // NOTE: This call is recursively linking all nested objects
+    //  which can cause recursive loops of `createObject` if `EchoReactiveHandler` is not set prior to this call.
+    //  Do not change order.
     initCore(core, target);
     slot.handler.init(target);
 
@@ -72,9 +80,9 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
     if (meta && meta.keys.length > 0) {
       target[symbolInternals].core.setMeta(meta);
     }
+
     return proxy;
   } else {
-    const core = new ObjectCore();
     const target: ProxyTarget = {
       [symbolInternals]: initInternals(core),
       [symbolPath]: [],
@@ -82,12 +90,13 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
       ...(init as any),
     };
 
-    // TODO(dmaretskyi): Does this need to be disposed?
+    // TODO(dmaretskyi): Does this need to be disposed? RB: Probably!
     core.updates.on(() => target[symbolInternals].signal.notifyWrite());
 
     initCore(core, target);
-    const proxy = createReactiveProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
+    const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
     saveTypeInAutomerge(target[symbolInternals], schema);
+
     return proxy;
   }
 };
@@ -98,9 +107,13 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
     target[symbolInternals].core.id = target[PROPERTY_ID];
     delete target[PROPERTY_ID];
   }
+
   core.initNewObject(linkAllNestedProperties(target));
 };
 
+/**
+ * @internal
+ */
 export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): EchoReactiveObject<any> => {
   const target: ProxyTarget = {
     [symbolInternals]: initInternals(core, database),
@@ -111,7 +124,7 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
   // TODO(dmaretskyi): Does this need to be disposed?
   core.updates.on(() => target[symbolInternals].signal.notifyWrite());
 
-  return createReactiveProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
+  return createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
 };
 
 const validateSchema = (schema: S.Schema<any>) => {
@@ -129,6 +142,7 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
   if (seen.has(target)) {
     return;
   }
+
   seen.add(target);
   for (const key in target) {
     const value = target[key];
@@ -138,9 +152,7 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
       if (value instanceof MutableSchema) {
         target[key] = value.serializedSchema;
         validateInitialProps(value.serializedSchema, seen);
-      } else if (isEchoObject(value)) {
-        continue;
-      } else {
+      } else if (!isEchoObject(value)) {
         throwIfCustomClass(key, value);
         validateInitialProps(target[key], seen);
       }
@@ -153,6 +165,7 @@ const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryVa
     if (isReactiveObject(value) as boolean) {
       return EchoReactiveHandler.instance.createRef(target, value);
     }
+
     return recurse(value);
   });
 };
