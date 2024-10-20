@@ -9,8 +9,10 @@ import { directive, type AttributePart, Directive, type DirectiveParameters } fr
 // TODO(burdon): Use with codemirror and other non-react ux.
 // TODO(burdon): Use Theme (mx, etc.)
 
+type DynamicAttributeProps = Record<string, string>;
+
 class DynamicAttributeDirective extends Directive {
-  render(_attributes: { [key: string]: string }) {
+  render(_attributes: DynamicAttributeProps) {
     return html``;
   }
 
@@ -28,7 +30,7 @@ const attr = directive(DynamicAttributeDirective);
 export type ButtonProps = {
   className: string;
   icon: string;
-} & Record<string, any>;
+} & DynamicAttributeProps;
 
 export const button = ({ className, icon, ...attributes }: ButtonProps) => {
   return html`

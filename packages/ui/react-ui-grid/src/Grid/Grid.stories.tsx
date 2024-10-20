@@ -16,13 +16,15 @@ import { Grid, type GridContentProps, type GridRootProps } from './Grid';
 
 type StoryGridProps = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
 
+const CUSTOM_PROP = 'data-story-action';
+
 const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement | null>(null);
   const { tx } = useThemeContext();
 
   const handleClick = useCallback((event: MouseEvent) => {
-    const closestAction = (event.target as HTMLElement).closest('button[data-story-action]');
+    const closestAction = (event.target as HTMLElement).closest(`button[${CUSTOM_PROP}]`);
     if (closestAction) {
       triggerRef.current = closestAction as HTMLDivElement;
       setMenuOpen(true);
@@ -59,19 +61,20 @@ export const Basic: StoryObj<StoryGridProps> = {
     id: 'story',
     initialCells: {
       grid: {
-        // TODO(burdon): Change to ":" delim.
         '1,1': {
           value: 'Weekly sales report',
+          resizeHandle: 'col',
 
           // TODO(burdon): This doesn't work in the storybook, but works in the table plugin.
           //  Throws Internal Error: expected template strings to be an array with a 'raw' field.
+          //  Does this have to be serialized?
           // accessoryHtml:
           //   '<button class="ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-1" data-story-action="menu"><svg><use href="/icons.svg#ph--arrow-right--regular"/></svg></button>',
           accessory: button({
             // TODO(burdon): Space for resize button.
             className: 'ch-button is-4 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-3',
             icon: 'ph--caret-down--regular',
-            'data-story-action': 'menu',
+            [CUSTOM_PROP]: 'menu',
           }),
         },
       },
