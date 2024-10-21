@@ -3,7 +3,7 @@
 //
 
 import { createKeyborg } from 'keyborg';
-import React, { createContext, type PropsWithChildren, useEffect } from 'react';
+import React, { createContext, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { type Density, type Elevation, type ThemeFunction } from '@dxos/react-ui-types';
 
@@ -14,11 +14,14 @@ import { ElevationProvider } from '../ElevationProvider';
 
 export type ThemeMode = 'light' | 'dark';
 
-export interface ThemeContextValue {
+export type ThemeContextValue = {
+  id: string;
   tx: ThemeFunction<any>;
   themeMode: ThemeMode;
   hasIosKeyboard: boolean;
-}
+};
+
+export const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export type ThemeProviderProps = Omit<TranslationsProviderProps, 'children'> &
   Partial<ThemeContextValue> &
@@ -26,20 +29,6 @@ export type ThemeProviderProps = Omit<TranslationsProviderProps, 'children'> &
     rootElevation?: Elevation;
     rootDensity?: Density;
   }>;
-
-export const ThemeContext = createContext<ThemeContextValue>({
-  tx: (_path, defaultClassName, _styleProps, ..._options) => defaultClassName,
-  themeMode: 'dark',
-  hasIosKeyboard: false,
-});
-
-const handleInputModalityChange = (isUsingKeyboard: boolean) => {
-  if (isUsingKeyboard) {
-    document.body.setAttribute('data-is-keyboard', 'true');
-  } else {
-    document.body.removeAttribute('data-is-keyboard');
-  }
-};
 
 export const ThemeProvider = ({
   children,
@@ -51,6 +40,7 @@ export const ThemeProvider = ({
   rootElevation = 'base',
   rootDensity = 'coarse',
 }: ThemeProviderProps) => {
+  const [id] = useState(() => Math.random().toString(36).substring(2, 15));
   useEffect(() => {
     if (document.defaultView) {
       const kb = createKeyborg(document.defaultView);
@@ -60,7 +50,7 @@ export const ThemeProvider = ({
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ tx, themeMode, hasIosKeyboard: hasIosKeyboard() }}>
+    <ThemeContext.Provider value={{ id, tx, themeMode, hasIosKeyboard: hasIosKeyboard() }}>
       <TranslationsProvider
         {...{
           fallback,
@@ -74,4 +64,12 @@ export const ThemeProvider = ({
       </TranslationsProvider>
     </ThemeContext.Provider>
   );
+};
+
+const handleInputModalityChange = (isUsingKeyboard: boolean) => {
+  if (isUsingKeyboard) {
+    document.body.setAttribute('data-is-keyboard', 'true');
+  } else {
+    document.body.removeAttribute('data-is-keyboard');
+  }
 };

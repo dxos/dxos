@@ -4112,9 +4112,6 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../../ui/primitives/react-hooks
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -4215,6 +4212,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
@@ -4305,6 +4305,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
@@ -4333,9 +4336,6 @@ importers:
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:../../common/esbuild-plugins
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
       '@sentry/vite-plugin':
         specifier: ^2.14.0
         version: 2.14.0(encoding@0.1.13)
@@ -5728,9 +5728,6 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
       '@effect/schema':
         specifier: ^0.75.1
         version: 0.75.1(effect@3.9.1)
@@ -5765,6 +5762,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
@@ -6985,9 +6985,6 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -7933,13 +7930,13 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
+    devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
-    devDependencies:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
@@ -8891,9 +8888,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
       '@dxos/react-ui-thread':
         specifier: workspace:*
         version: link:../../ui/react-ui-thread
@@ -8916,6 +8910,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
@@ -9013,12 +9010,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -9035,6 +9026,12 @@ importers:
         specifier: ^3.22.4
         version: 3.22.4
     devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -9959,13 +9956,13 @@ importers:
 
   packages/ui/brand:
     dependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       d3:
         specifier: ^7.9.0
         version: 7.9.0
     devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -10113,6 +10110,9 @@ importers:
 
   packages/ui/react-ui:
     dependencies:
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10255,9 +10255,6 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -10289,6 +10286,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -10316,9 +10316,6 @@ importers:
 
   packages/ui/react-ui-card:
     dependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@radix-ui/react-primitive':
         specifier: ^1.0.2
         version: 1.0.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -10335,6 +10332,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -10404,9 +10404,6 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../react-ui-list
@@ -10441,6 +10438,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -10477,9 +10477,6 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
@@ -10526,6 +10523,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -10616,9 +10616,6 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../primitives/react-hooks
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -10686,6 +10683,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -10709,10 +10709,10 @@ importers:
         version: 14.4.3(@testing-library/dom@8.19.0)
       '@types/chai':
         specifier: ^4.2.15
-        version: 4.3.5
+        version: 4.3.20
       '@types/chai-dom':
         specifier: ^1.11.0
-        version: 1.11.0
+        version: 1.11.3
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -10734,6 +10734,12 @@ importers:
       '@types/react-test-renderer':
         specifier: ^17.0.2
         version: 17.0.9
+      chai:
+        specifier: ^4.4.1
+        version: 4.5.0
+      chai-dom:
+        specifier: ^1.11.0
+        version: 1.12.0(chai@4.5.0)
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -10764,9 +10770,6 @@ importers:
       '@dxos/lit-grid':
         specifier: workspace:*
         version: link:../lit-grid
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
@@ -10786,6 +10789,9 @@ importers:
         specifier: ^1.0.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
     devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -10834,9 +10840,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
@@ -10853,6 +10856,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -10907,9 +10913,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@dxos/react-ui-card':
         specifier: workspace:*
         version: link:../react-ui-card
@@ -10944,6 +10947,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -10986,9 +10992,6 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../react-ui-mosaic
@@ -11014,6 +11017,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -11047,9 +11053,6 @@ importers:
 
   packages/ui/react-ui-searchlist:
     dependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@radix-ui/react-context':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.2.79)(react@18.2.0)
@@ -11063,6 +11066,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -11102,9 +11108,6 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
@@ -11148,6 +11151,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
@@ -11187,13 +11193,13 @@ importers:
 
   packages/ui/react-ui-syntax-highlighter:
     dependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       react-syntax-highlighter:
         specifier: ^15.5.0
         version: 15.5.0(react@18.2.0)
     devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -11242,9 +11248,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../react-ui-searchlist
@@ -11288,6 +11291,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -11318,9 +11324,6 @@ importers:
 
   packages/ui/react-ui-tabs:
     dependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -11349,6 +11352,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -11373,13 +11379,13 @@ importers:
 
   packages/ui/react-ui-text-tooltip:
     dependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@radix-ui/react-compose-refs':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.2.79)(react@18.2.0)
     devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -11477,9 +11483,6 @@ importers:
 
   packages/ui/react-ui-thread:
     dependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
@@ -11511,6 +11514,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -11543,9 +11549,6 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -11553,6 +11556,9 @@ importers:
         specifier: ^4.0.2
         version: 4.0.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
     devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -19952,11 +19958,11 @@ packages:
   '@types/callsite@1.0.31':
     resolution: {integrity: sha512-jrKmIHhuZVGUpOR1s4TgY9BTt/Eh9CFCjHVZ2FsrKmHSo3J/vpl6EpK08SfMLrX2IY1ZEFA+BPRTJQGg4xIHsA==}
 
-  '@types/chai-dom@1.11.0':
-    resolution: {integrity: sha512-Aja99Mmnny+Sz+T2hBK3oEsrcy18yabplT0pGX/QwIke9jMJHdvHlV2f4Tmq5SqxTMYwt1Zjbisv/4r83EUIHw==}
+  '@types/chai-dom@1.11.3':
+    resolution: {integrity: sha512-EUEZI7uID4ewzxnU7DJXtyvykhQuwe+etJ1wwOiJyQRTH/ifMWKX+ghiXkxCUvNJ6IQDodf0JXhuP6zZcy2qXQ==}
 
-  '@types/chai@4.3.5':
-    resolution: {integrity: sha512-mEo1sAde+UCE6b2hxn332f1g1E8WfYRu6p5SvTKr2ZKC1f7gFJXk4h5PyGP9Dt6gCaG8y8XhwnXWC6Iy2cmBng==}
+  '@types/chai@4.3.20':
+    resolution: {integrity: sha512-/pC9HAB5I/xMlc5FP77qjCnI16ChlJfW0tGa0IUcFn38VJrTV6DeZ60NU5KZBtaOZqjdpwTWohz5HU1RrhiYxQ==}
 
   '@types/chess.js@0.13.4':
     resolution: {integrity: sha512-rPmTVffnepx/TVe9ZzOf8bXxyCkYQ+h+VTSiI4JKjoKWzCFkPgPRJL7Cz15qslksOcVGEYCPYLbG0NLO4yzbrg==}
@@ -21296,11 +21302,6 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -21533,6 +21534,9 @@ packages:
 
   assert@2.1.0:
     resolution: {integrity: sha512-eLHpSK/Y4nhMJ07gDaAzoX/XAKS8PSaojml3M0DM4JpV1LAi5JOJ/p6H/XWrl8L+DzVEvVCW1z3vWAaB9oTsQw==}
+
+  assertion-error@1.1.0:
+    resolution: {integrity: sha512-jgsaNduz+ndvGyFt3uSuWqvy4lCnIJiovtouQN5JZHOKCS2QuhEdbcQHFhVksz2N2U9hXJo8odG7ETyWlEeuDw==}
 
   assertion-error@2.0.1:
     resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
@@ -22200,6 +22204,16 @@ packages:
   chacha20-universal@1.0.4:
     resolution: {integrity: sha512-/IOxdWWNa7nRabfe7+oF+jVkGjlr2xUL4J8l/OvzZhj+c9RpMqoo3Dq+5nU1j/BflRV4BKnaQ4+4oH1yBpQG1Q==}
 
+  chai-dom@1.12.0:
+    resolution: {integrity: sha512-pLP8h6IBR8z1AdeQ+EMcJ7dXPdsax/1Q7gdGZjsnAmSBl3/gItQUYSCo32br1qOy4SlcBjvqId7ilAf3uJ2K1w==}
+    engines: {node: '>= 0.12.0'}
+    peerDependencies:
+      chai: '>= 3'
+
+  chai@4.5.0:
+    resolution: {integrity: sha512-RITGBfijLkBddZvnn8jdqoTypxvqbOLYQkGGxXzeFjVHvudaPw0HNFD9x928/eUwYWd2dPCugVqspGALTZZQKw==}
+    engines: {node: '>=4'}
+
   chai@5.1.1:
     resolution: {integrity: sha512-pT1ZgP8rPNqUgieVaEY+ryQr6Q4HXNg8Ei9UnLUrjN4IA7dvQC5JB+/kxVcPNDHyBcc/26CXPkbNzq3qwrOEKA==}
     engines: {node: '>=12'}
@@ -22279,6 +22293,9 @@ packages:
     resolution: {integrity: sha512-oBwHRmovGbPDS1h8PhpttnlKjI6eiJO13v4h+xz+mfbHhIc+iNF9xuMobCIFMKFH7rlVWi5TJAOIxoXyGElYYg==}
     peerDependencies:
       chart.js: ^3.0.0
+
+  check-error@1.0.3:
+    resolution: {integrity: sha512-iKEoDYaRmd1mxM90a2OEfWhjsjPpYPuQ+lMYsoxB126+t8fw7ySEO48nmDg5COTjxDI65/Y2OWpeEHk3ZOe8zg==}
 
   check-error@2.1.1:
     resolution: {integrity: sha512-OAlb+T7V4Op9OwdkjmguYRqncdlx5JiofwOAUkmTF+jNdHwzTaTs4sRAGpzLF3oOz5xAyDGrPgeIDFQmDOTiJw==}
@@ -23364,6 +23381,10 @@ packages:
 
   deep-diff@1.0.2:
     resolution: {integrity: sha512-aWS3UIVH+NPGCD1kki+DCU9Dua032iSsO43LqQpcs4R3+dVv7tX0qBGjiVHJHjplsoUM2XRO/KB92glqc68awg==}
+
+  deep-eql@4.1.4:
+    resolution: {integrity: sha512-SUwdGfqdKOwxCPeVYjwSyRpJ7Z+fhpwIAtmCUdZIWZ/YP5R9WAsyuSgpLVDi9bjWoN2LXHNss/dk3urXtdQxGg==}
+    engines: {node: '>=6'}
 
   deep-eql@5.0.2:
     resolution: {integrity: sha512-h5k/5U50IJJFpzfL6nO9jaaumfjO/f2NjK/oYB2Djzm4p9L+3T9qWpZqZ2hAbLPuuYq9wrU08WQyBTL5GbPk5Q==}
@@ -28687,6 +28708,9 @@ packages:
   pathe@1.1.2:
     resolution: {integrity: sha512-whLdWMYL2TwI08hn8/ZqAbrVemu0LNaNNJZX73O6qaIdCTfXutsLhMkjdENX0qhsQ9uIimo4/aQOmXkoon2nDQ==}
 
+  pathval@1.1.1:
+    resolution: {integrity: sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==}
+
   pathval@2.0.0:
     resolution: {integrity: sha512-vE7JKRyES09KiunauX7nd2Q9/L7lhok4smP9RZTDeD4MVs72Dp2qNFVz39Nz5a0FVEW0BJR6C0DYrq6unoziZA==}
     engines: {node: '>= 14.16'}
@@ -31592,6 +31616,10 @@ packages:
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
     engines: {node: '>= 0.8.0'}
+
+  type-detect@4.1.0:
+    resolution: {integrity: sha512-Acylog8/luQ8L7il+geoSxhEkazvkslg7PSNKOX59mbB9cOveP5aq9h74Y7YU8yDpJwetzQQrfIwtf4Wp4LKcw==}
+    engines: {node: '>=4'}
 
   type-fest@0.12.0:
     resolution: {integrity: sha512-53RyidyjvkGpnWPMF9bQgFtWp+Sl8O2Rp13VavmJgfAP9WWG6q6TkrKU8iyJdnwnfgHI6k2hTlgqH4aSdjoTbg==}
@@ -44289,11 +44317,11 @@ snapshots:
 
   '@types/callsite@1.0.31': {}
 
-  '@types/chai-dom@1.11.0':
+  '@types/chai-dom@1.11.3':
     dependencies:
-      '@types/chai': 4.3.5
+      '@types/chai': 4.3.20
 
-  '@types/chai@4.3.5': {}
+  '@types/chai@4.3.20': {}
 
   '@types/chess.js@0.13.4': {}
 
@@ -46169,8 +46197,8 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1(ajv@8.12.0):
-    optionalDependencies:
+  ajv-formats@2.1.1:
+    dependencies:
       ajv: 8.12.0
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -46443,6 +46471,8 @@ snapshots:
       object-is: 1.1.5
       object.assign: 4.1.4
       util: 0.12.5
+
+  assertion-error@1.1.0: {}
 
   assertion-error@2.0.1: {}
 
@@ -47220,6 +47250,20 @@ snapshots:
     dependencies:
       nanoassert: 2.0.0
 
+  chai-dom@1.12.0(chai@4.5.0):
+    dependencies:
+      chai: 4.5.0
+
+  chai@4.5.0:
+    dependencies:
+      assertion-error: 1.1.0
+      check-error: 1.0.3
+      deep-eql: 4.1.4
+      get-func-name: 2.0.2
+      loupe: 2.3.7
+      pathval: 1.1.1
+      type-detect: 4.1.0
+
   chai@5.1.1:
     dependencies:
       assertion-error: 2.0.1
@@ -47308,6 +47352,10 @@ snapshots:
   chartjs-plugin-streaming@2.0.0(chart.js@3.9.1):
     dependencies:
       chart.js: 3.9.1
+
+  check-error@1.0.3:
+    dependencies:
+      get-func-name: 2.0.2
 
   check-error@2.1.1: {}
 
@@ -47697,7 +47745,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv-formats: 2.1.1
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -48525,6 +48573,10 @@ snapshots:
       mimic-response: 3.1.0
 
   deep-diff@1.0.2: {}
+
+  deep-eql@4.1.4:
+    dependencies:
+      type-detect: 4.1.0
 
   deep-eql@5.0.2: {}
 
@@ -55167,6 +55219,8 @@ snapshots:
 
   pathe@1.1.2: {}
 
+  pathval@1.1.1: {}
+
   pathval@2.0.0: {}
 
   pbf@3.2.1:
@@ -57106,7 +57160,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv-formats: 2.1.1
       ajv-keywords: 5.1.0(ajv@8.12.0)
 
   scroll@3.0.1: {}
@@ -58760,6 +58814,8 @@ snapshots:
   type-check@0.4.0:
     dependencies:
       prelude-ls: 1.2.1
+
+  type-detect@4.1.0: {}
 
   type-fest@0.12.0: {}
 

@@ -25,6 +25,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-input": "workspace:*",

@@ -115,7 +115,7 @@ export const Surface = forwardRef<HTMLElement, SurfaceProps>(
   },
 );
 
-const SurfaceContext = createContext<SurfaceProps | null>(null);
+const SurfaceContext = createContext<SurfaceProps | undefined>(undefined);
 
 export const useSurface = (): SurfaceProps =>
   useContext(SurfaceContext) ?? raise(new Error('Surface context not found'));
@@ -138,7 +138,7 @@ const SurfaceResolver = forwardRef<HTMLElement, SurfaceProps>((props, forwardedR
 const resolveNodes = (
   components: Record<string, SurfaceComponent>,
   props: SurfaceProps,
-  context: SurfaceProps | null,
+  context: SurfaceProps | undefined,
   forwardedRef: ForwardedRef<HTMLElement>,
 ): ReactNode[] => {
   const data = {

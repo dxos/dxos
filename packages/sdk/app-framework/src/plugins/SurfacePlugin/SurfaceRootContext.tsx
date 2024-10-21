@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createContext, useContext, type Context, type JSX, type Provider, type ForwardedRef } from 'react';
+import { createContext, useContext, type JSX, type ForwardedRef } from 'react';
 
 import { raise } from '@dxos/debug';
 
@@ -50,8 +50,8 @@ export type SurfaceRootContext = {
   debugInfo?: Map<string, DebugInfo>;
 };
 
-const SurfaceRootContext: Context<SurfaceRootContext | null> = createContext<SurfaceRootContext | null>(null);
+const SurfaceRootContext = createContext<SurfaceRootContext | undefined>(undefined);
 
 export const useSurfaceRoot = () => useContext(SurfaceRootContext) ?? raise(new Error('Missing SurfaceRootContext'));
 
-export const SurfaceProvider: Provider<SurfaceRootContext | null> = SurfaceRootContext.Provider;
+export const SurfaceProvider = SurfaceRootContext.Provider;
