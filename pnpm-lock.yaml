@@ -446,9 +446,6 @@ importers:
       '@types/markdown-it-container':
         specifier: ^2.0.9
         version: 2.0.9
-      '@types/node':
-        specifier: 22.5.5
-        version: 22.5.5
       '@types/prettier':
         specifier: ^2.7.3
         version: 2.7.3
@@ -995,9 +992,6 @@ importers:
       '@dxos/cli':
         specifier: workspace:*
         version: link:../../devtools/cli
-      '@types/node':
-        specifier: 22.5.5
-        version: 22.5.5
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -1050,9 +1044,6 @@ importers:
       '@types/lodash.merge':
         specifier: ^4.6.6
         version: 4.6.7
-      '@types/node':
-        specifier: 22.5.5
-        version: 22.5.5
       tmp-promise:
         specifier: ^3.0.3
         version: 3.0.3
@@ -1075,9 +1066,6 @@ importers:
         specifier: ~3.4.1
         version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(typescript@5.6.2))
     devDependencies:
-      '@types/node':
-        specifier: 22.5.5
-        version: 22.5.5
       postcss:
         specifier: ^8.4.41
         version: 8.4.41
@@ -1100,9 +1088,6 @@ importers:
         specifier: ~3.4.1
         version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(typescript@5.6.2))
     devDependencies:
-      '@types/node':
-        specifier: 22.5.5
-        version: 22.5.5
       postcss:
         specifier: ^8.4.41
         version: 8.4.41
@@ -1413,10 +1398,6 @@ importers:
       hypercore-crypto:
         specifier: ^2.3.0
         version: 2.3.2
-    devDependencies:
-      '@types/node':
-        specifier: 22.5.5
-        version: 22.5.5
 
   packages/common/crypto-names:
     dependencies:
