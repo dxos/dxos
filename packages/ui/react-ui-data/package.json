@@ -36,7 +36,6 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -61,6 +60,7 @@
     "vite": "5.4.7"
   },
   "peerDependencies": {
+    "@dxos/react-ui-theme": "workspace:*",
     "@effect/schema": "^0.75.1",
     "@phosphor-icons/react": "^2.1.5",
     "effect": "^3.9.1",

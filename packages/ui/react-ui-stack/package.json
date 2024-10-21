@@ -45,7 +45,6 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-deck": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@effect/schema": "^0.75.1",
     "@fluentui/react-tabster": "^9.19.0",
     "@radix-ui/primitive": "^1.0.0",
@@ -62,6 +61,7 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -75,6 +75,7 @@
   "peerDependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"

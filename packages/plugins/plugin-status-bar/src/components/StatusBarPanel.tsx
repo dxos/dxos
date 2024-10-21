@@ -20,7 +20,7 @@ export const StatusBarPanel = () => {
         <StatusBar.EndContent>
           <Popover.Trigger asChild>
             <StatusBar.Button aria-label='Give feedback about composer' data-joyride='welcome/feedback'>
-              <Icon icon='ph--paper-plane-tile--regular' size={4} />
+              <Icon icon='ph--paper-plane-tilt--regular' size={4} />
               <StatusBar.Text classNames='hidden sm:block'>Feedback</StatusBar.Text>
             </StatusBar.Button>
           </Popover.Trigger>

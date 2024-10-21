@@ -96,6 +96,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
     localStorage?.setItem(`${LOCAL_STORAGE_KEY}/${id}`, String(open));
   };
 
+  // TODO(burdon): Add Surface debug.
   return (
     <DensityProvider density='fine'>
       <div className={mx('flex flex-col w-full h-full divide-y divide-separator')}>

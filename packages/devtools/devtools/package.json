@@ -44,6 +44,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/rpc": "workspace:*",
@@ -80,7 +81,6 @@
     "@babel/core": "^7.18.13",
     "@dxos/config": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/lodash.defaultsdeep": "^4.6.6",
@@ -101,7 +101,6 @@
   },
   "peerDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
