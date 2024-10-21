@@ -22,13 +22,15 @@ export type MarkdownContainerProps = Pick<
   settings: MarkdownSettingsProps;
 };
 
+// TODO(burdon): Move toolbar here.
 // TODO(burdon): Factor out difference for ECHO and non-ECHO objects; i.e., single component.
-const MarkdownContainer = ({ role, id, object, settings, ...props }: MarkdownContainerProps) => {
+const MarkdownContainer = ({ id, role, object, settings, ...props }: MarkdownContainerProps) => {
   const scrollPastEnd = role === 'article';
   if (object instanceof DocumentType) {
     return (
       <DocumentEditor
         id={fullyQualifiedId(object)}
+        role={role}
         document={object}
         settings={settings}
         scrollPastEnd={scrollPastEnd}
@@ -39,6 +41,7 @@ const MarkdownContainer = ({ role, id, object, settings, ...props }: MarkdownCon
     return (
       <MarkdownEditor
         id={id}
+        role={role}
         initialValue={object.text}
         toolbar={settings.toolbar}
         scrollPastEnd={scrollPastEnd}
