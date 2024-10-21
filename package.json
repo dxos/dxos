@@ -148,7 +148,6 @@
     "pnpm": "^9.0.0"
   },
   "pnpm": {
-    "//": "NOTE: @types/node required for Cloudflare.",
     "overrides": {
       "ipfs-utils": "9.0.14",
       "micromatch": "^4.0.8",
