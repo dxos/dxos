@@ -15,7 +15,7 @@ export default template.define.script({
         `,
         onClientInitialized: '',
         onCreateIdentity: `
-          await client.spaces.isReady.wait();
+          await client.spaces.waitUntilReady();
           await client.spaces.default.waitUntilReady();
           client.spaces.default.db.add(create(Expando, { type: 'counter', count: 0 }));
         `,
