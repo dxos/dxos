@@ -96,7 +96,7 @@ export const Surface = forwardRef<HTMLElement, SurfaceProps>(
       };
     }, [id]);
     if (debugInfo?.get(id)) {
-      debugInfo.get(id)!.renderCount++;
+      debugInfo.get(id)!.renderCount++; // TODO(burdon): ???
     }
 
     const context = useContext(SurfaceContext);
@@ -159,7 +159,6 @@ const resolveNodes = (
     .sort(([, a], [, b]) => {
       const aDisposition = a.disposition ?? 'default';
       const bDisposition = b.disposition ?? 'default';
-
       if (aDisposition === bDisposition) {
         return 0;
       } else if (aDisposition === 'hoist' || bDisposition === 'fallback') {

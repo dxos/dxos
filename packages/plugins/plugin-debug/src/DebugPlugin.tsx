@@ -233,8 +233,13 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             if (settings.values.wireframe) {
               if (role === 'main' || role === 'article' || role === 'section') {
                 const primary = data.active ?? data.object;
-                if (!(primary instanceof CollectionType)) {
-                  return <Wireframe label={role} data={data} className='row-span-2 overflow-hidden' />;
+                const isCollection = primary instanceof CollectionType;
+                // TODO(burdon): Move into Container abstraction.
+                if (!isCollection) {
+                  return {
+                    node: <Wireframe label={role} data={data} classNames='row-span-2 overflow-hidden' />,
+                    disposition: 'hoist',
+                  };
                 }
               }
             }

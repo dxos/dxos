@@ -53,15 +53,15 @@ export default defineConfig((env) => ({
   esbuild: {
     keepNames: true,
   },
-  optimizeDeps: {
-    include: ['react', 'react-dom', '@dxos/react-ui', '@dxos/react-ui-theme'],
-  },
+  // optimizeDeps: {
+  //   include: ['react', 'react-dom', '@dxos/react-ui', '@dxos/react-ui-theme'],
+  // },
   build: {
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
     target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
     rollupOptions: {
-      // NOTE: Set cache to fix to help debug flaky builds.
+      // NOTE: Set cache to `false` to help debug flaky builds.
       // cache: false,
       input: {
         internal: resolve(__dirname, './internal.html'),
@@ -73,7 +73,7 @@ export default defineConfig((env) => ({
       output: {
         chunkFileNames,
         manualChunks: {
-          react: ['react', 'react-dom', '@dxos/react-ui', '@dxos/react-ui-theme'],
+          react: ['react', 'react-dom'],
         },
       },
       external: [
