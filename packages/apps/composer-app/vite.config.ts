@@ -53,9 +53,9 @@ export default defineConfig((env) => ({
   esbuild: {
     keepNames: true,
   },
-  // optimizeDeps: {
-  //   include: ['react', 'react-dom', '@dxos/react-ui', '@dxos/react-ui-theme'],
-  // },
+  optimizeDeps: {
+    include: ['react', 'react-dom', '@dxos/react-ui', '@dxos/react-ui-theme'],
+  },
   build: {
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
