@@ -397,9 +397,8 @@ export class ServiceContext extends Resource {
       edgeIdentity = await createEphemeralEdgeIdentity();
     }
 
-    if (this._edgeConnection) {
-      this._edgeConnection.setIdentity(edgeIdentity);
-    }
+    this._edgeConnection?.setIdentity(edgeIdentity);
+    this._edgeHttpClient?.setIdentity(edgeIdentity);
     this.networkManager.setPeerInfo({
       identityKey: edgeIdentity.identityKey,
       peerKey: edgeIdentity.peerKey,
