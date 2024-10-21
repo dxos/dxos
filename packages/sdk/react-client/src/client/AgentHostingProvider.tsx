@@ -21,7 +21,7 @@ export const AgentHostingContext = createContext<AgentHostingProviderClient | nu
  * @constructor
  * @deprecated
  */
-export const AgentHostingProvider = (props: PropsWithChildren<{}>) => {
+export const AgentHostingProvider = (props: PropsWithChildren) => {
   const client = useClient();
   const [agentHostingProviderClient] = useState(makeClient(client));
   return (

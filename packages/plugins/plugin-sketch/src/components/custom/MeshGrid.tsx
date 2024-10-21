@@ -5,7 +5,7 @@
 import { type TLGridProps } from '@tldraw/editor';
 import { useDefaultColorTheme } from '@tldraw/tldraw';
 import { modulate } from '@tldraw/utils';
-import React from 'react';
+import React, { useId } from 'react';
 
 const GRID_STEPS = [
   { min: -1, mid: 0.15, step: 64 },
@@ -14,10 +14,10 @@ const GRID_STEPS = [
   { min: 0.7, mid: 2.5, step: 1 },
 ];
 
-export const MeshGrid: React.FC<TLGridProps> = ({ x, y, z, size }) => {
+export const MeshGrid = ({ x, y, z, size }: TLGridProps) => {
   const theme = useDefaultColorTheme();
   const stroke = theme.grey.solid;
-  const id = React.useId();
+  const id = useId();
 
   return (
     <svg id={id} className='tl-grid' version='1.1' xmlns='http://www.w3.org/2000/svg'>

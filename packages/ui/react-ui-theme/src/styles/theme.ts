@@ -58,6 +58,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   tooltip: tooltipTheme,
   treegrid: treegridTheme,
 
+  // TODO(burdon): Is this out of order for a reason?
   hue: hueTheme,
 };
 

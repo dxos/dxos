@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
-// Lazily load components for content surfaces.
-export const KanbanMain = React.lazy(() => import('./KanbanMain'));
+export const KanbanMain = lazy(() => import('./KanbanMain'));

@@ -3,15 +3,18 @@
 //
 
 import React, {
-  forwardRef,
-  type ReactNode,
   Fragment,
   type ForwardedRef,
   type PropsWithChildren,
-  isValidElement,
+  type ReactNode,
   Suspense,
+  createContext,
+  forwardRef,
+  isValidElement,
+  useContext,
+  useEffect,
+  useState,
 } from 'react';
-import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
@@ -84,6 +87,18 @@ export type SurfaceProps = PropsWithChildren<{
 export const Surface = forwardRef<HTMLElement, SurfaceProps>(
   ({ role, name = role, fallback, placeholder, ...rest }, forwardedRef) => {
     const props = { role, name, fallback, ...rest };
+    const { debugInfo } = useSurfaceRoot();
+    const [id] = useState<string>(Math.random().toString(36).slice(2));
+    useEffect(() => {
+      debugInfo?.set(id, { id, created: Date.now(), name, role, renderCount: 0 });
+      return () => {
+        debugInfo?.delete(id);
+      };
+    }, [id]);
+    if (debugInfo?.get(id)) {
+      debugInfo.get(id)!.renderCount++;
+    }
+
     const context = useContext(SurfaceContext);
     const data = props.data ?? ((name && context?.surfaces?.[name]?.data) || {});
 
@@ -100,7 +115,7 @@ export const Surface = forwardRef<HTMLElement, SurfaceProps>(
   },
 );
 
-const SurfaceContext = createContext<SurfaceProps | null>(null);
+const SurfaceContext = createContext<SurfaceProps | undefined>(undefined);
 
 export const useSurface = (): SurfaceProps =>
   useContext(SurfaceContext) ?? raise(new Error('Surface context not found'));
@@ -123,7 +138,7 @@ const SurfaceResolver = forwardRef<HTMLElement, SurfaceProps>((props, forwardedR
 const resolveNodes = (
   components: Record<string, SurfaceComponent>,
   props: SurfaceProps,
-  context: SurfaceProps | null,
+  context: SurfaceProps | undefined,
   forwardedRef: ForwardedRef<HTMLElement>,
 ): ReactNode[] => {
   const data = {

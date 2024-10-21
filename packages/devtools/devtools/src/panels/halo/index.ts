@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
-export const CredentialsPanel = React.lazy(() => import('./CredentialsPanel'));
-export const DeviceListPanel = React.lazy(() => import('./DeviceListPanel'));
-export const IdentityPanel = React.lazy(() => import('./IdentityPanel'));
-export const KeyringPanel = React.lazy(() => import('./KeyringPanel'));
+export const CredentialsPanel = lazy(() => import('./CredentialsPanel'));
+export const DeviceListPanel = lazy(() => import('./DeviceListPanel'));
+export const IdentityPanel = lazy(() => import('./IdentityPanel'));
+export const KeyringPanel = lazy(() => import('./KeyringPanel'));

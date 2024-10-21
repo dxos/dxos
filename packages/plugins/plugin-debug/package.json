@@ -68,7 +68,6 @@
     "react-syntax-highlighter": "^15.5.0"
   },
   "devDependencies": {
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

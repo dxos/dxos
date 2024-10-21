@@ -27,7 +27,9 @@ import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/type
 import { faker } from '@dxos/random';
 import { createDocAccessor, type Space } from '@dxos/react-client/echo';
 
-// TODO(wittjosiah): Remove? Just use typenames.
+// TODO(burdon): Move to echo-generator.
+
+// TODO(wittjosiah): Remove? Just use DXNs.
 export enum SchemasNames {
   document = 'dxos.org/type/Document',
   diagram = 'dxos.org/type/Diagram',

@@ -14,11 +14,19 @@ import { ElevationProvider } from '../ElevationProvider';
 
 export type ThemeMode = 'light' | 'dark';
 
-export interface ThemeContextValue {
+export type ThemeContextValue = {
   tx: ThemeFunction<any>;
   themeMode: ThemeMode;
   hasIosKeyboard: boolean;
-}
+};
+
+const id = Math.random();
+/**
+ * @internal
+ */
+export const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
+(ThemeContext as any).__id = id;
+console.log('@@@@@@@@@@@@@@@@@@@@@@', { ThemeContext });
 
 export type ThemeProviderProps = Omit<TranslationsProviderProps, 'children'> &
   Partial<ThemeContextValue> &
@@ -26,20 +34,6 @@ export type ThemeProviderProps = Omit<TranslationsProviderProps, 'children'> &
     rootElevation?: Elevation;
     rootDensity?: Density;
   }>;
-
-export const ThemeContext = createContext<ThemeContextValue>({
-  tx: (_path, defaultClassName, _styleProps, ..._options) => defaultClassName,
-  themeMode: 'dark',
-  hasIosKeyboard: false,
-});
-
-const handleInputModalityChange = (isUsingKeyboard: boolean) => {
-  if (isUsingKeyboard) {
-    document.body.setAttribute('data-is-keyboard', 'true');
-  } else {
-    document.body.removeAttribute('data-is-keyboard');
-  }
-};
 
 export const ThemeProvider = ({
   children,
@@ -49,8 +43,9 @@ export const ThemeProvider = ({
   tx = (_path, defaultClassName, _styleProps, ..._options) => defaultClassName,
   themeMode = 'dark',
   rootElevation = 'base',
-  rootDensity = 'coarse',
+  rootDensity = 'coarse', // TODO(burdon): Change to fine and remove DensityProvider usage elsewhere.
 }: ThemeProviderProps) => {
+  console.log('################################', id);
   useEffect(() => {
     if (document.defaultView) {
       const kb = createKeyborg(document.defaultView);
@@ -74,4 +69,12 @@ export const ThemeProvider = ({
       </TranslationsProvider>
     </ThemeContext.Provider>
   );
+};
+
+const handleInputModalityChange = (isUsingKeyboard: boolean) => {
+  if (isUsingKeyboard) {
+    document.body.setAttribute('data-is-keyboard', 'true');
+  } else {
+    document.body.removeAttribute('data-is-keyboard');
+  }
 };

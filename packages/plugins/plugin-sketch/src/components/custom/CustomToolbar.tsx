@@ -33,11 +33,11 @@ import {
   useTools,
   XBoxToolbarItem,
 } from '@tldraw/tldraw';
-import React from 'react';
+import React, { memo } from 'react';
 
 type ToolSplice = { toolId: string; position: number };
 
-const DefaultToolbarContent = React.memo(({ toolsToSplice }: { toolsToSplice: ToolSplice[] }) => {
+const DefaultToolbarContent = memo(({ toolsToSplice }: { toolsToSplice: ToolSplice[] }) => {
   const tools = useTools();
 
   const toolNodes = [

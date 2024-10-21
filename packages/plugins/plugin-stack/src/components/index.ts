@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
-// Lazily load components for content surfaces.
-export const StackMain = React.lazy(() => import('./StackMain'));
+export const StackMain = lazy(() => import('./StackMain'));
 
 export * from './StackSettings';
 export * from './AddSectionDialog';

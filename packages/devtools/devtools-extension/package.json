@@ -24,6 +24,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/shell": "workspace:*",
     "react": "~18.2.0",

@@ -44,10 +44,8 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
@@ -67,9 +65,7 @@
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
     "luxon": "^3.4.4",
-    "react": "~18.2.0",
     "react-charts": "beta",
-    "react-dom": "~18.2.0",
     "react-drag-drop-files": "^2.3.8",
     "react-is": "~18.2.0",
     "react-json-tree": "^0.18.0",
@@ -84,6 +80,7 @@
     "@babel/core": "^7.18.13",
     "@dxos/config": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/lodash.defaultsdeep": "^4.6.6",
@@ -103,6 +100,10 @@
     "workbox-window": "^7.0.0"
   },
   "peerDependencies": {
-    "@babel/core": "^7.18.13"
+    "@babel/core": "^7.18.13",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   }
 }

@@ -7,4 +7,5 @@ export * from './provides';
 
 export * from './ErrorBoundary';
 export * from './Surface';
+export * from './SurfaceDebug';
 export * from './SurfaceRootContext';

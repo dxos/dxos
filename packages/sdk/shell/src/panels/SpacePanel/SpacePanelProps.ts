@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type cloneElement } from 'react';
+import { type FC, type cloneElement } from 'react';
 import { type SingleOrArray, type Event } from 'xstate';
 
 import { type Space } from '@dxos/react-client/echo';
@@ -23,9 +23,9 @@ export type SpacePanelImplProps = {
   authCode?: string;
   onDone?: () => void;
   doneActionParent?: Parameters<typeof cloneElement>[0];
-  DoneAction?: React.FC;
-  SpaceManager?: React.FC<SpaceManagerProps>;
-  InvitationManager?: React.FC<InvitationManagerProps>;
+  DoneAction?: FC;
+  SpaceManager?: FC<SpaceManagerProps>;
+  InvitationManager?: FC<InvitationManagerProps>;
 };
 
 export type SpacePanelProps = Pick<SpacePanelImplProps, 'space'> &

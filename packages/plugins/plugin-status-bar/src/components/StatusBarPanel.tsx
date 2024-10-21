@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DiscordLogo, PaperPlaneTilt } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { Popover } from '@dxos/react-ui';
+import { Icon, Popover } from '@dxos/react-ui';
 
 import { FeedbackForm } from './FeedbackForm';
 import { StatusBar } from './StatusBar';
@@ -21,14 +20,14 @@ export const StatusBarPanel = () => {
         <StatusBar.EndContent>
           <Popover.Trigger asChild>
             <StatusBar.Button aria-label='Give feedback about composer' data-joyride='welcome/feedback'>
-              <PaperPlaneTilt />
+              <Icon icon='ph--paper-plane-tilt--regular' size={4} />
               <StatusBar.Text classNames='hidden sm:block'>Feedback</StatusBar.Text>
             </StatusBar.Button>
           </Popover.Trigger>
           {/* TODO(zan): Configure this label? */}
           <StatusBar.Button aria-label='Open DXOS Discord' asChild>
             <a href='https://dxos.org/discord' target='_blank' rel='noopener noreferrer'>
-              <DiscordLogo />
+              <Icon icon='ph--discord-logo--regular' size={4} />
               <StatusBar.Text classNames='hidden sm:block'>Discord</StatusBar.Text>
             </a>
           </StatusBar.Button>

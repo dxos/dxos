@@ -3,7 +3,7 @@
 //
 
 import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
-import React, { forwardRef, useCallback } from 'react';
+import React, { type ReactNode, forwardRef, useCallback } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { List, useTranslation } from '@dxos/react-ui';
@@ -44,7 +44,7 @@ export type StackProps<TData extends StackSectionContent = StackSectionContent> 
     items?: StackSectionItem[];
     separation?: boolean; // TODO(burdon): Style.
     onCollapseSection?: (id: string, collapsed: boolean) => void;
-    emptyComponent?: React.ReactNode;
+    emptyComponent?: ReactNode;
   };
 
 export const Stack = ({

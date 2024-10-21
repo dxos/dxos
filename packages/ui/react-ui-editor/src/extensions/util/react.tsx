@@ -22,6 +22,7 @@ export const createElement = (tag: string, options?: ElementOptions, children?: 
   if (children) {
     el.append(...(Array.isArray(children) ? children : [children]));
   }
+
   return el;
 };
 

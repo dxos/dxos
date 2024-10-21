@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
 export * from './FilesSettings';
 
-// Lazily load components for content surfaces.
-export const LocalFileMain = React.lazy(() => import('./LocalFileMain'));
+export const LocalFileMain = lazy(() => import('./LocalFileMain'));

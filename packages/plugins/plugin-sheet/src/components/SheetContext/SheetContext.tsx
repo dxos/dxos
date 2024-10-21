@@ -38,7 +38,7 @@ export type SheetContextValue = {
   decorations: ReturnType<typeof createDecorations>;
 };
 
-const SheetContext = createContext<SheetContextValue | null>(null);
+const SheetContext = createContext<SheetContextValue | undefined>(undefined);
 
 export const useSheetContext = (): SheetContextValue => {
   const context = useContext(SheetContext);

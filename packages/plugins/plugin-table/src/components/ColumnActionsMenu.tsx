@@ -18,7 +18,7 @@ type ColumnActionsMenuProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-export const ColumnActionsMenu: React.FC<ColumnActionsMenuProps> = ({ tableModel, columnId, open, onOpenChange }) => {
+export const ColumnActionsMenu = ({ tableModel, columnId, open, onOpenChange }: ColumnActionsMenuProps) => {
   const { tx } = useThemeContext();
   const { t } = useTranslation(TABLE_PLUGIN);
   const dispatch = useIntentDispatcher();
