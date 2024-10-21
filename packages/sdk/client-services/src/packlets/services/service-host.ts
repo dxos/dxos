@@ -26,6 +26,7 @@ import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
 import { ServiceRegistry } from './service-registry';
+import { EdgeAgentServiceImpl } from '../agents';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
 import {
@@ -292,6 +293,11 @@ export class ClientServicesHost {
       return this._serviceContext.dataSpaceManager!;
     };
 
+    const agentManagerProvider = async () => {
+      await this._serviceContext.initialized.wait();
+      return this._serviceContext.edgeAgentManager!;
+    };
+
     const identityService = new IdentityServiceImpl(
       this._serviceContext.identityManager,
       this._serviceContext.keyring,
@@ -333,6 +339,8 @@ export class ClientServicesHost {
         config: this._config,
         context: this._serviceContext,
       }),
+
+      EdgeAgentService: new EdgeAgentServiceImpl(agentManagerProvider),
     });
 
     await this._serviceContext.open(ctx);

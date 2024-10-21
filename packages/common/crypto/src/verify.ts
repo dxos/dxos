@@ -33,18 +33,3 @@ export const verifySignature = async (
     message,
   );
 };
-
-/**
- * Creates an Ed25519 (libsodium keypair format) signature.
- */
-export const ed25519Signature = async (secretKey: Uint8Array, message: Uint8Array): Promise<Uint8Array> => {
-  const curve = 'Ed25519';
-  const privateKeyJwk = {
-    kty: 'OKP',
-    crv: curve,
-    x: Buffer.from(secretKey.subarray(32)).toString('base64url'),
-    d: Buffer.from(secretKey.subarray(0, 32)).toString('base64url'),
-  };
-  const key = await subtleCrypto.importKey('jwk', privateKeyJwk, { name: curve }, true, ['sign']);
-  return new Uint8Array(await subtleCrypto.sign({ name: curve, hash: 'SHA-256' }, key, message));
-};

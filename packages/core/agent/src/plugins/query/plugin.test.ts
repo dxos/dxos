@@ -7,10 +7,10 @@ import { afterAll, onTestFinished, beforeAll, describe, expect, test } from 'vit
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
+import { type EchoReactiveObject, type ReactiveObject } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { Filter, type Query } from '@dxos/echo-db';
 import { TestSchemaType, createSpaceObjectGenerator } from '@dxos/echo-generator';
-import { type EchoReactiveObject, type ReactiveObject } from '@dxos/echo-schema';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { QueryReactivity, type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';

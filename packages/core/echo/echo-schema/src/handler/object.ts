@@ -7,35 +7,37 @@ import { ulid } from 'ulidx';
 import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
+import { Expando } from './expando';
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
-import { getEchoObjectAnnotation } from '../ast';
-import { Expando } from '../expando';
-import { createReactiveProxy, getProxyHandlerSlot, isValidProxyTarget, type ReactiveHandler } from '../proxy';
+import { defineHiddenProperty } from './utils';
+import { getObjectAnnotation } from '../ast';
+import { createProxy, isValidProxyTarget } from '../proxy';
 import { type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject } from '../types';
-import { defineHiddenProperty } from '../utils';
+
+export const createObjectId = () => ulid();
 
 /**
  * Creates a reactive object from a plain Javascript object.
  * Optionally provides a TS-effect schema.
  */
 // TODO(dmaretskyi): Deep mutability.
+// TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 export const create: {
   <T extends {}>(obj: T): ReactiveObject<T>;
   <T extends {}>(schema: typeof Expando, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<Expando>;
   <T extends {}>(schema: S.Schema<T, any>, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T>;
 } = <T extends {}>(objOrSchema: S.Schema<T, any> | T, obj?: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T> => {
   if (obj && (objOrSchema as any) !== Expando) {
-    return _create<T>({ ...obj } as T, meta, objOrSchema as S.Schema<T, any>);
+    return createReactiveObject<T>({ ...obj } as T, meta, objOrSchema as S.Schema<T, any>);
   } else if (obj && (objOrSchema as any) === Expando) {
-    return _create<T>({ ...obj } as T, meta, undefined, { expando: true });
+    return createReactiveObject<T>({ ...obj } as T, meta, undefined, { expando: true });
   } else {
-    // TODO(burdon): Breaks if cloned?
-    return _create<T>(objOrSchema as T, meta);
+    return createReactiveObject<T>(objOrSchema as T, meta);
   }
 };
 
-const _create = <T extends {}>(
+const createReactiveObject = <T extends {}>(
   obj: T,
   meta?: ObjectMeta,
   schema?: S.Schema<T>,
@@ -46,23 +48,21 @@ const _create = <T extends {}>(
   }
 
   if (schema) {
-    const shouldGenerateId = options?.expando || getEchoObjectAnnotation(schema);
+    const shouldGenerateId = options?.expando || getObjectAnnotation(schema);
     if (shouldGenerateId) {
       setIdOnTarget(obj);
     }
     initMeta(obj, meta);
     prepareTypedTarget(obj, schema);
-    return createReactiveProxy<T>(obj, TypedReactiveHandler.instance as ReactiveHandler<any>);
+    return createProxy<T>(obj, TypedReactiveHandler.instance);
   } else {
     if (options?.expando) {
       setIdOnTarget(obj);
     }
     initMeta(obj, meta);
-    return createReactiveProxy<T>(obj, UntypedReactiveHandler.instance as ReactiveHandler<any>);
+    return createProxy<T>(obj, UntypedReactiveHandler.instance);
   }
 };
-
-export const generateEchoId = () => ulid();
 
 /**
  * Set ID on ECHO object targets during creation.
@@ -70,34 +70,25 @@ export const generateEchoId = () => ulid();
  */
 const setIdOnTarget = (target: any) => {
   invariant(!('id' in target), 'Object already has an `id` field, which is reserved.');
-  target.id = generateEchoId();
+  target.id = createObjectId();
 };
 
-const symbolMeta = Symbol.for('@dxos/meta');
+const symbolMeta = Symbol.for('@dxos/schema/ObjectMeta');
 
 /**
  * Set metadata on object.
  */
 const initMeta = <T>(obj: T, meta: ObjectMeta = { keys: [] }) => {
   prepareTypedTarget(meta, ObjectMetaSchema);
-  defineHiddenProperty(obj, symbolMeta, createReactiveProxy(meta, TypedReactiveHandler.instance as any));
+  defineHiddenProperty(obj, symbolMeta, createProxy(meta, TypedReactiveHandler.instance as any));
 };
 
 /**
  * Get metadata from object.
  * @internal
  */
-export const getTargetMeta = (object: any): ObjectMeta => {
+export const getObjectMeta = (object: any): ObjectMeta => {
   const metadata = object[symbolMeta];
-  invariant(metadata, 'Metadata not found.');
+  invariant(metadata, 'ObjectMeta not found.');
   return metadata;
-};
-
-/**
- * Unsafe method to override id for debugging/testing and migration purposes.
- *
- * @deprecated
- */
-export const dangerouslyAssignProxyId = <T>(obj: ReactiveObject<T>, id: string) => {
-  (getProxyHandlerSlot(obj).target as any).id = id;
 };

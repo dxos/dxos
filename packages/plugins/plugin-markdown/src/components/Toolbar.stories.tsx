@@ -9,7 +9,7 @@ import React, { type FC, useState } from 'react';
 import { create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
+import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
 import {
   type Action,
@@ -39,7 +39,7 @@ faker.seed(101);
 
 const Story: FC<{ content: string }> = ({ content }) => {
   const { themeMode } = useThemeContext();
-  const [text] = useState(createEchoObject(create(TextType, { content })));
+  const [text] = useState(createObject(create(TextType, { content })));
   const [formattingState, formattingObserver] = useFormattingState();
   const [viewMode, setViewMode] = useState<EditorViewMode>('preview');
   const { parentRef, view } = useTextEditor(() => {

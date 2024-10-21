@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import {
   create,
-  dangerouslyAssignProxyId,
+  dangerouslySetProxyId,
   Expando,
   getMeta,
   getSchema,
@@ -21,10 +21,9 @@ import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { getObjectCore } from '../core-db';
-import { clone } from '../echo-handler';
+import { getObjectCore, clone } from '../echo-handler';
 import { Filter } from '../query';
-import { Contact, Container, EchoTestBuilder, RecordType, Task, Todo } from '../testing';
+import { Contact, Container, EchoTestBuilder, RecordType, Task } from '../testing';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
@@ -155,34 +154,34 @@ describe('Database', () => {
   });
 
   test('creating objects', async () => {
-    const { db: database } = await createDbWithTypes();
+    const { db } = await createDbWithTypes();
 
     const task = create(Task, { title: 'test' });
     expect(task.title).to.eq('test');
     expect(task.id).to.exist;
     expect(() => getObjectCore(task)).to.throw();
     expect(getSchema(task)?.ast).to.eq(Task.ast);
-    expect(getType(task)?.objectId).to.eq('example.test.Task');
+    expect(getType(task)?.objectId).to.eq('example.com/type/Task');
 
-    database.add(task);
-    await database.flush();
+    db.add(task);
+    await db.flush();
     expect(getObjectCore(task).database).to.exist;
 
-    const { objects: tasks } = await database.query(Filter.schema(Task)).run();
+    const { objects: tasks } = await db.query(Filter.schema(Task)).run();
     expect(tasks).to.have.length(1);
     expect(tasks[0].id).to.eq(task.id);
   });
 
   test('enums', async () => {
-    const { db: database } = await createDbWithTypes();
+    const { db } = await createDbWithTypes();
 
     {
       const container = create(Container, { records: [{ type: RecordType.WORK }] });
-      database.add(container);
+      db.add(container);
     }
 
     {
-      const { objects } = await database.query(Filter.schema(Container)).run();
+      const { objects } = await db.query(Filter.schema(Container)).run();
       const [container] = objects;
       expect(container.records).to.have.length(1);
       expect(container.records![0].type).to.eq(RecordType.WORK);
@@ -190,19 +189,18 @@ describe('Database', () => {
   });
 
   test('dxos.schema.Expando', async () => {
-    const { db: database } = await createDbWithTypes();
+    const { db } = await createDbWithTypes();
 
     {
-      const container = create(Container, { objects: [] });
-      database.add(container);
-      await database.flush();
+      const container = db.add(create(Container, { objects: [] }));
+      await db.flush();
 
       container.objects!.push(create(Expando, { foo: 100 }));
       container.objects!.push(create(Expando, { bar: 200 }));
     }
 
     {
-      const { objects } = await database.query(Filter.schema(Container)).run();
+      const { objects } = await db.query(Filter.schema(Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
       expect(container.objects![0]!.foo).to.equal(100);
@@ -211,19 +209,18 @@ describe('Database', () => {
   });
 
   test('dxos.schema.TextObject', async () => {
-    const { db: database } = await createDbWithTypes();
+    const { db } = await createDbWithTypes();
 
     {
-      const container = create(Container, { objects: [] });
-      database.add(container);
-      await database.flush();
+      const container = db.add(create(Container, { objects: [] }));
+      await db.flush();
 
       container.objects!.push(create(Task, {}));
       container.objects!.push(create(Contact, {}));
     }
 
     {
-      const { objects } = await database.query(Filter.schema(Container)).run();
+      const { objects } = await db.query(Filter.schema(Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
       expect(getType(container.objects![0]!)?.objectId).to.equal(Task.typename);
@@ -264,14 +261,14 @@ describe('Database', () => {
   });
 
   test('operator-based filters', async () => {
-    const { db: database } = await createDbWithTypes();
+    const { db } = await createDbWithTypes();
 
-    database.add(create(Task, { title: 'foo 1' }));
-    database.add(create(Task, { title: 'foo 2' }));
-    database.add(create(Task, { title: 'bar 3' }));
+    db.add(create(Task, { title: 'foo 1' }));
+    db.add(create(Task, { title: 'foo 2' }));
+    db.add(create(Task, { title: 'bar 3' }));
 
     expect(
-      (await database.query(Filter.schema(Task, (task: Task) => task.title?.startsWith('foo'))).run()).objects,
+      (await db.query(Filter.schema(Task, (task: Task) => task.title?.startsWith('foo'))).run()).objects,
     ).to.have.length(2);
   });
 
@@ -282,7 +279,7 @@ describe('Database', () => {
     // Old format
     const oldId = PublicKey.random().toHex();
     const reactiveObjWithOldId = create(Expando, { string: 'foo' });
-    dangerouslyAssignProxyId(reactiveObjWithOldId, oldId);
+    dangerouslySetProxyId(reactiveObjWithOldId, oldId);
     const expandoWithOldId = db.add(reactiveObjWithOldId);
 
     // get by id
@@ -292,31 +289,31 @@ describe('Database', () => {
 
   describe('references', () => {
     test('add with a reference to echo reactive proxy', async () => {
-      const { db: database } = await createDbWithTypes();
-      const firstTask = database.add(create(Task, { title: 'foo' }));
-      const secondTask = database.add(create(Task, { title: 'bar', previous: firstTask }));
+      const { db } = await createDbWithTypes();
+      const firstTask = db.add(create(Task, { title: 'foo' }));
+      const secondTask = db.add(create(Task, { title: 'bar', previous: firstTask }));
       expect(secondTask.previous).to.eq(firstTask);
     });
 
     test('add with a reference to a reactive proxy', async () => {
-      const { db: database } = await createDbWithTypes();
-      const task = database.add(create(Task, { title: 'first', previous: create(Task, { title: 'second' }) }));
+      const { db } = await createDbWithTypes();
+      const task = db.add(create(Task, { title: 'first', previous: create(Task, { title: 'second' }) }));
       expect(task.title).to.eq('first');
       expect(task.previous?.id).to.be.a('string');
     });
   });
 
   test('typenames of nested objects', async () => {
-    const { db: database } = await createDbWithTypes();
+    const { db } = await createDbWithTypes();
+    const task = db.add(
+      create(Task, {
+        title: 'Main task',
+        subTasks: [create(Task, { title: 'Sub task' })],
+      }),
+    );
 
-    const task = create(Task, {
-      title: 'Main task',
-      todos: [create(Todo, { name: 'Sub task' })],
-    });
-    database.add(task);
-
-    expect(getType(task.todos![0] as any)?.objectId).to.eq('example.test.Task.Todo');
-    expect(JSON.parse(JSON.stringify(task.todos![0]))['@type']['/']).to.eq('dxn:type:example.test.Task.Todo');
+    expect(getType(task.subTasks![0] as any)?.objectId).to.eq('example.com/type/Task');
+    expect(JSON.parse(JSON.stringify(task.subTasks![0]))['@type']['/']).to.eq('dxn:type:example.com/type/Task');
   });
 
   describe('object collections', () => {
@@ -384,7 +381,7 @@ describe('Database', () => {
 
   const createDbWithTypes = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.addSchema([Task, Contact, Container, Todo]);
+    graph.schemaRegistry.addSchema([Task, Contact, Container]);
     return { db, graph };
   };
 

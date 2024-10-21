@@ -35,7 +35,7 @@ import {
   type ObjectStructure,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES, generateEchoId, getTypeReference } from '@dxos/echo-schema';
+import { TYPE_PROPERTIES, createObjectId, getTypeReference } from '@dxos/echo-schema';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages, type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -120,6 +120,7 @@ export type DataSpaceManagerParams = {
 export type DataSpaceManagerRuntimeParams = {
   spaceMemberPresenceAnnounceInterval?: number;
   spaceMemberPresenceOfflineTimeout?: number;
+  activeEdgeNotarizationPollingInterval?: number;
   disableP2pReplication?: boolean;
 };
 
@@ -296,7 +297,7 @@ export class DataSpaceManager extends Resource {
       },
     };
 
-    const propertiesId = generateEchoId();
+    const propertiesId = createObjectId();
     document.change((doc: SpaceDoc) => {
       setDeep(doc, ['objects', propertiesId], properties);
     });
@@ -507,6 +508,7 @@ export class DataSpaceManager extends Resource {
       edgeConnection: this._edgeConnection,
       edgeHttpClient: this._edgeHttpClient,
       edgeFeatures: this._edgeFeatures,
+      activeEdgeNotarizationPollingInterval: this._runtimeParams?.activeEdgeNotarizationPollingInterval,
     });
     dataSpace.postOpen.append(async () => {
       const setting = dataSpace.getEdgeReplicationSetting();

@@ -5,7 +5,6 @@
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
@@ -18,7 +17,8 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { nonNullable } from '@dxos/util';
 
-import { getObjectCore } from '../core-db';
+import { type EchoReactiveObject } from '../echo-handler';
+import { getObjectCore } from '../echo-handler';
 import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '../hypergraph';
 import { type Filter, type QueryResult } from '../query';
 

@@ -11,7 +11,7 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 
-import { TableContainer } from './components';
+import { TableContainer, TableViewEditor } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
 import translations from './translations';
 import { TableType } from './types';
@@ -96,6 +96,16 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             case 'section':
             case 'article':
               return isTable(data.object) ? <TableContainer role={role} table={data.object} /> : null;
+            case 'complementary--settings': {
+              if (!(data.subject instanceof TableType)) {
+                return null;
+              }
+              if (!data.subject.view) {
+                return null;
+              }
+
+              return <TableViewEditor view={data.subject.view} />;
+            }
             default:
               return null;
           }
@@ -121,7 +131,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           switch (intent.action) {
             case TableAction.CREATE: {
               return {
-                data: create(TableType, { name: '', props: [] }),
+                data: create(TableType, { name: '' }),
               };
             }
           }

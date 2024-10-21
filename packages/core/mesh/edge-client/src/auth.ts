@@ -8,7 +8,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { type Chain, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import type { EdgeIdentity } from './edge-client';
+import type { EdgeIdentity } from './edge-identity';
 
 /**
  * Edge identity backed by a device key without a credential chain.

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { create, type EchoReactiveObject, S } from '@dxos/echo-schema';
+import { create, type ReactiveObject, S } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 // TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/react-ui/testing.
@@ -23,7 +23,7 @@ type ObjectDataGenerator = {
   createData: () => any;
 };
 
-type ObjectFactory<T extends EchoReactiveObject<any>> = {
+type ObjectFactory<T extends ReactiveObject<any>> = {
   schema?: S.Schema<any>; // TODO(burdon): Support both typed and expando schema.
   createObject: () => T;
 };

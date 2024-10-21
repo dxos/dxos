@@ -4,13 +4,13 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { create, type EchoReactiveObject, Expando, ref, TypedObject } from '@dxos/echo-schema';
-import { S } from '@dxos/echo-schema';
+import { create, Expando, ref, TypedObject, S } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { loadObjectReferences } from './load-object';
+import { type EchoReactiveObject } from '../echo-handler';
 import { EchoTestBuilder } from '../testing';
 
 describe('loadObjectReferences', () => {
@@ -148,9 +148,9 @@ describe('loadObjectReferences', () => {
   });
 
   test('loads as array of non-nullable items', async () => {
-    class Nested extends TypedObject({ typename: 'Nested', version: '1.0.0' })({ value: S.Number }) {}
+    class Nested extends TypedObject({ typename: 'example.com/Nested', version: '1.0.0' })({ value: S.Number }) {}
 
-    class TestSchema extends TypedObject({ typename: 'Test', version: '1.0.0' })({
+    class TestSchema extends TypedObject({ typename: 'example.com/Test', version: '1.0.0' })({
       nested: S.mutable(S.Array(ref(Nested))),
     }) {}
 

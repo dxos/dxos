@@ -85,6 +85,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-data": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-grid": "workspace:*",
     "@dxos/schema": "workspace:*",
