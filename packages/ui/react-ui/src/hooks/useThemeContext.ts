@@ -6,6 +6,10 @@ import { useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { ThemeContext } from '../components';
+// TODO(burdon): !!!
+import { ThemeContext } from '../components/ThemeProvider/ThemeProvider';
 
-export const useThemeContext = () => useContext(ThemeContext) ?? raise(new Error('Missing ThemeContext'));
+export const useThemeContext = () => {
+  console.log('??', (ThemeContext as any).__id);
+  return useContext(ThemeContext) ?? raise(new Error('Missing ThemeContext'));
+};

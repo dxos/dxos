@@ -20,7 +20,13 @@ export type ThemeContextValue = {
   hasIosKeyboard: boolean;
 };
 
+const id = Math.random();
+/**
+ * @internal
+ */
 export const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
+(ThemeContext as any).__id = id;
+console.log('@@@@@@@@@@@@@@@@@@@@@@', { ThemeContext });
 
 export type ThemeProviderProps = Omit<TranslationsProviderProps, 'children'> &
   Partial<ThemeContextValue> &
@@ -39,6 +45,7 @@ export const ThemeProvider = ({
   rootElevation = 'base',
   rootDensity = 'coarse', // TODO(burdon): Change to fine and remove DensityProvider usage elsewhere.
 }: ThemeProviderProps) => {
+  console.log('################################', id);
   useEffect(() => {
     if (document.defaultView) {
       const kb = createKeyborg(document.defaultView);

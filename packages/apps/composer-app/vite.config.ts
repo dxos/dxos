@@ -29,7 +29,8 @@ const isFalse = (str?: string) => str === 'false' || str === '0';
 
 // https://vitejs.dev/config
 export default defineConfig((env) => ({
-  test: baseConfig({ cwd: __dirname })['test'],
+  // Vitest config.
+  test: baseConfig({ cwd: __dirname })['test'] as any,
   server: {
     host: true,
     https:
@@ -52,6 +53,9 @@ export default defineConfig((env) => ({
   esbuild: {
     keepNames: true,
   },
+  // optimizeDeps: {
+  //   include: ['react', 'react-dom', '@dxos/react-ui', '@dxos/react-ui-theme'],
+  // },
   build: {
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
@@ -69,7 +73,7 @@ export default defineConfig((env) => ({
       output: {
         chunkFileNames,
         manualChunks: {
-          react: ['react', 'react-dom'],
+          react: ['react', 'react-dom', '@dxos/react-ui', '@dxos/react-ui-theme'],
         },
       },
       external: [
@@ -120,7 +124,7 @@ export default defineConfig((env) => ({
       // verbose: true,
     }),
     // https://github.com/antfu-collective/vite-plugin-inspect#readme
-    // localhost:5173/__inspect
+    // Open: http://localhost:5173/__inspect
     isTrue(process.env.DX_INSPECT) && Inspect(),
     WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
