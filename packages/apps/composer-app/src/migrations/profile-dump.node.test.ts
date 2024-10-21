@@ -88,7 +88,7 @@ describe('Run migrations on profile dump', () => {
 
     log.break();
 
-    await client.spaces.isReady.wait();
+    await client.spaces.waitUntilReady();
 
     log.info('Running protocols migrations');
 
