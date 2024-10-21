@@ -55,20 +55,20 @@ jobs:
         run: sudo apt-get install libxtst-dev libpng++-dev
         shell: bash
 
+      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-extra-large-js" --stop-agents-after="${{ inputs.stop-agents-after }}"
+        shell: bash
+        if: ${{ inputs.stop-agents-after }}
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         id: pnpm-install
         with:
           run_install: false
-
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-extra-large-js" --stop-agents-after="${{ inputs.stop-agents-after }}"
-        shell: bash
-        if: ${{ inputs.stop-agents-after }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ inputs.node-version }}
-          cache: 'pnpm'
 
       - uses: nrwl/nx-set-shas@v4
 
