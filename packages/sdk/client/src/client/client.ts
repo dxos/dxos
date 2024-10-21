@@ -495,6 +495,9 @@ export class Client {
 
   /**
    * Resets and destroys client storage.
+   *
+   * This will currently leave the client in a closed state.
+   * Re-using the client after reset is not currently supported.
    */
   @synchronized
   async reset() {
