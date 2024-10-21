@@ -11,11 +11,6 @@ on:
         required: false
         default: false
 
-# Needed for nx-set-shas when run on the main branch
-permissions:
-  actions: read
-  contents: read
-
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
@@ -54,10 +49,6 @@ jobs:
       - name: Install system dependencies
         run: sudo apt-get install libxtst-dev libpng++-dev
         shell: bash
-
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-extra-large-js" --stop-agents-after="${{ inputs.stop-agents-after }}"
-        shell: bash
-        if: ${{ inputs.stop-agents-after }}
 
       - name: Install Node.js
         uses: actions/setup-node@v3
