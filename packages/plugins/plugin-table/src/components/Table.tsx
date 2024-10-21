@@ -11,7 +11,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { TableCellEditor } from './TableCellEditor';
 import { useTableModel } from '../hooks';
-import { columnSettingsButtonAttr } from '../table-model';
+import { tableColumnAttr } from '../table-model';
 import { type TableType } from '../types';
 
 // NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
@@ -47,10 +47,10 @@ export const Table = ({ table, data }: TableProps) => {
   );
 
   const handleClick = useCallback((event: MouseEvent) => {
-    const closestButton = (event.target as HTMLButtonElement).closest(`button[${columnSettingsButtonAttr}]`);
+    const closestButton = (event.target as HTMLButtonElement).closest(`button[${tableColumnAttr}]`);
     if (closestButton) {
       triggerRef.current = closestButton as HTMLButtonElement;
-      setClickedColumnId(closestButton.getAttribute(columnSettingsButtonAttr));
+      setClickedColumnId(closestButton.getAttribute(tableColumnAttr));
       setMenuOpen(true);
     }
   }, []);

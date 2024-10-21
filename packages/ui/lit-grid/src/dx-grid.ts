@@ -9,6 +9,8 @@ import { styleMap } from 'lit/directives/style-map.js';
 import { unsafeStatic, html as staticHtml } from 'lit/static-html.js';
 
 // eslint-disable-next-line unused-imports/no-unused-imports
+import './dx-button';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import './dx-grid-axis-resize-handle';
 import {
   type DxGridAxisMetaProps,
@@ -1028,7 +1030,7 @@ export class DxGrid extends LitElement {
     const active = this.cellActive(col, row, plane);
     const resizeIndex = cell?.resizeHandle ? (cell.resizeHandle === 'col' ? col : row) : undefined;
     const resizePlane = cell?.resizeHandle ? resolveResizePlane(cell.resizeHandle, plane) : undefined;
-    const accessory = cell?.accessoryHtml ? staticHtml`${unsafeStatic(cell.accessoryHtml)}` : null;
+    const accessory = cell?.accessory ?? (cell?.accessoryHtml ? staticHtml`${unsafeStatic(cell.accessoryHtml)}` : null);
     return html`<div
       role="gridcell"
       tabindex="0"
@@ -1042,8 +1044,9 @@ export class DxGrid extends LitElement {
       data-dx-grid-action="cell"
       style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
     >
-      ${cell?.value}${accessory}${cell?.resizeHandle &&
-      this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
+      ${cell?.value}
+      ${accessory}
+      ${cell?.resizeHandle && this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
         ? html`<dx-grid-axis-resize-handle
             axis=${cell.resizeHandle}
             plane=${resizePlane}

@@ -35,16 +35,15 @@ const TableContainer = ({ role, table }: LayoutContainerProps<Omit<ObjectTablePr
   const handleAction = useCallback(
     (action: ToolbarAction) => {
       switch (action.type) {
-        case 'comment': {
-          onThreadCreate();
-          break;
-        }
-      }
-      switch (action.type) {
         case 'add-row': {
           if (table.schema && space) {
             space.db.add(create(table.schema, {}));
           }
+          break;
+        }
+        case 'comment': {
+          onThreadCreate();
+          break;
         }
       }
     },
@@ -61,8 +60,9 @@ const TableContainer = ({ role, table }: LayoutContainerProps<Omit<ObjectTablePr
             : 'border-be border-separator',
         )}
       >
-        <Toolbar.Separator />
         <Toolbar.Actions />
+        <Toolbar.Separator />
+        <Toolbar.Extended />
       </Toolbar.Root>
       <div
         className={mx(

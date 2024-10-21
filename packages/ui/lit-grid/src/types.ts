@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type TemplateResult } from 'lit';
+
 import { type DxGrid } from './dx-grid';
 import { toCellIndex } from './util';
 
@@ -48,11 +50,16 @@ export type DxGridCellValue = {
    */
   value: string;
   /**
+   * Accessory component.
+   */
+  accessory?: TemplateResult;
+  /**
    * Accessory HTML to render alongside the value.
+   * @deprecated
    */
   accessoryHtml?: string;
   /**
-   * If this is a merged cell, the bottomright-most of the range in numeric notation, otherwise undefined.
+   * If this is a merged cell, the bottom-right-most of the range in numeric notation, otherwise undefined.
    */
   end?: string;
   /**

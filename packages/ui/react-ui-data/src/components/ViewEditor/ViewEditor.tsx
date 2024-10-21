@@ -47,24 +47,15 @@ export const ViewEditor = ({ classNames, view, schemaResolver, readonly }: ViewE
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
       <List.Root<FieldType> isItem={S.is(FieldSchema)} items={view.fields}>
-        {({ items }) => (
-          <div className='w-full'>
-            <div role='heading' className={grid}>
-              <div />
-              <div className='flex items-center text-sm'>{t('field path label')}</div>
-            </div>
-
-            <div role='list' className='flex flex-col w-full'>
-              {items.map((item) => (
-                <List.Item<FieldType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
-                  <List.ItemDragHandle />
-                  <List.ItemTitle onClick={() => handleSelect(item)}>{item.path}</List.ItemTitle>
-                  <List.ItemDeleteButton onClick={() => handleDelete(item)} />
-                </List.Item>
-              ))}
-            </div>
-          </div>
-        )}
+        {({ items }) =>
+          items.map((item) => (
+            <List.Item<FieldType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
+              <List.ItemDragHandle />
+              <List.ItemTitle onClick={() => handleSelect(item)}>{item.path}</List.ItemTitle>
+              <List.ItemDeleteButton onClick={() => handleDelete(item)} />
+            </List.Item>
+          ))
+        }
       </List.Root>
 
       {field && <Field classNames='p-2' autoFocus field={field} schema={schemaResolver(view.query.schema)} />}
