@@ -131,7 +131,7 @@ export class EdgeHttpClient {
       throw EdgeCallFailedError.fromHttpFailure(response);
     }
     const challenge = await handleAuthChallenge(response, this._edgeIdentity);
-    this._authHeader = `VerifiablePresentation pb;base64,${Buffer.from(challenge).toString('base64')}`;
+    this._authHeader = encodeAuthHeader(challenge);
     log('auth header updated');
     return this._authHeader;
   }
@@ -193,4 +193,9 @@ const createRequest = (args: EdgeHttpCallArgs, authHeader: string | undefined): 
     body: args.body && JSON.stringify(args.body),
     headers: authHeader ? { Authorization: authHeader } : undefined,
   };
+};
+
+const encodeAuthHeader = (challenge: Uint8Array) => {
+  const encodedChallenge = Buffer.from(challenge).toString('base64');
+  return `VerifiablePresentation pb;base64,${encodedChallenge}`;
 };
