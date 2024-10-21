@@ -101,6 +101,7 @@ export default defineConfig((env) => ({
         join(__dirname, './index.html'),
         join(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         join(rootDir, '/packages/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/devtools/*/src/**/*.{js,ts,jsx,tsx}'),
         join(rootDir, '/packages/plugins/*/src/**/*.{js,ts,jsx,tsx}'),
         join(rootDir, '/packages/plugins/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
         join(rootDir, '/packages/sdk/*/src/**/*.{js,ts,jsx,tsx}'),

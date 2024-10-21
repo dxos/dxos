@@ -12,8 +12,7 @@ import { getActiveSpace } from '@dxos/plugin-space';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Icon, ThemeProvider } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { Icon } from '@dxos/react-ui';
 
 const styles = {
   success: 'text-sky-300 dark:text-green-700',
@@ -135,7 +134,7 @@ const SwarmIndicator = () => {
 };
 
 /**
- * Space saving indicator.
+ * Data saving indicator.
  */
 const SavingIndicator = () => {
   const [state, _setState] = useState(0);
@@ -196,11 +195,9 @@ const PerformanceIndicator = () => {
         <Icon icon='ph--chart-bar--fill' size={3} />
       </StatusBar.Button>
       {visible && (
-        <ThemeProvider tx={defaultTx}>
-          <div className='z-20 absolute bottom-[32px] w-[450px] border-l border-y border-separator'>
-            <StatsPanel stats={stats} onRefresh={refreshStats} />
-          </div>
-        </ThemeProvider>
+        <div className='z-20 absolute bottom-[--statusbar-size] w-[450px] border-l border-y border-separator'>
+          <StatsPanel stats={stats} onRefresh={refreshStats} />
+        </div>
       )}
     </>
   );
