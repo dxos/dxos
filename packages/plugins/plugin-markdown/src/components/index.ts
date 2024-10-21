@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
 export * from './MarkdownSettings';
 
-export const MarkdownContainer = React.lazy(() => import('./MarkdownContainer'));
+export const MarkdownContainer = lazy(() => import('./MarkdownContainer'));
