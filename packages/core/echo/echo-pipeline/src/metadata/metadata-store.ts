@@ -230,7 +230,7 @@ export class MetadataStore {
       return this._metadata.identity.haloSpace;
     }
 
-    const space = this.spaces.find((space) => space.key === spaceKey);
+    const space = this.spaces.find((space) => space.key.equals(spaceKey));
     invariant(space, 'Space not found');
     return space;
   }
