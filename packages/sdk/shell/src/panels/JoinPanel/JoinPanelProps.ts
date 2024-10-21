@@ -55,6 +55,10 @@ export type JoinPanelImplProps = Pick<
     Halo: Invitation.State;
     Space: Invitation.State;
   }>;
+  invitationAuthMethods?: Partial<{
+    Halo: Invitation.AuthMethod;
+    Space: Invitation.AuthMethod;
+  }>;
   succeededKeys?: Partial<{
     Halo: Set<string>;
     Space: Set<string>;
