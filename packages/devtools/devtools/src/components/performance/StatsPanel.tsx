@@ -5,7 +5,6 @@
 import React, { useEffect, useState } from 'react';
 
 import { DensityProvider, Icon, Toggle } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 
 import { Panel, type PanelProps } from './Panel';
 import {
@@ -99,7 +98,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
   // TODO(burdon): Add Surface debug.
   return (
     <DensityProvider density='fine'>
-      <div className={mx('flex flex-col w-full h-full divide-y divide-separator')}>
+      <div className='flex flex-col w-full h-full divide-y divide-separator'>
         <Panel
           id='main'
           icon='ph--chart-bar--regular'
