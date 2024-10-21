@@ -86,7 +86,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@cloudflare/workers-types": "^4.20240821.1",
+    "@cloudflare/workers-types": "^4.20241018.0",
     "@dxos/app-graph": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
