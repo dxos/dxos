@@ -1,4 +1,4 @@
-name: Check
+name: Edge tests
 
 on:
   push:
@@ -27,9 +27,6 @@ concurrency:
 # https://nx.dev/ci/intro/tutorials/github-actions
 jobs:
   test:
-    strategy:
-      matrix:
-        node-version: ['18.20.1', '20.12.1', '21.7.2']
     runs-on: ubuntu-latest
     steps:
       - name: Setup tmate session
@@ -38,123 +35,52 @@ jobs:
         with:
           detached: true
 
-      - name: Checkout
+
+      - name: Checkout DXOS
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           lfs: true
+          path: dxos
 
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.github/actions/branch
-
-      - name: Setup
-        uses: ./.github/actions/setup
-        with:
-          node-version: ${{ matrix.node-version }}
-          stop-agents-after: test
-
-      - name: Test Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected -t test --coverage
-
-      - name: Test All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many -t test --coverage
-
-      - uses: codecov/codecov-action@v4
-        if: ${{ matrix.node-version == '20.12.1' }}
-        with:
-          directory: ./coverage
-          fail_ci_if_error: true
-          handle_no_reports_found: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          verbose: true
-
-      - name: Send test report
-        if: ${{ (success() || failure()) && github.event_name == 'schedule' }}
-        uses: ./.github/actions/test-report
-        with:
-          name: '${{ github.job }}-${{ matrix.node-version }}'
-          result: ${{ job.status }}
-
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
+      - name: Checkout EDGE
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           lfs: true
+          repository: dxos/edge
+          path: edge
 
       - name: Extract branch
         id: extract_branch
         uses: ./.github/actions/branch
-
-      - name: Setup
-        uses: ./.github/actions/setup
-        with:
-          node-version: 20.12.1
-          stop-agents-after: build
-
-      - name: Check Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected -t lint build
-
-      - name: Check All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many -t lint build
-
-  e2e:
-    runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
-    env:
-      DX_ENVIRONMENT: ci
-      DX_PWA: false
-      NODE_OPTIONS: --max-old-space-size=8192
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          lfs: true
-
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.github/actions/branch
-
-      - name: Setup
-        uses: ./.github/actions/setup
-        with:
-          node-version: 20.12.1
 
       - name: Install system dependencies
-        run: npx playwright@1.46.0 install-deps
+        run: sudo apt-get install libxtst-dev libpng++-dev
+        shell: bash
 
-      - name: Bundle
-        run: pnpm exec nx affected -t bundle --parallel=2
+      - uses: pnpm/action-setup@v4
 
-      - name: Test Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected -t e2e --browser=all --parallel=1
+      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-extra-large-js" --stop-agents-after="${{ inputs.stop-agents-after }}"
+        shell: bash
+        if: ${{ inputs.stop-agents-after }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'pnpm'
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - name: Link All
+        working-directory: ./edge
+        run: node ./scripts/link-packages.mjs ../dxos --all
+
+      - name: Install dependencies
+        working-directory: ./edge
+        run: pnpm install
+        shell: bash
 
       - name: Test All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many -t e2e --browser=all --parallel=1
-
-      - name: Send test report
-        if: ${{ (success() || failure()) && github.event_name == 'schedule' }}
-        uses: ./.github/actions/test-report
-        with:
-          name: ${{ github.job }}
-          result: ${{ job.status }}
-
-  dead-links:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Link Checker
-        uses: lycheeverse/lychee-action@v1
-        with:
-          args: --offline ./docs/content/composer ./docs/content/guide
+        working-directory: ./edge
+        run: pnpm exec nx run-many -t test --coverage
