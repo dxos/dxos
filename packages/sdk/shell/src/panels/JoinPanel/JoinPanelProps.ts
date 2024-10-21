@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type cloneElement } from 'react';
+import { type FC, type cloneElement } from 'react';
 
 import type { Identity } from '@dxos/react-client/halo';
 import type { Invitation, AuthenticatingInvitationObservable, InvitationResult } from '@dxos/react-client/invitations';
@@ -71,8 +71,8 @@ export type JoinPanelImplProps = Pick<
   onSpaceInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
   onConfirmResetStorage?: () => Promise<void>;
   onCancelResetStorage?: () => void;
-  IdentityInput?: React.FC<IdentityInputProps>;
-  ConfirmReset?: React.FC<ConfirmResetProps>;
+  IdentityInput?: FC<IdentityInputProps>;
+  ConfirmReset?: FC<ConfirmResetProps>;
 };
 
 export interface IdentityAction {

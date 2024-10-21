@@ -3,7 +3,7 @@
 //
 
 import { createKeyborg } from 'keyborg';
-import React, { createContext, type PropsWithChildren, useEffect, useState } from 'react';
+import React, { createContext, type PropsWithChildren, useEffect } from 'react';
 
 import { type Density, type Elevation, type ThemeFunction } from '@dxos/react-ui-types';
 
@@ -15,7 +15,6 @@ import { ElevationProvider } from '../ElevationProvider';
 export type ThemeMode = 'light' | 'dark';
 
 export type ThemeContextValue = {
-  id: string;
   tx: ThemeFunction<any>;
   themeMode: ThemeMode;
   hasIosKeyboard: boolean;
@@ -38,9 +37,8 @@ export const ThemeProvider = ({
   tx = (_path, defaultClassName, _styleProps, ..._options) => defaultClassName,
   themeMode = 'dark',
   rootElevation = 'base',
-  rootDensity = 'coarse',
+  rootDensity = 'coarse', // TODO(burdon): Change to fine and remove DensityProvider usage elsewhere.
 }: ThemeProviderProps) => {
-  const [id] = useState(() => Math.random().toString(36).substring(2, 15));
   useEffect(() => {
     if (document.defaultView) {
       const kb = createKeyborg(document.defaultView);
@@ -50,7 +48,7 @@ export const ThemeProvider = ({
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ id, tx, themeMode, hasIosKeyboard: hasIosKeyboard() }}>
+    <ThemeContext.Provider value={{ tx, themeMode, hasIosKeyboard: hasIosKeyboard() }}>
       <TranslationsProvider
         {...{
           fallback,

@@ -13,8 +13,7 @@ import { type ThemedClassName } from '../../util';
 export type IconProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.svg>> & { icon: string; size?: Size };
 
 export const Icon = forwardRef<SVGSVGElement, IconProps>(({ icon, classNames, size, ...props }, forwardedRef) => {
-  const { id, tx } = useThemeContext();
-  console.log('::::', id);
+  const { tx } = useThemeContext();
   return (
     <svg {...props} className={tx('icon.root', 'icon', { size }, classNames)} ref={forwardedRef}>
       <use href={`/icons.svg#${icon}`} />
