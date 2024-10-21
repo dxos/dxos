@@ -20,6 +20,10 @@ type SurfaceComponentProps = WithRequiredProperty<SurfaceProps, 'data'>;
  */
 export type SurfaceDisposition = 'hoist' | 'fallback';
 
+/**
+ * Surface debug info.
+ * NOTE: Short-term measure to track perf issues.
+ */
 export type DebugInfo = {
   id: string;
   created: number;

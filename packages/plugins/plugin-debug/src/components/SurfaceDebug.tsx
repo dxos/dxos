@@ -4,15 +4,18 @@
 
 import React, { useMemo, useState } from 'react';
 
+import { type DebugInfo, useSurfaceRoot } from '@dxos/app-framework';
 import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-
-import { type DebugInfo, useSurfaceRoot } from './SurfaceRootContext';
 
 // TODO(burdon): Move to debug panel.
 
 export type SurfaceDebugProps = ThemedClassName<{}>;
 
+/**
+ * Show surface info.
+ * NOTE: Remove from @dxos/app-framework if removing this.
+ */
 export const SurfaceDebug = ({ classNames }: SurfaceDebugProps) => {
   const context = useSurfaceRoot();
   const [surfaces, setSurfaces] = useState<DebugInfo[]>([]);
