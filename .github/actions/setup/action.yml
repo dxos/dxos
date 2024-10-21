@@ -16,7 +16,11 @@ runs:
       run: sudo apt-get install libxtst-dev libpng++-dev
       shell: bash
 
-    - uses: pnpm/action-setup@v4
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      id: pnpm-install
+      with:
+        run_install: false
 
     - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-extra-large-js" --stop-agents-after="${{ inputs.stop-agents-after }}"
       shell: bash
