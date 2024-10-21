@@ -47,6 +47,7 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+          token: ${{ secrets.CREATE_PR_TOKEN }}
           repository: dxos/edge
           path: edge
 
