@@ -6,17 +6,6 @@ import { useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-// TODO(burdon): !!!
-import { ThemeContext } from '../components/ThemeProvider/ThemeProvider';
+import { ThemeContext } from '../components';
 
-const map: any = {};
-
-export const useThemeContext = () => {
-  if (!map[(ThemeContext as any).__id!]) {
-    map[(ThemeContext as any).__id!] = true;
-    // TODO(burdon): Called multiple times with empty context!!!
-    console.log('____useThemeContext____', (ThemeContext as any).__id);
-  }
-
-  return useContext(ThemeContext) ?? raise(new Error('Missing ThemeContext'));
-};
+export const useThemeContext = () => useContext(ThemeContext) ?? raise(new Error('Missing ThemeContext'));

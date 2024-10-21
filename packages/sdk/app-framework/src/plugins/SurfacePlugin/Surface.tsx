@@ -88,6 +88,8 @@ export const Surface = forwardRef<HTMLElement, SurfaceProps>(
   ({ role, name = role, fallback, placeholder, ...rest }, forwardedRef) => {
     const props = { role, name, fallback, ...rest };
     const { debugInfo } = useSurfaceRoot();
+
+    // Track debug info.
     const [id] = useState<string>(Math.random().toString(36).slice(2));
     useEffect(() => {
       debugInfo?.set(id, { id, created: Date.now(), name, role, renderCount: 0 });
@@ -96,7 +98,7 @@ export const Surface = forwardRef<HTMLElement, SurfaceProps>(
       };
     }, [id]);
     if (debugInfo?.get(id)) {
-      debugInfo.get(id)!.renderCount++; // TODO(burdon): ???
+      debugInfo.get(id)!.renderCount++;
     }
 
     const context = useContext(SurfaceContext);
@@ -135,6 +137,9 @@ const SurfaceResolver = forwardRef<HTMLElement, SurfaceProps>((props, forwardedR
   return <SurfaceContext.Provider value={currentContext}>{nodes}</SurfaceContext.Provider>;
 });
 
+/**
+ * Resolve surface nodes from across all component.
+ */
 const resolveNodes = (
   components: Record<string, SurfaceComponent>,
   props: SurfaceProps,
