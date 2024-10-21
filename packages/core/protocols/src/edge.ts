@@ -162,6 +162,5 @@ const isRetryableCode = (status: number) => {
     // Not Implemented
     return false;
   }
-  // TODO: handle 401 Not Authorized
   return !(status >= 400 && status < 500);
 };
