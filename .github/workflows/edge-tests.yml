@@ -1,4 +1,4 @@
-name: Edge tests
+name: EDGE tests
 
 on:
   push:
@@ -50,10 +50,6 @@ jobs:
           token: ${{ secrets.CREATE_PR_TOKEN }}
           repository: dxos/edge
           path: edge
-
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.github/actions/branch
 
       - name: Install system dependencies
         run: sudo apt-get install libxtst-dev libpng++-dev
