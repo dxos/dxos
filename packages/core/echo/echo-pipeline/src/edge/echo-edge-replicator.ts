@@ -32,7 +32,9 @@ import {
 /**
  * Delay before restarting the connection after receiving a forbidden error.
  */
-const RESTART_DELAY = 500;
+const INITIAL_RESTART_DELAY = 500;
+const RESTART_DELAY_JITTER = 250;
+const MAX_RESTART_DELAY = 5000;
 
 export type EchoEdgeReplicatorParams = {
   edgeConnection: EdgeConnection;
@@ -113,12 +115,14 @@ export class EchoEdgeReplicator implements EchoReplicator {
     }
   }
 
-  private async _openConnection(spaceId: SpaceId) {
+  private async _openConnection(spaceId: SpaceId, reconnects: number = 0) {
     invariant(this._context);
     invariant(!this._connections.has(spaceId));
+
+    let restartScheduled = false;
+
     const connection = new EdgeReplicatorConnection({
       edgeConnection: this._edgeConnection,
-      ownPeerId: this._context.peerId,
       spaceId,
       context: this._context,
       sharedPolicyEnabled: this._sharePolicyEnabled,
@@ -129,15 +133,34 @@ export class EchoEdgeReplicator implements EchoReplicator {
         this._context?.onConnectionClosed(connection);
       },
       onRestartRequested: async () => {
-        using _guard = await this._mutex.acquire();
-
-        const ctx = this._ctx;
-        await connection.close(); // Will call onRemoteDisconnected
-        this._connections.delete(spaceId);
-        if (ctx?.disposed) {
+        if (!this._ctx || restartScheduled) {
           return;
         }
-        await this._openConnection(spaceId);
+
+        const restartDelay =
+          Math.min(MAX_RESTART_DELAY, INITIAL_RESTART_DELAY * reconnects) + Math.random() * RESTART_DELAY_JITTER;
+
+        log.info('connection restart scheduled', { spaceId, reconnects, restartDelay });
+
+        restartScheduled = true;
+        scheduleTask(
+          this._ctx,
+          async () => {
+            using _guard = await this._mutex.acquire();
+            if (this._connections.get(spaceId) !== connection) {
+              return;
+            }
+
+            const ctx = this._ctx;
+            await connection.close(); // Will call onRemoteDisconnected
+            this._connections.delete(spaceId);
+            if (ctx?.disposed) {
+              return;
+            }
+            await this._openConnection(spaceId, reconnects + 1);
+          },
+          restartDelay,
+        );
       },
     });
     this._connections.set(spaceId, connection);
@@ -148,7 +171,6 @@ export class EchoEdgeReplicator implements EchoReplicator {
 
 type EdgeReplicatorConnectionsParams = {
   edgeConnection: EdgeConnection;
-  ownPeerId: string;
   spaceId: SpaceId;
   context: EchoReplicatorContext;
   sharedPolicyEnabled: boolean;
@@ -160,24 +182,21 @@ type EdgeReplicatorConnectionsParams = {
 class EdgeReplicatorConnection extends Resource implements ReplicatorConnection {
   private readonly _edgeConnection: EdgeConnection;
   private _remotePeerId: string | null = null;
-  private readonly _ownPeerId: string;
   private readonly _targetServiceId: string;
   private readonly _spaceId: SpaceId;
   private readonly _context: EchoReplicatorContext;
   private readonly _sharedPolicyEnabled: boolean;
   private readonly _onRemoteConnected: () => Promise<void>;
   private readonly _onRemoteDisconnected: () => Promise<void>;
-  private readonly _onRestartRequested: () => Promise<void>;
+  private readonly _onRestartRequested: () => void;
 
   private _readableStreamController!: ReadableStreamDefaultController<AutomergeProtocolMessage>;
-  private _restartScheduled = false;
 
   public readable: ReadableStream<AutomergeProtocolMessage>;
   public writable: WritableStream<AutomergeProtocolMessage>;
 
   constructor({
     edgeConnection,
-    ownPeerId,
     spaceId,
     context,
     sharedPolicyEnabled,
@@ -187,7 +206,6 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   }: EdgeReplicatorConnectionsParams) {
     super();
     this._edgeConnection = edgeConnection;
-    this._ownPeerId = ownPeerId;
     this._spaceId = spaceId;
     this._context = context;
 
@@ -284,21 +302,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     // AutomergeReplicator might return a Forbidden error if the credentials are not yet replicated.
     // We restart the connection with some delay to account for that.
     if (isForbiddenErrorMessage(message)) {
-      if (!this._restartScheduled) {
-        log.warn('Forbidden error received, replicator will restart the connection', {
-          spaceId: this._spaceId,
-          delayMs: RESTART_DELAY,
-          remotePeerId: this._remotePeerId,
-        });
-        this._restartScheduled = true;
-        scheduleTask(
-          this._ctx,
-          async () => {
-            await this._onRestartRequested();
-          },
-          RESTART_DELAY,
-        );
-      }
+      this._onRestartRequested();
       return;
     }
 
