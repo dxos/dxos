@@ -85,7 +85,7 @@ const SimpleStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
 
 export default {
   // TODO(burdon): Storybook collides with react-ui/List.
-  title: 'react-ui-list/List',
+  title: 'react-ui-list-x/List',
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: Story,
 };
