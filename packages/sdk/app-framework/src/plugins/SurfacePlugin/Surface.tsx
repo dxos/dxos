@@ -23,6 +23,10 @@ import { type SurfaceComponent, type SurfaceResult, useSurfaceRoot } from './Sur
  */
 export type Direction = 'inline' | 'inline-reverse' | 'block' | 'block-reverse';
 
+export type DebugInfo = {
+  renderCount: number;
+};
+
 /**
  * SurfaceProps are the props that are passed to the Surface component.
  */
@@ -76,6 +80,11 @@ export type SurfaceProps = PropsWithChildren<{
    * These props are not used by Surface itself but may be used by components which resolve the surface.
    */
   [key: string]: unknown;
+
+  /**
+   * Debug info.
+   */
+  debugInfo?: Map<string, DebugInfo>;
 }>;
 
 /**
@@ -83,6 +92,7 @@ export type SurfaceProps = PropsWithChildren<{
  */
 export const Surface = forwardRef<HTMLElement, SurfaceProps>(
   ({ role, name = role, fallback, placeholder, ...rest }, forwardedRef) => {
+    const [id] = useState(() => Math.random().toString(36).slice(2));
     const props = { role, name, fallback, ...rest };
     const context = useContext(SurfaceContext);
     const data = props.data ?? ((name && context?.surfaces?.[name]?.data) || {});
@@ -106,6 +116,7 @@ export const useSurface = (): SurfaceProps =>
   useContext(SurfaceContext) ?? raise(new Error('Surface context not found'));
 
 const SurfaceResolver = forwardRef<HTMLElement, SurfaceProps>((props, forwardedRef) => {
+  const debugInfo = new Map<string, DebugInfo>();
   const { components } = useSurfaceRoot();
   const parent = useContext(SurfaceContext);
   const nodes = resolveNodes(components, props, parent, forwardedRef);
@@ -115,6 +126,7 @@ const SurfaceResolver = forwardRef<HTMLElement, SurfaceProps>((props, forwardedR
       ...((props.name && parent?.surfaces?.[props.name]?.surfaces) || {}),
       ...props.surfaces,
     },
+    debugInfo,
   };
 
   return <SurfaceContext.Provider value={currentContext}>{nodes}</SurfaceContext.Provider>;

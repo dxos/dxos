@@ -29,6 +29,8 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.1",
     "@phosphor-icons/react": "^2.1.5",

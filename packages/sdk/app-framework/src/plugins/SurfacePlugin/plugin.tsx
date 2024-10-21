@@ -6,10 +6,11 @@ import React from 'react';
 
 import { create } from '@dxos/echo-schema';
 
+import { SurfaceDebug } from './SurfaceDebug';
 import { SurfaceProvider, type SurfaceRootContext } from './SurfaceRootContext';
 import SurfaceMeta from './meta';
 import { parseSurfacePlugin, type SurfacePluginProvides } from './provides';
-import type { PluginDefinition } from '../PluginHost';
+import { type PluginDefinition } from '../PluginHost';
 import { filterPlugins } from '../helpers';
 
 /**
@@ -27,7 +28,12 @@ const SurfacePlugin = (): PluginDefinition<SurfacePluginProvides> => {
     },
     provides: {
       surface: state,
-      context: ({ children }) => <SurfaceProvider value={state}>{children}</SurfaceProvider>,
+      context: ({ children }) => (
+        <SurfaceProvider value={state}>
+          <SurfaceDebug classNames='z-[100] absolute bottom-0 right-0 w-[200px]' />
+          {children}
+        </SurfaceProvider>
+      ),
     },
   };
 };
