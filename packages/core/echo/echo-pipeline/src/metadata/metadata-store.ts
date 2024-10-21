@@ -241,7 +241,7 @@ export class MetadataStore {
       return true;
     }
 
-    return !!this.spaces.find((space) => space.key === spaceKey);
+    return !!this.spaces.find((space) => space.key.equals(spaceKey));
   }
 
   private _getLargeSpaceMetadata(key: PublicKey): LargeSpaceMetadata {
@@ -298,7 +298,7 @@ export class MetadataStore {
 
   async addSpace(record: SpaceMetadata) {
     invariant(
-      !(this._metadata.spaces ?? []).find((space) => space.key === record.key),
+      !(this._metadata.spaces ?? []).find((space) => space.key.equals(record.key)),
       'Cannot overwrite existing space in metadata',
     );
 
