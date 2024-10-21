@@ -6,7 +6,6 @@ import React from 'react';
 
 import { create } from '@dxos/echo-schema';
 
-import { SurfaceDebug } from './SurfaceDebug';
 import { SurfaceProvider, type SurfaceRootContext } from './SurfaceRootContext';
 import SurfaceMeta from './meta';
 import { parseSurfacePlugin, type SurfacePluginProvides } from './provides';
@@ -17,7 +16,7 @@ import { filterPlugins } from '../helpers';
  * Provides a registry of surface components.
  */
 const SurfacePlugin = (): PluginDefinition<SurfacePluginProvides> => {
-  const state = create<SurfaceRootContext>({ components: {} });
+  const state = create<SurfaceRootContext>({ components: {}, debugInfo: new Map() });
 
   return {
     meta: SurfaceMeta,
@@ -28,12 +27,7 @@ const SurfacePlugin = (): PluginDefinition<SurfacePluginProvides> => {
     },
     provides: {
       surface: state,
-      context: ({ children }) => (
-        <SurfaceProvider value={state}>
-          <SurfaceDebug classNames='z-[100] absolute bottom-0 right-0 w-[200px]' />
-          {children}
-        </SurfaceProvider>
-      ),
+      context: ({ children }) => <SurfaceProvider value={state}>{children}</SurfaceProvider>,
     },
   };
 };
