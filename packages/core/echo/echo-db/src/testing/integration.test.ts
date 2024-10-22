@@ -369,7 +369,7 @@ describe('Integration tests', () => {
         expect(getSchema(object)).to.eq(stored);
 
         db.add({ text: 'Expando object' }); // Add Expando object to test filtering
-        await db.flush();
+        await db.flush({ indexes: true });
       }
 
       await peer.reload();
@@ -377,7 +377,7 @@ describe('Integration tests', () => {
         // Objects with stored schema get included in queries that select all objects..
         await using db = await peer.openDatabase(spaceKey, rootUrl);
         const { objects } = await db.query().run();
-        expect(objects.length).to.eq(2);
+        expect(objects.length).to.eq(3);
       }
 
       await peer.reload();
@@ -385,6 +385,17 @@ describe('Integration tests', () => {
         // Can query by stored schema DXN.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
         const { objects } = await db.query(Filter.typename(schemaDxn)).run();
+        expect(objects.length).to.eq(1);
+        expect(getSchema(objects[0])).to.include({ typename: 'example.com/type/Test', version: '0.1.0' });
+      }
+
+      await peer.reload();
+      {
+        // Can query by stored schema ref.
+        await using db = await peer.openDatabase(spaceKey, rootUrl);
+        const schema = db.schema.getSchemaByTypename('example.com/type/Test');
+
+        const { objects } = await db.query(Filter.schema(schema)).run();
         expect(objects.length).to.eq(1);
         expect(getSchema(objects[0])).to.include({ typename: 'example.com/type/Test', version: '0.1.0' });
       }
