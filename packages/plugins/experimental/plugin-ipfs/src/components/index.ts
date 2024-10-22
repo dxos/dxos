@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
-// Lazily load components for content surfaces.
-export const FileCard = React.lazy(() => import('./FileCard'));
-export const FileMain = React.lazy(() => import('./FileMain'));
-export const FileSection = React.lazy(() => import('./FileSection'));
-export const FileSlide = React.lazy(() => import('./FileSlide'));
+export const FileCard = lazy(() => import('./FileCard'));
+export const FileMain = lazy(() => import('./FileMain'));
+export const FileSection = lazy(() => import('./FileSection'));
+export const FileSlide = lazy(() => import('./FileSlide'));
