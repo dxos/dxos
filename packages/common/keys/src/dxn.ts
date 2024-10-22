@@ -47,6 +47,10 @@ export class DXN {
     return new DXN(kind, parts);
   }
 
+  static localEchoObjectDXN(id: string) {
+    return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, id]);
+  }
+
   #kind: string;
   #parts: string[];
 
