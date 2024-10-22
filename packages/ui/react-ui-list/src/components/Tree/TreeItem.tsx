@@ -12,12 +12,14 @@ import {
   type ItemMode,
   type Instruction,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
+import React, { memo, type KeyboardEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { Button, Icon, Treegrid, useDefaultValue } from '@dxos/react-ui';
+import { Treegrid, useDefaultValue } from '@dxos/react-ui';
 
 import { DropIndicator } from './DropIndicator';
+import { TreeItemHeading } from './TreeItemHeading';
+import { TreeItemToggle } from './TreeItemToggle';
 import { DEFAULT_INDENTATION, paddingIndendation } from './helpers';
 import { type ItemType } from './types';
 
@@ -29,23 +31,33 @@ export type TreeItemProps = {
   open: boolean;
   current: boolean;
   draggable: boolean;
+  renderColumns?: (item: ItemType) => ReactNode;
   canDrop?: (data: unknown) => boolean;
   onOpenChange?: (id: string, nextOpen: boolean) => void;
   onSelect?: (id: string, nextState: boolean) => void;
 };
 
 // TODO(wittjosiah): Styles.
-// TODO(wittjosiah): Port data, aria, keynav, etc. props over from navtree.
 
 export const TreeItem = memo(
-  ({ item, mode, open, current, draggable: _draggable, canDrop, onOpenChange, onSelect }: TreeItemProps) => {
-    const { id, name, icon, path } = item;
+  ({
+    item,
+    mode,
+    open,
+    current,
+    draggable: _draggable,
+    renderColumns,
+    canDrop,
+    onOpenChange,
+    onSelect,
+  }: TreeItemProps) => {
+    const { id, name, icon, className, disabled, path } = item;
     const parentOf = useDefaultValue(item.parentOf, () => []);
     const level = path.length - 1;
     const isBranch = parentOf.length > 0;
 
     const ref = useRef<HTMLDivElement | null>(null);
-    const [_state, setState] = useState<TreeItemState>('idle');
+    const [state, setState] = useState<TreeItemState>('idle');
     const [instruction, setInstruction] = useState<Instruction | null>(null);
 
     useEffect(() => {
@@ -111,6 +123,7 @@ export const TreeItem = memo(
               // TODO(wittjosiah): Expand after 500ms if still merging.
               setInstruction(instruction);
             } else if (instruction?.type === 'reparent') {
+              // TODO(wittjosiah): This is not occurring in the current implementation.
               setInstruction(instruction);
             } else {
               setInstruction(null);
@@ -127,7 +140,28 @@ export const TreeItem = memo(
     }, [draggable, item, mode, canDrop]);
 
     const handleOpenChange = useCallback(() => onOpenChange?.(id, !open), [onOpenChange, id, open]);
-    const handleSelect = useCallback(() => onSelect?.(id, !current), [onSelect, id, current]);
+
+    const handleSelect = useCallback(() => {
+      ref.current?.focus();
+      onSelect?.(id, !current);
+    }, [onSelect, id, current]);
+
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent) => {
+        switch (event.key) {
+          case 'ArrowRight':
+            isBranch && !open && handleOpenChange();
+            break;
+          case 'ArrowLeft':
+            isBranch && open && handleOpenChange();
+            break;
+          case ' ':
+            handleSelect();
+            break;
+        }
+      },
+      [isBranch, open, handleOpenChange, handleSelect],
+    );
 
     return (
       <Treegrid.Row
@@ -136,34 +170,27 @@ export const TreeItem = memo(
         id={path.join(Treegrid.PATH_SEPARATOR)}
         aria-labelledby={`${id}__label`}
         parentOf={isBranch ? parentOf.join(Treegrid.PARENT_OF_SEPARATOR) : undefined}
+        // focusableGroup={false}
         classNames='grid aria-[current]:bg-input'
+        data-itemid={item.id}
+        data-testid={item.testId}
         // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS
         //   without alerting the user (except for in the correct link element). See also:
         //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
         aria-current={current ? ('' as 'page') : undefined}
+        onKeyDown={handleKeyDown}
       >
         <Treegrid.Cell indent classNames='relative flex items-center' style={paddingIndendation(level)}>
-          <Button
-            variant='ghost'
-            density='fine'
-            classNames={['!pli-1', !isBranch && 'invisible']}
-            onClick={handleOpenChange}
-          >
-            <Icon
-              icon='ph--caret-right--regular'
-              size={3}
-              classNames={['transition duration-200', open && 'rotate-90']}
-            />
-          </Button>
-          <Button
-            variant='ghost'
-            density='fine'
-            classNames='grow gap-1 !pis-0.5 hover:!bg-transparent dark:hover:!bg-transparent'
-            onClick={handleSelect}
-          >
-            {icon && <Icon icon={icon ?? 'ph--placeholder--regular'} size={5} classNames='is-[1em] bs-[1em] mlb-1' />}
-            <span className='flex-1 is-0 truncate text-start'>{name}</span>
-          </Button>
+          <TreeItemToggle open={open} isBranch={isBranch} onToggle={handleOpenChange} />
+          <TreeItemHeading
+            label={name}
+            icon={icon}
+            className={className}
+            disabled={disabled}
+            current={current}
+            onSelect={handleSelect}
+          />
+          {state === 'idle' && renderColumns?.(item)}
           {instruction && <DropIndicator instruction={instruction} />}
         </Treegrid.Cell>
       </Treegrid.Row>

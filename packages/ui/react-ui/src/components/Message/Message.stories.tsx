@@ -28,7 +28,7 @@ const StoryMessage = ({ valence, title, body }: StoryMessageProps) => (
 );
 
 export default {
-  title: 'react-ui/Message',
+  title: 'react-ui-core/Message',
   component: StoryMessage,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

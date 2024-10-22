@@ -40,7 +40,7 @@ const StorybookDialog = ({ title, openTrigger, description, body, closeTrigger, 
 };
 
 export default {
-  title: 'react-ui/Dialog',
+  title: 'react-ui-core/Dialog',
   component: StorybookDialog,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

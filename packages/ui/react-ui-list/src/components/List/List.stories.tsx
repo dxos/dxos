@@ -11,7 +11,7 @@ import { ghostHover, mx } from '@dxos/react-ui-theme';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { List, type ListRootProps } from './List';
-import { createList, TestItemSchema, type TestItemType } from '../../testing';
+import { createList, TestItemSchema, type TestItemType } from './testing';
 
 // TODO(burdon): var-icon-size.
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2rem] rounded';
@@ -84,8 +84,7 @@ const SimpleStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
 };
 
 export default {
-  // TODO(burdon): Storybook collides with react-ui/List.
-  title: 'react-ui-list-x/List',
+  title: 'react-ui-list/List',
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: Story,
 };

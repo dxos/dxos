@@ -142,7 +142,7 @@ const StorybookTreegrid = () => {
 };
 
 export default {
-  title: 'react-ui/Treegrid',
+  title: 'react-ui-core/Treegrid',
   component: StorybookTreegrid,
   decorators: [withTheme],
 };

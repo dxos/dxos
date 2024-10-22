@@ -8,7 +8,7 @@ import { Link } from './Link';
 import { withTheme } from '../../testing';
 
 export default {
-  title: 'react-ui/Link',
+  title: 'react-ui-core/Link',
   component: Link,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

@@ -92,7 +92,7 @@ const StorybookDropdownMenu = () => {
 };
 
 export default {
-  title: 'react-ui/Dropdown menu',
+  title: 'react-ui-core/Dropdown menu',
   component: StorybookDropdownMenu,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

@@ -10,7 +10,8 @@ import React, { useEffect } from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
+import { Icon } from '@dxos/react-ui';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Tree, type TreeProps } from './Tree';
 import { createTree, flattenTree, getItem, updateState, type TestItem } from './testing';
@@ -66,11 +67,14 @@ const Story = (args: Partial<TreeProps>) => {
 };
 
 export default {
-  title: 'react-ui-list-x/Tree',
+  title: 'react-ui-list/Tree',
   component: Tree,
   render: Story,
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ tooltips: true })],
   args: {
+    renderColumns: () => {
+      return <Icon icon='ph--placeholder--regular' size={5} />;
+    },
     onOpenChange: (id: string, open: boolean) => {
       if (open) {
         state.open.push(id);

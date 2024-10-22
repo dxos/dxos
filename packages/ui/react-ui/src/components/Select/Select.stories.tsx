@@ -59,7 +59,7 @@ const StorybookSelect = ({ items = [] }: PropsWithChildren<{ items: ItemProps[] 
 };
 
 export default {
-  title: 'react-ui/Select',
+  title: 'react-ui-core/Select',
   component: createDensityTest(StorybookSelect),
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { type ReactNode } from 'react';
 
 import { Treegrid } from '@dxos/react-ui';
 
@@ -15,14 +15,26 @@ export type TreeProps = {
   open: string[];
   current: string[];
   draggable?: boolean;
+  gridTemplateColumns?: string;
+  renderColumns?: (item: ItemType) => ReactNode;
   canDrop?: (data: unknown) => boolean;
   onOpenChange?: (id: string, nextOpen: boolean) => void;
   onSelect?: (id: string, nextState: boolean) => void;
 };
 
-export const Tree = ({ items, open, current, draggable = false, canDrop, onOpenChange, onSelect }: TreeProps) => {
+export const Tree = ({
+  items,
+  open,
+  current,
+  draggable = false,
+  gridTemplateColumns = '1fr',
+  renderColumns,
+  canDrop,
+  onOpenChange,
+  onSelect,
+}: TreeProps) => {
   return (
-    <Treegrid.Root gridTemplateColumns='1fr'>
+    <Treegrid.Root gridTemplateColumns={gridTemplateColumns}>
       {items.map((item, i) => (
         <TreeItem
           key={item.id}
@@ -31,6 +43,7 @@ export const Tree = ({ items, open, current, draggable = false, canDrop, onOpenC
           open={open.includes(item.id)}
           draggable={draggable}
           current={current.includes(item.id)}
+          renderColumns={renderColumns}
           canDrop={canDrop}
           onOpenChange={onOpenChange}
           onSelect={onSelect}

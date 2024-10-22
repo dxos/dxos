@@ -15,7 +15,7 @@ import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
 
 export default {
-  title: 'react-ui/Button',
+  title: 'react-ui-core/Button',
   component: Button,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

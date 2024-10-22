@@ -10756,6 +10756,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
+      '@dxos/react-ui-text-tooltip':
+        specifier: workspace:*
+        version: link:../react-ui-text-tooltip
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
