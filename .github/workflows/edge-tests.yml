@@ -99,6 +99,6 @@ jobs:
         run: pnpm install --no-frozen-lockfile
         shell: bash
 
-      - name: Test All
+      - name: Run tests from EDGE repo
         working-directory: ./edge
-        run: pnpm exec nx run-many -t test --coverage
+        run: pnpm exec nx run-many -t test
