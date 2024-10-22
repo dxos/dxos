@@ -149,6 +149,10 @@ export class Filter<T extends {} = any> {
 
   // TODO(burdon): Tighten to AbstractTypedObject.
   static schema(schema: S.Schema<any>, filter?: Record<string, any> | OperatorFilter): Filter {
+    if (!schema) {
+      throw new TypeError('`schema` parameter is required.');
+    }
+
     // TODO(dmaretskyi): Make `getReferenceWithSpaceKey` work over abstract handlers to not depend on EchoHandler directly.
     const typeReference = S.isSchema(schema) ? requireTypeReference(schema) : getReferenceWithSpaceKey(schema);
     invariant(typeReference, 'Invalid schema; check persisted in the database.');
@@ -156,8 +160,22 @@ export class Filter<T extends {} = any> {
   }
 
   static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>): Filter<any> {
+    if (!typename) {
+      throw new TypeError('`typename` parameter is required.');
+    }
+    if (typename.startsWith('dxn:echo:')) {
+      throw new TypeError('Dynamic schema references are not allowed.');
+    }
+
     const type = Reference.fromLegacyTypename(typename);
     return this._fromTypeWithPredicate(type, filter);
+  }
+
+  static typeDXN(dxn: string): Filter {
+    if (!dxn) {
+      throw new TypeError('`dxn` parameter is required.');
+    }
+    return new Filter({ type: Reference.fromDXN(DXN.parse(dxn)) });
   }
 
   private static _fromTypeWithPredicate(type: Reference, filter?: Record<string, any> | OperatorFilter<any>) {
