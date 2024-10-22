@@ -3,7 +3,7 @@
 //
 
 import { Event, scheduleTaskInterval } from '@dxos/async';
-import { type Client, type Config } from '@dxos/client';
+import { PublicKey, type Client, type Config } from '@dxos/client';
 import { type ClientServices, type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -115,6 +115,7 @@ export class Observability {
     environment && this.setTag('environment', environment);
     release && this.setTag('release', release);
     this.setTag('mode', this._mode);
+    this.setTag('session', PublicKey.random().toHex());
   }
 
   get mode() {
