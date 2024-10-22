@@ -38,8 +38,8 @@ const frozen = {
   frozenRowsStart: 1,
 };
 
-const sheetRowDefault = { grid: { size: 32, resizeable: true } };
-const sheetColDefault = { frozenColsStart: { size: 48 }, grid: { size: 180, resizeable: true } };
+const sheetRowDefault = { frozenRowsStart: { size: 32, readonly: true }, grid: { size: 32, resizeable: true } };
+const sheetColDefault = { frozenColsStart: { size: 48, readonly: true }, grid: { size: 180, resizeable: true } };
 
 export const GridSheet = () => {
   const { id, model, editing, setEditing, setCursor, setRange } = useSheetContext();
@@ -155,6 +155,7 @@ export const GridSheet = () => {
         frozen={frozen}
         onFocus={handleFocus}
         onWheelCapture={handleWheel}
+        overscroll='inline'
         className='[--dx-grid-base:var(--surface-bg)]'
         ref={dxGrid}
       />
