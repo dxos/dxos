@@ -41,7 +41,6 @@ export const clone = <T extends {}>(
   }
 
   const clone = cloneInner(obj, retainId ? obj.id : createObjectId());
-
   const clones: EchoReactiveObject<any>[] = [clone];
   for (const innerObj of additional) {
     if (innerObj) {

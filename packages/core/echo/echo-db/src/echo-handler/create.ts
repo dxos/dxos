@@ -40,21 +40,21 @@ export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =
   isReactiveObject(value) && getProxyHandler(value) instanceof EchoReactiveHandler;
 
 /**
- * Creates a reactive object.
+ * Creates a reactive ECHO object.
  * @internal
  */
 // TODO(burdon): Remove from public API (just use `create()`?).
-export const createObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
-  invariant(!isEchoObject(init));
-  const schema = getSchema(init);
+export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
+  invariant(!isEchoObject(props));
+  const schema = getSchema(props);
   if (schema != null) {
     validateSchema(schema);
   }
-  validateInitialProps(init);
+  validateInitialProps(props);
 
   const core = new ObjectCore();
-  if (isReactiveObject(init)) {
-    const proxy = init as any;
+  if (isReactiveObject(props)) {
+    const proxy = props as any;
     const meta = getProxyTarget<ObjectMeta>(getMeta(proxy));
 
     // TODO(burdon): Document.
@@ -64,7 +64,7 @@ export const createObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
     target[symbolInternals] = initInternals(core);
 
     // TODO(dmaretskyi): Does this need to be disposed? RB: Probably!
-    core.updates.on(() => target[symbolInternals].signal.notifyWrite());
+    core.subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
 
     target[symbolPath] = [];
     target[symbolNamespace] = DATA_NAMESPACE;
@@ -87,17 +87,26 @@ export const createObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
       [symbolInternals]: initInternals(core),
       [symbolPath]: [],
       [symbolNamespace]: DATA_NAMESPACE,
-      ...(init as any),
+      ...(props as any),
     };
 
     // TODO(dmaretskyi): Does this need to be disposed? RB: Probably!
-    core.updates.on(() => target[symbolInternals].signal.notifyWrite());
+    core.subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
 
     initCore(core, target);
     const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
     saveTypeInAutomerge(target[symbolInternals], schema);
-
     return proxy;
+  }
+};
+
+// TODO(burdon): Call and remove subscriptions.
+const disposeObject = <T extends {}>(proxy: EchoReactiveObject<T>) => {
+  invariant(isEchoObject(proxy));
+  const target: ProxyTarget = getProxyTarget(proxy);
+  const internals: ObjectInternals = target[symbolInternals];
+  for (const unsubscribe of internals.core.subscriptions) {
+    unsubscribe();
   }
 };
 
