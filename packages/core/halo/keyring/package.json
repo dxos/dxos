@@ -36,9 +36,7 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/util": "workspace:*"
   },
-  "devDependencies": {
-    "@types/node": "^22.7.4"
-  },
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

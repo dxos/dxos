@@ -4,6 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { randomInt } from './random';
 import { createBucketReducer, numericalValues, reduceGroupBy, reduceSeries, reduceSet } from './reducers';
 import { Tracer } from './tracer';
 
@@ -21,7 +22,7 @@ describe('Tracer', () => {
     const n = 20;
     for (let i = 0; i < n; i++) {
       tracer.emit(key);
-      await sleep(Math.random() * 10);
+      await sleep(randomInt(10));
     }
 
     const events = tracer.get('test')!;
