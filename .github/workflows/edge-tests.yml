@@ -50,10 +50,15 @@ jobs:
         run: sudo apt-get install libxtst-dev libpng++-dev
         shell: bash
 
+      - name: Install system dependencies
+        run: sudo apt-get install libxtst-dev libpng++-dev
+        shell: bash
+
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
+          cache: 'pnpm'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -62,12 +67,17 @@ jobs:
           version: 9
           run_install: false
 
-      - uses: nrwl/nx-set-shas@v4
-
-      - name: Install dependencies
-        working-directory: ./edge
-        run: pnpm install
+      - name: Install DXOS dependencies
+        working-directory: ./dxos
+        run: pnpm install --frozen-lockfile
         shell: bash
+      
+      - name: Install EDGE dependencies
+        working-directory: ./edge
+        run: pnpm install --frozen-lockfile
+        shell: bash
+
+      - uses: nrwl/nx-set-shas@v4
 
       - name: Link DXOS packages inside EDGE repo
         working-directory: ./edge
