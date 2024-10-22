@@ -95,7 +95,7 @@ jobs:
 
       - name: Install linked dependencies
         working-directory: ./edge
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
         shell: bash
 
       - name: Test All
