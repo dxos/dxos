@@ -64,11 +64,16 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
 
-      - name: Link All
+      - name: Install dependencies
+        working-directory: ./edge
+        run: pnpm install
+        shell: bash
+
+      - name: Link DXOS packages inside EDGE repo
         working-directory: ./edge
         run: node ./scripts/link-packages.mjs ../dxos --all
 
-      - name: Install dependencies
+      - name: Install linked dependencies
         working-directory: ./edge
         run: pnpm install
         shell: bash
