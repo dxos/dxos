@@ -8,7 +8,6 @@ import { type Decorator, type StoryFn } from '@storybook/react';
 import React, { type FC, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { DensityProvider } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SearchResults } from './SearchResults';
@@ -23,14 +22,12 @@ const Story: FC<{ objects: any[] }> = ({ objects }) => {
   const filteredItems = useGlobalSearchResults(objects);
 
   return (
-    <DensityProvider density='fine'>
-      <div className='flex grow justify-center overflow-hidden'>
-        <div className='flex flex-col w-[300px] m-4 overflow-hidden'>
-          <Searchbar variant='subdued' placeholder='Enter regular expression...' onChange={setMatch} />
-          <SearchResults items={filteredItems} selected={selected} onSelect={setSelected} />
-        </div>
+    <div className='flex grow justify-center overflow-hidden'>
+      <div className='flex flex-col w-[300px] m-4 overflow-hidden'>
+        <Searchbar variant='subdued' placeholder='Enter regular expression...' onChange={setMatch} />
+        <SearchResults items={filteredItems} selected={selected} onSelect={setSelected} />
       </div>
-    </DensityProvider>
+    </div>
   );
 };
 

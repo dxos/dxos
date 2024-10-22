@@ -9,7 +9,7 @@ import React, { type ComponentPropsWithoutRef, StrictMode, useEffect, useMemo, u
 import { createRoot } from 'react-dom/client';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { Button, DensityProvider, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Button, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type CursorInfo,
   automerge,
@@ -563,19 +563,17 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
 
   return (
     <div role='tree' className={className}>
-      <DensityProvider density='fine'>
-        <OutlinerBranch
-          root={root}
-          active={active}
-          onItemCursor={handleCursor}
-          onItemSelect={(root, item) => setActive({ itemId: item.id })}
-          onItemCreate={onCreate && handleCreate}
-          onItemDelete={onDelete && handleDelete}
-          onItemIndent={handleIndent}
-          onItemShift={handleShift}
-          {...props}
-        />
-      </DensityProvider>
+      <OutlinerBranch
+        root={root}
+        active={active}
+        onItemCursor={handleCursor}
+        onItemSelect={(root, item) => setActive({ itemId: item.id })}
+        onItemCreate={onCreate && handleCreate}
+        onItemDelete={onDelete && handleDelete}
+        onItemIndent={handleIndent}
+        onItemShift={handleShift}
+        {...props}
+      />
     </div>
   );
 };

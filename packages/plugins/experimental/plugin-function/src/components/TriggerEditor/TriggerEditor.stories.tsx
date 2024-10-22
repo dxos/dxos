@@ -9,7 +9,6 @@ import { FunctionDef, FunctionTrigger } from '@dxos/functions/types';
 import { ChainPromptType } from '@dxos/plugin-chain/types';
 import { useSpace } from '@dxos/react-client/echo';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
-import { DensityProvider } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TriggerEditor } from './TriggerEditor';
@@ -45,11 +44,9 @@ const TriggerEditorStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
   }
 
   return (
-    <DensityProvider density='fine'>
-      <div role='none' className='is-full pli-8'>
-        <TriggerEditor space={space} trigger={trigger} />
-      </div>
-    </DensityProvider>
+    <div role='none' className='is-full pli-8'>
+      <TriggerEditor space={space} trigger={trigger} />
+    </div>
   );
 };
 
