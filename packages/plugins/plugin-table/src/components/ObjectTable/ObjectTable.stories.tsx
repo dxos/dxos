@@ -11,9 +11,9 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ObjectTable } from './ObjectTable';
-import { Toolbar } from './Toolbar';
-import { createEmptyTable } from './testing';
-import { TableType } from '../types';
+import { TableType } from '../../types';
+import { Toolbar } from '../Toolbar';
+import { createEmptyTable } from '../testing';
 
 const Story = () => {
   const spaces = useSpaces();
@@ -64,7 +64,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'plugin-table/ObjectTable-Next',
+  title: 'plugin-table/ObjectTable/next',
   component: ObjectTable,
   decorators: [
     withClientProvider({
