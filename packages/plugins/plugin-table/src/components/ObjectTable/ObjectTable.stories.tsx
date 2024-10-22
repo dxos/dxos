@@ -64,7 +64,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'plugin-table/ObjectTable',
+  title: 'plugin-table/ObjectTable/next',
   component: ObjectTable,
   decorators: [
     withClientProvider({
