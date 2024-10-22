@@ -36,6 +36,7 @@ import {
   type DxGridPositionNullable,
   type DxGridAxis,
   type DxGridSelectionProps,
+  type DxGridAnnotatedWheelEvent,
 } from './types';
 import { separator, toCellIndex } from './util';
 
@@ -190,8 +191,12 @@ const isSameCell = (a: DxGridPositionNullable, b: DxGridPositionNullable) =>
 export class DxGrid extends LitElement {
   constructor() {
     super();
+    // Wheel, top-level and element-level
+    document.defaultView?.addEventListener('wheel', this.handleTopLevelWheel, { passive: false });
+    this.addEventListener('wheel', this.handleWheel);
+    // Custom event(s)
     this.addEventListener('dx-axis-resize-internal', this.handleAxisResizeInternal as EventListener);
-    this.addEventListener('wheel', this.handleWheel, { passive: true });
+    // Standard events
     this.addEventListener('pointerdown', this.handlePointerDown);
     this.addEventListener('pointermove', this.handlePointerMove);
     this.addEventListener('pointerup', this.handlePointerUp);
@@ -234,6 +239,9 @@ export class DxGrid extends LitElement {
 
   @property({ type: Object })
   frozen: DxGridFrozenAxes = {};
+
+  @property({ type: String })
+  overscroll: 'inline' | 'block' | undefined = undefined;
 
   /**
    * When this function is defined, it is used first to try to get a value for a cell, and otherwise will fall back
@@ -557,24 +565,50 @@ export class DxGrid extends LitElement {
     }
   };
 
-  private updatePosInline(inline?: number) {
-    this.posInline = Math.max(0, Math.min(this.intrinsicInlineSize - this.sizeInline, inline ?? this.posInline));
+  private maxPosInline() {
+    return this.intrinsicInlineSize - this.sizeInline;
+  }
+
+  private maxPosBlock() {
+    return this.intrinsicBlockSize - this.sizeBlock;
+  }
+
+  private updatePosInline(inline?: number, maxInline: number = this.maxPosInline()) {
+    this.posInline = Math.max(0, Math.min(maxInline, inline ?? this.posInline));
     this.maybeUpdateVisInline();
   }
 
-  private updatePosBlock(block?: number) {
-    this.posBlock = Math.max(0, Math.min(this.intrinsicBlockSize - this.sizeBlock, block ?? this.posBlock));
+  private updatePosBlock(block?: number, maxBlock: number = this.maxPosBlock()) {
+    this.posBlock = Math.max(0, Math.min(maxBlock, block ?? this.posBlock));
     this.maybeUpdateVisBlock();
   }
 
-  private updatePos(inline?: number, block?: number) {
-    this.updatePosInline(inline);
-    this.updatePosBlock(block);
+  private updatePos(inline?: number, block?: number, maxInline?: number, maxBlock?: number) {
+    this.updatePosInline(inline, maxInline);
+    this.updatePosBlock(block, maxBlock);
   }
 
-  private handleWheel = ({ deltaX, deltaY }: Pick<WheelEvent, 'deltaX' | 'deltaY'>) => {
+  private handleTopLevelWheel = (event: DxGridAnnotatedWheelEvent) => {
+    if (
+      (Number.isFinite(event.overscrollInline) && this.overscroll === 'inline' && event.overscrollInline === 0) ||
+      (Number.isFinite(event.overscrollBlock) && this.overscroll === 'block' && event.overscrollBlock === 0)
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
+
+  private handleWheel = (event: DxGridAnnotatedWheelEvent) => {
     if (this.mode === 'browse') {
-      this.updatePos(this.posInline + deltaX, this.posBlock + deltaY);
+      const nextPosInline = this.posInline + event.deltaX;
+      const nextPosBlock = this.posBlock + event.deltaY;
+      const maxPosInline = this.maxPosInline();
+      const maxPosBlock = this.maxPosBlock();
+      this.updatePos(nextPosInline, nextPosBlock, maxPosInline, maxPosBlock);
+      event.overscrollInline =
+        nextPosInline <= 0 ? nextPosInline : nextPosInline > maxPosInline ? nextPosInline - maxPosInline : 0;
+      event.overscrollBlock =
+        nextPosBlock <= 0 ? nextPosBlock : nextPosBlock > maxPosBlock ? nextPosBlock - maxPosBlock : 0;
     }
   };
 
@@ -1240,6 +1274,7 @@ export class DxGrid extends LitElement {
     if (this.viewportRef.value) {
       this.observer.unobserve(this.viewportRef.value);
     }
+    document.defaultView?.removeEventListener('wheel', this.handleTopLevelWheel);
   }
 
   override createRenderRoot() {

@@ -155,6 +155,7 @@ export const GridSheet = () => {
         frozen={frozen}
         onFocus={handleFocus}
         onWheelCapture={handleWheel}
+        overscroll='inline'
         className='[--dx-grid-base:var(--surface-bg)]'
         ref={dxGrid}
       />
