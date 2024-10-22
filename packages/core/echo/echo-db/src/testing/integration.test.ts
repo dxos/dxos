@@ -399,7 +399,7 @@ describe('Integration tests', () => {
         await db.schema.list(); // Have to preload schema.
         const schema = db.schema.getSchemaByTypename('example.com/type/Test');
 
-        const { objects } = await db.query(Filter.schema(schema)).run();
+        const { objects } = await db.query(Filter.schema(schema!)).run();
         expect(objects.length).to.eq(1);
         expect(getObjectAnnotation(getSchema(objects[0])!)).to.include({
           typename: 'example.com/type/Test',
