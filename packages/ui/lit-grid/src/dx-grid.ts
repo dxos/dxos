@@ -808,25 +808,30 @@ export class DxGrid extends LitElement {
    * Moves focus to the cell with actual focus, otherwise moves focus to the viewport.
    */
   refocus(increment?: 'col' | 'row', delta: 1 | -1 = 1) {
-    switch (increment) {
-      case 'row':
-        this.focusedCell = { ...this.focusedCell, row: this.focusedCell.row + delta };
-        break;
-      case 'col':
-        this.focusedCell = { ...this.focusedCell, col: this.focusedCell.col + delta };
-    }
     if (increment) {
+      switch (increment) {
+        case 'col': {
+          this.focusedCell.col += delta;
+          break;
+        }
+        case 'row': {
+          this.focusedCell.row += delta;
+          break;
+        }
+      }
       this.snapPosToFocusedCell();
     }
+
     queueMicrotask(() => {
-      const outOfVis = this.focusedCellOutOfVis(overscanCol, overscanRow);
-      if (outOfVis.col !== 0 || outOfVis.row !== 0) {
-        this.viewportRef.value?.focus({ preventScroll: true });
-      } else {
-        const activeFocusedCell = document.activeElement?.closest(this.focusedCellQuery());
-        if (!activeFocusedCell) {
-          this.focusedCellElement()?.focus({ preventScroll: true });
+      const outOfVis = this.focusedCellOutOfVis();
+      const cellVisible = outOfVis.col === 0 && outOfVis.row === 0;
+      if (cellVisible) {
+        const cellElement = this.focusedCellElement();
+        if (cellElement && cellElement !== document.activeElement) {
+          cellElement.focus({ preventScroll: true });
         }
+      } else {
+        this.viewportRef.value?.focus({ preventScroll: true });
       }
     });
   }
@@ -1209,9 +1214,11 @@ export class DxGrid extends LitElement {
 
     if (changedProperties.has('columns')) {
       this.computeColSizes();
+      this.updateIntrinsicInlineSize();
     }
     if (changedProperties.has('rows')) {
       this.computeRowSizes();
+      this.updateIntrinsicBlockSize();
     }
   }
 
