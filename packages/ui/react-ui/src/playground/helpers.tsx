@@ -4,16 +4,15 @@
 
 import '@dxos-theme';
 
-import React, { type FunctionComponent } from 'react';
+import React, { type FC } from 'react';
 
 import { type Density } from '@dxos/react-ui-types';
 
 import { DensityProvider, ElevationProvider } from '../components';
 
 // TODO(burdon): Grid: density, variant (context?), elevation.
-export const createScenarios =
-  (Component: FunctionComponent<any>) =>
-  ({ ...props }) => {
+export const createScenarios = (Component: FC<any>) => {
+  return ({ ...props }) => {
     const densities: Density[] = ['coarse', 'fine'];
     return (
       <div className='flex flex-col space-y-8'>
@@ -30,3 +29,4 @@ export const createScenarios =
       </div>
     );
   };
+};

@@ -10,7 +10,7 @@ import { CSS } from '@dnd-kit/utilities';
 import React, { type FC, type PropsWithChildren, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { DensityProvider, DropdownMenu, Input, ScrollArea } from '@dxos/react-ui';
+import { DropdownMenu, Input, ScrollArea } from '@dxos/react-ui';
 import { modalSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -202,10 +202,7 @@ export default {
     (Story: any) => (
       <div className={mx('flex h-screen w-full justify-center overflow-hidden', modalSurface)}>
         <div className='flex flex-col w-[360px] overflow-hidden'>
-          {/* TODO(burdon): Story for different densities. */}
-          <DensityProvider density='fine'>
-            <Story />
-          </DensityProvider>
+          <Story />
         </div>
       </div>
     ),

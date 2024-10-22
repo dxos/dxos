@@ -26,7 +26,7 @@ const Container = ({ children }: PropsWithChildren<{}>) => (
     <div role='group' className={mx('flex flex-col gap-4 mbe-4 p-4')}>
       <ElevationProvider elevation='base'>
         <div className='flex gap-4'>{children}</div>
-        <DensityProvider density='fine'>
+        <DensityProvider density='coarse'>
           <div className='flex gap-4'>{children}</div>
         </DensityProvider>
       </ElevationProvider>
@@ -37,7 +37,7 @@ const Container = ({ children }: PropsWithChildren<{}>) => (
     >
       <ElevationProvider elevation='group'>
         <div className='flex gap-4'>{children}</div>
-        <DensityProvider density='fine'>
+        <DensityProvider density='coarse'>
           <div className='flex gap-4'>{children}</div>
         </DensityProvider>
       </ElevationProvider>
@@ -52,7 +52,7 @@ const Container = ({ children }: PropsWithChildren<{}>) => (
     >
       <ElevationProvider elevation='chrome'>
         <div className='flex gap-4'>{children}</div>
-        <DensityProvider density='fine'>
+        <DensityProvider density='coarse'>
           <div className='flex gap-4'>{children}</div>
         </DensityProvider>
       </ElevationProvider>

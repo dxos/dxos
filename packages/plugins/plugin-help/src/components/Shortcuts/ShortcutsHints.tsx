@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type KeyBinding, Keyboard } from '@dxos/keyboard';
-import { Button, DensityProvider, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { Key } from './Key';
 
@@ -27,17 +27,15 @@ export const ShortcutsHints = ({ onClose }: { onClose?: () => void }) => {
   };
 
   return (
-    <DensityProvider density='fine'>
-      <div role='none' className='flex px-2 gap-4'>
-        {hints.map((binding) => (
-          <Shortcut key={binding.shortcut} binding={binding} />
-        ))}
-        {onClose && (
-          <Button variant='ghost' classNames='p-0 cursor-pointer' onClick={onClose}>
-            <Icon icon='ph--x--regular' size={4} />
-          </Button>
-        )}
-      </div>
-    </DensityProvider>
+    <div role='none' className='flex px-2 gap-4'>
+      {hints.map((binding) => (
+        <Shortcut key={binding.shortcut} binding={binding} />
+      ))}
+      {onClose && (
+        <Button variant='ghost' classNames='p-0 cursor-pointer' onClick={onClose}>
+          <Icon icon='ph--x--regular' size={4} />
+        </Button>
+      )}
+    </div>
   );
 };
