@@ -4,6 +4,10 @@
 
 import { effect, type ReadonlySignal } from '@preact/signals-core';
 
+import { toCellKey, type GridCell } from '../types';
+
+// TODO(burdon): Move into model.
+//  TODO(burdon): This class is probably not necessary since we can subscribe to updates from ECHO directly.
 // TODO(Zan): Take in the current visible bounds and only subscribe to cells within that range.
 
 /**
@@ -19,7 +23,7 @@ export class CellUpdateListener {
 
   constructor(
     private readonly cells: ReadonlySignal<{ [key: string]: any }>,
-    private onCellUpdate?: (col: number, row: number) => void,
+    private onCellUpdate?: (cell: GridCell) => void,
   ) {
     this.setupCellListeners();
     this.createInitialCellEffects();
@@ -52,10 +56,10 @@ export class CellUpdateListener {
   };
 
   private trackUpdate = (cellKey: string): void => {
-    const [col, row] = cellKey.split(',').map(Number);
-    this.onCellUpdate?.(col, row);
+    this.onCellUpdate?.(toCellKey(cellKey));
   };
 
+  // TODO(burdon): Implement Resource.
   public dispose = (): void => {
     this.cleanupCellListeners();
     if (this.topLevelEffectUnsubscribe) {

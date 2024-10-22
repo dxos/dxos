@@ -17,9 +17,8 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { formatValue } from '@dxos/schema';
 
-import { CellUpdateListener } from './CellUpdateListener';
-import { type TableType } from './types';
-import { getCellKey } from './util';
+import { CellUpdateListener } from './update-listener';
+import { fromCellKey, type GridCell, type TableType } from '../types';
 
 export type ColumnId = string;
 export type SortDirection = 'asc' | 'desc';
@@ -28,7 +27,7 @@ export type SortConfig = { columnId: ColumnId; direction: SortDirection };
 export type TableModelProps = {
   table: TableType;
   data: any[];
-  onCellUpdate?: (col: number, row: number) => void;
+  onCellUpdate?: (cell: GridCell) => void;
   sorting?: SortConfig[];
   pinnedRows?: { top: number[]; bottom: number[] };
   rowSelection?: number[];
@@ -44,23 +43,26 @@ const columnSettingsButtonHtml = (columnId: string) =>
 export class TableModel extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
 
+  public readonly table: TableType;
+  public readonly data: any[];
+
   public cells!: ReadonlySignal<DxGridCells>;
   public cellUpdateListener!: CellUpdateListener;
   public columnMeta!: ReadonlySignal<DxGridAxisMeta>;
 
-  public readonly table: TableType;
-  public readonly data: any[];
-  private onCellUpdate?: (col: number, row: number) => void;
   public pinnedRows: { top: number[]; bottom: number[] };
   public rowSelection: number[];
 
   public readonly sorting = signal<SortConfig | undefined>(undefined);
+
   /**
    * Maps display indices to data indices.
    * Used for translating between sorted/displayed order and original data order.
    * Keys are display indices, values are corresponding data indices.
    */
-  private displayToDataIndex: Map<number, number> = new Map();
+  private readonly displayToDataIndex: Map<number, number> = new Map();
+
+  private readonly onCellUpdate?: (cell: GridCell) => void;
 
   constructor({
     table,
@@ -86,7 +88,7 @@ export class TableModel extends Resource {
       return Object.fromEntries(
         fields.map((field, index: number) => {
           return [
-            getCellKey(index, 0),
+            fromCellKey({ col: index, row: 0 }),
             {
               value: field.label ?? field.path,
               resizeHandle: 'col',
@@ -104,7 +106,7 @@ export class TableModel extends Resource {
         return this.data;
       }
 
-      const field = this.table.view?.fields.find((f) => f.id === sort.columnId);
+      const field = this.table.view?.fields.find((field) => field.id === sort.columnId);
       if (!field) {
         return this.data;
       }
@@ -142,9 +144,11 @@ export class TableModel extends Resource {
           if (cellClasses) {
             cell.className = mx(cellClasses);
           }
-          values[getCellKey(colIndex, displayIndex)] = cell;
+
+          values[fromCellKey({ col: colIndex, row: displayIndex })] = cell;
         });
       });
+
       return values;
     });
 
@@ -153,25 +157,49 @@ export class TableModel extends Resource {
     });
 
     this.columnMeta = computed(() => {
-      const headings = Object.fromEntries(
-        (this.table.view?.fields ?? []).map((field, index: number) => {
-          return [index, { size: field.size ?? 256, resizeable: true }];
-        }),
-      );
-      return { grid: headings };
+      return {
+        grid: Object.fromEntries(
+          (this.table.view?.fields ?? []).map((field, index: number) => [
+            index,
+            { size: field.size ?? 256, resizeable: true },
+          ]),
+        ),
+      };
     });
 
     this.cellUpdateListener = new CellUpdateListener(cellValues, this.onCellUpdate);
     this._ctx.onDispose(this.cellUpdateListener.dispose);
   }
 
-  public setSort(columnId: ColumnId, direction: SortDirection): void {
-    this.sorting.value = { columnId, direction };
-  }
+  //
+  // Data
+  //
 
-  public clearSort(): void {
-    this.sorting.value = undefined;
-  }
+  public getCellData = ({ col, row }: GridCell): any => {
+    const fields = this.table.view?.fields ?? [];
+    if (col < 0 || col >= fields.length) {
+      return undefined;
+    }
+
+    const field = fields[col];
+    const dataIndex = this.displayToDataIndex.get(row) ?? row;
+    return this.data[dataIndex][field.path];
+  };
+
+  public setCellData = ({ col, row }: GridCell, value: any): void => {
+    const fields = this.table.view?.fields ?? [];
+    if (col < 0 || col >= fields.length) {
+      return;
+    }
+
+    const field = fields[col];
+    const dataIndex = this.displayToDataIndex.get(row) ?? row;
+    this.data[dataIndex][field.path] = parseValue(field.type, value);
+  };
+
+  //
+  // Move
+  //
 
   public moveColumn(columnId: ColumnId, newIndex: number): void {
     const fields = this.table.view?.fields ?? [];
@@ -182,28 +210,9 @@ export class TableModel extends Resource {
     }
   }
 
-  public pinRow(rowIndex: number, side: 'top' | 'bottom'): void {
-    this.pinnedRows[side].push(rowIndex);
-  }
-
-  public unpinRow(rowIndex: number): void {
-    this.pinnedRows.top = this.pinnedRows.top.filter((index: number) => index !== rowIndex);
-    this.pinnedRows.bottom = this.pinnedRows.bottom.filter((index: number) => index !== rowIndex);
-  }
-
-  public selectRow(rowIndex: number): void {
-    if (!this.rowSelection.includes(rowIndex)) {
-      this.rowSelection.push(rowIndex);
-    }
-  }
-
-  public deselectRow(rowIndex: number): void {
-    this.rowSelection = this.rowSelection.filter((index: number) => index !== rowIndex);
-  }
-
-  public deselectAllRows(): void {
-    this.rowSelection = [];
-  }
+  //
+  // Resize
+  //
 
   public setColumnWidth(columnIndex: number, width: number): void {
     const newWidth = Math.max(0, width);
@@ -213,23 +222,48 @@ export class TableModel extends Resource {
     }
   }
 
-  public getCellData = (colIndex: number, rowIndex: number): any => {
-    const fields = this.table.view?.fields ?? [];
-    if (colIndex < 0 || colIndex >= fields.length) {
-      return undefined;
-    }
-    const field = fields[colIndex];
-    const dataIndex = this.displayToDataIndex.get(rowIndex) ?? rowIndex;
-    return this.data[dataIndex][field.path];
-  };
+  //
+  // Sorting
+  //
 
-  public setCellData = (colIndex: number, rowIndex: number, value: any): void => {
-    const fields = this.table.view?.fields ?? [];
-    if (colIndex < 0 || colIndex >= fields.length) {
-      return;
+  public setSort(columnId: ColumnId, direction: SortDirection): void {
+    this.sorting.value = { columnId, direction };
+  }
+
+  public clearSort(): void {
+    this.sorting.value = undefined;
+  }
+
+  //
+  // Pinning
+  //
+
+  // TODO(burdon): Change to setPinned(on/off).
+  public pinRow(rowIndex: number, side: 'top' | 'bottom'): void {
+    this.pinnedRows[side].push(rowIndex);
+  }
+
+  public unpinRow(rowIndex: number): void {
+    this.pinnedRows.top = this.pinnedRows.top.filter((index: number) => index !== rowIndex);
+    this.pinnedRows.bottom = this.pinnedRows.bottom.filter((index: number) => index !== rowIndex);
+  }
+
+  //
+  // Selection
+  //
+
+  // TODO(burdon): Change to setSelection(on/off).
+  public selectRow(rowIndex: number) {
+    if (!this.rowSelection.includes(rowIndex)) {
+      this.rowSelection.push(rowIndex);
     }
-    const field = fields[colIndex];
-    const dataIndex = this.displayToDataIndex.get(rowIndex) ?? rowIndex;
-    this.data[dataIndex][field.path] = parseValue(field.type, value);
-  };
+  }
+
+  public deselectRow(rowIndex: number) {
+    this.rowSelection = this.rowSelection.filter((index: number) => index !== rowIndex);
+  }
+
+  public deselectAllRows() {
+    this.rowSelection = [];
+  }
 }

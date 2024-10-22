@@ -17,7 +17,7 @@ import {
 
 import { type GridEditBox } from '../Grid';
 
-type EditorKeyEvent = Pick<KeyboardEvent<HTMLInputElement>, 'key'> & { shift?: boolean };
+export type EditorKeyEvent = Pick<KeyboardEvent<HTMLInputElement>, 'key'> & { shift?: boolean };
 
 export type EditorKeysProps = {
   onClose: (value: string | undefined, event: EditorKeyEvent) => void;

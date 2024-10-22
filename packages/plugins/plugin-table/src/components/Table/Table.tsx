@@ -10,9 +10,9 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { TableCellEditor } from './TableCellEditor';
-import { useTableModel } from '../hooks';
-import { columnSettingsButtonAttr } from '../table-model';
-import { type TableType } from '../types';
+import { useTableModel } from '../../hooks';
+import { columnSettingsButtonAttr } from '../../model';
+import { type GridCell, type TableType } from '../../types';
 
 // NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
 // These are offset by 1px to avoid double borders in planks.
@@ -23,19 +23,24 @@ const blockEndLine =
 
 const frozen = { frozenRowsStart: 1 };
 
-type TableProps = { table: TableType; data: any[] };
+export type TableProps = {
+  table: TableType;
+  data: any[];
+};
 
+// TODO(burdon): Move to react-ui-table?
 export const Table = ({ table, data }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [clickedColumnId, setClickedColumnId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleOnCellUpdate = useCallback((col: number, row: number) => {
-    gridRef.current?.updateIfWithinBounds({ col, row });
+  const handleOnCellUpdate = useCallback((cell: GridCell) => {
+    gridRef.current?.updateIfWithinBounds(cell);
   }, []);
 
   const tableModel = useTableModel(table, data, handleOnCellUpdate);
+
   const handleAxisResize = useCallback(
     (event: DxAxisResize) => {
       if (event.axis === 'col') {

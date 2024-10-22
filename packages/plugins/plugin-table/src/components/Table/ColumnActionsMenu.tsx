@@ -8,8 +8,8 @@ import React from 'react';
 import { LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { DropdownMenu, useThemeContext, useTranslation } from '@dxos/react-ui';
 
-import { TABLE_PLUGIN } from '../meta';
-import { type TableModel } from '../table-model';
+import { TABLE_PLUGIN } from '../../meta';
+import { type TableModel } from '../../model';
 
 type ColumnActionsMenuProps = {
   tableModel: TableModel | undefined;
