@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
-export const DashboardPanel = React.lazy(() => import('./DashboardPanel'));
-export const SearchPanel = React.lazy(() => import('./SearchPanel'));
+export const DashboardPanel = lazy(() => import('./DashboardPanel'));
+export const SearchPanel = lazy(() => import('./SearchPanel'));

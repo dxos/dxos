@@ -38,7 +38,7 @@ describe('Client', () => {
     onTestFinished(() => client.destroy());
     await asyncTimeout(client.initialize(), 2_000);
     await asyncTimeout(client.halo.createIdentity(), 2_000);
-    await asyncTimeout(client.spaces.isReady.wait(), 2_000);
+    await asyncTimeout(client.spaces.waitUntilReady(), 2_000);
     await asyncTimeout(client.spaces.default.waitUntilReady(), 2_000);
   });
 
@@ -99,7 +99,7 @@ describe('Client', () => {
       expect(client.halo.identity.get()).not.to.exist;
       const identity = await client.halo.createIdentity({ displayName });
       expect(client.halo.identity.get()).to.deep.eq(identity);
-      await client.spaces.isReady.wait();
+      await client.spaces.waitUntilReady();
       await client.destroy();
     }
 
@@ -109,7 +109,7 @@ describe('Client', () => {
       expect(client.halo.identity).to.exist;
       // TODO(burdon): Error type.
       await expect(client.halo.createIdentity({ displayName })).rejects.toBeInstanceOf(Error);
-      await client.spaces.isReady.wait();
+      await client.spaces.waitUntilReady();
     }
     {
       // Reset storage.
@@ -117,12 +117,13 @@ describe('Client', () => {
     }
 
     {
+      // TODO(wittjosiah): This functionality is currently disabled because it was unreliable.
       // Start again.
-      expect(client.halo.identity.get()).to.eq(null);
-      await client.halo.createIdentity({ displayName });
-      expect(client.halo.identity).to.exist;
-      await client.spaces.isReady.wait();
-      await client.destroy();
+      // expect(client.halo.identity.get()).to.eq(null);
+      // await client.halo.createIdentity({ displayName });
+      // expect(client.halo.identity).to.exist;
+      // await client.spaces.waitUntilReady();
+      // await client.destroy();
     }
   });
 
@@ -186,7 +187,8 @@ describe('Client', () => {
     await expect.poll(() => thread1.messages[0]!.blocks[0].content?.content, { timeout: 1_000 }).toEqual(text);
   });
 
-  test('reset & create space', async () => {
+  // TODO(wittjosiah): This functionality is currently disabled because it was unreliable.
+  test.skip('reset & create space', async () => {
     const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createLocalClientServices() });

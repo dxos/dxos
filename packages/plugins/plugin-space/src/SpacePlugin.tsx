@@ -858,8 +858,11 @@ export const SpacePlugin = ({
               }
 
               return {
-                data: { space, id: space.id, activeParts: { main: [space.id] } },
-
+                data: {
+                  space,
+                  id: space.id,
+                  activeParts: { main: [space.id] },
+                },
                 intents: [
                   ...(settings.values.onSpaceCreate
                     ? [
@@ -890,9 +893,26 @@ export const SpacePlugin = ({
                 const { space } = await client.shell.joinSpace({ invitationCode: intent.data?.invitationCode });
                 if (space) {
                   return {
-                    data: { space, id: space.id, activeParts: { main: [space.id] } },
-
+                    data: {
+                      space,
+                      id: space.id,
+                      activeParts: { main: [space.id] },
+                    },
                     intents: [
+                      [
+                        {
+                          action: LayoutAction.SET_LAYOUT,
+                          data: {
+                            element: 'toast',
+                            subject: {
+                              id: `${SPACE_PLUGIN}/join-success`,
+                              duration: 10_000,
+                              title: translations[0]['en-US'][SPACE_PLUGIN]['join success label'],
+                              closeLabel: translations[0]['en-US'][SPACE_PLUGIN]['dismiss label'],
+                            },
+                          },
+                        },
+                      ],
                       [
                         {
                           action: ObservabilityAction.SEND_EVENT,

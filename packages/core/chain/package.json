@@ -26,8 +26,7 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/node-std": "workspace:*",
-    "@types/node": "^22.7.4"
+    "@dxos/node-std": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

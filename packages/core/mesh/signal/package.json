@@ -30,7 +30,6 @@
   },
   "devDependencies": {
     "@dxos/util": "workspace:*",
-    "@types/node": "^22.7.4",
     "@types/node-fetch": "^2.5.10"
   },
   "publishConfig": {

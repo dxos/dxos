@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChartBar, Circle, Lightning, LightningSlash } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { firstIdInPart, parseGraphPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
@@ -13,7 +12,8 @@ import { getActiveSpace } from '@dxos/plugin-space';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { Icon } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 const styles = {
   success: 'text-sky-300 dark:text-green-700',
@@ -97,13 +97,13 @@ const ErrorIndicator = () => {
   if (errorRef.current) {
     return (
       <StatusBar.Button title={errorRef.current.message} onClick={handleReset}>
-        <Circle weight='fill' className={mx(styles.error, getSize(3))} />
+        <Icon icon='ph--warning-circle--duotone' size={4} classNames={styles.error} />
       </StatusBar.Button>
     );
   } else {
     return (
       <StatusBar.Item title='No errors.'>
-        <Circle weight='fill' className={getSize(3)} />
+        <Icon icon='ph--check--regular' size={4} />
       </StatusBar.Item>
     );
   }
@@ -122,21 +122,22 @@ const SwarmIndicator = () => {
   if (state === 0) {
     return (
       <StatusBar.Item title='Connected to swarm.'>
-        <Lightning className={getSize(4)} />
+        <Icon icon='ph--lightning--regular' size={4} />
       </StatusBar.Item>
     );
   } else {
     return (
       <StatusBar.Item title='Disconnected from swarm.'>
-        <LightningSlash className={mx(styles.warning, getSize(4))} />
+        <Icon icon='ph--lightning-slash--regular' size={4} classNames={styles.warning} />
       </StatusBar.Item>
     );
   }
 };
 
 /**
- * Space saving indicator.
+ * Data saving indicator.
  */
+// TODO(burdon): Merge with SaveStatus.
 const SavingIndicator = () => {
   const [state, _setState] = useState(0);
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
@@ -167,20 +168,20 @@ const SavingIndicator = () => {
     case 2:
       return (
         <StatusBar.Item title='Edit not saved.'>
-          <Circle weight='fill' className={mx(styles.warning, getSize(3))} />
+          <Icon icon='ph--circle--duotone' size={4} classNames={styles.warning} />
         </StatusBar.Item>
       );
     case 1:
       return (
         <StatusBar.Item title='Saving...'>
-          <Circle weight='fill' className={mx(styles.success, getSize(3))} />
+          <Icon icon='ph--circle--duotone' size={4} classNames={styles.success} />
         </StatusBar.Item>
       );
     case 0:
     default:
       return (
         <StatusBar.Item title='Modified indicator.'>
-          <Circle weight='fill' className={getSize(3)} />
+          <Icon icon='ph--circle--duotone' size={4} />
         </StatusBar.Item>
       );
   }
@@ -193,10 +194,16 @@ const PerformanceIndicator = () => {
   return (
     <>
       <StatusBar.Button onClick={() => setVisible((visible) => !visible)} title='Performance panels'>
-        <ChartBar />
+        <Icon icon='ph--chart-bar--regular' size={4} />
       </StatusBar.Button>
       {visible && (
-        <div className='z-20 absolute bottom-[24px] w-[450px] border-l border-y border-separator'>
+        <div
+          className={mx(
+            'z-20 absolute bottom-[--statusbar-size] right-2 w-[450px] max-h-[600px]',
+            'overflow-x-hidden overflow-y-auto scrollbar-thin',
+            'border-x border-y border-separator',
+          )}
+        >
           <StatsPanel stats={stats} onRefresh={refreshStats} />
         </div>
       )}
@@ -204,7 +211,7 @@ const PerformanceIndicator = () => {
   );
 };
 
-const indicators = [PerformanceIndicator, SavingIndicator, ErrorIndicator, SwarmIndicator];
+const indicators = [SavingIndicator, SwarmIndicator, PerformanceIndicator, ErrorIndicator];
 
 export const DebugStatus = () => {
   return (

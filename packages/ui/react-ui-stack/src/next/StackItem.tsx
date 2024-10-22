@@ -10,7 +10,7 @@ import {
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
-import React, { useRef, useState, type ComponentPropsWithoutRef } from 'react';
+import React, { useEffect, useRef, useState, type ComponentPropsWithoutRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -27,7 +27,7 @@ export const StackItem = ({ item, children, classNames, orientation, onReorder, 
   const ref = useRef<HTMLDivElement>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!ref.current) {
       return;
     }
