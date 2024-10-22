@@ -42,8 +42,7 @@
     "@dxos/node-std": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/cli": "workspace:*",
-    "@types/node": "^22.7.4"
+    "@dxos/cli": "workspace:*"
   },
   "publishConfig": {
     "access": "restricted"
