@@ -10,6 +10,7 @@ import React, {
   type PropsWithChildren,
   isValidElement,
   Suspense,
+  memo,
 } from 'react';
 import { createContext, useContext } from 'react';
 
@@ -81,8 +82,8 @@ export type SurfaceProps = PropsWithChildren<{
 /**
  * A surface is a named region of the screen that can be populated by plugins.
  */
-export const Surface = forwardRef<HTMLElement, SurfaceProps>(
-  ({ role, name = role, fallback, placeholder, ...rest }, forwardedRef) => {
+export const Surface = memo(
+  forwardRef<HTMLElement, SurfaceProps>(({ role, name = role, fallback, placeholder, ...rest }, forwardedRef) => {
     const props = { role, name, fallback, ...rest };
     const context = useContext(SurfaceContext);
     const data = props.data ?? ((name && context?.surfaces?.[name]?.data) || {});
@@ -97,7 +98,7 @@ export const Surface = forwardRef<HTMLElement, SurfaceProps>(
     ) : (
       suspense
     );
-  },
+  }),
 );
 
 const SurfaceContext = createContext<SurfaceProps | null>(null);

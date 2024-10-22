@@ -10264,6 +10264,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
       '@radix-ui/primitive':
         specifier: ^1.0.0
         version: 1.0.1
