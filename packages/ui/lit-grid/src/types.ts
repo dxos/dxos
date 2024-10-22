@@ -75,6 +75,7 @@ export type DxGridAxisMetaProps = {
   size: number;
   description?: string;
   resizeable?: boolean;
+  readonly?: boolean;
 };
 
 export type DxGridAxisSizes = DxGridPlaneRecord<DxGridFrozenPlane, Record<string, number>>;

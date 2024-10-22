@@ -65,7 +65,7 @@ dx-grid, dx-grid-axis-resize-handle {
     &[inert] {
       visibility: hidden;
     }
-    &:focus, &:focus-visible, &.dx-grid__cell--active {
+    &:focus, &:focus-visible, &[data-dx-active] {
       cursor: text;
       z-index: 2;
       border-color: var(--dx-accentSurface);
@@ -74,7 +74,7 @@ dx-grid, dx-grid-axis-resize-handle {
   }
   &[data-grid-mode="edit"] {
     [role='gridcell'], [role='columnheader'], [role='rowheader'] {
-      &.dx-grid__cell--active {
+      &[data-dx-active] {
         color: transparent !important;
         & > * {
           opacity: 0 !important;

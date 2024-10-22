@@ -157,22 +157,22 @@ const resolveColPlane = (plane: DxGridPlane): 'grid' | DxGridFrozenColsPlane => 
   }
 };
 
-const resolveResizePlane = (resizeAxis: DxGridAxis, cellPlane: DxGridPlane): 'grid' | DxGridFrozenPlane => {
+const resolveFrozenPlane = (axis: DxGridAxis, cellPlane: DxGridPlane): 'grid' | DxGridFrozenPlane => {
   switch (cellPlane) {
     case 'fixedStartStart':
-      return resizeAxis === 'col' ? 'frozenColsStart' : 'frozenRowsStart';
+      return axis === 'col' ? 'frozenColsStart' : 'frozenRowsStart';
     case 'fixedStartEnd':
-      return resizeAxis === 'col' ? 'frozenColsEnd' : 'frozenRowsStart';
+      return axis === 'col' ? 'frozenColsEnd' : 'frozenRowsStart';
     case 'fixedEndStart':
-      return resizeAxis === 'col' ? 'frozenColsStart' : 'frozenRowsEnd';
+      return axis === 'col' ? 'frozenColsStart' : 'frozenRowsEnd';
     case 'fixedEndEnd':
-      return resizeAxis === 'col' ? 'frozenColsEnd' : 'frozenRowsEnd';
+      return axis === 'col' ? 'frozenColsEnd' : 'frozenRowsEnd';
     case 'frozenColsStart':
     case 'frozenColsEnd':
-      return resizeAxis === 'col' ? cellPlane : 'grid';
+      return axis === 'col' ? cellPlane : 'grid';
     case 'frozenRowsStart':
     case 'frozenRowsEnd':
-      return resizeAxis === 'row' ? cellPlane : 'grid';
+      return axis === 'row' ? cellPlane : 'grid';
     default:
       return cellPlane;
   }
@@ -1059,23 +1059,33 @@ export class DxGrid extends LitElement {
       : null;
   }
 
+  private cellReadonly(col: number, row: number, plane: DxGridPlane) {
+    const colPlane = resolveColPlane(plane);
+    const rowPlane = resolveRowPlane(plane);
+    return (
+      (this.columns?.[colPlane]?.[col]?.readonly ?? this.columnDefault?.[colPlane]?.readonly) ||
+      (this.rows?.[rowPlane]?.[row]?.readonly ?? this.rowDefault?.[rowPlane]?.readonly)
+    );
+  }
+
   private renderCell(col: number, row: number, plane: DxGridPlane, selected?: boolean, visCol = col, visRow = row) {
     const cell = this.cell(col, row, plane);
     const active = this.cellActive(col, row, plane);
+    const readonly = this.cellReadonly(col, row, plane);
     const resizeIndex = cell?.resizeHandle ? (cell.resizeHandle === 'col' ? col : row) : undefined;
-    const resizePlane = cell?.resizeHandle ? resolveResizePlane(cell.resizeHandle, plane) : undefined;
+    const resizePlane = cell?.resizeHandle ? resolveFrozenPlane(cell.resizeHandle, plane) : undefined;
     const accessory = cell?.accessoryHtml ? staticHtml`${unsafeStatic(cell.accessoryHtml)}` : null;
     return html`<div
       role="gridcell"
       tabindex="0"
       ?inert=${col < 0 || row < 0}
       ?aria-selected=${selected}
-      class=${cell || active
-        ? (cell?.className ? cell.className + ' ' : '') + (active ? 'dx-grid__cell--active' : '')
-        : nothing}
+      class=${cell?.className ?? nothing}
       aria-colindex=${col}
       aria-rowindex=${row}
       data-dx-grid-action="cell"
+      ?data-dx-active=${active}
+      ?data-dx-readonly=${readonly}
       style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
     >
       ${cell?.value}${accessory}${cell?.resizeHandle &&
