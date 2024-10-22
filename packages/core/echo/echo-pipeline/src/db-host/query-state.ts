@@ -103,8 +103,6 @@ export class QueryState extends Resource {
 
           const { objectId, documentId, spaceKey: spaceKeyInIndex } = objectPointerCodec.decode(result.id);
 
-          log.info('QueryState.execQuery', { objectId, documentId, spaceKeyInIndex });
-
           let spaceKey: string | null;
           if (spaceKeyInIndex !== undefined) {
             spaceKey = spaceKeyInIndex;
