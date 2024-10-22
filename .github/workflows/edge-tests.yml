@@ -71,7 +71,11 @@ jobs:
         working-directory: ./dxos
         run: pnpm install --frozen-lockfile
         shell: bash
-      
+
+      - name: Build
+        working-directory: ./dxos
+        run: pnpm nx run-many --target=build
+
       - name: Install EDGE dependencies
         working-directory: ./edge
         run: pnpm install --frozen-lockfile
