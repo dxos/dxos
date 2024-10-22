@@ -67,7 +67,9 @@ export const ViewEditor = ({ classNames, view, schemaResolver, readonly }: ViewE
         )}
       </List.Root>
 
-      {field && <Field classNames='p-2' autoFocus field={field} schema={schemaResolver(view.query.schema)} />}
+      {field && view.query?.schema && (
+        <Field classNames='p-2' autoFocus field={field} schema={schemaResolver(view.query.schema)} />
+      )}
 
       {!readonly && (
         <div className='flex justify-center'>
