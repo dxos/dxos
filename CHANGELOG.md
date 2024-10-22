@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.13](https://github.com/dxos/dxos/compare/v0.6.12...v0.6.13) (2024-10-22)
+
+
+### Bug Fixes
+
+* unauthed space join flow ([#8004](https://github.com/dxos/dxos/issues/8004)) ([aa81828](https://github.com/dxos/dxos/commit/aa81828af90f9dfb8d9680228b1c966a227a58db))
+
 ## [0.6.12](https://github.com/dxos/dxos/compare/v0.6.11...v0.6.12) (2024-10-16)
 
 
