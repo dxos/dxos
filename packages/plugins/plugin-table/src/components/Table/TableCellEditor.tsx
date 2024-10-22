@@ -15,7 +15,7 @@ import {
 } from '@dxos/react-ui-grid';
 
 import { type TableModel } from '../../model';
-import { toCellKey } from '../../types';
+import { toGridCell } from '../../types';
 
 export type TableCellEditor = GridScopedProps<{
   gridRef: RefObject<DxGridElement>;
@@ -27,7 +27,7 @@ export const TableCellEditor = ({ __gridScope, gridRef, tableModel }: TableCellE
   const updateCell = useCallback(
     (value: any) => {
       if (value !== undefined && editing && tableModel) {
-        tableModel.setCellData(toCellKey(editing.index), value);
+        tableModel.setCellData(toGridCell(editing.index), value);
       }
     },
     [editing, tableModel],
@@ -79,7 +79,7 @@ export const TableCellEditor = ({ __gridScope, gridRef, tableModel }: TableCellE
   const getCellContent = useCallback(() => {
     if (editing && tableModel) {
       // TODO(Zan): Coercing to empty string on null/undefined values is temporary util we deeply integrate with fields.
-      return tableModel.getCellData(toCellKey(editing.index)) ?? '';
+      return tableModel.getCellData(toGridCell(editing.index)) ?? '';
     }
   }, [editing, tableModel]);
 

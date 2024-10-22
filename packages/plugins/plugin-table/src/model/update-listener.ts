@@ -4,7 +4,9 @@
 
 import { effect, type ReadonlySignal } from '@preact/signals-core';
 
-import { toCellKey, type GridCell } from '../types';
+import { type DxGridCellIndex } from '@dxos/react-ui-grid';
+
+import { toGridCell, type GridCell } from '../types';
 
 // TODO(burdon): Move into model.
 //  TODO(burdon): This class is probably not necessary since we can subscribe to updates from ECHO directly.
@@ -45,7 +47,7 @@ export class CellUpdateListener {
     this.cellEffectsUnsubscribes = Object.entries(cellsObj).map(([key, cellSignal]) => {
       return effect(() => {
         cellSignal.value; // Access the value to subscribe to the signal.
-        queueMicrotask(() => this.trackUpdate(key));
+        queueMicrotask(() => this.trackUpdate(key as DxGridCellIndex));
       });
     });
   };
@@ -55,8 +57,8 @@ export class CellUpdateListener {
     this.cellEffectsUnsubscribes = [];
   };
 
-  private trackUpdate = (cellKey: string): void => {
-    this.onCellUpdate?.(toCellKey(cellKey));
+  private trackUpdate = (cellIdx: DxGridCellIndex): void => {
+    this.onCellUpdate?.(toGridCell(cellIdx));
   };
 
   // TODO(burdon): Implement Resource.

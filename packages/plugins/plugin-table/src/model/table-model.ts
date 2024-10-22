@@ -18,7 +18,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { formatValue } from '@dxos/schema';
 
 import { CellUpdateListener } from './update-listener';
-import { fromCellKey, type GridCell, type TableType } from '../types';
+import { fromGridCell, type GridCell, type TableType } from '../types';
 
 export type ColumnId = string;
 export type SortDirection = 'asc' | 'desc';
@@ -88,7 +88,7 @@ export class TableModel extends Resource {
       return Object.fromEntries(
         fields.map((field, index: number) => {
           return [
-            fromCellKey({ col: index, row: 0 }),
+            fromGridCell({ col: index, row: 0 }),
             {
               value: field.label ?? field.path,
               resizeHandle: 'col',
@@ -145,7 +145,7 @@ export class TableModel extends Resource {
             cell.className = mx(cellClasses);
           }
 
-          values[fromCellKey({ col: colIndex, row: displayIndex })] = cell;
+          values[fromGridCell({ col: colIndex, row: displayIndex })] = cell;
         });
       });
 
