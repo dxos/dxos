@@ -50,18 +50,13 @@ jobs:
         run: sudo apt-get install libxtst-dev libpng++-dev
         shell: bash
 
+      - uses: pnpm/action-setup@v4
+
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: 'pnpm'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        id: pnpm-install
-        with:
-          version: 9
-          run_install: false
 
       - name: Install DXOS dependencies
         working-directory: ./dxos
