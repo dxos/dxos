@@ -7,6 +7,7 @@ import { Resource } from '@dxos/context';
 import { decodeReference, type ObjectStructure } from '@dxos/echo-protocol';
 import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
 import { DXN, PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
@@ -20,7 +21,6 @@ import {
   type LoadParams,
   staticImplements,
 } from './types';
-import { log } from '@dxos/log';
 
 @trace.resource()
 @staticImplements<IndexStaticProps>()
