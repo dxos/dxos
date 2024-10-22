@@ -20,6 +20,7 @@ import {
   type LoadParams,
   staticImplements,
 } from './types';
+import { log } from '@dxos/log';
 
 @trace.resource()
 @staticImplements<IndexStaticProps>()
@@ -58,7 +59,6 @@ export class IndexSchema extends Resource implements Index {
 
   @trace.span({ showInBrowserTimeline: true })
   async find(filter: IndexQuery): Promise<FindResult[]> {
-    log.info('find', { filter });
     // TODO(burdon): Handle inversion.
     if (filter.inverted) {
       return Array.from(this._index.entries())
