@@ -377,16 +377,18 @@ export class DxGrid extends LitElement {
 
   private dispatchEditRequest(initialContent?: string) {
     this.snapPosToFocusedCell();
-    // Without deferring, the event dispatches before `focusedCellBox` can get updated bounds of the cell, hence:
-    queueMicrotask(() =>
-      this.dispatchEvent(
-        new DxEditRequest({
-          cellIndex: toCellIndex(this.focusedCell),
-          cellBox: this.focusedCellBox(),
-          initialContent,
-        }),
-      ),
-    );
+    if (!this.cellReadonly(this.focusedCell.col, this.focusedCell.row, this.focusedCell.plane)) {
+      // Without deferring, the event dispatches before `focusedCellBox` can get updated bounds of the cell, hence:
+      queueMicrotask(() =>
+        this.dispatchEvent(
+          new DxEditRequest({
+            cellIndex: toCellIndex(this.focusedCell),
+            cellBox: this.focusedCellBox(),
+            initialContent,
+          }),
+        ),
+      );
+    }
   }
 
   private handlePointerDown = (event: PointerEvent) => {
@@ -1079,13 +1081,13 @@ export class DxGrid extends LitElement {
       role="gridcell"
       tabindex="0"
       ?inert=${col < 0 || row < 0}
-      ?aria-selected=${selected}
+      aria-selected=${selected ? 'true' : nothing}
+      aria-readonly=${readonly ? 'true' : nothing}
       class=${cell?.className ?? nothing}
+      ?data-dx-active=${active}
+      data-dx-grid-action="cell"
       aria-colindex=${col}
       aria-rowindex=${row}
-      data-dx-grid-action="cell"
-      ?data-dx-active=${active}
-      ?data-dx-readonly=${readonly}
       style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
     >
       ${cell?.value}${accessory}${cell?.resizeHandle &&

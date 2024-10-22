@@ -66,10 +66,12 @@ dx-grid, dx-grid-axis-resize-handle {
       visibility: hidden;
     }
     &:focus, &:focus-visible, &[data-dx-active] {
-      cursor: text;
       z-index: 2;
       border-color: var(--dx-accentSurface);
       outline: none;
+      &:not([aria-readonly]) {
+        cursor: text;
+      }
     }
   }
   &[data-grid-mode="edit"] {
