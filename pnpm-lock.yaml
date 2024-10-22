@@ -158,6 +158,9 @@ importers:
       '@rushstack/eslint-patch':
         specifier: ^1.3.3
         version: 1.4.0
+      '@storybook/testing-react':
+        specifier: ^2.0.1
+        version: 2.0.1(@storybook/client-logger@8.1.11)(@storybook/preview-api@8.3.3(storybook@8.3.3))(@storybook/react@8.3.3(@storybook/test@8.3.3(storybook@8.3.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@8.3.3)(typescript@5.6.2))(@storybook/types@8.1.11)(react@18.2.0)
       '@swc-node/register':
         specifier: 1.9.1
         version: 1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2)
@@ -19220,6 +19223,17 @@ packages:
     resolution: {integrity: sha512-uZ8nMIovfI2ry989K2+cYAeEVD/3dpjj2+Rbmy7DiZWWVhFALfmqaTRkzZfShLmlH0TFv+rfcBPihGccBtw0FQ==}
     peerDependencies:
       storybook: ^8.3.3
+
+  '@storybook/testing-react@2.0.1':
+    resolution: {integrity: sha512-D0fT7f0TUU8+usR+0NSyCYQCYDWernQqGZou32ISsoBkY9IiH1JMY4hQE8zUaGozu9eMlaa2wieWIMsjWovpdw==}
+    engines: {node: '>=10'}
+    deprecated: In Storybook 7, this package has been promoted to a first-class Storybook functionality. This means that you no longer need it! Instead, you can import the same utilities, but from the @storybook/react package. Please migrate when you can.
+    peerDependencies:
+      '@storybook/client-logger': ^7.0.0-beta.0 || ^7.0.0-rc.0 || ^7.0.0
+      '@storybook/preview-api': ^7.0.0-beta.0 || ^7.0.0-rc.0 || ^7.0.0
+      '@storybook/react': ^7.0.0-beta.0 || ^7.0.0-rc.0 || ^7.0.0
+      '@storybook/types': ^7.0.0-beta.0 || ^7.0.0-rc.0 || ^7.0.0
+      react: ~18.2.0
 
   '@storybook/theming@8.1.11':
     resolution: {integrity: sha512-Chn/opjO6Rl1isNobutYqAH2PjKNkj09YBw/8noomk6gElSa3JbUTyaG/+JCHA6OG/9kUsqoKDb5cZmAKNq/jA==}
@@ -43516,6 +43530,15 @@ snapshots:
       '@vitest/spy': 2.0.5
       storybook: 8.3.3
       util: 0.12.5
+
+  '@storybook/testing-react@2.0.1(@storybook/client-logger@8.1.11)(@storybook/preview-api@8.3.3(storybook@8.3.3))(@storybook/react@8.3.3(@storybook/test@8.3.3(storybook@8.3.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@8.3.3)(typescript@5.6.2))(@storybook/types@8.1.11)(react@18.2.0)':
+    dependencies:
+      '@storybook/client-logger': 8.1.11
+      '@storybook/csf': 0.1.11
+      '@storybook/preview-api': 8.3.3(storybook@8.3.3)
+      '@storybook/react': 8.3.3(@storybook/test@8.3.3(storybook@8.3.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@8.3.3)(typescript@5.6.2)
+      '@storybook/types': 8.1.11
+      react: 18.2.0
 
   '@storybook/theming@8.1.11(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
     dependencies:
