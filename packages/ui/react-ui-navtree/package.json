@@ -23,11 +23,9 @@
   "dependencies": {
     "@dxos/echo-schema": "workspace:*",
     "@dxos/keyboard": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-text-tooltip": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@radix-ui/react-use-controllable-state": "^1.0.0"
   },
@@ -35,6 +33,8 @@
     "@dnd-kit/core": "^6.0.5",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
@@ -47,6 +47,8 @@
     "vite": "5.4.7"
   },
   "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"

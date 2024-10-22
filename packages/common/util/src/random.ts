@@ -4,7 +4,7 @@
 
 // TODO(burdon): Random class utility.
 // TODO(burdon): Make object { min, max }.
-export const randomInt = (max: number, min: number) => {
+export const randomInt = (max: number, min = 0) => {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min + 1)) + min;

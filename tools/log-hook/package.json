@@ -23,7 +23,5 @@
     "sorcery": "^0.10.0",
     "source-map": "^0.6.1"
   },
-  "devDependencies": {
-    "@types/node": "^22.7.4"
-  }
+  "devDependencies": {}
 }
