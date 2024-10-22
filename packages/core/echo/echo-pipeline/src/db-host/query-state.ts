@@ -15,6 +15,7 @@ import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
 import { type AutomergeHost, getSpaceKeyFromDoc } from '../automerge';
+import { log } from '@dxos/log';
 
 type QueryStateParams = {
   indexer: Indexer;
@@ -101,6 +102,8 @@ export class QueryState extends Resource {
           }
 
           const { objectId, documentId, spaceKey: spaceKeyInIndex } = objectPointerCodec.decode(result.id);
+
+          log.info('QueryState.execQuery', { objectId, documentId, spaceKeyInIndex });
 
           let spaceKey: string | null;
           if (spaceKeyInIndex !== undefined) {

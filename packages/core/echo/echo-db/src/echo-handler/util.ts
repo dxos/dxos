@@ -8,6 +8,8 @@ import { type ForeignKey, type ReactiveObject, getMeta, getProxyTarget } from '@
 import { type EchoReactiveObject, isEchoObject } from './create';
 import { symbolInternals, type ProxyTarget } from './echo-proxy-target';
 import { type EchoDatabase } from '../proxy-db';
+import { log } from '@dxos/log';
+import { invariant } from '@dxos/invariant';
 
 export const getDatabaseFromObject = (obj: ReactiveObject<any>): EchoDatabase | undefined => {
   if (!isEchoObject(obj)) {
@@ -20,6 +22,7 @@ export const getDatabaseFromObject = (obj: ReactiveObject<any>): EchoDatabase | 
 };
 
 export const getReferenceWithSpaceKey = (obj: EchoReactiveObject<any>): Reference | undefined => {
+  invariant(obj);
   const db = getDatabaseFromObject(obj);
   return db && new Reference(obj.id, undefined, db.spaceKey.toHex());
 };

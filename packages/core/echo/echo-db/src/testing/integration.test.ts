@@ -11,7 +11,7 @@ import {
   testAutomergeReplicatorFactory,
   TestReplicationNetwork,
 } from '@dxos/echo-pipeline/testing';
-import { create, Expando, getSchema, S, TypedObject } from '@dxos/echo-schema';
+import { create, Expando, getObjectAnnotation, getSchema, S, TypedObject } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -20,6 +20,7 @@ import { deferAsync } from '@dxos/util';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
 import { Filter } from '../query';
+import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 
@@ -384,20 +385,27 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema DXN.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const { objects } = await db.query(Filter.typename(schemaDxn)).run();
+        const { objects } = await db.query(Filter.typeDXN(schemaDxn)).run();
         expect(objects.length).to.eq(1);
-        expect(getSchema(objects[0])).to.include({ typename: 'example.com/type/Test', version: '0.1.0' });
+        expect(getObjectAnnotation(getSchema(objects[0])!)).to.include({
+          typename: 'example.com/type/Test',
+          version: '0.1.0',
+        });
       }
 
       await peer.reload();
       {
         // Can query by stored schema ref.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
+        await db.schema.list(); // Have to preload schema.
         const schema = db.schema.getSchemaByTypename('example.com/type/Test');
 
         const { objects } = await db.query(Filter.schema(schema)).run();
         expect(objects.length).to.eq(1);
-        expect(getSchema(objects[0])).to.include({ typename: 'example.com/type/Test', version: '0.1.0' });
+        expect(getObjectAnnotation(getSchema(objects[0])!)).to.include({
+          typename: 'example.com/type/Test',
+          version: '0.1.0',
+        });
       }
     });
   });
