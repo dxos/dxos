@@ -7,7 +7,7 @@ import { S, TypedObject } from '@dxos/echo-schema';
 // All section metadata needs to be optional/have defaults.
 // Any objects added to the collection will start with the section defaults.
 // If an object is removed from the collection without removing the section metadata this is fine.
-// Stack component should cleanup the superfluous data on future edits.
+// Stack components should clean-up the superfluous data on future edits.
 
 export const SectionSchema = S.Struct({
   height: S.optional(S.Number),

@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
 export * from './PresenterSettings';
 
-// Lazily load components for content surfaces.
-export const RevealMain = React.lazy(() => import('./RevealMain'));
-export const PresenterMain = React.lazy(() => import('./PresenterMain'));
-export const MarkdownSlide = React.lazy(() => import('./MarkdownSlide'));
+export const RevealMain = lazy(() => import('./RevealMain'));
+export const PresenterMain = lazy(() => import('./PresenterMain'));
+export const MarkdownSlide = lazy(() => import('./MarkdownSlide'));

@@ -50,7 +50,7 @@ export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message'
   sender: ActorSchema,
   /** Text content of the message. */
   text: S.String,
-  /** Non-text content sent with a message (e.g. files, polls, etc.) */
+  /** Non-text content sent with a message (e.g., files, polls, etc.) */
   parts: S.optional(S.mutable(S.Array(ref(Expando)))),
   /** Custom properties for specific message types (e.g. email subject or cc fields). */
   properties: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),

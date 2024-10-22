@@ -5,7 +5,7 @@
 import { expect, test } from '@playwright/test';
 import { platform } from 'node:os';
 
-import { AppManager } from './app-manager';
+import { AppManager, INITIAL_URL } from './app-manager';
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973
@@ -34,8 +34,6 @@ test.describe('HALO tests', () => {
   });
 
   test('join new identity', async () => {
-    test.setTimeout(60_000);
-
     await host.createSpace();
 
     await expect(host.getSpaceItems()).toHaveCount(2);
@@ -45,7 +43,12 @@ test.describe('HALO tests', () => {
     const invitationCode = await host.shell.createDeviceInvitation();
     const authCode = await host.shell.getAuthCode();
     await guest.openIdentityManager();
-    await guest.shell.joinNewIdentity(invitationCode);
+    await Promise.all([
+      // Wait for reset to complete and attempt to reload.
+      guest.page.waitForRequest(INITIAL_URL + '/?deviceInvitationCode=', { timeout: 5_000 }),
+      guest.shell.joinNewIdentity(invitationCode),
+    ]);
+    await guest.shell.acceptDeviceInvitation(invitationCode);
     await guest.shell.authenticateDevice(authCode);
     await host.shell.closeShell();
 

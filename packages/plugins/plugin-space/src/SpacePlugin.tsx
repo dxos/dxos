@@ -23,7 +23,7 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject, type Identifiable, isReactiveObject } from '@dxos/echo-schema';
+import { type HasId, isReactiveObject } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
@@ -35,6 +35,7 @@ import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
   Expando,
+  type EchoReactiveObject,
   Filter,
   type PropertiesTypeProps,
   type Space,
@@ -857,8 +858,11 @@ export const SpacePlugin = ({
               }
 
               return {
-                data: { space, id: space.id, activeParts: { main: [space.id] } },
-
+                data: {
+                  space,
+                  id: space.id,
+                  activeParts: { main: [space.id] },
+                },
                 intents: [
                   ...(settings.values.onSpaceCreate
                     ? [
@@ -889,9 +893,26 @@ export const SpacePlugin = ({
                 const { space } = await client.shell.joinSpace({ invitationCode: intent.data?.invitationCode });
                 if (space) {
                   return {
-                    data: { space, id: space.id, activeParts: { main: [space.id] } },
-
+                    data: {
+                      space,
+                      id: space.id,
+                      activeParts: { main: [space.id] },
+                    },
                     intents: [
+                      [
+                        {
+                          action: LayoutAction.SET_LAYOUT,
+                          data: {
+                            element: 'toast',
+                            subject: {
+                              id: `${SPACE_PLUGIN}/join-success`,
+                              duration: 10_000,
+                              title: translations[0]['en-US'][SPACE_PLUGIN]['join success label'],
+                              closeLabel: translations[0]['en-US'][SPACE_PLUGIN]['dismiss label'],
+                            },
+                          },
+                        },
+                      ],
                       [
                         {
                           action: ObservabilityAction.SEND_EVENT,
@@ -1110,14 +1131,14 @@ export const SpacePlugin = ({
               }
 
               if (intent.data?.target instanceof CollectionType) {
-                intent.data?.target.objects.push(object as Identifiable);
+                intent.data?.target.objects.push(object as HasId);
               } else if (isSpace(intent.data?.target)) {
                 const collection = space.properties[CollectionType.typename];
                 if (collection instanceof CollectionType) {
-                  collection.objects.push(object as Identifiable);
+                  collection.objects.push(object as HasId);
                 } else {
                   // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-                  const collection = create(CollectionType, { objects: [object as Identifiable], views: {} });
+                  const collection = create(CollectionType, { objects: [object as HasId], views: {} });
                   space.properties[CollectionType.typename] = collection;
                 }
               }

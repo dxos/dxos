@@ -5,13 +5,14 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Reference } from '@dxos/echo-protocol';
-import { create, generateEchoId, S, TypedObject } from '@dxos/echo-schema';
+import { create, createObjectId, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { Filter } from './filter';
 import { filterMatch, compareType } from './filter-match';
-import { getObjectCore, ObjectCore } from '../core-db';
+import { ObjectCore } from '../core-db';
+import { getObjectCore } from '../echo-handler';
 import { EchoTestBuilder } from '../testing';
 
 describe('Filter', () => {
@@ -87,7 +88,7 @@ describe('Filter', () => {
 
   test('compare types', () => {
     const spaceKey = PublicKey.random();
-    const objectId = generateEchoId();
+    const objectId = createObjectId();
 
     expect(compareType(new Reference(objectId, undefined, spaceKey.toHex()), new Reference(objectId), spaceKey)).to.be
       .true;
@@ -121,7 +122,9 @@ describe('Filter', () => {
   });
 
   test('dynamic schema', async () => {
-    class GeneratedSchema extends TypedObject({ typename: 'dynamic', version: '0.1.0' })({ title: S.String }) {}
+    class GeneratedSchema extends TypedObject({ typename: 'example.com/dynamic', version: '0.1.0' })({
+      title: S.String,
+    }) {}
     const { db } = await builder.createDatabase();
     const schema = db.schema.addSchema(GeneratedSchema);
     const obj = db.add(create(schema, { title: 'test' }));
@@ -130,9 +133,8 @@ describe('Filter', () => {
   });
 
   test('__typename', () => {
-    const filter = Filter.from({ __typename: 'dxos.org/example/Type' });
-
-    expect(filter.type!.toDXN().toString()).to.equal('dxn:type:dxos.org/example/Type');
+    const filter = Filter.from({ __typename: 'example.com/type/Type' });
+    expect(filter.type!.toDXN().toString()).to.equal('dxn:type:example.com/type/Type');
     expect(filter.properties).to.deep.equal({});
   });
 });

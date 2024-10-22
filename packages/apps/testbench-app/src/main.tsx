@@ -60,7 +60,6 @@ const useThemeWatcher = () => {
 
 const App = withProfiler(() => {
   const themeMode = useThemeWatcher();
-
   return (
     <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={translations}>
       <DensityProvider density='fine'>
@@ -104,7 +103,7 @@ const main = async () => {
     }
 
     client.addTypes([ItemType, DocumentType]);
-    await client.spaces.isReady.wait();
+    await client.spaces.waitUntilReady();
   };
 
   const root = createRoot(document.getElementById('root')!);

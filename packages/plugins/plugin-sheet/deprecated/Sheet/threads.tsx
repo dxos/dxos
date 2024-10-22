@@ -3,7 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
+import React, { MouseEvent, type PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type IntentResolver, LayoutAction, useIntentDispatcher, useIntentResolver } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
@@ -28,11 +28,11 @@ const CommentIndicator = () => {
 
 const ThreadedCellWrapper = ({ children }: PropsWithChildren) => {
   const dispatch = useIntentDispatcher();
-  const [isHovered, setIsHovered] = React.useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const { t } = useTranslation(SHEET_PLUGIN);
 
-  const handleClick = React.useCallback(
-    (_event: React.MouseEvent) => {
+  const handleClick = useCallback(
+    (_event: MouseEvent) => {
       void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
     },
     [dispatch],

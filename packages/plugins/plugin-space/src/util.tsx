@@ -4,13 +4,12 @@
 
 import { type MetadataResolver, NavigationAction, type IntentDispatcher } from '@dxos/app-framework';
 import {
-  type EchoReactiveObject,
   create,
   isReactiveObject,
   getTypename,
-  type Expando,
   getSchema,
-  getEchoObjectAnnotation,
+  getObjectAnnotation,
+  type Expando,
   EXPANDO_TYPENAME,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -29,16 +28,17 @@ import {
   memoize,
 } from '@dxos/plugin-graph';
 import {
-  SpaceState,
   fullyQualifiedId,
   getSpace,
   isEchoObject,
   isSpace,
   type Echo,
+  type EchoReactiveObject,
   type FilterSource,
   type Query,
   type QueryOptions,
   type Space,
+  SpaceState,
 } from '@dxos/react-client/echo';
 
 import { SpaceAction, SPACE_PLUGIN } from './meta';
@@ -598,7 +598,7 @@ export const getNestedObjects = async (
 // TODO(burdon): Remove.
 export const cloneObject = async (object: Expando, resolve: MetadataResolver): Promise<Expando> => {
   const schema = getSchema(object);
-  const typename = schema ? getEchoObjectAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
+  const typename = schema ? getObjectAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
   const metadata = resolve(typename);
   const serializer = metadata.serializer;
   invariant(serializer, `No serializer for type: ${typename}`);

@@ -505,3 +505,19 @@ service NetworkService {
   rpc UpdateConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
   rpc QueryStatus(google.protobuf.Empty) returns (stream NetworkStatus);
 }
+
+service EdgeAgentService {
+  rpc CreateAgent(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc QueryAgentStatus(google.protobuf.Empty) returns (stream QueryAgentStatusResponse);
+}
+
+message QueryAgentStatusResponse {
+  enum AgentStatus {
+    UNKNOWN = 0;
+    ACTIVE = 1;
+    INACTIVE = 2;
+    NOT_FOUND = 3;
+  }
+
+  AgentStatus status = 1;
+}

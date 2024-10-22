@@ -34,9 +34,7 @@
     "isomorphic-ws": "^5.0.0",
     "ws": "^8.14.2"
   },
-  "devDependencies": {
-    "@types/node": "^22.7.4"
-  },
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

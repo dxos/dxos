@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
 export * from './SketchSettings';
 
-// Lazily load components for content surfaces.
-export const SketchComponent = React.lazy(() => import('./SketchComponent'));
-export const SketchMain = React.lazy(() => import('./SketchMain'));
+export const SketchComponent = lazy(() => import('./SketchComponent'));
+export const SketchMain = lazy(() => import('./SketchMain'));

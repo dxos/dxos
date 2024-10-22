@@ -7,18 +7,19 @@ import '@dxos-theme';
 import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { type EchoReactiveObject, create } from '@dxos/echo-schema';
-import { faker } from '@dxos/random';
-import { type Client, useClient } from '@dxos/react-client';
 import {
+  create,
+  type Echo,
+  type EchoReactiveObject,
+  type FilterSource,
   type Space,
   SpaceState,
   isSpace,
-  type Echo,
-  type FilterSource,
   type QueryOptions,
   type Query,
-} from '@dxos/react-client/echo';
+} from '@dxos/client/echo';
+import { faker } from '@dxos/random';
+import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, DensityProvider, Input, Select, useAsyncEffect } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';

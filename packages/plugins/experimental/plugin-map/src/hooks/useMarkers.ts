@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { DynamicSchema, getTypename, StoredSchema } from '@dxos/echo-schema';
+import { MutableSchema, getTypename, StoredSchema } from '@dxos/echo-schema';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 
 import { useStabilizedObject } from './useStabilizedObject';
@@ -58,7 +58,7 @@ export const useMarkers = (map: MapType): MapMarker[] => {
 };
 
 const hasLocation = (schema: StoredSchema): boolean => {
-  const properties = new DynamicSchema(schema).getProperties();
+  const properties = new MutableSchema(schema).getProperties();
   return (
     properties.some((prop) => prop.name === 'latitude' && prop.type._tag === 'NumberKeyword') &&
     properties.some((prop) => prop.name === 'longitude' && prop.type._tag === 'NumberKeyword')

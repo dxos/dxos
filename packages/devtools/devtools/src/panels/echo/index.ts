@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
-export const AutomergePanel = React.lazy(() => import('./AutomergePanel'));
-export const FeedsPanel = React.lazy(() => import('./FeedsPanel'));
-export const MembersPanel = React.lazy(() => import('./MembersPanel'));
-export const MetadataPanel = React.lazy(() => import('./MetadataPanel'));
-export const ObjectsPanel = React.lazy(() => import('./ObjectsPanel'));
-export const SpaceInfoPanel = React.lazy(() => import('./SpaceInfoPanel'));
-export const SpaceListPanel = React.lazy(() => import('./SpaceListPanel'));
+export const AutomergePanel = lazy(() => import('./AutomergePanel'));
+export const FeedsPanel = lazy(() => import('./FeedsPanel'));
+export const MembersPanel = lazy(() => import('./MembersPanel'));
+export const MetadataPanel = lazy(() => import('./MetadataPanel'));
+export const ObjectsPanel = lazy(() => import('./ObjectsPanel'));
+export const SpaceInfoPanel = lazy(() => import('./SpaceInfoPanel'));
+export const SpaceListPanel = lazy(() => import('./SpaceListPanel'));

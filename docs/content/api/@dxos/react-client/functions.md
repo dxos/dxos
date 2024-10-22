@@ -85,7 +85,7 @@ Arguments:
 `path`: <code>KeyPath</code>
 
 
-### [createEchoObject(init)]()
+### [createObject(init)]()
 
 
 

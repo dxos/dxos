@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type SpaceId } from '@dxos/keys';
+
 export enum EdgeService {
   AUTOMERGE_REPLICATOR = 'automerge-replicator',
   FEED_REPLICATOR = 'feed-replicator',
@@ -60,6 +62,30 @@ export type JoinSpaceResponseBody = {
   spaceGenesisFeedKey: string;
 };
 
+export type CreateAgentRequestBody = {
+  identityKey: string;
+  haloSpaceId: SpaceId;
+  haloSpaceKey: string;
+};
+
+export type CreateAgentResponseBody = {
+  deviceKey: string;
+  feedKey: string;
+};
+
+export type GetAgentStatusResponseBody = {
+  agent: {
+    deviceKey?: string;
+    status: EdgeAgentStatus;
+  };
+};
+
+export enum EdgeAgentStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  NOT_FOUND = 'not_found',
+}
+
 export class EdgeCallFailedError extends Error {
   public static fromProcessingFailureCause(cause: Error) {
     return new EdgeCallFailedError({
@@ -111,7 +137,7 @@ export class EdgeAuthChallengeError extends EdgeCallFailedError {
     public readonly challenge: string,
     errorData: EdgeErrorData,
   ) {
-    super({ reason: 'Auth challenge.', errorData });
+    super({ reason: 'Auth challenge.', errorData, isRetryable: false });
   }
 }
 
@@ -122,7 +148,7 @@ export type EdgeAuthChallenge = {
 
 const getRetryAfterMillis = (response: Response) => {
   const retryAfter = Number(response.headers.get('Retry-After'));
-  return Number.isNaN(retryAfter) ? undefined : retryAfter * 1000;
+  return Number.isNaN(retryAfter) || retryAfter === 0 ? undefined : retryAfter * 1000;
 };
 
 export const createRetryableHttpFailure = (args: { reason: any; retryAfterSeconds: number }) => {
@@ -136,6 +162,5 @@ const isRetryableCode = (status: number) => {
     // Not Implemented
     return false;
   }
-  // TODO: handle 401 Not Authorized
   return !(status >= 400 && status < 500);
 };

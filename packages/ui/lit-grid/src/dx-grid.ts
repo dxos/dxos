@@ -1133,12 +1133,8 @@ export class DxGrid extends LitElement {
     this.updateIntrinsicBlockSize();
   }
 
-  override firstUpdated() {
-    if (this.getCells) {
-      this.updateCells(true);
-    }
-    this.observer.observe(this.viewportRef.value!);
-    this.colSizes = Object.entries(this.columns).reduce(
+  private computeColSizes() {
+    this.colSizes = Object.entries(this.columns ?? {}).reduce(
       (acc: DxGridAxisSizes, [plane, planeColMeta]) => {
         acc[plane as 'grid' | DxGridFrozenPlane] = Object.entries(planeColMeta).reduce(
           (planeAcc: Record<string, number>, [col, colMeta]) => {
@@ -1153,7 +1149,10 @@ export class DxGrid extends LitElement {
       },
       { grid: {} },
     );
-    this.rowSizes = Object.entries(this.rows).reduce(
+  }
+
+  private computeRowSizes() {
+    this.rowSizes = Object.entries(this.rows ?? {}).reduce(
       (acc: DxGridAxisSizes, [plane, planeRowMeta]) => {
         acc[plane as 'grid' | DxGridFrozenPlane] = Object.entries(planeRowMeta).reduce(
           (planeAcc: Record<string, number>, [row, rowMeta]) => {
@@ -1168,6 +1167,15 @@ export class DxGrid extends LitElement {
       },
       { grid: {} },
     );
+  }
+
+  override firstUpdated() {
+    if (this.getCells) {
+      this.updateCells(true);
+    }
+    this.observer.observe(this.viewportRef.value!);
+    this.computeColSizes();
+    this.computeRowSizes();
     this.updateIntrinsicSizes();
   }
 
@@ -1197,6 +1205,13 @@ export class DxGrid extends LitElement {
       this.updateIntrinsicInlineSize();
       this.updatePosInline();
       this.updateVisInline();
+    }
+
+    if (changedProperties.has('columns')) {
+      this.computeColSizes();
+    }
+    if (changedProperties.has('rows')) {
+      this.computeRowSizes();
     }
   }
 

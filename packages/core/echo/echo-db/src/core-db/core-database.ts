@@ -39,7 +39,7 @@ import {
 import { CoreDatabaseQueryContext } from './core-database-query-context';
 import { type UpdateOperation, type InsertBatch, type InsertData } from './crud-api';
 import { ObjectCore } from './object-core';
-import { getInlineAndLinkChanges } from './utils';
+import { getInlineAndLinkChanges } from './util';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
@@ -60,6 +60,10 @@ export type CoreDatabaseParams = {
  */
 const THROTTLED_UPDATE_FREQUENCY = 10;
 
+/**
+ *
+ */
+// TODO(burdon): Document.
 @trace.resource()
 export class CoreDatabase {
   private readonly _hypergraph: Hypergraph;
@@ -89,15 +93,15 @@ export class CoreDatabase {
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
-  constructor(params: CoreDatabaseParams) {
-    this._hypergraph = params.graph;
-    this._dataService = params.dataService;
-    this._queryService = params.queryService;
-    this._spaceId = params.spaceId;
-    this._spaceKey = params.spaceKey;
+  constructor({ graph, dataService, queryService, spaceId, spaceKey }: CoreDatabaseParams) {
+    this._hypergraph = graph;
+    this._dataService = dataService;
+    this._queryService = queryService;
+    this._spaceId = spaceId;
+    this._spaceKey = spaceKey;
     this._repoProxy = new RepoProxy(this._dataService, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
-    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(params.spaceId, this._repoProxy, params.spaceKey);
+    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this._repoProxy, spaceId, spaceKey);
   }
 
   get graph(): Hypergraph {
@@ -498,7 +502,9 @@ export class CoreDatabase {
 
     const headsStates = await this._dataService.getDocumentHeads(
       {
-        documentIds: Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+        documentIds: Object.values(doc.links ?? {}).map((link) =>
+          interpretAsDocumentId(link.toString() as AutomergeUrl),
+        ),
       },
       { timeout: RPC_TIMEOUT },
     );
@@ -590,7 +596,7 @@ export class CoreDatabase {
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandleProxy<SpaceDoc>, objectsToLoad: string[]) {
     const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
-    const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}));
+    const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}).map(([k, v]) => [k, v.toString()]));
 
     const objectsToRebind = new Map<string, { handle: DocHandleProxy<SpaceDoc>; objectIds: string[] }>();
     objectsToRebind.set(spaceRootDocHandle.url, { handle: spaceRootDocHandle, objectIds: [] });
@@ -609,14 +615,14 @@ export class CoreDatabase {
         if (newObjectDocUrl === object.docHandle?.url) {
           continue;
         }
-        const existing = objectsToRebind.get(newObjectDocUrl);
+        const existing = objectsToRebind.get(newObjectDocUrl.toString());
         if (existing != null) {
           existing.objectIds.push(object.id);
           continue;
         }
         const newDocHandle = this._repoProxy.find(newObjectDocUrl as DocumentId);
         await newDocHandle.doc();
-        objectsToRebind.set(newObjectDocUrl, { handle: newDocHandle, objectIds: [object.id] });
+        objectsToRebind.set(newObjectDocUrl.toString(), { handle: newDocHandle, objectIds: [object.id] });
       } else {
         objectsToRemove.push(object.id);
       }
@@ -872,8 +878,8 @@ const createCoreFromInsertData = (data: InsertData): ObjectCore => {
   if ('id' in data) {
     throw new Error('Cannot insert object with id');
   }
-  const { __typename, ...rest } = data;
 
+  const { __typename, ...rest } = data;
   let type: DXN | undefined;
   if (__typename) {
     type = sanitizeTypename(__typename);

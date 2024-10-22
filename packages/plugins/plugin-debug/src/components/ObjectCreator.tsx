@@ -4,8 +4,7 @@
 
 import React, { type FC, useMemo, useState } from 'react';
 
-import { type EchoReactiveObject, type ReactiveObject } from '@dxos/echo-schema';
-import { type Space } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, type ReactiveObject, type Space } from '@dxos/react-client/echo';
 import { Button, DensityProvider } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, Table } from '@dxos/react-ui-table';
 

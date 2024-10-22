@@ -4,10 +4,10 @@
 
 import { type Brand } from 'effect';
 
-import { type EchoReactiveObject } from '@dxos/echo-schema';
-import type { GenericSignal } from '@dxos/echo-signals/runtime';
-import type { ComplexMap } from '@dxos/util';
+import { type GenericSignal } from '@dxos/echo-signals/runtime';
+import { type ComplexMap } from '@dxos/util';
 
+import { type EchoReactiveObject } from './create';
 import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
 import type { ObjectCore, KeyPath } from '../core-db';
@@ -40,8 +40,28 @@ export const TargetKey = {
   hash: (key: TargetKey): string => JSON.stringify(key),
 };
 
+/**
+ *
+ */
+// TODO(burdon): Document.
 export type ObjectInternals = {
+  /**
+   *
+   */
+  // TODO(burdon): Document.
   core: ObjectCore;
+
+  /**
+   * Database.
+   * Is set on object adding to database.
+   */
+  database: EchoDatabase | undefined;
+
+  /**
+   *
+   */
+  // TODO(burdon): Document.
+  signal: GenericSignal;
 
   /**
    * Caching targets based on key path.
@@ -49,28 +69,21 @@ export type ObjectInternals = {
    */
   targetsMap: ComplexMap<TargetKey, ProxyTarget>;
 
-  signal: GenericSignal;
-
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * Set only when the object is not bound to a database.
    */
   linkCache: Map<string, EchoReactiveObject<any>> | undefined;
-
-  /**
-   * Database.
-   * Is set on object adding to database.
-   */
-  database: EchoDatabase | undefined;
 };
 
 /**
- * Generic proxy target type for ECHO handler.
+ * Generic proxy target type for ECHO proxy objects.
  * Targets can either be objects or arrays (instances of `EchoArrayTwoPointO`).
- * Every targets holds a set of hidden properties on symbols.
+ * @internal
  */
 export type ProxyTarget = {
   [symbolInternals]: ObjectInternals;
+
   /**
    * `data` or `meta` namespace.
    */
@@ -85,6 +98,7 @@ export type ProxyTarget = {
 
   /**
    * Reference to the handler.
+   * @deprecated
    */
   // TODO(dmaretskyi): Can be removed.
   [symbolHandler]?: EchoReactiveHandler;

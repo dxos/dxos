@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject } from '@dxos/client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
