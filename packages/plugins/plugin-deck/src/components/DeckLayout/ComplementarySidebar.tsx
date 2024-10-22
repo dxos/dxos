@@ -33,8 +33,9 @@ export type ComplementarySidebarProps = {
 const panels = ['comments', 'settings', 'debug'] as const;
 
 const nodes = [
-  { id: 'comments', icon: 'ph--chat-text--regular' },
   { id: 'settings', icon: 'ph--gear--regular' },
+  { id: 'comments', icon: 'ph--chat-text--regular' },
+  { id: 'automation', icon: 'ph--bug--atom' },
   { id: 'debug', icon: 'ph--bug--regular' },
 ];
 
@@ -65,7 +66,7 @@ export const ComplementarySidebar = ({ layoutParts, flatDeck }: ComplementarySid
           void dispatch({ action: NavigationAction.OPEN, data: { activeParts: { complementary: id } } });
         },
         properties: {
-          label: [`${id} label`, { ns: DECK_PLUGIN }],
+          label: [`open ${id} label`, { ns: DECK_PLUGIN }],
           icon,
           menuItemType: 'toggle',
           isChecked: part === id,
