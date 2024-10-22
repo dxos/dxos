@@ -11,7 +11,7 @@ import { create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { Button, DensityProvider } from '@dxos/react-ui';
+import { Button } from '@dxos/react-ui';
 import { withSignals, withTheme } from '@dxos/storybook-utils';
 import { range } from '@dxos/util';
 
@@ -157,14 +157,7 @@ export default {
     },
     rowsSelectable: { control: 'select', options: [false, true, 'multi'] },
   },
-  decorators: [
-    withTheme,
-    (Story: any) => (
-      <DensityProvider density='fine'>
-        <Story />
-      </DensityProvider>
-    ),
-  ],
+  decorators: [withTheme],
 };
 
 export const Default = {

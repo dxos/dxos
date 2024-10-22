@@ -16,7 +16,7 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
-import { DensityProvider, Icon, type ThemedClassName, Toolbar, useDynamicRef } from '@dxos/react-ui';
+import { Icon, type ThemedClassName, Toolbar, useDynamicRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { GlobeContextProvider, type GlobeContextProviderProps, type GlobeContextType, useGlobeContext } from '../hooks';
@@ -242,28 +242,24 @@ const Button = ({ icon, onAction }: { icon: string; onAction?: () => void }) => 
 const GlobeZoomControls = ({ classNames, position = 'bottom-left', onAction }: GlobeControlsProps) => {
   // TODO(wittjosiah): This is a hack to get the theme to work. Gem isn't getting global theme context.
   return (
-    <DensityProvider density='fine'>
-      <Toolbar.Root
-        classNames={mx('z-10 absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}
-      >
-        <Button icon='ph--plus--regular' onAction={() => onAction?.('zoom-in')} />
-        <Button icon='ph--minus--regular' onAction={() => onAction?.('zoom-out')} />
-      </Toolbar.Root>
-    </DensityProvider>
+    <Toolbar.Root
+      classNames={mx('z-10 absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}
+    >
+      <Button icon='ph--plus--regular' onAction={() => onAction?.('zoom-in')} />
+      <Button icon='ph--minus--regular' onAction={() => onAction?.('zoom-out')} />
+    </Toolbar.Root>
   );
 };
 
 const GlobeActionControls = ({ classNames, position = 'bottom-right', onAction }: GlobeControlsProps) => {
   // TODO(wittjosiah): This is a hack to get the theme to work. Gem isn't getting global theme context.
   return (
-    <DensityProvider density='fine'>
-      <Toolbar.Root
-        classNames={mx('z-10 absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}
-      >
-        <Button icon='ph--play--regular' onAction={() => onAction?.('start')} />
-        <Button icon='ph--globe-hemisphere-west--regular' onAction={() => onAction?.('toggle')} />
-      </Toolbar.Root>
-    </DensityProvider>
+    <Toolbar.Root
+      classNames={mx('z-10 absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}
+    >
+      <Button icon='ph--play--regular' onAction={() => onAction?.('start')} />
+      <Button icon='ph--globe-hemisphere-west--regular' onAction={() => onAction?.('toggle')} />
+    </Toolbar.Root>
   );
 };
 

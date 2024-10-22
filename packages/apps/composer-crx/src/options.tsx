@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { DensityProvider, ThemeProvider } from '@dxos/react-ui';
+import { ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
 import { Options } from './components';
@@ -15,13 +15,11 @@ import { Options } from './components';
 const Root = () => {
   return (
     <ThemeProvider tx={defaultTx} themeMode='dark'>
-      <DensityProvider density='fine'>
-        <div className='absolute inset-0 flex justify-center overflow-hidden dark bg-base'>
-          <div className='flex flex-col overflow-y-auto max-w-[640px] w-full'>
-            <Options />
-          </div>
+      <div className='absolute inset-0 flex justify-center overflow-hidden dark bg-base'>
+        <div className='flex flex-col overflow-y-auto max-w-[640px] w-full'>
+          <Options />
         </div>
-      </DensityProvider>
+      </div>
     </ThemeProvider>
   );
 };
