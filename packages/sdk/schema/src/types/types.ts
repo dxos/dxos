@@ -83,7 +83,7 @@ export const QuerySchema = S.Struct({
 
 // TODO(burdon): Are views always flat projections?
 export const ViewSchema = S.Struct({
-  query: QuerySchema,
+  query: S.optional(QuerySchema),
   fields: S.mutable(S.Array(FieldSchema)),
 });
 
