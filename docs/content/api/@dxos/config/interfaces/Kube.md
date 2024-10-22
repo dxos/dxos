@@ -4,18 +4,19 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [alias]()
-Type: <code>string[]</code>
+### [endpoints]()
+Type: <code>[Endpoints](/api/@dxos/config/interfaces/Endpoints)</code>
 
+Options:
+  - proto3_optional = true
 
+### [publicUrl]()
+Type: <code>string</code>
 
-### [appTunneling]()
-Type: <code>[AppTunneling](/api/@dxos/config/interfaces/AppTunneling)</code>
+Options:
+  - proto3_optional = true
 
-
-
-### [autoupdate]()
-Type: <code>[Autoupdate](/api/@dxos/config/interfaces/Autoupdate)</code>
+    faces/Autoupdate)</code>
 
 
 

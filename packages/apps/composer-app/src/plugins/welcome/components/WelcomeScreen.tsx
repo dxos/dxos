@@ -4,7 +4,7 @@
 
 import React, { useRef, useState } from 'react';
 
-import { NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { ClientAction } from '@dxos/plugin-client/meta';
@@ -67,7 +67,7 @@ export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?:
 
     if (isSpace(result?.data.space)) {
       const space = result?.data.space;
-      const credentials = await client.halo.queryCredentials();
+      const credentials = client.halo.queryCredentials();
       const spaceCredential = credentials.find((credential) => {
         if (credential.subject.assertion['@type'] !== 'dxos.halo.credentials.SpaceMember') {
           return false;
@@ -87,6 +87,10 @@ export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?:
         {
           action: NavigationAction.CLOSE,
           data: { activeParts: { fullScreen: 'surface:WelcomeScreen', main: client.spaces.default.id } },
+        },
+        {
+          action: LayoutAction.SET_LAYOUT_MODE,
+          data: { layoutMode: 'solo' },
         },
         { action: NavigationAction.OPEN, data: { activeParts: { main: space.id } } },
       ]);
