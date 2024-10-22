@@ -8,6 +8,7 @@ import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type QueryRequest, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
@@ -15,7 +16,6 @@ import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
 import { type AutomergeHost, getSpaceKeyFromDoc } from '../automerge';
-import { log } from '@dxos/log';
 
 type QueryStateParams = {
   indexer: Indexer;

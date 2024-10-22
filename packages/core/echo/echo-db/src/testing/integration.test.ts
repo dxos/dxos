@@ -20,7 +20,6 @@ import { deferAsync } from '@dxos/util';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
 import { Filter } from '../query';
-import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 

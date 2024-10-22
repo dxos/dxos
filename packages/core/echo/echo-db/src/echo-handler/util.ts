@@ -4,12 +4,11 @@
 
 import { Reference } from '@dxos/echo-protocol';
 import { type ForeignKey, type ReactiveObject, getMeta, getProxyTarget } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 
 import { type EchoReactiveObject, isEchoObject } from './create';
 import { symbolInternals, type ProxyTarget } from './echo-proxy-target';
 import { type EchoDatabase } from '../proxy-db';
-import { log } from '@dxos/log';
-import { invariant } from '@dxos/invariant';
 
 export const getDatabaseFromObject = (obj: ReactiveObject<any>): EchoDatabase | undefined => {
   if (!isEchoObject(obj)) {
