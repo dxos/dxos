@@ -52,6 +52,7 @@ export const Table = ({ table, data }: TableProps) => {
   );
 
   const handleClick = useCallback((event: MouseEvent) => {
+    // TODO(burdon): Get target from event (this is brittle).
     const closestButton = (event.target as HTMLButtonElement).closest(`button[${columnSettingsButtonAttr}]`);
     if (closestButton) {
       triggerRef.current = closestButton as HTMLButtonElement;
@@ -62,22 +63,23 @@ export const Table = ({ table, data }: TableProps) => {
 
   return (
     <ModalPrimitive.Root>
+      {/* TODO(burdon): Is this required to be unique? */}
       <Grid.Root id='table-next'>
         <TableCellEditor tableModel={tableModel} gridRef={gridRef} />
         <Grid.Content
           ref={gridRef}
-          limitRows={data.length}
-          limitColumns={table.view?.fields?.length ?? 0}
-          initialCells={tableModel?.cells.value}
-          columns={tableModel?.columnMeta.value}
-          frozen={frozen}
-          onAxisResize={handleAxisResize}
-          onClick={handleClick}
           className={mx(
             '[&>.dx-grid]:min-bs-0 [&>.dx-grid]:bs-full [&>.dx-grid]:max-bs-max [--dx-grid-base:var(--surface-bg)]',
             inlineEndLine,
             blockEndLine,
           )}
+          initialCells={tableModel?.cells.value}
+          columns={tableModel?.columnMeta.value}
+          frozen={frozen}
+          limitRows={data.length}
+          limitColumns={table.view?.fields?.length ?? 0}
+          onAxisResize={handleAxisResize}
+          onClick={handleClick}
         />
       </Grid.Root>
       <ModalPrimitive.Anchor virtualRef={triggerRef} />
