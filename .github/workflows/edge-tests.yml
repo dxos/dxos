@@ -95,6 +95,7 @@ jobs:
 
       - name: Install linked dependencies
         working-directory: ./edge
+        # NOTE: --no-frozen-lockfile is required to accept overrides from "Link" step.
         run: pnpm install --no-frozen-lockfile
         shell: bash
 
