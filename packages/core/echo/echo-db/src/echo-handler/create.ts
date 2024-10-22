@@ -55,6 +55,7 @@ export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
 
   const core = new ObjectCore();
   if (isReactiveObject(props)) {
+    // Already an echo-schema reactive object.
     const proxy = props as any;
     const meta = getProxyTarget<ObjectMeta>(getMeta(proxy));
 
