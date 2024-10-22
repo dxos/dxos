@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type ReactNode } from 'react';
+
 import { create } from '@dxos/echo-schema';
 
 export type Decoration = {
@@ -11,7 +13,7 @@ export type Decoration = {
    * the cell's border and its padding/layout/content, allowing for custom rendering or
    * additional elements to be inserted around the cell's main content.
    */
-  decorate?: (props: { children: React.ReactNode }) => React.ReactNode;
+  decorate?: (props: { children: ReactNode }) => ReactNode;
   /**
    * An array of CSS class names to be applied to the content of the SheetCell.
    * These classes can be used to style the cell's content independently of its structure.

@@ -26,6 +26,7 @@ import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
 import { ServiceRegistry } from './service-registry';
+import { EdgeAgentServiceImpl } from '../agents';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
 import {
@@ -101,6 +102,9 @@ export class ClientServicesHost {
   @Trace.info()
   private _open = false;
 
+  @Trace.info()
+  private _resetting = false;
+
   constructor({
     config,
     transportFactory,
@@ -141,7 +145,7 @@ export class ClientServicesHost {
     this._systemService = new SystemServiceImpl({
       config: () => this._config,
       statusUpdate: this._statusUpdate,
-      getCurrentStatus: () => (this.isOpen ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
+      getCurrentStatus: () => (this.isOpen && !this._resetting ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
       getDiagnostics: () => {
         return createDiagnostics(this._serviceRegistry.services, this._serviceContext, this._config!);
       },
@@ -289,6 +293,11 @@ export class ClientServicesHost {
       return this._serviceContext.dataSpaceManager!;
     };
 
+    const agentManagerProvider = async () => {
+      await this._serviceContext.initialized.wait();
+      return this._serviceContext.edgeAgentManager!;
+    };
+
     const identityService = new IdentityServiceImpl(
       this._serviceContext.identityManager,
       this._serviceContext.keyring,
@@ -330,6 +339,8 @@ export class ClientServicesHost {
         config: this._config,
         context: this._serviceContext,
       }),
+
+      EdgeAgentService: new EdgeAgentServiceImpl(agentManagerProvider),
     });
 
     await this._serviceContext.open(ctx);
@@ -380,6 +391,10 @@ export class ClientServicesHost {
     log.trace('dxos.sdk.client-services-host.reset', trace.begin({ id: traceId }));
 
     log.info('resetting...');
+    // Emit this status update immediately so app returns to fallback.
+    // This state is never cleared because the app reloads.
+    this._resetting = true;
+    this._statusUpdate.emit();
     await this._serviceContext?.close();
     await this._storage!.reset();
     log.info('reset');

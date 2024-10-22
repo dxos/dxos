@@ -5,7 +5,6 @@
 import React, { useEffect, useState } from 'react';
 
 import { DensityProvider, Icon, Toggle } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 
 import { Panel, type PanelProps } from './Panel';
 import {
@@ -15,20 +14,14 @@ import {
   PerformancePanel,
   QueriesPanel,
   RawQueriesPanel,
+  ReplicatorMessagesPanel,
+  ReplicatorPanel,
   SpansPanel,
   TimeSeries,
 } from './panels';
-import { ReplicatorMessagesPanel } from './panels/ReplicatorMessagesPanel';
-import { ReplicatorPanel } from './panels/ReplicatorPanel';
 import { removeEmpty, type Stats } from '../../hooks';
-import { styles } from '../../styles';
 
 const LOCAL_STORAGE_KEY = 'dxos.org/plugin/performance/panel';
-
-export type QueryPanelProps = {
-  stats?: Stats;
-  onRefresh?: () => void;
-};
 
 type PanelKey =
   | 'ts'
@@ -38,8 +31,9 @@ type PanelKey =
   | 'rawQueries'
   | 'database'
   | 'memory'
-  | 'dbReplicator'
+  | 'replicator'
   | 'replicatorMessages';
+
 type PanelMap = Record<PanelKey, boolean | undefined>;
 
 const PANEL_KEYS: PanelKey[] = [
@@ -50,9 +44,14 @@ const PANEL_KEYS: PanelKey[] = [
   'rawQueries',
   'database',
   'memory',
-  'dbReplicator',
+  'replicator',
   'replicatorMessages',
 ];
+
+export type QueryPanelProps = {
+  stats?: Stats;
+  onRefresh?: () => void;
+};
 
 // TODO(burdon): Reconcile with TraceView in diagnostics.
 export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
@@ -96,9 +95,10 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
     localStorage?.setItem(`${LOCAL_STORAGE_KEY}/${id}`, String(open));
   };
 
+  // TODO(burdon): Add Surface debug.
   return (
     <DensityProvider density='fine'>
-      <div className={mx('flex flex-col w-full h-full divide-y', styles.border)}>
+      <div className='flex flex-col w-full h-full divide-y divide-separator'>
         <Panel
           id='main'
           icon='ph--chart-bar--regular'
@@ -127,8 +127,8 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
         <RawQueriesPanel id='rawQueries' open={panelState.rawQueries} onToggle={handleToggle} queries={rawQueries} />
         <DatabasePanel id='database' open={panelState.database} onToggle={handleToggle} database={stats?.database} />
         <ReplicatorPanel
-          id='dbReplicator'
-          open={panelState.dbReplicator}
+          id='replicator'
+          open={panelState.replicator}
           onToggle={handleToggle}
           database={stats?.database}
         />

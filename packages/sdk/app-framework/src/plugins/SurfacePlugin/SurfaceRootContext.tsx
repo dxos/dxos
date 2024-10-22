@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createContext, useContext, type Context, type JSX, type Provider, type ForwardedRef } from 'react';
+import { createContext, useContext, type JSX, type ForwardedRef } from 'react';
+
+import { raise } from '@dxos/debug';
 
 import { type SurfaceProps } from './Surface';
 
@@ -17,6 +19,16 @@ type SurfaceComponentProps = WithRequiredProperty<SurfaceProps, 'data'>;
  * Determines the priority of the surface when multiple components are resolved.
  */
 export type SurfaceDisposition = 'hoist' | 'fallback';
+
+/**
+ * Surface debug info.
+ * NOTE: Short-term measure to track perf issues.
+ */
+export type DebugInfo = {
+  id: string;
+  created: number;
+  renderCount: number;
+} & Pick<SurfaceProps, 'role' | 'name'>;
 
 export type SurfaceResult = {
   node: JSX.Element;
@@ -35,10 +47,15 @@ export type SurfaceComponent = (
 
 export type SurfaceRootContext = {
   components: Record<string, SurfaceComponent>;
+
+  /**
+   * Debug info.
+   */
+  debugInfo?: Map<string, DebugInfo>;
 };
 
-const SurfaceRootContext: Context<SurfaceRootContext> = createContext<SurfaceRootContext>({ components: {} });
+const SurfaceRootContext = createContext<SurfaceRootContext | undefined>(undefined);
 
-export const useSurfaceRoot = () => useContext(SurfaceRootContext);
+export const useSurfaceRoot = () => useContext(SurfaceRootContext) ?? raise(new Error('Missing SurfaceRootContext'));
 
-export const SurfaceProvider: Provider<SurfaceRootContext> = SurfaceRootContext.Provider;
+export const SurfaceProvider = SurfaceRootContext.Provider;

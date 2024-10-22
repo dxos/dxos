@@ -34,6 +34,7 @@ import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { safeInstanceof } from '@dxos/util';
 
+import { EdgeAgentManager } from '../agents';
 import {
   IdentityManager,
   type CreateIdentityOptions,
@@ -83,6 +84,7 @@ export class ServiceContext extends Resource {
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
+  public edgeAgentManager?: EdgeAgentManager;
 
   private readonly _handlerFactories = new Map<
     Invitation.Kind,
@@ -222,6 +224,7 @@ export class ServiceContext extends Resource {
       await this.identityManager.identity.space.spaceState.removeCredentialProcessor(this._deviceSpaceSync);
     }
     await this.dataSpaceManager?.close();
+    await this.edgeAgentManager?.close();
     await this.identityManager.close();
     await this.spaceManager.close();
     await this.feedStore.close();
@@ -308,6 +311,14 @@ export class ServiceContext extends Resource {
     });
     await this.dataSpaceManager.open();
 
+    this.edgeAgentManager = new EdgeAgentManager(
+      this._edgeFeatures,
+      this._edgeHttpClient,
+      this.dataSpaceManager,
+      identity,
+    );
+    await this.edgeAgentManager.open();
+
     this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {
       invariant(this.dataSpaceManager, 'dataSpaceManager not initialized yet');
       return new SpaceInvitationProtocol(this.dataSpaceManager, signingContext, this.keyring, invitation.spaceKey);
@@ -386,9 +397,8 @@ export class ServiceContext extends Resource {
       edgeIdentity = await createEphemeralEdgeIdentity();
     }
 
-    if (this._edgeConnection) {
-      this._edgeConnection.setIdentity(edgeIdentity);
-    }
+    this._edgeConnection?.setIdentity(edgeIdentity);
+    this._edgeHttpClient?.setIdentity(edgeIdentity);
     this.networkManager.setPeerInfo({
       identityKey: edgeIdentity.identityKey,
       peerKey: edgeIdentity.peerKey,

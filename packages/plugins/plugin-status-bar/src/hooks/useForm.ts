@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ChangeEvent, useCallback, useState } from 'react';
+import { type ChangeEvent, type FocusEvent, useCallback, useState } from 'react';
 
 import { type ValidationError } from '../util';
 
@@ -55,7 +55,7 @@ export const useForm = <T extends object>({ initialValues, validate, onSubmit }:
   const touchAll = useCallback(() => setTouched(mkAllTouched(values)), [values, setTouched]);
 
   const handleBlur = useCallback(
-    (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name } = event.target;
       setTouched((touched) => ({ ...touched, [name]: true }));
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/crypto",
-  "version": "0.6.12",
+  "version": "0.6.13",
   "description": "Basic cross-platform crypto utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,9 +40,7 @@
     "@dxos/node-std": "workspace:*",
     "hypercore-crypto": "^2.3.0"
   },
-  "devDependencies": {
-    "@types/node": "^22.7.4"
-  },
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

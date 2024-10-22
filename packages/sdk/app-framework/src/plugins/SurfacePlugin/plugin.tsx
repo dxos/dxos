@@ -9,14 +9,14 @@ import { create } from '@dxos/echo-schema';
 import { SurfaceProvider, type SurfaceRootContext } from './SurfaceRootContext';
 import SurfaceMeta from './meta';
 import { parseSurfacePlugin, type SurfacePluginProvides } from './provides';
-import type { PluginDefinition } from '../PluginHost';
+import { type PluginDefinition } from '../PluginHost';
 import { filterPlugins } from '../helpers';
 
 /**
  * Provides a registry of surface components.
  */
 const SurfacePlugin = (): PluginDefinition<SurfacePluginProvides> => {
-  const state = create<SurfaceRootContext>({ components: {} });
+  const state = create<SurfaceRootContext>({ components: {}, debugInfo: new Map() });
 
   return {
     meta: SurfaceMeta,

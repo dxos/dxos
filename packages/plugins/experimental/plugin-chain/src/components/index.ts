@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
-// Lazily load components for content surfaces.
-export const ChainArticle = React.lazy(() => import('./ChainArticle'));
+export const ChainArticle = lazy(() => import('./ChainArticle'));
 
 export * from './Chain';
 export * from './PromptTemplate';

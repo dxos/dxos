@@ -169,7 +169,6 @@ export const MarkdownEditor = ({
   return (
     <div
       role='none'
-      // TODO(burdon): Move role logic out of here (see sheet, table, sketch, etc.)
       {...(role === 'section'
         ? { className: 'flex flex-col' }
         : {
