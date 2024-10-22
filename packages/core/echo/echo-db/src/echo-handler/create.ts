@@ -43,7 +43,8 @@ export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =
  * Creates a reactive ECHO object.
  * @internal
  */
-// TODO(burdon): Remove from public API (just use `create()`?).
+// TODO(burdon): Document lifecycle.
+// TODO(burdon): Remove from public API.
 export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
   invariant(!isEchoObject(props));
   const schema = getSchema(props);
@@ -60,15 +61,15 @@ export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
     // TODO(burdon): Document.
     const slot = getProxySlot(proxy);
     slot.setHandler(EchoReactiveHandler.instance);
+
     const target = slot.target as ProxyTarget;
     target[symbolInternals] = initInternals(core);
-
-    // TODO(dmaretskyi): Does this need to be disposed? RB: Probably!
-    core.subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
-
     target[symbolPath] = [];
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, proxy);
+
+    // TODO(dmaretskyi): Does this need to be disposed?
+    core.subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
 
     // NOTE: This call is recursively linking all nested objects
     //  which can cause recursive loops of `createObject` if `EchoReactiveHandler` is not set prior to this call.
@@ -90,7 +91,7 @@ export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
       ...(props as any),
     };
 
-    // TODO(dmaretskyi): Does this need to be disposed? RB: Probably!
+    // TODO(dmaretskyi): Does this need to be disposed?
     core.subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
 
     initCore(core, target);
@@ -101,7 +102,7 @@ export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
 };
 
 // TODO(burdon): Call and remove subscriptions.
-const disposeObject = <T extends {}>(proxy: EchoReactiveObject<T>) => {
+const destroyObject = <T extends {}>(proxy: EchoReactiveObject<T>) => {
   invariant(isEchoObject(proxy));
   const target: ProxyTarget = getProxyTarget(proxy);
   const internals: ObjectInternals = target[symbolInternals];
