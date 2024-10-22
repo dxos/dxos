@@ -1209,9 +1209,11 @@ export class DxGrid extends LitElement {
 
     if (changedProperties.has('columns')) {
       this.computeColSizes();
+      this.updateIntrinsicInlineSize();
     }
     if (changedProperties.has('rows')) {
       this.computeRowSizes();
+      this.updateIntrinsicBlockSize();
     }
   }
 
