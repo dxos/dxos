@@ -77,7 +77,8 @@ export const Table = ({ table, data }: TableProps) => {
           columns={tableModel?.columnMeta.value}
           frozen={frozen}
           limitRows={data.length}
-          limitColumns={table.view?.fields?.length ?? 0}
+          // TODO(ZaymonFC): Table model should return the number of columns to account for the action column.
+          limitColumns={(table.view?.fields?.length ?? 0) + 1}
           onAxisResize={handleAxisResize}
           onClick={handleClick}
         />

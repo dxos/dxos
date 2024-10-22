@@ -40,6 +40,16 @@ const columnSettingsIcon = 'ph--caret-down--regular';
 const columnSettingsButtonHtml = (columnId: string) =>
   `<button class="${columnSettingsButtonClasses}" ${columnSettingsButtonAttr}="${columnId}"><svg><use href="/icons.svg#${columnSettingsIcon}"/></svg></button>`;
 
+// TODO(Zan): Add constants for the action column.
+const ACTION_COLUMN_WIDTH = 40;
+
+// TODO(Zan): Add constants for the hamburger menu button.
+const hamburgerMenuButtonAttr = 'data-table-row-menu-button';
+const hamburgerMenuButtonClasses = 'ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2';
+const hamburgerMenuIcon = 'ph--dots-three-vertical--regular';
+const hamburgerMenuButtonHtml = (rowIndex: number) =>
+  `<button class="${hamburgerMenuButtonClasses}" ${hamburgerMenuButtonAttr}="${rowIndex}"><svg><use href="/icons.svg#${hamburgerMenuIcon}"/></svg></button>`;
+
 export class TableModel extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
 
@@ -85,18 +95,24 @@ export class TableModel extends Resource {
     // Construct the header cells based on the table fields.
     const headerCells: ReadonlySignal<DxGridPlaneCells> = computed(() => {
       const fields = this.table.view?.fields ?? [];
-      return Object.fromEntries(
-        fields.map((field, index: number) => {
-          return [
-            fromGridCell({ col: index, row: 0 }),
-            {
-              value: field.label ?? field.path,
-              resizeHandle: 'col',
-              accessoryHtml: columnSettingsButtonHtml(field.id),
-            },
-          ];
-        }),
+      const cells: DxGridPlaneCells = Object.fromEntries(
+        fields.map((field, index: number) => [
+          fromGridCell({ col: index, row: 0 }),
+          {
+            value: field.label ?? field.path,
+            resizeHandle: 'col',
+            accessoryHtml: columnSettingsButtonHtml(field.id),
+          },
+        ]),
       );
+
+      // Add action column header
+      cells[fromGridCell({ col: fields.length, row: 0 })] = {
+        value: '',
+        resizeHandle: 'col',
+      };
+
+      return cells;
     });
 
     const sortedData = computed(() => {
@@ -130,8 +146,10 @@ export class TableModel extends Resource {
     // Map the data to grid cells.
     const cellValues: ReadonlySignal<DxGridPlaneCells> = computed(() => {
       const values: DxGridPlaneCells = {};
+      const fields = this.table.view?.fields ?? [];
+
       sortedData.value.forEach((row, displayIndex) => {
-        (this.table.view?.fields ?? []).forEach((field, colIndex: number) => {
+        fields.forEach((field, colIndex: number) => {
           const cellValueSignal = computed(() =>
             row[field.path] !== undefined ? formatValue(field.type, row[field.path]) : '',
           );
@@ -147,6 +165,12 @@ export class TableModel extends Resource {
 
           values[fromGridCell({ col: colIndex, row: displayIndex })] = cell;
         });
+
+        // Add action column cell
+        values[fromGridCell({ col: fields.length, row: displayIndex })] = {
+          value: '',
+          accessoryHtml: hamburgerMenuButtonHtml(displayIndex),
+        };
       });
 
       return values;
@@ -157,14 +181,15 @@ export class TableModel extends Resource {
     });
 
     this.columnMeta = computed(() => {
-      return {
-        grid: Object.fromEntries(
-          (this.table.view?.fields ?? []).map((field, index: number) => [
-            index,
-            { size: field.size ?? 256, resizeable: true },
-          ]),
-        ),
-      };
+      const fields = this.table.view?.fields ?? [];
+      const meta = Object.fromEntries(
+        fields.map((field, index: number) => [index, { size: field.size ?? 256, resizeable: true }]),
+      );
+
+      // Add action column meta
+      meta[fields.length] = { size: ACTION_COLUMN_WIDTH, resizeable: false };
+
+      return { grid: meta };
     });
 
     this.cellUpdateListener = new CellUpdateListener(cellValues, this.onCellUpdate);
@@ -182,7 +207,7 @@ export class TableModel extends Resource {
     }
 
     const field = fields[col];
-    const dataIndex = this.displayToDataIndex.get(row) ?? row;
+    const dataIndex = this.displayToDataIndex.get(row - 1) ?? row - 1;
     return this.data[dataIndex][field.path];
   };
 
@@ -193,7 +218,7 @@ export class TableModel extends Resource {
     }
 
     const field = fields[col];
-    const dataIndex = this.displayToDataIndex.get(row) ?? row;
+    const dataIndex = this.displayToDataIndex.get(row - 1) ?? row - 1;
     this.data[dataIndex][field.path] = parseValue(field.type, value);
   };
 
@@ -206,7 +231,9 @@ export class TableModel extends Resource {
     const currentIndex = fields.findIndex((field) => field.id === columnId);
     if (currentIndex !== -1 && this.table.view) {
       const [removed] = fields.splice(currentIndex, 1);
-      fields.splice(newIndex, 0, removed);
+      // Ensure we don't move past the action column
+      const adjustedNewIndex = Math.min(newIndex, fields.length);
+      fields.splice(adjustedNewIndex, 0, removed);
     }
   }
 
@@ -215,10 +242,13 @@ export class TableModel extends Resource {
   //
 
   public setColumnWidth(columnIndex: number, width: number): void {
-    const newWidth = Math.max(0, width);
-    const field = this.table?.view?.fields[columnIndex];
-    if (field) {
-      field.size = newWidth;
+    const fields = this.table.view?.fields ?? [];
+    if (columnIndex < fields.length) {
+      const newWidth = Math.max(0, width);
+      const field = fields[columnIndex];
+      if (field) {
+        field.size = newWidth;
+      }
     }
   }
 
