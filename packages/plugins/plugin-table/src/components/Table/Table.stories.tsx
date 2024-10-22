@@ -12,7 +12,7 @@ import { useDefaultValue } from '@dxos/react-ui';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
-import { type SimulatorProps, createItems, createTable, useSimulator } from './testing';
+import { type SimulatorProps, createItems, createTable, useSimulator } from '../testing';
 
 faker.seed(0);
 
@@ -36,7 +36,8 @@ const Story = (props: StoryProps) => {
 };
 
 export default {
-  title: 'plugin-table/table-next',
+  title: 'plugin-table/Table',
+  component: Table,
   render: Story,
   decorators: [withSignals, withTheme, withLayout({ fullscreen: true })],
 };
