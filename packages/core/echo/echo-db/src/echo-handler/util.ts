@@ -4,6 +4,7 @@
 
 import { Reference } from '@dxos/echo-protocol';
 import { type ForeignKey, type ReactiveObject, getMeta, getProxyTarget } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 
 import { type EchoReactiveObject, isEchoObject } from './create';
 import { symbolInternals, type ProxyTarget } from './echo-proxy-target';
@@ -20,6 +21,7 @@ export const getDatabaseFromObject = (obj: ReactiveObject<any>): EchoDatabase | 
 };
 
 export const getReferenceWithSpaceKey = (obj: EchoReactiveObject<any>): Reference | undefined => {
+  invariant(obj);
   const db = getDatabaseFromObject(obj);
   return db && new Reference(obj.id, undefined, db.spaceKey.toHex());
 };
