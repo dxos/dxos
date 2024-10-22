@@ -66,6 +66,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
       return (await Promise.all([this._filterMapCore(filter, core, start, undefined)])).filter(nonNullable);
     }
 
+    // TODO(dmaretskyi): Ensure the space id is set on filter.
     const response = await Stream.first(
       this._queryService.execQuery(
         { filter: filter.toProto(), reactivity: QueryReactivity.ONE_SHOT },
