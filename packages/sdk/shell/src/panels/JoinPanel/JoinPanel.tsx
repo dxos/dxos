@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { log } from '@dxos/log';
 import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { DensityProvider, useId, useThemeContext } from '@dxos/react-ui';
+import { useId, useThemeContext } from '@dxos/react-ui';
 
 import { JoinHeading } from './JoinHeading';
 import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps';
@@ -52,7 +52,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
     ConfirmReset: ConfirmResetComponent = ConfirmReset,
   } = props;
   return (
-    <DensityProvider density='fine'>
+    <>
       {mode !== 'halo-only' && <JoinHeading {...{ titleId, mode, onExit, exitActionParent }} />}
       <Viewport.Root focusManaged activeView={activeView}>
         <Viewport.Views>
@@ -174,7 +174,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
           </Viewport.View> */}
         </Viewport.Views>
       </Viewport.Root>
-    </DensityProvider>
+    </>
   );
 };
 

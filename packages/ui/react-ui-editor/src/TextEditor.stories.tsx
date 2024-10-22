@@ -21,7 +21,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { Button, DensityProvider, Input, useThemeContext } from '@dxos/react-ui';
+import { Button, Input, useThemeContext } from '@dxos/react-ui';
 import { baseSurface, mx, getSize } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -574,22 +574,20 @@ const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void 
   };
 
   return (
-    <DensityProvider density='fine'>
-      <div className={mx('flex items-center p-2 gap-2 border rounded-md', baseSurface)}>
-        <Input.Root>
-          <Input.TextInput
-            autoFocus={true}
-            placeholder='Enter command.'
-            value={text}
-            onChange={({ target: { value } }) => setText(value)}
-            onKeyDown={handleKeyDown}
-          />
-        </Input.Root>
-        <Button variant='ghost' classNames='pli-0' onClick={() => onClose()}>
-          <X className={getSize(5)} />
-        </Button>
-      </div>
-    </DensityProvider>
+    <div className={mx('flex items-center p-2 gap-2 border rounded-md', baseSurface)}>
+      <Input.Root>
+        <Input.TextInput
+          autoFocus={true}
+          placeholder='Enter command.'
+          value={text}
+          onChange={({ target: { value } }) => setText(value)}
+          onKeyDown={handleKeyDown}
+        />
+      </Input.Root>
+      <Button variant='ghost' classNames='pli-0' onClick={() => onClose()}>
+        <X className={getSize(5)} />
+      </Button>
+    </div>
   );
 };
 

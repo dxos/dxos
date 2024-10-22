@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { ClientProvider, type ClientProviderProps } from '@dxos/react-client';
-import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
+import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
 import { Devtools } from './Devtools';
@@ -34,13 +34,11 @@ export const App = (props: ClientProviderProps) => {
 
   return (
     <ThemeProvider {...{ tx: defaultTx, themeMode }}>
-      <DensityProvider density='fine'>
-        <ErrorBoundary>
-          <ClientProvider {...props}>
-            <Devtools />
-          </ClientProvider>
-        </ErrorBoundary>
-      </DensityProvider>
+      <ErrorBoundary>
+        <ClientProvider {...props}>
+          <Devtools />
+        </ClientProvider>
+      </ErrorBoundary>
     </ThemeProvider>
   );
 };

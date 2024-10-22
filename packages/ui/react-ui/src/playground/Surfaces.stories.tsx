@@ -61,7 +61,7 @@ const SurfacesStory = () => {
 };
 
 export default {
-  title: 'react-ui/Scenarios/Surfaces',
+  title: 'react-ui/Playground/Surfaces',
   component: SurfacesStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { DensityProvider, Icon, Toggle } from '@dxos/react-ui';
+import { Icon, Toggle } from '@dxos/react-ui';
 
 import { Panel, type PanelProps } from './Panel';
 import {
@@ -97,50 +97,48 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
 
   // TODO(burdon): Add Surface debug.
   return (
-    <DensityProvider density='fine'>
-      <div className='flex flex-col w-full h-full divide-y divide-separator'>
-        <Panel
-          id='main'
-          icon='ph--chart-bar--regular'
-          title='Stats'
-          info={
-            <Toggle
-              pressed={live}
-              classNames='!bg-transparent !p-0'
-              density='fine'
-              value='ghost'
-              onClick={handleToggleLive}
-            >
-              <Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} size={4} />
-            </Toggle>
-          }
-        />
-        <TimeSeries id='ts' open={panelState.ts} onToggle={handleToggle} />
-        <PerformancePanel
-          id='performance'
-          open={panelState.performance}
-          onToggle={handleToggle}
-          entries={stats?.performanceEntries}
-        />
-        <SpansPanel id='spans' open={panelState.spans} onToggle={handleToggle} spans={spans} />
-        <QueriesPanel id='queries' open={panelState.queries} onToggle={handleToggle} queries={queries} />
-        <RawQueriesPanel id='rawQueries' open={panelState.rawQueries} onToggle={handleToggle} queries={rawQueries} />
-        <DatabasePanel id='database' open={panelState.database} onToggle={handleToggle} database={stats?.database} />
-        <ReplicatorPanel
-          id='replicator'
-          open={panelState.replicator}
-          onToggle={handleToggle}
-          database={stats?.database}
-        />
-        <ReplicatorMessagesPanel
-          id='replicatorMessages'
-          open={panelState.replicatorMessages}
-          onToggle={handleToggle}
-          database={stats?.database}
-        />
-        <MemoryPanel id='memory' memory={stats?.memory} />
-        <NetworkPanel id='network' network={stats?.network} />
-      </div>
-    </DensityProvider>
+    <div className='flex flex-col w-full h-full divide-y divide-separator'>
+      <Panel
+        id='main'
+        icon='ph--chart-bar--regular'
+        title='Stats'
+        info={
+          <Toggle
+            pressed={live}
+            classNames='!bg-transparent !p-0'
+            density='fine'
+            value='ghost'
+            onClick={handleToggleLive}
+          >
+            <Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} size={4} />
+          </Toggle>
+        }
+      />
+      <TimeSeries id='ts' open={panelState.ts} onToggle={handleToggle} />
+      <PerformancePanel
+        id='performance'
+        open={panelState.performance}
+        onToggle={handleToggle}
+        entries={stats?.performanceEntries}
+      />
+      <SpansPanel id='spans' open={panelState.spans} onToggle={handleToggle} spans={spans} />
+      <QueriesPanel id='queries' open={panelState.queries} onToggle={handleToggle} queries={queries} />
+      <RawQueriesPanel id='rawQueries' open={panelState.rawQueries} onToggle={handleToggle} queries={rawQueries} />
+      <DatabasePanel id='database' open={panelState.database} onToggle={handleToggle} database={stats?.database} />
+      <ReplicatorPanel
+        id='replicator'
+        open={panelState.replicator}
+        onToggle={handleToggle}
+        database={stats?.database}
+      />
+      <ReplicatorMessagesPanel
+        id='replicatorMessages'
+        open={panelState.replicatorMessages}
+        onToggle={handleToggle}
+        database={stats?.database}
+      />
+      <MemoryPanel id='memory' memory={stats?.memory} />
+      <NetworkPanel id='network' network={stats?.network} />
+    </div>
   );
 };
