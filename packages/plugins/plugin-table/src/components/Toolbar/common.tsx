@@ -2,20 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Icon } from '@phosphor-icons/react';
 import React from 'react';
 
 import {
+  Icon,
   Toolbar as NaturalToolbar,
   Tooltip,
   type ToolbarButtonProps as NaturalToolbarButtonProps,
   type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
 } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Factor out in common with react-ui-editor.
 
-export const iconStyles = getSize(5);
 export const buttonStyles = 'min-bs-0 p-2';
 export const tooltipProps = { side: 'top' as const, classNames: 'z-10' };
 
@@ -23,16 +21,17 @@ export const ToolbarSeparator = () => <div role='separator' className='grow' />;
 
 //
 // ToolbarButton
+// TODO(burdon): Factor out.
 //
 
-type ToolbarButtonProps = NaturalToolbarButtonProps & { Icon: Icon };
+type ToolbarButtonProps = NaturalToolbarButtonProps & { icon: string };
 
-export const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) => {
+export const ToolbarButton = ({ children, icon, ...props }: ToolbarButtonProps) => {
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
         <NaturalToolbar.Button variant='ghost' {...props} classNames={buttonStyles}>
-          <Icon className={iconStyles} />
+          <Icon icon={icon} size={5} />
           <span className='sr-only'>{children}</span>
         </NaturalToolbar.Button>
       </Tooltip.Trigger>
@@ -50,14 +49,14 @@ export const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) 
 // ToolbarToggleButton
 //
 
-export type ToolbarToggleButtonProps = NaturalToolbarToggleGroupItemProps & { Icon: Icon };
+export type ToolbarToggleButtonProps = NaturalToolbarToggleGroupItemProps & { icon: string };
 
-export const ToolbarToggleButton = ({ Icon, children, ...props }: ToolbarToggleButtonProps) => {
+export const ToolbarToggleButton = ({ children, icon, ...props }: ToolbarToggleButtonProps) => {
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
         <NaturalToolbar.ToggleGroupItem variant='ghost' {...props} classNames={buttonStyles}>
-          <Icon className={iconStyles} />
+          <Icon icon={icon} size={5} />
           <span className='sr-only'>{children}</span>
         </NaturalToolbar.ToggleGroupItem>
       </Tooltip.Trigger>

@@ -52,8 +52,9 @@ const Story = () => {
     <div>
       <div className='border-b border-separator'>
         <Toolbar.Root onAction={handleAction}>
-          <Toolbar.Separator />
           <Toolbar.Actions />
+          <Toolbar.Separator />
+          <Toolbar.Extended />
         </Toolbar.Root>
       </div>
       <div className='relative is-full max-is-max min-is-0 min-bs-0'>
