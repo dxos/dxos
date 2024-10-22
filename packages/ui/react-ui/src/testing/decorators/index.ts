@@ -3,3 +3,4 @@
 //
 
 export * from './withTheme';
+export * from './withVariants';

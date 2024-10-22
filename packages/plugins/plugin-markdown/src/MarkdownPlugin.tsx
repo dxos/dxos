@@ -53,7 +53,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     defaultViewMode: 'preview',
     toolbar: true,
     numberedHeadings: true,
-    folding: false,
+    folding: true,
     experimental: false,
   });
 

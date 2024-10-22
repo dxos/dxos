@@ -5,7 +5,7 @@
 import React, { type FC, useMemo, useState } from 'react';
 
 import { type EchoReactiveObject, type ReactiveObject, type Space } from '@dxos/react-client/echo';
-import { Button, DensityProvider } from '@dxos/react-ui';
+import { Button } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, Table } from '@dxos/react-ui-table';
 
 import { SchemasNames, createSpaceObjectGenerator } from '../scaffolding';
@@ -86,13 +86,11 @@ export const ObjectCreator: FC<{
 
   return (
     <>
-      <DensityProvider density={'fine'}>
-        <Table.Root>
-          <Table.Viewport>
-            <Table.Main<CreateObjectsParams> columns={columns} data={objectsToCreate} />
-          </Table.Viewport>
-        </Table.Root>
-      </DensityProvider>
+      <Table.Root>
+        <Table.Viewport>
+          <Table.Main<CreateObjectsParams> columns={columns} data={objectsToCreate} />
+        </Table.Viewport>
+      </Table.Root>
       <Button onClick={handleCreate}>Create</Button>
     </>
   );
