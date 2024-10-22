@@ -466,7 +466,7 @@ export class DxGrid extends LitElement {
           this.dispatchEditRequest();
           break;
         default:
-          if (event.key.length === 1 && event.key.match(/\P{Cc}/u)) {
+          if (event.key.length === 1 && event.key.match(/\P{Cc}/u) && !(event.metaKey || event.ctrlKey)) {
             this.dispatchEditRequest(event.key);
           }
           break;
