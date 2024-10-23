@@ -21,7 +21,7 @@ const inlineEndLine =
 const blockEndLine =
   '[&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-inline-0 [&>.dx-grid]:before:-block-end-px [&>.dx-grid]:before:bs-px [&>.dx-grid]:before:bg-separator';
 
-const frozen = { frozenRowsStart: 1 };
+const frozen = { frozenRowsStart: 1, frozenColsEnd: 1 };
 
 export type TableProps = {
   table: TableType;
@@ -77,8 +77,7 @@ export const Table = ({ table, data }: TableProps) => {
           columns={tableModel?.columnMeta.value}
           frozen={frozen}
           limitRows={data.length}
-          // TODO(ZaymonFC): Table model should return the number of columns to account for the action column.
-          limitColumns={(table.view?.fields?.length ?? 0) + 1}
+          limitColumns={table.view?.fields?.length ?? 0}
           onAxisResize={handleAxisResize}
           onClick={handleClick}
         />
