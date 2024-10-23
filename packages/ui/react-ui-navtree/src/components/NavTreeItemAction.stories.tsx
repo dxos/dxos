@@ -13,15 +13,6 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { NavTreeItemAction, NavTreeItemActionSearchList } from './NavTreeItemAction';
 import { type NavTreeActionNode } from '../types';
 
-const meta: Meta = {
-  title: 'ui/react-ui-navtree/NavTreeItemAction',
-  component: NavTreeItemAction,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
-};
-
-// TODO(burdon): Required otherwise ID complains with `Inferred type...` error.
-export default meta;
-
 export const Default = {
   render: () => {
     // TODO(burdon): Factor out across tests.
@@ -53,3 +44,12 @@ export const Default = {
     );
   },
 };
+
+const meta: Meta = {
+  title: 'ui/react-ui-navtree/NavTreeItemAction',
+  component: NavTreeItemAction,
+  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+};
+
+// TODO(burdon): Required otherwise ID complains with `Inferred type...` error.
+export default meta;
