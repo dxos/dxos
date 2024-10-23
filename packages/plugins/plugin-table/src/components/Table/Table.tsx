@@ -3,16 +3,16 @@
 //
 
 import * as ModalPrimitive from '@radix-ui/react-popper';
-import React, { useCallback, useRef, useState, type MouseEvent } from 'react';
+import React, { useCallback, useRef } from 'react';
 
 import { type DxGridElement, type DxAxisResize, Grid } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
+import { NewColumnForm } from './NewColumnForm';
 import { RowActionsMenu } from './RowActionsMenu';
 import { TableCellEditor } from './TableCellEditor';
-import { useTableModel } from '../../hooks';
-import { columnSettingsButtonAttr, rowMenuButtonAttr } from '../../model';
+import { useTableModel, useTableMenuController } from '../../hooks';
 import { type GridCell, type TableType } from '../../types';
 
 // NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
@@ -33,16 +33,10 @@ export type TableProps = {
 // TODO(burdon): Move to react-ui-table?
 export const Table = ({ table, data, onDeleteRow }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const [clickedColumnId, setClickedColumnId] = useState<string | null>(null);
-  const [clickedRowIndex, setClickedRowIndex] = useState<number | null>(null);
-  const [columnMenuOpen, setColumnMenuOpen] = useState(false);
-  const [rowMenuOpen, setRowMenuOpen] = useState(false);
 
   const handleOnCellUpdate = useCallback((cell: GridCell) => {
     gridRef.current?.updateIfWithinBounds(cell);
   }, []);
-
   const tableModel = useTableModel({ table, data, onCellUpdate: handleOnCellUpdate, onDeleteRow });
 
   const handleAxisResize = useCallback(
@@ -55,23 +49,7 @@ export const Table = ({ table, data, onDeleteRow }: TableProps) => {
     [tableModel],
   );
 
-  const handleClick = useCallback((event: MouseEvent) => {
-    const target = event.target as HTMLElement;
-    const closestColumnButton = target.closest(`button[${columnSettingsButtonAttr}]`);
-    const closestRowButton = target.closest(`button[${rowMenuButtonAttr}]`);
-
-    if (closestColumnButton) {
-      triggerRef.current = closestColumnButton as HTMLButtonElement;
-      setClickedColumnId(closestColumnButton.getAttribute(columnSettingsButtonAttr));
-      setColumnMenuOpen(true);
-      setRowMenuOpen(false);
-    } else if (closestRowButton) {
-      triggerRef.current = closestRowButton as HTMLButtonElement;
-      setClickedRowIndex(Number(closestRowButton.getAttribute(rowMenuButtonAttr)));
-      setRowMenuOpen(true);
-      setColumnMenuOpen(false);
-    }
-  }, []);
+  const { state: menuState, triggerRef, handleClick, close } = useTableMenuController();
 
   return (
     <ModalPrimitive.Root>
@@ -97,16 +75,17 @@ export const Table = ({ table, data, onDeleteRow }: TableProps) => {
       <ModalPrimitive.Anchor virtualRef={triggerRef} />
       <ColumnActionsMenu
         tableModel={tableModel}
-        columnId={clickedColumnId}
-        open={columnMenuOpen}
-        onOpenChange={setColumnMenuOpen}
+        columnId={menuState?.type === 'column' ? menuState.columnId : null}
+        open={menuState?.type === 'column'}
+        onOpenChange={close}
       />
       <RowActionsMenu
         tableModel={tableModel}
-        rowIndex={clickedRowIndex}
-        open={rowMenuOpen}
-        onOpenChange={setRowMenuOpen}
+        rowIndex={menuState?.type === 'row' ? menuState.rowIndex : null}
+        open={menuState?.type === 'row'}
+        onOpenChange={close}
       />
+      <NewColumnForm tableModel={tableModel} open={menuState?.type === 'newColumn'} onOpenChange={close} />
     </ModalPrimitive.Root>
   );
 };
