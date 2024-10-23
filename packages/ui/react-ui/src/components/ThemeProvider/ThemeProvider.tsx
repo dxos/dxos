@@ -28,8 +28,8 @@ export const ThemeContext = createContext<ThemeContextValue | undefined>(undefin
 export type ThemeProviderProps = Omit<TranslationsProviderProps, 'children'> &
   Partial<ThemeContextValue> &
   PropsWithChildren<{
-    rootElevation?: Elevation;
     rootDensity?: Density;
+    rootElevation?: Elevation;
   }>;
 
 export const ThemeProvider = ({
@@ -39,8 +39,8 @@ export const ThemeProvider = ({
   appNs,
   tx = (_path, defaultClassName, _styleProps, ..._options) => defaultClassName,
   themeMode = 'dark',
+  rootDensity = 'fine',
   rootElevation = 'base',
-  rootDensity = 'coarse', // TODO(burdon): Change to fine and remove DensityProvider usage elsewhere.
 }: ThemeProviderProps) => {
   useEffect(() => {
     if (document.defaultView) {

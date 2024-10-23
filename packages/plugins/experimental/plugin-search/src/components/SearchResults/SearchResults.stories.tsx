@@ -7,7 +7,6 @@ import '@dxos-theme';
 import React, { type FC, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { DensityProvider } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SearchResults, type SearchResultsProps } from './SearchResults';
@@ -19,13 +18,11 @@ const Story: FC<SearchResultsProps> = (args) => {
   const [selected, setSelected] = useState<string>();
 
   return (
-    <DensityProvider density='fine'>
-      <div className='flex grow justify-center overflow-hidden'>
-        <div className='flex w-[300px] m-4 overflow-hidden'>
-          <SearchResults {...args} selected={selected} onSelect={setSelected} />
-        </div>
+    <div className='flex grow justify-center overflow-hidden'>
+      <div className='flex w-[300px] m-4 overflow-hidden'>
+        <SearchResults {...args} selected={selected} onSelect={setSelected} />
       </div>
-    </DensityProvider>
+    </div>
   );
 };
 
