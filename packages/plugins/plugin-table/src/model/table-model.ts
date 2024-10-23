@@ -34,20 +34,29 @@ export type TableModelProps = {
   rowSelection?: number[];
 };
 
+//
+// Accessory HTML and Attributes.
+//
+
 // TODO(Zan): Is there a better place for this to live?
+const cellButtonClasses = 'ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2';
+
 export const columnSettingsButtonAttr = 'data-table-column-settings-button';
-const columnSettingsButtonClasses = 'ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2';
 const columnSettingsIcon = 'ph--caret-down--regular';
 const columnSettingsButtonHtml = (columnId: string) =>
-  `<button class="${columnSettingsButtonClasses}" ${columnSettingsButtonAttr}="${columnId}"><svg><use href="/icons.svg#${columnSettingsIcon}"/></svg></button>`;
-
-const ACTION_COLUMN_WIDTH = 40;
+  `<button class="${cellButtonClasses}" ${columnSettingsButtonAttr}="${columnId}"><svg><use href="/icons.svg#${columnSettingsIcon}"/></svg></button>`;
 
 export const rowMenuButtonAttr = 'data-table-row-menu-button';
-const rowMenuButtonClasses = 'ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2';
 const rowMenuIcon = 'ph--dots-three--regular';
 const rowActionMenuButtonHtml = (rowIndex: number) =>
-  `<button class="${rowMenuButtonClasses}" ${rowMenuButtonAttr}="${rowIndex}"><svg><use href="/icons.svg#${rowMenuIcon}"/></svg></button>`;
+  `<button class="${cellButtonClasses}" ${rowMenuButtonAttr}="${rowIndex}"><svg><use href="/icons.svg#${rowMenuIcon}"/></svg></button>`;
+
+export const newColumnButtonAttr = 'data-table-new-column-button';
+const newColumnIcon = 'ph--plus--regular';
+const newColumnButtonHtml = () =>
+  `<button class="${cellButtonClasses}" ${newColumnButtonAttr}><svg><use href="/icons.svg#${newColumnIcon}"/></svg></button>`;
+
+const ACTION_COLUMN_WIDTH = 40;
 
 export class TableModel extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
@@ -166,9 +175,6 @@ export class TableModel extends Resource {
     const actionColumnCells: ReadonlySignal<DxGridPlaneCells> = computed(() => {
       const values: DxGridPlaneCells = {};
 
-      // Add header cell for the action column
-      values[fromGridCell({ col: 0, row: 0 })] = { value: '' };
-
       // Add action cells for each row
       for (let displayIndex = 0; displayIndex < this.data.length; displayIndex++) {
         values[fromGridCell({ col: 0, row: displayIndex })] = {
@@ -180,10 +186,15 @@ export class TableModel extends Resource {
       return values;
     });
 
+    const newColumnCell: DxGridPlaneCells = {
+      [fromGridCell({ col: 0, row: 0 })]: { value: '', accessoryHtml: newColumnButtonHtml() },
+    };
+
     this.cells = computed(() => ({
       grid: cellValues.value,
       frozenRowsStart: headerCells.value,
       frozenColsEnd: actionColumnCells.value,
+      fixedStartEnd: newColumnCell,
     }));
 
     this.columnMeta = computed(() => {
