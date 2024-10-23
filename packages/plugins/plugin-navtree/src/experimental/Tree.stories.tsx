@@ -16,7 +16,7 @@ import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes, visi
 faker.seed(1234);
 
 export default {
-  title: 'plugin-navtree/Tree',
+  title: 'plugin-navtree/experimental/Tree',
   component: Tree,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: modalSurface })],
 };

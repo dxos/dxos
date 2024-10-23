@@ -133,7 +133,7 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
 };
 
 export default {
-  title: 'react-ui-navtree/Graph',
+  title: 'plugin-navtree/Graph',
   component: NavTree,
   decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
 };

@@ -4,11 +4,11 @@
 
 import React, { type KeyboardEvent, forwardRef, memo, useCallback, useMemo } from 'react';
 
-import { Button, Icon } from '@dxos/react-ui';
+import { Button, Icon, toLocalizedString, useTranslation, type Label } from '@dxos/react-ui';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 export type NavTreeItemHeadingProps = {
-  label: string;
+  label: Label;
   icon?: string;
   className?: string;
   disabled?: boolean;
@@ -19,6 +19,8 @@ export type NavTreeItemHeadingProps = {
 export const TreeItemHeading = memo(
   forwardRef<HTMLButtonElement, NavTreeItemHeadingProps>(
     ({ label, icon, className, disabled, current, onSelect }, forwardedRef) => {
+      const { t } = useTranslation();
+
       const handleButtonKeydown = useCallback(
         (event: KeyboardEvent) => {
           if (event.key === ' ' || event.key === 'Enter') {
@@ -37,7 +39,7 @@ export const TreeItemHeading = memo(
 
       return (
         <TextTooltip
-          text={label}
+          text={toLocalizedString(label, t)}
           side='bottom'
           truncateQuery='span[data-tooltip]'
           onlyWhenTruncating
@@ -55,7 +57,7 @@ export const TreeItemHeading = memo(
             {...(current && { 'aria-current': 'location' })}
           >
             {icon && <Icon icon={icon ?? 'ph--placeholder--regular'} size={4} classNames='is-[1em] bs-[1em] mlb-1' />}
-            <span className='flex-1 is-0 truncate text-start text-sm font-normal'>{label}</span>
+            <span className='flex-1 is-0 truncate text-start text-sm font-normal'>{toLocalizedString(label, t)}</span>
           </Button>
         </TextTooltip>
       );

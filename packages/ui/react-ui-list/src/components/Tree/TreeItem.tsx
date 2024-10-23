@@ -12,7 +12,7 @@ import {
   type ItemMode,
   type Instruction,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import React, { memo, type KeyboardEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import React, { memo, type KeyboardEvent, useCallback, useEffect, useRef, useState, type FC } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { Treegrid, useDefaultValue } from '@dxos/react-ui';
@@ -31,7 +31,7 @@ export type TreeItemProps = {
   open: boolean;
   current: boolean;
   draggable: boolean;
-  renderColumns?: (item: ItemType) => ReactNode;
+  renderColumns?: FC<{ item: ItemType }>;
   canDrop?: (data: unknown) => boolean;
   onOpenChange?: (id: string, nextOpen: boolean) => void;
   onSelect?: (id: string, nextState: boolean) => void;
@@ -46,12 +46,12 @@ export const TreeItem = memo(
     open,
     current,
     draggable: _draggable,
-    renderColumns,
+    renderColumns: Columns,
     canDrop,
     onOpenChange,
     onSelect,
   }: TreeItemProps) => {
-    const { id, name, icon, className, disabled, path } = item;
+    const { id, label, icon, className, disabled, path } = item;
     const parentOf = useDefaultValue(item.parentOf, () => []);
     const level = path.length - 1;
     const isBranch = parentOf.length > 0;
@@ -183,14 +183,14 @@ export const TreeItem = memo(
         <Treegrid.Cell indent classNames='relative flex items-center' style={paddingIndendation(level)}>
           <TreeItemToggle open={open} isBranch={isBranch} onToggle={handleOpenChange} />
           <TreeItemHeading
-            label={name}
+            label={label}
             icon={icon}
             className={className}
             disabled={disabled}
             current={current}
             onSelect={handleSelect}
           />
-          {state === 'idle' && renderColumns?.(item)}
+          {state === 'idle' && Columns && <Columns item={item} />}
           {instruction && <DropIndicator instruction={instruction} />}
         </Treegrid.Cell>
       </Treegrid.Row>

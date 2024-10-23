@@ -83,7 +83,7 @@ export const getItem = (testItem: TestItem, parent?: string[]): ItemType => {
 
   const item = {
     id: testItem.id,
-    name: testItem.name,
+    label: testItem.name,
     icon: testItem.icon,
     path: parent ? [...parent, testItem.id] : [testItem.id],
     ...((testItem.items?.length ?? 0) > 0 && {

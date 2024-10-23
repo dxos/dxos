@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ReactNode } from 'react';
+import React, { type FC } from 'react';
 
 import { Treegrid } from '@dxos/react-ui';
 
@@ -16,7 +16,7 @@ export type TreeProps = {
   current: string[];
   draggable?: boolean;
   gridTemplateColumns?: string;
-  renderColumns?: (item: ItemType) => ReactNode;
+  renderColumns?: FC<{ item: ItemType }>;
   canDrop?: (data: unknown) => boolean;
   onOpenChange?: (id: string, nextOpen: boolean) => void;
   onSelect?: (id: string, nextState: boolean) => void;

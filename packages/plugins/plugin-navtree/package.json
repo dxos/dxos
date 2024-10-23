@@ -29,11 +29,14 @@
     "src"
   ],
   "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "^1.4.0",
+    "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -50,6 +53,7 @@
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
+    "@radix-ui/react-use-controllable-state": "^1.0.0",
     "date-fns": "^3.3.1"
   },
   "devDependencies": {

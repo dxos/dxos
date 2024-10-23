@@ -19,7 +19,8 @@ import {
   parseGraphPlugin,
   NavigationAction,
 } from '@dxos/app-framework';
-import { createExtension, type Graph, isAction, isGraphNode, type Node } from '@dxos/app-graph';
+import { createExtension, type Graph, isAction, isGraphNode, type Node, NodeFilter } from '@dxos/app-graph';
+import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Path } from '@dxos/react-ui-mosaic';
@@ -37,7 +38,14 @@ import {
 import { CommandsTrigger } from './components/CommandsTrigger';
 import meta, { KEY_BINDING, NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
-import { expandOpenGraphNodes, getActions, getChildren, type NavTreeItem, type NavTreeItemGraphNode } from './util';
+import { type NavTreeItem } from './types';
+import {
+  expandOpenGraphNodes,
+  getActions,
+  getChildren,
+  treeItemsFromRootNode,
+  type NavTreeItemGraphNode,
+} from './util';
 
 export type NavTreePluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
@@ -45,22 +53,70 @@ export type NavTreePluginProvides = SurfaceProvides &
   TranslationsProvides &
   IntentResolverProvides;
 
-type NavTreeState = { root?: NavTreeItemGraphNode; openItemIds: OpenItemIds };
+type NavTreeState = {
+  root?: NavTreeItemGraphNode;
+  flatTree: NavTreeItem[];
+  open: string[];
+};
 
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
-  const state = new LocalStorageStore<NavTreeState>('dxos.org/settings/navtree', {
-    // TODO(thure): Do this dynamically.
-    openItemIds: { root: true, 'dxos.org/plugin/space-spaces': true, 'dxos.org/plugin/files': true },
-  });
-
   let graphPlugin: Plugin<GraphProvides> | undefined;
   let graph: Graph | undefined;
+  // const itemCache = new Map<string, NavTreeItem>();
 
-  const handleOpenItemIdsChange = (nextOpenItemIds: OpenItemIds) => {
+  const state = new LocalStorageStore<NavTreeState>('dxos.org/settings/navtree', {
+    root: undefined,
+    get flatTree() {
+      if (!this.root || !graph) {
+        return [];
+      }
+
+      return treeItemsFromRootNode(graph, this.root, this.open, getItem);
+    },
+    // TODO(thure): Do this dynamically.
+    open: ['root', 'dxos.org/plugin/space-spaces', 'dxos.org/plugin/files'],
+  });
+
+  const getItem = (node: NavTreeItemGraphNode, parent: readonly string[], filter?: NodeFilter) => {
+    invariant(graph);
+
+    // const cachedItem = itemCache.get(node.id);
+    // if (cachedItem) {
+    //   return cachedItem;
+    // }
+
+    const path = [...parent, node.id];
+    const children = getChildren(graph, node, filter, path);
+    const { actions, groupedActions } = getActions(graph, node);
+    const item = {
+      id: Path.create(...path),
+      label: node.properties.label ?? node.id,
+      icon: node.properties.icon,
+      path,
+      ...((children?.length ?? 0) > 0 && {
+        parentOf: children!.map(({ id }) => Path.create(...path, id)),
+      }),
+      node,
+      actions,
+      groupedActions,
+    } satisfies NavTreeItem;
+    // itemCache.set(node.id, item);
+    return item;
+  };
+
+  const handleOpenChange = (id: string, open: boolean) => {
     // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
-    state.values.openItemIds = nextOpenItemIds;
+    if (open) {
+      state.values.open.push(id);
+    } else {
+      const index = state.values.open.indexOf(id);
+      if (index > -1) {
+        state.values.open.splice(index, 1);
+      }
+    }
+
     if (graph) {
-      void expandOpenGraphNodes(graph, nextOpenItemIds);
+      void expandOpenGraphNodes(graph, state.values.open);
     }
   };
 
@@ -77,9 +133,9 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       getChildren(graph, state.values.root);
       getActions(graph, state.values.root);
 
-      state.prop({ key: 'openItemIds', storageKey: 'openItemIds', type: LocalStorageStore.json<OpenItemIds>() });
+      state.prop({ key: 'open', type: LocalStorageStore.json<string[]>() });
 
-      void expandOpenGraphNodes(graph, state.values.openItemIds);
+      void expandOpenGraphNodes(graph, state.values.open);
 
       // TODO(wittjosiah): Factor out.
       // TODO(wittjosiah): Handle removal of actions.
@@ -147,18 +203,15 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
 
           switch (role) {
             case 'navigation':
-              if (state.values.root && state.values.openItemIds) {
-                return (
-                  <NavTreeContainer
-                    root={state.values.root}
-                    activeIds={data.activeIds as Set<string>}
-                    openItemIds={state.values.openItemIds}
-                    onOpenItemIdsChange={handleOpenItemIdsChange}
-                    attended={data.attended as string[]}
-                    popoverAnchorId={data.popoverAnchorId as string}
-                  />
-                );
-              }
+              return (
+                <NavTreeContainer
+                  items={state.values.flatTree}
+                  current={data.activeIds as string[]}
+                  open={state.values.open}
+                  onOpenChange={handleOpenChange}
+                  popoverAnchorId={data.popoverAnchorId as string}
+                />
+              );
               break;
 
             case 'document-title': {
@@ -198,20 +251,20 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
           switch (intent.action) {
             case NavigationAction.EXPOSE: {
               if (graph && intent.data?.id) {
-                const path = graph.getPath({ target: intent.data.id });
-                if (Array.isArray(path)) {
-                  const additionalOpenItems = [...Array(path.length - 1)].reduce((acc: OpenItemIds, _, index) => {
-                    const itemId = Path.create(...path.slice(1, index + 1));
-                    if (itemId.length > 0) {
-                      acc[itemId] = true;
-                    }
-                    return acc;
-                  }, {});
-                  state.values.openItemIds = {
-                    ...additionalOpenItems,
-                    ...state.values.openItemIds,
-                  };
-                }
+                // const path = graph.getPath({ target: intent.data.id });
+                // if (Array.isArray(path)) {
+                //   const additionalOpenItems = [...Array(path.length - 1)].reduce((acc: OpenItemIds, _, index) => {
+                //     const itemId = Path.create(...path.slice(1, index + 1));
+                //     if (itemId.length > 0) {
+                //       acc[itemId] = true;
+                //     }
+                //     return acc;
+                //   }, {});
+                //   state.values.openItemIds = {
+                //     ...additionalOpenItems,
+                //     ...state.values.openItemIds,
+                //   };
+                // }
               }
               break;
             }

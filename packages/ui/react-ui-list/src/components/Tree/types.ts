@@ -4,9 +4,20 @@
 
 import { S } from '@dxos/echo-schema';
 
+const LabelSchema = S.Union(
+  S.String,
+  S.Tuple(
+    S.String,
+    S.Struct({
+      ns: S.String,
+      count: S.optional(S.Number),
+    }),
+  ),
+);
+
 export const ItemSchema = S.Struct({
   id: S.String,
-  name: S.String,
+  label: S.mutable(LabelSchema),
   icon: S.optional(S.String),
   disabled: S.optional(S.Boolean),
   className: S.optional(S.String),
