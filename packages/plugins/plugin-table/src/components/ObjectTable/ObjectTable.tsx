@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -27,20 +27,22 @@ export const ObjectTable = ({ table }: ObjectTableProps) => {
     // TODO(burdon): Toggle deleted.
     [table.schema],
   );
-
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   useEffect(() => {
     if (space && !table.schema && !table.view) {
       table.schema = space.db.schema.addSchema(createStarterSchema());
       table.view = createStarterView();
-      space.db.add(create(table.schema));
+      space.db.add(create(table.schema, {}));
     }
   }, [space, table.schema]);
+
+  // TODO(ZaymonFC): Drive this through intents so it can be undone.
+  const onDeleteRow = useCallback((row: any) => space?.db.remove(row), [space]);
 
   if (!table.schema || !table.view) {
     return null;
   }
 
-  return <Table table={table} data={filteredObjects} />;
+  return <Table table={table} data={filteredObjects} onDeleteRow={onDeleteRow} />;
 };

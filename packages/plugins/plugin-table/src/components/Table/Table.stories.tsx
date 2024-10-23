@@ -28,9 +28,16 @@ const DefaultStory = (props: StoryProps) => {
   const simulatorProps = useMemo(() => ({ table, items, ...props }), [table, items, props]);
   useSimulator(simulatorProps);
 
+  const deleteItem = useCallback(
+    (row: any) => {
+      items.splice(items.indexOf(row), 1);
+    },
+    [items],
+  );
+
   return (
     <div className='relative is-full max-is-max min-is-0 min-bs-0'>
-      <Table table={table} data={items} />
+      <Table table={table} data={items} onDeleteRow={deleteItem} />
     </div>
   );
 };

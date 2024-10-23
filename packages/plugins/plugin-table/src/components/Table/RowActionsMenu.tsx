@@ -17,7 +17,6 @@ export type RowActionsMenuProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-// TODO(burdon): Factor out; take from common component from sheet.
 export const RowActionsMenu = ({ tableModel, rowIndex, open, onOpenChange }: RowActionsMenuProps) => {
   const { tx } = useThemeContext();
   const { t } = useTranslation(TABLE_PLUGIN);
@@ -30,9 +29,7 @@ export const RowActionsMenu = ({ tableModel, rowIndex, open, onOpenChange }: Row
     <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.Content classNames='contents'>
         <ModalPrimitive.Content className={tx('menu.content', 'menu__content', {})}>
-          <DropdownMenu.Item onClick={() => console.log('DELETING ROW', rowIndex)}>
-            {t('delete row label')}
-          </DropdownMenu.Item>
+          <DropdownMenu.Item onClick={() => tableModel.deleteRow(rowIndex)}>{t('delete row label')}</DropdownMenu.Item>
           <ModalPrimitive.Arrow className={tx('menu.arrow', 'menu__arrow', {})} />
         </ModalPrimitive.Content>
       </DropdownMenu.Content>

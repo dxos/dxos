@@ -27,10 +27,11 @@ const frozen = { frozenRowsStart: 1, frozenColsEnd: 1 };
 export type TableProps = {
   table: TableType;
   data: any[];
+  onDeleteRow?: (row: any) => void;
 };
 
 // TODO(burdon): Move to react-ui-table?
-export const Table = ({ table, data }: TableProps) => {
+export const Table = ({ table, data, onDeleteRow }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [clickedColumnId, setClickedColumnId] = useState<string | null>(null);
@@ -42,7 +43,7 @@ export const Table = ({ table, data }: TableProps) => {
     gridRef.current?.updateIfWithinBounds(cell);
   }, []);
 
-  const tableModel = useTableModel(table, data, handleOnCellUpdate);
+  const tableModel = useTableModel({ table, data, onCellUpdate: handleOnCellUpdate, onDeleteRow });
 
   const handleAxisResize = useCallback(
     (event: DxAxisResize) => {
