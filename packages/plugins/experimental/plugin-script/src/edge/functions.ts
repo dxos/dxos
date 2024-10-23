@@ -14,6 +14,7 @@ import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { codec } from './codec';
 import { matchServiceCredential } from './hub-protocol';
+import type { SpaceId } from '@dxos/keys';
 
 // TODO: use URL scheme for source?
 const USERFUNCTIONS_META_KEY = 'dxos.org/service/function';
@@ -132,4 +133,21 @@ const presentationForIdentity = async ({ halo, timeout }: { halo: Halo; timeout?
   const presentation = await halo.presentCredentials({ ids: [credential.id] });
 
   return { Authorization: `Bearer ${codec.encode(presentation)}` };
+};
+
+export type InvocationOptions = {
+  spaceId?: SpaceId;
+  subjectId?: string;
+};
+
+export const getInvocationUrl = (functionUrl: string, edgeUrl: string, options: InvocationOptions = {}) => {
+  const baseUrl = new URL('functions/', edgeUrl);
+
+  // Leading slashes cause the URL to be treated as an absolute path.
+  const relativeUrl = functionUrl.replace(/^\//, '');
+  const url = new URL(`./${relativeUrl}`, baseUrl.toString());
+  options.spaceId && url.searchParams.set('spaceId', options.spaceId);
+  options.subjectId && url.searchParams.set('subjectId', options.subjectId);
+  url.protocol = 'https';
+  return url.toString();
 };
