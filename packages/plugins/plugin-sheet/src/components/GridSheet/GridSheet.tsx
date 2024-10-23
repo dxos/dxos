@@ -42,7 +42,7 @@ const sheetRowDefault = { frozenRowsStart: { size: 32, readonly: true }, grid: {
 const sheetColDefault = { frozenColsStart: { size: 48, readonly: true }, grid: { size: 180, resizeable: true } };
 
 export const GridSheet = () => {
-  const { id, model, editing, setEditing, setCursor, setRange, range } = useSheetContext();
+  const { id, model, editing, setEditing, setCursor, setRange, range, cursor } = useSheetContext();
   const dxGrid = useRef<DxGridElement | null>(null);
   const rangeNotifier = useRef<CellRangeNotifier>();
   const { hasAttention } = useAttention(id);
@@ -120,16 +120,38 @@ export const GridSheet = () => {
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
+      const cursorFallbackRange: CellRange | null = range ?? cursor ? { from: cursor!, to: cursor! } : null;
       switch (event.key) {
         case 'Backspace':
         case 'Delete':
-          if (range) {
-            model.clear(range);
-          }
-          break;
+          event.preventDefault();
+          return cursorFallbackRange && model.clear(cursorFallbackRange);
+      }
+      if (event.metaKey || event.ctrlKey) {
+        switch (event.key) {
+          case 'x':
+          case 'X':
+            event.preventDefault();
+            return cursorFallbackRange && model.cut(cursorFallbackRange);
+          case 'c':
+          case 'C':
+            event.preventDefault();
+            return cursorFallbackRange && model.copy(cursorFallbackRange);
+          case 'v':
+          case 'V':
+            event.preventDefault();
+            return cursor && model.paste(cursor);
+          case 'z':
+            event.preventDefault();
+            return event.shiftKey ? model.redo() : model.undo();
+          case 'Z':
+          case 'y':
+            event.preventDefault();
+            return model.redo();
+        }
       }
     },
-    [range, model],
+    [range, model, cursor],
   );
 
   const { columns, rows } = useSheetModelDxGridProps(dxGrid, model);
