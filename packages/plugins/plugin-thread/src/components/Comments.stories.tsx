@@ -55,7 +55,7 @@ export const Default = {};
 
 const meta: Meta = {
   title: 'plugins/plugin-thread/Comments',
-  // TODO(wittjosiah): Register schemas.
+  // TODO(wittjosiah): Use decorator.
   render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType, MessageType]} />,
   decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
   parameters: { translations },

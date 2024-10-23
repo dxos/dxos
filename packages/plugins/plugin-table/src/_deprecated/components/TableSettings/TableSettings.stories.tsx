@@ -43,8 +43,9 @@ export const Default = {};
 const meta: Meta = {
   title: 'plugins/plugin-table/TableSettings',
   component: TableSettings,
-  decorators: [withTheme],
+  // TODO(burdon): Use decorator.
   render: () => <ClientRepeater component={Story} types={[TableType]} createSpace />,
+  decorators: [withTheme],
 };
 
 export default meta;

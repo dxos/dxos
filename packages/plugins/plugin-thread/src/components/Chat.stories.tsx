@@ -70,7 +70,7 @@ export const Default = {};
 const meta: Meta = {
   title: 'plugins/plugin-thread/Chat',
   component: Thread,
-  // TODO(wittjosiah): Register schemas.
+  // TODO(burdon): Use decorator.
   render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType]} />,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { translations },

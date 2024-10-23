@@ -30,7 +30,7 @@ const useTable = () => {
   return table;
 };
 
-const Story = () => {
+const DefaultStory = () => {
   const table = useTable();
   if (!table) {
     return null;
@@ -67,11 +67,10 @@ export const Multiple = {
   ],
 };
 
-const meta: Meta = {
+const meta: Meta<typeof ObjectTable> = {
   title: 'plugins/plugin-table/ObjectTable',
   component: ObjectTable,
-  // render: () => <div>s</div>,
-  render: () => <Story />,
+  render: DefaultStory as any,
 };
 
 export default meta;

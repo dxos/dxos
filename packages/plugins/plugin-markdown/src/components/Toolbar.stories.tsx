@@ -38,7 +38,7 @@ import { TextType } from '../types';
 
 faker.seed(101);
 
-const Story: FC<{ content: string }> = ({ content }) => {
+const DefaultStory: FC<{ content?: string }> = ({ content = '' }) => {
   const { themeMode } = useThemeContext();
   const [text] = useState(createObject(create(TextType, { content })));
   const [formattingState, formattingObserver] = useFormattingState();
@@ -108,12 +108,12 @@ export const Default = {
   },
 };
 
-const meta: Meta = {
+const meta: Meta<typeof Toolbar.Root> = {
   title: 'plugins/react-ui-editor/Toolbar',
-  component: Toolbar,
+  component: Toolbar.Root,
+  render: DefaultStory as any,
   decorators: [withTheme, withLayout({ tooltips: true })],
   parameters: { translations, layout: 'fullscreen' },
-  render: (args: any) => <Story {...args} />,
-} as any;
+};
 
 export default meta;
