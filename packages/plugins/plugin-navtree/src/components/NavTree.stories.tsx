@@ -73,21 +73,21 @@ export default {
   render: Story,
   decorators: [withTheme, withLayout({ tooltips: true })],
   args: {
-    onOpenChange: (id: string, open: boolean) => {
+    onOpenChange: (item: NavTreeItem, open: boolean) => {
       if (open) {
-        state.open.push(id);
+        state.open.push(item.id);
       } else {
-        const index = state.open.indexOf(id);
+        const index = state.open.indexOf(item.id);
         if (index > -1) {
           state.open.splice(index, 1);
         }
       }
     },
-    onSelect: (id: string, current: boolean) => {
+    onSelect: (item: NavTreeItem, current: boolean) => {
       if (current) {
-        state.current.push(id);
+        state.current.push(item.id);
       } else {
-        const index = state.current.indexOf(id);
+        const index = state.current.indexOf(item.id);
         if (index > -1) {
           state.current.splice(index, 1);
         }

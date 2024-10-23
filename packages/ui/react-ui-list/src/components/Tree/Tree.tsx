@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React from 'react';
 
-import { Treegrid } from '@dxos/react-ui';
+import { Treegrid, type TreegridRootProps } from '@dxos/react-ui';
 
-import { TreeItem } from './TreeItem';
+import { TreeItem, type TreeItemProps } from './TreeItem';
 import { getMode } from './helpers';
 import { type ItemType } from './types';
 
@@ -14,20 +14,15 @@ export type TreeProps = {
   items: ItemType[];
   open: string[];
   current: string[];
-  draggable?: boolean;
-  gridTemplateColumns?: string;
-  renderColumns?: FC<{ item: ItemType }>;
-  canDrop?: (data: unknown) => boolean;
-  onOpenChange?: (id: string, nextOpen: boolean) => void;
-  onSelect?: (id: string, nextState: boolean) => void;
-};
+} & Partial<Pick<TreegridRootProps, 'gridTemplateColumns'>> &
+  Pick<TreeItemProps, 'draggable' | 'renderColumns' | 'canDrop' | 'onOpenChange' | 'onSelect'>;
 
 export const Tree = ({
   items,
   open,
   current,
   draggable = false,
-  gridTemplateColumns = '1fr',
+  gridTemplateColumns = '[tree-row-start] 1fr min-content [tree-row-end]',
   renderColumns,
   canDrop,
   onOpenChange,

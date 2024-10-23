@@ -27,14 +27,14 @@ const edgeToOrientationMap: Record<InstructionType, Orientation> = {
 const orientationStyles: Record<Orientation, HTMLAttributes<HTMLElement>['className']> = {
   // TODO(wittjosiah): Stop using left/right here.
   sibling:
-    'bs-[--line-thickness] left-[--horizontal-indent] right-0 bg-[--line-color] before:left-[--negative-terminal-size]',
+    'bs-[--line-thickness] left-[--horizontal-indent] right-0 bg-accentSurface before:left-[--negative-terminal-size]',
   child: 'is-full block-start-0 block-end-0 border-[length:--line-thickness] before:invisible',
 };
 
 const instructionStyles: Record<InstructionType, HTMLAttributes<HTMLElement>['className']> = {
   'reorder-above': 'block-start-[--line-offset] before:block-start-[--offset-terminal]',
   'reorder-below': 'block-end-[--line-offset] before:block-end-[--offset-terminal]',
-  'make-child': 'border-[--line-color]',
+  'make-child': 'border-accentSurface',
   // TODO(wittjosiah): This is not occurring in the current implementation.
   reparent: '',
 };
@@ -50,13 +50,16 @@ export const DropIndicator = ({ instruction }: DropIndicatorProps) => {
   const desiredInstruction = isBlocked ? instruction.desired : instruction;
   const orientation = edgeToOrientationMap[desiredInstruction.type];
 
+  if (isBlocked) {
+    return null;
+  }
+
   return (
     <div
       style={
         {
           '--line-thickness': `${strokeSize}px`,
           '--line-offset': `${lineOffset}`,
-          '--line-color': isBlocked ? 'var(--dx-warning)' : 'var(--dx-accentSurface)',
           '--terminal-size': `${terminalSize}px`,
           '--terminal-radius': `${terminalSize / 2}px`,
           '--negative-terminal-size': `-${terminalSize}px`,

@@ -15,14 +15,26 @@ import { type NavTreeItem } from '../types';
 
 const NAV_TREE_ITEM = 'NavTreeItem';
 
-export type NavTreeProps = Omit<TreeProps, 'items' | 'draggable' | 'gridTemplateColumns' | 'renderColumns'> & {
+export type NavTreeProps = Omit<
+  TreeProps,
+  'items' | 'draggable' | 'gridTemplateColumns' | 'renderColumns' | 'onOpenChange' | 'onSelect'
+> & {
   items: NavTreeItem[];
   loadDescendents?: NavTreeColumnsProps['loadDescendents'];
   renderPresence?: NavTreeColumnsProps['renderPresence'];
   popoverAnchorId?: NavTreeColumnsProps['popoverAnchorId'];
+  onOpenChange?: (item: NavTreeItem, open: boolean) => void;
+  onSelect?: (item: NavTreeItem, state: boolean) => void;
 };
 
-export const NavTree = ({ loadDescendents, renderPresence, popoverAnchorId, ...props }: NavTreeProps) => {
+export const NavTree = ({
+  loadDescendents,
+  renderPresence,
+  popoverAnchorId,
+  onOpenChange,
+  onSelect,
+  ...props
+}: NavTreeProps) => {
   const renderColumns = useCallback(
     ({ item }: { item: ItemType }) => {
       return (
@@ -41,8 +53,10 @@ export const NavTree = ({ loadDescendents, renderPresence, popoverAnchorId, ...p
     <Tree
       {...props}
       draggable
-      // gridTemplateColumns='[navtree-row-start] 1fr min-content min-content min-content [navtree-row-end]'
+      gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
       renderColumns={renderColumns}
+      onOpenChange={onOpenChange as TreeProps['onOpenChange']}
+      onSelect={onSelect as TreeProps['onSelect']}
     />
   );
 };

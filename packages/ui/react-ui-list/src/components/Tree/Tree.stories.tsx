@@ -75,21 +75,21 @@ export default {
     renderColumns: () => {
       return <Icon icon='ph--placeholder--regular' size={5} />;
     },
-    onOpenChange: (id: string, open: boolean) => {
+    onOpenChange: (item: ItemType, open: boolean) => {
       if (open) {
-        state.open.push(id);
+        state.open.push(item.id);
       } else {
-        const index = state.open.indexOf(id);
+        const index = state.open.indexOf(item.id);
         if (index > -1) {
           state.open.splice(index, 1);
         }
       }
     },
-    onSelect: (id: string, current: boolean) => {
+    onSelect: (item: ItemType, current: boolean) => {
       if (current) {
-        state.current.push(id);
+        state.current.push(item.id);
       } else {
-        const index = state.current.indexOf(id);
+        const index = state.current.indexOf(item.id);
         if (index > -1) {
           state.current.splice(index, 1);
         }

@@ -128,6 +128,7 @@ export const SpacePlugin = ({
     awaiting: undefined,
     spaceNames: {},
     viewersByObject: {},
+    // TODO(wittjosiah): Stop using (Complex)Map inside reactive object.
     viewersByIdentity: new ComplexMap(PublicKey.hash),
     sdkMigrationRunning: {},
   });
@@ -404,9 +405,12 @@ export const SpacePlugin = ({
             // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
-                <SmallPresenceLive viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]} />
+                <SmallPresenceLive
+                  id={data.id as string}
+                  viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]}
+                />
               ) : (
-                <SmallPresence count={0} />
+                <SmallPresence id={data.id as string} count={0} />
               );
             }
             case 'navbar-start': {

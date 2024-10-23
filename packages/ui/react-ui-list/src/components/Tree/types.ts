@@ -15,16 +15,18 @@ const LabelSchema = S.Union(
   ),
 );
 
-export const ItemSchema = S.Struct({
-  id: S.String,
-  label: S.mutable(LabelSchema),
-  icon: S.optional(S.String),
-  disabled: S.optional(S.Boolean),
-  className: S.optional(S.String),
-  testId: S.optional(S.String),
-  path: S.Array(S.String),
-  parentOf: S.optional(S.Array(S.String)),
-});
+export const ItemSchema = S.mutable(
+  S.Struct({
+    id: S.String,
+    label: S.mutable(LabelSchema),
+    icon: S.optional(S.String),
+    disabled: S.optional(S.Boolean),
+    className: S.optional(S.String),
+    testId: S.optional(S.String),
+    path: S.Array(S.String),
+    parentOf: S.optional(S.Array(S.String)),
+  }),
+);
 
 export type ItemType = S.Schema.Type<typeof ItemSchema>;
 

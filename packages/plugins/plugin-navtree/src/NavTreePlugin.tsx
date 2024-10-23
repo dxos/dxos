@@ -19,12 +19,10 @@ import {
   parseGraphPlugin,
   NavigationAction,
 } from '@dxos/app-framework';
-import { createExtension, type Graph, isAction, isGraphNode, type Node, NodeFilter } from '@dxos/app-graph';
+import { createExtension, type Graph, isAction, isGraphNode, type Node, type NodeFilter } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Path } from '@dxos/react-ui-mosaic';
-import { type OpenItemIds } from '@dxos/react-ui-navtree';
 import { getHostPlatform } from '@dxos/util';
 
 import {
@@ -62,7 +60,7 @@ type NavTreeState = {
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
   let graph: Graph | undefined;
-  // const itemCache = new Map<string, NavTreeItem>();
+  const itemCache = new Map<string, NavTreeItem>();
 
   const state = new LocalStorageStore<NavTreeState>('dxos.org/settings/navtree', {
     root: undefined,
@@ -79,37 +77,38 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
 
   const getItem = (node: NavTreeItemGraphNode, parent: readonly string[], filter?: NodeFilter) => {
     invariant(graph);
-
-    // const cachedItem = itemCache.get(node.id);
-    // if (cachedItem) {
-    //   return cachedItem;
-    // }
-
     const path = [...parent, node.id];
-    const children = getChildren(graph, node, filter, path);
     const { actions, groupedActions } = getActions(graph, node);
+    const children = getChildren(graph, node, filter, path);
+    const parentOf = children.length > 0 ? children.map(({ id }) => id) : node.properties.isBranch ? [] : undefined;
     const item = {
-      id: Path.create(...path),
+      id: node.id,
       label: node.properties.label ?? node.id,
       icon: node.properties.icon,
       path,
-      ...((children?.length ?? 0) > 0 && {
-        parentOf: children!.map(({ id }) => Path.create(...path, id)),
-      }),
+      parentOf,
       node,
       actions,
       groupedActions,
     } satisfies NavTreeItem;
-    // itemCache.set(node.id, item);
-    return item;
+
+    const cachedItem = itemCache.get(node.id);
+    // TODO(wittjosiah): This is not a good enough check.
+    //   Consider better ways to doing reactive transformations which retain referential equality.
+    if (cachedItem && JSON.stringify(item) === JSON.stringify(cachedItem)) {
+      return cachedItem;
+    } else {
+      itemCache.set(node.id, item);
+      return item;
+    }
   };
 
-  const handleOpenChange = (id: string, open: boolean) => {
+  const handleOpenChange = (item: NavTreeItem, open: boolean) => {
     // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
     if (open) {
-      state.values.open.push(id);
+      state.values.open.push(item.id);
     } else {
-      const index = state.values.open.indexOf(id);
+      const index = state.values.open.indexOf(item.id);
       if (index > -1) {
         state.values.open.splice(index, 1);
       }
@@ -212,7 +211,6 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                   popoverAnchorId={data.popoverAnchorId as string}
                 />
               );
-              break;
 
             case 'document-title': {
               return <NavTreeDocumentTitle node={isGraphNode(data.activeNode) ? data.activeNode : undefined} />;

@@ -21,7 +21,7 @@ type SharedProperties = {
 
 export type NodeProperties = SharedProperties & {
   role?: string;
-  isPreview?: boolean;
+  isBranch?: boolean;
   error?: string;
   modified?: boolean;
   palette?: string;

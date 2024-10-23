@@ -15,7 +15,7 @@ import {
 import React, { memo, type KeyboardEvent, useCallback, useEffect, useRef, useState, type FC } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { Treegrid, useDefaultValue } from '@dxos/react-ui';
+import { Treegrid } from '@dxos/react-ui';
 
 import { DropIndicator } from './DropIndicator';
 import { TreeItemHeading } from './TreeItemHeading';
@@ -30,11 +30,11 @@ export type TreeItemProps = {
   mode: ItemMode;
   open: boolean;
   current: boolean;
-  draggable: boolean;
+  draggable?: boolean;
   renderColumns?: FC<{ item: ItemType }>;
   canDrop?: (data: unknown) => boolean;
-  onOpenChange?: (id: string, nextOpen: boolean) => void;
-  onSelect?: (id: string, nextState: boolean) => void;
+  onOpenChange?: (item: ItemType, nextOpen: boolean) => void;
+  onSelect?: (item: ItemType, nextState: boolean) => void;
 };
 
 // TODO(wittjosiah): Styles.
@@ -51,10 +51,9 @@ export const TreeItem = memo(
     onOpenChange,
     onSelect,
   }: TreeItemProps) => {
-    const { id, label, icon, className, disabled, path } = item;
-    const parentOf = useDefaultValue(item.parentOf, () => []);
+    const { id, label, icon, className, disabled, path, parentOf } = item;
     const level = path.length - 1;
-    const isBranch = parentOf.length > 0;
+    const isBranch = !!parentOf;
 
     const ref = useRef<HTMLDivElement | null>(null);
     const [state, setState] = useState<TreeItemState>('idle');
@@ -139,12 +138,12 @@ export const TreeItem = memo(
       );
     }, [draggable, item, mode, canDrop]);
 
-    const handleOpenChange = useCallback(() => onOpenChange?.(id, !open), [onOpenChange, id, open]);
+    const handleOpenChange = useCallback(() => onOpenChange?.(item, !open), [onOpenChange, item, open]);
 
     const handleSelect = useCallback(() => {
       ref.current?.focus();
-      onSelect?.(id, !current);
-    }, [onSelect, id, current]);
+      onSelect?.(item, !current);
+    }, [onSelect, item, current]);
 
     const handleKeyDown = useCallback(
       (event: KeyboardEvent) => {
@@ -169,9 +168,9 @@ export const TreeItem = memo(
         key={id}
         id={path.join(Treegrid.PATH_SEPARATOR)}
         aria-labelledby={`${id}__label`}
-        parentOf={isBranch ? parentOf.join(Treegrid.PARENT_OF_SEPARATOR) : undefined}
+        parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
         // focusableGroup={false}
-        classNames='grid aria-[current]:bg-input'
+        classNames='grid grid-cols-subgrid col-[tree-row] aria-[current]:bg-input'
         data-itemid={item.id}
         data-testid={item.testId}
         // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS
@@ -180,16 +179,22 @@ export const TreeItem = memo(
         aria-current={current ? ('' as 'page') : undefined}
         onKeyDown={handleKeyDown}
       >
-        <Treegrid.Cell indent classNames='relative flex items-center' style={paddingIndendation(level)}>
-          <TreeItemToggle open={open} isBranch={isBranch} onToggle={handleOpenChange} />
-          <TreeItemHeading
-            label={label}
-            icon={icon}
-            className={className}
-            disabled={disabled}
-            current={current}
-            onSelect={handleSelect}
-          />
+        <Treegrid.Cell
+          indent
+          classNames='relative grid grid-cols-subgrid col-[tree-row]'
+          style={paddingIndendation(level)}
+        >
+          <div role='none' className='flex items-center'>
+            <TreeItemToggle open={open} isBranch={isBranch} onToggle={handleOpenChange} />
+            <TreeItemHeading
+              label={label}
+              icon={icon}
+              className={className}
+              disabled={disabled}
+              current={current}
+              onSelect={handleSelect}
+            />
+          </div>
           {state === 'idle' && Columns && <Columns item={item} />}
           {instruction && <DropIndicator instruction={instruction} />}
         </Treegrid.Cell>

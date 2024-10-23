@@ -30,7 +30,7 @@ import {
 export const NODE_TYPE = 'dxos/app-graph/node';
 
 const renderPresence = ({ item }: { item: NavTreeItem }) => (
-  <Surface role='presence--glyph' data={{ object: item.node.data }} />
+  <Surface role='presence--glyph' data={{ object: item.node.data, id: item.node.id }} />
 );
 
 export const NavTreeContainer = ({
@@ -46,9 +46,9 @@ export const NavTreeContainer = ({
   onOpenChange: NavTreeProps['onOpenChange'];
   popoverAnchorId?: string;
 }) => {
-  // const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
-  // const [isLg] = useMediaQuery('lg', { ssr: false });
-  // const dispatch = useIntentDispatcher();
+  const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
+  const [isLg] = useMediaQuery('lg', { ssr: false });
+  const dispatch = useIntentDispatcher();
 
   const { graph } = useGraph();
 
@@ -67,51 +67,32 @@ export const NavTreeContainer = ({
     [graph],
   );
 
-  // const handleNavigate = async ({ node, actions }: NavTreeItemNode) => {
-  //   if (!node.data) {
-  //     return;
-  //   }
+  const handleSelect = useCallback(
+    ({ node, actions }: NavTreeItem) => {
+      if (!node.data) {
+        return;
+      }
 
-  //   // TODO(thure): Refactor opening related planks (comments in this case) to a generalized approach.
-  //   await dispatch({
-  //     action: NavigationAction.OPEN,
-  //     data: {
-  //       activeParts: {
-  //         main: [node.id],
-  //       },
-  //     },
-  //   });
+      // TODO(thure): Refactor opening related planks (comments in this case) to a generalized approach.
+      void dispatch({
+        action: NavigationAction.OPEN,
+        data: {
+          activeParts: {
+            main: [node.id],
+          },
+        },
+      });
 
-  //   const defaultAction = actions?.find((action) => action.properties?.disposition === 'default');
-  //   if (isAction(defaultAction)) {
-  //     void (defaultAction.data as () => void)();
-  //   }
-  //   if (!isLg) {
-  //     closeNavigationSidebar();
-  //   }
-  // };
-
-  const handleSelect = () => {
-    console.log('handleSelect');
-  };
-
-  // const handleItemOpenChange = ({ id, actions, path }: NavTreeItemNode, nextOpen: boolean) => {
-  //   if (path) {
-  //     if (nextOpen) {
-  //       onOpenItemIdsChange({ ...openItemIds, [id]: true });
-  //     } else {
-  //       // TODO(thure): Filter vs single-remove, make setting?
-  //       const { [id]: _, ...nextOpenItemIds } = openItemIds;
-  //       onOpenItemIdsChange(nextOpenItemIds);
-  //     }
-  //   }
-
-  //   // TODO(wittjosiah): This is a temporary solution to ensure spaces get enabled when they are expanded.
-  //   const defaultAction = actions?.find((action) => action.properties?.disposition === 'default');
-  //   if (isAction(defaultAction)) {
-  //     void (defaultAction.data as () => void)();
-  //   }
-  // };
+      const defaultAction = actions?.find((action) => action.properties?.disposition === 'default');
+      if (isAction(defaultAction)) {
+        void (defaultAction.data as () => void)();
+      }
+      if (!isLg) {
+        closeNavigationSidebar();
+      }
+    },
+    [dispatch, isLg, closeNavigationSidebar],
+  );
 
   // const resolveItemLevel = useCallback(
   //   (overPosition: number | undefined, activeId: string | undefined, levelOffset: number) => {
@@ -361,16 +342,6 @@ export const NavTreeContainer = ({
             popoverAnchorId={popoverAnchorId}
             onOpenChange={onOpenChange}
             onSelect={handleSelect}
-            // id={root.id}
-            // type={NODE_TYPE}
-            // loadDescendents={loadDescendents}
-            // popoverAnchorId={popoverAnchorId}
-            // resolveItemLevel={resolveItemLevel}
-            // onNavigate={handleNavigate}
-            // onItemOpenChange={handleItemOpenChange}
-            // onMove={handleMove}
-            // onDrop={handleDrop}
-            // onDragEnd={handleDragEnd}
           />
         </div>
 
