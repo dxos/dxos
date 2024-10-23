@@ -69,6 +69,10 @@ export type DxGridCellValue = {
    * Whether to render a resize handle for this cell’s row or column.
    */
   resizeHandle?: DxGridAxis;
+  /**
+   * Whether this cell is read-only.
+   */
+  readonly?: boolean;
 };
 
 export type DxGridAxisMetaProps = {
