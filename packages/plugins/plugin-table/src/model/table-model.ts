@@ -42,11 +42,11 @@ const columnSettingsButtonHtml = (columnId: string) =>
 
 const ACTION_COLUMN_WIDTH = 40;
 
-const hamburgerMenuButtonAttr = 'data-table-row-menu-button';
-const hamburgerMenuButtonClasses = 'ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2';
-const hamburgerMenuIcon = 'ph--dots-three--regular';
+export const rowMenuButtonAttr = 'data-table-row-menu-button';
+const rowMenuButtonClasses = 'ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2';
+const rowMenuIcon = 'ph--dots-three--regular';
 const rowActionMenuButtonHtml = (rowIndex: number) =>
-  `<button class="${hamburgerMenuButtonClasses}" ${hamburgerMenuButtonAttr}="${rowIndex}"><svg><use href="/icons.svg#${hamburgerMenuIcon}"/></svg></button>`;
+  `<button class="${rowMenuButtonClasses}" ${rowMenuButtonAttr}="${rowIndex}"><svg><use href="/icons.svg#${rowMenuIcon}"/></svg></button>`;
 
 export class TableModel extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
