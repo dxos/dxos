@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { type FC, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
@@ -91,8 +92,8 @@ const Story: FC<{ content: string }> = ({ content }) => {
   );
 };
 
-export default {
-  title: 'react-ui-editor/Toolbar',
+const meta: Meta = {
+  title: 'plugins/react-ui-editor/Toolbar',
   component: Toolbar,
   decorators: [withTheme, withLayout({ tooltips: true })],
   parameters: { translations, layout: 'fullscreen' },
@@ -114,3 +115,4 @@ export const Default = {
     content,
   },
 };
+export default meta;

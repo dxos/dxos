@@ -5,6 +5,7 @@
 import '@dxos-theme';
 
 import { IconBase, type IconWeight, GithubLogo, type IconProps } from '@phosphor-icons/react';
+import { type Meta } from '@storybook/react';
 import React, { forwardRef, type SVGProps, type ReactElement } from 'react';
 
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -93,8 +94,8 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-registry/Icon',
+const meta: Meta = {
+  title: 'plugins/plugin-registry/Icon',
   render: Story,
   parameters: {
     layout: 'centered',
@@ -102,3 +103,4 @@ export default {
 };
 
 export const Default = {};
+export default meta;

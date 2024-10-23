@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useMemo, type FC } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
@@ -12,12 +13,18 @@ import { editorWithToolbarLayout, automerge } from '@dxos/react-ui-editor';
 import { topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { MarkdownEditor } from './MarkdownEditor';
+import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 
-const Story: FC<{
-  content: string;
+const content = Array.from({ length: 100 })
+  .map((_, i) => `Line ${i + 1}`)
+  .join('\n');
+
+type StoryProps = MarkdownEditorProps & {
+  content?: string;
   toolbar?: boolean;
-}> = ({ content = '# Test', toolbar }) => {
+};
+
+const Story = ({ content = '# Test', toolbar }: StoryProps) => {
   const doc = useMemo(() => createObject({ content }), [content]);
   const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
 
@@ -32,18 +39,6 @@ const Story: FC<{
   );
 };
 
-export default {
-  title: 'plugin-markdown/EditorMain',
-  component: MarkdownEditor,
-  decorators: [withTheme, withLayout({ tooltips: true })],
-  parameters: { layout: 'fullscreen' },
-  render: Story,
-};
-
-const content = Array.from({ length: 100 })
-  .map((_, i) => `Line ${i + 1}`)
-  .join('\n');
-
 export const Default = {
   args: {
     content,
@@ -56,3 +51,13 @@ export const WithToolbar = {
     toolbar: true,
   },
 };
+
+const meta: Meta<typeof MarkdownEditor> = {
+  title: 'plugins/plugin-markdown/EditorMain',
+  component: MarkdownEditor,
+  render: Story,
+  decorators: [withTheme, withLayout({ tooltips: true })],
+  parameters: { layout: 'fullscreen' },
+};
+
+export default meta;

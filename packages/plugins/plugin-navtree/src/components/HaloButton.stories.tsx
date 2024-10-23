@@ -4,16 +4,19 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React from 'react';
 
 import { HaloButton } from './HaloButton';
 
-export default {
-  title: 'plugin-navtree/HaloButton',
-  component: HaloButton,
-  actions: { argTypesRegex: '^on.*' },
-};
-
-export const Normal = (props: any) => {
+export const Default = (props: any) => {
   return <HaloButton {...props} />;
 };
+
+const meta: Meta<typeof HaloButton> = {
+  title: 'plugins/plugin-navtree/HaloButton',
+  component: HaloButton,
+  // actions: { argTypesRegex: '^on.*' },
+};
+
+export default meta;

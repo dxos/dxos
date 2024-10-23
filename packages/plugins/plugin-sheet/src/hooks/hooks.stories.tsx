@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { useSpace } from '@dxos/react-client/echo';
@@ -36,8 +37,8 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-sheet/hooks',
+const meta: Meta = {
+  title: 'plugins/plugin-sheet/hooks',
   component: ComputeGraphContextProvider,
   decorators: [
     withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
@@ -48,3 +49,4 @@ export default {
 };
 
 export const Default = {};
+export default meta;

@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Meta } from '@storybook/react';
 import React from 'react';
 
 import { useSpace } from '@dxos/react-client/echo';
@@ -14,8 +15,8 @@ import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../
 import { SheetType } from '../../types';
 import { SheetProvider } from '../SheetContext';
 
-export default {
-  title: 'plugin-sheet/GridSheet',
+const meta: Meta = {
+  title: 'plugins/plugin-sheet/GridSheet',
   component: GridSheet,
   decorators: [
     withClientProvider({ types: [SheetType], createSpace: true }),
@@ -39,3 +40,4 @@ export const Basic = () => {
     </SheetProvider>
   );
 };
+export default meta;

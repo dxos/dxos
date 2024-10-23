@@ -4,11 +4,12 @@
 
 import '@dxos-theme';
 
-import React, { type FC, useState } from 'react';
+import { type Meta } from '@storybook/react';
+import React, { useState } from 'react';
 
-import { PageNumber, Pager, StartButton } from './Pager';
+import { PageNumber, Pager, type PagerProps, StartButton } from './Pager';
 
-const Story: FC<{ count?: number }> = ({ count = 20 }) => {
+const Story = ({ count = 20 }: PagerProps) => {
   const [index, setIndex] = useState(0);
   const [running, setRunning] = useState(false);
 
@@ -21,8 +22,8 @@ const Story: FC<{ count?: number }> = ({ count = 20 }) => {
   );
 };
 
-export default {
-  title: 'plugin-presenter/Pager',
+const meta: Meta<PagerProps> = {
+  title: 'plugins/plugin-presenter/Pager',
   render: Story,
   parameters: {
     layout: 'centered',
@@ -30,3 +31,4 @@ export default {
 };
 
 export const Default = {};
+export default meta;

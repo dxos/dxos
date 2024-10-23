@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { type FC, useEffect, useState } from 'react';
 
 import { range } from '@dxos/echo-generator';
@@ -68,8 +69,8 @@ const Story: FC<ClientRepeatedComponentProps & { type?: TreeComponentProps<any>[
   return <Tree space={space} selected={object?.id} variant={type} />;
 };
 
-export default {
-  title: 'plugin-explorer/Tree',
+const meta: Meta = {
+  title: 'plugins/plugin-explorer/Tree',
   component: Tree,
   render: () => <ClientRepeater component={Story} types={[TreeType, TreeItemType]} createSpace />,
   decorators: [withTheme, withLayout({ fullscreen: true })],
@@ -95,3 +96,4 @@ export const Edge = {
     type: 'edge',
   },
 };
+export default meta;

@@ -3,6 +3,8 @@
 //
 
 import '@dxos-theme';
+
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useMemo } from 'react';
 
 import { PublicKey } from '@dxos/keys';
@@ -96,8 +98,8 @@ const Story = (props: EditorProps) => {
   );
 };
 
-export default {
-  title: 'plugin-sheet/extensions',
+const meta: Meta = {
+  title: 'plugins/plugin-sheet/extensions',
   decorators: [
     withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
     withComputeGraphDecorator(),
@@ -149,3 +151,4 @@ export const Graph = {
     ),
   },
 };
+export default meta;

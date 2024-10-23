@@ -4,11 +4,13 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
+
 import { Slide } from './Slide';
 import { createSlide } from '../../testing';
 
-export default {
-  title: 'plugin-presenter/Slide',
+const meta: Meta = {
+  title: 'plugins/plugin-presenter/Slide',
   component: Slide,
   parameters: {
     layout: 'fullscreen',
@@ -20,3 +22,4 @@ export const Default = {
     content: createSlide(),
   },
 };
+export default meta;

@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
@@ -101,8 +102,8 @@ const SheetWithToolbar = ({ graph, debug }: { graph: ComputeGraph; debug?: boole
   );
 };
 
-export default {
-  title: 'plugin-sheet/Sheet',
+const meta: Meta = {
+  title: 'plugins/plugin-sheet/Sheet',
   component: Sheet,
   decorators: [
     withClientProvider({ types: [SheetType], createIdentity: true }),
@@ -250,3 +251,4 @@ export const GridLayout = () => {
 const Cell = ({ className, label }: { className?: string; label: string }) => (
   <div className={mx('flex items-center justify-center border', className)}>{label}</div>
 );
+export default meta;

@@ -5,14 +5,14 @@
 import '@dxos-theme';
 
 import { Circle } from '@phosphor-icons/react';
-import React, { type FC, useState } from 'react';
-import { type Step } from 'react-joyride';
+import { type Meta, type StoryObj } from '@storybook/react';
+import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Button } from '@dxos/react-ui';
-import { type Meta, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
 
-import { HelpContextProvider } from './HelpContextProvider';
+import { HelpContextProvider, type HelpContextProviderProps } from './HelpContextProvider';
 import { useHelp } from '../../hooks';
 
 const App = () => {
@@ -57,7 +57,7 @@ const App = () => {
   );
 };
 
-const Story: FC<{ steps?: Step[] }> = ({ steps = [] }) => (
+const Story = ({ steps = [] }: HelpContextProviderProps) => (
   <HelpContextProvider steps={steps}>
     <div className='fixed inset-0 overflow-hidden'>
       <App />
@@ -65,48 +65,49 @@ const Story: FC<{ steps?: Step[] }> = ({ steps = [] }) => (
   </HelpContextProvider>
 );
 
-/**
- * IMPORTANT: Storybook must be run in separate tab.
- */
-const meta: Meta = {
-  title: 'plugin-help/Joyride',
-  render: (args: any) => <Story {...args} />,
-  decorators: [withTheme],
-};
-
-export default meta;
-
 // TODO(burdon): Tour should prompt user to create a Stack -- and respond to it being created.
 //  Use beacon to simulate click.
 
-export const Default = {
+export const Default: StoryObj<typeof HelpContextProvider> = {
   args: {
     // https://docs.react-joyride.com/step#options
     steps: [
       {
         target: '[data-joyride="basic/1"]',
-        title: 'Step 1',
+        title: 'plugins/Step 1',
         content: faker.lorem.paragraph(),
         disableBeacon: true,
         placement: 'right',
       },
       {
         target: '[data-joyride="basic/2"]',
-        title: 'Step 2',
+        title: 'plugins/Step 2',
         content: faker.lorem.paragraph(),
       },
       {
         target: '[data-joyride="basic/3"]',
-        title: 'Step 3',
+        title: 'plugins/Step 3',
         content: faker.lorem.paragraph(),
         placement: 'right',
       },
       {
         target: '[data-joyride="basic/4"]',
-        title: 'Step 4',
+        title: 'plugins/Step 4',
         content: faker.lorem.paragraph(),
         placement: 'top-end',
       },
     ],
   },
 };
+
+/**
+ * IMPORTANT: Run in separate tab.
+ */
+const meta: Meta<typeof HelpContextProvider> = {
+  title: 'plugins/plugin-help/Joyride',
+  component: HelpContextProvider,
+  render: Story,
+  decorators: [withTheme],
+};
+
+export default meta;

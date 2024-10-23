@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
@@ -42,12 +43,6 @@ const Story = ({ text }: StoryProps) => {
   );
 
   return <div className='w-[50rem]' ref={parentRef} {...focusAttributes} />;
-};
-
-export default {
-  title: 'plugin-mermaid/extensions',
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
-  render: Story,
 };
 
 export const Default = {
@@ -90,3 +85,11 @@ export const Error = {
     ),
   },
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-mermaid/extensions',
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
+  render: Story,
+};
+
+export default meta;

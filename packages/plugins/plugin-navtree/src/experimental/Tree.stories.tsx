@@ -5,6 +5,7 @@
 import '@dxos-theme';
 
 import { House, List, Planet, PlusCircle, Sailboat } from '@phosphor-icons/react';
+import { type Meta } from '@storybook/react';
 import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -15,8 +16,8 @@ import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes, visi
 
 faker.seed(1234);
 
-export default {
-  title: 'plugin-navtree/Tree',
+const meta: Meta = {
+  title: 'plugins/plugin-navtree/Tree',
   component: Tree,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: modalSurface })],
 };
@@ -47,11 +48,11 @@ const Container = ({ children, sidebar }: PropsWithChildren<{ sidebar: JSX.Eleme
 const data: TreeNodeData[] = [
   {
     id: 'root',
-    title: 'Root',
+    title: 'plugins/Root',
     children: [
       {
         id: faker.string.uuid(),
-        title: 'Personal Space',
+        title: 'plugins/Personal Space',
         color: 'text-green-400',
         Icon: House,
         children: [
@@ -227,3 +228,4 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
     </div>
   );
 };
+export default meta;

@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
@@ -72,16 +73,6 @@ const Story = ({
   );
 };
 
-export default {
-  title: 'plugin-outliner/Outliner',
-  component: Outliner,
-  decorators: [withTheme],
-  render: Story,
-  parameters: {
-    layout: 'fullscreen',
-  },
-};
-
 export const Empty = {};
 
 export const Default = {
@@ -105,3 +96,14 @@ export const Checkbox = {
     isTasklist: true,
   },
 };
+
+const meta = {
+  title: 'plugins/plugin-outliner/Outliner',
+  render: Story,
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+  },
+};
+
+export default meta;

@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React from 'react';
 
 // @ts-ignore
@@ -24,9 +25,10 @@ const Story = () => {
   return <RevealPlayer content={CONTENT} />;
 };
 
-export default {
-  title: 'plugin-presenter/Reveal',
+const meta: Meta = {
+  title: 'plugins/plugin-presenter/Reveal',
   render: Story,
 };
 
 export const Default = {};
+export default meta;

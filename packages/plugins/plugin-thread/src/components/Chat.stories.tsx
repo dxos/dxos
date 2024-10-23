@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { SurfaceProvider } from '@dxos/app-framework';
@@ -64,8 +65,8 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-thread/Chat',
+const meta: Meta = {
+  title: 'plugins/plugin-thread/Chat',
   component: Thread,
   // TODO(wittjosiah): Register schemas.
   render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType]} />,
@@ -74,3 +75,4 @@ export default {
 };
 
 export const Default = {};
+export default meta;

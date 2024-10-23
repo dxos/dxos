@@ -4,25 +4,22 @@
 
 import '@dxos-theme';
 
-import React, { type FC } from 'react';
+import { type Meta } from '@storybook/react';
 
 import { Searchbar, type SearchbarProps } from './Searchbar';
-
-const Story: FC<SearchbarProps> = (args) => {
-  return <Searchbar {...args} />;
-};
-
-export default {
-  title: 'plugin-search/Searchbar',
-  component: Searchbar,
-  render: Story,
-  parameters: {
-    layout: 'centered',
-  },
-};
 
 export const Default = {
   args: {
     placeholder: 'Search...',
   },
 };
+
+const meta: Meta<SearchbarProps> = {
+  title: 'plugins/plugin-search/Searchbar',
+  component: Searchbar,
+  parameters: {
+    layout: 'centered',
+  },
+};
+
+export default meta;

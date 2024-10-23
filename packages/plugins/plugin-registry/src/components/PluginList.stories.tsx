@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { type PluginMeta } from '@dxos/app-framework';
@@ -51,8 +52,8 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-registry/PluginList',
+const meta: Meta = {
+  title: 'plugins/plugin-registry/PluginList',
   component: PluginList,
   render: Story,
   decorators: [withTheme],
@@ -62,3 +63,4 @@ export default {
 };
 
 export const Default = {};
+export default meta;

@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import { type SerializedStore } from '@tldraw/store';
 import { type TLRecord } from '@tldraw/tldraw';
 import React, { useState } from 'react';
@@ -65,8 +66,10 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-sketch/SketchComponent',
+export const Default = {};
+
+const meta: Meta<typeof Sketch> = {
+  title: 'plugins/plugin-sketch/Sketch',
   component: Sketch,
   render: Story,
   decorators: [withTheme, withLayout({ fullscreen: true })],
@@ -75,4 +78,4 @@ export default {
   },
 };
 
-export const Default = {};
+export default meta;

@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
@@ -31,11 +32,12 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-inbox/MessageList',
+const meta: Meta = {
+  title: 'plugins/plugin-inbox/MessageList',
   component: MessageList,
   render: Story,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export const Default = {};
+export default meta;

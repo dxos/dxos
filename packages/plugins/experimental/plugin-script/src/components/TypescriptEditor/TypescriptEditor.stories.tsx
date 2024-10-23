@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useMemo } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
@@ -30,10 +31,11 @@ const Story = () => {
   return <TypescriptEditor id='test' initialValue={initialValue} extensions={extensions} />;
 };
 
-export default {
-  title: 'plugin-script/TypescriptEditor',
+const meta: Meta = {
+  title: 'plugins/plugin-script/TypescriptEditor',
   component: TypescriptEditor,
   render: Story,
 };
 
 export const Default = {};
+export default meta;

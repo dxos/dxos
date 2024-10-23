@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React from 'react';
 
 import { textBlockWidth } from '@dxos/react-ui-theme';
@@ -20,12 +21,14 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-sheet/Toolbar',
-  component: Toolbar,
+export const Default = {};
+
+const meta: Meta<typeof Toolbar.Root> = {
+  title: 'plugins/plugin-sheet/Toolbar',
+  component: Toolbar.Root,
+  render: Story,
   decorators: [withTheme, withLayout({ tooltips: true })],
   parameters: { translations, layout: 'fullscreen' },
-  render: (args: any) => <Story {...args} />,
 };
 
-export const Default = {};
+export default meta;

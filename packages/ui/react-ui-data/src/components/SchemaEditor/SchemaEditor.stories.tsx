@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
 import { withTheme, withLayout } from '@dxos/storybook-utils';
@@ -21,18 +22,20 @@ const Story = (props: SchemaEditorProps) => (
   </TestPopup>
 );
 
-export default {
+export const Default: StoryObj<SchemaEditorProps> = {
+  args: {
+    schema: TestSchema,
+  },
+};
+
+const meta: Meta<typeof SchemaEditor> = {
   title: 'react-ui-data/SchemaEditor',
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],
+  render: Story,
   parameters: {
     layout: 'centered',
     translations,
   },
-  render: Story,
 };
 
-export const Default = {
-  args: {
-    schema: TestSchema,
-  } satisfies SchemaEditorProps,
-};
+export default meta;

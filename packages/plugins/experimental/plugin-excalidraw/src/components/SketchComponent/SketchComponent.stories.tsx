@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-db';
@@ -29,8 +30,10 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-excalidraw/SketchComponent',
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-excalidraw/SketchComponent',
   component: SketchComponent,
   render: Story,
   decorators: [withTheme, withLayout({ fullscreen: true })],
@@ -39,4 +42,4 @@ export default {
   },
 };
 
-export const Default = {};
+export default meta;

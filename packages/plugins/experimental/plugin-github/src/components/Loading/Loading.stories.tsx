@@ -4,10 +4,12 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
+
 import { Loading } from './Loading';
 
-export default {
-  title: 'plugin-github/Loading',
+const meta: Meta = {
+  title: 'plugins/plugin-github/Loading',
   component: Loading,
   argTypes: {
     size: {
@@ -26,3 +28,4 @@ export const Small = { args: { ...Default.args, size: 'sm' } };
 export const Neutral = { args: { ...Default.args, color: 'neutral' } };
 export const Large = { args: { ...Default.args, size: 'lg' } };
 export const ExtraLarge = { args: { ...Default.args, size: 'xl' } };
+export default meta;

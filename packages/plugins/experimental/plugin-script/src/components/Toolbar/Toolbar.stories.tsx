@@ -4,13 +4,15 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
+
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Toolbar } from './Toolbar';
 import { templates } from '../../templates';
 
-export default {
-  title: 'plugin-script/Toolbar',
+const meta: Meta = {
+  title: 'plugins/plugin-script/Toolbar',
   component: Toolbar,
   decorators: [withTheme, withLayout({ tooltips: true })],
 };
@@ -24,3 +26,4 @@ export const Default = {
     onTogglePanel: () => {},
   },
 };
+export default meta;

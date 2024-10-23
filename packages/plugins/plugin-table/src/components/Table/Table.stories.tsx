@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useMemo } from 'react';
 
 import { faker } from '@dxos/random';
@@ -35,8 +35,8 @@ const Story = (props: StoryProps) => {
   );
 };
 
-export default {
-  title: 'plugin-table/Table',
+const meta: Meta = {
+  title: 'plugins/plugin-table/Table',
   component: Table,
   render: Story,
   decorators: [withSignals, withTheme, withLayout({ fullscreen: true })],
@@ -57,3 +57,4 @@ export const Mutations: StoryObj<StoryProps> = {
     insertInterval: 100,
   },
 };
+export default meta;

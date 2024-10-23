@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React from 'react';
 
 import { SpaceId } from '@dxos/keys';
@@ -21,8 +22,8 @@ const Story = (props: any) => {
   );
 };
 
-export default {
-  title: 'plugin-space/SyncStatusIndicator',
+const meta: Meta = {
+  title: 'plugins/plugin-space/SyncStatusIndicator',
   decorators: [withTheme, withLayout({ fullscreen: true })],
   component: SyncStatusIndicator,
   parameters: { translations },
@@ -60,3 +61,4 @@ export const Detail = {
     classNames: 'm-2 w-[200px] border border-separator rounded-md',
   },
 };
+export default meta;

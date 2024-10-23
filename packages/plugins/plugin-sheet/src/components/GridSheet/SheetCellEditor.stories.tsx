@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Client } from '@dxos/client';
@@ -18,8 +19,8 @@ import { sheetExtension } from '../../extensions';
 import { defaultFunctions } from '../../graph';
 import { SheetType } from '../../types';
 
-export default {
-  title: 'plugin-sheet/CellEditor',
+const meta: Meta = {
+  title: 'plugins/plugin-sheet/CellEditor',
   component: CellEditor,
   render: (args: StoryProps) => <Story {...args} />,
   decorators: [withTheme],
@@ -89,3 +90,4 @@ export const Automerge = {
     value: '=SUM(A1:A2, 100, TRUE, "100", SUM(A1:A2, B1:B2))',
   },
 };
+export default meta;

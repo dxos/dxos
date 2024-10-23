@@ -230,11 +230,6 @@ const Story = ({
 
 const initialRotation: Vector = [0, -40, 0];
 
-export default {
-  title: 'gem-globe/Globe',
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#000]' })],
-};
-
 export const Earth1 = () => {
   const [topology] = useAsyncState(async () => (await import('../../data/countries-110m.ts')).default);
   const [controller, setController] = useState<GlobeController | null>();
@@ -314,4 +309,9 @@ export const Globe5 = () => {
 
 export const Globe6 = () => {
   return <Story drag xAxis tour scale={2} translation={{ x: 0, y: 600 }} rotation={[0, -20, 0]} styles={dotStyles} />;
+};
+
+export default {
+  title: 'gem-globe/Globe',
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#000]' })],
 };

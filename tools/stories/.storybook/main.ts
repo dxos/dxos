@@ -21,6 +21,7 @@ export const packages = resolve(__dirname, '../../../packages');
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
 
 /**
+ * https://storybook.js.org/docs/api/main-config/main-config
  * https://nx.dev/recipes/storybook/one-storybook-for-all
  */
 export const config = (
@@ -44,7 +45,12 @@ export const config = (
       strictMode: true,
     },
   },
+  /**
+   *
+   */
   viteFinal: async (config, { configType }) => {
+    console.log(JSON.stringify({ config, configType }, null, 2));
+
     return mergeConfig(
       configType === 'PRODUCTION'
         ? {

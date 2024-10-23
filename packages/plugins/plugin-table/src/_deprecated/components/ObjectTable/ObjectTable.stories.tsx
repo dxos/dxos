@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -44,8 +45,8 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-table/ObjectTable',
+const meta: Meta = {
+  title: 'plugins/plugin-table/ObjectTable',
   component: ObjectTable,
   // render: () => <div>s</div>,
   render: () => <Story />,
@@ -72,3 +73,4 @@ export const Multiple = {
     withLayout({ fullscreen: true, classNames: 'grid grid-cols-3' }),
   ],
 };
+export default meta;

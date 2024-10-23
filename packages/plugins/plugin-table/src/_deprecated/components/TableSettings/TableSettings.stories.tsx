@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
@@ -37,11 +38,12 @@ const Story = () => {
   return <TableSettings table={table} schemas={schemas} />;
 };
 
-export default {
-  title: 'plugin-table/TableSettings',
+const meta: Meta = {
+  title: 'plugins/plugin-table/TableSettings',
   component: TableSettings,
   decorators: [withTheme],
   render: () => <ClientRepeater component={Story} types={[TableType]} createSpace />,
 };
 
 export const Default = {};
+export default meta;

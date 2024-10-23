@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { type FC, useEffect } from 'react';
 
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
@@ -32,8 +33,8 @@ const Story: FC = () => {
   return <ObjectCreator space={space} onAddObjects={handleCreate} />;
 };
 
-export default {
-  title: 'plugin-debug/SchemaList',
+const meta: Meta = {
+  title: 'plugins/plugin-debug/SchemaList',
   component: ObjectCreator,
   render: () => <ClientRepeater component={Story} createSpace />,
   parameters: {
@@ -42,3 +43,4 @@ export default {
 };
 
 export const Default = {};
+export default meta;
