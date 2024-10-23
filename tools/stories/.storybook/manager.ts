@@ -15,13 +15,6 @@ addons.setConfig({
   showToolbar: true,
   sidebar: {
     showRoots: true,
-    // renderLabel: (item) => {
-    // const { id, parent, type, depth, name, importPath } = item;
-    // console.log(item);
-    // type = group > component > story
-    // return `${type}/${name}`
-    // return name;
-    // },
   },
   theme: create({
     base: 'dark',
