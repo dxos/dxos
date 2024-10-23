@@ -102,7 +102,7 @@ export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
 };
 
 // TODO(burdon): Call and remove subscriptions.
-const destroyObject = <T extends {}>(proxy: EchoReactiveObject<T>) => {
+export const destroyObject = <T extends {}>(proxy: EchoReactiveObject<T>) => {
   invariant(isEchoObject(proxy));
   const target: ProxyTarget = getProxyTarget(proxy);
   const internals: ObjectInternals = target[symbolInternals];
