@@ -50,6 +50,7 @@ export const config = (
    */
   viteFinal: async (config, { configType }) => {
     if (process.env.DX_DEBUG) {
+      // eslint-disable-next-line no-console
       console.log(JSON.stringify({ config, configType }, null, 2));
     }
 

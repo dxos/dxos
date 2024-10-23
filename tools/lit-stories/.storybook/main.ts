@@ -13,9 +13,7 @@ export const packages = resolve(__dirname, '../../../packages');
 
 const contentFiles = '*.{ts,tsx,js,jsx}';
 
-export const config = (
-  baseConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
-): StorybookConfig => ({
+export const config = (baseConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>): StorybookConfig => ({
   framework: {
     name: '@storybook/web-components-vite',
     options: {},
