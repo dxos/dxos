@@ -28,6 +28,7 @@ const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
   }, []);
 
   return (
+    // TODO(thure): This is no good very (my) bad. Refactor as part of #7962.
     <ModalPrimitive.Root>
       <Grid.Root id='story' onEditingChange={onEditingChange}>
         <Grid.Content {...props} onClick={handleClick} />
