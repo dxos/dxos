@@ -27,6 +27,7 @@ export type SortConfig = { columnId: ColumnId; direction: SortDirection };
 export type TableModelProps = {
   table: TableType;
   data: any[];
+  onDeleteRow?: (id: string) => void;
   onCellUpdate?: (cell: GridCell) => void;
   sorting?: SortConfig[];
   pinnedRows?: { top: number[]; bottom: number[] };
@@ -70,11 +71,13 @@ export class TableModel extends Resource {
    */
   private readonly displayToDataIndex: Map<number, number> = new Map();
 
+  private readonly onDeleteRow?: (id: string) => void;
   private readonly onCellUpdate?: (cell: GridCell) => void;
 
   constructor({
     table,
     data,
+    onDeleteRow,
     onCellUpdate,
     sorting = [],
     pinnedRows = { top: [], bottom: [] },
@@ -83,6 +86,7 @@ export class TableModel extends Resource {
     super();
     this.table = table;
     this.data = data;
+    this.onDeleteRow = onDeleteRow;
     this.onCellUpdate = onCellUpdate;
     this.sorting.value = sorting[0] ?? undefined;
     this.pinnedRows = pinnedRows;
@@ -206,6 +210,11 @@ export class TableModel extends Resource {
   //
   // Data
   //
+
+  public deleteRow = (rowIndex: number): void => {
+    const dataIndex = this.displayToDataIndex.get(rowIndex) ?? rowIndex;
+    this.onDeleteRow?.(this.data[dataIndex]);
+  };
 
   public getCellData = ({ col, row }: GridCell): any => {
     const fields = this.table.view?.fields ?? [];
