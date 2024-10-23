@@ -443,6 +443,28 @@ export class DxGrid extends LitElement {
     }
   };
 
+  /**
+   * TODO(thure): This should not rely on dom order (because of virtualization), it was just easier than implementing
+   *   the 3 different types of logic needed by the 3 types of planes.
+   * @deprecated
+   */
+  private incrementFocusWithinPlaneByDomOrder(reverse?: boolean) {
+    const focusedCellElement = this.focusedCellElement();
+    if (focusedCellElement) {
+      const nextCell = closestCell(focusedCellElement?.[reverse ? 'previousElementSibling' : 'nextElementSibling']);
+      if (nextCell) {
+        this.focusedCell = nextCell;
+      } else if (focusedCellElement) {
+        const loopedCell = closestCell(
+          focusedCellElement.parentElement?.[reverse ? 'lastElementChild' : 'firstElementChild'] ?? null,
+        );
+        if (loopedCell) {
+          this.focusedCell = loopedCell;
+        }
+      }
+    }
+  }
+
   private handleKeydown(event: KeyboardEvent) {
     if (this.focusActive && this.mode === 'browse') {
       // Adjust state
@@ -458,6 +480,9 @@ export class DxGrid extends LitElement {
           break;
         case 'ArrowLeft':
           this.focusedCell = { ...this.focusedCell, col: Math.max(0, this.focusedCell.col - 1) };
+          break;
+        case 'Tab':
+          this.incrementFocusWithinPlaneByDomOrder(event.shiftKey);
           break;
       }
       // Emit edit request if relevant
@@ -477,6 +502,7 @@ export class DxGrid extends LitElement {
         case 'ArrowUp':
         case 'ArrowRight':
         case 'ArrowLeft':
+        case 'Tab':
           event.preventDefault();
           this.snapPosToFocusedCell();
           break;
@@ -1001,8 +1027,8 @@ export class DxGrid extends LitElement {
             'grid-template-rows': this[`template${rowPlane}`],
           })}
         >
-          ${[...Array(cols)].map((_, c) => {
-            return [...Array(rows)].map((_, r) => {
+          ${[...Array(rows)].map((_, r) => {
+            return [...Array(cols)].map((_, c) => {
               return this.renderCell(c, r, plane, cellSelected(c, r, plane, selection));
             });
           })}
@@ -1027,8 +1053,8 @@ export class DxGrid extends LitElement {
             style="transform:translate3d(${offsetInline}px,0,0);grid-template-columns:${this
               .templateGridColumns};grid-template-rows:${this[`template${rowPlane}`]}"
           >
-            ${[...Array(visibleCols)].map((_, c0) => {
-              return [...Array(rows)].map((_, r) => {
+            ${[...Array(rows)].map((_, r) => {
+              return [...Array(visibleCols)].map((_, c0) => {
                 const c = this.visColMin + c0;
                 return this.renderCell(c, r, plane, cellSelected(c, r, plane, selection), c0, r);
               });
@@ -1055,8 +1081,8 @@ export class DxGrid extends LitElement {
             style="transform:translate3d(0,${offsetBlock}px,0);grid-template-rows:${this
               .templateGridRows};grid-template-columns:${this[`template${colPlane}`]}"
           >
-            ${[...Array(cols)].map((_, c) => {
-              return [...Array(visibleRows)].map((_, r0) => {
+            ${[...Array(visibleRows)].map((_, r0) => {
+              return [...Array(cols)].map((_, c) => {
                 const r = this.visRowMin + r0;
                 return this.renderCell(c, r, plane, cellSelected(c, r, plane, selection), c, r0);
               });
@@ -1148,8 +1174,8 @@ export class DxGrid extends LitElement {
           style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:${this
             .templateGridColumns};grid-template-rows:${this.templateGridRows};"
         >
-          ${[...Array(visibleCols)].map((_, c0) => {
-            return [...Array(visibleRows)].map((_, r0) => {
+          ${[...Array(visibleRows)].map((_, r0) => {
+            return [...Array(visibleCols)].map((_, c0) => {
               const c = c0 + this.visColMin;
               const r = r0 + this.visRowMin;
               return this.renderCell(c, r, 'grid', cellSelected(c, r, 'grid', selection), c0, r0);
