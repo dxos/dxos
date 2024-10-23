@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { type FC } from 'react';
+import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -13,7 +13,7 @@ import { Container } from './Container';
 import { Slide, type SlideProps } from './Slide';
 import { createSlide } from '../../testing';
 
-const Story = ({ content = '' }: SlideProps) => {
+const DefaultStory = ({ content = '' }: SlideProps) => {
   return (
     <Container classNames='bg-neutral-200'>
       <Slide content={content} />
@@ -47,7 +47,7 @@ export const Ordered = {
 
 const meta: Meta<typeof Slide> = {
   title: 'plugins/plugin-presenter/Container',
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',

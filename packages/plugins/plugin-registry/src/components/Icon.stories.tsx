@@ -49,7 +49,7 @@ const createIcon = ({ name, weights }: StoryIconProps) => {
   return CustomIcon;
 };
 
-const Story = () => {
+const DefaultStory = () => {
   const CustomIcon = createIcon({
     name: 'GithubLogo',
     weights: {
@@ -98,7 +98,7 @@ export const Default = {};
 
 const meta: Meta = {
   title: 'plugins/plugin-registry/Icon',
-  render: Story,
+  render: DefaultStory,
   parameters: {
     layout: 'centered',
   },

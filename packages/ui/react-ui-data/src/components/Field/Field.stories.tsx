@@ -15,7 +15,7 @@ import { TestSchema, type TestType, testView } from '../../testing';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
 
-const Story = (args: FieldProps<typeof Field<TestType>>) => (
+const DefaultStory = (args: FieldProps<typeof Field<TestType>>) => (
   <TestPopup>
     <Field {...args} />
   </TestPopup>
@@ -31,7 +31,7 @@ export const Default: StoryObj<typeof Field<TestType>> = {
 const meta: Meta<typeof Field<TestType>> = {
   title: 'ui/react-ui-data/Field',
   component: Field,
-  render: Story as any,
+  render: DefaultStory as any,
   decorators: [withTheme],
   parameters: {
     layout: 'centered',

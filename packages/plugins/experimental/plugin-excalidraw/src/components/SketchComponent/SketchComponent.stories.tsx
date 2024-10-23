@@ -18,7 +18,7 @@ const createSketch = () => {
   return createObject(create(DiagramType, { canvas: createObject(create(CanvasType, { content: {} })) }));
 };
 
-const Story = () => {
+const DefaultStory = () => {
   const [sketch] = useState<DiagramType>(createSketch());
 
   return (
@@ -35,7 +35,7 @@ export const Default = {};
 const meta: Meta = {
   title: 'plugins/plugin-excalidraw/SketchComponent',
   component: SketchComponent,
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',

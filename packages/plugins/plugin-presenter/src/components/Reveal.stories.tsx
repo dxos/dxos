@@ -22,7 +22,7 @@ import { RevealPlayer } from './Reveal';
 // https://fontsource.org/fonts
 // https://fonts.google.com
 
-const Story = () => {
+const DefaultStory = () => {
   return <RevealPlayer content={CONTENT} />;
 };
 
@@ -30,7 +30,7 @@ export const Default = {};
 
 const meta: Meta = {
   title: 'plugins/plugin-presenter/Reveal',
-  render: Story,
+  render: DefaultStory,
 };
 
 export default meta;

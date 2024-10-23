@@ -16,7 +16,9 @@ export const Default = (props: any) => {
 const meta: Meta<typeof HaloButton> = {
   title: 'plugins/plugin-navtree/HaloButton',
   component: HaloButton,
-  // actions: { argTypesRegex: '^on.*' },
+  parameters: {
+    actions: { argTypesRegex: '^on.*' },
+  },
 };
 
 export default meta;

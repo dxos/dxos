@@ -130,6 +130,14 @@ const StorybookStack = () => {
   );
 };
 
+type Story = StoryObj<typeof StorybookStack>;
+
+export const Default: Story = {
+  args: {
+    orientation: 'horizontal',
+  },
+};
+
 const meta: Meta<typeof StorybookStack> = {
   title: 'ui/react-ui-stack-next/Stack',
   component: StorybookStack,
@@ -138,9 +146,3 @@ const meta: Meta<typeof StorybookStack> = {
 };
 
 export default meta;
-
-type Story = StoryObj<typeof StorybookStack>;
-
-export const Default: Story = {
-  args: { orientation: 'horizontal' },
-};

@@ -31,7 +31,7 @@ const code = [
   '}',
 ].join('\n');
 
-const Story = () => {
+const DefaultStory = () => {
   const client = useClient();
   const spaces = useSpaces();
   console.log(spaces.length);
@@ -65,8 +65,8 @@ export const Default = {};
 const meta: Meta = {
   title: 'plugins/plugin-script/ScriptBlock',
   component: ScriptBlock,
+  render: DefaultStory,
   decorators: [withClientProvider({ createSpace: true }), withTheme, withLayout({ fullscreen: true, tooltips: true })],
-  render: Story,
 };
 
 export default meta;

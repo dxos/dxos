@@ -4,7 +4,6 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
@@ -17,7 +16,7 @@ import { TreeItemType } from '../../types';
 
 faker.seed(100);
 
-const Story = ({
+const DefaultStory = ({
   isTasklist,
   count = 1,
   data,
@@ -99,7 +98,7 @@ export const Checkbox = {
 
 const meta = {
   title: 'plugins/plugin-outliner/Outliner',
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',

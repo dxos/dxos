@@ -15,7 +15,7 @@ import { testData, testView, TestSchema, type TestType } from '../../testing';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
 
-const Story = (props: FormProps) => (
+const DefaultStory = (props: FormProps) => (
   <TestPopup>
     <Form {...props} />
   </TestPopup>
@@ -45,10 +45,10 @@ export const Readonly: StoryObj<FormProps<TestType>> = {
   },
 };
 
-const meta: Meta<typeof Story> = {
+const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-data/Form',
   component: Form,
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],
   parameters: {
     layout: 'centered',

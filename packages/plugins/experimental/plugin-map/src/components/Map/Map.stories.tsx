@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Map } from './Map';
 
-const Story = () => {
+const DefaultStory = () => {
   return (
     <Map.Root>
       <Map.Canvas />
@@ -26,7 +26,7 @@ export const Default = {};
 const meta: Meta = {
   title: 'plugins/plugin-map/Map',
   component: Map.Root,
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 

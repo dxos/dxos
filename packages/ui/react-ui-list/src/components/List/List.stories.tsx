@@ -17,7 +17,7 @@ import { createList, TestItemSchema, type TestItemType } from '../../testing';
 // TODO(burdon): var-icon-size.
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2rem] rounded';
 
-const Story = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
+const DefaultStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
   const handleSelect = (item: TestItemType) => {
     console.log('select', item);
   };
@@ -87,7 +87,7 @@ const SimpleStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
 const list = create(createList(100));
 
 export const Default: StoryObj<ListRootProps<TestItemType>> = {
-  render: Story,
+  render: DefaultStory,
   args: {
     items: list.items,
     isItem: S.is(TestItemSchema),

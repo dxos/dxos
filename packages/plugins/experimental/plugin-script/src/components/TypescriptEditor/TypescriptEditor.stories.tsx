@@ -23,7 +23,7 @@ import { templates } from '../../templates';
 // TODO(burdon): Effect schema.
 // TODO(burdon): react-buddy for storybook?
 
-const Story = () => {
+const DefaultStory = () => {
   const object = useMemo(() => createObject({ content: templates[0].source }), []);
   const initialValue = useMemo(() => object.content, [object]);
   const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
@@ -36,7 +36,7 @@ export const Default = {};
 const meta: Meta = {
   title: 'plugins/plugin-script/TypescriptEditor',
   component: TypescriptEditor,
-  render: Story,
+  render: DefaultStory,
 };
 
 export default meta;

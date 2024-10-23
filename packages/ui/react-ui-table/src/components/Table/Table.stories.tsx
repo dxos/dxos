@@ -410,7 +410,7 @@ type StoryProps = {
   insertionInterval: number;
 };
 
-const Story = ({
+const DefaultStory = ({
   periodicMutations,
   mutationInterval,
   periodicDeletions,
@@ -493,7 +493,9 @@ const Story = ({
   );
 };
 
+// TODO(burdon): Use StoryObj.
 export const RealTimeUpdates = {
+  render: DefaultStory,
   argTypes: {
     periodicMutations: { control: 'boolean' },
     mutationInterval: { control: 'number' },
@@ -511,5 +513,4 @@ export const RealTimeUpdates = {
     insertionInterval: 3000,
   } satisfies StoryProps,
   decorators: [withSignals],
-  render: Story,
 };

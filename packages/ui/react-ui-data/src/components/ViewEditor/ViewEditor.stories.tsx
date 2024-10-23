@@ -17,7 +17,7 @@ import { testView } from '../../testing';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
 
-const Story = (props: ViewEditorProps) => {
+const DefaultStory = (props: ViewEditorProps) => {
   const resolver = useSchemaResolver();
   return (
     <TestPopup>
@@ -46,7 +46,7 @@ export const Empty: StoryObj<typeof ViewEditor> = {
 const meta: Meta<typeof ViewEditor> = {
   title: 'ui/react-ui-data/ViewEditor',
   component: ViewEditor,
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme, withSignals, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],
   parameters: {
     translations,

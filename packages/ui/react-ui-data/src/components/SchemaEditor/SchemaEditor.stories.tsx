@@ -16,7 +16,7 @@ import { TestPopup } from '../testing';
 
 // TODO(burdon): Hierarchical schema editor.
 
-const Story = (props: SchemaEditorProps) => (
+const DefaultStory = (props: SchemaEditorProps) => (
   <TestPopup>
     <SchemaEditor {...props} />
   </TestPopup>
@@ -31,7 +31,7 @@ export const Default: StoryObj<SchemaEditorProps> = {
 const meta: Meta<typeof SchemaEditor> = {
   title: 'ui/react-ui-data/SchemaEditor',
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],
-  render: Story,
+  render: DefaultStory,
   parameters: {
     layout: 'centered',
     translations,

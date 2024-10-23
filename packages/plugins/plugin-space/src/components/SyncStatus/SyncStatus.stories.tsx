@@ -14,7 +14,7 @@ import { SyncStatusDetail, SyncStatusIndicator } from './SyncStatus';
 import { getSyncSummary, type SpaceSyncStateMap } from './types';
 import translations from '../../translations';
 
-const Story = (props: any) => {
+const DefaultStory = (props: any) => {
   return (
     <div className='flex flex-col-reverse p-4 '>
       <SyncStatusIndicator {...props} />
@@ -56,10 +56,10 @@ export const Detail = {
 
 const meta: Meta = {
   title: 'plugins/plugin-space/SyncStatusIndicator',
-  decorators: [withTheme, withLayout({ fullscreen: true })],
   component: SyncStatusIndicator,
+  render: DefaultStory,
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { translations },
-  render: Story,
 };
 
 export default meta;

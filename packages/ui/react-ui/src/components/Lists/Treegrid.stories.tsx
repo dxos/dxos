@@ -120,7 +120,7 @@ function* visitor(node: StorybookNode, isOpen?: (node: StorybookNode) => boolean
 
 const flattenedContent = Array.from(visitor(content, () => true));
 
-const Story = () => {
+const DefaultStory = () => {
   return (
     <Tg.Root gridTemplateColumns='1fr'>
       {flattenedContent.map(({ node, parentOf, path }) => {
@@ -141,11 +141,11 @@ const Story = () => {
   );
 };
 
+export const Default = {};
+
 export default {
   title: 'ui/react-ui/Treegrid',
   component: Tg.Root,
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme],
 };
-
-export const Default = {};

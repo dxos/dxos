@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 
 import { PageNumber, Pager, type PagerProps, StartButton } from './Pager';
 
-const Story = ({ count = 20 }: PagerProps) => {
+const DefaultStory = ({ count = 20 }: PagerProps) => {
   const [index, setIndex] = useState(0);
   const [running, setRunning] = useState(false);
 
@@ -26,7 +26,7 @@ export const Default = {};
 
 const meta: Meta<PagerProps> = {
   title: 'plugins/plugin-presenter/Pager',
-  render: Story,
+  render: DefaultStory,
   parameters: {
     layout: 'centered',
   },

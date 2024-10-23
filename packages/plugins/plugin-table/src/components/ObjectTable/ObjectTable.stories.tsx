@@ -16,7 +16,7 @@ import { TableType } from '../../types';
 import { Toolbar } from '../Toolbar';
 import { createEmptyTable } from '../testing';
 
-const Story = (args: ObjectTableProps) => {
+const DefaultStory = (args: ObjectTableProps) => {
   const spaces = useSpaces();
   const [table, setTable] = useState<TableType | undefined>();
   const objects = useQuery(spaces[spaces.length - 1], Filter.schema(TableType));
@@ -69,7 +69,7 @@ export const Default = {};
 const meta: Meta<typeof ObjectTable> = {
   title: 'plugins/plugin-table/ObjectTable/next',
   component: ObjectTable,
-  render: Story as any,
+  render: DefaultStory as any,
   decorators: [
     withClientProvider({
       types: [TableType],

@@ -25,7 +25,7 @@ type StoryProps = {
   text?: string;
 };
 
-const Story = ({ text }: StoryProps) => {
+const DefaultStory = ({ text }: StoryProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
@@ -88,8 +88,8 @@ export const Error = {
 
 const meta: Meta = {
   title: 'plugins/plugin-mermaid/extensions',
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
-  render: Story,
 };
 
 export default meta;

@@ -24,7 +24,7 @@ const icons = [
   'ph--github-logo--regular',
 ];
 
-const Story = () => {
+const DefaultStory = () => {
   const [plugins] = useState<PluginMeta[]>(
     faker.helpers.multiple(
       () => ({
@@ -57,7 +57,7 @@ export const Default = {};
 const meta: Meta = {
   title: 'plugins/plugin-registry/PluginList',
   component: PluginList,
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: {
     layout: 'centered',

@@ -20,7 +20,7 @@ type StoryProps = {
   rows?: number;
 } & Pick<SimulatorProps, 'insertInterval' | 'updateInterval'>;
 
-const Story = (props: StoryProps) => {
+const DefaultStory = (props: StoryProps) => {
   const getDefaultRows = useCallback(() => 10, []);
   const rows = useDefaultValue(props.rows, getDefaultRows);
   const table = useMemo(() => createTable(), []);
@@ -54,7 +54,7 @@ export const Mutations: StoryObj<StoryProps> = {
 const meta: Meta = {
   title: 'plugins/plugin-table/Table',
   component: Table,
-  render: Story,
+  render: DefaultStory,
   decorators: [withSignals, withTheme, withLayout({ fullscreen: true })],
 };
 

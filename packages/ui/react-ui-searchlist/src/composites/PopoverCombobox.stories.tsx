@@ -15,7 +15,7 @@ faker.seed(1234);
 
 const storybookItems = faker.helpers.uniqueArray(faker.commerce.productName, 16);
 
-const Story = () => {
+const DefaultStory = () => {
   return (
     <PopoverCombobox.Root placeholder='Nothing selected'>
       <PopoverCombobox.Trigger />
@@ -35,8 +35,8 @@ const Story = () => {
 export default {
   title: 'ui/react-ui-searchlist/PopoverCombobox',
   component: PopoverCombobox,
+  render: DefaultStory,
   decorators: [withTheme],
-  render: Story,
 };
 
 export const Default = {

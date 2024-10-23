@@ -27,7 +27,7 @@ const template = [
   '{input}',
 ].join('\n');
 
-const Story = () => {
+const DefaultStory = () => {
   const client = useClient();
   const [chain] = useState(() => {
     const space = client.spaces.default;
@@ -51,7 +51,7 @@ export const Default = {};
 
 const meta: Meta = {
   title: 'plugins/plugin-chain/PromptTemplate',
-  render: Story,
+  render: DefaultStory,
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [ChainType, ChainPromptType] }),
     withTheme,

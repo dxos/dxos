@@ -13,7 +13,7 @@ import { ColumnSettings, type ColumnSettingsProps } from './ColumnSettings';
 import { type TableDef } from '../../schema';
 import translations from '../../translations';
 
-const Story = (props: ColumnSettingsProps) => (
+const DefaultStory = (props: ColumnSettingsProps) => (
   <div className='flex w-[240px] m-2 p-2 border border-separator rounded'>
     <ColumnSettings {...props} />
   </div>
@@ -22,11 +22,11 @@ const Story = (props: ColumnSettingsProps) => (
 export default {
   title: 'ui/react-ui-table/ColumnSettings',
   component: ColumnSettings,
+  render: DefaultStory,
   decorators: [withTheme, withLayout()],
   parameters: {
     translations,
   },
-  render: Story,
 };
 
 const sampleTableDef: TableDef = {

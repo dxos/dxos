@@ -41,7 +41,7 @@ type EditorProps = {
 
 const SHEET_NAME = 'Test Sheet';
 
-const Editor = ({ text }: EditorProps) => {
+const EditorStory = ({ text }: EditorProps) => {
   const id = useMemo(() => PublicKey.random(), []);
   const { themeMode } = useThemeContext();
   const space = useSpace();
@@ -89,10 +89,10 @@ const Grid = () => {
   );
 };
 
-const Story = (props: EditorProps) => {
+const GraphStory = (props: EditorProps) => {
   return (
     <div className='grid grid-rows-2'>
-      <Editor {...props} />
+      <EditorStory {...props} />
       <Grid />
     </div>
   );
@@ -100,7 +100,7 @@ const Story = (props: EditorProps) => {
 
 // TODO(burdon): Inline formulae.
 export const Default = {
-  render: Editor,
+  render: EditorStory,
   args: {
     text: str(
       //
@@ -124,7 +124,7 @@ export const Default = {
 };
 
 export const Graph = {
-  render: Story,
+  render: GraphStory,
   args: {
     text: str(
       //

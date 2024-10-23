@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type Decorator, type StoryFn } from '@storybook/react';
-import React, { type FC, useState } from 'react';
+import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -20,7 +20,7 @@ type StoryProps = SearchbarProps & {
   objects?: any[];
 };
 
-const Story = ({ objects, ...props }: StoryProps) => {
+const DefaultStory = ({ objects, ...props }: StoryProps) => {
   const [selected, setSelected] = useState<string>();
   const { setMatch } = useGlobalSearch();
   const filteredItems = useGlobalSearchResults(objects);
@@ -56,7 +56,7 @@ export const Default = {
 const meta: Meta<typeof Searchbar> = {
   title: 'plugins/plugin-search/Search',
   component: Searchbar,
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true }), SearchContextDecorator()],
   parameters: {
     layout: 'fullscreen',

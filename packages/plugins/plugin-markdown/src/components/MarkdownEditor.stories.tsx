@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { useMemo, type FC } from 'react';
+import React, { useMemo } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
@@ -24,7 +24,7 @@ type StoryProps = MarkdownEditorProps & {
   toolbar?: boolean;
 };
 
-const Story = ({ content = '# Test', toolbar }: StoryProps) => {
+const DefaultStory = ({ content = '# Test', toolbar }: StoryProps) => {
   const doc = useMemo(() => createObject({ content }), [content]);
   const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
 
@@ -55,7 +55,7 @@ export const WithToolbar = {
 const meta: Meta<typeof MarkdownEditor> = {
   title: 'plugins/plugin-markdown/EditorMain',
   component: MarkdownEditor,
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ tooltips: true })],
   parameters: { layout: 'fullscreen' },
 };

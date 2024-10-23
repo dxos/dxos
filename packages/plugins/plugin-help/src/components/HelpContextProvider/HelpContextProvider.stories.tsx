@@ -57,7 +57,7 @@ const App = () => {
   );
 };
 
-const Story = ({ steps = [] }: HelpContextProviderProps) => (
+const DefaultStory = ({ steps = [] }: HelpContextProviderProps) => (
   <HelpContextProvider steps={steps}>
     <div className='fixed inset-0 overflow-hidden'>
       <App />
@@ -106,7 +106,7 @@ export const Default: StoryObj<typeof HelpContextProvider> = {
 const meta: Meta<typeof HelpContextProvider> = {
   title: 'plugins/plugin-help/Joyride',
   component: HelpContextProvider,
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme],
 };
 

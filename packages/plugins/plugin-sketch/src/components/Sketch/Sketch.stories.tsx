@@ -27,7 +27,7 @@ const createSketch = (content: SerializedStore<TLRecord> = {}): DiagramType => {
   );
 };
 
-const Story = () => {
+const DefaultStory = () => {
   const [sketch, setSketch] = useState<DiagramType>(createSketch(data.v2));
 
   const handleClear = () => {
@@ -71,7 +71,7 @@ export const Default = {};
 const meta: Meta<typeof Sketch> = {
   title: 'plugins/plugin-sketch/Sketch',
   component: Sketch,
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',

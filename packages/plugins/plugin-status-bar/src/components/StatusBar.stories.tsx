@@ -12,7 +12,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { StatusBar } from './StatusBar';
 
-export const Story = () => (
+export const DefaultStory = () => (
   <StatusBar.Container>
     <StatusBar.EndContent>
       <StatusBar.Button>
@@ -35,13 +35,15 @@ export const Story = () => (
 
 export const Default = {};
 
-const meta: Meta = {
+const meta: Meta<typeof StatusBar> = {
   title: 'plugins/plugin-status/StatusBar',
-  // component: StatusBar,
-  // actions: { argTypesRegex: '^on.*' },
+  component: StatusBar as any,
+  render: DefaultStory,
   decorators: [withTheme],
-  render: Story,
-  parameters: { chromatic: { disableSnapshot: false } },
+  parameters: {
+    chromatic: { disableSnapshot: false },
+    actions: { argTypesRegex: '^on.*' },
+  },
 };
 
 export default meta;
