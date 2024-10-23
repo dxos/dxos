@@ -33,12 +33,10 @@ export type TableProps = {
 // TODO(burdon): Move to react-ui-table?
 export const Table = ({ table, data, onDeleteRow }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
-  const { state: menuState, triggerRef, handleClick, close } = useTableMenuController();
 
   const handleOnCellUpdate = useCallback((cell: GridCell) => {
     gridRef.current?.updateIfWithinBounds(cell);
   }, []);
-
   const tableModel = useTableModel({ table, data, onCellUpdate: handleOnCellUpdate, onDeleteRow });
 
   const handleAxisResize = useCallback(
@@ -50,6 +48,8 @@ export const Table = ({ table, data, onDeleteRow }: TableProps) => {
     },
     [tableModel],
   );
+
+  const { state: menuState, triggerRef, handleClick, close } = useTableMenuController();
 
   return (
     <ModalPrimitive.Root>
