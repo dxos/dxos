@@ -5,6 +5,7 @@
 import '@dxos-theme';
 
 import { Plugs, PlugsConnected } from '@phosphor-icons/react';
+import { type StoryObj } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
@@ -493,17 +494,9 @@ const DefaultStory = ({
   );
 };
 
-// TODO(burdon): Use StoryObj.
-export const RealTimeUpdates = {
+export const RealTimeUpdates: StoryObj<StoryProps> = {
   render: DefaultStory,
-  argTypes: {
-    periodicMutations: { control: 'boolean' },
-    mutationInterval: { control: 'number' },
-    periodicDeletions: { control: 'boolean' },
-    deletionInterval: { control: 'number' },
-    periodicInsertions: { control: 'boolean' },
-    insertionInterval: { control: 'number' },
-  },
+  decorators: [withSignals],
   args: {
     periodicMutations: true,
     mutationInterval: 1000,
@@ -511,6 +504,5 @@ export const RealTimeUpdates = {
     deletionInterval: 5000,
     periodicInsertions: false,
     insertionInterval: 3000,
-  } satisfies StoryProps,
-  decorators: [withSignals],
+  },
 };
