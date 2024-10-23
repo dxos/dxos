@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef, type FocusEvent, type WheelEvent } from 'react';
+import React, { useCallback, useMemo, useRef, type FocusEvent, type WheelEvent, type KeyboardEvent } from 'react';
 
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -42,7 +42,7 @@ const sheetRowDefault = { frozenRowsStart: { size: 32, readonly: true }, grid: {
 const sheetColDefault = { frozenColsStart: { size: 48, readonly: true }, grid: { size: 180, resizeable: true } };
 
 export const GridSheet = () => {
-  const { id, model, editing, setEditing, setCursor, setRange } = useSheetContext();
+  const { id, model, editing, setEditing, setCursor, setRange, range } = useSheetContext();
   const dxGrid = useRef<DxGridElement | null>(null);
   const rangeNotifier = useRef<CellRangeNotifier>();
   const { hasAttention } = useAttention(id);
@@ -118,6 +118,20 @@ export const GridSheet = () => {
     [hasAttention],
   );
 
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      switch (event.key) {
+        case 'Backspace':
+        case 'Delete':
+          if (range) {
+            model.clear(range);
+          }
+          break;
+      }
+    },
+    [range, model],
+  );
+
   const { columns, rows } = useSheetModelDxGridProps(dxGrid, model);
 
   const extension = useMemo(
@@ -155,6 +169,7 @@ export const GridSheet = () => {
         frozen={frozen}
         onFocus={handleFocus}
         onWheelCapture={handleWheel}
+        onKeyDown={handleKeyDown}
         overscroll='inline'
         className='[--dx-grid-base:var(--surface-bg)]'
         ref={dxGrid}
