@@ -14,6 +14,17 @@ import { useComputeGraph } from '../../hooks';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { SheetType } from '../../types';
 
+export const Basic = () => {
+  const space = useSpace();
+  const graph = useComputeGraph(space);
+  const sheet = useTestSheet(space, graph, { cells: createTestCells() });
+  if (!sheet || !graph) {
+    return null;
+  }
+
+  return <SheetContainer graph={graph} sheet={sheet} role='article' />;
+};
+
 const meta: Meta = {
   title: 'plugins/plugin-sheet/SheetContainer',
   component: SheetContainer,
@@ -29,14 +40,4 @@ const meta: Meta = {
   ],
 };
 
-export const Basic = () => {
-  const space = useSpace();
-  const graph = useComputeGraph(space);
-  const sheet = useTestSheet(space, graph, { cells: createTestCells() });
-  if (!sheet || !graph) {
-    return null;
-  }
-
-  return <SheetContainer graph={graph} sheet={sheet} role='article' />;
-};
 export default meta;

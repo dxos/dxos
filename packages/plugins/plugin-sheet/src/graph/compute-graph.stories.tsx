@@ -81,6 +81,8 @@ const Story = () => {
   );
 };
 
+export const Default = {};
+
 const meta: Meta = {
   title: 'plugins/plugin-sheet/functions',
   decorators: [
@@ -91,5 +93,4 @@ const meta: Meta = {
   render: (args: any) => <Story {...args} />,
 };
 
-export const Default = {};
 export default meta;

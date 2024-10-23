@@ -36,7 +36,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'react-ui-thread/Message',
+  title: 'ui/react-ui-thread/Message',
   component: MessageRoot,
   render: Story,
   decorators: [withTheme, withLayout({ fullscreen: true })],

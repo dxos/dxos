@@ -11,6 +11,12 @@ import { withTheme } from '@dxos/storybook-utils';
 import { ShareSpaceButtonImpl } from './ShareSpaceButton';
 import translations from '../translations';
 
+export const Default = {
+  args: {
+    onClick: () => console.log('clicked'),
+  },
+};
+
 const meta: Meta = {
   title: 'plugins/plugin-space/ShareSpaceButton',
   component: ShareSpaceButtonImpl,
@@ -18,9 +24,4 @@ const meta: Meta = {
   parameters: { translations },
 };
 
-export const Default = {
-  args: {
-    onClick: () => console.log('clicked'),
-  },
-};
 export default meta;

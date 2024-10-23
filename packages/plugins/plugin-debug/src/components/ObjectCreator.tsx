@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { type EchoReactiveObject, type ReactiveObject, type Space } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
@@ -21,10 +21,12 @@ export type CreateObjectsParams = {
 
 const CREATE_OBJECTS_IN_ONE_CHUNK = 10;
 
-export const ObjectCreator: FC<{
+export type ObjectCreatorProps = {
   space: Space;
   onAddObjects?: (objects: ReactiveObject<any>[]) => void;
-}> = ({ space, onAddObjects }) => {
+};
+
+export const ObjectCreator = ({ space, onAddObjects }: ObjectCreatorProps) => {
   const generator = useMemo(() => createSpaceObjectGenerator(space), [space]);
 
   const [objectsToCreate, setObjectsToCreate] = useState<CreateObjectsParams[]>([

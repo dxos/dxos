@@ -13,7 +13,7 @@ import { TaskListExample } from '../examples';
 import { NetworkToggle } from '../template/src/components';
 
 export default {
-  title: 'examples/DXOS',
+  title: 'sdk/examples/DXOS',
   decorators: [withTheme],
 };
 

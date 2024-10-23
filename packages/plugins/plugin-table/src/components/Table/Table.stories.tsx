@@ -35,13 +35,6 @@ const Story = (props: StoryProps) => {
   );
 };
 
-const meta: Meta = {
-  title: 'plugins/plugin-table/Table',
-  component: Table,
-  render: Story,
-  decorators: [withSignals, withTheme, withLayout({ fullscreen: true })],
-};
-
 export const Default: StoryObj<StoryProps> = {};
 
 export const ManyItems: StoryObj<StoryProps> = {
@@ -57,4 +50,12 @@ export const Mutations: StoryObj<StoryProps> = {
     insertInterval: 100,
   },
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-table/Table',
+  component: Table,
+  render: Story,
+  decorators: [withSignals, withTheme, withLayout({ fullscreen: true })],
+};
+
 export default meta;

@@ -29,7 +29,7 @@ export const Default: StoryObj<SchemaEditorProps> = {
 };
 
 const meta: Meta<typeof SchemaEditor> = {
-  title: 'react-ui-data/SchemaEditor',
+  title: 'ui/react-ui-data/SchemaEditor',
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],
   render: Story,
   parameters: {

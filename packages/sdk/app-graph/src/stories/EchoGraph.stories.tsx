@@ -250,7 +250,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'app-graph/EchoGraph',
+  title: 'sdk/app-graph/EchoGraph',
   decorators: [
     withTheme,
     withClientProvider({

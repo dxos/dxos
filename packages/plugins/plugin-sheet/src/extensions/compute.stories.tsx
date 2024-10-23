@@ -98,17 +98,6 @@ const Story = (props: EditorProps) => {
   );
 };
 
-const meta: Meta = {
-  title: 'plugins/plugin-sheet/extensions',
-  decorators: [
-    withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
-    withComputeGraphDecorator(),
-    withTheme,
-    withLayout({ fullscreen: true, classNames: 'justify-center' }),
-  ],
-  parameters: { layout: 'fullscreen' },
-};
-
 // TODO(burdon): Inline formulae.
 export const Default = {
   render: Editor,
@@ -151,4 +140,16 @@ export const Graph = {
     ),
   },
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-sheet/extensions',
+  decorators: [
+    withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
+    withComputeGraphDecorator(),
+    withTheme,
+    withLayout({ fullscreen: true, classNames: 'justify-center' }),
+  ],
+  parameters: { layout: 'fullscreen' },
+};
+
 export default meta;

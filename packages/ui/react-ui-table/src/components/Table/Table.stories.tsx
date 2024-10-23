@@ -127,7 +127,7 @@ const MinimalTable = (props: any) => {
 };
 
 export default {
-  title: 'react-ui-table/Table',
+  title: 'ui/react-ui-table/Table',
   component: MinimalTable,
   args: {
     header: true,

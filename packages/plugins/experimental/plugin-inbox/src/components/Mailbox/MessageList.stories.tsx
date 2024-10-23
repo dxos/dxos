@@ -32,6 +32,8 @@ const Story = () => {
   );
 };
 
+export const Default = {};
+
 const meta: Meta = {
   title: 'plugins/plugin-inbox/MessageList',
   component: MessageList,
@@ -39,5 +41,4 @@ const meta: Meta = {
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
-export const Default = {};
 export default meta;

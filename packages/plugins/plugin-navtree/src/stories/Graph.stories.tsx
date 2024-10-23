@@ -133,12 +133,6 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
   );
 };
 
-const meta: Meta = {
-  title: 'plugins/react-ui-navtree/Graph',
-  component: NavTree,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
-};
-
 export const Default = {
   render: ({ debug }: { debug?: boolean }) => (
     <Mosaic.Root debug={debug}>
@@ -147,4 +141,11 @@ export const Default = {
     </Mosaic.Root>
   ),
 };
+
+const meta: Meta = {
+  title: 'plugins/react-ui-navtree/Graph',
+  component: NavTree,
+  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+};
+
 export default meta;

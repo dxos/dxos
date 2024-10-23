@@ -32,7 +32,7 @@ const Story = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
 };
 
 export default {
-  title: 'react-ui/Button',
+  title: 'ui/react-ui/Button',
   component: Button,
   decorators: [withVariants(), withTheme],
   render: Story,

@@ -44,7 +44,7 @@ export const Empty: StoryObj<typeof ViewEditor> = {
 };
 
 const meta: Meta<typeof ViewEditor> = {
-  title: 'react-ui-data/ViewEditor',
+  title: 'ui/react-ui-data/ViewEditor',
   component: ViewEditor,
   render: Story,
   decorators: [withTheme, withSignals, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],

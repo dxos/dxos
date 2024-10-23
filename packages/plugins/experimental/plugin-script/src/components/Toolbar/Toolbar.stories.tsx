@@ -11,12 +11,6 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Toolbar } from './Toolbar';
 import { templates } from '../../templates';
 
-const meta: Meta = {
-  title: 'plugins/plugin-script/Toolbar',
-  component: Toolbar,
-  decorators: [withTheme, withLayout({ tooltips: true })],
-};
-
 export const Default = {
   args: {
     binding: 'example',
@@ -26,4 +20,11 @@ export const Default = {
     onTogglePanel: () => {},
   },
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-script/Toolbar',
+  component: Toolbar,
+  decorators: [withTheme, withLayout({ tooltips: true })],
+};
+
 export default meta;

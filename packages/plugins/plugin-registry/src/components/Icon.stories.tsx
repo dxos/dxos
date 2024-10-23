@@ -94,6 +94,8 @@ const Story = () => {
   );
 };
 
+export const Default = {};
+
 const meta: Meta = {
   title: 'plugins/plugin-registry/Icon',
   render: Story,
@@ -102,5 +104,4 @@ const meta: Meta = {
   },
 };
 
-export const Default = {};
 export default meta;

@@ -21,14 +21,16 @@ import { RevealPlayer } from './Reveal';
 // https://colorhunt.co/palette/27374d526d829db2bfdde6ed
 // https://fontsource.org/fonts
 // https://fonts.google.com
+
 const Story = () => {
   return <RevealPlayer content={CONTENT} />;
 };
+
+export const Default = {};
 
 const meta: Meta = {
   title: 'plugins/plugin-presenter/Reveal',
   render: Story,
 };
 
-export const Default = {};
 export default meta;

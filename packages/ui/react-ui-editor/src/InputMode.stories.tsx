@@ -97,7 +97,7 @@ const EditorInputModeToolbar = ({
 };
 
 export default {
-  title: 'react-ui-editor/InputMode',
+  title: 'ui/react-ui-editor/InputMode',
   decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
   parameters: { translations, layout: 'fullscreen' },
   render: Story,

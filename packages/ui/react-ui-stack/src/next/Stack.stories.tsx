@@ -131,7 +131,7 @@ const StorybookStack = () => {
 };
 
 const meta: Meta<typeof StorybookStack> = {
-  title: 'react-ui-stack-next/Stack',
+  title: 'ui/react-ui-stack-next/Stack',
   component: StorybookStack,
   decorators: [withTheme],
   argTypes: { orientation: { control: 'radio', options: ['horizontal', 'vertical'] } },

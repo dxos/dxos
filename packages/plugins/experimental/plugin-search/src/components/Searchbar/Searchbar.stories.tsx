@@ -8,17 +8,17 @@ import { type Meta } from '@storybook/react';
 
 import { Searchbar, type SearchbarProps } from './Searchbar';
 
-export const Default = {
-  args: {
-    placeholder: 'Search...',
-  },
-};
-
 const meta: Meta<SearchbarProps> = {
   title: 'plugins/plugin-search/Searchbar',
   component: Searchbar,
   parameters: {
     layout: 'centered',
+  },
+};
+
+export const Default = {
+  args: {
+    placeholder: 'Search...',
   },
 };
 

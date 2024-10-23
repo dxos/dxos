@@ -51,6 +51,8 @@ const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
   );
 };
 
+export const Default = {};
+
 const meta: Meta = {
   title: 'plugins/plugin-thread/Comments',
   // TODO(wittjosiah): Register schemas.
@@ -59,5 +61,4 @@ const meta: Meta = {
   parameters: { translations },
 };
 
-export const Default = {};
 export default meta;

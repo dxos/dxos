@@ -38,6 +38,8 @@ const Story = () => {
   return <TableSettings table={table} schemas={schemas} />;
 };
 
+export const Default = {};
+
 const meta: Meta = {
   title: 'plugins/plugin-table/TableSettings',
   component: TableSettings,
@@ -45,5 +47,4 @@ const meta: Meta = {
   render: () => <ClientRepeater component={Story} types={[TableType]} createSpace />,
 };
 
-export const Default = {};
 export default meta;

@@ -68,7 +68,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'keyboard/Keyboard',
+  title: 'common/keyboard/Keyboard',
   decorators: [withTheme],
   render: Story,
 };

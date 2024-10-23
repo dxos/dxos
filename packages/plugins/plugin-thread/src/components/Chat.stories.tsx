@@ -65,6 +65,8 @@ const Story = () => {
   );
 };
 
+export const Default = {};
+
 const meta: Meta = {
   title: 'plugins/plugin-thread/Chat',
   component: Thread,
@@ -74,5 +76,4 @@ const meta: Meta = {
   parameters: { translations },
 };
 
-export const Default = {};
 export default meta;

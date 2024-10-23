@@ -45,13 +45,6 @@ const Story = () => {
   );
 };
 
-const meta: Meta = {
-  title: 'plugins/plugin-table/ObjectTable',
-  component: ObjectTable,
-  // render: () => <div>s</div>,
-  render: () => <Story />,
-};
-
 const clientProps: WithClientProviderProps = {
   types: [TableType],
   createIdentity: true,
@@ -73,4 +66,12 @@ export const Multiple = {
     withLayout({ fullscreen: true, classNames: 'grid grid-cols-3' }),
   ],
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-table/ObjectTable',
+  component: ObjectTable,
+  // render: () => <div>s</div>,
+  render: () => <Story />,
+};
+
 export default meta;

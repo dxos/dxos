@@ -37,6 +37,8 @@ const Story = () => {
   );
 };
 
+export const Default = {};
+
 const meta: Meta = {
   title: 'plugins/plugin-sheet/hooks',
   component: ComputeGraphContextProvider,
@@ -48,5 +50,4 @@ const meta: Meta = {
   render: (args: any) => <Story {...args} />,
 };
 
-export const Default = {};
 export default meta;

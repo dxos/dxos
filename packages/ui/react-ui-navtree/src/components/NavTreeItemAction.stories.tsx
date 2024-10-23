@@ -14,7 +14,7 @@ import { NavTreeItemAction, NavTreeItemActionSearchList } from './NavTreeItemAct
 import { type NavTreeActionNode } from '../types';
 
 const meta: Meta = {
-  title: 'react-ui-navtree/NavTreeItemAction',
+  title: 'ui/react-ui-navtree/NavTreeItemAction',
   component: NavTreeItemAction,
   decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
 };

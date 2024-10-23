@@ -51,9 +51,10 @@ const TriggerEditorStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
   );
 };
 
+export const Default = {};
+
 const meta: Meta = {
   title: 'plugins/plugin-function/TriggerEditor',
-
   render: () => (
     <ClientRepeater
       component={TriggerEditorStory}
@@ -70,5 +71,4 @@ const meta: Meta = {
   decorators: [withTheme],
 };
 
-export const Default = {};
 export default meta;

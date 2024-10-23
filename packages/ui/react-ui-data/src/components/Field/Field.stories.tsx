@@ -29,7 +29,7 @@ export const Default: StoryObj<typeof Field<TestType>> = {
 };
 
 const meta: Meta<typeof Field<TestType>> = {
-  title: 'react-ui-data/Field',
+  title: 'ui/react-ui-data/Field',
   component: Field,
   render: Story as any,
   decorators: [withTheme],

@@ -80,7 +80,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'react-ui-thread/Thread',
+  title: 'ui/react-ui-thread/Thread',
   component: Thread,
   render: Story,
   decorators: [withTheme, withLayout({ fullscreen: true })],

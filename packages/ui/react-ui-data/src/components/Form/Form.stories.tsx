@@ -46,7 +46,7 @@ export const Readonly: StoryObj<FormProps<TestType>> = {
 };
 
 const meta: Meta<typeof Story> = {
-  title: 'react-ui-data/Form',
+  title: 'ui/react-ui-data/Form',
   component: Form,
   render: Story,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],

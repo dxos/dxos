@@ -20,7 +20,7 @@ const Story = (props: ColumnSettingsProps) => (
 );
 
 export default {
-  title: 'react-ui-table/ColumnSettings',
+  title: 'ui/react-ui-table/ColumnSettings',
   component: ColumnSettings,
   decorators: [withTheme, withLayout()],
   parameters: {

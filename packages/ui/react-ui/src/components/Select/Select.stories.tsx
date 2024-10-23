@@ -42,7 +42,7 @@ const Story = ({ items = [] }: StoryProps) => {
 };
 
 export default {
-  title: 'react-ui/Select',
+  title: 'ui/react-ui/Select',
   render: Story,
   decorators: [withVariants(), withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

@@ -22,14 +22,6 @@ const Story = (props: any) => {
   );
 };
 
-const meta: Meta = {
-  title: 'plugins/plugin-space/SyncStatusIndicator',
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  component: SyncStatusIndicator,
-  parameters: { translations },
-  render: Story,
-};
-
 const random = ({ min, max }: { min: number; max: number }) => min + Math.floor(Math.random() * (max - min));
 
 const state: SpaceSyncStateMap = Array.from({ length: 5 }).reduce<SpaceSyncStateMap>((map) => {
@@ -61,4 +53,13 @@ export const Detail = {
     classNames: 'm-2 w-[200px] border border-separator rounded-md',
   },
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-space/SyncStatusIndicator',
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+  component: SyncStatusIndicator,
+  parameters: { translations },
+  render: Story,
+};
+
 export default meta;

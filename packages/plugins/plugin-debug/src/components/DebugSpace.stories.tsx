@@ -29,6 +29,8 @@ const Story = () => {
   return <DebugSpace space={space} />;
 };
 
+export const Default = {};
+
 const meta: Meta = {
   title: 'plugins/plugin-debug/DebugSpace',
   component: DebugSpace,
@@ -38,5 +40,4 @@ const meta: Meta = {
   },
 };
 
-export const Default = {};
 export default meta;

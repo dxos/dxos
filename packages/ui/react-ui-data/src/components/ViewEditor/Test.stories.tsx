@@ -37,7 +37,7 @@ export const Primary: StoryObj<TestProps> = {
 };
 
 const meta: Meta = {
-  title: 'react-ui-data/Test',
+  title: 'ui/react-ui-data/Test',
   component: Test,
   decorators: [withTheme],
 };

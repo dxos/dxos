@@ -16,12 +16,6 @@ import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes, visi
 
 faker.seed(1234);
 
-const meta: Meta = {
-  title: 'plugins/plugin-navtree/Tree',
-  component: Tree,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: modalSurface })],
-};
-
 /**
  * Space:
  * - Space panels are separated from each other to give them more weight than folders.
@@ -228,4 +222,11 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
     </div>
   );
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-navtree/Tree',
+  component: Tree,
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: modalSurface })],
+};
+
 export default meta;

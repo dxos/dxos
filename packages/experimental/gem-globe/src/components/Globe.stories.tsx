@@ -312,6 +312,6 @@ export const Globe6 = () => {
 };
 
 export default {
-  title: 'gem-globe/Globe',
+  title: 'experimental/gem-globe/Globe',
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#000]' })],
 };

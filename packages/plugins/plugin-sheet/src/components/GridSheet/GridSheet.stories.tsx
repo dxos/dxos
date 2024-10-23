@@ -15,17 +15,6 @@ import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../
 import { SheetType } from '../../types';
 import { SheetProvider } from '../SheetContext';
 
-const meta: Meta = {
-  title: 'plugins/plugin-sheet/GridSheet',
-  component: GridSheet,
-  decorators: [
-    withClientProvider({ types: [SheetType], createSpace: true }),
-    withComputeGraphDecorator(),
-    withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
-  ],
-};
-
 export const Basic = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
@@ -40,4 +29,16 @@ export const Basic = () => {
     </SheetProvider>
   );
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-sheet/GridSheet',
+  component: GridSheet,
+  decorators: [
+    withClientProvider({ types: [SheetType], createSpace: true }),
+    withComputeGraphDecorator(),
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true }),
+  ],
+};
+
 export default meta;

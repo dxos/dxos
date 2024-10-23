@@ -82,7 +82,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'react-ui/Playground/Controls',
+  title: 'ui/react-ui/Playground/Controls',
   render: Story,
   decorators: [withVariants(), withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

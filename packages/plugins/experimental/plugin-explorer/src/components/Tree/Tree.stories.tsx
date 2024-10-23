@@ -69,16 +69,6 @@ const Story: FC<ClientRepeatedComponentProps & { type?: TreeComponentProps<any>[
   return <Tree space={space} selected={object?.id} variant={type} />;
 };
 
-const meta: Meta = {
-  title: 'plugins/plugin-explorer/Tree',
-  component: Tree,
-  render: () => <ClientRepeater component={Story} types={[TreeType, TreeItemType]} createSpace />,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: {
-    layout: 'fullscreen',
-  },
-};
-
 export const Tidy = {
   args: {
     type: 'tidy',
@@ -96,4 +86,15 @@ export const Edge = {
     type: 'edge',
   },
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-explorer/Tree',
+  component: Tree,
+  render: () => <ClientRepeater component={Story} types={[TreeType, TreeItemType]} createSpace />,
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+};
+
 export default meta;

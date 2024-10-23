@@ -22,6 +22,8 @@ const Story = ({ count = 20 }: PagerProps) => {
   );
 };
 
+export const Default = {};
+
 const meta: Meta<PagerProps> = {
   title: 'plugins/plugin-presenter/Pager',
   render: Story,
@@ -30,5 +32,4 @@ const meta: Meta<PagerProps> = {
   },
 };
 
-export const Default = {};
 export default meta;

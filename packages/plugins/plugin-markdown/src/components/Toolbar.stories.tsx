@@ -92,14 +92,6 @@ const Story: FC<{ content: string }> = ({ content }) => {
   );
 };
 
-const meta: Meta = {
-  title: 'plugins/react-ui-editor/Toolbar',
-  component: Toolbar,
-  decorators: [withTheme, withLayout({ tooltips: true })],
-  parameters: { translations, layout: 'fullscreen' },
-  render: (args: any) => <Story {...args} />,
-} as any;
-
 const content = [
   '# Demo',
   '',
@@ -115,4 +107,13 @@ export const Default = {
     content,
   },
 };
+
+const meta: Meta = {
+  title: 'plugins/react-ui-editor/Toolbar',
+  component: Toolbar,
+  decorators: [withTheme, withLayout({ tooltips: true })],
+  parameters: { translations, layout: 'fullscreen' },
+  render: (args: any) => <Story {...args} />,
+} as any;
+
 export default meta;

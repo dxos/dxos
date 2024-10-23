@@ -333,7 +333,7 @@ const Story = ({
 };
 
 export default {
-  title: 'react-ui-editor/TextEditor',
+  title: 'ui/react-ui-editor/TextEditor',
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: Story,
   parameters: { translations, layout: 'fullscreen' },

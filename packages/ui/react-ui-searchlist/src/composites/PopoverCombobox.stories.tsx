@@ -33,7 +33,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'react-ui-searchlist/PopoverCombobox',
+  title: 'ui/react-ui-searchlist/PopoverCombobox',
   component: PopoverCombobox,
   decorators: [withTheme],
   render: Story,

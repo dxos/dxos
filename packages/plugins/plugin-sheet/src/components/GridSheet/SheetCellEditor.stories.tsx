@@ -19,13 +19,6 @@ import { sheetExtension } from '../../extensions';
 import { defaultFunctions } from '../../graph';
 import { SheetType } from '../../types';
 
-const meta: Meta = {
-  title: 'plugins/plugin-sheet/CellEditor',
-  component: CellEditor,
-  render: (args: StoryProps) => <Story {...args} />,
-  decorators: [withTheme],
-};
-
 type StoryProps = CellEditorProps;
 
 const Story = ({ value, ...props }: StoryProps) => {
@@ -90,4 +83,12 @@ export const Automerge = {
     value: '=SUM(A1:A2, 100, TRUE, "100", SUM(A1:A2, B1:B2))',
   },
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-sheet/CellEditor',
+  component: CellEditor,
+  render: (args: StoryProps) => <Story {...args} />,
+  decorators: [withTheme],
+};
+
 export default meta;

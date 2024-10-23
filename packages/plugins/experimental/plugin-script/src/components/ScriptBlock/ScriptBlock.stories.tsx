@@ -60,6 +60,8 @@ const Story = () => {
   return <ScriptBlock script={object} containerUrl={mainUrl} />;
 };
 
+export const Default = {};
+
 const meta: Meta = {
   title: 'plugins/plugin-script/ScriptBlock',
   component: ScriptBlock,
@@ -67,5 +69,4 @@ const meta: Meta = {
   render: Story,
 };
 
-export const Default = {};
 export default meta;

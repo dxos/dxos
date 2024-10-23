@@ -31,11 +31,12 @@ const Story = () => {
   return <TypescriptEditor id='test' initialValue={initialValue} extensions={extensions} />;
 };
 
+export const Default = {};
+
 const meta: Meta = {
   title: 'plugins/plugin-script/TypescriptEditor',
   component: TypescriptEditor,
   render: Story,
 };
 
-export const Default = {};
 export default meta;
