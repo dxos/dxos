@@ -44,7 +44,6 @@ export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =
  * @internal
  */
 // TODO(burdon): Document lifecycle.
-// TODO(burdon): Remove from public API.
 export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
   invariant(!isEchoObject(props));
   const schema = getSchema(props);
