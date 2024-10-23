@@ -2,6 +2,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@dxos/devtools": [
+        "packages/devtools/devtools/src/index.ts"
+      ],
       "@dxos/plugin-chain": [
         "packages/plugins/experimental/plugin-chain/src/index.ts"
       ],
