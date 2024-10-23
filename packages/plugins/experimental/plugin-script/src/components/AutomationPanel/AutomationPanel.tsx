@@ -1,9 +1,15 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import React, { useMemo, useState } from 'react';
+
 import type { EchoReactiveObject } from '@dxos/client/echo';
 import { failUndefined } from '@dxos/debug';
 import { useClient } from '@dxos/react-client';
 import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Select } from '@dxos/react-ui';
-import React, { useMemo, useState } from 'react';
+
 import { getInvocationUrl, getUserFunctionUrlInMetadata } from '../../edge';
 import { FunctionType, ScriptType } from '../../types';
 import { DebugPanel } from '../DebugPanel';

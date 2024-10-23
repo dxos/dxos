@@ -9,12 +9,12 @@ import { type Config } from '@dxos/client';
 import { type Halo } from '@dxos/client-protocol';
 import { type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { codec } from './codec';
 import { matchServiceCredential } from './hub-protocol';
-import type { SpaceId } from '@dxos/keys';
 
 // TODO: use URL scheme for source?
 const USERFUNCTIONS_META_KEY = 'dxos.org/service/function';
