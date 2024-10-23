@@ -112,6 +112,7 @@ export class TableModel extends Resource {
             value: field.label ?? field.path,
             resizeHandle: 'col',
             accessoryHtml: columnSettingsButtonHtml(field.id),
+            readonly: false,
           },
         ]),
       );
@@ -145,7 +146,7 @@ export class TableModel extends Resource {
       return sorted.map(({ item }) => item);
     });
 
-    const cellValues: ReadonlySignal<DxGridPlaneCells> = computed(() => {
+    const mainCellValues: ReadonlySignal<DxGridPlaneCells> = computed(() => {
       const values: DxGridPlaneCells = {};
       const fields = this.table.view?.fields ?? [];
 
@@ -176,10 +177,11 @@ export class TableModel extends Resource {
       const values: DxGridPlaneCells = {};
 
       // Add action cells for each row
-      for (let displayIndex = 0; displayIndex < this.data.length; displayIndex++) {
-        values[fromGridCell({ col: 0, row: displayIndex })] = {
+      for (let displayRow = 0; displayRow < this.data.length; displayRow++) {
+        values[fromGridCell({ col: 0, row: displayRow })] = {
           value: '',
-          accessoryHtml: rowActionMenuButtonHtml(displayIndex),
+          accessoryHtml: rowActionMenuButtonHtml(displayRow),
+          readonly: true,
         };
       }
 
@@ -187,11 +189,11 @@ export class TableModel extends Resource {
     });
 
     const newColumnCell: DxGridPlaneCells = {
-      [fromGridCell({ col: 0, row: 0 })]: { value: '', accessoryHtml: newColumnButtonHtml() },
+      [fromGridCell({ col: 0, row: 0 })]: { value: '', accessoryHtml: newColumnButtonHtml(), readonly: true },
     };
 
     this.cells = computed(() => ({
-      grid: cellValues.value,
+      grid: mainCellValues.value,
       frozenRowsStart: headerCells.value,
       frozenColsEnd: actionColumnCells.value,
       fixedStartEnd: newColumnCell,
@@ -214,7 +216,7 @@ export class TableModel extends Resource {
       };
     });
 
-    this.cellUpdateListener = new CellUpdateListener(cellValues, this.onCellUpdate);
+    this.cellUpdateListener = new CellUpdateListener(mainCellValues, this.onCellUpdate);
     this._ctx.onDispose(this.cellUpdateListener.dispose);
   }
 
