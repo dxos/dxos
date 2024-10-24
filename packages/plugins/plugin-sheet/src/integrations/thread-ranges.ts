@@ -10,9 +10,10 @@ import { debounce } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { type DxGridElement, type DxGridPosition } from '@dxos/react-ui-grid';
 
+import { type Integration, type Integrations } from './integrations';
 import { addressFromIndex, addressToIndex, type CellAddress, closest } from '../defs';
 import { SHEET_PLUGIN } from '../meta';
-import { type SheetModel, type Decoration, type Decorations } from '../model';
+import { type SheetModel } from '../model';
 
 export const useUpdateFocusedCellOnThreadSelection = (
   model: SheetModel,
@@ -95,7 +96,7 @@ export const useSelectThreadOnCellFocus = (model: SheetModel, cursor?: CellAddre
   }, [cursor, selectClosestThread]);
 };
 
-const createThreadDecoration = (cellIndex: string, threadId: string, sheetId: string): Decoration => {
+const createThreadIntegration = (cellIndex: string, threadId: string, sheetId: string): Integration => {
   return {
     type: 'comment',
     classNames: ['bg-greenFill'],
@@ -103,7 +104,7 @@ const createThreadDecoration = (cellIndex: string, threadId: string, sheetId: st
   };
 };
 
-export const useThreadDecorations = (model: SheetModel, decorations: Decorations) => {
+export const useThreadIntegrations = (model: SheetModel, integrations: Integrations) => {
   const sheet = useMemo(() => model.sheet, [model.sheet]);
   const sheetId = useMemo(() => fullyQualifiedId(sheet), [sheet]);
 
@@ -123,21 +124,21 @@ export const useThreadDecorations = (model: SheetModel, decorations: Decorations
         activeThreadAnchors.add(thread.anchor);
         const index = thread.anchor;
 
-        // Add decoration only if it doesn't already exist
-        const existingDecorations = decorations.getDecorationsForCell(index);
-        if (!existingDecorations || !existingDecorations.some((d) => d.type === 'comment')) {
-          decorations.addDecoration(index, createThreadDecoration(index, thread.id, sheetId));
+        // Add integration only if it doesn't already exist
+        const existingIntegrations = integrations.getIntegrationsForCell(index);
+        if (!existingIntegrations || !existingIntegrations.some((d) => d.type === 'comment')) {
+          integrations.addIntegration(index, createThreadIntegration(index, thread.id, sheetId));
         }
       }
 
-      // Remove decorations for resolved or deleted threads
-      for (const decoration of decorations.getAllDecorations()) {
-        if (decoration.type !== 'comment') {
+      // Remove integrations for resolved or deleted threads
+      for (const integration of integrations.getAllIntegrations()) {
+        if (integration.type !== 'comment') {
           continue;
         }
 
-        if (!activeThreadAnchors.has(decoration.cellIndex)) {
-          decorations.removeDecoration(decoration.cellIndex, 'comment');
+        if (!activeThreadAnchors.has(integration.cellIndex)) {
+          integrations.removeIntegration(integration.cellIndex, 'comment');
         }
       }
     });

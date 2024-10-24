@@ -10,8 +10,13 @@ import { Grid, useGridContext, type GridScopedProps, type GridEditing } from '@d
 
 import { type CellAddress, type CellRange } from '../../defs';
 import { type ComputeGraph } from '../../graph';
-import { useSheetModel, useSelectThreadOnCellFocus, useThreadDecorations } from '../../hooks';
-import { type SheetModel, createDecorations } from '../../model';
+import {
+  createIntegrations,
+  type Integrations,
+  useSelectThreadOnCellFocus,
+  useThreadIntegrations,
+} from '../../integrations';
+import { type SheetModel, useSheetModel } from '../../model';
 import { type SheetType } from '../../types';
 
 export type SheetContextValue = {
@@ -34,8 +39,8 @@ export type SheetContextValue = {
   // TODO(burdon): Generalize.
   onInfo?: () => void;
 
-  // Decorations.
-  decorations: ReturnType<typeof createDecorations>;
+  // Integrations.
+  integrations: Integrations;
 };
 
 const SheetContext = createContext<SheetContextValue | undefined>(undefined);
@@ -55,14 +60,14 @@ const SheetProviderImpl = ({
   const { id, editing, setEditing } = useGridContext('SheetProvider', __gridScope);
 
   // TODO(Zan): Impl. set range and set cursor that scrolls to that cell or range if it is not visible.
-  const decorations = useMemo(() => createDecorations(), []);
+  const integrations = useMemo(() => createIntegrations(), []);
 
   // TODO(thure): Reconnect these.
   const [cursor, setCursor] = useState<CellAddress>();
   const [range, setRange] = useState<CellRange>();
 
   useSelectThreadOnCellFocus(model, cursor);
-  useThreadDecorations(model, decorations);
+  useThreadIntegrations(model, integrations);
 
   return (
     <SheetContext.Provider
@@ -77,7 +82,7 @@ const SheetProviderImpl = ({
         setRange,
         // TODO(burdon): Change to event.
         onInfo,
-        decorations,
+        integrations,
       }}
     >
       {children}
