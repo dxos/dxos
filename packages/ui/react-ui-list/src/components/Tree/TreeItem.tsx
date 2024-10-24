@@ -4,7 +4,6 @@
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 // https://github.com/atlassian/pragmatic-drag-and-drop/blob/main/packages/hitbox/constellation/index/about.mdx
 import {
   attachInstruction,
@@ -55,10 +54,10 @@ export const TreeItem = memo(
     const level = path.length - 1;
     const isBranch = !!parentOf;
 
-    const ref = useRef<HTMLDivElement | null>(null);
+    const ref = useRef<HTMLButtonElement | null>(null);
     const openRef = useRef(false);
     const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
-    const [state, setState] = useState<TreeItemState>('idle');
+    const [_state, setState] = useState<TreeItemState>('idle');
     const [instruction, setInstruction] = useState<Instruction | null>(null);
 
     const cancelExpand = useCallback(() => {
@@ -80,24 +79,6 @@ export const TreeItem = memo(
         draggable({
           element: ref.current,
           getInitialData: () => item,
-          // TODO(wittjosiah): This doesn't seem to be working.
-          onGenerateDragPreview: ({ nativeSetDragImage, source }) => {
-            const rect = source.element.getBoundingClientRect();
-            setCustomNativeDragPreview({
-              nativeSetDragImage,
-              getOffset: ({ container }) => {
-                const { height } = container.getBoundingClientRect();
-                return {
-                  x: 20,
-                  y: height / 2,
-                };
-              },
-              render: ({ container }) => {
-                container.style.width = rect.width + 'px';
-                setState('preview');
-              },
-            });
-          },
           onDragStart: () => {
             setState('dragging');
             if (open) {
@@ -193,7 +174,6 @@ export const TreeItem = memo(
 
     return (
       <Treegrid.Row
-        ref={ref}
         key={id}
         id={path.join(Treegrid.PATH_SEPARATOR)}
         aria-labelledby={`${id}__label`}
@@ -216,6 +196,7 @@ export const TreeItem = memo(
           <div role='none' className='flex items-center'>
             <TreeItemToggle open={open} isBranch={isBranch} onToggle={handleOpenChange} />
             <TreeItemHeading
+              ref={ref}
               label={label}
               icon={icon}
               className={className}
@@ -224,7 +205,7 @@ export const TreeItem = memo(
               onSelect={handleSelect}
             />
           </div>
-          {state === 'idle' && Columns && <Columns item={item} />}
+          {Columns && <Columns item={item} />}
           {instruction && <DropIndicator instruction={instruction} />}
         </Treegrid.Cell>
       </Treegrid.Row>

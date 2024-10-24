@@ -6,7 +6,7 @@ import { type ItemMode } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-ite
 
 import { type ItemType } from './types';
 
-export const DEFAULT_INDENTATION = 16;
+export const DEFAULT_INDENTATION = 8;
 
 export const paddingIndendation = (level: number, indentation = DEFAULT_INDENTATION) => ({
   paddingInlineStart: `${(level - 1) * indentation}px`,

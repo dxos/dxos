@@ -64,7 +64,7 @@ export const DropIndicator = ({ instruction }: DropIndicatorProps) => {
           '--terminal-radius': `${terminalSize / 2}px`,
           '--negative-terminal-size': `-${terminalSize}px`,
           '--offset-terminal': `${offsetToAlignTerminalWithLine}px`,
-          '--horizontal-indent': `${desiredInstruction.currentLevel * desiredInstruction.indentPerLevel}px`,
+          '--horizontal-indent': `${desiredInstruction.currentLevel * desiredInstruction.indentPerLevel + 4}px`,
         } as CSSProperties
       }
       className={mx(
