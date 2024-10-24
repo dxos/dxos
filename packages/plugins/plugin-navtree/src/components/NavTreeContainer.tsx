@@ -13,7 +13,7 @@ import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { isItem } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
 
-import { NavTree, type NavTreeProps } from './NavTree';
+import { NAV_TREE_ITEM, NavTree, type NavTreeProps } from './NavTree';
 import { NavTreeFooter } from './NavTreeFooter';
 import { NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItem } from '../types';
@@ -68,8 +68,15 @@ export const NavTreeContainer = ({
   );
 
   const handleSelect = useCallback(
-    ({ node, actions }: NavTreeItem) => {
+    ({ node, actions, path }: NavTreeItem) => {
       if (!node.data) {
+        return;
+      }
+
+      if (isAction(node)) {
+        const [parentId] = path.slice(1);
+        const parent = items.find(({ id }) => id === parentId)?.node;
+        void (parent && node.data({ node: parent, caller: NAV_TREE_ITEM }));
         return;
       }
 
@@ -94,6 +101,7 @@ export const NavTreeContainer = ({
     [dispatch, isLg, closeNavigationSidebar],
   );
 
+  // TODO(wittjosiah): Factor out hook.
   useEffect(() => {
     return monitorForElements({
       canMonitor: ({ source }) => isItem(source.data),

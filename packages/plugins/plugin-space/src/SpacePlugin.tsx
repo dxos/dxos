@@ -557,7 +557,7 @@ export const SpacePlugin = ({
                   properties: {
                     label: ['create space label', { ns: SPACE_PLUGIN }],
                     icon: 'ph--plus--regular',
-                    disposition: 'toolbar',
+                    disposition: 'item',
                     testId: 'spacePlugin.createSpace',
                   },
                 },
@@ -577,6 +577,7 @@ export const SpacePlugin = ({
                   properties: {
                     label: ['join space label', { ns: SPACE_PLUGIN }],
                     icon: 'ph--sign-in--regular',
+                    disposition: 'item',
                     testId: 'spacePlugin.joinSpace',
                   },
                 },

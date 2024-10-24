@@ -13,7 +13,7 @@ import { NavTreeItemAction } from './NavTreeItemAction';
 import { NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItem } from '../types';
 
-const NAV_TREE_ITEM = 'NavTreeItem';
+export const NAV_TREE_ITEM = 'NavTreeItem';
 
 export type NavTreeProps = Omit<
   TreeProps,

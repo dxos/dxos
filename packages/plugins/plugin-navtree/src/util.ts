@@ -129,6 +129,10 @@ type FlattenedActions = Required<Pick<NavTreeItem, 'actions' | 'groupedActions'>
 export const getActions = (graph: Graph, node: Node): FlattenedActions => {
   return graph.actions(node).reduce(
     (acc: FlattenedActions, arg) => {
+      if (arg.properties.disposition === 'item') {
+        return acc;
+      }
+
       acc.actions.push(arg);
       if (!isAction(arg)) {
         const actionGroup = graph.actions(arg);
@@ -175,7 +179,13 @@ function* navTreeItemVisitor({
     }
     const { id, node, path } = nextItem;
     const children = getChildren(graph, node, filter, path);
+    const actions = graph.actions(node);
     if (path.length === 1 || open.includes(id)) {
+      for (let i = actions.length - 1; i >= 0; i--) {
+        if (actions[i].properties.disposition === 'item') {
+          stack.push(getItem(actions[i], path, filter));
+        }
+      }
       for (let i = children.length - 1; i >= 0; i--) {
         const child = children[i] as NavTreeItemGraphNode;
         stack.push(getItem(child, path, filter));
