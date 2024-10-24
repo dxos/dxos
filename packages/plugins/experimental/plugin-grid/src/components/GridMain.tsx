@@ -8,7 +8,7 @@ import { Surface, parseMetadataResolverPlugin, useResolvePlugin } from '@dxos/ap
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { create, type EchoReactiveObject, getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
-import type { MosaicDropEvent, MosaicOperation, MosaicTileAction, MosaicTileComponent } from '@dxos/react-ui-mosaic';
+import type { MosaicDropEvent, MosaicOperation, MosaicTileAction } from '@dxos/react-ui-mosaic';
 import {
   baseSurface,
   topbarBlockPaddingStart,
@@ -102,7 +102,7 @@ const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   );
 };
 
-const GridCard: MosaicTileComponent<GridDataItem> = forwardRef(({ item, ...props }, forwardRef) => {
+const GridCard = forwardRef<HTMLDivElement, any>(({ item, ...props }, forwardRef) => {
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
   const parseData = props.type && metadataPlugin?.provides.metadata.resolver(props.type)?.parse;
   const object = parseData ? parseData(item, 'view-object') : item;
