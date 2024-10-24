@@ -18,7 +18,7 @@ export default {
   render: () => <div>Main</div>,
   // render: () => <ClientRepeater component={Main} count={2} types={[ItemType]} createSpace />,
   decorators: [
-    withMultiClientProvider({ numClients: 3, types: [ItemType], createSpace: true }),
+    withMultiClientProvider({ numClients: 3, types: [ItemType], createIdentity: true, createSpace: true }),
     withLayout({ fullscreen: true, classNames: ['grid grid-row-2 h-full divide-y divide-separator'] }),
     withTheme,
   ],
