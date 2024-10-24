@@ -74,7 +74,11 @@ export default {
   decorators: [withTheme, withLayout({ tooltips: true })],
   args: {
     renderColumns: () => {
-      return <Icon icon='ph--placeholder--regular' size={5} />;
+      return (
+        <div className='flex items-center'>
+          <Icon icon='ph--placeholder--regular' size={5} />
+        </div>
+      );
     },
     onOpenChange: (item: ItemType, open: boolean) => {
       const path = Path.create(...item.path);

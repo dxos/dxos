@@ -63,7 +63,8 @@ export const TreeItem = memo(
     const level = path.length - 1;
     const isBranch = !!parentOf;
 
-    const ref = useRef<HTMLButtonElement | null>(null);
+    const rowRef = useRef<HTMLDivElement | null>(null);
+    const buttonRef = useRef<HTMLButtonElement | null>(null);
     const openRef = useRef(false);
     const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
     const [_state, setState] = useState<TreeItemState>('idle');
@@ -81,12 +82,12 @@ export const TreeItem = memo(
         return;
       }
 
-      invariant(ref.current);
+      invariant(buttonRef.current);
 
       // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/adapters/element/about
       return combine(
         draggable({
-          element: ref.current,
+          element: buttonRef.current,
           getInitialData: () => item,
           onDragStart: () => {
             setState('dragging');
@@ -103,7 +104,7 @@ export const TreeItem = memo(
           },
         }),
         dropTargetForElements({
-          element: ref.current,
+          element: buttonRef.current,
           getData: ({ input, element }) => {
             return attachInstruction(item, {
               input,
@@ -116,7 +117,7 @@ export const TreeItem = memo(
           },
           canDrop: ({ source }) => {
             const _canDrop = canDrop ?? (() => true);
-            return source.element !== ref.current && _canDrop(source.data);
+            return source.element !== buttonRef.current && _canDrop(source.data);
           },
           getIsSticky: () => true,
           onDrag: ({ self, source }) => {
@@ -159,7 +160,7 @@ export const TreeItem = memo(
     const handleOpenChange = useCallback(() => onOpenChange?.(item, !open), [onOpenChange, item, open]);
 
     const handleSelect = useCallback(() => {
-      ref.current?.focus();
+      rowRef.current?.focus();
       onSelect?.(item, !current);
     }, [onSelect, item, current]);
 
@@ -182,6 +183,7 @@ export const TreeItem = memo(
 
     return (
       <Treegrid.Row
+        ref={rowRef}
         key={id}
         id={path.join(Treegrid.PATH_SEPARATOR)}
         aria-labelledby={`${id}__label`}
@@ -210,7 +212,7 @@ export const TreeItem = memo(
           <div role='none' className='flex items-center'>
             <TreeItemToggle open={open} isBranch={isBranch} onToggle={handleOpenChange} />
             <TreeItemHeading
-              ref={ref}
+              ref={buttonRef}
               label={label}
               icon={icon}
               className={className}

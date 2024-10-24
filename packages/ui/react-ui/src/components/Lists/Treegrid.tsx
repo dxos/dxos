@@ -60,7 +60,6 @@ type TreegridRowProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.d
   id: string;
   asChild?: boolean;
   parentOf?: string;
-  focusableGroup?: boolean;
   defaultOpen?: boolean;
   open?: boolean;
   onOpenChange?(open: boolean): void;
