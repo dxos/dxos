@@ -68,9 +68,9 @@ export const resolveMigrationOperation = (
       const activeKey = activeNode.properties.persistenceKey;
       if (activeKey && persistenceParent?.properties.acceptPersistenceKey) {
         return persistenceParent.properties.acceptPersistenceKey.has(activeKey) &&
-          destinationRelatedNode.properties.onTransferStart
+          persistenceParent.properties.onTransferStart
           ? 'transfer'
-          : destinationRelatedNode.properties.onCopy
+          : persistenceParent.properties.onCopy
             ? 'copy'
             : 'reject';
       } else {

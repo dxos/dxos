@@ -2,17 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ReactNode, useCallback, useMemo } from 'react';
+import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import React, { useCallback, useEffect } from 'react';
 
 import { NavigationAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
-import { getGraph, isAction, isActionLike, type Node } from '@dxos/app-graph';
+import { isAction, isActionLike, type Node } from '@dxos/app-graph';
 import { useGraph } from '@dxos/plugin-graph';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
-import { List } from '@dxos/react-ui-list';
-import { ghostHover, mx } from '@dxos/react-ui-theme';
+import { isItem } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
 
-import { NavTree, NavTreeProps } from './NavTree';
+import { NavTree, type NavTreeProps } from './NavTree';
 import { NavTreeFooter } from './NavTreeFooter';
 import { NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItem } from '../types';
@@ -22,7 +23,6 @@ import {
   getChildren,
   getParent,
   resolveMigrationOperation,
-  treeItemsFromRootNode,
   type NavTreeItemGraphNode,
 } from '../util';
 
@@ -94,234 +94,73 @@ export const NavTreeContainer = ({
     [dispatch, isLg, closeNavigationSidebar],
   );
 
-  // const resolveItemLevel = useCallback(
-  //   (overPosition: number | undefined, activeId: string | undefined, levelOffset: number) => {
-  //     if (!(typeof overPosition === 'number' && activeId)) {
-  //       return 1;
-  //     } else {
-  //       const nextItems = arrayMove(
-  //         items,
-  //         items.findIndex(({ id }) => id === activeId),
-  //         overPosition,
-  //       );
-  //       const previousItem: NavTreeItem | undefined = nextItems[overPosition - 1];
-  //       const nextItem: NavTreeItem | undefined = nextItems[overPosition + 1];
-  //       return Math.min(
-  //         previousItem ? getLevel(previousItem?.path) + 1 : 1,
-  //         Math.max(nextItem ? getLevel(nextItem?.path) : 1, getLevel(nextItems[overPosition].path) + levelOffset),
-  //       );
-  //     }
-  //   },
-  //   [items],
-  // );
+  useEffect(() => {
+    return monitorForElements({
+      canMonitor: ({ source }) => isItem(source.data),
+      onDrop: ({ location, source }) => {
+        // Didn't drop on anything.
+        if (!location.current.dropTargets.length) {
+          return;
+        }
 
-  // const handleMove: NavTreeProps['onMove'] = useCallback(
-  //   ({ active, over, details }: MosaicMoveEvent<number, NavTreeItemMoveDetails>) => {
-  //     const levelOffset = Math.floor((details?.delta?.x ?? 0) / 16);
-  //     const overPosition = over.position ?? 0;
-  //     const nextItems = arrayMove(
-  //       items,
-  //       items.findIndex(({ id }) => id === active.item.id),
-  //       overPosition,
-  //     );
+        const target = location.current.dropTargets[0];
 
-  //     const previousItem: NavTreeItem | undefined = nextItems[overPosition - 1];
-  //     const nextItem: NavTreeItem | undefined = nextItems[overPosition + 1];
-  //     const activeNode = 'node' in active.item ? (active.item as NavTreeItem).node : undefined;
-  //     if (!activeNode || !previousItem || !previousItem.path) {
-  //       // console.log('[reject]', !activeNode, !previousItem, !previousItem.path);
-  //       // log.warn('Top-level rearrange before the first item of the NavTree is unsupported at this time.');
-  //       return { operation: 'reject' as const, details: { levelOffset } };
-  //     }
+        const instruction: Instruction | null = extractInstruction(target.data);
+        if (instruction !== null && instruction.type !== 'instruction-blocked') {
+          const sourceNode = source.data.node as NavTreeItemGraphNode;
+          const targetNode = target.data.node as NavTreeItemGraphNode;
 
-  //     const overLevel = resolveItemLevel(overPosition, active.item.id, levelOffset);
-  //     const previousLevel = getLevel(previousItem.path);
-  //     // console.log('[over]', overLevel, previousLevel, levelOffset);
-  //     if (previousLevel === overLevel - 1) {
-  //       if (Path.hasChild(previousItem.id, active.item.id)) {
-  //         // Previous is already parent of Active, rearrange.
-  //         const operation = previousItem.node.properties.onRearrangeChildren
-  //           ? ('rearrange' as const)
-  //           : ('reject' as const);
-  //         return { operation, details: { levelOffset } };
-  //       } else {
-  //         // Previous is not yet parent of Active, check transfer or copy.
-  //         const operation = resolveMigrationOperation(graph, activeNode, previousItem.path, previousItem.node);
-  //         // console.log('[migration result]', operation, 'Previous is not yet parent of Active, check transfer or copy.');
-  //         return { operation, details: { levelOffset } };
-  //       }
-  //     } else if (previousLevel === overLevel) {
-  //       const parent = getParent(graph, previousItem.node, previousItem.path);
-  //       const parentPath = previousItem.path.slice(0, previousItem.path.length - 1);
-  //       if (Path.siblings(previousItem.id, active.item.id)) {
-  //         // Previous is already a sibling of Active, rearrange.
-  //         const operation = parent?.properties.onRearrangeChildren ? ('rearrange' as const) : ('reject' as const);
-  //         return { operation, details: { levelOffset } };
-  //       } else {
-  //         // Previous is not yet a sibling of Active, transfer/copy to Previous’s parent.
-  //         const operation = resolveMigrationOperation(graph, activeNode, parentPath, parent);
-  //         // console.log(
-  //         //   '[migration result]',
-  //         //   operation,
-  //         //   'Previous is not yet a sibling of Active, transfer/copy to Previous’s parent.',
-  //         // );
-  //         return { operation, details: { levelOffset } };
-  //       }
-  //     } else if (nextItem && nextItem.path) {
-  //       const nextLevel = getLevel(nextItem.path);
-  //       if (nextLevel === overLevel) {
-  //         const parent = getParent(graph, nextItem.node, nextItem.path);
-  //         const parentPath = nextItem.path.slice(0, nextItem.path.length - 1);
-  //         if (Path.siblings(nextItem.id, active.item.id)) {
-  //           // Next is already a sibling of Active, rearrange.
-  //           const operation = parent?.properties.onRearrangeChildren ? ('rearrange' as const) : ('reject' as const);
-  //           return { operation, details: { levelOffset } };
-  //         } else {
-  //           // Next is not yet a sibling of Active, transfer to Next’s parent.
-  //           const operation = resolveMigrationOperation(graph, activeNode, parentPath, parent);
-  //           // console.log(
-  //           //   '[migration result]',
-  //           //   operation,
-  //           //   'Next is not yet a sibling of Active, transfer to Next’s parent.',
-  //           // );
-  //           return { operation, details: { levelOffset } };
-  //         }
-  //       } else {
-  //         // console.log('[migration result]', 'reject');
-  //         return { operation: 'reject' as const, details: { levelOffset } };
-  //       }
-  //     } else {
-  //       // console.log('[migration result]', 'reject');
-  //       return { operation: 'reject' as const, details: { levelOffset } };
-  //     }
-  //   },
-  //   [root, items],
-  // );
+          const sourcePath = source.data.path as string[];
+          const targetPath = target.data.path as string[];
 
-  // const handleDrop = useCallback(
-  //   ({ operation, active, over, details = {} }: MosaicDropEvent<number, NavTreeItemMoveDetails>) => {
-  //     if (Path.first(over.path) !== root.id) {
-  //       return undefined;
-  //     }
+          const nextItems = instruction.type.startsWith('reorder')
+            ? items.filter((item) => item.path.slice(0, -1).join() === targetPath.slice(0, -1).join())
+            : items.filter((item) => item.path.slice(0, -1).join() === targetPath.join());
+          const operation =
+            sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join()
+              ? 'rearrange'
+              : resolveMigrationOperation(graph, sourceNode, targetPath, targetNode);
 
-  //     const { levelOffset = 0 } = details;
-  //     const overPosition = over.position ?? 0;
-  //     const nextItems = arrayMove(
-  //       items,
-  //       items.findIndex(({ id }) => id === active.item.id),
-  //       overPosition,
-  //     );
+          const sourceParent = getParent(graph, sourceNode, sourcePath);
+          const targetParent = getParent(graph, targetNode, targetPath);
 
-  //     const activeNode = 'node' in active.item ? (active.item as NavTreeItem).node : undefined;
-  //     const activeParentId = Path.parent(active.item.id);
-  //     if (!activeNode) {
-  //       return undefined;
-  //     }
+          const sourceIndex = nextItems.findIndex(({ id }) => id === sourceNode.id);
+          const targetIndex = nextItems.findIndex(({ id }) => id === targetNode.id);
+          const migrationIndex =
+            instruction.type === 'make-child'
+              ? nextItems.length - 1
+              : instruction.type === 'reorder-below'
+                ? targetIndex + 1
+                : targetIndex;
 
-  //     const activeParent = getParent(graph, activeNode, (active.item as NavTreeItem).path ?? []);
-  //     if (operation === 'rearrange') {
-  //       void activeParent?.properties.onRearrangeChildren?.(
-  //         nextItems.filter(({ id }) => Path.hasChild(activeParentId, id)).map(({ node }) => node.data),
-  //       );
-  //       return null;
-  //     } else {
-  //       const previousItem: NavTreeItem | undefined = nextItems[overPosition - 1];
-  //       const nextItem: NavTreeItem | undefined = nextItems[overPosition + 1];
-  //       const overLevel = resolveItemLevel(overPosition, active.item.id, levelOffset);
-  //       const previousLevel = getLevel(previousItem.path);
-  //       if (operation === 'copy') {
-  //         if (previousLevel === overLevel - 1) {
-  //           void previousItem.node.properties.onCopy?.(activeNode, 0);
-  //           return null;
-  //         } else if (previousLevel === overLevel) {
-  //           const parent = getParent(graph, previousItem.node, previousItem.path ?? []);
-  //           void parent?.properties.onCopy?.(
-  //             activeNode,
-  //             getChildren(graph, parent).findIndex(({ id }) => id === previousItem.node.id) + 1,
-  //           );
-  //           return null;
-  //         } else if (nextItem && nextItem.path) {
-  //           const parent = getParent(graph, nextItem.node, nextItem.path ?? []);
-  //           void parent?.properties.onCopy?.(
-  //             activeNode,
-  //             getChildren(graph, parent).findIndex(({ id }) => id === nextItem.node.id),
-  //           );
-  //           return null;
-  //         }
-  //       } else if (operation === 'transfer') {
-  //         const onTransferEnd = activeParent?.properties.onTransferEnd;
-  //         if (!onTransferEnd) {
-  //           return undefined;
-  //         } else if (previousLevel === overLevel - 1) {
-  //           const onTransferStart = previousItem.node.properties.onTransferStart;
-  //           if (onTransferStart) {
-  //             void onTransferEnd(activeNode, previousItem.node);
-  //             void onTransferStart(activeNode, 0);
-  //             return null;
-  //           }
-  //         } else if (previousLevel === overLevel && previousItem.path) {
-  //           const parent = getParent(graph, previousItem.node, previousItem.path);
-  //           if (parent?.properties.onTransferStart) {
-  //             void onTransferEnd(activeNode, previousItem.node);
-  //             void parent.properties.onTransferStart(
-  //               activeNode,
-  //               getChildren(graph, parent).findIndex(({ id }) => id === previousItem.node.id) + 1,
-  //             );
-  //             return null;
-  //           }
-  //         } else if (nextItem && nextItem.path) {
-  //           const parent = getParent(graph, nextItem.node, nextItem.path);
-  //           if (parent?.properties.onTransferStart) {
-  //             void onTransferEnd(activeNode, previousItem.node);
-  //             void parent.properties.onTransferStart(
-  //               activeNode,
-  //               getChildren(graph, parent).findIndex(({ id }) => id === nextItem.node.id),
-  //             );
-  //             return null;
-  //           }
-  //         }
-  //       }
-  //     }
-  //     return undefined;
-  //   },
-  //   [root, items],
-  // );
+          switch (operation) {
+            case 'rearrange': {
+              arrayMove(nextItems, sourceIndex, targetIndex);
+              void sourceParent?.properties.onRearrangeChildren?.(nextItems.map((item) => item.node.data));
+              break;
+            }
 
-  // const handleDragEnd = useCallback(() => {
-  //   onOpenItemIdsChange({ ...openItemIds });
-  // }, [onOpenItemIdsChange, openItemIds]);
+            case 'copy': {
+              const target = instruction.type === 'make-child' ? targetNode : targetParent;
+              void target?.properties.onCopy?.(sourceNode, migrationIndex);
+              break;
+            }
 
-  // // TODO(burdon): Remove.
-  // // Debug list.
-  // const debug = false;
-  // if (debug) {
-  //   const getLabel = (item: NavTreeItem) => {
-  //     const label = item.node?.properties?.label;
-  //     return typeof label === 'string' ? label : item.id;
-  //   };
+            case 'transfer': {
+              const target = instruction.type === 'make-child' ? targetNode : targetParent;
+              if (!target?.properties.onTransferStart || !sourceParent?.properties.onTransferEnd) {
+                break;
+              }
 
-  //   return (
-  //     <div className='bs-full overflow-hidden row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'>
-  //       <div className='flex items-center p-2'>Items: {items.length}</div>
-  //       <div role='none' className='!overflow-y-auto'>
-  //         <List.Root<NavTreeItem> items={items} isItem={() => true}>
-  //           {({ items }) =>
-  //             items.map((item) => (
-  //               <List.Item<NavTreeItem> key={item.id} item={item} classNames={mx('p-2', ghostHover)}>
-  //                 <List.ItemDragHandle />
-  //                 <List.ItemTitle classNames='p-2 text-sm' onClick={() => handleNavigate(item)}>
-  //                   {getLabel(item)}
-  //                 </List.ItemTitle>
-  //                 <List.IconButton icon='ph--caret-down--regular' onClick={() => handleItemOpenChange(item, true)} />
-  //               </List.Item>
-  //             ))
-  //           }
-  //         </List.Root>
-  //       </div>
-  //       <NavTreeFooter />
-  //     </div>
-  //   );
-  // }
+              void target?.properties.onTransferStart(sourceNode, migrationIndex);
+              void sourceParent?.properties.onTransferEnd?.(sourceNode, target);
+              break;
+            }
+          }
+        }
+      },
+    });
+  }, [items]);
 
   return (
     <ElevationProvider elevation='chrome'>

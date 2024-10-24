@@ -69,7 +69,8 @@ const getItem = (node: NavTreeItemGraphNode, parent: readonly string[], filter?:
   const path = [...parent, node.id];
   const { actions, groupedActions } = getActions(graph, node);
   const children = getChildren(graph, node, filter, path);
-  const parentOf = children.length > 0 ? children.map(({ id }) => id) : node.properties.isBranch ? [] : undefined;
+  const parentOf =
+    children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
   const item = {
     id: node.id,
     label: node.properties.label ?? node.id,
