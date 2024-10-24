@@ -13,7 +13,7 @@ import { type FieldType, FieldValueType, getUniqueProperty, type ViewType } from
 import { type TableModel } from '../../model';
 
 type NewColumnFormProps = {
-  tableModel: TableModel;
+  tableModel?: TableModel;
   open: boolean;
   close: () => void;
 };
@@ -34,9 +34,13 @@ export const NewColumnForm = ({ tableModel, open, close }: NewColumnFormProps) =
 
   useEffect(() => {
     if (open) {
-      setField(createNewField(tableModel.table.view!));
+      if (tableModel?.table?.view) {
+        setField(createNewField(tableModel.table.view));
+      } else {
+        close();
+      }
     }
-  }, [open]);
+  }, [open, close, tableModel]);
 
   const onCreate = useCallback(() => {
     if (!field) {
