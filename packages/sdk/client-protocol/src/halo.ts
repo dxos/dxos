@@ -26,7 +26,7 @@ export interface Halo {
   get credentials(): MulticastObservable<Credential[]>;
 
   createIdentity(options?: ProfileDocument, deviceProfile?: DeviceProfileDocument): Promise<Identity>;
-  recoverIdentity(recoveryKey: Uint8Array): Promise<Identity>;
+  recoverIdentity(args: { seedphrase: string }): Promise<Identity>;
   updateProfile(profile: ProfileDocument): Promise<Identity>;
 
   share(options?: Partial<Invitation>): CancellableInvitation;
