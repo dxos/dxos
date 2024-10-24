@@ -26,7 +26,6 @@ export type SortConfig = { columnId: ColumnId; direction: SortDirection };
 
 export type TableModelProps = {
   table: TableType;
-  data: any[];
   onDeleteRow?: (id: string) => void;
   onCellUpdate?: (cell: GridCell) => void;
   sorting?: SortConfig[];
@@ -62,7 +61,7 @@ export class TableModel extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
 
   public readonly table: TableType;
-  public readonly data: any[];
+  private readonly data = signal<any[]>([]);
 
   public cells!: ReadonlySignal<DxGridCells>;
   public cellUpdateListener!: CellUpdateListener;
@@ -85,7 +84,6 @@ export class TableModel extends Resource {
 
   constructor({
     table,
-    data,
     onDeleteRow,
     onCellUpdate,
     sorting = [],
@@ -94,13 +92,16 @@ export class TableModel extends Resource {
   }: TableModelProps) {
     super();
     this.table = table;
-    this.data = data;
     this.onDeleteRow = onDeleteRow;
     this.onCellUpdate = onCellUpdate;
     this.sorting.value = sorting[0] ?? undefined;
     this.pinnedRows = pinnedRows;
     this.rowSelection = rowSelection;
   }
+
+  public updateData = (newData: any[]): void => {
+    this.data.value = newData;
+  };
 
   protected override async _open() {
     const headerCells: ReadonlySignal<DxGridPlaneCells> = computed(() => {
@@ -122,15 +123,15 @@ export class TableModel extends Resource {
       this.displayToDataIndex.clear();
       const sort = this.sorting.value;
       if (!sort) {
-        return this.data;
+        return this.data.value;
       }
 
       const field = this.table.view?.fields.find((field) => field.id === sort.columnId);
       if (!field) {
-        return this.data;
+        return this.data.value;
       }
 
-      const dataWithIndices = this.data.map((item, index) => ({ item, index }));
+      const dataWithIndices = this.data.value.map((item, index) => ({ item, index }));
       const sorted = sortBy(dataWithIndices, [(wrapper) => wrapper.item[field.path]]);
       if (sort.direction === 'desc') {
         sorted.reverse();
@@ -177,7 +178,7 @@ export class TableModel extends Resource {
       const values: DxGridPlaneCells = {};
 
       // Add action cells for each row
-      for (let displayRow = 0; displayRow < this.data.length; displayRow++) {
+      for (let displayRow = 0; displayRow < this.data.value.length; displayRow++) {
         values[fromGridCell({ col: 0, row: displayRow })] = {
           value: '',
           accessoryHtml: rowActionMenuButtonHtml(displayRow),
@@ -226,7 +227,7 @@ export class TableModel extends Resource {
 
   public deleteRow = (rowIndex: number): void => {
     const dataIndex = this.displayToDataIndex.get(rowIndex) ?? rowIndex;
-    this.onDeleteRow?.(this.data[dataIndex]);
+    this.onDeleteRow?.(this.data.value[dataIndex]);
   };
 
   public getCellData = ({ col, row }: GridCell): any => {
@@ -237,7 +238,7 @@ export class TableModel extends Resource {
 
     const field = fields[col];
     const dataIndex = this.displayToDataIndex.get(row) ?? row;
-    return this.data[dataIndex][field.path];
+    return this.data.value[dataIndex][field.path];
   };
 
   public setCellData = ({ col, row }: GridCell, value: any): void => {
@@ -248,7 +249,7 @@ export class TableModel extends Resource {
 
     const field = fields[col];
     const dataIndex = this.displayToDataIndex.get(row) ?? row;
-    this.data[dataIndex][field.path] = parseValue(field.type, value);
+    this.data.value[dataIndex][field.path] = parseValue(field.type, value);
   };
 
   //

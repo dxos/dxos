@@ -24,13 +24,13 @@ export const useTableModel = ({
   const [tableModel, setTableModel] = useState<TableModel>();
 
   useEffect(() => {
-    if (!table || !data) {
+    if (!table) {
       return;
     }
 
     let tableModel: TableModel | undefined;
     const t = setTimeout(async () => {
-      tableModel = new TableModel({ table, data, onDeleteRow, onCellUpdate });
+      tableModel = new TableModel({ table, onDeleteRow, onCellUpdate });
       await tableModel.open();
       setTableModel(tableModel);
     });
@@ -39,7 +39,11 @@ export const useTableModel = ({
       clearTimeout(t);
       void tableModel?.close();
     };
-  }, [data, table, onCellUpdate]);
+  }, [table, onCellUpdate]);
+
+  useEffect(() => {
+    tableModel?.updateData(data);
+  }, [data, tableModel]);
 
   return tableModel;
 };
