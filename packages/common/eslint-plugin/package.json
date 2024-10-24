@@ -5,6 +5,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": false,
   "main": "index.js",
   "dependencies": {
     "@dxos/eslint-plugin-rules": "workspace:*",

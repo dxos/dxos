@@ -6,6 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "main": "dist/lib/browser/index.mjs",
   "types": "dist/types/src/index.d.ts",
   "files": [

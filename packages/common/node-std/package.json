@@ -6,6 +6,9 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": [
+    "./dist/lib/browser/globals.mjs"
+  ],
   "exports": {
     "./_/config": {
       "import": "./dist/lib/browser/_/config.mjs",
