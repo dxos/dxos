@@ -36,7 +36,7 @@ const StorybookAttentionGlyph = ({ current, attention }: StorybookAttentionGlyph
 };
 
 export default {
-  title: 'react-ui-deck/AttentionGlyph',
+  title: 'ui/react-ui-deck/AttentionGlyph',
   component: StorybookAttentionGlyph,
   decorators: [withTheme],
 };

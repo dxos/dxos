@@ -30,7 +30,7 @@ const JoinDialog = (args: Partial<JoinPanelImplProps>) => (
 );
 
 export default {
-  title: 'react-shell/JoinPanel',
+  title: 'sdk/react-shell/JoinPanel',
   component: JoinDialog,
   decorators: [withTheme],
   parameters: { translations, chromatic: { disableSnapshot: false } },

@@ -14,7 +14,7 @@ import { Main } from './Main';
 import { ItemType } from '../data';
 
 export default {
-  title: 'testbench-app/Main',
+  title: 'apps/testbench-app/Main',
   component: Main,
   render: () => (
     <AppContainer>

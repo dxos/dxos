@@ -39,7 +39,7 @@ const StorybookBreadcrumb = () => {
 };
 
 export default {
-  title: 'react-ui/Breadcrumb',
+  title: 'ui/react-ui/Breadcrumb',
   component: StorybookBreadcrumb,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

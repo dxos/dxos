@@ -15,7 +15,7 @@ import { useClient } from '../client';
 import { useSpace } from '../echo';
 
 export default {
-  title: 'react-client/ClientRepeater',
+  title: 'sdk/react-client/ClientRepeater',
   decorators: [withTheme],
 };
 

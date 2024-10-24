@@ -26,7 +26,7 @@ import { convertTreeToGraph, createTree, TestGraphModel, type TestNode } from '.
 import '../../styles/defaults.css';
 
 export default {
-  title: 'gem-spore/hooks',
+  title: 'experimental/gem-spore/hooks',
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 

@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import { type SerializedStore } from '@tldraw/store';
 import { type TLRecord } from '@tldraw/tldraw';
 import React, { useState } from 'react';
@@ -26,7 +27,7 @@ const createSketch = (content: SerializedStore<TLRecord> = {}): DiagramType => {
   );
 };
 
-const Story = () => {
+const DefaultStory = () => {
   const [sketch, setSketch] = useState<DiagramType>(createSketch(data.v2));
 
   const handleClear = () => {
@@ -65,14 +66,16 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-sketch/SketchComponent',
+export const Default = {};
+
+const meta: Meta<typeof Sketch> = {
+  title: 'plugins/plugin-sketch/Sketch',
   component: Sketch,
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },
 };
 
-export const Default = {};
+export default meta;

@@ -12,7 +12,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 export default {
-  title: 'brand/Rive',
+  title: 'ui/brand/Rive',
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: ['absolute inset-0 bg-black'] })],
 };
 

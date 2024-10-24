@@ -55,7 +55,7 @@ const StorybookViewport = (props: StorybookViewportProps) => {
 };
 
 export default {
-  title: 'react-shell/StorybookViewport',
+  title: 'sdk/react-shell/StorybookViewport',
   component: StorybookViewport,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

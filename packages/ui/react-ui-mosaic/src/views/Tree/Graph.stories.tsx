@@ -16,7 +16,7 @@ import { Tree } from './Tree';
 faker.seed(3);
 
 export default {
-  title: 'react-ui-mosaic/Tree',
+  title: 'ui/react-ui-mosaic/Tree',
   component: Tree,
   // render: ({ id = 'tree', debug }: { id: string; debug: boolean }) => {
   //   return (

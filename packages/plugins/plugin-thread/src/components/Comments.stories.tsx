@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
@@ -50,12 +51,14 @@ const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
   );
 };
 
-export default {
-  title: 'plugin-thread/Comments',
-  // TODO(wittjosiah): Register schemas.
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-thread/Comments',
+  // TODO(wittjosiah): Use decorator.
   render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType, MessageType]} />,
   decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
   parameters: { translations },
 };
 
-export const Default = {};
+export default meta;

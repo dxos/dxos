@@ -28,7 +28,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'gem-core/Mesh',
+  title: 'experimental/gem-core/Mesh',
   component: Mesh,
   render: () => <Story />,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#111]' })],

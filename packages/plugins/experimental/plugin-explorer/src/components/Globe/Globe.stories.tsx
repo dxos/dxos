@@ -5,6 +5,7 @@
 import '@dxos-theme';
 
 import * as Plot from '@observablehq/plot';
+import { type Meta } from '@storybook/react';
 import * as d3 from 'd3';
 import React, { useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
@@ -20,14 +21,6 @@ import CountriesData from '../../../data/countries-110m.js';
 // TODO(burdon): Generate data with geo lat/lng.
 // TODO(burdon): How to provide geo service via agent?
 
-export default {
-  title: 'plugin-explorer/Globe',
-  component: Plot,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-};
-
-export const Default = () => <ClientRepeater component={DefaultStory} createSpace />;
-
 const DefaultStory = () => {
   const items = CitiesData.features.map((feature: any) => ({
     lat: feature.geometry.coordinates[0],
@@ -37,7 +30,6 @@ const DefaultStory = () => {
   return <Globe items={items} />;
 };
 
-export const Extended = () => <ClientRepeater component={ExtendedStory} createSpace />;
 const ExtendedStory = () => {
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
   useEffect(() => {
@@ -87,3 +79,14 @@ const ExtendedStory = () => {
 
   return <div ref={containerRef} className='grow p-8' />;
 };
+
+export const Default = () => <ClientRepeater component={DefaultStory} createSpace />;
+
+export const Extended = () => <ClientRepeater component={ExtendedStory} createSpace />;
+
+const meta: Meta = {
+  title: 'plugins/plugin-explorer/Globe',
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+};
+
+export default meta;

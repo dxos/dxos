@@ -12,7 +12,7 @@ import { Deck, Plank } from './Deck';
 import translations from '../../translations';
 
 export default {
-  title: 'react-ui-deck/Deck',
+  title: 'ui/react-ui-deck/Deck',
   component: Deck.Root,
   decorators: [withTheme],
   parameters: { translations, layout: 'fullscreen' },

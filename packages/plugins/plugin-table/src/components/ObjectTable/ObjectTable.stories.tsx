@@ -4,18 +4,19 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ObjectTable } from './ObjectTable';
+import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 import { TableType } from '../../types';
 import { Toolbar } from '../Toolbar';
 import { createEmptyTable } from '../testing';
 
-const Story = () => {
+const DefaultStory = (args: ObjectTableProps) => {
   const spaces = useSpaces();
   const [table, setTable] = useState<TableType | undefined>();
   const objects = useQuery(spaces[spaces.length - 1], Filter.schema(TableType));
@@ -63,9 +64,12 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-table/ObjectTable/next',
+export const Default = {};
+
+const meta: Meta<typeof ObjectTable> = {
+  title: 'plugins/plugin-table/ObjectTable/next',
   component: ObjectTable,
+  render: DefaultStory as any,
   decorators: [
     withClientProvider({
       types: [TableType],
@@ -78,7 +82,6 @@ export default {
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
   ],
-  render: Story,
 };
 
-export const Default = {};
+export default meta;

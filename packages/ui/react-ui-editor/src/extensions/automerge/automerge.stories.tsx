@@ -92,7 +92,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'react-ui-editor/Automerge',
+  title: 'ui/react-ui-editor/Automerge',
   component: Editor,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: () => <Story />,

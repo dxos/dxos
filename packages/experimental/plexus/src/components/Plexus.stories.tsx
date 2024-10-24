@@ -35,7 +35,7 @@ const icons = [AirplaneTakeoff, Bank, Buildings, Notepad, User, Users];
 
 export default {
   component: Plexus,
-  title: 'plexus/Plexus',
+  title: 'experimental/plexus/Plexus',
   render: () => <Test />,
   decorators: [withTheme],
 };

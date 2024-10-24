@@ -44,7 +44,7 @@ const TypographyStory = () => {
 };
 
 export default {
-  title: 'react-ui/Playground/Typography',
+  title: 'ui/react-ui/Playground/Typography',
   component: TypographyStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

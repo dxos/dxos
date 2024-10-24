@@ -13,7 +13,7 @@ import { InvitationList } from './InvitationList';
 import { inviteWithState } from '../../testing';
 
 export default {
-  title: 'react-shell/InvitationList',
+  title: 'sdk/react-shell/InvitationList',
   component: InvitationList,
   decorators: [withTheme, withLayout({ tooltips: true })],
   actions: { argTypesRegex: '^on.*' },

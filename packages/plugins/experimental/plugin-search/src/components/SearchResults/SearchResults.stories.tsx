@@ -4,7 +4,8 @@
 
 import '@dxos-theme';
 
-import React, { type FC, useState } from 'react';
+import { type Meta } from '@storybook/react';
+import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -14,7 +15,7 @@ import { filterObjectsSync } from '../../search-sync';
 
 faker.seed(1);
 
-const Story: FC<SearchResultsProps> = (args) => {
+const DefaultStory = (args: SearchResultsProps) => {
   const [selected, setSelected] = useState<string>();
 
   return (
@@ -24,16 +25,6 @@ const Story: FC<SearchResultsProps> = (args) => {
       </div>
     </div>
   );
-};
-
-export default {
-  title: 'plugin-search/SearchResults',
-  component: SearchResults,
-  render: Story,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: {
-    layout: 'fullscreen',
-  },
 };
 
 const word = 'hello';
@@ -52,3 +43,15 @@ export const Default = {
     match,
   },
 };
+
+const meta: Meta<typeof SearchResults> = {
+  title: 'plugins/plugin-search/SearchResults',
+  component: SearchResults,
+  render: DefaultStory,
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+};
+
+export default meta;

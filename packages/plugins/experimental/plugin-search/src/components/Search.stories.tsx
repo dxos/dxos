@@ -4,19 +4,23 @@
 
 import '@dxos-theme';
 
-import { type Decorator, type StoryFn } from '@storybook/react';
-import React, { type FC, useState } from 'react';
+import { type Meta, type Decorator, type StoryFn } from '@storybook/react';
+import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SearchResults } from './SearchResults';
-import { Searchbar } from './Searchbar';
+import { Searchbar, type SearchbarProps } from './Searchbar';
 import { SearchContextProvider, useGlobalSearch, useGlobalSearchResults } from '../context';
 
 faker.seed(1);
 
-const Story: FC<{ objects: any[] }> = ({ objects }) => {
+type StoryProps = SearchbarProps & {
+  objects?: any[];
+};
+
+const DefaultStory = ({ objects, ...props }: StoryProps) => {
   const [selected, setSelected] = useState<string>();
   const { setMatch } = useGlobalSearch();
   const filteredItems = useGlobalSearchResults(objects);
@@ -24,7 +28,7 @@ const Story: FC<{ objects: any[] }> = ({ objects }) => {
   return (
     <div className='flex grow justify-center overflow-hidden'>
       <div className='flex flex-col w-[300px] m-4 overflow-hidden'>
-        <Searchbar variant='subdued' placeholder='Enter regular expression...' onChange={setMatch} />
+        <Searchbar variant='subdued' placeholder='Enter regular expression...' onChange={setMatch} {...props} />
         <SearchResults items={filteredItems} selected={selected} onSelect={setSelected} />
       </div>
     </div>
@@ -39,16 +43,6 @@ const SearchContextDecorator = (): Decorator => {
   );
 };
 
-export default {
-  title: 'plugin-search/Search',
-  component: Searchbar,
-  render: Story,
-  decorators: [withTheme, withLayout({ fullscreen: true }), SearchContextDecorator()],
-  parameters: {
-    layout: 'fullscreen',
-  },
-};
-
 export const Default = {
   args: {
     objects: Array.from({ length: 8 }).map(() => ({
@@ -58,3 +52,15 @@ export const Default = {
     })),
   },
 };
+
+const meta: Meta<typeof Searchbar> = {
+  title: 'plugins/plugin-search/Search',
+  component: Searchbar,
+  render: DefaultStory,
+  decorators: [withTheme, withLayout({ fullscreen: true }), SearchContextDecorator()],
+  parameters: {
+    layout: 'fullscreen',
+  },
+};
+
+export default meta;

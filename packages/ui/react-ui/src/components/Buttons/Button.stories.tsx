@@ -10,7 +10,7 @@ import React from 'react';
 import { Button, ButtonGroup, type ButtonProps } from './Button';
 import { withVariants, withTheme } from '../../testing';
 
-const Story = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
+const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
   return (
     <div>
       <Button {...args}>{children}</Button>
@@ -29,14 +29,6 @@ const Story = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
       )}
     </div>
   );
-};
-
-export default {
-  title: 'react-ui/Button',
-  component: Button,
-  decorators: [withVariants(), withTheme],
-  render: Story,
-  parameters: { chromatic: { disableSnapshot: false } },
 };
 
 const defaults = { children: 'Test' };
@@ -59,4 +51,12 @@ export const Outline = {
 
 export const Ghost = {
   args: { ...defaults, variant: 'ghost' },
+};
+
+export default {
+  title: 'ui/react-ui/Button',
+  component: Button,
+  decorators: [withVariants(), withTheme],
+  render: DefaultStory,
+  parameters: { chromatic: { disableSnapshot: false } },
 };

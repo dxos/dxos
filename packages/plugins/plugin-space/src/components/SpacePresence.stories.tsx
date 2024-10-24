@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
-
 import '@dxos-theme';
+
+import { type Meta } from '@storybook/react';
+import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
@@ -12,13 +13,6 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { FullPresence, type MemberPresenceProps, SmallPresence, type Member } from './SpacePresence';
 import translations from '../translations';
-
-export default {
-  title: 'plugin-space/SpacePresence',
-  decorators: [withTheme, withLayout({ tooltips: true })],
-  parameters: { translations },
-  actions: { argTypesRegex: '^on.*' },
-};
 
 const nViewers = (n: number, currentlyAttended = true): Member[] =>
   Array.from({ length: n }, () => ({
@@ -95,3 +89,14 @@ export const Small = (props: MemberPresenceProps) => {
     </div>
   );
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-space/SpacePresence',
+  decorators: [withTheme, withLayout({ tooltips: true })],
+  parameters: {
+    actions: { argTypesRegex: '^on.*' },
+    translations,
+  },
+};
+
+export default meta;

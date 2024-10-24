@@ -29,7 +29,7 @@ const StoryTooltip = ({ content }: StoryTooltipProps) => (
 );
 
 export default {
-  title: 'react-ui/Tooltip',
+  title: 'ui/react-ui/Tooltip',
   component: StoryTooltip,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

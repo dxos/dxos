@@ -5,6 +5,7 @@
 import '@dxos-theme';
 
 import { IconBase, type IconWeight, GithubLogo, type IconProps } from '@phosphor-icons/react';
+import { type Meta } from '@storybook/react';
 import React, { forwardRef, type SVGProps, type ReactElement } from 'react';
 
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -48,7 +49,7 @@ const createIcon = ({ name, weights }: StoryIconProps) => {
   return CustomIcon;
 };
 
-const Story = () => {
+const DefaultStory = () => {
   const CustomIcon = createIcon({
     name: 'GithubLogo',
     weights: {
@@ -93,12 +94,14 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-registry/Icon',
-  render: Story,
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-registry/Icon',
+  render: DefaultStory,
   parameters: {
     layout: 'centered',
   },
 };
 
-export const Default = {};
+export default meta;

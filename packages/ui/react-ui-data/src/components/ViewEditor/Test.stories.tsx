@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react';
 import { within, userEvent, expect, fn } from '@storybook/test';
 import React from 'react';
 
@@ -24,13 +24,8 @@ export const Test = ({ onClick }: TestProps) => (
   </button>
 );
 
-export default {
-  title: 'react-ui-data/Test',
-  component: Test,
-  decorators: [withTheme],
-};
-
 export const Primary: StoryObj<TestProps> = {
+  // TODO(burdon): Race condition on first load?
   play: async ({ args, canvasElement }: any) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button'));
@@ -40,3 +35,11 @@ export const Primary: StoryObj<TestProps> = {
     onClick: fn(),
   },
 };
+
+const meta: Meta = {
+  title: 'ui/react-ui-data/Test',
+  component: Test,
+  decorators: [withTheme],
+};
+
+export default meta;

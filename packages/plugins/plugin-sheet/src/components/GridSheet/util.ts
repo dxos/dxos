@@ -75,11 +75,7 @@ const gridCellGetter = (model: SheetModel) => {
       return [...Array(nextBounds.end.row - nextBounds.start.row)].forEach((_, r0) => {
         const col = nextBounds.start.col + c0;
         const row = nextBounds.start.row + r0;
-        const cell = projectCellProps(model, col, row);
-        if (cell.value) {
-          cachedGridCells;
-          cachedGridCells[`${col},${row}`] = cell;
-        }
+        cachedGridCells[`${col},${row}`] = projectCellProps(model, col, row);
       });
     });
     return cachedGridCells;

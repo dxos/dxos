@@ -58,12 +58,18 @@ const waitForTarget = async (step: Step) => {
   }
 };
 
+export type HelpContextProviderProps = PropsWithChildren<{
+  steps: Step[];
+  running?: boolean;
+  onRunningChanged?: (state: boolean) => any;
+}>;
+
 export const HelpContextProvider = ({
   children,
   steps: initialSteps,
   running: runningProp,
   onRunningChanged,
-}: PropsWithChildren<{ steps: Step[]; running?: boolean; onRunningChanged?: (state: boolean) => any }>) => {
+}: HelpContextProviderProps) => {
   const shellDisplay = useShellDisplay();
   const { plugins } = usePlugins();
   const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);

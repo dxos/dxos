@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React from 'react';
 
 // @ts-ignore
@@ -20,13 +21,16 @@ import { RevealPlayer } from './Reveal';
 // https://colorhunt.co/palette/27374d526d829db2bfdde6ed
 // https://fontsource.org/fonts
 // https://fonts.google.com
-const Story = () => {
+
+const DefaultStory = () => {
   return <RevealPlayer content={CONTENT} />;
 };
 
-export default {
-  title: 'plugin-presenter/Reveal',
-  render: Story,
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-presenter/Reveal',
+  render: DefaultStory,
 };
 
-export const Default = {};
+export default meta;

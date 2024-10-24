@@ -4,16 +4,20 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
+
 import { create } from '@dxos/react-client/echo';
 
 import Wildcard from './Wildcard';
 
-export default {
-  title: 'plugin-wildcard/Wildcard',
+export const Default = {};
+
+const meta: Meta<typeof Wildcard> = {
+  title: 'plugins/plugin-wildcard/Wildcard',
   component: Wildcard,
   args: {
-    item: { id: 'test', object: create({ title: 'Test', other: 'details' }) },
+    item: { id: 'test', object: create({ title: 'plugins/Test', other: 'details' }) },
   },
 };
 
-export const Default = {};
+export default meta;

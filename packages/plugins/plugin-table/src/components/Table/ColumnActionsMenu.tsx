@@ -31,6 +31,7 @@ export const ColumnActionsMenu = ({ tableModel, columnId, open, onOpenChange }: 
   const currentSort = tableModel.sorting.value;
   const isCurrentColumnSorted = currentSort?.columnId === columnId;
 
+  // TODO(thure): This is no good very (my) bad. Refactor as part of #7962.
   return (
     <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.Content classNames='contents'>

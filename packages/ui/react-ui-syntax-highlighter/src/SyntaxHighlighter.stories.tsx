@@ -9,7 +9,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 
 export default {
-  title: 'react-ui-syntax-highlighter/SyntaxHighlighter',
+  title: 'ui/react-ui-syntax-highlighter/SyntaxHighlighter',
   component: SyntaxHighlighter,
   decorators: [withTheme],
 };

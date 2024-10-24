@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
@@ -12,11 +13,15 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { PublicKeySelector } from './PublicKeySelector';
 
-export default {
+const meta: Meta = {
   component: PublicKeySelector,
-  actions: { argTypesRegex: '^on.*' },
   decorators: [withTheme],
+  parameters: {
+    actions: { argTypesRegex: '^on.*' },
+  },
 };
+
+export default meta;
 
 export const Normal = (props: any) => {
   return (

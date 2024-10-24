@@ -42,7 +42,7 @@ const ContentTypesStoryStack = ({ items }: { items: StackSectionItem[] }) => {
 };
 
 export default {
-  title: 'react-ui-stack/ContentTypes',
+  title: 'ui/react-ui-stack/ContentTypes',
   component: ContentTypesStoryStack,
   decorators: [withTheme, withLayout({ tooltips: true })],
 };

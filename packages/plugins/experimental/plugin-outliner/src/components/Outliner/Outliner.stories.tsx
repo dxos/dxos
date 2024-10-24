@@ -16,7 +16,7 @@ import { TreeItemType } from '../../types';
 
 faker.seed(100);
 
-const Story = ({
+const DefaultStory = ({
   isTasklist,
   count = 1,
   data,
@@ -72,16 +72,6 @@ const Story = ({
   );
 };
 
-export default {
-  title: 'plugin-outliner/Outliner',
-  component: Outliner,
-  decorators: [withTheme],
-  render: Story,
-  parameters: {
-    layout: 'fullscreen',
-  },
-};
-
 export const Empty = {};
 
 export const Default = {
@@ -105,3 +95,14 @@ export const Checkbox = {
     isTasklist: true,
   },
 };
+
+const meta = {
+  title: 'plugins/plugin-outliner/Outliner',
+  render: DefaultStory,
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+  },
+};
+
+export default meta;

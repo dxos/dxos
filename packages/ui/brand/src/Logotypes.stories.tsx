@@ -14,7 +14,7 @@ import { DXOSType, DXOSHorizontalType, DXOSVerticalType } from './logotypes';
 const Icon = () => null;
 
 export default {
-  title: 'brand/LogoTypes',
+  title: 'ui/brand/LogoTypes',
   component: Icon,
   decorators: [withTheme],
 };

@@ -4,13 +4,11 @@
 
 import { join } from 'path';
 
-import { config, packages } from '../../.storybook/config';
+import { config, packages } from '../../.storybook/main';
 
 export default config(
   {
-    stories: [
-      join(packages, '/ui/react-ui/src/**/*.stories.tsx'),
-    ]
+    stories: [join(packages, '/ui/react-ui/src/**/*.stories.tsx')],
   },
   join(__dirname, packages, '/ui'),
 );

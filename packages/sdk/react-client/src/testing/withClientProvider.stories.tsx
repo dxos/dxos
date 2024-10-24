@@ -37,7 +37,7 @@ const Test = () => {
 };
 
 export default {
-  title: 'react-client/withClientProvider',
+  title: 'sdk/react-client/withClientProvider',
   render: Test,
 };
 

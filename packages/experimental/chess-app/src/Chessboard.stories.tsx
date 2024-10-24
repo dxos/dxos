@@ -32,7 +32,7 @@ const Test = () => {
 };
 
 export default {
-  title: 'chess-app/Chessboard',
+  title: 'experimental/chess-app/Chessboard',
   component: Chessboard,
   render: () => <Test />,
   decorators: [withTheme],

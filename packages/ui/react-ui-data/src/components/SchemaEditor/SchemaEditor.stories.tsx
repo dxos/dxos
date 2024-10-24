@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
 import { withTheme, withLayout } from '@dxos/storybook-utils';
@@ -15,24 +16,26 @@ import { TestPopup } from '../testing';
 
 // TODO(burdon): Hierarchical schema editor.
 
-const Story = (props: SchemaEditorProps) => (
+const DefaultStory = (props: SchemaEditorProps) => (
   <TestPopup>
     <SchemaEditor {...props} />
   </TestPopup>
 );
 
-export default {
-  title: 'react-ui-data/SchemaEditor',
+export const Default: StoryObj<SchemaEditorProps> = {
+  args: {
+    schema: TestSchema,
+  },
+};
+
+const meta: Meta<typeof SchemaEditor> = {
+  title: 'ui/react-ui-data/SchemaEditor',
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],
+  render: DefaultStory,
   parameters: {
     layout: 'centered',
     translations,
   },
-  render: Story,
 };
 
-export const Default = {
-  args: {
-    schema: TestSchema,
-  } satisfies SchemaEditorProps,
-};
+export default meta;

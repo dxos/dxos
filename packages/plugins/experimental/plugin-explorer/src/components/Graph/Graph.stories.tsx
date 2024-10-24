@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
@@ -46,8 +47,10 @@ const Story = () => {
   return <Graph space={space} />;
 };
 
-export default {
-  title: 'plugin-explorer/Graph',
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-explorer/Graph',
   component: Graph,
   render: () => <ClientRepeater component={Story} createSpace types={[ViewType]} />,
   decorators: [withTheme, withLayout({ fullscreen: true })],
@@ -56,4 +59,4 @@ export default {
   },
 };
 
-export const Default = {};
+export default meta;

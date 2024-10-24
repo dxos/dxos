@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { FunctionType } from '@dxos/plugin-script/types';
@@ -80,8 +81,10 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-sheet/functions',
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-sheet/functions',
   decorators: [
     withClientProvider({ types: [FunctionType, SheetType], createIdentity: true, createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
@@ -90,4 +93,4 @@ export default {
   render: (args: any) => <Story {...args} />,
 };
 
-export const Default = {};
+export default meta;

@@ -92,7 +92,7 @@ const StorybookContextMenu = () => {
 };
 
 export default {
-  title: 'react-ui/Context menu',
+  title: 'ui/react-ui/Context menu',
   component: StorybookContextMenu,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

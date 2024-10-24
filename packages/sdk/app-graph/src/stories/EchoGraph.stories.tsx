@@ -183,7 +183,7 @@ const runAction = async (client: Client, action: Action) => {
   }
 };
 
-const Story = () => {
+const DefaultStory = () => {
   const [generating, setGenerating] = useState(false);
   const [actionInterval, setActionInterval] = useState(String(DEFAULT_PERIOD));
   const [action, setAction] = useState<Action>();
@@ -250,7 +250,8 @@ const Story = () => {
 };
 
 export default {
-  title: 'app-graph/EchoGraph',
+  title: 'sdk/app-graph/EchoGraph',
+  render: DefaultStory,
   decorators: [
     withTheme,
     withClientProvider({
@@ -261,7 +262,6 @@ export default {
       },
     }),
   ],
-  render: Story,
 };
 
 export const Default = {};

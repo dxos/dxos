@@ -18,7 +18,7 @@ import { convertTreeToGraph, createGraph, createTree, seed, TestGraphModel, type
 import '../../styles/defaults.css';
 
 export default {
-  title: 'gem-spore/Graph',
+  title: 'experimental/gem-spore/Graph',
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 

@@ -12,7 +12,7 @@ import React from 'react';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 export default {
-  title: 'gem-globe/drei',
+  title: 'experimental/gem-globe/drei',
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#111]' })],
 };
 
