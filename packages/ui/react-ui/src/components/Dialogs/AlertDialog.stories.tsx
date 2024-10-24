@@ -54,7 +54,7 @@ const StorybookAlertDialog = ({
 };
 
 export default {
-  title: 'react-ui/Dialog (alert)',
+  title: 'ui/react-ui/Dialog (alert)',
   component: StorybookAlertDialog,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
