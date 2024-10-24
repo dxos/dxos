@@ -67,7 +67,7 @@ const DefaultStory = (args: ObjectTableProps) => {
 export const Default = {};
 
 const meta: Meta<typeof ObjectTable> = {
-  title: 'plugins/plugin-table/ObjectTable/next',
+  title: 'plugins/plugin-table/ObjectTable',
   component: ObjectTable,
   render: DefaultStory as any,
   decorators: [

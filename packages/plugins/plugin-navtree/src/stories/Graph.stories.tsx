@@ -143,7 +143,7 @@ export const Default = {
 };
 
 const meta: Meta = {
-  title: 'plugins/react-ui-navtree/Graph',
+  title: 'plugins/plugin-navtree/Graph',
   component: NavTree,
   decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
 };
