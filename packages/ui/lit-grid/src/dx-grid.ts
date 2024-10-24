@@ -491,18 +491,23 @@ export class DxGrid extends LitElement {
       // Adjust state
       switch (event.key) {
         case 'ArrowDown':
+          event.preventDefault();
           this.moveFocusWithinPlane(0, 1);
           break;
         case 'ArrowUp':
+          event.preventDefault();
           this.moveFocusWithinPlane(0, -1);
           break;
         case 'ArrowRight':
+          event.preventDefault();
           this.moveFocusWithinPlane(1, 0);
           break;
         case 'ArrowLeft':
+          event.preventDefault();
           this.moveFocusWithinPlane(-1, 0);
           break;
         case 'Tab':
+          event.preventDefault();
           this.incrementFocusWithinPlane(event.shiftKey);
           break;
       }
@@ -515,17 +520,6 @@ export class DxGrid extends LitElement {
           if (event.key.length === 1 && event.key.match(/\P{Cc}/u) && !(event.metaKey || event.ctrlKey)) {
             this.dispatchEditRequest(event.key);
           }
-          break;
-      }
-      // Handle virtualization & focus consequences
-      switch (event.key) {
-        case 'ArrowDown':
-        case 'ArrowUp':
-        case 'ArrowRight':
-        case 'ArrowLeft':
-        case 'Tab':
-          event.preventDefault();
-          this.snapPosToFocusedCell();
           break;
       }
     }
@@ -557,9 +551,16 @@ export class DxGrid extends LitElement {
   }
 
   private setFocusedCell(nextCoords: DxGridPosition) {
-    this.focusedCell = nextCoords;
-    this.selectionStart = nextCoords;
-    this.selectionEnd = nextCoords;
+    if (
+      this.focusedCell.plane !== nextCoords.plane ||
+      this.focusedCell.col !== nextCoords.col ||
+      this.focusedCell.row !== nextCoords.row
+    ) {
+      this.focusedCell = nextCoords;
+      this.selectionStart = nextCoords;
+      this.selectionEnd = nextCoords;
+      this.snapPosToFocusedCell();
+    }
   }
 
   private focusedCellBox(): DxEditRequest['cellBox'] {
@@ -834,13 +835,7 @@ export class DxGrid extends LitElement {
     const cellCoords = closestCell(event.target);
     if (cellCoords) {
       this.focusActive = true;
-      if (
-        this.focusedCell.plane !== cellCoords.plane ||
-        this.focusedCell.col !== cellCoords.col ||
-        this.focusedCell.row !== cellCoords.row
-      ) {
-        this.setFocusedCell(cellCoords);
-      }
+      this.setFocusedCell(cellCoords);
     }
   }
 
