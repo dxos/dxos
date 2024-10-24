@@ -47,8 +47,16 @@ export class DXN {
     return new DXN(kind, parts);
   }
 
+  static equals(a: DXN, b: DXN) {
+    return a.kind === b.kind && a.parts.length === b.parts.length && a.parts.every((part, i) => part === b.parts[i]);
+  }
+
   static isDXNString(dxn: string) {
     return dxn.startsWith('dxn:');
+  }
+
+  static typename(type: string) {
+    return new DXN(DXN.kind.TYPE, [type]);
   }
 
   static localEchoObjectDXN(id: string) {
