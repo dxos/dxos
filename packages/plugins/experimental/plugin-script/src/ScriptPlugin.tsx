@@ -123,7 +123,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
             }
 
             case 'complementary--automation': {
-              return <AutomationPanel subject={data.subject} />;
+              return <AutomationPanel subject={data.subject as any} />;
             }
           }
           return null;
