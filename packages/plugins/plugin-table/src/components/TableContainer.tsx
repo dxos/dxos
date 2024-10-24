@@ -19,7 +19,7 @@ import { type TableType } from '../types';
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
 
 // TODO(zantonio): Move toolbar action handling to a more appropriate location.
-const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType; role: string }>) => {
+const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType; role?: string }>) => {
   const { hasAttention } = useAttention(fullyQualifiedId(table));
   const dispatch = useIntentDispatcher();
   const space = getSpace(table);
