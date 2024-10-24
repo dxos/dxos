@@ -10,14 +10,16 @@ import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/reac
 import { useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Table, type TableProps } from './Table';
+import { Table } from './Table';
 import { Toolbar, type ToolbarAction } from './Toolbar';
+import { useTableModel } from '../hooks';
+import { type TableType } from '../types';
 
 // TODO(zantonio): Factor out, copied this from MarkdownPlugin.
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
 
 // TODO(zantonio): Move toolbar action handling to a more appropriate location.
-const TableContainer = ({ role, table }: LayoutContainerProps<Omit<TableProps, 'role' | 'getScrollElement'>>) => {
+const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType; role: string }>) => {
   const { hasAttention } = useAttention(fullyQualifiedId(table));
   const dispatch = useIntentDispatcher();
   const space = getSpace(table);
@@ -25,6 +27,8 @@ const TableContainer = ({ role, table }: LayoutContainerProps<Omit<TableProps, '
     table.schema,
   ]);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
+
+  const tableModel = useTableModel({ table, objects: filteredObjects });
 
   const onThreadCreate = useCallback(() => {
     void dispatch({
@@ -76,7 +80,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<Omit<TableProps, '
           role === 'slide' && 'bs-full overflow-auto grid place-items-center',
         )}
       >
-        <Table key={table.id} table={table} objects={filteredObjects} />
+        <Table key={table.id} tableModel={tableModel} />
       </div>
     </div>
   );

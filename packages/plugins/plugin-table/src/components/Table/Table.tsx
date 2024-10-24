@@ -3,7 +3,7 @@
 //
 
 import * as ModalPrimitive from '@radix-ui/react-popper';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 
 import { type DxGridElement, type DxAxisResize, Grid } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
@@ -12,8 +12,9 @@ import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { NewColumnForm } from './NewColumnForm';
 import { RowActionsMenu } from './RowActionsMenu';
 import { TableCellEditor } from './TableCellEditor';
-import { useTableModel, useTableMenuController } from '../../hooks';
-import { type GridCell, type TableType } from '../../types';
+import { useTableMenuController } from '../../hooks';
+import { type TableModel } from '../../model';
+import { type GridCell } from '../../types';
 
 // NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
 // These are offset by 1px to avoid double borders in planks.
@@ -24,19 +25,20 @@ const blockEndLine =
 
 const frozen = { frozenRowsStart: 1, frozenColsEnd: 1 };
 
-export type TableProps = {
-  table: TableType;
-  objects: any[];
-};
+export type TableProps = { tableModel?: TableModel };
 
-// TODO(burdon): Move to react-ui-table?
-export const Table = ({ table, objects }: TableProps) => {
+export const Table = ({ tableModel }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
 
   const handleOnCellUpdate = useCallback((cell: GridCell) => {
     gridRef.current?.updateIfWithinBounds(cell);
   }, []);
-  const tableModel = useTableModel({ table, objects, onCellUpdate: handleOnCellUpdate });
+
+  useEffect(() => {
+    if (tableModel) {
+      tableModel.onCellUpdate = handleOnCellUpdate;
+    }
+  }, [tableModel, handleOnCellUpdate]);
 
   const handleAxisResize = useCallback(
     (event: DxAxisResize) => {
@@ -66,7 +68,7 @@ export const Table = ({ table, objects }: TableProps) => {
           columns={tableModel?.columnMeta.value}
           frozen={frozen}
           limitRows={tableModel?.getRowCount() ?? 0}
-          limitColumns={table.view?.fields?.length ?? 0}
+          limitColumns={tableModel?.table.view?.fields?.length ?? 0}
           onAxisResize={handleAxisResize}
           onClick={handleClick}
         />
