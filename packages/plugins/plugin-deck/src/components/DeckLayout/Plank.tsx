@@ -3,7 +3,7 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React, { type KeyboardEvent, useCallback, useLayoutEffect, useRef } from 'react';
+import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import {
   LayoutAction,
@@ -15,6 +15,8 @@ import {
   Surface,
   useIntentDispatcher,
   type Layout,
+  indexInPart,
+  partLength,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';
@@ -42,7 +44,7 @@ export type PlankProps = {
   searchEnabled?: boolean;
 };
 
-export const Plank = ({ entry, layoutParts, part, flatDeck, searchEnabled, layoutMode }: PlankProps) => {
+export const Plank = memo(({ entry, layoutParts, part, flatDeck, searchEnabled, layoutMode }: PlankProps) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const dispatch = useIntentDispatcher();
   const { popoverAnchorId, scrollIntoView } = useLayout();
@@ -53,7 +55,11 @@ export const Plank = ({ entry, layoutParts, part, flatDeck, searchEnabled, layou
   const resizeable = layoutMode === 'deck';
 
   const attendableAttrs = useAttendableAttributes(entry.id);
-  const coordinate: LayoutCoordinate = { part, entryId: entry.id };
+  const coordinate: LayoutCoordinate = useMemo(() => ({ part, entryId: entry.id }), [entry.id, part]);
+  const index = indexInPart(layoutParts, coordinate);
+  const length = partLength(layoutParts, part);
+  const canIncrementStart = part === 'main' && index !== undefined && index > 0 && length !== undefined && length > 1;
+  const canIncrementEnd = part === 'main' && index !== undefined && index < length - 1 && length !== undefined;
 
   const size = plankSizing?.[entry.id] as number | undefined;
   const setSize = useCallback(
@@ -82,6 +88,19 @@ export const Plank = ({ entry, layoutParts, part, flatDeck, searchEnabled, layou
 
   const sizeAttrs = useMainSize();
 
+  const data = useMemo(
+    () =>
+      node && {
+        ...(entry.path ? { subject: node.data, path: entry.path } : { object: node.data }),
+        coordinate,
+        popoverAnchorId,
+      },
+    [node],
+  );
+
+  // TODO(wittjosiah): Change prop to accept a component.
+  const placeholder = useMemo(() => <PlankLoading />, []);
+
   return (
     <NaturalPlank.Root
       size={size}
@@ -100,27 +119,17 @@ export const Plank = ({ entry, layoutParts, part, flatDeck, searchEnabled, layou
         {node ? (
           <>
             <NodePlankHeading
-              id={entry.id}
+              coordinate={coordinate}
               node={node}
-              layoutPart={coordinate.part}
-              layoutParts={layoutParts}
+              canIncrementStart={canIncrementStart}
+              canIncrementEnd={canIncrementEnd}
               popoverAnchorId={popoverAnchorId}
               flatDeck={flatDeck}
             />
-            <Surface
-              role='article'
-              data={{
-                ...(entry.path ? { subject: node.data, path: entry.path } : { object: node.data }),
-                coordinate,
-                popoverAnchorId,
-              }}
-              limit={1}
-              fallback={PlankContentError}
-              placeholder={<PlankLoading />}
-            />
+            <Surface role='article' data={data} limit={1} fallback={PlankContentError} placeholder={placeholder} />
           </>
         ) : (
-          <PlankError layoutCoordinate={coordinate} id={entry.id} flatDeck={flatDeck} />
+          <PlankError layoutCoordinate={coordinate} flatDeck={flatDeck} />
         )}
       </NaturalPlank.Content>
       {searchEnabled && resizeable ? (
@@ -166,4 +175,4 @@ export const Plank = ({ entry, layoutParts, part, flatDeck, searchEnabled, layou
       ) : null}
     </NaturalPlank.Root>
   );
-};
+});

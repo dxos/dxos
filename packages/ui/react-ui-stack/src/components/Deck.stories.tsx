@@ -102,10 +102,9 @@ export default {
 export const StaticBasicStacks = {
   args: {},
   render: () => {
-    const [attention] = useState({ attended: [] });
     return (
       <Mosaic.Root>
-        <RootAttentionProvider attention={attention}>
+        <RootAttentionProvider>
           <Mosaic.DragOverlay />
           <NaturalDeck.Root classNames='fixed inset-0 z-0'>
             <DemoStackPlank />
@@ -125,10 +124,9 @@ export const StaticBasicStacks = {
 export const StaticBasicStacksWithOverscrolling = {
   args: {},
   render: () => {
-    const [attention] = useState({ attended: [] });
     return (
       <Mosaic.Root>
-        <RootAttentionProvider attention={attention}>
+        <RootAttentionProvider>
           <Mosaic.DragOverlay />
           <NaturalDeck.Root classNames='fixed inset-0 z-0'>
             <DemoStackPlank />
@@ -195,7 +193,6 @@ export const DynamicBasicStacks = () => {
         return acc;
       }, {}),
   );
-  const [attention] = useState({ attended: [] });
 
   const [navOpen, setNavOpen] = useState(true);
   const [c11yOpen, setC11yOpen] = useState(false);
@@ -285,7 +282,7 @@ export const DynamicBasicStacks = () => {
 
   return (
     <Mosaic.Root>
-      <RootAttentionProvider attention={attention}>
+      <RootAttentionProvider>
         <Main.Root complementarySidebarOpen={c11yOpen} navigationSidebarOpen={navOpen}>
           <Main.Overlay />
           <Mosaic.DragOverlay />

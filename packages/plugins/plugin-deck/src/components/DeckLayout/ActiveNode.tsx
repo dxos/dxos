@@ -6,10 +6,13 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { useGraph } from '@dxos/plugin-graph';
+import { useAttended } from '@dxos/react-ui-attention';
 
 import { useNode, useNodeActionExpander } from '../../hooks';
 
-export const ActiveNode = ({ id }: { id?: string }) => {
+// TODO(burdon): Factor out to effect in plugin set document title.
+export const ActiveNode = () => {
+  const [id] = useAttended();
   const { graph } = useGraph();
   const activeNode = useNode(graph, id);
   useNodeActionExpander(activeNode);

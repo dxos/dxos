@@ -11,6 +11,7 @@ import React, {
   createContext,
   forwardRef,
   isValidElement,
+  memo,
   useContext,
   useEffect,
   useState,
@@ -84,8 +85,8 @@ export type SurfaceProps = PropsWithChildren<{
 /**
  * A surface is a named region of the screen that can be populated by plugins.
  */
-export const Surface = forwardRef<HTMLElement, SurfaceProps>(
-  ({ role, name = role, fallback, placeholder, ...rest }, forwardedRef) => {
+export const Surface = memo(
+  forwardRef<HTMLElement, SurfaceProps>(({ role, name = role, fallback, placeholder, ...rest }, forwardedRef) => {
     const props = { role, name, fallback, ...rest };
     const { debugInfo } = useSurfaceRoot();
 
@@ -114,7 +115,7 @@ export const Surface = forwardRef<HTMLElement, SurfaceProps>(
     ) : (
       suspense
     );
-  },
+  }),
 );
 
 const SurfaceContext = createContext<SurfaceProps | undefined>(undefined);

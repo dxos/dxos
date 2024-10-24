@@ -16,8 +16,6 @@ Type: <code>string</code>
 Options:
   - proto3_optional = true
 
-    faces/Autoupdate)</code>
-
 
 
 ### [bots]()

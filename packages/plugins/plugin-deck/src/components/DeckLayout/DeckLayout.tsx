@@ -3,11 +3,12 @@
 //
 
 import { Sidebar as MenuIcon } from '@phosphor-icons/react';
+import { untracked } from '@preact/signals-core';
 import React, { useCallback, useEffect, useMemo, useRef, type UIEvent } from 'react';
 
 import { type LayoutParts, Surface, type Toast as ToastSchema, firstIdInPart, usePlugin } from '@dxos/app-framework';
+import { type AttentionPluginProvides } from '@dxos/plugin-attention';
 import { Button, Dialog, Main, Popover, useOnTransition, useTranslation } from '@dxos/react-ui';
-import { useAttended } from '@dxos/react-ui-attention';
 import { Deck } from '@dxos/react-ui-deck';
 import { getSize, mainPaddingTransitions } from '@dxos/react-ui-theme';
 
@@ -60,7 +61,8 @@ export const DeckLayout = ({
   } = context;
   const { t } = useTranslation(DECK_PLUGIN);
   const { plankSizing } = useDeckContext();
-  const attended = useAttended();
+  // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
+  const attentionPlugin = usePlugin<AttentionPluginProvides>('dxos.org/plugin/attention');
   const searchPlugin = usePlugin('dxos.org/plugin/search');
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
 
@@ -69,6 +71,7 @@ export const DeckLayout = ({
 
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
+    const attended = untracked(() => attentionPlugin?.provides.attention.attended ?? []);
     const firstId = layoutMode === 'solo' ? firstIdInPart(layoutParts, 'solo') : firstIdInPart(layoutParts, 'main');
     if (attended.length === 0 && firstId) {
       // TODO(wittjosiah): Focusing the type button is a workaround.
@@ -109,18 +112,6 @@ export const DeckLayout = ({
     [layoutMode],
   );
 
-  const firstAttendedId = attended[0];
-  useEffect(() => {
-    // TODO(burdon): Can we prevent the need to re-scroll since the planks are preserved?
-    //  E.g., hide the deck and just move the solo article?
-    if (layoutMode === 'deck' && firstAttendedId) {
-      // setTimeout(() => {
-      // const el = deckRef.current?.querySelector(`article[data-attendable-id="${firstAttendedId}"]`);
-      // el?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-      // }, 0);
-    }
-  }, [layoutMode, firstAttendedId]);
-
   const isEmpty = layoutParts.main?.length === 0 && layoutParts.solo?.length === 0;
 
   const padding = useMemo(() => {
@@ -147,8 +138,7 @@ export const DeckLayout = ({
         }
       }}
     >
-      {/* TODO(burdon): Factor out hook to set document title. */}
-      <ActiveNode id={firstAttendedId} />
+      <ActiveNode />
 
       <Main.Root
         navigationSidebarOpen={context.sidebarOpen}
@@ -178,8 +168,7 @@ export const DeckLayout = ({
         <Sidebar layoutParts={layoutParts} />
 
         {/* Right sidebar. */}
-        {/* TODO(wittjosiah): Get context from layout parts. */}
-        <ComplementarySidebar context='comments' layoutParts={layoutParts} flatDeck={flatDeck} />
+        <ComplementarySidebar panel={layoutParts.complementary?.[0].id} flatDeck={flatDeck} />
 
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />

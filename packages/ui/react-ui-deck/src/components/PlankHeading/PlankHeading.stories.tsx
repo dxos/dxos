@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React from 'react';
 
 import { Icon } from '@dxos/react-ui';
-import { RootAttentionProvider } from '@dxos/react-ui-attention';
+import { AttentionManager, RootAttentionProvider } from '@dxos/react-ui-attention';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { PlankHeading } from './PlankHeading';
@@ -18,7 +18,7 @@ type StorybookPlankHeadingProps = {
   label?: string;
 };
 
-const storybookAttention = { attended: ['attended-story'] };
+const storybookAttention = new AttentionManager(['attended-story']);
 
 const StorybookPlankHeading = ({
   attendableId = '',

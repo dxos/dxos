@@ -34,13 +34,11 @@ export const PlankContentError = ({ error }: { error?: Error }) => {
 
 export const PlankError = ({
   layoutCoordinate,
-  id,
   node,
   error,
   flatDeck,
 }: {
   layoutCoordinate: LayoutCoordinate;
-  id: string;
   node?: Node;
   error?: Error;
   flatDeck?: boolean;
@@ -51,13 +49,7 @@ export const PlankError = ({
   }, []);
   return (
     <>
-      <NodePlankHeading
-        node={node}
-        id={id}
-        layoutPart={layoutCoordinate.part}
-        pending={!timedOut}
-        flatDeck={flatDeck}
-      />
+      <NodePlankHeading coordinate={layoutCoordinate} node={node} pending={!timedOut} flatDeck={flatDeck} />
       {timedOut ? <PlankContentError error={error} /> : <PlankLoading />}
     </>
   );
