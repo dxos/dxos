@@ -5,11 +5,12 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-data';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -17,7 +18,7 @@ import { Table } from './Table';
 import { useTableModel } from '../../hooks';
 import { TableType } from '../../types';
 import { Toolbar } from '../Toolbar';
-import { createEmptyTable } from '../testing';
+import { createEmptyTable, createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
 
 const DefaultStory = () => {
   const spaces = useSpaces();
@@ -86,6 +87,46 @@ const DefaultStory = () => {
 };
 
 export const Default = {};
+
+type StoryProps = {
+  rows?: number;
+} & Pick<SimulatorProps, 'insertInterval' | 'updateInterval'>;
+
+const TablePerformanceStory = (props: StoryProps) => {
+  const getDefaultRows = useCallback(() => 10, []);
+  const rows = useDefaultValue(props.rows, getDefaultRows);
+  const table = useMemo(() => createTable(), []);
+  const items = useMemo(() => createItems(rows), [rows]);
+  const simulatorProps = useMemo(() => ({ table, items, ...props }), [table, items, props]);
+  useSimulator(simulatorProps);
+
+  const tableModel = useTableModel({
+    table,
+    objects: items as any,
+  });
+
+  return (
+    <div className='relative is-full max-is-max min-is-0 min-bs-0'>
+      <Table tableModel={tableModel} />
+    </div>
+  );
+};
+
+export const Mutations = {
+  render: TablePerformanceStory,
+  args: {
+    rows: 1000,
+    updateInterval: 1,
+  },
+};
+
+export const RapidInsertions = {
+  render: TablePerformanceStory,
+  args: {
+    rows: 0,
+    insertInterval: 100,
+  },
+};
 
 const meta: Meta<typeof Table> = {
   title: 'plugins/plugin-table/Table',
