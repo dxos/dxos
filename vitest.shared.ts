@@ -2,12 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-// import inject from '@rollup/plugin-inject';
 import { join, relative } from 'node:path';
 import pkgUp from 'pkg-up';
 import { type Plugin, UserConfig as ViteConfig } from 'vite';
 import { defineConfig, type UserConfig as VitestConfig } from 'vitest/config';
-// import Inspect from 'vite-plugin-inspect';
 import WasmPlugin from 'vite-plugin-wasm';
 import Inspect from 'vite-plugin-inspect';
 

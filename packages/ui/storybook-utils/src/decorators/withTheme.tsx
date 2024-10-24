@@ -19,7 +19,7 @@ export const withTheme: Decorator = (Story, context) => {
   const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
 
   // https://www.npmjs.com/package/storybook-dark-mode
-  // NOTE: The useDarkMode hook causes the story to re-render infinitely.
+  // NOTE: The `useDarkMode` hook causes the story to continually re-render.
   useEffect(() => {
     const handleUpdate = (dark: boolean) => setThemeMode(dark ? 'dark' : 'light');
     channel.on(DARK_MODE_EVENT_NAME, handleUpdate);
