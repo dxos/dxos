@@ -19,6 +19,7 @@ import { formatValue } from '@dxos/schema';
 
 import { CellUpdateListener } from './update-listener';
 import { fromGridCell, type GridCell, type TableType } from '../types';
+import { tableButtons } from '../util';
 
 export type ColumnId = string;
 export type SortDirection = 'asc' | 'desc';
@@ -33,30 +34,6 @@ export type TableModelProps = {
   pinnedRows?: { top: number[]; bottom: number[] };
   rowSelection?: number[];
 };
-
-//
-// Accessory HTML and Attributes.
-//
-
-// TODO(Zan): Is there a better place for this to live?
-const cellButtonClasses = 'ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2';
-
-export const columnSettingsButtonAttr = 'data-table-column-settings-button';
-const columnSettingsIcon = 'ph--caret-down--regular';
-const columnSettingsButtonHtml = (columnId: string) =>
-  `<button class="${cellButtonClasses}" ${columnSettingsButtonAttr}="${columnId}"><svg><use href="/icons.svg#${columnSettingsIcon}"/></svg></button>`;
-
-export const rowMenuButtonAttr = 'data-table-row-menu-button';
-const rowMenuIcon = 'ph--dots-three--regular';
-const rowActionMenuButtonHtml = (rowIndex: number) =>
-  `<button class="${cellButtonClasses}" ${rowMenuButtonAttr}="${rowIndex}"><svg><use href="/icons.svg#${rowMenuIcon}"/></svg></button>`;
-
-export const newColumnButtonAttr = 'data-table-new-column-button';
-const newColumnIcon = 'ph--plus--regular';
-const newColumnButtonHtml = () =>
-  `<button class="${cellButtonClasses}" ${newColumnButtonAttr}><svg><use href="/icons.svg#${newColumnIcon}"/></svg></button>`;
-
-const ACTION_COLUMN_WIDTH = 40;
 
 export class TableModel extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
@@ -116,7 +93,7 @@ export class TableModel extends Resource {
           {
             value: field.label ?? field.path,
             resizeHandle: 'col',
-            accessoryHtml: columnSettingsButtonHtml(field.id),
+            accessoryHtml: tableButtons.columnSettings.render({ columnId: field.id }),
             readonly: true,
           },
         ]),
@@ -185,7 +162,7 @@ export class TableModel extends Resource {
       for (let displayRow = 0; displayRow < this.data.value.length; displayRow++) {
         values[fromGridCell({ col: 0, row: displayRow })] = {
           value: '',
-          accessoryHtml: rowActionMenuButtonHtml(displayRow),
+          accessoryHtml: tableButtons.rowMenu.render({ rowIndex: displayRow }),
           readonly: true,
         };
       }
@@ -194,7 +171,7 @@ export class TableModel extends Resource {
     });
 
     const newColumnCell: DxGridPlaneCells = {
-      [fromGridCell({ col: 0, row: 0 })]: { value: '', accessoryHtml: newColumnButtonHtml(), readonly: true },
+      [fromGridCell({ col: 0, row: 0 })]: { value: '', accessoryHtml: tableButtons.newColumn.render(), readonly: true },
     };
 
     this.cells = computed(() => ({
@@ -210,13 +187,10 @@ export class TableModel extends Resource {
         fields.map((field, index: number) => [index, { size: field.size ?? 256, resizeable: true }]),
       );
 
-      // Add action column meta
-      meta[fields.length] = { size: ACTION_COLUMN_WIDTH, resizeable: false };
-
       return {
         grid: meta,
         frozenColsEnd: {
-          0: { size: ACTION_COLUMN_WIDTH, resizeable: false },
+          0: { size: 40, resizeable: false },
         },
       };
     });
