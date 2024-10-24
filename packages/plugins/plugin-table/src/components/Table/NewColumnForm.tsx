@@ -20,15 +20,15 @@ type NewColumnFormProps = {
 
 // TODO(ZaymonFC): A util in `@dxos/schema` should look at the view and the
 // schema and generate the new field. That's why I haven't moved this to ../../seed.
-export const createStarterField = (): FieldType =>
-  create(FieldSchema, {
-    path: 'newField',
-    type: FieldValueType.Text,
-  });
+export const createStarterField = () => {
+  // TODO(ZaymonFC): Can't currently supply a schema since it's not in the registry when we
+  // try to add it to the table
+  return create({ path: 'newField', type: FieldValueType.Text });
+};
 
 export const NewColumnForm = ({ tableModel, open, close }: NewColumnFormProps) => {
   const { tx } = useThemeContext();
-  const [field, setField] = useState(() => create(FieldSchema, createStarterField()));
+  const [field, setField] = useState(() => createStarterField());
 
   useEffect(() => {
     if (open) {
@@ -37,7 +37,7 @@ export const NewColumnForm = ({ tableModel, open, close }: NewColumnFormProps) =
   }, [open]);
 
   const onCreate = useCallback(() => {
-    tableModel?.table?.view?.fields?.push(field);
+    tableModel?.table?.view?.fields?.push(field as any);
     // TODO(ZaymonFC): Use a module to update the view and schema at the same time!
     // TODO(ZaymonFC): Validate: that path and name are unique. Path should be non-empty.
     close();

@@ -4,65 +4,84 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useCallback, useMemo } from 'react';
+import { type Meta } from '@storybook/react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { faker } from '@dxos/random';
-import { useDefaultValue } from '@dxos/react-ui';
-import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
+import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
-import { type SimulatorProps, createItems, createTable, useSimulator } from '../testing';
+import { TableType } from '../../types';
+import { Toolbar } from '../Toolbar';
+import { createEmptyTable } from '../testing';
 
-faker.seed(0);
+const DefaultStory = () => {
+  const spaces = useSpaces();
+  const [table, setTable] = useState<TableType | undefined>();
+  const objects = useQuery(spaces[spaces.length - 1], Filter.schema(TableType));
+  useEffect(() => {
+    if (objects.length) {
+      setTable(objects[0]);
+    }
+  }, [objects]);
 
-type StoryProps = {
-  rows?: number;
-} & Pick<SimulatorProps, 'insertInterval' | 'updateInterval'>;
-
-const DefaultStory = (props: StoryProps) => {
-  const getDefaultRows = useCallback(() => 10, []);
-  const rows = useDefaultValue(props.rows, getDefaultRows);
-  const table = useMemo(() => createTable(), []);
-  const items = useMemo(() => createItems(rows), [rows]);
-  const simulatorProps = useMemo(() => ({ table, items, ...props }), [table, items, props]);
-  useSimulator(simulatorProps);
-
-  const deleteItem = useCallback(
-    (row: any) => {
-      items.splice(items.indexOf(row), 1);
+  const handleAction = useCallback(
+    (action: { type: string }) => {
+      switch (action.type) {
+        case 'on-thread-create': {
+          console.log('Thread creation triggered');
+          break;
+        }
+        case 'add-row': {
+          const lastSpace = spaces[spaces.length - 1];
+          if (table?.schema && lastSpace) {
+            lastSpace.db.add(create(table.schema, {}));
+          }
+          break;
+        }
+      }
     },
-    [items],
+    [table, spaces],
   );
 
+  if (!table) {
+    return null;
+  }
+
   return (
-    <div className='relative is-full max-is-max min-is-0 min-bs-0'>
-      <Table table={table} data={items} onDeleteRow={deleteItem} />
+    <div>
+      <div className='border-b border-separator'>
+        <Toolbar.Root onAction={handleAction}>
+          <Toolbar.Separator />
+          <Toolbar.Actions />
+        </Toolbar.Root>
+      </div>
+      <div className='relative is-full max-is-max min-is-0 min-bs-0'>
+        <Table table={table} />
+      </div>
     </div>
   );
 };
 
-export const Default: StoryObj<StoryProps> = {};
+export const Default = {};
 
-export const ManyItems: StoryObj<StoryProps> = {
-  args: {
-    rows: 1000,
-    updateInterval: 1,
-  },
-};
-
-export const Mutations: StoryObj<StoryProps> = {
-  args: {
-    rows: 0,
-    insertInterval: 100,
-  },
-};
-
-const meta: Meta = {
+const meta: Meta<typeof Table> = {
   title: 'plugins/plugin-table/Table',
   component: Table,
-  render: DefaultStory,
-  decorators: [withSignals, withTheme, withLayout({ fullscreen: true })],
+  render: DefaultStory as any,
+  decorators: [
+    withClientProvider({
+      types: [TableType],
+      createIdentity: true,
+      createSpace: true,
+      onSpaceCreated: ({ space }) => {
+        space.db.add(createEmptyTable());
+      },
+    }),
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true }),
+  ],
 };
 
 export default meta;

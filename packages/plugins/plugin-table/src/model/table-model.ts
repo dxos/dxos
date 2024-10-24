@@ -61,7 +61,7 @@ export class TableModel extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
 
   public readonly table: TableType;
-  private readonly data = signal<any[]>([]);
+  public readonly data = signal<any[]>([]);
 
   public cells!: ReadonlySignal<DxGridCells>;
   public cellUpdateListener!: CellUpdateListener;
@@ -251,6 +251,8 @@ export class TableModel extends Resource {
     const dataIndex = this.displayToDataIndex.get(row) ?? row;
     this.data.value[dataIndex][field.path] = parseValue(field.type, value);
   };
+
+  public getRowCount = (): number => this.data.value.length;
 
   //
   // Move
