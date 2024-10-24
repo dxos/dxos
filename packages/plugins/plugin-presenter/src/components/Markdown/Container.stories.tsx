@@ -4,29 +4,21 @@
 
 import '@dxos-theme';
 
-import React, { type FC } from 'react';
+import { type Meta } from '@storybook/react';
+import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Container } from './Container';
-import { Slide } from './Slide';
+import { Slide, type SlideProps } from './Slide';
 import { createSlide } from '../../testing';
 
-const Story: FC<{ content: string }> = ({ content }) => {
+const DefaultStory = ({ content = '' }: SlideProps) => {
   return (
     <Container classNames='bg-neutral-200'>
       <Slide content={content} />
     </Container>
   );
-};
-
-export default {
-  title: 'plugin-presenter/Container',
-  render: Story,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: {
-    layout: 'fullscreen',
-  },
 };
 
 export const Default = {
@@ -52,3 +44,14 @@ export const Ordered = {
     content: createSlide({ ordered: 4 }),
   },
 };
+
+const meta: Meta<typeof Slide> = {
+  title: 'plugins/plugin-presenter/Container',
+  render: DefaultStory,
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+};
+
+export default meta;
