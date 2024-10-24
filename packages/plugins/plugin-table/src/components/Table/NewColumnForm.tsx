@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { create } from '@dxos/echo-schema';
 import { DropdownMenu, useThemeContext } from '@dxos/react-ui';
 import { Field } from '@dxos/react-ui-data';
-import { FieldType, FieldValueType } from '@dxos/schema';
+import { type FieldType, FieldValueType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
