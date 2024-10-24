@@ -7,11 +7,10 @@ import '@dxos-theme';
 import { FileTs, FileJs, ArrowClockwise, Bug, TextUnderline, TextB, TextItalic } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { createScenarios } from './helpers';
 import { Input, Select, Toggle, Toolbar } from '../components';
-import { withTheme } from '../testing';
+import { withTheme, withVariants } from '../testing';
 
-const Story = () => {
+const DefaultStory = () => {
   const [checked, setChecked] = useState<boolean>(false);
   const [select, setSelect] = useState<string>();
 
@@ -82,13 +81,11 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'react-ui/Scenarios/Controls',
-  component: Story,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
-};
+export const Default = {};
 
-export const Default = {
-  render: createScenarios(Story),
+export default {
+  title: 'ui/react-ui/Playground/Controls',
+  render: DefaultStory,
+  decorators: [withVariants(), withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };

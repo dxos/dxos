@@ -29,21 +29,19 @@ export type ComplementarySidebarProps = {
   flatDeck?: boolean;
 };
 
-const panels = ['comments', 'settings', 'debug'] as const;
+type Panel = { id: string; icon: string };
 
-const nodes = [
-  { id: 'comments', icon: 'ph--chat-text--regular' },
+// TODO(burdon): Should be provided by plugins.
+const panels: Panel[] = [
   { id: 'settings', icon: 'ph--gear--regular' },
+  { id: 'comments', icon: 'ph--chat-text--regular' },
+  { id: 'automation', icon: 'ph--atom--regular' },
   { id: 'debug', icon: 'ph--bug--regular' },
 ];
 
-type Panel = (typeof panels)[number];
-const getPanel = (part?: string): Panel => {
-  if (part && panels.findIndex((panel) => panel === part) !== -1) {
-    return part as Panel;
-  } else {
-    return 'settings';
-  }
+const getPanel = (id?: string): Panel['id'] => {
+  const panel = panels.find((p) => p.id === id) ?? panels[0];
+  return panel.id;
 };
 
 export const ComplementarySidebar = ({ panel, flatDeck }: ComplementarySidebarProps) => {
@@ -58,13 +56,13 @@ export const ComplementarySidebar = ({ panel, flatDeck }: ComplementarySidebarPr
 
   const actions = useMemo(
     () =>
-      nodes.map(({ id, icon }) => ({
+      panels.map(({ id, icon }) => ({
         id: `complementary-${id}`,
         data: () => {
           void dispatch({ action: NavigationAction.OPEN, data: { activeParts: { complementary: id } } });
         },
         properties: {
-          label: [`${id} label`, { ns: DECK_PLUGIN }],
+          label: [`open ${id} label`, { ns: DECK_PLUGIN }],
           icon,
           menuItemType: 'toggle',
           isChecked: part === id,
@@ -86,8 +84,7 @@ export const ComplementarySidebar = ({ panel, flatDeck }: ComplementarySidebarPr
           flatDeck={flatDeck}
           actions={actions}
         />
-        {/* TODO(wittjosiah): Render some placeholder when node is undefined. */}
-        <div className='row-span-2'>
+        <div className='row-span-2 divide-y divide-separator'>
           {node && (
             <Surface
               role={`complementary--${part}`}

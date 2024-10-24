@@ -1,6 +1,6 @@
 {
   "name": "@dxos/chain",
-  "version": "0.6.12",
+  "version": "0.6.13",
   "description": "AI chain.",
   "homepage": "https://github.com/dxos/dxos/tree/master/packages/protocols",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -26,8 +26,7 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/node-std": "workspace:*",
-    "@types/node": "^22.7.4"
+    "@dxos/node-std": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

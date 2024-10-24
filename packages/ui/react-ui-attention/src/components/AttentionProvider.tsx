@@ -49,10 +49,8 @@ const useAttended = () => {
  */
 const useAttendableAttributes = (attendableId?: string) => {
   const { hasAttention } = useAttention(attendableId);
-
   return useMemo(() => {
     const attributes: Record<string, string | undefined> = { [ATTENABLE_ATTRIBUTE]: attendableId };
-
     if (hasAttention) {
       attributes[ATTENTION_SOURCE_ATTRIBUTE] = 'true';
     }

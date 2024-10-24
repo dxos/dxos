@@ -21,16 +21,16 @@ import { createExtension, Graph, type Node } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
-import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
+import { type Space, SpaceState, isEchoObject, isSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
-  topbarBlockPaddingStart,
-  fixedInsetFlexLayout,
   bottombarBlockPaddingEnd,
+  fixedInsetFlexLayout,
+  topbarBlockPaddingStart,
 } from '@dxos/react-ui-theme';
 
-import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, Wireframe } from './components';
+import { DebugGlobal, DebugSettings, DebugSpace, DebugObjectPanel, DebugStatus, Wireframe } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
 import translations from './translations';
 import { DebugContext, type DebugSettingsProps, type DebugPluginProvides, DebugAction } from './types';
@@ -142,7 +142,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                 const space = node.data;
                 return [
                   {
-                    id: `${space.id}-debug`,
+                    id: `${space.id}-debug`, // TODO(burdon): Change to slashes consistently.
                     type: 'dxos.org/plugin/debug/space',
                     data: { space },
                     properties: {
@@ -188,6 +188,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               return data.plugin === meta.id ? <DebugSettings settings={settings.values} /> : null;
             case 'status':
               return <DebugStatus />;
+            case 'complementary--debug':
+              return isEchoObject(data.subject) ? <DebugObjectPanel object={data.subject} /> : null;
           }
 
           const primary = data.active ?? data.object;
@@ -233,8 +235,15 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             if (settings.values.wireframe) {
               if (role === 'main' || role === 'article' || role === 'section') {
                 const primary = data.active ?? data.object;
-                if (!(primary instanceof CollectionType)) {
-                  return <Wireframe label={role} data={data} className='row-span-2 overflow-hidden' />;
+                const isCollection = primary instanceof CollectionType;
+                // TODO(burdon): Move into Container abstraction.
+                if (!isCollection) {
+                  return {
+                    disposition: 'hoist',
+                    node: (
+                      <Wireframe label={`${role}:${name}`} object={primary} classNames='row-span-2 overflow-hidden' />
+                    ),
+                  };
                 }
               }
             }

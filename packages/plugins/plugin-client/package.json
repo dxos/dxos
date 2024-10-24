@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-client",
-  "version": "0.6.12",
+  "version": "0.6.13",
   "description": "DXOS Surface plugin for DXOS Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -46,7 +46,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "@phosphor-icons/react": "^2.1.5"
   },
   "devDependencies": {

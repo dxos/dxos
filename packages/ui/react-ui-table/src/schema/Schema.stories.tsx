@@ -15,7 +15,7 @@ import { schemaToColumnDefs } from './column-utils';
 import { Table } from '../components';
 
 export default {
-  title: 'react-ui-table/Schema',
+  title: 'ui/react-ui-table/Schema',
   decorators: [withTheme, withLayout()],
 };
 

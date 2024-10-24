@@ -36,7 +36,7 @@ const Story = ({ current, attention }: StoryProps) => {
 };
 
 export default {
-  title: 'react-ui-attention/AttentionGlyph',
+  title: 'ui/react-ui-attention/AttentionGlyph',
   component: AttentionGlyph,
   render: Story,
   decorators: [withTheme],

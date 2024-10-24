@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-deck",
-  "version": "0.6.12",
+  "version": "0.6.13",
   "description": "Layout and signifier components to facilitate multitasking.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -22,9 +22,7 @@
   ],
   "dependencies": {
     "@dxos/keyboard": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "^9.19.0",
     "@radix-ui/primitive": "^1.0.0",
@@ -41,6 +39,8 @@
     "@dnd-kit/utilities": "^3.2.0",
     "@dxos/app-graph": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
@@ -50,6 +50,8 @@
     "vite": "5.4.7"
   },
   "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"

@@ -93,7 +93,7 @@ const DemoStackPlank = (rootProps: Partial<ComponentProps<typeof Plank.Root>>) =
 
 export default {
   // NOTE(thure): This is intentionally organized under `react-ui-deck` so that related stories appear together in Storybook despite needing to live in separate packages based on dependencies.
-  title: 'react-ui-deck/Deck',
+  title: 'ui/react-ui-deck/Deck',
   component: NaturalDeck.Root,
   decorators: [withTheme],
   args: {},

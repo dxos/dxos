@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cf-labs",
-  "version": "0.6.12",
+  "version": "0.6.13",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.5.17",
-    "@cloudflare/workers-types": "^4.20240821.1",
+    "@cloudflare/workers-types": "^4.20241018.0",
     "@vitest/browser": "~2.1.2",
     "@vitest/runner": "~2.1.2",
     "@vitest/snapshot": "~2.1.2",

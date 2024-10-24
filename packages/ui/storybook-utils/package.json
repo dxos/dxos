@@ -1,6 +1,6 @@
 {
   "name": "@dxos/storybook-utils",
-  "version": "0.6.12",
+  "version": "0.6.13",
   "private": true,
   "description": "Utilities for DXOS UI Storybooks.",
   "homepage": "https://dxos.org",
@@ -23,12 +23,14 @@
   ],
   "dependencies": {
     "@dxos/echo-signals": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@storybook/preview-api": "^8.3.6",
     "lodash.defaultsdeep": "^4.6.1",
     "storybook-dark-mode": "^4.0.2"
   },
   "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
@@ -37,6 +39,8 @@
     "storybook": "^8.3.3"
   },
   "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   }

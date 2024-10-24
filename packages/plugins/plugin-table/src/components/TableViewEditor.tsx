@@ -13,11 +13,7 @@ const TableViewEditor = ({ view }: { view: ViewType }) => {
     return null;
   }
 
-  return (
-    <div>
-      <ViewEditor schemaResolver={resolver} view={view} />
-    </div>
-  );
+  return <ViewEditor schemaResolver={resolver} view={view} />;
 };
 
 export default TableViewEditor;

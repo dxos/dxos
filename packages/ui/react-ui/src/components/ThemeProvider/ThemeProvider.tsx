@@ -14,32 +14,23 @@ import { ElevationProvider } from '../ElevationProvider';
 
 export type ThemeMode = 'light' | 'dark';
 
-export interface ThemeContextValue {
+export type ThemeContextValue = {
   tx: ThemeFunction<any>;
   themeMode: ThemeMode;
   hasIosKeyboard: boolean;
-}
+};
+
+/**
+ * @internal
+ */
+export const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export type ThemeProviderProps = Omit<TranslationsProviderProps, 'children'> &
   Partial<ThemeContextValue> &
   PropsWithChildren<{
-    rootElevation?: Elevation;
     rootDensity?: Density;
+    rootElevation?: Elevation;
   }>;
-
-export const ThemeContext = createContext<ThemeContextValue>({
-  tx: (_path, defaultClassName, _styleProps, ..._options) => defaultClassName,
-  themeMode: 'dark',
-  hasIosKeyboard: false,
-});
-
-const handleInputModalityChange = (isUsingKeyboard: boolean) => {
-  if (isUsingKeyboard) {
-    document.body.setAttribute('data-is-keyboard', 'true');
-  } else {
-    document.body.removeAttribute('data-is-keyboard');
-  }
-};
 
 export const ThemeProvider = ({
   children,
@@ -48,8 +39,8 @@ export const ThemeProvider = ({
   appNs,
   tx = (_path, defaultClassName, _styleProps, ..._options) => defaultClassName,
   themeMode = 'dark',
+  rootDensity = 'fine',
   rootElevation = 'base',
-  rootDensity = 'coarse',
 }: ThemeProviderProps) => {
   useEffect(() => {
     if (document.defaultView) {
@@ -74,4 +65,12 @@ export const ThemeProvider = ({
       </TranslationsProvider>
     </ThemeContext.Provider>
   );
+};
+
+const handleInputModalityChange = (isUsingKeyboard: boolean) => {
+  if (isUsingKeyboard) {
+    document.body.setAttribute('data-is-keyboard', 'true');
+  } else {
+    document.body.removeAttribute('data-is-keyboard');
+  }
 };

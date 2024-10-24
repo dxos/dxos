@@ -4,6 +4,12 @@
 
 import { effect, type ReadonlySignal } from '@preact/signals-core';
 
+import { type DxGridCellIndex } from '@dxos/react-ui-grid';
+
+import { toGridCell, type GridCell } from '../types';
+
+// TODO(burdon): Move into model.
+//  TODO(burdon): This class is probably not necessary since we can subscribe to updates from ECHO directly.
 // TODO(Zan): Take in the current visible bounds and only subscribe to cells within that range.
 
 /**
@@ -19,7 +25,7 @@ export class CellUpdateListener {
 
   constructor(
     private readonly cells: ReadonlySignal<{ [key: string]: any }>,
-    private onCellUpdate?: (col: number, row: number) => void,
+    private onCellUpdate?: (cell: GridCell) => void,
   ) {
     this.setupCellListeners();
     this.createInitialCellEffects();
@@ -41,7 +47,7 @@ export class CellUpdateListener {
     this.cellEffectsUnsubscribes = Object.entries(cellsObj).map(([key, cellSignal]) => {
       return effect(() => {
         cellSignal.value; // Access the value to subscribe to the signal.
-        queueMicrotask(() => this.trackUpdate(key));
+        queueMicrotask(() => this.trackUpdate(key as DxGridCellIndex));
       });
     });
   };
@@ -51,11 +57,11 @@ export class CellUpdateListener {
     this.cellEffectsUnsubscribes = [];
   };
 
-  private trackUpdate = (cellKey: string): void => {
-    const [col, row] = cellKey.split(',').map(Number);
-    this.onCellUpdate?.(col, row);
+  private trackUpdate = (cellIdx: DxGridCellIndex): void => {
+    this.onCellUpdate?.(toGridCell(cellIdx));
   };
 
+  // TODO(burdon): Implement Resource.
   public dispose = (): void => {
     this.cleanupCellListeners();
     if (this.topLevelEffectUnsubscribe) {

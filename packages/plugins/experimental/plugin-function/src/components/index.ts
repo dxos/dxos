@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
-// Lazily load components for content surfaces.
-export const TriggerArticle = React.lazy(() => import('./TriggerContainer'));
-export const TriggerSection = React.lazy(() => import('./TriggerSection'));
+export const TriggerArticle = lazy(() => import('./TriggerContainer'));
+export const TriggerSection = lazy(() => import('./TriggerSection'));
