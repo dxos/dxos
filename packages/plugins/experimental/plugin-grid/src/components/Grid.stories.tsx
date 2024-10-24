@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryFn } from '@storybook/react';
+import { type Meta, type StoryFn } from '@storybook/react';
 import React, { type Ref, forwardRef, useState } from 'react';
 
 import { Surface, SurfaceProvider } from '@dxos/app-framework';
@@ -18,6 +18,7 @@ import {
   type MosaicDropEvent,
   type MosaicTileProps,
   type MosaicOperation,
+  type MosaicDraggedItem,
 } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -162,23 +163,9 @@ const DemoCard: MosaicTileComponent<DemoCardProps> = forwardRef(
   },
 );
 
-const SurfaceCard: MosaicTileComponent<DemoCardProps> = forwardRef(({ item, ...props }, forwardRef) => {
+const SurfaceCard = forwardRef<HTMLDivElement, MosaicDraggedItem<DemoCardProps>>(({ item, ...props }, forwardRef) => {
   return <Surface ref={forwardRef} role='card' data={{ content: item }} {...props} />;
 });
-
-export default {
-  title: 'plugin-grid/Grid',
-  component: Grid,
-  render: (args: DemoGridProps) => {
-    return (
-      <Mosaic.Root debug={debug}>
-        <Mosaic.DragOverlay />
-        <DemoGrid {...args} />
-      </Mosaic.Root>
-    );
-  },
-  args: { id: 'grid', options: { size } },
-};
 
 export const Default = {};
 
@@ -209,3 +196,20 @@ export const WithSurface = {
     ),
   ],
 };
+
+const meta: Meta<DemoGridProps> = {
+  title: 'plugins/plugin-grid/Grid',
+  component: Grid,
+  decorators: [withTheme],
+  render: (args: DemoGridProps) => {
+    return (
+      <Mosaic.Root debug={debug}>
+        <Mosaic.DragOverlay />
+        <DemoGrid {...args} />
+      </Mosaic.Root>
+    );
+  },
+  args: { id: 'grid', options: { size } },
+};
+
+export default meta;

@@ -24,7 +24,7 @@ import { List, ListItem, type ListProps, type ListScopedProps } from './List';
 import { withTheme } from '../../testing';
 
 export default {
-  title: 'react-ui-core/List',
+  title: 'ui/react-ui/List',
   component: List as FC<ListProps>,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

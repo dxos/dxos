@@ -8,7 +8,8 @@ import { Tag } from './Tag';
 import { withTheme } from '../../testing';
 
 export default {
-  title: 'react-ui-core/Tag',
+  title: 'ui/react-ui/Tag',
+
   component: Tag,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

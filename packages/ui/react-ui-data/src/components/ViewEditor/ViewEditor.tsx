@@ -17,7 +17,7 @@ const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
 
 export type ViewEditorProps = ThemedClassName<{
   view: ViewType;
-  schemaResolver: SchemaResolver;
+  schemaResolver?: SchemaResolver;
   readonly?: boolean;
 }>;
 
@@ -67,7 +67,9 @@ export const ViewEditor = ({ classNames, view, schemaResolver, readonly }: ViewE
         )}
       </List.Root>
 
-      {field && <Field classNames='p-2' autoFocus field={field} schema={schemaResolver(view.query.schema)} />}
+      {field && view.query?.schema && (
+        <Field classNames='p-2' autoFocus field={field} schema={schemaResolver?.(view.query.schema)} />
+      )}
 
       {!readonly && (
         <div className='flex justify-center'>

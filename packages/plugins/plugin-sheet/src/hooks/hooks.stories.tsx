@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { useSpace } from '@dxos/react-client/echo';
@@ -17,7 +18,7 @@ import { useComputeGraph, useSheetModel } from '../hooks';
 import { withComputeGraphDecorator } from '../testing';
 import { SheetType } from '../types';
 
-const Story = () => {
+const DefaultStory = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
   const [sheet, setSheet] = useState<SheetType>();
@@ -36,15 +37,17 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-sheet/hooks',
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-sheet/hooks',
   component: ComputeGraphContextProvider,
+  render: DefaultStory,
   decorators: [
     withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
     withComputeGraphDecorator(),
     withTheme,
   ],
-  render: (args: any) => <Story {...args} />,
 };
 
-export const Default = {};
+export default meta;

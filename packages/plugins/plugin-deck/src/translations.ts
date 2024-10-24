@@ -10,7 +10,6 @@ export default [
         'main header label': 'Main header',
         'open navigation sidebar label': 'Open navigation sidebar.',
         'open complementary sidebar label': 'Open complementary sidebar.',
-        'open settings label': 'Show settings',
         'plugin error message': 'Content failed to render.',
         'content fallback message': 'Unsupported',
         'content fallback description':
@@ -27,7 +26,6 @@ export default [
         'undo action label': 'Undo',
         'undo action alt': 'Undo previous action',
         'undo close label': 'Dismiss',
-        'open comments label': 'Open comments',
         'error fallback message': 'Unable to open this item',
         'plank heading fallback label': 'Untitled',
         'actions menu label': 'Options',
@@ -41,8 +39,12 @@ export default [
         'settings overscroll centering label': 'Centering',
         'settings overscroll none label': 'None',
         'settings flat deck': 'Flatten deck appearance',
-        'comments label': 'Show Comments',
-        'settings label': 'Show Settings',
+
+        // ComplementarySidebar
+        'open settings label': 'Show settings',
+        'open comments label': 'Show Comments',
+        'open automation label': 'Show Automation',
+        'open debug label': 'Show Debug',
       },
     },
   },

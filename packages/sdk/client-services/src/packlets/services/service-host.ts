@@ -300,6 +300,7 @@ export class ClientServicesHost {
 
     const identityService = new IdentityServiceImpl(
       this._serviceContext.identityManager,
+      this._serviceContext.recoveryManager,
       this._serviceContext.keyring,
       () => this._serviceContext.dataSpaceManager!,
       (params) => this._createIdentity(params),

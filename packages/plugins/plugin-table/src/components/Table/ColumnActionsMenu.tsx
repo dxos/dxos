@@ -8,16 +8,17 @@ import React from 'react';
 import { LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { DropdownMenu, useThemeContext, useTranslation } from '@dxos/react-ui';
 
-import { TABLE_PLUGIN } from '../meta';
-import { type TableModel } from '../table-model';
+import { TABLE_PLUGIN } from '../../meta';
+import { type TableModel } from '../../model';
 
-type ColumnActionsMenuProps = {
-  tableModel: TableModel | undefined;
+export type ColumnActionsMenuProps = {
+  tableModel?: TableModel;
   columnId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
+// TODO(burdon): Factor out; take from common component from sheet.
 export const ColumnActionsMenu = ({ tableModel, columnId, open, onOpenChange }: ColumnActionsMenuProps) => {
   const { tx } = useThemeContext();
   const { t } = useTranslation(TABLE_PLUGIN);
@@ -30,9 +31,11 @@ export const ColumnActionsMenu = ({ tableModel, columnId, open, onOpenChange }: 
   const currentSort = tableModel.sorting.value;
   const isCurrentColumnSorted = currentSort?.columnId === columnId;
 
+  // TODO(thure): This is no good very (my) bad. Refactor as part of #7962.
   return (
     <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.Content classNames='contents'>
+        {/* TODO(burdon): Reuse/adapt react-ui? Otherwise mixes styling systems. */}
         <ModalPrimitive.Content className={tx('menu.content', 'menu__content', {})}>
           {(!isCurrentColumnSorted || currentSort?.direction === 'asc') && (
             <DropdownMenu.Item onClick={() => tableModel.setSort(columnId, 'desc')}>

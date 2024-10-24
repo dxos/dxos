@@ -8,9 +8,9 @@ import { describe, expect, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
-import { create, Expando } from '@dxos/echo-schema';
+import { create, Expando, S, TypedObject } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { PublicKey } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -560,6 +560,33 @@ describe('CoreDatabase', () => {
           },
         });
       }
+    });
+
+    test('dynamic schema objects', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { db, crud } = await testBuilder.createDatabase();
+
+      class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+        field: S.String,
+      }) {}
+
+      const stored = db.schema.addSchema(TestSchema);
+      const schemaDxn = DXN.localEchoObjectDXN(stored.id).toString();
+
+      const object = db.add(create(stored, { field: 'test' }));
+      await db.flush({ indexes: true });
+
+      const { objects } = await crud.query({ __typename: schemaDxn }).run();
+      expect(objects).toEqual([
+        {
+          id: object.id,
+          __typename: schemaDxn,
+          __meta: {
+            keys: [],
+          },
+          field: 'test',
+        },
+      ]);
     });
   });
 });

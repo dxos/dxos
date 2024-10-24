@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { batch } from '@preact/signals-core';
+import { type Meta } from '@storybook/react';
 import React, { useEffect } from 'react';
 
 import { Graph, ROOT_ID, type NodeFilter } from '@dxos/app-graph';
@@ -119,8 +120,10 @@ const Story = (args: Partial<NavTreeProps>) => {
   return <NavTree items={items} open={state.open} current={state.current} {...args} />;
 };
 
-export default {
-  title: 'plugin-navtree/Graph',
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-navtree/Graph',
   component: NavTree,
   render: Story,
   decorators: [withTheme, withLayout({ tooltips: true })],
@@ -148,4 +151,4 @@ export default {
   } satisfies Partial<NavTreeProps>,
 };
 
-export const Default = {};
+export default meta;

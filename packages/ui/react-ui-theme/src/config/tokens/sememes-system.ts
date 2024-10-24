@@ -66,10 +66,6 @@ export const systemSememes = {
     light: ['neutral', '450/.1'],
     dark: ['neutral', '450/.1'],
   },
-  warning: {
-    light: ['amber', 500],
-    dark: ['amber', 500],
-  },
 
   //
   // Borders (border-, divide-)

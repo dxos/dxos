@@ -24,7 +24,6 @@ import React, { type ComponentPropsWithRef, forwardRef, type FunctionComponent }
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
-import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
 
 type ToastProviderProps = ToastProviderPrimitiveProps;
@@ -46,9 +45,7 @@ const ToastRoot = forwardRef<HTMLLIElement, ToastRootProps>(({ classNames, child
   const { tx } = useThemeContext();
   return (
     <ToastRootPrimitive {...props} className={tx('toast.root', 'toast', {}, classNames)} ref={forwardedRef}>
-      <ElevationProvider elevation='chrome'>
-        <DensityProvider density='fine'>{children}</DensityProvider>
-      </ElevationProvider>
+      <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
     </ToastRootPrimitive>
   );
 });

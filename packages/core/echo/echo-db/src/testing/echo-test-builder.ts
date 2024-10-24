@@ -109,7 +109,10 @@ export class EchoTestPeer extends Resource {
     return client;
   }
 
-  async createDatabase(spaceKey: PublicKey, { client = this.client }: { client?: EchoClient } = {}) {
+  async createDatabase(
+    spaceKey: PublicKey = PublicKey.random(),
+    { client = this.client }: { client?: EchoClient } = {},
+  ) {
     const root = await this.host.createSpaceRoot(spaceKey);
     // NOTE: Client closes the database when it is closed.
     const spaceId = await createIdFromSpaceKey(spaceKey);

@@ -40,7 +40,7 @@ const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
 };
 
 export default {
-  title: 'react-ui-mosaic/Demo',
+  title: 'ui/react-ui-mosaic/Demo',
   render: () => (
     <ClientRepeater
       component={Story}

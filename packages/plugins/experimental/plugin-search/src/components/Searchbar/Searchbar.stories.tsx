@@ -4,24 +4,13 @@
 
 import '@dxos-theme';
 
-import React, { type FC } from 'react';
-
-import { DensityProvider } from '@dxos/react-ui';
+import { type Meta } from '@storybook/react';
 
 import { Searchbar, type SearchbarProps } from './Searchbar';
 
-const Story: FC<SearchbarProps> = (args) => {
-  return (
-    <DensityProvider density='coarse'>
-      <Searchbar {...args} />
-    </DensityProvider>
-  );
-};
-
-export default {
-  title: 'plugin-search/Searchbar',
+const meta: Meta<SearchbarProps> = {
+  title: 'plugins/plugin-search/Searchbar',
   component: Searchbar,
-  render: Story,
   parameters: {
     layout: 'centered',
   },
@@ -32,3 +21,5 @@ export const Default = {
     placeholder: 'Search...',
   },
 };
+
+export default meta;
