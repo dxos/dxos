@@ -1169,6 +1169,7 @@ export class DxGrid extends LitElement {
       aria-selected=${selected ? 'true' : nothing}
       aria-readonly=${readonly ? 'true' : nothing}
       class=${cell?.className ?? nothing}
+      data-refs=${cell?.dataRefs ?? nothing}
       ?data-dx-active=${active}
       data-dx-grid-action="cell"
       aria-colindex=${col}

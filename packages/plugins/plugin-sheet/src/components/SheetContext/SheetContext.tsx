@@ -2,20 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useContext, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, createContext, useContext, useState, useCallback } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { Grid, useGridContext, type GridScopedProps, type GridEditing } from '@dxos/react-ui-grid';
-
-import { type CellAddress, type CellRange } from '../../defs';
-import { type ComputeGraph } from '../../graph';
 import {
-  createIntegrations,
-  type Integrations,
-  useSelectThreadOnCellFocus,
-  useThreadIntegrations,
-} from '../../integrations';
+  Grid,
+  useGridContext,
+  type GridScopedProps,
+  type GridEditing,
+  type DxGridCellValue,
+} from '@dxos/react-ui-grid';
+
+import { type CellAddress, type CellRange, type CompleteCellRange } from '../../defs';
+import { type ComputeGraph } from '../../graph';
+import { useSelectThreadOnCellFocus } from '../../integrations';
 import { type SheetModel, useSheetModel } from '../../model';
 import { type SheetType } from '../../types';
 
@@ -30,17 +31,19 @@ export type SheetContextValue = {
   setCursor: (cell: CellAddress | undefined) => void;
   range?: CellRange;
   setRange: (range: CellRange | undefined) => void;
+  cursorFallbackRange?: CompleteCellRange;
 
   // Editing state (undefined if not editing).
   editing: GridEditing;
   setEditing: (editing: GridEditing) => void;
 
+  // Active refs
+  activeRefs: DxGridCellValue['dataRefs'];
+  setActiveRefs: (activeRefs: DxGridCellValue['dataRefs']) => void;
+
   // Events.
   // TODO(burdon): Generalize.
   onInfo?: () => void;
-
-  // Integrations.
-  integrations: Integrations;
 };
 
 const SheetContext = createContext<SheetContextValue | undefined>(undefined);
@@ -59,15 +62,31 @@ const SheetProviderImpl = ({
 }: GridScopedProps<PropsWithChildren<Pick<SheetContextValue, 'onInfo' | 'model'>>>) => {
   const { id, editing, setEditing } = useGridContext('SheetProvider', __gridScope);
 
-  // TODO(Zan): Impl. set range and set cursor that scrolls to that cell or range if it is not visible.
-  const integrations = useMemo(() => createIntegrations(), []);
+  const [cursor, setCursorInternal] = useState<CellAddress>();
+  const [range, setRangeInternal] = useState<CellRange>();
+  const [cursorFallbackRange, setCursorFallbackRange] = useState<CompleteCellRange>();
+  const [activeRefs, setActiveRefs] = useState<DxGridCellValue['dataRefs']>('');
 
-  // TODO(thure): Reconnect these.
-  const [cursor, setCursor] = useState<CellAddress>();
-  const [range, setRange] = useState<CellRange>();
+  const setCursor = useCallback(
+    (nextCursor?: CellAddress) => {
+      setCursorInternal(nextCursor);
+      setCursorFallbackRange(
+        range?.to ? (range as CompleteCellRange) : nextCursor ? { from: nextCursor!, to: nextCursor! } : undefined,
+      );
+    },
+    [range],
+  );
+  const setRange = useCallback(
+    (nextRange?: CellRange) => {
+      setRangeInternal(nextRange);
+      setCursorFallbackRange(
+        nextRange?.to ? (nextRange as CompleteCellRange) : cursor ? { from: cursor!, to: cursor! } : undefined,
+      );
+    },
+    [cursor],
+  );
 
-  useSelectThreadOnCellFocus(model, cursor);
-  useThreadIntegrations(model, integrations);
+  useSelectThreadOnCellFocus();
 
   return (
     <SheetContext.Provider
@@ -80,9 +99,11 @@ const SheetProviderImpl = ({
         setCursor,
         range,
         setRange,
+        cursorFallbackRange,
+        activeRefs,
+        setActiveRefs,
         // TODO(burdon): Change to event.
         onInfo,
-        integrations,
       }}
     >
       {children}

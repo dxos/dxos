@@ -117,24 +117,6 @@ export const rangeFromIndex = (sheet: SheetType, idx: string): CellRange => {
 };
 
 /**
- * Find closest cell to cursor.
- */
-export const closest = (cursor: CellAddress, cells: CellAddress[]): CellAddress | undefined => {
-  let closestCell: CellAddress | undefined;
-  let closestDistance = Number.MAX_SAFE_INTEGER;
-
-  for (const cell of cells) {
-    const distance = Math.abs(cell.row - cursor.row) + Math.abs(cell.col - cursor.col);
-    if (distance < closestDistance) {
-      closestCell = cell;
-      closestDistance = distance;
-    }
-  }
-
-  return closestCell;
-};
-
-/**
  * Compares the positions of two cell indexes in a sheet.
  * Sorts primarily by row, then by column if rows are equal.
  */
