@@ -1205,7 +1205,7 @@ export class DxGrid extends LitElement {
           .filter((value) => value)
           .map(
             (activeRef) =>
-              `[data-refs~=${activeRef}] { background: var(--dx-grid-commented-active, var(--dx-gridCommentedActive)) }`,
+              `[data-refs~="${activeRef}"] { background: var(--dx-grid-commented-active, var(--dx-gridCommentedActive)) !important; }`,
           )
           .join('\n')}
       </style>

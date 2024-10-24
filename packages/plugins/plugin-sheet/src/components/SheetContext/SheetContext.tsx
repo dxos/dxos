@@ -16,7 +16,6 @@ import {
 
 import { type CellAddress, type CellRange, type CompleteCellRange } from '../../defs';
 import { type ComputeGraph } from '../../graph';
-import { useSelectThreadOnCellFocus } from '../../integrations';
 import { type SheetModel, useSheetModel } from '../../model';
 import { type SheetType } from '../../types';
 
@@ -85,8 +84,6 @@ const SheetProviderImpl = ({
     },
     [cursor],
   );
-
-  useSelectThreadOnCellFocus();
 
   return (
     <SheetContext.Provider
