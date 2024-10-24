@@ -16,6 +16,7 @@ import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { isItem } from '@dxos/react-ui-list';
+import { Path } from '@dxos/react-ui-mosaic';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { NavTree, type NavTreeProps } from '../components';
@@ -130,10 +131,11 @@ const meta: Meta = {
   decorators: [withTheme, withLayout({ tooltips: true })],
   args: {
     onOpenChange: (item: NavTreeItem, open: boolean) => {
+      const path = Path.create(...item.path);
       if (open) {
-        state.open.push(item.id);
+        state.open.push(path);
       } else {
-        const index = state.open.indexOf(item.id);
+        const index = state.open.indexOf(path);
         if (index > -1) {
           state.open.splice(index, 1);
         }
