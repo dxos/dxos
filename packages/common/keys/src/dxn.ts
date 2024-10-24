@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
+import type { inspect, InspectOptionsStylized } from 'node:util';
 
 /**
  * DXN unambiguously names a resource like an ECHO object, schema definition, plugin, etc.
@@ -106,6 +108,19 @@ export class DXN {
 
   toString() {
     return `dxn:${this.#kind}:${this.#parts.join(':')}`;
+  }
+
+  /**
+   * Used by Node.js to get textual representation of this object when it's printed with a `console.log` statement.
+   */
+  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect) {
+    const printControlCode = (code: number) => {
+      return `\x1b[${code}m`;
+    };
+
+    return (
+      printControlCode(inspectFn.colors.blueBright![0]) + this.toString() + printControlCode(inspectFn.colors.reset![0])
+    );
   }
 }
 
