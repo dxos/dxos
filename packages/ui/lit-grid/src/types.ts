@@ -98,6 +98,7 @@ export type DxGridProps = Partial<
     | 'limitRows'
     | 'frozen'
     | 'overscroll'
+    | 'activeRefs'
   >
 >;
 

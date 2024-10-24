@@ -8,10 +8,10 @@ import { invariant } from '@dxos/invariant';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import {
   Grid,
+  type GridContentProps,
   useGridContext,
   type GridScopedProps,
   type GridEditing,
-  type DxGridCellValue,
 } from '@dxos/react-ui-grid';
 
 import { type CellAddress, type CellRange, type CompleteCellRange } from '../../defs';
@@ -38,8 +38,8 @@ export type SheetContextValue = {
   setEditing: (editing: GridEditing) => void;
 
   // Active refs
-  activeRefs: DxGridCellValue['dataRefs'];
-  setActiveRefs: (activeRefs: DxGridCellValue['dataRefs']) => void;
+  activeRefs: GridContentProps['activeRefs'];
+  setActiveRefs: (activeRefs: GridContentProps['activeRefs']) => void;
 
   // Events.
   // TODO(burdon): Generalize.
@@ -65,7 +65,7 @@ const SheetProviderImpl = ({
   const [cursor, setCursorInternal] = useState<CellAddress>();
   const [range, setRangeInternal] = useState<CellRange>();
   const [cursorFallbackRange, setCursorFallbackRange] = useState<CompleteCellRange>();
-  const [activeRefs, setActiveRefs] = useState<DxGridCellValue['dataRefs']>('');
+  const [activeRefs, setActiveRefs] = useState<GridContentProps['activeRefs']>('');
 
   const setCursor = useCallback(
     (nextCursor?: CellAddress) => {

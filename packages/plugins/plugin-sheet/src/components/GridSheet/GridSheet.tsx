@@ -42,7 +42,8 @@ const sheetRowDefault = { frozenRowsStart: { size: 32, readonly: true }, grid: {
 const sheetColDefault = { frozenColsStart: { size: 48, readonly: true }, grid: { size: 180, resizeable: true } };
 
 export const GridSheet = () => {
-  const { id, model, editing, setEditing, setCursor, setRange, cursor, cursorFallbackRange } = useSheetContext();
+  const { id, model, editing, setEditing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs } =
+    useSheetContext();
   const dxGrid = useRef<DxGridElement | null>(null);
   const rangeNotifier = useRef<CellRangeNotifier>();
   const { hasAttention } = useAttention(id);
@@ -193,6 +194,7 @@ export const GridSheet = () => {
         onKeyDown={handleKeyDown}
         overscroll='inline'
         className='[--dx-grid-base:var(--surface-bg)]'
+        activeRefs={activeRefs}
         ref={dxGrid}
       />
     </>

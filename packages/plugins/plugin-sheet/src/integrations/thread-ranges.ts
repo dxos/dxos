@@ -17,7 +17,7 @@ export const completeCellRangeToThreadCursor = (range: CompleteCellRange): strin
   return `${range.from.col},${range.from.row},${range.to.col},${range.to.row}`;
 };
 
-export const parseThreadCursorAsCompleteCellRange = (cursor: string): CompleteCellRange | null => {
+export const parseThreadAnchorAsCellRange = (cursor: string): CompleteCellRange | null => {
   const coords = cursor.split(',');
   if (coords.length !== 4) {
     return null;
@@ -41,7 +41,7 @@ export const useUpdateFocusedCellOnThreadSelection = (grid: MutableRefObject<DxG
           }
           setActiveRefs(data.thread);
           // TODO(Zan): Everywhere we refer to the cursor in a thread context should change to `anchor`.
-          const range = parseThreadCursorAsCompleteCellRange(data.cursor);
+          const range = parseThreadAnchorAsCellRange(data.cursor);
           range && grid.current?.setFocus({ ...range.to, plane: 'grid' }, true);
         }
       }
@@ -72,7 +72,7 @@ export const useSelectThreadOnCellFocus = () => {
 
       const closestThread = threads?.find(({ anchor }) => {
         if (anchor) {
-          const range = parseThreadCursorAsCompleteCellRange(anchor);
+          const range = parseThreadAnchorAsCellRange(anchor);
           return range ? inRange(range, cellAddress) : false;
         } else {
           return false;
