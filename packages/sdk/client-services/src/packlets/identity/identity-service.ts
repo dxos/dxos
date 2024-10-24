@@ -6,7 +6,6 @@ import { Trigger, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
 import { signPresentation } from '@dxos/credentials';
-import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
@@ -24,6 +23,7 @@ import { safeAwaitAll } from '@dxos/util';
 
 import { type Identity } from './identity';
 import { type CreateIdentityOptions, type IdentityManager } from './identity-manager';
+import { type EdgeIdentityRecoveryManager } from './identity-recovery-manager';
 import { type DataSpaceManager } from '../spaces';
 
 const DEFAULT_SPACE_SEARCH_TIMEOUT = 10_000;
@@ -31,6 +31,7 @@ const DEFAULT_SPACE_SEARCH_TIMEOUT = 10_000;
 export class IdentityServiceImpl extends Resource implements IdentityService {
   constructor(
     private readonly _identityManager: IdentityManager,
+    private readonly _recoveryManager: EdgeIdentityRecoveryManager,
     private readonly _keyring: Keyring,
     private readonly _dataSpaceManagerProvider: () => DataSpaceManager,
     private readonly _createIdentity: (params: CreateIdentityOptions) => Promise<Identity>,
@@ -58,10 +59,6 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     const identity = this._identityManager.identity;
     invariant(identity);
     await identity.updateDefaultSpace(space.id);
-  }
-
-  async recoverIdentity(request: RecoverIdentityRequest): Promise<IdentityProto> {
-    return todo();
   }
 
   queryIdentity(): Stream<QueryIdentityResponse> {
@@ -93,7 +90,12 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
   }
 
   async createRecoveryPhrase() {
-    return this._identityManager.createRecoveryPhrase();
+    return this._recoveryManager.createRecoveryPhrase();
+  }
+
+  async recoverIdentity(request: RecoverIdentityRequest): Promise<IdentityProto> {
+    await this._recoveryManager.recoverIdentity(request);
+    return this._getIdentity()!;
   }
 
   // TODO(burdon): Rename createPresentation?
