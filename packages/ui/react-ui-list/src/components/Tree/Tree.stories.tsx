@@ -7,11 +7,11 @@ import '@dxos-theme';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import React, { useEffect } from 'react';
-import { Path } from '@dxos/react-ui-mosaic';
 
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
+import { Path } from '@dxos/react-ui-mosaic';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Tree, type TreeProps } from './Tree';
