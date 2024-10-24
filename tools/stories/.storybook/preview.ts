@@ -34,7 +34,9 @@ const preview: Preview = {
 
     // https://storybook.js.org/addons/storybook-dark-mode
     darkMode: {
-      classTarget: 'html', // TODO(burdon): This doesn't seem to work.
+      // TODO(burdon): This doesn't seem to work. Invalid value in Application/Store.
+      //  https://github.com/hipstersmoothie/storybook-dark-mode/issues/234
+      classTarget: 'html',
       stylePreview: true,
       dark: { ...themes.dark },
       darkClass: 'dark',
@@ -56,5 +58,7 @@ const preview: Preview = {
     },
   },
 };
+
+export const parameters: Preview['parameters'] = preview.parameters;
 
 export default preview;
