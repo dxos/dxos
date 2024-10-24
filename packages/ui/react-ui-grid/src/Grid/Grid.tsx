@@ -99,6 +99,7 @@ GridRoot.displayName = GRID_NAME;
 
 type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'onEdit'> & {
   getCells?: NonNullable<NaturalDxGrid['getCells']>;
+  activeRefs?: string;
 };
 
 const GRID_CONTENT_NAME = 'GridContent';
@@ -134,7 +135,7 @@ export { GridRoot, GridContent, useGridContext, createGridScope };
 
 export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps, DxGridElement };
 
-export { colToA1Notation, rowToA1Notation, closestCell } from '@dxos/lit-grid';
+export { colToA1Notation, rowToA1Notation, closestCell, commentedClassName } from '@dxos/lit-grid';
 
 export type {
   DxGridRange,

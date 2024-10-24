@@ -66,6 +66,10 @@ export type DxGridCellValue = {
    */
   className?: string;
   /**
+   * `data-refs` attribute to apply to the gridcell element.
+   */
+  dataRefs?: string;
+  /**
    * Whether to render a resize handle for this cell’s row or column.
    */
   resizeHandle?: DxGridAxis;
@@ -94,6 +98,7 @@ export type DxGridProps = Partial<
     | 'limitRows'
     | 'frozen'
     | 'overscroll'
+    | 'activeRefs'
   >
 >;
 

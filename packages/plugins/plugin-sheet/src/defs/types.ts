@@ -13,6 +13,7 @@ export const MAX_COLUMNS = 26 * 2;
 export type CellAddress = { col: number; row: number };
 
 export type CellRange = { from: CellAddress; to?: CellAddress };
+export type CompleteCellRange = { from: CellAddress; to: CellAddress };
 
 export type CellIndex = string;
 

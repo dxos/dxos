@@ -243,6 +243,9 @@ export class DxGrid extends LitElement {
   @property({ type: String })
   overscroll: 'inline' | 'block' | undefined = undefined;
 
+  @property({ type: String })
+  activeRefs = '';
+
   /**
    * When this function is defined, it is used first to try to get a value for a cell, and otherwise will fall back
    * to `cells`.
@@ -1169,14 +1172,16 @@ export class DxGrid extends LitElement {
       aria-selected=${selected ? 'true' : nothing}
       aria-readonly=${readonly ? 'true' : nothing}
       class=${cell?.className ?? nothing}
+      data-refs=${cell?.dataRefs ?? nothing}
       ?data-dx-active=${active}
       data-dx-grid-action="cell"
       aria-colindex=${col}
       aria-rowindex=${row}
       style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
     >
-      ${cell?.value}${accessory}${cell?.resizeHandle &&
-      this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
+      ${this.mode === 'edit' && active ? null : cell?.value}${this.mode === 'edit' && active
+        ? null
+        : accessory}${cell?.resizeHandle && this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
         ? html`<dx-grid-axis-resize-handle
             axis=${cell.resizeHandle}
             plane=${resizePlane}
@@ -1194,57 +1199,67 @@ export class DxGrid extends LitElement {
     const offsetBlock = this.binBlockMin - this.posBlock - this.overscanBlock;
     const selection = selectionProps(this.selectionStart, this.selectionEnd);
 
-    return html`<div
-      role="none"
-      class="dx-grid"
-      style=${styleMap({
-        'grid-template-columns': `${this.templatefrozenColsStart ? 'min-content ' : ''}minmax(0, ${
-          Number.isFinite(this.limitColumns) ? `${this.intrinsicInlineSize}px` : '1fr'
-        })${this.templatefrozenColsEnd ? ' min-content' : ''}`,
-        'grid-template-rows': `${this.templatefrozenRowsStart ? 'min-content ' : ''}minmax(0, ${
-          Number.isFinite(this.limitRows) ? `${this.intrinsicBlockSize}px` : '1fr'
-        })${this.templatefrozenRowsEnd ? ' min-content' : ''}`,
-      })}
-      data-grid=${this.gridId}
-      data-grid-mode=${this.mode}
-      ?data-grid-select=${selection.visible}
-    >
-      ${this.renderFixed('fixedStartStart', selection)}${this.renderFrozenRows(
-        'frozenRowsStart',
-        visibleCols,
-        offsetInline,
-        selection,
-      )}${this.renderFixed('fixedStartEnd', selection)}${this.renderFrozenColumns(
-        'frozenColsStart',
-        visibleRows,
-        offsetBlock,
-        selection,
-      )}
-      <div role="grid" class="dx-grid__plane--grid" tabindex="0" ${ref(this.viewportRef)}>
-        <div
-          role="none"
-          class="dx-grid__plane--grid__content"
-          data-dx-grid-plane="grid"
-          style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:${this
-            .templateGridColumns};grid-template-rows:${this.templateGridRows};"
-        >
-          ${[...Array(visibleRows)].map((_, r0) => {
-            return [...Array(visibleCols)].map((_, c0) => {
-              const c = c0 + this.visColMin;
-              const r = r0 + this.visRowMin;
-              return this.renderCell(c, r, 'grid', cellSelected(c, r, 'grid', selection), c0, r0);
-            });
-          })}
+    return html`<style>
+        ${this.activeRefs
+          .split(' ')
+          .filter((value) => value)
+          .map(
+            (activeRef) =>
+              `[data-refs~="${activeRef}"] { background: var(--dx-grid-commented-active, var(--dx-gridCommentedActive)) !important; }`,
+          )
+          .join('\n')}
+      </style>
+      <div
+        role="none"
+        class="dx-grid"
+        style=${styleMap({
+          'grid-template-columns': `${this.templatefrozenColsStart ? 'min-content ' : ''}minmax(0, ${
+            Number.isFinite(this.limitColumns) ? `${this.intrinsicInlineSize}px` : '1fr'
+          })${this.templatefrozenColsEnd ? ' min-content' : ''}`,
+          'grid-template-rows': `${this.templatefrozenRowsStart ? 'min-content ' : ''}minmax(0, ${
+            Number.isFinite(this.limitRows) ? `${this.intrinsicBlockSize}px` : '1fr'
+          })${this.templatefrozenRowsEnd ? ' min-content' : ''}`,
+        })}
+        data-grid=${this.gridId}
+        data-grid-mode=${this.mode}
+        ?data-grid-select=${selection.visible}
+      >
+        ${this.renderFixed('fixedStartStart', selection)}${this.renderFrozenRows(
+          'frozenRowsStart',
+          visibleCols,
+          offsetInline,
+          selection,
+        )}${this.renderFixed('fixedStartEnd', selection)}${this.renderFrozenColumns(
+          'frozenColsStart',
+          visibleRows,
+          offsetBlock,
+          selection,
+        )}
+        <div role="grid" class="dx-grid__plane--grid" tabindex="0" ${ref(this.viewportRef)}>
+          <div
+            role="none"
+            class="dx-grid__plane--grid__content"
+            data-dx-grid-plane="grid"
+            style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:${this
+              .templateGridColumns};grid-template-rows:${this.templateGridRows};"
+          >
+            ${[...Array(visibleRows)].map((_, r0) => {
+              return [...Array(visibleCols)].map((_, c0) => {
+                const c = c0 + this.visColMin;
+                const r = r0 + this.visRowMin;
+                return this.renderCell(c, r, 'grid', cellSelected(c, r, 'grid', selection), c0, r0);
+              });
+            })}
+          </div>
         </div>
-      </div>
-      ${this.renderFrozenColumns('frozenColsEnd', visibleRows, offsetBlock, selection)}${this.renderFixed(
-        'fixedEndStart',
-        selection,
-      )}${this.renderFrozenRows('frozenRowsEnd', visibleCols, offsetInline, selection)}${this.renderFixed(
-        'fixedEndEnd',
-        selection,
-      )}
-    </div>`;
+        ${this.renderFrozenColumns('frozenColsEnd', visibleRows, offsetBlock, selection)}${this.renderFixed(
+          'fixedEndStart',
+          selection,
+        )}${this.renderFrozenRows('frozenRowsEnd', visibleCols, offsetInline, selection)}${this.renderFixed(
+          'fixedEndEnd',
+          selection,
+        )}
+      </div>`;
   }
 
   private updateIntrinsicInlineSize() {
@@ -1382,3 +1397,5 @@ export class DxGrid extends LitElement {
 }
 
 export { rowToA1Notation, colToA1Notation } from './util';
+
+export const commentedClassName = 'dx-grid__cell--commented';

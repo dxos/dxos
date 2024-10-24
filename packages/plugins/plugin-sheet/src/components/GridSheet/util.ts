@@ -4,7 +4,7 @@
 
 import { type MutableRefObject, useEffect, useLayoutEffect, useState } from 'react';
 
-import { createDocAccessor } from '@dxos/react-client/echo';
+import { createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
 import { parseValue, cellClassesForFieldType } from '@dxos/react-ui-data';
 import {
   type GridContentProps,
@@ -16,10 +16,12 @@ import {
   type DxGridCellValue,
   colToA1Notation,
   rowToA1Notation,
+  commentedClassName,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type CellAddress, inRange, cellClassNameForRange } from '../../defs';
+import { parseThreadAnchorAsCellRange } from '../../integrations';
 import { type SheetModel } from '../../model';
 
 export const dxGridCellIndexToSheetCellAddress = (index: string): CellAddress => {
@@ -61,10 +63,21 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
     return { value: '' };
   }
   const ranges = model.sheet.ranges?.filter(({ range }) => inRange(range, address));
+  const threadRefs = model.sheet.threads
+    ?.filter((thread) => {
+      const range = thread?.anchor && parseThreadAnchorAsCellRange(thread!.anchor);
+      return thread && range ? inRange(range, address) : false;
+    })
+    .map((thread) => fullyQualifiedId(thread!))
+    .join(' ');
   const type = model.getValueType(address);
   const classNames = ranges?.map(cellClassNameForRange).reverse();
 
-  return { value: parseValue(type, rawValue), className: mx(cellClassesForFieldType(type), classNames) };
+  return {
+    value: parseValue(type, rawValue),
+    className: mx(cellClassesForFieldType(type), threadRefs && commentedClassName, classNames),
+    dataRefs: threadRefs,
+  };
 };
 
 const gridCellGetter = (model: SheetModel) => {

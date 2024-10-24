@@ -73,15 +73,8 @@ dx-grid, dx-grid-axis-resize-handle {
         cursor: text;
       }
     }
-  }
-  &[data-grid-mode="edit"] {
-    [role='gridcell'], [role='columnheader'], [role='rowheader'] {
-      &[data-dx-active] {
-        color: transparent !important;
-        & > * {
-          opacity: 0 !important;
-        }
-      }
+    &.dx-grid__cell--commented {
+      background: var(--dx-grid-commented, var(--dx-gridCommented));
     }
   }
   &[data-grid-select] {
