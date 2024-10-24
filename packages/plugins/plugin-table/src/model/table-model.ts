@@ -112,7 +112,7 @@ export class TableModel extends Resource {
             value: field.label ?? field.path,
             resizeHandle: 'col',
             accessoryHtml: columnSettingsButtonHtml(field.id),
-            readonly: false,
+            readonly: true,
           },
         ]),
       );
