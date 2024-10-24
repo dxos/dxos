@@ -5,13 +5,32 @@
 import { type Preview } from '@storybook/react';
 import { themes } from '@storybook/theming';
 import { type IndexEntry } from '@storybook/types';
-import { log } from 'console';
 
 /**
  * Configure Storybook rendering.
  * https://storybook.js.org/docs/configure#configure-story-rendering
  */
 const preview: Preview = {
+  /**
+   * https://storybook.js.org/docs/essentials/toolbars-and-globals
+   */
+  globalTypes: {
+    locale: {
+      title: 'fucker',
+      description: 'DX logging level.',
+      toolbar: {
+        icon: 'globe', // print
+        items: [
+          { value: 'en', right: '🇺🇸', title: 'English' },
+          { value: 'fr', right: '🇫🇷', title: 'Français' },
+        ]
+      }
+    }
+  },
+  initialGlobals: {
+    locale: 'en',
+  },
+
   /**
    * Referenced when story is previewed in browser.
    * https://storybook.js.org/docs/writing-stories/parameters#global-parameters
@@ -35,8 +54,6 @@ const preview: Preview = {
 
     // https://storybook.js.org/addons/storybook-dark-mode
     darkMode: {
-      // TODO(burdon): This doesn't seem to work. Invalid value in Application/Store.
-      //  https://github.com/hipstersmoothie/storybook-dark-mode/issues/234
       classTarget: 'html',
       stylePreview: true,
       dark: { ...themes.dark },
@@ -61,6 +78,9 @@ const preview: Preview = {
   },
 };
 
+export const globalTypes: Preview['globalTypes'] = preview.globalTypes;
 export const parameters: Preview['parameters'] = preview.parameters;
+
+console.log(JSON.stringify(preview, null, 2));
 
 export default preview;

@@ -13,7 +13,7 @@ import { performInvitation, TestBuilder } from '@dxos/client/testing';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
-import { ClientProvider, type ClientProviderProps, useClient } from '../client';
+import { ClientProvider, type ClientProviderProps } from '../client';
 
 type InitializeProps = {
   createIdentity?: boolean;
@@ -121,34 +121,20 @@ export const withMultiClientProvider = ({
     };
 
     return (
-      <div>
-        <ErrorBoundary>
-          {Array.from({ length: numClients }).map((_, index) => (
-            <div key={index} className='border border-red-500 p-2'>
-              <ClientProvider
-                services={builder.current.createLocalClientServices()}
-                onInitialized={(client) => handleInitialized(client, index)}
-                {...props}
-              >
-                <ClientInfo index={index} numClients={numClients} />
-                <Story />
-              </ClientProvider>
-            </div>
-          ))}
-        </ErrorBoundary>
-      </div>
+      <ErrorBoundary>
+        {Array.from({ length: numClients }).map((_, index) => (
+          <ClientProvider
+            key={index}
+            services={builder.current.createLocalClientServices()}
+            onInitialized={(client) => handleInitialized(client, index)}
+            {...props}
+          >
+            <Story />
+          </ClientProvider>
+        ))}
+      </ErrorBoundary>
     );
   };
-};
-
-// TODO(burdon): Optional label.
-const ClientInfo = ({ index, numClients }: { index: number; numClients: number }) => {
-  const client = useClient();
-  useEffect(() => {
-    log.info('client', { index, numClients, client });
-  }, []);
-
-  return <div>{index}</div>;
 };
 
 const ErrorBoundary = ({ children }: PropsWithChildren) => {
