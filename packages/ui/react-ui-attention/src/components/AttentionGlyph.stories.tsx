@@ -10,12 +10,12 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { AttentionGlyph } from './AttentionGlyph';
 
-type StorybookAttentionGlyphProps = {
+type StoryProps = {
   current?: boolean;
   attention?: boolean;
 };
 
-const StorybookAttentionGlyph = ({ current, attention }: StorybookAttentionGlyphProps) => {
+const Story = ({ current, attention }: StoryProps) => {
   const itemAttrs = {
     ...(current && { 'aria-current': 'page' as const }),
     ...(attention && { 'data-attention': 'true' }),
@@ -36,17 +36,20 @@ const StorybookAttentionGlyph = ({ current, attention }: StorybookAttentionGlyph
 };
 
 export default {
-  title: 'ui/react-ui-deck/AttentionGlyph',
-  component: StorybookAttentionGlyph,
+  title: 'ui/react-ui-attention/AttentionGlyph',
+  component: AttentionGlyph,
+  render: Story,
   decorators: [withTheme],
 };
 
 export const Default = {
   args: {},
 };
+
 export const Current = {
   args: { current: true },
 };
+
 export const Attention = {
   args: { current: true, attention: true },
 };
