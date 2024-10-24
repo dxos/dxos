@@ -13,9 +13,6 @@ import { SignalMessageTable } from './SignalMessageTable';
 export default {
   component: SignalMessageTable,
   decorators: [withTheme],
-  parameters: {
-    actions: { argTypesRegex: '^on.*' },
-  },
 };
 
 export const Normal = (props: any) => {

@@ -20,6 +20,11 @@ const preview: Preview = {
       argTypesRegex: '^on[A-Z].*',
     },
 
+    // Disables Chromatic's snapshotting on a global level.
+    chromatic: {
+      disableSnapshot: true,
+    },
+
     controls: {
       matchers: {
         color: /(background|color)$/i,
@@ -27,19 +32,16 @@ const preview: Preview = {
       },
     },
 
-    // Disables Chromatic's snapshotting on a global level.
-    chromatic: {
-      disableSnapshot: true,
-    },
-
     // https://storybook.js.org/addons/storybook-dark-mode
     darkMode: {
+      // TODO(burdon): This doesn't seem to work. Invalid value in Application/Store.
+      //  https://github.com/hipstersmoothie/storybook-dark-mode/issues/234
       classTarget: 'html',
-      stylePreview: false,
+      stylePreview: true,
       dark: { ...themes.dark },
       darkClass: 'dark',
       light: { ...themes.light },
-      lightClass: 'dark',
+      lightClass: 'light',
     },
 
     // https://storybook.js.org/docs/api/parameters#options
@@ -56,5 +58,7 @@ const preview: Preview = {
     },
   },
 };
+
+export const parameters: Preview['parameters'] = preview.parameters;
 
 export default preview;
