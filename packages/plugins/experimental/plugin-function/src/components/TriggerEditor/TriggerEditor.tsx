@@ -105,7 +105,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
           a.typename < b.typename ? -1 : 1,
         );
       })
-      .catch();
+      .catch(() => {});
   }, [space]);
 
   // Keen an enriched version of the schema in memory so we can share it with prompt editor.

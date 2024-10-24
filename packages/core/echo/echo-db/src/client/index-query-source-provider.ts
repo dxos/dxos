@@ -130,7 +130,7 @@ export class IndexQuerySource implements QuerySource {
           if (currentCtx) {
             return;
           }
-          void stream.close().catch();
+          void stream.close().catch(() => {});
         }
 
         await currentCtx?.dispose();
@@ -219,7 +219,7 @@ export class IndexQuerySource implements QuerySource {
   }
 
   private _closeStream() {
-    void this._stream?.close().catch();
+    void this._stream?.close().catch(() => {});
     this._stream = undefined;
   }
 }

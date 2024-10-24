@@ -46,7 +46,7 @@ const DefaultStory = () => {
           [TestSchemaType.organization]: 20,
           [TestSchemaType.contact]: 50,
         })
-        .catch();
+        .catch(() => {});
     } catch (err) {
       console.log(err);
     }

@@ -9,6 +9,7 @@ module.exports = {
     'no-console': 'error',
     '@dxos/rules/comment': 'off',
     '@dxos/rules/header': 'error',
+    '@dxos/rules/no-empty-promise-catch': 'error',
     '@stayradiated/prefer-arrow-functions/prefer-arrow-functions': [
       'error',
       {
