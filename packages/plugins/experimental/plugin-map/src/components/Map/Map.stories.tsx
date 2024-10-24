@@ -4,13 +4,14 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Map } from './Map';
 
-const Story = (props: any) => {
+const DefaultStory = () => {
   return (
     <Map.Root>
       <Map.Canvas />
@@ -20,11 +21,13 @@ const Story = (props: any) => {
   );
 };
 
-export default {
-  title: 'plugin-map/Map',
-  component: Map,
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-map/Map',
+  component: Map.Root,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: (...args: any[]) => <Story {...args} />,
 };
 
-export const Default = {};
+export default meta;

@@ -97,10 +97,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             case 'article':
               return isTable(data.object) ? <TableContainer role={role} table={data.object} /> : null;
             case 'complementary--settings': {
-              if (!(data.subject instanceof TableType)) {
-                return null;
-              }
-              if (!data.subject.view) {
+              if (!(data.subject instanceof TableType) || !data.subject.view) {
                 return null;
               }
 

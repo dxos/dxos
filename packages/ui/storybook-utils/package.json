@@ -1,6 +1,6 @@
 {
   "name": "@dxos/storybook-utils",
-  "version": "0.6.12",
+  "version": "0.6.13",
   "private": true,
   "description": "Utilities for DXOS UI Storybooks.",
   "homepage": "https://dxos.org",
@@ -23,6 +23,8 @@
   ],
   "dependencies": {
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@storybook/preview-api": "^8.3.6",
     "lodash.defaultsdeep": "^4.6.1",
     "storybook-dark-mode": "^4.0.2"
   },

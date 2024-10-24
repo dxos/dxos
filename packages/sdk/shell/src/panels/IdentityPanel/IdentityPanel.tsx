@@ -12,7 +12,7 @@ import { type Identity, useIdentity, useDevices, useHaloInvitations } from '@dxo
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { useNetworkStatus, ConnectionState } from '@dxos/react-client/mesh';
-import { Avatar, DensityProvider, Input, Toolbar, Tooltip, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, Input, Toolbar, Tooltip, useId, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
@@ -178,7 +178,7 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
   const onCancelReset = () => rest.send?.('unchooseAction');
 
   return (
-    <DensityProvider density='fine'>
+    <>
       <IdentityHeading
         {...{ identity, titleId, title, onDone, onUpdateProfile, connectionState, onChangeConnectionState }}
       />
@@ -218,7 +218,7 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
           </Viewport.View>
         </Viewport.Views>
       </Viewport.Root>
-    </DensityProvider>
+    </>
   );
 };
 

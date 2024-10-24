@@ -5,16 +5,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import {
-  Avatar,
-  DensityProvider,
-  Icon,
-  Input,
-  type ThemedClassName,
-  Toolbar,
-  useControlledValue,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Avatar, Icon, Input, type ThemedClassName, Toolbar, useControlledValue, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -175,43 +166,41 @@ export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindi
   };
 
   return (
-    <DensityProvider density='fine'>
-      <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
-        {/* TODO(burdon): Replace with Thread? */}
-        <div ref={scrollerRef} className='flex flex-col gap-6 h-full p-4 overflow-x-hidden overflow-y-auto'>
-          <MessageThread state={state} result={result} history={history} />
-        </div>
-
-        <Toolbar.Root classNames='p-2'>
-          <Input.Root>
-            <Input.TextInput
-              ref={inputRef}
-              autoFocus
-              placeholder={t('function request placeholder')}
-              value={input}
-              onChange={(ev) => setInput(ev.target.value)}
-              onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
-            />
-          </Input.Root>
-          <Input.Root>
-            <Input.TextInput
-              ref={bindingInputRef}
-              classNames='!w-[10rem]'
-              placeholder={t('binding placeholder')}
-              value={binding}
-              onChange={(ev) => setBinding(ev.target.value.toUpperCase())}
-              onBlur={handleBlur}
-            />
-          </Input.Root>
-          <Toolbar.Button onClick={() => handleRequest(input)}>
-            <Icon icon='ph--play--regular' size={4} />
-          </Toolbar.Button>
-          <Toolbar.Button onClick={() => (state ? handleStop() : handleClear())}>
-            <Icon icon={state ? 'ph--stop--regular' : 'ph--trash--regular'} size={4} />
-          </Toolbar.Button>
-        </Toolbar.Root>
+    <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
+      {/* TODO(burdon): Replace with Thread? */}
+      <div ref={scrollerRef} className='flex flex-col gap-6 h-full p-4 overflow-x-hidden overflow-y-auto'>
+        <MessageThread state={state} result={result} history={history} />
       </div>
-    </DensityProvider>
+
+      <Toolbar.Root classNames='p-2'>
+        <Input.Root>
+          <Input.TextInput
+            ref={inputRef}
+            autoFocus
+            placeholder={t('function request placeholder')}
+            value={input}
+            onChange={(ev) => setInput(ev.target.value)}
+            onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
+          />
+        </Input.Root>
+        <Input.Root>
+          <Input.TextInput
+            ref={bindingInputRef}
+            classNames='!w-[10rem]'
+            placeholder={t('binding placeholder')}
+            value={binding}
+            onChange={(ev) => setBinding(ev.target.value.toUpperCase())}
+            onBlur={handleBlur}
+          />
+        </Input.Root>
+        <Toolbar.Button onClick={() => handleRequest(input)}>
+          <Icon icon='ph--play--regular' size={4} />
+        </Toolbar.Button>
+        <Toolbar.Button onClick={() => (state ? handleStop() : handleClear())}>
+          <Icon icon={state ? 'ph--stop--regular' : 'ph--trash--regular'} size={4} />
+        </Toolbar.Button>
+      </Toolbar.Root>
+    </div>
   );
 };
 

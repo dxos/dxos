@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
@@ -26,7 +27,7 @@ const template = [
   '{input}',
 ].join('\n');
 
-const Story = () => {
+const DefaultStory = () => {
   const client = useClient();
   const [chain] = useState(() => {
     const space = client.spaces.default;
@@ -46,9 +47,11 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-chain/PromptTemplate',
-  render: Story,
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-chain/PromptTemplate',
+  render: DefaultStory,
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [ChainType, ChainPromptType] }),
     withTheme,
@@ -56,4 +59,4 @@ export default {
   ],
 };
 
-export const Default = {};
+export default meta;

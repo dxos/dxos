@@ -21,7 +21,7 @@ const content = [...Array(24)].reduce((acc: { [key: string]: { title: string; pa
 }, {});
 
 export default {
-  title: 'react-ui-tabs/Tabs',
+  title: 'ui/react-ui-tabs/Tabs',
   component: NaturalTabs.Root,
   decorators: [withTheme],
   // parameters: { translations },

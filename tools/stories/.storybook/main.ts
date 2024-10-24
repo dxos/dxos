@@ -14,19 +14,27 @@ import WasmPlugin from 'vite-plugin-wasm';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
-// TODO(burdon): Set auto title (remove need for actual title property).
-//  https://storybook.js.org/docs/configure/sidebar-and-urls#csf-30-auto-titles
-
 export const packages = resolve(__dirname, '../../../packages');
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
 
 /**
+ * https://storybook.js.org/docs/api/main-config/main-config
  * https://nx.dev/recipes/storybook/one-storybook-for-all
  */
 export const config = (
-  specificConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
+  baseConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
   turbosnapRootDir?: string,
 ): StorybookConfig => ({
+  framework: {
+    name: '@storybook/react-vite',
+    options: {
+      strictMode: true,
+    },
+  },
+  typescript: {
+    // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
+    reactDocgen: false,
+  },
   addons: [
     '@storybook/addon-essentials',
     '@storybook/addon-interactions',
@@ -34,17 +42,15 @@ export const config = (
     '@storybook/addon-themes',
     'storybook-dark-mode',
   ],
-  // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
-  typescript: {
-    reactDocgen: false,
-  },
-  framework: {
-    name: '@storybook/react-vite',
-    options: {
-      strictMode: true,
-    },
-  },
+  /**
+   * https://storybook.js.org/docs/api/main-config/main-config-vite-final
+   */
   viteFinal: async (config, { configType }) => {
+    if (process.env.DX_DEBUG) {
+      // eslint-disable-next-line no-console
+      console.log(JSON.stringify({ config, configType }, null, 2));
+    }
+
     return mergeConfig(
       configType === 'PRODUCTION'
         ? {
@@ -116,5 +122,5 @@ export const config = (
       } satisfies InlineConfig,
     );
   },
-  ...specificConfig,
+  ...baseConfig,
 });

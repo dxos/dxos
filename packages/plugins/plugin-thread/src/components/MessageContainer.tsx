@@ -11,15 +11,7 @@ import { type MessageType } from '@dxos/plugin-space/types';
 import { PublicKey } from '@dxos/react-client';
 import { type EchoReactiveObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
-import {
-  Button,
-  ButtonGroup,
-  DensityProvider,
-  Tooltip,
-  useOnTransition,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Button, ButtonGroup, Tooltip, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import {
@@ -184,16 +176,14 @@ const MessageBlockObjectTile: MosaicTileComponent<EchoReactiveObject<any>> = for
         style={draggableStyle}
         ref={forwardedRef}
       >
-        <DensityProvider density='fine'>
-          <Surface
-            role='card'
-            limit={1}
-            data={{ content: item }}
-            draggableProps={draggableProps}
-            fallback={title}
-            {...props}
-          />
-        </DensityProvider>
+        <Surface
+          role='card'
+          limit={1}
+          data={{ content: item }}
+          draggableProps={draggableProps}
+          fallback={title}
+          {...props}
+        />
       </div>
     );
   },

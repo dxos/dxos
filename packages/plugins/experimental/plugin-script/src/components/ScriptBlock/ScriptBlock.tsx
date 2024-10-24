@@ -7,7 +7,7 @@ import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createDocAccessor, DocAccessor } from '@dxos/react-client/echo';
-import { DensityProvider, Toolbar, Button, Icon } from '@dxos/react-ui';
+import { Toolbar, Button, Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Bundler, type BundlerResult, initializeBundler } from '../../bundler';
@@ -80,24 +80,22 @@ export const ScriptBlock = ({ script, hideSelector, classes, containerUrl }: Scr
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classes?.root)}>
       {!hideSelector && (
-        <DensityProvider density='fine'>
-          <Toolbar.Root classNames={mx('mb-2', classes?.toolbar)}>
-            <div className='grow' />
-            {result?.bundle && !result?.error && (
-              <div title={String(result.error)}>
-                <Icon icon='ph--check--regular' size={5} classNames='text-green-500' />
-              </div>
-            )}
-            {result?.error && (
-              <div title={String(result.error)}>
-                <Icon icon='ph--warning--regular' size={5} classNames='text-orange-500' />
-              </div>
-            )}
-            <Button variant='ghost' onClick={() => handleExec()}>
-              <Icon icon='ph--play--regular' size={5} />
-            </Button>
-          </Toolbar.Root>
-        </DensityProvider>
+        <Toolbar.Root classNames={mx('mb-2', classes?.toolbar)}>
+          <div className='grow' />
+          {result?.bundle && !result?.error && (
+            <div title={String(result.error)}>
+              <Icon icon='ph--check--regular' size={5} classNames='text-green-500' />
+            </div>
+          )}
+          {result?.error && (
+            <div title={String(result.error)}>
+              <Icon icon='ph--warning--regular' size={5} classNames='text-orange-500' />
+            </div>
+          )}
+          <Button variant='ghost' onClick={() => handleExec()}>
+            <Icon icon='ph--play--regular' size={5} />
+          </Button>
+        </Toolbar.Root>
       )}
 
       <div className='flex'>

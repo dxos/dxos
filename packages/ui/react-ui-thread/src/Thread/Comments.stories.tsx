@@ -349,7 +349,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
 };
 
 export default {
-  title: 'react-ui-thread/Comments',
+  title: 'ui/react-ui-thread/Comments',
   component: StoryThread,
   decorators: [withTheme],
   render: (args: StoryProps) => <Story {...args} />,

@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useMemo } from 'react';
 
 import { faker } from '@dxos/random';
@@ -12,7 +12,7 @@ import { useDefaultValue } from '@dxos/react-ui';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
-import { type SimulatorProps, createItems, createTable, useSimulator } from './testing';
+import { type SimulatorProps, createItems, createTable, useSimulator } from '../testing';
 
 faker.seed(0);
 
@@ -20,7 +20,7 @@ type StoryProps = {
   rows?: number;
 } & Pick<SimulatorProps, 'insertInterval' | 'updateInterval'>;
 
-const Story = (props: StoryProps) => {
+const DefaultStory = (props: StoryProps) => {
   const getDefaultRows = useCallback(() => 10, []);
   const rows = useDefaultValue(props.rows, getDefaultRows);
   const table = useMemo(() => createTable(), []);
@@ -33,12 +33,6 @@ const Story = (props: StoryProps) => {
       <Table table={table} data={items} />
     </div>
   );
-};
-
-export default {
-  title: 'plugin-table/table-next',
-  render: Story,
-  decorators: [withSignals, withTheme, withLayout({ fullscreen: true })],
 };
 
 export const Default: StoryObj<StoryProps> = {};
@@ -56,3 +50,12 @@ export const Mutations: StoryObj<StoryProps> = {
     insertInterval: 100,
   },
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-table/Table',
+  component: Table,
+  render: DefaultStory,
+  decorators: [withSignals, withTheme, withLayout({ fullscreen: true })],
+};
+
+export default meta;
