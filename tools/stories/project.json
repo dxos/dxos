@@ -9,18 +9,13 @@
           "quiet": true
         }
       },
-      "dependsOn": [
-        "^compile",
-        "mkdist"
-      ],
+      "dependsOn": ["^compile", "mkdist"],
       "executor": "@nx/storybook:build",
       "options": {
         "configDir": "{projectRoot}/config/all",
         "outputDir": "{projectRoot}/out/stories"
       },
-      "outputs": [
-        "{options.outputDir}"
-      ]
+      "outputs": ["{options.outputDir}"]
     },
     "lint": {
       "options": {
@@ -34,9 +29,7 @@
     "mkdist": {
       "cache": true,
       "command": "mkdir -p tools/stories/static",
-      "outputs": [
-        "{workspaceRoot}/tools/stories/static"
-      ]
+      "outputs": ["{workspaceRoot}/tools/stories/static"]
     },
     "storybook": {
       "configurations": {
@@ -44,10 +37,7 @@
           "quiet": true
         }
       },
-      "dependsOn": [
-        "^compile",
-        "mkdist"
-      ],
+      "dependsOn": ["^compile", "mkdist"],
       "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "{projectRoot}/config/all"
@@ -59,10 +49,7 @@
           "quiet": true
         }
       },
-      "dependsOn": [
-        "^compile",
-        "mkdist"
-      ],
+      "dependsOn": ["^compile", "mkdist"],
       "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "{projectRoot}/config/e2e",
@@ -75,9 +62,7 @@
           "quiet": true
         }
       },
-      "dependsOn": [
-        "^compile"
-      ],
+      "dependsOn": ["^compile"],
       "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "{projectRoot}/config/examples",
@@ -100,7 +85,6 @@
     "react-ui-editor",
     "react-ui-grid",
     "react-ui-mosaic",
-    "react-ui-navtree",
     "react-ui-searchlist",
     "react-ui-stack",
     "react-ui-table",

@@ -353,9 +353,6 @@
       "@dxos/react-ui-mosaic": [
         "packages/ui/react-ui-mosaic/src/index.ts"
       ],
-      "@dxos/react-ui-navtree": [
-        "packages/ui/react-ui-navtree/src/index.ts"
-      ],
       "@dxos/react-ui-searchlist": [
         "packages/ui/react-ui-searchlist/src/index.ts"
       ],
