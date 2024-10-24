@@ -71,7 +71,8 @@ message QueryOptions {
  */
 message Filter {
   optional google.protobuf.Struct properties = 1;
-  optional dxos.echo.model.document.Reference type = 2;
+  // DXN for the type of the filter.
+  repeated string type = 2;
   repeated string object_ids = 8;
   optional string text = 3;
   optional bool not = 4;

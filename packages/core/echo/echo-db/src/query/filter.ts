@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { isEncodedReference, Reference, type EncodedReference } from '@dxos/echo-protocol';
+import { isEncodedReference, type EncodedReference } from '@dxos/echo-protocol';
 import { requireTypeReference, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -51,8 +51,7 @@ export type FilterSource<T extends {} = any> = PropertyFilter | OperatorFilter<T
 // TODO(burdon): Remove class.
 // TODO(burdon): Disambiguate if multiple are defined (i.e., AND/OR).
 export type FilterParams<T extends {} = any> = {
-  // TODO(dmaretskyi): Convert to DXN.
-  type?: Reference;
+  type?: DXN[];
   properties?: Record<string, any>;
   objectIds?: string[];
   text?: string;
@@ -114,23 +113,22 @@ export class Filter<T extends {} = any> {
       }
     }
 
-    let type: DXN | undefined;
+    let type: DXN[] | undefined;
     if (__typename) {
-      if (Array.isArray(__typename) && __typename.length > 1) {
-        throw new Error('Multiple __typename values are not yet supported.');
-      }
-      const typeString = Array.isArray(__typename) ? __typename[0] : __typename;
-      if (typeString.startsWith('dxn:')) {
-        type = DXN.parse(typeString);
-      } else {
-        type = new DXN(DXN.kind.TYPE, [typeString]);
-      }
+      const typenames = Array.isArray(__typename) ? __typename : [__typename];
+      type = typenames.map((typename) => {
+        if (typename.startsWith('dxn:')) {
+          return DXN.parse(typename);
+        } else {
+          return new DXN(DXN.kind.TYPE, [typename]);
+        }
+      });
     }
 
     return new Filter(
       {
         objectIds: id !== undefined ? sanitizeIdArray(id) : undefined,
-        type: type ? Reference.fromDXN(type) : undefined,
+        type,
         properties,
       },
       options,
@@ -156,7 +154,7 @@ export class Filter<T extends {} = any> {
     // TODO(dmaretskyi): Make `getReferenceWithSpaceKey` work over abstract handlers to not depend on EchoHandler directly.
     const typeReference = S.isSchema(schema) ? requireTypeReference(schema) : getReferenceWithSpaceKey(schema);
     invariant(typeReference, 'Invalid schema; check persisted in the database.');
-    return this._fromTypeWithPredicate(typeReference, filter);
+    return this._fromTypeWithPredicate(typeReference.toDXN(), filter);
   }
 
   static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>): Filter<any> {
@@ -167,25 +165,24 @@ export class Filter<T extends {} = any> {
       throw new TypeError('Dynamic schema references are not allowed.');
     }
 
-    const type = Reference.fromLegacyTypename(typename);
-    return this._fromTypeWithPredicate(type, filter);
+    return this._fromTypeWithPredicate(DXN.typename(typename), filter);
   }
 
   static typeDXN(dxn: string): Filter {
     if (!dxn) {
       throw new TypeError('`dxn` parameter is required.');
     }
-    return new Filter({ type: Reference.fromDXN(DXN.parse(dxn)) });
+    return new Filter({ type: [DXN.parse(dxn)] });
   }
 
-  private static _fromTypeWithPredicate(type: Reference, filter?: Record<string, any> | OperatorFilter<any>) {
+  private static _fromTypeWithPredicate(type: DXN, filter?: Record<string, any> | OperatorFilter<any>) {
     switch (typeof filter) {
       case 'function':
-        return new Filter({ type, predicate: filter as any });
+        return new Filter({ type: [type], predicate: filter as any });
       case 'object':
-        return new Filter({ type, properties: filter });
+        return new Filter({ type: [type], properties: filter });
       case 'undefined':
-        return new Filter({ type });
+        return new Filter({ type: [type] });
       default:
         throw new TypeError('Invalid filter.');
     }
@@ -216,7 +213,7 @@ export class Filter<T extends {} = any> {
     };
     return new Filter(
       {
-        type: proto.type ? Reference.fromValue(proto.type) : undefined,
+        type: proto.type?.map((type) => DXN.parse(type)),
         properties: proto.properties,
         text: proto.text,
         not: proto.not,
@@ -231,7 +228,7 @@ export class Filter<T extends {} = any> {
   // TODO(burdon): Split into protobuf serializable and non-serializable (operator) predicates.
 
   // TODO(dmaretskyi): Support expando.
-  public readonly type?: Reference;
+  public readonly type?: DXN[];
   public readonly properties?: Record<string, any>;
   public readonly objectIds?: string[];
   public readonly text?: string;
@@ -271,7 +268,7 @@ export class Filter<T extends {} = any> {
     return {
       properties: this.properties,
       objectIds: this.objectIds,
-      type: this.type?.encode(),
+      type: this.type?.map((type) => type.toString()),
       text: this.text,
       not: this.not,
       and: this.and.map((filter) => filter.toProto()),
@@ -284,7 +281,7 @@ export class Filter<T extends {} = any> {
     return createBuf(FilterSchema, {
       properties: this.properties,
       objectIds: this.objectIds,
-      type: this.type?.encode(),
+      type: this.type?.map((type) => type.toString()),
       text: this.text,
       not: this.not,
       and: this.and.map((filter) => filter.toBufProto()),

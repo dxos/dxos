@@ -18,3 +18,4 @@ export * from './todo';
 export * from './devtools-formatter';
 export * from './equality';
 export * from './exposed-modules';
+export * from './inspect-custom';
