@@ -444,25 +444,46 @@ export class DxGrid extends LitElement {
   };
 
   /**
-   * TODO(thure): This should not rely on dom order (because of virtualization), it was just easier than implementing
-   *   the 3 different types of logic needed by the 3 types of planes.
-   * @deprecated
+   * Increments focus among all theoretically possible cells in a plane, cycling as tab would but accounting for the
+   * theoretical bounds of the grid plane (handling infinite planes heuristically).
    */
-  private incrementFocusWithinPlaneByDomOrder(reverse?: boolean) {
-    const focusedCellElement = this.focusedCellElement();
-    if (focusedCellElement) {
-      const nextCell = closestCell(focusedCellElement?.[reverse ? 'previousElementSibling' : 'nextElementSibling']);
-      if (nextCell) {
-        this.focusedCell = nextCell;
-      } else if (focusedCellElement) {
-        const loopedCell = closestCell(
-          focusedCellElement.parentElement?.[reverse ? 'lastElementChild' : 'firstElementChild'] ?? null,
-        );
-        if (loopedCell) {
-          this.focusedCell = loopedCell;
-        }
+  private incrementFocusWithinPlane(reverse?: boolean) {
+    const colPlane = resolveColPlane(this.focusedCell.plane);
+    const rowPlane = resolveRowPlane(this.focusedCell.plane);
+    const colMax = (colPlane === 'grid' ? this.limitColumns : this.frozen[colPlane]!) - 1;
+    const rowMax = (rowPlane === 'grid' ? this.limitRows : this.frozen[rowPlane]!) - 1;
+    if (reverse ? this.focusedCell.col - 1 < 0 : this.focusedCell.col + 1 > colMax) {
+      if (reverse ? this.focusedCell.row - 1 < 0 : this.focusedCell.row + 1 > rowMax) {
+        this.setFocusedCell({
+          plane: this.focusedCell.plane,
+          row: reverse && Number.isFinite(rowMax) ? rowMax : 0,
+          col: reverse && Number.isFinite(colMax) ? colMax : 0,
+        });
+      } else {
+        this.setFocusedCell({
+          plane: this.focusedCell.plane,
+          row: this.focusedCell.row + (reverse ? -1 : 1),
+          col: reverse && Number.isFinite(colMax) ? colMax : 0,
+        });
       }
+    } else {
+      this.setFocusedCell({ ...this.focusedCell, col: this.focusedCell.col + (reverse ? -1 : 1) });
     }
+  }
+
+  /**
+   * Increments focus in a specific direction without cycling.
+   */
+  private moveFocusWithinPlane(deltaCol: number, deltaRow: number) {
+    const colPlane = resolveColPlane(this.focusedCell.plane);
+    const rowPlane = resolveRowPlane(this.focusedCell.plane);
+    const colMax = (colPlane === 'grid' ? this.limitColumns : this.frozen[colPlane]!) - 1;
+    const rowMax = (rowPlane === 'grid' ? this.limitRows : this.frozen[rowPlane]!) - 1;
+    this.setFocusedCell({
+      ...this.focusedCell,
+      col: Math.max(0, Math.min(colMax, this.focusedCell.col + deltaCol)),
+      row: Math.max(0, Math.min(rowMax, this.focusedCell.row + deltaRow)),
+    });
   }
 
   private handleKeydown(event: KeyboardEvent) {
@@ -470,19 +491,19 @@ export class DxGrid extends LitElement {
       // Adjust state
       switch (event.key) {
         case 'ArrowDown':
-          this.focusedCell = { ...this.focusedCell, row: Math.min(this.limitRows - 1, this.focusedCell.row + 1) };
+          this.moveFocusWithinPlane(0, 1);
           break;
         case 'ArrowUp':
-          this.focusedCell = { ...this.focusedCell, row: Math.max(0, this.focusedCell.row - 1) };
+          this.moveFocusWithinPlane(0, -1);
           break;
         case 'ArrowRight':
-          this.focusedCell = { ...this.focusedCell, col: Math.min(this.limitColumns - 1, this.focusedCell.col + 1) };
+          this.moveFocusWithinPlane(1, 0);
           break;
         case 'ArrowLeft':
-          this.focusedCell = { ...this.focusedCell, col: Math.max(0, this.focusedCell.col - 1) };
+          this.moveFocusWithinPlane(-1, 0);
           break;
         case 'Tab':
-          this.incrementFocusWithinPlaneByDomOrder(event.shiftKey);
+          this.incrementFocusWithinPlane(event.shiftKey);
           break;
       }
       // Emit edit request if relevant
@@ -533,6 +554,12 @@ export class DxGrid extends LitElement {
     return (
       this.focusActive && this.focusedCell.plane === plane && this.focusedCell.col === c && this.focusedCell.row === r
     );
+  }
+
+  private setFocusedCell(nextCoords: DxGridPosition) {
+    this.focusedCell = nextCoords;
+    this.selectionStart = nextCoords;
+    this.selectionEnd = nextCoords;
   }
 
   private focusedCellBox(): DxEditRequest['cellBox'] {
@@ -796,7 +823,7 @@ export class DxGrid extends LitElement {
   // Focus handlers
 
   setFocus(coords: DxGridPosition, snap = true) {
-    this.focusedCell = coords;
+    this.setFocusedCell(coords);
     this.focusActive = true;
     if (snap) {
       this.snapPosToFocusedCell();
@@ -812,7 +839,7 @@ export class DxGrid extends LitElement {
         this.focusedCell.col !== cellCoords.col ||
         this.focusedCell.row !== cellCoords.row
       ) {
-        this.focusedCell = cellCoords;
+        this.setFocusedCell(cellCoords);
       }
     }
   }
