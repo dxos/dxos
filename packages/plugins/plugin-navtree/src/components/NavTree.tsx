@@ -110,7 +110,7 @@ const NavTreeColumns = ({ item, loadDescendents, renderPresence: Presence, popov
       ) : (
         <Treegrid.Cell />
       )}
-      {actions.length > 0 && (
+      {actions.length > 0 ? (
         <NavTreeItemAction
           testId={`navtree.treeItem.actionsLevel${level}`}
           label={t('tree item actions label')}
@@ -120,6 +120,8 @@ const NavTreeColumns = ({ item, loadDescendents, renderPresence: Presence, popov
           menuType='dropdown'
           caller={NAV_TREE_ITEM}
         />
+      ) : (
+        <Treegrid.Cell />
       )}
       {Presence && <Presence item={item} />}
     </ActionRoot>

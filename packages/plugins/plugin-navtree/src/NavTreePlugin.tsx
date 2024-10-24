@@ -86,6 +86,8 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       id: node.id,
       label: node.properties.label ?? node.id,
       icon: node.properties.icon,
+      disabled: node.properties.disabled,
+      testId: node.properties.testId,
       path,
       parentOf,
       node,

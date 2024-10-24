@@ -15,6 +15,13 @@ import React, { memo, type KeyboardEvent, useCallback, useEffect, useRef, useSta
 
 import { invariant } from '@dxos/invariant';
 import { Treegrid } from '@dxos/react-ui';
+import {
+  focusRing,
+  hoverableControls,
+  hoverableFocusedKeyboardControls,
+  hoverableFocusedWithinControls,
+  mx,
+} from '@dxos/react-ui-theme';
 
 import { DropIndicator } from './DropIndicator';
 import { TreeItemHeading } from './TreeItemHeading';
@@ -23,6 +30,9 @@ import { DEFAULT_INDENTATION, paddingIndendation } from './helpers';
 import { type ItemType } from './types';
 
 type TreeItemState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
+
+const hoverableDescriptionIcons =
+  '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
 
 export type TreeItemProps = {
   item: ItemType;
@@ -179,7 +189,14 @@ export const TreeItem = memo(
         aria-labelledby={`${id}__label`}
         parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
         // focusableGroup={false}
-        classNames='grid grid-cols-subgrid col-[tree-row] aria-[current]:bg-input'
+        classNames={mx(
+          'grid grid-cols-subgrid col-[tree-row] aria-[current]:bg-input',
+          hoverableControls,
+          hoverableFocusedKeyboardControls,
+          hoverableFocusedWithinControls,
+          hoverableDescriptionIcons,
+          focusRing,
+        )}
         data-itemid={item.id}
         data-testid={item.testId}
         // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS
