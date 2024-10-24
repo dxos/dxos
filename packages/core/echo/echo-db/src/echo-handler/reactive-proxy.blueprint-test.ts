@@ -207,7 +207,6 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
       test('keys enumeration', async () => {
         const obj = await createObject({ string: 'bar' });
-
         expect(Object.keys(obj)).to.deep.eq(objectsHaveId ? ['string', 'id'] : ['string']);
 
         obj.number = 42;
@@ -230,7 +229,6 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
       test('instanceof', async () => {
         const obj = await createObject({ stringArray: ['1', '2', '3'], object: { field: 'foo' } });
-
         expect(obj instanceof Object).to.be.true;
         expect(obj instanceof Array).to.be.false;
         expect(obj.stringArray instanceof Object).to.be.true;
@@ -267,7 +265,6 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
       test('chai deep equal works', async () => {
         const obj = await createObject({ ...TEST_OBJECT });
-
         const expected = objectsHaveId ? { id: (obj as any).id, ...TEST_OBJECT } : TEST_OBJECT;
         expect(obj).to.deep.eq(expected);
         expect(obj).to.not.deep.eq({ ...expected, number: 11 });
@@ -275,7 +272,6 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
       test('jest deep equal works', async () => {
         const obj = await createObject({ ...TEST_OBJECT });
-
         const expected = objectsHaveId ? { id: (obj as any).id, ...TEST_OBJECT } : TEST_OBJECT;
         expect(obj).toEqual(expected);
         expect(obj).not.toEqual({ ...expected, number: 11 });
@@ -296,7 +292,6 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       test('getOwnPropertyDescriptor', async () => {
         const obj = await createObject({ string: 'bar' });
         const descriptor = Object.getOwnPropertyDescriptor(obj, 'string');
-
         expect(descriptor).to.deep.eq({
           value: 'bar',
           writable: true,
@@ -329,7 +324,6 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       describe('signal updates', () => {
         test('are synchronous', async () => {
           const obj = await createObject({ string: 'bar' });
-
           using updates = updateCounter(() => {
             obj.string;
           });
@@ -341,7 +335,6 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('in nested objects', async () => {
           const obj = await createObject({ object: { field: 'bar' } });
-
           using updates = updateCounter(() => {
             obj.object!.field; // TODO(burdon): Better way to demonstrate this? E.g., log?
           });
@@ -353,7 +346,6 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('in nested arrays', async () => {
           const obj = await createObject({ stringArray: ['7'] });
-
           using updates = updateCounter(() => {
             obj.stringArray![0];
           });
@@ -365,7 +357,6 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('in nested arrays with objects', async () => {
           const obj = await createObject({ objectArray: [{ field: 'bar' }] });
-
           using updates = updateCounter(() => {
             obj.objectArray![0].field;
           });
@@ -377,7 +368,6 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('in nested arrays with arrays', async () => {
           const obj = await createObject({ twoDimNumberArray: [[1, 2, 3]] });
-
           using updates = updateCounter(() => {
             obj.twoDimNumberArray![0][0];
           });
@@ -389,7 +379,6 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('Object.keys', async () => {
           const obj = await createObject({ number: 42 });
-
           using updates = updateCounter(() => {
             Object.keys(obj);
           });

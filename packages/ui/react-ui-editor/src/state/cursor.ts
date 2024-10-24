@@ -32,7 +32,6 @@ export class Cursor {
 
   static readonly getCursorFromRange = (state: EditorState, range: Range) => {
     const cursorConverter = state.facet(Cursor.converter);
-
     const from = cursorConverter.toCursor(range.from);
     const to = cursorConverter.toCursor(range.to, -1);
     return [from, to].join(':');
