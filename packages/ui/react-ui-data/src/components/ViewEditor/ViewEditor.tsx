@@ -61,7 +61,7 @@ export const ViewEditor = ({ classNames, view, schemaResolver, readonly }: ViewE
             </div>
 
             <div role='list' className='flex flex-col w-full'>
-              {items.map((item) => (
+              {items?.map((item) => (
                 <List.Item<FieldType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
                   <List.ItemDragHandle />
                   <List.ItemTitle onClick={() => handleSelect(item)}>{item.path}</List.ItemTitle>
