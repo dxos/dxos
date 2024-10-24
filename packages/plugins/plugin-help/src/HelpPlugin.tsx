@@ -108,7 +108,6 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
           switch (role) {
             case 'hints':
               return <ShortcutsHints />;
-
             case 'keyshortcuts':
               return <ShortcutsList />;
           }

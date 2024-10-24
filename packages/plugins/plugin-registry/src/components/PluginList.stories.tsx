@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { type PluginMeta } from '@dxos/app-framework';
@@ -23,7 +24,7 @@ const icons = [
   'ph--github-logo--regular',
 ];
 
-const Story = () => {
+const DefaultStory = () => {
   const [plugins] = useState<PluginMeta[]>(
     faker.helpers.multiple(
       () => ({
@@ -51,14 +52,16 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-registry/PluginList',
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-registry/PluginList',
   component: PluginList,
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: {
     layout: 'centered',
   },
 };
 
-export const Default = {};
+export default meta;
