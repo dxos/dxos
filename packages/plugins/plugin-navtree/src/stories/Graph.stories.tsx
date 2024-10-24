@@ -111,6 +111,7 @@ const Story = (args: Partial<NavTreeProps>) => {
 
         const instruction: Instruction | null = extractInstruction(target.data);
         if (instruction !== null) {
+          // TODO(wittjosiah): Implement drop logic.
           console.log('update', instruction);
         }
       },

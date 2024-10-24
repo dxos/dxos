@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, memo, useMemo } from 'react';
+import React, { forwardRef, memo } from 'react';
 
 import { Button, Icon } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 export type TreeItemToggleProps = {
   open?: boolean;
@@ -14,19 +15,20 @@ export type TreeItemToggleProps = {
 
 export const TreeItemToggle = memo(
   forwardRef<HTMLButtonElement, TreeItemToggleProps>(({ open, isBranch, onToggle }, forwardedRef) => {
-    const buttonClassNames = useMemo(() => ['!pli-1', !isBranch && 'invisible'], [isBranch]);
-    const iconClassNames = useMemo(() => ['transition duration-200', open && 'rotate-90'], [open]);
-
     return (
       <Button
         ref={forwardedRef}
         data-testid='treeItem.toggle'
         variant='ghost'
         density='fine'
-        classNames={buttonClassNames}
+        classNames={mx('!pli-1', !isBranch && 'invisible')}
         onClick={onToggle}
       >
-        <Icon icon='ph--caret-right--regular' size={3} classNames={iconClassNames} />
+        <Icon
+          icon='ph--caret-right--regular'
+          size={3}
+          classNames={mx('transition duration-200', open && 'rotate-90')}
+        />
       </Button>
     );
   }),

@@ -23,6 +23,7 @@ import { createExtension, type Graph, isAction, isGraphNode, type Node, type Nod
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { Path } from '@dxos/react-ui-mosaic';
 import { getHostPlatform } from '@dxos/util';
 
 import {
@@ -72,7 +73,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       return treeItemsFromRootNode(graph, this.root, this.open, getItem);
     },
     // TODO(thure): Do this dynamically.
-    open: ['root', 'dxos.org/plugin/space-spaces', 'dxos.org/plugin/files'],
+    open: ['root', 'root~dxos.org/plugin/space-spaces', 'root~dxos.org/plugin/files'],
   });
 
   const getItem = (node: NavTreeItemGraphNode, parent: readonly string[], filter?: NodeFilter) => {
@@ -107,11 +108,12 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
   };
 
   const handleOpenChange = (item: NavTreeItem, open: boolean) => {
+    const path = Path.create(...item.path);
     // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
     if (open) {
-      state.values.open.push(item.id);
+      state.values.open.push(path);
     } else {
-      const index = state.values.open.indexOf(item.id);
+      const index = state.values.open.indexOf(path);
       if (index > -1) {
         state.values.open.splice(index, 1);
       }
@@ -252,20 +254,17 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
           switch (intent.action) {
             case NavigationAction.EXPOSE: {
               if (graph && intent.data?.id) {
-                // const path = graph.getPath({ target: intent.data.id });
-                // if (Array.isArray(path)) {
-                //   const additionalOpenItems = [...Array(path.length - 1)].reduce((acc: OpenItemIds, _, index) => {
-                //     const itemId = Path.create(...path.slice(1, index + 1));
-                //     if (itemId.length > 0) {
-                //       acc[itemId] = true;
-                //     }
-                //     return acc;
-                //   }, {});
-                //   state.values.openItemIds = {
-                //     ...additionalOpenItems,
-                //     ...state.values.openItemIds,
-                //   };
-                // }
+                const path = graph.getPath({ target: intent.data.id });
+                if (Array.isArray(path)) {
+                  const additionalOpenItems = [...Array(path.length)].reduce((acc: string[], _, index) => {
+                    const itemId = Path.create(...path.slice(0, index));
+                    if (itemId.length > 0) {
+                      acc.push(itemId);
+                    }
+                    return acc;
+                  }, []);
+                  state.values.open.push(...additionalOpenItems);
+                }
               }
               break;
             }

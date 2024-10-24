@@ -16,6 +16,7 @@ export type SidebarProps = {
 export const Sidebar = ({ layoutParts }: SidebarProps) => {
   const { layoutMode, popoverAnchorId } = useLayout();
 
+  // TODO(wittjosiah): The activeIds should be path-based to avoid conflicts.
   const activeIds = useMemo(() => {
     if (layoutMode === 'solo') {
       return Array.from(new Set<string>(layoutParts?.solo?.map((e) => e.id) ?? []));

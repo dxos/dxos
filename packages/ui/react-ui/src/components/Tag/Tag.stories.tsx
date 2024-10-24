@@ -9,7 +9,6 @@ import { withTheme } from '../../testing';
 
 export default {
   title: 'ui/react-ui/Tag',
-
   component: Tag,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

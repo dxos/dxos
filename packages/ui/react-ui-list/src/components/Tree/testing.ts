@@ -7,6 +7,7 @@ import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 import { S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
+import { Path } from '@dxos/react-ui-mosaic';
 
 import { type ItemType } from './types';
 
@@ -24,15 +25,18 @@ export const TestItemSchema = S.Struct({
   items: S.mutable(S.Array(S.suspend((): S.Schema<TestItem> => TestItemSchema))),
 });
 
-export const createTree = (n = 3, d = 3): TestItem => ({
+export const createTree = (n = 4, d = 4): TestItem => ({
   id: faker.string.uuid(),
   name: faker.commerce.productName(),
-  icon: faker.helpers.arrayElement([
-    'ph--planet--regular',
-    'ph--sailboat--regular',
-    'ph--house--regular',
-    'ph--gear--regular',
-  ]),
+  icon:
+    d === 3
+      ? undefined
+      : faker.helpers.arrayElement([
+          'ph--planet--regular',
+          'ph--sailboat--regular',
+          'ph--house--regular',
+          'ph--gear--regular',
+        ]),
   items: d > 0 ? faker.helpers.multiple(() => createTree(n, d - 1), { count: n }) : [],
 });
 
@@ -43,7 +47,7 @@ function* visitor({
 }: {
   testItem: TestItem;
   getItem: (testItem: TestItem, parent?: readonly string[]) => ItemType;
-  isOpen?: (testItem: TestItem) => boolean;
+  isOpen?: (testItem: ItemType) => boolean;
 }): Generator<ItemType> {
   const stack: [TestItem, ItemType][] = [[testItem, getItem(testItem)]];
   while (stack.length > 0) {
@@ -53,7 +57,7 @@ function* visitor({
     }
 
     const children = Array.from(testItem.items ?? []);
-    if (item.path.length === 1 || isOpen?.(testItem)) {
+    if (item.path.length === 1 || isOpen?.(item)) {
       for (let i = children.length - 1; i >= 0; i--) {
         const child = children[i];
         stack.push([child, getItem(child, item.path)]);
@@ -67,7 +71,7 @@ export const flattenTree = (tree: TestItem, open: string[], getItem: (tree: Test
     visitor({
       testItem: tree,
       getItem,
-      isOpen: ({ id }) => open.includes(id),
+      isOpen: ({ path }) => open.includes(Path.create(...path)),
     }),
   );
 };
@@ -114,6 +118,7 @@ const getTestItem = (tree: TestItem, path: string[]) => {
   return item;
 };
 
+// TODO(wittjosiah): Reconcile with plugin-navtree/testing/vistor.
 export const updateState = ({
   state,
   instruction,

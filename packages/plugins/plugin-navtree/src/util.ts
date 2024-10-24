@@ -177,10 +177,10 @@ function* navTreeItemVisitor({
     if (nextItem.path.length > 1) {
       yield nextItem;
     }
-    const { id, node, path } = nextItem;
+    const { node, path } = nextItem;
     const children = getChildren(graph, node, filter, path);
     const actions = graph.actions(node);
-    if (path.length === 1 || open.includes(id)) {
+    if (path.length === 1 || open.includes(Path.create(...path))) {
       for (let i = actions.length - 1; i >= 0; i--) {
         if (actions[i].properties.disposition === 'item') {
           stack.push(getItem(actions[i], path, filter));

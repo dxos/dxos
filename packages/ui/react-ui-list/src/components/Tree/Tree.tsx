@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Treegrid, type TreegridRootProps } from '@dxos/react-ui';
+import { Path } from '@dxos/react-ui-mosaic';
 
 import { TreeItem, type TreeItemProps } from './TreeItem';
 import { getMode } from './helpers';
@@ -30,20 +31,25 @@ export const Tree = ({
 }: TreeProps) => {
   return (
     <Treegrid.Root gridTemplateColumns={gridTemplateColumns}>
-      {items.map((item, i) => (
-        <TreeItem
-          key={item.id}
-          item={item}
-          mode={getMode(items, i)}
-          open={open.includes(item.id)}
-          draggable={draggable}
-          current={current.includes(item.id)}
-          renderColumns={renderColumns}
-          canDrop={canDrop}
-          onOpenChange={onOpenChange}
-          onSelect={onSelect}
-        />
-      ))}
+      {items.map((item, i) => {
+        const path = Path.create(...item.path);
+
+        return (
+          <TreeItem
+            key={item.id}
+            item={item}
+            mode={getMode(items, i)}
+            open={open.includes(path)}
+            // TODO(wittjosiah): This should also be path-based.
+            current={current.includes(item.id)}
+            draggable={draggable}
+            renderColumns={renderColumns}
+            canDrop={canDrop}
+            onOpenChange={onOpenChange}
+            onSelect={onSelect}
+          />
+        );
+      })}
     </Treegrid.Root>
   );
 };

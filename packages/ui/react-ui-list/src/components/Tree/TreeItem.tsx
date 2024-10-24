@@ -47,7 +47,6 @@ export type TreeItemProps = {
 };
 
 // TODO(wittjosiah): Styles.
-
 export const TreeItem = memo(
   ({
     item,
@@ -124,7 +123,6 @@ export const TreeItem = memo(
             const instruction = extractInstruction(self.data);
 
             if (source.data.id !== item.id) {
-              // TODO(wittjosiah): Expand after 500ms if still merging.
               if (instruction?.type === 'make-child' && isBranch && !open && !cancelExpandRef.current) {
                 cancelExpandRef.current = setTimeout(() => {
                   onOpenChange?.(item, true);
@@ -188,7 +186,6 @@ export const TreeItem = memo(
         id={path.join(Treegrid.PATH_SEPARATOR)}
         aria-labelledby={`${id}__label`}
         parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
-        // focusableGroup={false}
         classNames={mx(
           'grid grid-cols-subgrid col-[tree-row] aria-[current]:bg-input',
           hoverableControls,

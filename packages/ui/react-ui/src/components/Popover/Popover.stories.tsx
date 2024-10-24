@@ -30,7 +30,6 @@ const StorybookPopover = ({ openTrigger, children }: PropsWithChildren<{ openTri
 
 export default {
   title: 'ui/react-ui/Popover',
-
   component: StorybookPopover,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

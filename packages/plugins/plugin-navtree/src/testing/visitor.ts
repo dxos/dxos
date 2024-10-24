@@ -6,6 +6,7 @@ import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 
 import { isActionLike, type Node, type NodeArg } from '@dxos/app-graph';
 import { log } from '@dxos/log';
+import { Path } from '@dxos/react-ui-mosaic';
 
 import { type NavTreeItem } from '../types';
 
@@ -14,7 +15,7 @@ export const flattenTree = (tree: NodeArg<any>, open: string[]): NavTreeItem[] =
     visitor({
       node: tree,
       getItem,
-      isOpen: ({ id }) => open.includes(id),
+      isOpen: ({ path }) => open.includes(Path.create(...path)),
     }),
   );
 };
@@ -26,7 +27,7 @@ export function* visitor({
 }: {
   node: NodeArg<any>;
   getItem: (node: NodeArg<any>, parent?: readonly string[]) => NavTreeItem;
-  isOpen?: (node: NodeArg<any>) => boolean;
+  isOpen?: (node: NavTreeItem) => boolean;
 }): Generator<NavTreeItem> {
   const stack: [NodeArg<any>, NavTreeItem][] = [[node, getItem(node)]];
   while (stack.length > 0) {
@@ -36,7 +37,7 @@ export function* visitor({
     }
 
     const children = Array.from(node.nodes ?? []);
-    if (item.path.length === 1 || isOpen?.(node)) {
+    if (item.path.length === 1 || isOpen?.(item)) {
       for (let i = children.length - 1; i >= 0; i--) {
         const child = children[i];
         stack.push([child, getItem(child, item.path)]);
@@ -99,6 +100,7 @@ const getNode = (tree: NodeArg<any>, path: string[]) => {
   return node;
 };
 
+// TODO(wittjosiah): Reconcile with react-ui-list/Tree/testing.
 export const updateState = ({
   state,
   instruction,

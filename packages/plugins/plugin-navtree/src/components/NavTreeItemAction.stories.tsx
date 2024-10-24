@@ -38,7 +38,7 @@ const menuActions = faker.helpers.multiple(
 );
 
 export default {
-  title: 'plugin-navtree/NavTreeItemAction',
+  title: 'plugins/plugin-navtree/NavTreeItemAction',
   component: NavTreeItemAction,
   decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
   args: {

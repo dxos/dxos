@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type KeyboardEvent, forwardRef, memo, useCallback, useMemo } from 'react';
+import React, { type KeyboardEvent, forwardRef, memo, useCallback } from 'react';
 
 import { Button, Icon, toLocalizedString, useTranslation, type Label } from '@dxos/react-ui';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
+import { mx } from '@dxos/react-ui-theme';
 
 export type NavTreeItemHeadingProps = {
   label: Label;
@@ -32,11 +33,6 @@ export const TreeItemHeading = memo(
         [onSelect],
       );
 
-      const buttonClassNames = useMemo(
-        () => ['grow gap-1 !pis-0.5 hover:!bg-transparent dark:hover:!bg-transparent', className],
-        [className],
-      );
-
       return (
         <TextTooltip
           text={toLocalizedString(label, t)}
@@ -50,7 +46,7 @@ export const TreeItemHeading = memo(
             data-testid='treeItem.heading'
             variant='ghost'
             density='fine'
-            classNames={buttonClassNames}
+            classNames={mx('grow gap-1 !pis-0.5 hover:!bg-transparent dark:hover:!bg-transparent', className)}
             disabled={disabled}
             onClick={onSelect}
             onKeyDown={handleButtonKeydown}

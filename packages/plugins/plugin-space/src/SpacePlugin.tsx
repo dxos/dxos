@@ -507,7 +507,6 @@ export const SpacePlugin = ({
                     type: SPACES,
                     properties: {
                       label: ['spaces label', { ns: SPACE_PLUGIN }],
-                      palette: 'teal',
                       testId: 'spacePlugin.spaces',
                       role: 'branch',
                       childrenPersistenceClass: 'echo',

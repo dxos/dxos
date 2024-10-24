@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import React, { useEffect } from 'react';
+import { Path } from '@dxos/react-ui-mosaic';
 
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
@@ -67,7 +68,7 @@ const Story = (args: Partial<TreeProps>) => {
 };
 
 export default {
-  title: 'react-ui-list/Tree',
+  title: 'ui/react-ui-list/Tree',
   component: Tree,
   render: Story,
   decorators: [withTheme, withLayout({ tooltips: true })],
@@ -76,10 +77,11 @@ export default {
       return <Icon icon='ph--placeholder--regular' size={5} />;
     },
     onOpenChange: (item: ItemType, open: boolean) => {
+      const path = Path.create(...item.path);
       if (open) {
-        state.open.push(item.id);
+        state.open.push(path);
       } else {
-        const index = state.open.indexOf(item.id);
+        const index = state.open.indexOf(path);
         if (index > -1) {
           state.open.splice(index, 1);
         }

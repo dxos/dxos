@@ -75,7 +75,6 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
       children,
       id,
       parentOf,
-      focusableGroup = true,
       open: propsOpen,
       defaultOpen,
       onOpenChange: propsOnOpenChange,
@@ -107,12 +106,12 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
           className={tx('treegrid.row', 'treegrid__row', { level }, classNames)}
           {...(parentOf && { 'aria-expanded': open, 'aria-owns': parentOf })}
           tabIndex={0}
-          {...(focusableGroup ? focusableGroupAttrs : {})}
+          {...focusableGroupAttrs}
           {...props}
           id={id}
           ref={forwardedRef}
         >
-          <div role='none' className='contents' {...(focusableGroup ? arrowGroupAttrs : {})}>
+          <div role='none' className='contents' {...arrowGroupAttrs}>
             {children}
           </div>
         </Root>
