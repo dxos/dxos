@@ -391,6 +391,15 @@ export class DxGrid extends LitElement {
     }
   }
 
+  private dispatchSelectionChange() {
+    return this.dispatchEvent(
+      new DxGridCellsSelect({
+        start: this.selectionStart,
+        end: this.selectionEnd,
+      }),
+    );
+  }
+
   private handlePointerDown = (event: PointerEvent) => {
     if (event.isPrimary) {
       const { action, actionEl } = closestAction(event.target);
@@ -418,12 +427,7 @@ export class DxGrid extends LitElement {
     const cell = closestCell(event.target);
     if (cell) {
       this.selectionEnd = cell;
-      this.dispatchEvent(
-        new DxGridCellsSelect({
-          start: this.selectionStart,
-          end: this.selectionEnd,
-        }),
-      );
+      this.dispatchSelectionChange();
     }
     this.pointer = null;
   };
@@ -439,6 +443,7 @@ export class DxGrid extends LitElement {
         (cell.col !== this.selectionEnd.col || cell.row !== this.selectionEnd.row)
       ) {
         this.selectionEnd = cell;
+        this.dispatchSelectionChange();
       }
     }
   };
@@ -474,16 +479,27 @@ export class DxGrid extends LitElement {
   /**
    * Increments focus in a specific direction without cycling.
    */
-  private moveFocusWithinPlane(deltaCol: number, deltaRow: number) {
-    const colPlane = resolveColPlane(this.focusedCell.plane);
-    const rowPlane = resolveRowPlane(this.focusedCell.plane);
+  private moveFocusOrSelectionEndWithinPlane(deltaCol: number, deltaRow: number, selectionEnd?: boolean) {
+    const current = selectionEnd ? this.selectionEnd : this.focusedCell;
+
+    const colPlane = resolveColPlane(current.plane);
     const colMax = (colPlane === 'grid' ? this.limitColumns : this.frozen[colPlane]!) - 1;
+    const nextCol = Math.max(0, Math.min(colMax, current.col + deltaCol));
+
+    const rowPlane = resolveRowPlane(current.plane);
     const rowMax = (rowPlane === 'grid' ? this.limitRows : this.frozen[rowPlane]!) - 1;
-    this.setFocusedCell({
-      ...this.focusedCell,
-      col: Math.max(0, Math.min(colMax, this.focusedCell.col + deltaCol)),
-      row: Math.max(0, Math.min(rowMax, this.focusedCell.row + deltaRow)),
-    });
+    const nextRow = Math.max(0, Math.min(rowMax, current.row + deltaRow));
+
+    if (selectionEnd) {
+      this.selectionEnd = { ...this.selectionEnd, col: nextCol, row: nextRow };
+      this.dispatchSelectionChange();
+    } else {
+      this.setFocusedCell({
+        ...this.focusedCell,
+        col: nextCol,
+        row: nextRow,
+      });
+    }
   }
 
   private handleKeydown(event: KeyboardEvent) {
@@ -492,27 +508,33 @@ export class DxGrid extends LitElement {
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault();
-          this.moveFocusWithinPlane(0, 1);
+          this.moveFocusOrSelectionEndWithinPlane(0, 1, event.shiftKey);
           break;
         case 'ArrowUp':
           event.preventDefault();
-          this.moveFocusWithinPlane(0, -1);
+          this.moveFocusOrSelectionEndWithinPlane(0, -1, event.shiftKey);
           break;
         case 'ArrowRight':
           event.preventDefault();
-          this.moveFocusWithinPlane(1, 0);
+          this.moveFocusOrSelectionEndWithinPlane(1, 0, event.shiftKey);
           break;
         case 'ArrowLeft':
           event.preventDefault();
-          this.moveFocusWithinPlane(-1, 0);
+          this.moveFocusOrSelectionEndWithinPlane(-1, 0, event.shiftKey);
           break;
         case 'Tab':
           event.preventDefault();
           this.incrementFocusWithinPlane(event.shiftKey);
           break;
-      }
-      // Emit edit request if relevant
-      switch (event.key) {
+        case 'Escape':
+          // Handle escape if selection is a superset of the focused cell.
+          if (this.selectionStart.col !== this.selectionEnd.col || this.selectionStart.row !== this.selectionEnd.row) {
+            event.preventDefault();
+            this.selectionStart = this.focusedCell;
+            this.selectionEnd = this.focusedCell;
+            this.dispatchSelectionChange();
+          }
+          break;
         case 'Enter':
           this.dispatchEditRequest();
           break;
@@ -560,6 +582,7 @@ export class DxGrid extends LitElement {
       this.selectionStart = nextCoords;
       this.selectionEnd = nextCoords;
       this.snapPosToFocusedCell();
+      this.dispatchSelectionChange();
     }
   }
 
