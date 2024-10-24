@@ -43,7 +43,7 @@ export const config = (
     '@storybook/addon-interactions',
     '@storybook/addon-links',
     '@storybook/addon-themes',
-    'storybook-dark-mode',
+    // 'storybook-dark-mode',
   ],
   /**
    * https://storybook.js.org/docs/api/main-config/main-config-vite-final
