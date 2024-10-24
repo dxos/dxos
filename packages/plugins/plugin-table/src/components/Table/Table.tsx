@@ -85,7 +85,7 @@ export const Table = ({ table, data, onDeleteRow }: TableProps) => {
         open={menuState?.type === 'row'}
         onOpenChange={close}
       />
-      <NewColumnForm tableModel={tableModel} open={menuState?.type === 'newColumn'} onOpenChange={close} />
+      <NewColumnForm tableModel={tableModel} open={menuState?.type === 'newColumn'} close={close} />
     </ModalPrimitive.Root>
   );
 };
