@@ -41,7 +41,7 @@ const Story = () => {
 export const Default = {};
 
 const meta: Meta = {
-  title: 'plugins/plugin-table/TableSettings',
+  title: 'plugins/plugin-table-deprecated/TableSettings',
   component: TableSettings,
   // TODO(burdon): Use decorator.
   render: () => <ClientRepeater component={Story} types={[TableType]} createSpace />,

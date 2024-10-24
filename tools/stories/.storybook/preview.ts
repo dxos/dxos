@@ -20,6 +20,11 @@ const preview: Preview = {
       argTypesRegex: '^on[A-Z].*',
     },
 
+    // Disables Chromatic's snapshotting on a global level.
+    chromatic: {
+      disableSnapshot: true,
+    },
+
     controls: {
       matchers: {
         color: /(background|color)$/i,
@@ -27,19 +32,14 @@ const preview: Preview = {
       },
     },
 
-    // Disables Chromatic's snapshotting on a global level.
-    chromatic: {
-      disableSnapshot: true,
-    },
-
     // https://storybook.js.org/addons/storybook-dark-mode
     darkMode: {
-      classTarget: 'html',
-      stylePreview: false,
+      classTarget: 'html', // TODO(burdon): This doesn't seem to work.
+      stylePreview: true,
       dark: { ...themes.dark },
       darkClass: 'dark',
       light: { ...themes.light },
-      lightClass: 'dark',
+      lightClass: 'light',
     },
 
     // https://storybook.js.org/docs/api/parameters#options
@@ -51,7 +51,6 @@ const preview: Preview = {
       //   method: 'alphabetical-by-kind',
       // },
       storySort: (a: IndexEntry, b: IndexEntry) => {
-        console.log('===', a, b);
         return a.id === b.id ? 0 : a.id.localeCompare(b.id, undefined, { numeric: true });
       },
     },

@@ -55,7 +55,15 @@ const meta: Meta = {
   title: 'plugins/plugin-table/Table',
   component: Table,
   render: DefaultStory,
-  decorators: [withSignals, withTheme, withLayout({ fullscreen: true })],
+  decorators: [
+    // (Story) => {
+    //   console.log('!');
+    //   return <Story />;
+    // },
+    withTheme,
+    withSignals,
+    withLayout({ fullscreen: true }),
+  ],
 };
 
 export default meta;
