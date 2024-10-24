@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
@@ -50,9 +51,10 @@ const TriggerEditorStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
   );
 };
 
-export default {
-  title: 'plugin-function/TriggerEditor',
+export const Default = {};
 
+const meta: Meta = {
+  title: 'plugins/plugin-function/TriggerEditor',
   render: () => (
     <ClientRepeater
       component={TriggerEditorStory}
@@ -69,4 +71,4 @@ export default {
   decorators: [withTheme],
 };
 
-export const Default = {};
+export default meta;

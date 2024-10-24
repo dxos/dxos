@@ -10,7 +10,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 export default {
-  title: 'gem-globe/canvas',
+  title: 'experimental/gem-globe/canvas',
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#111]' })],
 };
 

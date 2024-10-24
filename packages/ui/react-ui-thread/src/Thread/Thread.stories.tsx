@@ -19,7 +19,7 @@ import translations from '../translations';
 
 faker.seed(1);
 
-const Story = () => {
+const DefaultStory = () => {
   const [pending, setPending] = useState(false);
   const [identityKey1] = useState(PublicKey.random());
   const [identityKey2] = useState(PublicKey.random());
@@ -80,9 +80,9 @@ const Story = () => {
 };
 
 export default {
-  title: 'react-ui-thread/Thread',
+  title: 'ui/react-ui-thread/Thread',
   component: Thread,
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { translations },
 };

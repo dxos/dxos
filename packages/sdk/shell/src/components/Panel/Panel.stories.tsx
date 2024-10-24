@@ -15,7 +15,7 @@ import { Label } from './Label';
 import { StorybookDialog } from '../StorybookDialog';
 
 export default {
-  title: 'react-shell/StorybookDialog',
+  title: 'sdk/react-shell/StorybookDialog',
   component: StorybookDialog,
   actions: { argTypesRegex: '^on.*' },
   decorators: [withTheme],
