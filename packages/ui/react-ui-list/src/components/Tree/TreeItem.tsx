@@ -56,8 +56,17 @@ export const TreeItem = memo(
     const isBranch = !!parentOf;
 
     const ref = useRef<HTMLDivElement | null>(null);
+    const openRef = useRef(false);
+    const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
     const [state, setState] = useState<TreeItemState>('idle');
     const [instruction, setInstruction] = useState<Instruction | null>(null);
+
+    const cancelExpand = useCallback(() => {
+      if (cancelExpandRef.current) {
+        clearTimeout(cancelExpandRef.current);
+        cancelExpandRef.current = null;
+      }
+    }, []);
 
     useEffect(() => {
       if (!_draggable) {
@@ -91,11 +100,16 @@ export const TreeItem = memo(
           },
           onDragStart: () => {
             setState('dragging');
-            // TODO(wittjosiah): Collapse open items during a drag.
+            if (open) {
+              openRef.current = true;
+              onOpenChange?.(item, false);
+            }
           },
           onDrop: () => {
             setState('idle');
-            // TODO(wittjosiah): Expand open items after a drag.
+            if (openRef.current) {
+              onOpenChange?.(item, true);
+            }
           },
         }),
         dropTargetForElements({
@@ -120,6 +134,16 @@ export const TreeItem = memo(
 
             if (source.data.id !== item.id) {
               // TODO(wittjosiah): Expand after 500ms if still merging.
+              if (instruction?.type === 'make-child' && isBranch && !open && !cancelExpandRef.current) {
+                cancelExpandRef.current = setTimeout(() => {
+                  onOpenChange?.(item, true);
+                }, 500);
+              }
+
+              if (instruction?.type !== 'make-child') {
+                cancelExpand();
+              }
+
               setInstruction(instruction);
             } else if (instruction?.type === 'reparent') {
               // TODO(wittjosiah): This is not occurring in the current implementation.
@@ -129,14 +153,19 @@ export const TreeItem = memo(
             }
           },
           onDragLeave: () => {
+            cancelExpand();
             setInstruction(null);
           },
           onDrop: () => {
+            cancelExpand();
             setInstruction(null);
           },
         }),
       );
-    }, [draggable, item, mode, canDrop]);
+    }, [draggable, item, mode, open, canDrop]);
+
+    // Cancel expand on unmount.
+    useEffect(() => () => cancelExpand(), [cancelExpand]);
 
     const handleOpenChange = useCallback(() => onOpenChange?.(item, !open), [onOpenChange, item, open]);
 
