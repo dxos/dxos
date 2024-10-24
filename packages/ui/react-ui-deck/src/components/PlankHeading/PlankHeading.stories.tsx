@@ -55,7 +55,7 @@ const StorybookPlankHeading = ({
 };
 
 export default {
-  title: 'react-ui-deck/PlankHeading',
+  title: 'ui/react-ui-deck/PlankHeading',
   component: StorybookPlankHeading,
   decorators: [withTheme],
   parameters: { translations },

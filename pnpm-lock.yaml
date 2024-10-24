@@ -158,9 +158,6 @@ importers:
       '@rushstack/eslint-patch':
         specifier: ^1.3.3
         version: 1.4.0
-      '@storybook/testing-react':
-        specifier: ^2.0.1
-        version: 2.0.1(@storybook/client-logger@8.1.11)(@storybook/preview-api@8.3.3(storybook@8.3.3))(@storybook/react@8.3.3(@storybook/test@8.3.3(storybook@8.3.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@8.3.3)(typescript@5.6.2))(@storybook/types@8.1.11)(react@18.2.0)
       '@swc-node/register':
         specifier: 1.9.1
         version: 1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2)
@@ -10662,6 +10659,9 @@ importers:
 
   packages/ui/react-ui-grid:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: ^6.18.1
+        version: 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
       '@codemirror/state':
         specifier: ^6.4.1
         version: 6.4.1
@@ -11450,6 +11450,12 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@storybook/preview-api':
+        specifier: ^8.3.6
+        version: 8.3.6(storybook@8.3.3)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -19180,10 +19186,10 @@ packages:
   '@storybook/mdx2-csf@1.1.0':
     resolution: {integrity: sha512-TXJJd5RAKakWx4BtpwvSNdgTDkKM6RkXU8GK34S/LhidQ5Pjz3wcnqb0TxEkfhK/ztbP8nKHqXFwLfa2CYkvQw==}
 
-  '@storybook/preview-api@8.3.3':
-    resolution: {integrity: sha512-GP2QlaF3BBQGAyo248N7549YkTQjCentsc1hUvqPnFWU4xfjkejbnFk8yLaIw0VbYbL7jfd7npBtjZ+6AnphMQ==}
+  '@storybook/preview-api@8.3.6':
+    resolution: {integrity: sha512-/Wxvb7wbI2O2iH63arRQQyyojA630vibdshkFjuC/u1nYdptEV1jkxa0OYmbZbKCn4/ze6uH4hfsKOpDPV9SWg==}
     peerDependencies:
-      storybook: ^8.3.3
+      storybook: ^8.3.6
 
   '@storybook/react-dom-shim@8.3.3':
     resolution: {integrity: sha512-0dPC9K7+K5+X/bt3GwYmh+pCpisUyKVjWsI+PkzqGnWqaXFakzFakjswowIAIO1rf7wYZR591x3ehUAyL2bJiQ==}
@@ -19223,17 +19229,6 @@ packages:
     resolution: {integrity: sha512-uZ8nMIovfI2ry989K2+cYAeEVD/3dpjj2+Rbmy7DiZWWVhFALfmqaTRkzZfShLmlH0TFv+rfcBPihGccBtw0FQ==}
     peerDependencies:
       storybook: ^8.3.3
-
-  '@storybook/testing-react@2.0.1':
-    resolution: {integrity: sha512-D0fT7f0TUU8+usR+0NSyCYQCYDWernQqGZou32ISsoBkY9IiH1JMY4hQE8zUaGozu9eMlaa2wieWIMsjWovpdw==}
-    engines: {node: '>=10'}
-    deprecated: In Storybook 7, this package has been promoted to a first-class Storybook functionality. This means that you no longer need it! Instead, you can import the same utilities, but from the @storybook/react package. Please migrate when you can.
-    peerDependencies:
-      '@storybook/client-logger': ^7.0.0-beta.0 || ^7.0.0-rc.0 || ^7.0.0
-      '@storybook/preview-api': ^7.0.0-beta.0 || ^7.0.0-rc.0 || ^7.0.0
-      '@storybook/react': ^7.0.0-beta.0 || ^7.0.0-rc.0 || ^7.0.0
-      '@storybook/types': ^7.0.0-beta.0 || ^7.0.0-rc.0 || ^7.0.0
-      react: ~18.2.0
 
   '@storybook/theming@8.1.11':
     resolution: {integrity: sha512-Chn/opjO6Rl1isNobutYqAH2PjKNkj09YBw/8noomk6gElSa3JbUTyaG/+JCHA6OG/9kUsqoKDb5cZmAKNq/jA==}
@@ -21212,6 +21207,11 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -43328,7 +43328,7 @@ snapshots:
       '@storybook/client-logger': 8.1.11
       '@storybook/csf': 0.1.11
       '@storybook/global': 5.0.0
-      '@storybook/icons': 1.2.9(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@storybook/icons': 1.2.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@storybook/theming': 8.1.11(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@storybook/types': 8.1.11
       memoizerific: 1.11.3
@@ -43401,7 +43401,7 @@ snapshots:
       '@storybook/components': 8.3.3(storybook@8.3.3)
       '@storybook/global': 5.0.0
       '@storybook/manager-api': 8.3.3(storybook@8.3.3)
-      '@storybook/preview-api': 8.3.3(storybook@8.3.3)
+      '@storybook/preview-api': 8.3.6(storybook@8.3.3)
       '@storybook/theming': 8.3.3(storybook@8.3.3)
       storybook: 8.3.3
       ts-dedent: 2.2.0
@@ -43430,7 +43430,7 @@ snapshots:
       '@storybook/core-events': 8.1.11
       '@storybook/csf': 0.1.11
       '@storybook/global': 5.0.0
-      '@storybook/icons': 1.2.9(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@storybook/icons': 1.2.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@storybook/router': 8.1.11
       '@storybook/theming': 8.1.11(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@storybook/types': 8.1.11
@@ -43450,7 +43450,7 @@ snapshots:
 
   '@storybook/mdx2-csf@1.1.0': {}
 
-  '@storybook/preview-api@8.3.3(storybook@8.3.3)':
+  '@storybook/preview-api@8.3.6(storybook@8.3.3)':
     dependencies:
       storybook: 8.3.3
 
@@ -43488,7 +43488,7 @@ snapshots:
       '@storybook/components': 8.3.3(storybook@8.3.3)
       '@storybook/global': 5.0.0
       '@storybook/manager-api': 8.3.3(storybook@8.3.3)
-      '@storybook/preview-api': 8.3.3(storybook@8.3.3)
+      '@storybook/preview-api': 8.3.6(storybook@8.3.3)
       '@storybook/react-dom-shim': 8.3.3(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@8.3.3)
       '@storybook/theming': 8.3.3(storybook@8.3.3)
       '@types/escodegen': 0.0.6
@@ -43531,15 +43531,6 @@ snapshots:
       storybook: 8.3.3
       util: 0.12.5
 
-  '@storybook/testing-react@2.0.1(@storybook/client-logger@8.1.11)(@storybook/preview-api@8.3.3(storybook@8.3.3))(@storybook/react@8.3.3(@storybook/test@8.3.3(storybook@8.3.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@8.3.3)(typescript@5.6.2))(@storybook/types@8.1.11)(react@18.2.0)':
-    dependencies:
-      '@storybook/client-logger': 8.1.11
-      '@storybook/csf': 0.1.11
-      '@storybook/preview-api': 8.3.3(storybook@8.3.3)
-      '@storybook/react': 8.3.3(@storybook/test@8.3.3(storybook@8.3.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@8.3.3)(typescript@5.6.2)
-      '@storybook/types': 8.1.11
-      react: 18.2.0
-
   '@storybook/theming@8.1.11(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
     dependencies:
       '@emotion/use-insertion-effect-with-fallbacks': 1.0.1(react@18.2.0)
@@ -43579,7 +43570,7 @@ snapshots:
       '@storybook/components': 8.3.3(storybook@8.3.3)
       '@storybook/global': 5.0.0
       '@storybook/manager-api': 8.3.3(storybook@8.3.3)
-      '@storybook/preview-api': 8.3.3(storybook@8.3.3)
+      '@storybook/preview-api': 8.3.6(storybook@8.3.3)
       '@storybook/theming': 8.3.3(storybook@8.3.3)
       lit: 3.2.0
       storybook: 8.3.3
@@ -46117,8 +46108,8 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1:
-    dependencies:
+  ajv-formats@2.1.1(ajv@8.12.0):
+    optionalDependencies:
       ajv: 8.12.0
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -47665,7 +47656,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -57086,7 +57077,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       ajv-keywords: 5.1.0(ajv@8.12.0)
 
   scroll@3.0.1: {}
