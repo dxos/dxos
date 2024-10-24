@@ -6,22 +6,22 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { ClientRepeater } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { withMultiClientProvider } from '@dxos/react-client/testing';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { AppContainer } from './AppContainer';
 import { Main } from './Main';
 import { ItemType } from '../data';
 
 export default {
   title: 'apps/testbench-app/Main',
   component: Main,
-  render: () => (
-    <AppContainer>
-      <ClientRepeater component={Main} count={2} types={[ItemType]} createSpace />
-    </AppContainer>
-  ),
-  decorators: [withTheme],
+  render: () => <div>Main</div>,
+  // render: () => <ClientRepeater component={Main} count={2} types={[ItemType]} createSpace />,
+  decorators: [
+    withMultiClientProvider({ numClients: 3, types: [ItemType], createSpace: true }),
+    withLayout({ fullscreen: true, classNames: ['grid grid-row-2 h-full divide-y divide-separator'] }),
+    withTheme,
+  ],
   parameters: {
     layout: 'fullscreen',
   },
