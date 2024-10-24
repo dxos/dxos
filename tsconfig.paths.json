@@ -329,6 +329,9 @@
       "@dxos/react-ui-attention": [
         "packages/ui/react-ui-attention/src/index.ts"
       ],
+      "@dxos/react-ui-attention/testing": [
+        "packages/ui/react-ui-attention/src/testing/index.ts"
+      ],
       "@dxos/react-ui-card": [
         "packages/ui/react-ui-card/src/index.ts"
       ],
@@ -352,9 +355,6 @@
       ],
       "@dxos/react-ui-mosaic": [
         "packages/ui/react-ui-mosaic/src/index.ts"
-      ],
-      "@dxos/react-ui-navtree": [
-        "packages/ui/react-ui-navtree/src/index.ts"
       ],
       "@dxos/react-ui-searchlist": [
         "packages/ui/react-ui-searchlist/src/index.ts"

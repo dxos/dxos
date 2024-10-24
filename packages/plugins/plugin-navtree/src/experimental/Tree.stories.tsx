@@ -224,7 +224,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
 };
 
 const meta: Meta = {
-  title: 'plugins/plugin-navtree/Tree',
+  title: 'plugins/plugin-navtree/experimental/Tree',
   component: Tree,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: modalSurface })],
 };

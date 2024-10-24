@@ -33,7 +33,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'react-ui-attention/AttentionProvider',
+  title: 'ui/react-ui-attention/AttentionProvider',
   render: Story,
   decorators: [withTheme, withAttention],
 };

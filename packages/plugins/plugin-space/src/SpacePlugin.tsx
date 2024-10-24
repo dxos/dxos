@@ -128,6 +128,7 @@ export const SpacePlugin = ({
     awaiting: undefined,
     spaceNames: {},
     viewersByObject: {},
+    // TODO(wittjosiah): Stop using (Complex)Map inside reactive object.
     viewersByIdentity: new ComplexMap(PublicKey.hash),
     sdkMigrationRunning: {},
   });
@@ -404,9 +405,12 @@ export const SpacePlugin = ({
             // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
-                <SmallPresenceLive viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]} />
+                <SmallPresenceLive
+                  id={data.id as string}
+                  viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]}
+                />
               ) : (
-                <SmallPresence count={0} />
+                <SmallPresence id={data.id as string} count={0} />
               );
             }
             case 'navbar-start': {
@@ -503,7 +507,6 @@ export const SpacePlugin = ({
                     type: SPACES,
                     properties: {
                       label: ['spaces label', { ns: SPACE_PLUGIN }],
-                      palette: 'teal',
                       testId: 'spacePlugin.spaces',
                       role: 'branch',
                       childrenPersistenceClass: 'echo',
@@ -553,7 +556,7 @@ export const SpacePlugin = ({
                   properties: {
                     label: ['create space label', { ns: SPACE_PLUGIN }],
                     icon: 'ph--plus--regular',
-                    disposition: 'toolbar',
+                    disposition: 'item',
                     testId: 'spacePlugin.createSpace',
                   },
                 },
@@ -573,6 +576,7 @@ export const SpacePlugin = ({
                   properties: {
                     label: ['join space label', { ns: SPACE_PLUGIN }],
                     icon: 'ph--sign-in--regular',
+                    disposition: 'item',
                     testId: 'spacePlugin.joinSpace',
                   },
                 },

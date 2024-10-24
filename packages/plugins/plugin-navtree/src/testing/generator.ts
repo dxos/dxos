@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type NodeArg } from '@dxos/app-graph';
 import { create, S, type ReactiveObject, TypedObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
@@ -115,4 +116,84 @@ const data = {
     '/images/image-5.png',
     '/images/image-6.png',
   ],
+};
+
+export const createTree = () => {
+  const generator = new TestObjectGenerator({ types: ['document'] });
+
+  const initialContent = {
+    id: 'root',
+    data: null,
+    type: 'root',
+    properties: {
+      label: 'Root',
+      icon: 'ph--circle--regular',
+    },
+    nodes: [...Array(4)].map(() => {
+      const l0 = generator.createObject();
+      return {
+        id: faker.string.uuid(),
+        data: null,
+        type: 'collection',
+        properties: {
+          label: l0.title,
+          icon: 'ph--horse--regular',
+        },
+        nodes: [
+          ...[...Array(4)].map(() => {
+            const l1 = generator.createObject();
+            return {
+              id: faker.string.uuid(),
+              data: null,
+              type: 'document',
+              properties: {
+                label: l1.title,
+                icon: 'ph--butterfly--regular',
+              },
+              nodes: [
+                {
+                  id: `${faker.string.uuid()}__a1`,
+                  data: () => {},
+                  type: 'action',
+                  properties: {
+                    label: faker.lorem.words(2),
+                    icon: 'ph--boat--regular',
+                  },
+                },
+                {
+                  id: `${faker.string.uuid()}__a2`,
+                  data: () => {},
+                  type: 'action',
+                  properties: {
+                    label: faker.lorem.words(2),
+                    icon: 'ph--train-simple--regular',
+                  },
+                },
+              ],
+            } satisfies NodeArg<any>;
+          }),
+          {
+            id: `${faker.string.uuid()}__a1`,
+            data: () => {},
+            type: 'action',
+            properties: {
+              label: faker.lorem.words(2),
+              icon: 'ph--boat--regular',
+            },
+          },
+          {
+            id: `${faker.string.uuid()}__a2`,
+            data: () => {},
+            type: 'action',
+            properties: {
+              label: faker.lorem.words(2),
+              icon: 'ph--train-simple--regular',
+            },
+          },
+        ],
+      } satisfies NodeArg<any>;
+    }),
+  } satisfies NodeArg<any>;
+
+  return initialContent;
 };
