@@ -7,7 +7,6 @@ set -euo pipefail
 
 APPS=(
   "./packages/apps/composer-app"
-  "./tools/stories"
 )
 
 # Do not use remote cache
