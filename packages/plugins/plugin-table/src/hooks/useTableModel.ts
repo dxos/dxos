@@ -5,8 +5,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
-import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { type EchoReactiveObject, Filter, getSpace, useQuery } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, getSpace } from '@dxos/react-client/echo';
 
 import { TableModel } from '../model';
 import { type TableType } from '../types';
@@ -14,23 +13,12 @@ import { createStarterSchema, createStarterView } from '../types';
 
 export type UseTableModelParams = {
   table: TableType;
+  objects: EchoReactiveObject<any>[];
   onCellUpdate: (cell: { col: number; row: number }) => void;
 };
 
-// TODO(burdon): Create TableModel interface and useTableModel hook that manages query.
-export const useTableModel = ({ table, onCellUpdate }: UseTableModelParams): TableModel | undefined => {
+export const useTableModel = ({ table, objects, onCellUpdate }: UseTableModelParams): TableModel | undefined => {
   const space = getSpace(table);
-
-  // TODO(burdon): Move into model.
-  const queriedObjects = useQuery<EchoReactiveObject<any>>(
-    space,
-    table.schema ? Filter.schema(table.schema) : () => false,
-    undefined,
-    // TODO(burdon): Toggle deleted.
-    [table.schema],
-  );
-
-  const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const onDeleteRow = useCallback(
     (row: any) => {
@@ -68,8 +56,8 @@ export const useTableModel = ({ table, onCellUpdate }: UseTableModelParams): Tab
   }, [table, onCellUpdate, onDeleteRow]);
 
   useEffect(() => {
-    tableModel?.updateData(filteredObjects);
-  }, [filteredObjects, tableModel]);
+    tableModel?.updateData(objects);
+  }, [objects, tableModel]);
 
   return tableModel;
 };

@@ -26,16 +26,17 @@ const frozen = { frozenRowsStart: 1, frozenColsEnd: 1 };
 
 export type TableProps = {
   table: TableType;
+  objects: any[];
 };
 
 // TODO(burdon): Move to react-ui-table?
-export const Table = ({ table }: TableProps) => {
+export const Table = ({ table, objects }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
 
   const handleOnCellUpdate = useCallback((cell: GridCell) => {
     gridRef.current?.updateIfWithinBounds(cell);
   }, []);
-  const tableModel = useTableModel({ table, onCellUpdate: handleOnCellUpdate });
+  const tableModel = useTableModel({ table, objects, onCellUpdate: handleOnCellUpdate });
 
   const handleAxisResize = useCallback(
     (event: DxAxisResize) => {

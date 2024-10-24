@@ -5,7 +5,8 @@
 import React, { useCallback } from 'react';
 
 import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
-import { create, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { useGlobalFilteredObjects } from '@dxos/plugin-search';
+import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -20,6 +21,10 @@ const TableContainer = ({ role, table }: LayoutContainerProps<Omit<TableProps, '
   const { hasAttention } = useAttention(fullyQualifiedId(table));
   const dispatch = useIntentDispatcher();
   const space = getSpace(table);
+  const queriedObjects = useQuery(space, table.schema ? Filter.schema(table.schema) : () => false, undefined, [
+    table.schema,
+  ]);
+  const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const onThreadCreate = useCallback(() => {
     void dispatch({
@@ -71,7 +76,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<Omit<TableProps, '
           role === 'slide' && 'bs-full overflow-auto grid place-items-center',
         )}
       >
-        <Table key={table.id} table={table} />
+        <Table key={table.id} table={table} objects={filteredObjects} />
       </div>
     </div>
   );

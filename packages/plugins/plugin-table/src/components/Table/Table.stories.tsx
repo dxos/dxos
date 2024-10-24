@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -19,12 +20,20 @@ import { createEmptyTable } from '../testing';
 const DefaultStory = () => {
   const spaces = useSpaces();
   const [table, setTable] = useState<TableType | undefined>();
-  const objects = useQuery(spaces[spaces.length - 1], Filter.schema(TableType));
+  const space = spaces[spaces.length - 1];
+
+  const tableObjects = useQuery(space, Filter.schema(TableType));
   useEffect(() => {
-    if (objects.length) {
-      setTable(objects[0]);
+    if (tableObjects.length) {
+      setTable(tableObjects[0]);
     }
-  }, [objects]);
+  }, [tableObjects]);
+
+  const queriedObjects = useQuery(space, table?.schema ? Filter.schema(table.schema) : () => false, undefined, [
+    table?.schema,
+  ]);
+
+  const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const handleAction = useCallback(
     (action: { type: string }) => {
@@ -58,7 +67,7 @@ const DefaultStory = () => {
         </Toolbar.Root>
       </div>
       <div className='relative is-full max-is-max min-is-0 min-bs-0'>
-        <Table table={table} />
+        <Table table={table} objects={filteredObjects} />
       </div>
     </div>
   );
