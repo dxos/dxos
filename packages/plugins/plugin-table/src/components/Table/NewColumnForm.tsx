@@ -5,43 +5,54 @@
 import * as ModalPrimitive from '@radix-ui/react-popper';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { create } from '@dxos/echo-schema';
+import { create, createObjectId } from '@dxos/echo-schema';
 import { DropdownMenu, useThemeContext } from '@dxos/react-ui';
 import { Field } from '@dxos/react-ui-data';
-import { type FieldType, FieldValueType } from '@dxos/schema';
+import { type FieldType, FieldValueType, getUniqueProperty, type ViewType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
 type NewColumnFormProps = {
-  tableModel?: TableModel;
+  tableModel: TableModel;
   open: boolean;
   close: () => void;
 };
 
 // TODO(ZaymonFC): A util in `@dxos/schema` should look at the view and the
 // schema and generate the new field. That's why I haven't moved this to ../../seed.
-export const createStarterField = (): FieldType => {
+export const createNewField = (view: ViewType): FieldType => {
+  const field: FieldType = { id: createObjectId(), path: getUniqueProperty(view), type: FieldValueType.String };
+
   // TODO(ZaymonFC): Can't currently supply a schema since it's not in the registry when we
   // try to add it to the table
-  return create({ path: 'newField', type: FieldValueType.Text }) as any;
+  return create(field);
 };
 
 export const NewColumnForm = ({ tableModel, open, close }: NewColumnFormProps) => {
   const { tx } = useThemeContext();
-  const [field, setField] = useState(() => createStarterField());
+  const [field, setField] = useState<FieldType | undefined>(undefined);
 
   useEffect(() => {
     if (open) {
-      setField(createStarterField());
+      setField(createNewField(tableModel.table.view!));
     }
   }, [open]);
 
   const onCreate = useCallback(() => {
+    if (!field) {
+      close();
+      return;
+    }
+
     tableModel?.table?.view?.fields?.push(field);
     // TODO(ZaymonFC): Use a module to update the view and schema at the same time!
     // TODO(ZaymonFC): Validate: that path and name are unique. Path should be non-empty.
     close();
   }, [tableModel, field]);
+
+  if (!field) {
+    return null;
+  }
 
   return (
     <DropdownMenu.Root open={open} onOpenChange={close}>
