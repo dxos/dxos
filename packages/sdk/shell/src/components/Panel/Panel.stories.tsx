@@ -17,7 +17,6 @@ import { StorybookDialog } from '../StorybookDialog';
 export default {
   title: 'sdk/react-shell/StorybookDialog',
   component: StorybookDialog,
-  actions: { argTypesRegex: '^on.*' },
   decorators: [withTheme],
 };
 
