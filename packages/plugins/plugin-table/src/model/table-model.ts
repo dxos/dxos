@@ -82,7 +82,7 @@ export class TableModel extends Resource {
 
   private readonly onDeleteRow?: (id: string) => void;
   private readonly onInsertRow?: (index?: number) => void;
-  private readonly onCellUpdate?: (cell: GridCell) => void;
+  public onCellUpdate?: (cell: GridCell) => void;
 
   constructor({
     table,
@@ -98,7 +98,7 @@ export class TableModel extends Resource {
     this.onDeleteRow = onDeleteRow;
     this.onInsertRow = onInsertRow;
     this.onCellUpdate = onCellUpdate;
-    this.sorting.value = sorting[0] ?? undefined;
+    this.sorting.value = sorting.at(0);
     this.pinnedRows = pinnedRows;
     this.rowSelection = rowSelection;
   }

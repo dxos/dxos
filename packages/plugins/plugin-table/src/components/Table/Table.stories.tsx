@@ -13,6 +13,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
+import { useTableModel } from '../../hooks';
 import { TableType } from '../../types';
 import { Toolbar } from '../Toolbar';
 import { createEmptyTable } from '../testing';
@@ -34,6 +35,11 @@ const DefaultStory = () => {
   ]);
 
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
+
+  const tableModel = useTableModel({
+    table: table!,
+    objects: filteredObjects,
+  });
 
   const handleAction = useCallback(
     (action: { type: string }) => {
@@ -67,7 +73,7 @@ const DefaultStory = () => {
         </Toolbar.Root>
       </div>
       <div className='relative is-full max-is-max min-is-0 min-bs-0'>
-        <Table table={table} objects={filteredObjects} />
+        <Table tableModel={tableModel} />
       </div>
     </div>
   );
