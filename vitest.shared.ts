@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import inject from '@rollup/plugin-inject';
+// import inject from '@rollup/plugin-inject';
 import { join, relative } from 'node:path';
 import pkgUp from 'pkg-up';
 import { type Plugin, UserConfig as ViteConfig } from 'vite';
@@ -146,10 +146,10 @@ export const baseConfig = (options: ConfigOptions = {}): ViteConfig => {
   }
 };
 
-// TODO(dmaretskyi): Extract.
 /**
  * Replaces node built-in modules with their browser equivalents.
  */
+// TODO(dmaretskyi): Extract.
 function nodeStdPlugin(): Plugin {
   return {
     name: 'node-std',

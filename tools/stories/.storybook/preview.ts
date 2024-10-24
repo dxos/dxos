@@ -5,6 +5,7 @@
 import { type Preview } from '@storybook/react';
 import { themes } from '@storybook/theming';
 import { type IndexEntry } from '@storybook/types';
+import { log } from 'console';
 
 /**
  * Configure Storybook rendering.
@@ -53,6 +54,7 @@ const preview: Preview = {
       //   method: 'alphabetical-by-kind',
       // },
       storySort: (a: IndexEntry, b: IndexEntry) => {
+        console.log(a);
         return a.id === b.id ? 0 : a.id.localeCompare(b.id, undefined, { numeric: true });
       },
     },
