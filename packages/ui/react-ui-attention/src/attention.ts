@@ -19,7 +19,12 @@ export type Attention = S.Schema.Type<typeof AttentionSchema>;
 
 const stringKey = (key: string[]) => key.join(',');
 
+/**
+ * Manages attention state for an application.
+ */
 export class AttentionManager {
+  // Each attention path is associated with an attention object.
+  // The lookup is not a reactive object to ensure that attention for each path is subscribable independently.
   private readonly _map = new ComplexMap<string[], ReactiveObject<Attention>>(stringKey);
   private readonly _state: ReactiveObject<{ current: string[] }>;
 
@@ -27,14 +32,23 @@ export class AttentionManager {
     this._state = create({ current: initial });
   }
 
+  /**
+   * Currently attended element.
+   */
   get current() {
     return this._state.current;
   }
 
+  /**
+   * All attention paths.
+   */
   keys() {
     return this._map.keys();
   }
 
+  /**
+   * Get the attention state for a given path.
+   */
   get(key: string[]): ReactiveObject<Attention> {
     const object = this._map.get(key);
     if (object) {
@@ -46,7 +60,10 @@ export class AttentionManager {
     return newObject;
   }
 
-  updateAttended(nextKey: string[]) {
+  /**
+   * Update the currently attended element.
+   */
+  update(nextKey: string[]) {
     const currentKey = untracked(() => this.current);
     const currentRelatedTo = currentKey[0];
     const nextRelatedTo = nextKey[0];

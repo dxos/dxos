@@ -88,7 +88,7 @@ const RootAttentionProvider = ({
     //   Currently this depends on the deck in order to ensure that when the attended item is removed something else is attended.
     // Only update state if the result is different and not empty.
     if (next.length > 0 && (prev.length !== next.length || !!prev.find((id, index) => next[index] !== id))) {
-      attention.updateAttended(next);
+      attention.update(next);
       onChange?.(next);
     }
   };

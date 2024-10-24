@@ -19,6 +19,17 @@ import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { DECK_PLUGIN } from '../../meta';
 
+export type NodePlankHeadingProps = {
+  coordinate: LayoutCoordinate;
+  node?: Node;
+  canIncrementStart?: boolean;
+  canIncrementEnd?: boolean;
+  popoverAnchorId?: string;
+  pending?: boolean;
+  flatDeck?: boolean;
+  actions?: PlankHeadingAction[];
+};
+
 export const NodePlankHeading = memo(
   ({
     coordinate,
@@ -29,16 +40,7 @@ export const NodePlankHeading = memo(
     pending,
     flatDeck,
     actions = [],
-  }: {
-    coordinate: LayoutCoordinate;
-    node?: Node;
-    canIncrementStart?: boolean;
-    canIncrementEnd?: boolean;
-    popoverAnchorId?: string;
-    pending?: boolean;
-    flatDeck?: boolean;
-    actions?: PlankHeadingAction[];
-  }) => {
+  }: NodePlankHeadingProps) => {
     const { t } = useTranslation(DECK_PLUGIN);
     const { graph } = useGraph();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
@@ -117,6 +119,7 @@ export const NodePlankHeading = memo(
               return;
             }
 
+            // TODO(Zan): Update this to use the new layout actions.
             if (eventType === 'solo') {
               return dispatch([
                 {
@@ -124,29 +127,31 @@ export const NodePlankHeading = memo(
                   data: { type: eventType, layoutCoordinate: { part: 'main', entryId: coordinate.entryId } },
                 },
               ]);
+            } else if (eventType === 'close') {
+              if (layoutPart === 'complementary') {
+                return dispatch({
+                  action: LayoutAction.SET_LAYOUT,
+                  data: {
+                    element: 'complementary',
+                    state: false,
+                  },
+                });
+              } else {
+                return dispatch({
+                  action: NavigationAction.CLOSE,
+                  data: {
+                    activeParts: {
+                      [layoutPart]: [coordinate.entryId],
+                    },
+                  },
+                });
+              }
+            } else {
+              return dispatch({
+                action: NavigationAction.ADJUST,
+                data: { type: eventType, layoutCoordinate: coordinate },
+              });
             }
-
-            // TODO(Zan): Update this to use the new layout actions.
-            return dispatch(
-              eventType === 'close'
-                ? layoutPart === 'complementary'
-                  ? {
-                      action: LayoutAction.SET_LAYOUT,
-                      data: {
-                        element: 'complementary',
-                        state: false,
-                      },
-                    }
-                  : {
-                      action: NavigationAction.CLOSE,
-                      data: {
-                        activeParts: {
-                          [layoutPart]: [coordinate.entryId],
-                        },
-                      },
-                    }
-                : { action: NavigationAction.ADJUST, data: { type: eventType, layoutCoordinate: coordinate } },
-            );
           }}
           close={layoutPart === 'complementary' ? 'minify-end' : true}
         />
