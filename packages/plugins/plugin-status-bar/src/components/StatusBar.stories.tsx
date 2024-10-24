@@ -42,7 +42,6 @@ const meta: Meta<typeof StatusBar> = {
   decorators: [withTheme],
   parameters: {
     chromatic: { disableSnapshot: false },
-    actions: { argTypesRegex: '^on.*' },
   },
 };
 

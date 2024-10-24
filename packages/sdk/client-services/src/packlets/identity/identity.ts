@@ -118,13 +118,13 @@ export class Identity {
     await this.space.spaceState.addCredentialProcessor(this._deviceStateMachine);
     await this.space.spaceState.addCredentialProcessor(this._profileStateMachine);
     await this.space.spaceState.addCredentialProcessor(this._defaultSpaceStateMachine);
+    if (this._edgeFeedReplicator) {
+      this.space.protocol.feedAdded.append(this._onFeedAdded);
+    }
     await this.space.open(ctx);
   }
 
   public async joinNetwork() {
-    if (this._edgeFeedReplicator) {
-      this.space.protocol.feedAdded.append(this._onFeedAdded);
-    }
     await this.space.startProtocol();
     await this._edgeFeedReplicator?.open();
   }

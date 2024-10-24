@@ -122,7 +122,11 @@ message Identity {
 }
 
 message RecoverIdentityRequest {
-  bytes recovery_key = 1;
+  string seedphrase = 1;
+}
+
+message CreateRecoveryPhraseResponse {
+  string seedphrase = 1;
 }
 
 message QueryIdentityResponse {
@@ -145,6 +149,7 @@ message CreateIdentityRequest {
 service IdentityService {
   rpc CreateIdentity(CreateIdentityRequest) returns (Identity);
   rpc RecoverIdentity(RecoverIdentityRequest) returns (Identity);
+  rpc CreateRecoveryPhrase(google.protobuf.Empty) returns (CreateRecoveryPhraseResponse);
   rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
   rpc UpdateProfile(halo.credentials.ProfileDocument) returns (Identity);
   rpc SignPresentation(SignPresentationRequest) returns (dxos.halo.credentials.Presentation);

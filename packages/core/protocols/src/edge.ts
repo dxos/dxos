@@ -62,6 +62,20 @@ export type JoinSpaceResponseBody = {
   spaceGenesisFeedKey: string;
 };
 
+export type RecoverIdentityRequest = {
+  recoveryKey: string;
+  deviceKey: string;
+  controlFeedKey: string;
+  signature?: string;
+};
+
+export type RecoverIdentityResponseBody = {
+  identityKey: string;
+  haloSpaceKey: string;
+  genesisFeedKey: string;
+  deviceAuthCredential: string;
+};
+
 export type CreateAgentRequestBody = {
   identityKey: string;
   haloSpaceId: SpaceId;

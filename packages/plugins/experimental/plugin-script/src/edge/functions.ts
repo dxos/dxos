@@ -9,6 +9,7 @@ import { type Config } from '@dxos/client';
 import { type Halo } from '@dxos/client-protocol';
 import { type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
@@ -132,4 +133,21 @@ const presentationForIdentity = async ({ halo, timeout }: { halo: Halo; timeout?
   const presentation = await halo.presentCredentials({ ids: [credential.id] });
 
   return { Authorization: `Bearer ${codec.encode(presentation)}` };
+};
+
+export type InvocationOptions = {
+  spaceId?: SpaceId;
+  subjectId?: string;
+};
+
+export const getInvocationUrl = (functionUrl: string, edgeUrl: string, options: InvocationOptions = {}) => {
+  const baseUrl = new URL('functions/', edgeUrl);
+
+  // Leading slashes cause the URL to be treated as an absolute path.
+  const relativeUrl = functionUrl.replace(/^\//, '');
+  const url = new URL(`./${relativeUrl}`, baseUrl.toString());
+  options.spaceId && url.searchParams.set('spaceId', options.spaceId);
+  options.subjectId && url.searchParams.set('subjectId', options.subjectId);
+  url.protocol = 'https';
+  return url.toString();
 };

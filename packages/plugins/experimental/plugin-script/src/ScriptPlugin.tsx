@@ -16,7 +16,7 @@ import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { initializeBundler } from './bundler';
 import { Compiler } from './compiler';
-import { ScriptContainer, ScriptSettings } from './components';
+import { AutomationPanel, ScriptContainer, ScriptSettings } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import { templates } from './templates';
 import translations from './translations';
@@ -121,8 +121,11 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
               }
               break;
             }
-          }
 
+            case 'complementary--automation': {
+              return <AutomationPanel subject={data.subject as any} />;
+            }
+          }
           return null;
         },
       },

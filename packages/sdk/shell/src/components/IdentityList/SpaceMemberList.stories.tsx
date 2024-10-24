@@ -14,7 +14,6 @@ import { alice } from '../../testing';
 export default {
   title: 'sdk/react-shell/SpaceMemberList',
   component: SpaceMemberListImpl,
-  actions: { argTypesRegex: '^on.*' },
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

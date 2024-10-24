@@ -17,6 +17,8 @@ import {
   type CreateAgentResponseBody,
   type CreateAgentRequestBody,
   type GetAgentStatusResponseBody,
+  type RecoverIdentityRequest,
+  type RecoverIdentityResponseBody,
 } from '@dxos/protocols';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -73,6 +75,13 @@ export class EdgeHttpClient {
     args?: EdgeHttpGetArgs,
   ): Promise<JoinSpaceResponseBody> {
     return this._call(`/spaces/${spaceId}/join`, { ...args, body, method: 'POST' });
+  }
+
+  public async recoverIdentity(
+    body: RecoverIdentityRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<RecoverIdentityResponseBody> {
+    return this._call('/identity/recover', { ...args, body, method: 'POST' });
   }
 
   private async _call<T>(path: string, args: EdgeHttpCallArgs): Promise<T> {

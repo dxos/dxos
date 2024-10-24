@@ -68,7 +68,7 @@ export const Multiple = {
 };
 
 const meta: Meta<typeof ObjectTable> = {
-  title: 'plugins/plugin-table/ObjectTable',
+  title: 'plugins/plugin-table-deprecated/ObjectTable',
   component: ObjectTable,
   render: DefaultStory as any,
 };

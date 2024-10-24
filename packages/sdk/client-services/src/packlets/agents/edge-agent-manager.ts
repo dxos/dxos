@@ -142,9 +142,9 @@ export class EdgeAgentManager extends Resource {
       if ([SpaceState.SPACE_INACTIVE, SpaceState.SPACE_CLOSED].includes(space.state)) {
         continue;
       }
-      const agentFeedNeedsNotarization = !space.inner.spaceState.feeds
-        .values()
-        .some((feed) => feed.assertion.deviceKey.equals(agentDeviceKey));
+      const agentFeedNeedsNotarization = ![...space.inner.spaceState.feeds.values()].some((feed) =>
+        feed.assertion.deviceKey.equals(agentDeviceKey),
+      );
       space.notarizationPlugin.setActiveEdgePollingEnabled(agentFeedNeedsNotarization);
 
       log.info('set active edge polling', { enabled: agentFeedNeedsNotarization, spaceId: space.id });

@@ -16,9 +16,6 @@ import { PublicKeySelector } from './PublicKeySelector';
 const meta: Meta = {
   component: PublicKeySelector,
   decorators: [withTheme],
-  parameters: {
-    actions: { argTypesRegex: '^on.*' },
-  },
 };
 
 export default meta;

@@ -109,7 +109,7 @@ export const Default = {
 };
 
 const meta: Meta<typeof Toolbar.Root> = {
-  title: 'plugins/react-ui-editor/Toolbar',
+  title: 'plugins/plugin-markdown/Toolbar',
   component: Toolbar.Root,
   render: DefaultStory as any,
   decorators: [withTheme, withLayout({ tooltips: true })],

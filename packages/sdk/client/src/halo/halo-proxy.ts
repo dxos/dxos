@@ -227,12 +227,11 @@ export class HaloProxy implements Halo {
     return identity;
   }
 
-  async recoverIdentity(recoveryKey: Uint8Array): Promise<Identity> {
+  async recoverIdentity(args: { seedphrase: string }): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
-    const identity = await this._serviceProvider.services.IdentityService.recoverIdentity(
-      { recoveryKey },
-      { timeout: RPC_TIMEOUT },
-    );
+    const identity = await this._serviceProvider.services.IdentityService.recoverIdentity(args, {
+      timeout: RPC_TIMEOUT,
+    });
     this._identityChanged.emit(identity);
     return identity;
   }

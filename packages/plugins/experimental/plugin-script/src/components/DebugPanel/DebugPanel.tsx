@@ -22,9 +22,16 @@ export type DebugPanelProps = ThemedClassName<{
   functionUrl?: string;
   binding?: string;
   onBindingChange?: (binding: string) => void;
+  showBindingConfig?: boolean;
 }>;
 
-export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindingChange }: DebugPanelProps) => {
+export const DebugPanel = ({
+  classNames,
+  functionUrl,
+  binding: _binding,
+  onBindingChange,
+  showBindingConfig = false,
+}: DebugPanelProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
 
   const bindingInputRef = useRef<HTMLInputElement>(null);
@@ -168,7 +175,7 @@ export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindi
   return (
     <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
       {/* TODO(burdon): Replace with Thread? */}
-      <div ref={scrollerRef} className='flex flex-col gap-6 h-full p-4 overflow-x-hidden overflow-y-auto'>
+      <div ref={scrollerRef} className='flex flex-col gap-6 h-full p-2 overflow-x-hidden overflow-y-auto'>
         <MessageThread state={state} result={result} history={history} />
       </div>
 
@@ -183,16 +190,18 @@ export const DebugPanel = ({ classNames, functionUrl, binding: _binding, onBindi
             onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
           />
         </Input.Root>
-        <Input.Root>
-          <Input.TextInput
-            ref={bindingInputRef}
-            classNames='!w-[10rem]'
-            placeholder={t('binding placeholder')}
-            value={binding}
-            onChange={(ev) => setBinding(ev.target.value.toUpperCase())}
-            onBlur={handleBlur}
-          />
-        </Input.Root>
+        {showBindingConfig && (
+          <Input.Root>
+            <Input.TextInput
+              ref={bindingInputRef}
+              classNames='!w-[10rem]'
+              placeholder={t('binding placeholder')}
+              value={binding}
+              onChange={(ev) => setBinding(ev.target.value.toUpperCase())}
+              onBlur={handleBlur}
+            />
+          </Input.Root>
+        )}
         <Toolbar.Button onClick={() => handleRequest(input)}>
           <Icon icon='ph--play--regular' size={4} />
         </Toolbar.Button>
@@ -211,7 +220,7 @@ const MessageThread = ({ state, result, history }: { state: State | null; result
   return (
     <>
       {history.map((message, i) => (
-        <div key={i} className='grid grid-cols-[3rem_1fr_3rem]'>
+        <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
           <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
           <div className='overflow-auto'>
             <MessageItem message={message} />
@@ -219,7 +228,7 @@ const MessageThread = ({ state, result, history }: { state: State | null; result
         </div>
       ))}
       {result?.length > 0 && (
-        <div className='grid grid-cols-[3rem_1fr_3rem]'>
+        <div className='grid grid-cols-[2rem_1fr_2rem]'>
           <div className='p-1'>
             {(state === 'pending' && <Icon icon='ph--spinner--regular' size={6} classNames='animate-spin' />) || (
               <Icon icon='ph--robot--regular' size={6} classNames='animate-[pulse_1s_ease-in-out_infinite]' />
@@ -238,7 +247,7 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
   const { type, text, data, error } = message;
   const wrapper = 'p-1 px-2 rounded-lg bg-hoverSurface overflow-auto';
   return (
-    <div className={mx('flex', type === 'request' ? 'ml-[8rem] justify-end' : 'mr-[8rem]', classNames)}>
+    <div className={mx('flex', type === 'request' ? 'ml-[1rem] justify-end' : 'mr-[1rem]', classNames)}>
       {error && <div className={mx(wrapper, 'whitespace-pre text-error')}>{String(error)}</div>}
 
       {text !== undefined && (

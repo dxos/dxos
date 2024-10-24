@@ -47,6 +47,7 @@ describe('Config hook', () => {
     await act(async () => {
       await waitForCondition({ condition: () => client.status.get() === SystemStatus.ACTIVE });
     });
+    await expect.poll(() => result.current).toBeDefined();
     expect(result.current.get('runtime.client.storage')).toEqual(config.get('runtime.client.storage'));
   });
 });
