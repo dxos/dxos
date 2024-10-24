@@ -120,7 +120,7 @@ export const GridSheet = () => {
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      const cursorFallbackRange: CellRange | null = range ?? cursor ? { from: cursor!, to: cursor! } : null;
+      const cursorFallbackRange: CellRange | null = range ?? (cursor ? { from: cursor!, to: cursor! } : null);
       switch (event.key) {
         case 'Backspace':
         case 'Delete':
