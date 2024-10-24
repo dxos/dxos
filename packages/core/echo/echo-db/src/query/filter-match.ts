@@ -2,17 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Reference } from '@dxos/echo-protocol';
 import { EXPANDO_TYPENAME, isReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { DXN, type PublicKey } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type Filter } from './filter';
 import { type ObjectCore } from '../core-db';
 import { type EchoReactiveObject } from '../echo-handler';
-import { log } from '@dxos/log';
 
 /**
  * Query logic that checks if object complaint with a filter.

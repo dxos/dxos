@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { isEncodedReference, Reference, type EncodedReference } from '@dxos/echo-protocol';
+import { isEncodedReference, type EncodedReference } from '@dxos/echo-protocol';
 import { requireTypeReference, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -128,7 +128,7 @@ export class Filter<T extends {} = any> {
     return new Filter(
       {
         objectIds: id !== undefined ? sanitizeIdArray(id) : undefined,
-        type: type,
+        type,
         properties,
       },
       options,

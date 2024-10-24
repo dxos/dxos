@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { inspect, InspectOptionsStylized } from 'node:util';
+
 import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
-import type { inspect, InspectOptionsStylized } from 'node:util';
 
 /**
  * DXN unambiguously names a resource like an ECHO object, schema definition, plugin, etc.
