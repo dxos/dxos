@@ -16,7 +16,6 @@ const preview: Preview = {
    */
   globalTypes: {
     locale: {
-      title: 'fucker',
       description: 'DX logging level.',
       toolbar: {
         icon: 'globe', // print
