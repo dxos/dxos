@@ -102,6 +102,7 @@ const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   );
 };
 
+// TODO(wittjosiah): Surface doesn't like this forwarded ref after being memoized.
 const GridCard = forwardRef<HTMLDivElement, any>(({ item, ...props }, forwardRef) => {
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
   const parseData = props.type && metadataPlugin?.provides.metadata.resolver(props.type)?.parse;
