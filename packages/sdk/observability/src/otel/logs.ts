@@ -15,15 +15,23 @@ import {
   type LogEntry,
   LogLevel,
   type LogProcessor,
-  shouldLog,
 } from '@dxos/log';
 import { jsonlogify } from '@dxos/util';
 
 import { type OtelOptions, setDiagLogger } from './otel';
 
+export type OtelLogOptions = OtelOptions & {
+  logLevel: LogLevel;
+  /**
+   * Set `true` to capture logs sent through LoggingService from shared worker.
+   * Better to set to `false` because shared worker is initializing its own logger.
+   */
+  includeSharedWorkerLogs: boolean;
+};
+
 export class OtelLogs {
   private _loggerProvider: LoggerProvider;
-  constructor(private readonly options: OtelOptions) {
+  constructor(private readonly options: OtelLogOptions) {
     setDiagLogger(options.consoleDiagLogLevel);
     const resource = Resource.default().merge(
       new Resource({
@@ -45,9 +53,13 @@ export class OtelLogs {
   public readonly logProcessor: LogProcessor = (config: LogConfig, entry: LogEntry) => {
     const logger = this._loggerProvider.getLogger('dxos-observability', this.options.serviceVersion);
 
-    if (!shouldLog(entry, config.captureFilters) || entry.meta?.S?.remoteSessionId) {
+    if (
+      entry.level < this.options.logLevel ||
+      (!this.options.includeSharedWorkerLogs && entry.meta?.S?.remoteSessionId)
+    ) {
       return;
     }
+
     const record = {
       ...entry,
       ...(entry.meta ? { meta: { file: getRelativeFilename(entry.meta.F), line: entry.meta.L } } : {}),
