@@ -26,7 +26,8 @@ export type SortConfig = { columnId: ColumnId; direction: SortDirection };
 
 export type TableModelProps = {
   table: TableType;
-  onDeleteRow?: (id: string) => void;
+  onDeleteRow?: (row: any) => void;
+  onInsertRow?: (index?: number) => void;
   onCellUpdate?: (cell: GridCell) => void;
   sorting?: SortConfig[];
   pinnedRows?: { top: number[]; bottom: number[] };
@@ -80,11 +81,13 @@ export class TableModel extends Resource {
   private readonly displayToDataIndex: Map<number, number> = new Map();
 
   private readonly onDeleteRow?: (id: string) => void;
+  private readonly onInsertRow?: (index?: number) => void;
   private readonly onCellUpdate?: (cell: GridCell) => void;
 
   constructor({
     table,
     onDeleteRow,
+    onInsertRow,
     onCellUpdate,
     sorting = [],
     pinnedRows = { top: [], bottom: [] },
@@ -93,6 +96,7 @@ export class TableModel extends Resource {
     super();
     this.table = table;
     this.onDeleteRow = onDeleteRow;
+    this.onInsertRow = onInsertRow;
     this.onCellUpdate = onCellUpdate;
     this.sorting.value = sorting[0] ?? undefined;
     this.pinnedRows = pinnedRows;
@@ -228,6 +232,12 @@ export class TableModel extends Resource {
   public deleteRow = (rowIndex: number): void => {
     const dataIndex = this.displayToDataIndex.get(rowIndex) ?? rowIndex;
     this.onDeleteRow?.(this.data.value[dataIndex]);
+  };
+
+  public insertRow = (rowIndex?: number): void => {
+    const dataIndex =
+      rowIndex !== undefined ? this.displayToDataIndex.get(rowIndex) ?? rowIndex : this.data.value.length;
+    this.onInsertRow?.(dataIndex);
   };
 
   public getCellData = ({ col, row }: GridCell): any => {
