@@ -5,8 +5,12 @@ import platform from 'platform';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { createCredentialSignerWithKey, CredentialGenerator } from '@dxos/credentials';
-import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials/src';
+import {
+  createCredentialSignerWithKey,
+  CredentialGenerator,
+  generateSeedPhrase,
+  keyPairFromSeedPhrase,
+} from '@dxos/credentials';
 import { type MetadataStore, type SpaceManager, type SwarmIdentity } from '@dxos/echo-pipeline';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { type FeedStore } from '@dxos/feed-store';
