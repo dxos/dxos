@@ -16,7 +16,6 @@ export default {
   title: 'sdk/react-shell/InvitationList',
   component: InvitationList,
   decorators: [withTheme, withLayout({ tooltips: true })],
-  actions: { argTypesRegex: '^on.*' },
   parameters: { chromatic: { disableSnapshot: false } },
 };
 

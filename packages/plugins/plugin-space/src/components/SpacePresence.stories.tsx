@@ -93,10 +93,7 @@ export const Small = (props: MemberPresenceProps) => {
 const meta: Meta = {
   title: 'plugins/plugin-space/SpacePresence',
   decorators: [withTheme, withLayout({ tooltips: true })],
-  parameters: {
-    actions: { argTypesRegex: '^on.*' },
-    translations,
-  },
+  parameters: { translations },
 };
 
 export default meta;

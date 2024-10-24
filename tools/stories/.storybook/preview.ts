@@ -51,6 +51,7 @@ const preview: Preview = {
       //   method: 'alphabetical-by-kind',
       // },
       storySort: (a: IndexEntry, b: IndexEntry) => {
+        console.log('===', a, b);
         return a.id === b.id ? 0 : a.id.localeCompare(b.id, undefined, { numeric: true });
       },
     },
