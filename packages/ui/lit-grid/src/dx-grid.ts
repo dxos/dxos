@@ -403,15 +403,20 @@ export class DxGrid extends LitElement {
   private handlePointerDown = (event: PointerEvent) => {
     if (event.isPrimary) {
       const { action, actionEl } = closestAction(event.target);
-      if (action) {
-        if (action === 'cell') {
+      if (action && action === 'cell') {
+        if (event.shiftKey) {
+          // Prevent focus moving so the pointerup handler can move selectionEnd.
+          event.preventDefault();
+        } else {
           const cellCoords = closestCell(event.target, actionEl);
           if (cellCoords) {
             this.pointer = { state: 'maybeSelecting', pageX: event.pageX, pageY: event.pageY };
             this.selectionStart = cellCoords;
             this.selectionEnd = cellCoords;
+            this.dispatchSelectionChange();
           }
           if (this.mode === 'edit') {
+            // Prevent focus moving when editing.
             event.preventDefault();
           } else {
             if (this.focusActive && isSameCell(this.focusedCell, cellCoords)) {
@@ -426,8 +431,7 @@ export class DxGrid extends LitElement {
   private handlePointerUp = (event: PointerEvent) => {
     const cell = closestCell(event.target);
     if (cell) {
-      this.selectionEnd = cell;
-      this.dispatchSelectionChange();
+      this.setSelectionEnd(cell);
     }
     this.pointer = null;
   };
@@ -442,8 +446,7 @@ export class DxGrid extends LitElement {
         cell.plane === this.selectionStart.plane &&
         (cell.col !== this.selectionEnd.col || cell.row !== this.selectionEnd.row)
       ) {
-        this.selectionEnd = cell;
-        this.dispatchSelectionChange();
+        this.setSelectionEnd(cell);
       }
     }
   };
@@ -491,14 +494,9 @@ export class DxGrid extends LitElement {
     const nextRow = Math.max(0, Math.min(rowMax, current.row + deltaRow));
 
     if (selectionEnd) {
-      this.selectionEnd = { ...this.selectionEnd, col: nextCol, row: nextRow };
-      this.dispatchSelectionChange();
+      this.setSelectionEnd({ ...this.selectionEnd, col: nextCol, row: nextRow });
     } else {
-      this.setFocusedCell({
-        ...this.focusedCell,
-        col: nextCol,
-        row: nextRow,
-      });
+      this.setFocusedCell({ ...this.focusedCell, row: nextRow, col: nextCol });
     }
   }
 
@@ -582,6 +580,17 @@ export class DxGrid extends LitElement {
       this.selectionStart = nextCoords;
       this.selectionEnd = nextCoords;
       this.snapPosToFocusedCell();
+      this.dispatchSelectionChange();
+    }
+  }
+
+  private setSelectionEnd(nextCoords: DxGridPosition) {
+    if (
+      this.selectionEnd.plane !== nextCoords.plane ||
+      this.selectionEnd.col !== nextCoords.col ||
+      this.selectionEnd.row !== nextCoords.row
+    ) {
+      this.selectionEnd = nextCoords;
       this.dispatchSelectionChange();
     }
   }
