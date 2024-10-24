@@ -6,8 +6,6 @@ import { type Preview } from '@storybook/react';
 import { themes } from '@storybook/theming';
 import { type IndexEntry } from '@storybook/types';
 
-console.log('### PREVIEW ###');
-
 /**
  * Configure Storybook rendering.
  * https://storybook.js.org/docs/configure#configure-story-rendering
