@@ -3,7 +3,7 @@
 
 import { S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
-import { type FieldType, FieldValueType, type ViewType } from '@dxos/schema';
+import { FieldValueType, type ViewType } from '@dxos/schema';
 
 export const createStarterSchema = (typename?: string) => {
   // TODO(burdon): Prompt user for typename.
@@ -24,9 +24,3 @@ export const createStarterView = (): ViewType => {
     ],
   };
 };
-
-export const createStarterField = (): FieldType => ({
-  id: 'newField',
-  path: 'newField',
-  type: FieldValueType.Text,
-});
