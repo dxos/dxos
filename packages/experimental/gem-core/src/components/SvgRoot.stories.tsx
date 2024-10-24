@@ -44,7 +44,7 @@ const Component = (options: ComponentProps) => {
 };
 
 export default {
-  title: 'gem-core/SVGRoot',
+  title: 'experimental/gem-core/SVGRoot',
   component: SVGRoot,
   render: (props: ComponentProps) => <Story {...props} />,
   decorators: [withTheme, withLayout({ fullscreen: true })],

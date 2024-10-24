@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useMemo } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
@@ -22,7 +23,7 @@ import { templates } from '../../templates';
 // TODO(burdon): Effect schema.
 // TODO(burdon): react-buddy for storybook?
 
-const Story = () => {
+const DefaultStory = () => {
   const object = useMemo(() => createObject({ content: templates[0].source }), []);
   const initialValue = useMemo(() => object.content, [object]);
   const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
@@ -30,10 +31,12 @@ const Story = () => {
   return <TypescriptEditor id='test' initialValue={initialValue} extensions={extensions} />;
 };
 
-export default {
-  title: 'plugin-script/TypescriptEditor',
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-script/TypescriptEditor',
   component: TypescriptEditor,
-  render: Story,
+  render: DefaultStory,
 };
 
-export const Default = {};
+export default meta;

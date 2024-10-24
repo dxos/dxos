@@ -10,7 +10,7 @@ import { Status } from './Status';
 import { withTheme } from '../../testing';
 
 export default {
-  title: 'react-ui/Status',
+  title: 'ui/react-ui/Status',
   component: Status,
   actions: { argTypesRegex: '^on.*' },
   decorators: [withTheme],

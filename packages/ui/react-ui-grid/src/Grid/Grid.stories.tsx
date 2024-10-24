@@ -5,6 +5,7 @@
 import '@dxos-theme';
 
 import * as ModalPrimitive from '@radix-ui/react-popper';
+import { type StoryObj } from '@storybook/react';
 import React, { type MouseEvent, useCallback, useRef, useState } from 'react';
 
 import { DropdownMenu, useThemeContext } from '@dxos/react-ui';
@@ -46,13 +47,13 @@ const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
 };
 
 export default {
-  title: 'react-ui-grid/Grid',
+  title: 'ui/react-ui-grid/Grid',
   component: StoryGrid,
   decorators: [withTheme],
   parameters: { layout: 'fullscreen' },
 };
 
-export const Basic = {
+export const Basic: StoryObj<StoryGridProps> = {
   args: {
     id: 'story',
     initialCells: {
@@ -91,5 +92,5 @@ export const Basic = {
     onEditingChange: (event) => {
       console.log('[edit]', event);
     },
-  } satisfies StoryGridProps,
+  },
 };

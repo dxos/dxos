@@ -13,19 +13,17 @@ export const packages = resolve(__dirname, '../../../packages');
 
 const contentFiles = '*.{ts,tsx,js,jsx}';
 
-export const config = (
-  specificConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
-): StorybookConfig => ({
+export const config = (baseConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>): StorybookConfig => ({
+  framework: {
+    name: '@storybook/web-components-vite',
+    options: {},
+  },
   addons: [
     '@storybook/addon-links',
     '@storybook/addon-essentials',
     '@storybook/addon-interactions',
     '@storybook/addon-themes',
   ],
-  framework: {
-    name: '@storybook/web-components-vite',
-    options: {},
-  },
   docs: {
     autodocs: 'tag',
   },
@@ -54,5 +52,5 @@ export const config = (
       ],
     });
   },
-  ...specificConfig,
+  ...baseConfig,
 });
