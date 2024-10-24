@@ -12,16 +12,15 @@ import { type ViewType } from '@dxos/schema';
 import { withTheme, withLayout, withSignals } from '@dxos/storybook-utils';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
-import { useSchemaResolver } from '../../hooks';
 import { testView } from '../../testing';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
 
 const DefaultStory = (props: ViewEditorProps) => {
-  const resolver = useSchemaResolver();
+  // const resolver = useSchemaResolver();
   return (
     <TestPopup>
-      <ViewEditor schemaResolver={resolver} {...props} />
+      <ViewEditor {...props} />
     </TestPopup>
   );
 };

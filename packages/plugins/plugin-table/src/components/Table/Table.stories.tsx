@@ -10,6 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { ViewEditor } from '@dxos/react-ui-data';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
@@ -65,15 +66,20 @@ const DefaultStory = () => {
   }
 
   return (
-    <div>
-      <div className='border-b border-separator'>
-        <Toolbar.Root onAction={handleAction}>
-          <Toolbar.Separator />
-          <Toolbar.Actions />
-        </Toolbar.Root>
+    <div className='grid grid-cols-[1fr_256px] h-dvh w-dvw'>
+      <div>
+        <div className='border-b border-separator'>
+          <Toolbar.Root onAction={handleAction}>
+            <Toolbar.Separator />
+            <Toolbar.Actions />
+          </Toolbar.Root>
+        </div>
+        <div className='relative is-full max-is-max min-is-0 min-bs-0'>
+          <Table tableModel={tableModel} />
+        </div>
       </div>
-      <div className='relative is-full max-is-max min-is-0 min-bs-0'>
-        <Table tableModel={tableModel} />
+      <div className='border border-left border-separator -mt-px'>
+        {table.view && <ViewEditor view={table?.view} />}
       </div>
     </div>
   );
