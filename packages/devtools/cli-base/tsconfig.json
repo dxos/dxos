@@ -1,25 +1,19 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "emitDeclarationOnly": false,
     "lib": [
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist/src",
-    "rootDirs": [
-      "./src", // <-- KEEP "./src" FIRST
-      "./notebooks"
-    ],
+    "module": "ESNext",
+    "outDir": "dist/types",
     "types": [
       "@dxos/typings",
       "node"
     ]
   },
   "include": [
-    "notebooks",
-    "src",
-    "src/util/telemetryrc.json"
+    "src"
   ],
   "references": [],
   "ts-node": {

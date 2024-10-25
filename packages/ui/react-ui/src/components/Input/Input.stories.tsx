@@ -72,9 +72,10 @@ const StoryInput = (props: StoryInputProps) => {
 };
 
 export default {
-  title: 'ui/react-ui/Input',
-  component: StoryInput,
-  // TODO(thure): Refactor
+  title: 'ui/react-ui-core/Input',
+  component: Input,
+  render: StoryInput,
+  // TODO(thure): Refactor.
   argTypes: {
     label: { control: 'text' },
     description: { control: 'text' },

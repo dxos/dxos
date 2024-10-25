@@ -4,7 +4,7 @@
 
 import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
-import { write as copy } from 'node-clipboardy';
+import clipboard from 'node-clipboardy';
 import { spawn } from 'node:child_process';
 
 import { hostInvitation } from '@dxos/cli-base';
@@ -59,7 +59,7 @@ export default class Share extends BaseCommand<typeof Share> {
             const invitation = observable.get();
             const invitationCode = InvitationEncoder.encode(invitation);
             if (authMethod !== Invitation.AuthMethod.NONE) {
-              copy(invitation.authCode!);
+              clipboard.write(invitation.authCode!);
               this.log(chalk`\n{red Secret}: ${observable.get().authCode} (copied to clipboard)\n`);
             }
 

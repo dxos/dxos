@@ -6,7 +6,7 @@ import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
-import { prompt } from 'inquirer';
+import inquirer from 'inquirer';
 import { resolve } from 'path';
 
 import { log } from '@dxos/log';
@@ -37,7 +37,7 @@ export default class Import extends BaseCommand<typeof Import> {
     let storageConfig: Runtime.Client.Storage;
     if (!storageDir) {
       this.log('will overwrite profile', { profile });
-      const { confirm } = await prompt({
+      const { confirm } = await inquirer.prompt({
         type: 'confirm',
         name: 'confirm',
         default: false,
