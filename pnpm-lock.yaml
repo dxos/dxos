@@ -1951,9 +1951,6 @@ importers:
       '@types/callsite':
         specifier: ^1.0.31
         version: 1.0.31
-      '@types/inquirer':
-        specifier: ^8.2.10
-        version: 8.2.10
       '@types/lodash.flatten':
         specifier: ^4.4.6
         version: 4.4.7
@@ -3640,9 +3637,6 @@ importers:
       '@types/fs-extra':
         specifier: ^9.0.4
         version: 9.0.13
-      '@types/inquirer':
-        specifier: ^8.2.10
-        version: 8.2.10
       '@types/js-yaml':
         specifier: ^4.0.5
         version: 4.0.5
@@ -3809,9 +3803,6 @@ importers:
       '@types/fs-extra':
         specifier: ^9.0.4
         version: 9.0.13
-      '@types/inquirer':
-        specifier: ^8.2.10
-        version: 8.2.10
       '@types/js-yaml':
         specifier: ^4.0.5
         version: 4.0.5
@@ -4020,9 +4011,6 @@ importers:
       '@types/fs-extra':
         specifier: ^9.0.4
         version: 9.0.13
-      '@types/inquirer':
-        specifier: ^8.2.10
-        version: 8.2.10
       '@types/js-yaml':
         specifier: ^4.0.5
         version: 4.0.5
@@ -20111,9 +20099,6 @@ packages:
   '@types/imap@0.8.39':
     resolution: {integrity: sha512-f84NoVA81rzCWpiBvQZk/KlDH7mTHi+0V8ZnO/9Hyuo9N2gM66OBklhdjDumaAxUTlCM6yjcPWyP8f/We4V4rg==}
 
-  '@types/inquirer@8.2.10':
-    resolution: {integrity: sha512-IdD5NmHyVjWM8SHWo/kPBgtzXatwPkfwzyP3fN1jF2g9BWt5WO+8hL2F4o2GKIYsU40PpqeevuUWvkS/roXJkA==}
-
   '@types/ioredis@4.28.10':
     resolution: {integrity: sha512-69LyhUgrXdgcNDv7ogs1qXZomnfOEnSmrmMFqKgt1XMJxmoOSG/u3wYy13yACIfKuMJ8IhKgHafDO3sx19zVQQ==}
 
@@ -20491,9 +20476,6 @@ packages:
 
   '@types/three@0.168.0':
     resolution: {integrity: sha512-qAGLGzbaYgkkonOBfwOr+TZpOskPfFjrDAj801WQSVkUz0/D9zwir4vhruJ/CC/GteywzR9pqeVVfs5th/2oKw==}
-
-  '@types/through@0.0.30':
-    resolution: {integrity: sha512-FvnCJljyxhPM3gkRgWmxmDZyAQSiBQQWLI0A0VFL0K7W1oRUrPJSqNO0NvTnLkBcotdlp3lKvaT0JrnyRDkzOg==}
 
   '@types/topojson-client@3.1.4':
     resolution: {integrity: sha512-Ntf3ZSetMYy7z3PrVCvcqmdRoVhgKA9UKN0ZuuZf8Ts2kcyL4qK34IXBs6qO5fem62EK4k03PtkJPVoroVu4/w==}
@@ -21160,11 +21142,6 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -43982,11 +43959,6 @@ snapshots:
     dependencies:
       '@types/node': 22.5.5
 
-  '@types/inquirer@8.2.10':
-    dependencies:
-      '@types/through': 0.0.30
-      rxjs: 7.8.1
-
   '@types/ioredis@4.28.10':
     dependencies:
       '@types/node': 22.5.5
@@ -44412,10 +44384,6 @@ snapshots:
       '@webgpu/types': 0.1.16
       fflate: 0.8.2
       meshoptimizer: 0.18.1
-
-  '@types/through@0.0.30':
-    dependencies:
-      '@types/node': 22.5.5
 
   '@types/topojson-client@3.1.4':
     dependencies:
@@ -45475,8 +45443,8 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1(ajv@8.12.0):
-    optionalDependencies:
+  ajv-formats@2.1.1:
+    dependencies:
       ajv: 8.12.0
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -46991,7 +46959,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv-formats: 2.1.1
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -56470,7 +56438,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv-formats: 2.1.1
       ajv-keywords: 5.1.0(ajv@8.12.0)
 
   scroll@3.0.1: {}
