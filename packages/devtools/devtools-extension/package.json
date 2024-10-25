@@ -6,6 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "type": "module",
   "scripts": {
     "pack:crx": "crx pack out/devtools-extension -o dxos-devtools.crx",
