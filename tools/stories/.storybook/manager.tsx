@@ -4,7 +4,7 @@
 
 import { addons } from '@storybook/manager-api';
 import { create } from '@storybook/theming';
-import { UPDATE_DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
+import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
 
 /**
  * Referenced when story is previewed in browser.
@@ -19,32 +19,24 @@ addons.setConfig({
   },
 });
 
-const update = (darkMode: boolean) => {
-  console.log('###', darkMode);
-  addons.setConfig({
-    theme: create({
-      base: 'dark',
-      brandTitle: 'DXOS',
-      brandImage: '/dxos-horizontal-black.svg',
-      brandTarget: '_blank',
-      brandUrl: 'https://github.com/dxos',
+addons.register('dxos', () => {
+  const update = (darkMode: boolean) => {
+    addons.setConfig({
+      theme: create({
+        base: darkMode ? 'dark' : 'light',
+        brandTitle: 'DXOS',
+        brandImage: darkMode ? '/dxos-horizontal-white.png' : '/dxos-horizontal-black.png',
+        brandTarget: '_blank',
+        brandUrl: 'https://github.com/dxos',
+      })
     })
-  })
-}
+  }
 
-const channel = addons.getChannel();
-
-channel.on(UPDATE_DARK_MODE_EVENT_NAME, (darkMode) => update(darkMode));
-
-update(true);
-
-// window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (ev) => {
-//   const newColorScheme = ev.matches ? 'dark' : 'light';
-//   console.log('!!!', newColorScheme);
-//   addons.setConfig({
-//     theme: create({
-//       base: newColorScheme,
-//       brandImage: '/dxos-horizontal-black.svg',
-//     }),
-//   });
-// });
+  const currentDarkMode = undefined;
+  const channel = addons.getChannel();
+  channel.on(DARK_MODE_EVENT_NAME, (darkMode) => {
+    if (currentDarkMode !== darkMode) {
+      update(darkMode);
+    }
+  });
+});

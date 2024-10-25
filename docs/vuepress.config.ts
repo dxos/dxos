@@ -47,7 +47,7 @@ const config: UserConfig = defineUserConfig({
     iconAssets: 'https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css',
     iconPrefix: 'ph ph-',
     // Header logotype.
-    logo: '/images/logotype/dxos-horizontal.svg',
+    logo: '/images/logotype/dxos-horizontal-black.svg',
     logoDark: '/images/logotype/dxos-horizontal-white.svg',
     repo: 'dxos/dxos',
     // TODO(wittjosiah): Use release tag?

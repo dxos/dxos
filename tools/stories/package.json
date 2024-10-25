@@ -13,6 +13,7 @@
     "chromatic-ui": "chromatic --only-changed --storybook-base-dir packages/ui --project-token=\"chpt_54d88c077f59534\" --storybook-build-dir out/ui --exit-zero-on-changes"
   },
   "devDependencies": {
+    "@dxos/log": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
     "@storybook/addon-essentials": "~8.3.6",

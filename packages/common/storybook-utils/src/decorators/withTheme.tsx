@@ -4,7 +4,7 @@
 
 import { addons } from '@storybook/preview-api';
 import { type Decorator } from '@storybook/react';
-import React, { useEffect, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
 
 import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
@@ -16,9 +16,9 @@ const channel = addons.getChannel();
  * Changes theme based on storybook toolbar toggle.
  */
 export const withTheme: Decorator = (Story, context) => {
+  // Prevent re-rendering of the story.
+  const MemoizedStory = memo(Story);
   const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
-
-  console.log('context', context);
 
   // https://www.npmjs.com/package/storybook-dark-mode
   // NOTE: The `useDarkMode` hook causes the story to continually re-render.
@@ -31,7 +31,7 @@ export const withTheme: Decorator = (Story, context) => {
 
   return (
     <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={context?.parameters?.translations}>
-      <Story />
+      <MemoizedStory />
     </ThemeProvider>
   );
 };

@@ -11868,6 +11868,9 @@ importers:
 
   tools/stories:
     devDependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../packages/common/log
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui-theme
