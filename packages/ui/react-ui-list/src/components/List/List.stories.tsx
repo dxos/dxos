@@ -37,7 +37,7 @@ const DefaultStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => 
             </div>
 
             <div role='list' className='w-full h-full overflow-auto'>
-              {items.map((item) => (
+              {items?.map((item) => (
                 <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
                   <List.ItemDragHandle />
                   <List.ItemTitle onClick={() => handleSelect(item)}>{item.name}</List.ItemTitle>
@@ -48,7 +48,7 @@ const DefaultStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => 
 
             <div role='none' className={grid}>
               <div />
-              <div className='flex items-center text-sm'>{items.length} Items</div>
+              <div className='flex items-center text-sm'>{items?.length} Items</div>
             </div>
           </div>
 
@@ -71,7 +71,7 @@ const SimpleStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
     <List.Root<TestItemType> dragPreview items={items} {...props}>
       {({ items }) => (
         <div role='list' className='w-full h-full overflow-auto'>
-          {items.map((item) => (
+          {items?.map((item) => (
             <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
               <List.ItemDragHandle />
               <List.ItemTitle>{item.name}</List.ItemTitle>

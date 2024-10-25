@@ -5,21 +5,30 @@
 import React, { useCallback } from 'react';
 
 import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
-import { create, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { useGlobalFilteredObjects } from '@dxos/plugin-search';
+import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
-import { ObjectTable, type ObjectTableProps } from './ObjectTable';
+import { Table } from './Table';
 import { Toolbar, type ToolbarAction } from './Toolbar';
+import { useTableModel } from '../hooks';
+import { type TableType } from '../types';
 
 // TODO(zantonio): Factor out, copied this from MarkdownPlugin.
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
 
 // TODO(zantonio): Move toolbar action handling to a more appropriate location.
-const TableContainer = ({ role, table }: LayoutContainerProps<Omit<ObjectTableProps, 'role' | 'getScrollElement'>>) => {
+const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType; role?: string }>) => {
   const { hasAttention } = useAttention(fullyQualifiedId(table));
   const dispatch = useIntentDispatcher();
   const space = getSpace(table);
+  const queriedObjects = useQuery(space, table.schema ? Filter.schema(table.schema) : () => false, undefined, [
+    table.schema,
+  ]);
+  const filteredObjects = useGlobalFilteredObjects(queriedObjects);
+  const onDeleteRow = useCallback((row: any) => space?.db.remove(row), [space]);
+  const model = useTableModel({ table, objects: filteredObjects, onDeleteRow });
 
   const onThreadCreate = useCallback(() => {
     void dispatch({
@@ -71,7 +80,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<Omit<ObjectTablePr
           role === 'slide' && 'bs-full overflow-auto grid place-items-center',
         )}
       >
-        <ObjectTable key={table.id} table={table} />
+        <Table key={table.id} model={model} />
       </div>
     </div>
   );
