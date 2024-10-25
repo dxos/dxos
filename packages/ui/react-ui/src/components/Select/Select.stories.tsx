@@ -18,7 +18,7 @@ type ItemProps = { id: string; text: string };
 
 type StoryProps = { items: ItemProps[] };
 
-const Story = ({ items = [] }: StoryProps) => {
+const DefaultStory = ({ items = [] }: StoryProps) => {
   const [value, setValue] = useState<string>();
   return (
     <Select.Root value={value} onValueChange={setValue}>
@@ -41,15 +41,15 @@ const Story = ({ items = [] }: StoryProps) => {
   );
 };
 
-export default {
-  title: 'react-ui/Select',
-  render: Story,
-  decorators: [withVariants(), withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
-};
-
 export const Default: StoryObj<StoryProps> = {
   args: {
     items: Array.from({ length: 16 }).map((_, i) => ({ id: `item-${i}`, text: faker.lorem.word() })),
   },
+};
+
+export default {
+  title: 'ui/react-ui-core/Select',
+  render: DefaultStory,
+  decorators: [withVariants(), withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };

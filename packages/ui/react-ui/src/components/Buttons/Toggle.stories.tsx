@@ -21,8 +21,9 @@ const StorybookToggle = (props: StorybookToggleProps) => {
 };
 
 export default {
-  title: 'react-ui/Toggle button',
-  component: StorybookToggle,
+  title: 'ui/react-ui-core/Toggle',
+  component: Toggle,
+  render: StorybookToggle,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

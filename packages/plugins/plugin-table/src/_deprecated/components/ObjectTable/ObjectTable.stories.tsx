@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -29,7 +30,7 @@ const useTable = () => {
   return table;
 };
 
-const Story = () => {
+const DefaultStory = () => {
   const table = useTable();
   if (!table) {
     return null;
@@ -42,13 +43,6 @@ const Story = () => {
       </Table.Viewport>
     </Table.Root>
   );
-};
-
-export default {
-  title: 'plugin-table/ObjectTable',
-  component: ObjectTable,
-  // render: () => <div>s</div>,
-  render: () => <Story />,
 };
 
 const clientProps: WithClientProviderProps = {
@@ -72,3 +66,11 @@ export const Multiple = {
     withLayout({ fullscreen: true, classNames: 'grid grid-cols-3' }),
   ],
 };
+
+const meta: Meta<typeof ObjectTable> = {
+  title: 'plugins/plugin-table-deprecated/ObjectTable',
+  component: ObjectTable,
+  render: DefaultStory as any,
+};
+
+export default meta;

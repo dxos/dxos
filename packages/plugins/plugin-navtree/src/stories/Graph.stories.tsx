@@ -5,6 +5,7 @@
 import '@dxos-theme';
 
 import { batch } from '@preact/signals-core';
+import { type Meta } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
 import { Graph } from '@dxos/app-graph';
@@ -132,12 +133,6 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
   );
 };
 
-export default {
-  title: 'react-ui-navtree/Graph',
-  component: NavTree,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
-};
-
 export const Default = {
   render: ({ debug }: { debug?: boolean }) => (
     <Mosaic.Root debug={debug}>
@@ -146,3 +141,11 @@ export const Default = {
     </Mosaic.Root>
   ),
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-navtree/Graph',
+  component: NavTree,
+  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+};
+
+export default meta;

@@ -23,6 +23,8 @@
   ],
   "dependencies": {
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@storybook/preview-api": "^8.3.6",
     "lodash.defaultsdeep": "^4.6.1",
     "storybook-dark-mode": "^4.0.2"
   },
@@ -34,7 +36,7 @@
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
-    "storybook": "^8.3.3"
+    "storybook": "^8.3.6"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

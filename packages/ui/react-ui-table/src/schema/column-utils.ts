@@ -19,7 +19,7 @@ export const schemaToColumnDefs = <T>(schema: S.Schema<T, any>): ColumnDef<T, an
     let column: Partial<ColumnDef<any, any>> | undefined;
     switch (type) {
       case FieldValueType.String: {
-        column = builder.string({ label: propertyKey });
+        column = builder.string({ label: propertyKey, classNames: [name === 'id' && 'font-mono'] });
         break;
       }
       case FieldValueType.Number: {

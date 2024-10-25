@@ -41,6 +41,7 @@ import {
   type IdentityManagerParams,
   type JoinIdentityParams,
 } from '../identity';
+import { EdgeIdentityRecoveryManager } from '../identity/identity-recovery-manager';
 import {
   DeviceInvitationProtocol,
   type InvitationConnectionParams,
@@ -76,6 +77,7 @@ export class ServiceContext extends Resource {
   public readonly keyring: Keyring;
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
+  public readonly recoveryManager: EdgeIdentityRecoveryManager;
   public readonly invitations: InvitationsHandler;
   public readonly invitationsManager: InvitationsManager;
   public readonly echoHost: EchoHost;
@@ -141,6 +143,13 @@ export class ServiceContext extends Resource {
       edgeConnection: this._edgeConnection,
       edgeFeatures: this._edgeFeatures,
     });
+
+    this.recoveryManager = new EdgeIdentityRecoveryManager(
+      this.keyring,
+      this._edgeHttpClient,
+      () => this.identityManager.identity,
+      this._acceptIdentity.bind(this),
+    );
 
     this.echoHost = new EchoHost({ kv: this.level });
 
