@@ -16,7 +16,7 @@ import '@dxos-theme';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { translations } from '@dxos/react-ui-navtree';
+// import { translations } from '@dxos/react-ui-navtree';
 import { withTheme } from '@dxos/storybook-utils';
 
 faker.seed(3);
@@ -136,5 +136,5 @@ export default {
   title: 'apps/composer-app/StorybookNavtreePresence',
   component: () => <span>To do</span>,
   decorators: [withTheme],
-  parameters: { translations },
+  // parameters: { translations },
 };
