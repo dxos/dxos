@@ -132,22 +132,28 @@ export class TableModel extends Resource {
       const values: DxGridPlaneCells = {};
       const fields = this.table.view?.fields ?? [];
 
-      sortedData.value.forEach((row, displayIndex) => {
-        fields.forEach((field, colIndex: number) => {
-          const cellValueSignal = computed(() =>
-            row[field.path] !== undefined ? formatValue(field.type, row[field.path]) : '',
-          );
-          const cellClasses = cellClassesForFieldType(field.type);
-          const cell: DxGridCellValue = {
-            get value() {
-              return cellValueSignal.value;
-            },
-          };
-          if (cellClasses) {
-            cell.className = mx(cellClasses);
-          }
+      const addCell = (row: any, field: any, colIndex: number, displayIndex: number): void => {
+        const cellValueSignal = computed(() => {
+          return row[field.path] !== undefined ? formatValue(field.type, row[field.path]) : '';
+        });
 
-          values[fromGridCell({ col: colIndex, row: displayIndex })] = cell;
+        const cell: DxGridCellValue = {
+          get value() {
+            return cellValueSignal.value;
+          },
+        };
+
+        const cellClasses = cellClassesForFieldType(field.type);
+        if (cellClasses) {
+          cell.className = mx(cellClasses);
+        }
+
+        values[fromGridCell({ col: colIndex, row: displayIndex })] = cell;
+      };
+
+      sortedData.value.forEach((row, displayIndex) => {
+        fields.forEach((field, colIndex) => {
+          addCell(row, field, colIndex, displayIndex);
         });
       });
 
@@ -197,6 +203,15 @@ export class TableModel extends Resource {
 
     this.cellUpdateListener = new CellUpdateListener(mainCellValues, this.onCellUpdate);
     this._ctx.onDispose(this.cellUpdateListener.dispose);
+  }
+
+  //
+  // Setters
+  //
+
+  setOnCellUpdate(onCellUpdate: (cell: GridCell) => void): void {
+    this.onCellUpdate = onCellUpdate;
+    this.cellUpdateListener.setOnCellUpdate(this.onCellUpdate);
   }
 
   //
