@@ -29,8 +29,9 @@ const StorybookPopover = ({ openTrigger, children }: PropsWithChildren<{ openTri
 };
 
 export default {
-  title: 'ui/react-ui/Popover',
-  component: StorybookPopover,
+  title: 'ui/react-ui-core/Popover',
+  component: Popover,
+  render: StorybookPopover,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

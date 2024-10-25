@@ -48,7 +48,7 @@ export const Default: StoryObj<StoryProps> = {
 };
 
 export default {
-  title: 'ui/react-ui/Select',
+  title: 'ui/react-ui-core/Select',
   render: DefaultStory,
   decorators: [withVariants(), withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
