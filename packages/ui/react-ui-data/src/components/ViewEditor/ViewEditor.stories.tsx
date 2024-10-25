@@ -8,8 +8,9 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
 import { create } from '@dxos/echo-schema';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { type ViewType } from '@dxos/schema';
-import { withTheme, withLayout, withSignals } from '@dxos/storybook-utils';
+import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 import { useSchemaResolver } from '../../hooks';
@@ -47,7 +48,11 @@ const meta: Meta<typeof ViewEditor> = {
   title: 'ui/react-ui-data/ViewEditor',
   component: ViewEditor,
   render: DefaultStory,
-  decorators: [withTheme, withSignals, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],
+  decorators: [
+    withClientProvider(),
+    withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' }),
+    withTheme,
+  ],
   parameters: {
     translations,
   },

@@ -31,6 +31,7 @@ export type ListRendererProps<T extends ListItemRecord> = {
 export type ListRootProps<T extends ListItemRecord> = ThemedClassName<{
   children?: (props: ListRendererProps<T>) => ReactNode;
   items?: T[];
+  onMove?: (source: T, index: number) => void;
 }> &
   Pick<ListContext<T>, 'isItem' | 'dragPreview'>;
 
@@ -39,6 +40,7 @@ export const ListRoot = <T extends ListItemRecord>({
   children,
   items: _items = [],
   isItem,
+  onMove,
   ...props
 }: ListRootProps<T>) => {
   const [items, setItems] = useControlledValue<T[]>(_items);
@@ -74,6 +76,8 @@ export const ListRoot = <T extends ListItemRecord>({
             closestEdgeOfTarget,
           }),
         );
+
+        onMove?.(sourceData, targetIdx);
       },
     });
   }, [items]);
