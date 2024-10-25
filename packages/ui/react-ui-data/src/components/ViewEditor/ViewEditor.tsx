@@ -44,9 +44,15 @@ export const ViewEditor = ({ classNames, view, schemaResolver, readonly }: ViewE
     setField(undefined);
   };
 
+  const handleMove = (field: FieldType, idx: number) => {
+    const from = view.fields.findIndex((f) => field.id === f.id);
+    view.fields.splice(idx, 0, field);
+    view.fields.splice(from, 1);
+  };
+
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
-      <List.Root<FieldType> isItem={S.is(FieldSchema)} items={view.fields}>
+      <List.Root<FieldType> isItem={S.is(FieldSchema)} items={view.fields} onMove={handleMove}>
         {({ items }) => (
           <div className='w-full'>
             <div role='heading' className={grid}>
