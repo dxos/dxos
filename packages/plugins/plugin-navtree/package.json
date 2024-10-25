@@ -1,11 +1,12 @@
 {
   "name": "@dxos/plugin-navtree",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "DXOS Surface plugin for a tree view visualization of the graph.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -44,6 +45,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-deck": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-navtree": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",

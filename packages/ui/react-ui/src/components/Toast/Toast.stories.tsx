@@ -45,8 +45,9 @@ const StorybookToast = (props: StorybookToastProps) => {
 };
 
 export default {
-  title: 'react-ui/Toast',
-  component: StorybookToast,
+  title: 'ui/react-ui-core/Toast',
+  component: Toast,
+  render: StorybookToast,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

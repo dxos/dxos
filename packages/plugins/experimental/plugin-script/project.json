@@ -14,7 +14,7 @@
         "entryPoints": [
           "{projectRoot}/src/edge/index.ts",
           "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/meta.tsx",
+          "{projectRoot}/src/meta.ts",
           "{projectRoot}/src/types/index.ts"
         ],
         "platforms": [
@@ -27,6 +27,7 @@
     "test": {}
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "node-std"
   ]
 }

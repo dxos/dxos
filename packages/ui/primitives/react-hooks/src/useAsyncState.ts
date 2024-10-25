@@ -2,12 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 
 /**
  * NOTE: Use with care and when necessary to be able to cancel an async operation when unmounting.
  */
-export const useAsyncState = <T>(cb: () => Promise<T | undefined>, deps: any[] = []): T | undefined => {
+export const useAsyncState = <T>(
+  cb: () => Promise<T | undefined>,
+  deps: any[] = [],
+): [T | undefined, Dispatch<SetStateAction<T | undefined>>] => {
   const [value, setValue] = useState<T | undefined>();
   useEffect(() => {
     const t = setTimeout(async () => {
@@ -18,5 +21,5 @@ export const useAsyncState = <T>(cb: () => Promise<T | undefined>, deps: any[] =
     return () => clearTimeout(t);
   }, deps);
 
-  return value;
+  return [value, setValue];
 };

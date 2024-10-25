@@ -2,112 +2,47 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type FunctionPluginDefinition } from 'hyperformula';
-import { type ConfigParams } from 'hyperformula/typings/ConfigParams';
-import { type FunctionTranslationsPackage } from 'hyperformula/typings/interpreter';
+import { type Listeners } from 'hyperformula/typings/Emitter';
 
 import { Event } from '@dxos/async';
-import { type SpaceId, type Space, Filter, fullyQualifiedId } from '@dxos/client/echo';
+import { type Space, Filter, fullyQualifiedId } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
+import { getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FunctionType } from '@dxos/plugin-script/types';
 import { nonNullable } from '@dxos/util';
 
-import { HyperFormula } from '#hyperformula';
-import { FunctionContext, type FunctionContextOptions } from './async-function';
+import { ExportedCellChange, type HyperFormula } from '#hyperformula';
 import { ComputeNode } from './compute-node';
-import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './edge-function';
-import { defaultFunctions, type FunctionDefinition } from './function-defs';
-
-//
-// NOTE: The package.json file defines the packaged #hyperformula module.
-//
+import {
+  defaultFunctions,
+  FunctionContext,
+  type FunctionContextOptions,
+  type FunctionDefinition,
+  EDGE_FUNCTION_NAME,
+} from './functions';
 
 // TODO(wittjosiah): Factor out.
-const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
+const OBJECT_ID_LENGTH = 60; // 33 (space id) + 1 (separator) + 26 (object id).
 
-// TODO(burdon): Change to "DX".
-const CUSTOM_FUNCTION = 'ECHO';
+// TODO(burdon): Factory.
+// export type ComputeNodeGenerator = <T>(obj: T) => ComputeNode;
 
-export type ComputeGraphPlugin = {
-  plugin: FunctionPluginDefinition;
-  translations: FunctionTranslationsPackage;
-};
-
-export type ComputeGraphOptions = {
-  plugins?: ComputeGraphPlugin[];
-} & Partial<FunctionContextOptions> &
-  Partial<ConfigParams>;
-
-export const defaultOptions: ComputeGraphOptions = {
-  licenseKey: 'gpl-v3',
-  plugins: [
-    {
-      plugin: EdgeFunctionPlugin,
-      translations: EdgeFunctionPluginTranslations,
-    },
-  ],
-};
+type ObjectRef = { type: string; id: string };
 
 /**
  * Marker for sheets that are managed by an ECHO object.
+ * Sheet ID: `dxos.org/type/SheetType@1234`
  */
-const PREFIX = '__';
-export const createSheetName = (id: string) => `${PREFIX}${id}`;
-export const getSheetId = (name: string): string | undefined =>
-  name.startsWith(PREFIX) ? name.slice(PREFIX.length) : undefined;
-
-/**
- * NOTE: Async imports to decouple hyperformula deps.
- */
-export const createComputeGraphRegistry = (options: Partial<FunctionContextOptions> = {}) => {
-  return new ComputeGraphRegistry({
-    ...defaultOptions,
-    ...options,
-  });
+export const createSheetName = ({ type, id }: ObjectRef) => `${type}@${id}`;
+export const parseSheetName = (name: string): Partial<ObjectRef> => {
+  const [type, id] = name.split('@');
+  return id ? { type, id } : { id: type };
 };
 
-/**
- * Manages a collection of ComputeGraph instances for each space.
- *
- * [ComputePlugin] => [ComputeGraphRegistry] => [ComputeGraph(Space)] => [ComputeNode(Object)]
- */
-// TODO(burdon): Move graph into separate plugin; isolate HF deps.
-export class ComputeGraphRegistry extends Resource {
-  private readonly _registry = new Map<SpaceId, ComputeGraph>();
-
-  constructor(private readonly _options: ComputeGraphOptions = defaultOptions) {
-    super();
-    this._options.plugins?.forEach(({ plugin, translations }) => {
-      HyperFormula.registerFunctionPlugin(plugin, translations);
-    });
-  }
-
-  getGraph(spaceId: SpaceId): ComputeGraph | undefined {
-    return this._registry.get(spaceId);
-  }
-
-  async getOrCreateGraph(space: Space): Promise<ComputeGraph> {
-    let graph = this.getGraph(space.id);
-    if (!graph) {
-      log.info('create graph', { space: space.id });
-      graph = await this.createGraph(space);
-    }
-
-    return graph;
-  }
-
-  async createGraph(space: Space): Promise<ComputeGraph> {
-    invariant(!this._registry.has(space.id), `ComputeGraph already exists for space: ${space.id}`);
-    const hf = HyperFormula.buildEmpty(this._options);
-    const graph = new ComputeGraph(hf, space, this._options);
-    await graph.open(this._ctx);
-    this._registry.set(space.id, graph);
-    return graph;
-  }
-}
+export type ComputeGraphEvent = 'functionsUpdated';
 
 /**
  * Per-space compute and dependency graph.
@@ -115,7 +50,6 @@ export class ComputeGraphRegistry extends Resource {
  * Manages the set of custom functions.
  * HyperFormula manages the dependency graph.
  */
-// TODO(burdon): Tests.
 export class ComputeGraph extends Resource {
   public readonly id = `graph-${PublicKey.random().truncate()}`;
 
@@ -123,15 +57,12 @@ export class ComputeGraph extends Resource {
   private readonly _nodes = new Map<number, ComputeNode>();
 
   // Cached function objects.
-  private _functions: FunctionType[] = [];
+  private _remoteFunctions: FunctionType[] = [];
+
+  public readonly update = new Event<{ type: ComputeGraphEvent }>();
 
   // The context is passed to all functions.
-  public readonly context = new FunctionContext(this._hf, this._space, this.refresh.bind(this), this._options);
-
-  // TODO(burdon): Typed events.
-  // TODO(burdon): Tie into HyperFormula dependency graph.
-  // TODO(burdon): Event propagation.
-  public readonly update = new Event();
+  public readonly context = new FunctionContext(this._hf, this._space, this._options);
 
   constructor(
     private readonly _hf: HyperFormula,
@@ -139,28 +70,38 @@ export class ComputeGraph extends Resource {
     private readonly _options?: Partial<FunctionContextOptions>,
   ) {
     super();
-
     this._hf.updateConfig({ context: this.context });
+    // TODO(burdon): If debounce then aggregate changes.
+    const onValuesUpdate: Listeners['valuesUpdated'] = (changes) => {
+      for (const change of changes) {
+        if (change instanceof ExportedCellChange) {
+          const { sheet } = change;
+          const node = this._nodes.get(sheet);
+          if (node) {
+            node.update.emit({ type: 'valuesUpdated', change });
+          }
+        }
+      }
+    };
+
+    this._hf.on('valuesUpdated', onValuesUpdate);
+    this._ctx.onDispose(() => this._hf.off('valuesUpdated', onValuesUpdate));
   }
 
-  // TODO(burdon): Remove.
   get hf() {
     return this._hf;
   }
 
-  refresh() {
-    log('refresh', { id: this.id });
-    this.update.emit();
-  }
-
-  getFunctions({ standard = true, echo = true }: { standard?: boolean; echo?: boolean } = {}): FunctionDefinition[] {
+  getFunctions(
+    { standard, echo }: { standard?: boolean; echo?: boolean } = { standard: true, echo: true },
+  ): FunctionDefinition[] {
     return [
       ...(standard
         ? this._hf
             .getRegisteredFunctionNames()
             .map((name) => defaultFunctions.find((fn) => fn.name === name) ?? { name })
         : []),
-      ...(echo ? this._functions.map((fn) => ({ name: fn.binding! })) : []),
+      ...(echo ? this._remoteFunctions.map((fn) => ({ name: fn.binding! })) : []),
     ];
   }
 
@@ -175,15 +116,13 @@ export class ComputeGraph extends Resource {
   getOrCreateNode(name: string): ComputeNode {
     invariant(name.length);
     if (!this._hf.doesSheetExist(name)) {
-      log.info('created node', { space: this._space?.id, name });
+      log.info('created node', { space: this._space?.id, sheet: name });
       this._hf.addSheet(name);
-      this.update.emit();
     }
 
     const sheetId = this._hf.getSheetId(name);
     invariant(sheetId !== undefined);
 
-    // TODO(burdon): Chain context?
     const node = new ComputeNode(this, sheetId);
     this._nodes.set(sheetId, node);
     return node;
@@ -196,22 +135,27 @@ export class ComputeGraph extends Resource {
   mapFormulaToNative(formula: string): string {
     return (
       formula
-        // Sheet references.
+        //
+        // Map cross-sheet references by name onto sheet stored by ECHO object/model.
+        // Example: "Test Sheet"!A0 => "dxos.org/type/SheetType@1234"!A0
         // https://hyperformula.handsontable.com/guide/cell-references.html#cell-references
+        //
         .replace(/['"]?([ \w]+)['"]?!/, (_match, name) => {
           if (name) {
-            // TODO(burdon): What if not loaded?
+            // TODO(burdon): Cache map.
             const objects = this._hf
               .getSheetNames()
               .map((name) => {
-                const id = getSheetId(name);
-                return id ? this._space?.db.getObjectById(id) : undefined;
+                const { type, id } = parseSheetName(name);
+                return type && id ? this._space?.db.getObjectById(id) : undefined;
               })
               .filter(nonNullable);
 
             for (const obj of objects) {
-              if (obj.name === name || obj.title === name) {
-                return `${createSheetName(obj.id)}!`;
+              if (obj.name === name) {
+                const type = getTypename(obj)!;
+                // NOTE: Names must be single quoted.
+                return `'${createSheetName({ type, id: obj.id })}'!`;
               }
             }
           }
@@ -219,17 +163,19 @@ export class ComputeGraph extends Resource {
           return `${name}!`;
         })
 
-        // Functions.
+        //
+        // Map remote function references (i.e., to remote DX function invocation).
+        //
         .replace(/(\w+)\((.*)\)/g, (match, binding, args) => {
-          const fn = this._functions.find((fn) => fn.binding === binding);
+          const fn = this._remoteFunctions.find((fn) => fn.binding === binding);
           if (!fn) {
             return match;
           }
 
           if (args.trim() === '') {
-            return `${CUSTOM_FUNCTION}("${binding}")`;
+            return `${EDGE_FUNCTION_NAME}("${binding}")`;
           } else {
-            return `${CUSTOM_FUNCTION}("${binding}", ${args})`;
+            return `${EDGE_FUNCTION_NAME}("${binding}", ${args})`;
           }
         })
     );
@@ -241,11 +187,11 @@ export class ComputeGraph extends Resource {
    */
   mapFunctionBindingToId(formula: string) {
     return formula.replace(/(\w+)\((.*)\)/g, (match, binding, args) => {
-      if (binding === CUSTOM_FUNCTION || defaultFunctions.find((fn) => fn.name === binding)) {
+      if (binding === EDGE_FUNCTION_NAME || defaultFunctions.find((fn) => fn.name === binding)) {
         return match;
       }
 
-      const fn = this._functions.find((fn) => fn.binding === binding);
+      const fn = this._remoteFunctions.find((fn) => fn.binding === binding);
       if (fn) {
         const id = fullyQualifiedId(fn);
         return `${id}(${args})`;
@@ -266,7 +212,7 @@ export class ComputeGraph extends Resource {
         return match;
       }
 
-      const fn = this._functions.find((fn) => fullyQualifiedId(fn) === id);
+      const fn = this._remoteFunctions.find((fn) => fullyQualifiedId(fn) === id);
       if (fn?.binding) {
         return `${fn.binding}(${args})`;
       } else {
@@ -280,11 +226,17 @@ export class ComputeGraph extends Resource {
       // Subscribe to remote function definitions.
       const query = this._space.db.query(Filter.schema(FunctionType));
       const unsubscribe = query.subscribe(({ objects }) => {
-        this._functions = objects.filter(({ binding }) => binding);
-        this.update.emit();
+        this._remoteFunctions = objects.filter(({ binding }) => binding);
+        this.update.emit({ type: 'functionsUpdated' });
       });
 
       this._ctx.onDispose(unsubscribe);
+    }
+  }
+
+  protected override async _close() {
+    for (const node of this._nodes.values()) {
+      await node.close();
     }
   }
 }

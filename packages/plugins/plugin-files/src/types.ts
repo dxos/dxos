@@ -29,6 +29,7 @@ type PermissionStatus = 'granted' | 'denied' | 'prompt';
 
 export type LocalEntity = LocalDirectory | LocalFile;
 
+// TODO(burdon): Adapt to use/extend DocumentType.
 export type LocalFile = {
   id: string;
   title: string;

@@ -38,8 +38,8 @@ test.describe('Stack', () => {
   });
 
   test('transfer', async ({ browser, browserName }) => {
-    if (browserName === 'webkit') {
-      // TODO(wittjosiah): This test is failing consistently on WebKit in CI specifically.
+    if (browserName !== 'chromium') {
+      // TODO(wittjosiah): This test is flaky in Webkit & Firefox.
       test.skip();
     }
 

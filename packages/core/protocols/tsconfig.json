@@ -10,21 +10,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../common/codec-protobuf"
-    },
-    {
-      "path": "../../common/invariant"
-    },
-    {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/timeframe"
-    },
-    {
-      "path": "../../common/util"
-    }
-  ]
+  "references": []
 }

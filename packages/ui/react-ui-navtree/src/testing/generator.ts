@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/react-ui/testing.
-
-// TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
-
-import { S, TypedObject, create, type EchoReactiveObject } from '@dxos/echo-schema';
+import { create, S, type ReactiveObject, TypedObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
+
+// TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/react-ui/testing.
+// TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 
 // TODO(burdon): Util.
 export const range = <T>(fn: (i: number) => T | undefined, length: number): T[] =>
@@ -23,7 +22,7 @@ type ObjectDataGenerator = {
   createData: () => any;
 };
 
-type ObjectFactory<T extends EchoReactiveObject<any>> = {
+type ObjectFactory<T extends ReactiveObject<any>> = {
   schema?: S.Schema<any>; // TODO(burdon): Support both typed and expando schema.
   createObject: () => T;
 };

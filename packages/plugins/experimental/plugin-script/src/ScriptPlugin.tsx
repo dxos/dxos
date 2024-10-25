@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Code, type IconProps } from '@phosphor-icons/react';
 // @ts-ignore
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React from 'react';
@@ -17,7 +16,7 @@ import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { initializeBundler } from './bundler';
 import { Compiler } from './compiler';
-import { ScriptContainer, ScriptSettings } from './components';
+import { AutomationPanel, ScriptContainer, ScriptSettings } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import { templates } from './templates';
 import translations from './translations';
@@ -51,7 +50,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
         records: {
           [ScriptType.typename]: {
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
-            icon: (props: IconProps) => <Code {...props} />,
+            icon: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (script: ScriptType) => loadObjectReferences(script, (script) => [script.source]),
           },
@@ -122,8 +121,11 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
               }
               break;
             }
-          }
 
+            case 'complementary--automation': {
+              return <AutomationPanel subject={data.subject as any} />;
+            }
+          }
           return null;
         },
       },

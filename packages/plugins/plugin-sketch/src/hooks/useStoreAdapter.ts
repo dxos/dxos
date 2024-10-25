@@ -4,10 +4,9 @@
 
 import { useEffect, useState } from 'react';
 
-import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { createDocAccessor } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, createDocAccessor } from '@dxos/react-client/echo';
 import { setDeep } from '@dxos/util';
 
 import { TLDrawStoreAdapter } from './adapter';

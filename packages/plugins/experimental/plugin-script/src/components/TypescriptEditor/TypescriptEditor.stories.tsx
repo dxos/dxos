@@ -4,9 +4,10 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useMemo } from 'react';
 
-import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
+import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { createDataExtensions } from '@dxos/react-ui-editor';
 
 import { TypescriptEditor } from './TypescriptEditor';
@@ -22,18 +23,20 @@ import { templates } from '../../templates';
 // TODO(burdon): Effect schema.
 // TODO(burdon): react-buddy for storybook?
 
-const Story = () => {
-  const object = useMemo(() => createEchoObject({ content: templates[0].source }), []);
+const DefaultStory = () => {
+  const object = useMemo(() => createObject({ content: templates[0].source }), []);
   const initialValue = useMemo(() => object.content, [object]);
   const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
   const extensions = useMemo(() => [createDataExtensions({ id: object.id, text: accessor })], [object.id, accessor]);
   return <TypescriptEditor id='test' initialValue={initialValue} extensions={extensions} />;
 };
 
-export default {
-  title: 'plugin-script/TypescriptEditor',
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-script/TypescriptEditor',
   component: TypescriptEditor,
-  render: Story,
+  render: DefaultStory,
 };
 
-export const Default = {};
+export default meta;

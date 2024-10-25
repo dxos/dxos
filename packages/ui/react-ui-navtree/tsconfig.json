@@ -14,39 +14,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../../common/keyboard"
-    },
-    {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../react-ui"
-    },
-    {
-      "path": "../react-ui-mosaic"
-    },
-    {
-      "path": "../react-ui-searchlist"
-    },
-    {
-      "path": "../react-ui-text-tooltip"
-    },
-    {
-      "path": "../react-ui-theme"
-    },
-    {
-      "path": "../storybook-utils"
-    }
-  ]
+  "references": []
 }

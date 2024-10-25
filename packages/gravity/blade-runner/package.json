@@ -1,12 +1,13 @@
 {
   "name": "@dxos/blade-runner",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "private": true,
   "description": "DXOS simulation tests runner.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -86,7 +87,6 @@
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
     "@types/js-yaml": "^4.0.5",
-    "@types/node": "^22.6.1",
     "@types/seedrandom": "^3.0.5",
     "@types/yargs": "~16.0.1",
     "chart.js": "^3.9.1",

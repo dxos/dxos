@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { batch, effect } from '@preact/signals-core';
+import { batch } from '@preact/signals-core';
 import { setAutoFreeze } from 'immer';
 import React, { type PropsWithChildren } from 'react';
 
@@ -32,6 +32,7 @@ import {
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
+import { scheduledEffect } from '@dxos/echo-signals/core';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { parseAttentionPlugin, type AttentionPluginProvides } from '@dxos/plugin-attention';
@@ -40,7 +41,6 @@ import { createExtension, type Node } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { translations as deckTranslations } from '@dxos/react-ui-deck';
-import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import {
   DeckLayout,
@@ -111,7 +111,7 @@ export const DeckPlugin = ({
   let handleNavigation: () => Promise<void> | undefined;
 
   const settings = new LocalStorageStore<DeckSettingsProps>('dxos.org/settings/layout', {
-    showFooter: false,
+    showHints: false,
     customSlots: false,
     flatDeck: false,
     enableNativeRedirect: false,
@@ -199,9 +199,12 @@ export const DeckPlugin = ({
       const ids = (layout.values.layoutMode === 'deck' ? next.main : next.solo)?.map(({ id }) => id) ?? [];
       const isAttendedAvailable = !!attendedId && ids.includes(attendedId);
       if (!isAttendedAvailable) {
-        const nextAttended = next.main?.[0]?.id;
-        const article = document.querySelector<HTMLElement>(`article[data-attendable-id="${nextAttended}"]`);
-        article?.focus();
+        // Allow new plank to render before focusing.
+        requestAnimationFrame(() => {
+          const nextAttended = layout.values.layoutMode === 'solo' ? next.solo?.[0].id : next.main?.[0]?.id;
+          const article = document.querySelector<HTMLElement>(`article[data-attendable-id="${nextAttended}"]`);
+          article?.focus();
+        });
       }
     }
 
@@ -244,7 +247,7 @@ export const DeckPlugin = ({
       );
 
       settings
-        .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
+        .prop({ key: 'showHints', storageKey: 'show-hints', type: LocalStorageStore.bool() })
         .prop({ key: 'customSlots', storageKey: 'customSlots', type: LocalStorageStore.bool() })
         .prop({ key: 'flatDeck', storageKey: 'flatDeck', type: LocalStorageStore.bool() })
         .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
@@ -284,23 +287,13 @@ export const DeckPlugin = ({
       window.addEventListener('popstate', handleNavigation);
 
       unsubscriptionCallbacks.push(
-        effect(() => {
-          const selectedPath = soloPartToUri(location.values.active);
-          // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
-          history.pushState(null, '', `/${selectedPath}${window.location.search}`);
-        }),
-      );
-
-      unsubscriptionCallbacks.push(
-        effect(() => {
-          const soloId = location.values.active.solo?.[0].id;
-          if (layout.values.layoutMode === 'solo' && soloId && layout.values.scrollIntoView !== soloId) {
-            void intentPlugin?.provides.intent.dispatch({
-              action: LayoutAction.SCROLL_INTO_VIEW,
-              data: { id: soloId },
-            });
-          }
-        }),
+        scheduledEffect(
+          () => ({ selectedPath: soloPartToUri(location.values.active) }),
+          ({ selectedPath }) => {
+            // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
+            history.pushState(null, '', `/${selectedPath}${window.location.search}`);
+          },
+        ),
       );
 
       layoutModeHistory.values.push(`${layout.values.layoutMode}`);
@@ -354,31 +347,27 @@ export const DeckPlugin = ({
       ),
       root: () => {
         return (
-          <Mosaic.Root>
-            <DeckLayout
-              attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
-              layoutParts={location.values.active}
-              showHintsFooter={settings.values.showFooter}
-              overscroll={settings.values.overscroll}
-              flatDeck={settings.values.flatDeck}
-              slots={settings.values.customSlots ? customSlots : undefined}
-              toasts={layout.values.toasts}
-              onDismissToast={(id) => {
-                const index = layout.values.toasts.findIndex((toast) => toast.id === id);
-                if (index !== -1) {
-                  // Allow time for the toast to animate out.
-                  // TODO(burdon): Factor out and unregister timeout.
-                  setTimeout(() => {
-                    if (layout.values.toasts[index].id === currentUndoId) {
-                      currentUndoId = undefined;
-                    }
-                    layout.values.toasts.splice(index, 1);
-                  }, 1_000);
-                }
-              }}
-            />
-            <Mosaic.DragOverlay />
-          </Mosaic.Root>
+          <DeckLayout
+            layoutParts={location.values.active}
+            showHints={settings.values.showHints}
+            overscroll={settings.values.overscroll}
+            flatDeck={settings.values.flatDeck}
+            slots={settings.values.customSlots ? customSlots : undefined}
+            toasts={layout.values.toasts}
+            onDismissToast={(id) => {
+              const index = layout.values.toasts.findIndex((toast) => toast.id === id);
+              if (index !== -1) {
+                // Allow time for the toast to animate out.
+                // TODO(burdon): Factor out and unregister timeout.
+                setTimeout(() => {
+                  if (layout.values.toasts[index].id === currentUndoId) {
+                    currentUndoId = undefined;
+                  }
+                  layout.values.toasts.splice(index, 1);
+                }, 1_000);
+              }
+            }}
+          />
         );
       },
       surface: {

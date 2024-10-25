@@ -2,15 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import * as AST from '@effect/schema/AST';
-import { isTypeLiteral } from '@effect/schema/AST';
-
+import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { getEchoObjectTypename } from './annotations';
+import { getSchemaTypename } from './annotations';
 
-export const symbolSchema = Symbol.for('@dxos/schema');
+// TODO(burdon): Reconcile with @dxos/effect visit().
+
+// TODO(burdon): Reconcile with @dxos/effect visit().
+
+export const symbolSchema = Symbol.for('@dxos/schema/Schema');
 
 export class SchemaValidator {
   /**
@@ -18,17 +19,17 @@ export class SchemaValidator {
    * Validates there are no ambiguous discriminated union types.
    */
   public static validateSchema(schema: S.Schema<any>) {
-    const visitAll = (astList: AST.AST[]) => astList.forEach((ast) => this.validateSchema(S.make(ast)));
+    const visitAll = (nodes: AST.AST[]) => nodes.forEach((node) => this.validateSchema(S.make(node)));
     if (AST.isUnion(schema.ast)) {
-      const typeAstList = schema.ast.types.filter((type) => isTypeLiteral(type)) as AST.TypeLiteral[];
-      // check we can handle a discriminated union
+      const typeAstList = schema.ast.types.filter((type) => AST.isTypeLiteral(type)) as AST.TypeLiteral[];
+      // Check we can handle a discriminated union.
       if (typeAstList.length > 1) {
         getTypeDiscriminators(typeAstList);
       }
       visitAll(typeAstList);
     } else if (AST.isTupleType(schema.ast)) {
-      const positionalTypes = schema.ast.elements.map((e) => e.type);
-      const allTypes = positionalTypes.concat(schema.ast.rest);
+      const positionalTypes = schema.ast.elements.map((t) => t.type);
+      const allTypes = positionalTypes.concat(schema.ast.rest.map((t) => t.type));
       visitAll(allTypes);
     } else if (AST.isTypeLiteral(schema.ast)) {
       visitAll(AST.getPropertySignatures(schema.ast).map((p) => p.type));
@@ -41,6 +42,7 @@ export class SchemaValidator {
       if (AST.isTupleType(type.ast)) {
         type = this.getPropertySchema(rootObjectSchema, [property, '0']);
       }
+
       return type.ast.annotations[annotation] != null;
     } catch (err) {
       return false;
@@ -50,7 +52,7 @@ export class SchemaValidator {
   public static getPropertySchema(
     rootObjectSchema: S.Schema<any>,
     propertyPath: KeyPath,
-    getPropertyFn: (path: KeyPath) => any = () => null,
+    getProperty: (path: KeyPath) => any = () => null,
   ): S.Schema<any> {
     let schema: S.Schema<any> = rootObjectSchema;
     for (let i = 0; i < propertyPath.length; i++) {
@@ -60,15 +62,17 @@ export class SchemaValidator {
         schema = getArrayElementSchema(tupleAst, propertyName);
       } else {
         const propertyType = getPropertyType(schema.ast, propertyName.toString(), (propertyName) =>
-          getPropertyFn([...propertyPath.slice(0, i), propertyName]),
+          getProperty([...propertyPath.slice(0, i), propertyName]),
         );
         if (!propertyType) {
-          const type = getEchoObjectTypename(rootObjectSchema);
+          const type = getSchemaTypename(rootObjectSchema);
           invariant(propertyType, `unknown property: ${String(propertyName)} on ${type}. Path: ${propertyPath}`);
         }
+
         schema = S.make(propertyType).annotations(propertyType.annotations);
       }
     }
+
     return schema;
   }
 
@@ -103,7 +107,7 @@ const getArrayElementSchema = (tupleAst: AST.TupleType, property: string | symbo
   }
 
   const restType = tupleAst.rest;
-  return S.make(restType[0]).annotations(restType[0].annotations);
+  return S.make(restType[0].type).annotations(restType[0].annotations);
 };
 
 const flattenUnion = (typeAst: AST.AST): AST.AST[] =>
@@ -138,12 +142,14 @@ const getPropertyType = (
   if (anyOrObject != null) {
     return ast;
   }
+
   const typeOrDiscriminatedUnion = unwrapAst(ast, (t) => {
     return AST.isTypeLiteral(t) || (AST.isUnion(t) && t.types.some((t) => AST.isTypeLiteral(t)));
   });
   if (typeOrDiscriminatedUnion == null) {
     return null;
   }
+
   const targetProperty = getProperties(typeOrDiscriminatedUnion, getTargetPropertyFn).find(
     (p) => p.name === propertyName,
   );
@@ -188,6 +194,7 @@ const unwrapAst = (rootAst: AST.AST, predicate?: (ast: AST.AST) => boolean): AST
     if (predicate?.(ast)) {
       return ast;
     }
+
     if (AST.isUnion(ast)) {
       const next: any = ast.types.find((t) => (predicate != null && predicate(t)) || AST.isSuspend(t));
       if (next != null) {
@@ -195,6 +202,7 @@ const unwrapAst = (rootAst: AST.AST, predicate?: (ast: AST.AST) => boolean): AST
         continue;
       }
     }
+
     if (AST.isSuspend(ast)) {
       ast = ast.f();
     } else {
@@ -208,7 +216,7 @@ const unwrapAst = (rootAst: AST.AST, predicate?: (ast: AST.AST) => boolean): AST
 const unwrapArray = (ast: AST.AST) => unwrapAst(ast, AST.isTupleType) as AST.TupleType | null;
 
 export const checkIdNotPresentOnSchema = (schema: S.Schema<any, any, any>) => {
-  invariant(isTypeLiteral(schema.ast));
+  invariant(AST.isTypeLiteral(schema.ast));
   const idProperty = AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'id');
   if (idProperty != null) {
     throw new Error('"id" property name is reserved');

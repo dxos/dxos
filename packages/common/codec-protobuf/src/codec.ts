@@ -18,6 +18,15 @@ export const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
   arrays: true,
 };
 
+const JSON_CONVERSION_OPTIONS: IConversionOptions = {
+  // TODO(dmaretskyi): Internal crash with the current version of protobufjs.
+  // longs: String,
+  enums: String,
+  bytes: String,
+  defaults: false,
+  json: true,
+};
+
 /**
  * Defines a generic encoder/decoder.
  */
@@ -88,5 +97,15 @@ export class ProtoCodec<T = any> implements Codec<T> {
    */
   addJson(schema: any) {
     this._schema.addJson(schema);
+  }
+
+  encodeToJson(value: T, options: EncodingOptions = {}): any {
+    const sub = this._encodeMapper(value, [this._schema, options]);
+    return this._type.toObject(sub, JSON_CONVERSION_OPTIONS);
+  }
+
+  decodeFromJson(data: any, options: EncodingOptions = {}): T {
+    const obj = this._type.toObject(this._type.fromObject(data), OBJECT_CONVERSION_OPTIONS);
+    return this._decodeMapper(obj, [this._schema, options]);
   }
 }

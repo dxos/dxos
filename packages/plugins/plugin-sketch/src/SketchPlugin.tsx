@@ -21,7 +21,7 @@ import { SketchAction, type SketchGridType, type SketchPluginProvides, type Sket
 import { serializer } from './util';
 
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
-  const settings = new LocalStorageStore<SketchSettingsProps>(SKETCH_PLUGIN, {});
+  const settings = new LocalStorageStore<SketchSettingsProps>(SKETCH_PLUGIN);
 
   return {
     meta,

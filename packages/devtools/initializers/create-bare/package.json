@@ -1,11 +1,12 @@
 {
   "name": "@dxos/create-bare",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Creates an empty DXOS application",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": false,
   "bin": "bin/main.js",
   "scripts": {
     "start": "node bin/main.js"

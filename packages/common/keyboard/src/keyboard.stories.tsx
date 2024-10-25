@@ -13,7 +13,7 @@ import { type KeyHandler, Keyboard } from './keyboard';
 
 const contexts = ['/', '/space/1', '/space/2', '/space/2/a', '/space/2/b'];
 
-const Story = () => {
+const DefaultStory = () => {
   const [context, setContext] = useState<string | undefined>(undefined);
   const [bindings, setBindings] = useState({});
 
@@ -68,9 +68,9 @@ const Story = () => {
 };
 
 export default {
-  title: 'keyboard/Keyboard',
+  title: 'common/keyboard/Keyboard',
   decorators: [withTheme],
-  render: Story,
+  render: DefaultStory,
 };
 
 export const Default = {};

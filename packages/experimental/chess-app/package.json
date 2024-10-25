@@ -1,12 +1,13 @@
 {
   "name": "@dxos/chess-app",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "private": true,
   "description": "Chess app.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -39,6 +40,7 @@
   ],
   "dependencies": {
     "@dxos/echo-schema": "workspace:*",
+    "@effect/schema": "^0.75.1",
     "@phosphor-icons/react": "^2.1.5",
     "chess.js": "^1.0.0-beta.8",
     "react-chessboard": "^4.7.1",

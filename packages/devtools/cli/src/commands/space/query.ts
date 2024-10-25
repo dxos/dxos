@@ -29,7 +29,7 @@ export default class Query extends BaseCommand<typeof Query> {
       const filter = this.flags.typename?.length ? Filter.typename(this.flags.typename) : undefined;
       const { objects } = await space.db.query(filter).run();
       this.log('Objects:', objects.length);
-      this._printObjects(objects, { extended: this.flags.extended });
+      this._printObjects(objects, { extended: this.flags.extended as boolean });
       return { objects };
     });
   }

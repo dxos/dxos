@@ -7,7 +7,7 @@ import { Context, LifecycleState, Resource } from '@dxos/context';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type QueryRequest, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
@@ -79,8 +79,14 @@ export class QueryState extends Resource {
   @trace.span({ showInBrowserTimeline: true, op: 'db.query', attributes: { 'db.system': 'echo' } })
   async execQuery(): Promise<QueryRunResult> {
     const filter = this._params.request.filter;
+
     const beginQuery = performance.now();
-    const hits = await this._params.indexer.execQuery(filterToIndexQuery(filter));
+
+    // For object id filters, we return no results as those are handled by the SpaceQuerySource.
+    const hits =
+      filter.objectIds && filter.objectIds?.length > 0
+        ? []
+        : await this._params.indexer.execQuery(filterToIndexQuery(filter));
     if (this._firstRun) {
       this.metrics.indexQueryTime = performance.now() - beginQuery;
     }
@@ -182,13 +188,27 @@ const filterToIndexQuery = (filter: FilterProto): IndexQuery => {
     ((filter.or ?? []).length > 0 && (filter.or ?? []).every((subFilter) => !subFilter.not && subFilter.type))
   ) {
     return {
-      typenames: filter.type?.objectId
-        ? [filter.type.objectId]
-        : (filter.or ?? []).map((f) => f.type?.objectId).filter(nonNullable),
+      typenames:
+        filter.type && filter.type.length > 0
+          ? filter.type.map((type) => dxnToIndexerTypename(DXN.parse(type)))
+          : (filter.or ?? [])
+              .flatMap((f) => f.type?.map((type) => dxnToIndexerTypename(DXN.parse(type))) ?? [])
+              .filter(nonNullable),
       inverted: filter.not,
     };
   } else {
     // Query all objects.
     return { typenames: [] };
+  }
+};
+
+const dxnToIndexerTypename = (dxn: DXN) => {
+  switch (dxn.kind) {
+    case DXN.kind.TYPE:
+      return dxn.parts[0];
+    case DXN.kind.ECHO:
+      return dxn.parts[1];
+    default:
+      throw new Error(`Invalid DXN kind: ${dxn.kind}`);
   }
 };

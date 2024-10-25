@@ -12,7 +12,7 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/meta.tsx"
+          "{projectRoot}/src/meta.ts"
         ],
         "platforms": [
           "browser"
@@ -22,6 +22,7 @@
     "lint": {}
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "node-std"
   ]
 }

@@ -5,10 +5,11 @@
 import '@dxos-theme';
 
 import { batch } from '@preact/signals-core';
+import { type Meta } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
 import { Graph } from '@dxos/app-graph';
-import { registerSignalRuntime } from '@dxos/echo-signals/react';
+import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
 import { Treegrid } from '@dxos/react-ui';
 import { Mosaic, Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation } from '@dxos/react-ui-mosaic';
@@ -19,7 +20,7 @@ import { arrayMove } from '@dxos/util';
 import { type NavTreeItemGraphNode, treeItemsFromRootNode } from '../util';
 
 faker.seed(3);
-registerSignalRuntime();
+registerSignalsRuntime();
 
 const createGraph = () => {
   const graph = new Graph();
@@ -132,12 +133,6 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
   );
 };
 
-export default {
-  title: 'react-ui-navtree/Graph',
-  component: NavTree,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
-};
-
 export const Default = {
   render: ({ debug }: { debug?: boolean }) => (
     <Mosaic.Root debug={debug}>
@@ -146,3 +141,11 @@ export const Default = {
     </Mosaic.Root>
   ),
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-navtree/Graph',
+  component: NavTree,
+  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+};
+
+export default meta;

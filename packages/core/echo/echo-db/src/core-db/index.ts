@@ -11,7 +11,6 @@ export {
   type IDocHandle,
   type KeyPath,
   DocAccessor,
-  isValidKeyPath,
   createDocAccessor,
-  getObjectCore,
+  isValidKeyPath,
 } from './types';

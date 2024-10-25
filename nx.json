@@ -213,7 +213,14 @@
         },
         {
           "env": "VITEST_XML_REPORT"
+        },
+        {
+          "env": "EDGE_ENDPOINT"
         }
+      ],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}",
+        "{workspaceRoot}/test-results/{projectRoot}"
       ]
     },
     "compile-lib": {

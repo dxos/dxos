@@ -5,8 +5,8 @@
 import { X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type EchoReactiveObject, getMeta, getSchema } from '@dxos/echo-schema';
-import { createDocAccessor } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, createDocAccessor } from '@dxos/client/echo';
+import { getMeta, getSchema } from '@dxos/echo-schema';
 import { Button, Input, useThemeContext } from '@dxos/react-ui';
 import {
   automerge,
@@ -16,14 +16,11 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx, subtleHover } from '@dxos/react-ui-theme';
-
-import { classifySchemaProperties } from '../util';
+import { mapSchemaToFields } from '@dxos/schema';
 
 const MAX_RENDERED_COUNT = 80;
 
-export type ItemListProps<T> = {
-  objects: T[];
-} & Pick<ItemProps<T>, 'debug' | 'onDelete'>;
+export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | 'onDelete'>;
 
 export const ItemList = ({ objects, debug, ...props }: ItemListProps<EchoReactiveObject<any>>) => {
   return (
@@ -62,13 +59,11 @@ export const Item = ({ object, onDelete }: ItemProps<EchoReactiveObject<any>>) =
   }
 
   // TODO(burdon): Get additional metadata.
-  const props = classifySchemaProperties(schema);
+  const props = mapSchemaToFields(schema);
 
   // TODO(burdon): [API]: Type check?
   const getValue = (object: EchoReactiveObject<any>, prop: string) => (object as any)[prop];
-  const setValue = (object: EchoReactiveObject<any>, prop: string, value: any) => {
-    (object as any)[prop] = value;
-  };
+  const setValue = (object: EchoReactiveObject<any>, prop: string, value: any) => ((object as any)[prop] = value);
 
   return (
     <div className={mx('flex m-1 p-2 border', subtleHover)}>

@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { type Plugin, Surface, usePlugins } from '@dxos/app-framework';
+import { type PluginMeta, Surface, usePlugins } from '@dxos/app-framework';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { Tabs, type TabsActivePart } from '@dxos/react-ui-tabs';
 import { getSize } from '@dxos/react-ui-theme';
@@ -33,7 +33,7 @@ export const SettingsDialog = ({
     'dxos.org/plugin/registry',
   ];
 
-  const sortPlugin = ({ name: a }: Plugin['meta'], { name: b }: Plugin['meta']) => a?.localeCompare(b ?? '') ?? 0;
+  const sortPlugin = ({ name: a }: PluginMeta, { name: b }: PluginMeta) => a?.localeCompare(b ?? '') ?? 0;
 
   const corePlugins = core
     .map((id) => plugins.find((plugin) => plugin.meta.id === id)?.meta)
@@ -110,7 +110,7 @@ export const SettingsDialog = ({
   );
 };
 
-const PluginList = ({ title, plugins }: { title: string; plugins: Plugin['meta'][] }) => {
+const PluginList = ({ title, plugins }: { title: string; plugins: PluginMeta[] }) => {
   return (
     <div role='none'>
       <Tabs.TabGroupHeading classNames={'pli-1 mlb-2 mbs-4 @md:mbs-2'}>{title}</Tabs.TabGroupHeading>

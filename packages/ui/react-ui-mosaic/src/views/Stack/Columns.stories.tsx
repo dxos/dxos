@@ -17,7 +17,7 @@ import { SimpleCard } from '../../testing';
 faker.seed(3);
 
 export default {
-  title: 'react-ui-mosaic/Stack',
+  title: 'ui/react-ui-mosaic/Stack',
   component: Stack,
   render: (args: DemoStackProps) => {
     return (

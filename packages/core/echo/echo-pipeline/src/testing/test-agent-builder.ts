@@ -127,11 +127,23 @@ export class TestAgent {
     return this._spaces.get(spaceKey);
   }
 
+  private _networkManager?: SwarmNetworkManager;
+  get networkManager() {
+    if (this._networkManager) {
+      return this._networkManager;
+    }
+
+    this._networkManager = this._networkManagerProvider();
+    this._networkManager.setPeerInfo({ peerKey: this.deviceKey.toHex(), identityKey: this.identityKey.toHex() });
+
+    return this._networkManager;
+  }
+
   private _spaceManager?: SpaceManager;
   get spaceManager() {
     return (this._spaceManager ??= new SpaceManager({
       feedStore: this.feedStore,
-      networkManager: this._networkManagerProvider(),
+      networkManager: this.networkManager,
       metadataStore: this.metadataStore,
       blobStore: this.blobStore,
     }));
@@ -205,7 +217,7 @@ export class TestAgent {
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
-      networkManager: this._networkManagerProvider(),
+      networkManager: this.networkManager,
       blobStore: this.blobStore,
       onSessionAuth: (session) => {
         session.addExtension(

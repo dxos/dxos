@@ -1,0 +1,16 @@
+name: Test Report
+description: Send a test report to the team
+
+inputs:
+  name:
+    description: 'The name of the test report'
+    required: true
+  result:
+    description: 'Result of the job'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - run: ./.github/actions/test-report/send-test-report.sh "${{ inputs.name }}" "${{ inputs.result }}"
+      shell: bash

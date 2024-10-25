@@ -5,7 +5,12 @@ import platform from 'platform';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { createCredentialSignerWithKey, CredentialGenerator } from '@dxos/credentials';
+import {
+  createCredentialSignerWithKey,
+  CredentialGenerator,
+  generateSeedPhrase,
+  keyPairFromSeedPhrase,
+} from '@dxos/credentials';
 import { type MetadataStore, type SpaceManager, type SwarmIdentity } from '@dxos/echo-pipeline';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { type FeedStore } from '@dxos/feed-store';
@@ -23,6 +28,7 @@ import {
   type DeviceProfileDocument,
   DeviceType,
   type ProfileDocument,
+  type Credential,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
@@ -49,6 +55,7 @@ export type JoinIdentityParams = {
   haloGenesisFeedKey: PublicKey;
   controlFeedKey: PublicKey;
   dataFeedKey: PublicKey;
+  authorizedDeviceCredential: Credential;
 
   /**
    * Latest known timeframe for the control pipeline.
@@ -65,10 +72,6 @@ export type CreateIdentityOptions = {
   deviceProfile?: DeviceProfileDocument;
 };
 
-export type IdentityManagerCallbacks = {
-  onIdentityConstruction?: (identity: Identity) => void;
-};
-
 export type IdentityManagerParams = {
   metadataStore: MetadataStore;
   keyring: Keyring;
@@ -78,7 +81,6 @@ export type IdentityManagerParams = {
   edgeFeatures?: Runtime.Client.EdgeFeatures;
   devicePresenceAnnounceInterval?: number;
   devicePresenceOfflineTimeout?: number;
-  callbacks?: IdentityManagerCallbacks;
 };
 
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
@@ -94,7 +96,6 @@ export class IdentityManager {
   private readonly _devicePresenceOfflineTimeout: number;
   private readonly _edgeConnection: EdgeConnection | undefined;
   private readonly _edgeFeatures: Runtime.Client.EdgeFeatures | undefined;
-  private readonly _callbacks: IdentityManagerCallbacks | undefined;
 
   private _identity?: Identity;
 
@@ -108,7 +109,6 @@ export class IdentityManager {
     this._edgeFeatures = params.edgeFeatures;
     this._devicePresenceAnnounceInterval = params.devicePresenceAnnounceInterval ?? DEVICE_PRESENCE_ANNOUNCE_INTERVAL;
     this._devicePresenceOfflineTimeout = params.devicePresenceOfflineTimeout ?? DEVICE_PRESENCE_OFFLINE_TIMEOUT;
-    this._callbacks = params.callbacks;
   }
 
   get identity() {
@@ -198,10 +198,6 @@ export class IdentityManager {
       }
     }
 
-    // TODO(burdon): ???
-    // await this._keyring.deleteKey(identityRecord.identity_key);
-    // await this._keyring.deleteKey(identityRecord.halo_space.space_key);
-
     await this._metadataStore.setIdentityRecord(identityRecord);
     this._identity = identity;
     await this._identity.ready();
@@ -216,6 +212,7 @@ export class IdentityManager {
       deviceKey: identity.deviceKey,
       profile: identity.profileDocument,
     });
+
     return identity;
   }
 
@@ -246,9 +243,9 @@ export class IdentityManager {
   }
 
   /**
-   * Accept an existing identity. Expects its device key to be authorized (now or later).
+   * Prepare an identity object as the first step of acceptIdentity flow.
    */
-  async acceptIdentity(params: JoinIdentityParams) {
+  async prepareIdentity(params: JoinIdentityParams) {
     log('accepting identity', { params });
     invariant(!this._identity, 'Identity already exists.');
 
@@ -263,24 +260,33 @@ export class IdentityManager {
         controlTimeframe: params.controlTimeframe,
       },
     };
-
     const identity = await this._constructIdentity(identityRecord);
     await identity.open(new Context());
+    return { identity, identityRecord };
+  }
+
+  /**
+   * Accept an existing identity. Expects its device key to be authorized (now or later).
+   */
+  public async acceptIdentity(identity: Identity, identityRecord: IdentityRecord, profile?: DeviceProfileDocument) {
     this._identity = identity;
-    await this._metadataStore.setIdentityRecord(identityRecord);
+
+    // Identity becomes ready after device chain is replicated. Wait for it before storing the record.
     await this._identity.ready();
+    await this._metadataStore.setIdentityRecord(identityRecord);
+
     log.trace('dxos.halo.identity', {
-      identityKey: identityRecord.identityKey,
+      identityKey: this._identity!.identityKey,
       displayName: this._identity.profileDocument?.displayName,
     });
 
     await this.updateDeviceProfile({
       ...this.createDefaultDeviceProfile(),
-      ...params.deviceProfile,
+      ...profile,
     });
     this.stateUpdate.emit();
+
     log('accepted identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
-    return identity;
   }
 
   /**
@@ -327,6 +333,29 @@ export class IdentityManager {
       presence: Device.PresenceState.ONLINE,
       profile,
     };
+  }
+
+  async createRecoveryPhrase() {
+    const identity = this._identity;
+    invariant(identity);
+
+    const seedphrase = generateSeedPhrase();
+    const keypair = keyPairFromSeedPhrase(seedphrase);
+    const recoveryKey = PublicKey.from(keypair.publicKey);
+    const identityKey = identity.identityKey;
+    const credential = await identity.getIdentityCredentialSigner().createCredential({
+      subject: identityKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.IdentityRecovery',
+        recoveryKey,
+        identityKey,
+      },
+    });
+
+    const receipt = await identity.controlPipeline.writer.write({ credential: { credential } });
+    await identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+
+    return { seedphrase };
   }
 
   private async _constructIdentity(identityRecord: IdentityRecord) {
@@ -378,7 +407,6 @@ export class IdentityManager {
       edgeFeatures: this._edgeFeatures,
     });
     log('done', { identityKey: identityRecord.identityKey });
-    this._callbacks?.onIdentityConstruction?.(identity);
 
     // TODO(mykola): Set new timeframe on a write to a feed.
     if (identityRecord.haloSpace.controlTimeframe) {

@@ -40,6 +40,16 @@ export const formattingStyles = EditorView.theme({
   },
 
   /**
+   * Blockquote.
+   */
+  '& .cm-blockquote': {
+    background: 'var(--dx-cmCodeblock)',
+    borderLeft: '2px solid var(--dx-cmSeparator)',
+    paddingLeft: '1rem',
+    margin: '0',
+  },
+
+  /**
    * Code and codeblocks.
    */
   '& .cm-code': {

@@ -1,74 +1,87 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import '@dxos-theme';
 
-import React, { useEffect, useState } from 'react';
+import { type Meta } from '@storybook/react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { faker } from '@dxos/random';
-import { Filter, create, useSpaces, useQuery } from '@dxos/react-client/echo';
-import { type WithClientProviderProps, withClientProvider, withMultiClientProvider } from '@dxos/react-client/testing';
-import { Table } from '@dxos/react-ui-table';
+import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ObjectTable } from './ObjectTable';
+import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 import { TableType } from '../../types';
+import { Toolbar } from '../Toolbar';
+import { createEmptyTable } from '../testing';
 
-faker.seed(1);
-
-const useTable = () => {
+const DefaultStory = (args: ObjectTableProps) => {
   const spaces = useSpaces();
-  const [table, setTable] = useState<TableType>();
+  const [table, setTable] = useState<TableType | undefined>();
   const objects = useQuery(spaces[spaces.length - 1], Filter.schema(TableType));
   useEffect(() => {
     if (objects.length) {
       setTable(objects[0]);
     }
   }, [objects]);
-  return table;
-};
 
-const Story = () => {
-  const table = useTable();
+  const handleAction = useCallback(
+    (action: { type: string }) => {
+      switch (action.type) {
+        case 'on-thread-create': {
+          console.log('Thread creation triggered');
+          break;
+        }
+        case 'add-row': {
+          const lastSpace = spaces[spaces.length - 1];
+          if (table?.schema && lastSpace) {
+            lastSpace.db.add(create(table.schema, {}));
+          }
+          break;
+        }
+      }
+    },
+    [table, spaces],
+  );
+
   if (!table) {
     return null;
   }
 
   return (
-    <Table.Root>
-      <Table.Viewport>
-        <ObjectTable table={table} stickyHeader />
-      </Table.Viewport>
-    </Table.Root>
+    <div>
+      <div className='border-b border-separator'>
+        <Toolbar.Root onAction={handleAction}>
+          <Toolbar.Separator />
+          <Toolbar.Actions />
+        </Toolbar.Root>
+      </div>
+      <div className='relative is-full max-is-max min-is-0 min-bs-0'>
+        <ObjectTable table={table} />
+      </div>
+    </div>
   );
 };
 
-export default {
-  title: 'plugin-table/ObjectTable',
+export const Default = {};
+
+const meta: Meta<typeof ObjectTable> = {
+  title: 'plugins/plugin-table/ObjectTable',
   component: ObjectTable,
-  // render: () => <div>s</div>,
-  render: () => <Story />,
-};
-
-const clientProps: WithClientProviderProps = {
-  types: [TableType],
-  createIdentity: true,
-  createSpace: true,
-  onSpaceCreated: ({ space }) => {
-    // TODO(burdon): Create and set schema.
-    space.db.add(create(TableType, { name: 'Test', props: [] }));
-  },
-};
-
-export const Default = {
-  decorators: [withClientProvider(clientProps), withTheme, withLayout({ fullscreen: true })],
-};
-
-export const Multiple = {
+  render: DefaultStory as any,
   decorators: [
-    withMultiClientProvider({ ...clientProps, numClients: 3 }),
+    withClientProvider({
+      types: [TableType],
+      createIdentity: true,
+      createSpace: true,
+      onSpaceCreated: ({ space }) => {
+        space.db.add(createEmptyTable());
+      },
+    }),
     withTheme,
-    withLayout({ fullscreen: true, classNames: 'grid grid-cols-3' }),
+    withLayout({ fullscreen: true, tooltips: true }),
   ],
 };
+
+export default meta;

@@ -2,176 +2,266 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  type Icon,
-  Calendar,
-  ChatText,
-  CurrencyDollar,
-  Eraser,
-  HighlighterCircle,
-  TextAlignCenter,
-  TextAlignLeft,
-  TextAlignRight,
-} from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
+import { useIntentDispatcher } from '@dxos/app-framework';
 import {
-  DensityProvider,
-  ElevationProvider,
+  Icon,
   Toolbar as NaturalToolbar,
-  type ThemedClassName,
   useTranslation,
+  Tooltip,
+  type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
+  type ToolbarButtonProps as NaturalToolbarButtonProps,
+  type ToolbarToggleProps as NaturalToolbarToggleProps,
+  type ThemedClassName,
 } from '@dxos/react-ui';
+import { useAttention } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
 
-import { ToolbarButton, ToolbarSeparator, ToolbarToggleButton } from './common';
-import { addressToIndex } from '../../defs';
+import {
+  addressToIndex,
+  type AlignKey,
+  type AlignValue,
+  type CommentKey,
+  type CommentValue,
+  inRange,
+  type StyleKey,
+  type StyleValue,
+} from '../../defs';
+import { completeCellRangeToThreadCursor } from '../../integrations';
 import { SHEET_PLUGIN } from '../../meta';
-import { type Formatting } from '../../types';
-import { useSheetContext } from '../Sheet/sheet-context';
+import { type SheetType } from '../../types';
+import { useSheetContext } from '../SheetContext';
+
+//
+// Buttons
+//
+
+const buttonStyles = 'min-bs-0 p-2';
+const tooltipProps = { side: 'bottom' as const, classNames: 'z-10' };
+
+const ToolbarSeparator = () => <div role='separator' className='grow' />;
+
+//
+// ToolbarItem
+//
+
+type ToolbarItemProps =
+  | (NaturalToolbarButtonProps & { itemType: 'button'; icon: string })
+  | (NaturalToolbarToggleGroupItemProps & { itemType: 'toggleGroupItem'; icon: string })
+  | (NaturalToolbarToggleProps & { itemType: 'toggle'; icon: string });
+
+export const ToolbarItem = ({ itemType, icon, children, ...props }: ToolbarItemProps) => {
+  const Invoker =
+    itemType === 'toggleGroupItem'
+      ? NaturalToolbar.ToggleGroupItem
+      : itemType === 'toggle'
+        ? NaturalToolbar.Toggle
+        : NaturalToolbar.Button;
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>
+        {/* TODO(thure): type the props spread better. */}
+        <Invoker variant='ghost' {...(props as any)} classNames={buttonStyles}>
+          <Icon icon={icon} size={5} />
+          <span className='sr-only'>{children}</span>
+        </Invoker>
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content {...tooltipProps}>
+          {children}
+          <Tooltip.Arrow />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  );
+};
 
 //
 // Root
 //
 
-export type ToolbarAction =
-  | { type: 'clear' }
-  | { type: 'highlight' }
-  | { type: 'left' }
-  | { type: 'center' }
-  | { type: 'right' }
-  | { type: 'date' }
-  | { type: 'currency' }
-  | { type: 'comment'; anchor: string; cellContent?: string };
+type AlignAction = { key: AlignKey; value: AlignValue };
+type CommentAction = { key: CommentKey; value: CommentValue; cellContent?: string };
+type StyleAction = { key: StyleKey; value: StyleValue };
 
-export type ToolbarActionType = ToolbarAction['type'];
+export type ToolbarAction = StyleAction | AlignAction | CommentAction;
+
+export type ToolbarActionType = ToolbarAction['key'];
 
 export type ToolbarActionHandler = (action: ToolbarAction) => void;
 
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
-    onAction?: ToolbarActionHandler;
+    role?: string;
   }>
 >;
 
-const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>('Toolbar');
+const [ToolbarContextProvider, useToolbarContext] = createContext<{ onAction: (action: ToolbarAction) => void }>(
+  'Toolbar',
+);
 
-const ToolbarRoot = ({ children, onAction, classNames }: ToolbarProps) => {
+// TODO(Zan): Factor out, copied this from MarkdownPlugin.
+const sectionToolbarLayout =
+  'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 __-block-start-px transition-opacity';
+
+type Range = SheetType['ranges'][number];
+
+const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
+  const { id, model, cursorFallbackRange, cursor } = useSheetContext();
+  const { hasAttention } = useAttention(id);
+  const dispatch = useIntentDispatcher();
+
+  // TODO(Zan): Centralise the toolbar action handler. Current implementation in stories.
+  const handleAction = useCallback(
+    (action: ToolbarAction) => {
+      switch (action.key) {
+        case 'align':
+          if (cursor && cursorFallbackRange) {
+            const index = model.sheet.ranges?.findIndex(
+              (range) => range.key === action.key && inRange(range.range, cursor),
+            );
+            const nextRangeEntity = {
+              range: cursorFallbackRange,
+              key: action.key,
+              value: action.value,
+            };
+            if (index < 0) {
+              model.sheet.ranges?.push(nextRangeEntity);
+            } else {
+              model.sheet.ranges?.splice(index, 1, nextRangeEntity);
+            }
+          }
+          break;
+        case 'style':
+          if (action.value === 'unset') {
+            const index = model.sheet.ranges?.findIndex((range) => range.key === action.key);
+            if (index >= 0) {
+              model.sheet.ranges?.splice(index, 1);
+            }
+          } else if (cursorFallbackRange) {
+            model.sheet.ranges?.push({
+              range: cursorFallbackRange,
+              key: action.key,
+              value: action.value,
+            });
+          }
+          break;
+        case 'comment': {
+          // TODO(Zan): We shouldn't hardcode the action ID.
+          if (cursorFallbackRange) {
+            void dispatch({
+              action: 'dxos.org/plugin/thread/action/create',
+              data: {
+                cursor: completeCellRangeToThreadCursor(cursorFallbackRange),
+                name: action.cellContent,
+                subject: model.sheet,
+              },
+            });
+          }
+        }
+      }
+    },
+    [model.sheet, cursorFallbackRange, cursor, dispatch],
+  );
+
   return (
-    <ToolbarContextProvider onAction={onAction}>
-      <DensityProvider density='fine'>
-        <ElevationProvider elevation='chrome'>
-          <NaturalToolbar.Root classNames={['is-full shrink-0 overflow-x-auto overflow-y-hidden p-1', classNames]}>
-            {children}
-          </NaturalToolbar.Root>
-        </ElevationProvider>
-      </DensityProvider>
+    <ToolbarContextProvider onAction={handleAction}>
+      <NaturalToolbar.Root
+        classNames={[
+          ...(role === 'section'
+            ? ['z-[2] group-focus-within/section:visible', !hasAttention && 'invisible', sectionToolbarLayout]
+            : ['attention-surface']),
+          classNames,
+        ]}
+      >
+        {children}
+      </NaturalToolbar.Root>
     </ToolbarContextProvider>
   );
 };
 
 // TODO(burdon): Generalize.
 // TODO(burdon): Detect and display current state.
-type ButtonProps = {
-  type: ToolbarActionType;
-  Icon: Icon;
-  getState: (state: Formatting) => boolean;
-  disabled?: (state: Formatting) => boolean;
+type ButtonProps<T> = {
+  value: T;
+  icon: string;
+  disabled?: (state: Range) => boolean;
 };
 
 //
 // Alignment
 //
 
-const formatOptions: ButtonProps[] = [
-  { type: 'date', Icon: Calendar, getState: (state) => false },
-  { type: 'currency', Icon: CurrencyDollar, getState: (state) => false },
-];
-
-const Format = () => {
-  const { onAction } = useToolbarContext('Format');
-  const { t } = useTranslation(SHEET_PLUGIN);
-
-  return (
-    <NaturalToolbar.ToggleGroup
-      type='single'
-      // value={cellStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
-    >
-      {formatOptions.map(({ type, getState, Icon }) => (
-        <ToolbarToggleButton
-          key={type}
-          value={type}
-          Icon={Icon}
-          // disabled={state?.blockType === 'codeblock'}
-          // onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
-          onClick={() => onAction?.({ type: type as Exclude<typeof type, 'comment'> })}
-        >
-          {t(`toolbar ${type} label`)}
-        </ToolbarToggleButton>
-      ))}
-    </NaturalToolbar.ToggleGroup>
-  );
-};
-
-const alignmentOptions: ButtonProps[] = [
-  { type: 'left', Icon: TextAlignLeft, getState: (state) => false },
-  { type: 'center', Icon: TextAlignCenter, getState: (state) => false },
-  { type: 'right', Icon: TextAlignRight, getState: (state) => false },
+const alignmentOptions: ButtonProps<AlignValue>[] = [
+  { value: 'start', icon: 'ph--text-align-left--regular' },
+  { value: 'center', icon: 'ph--text-align-center--regular' },
+  { value: 'end', icon: 'ph--text-align-right--regular' },
 ];
 
 const Alignment = () => {
+  const { cursor, model } = useSheetContext();
   const { onAction } = useToolbarContext('Alignment');
   const { t } = useTranslation(SHEET_PLUGIN);
+
+  const value = useMemo(
+    () =>
+      cursor
+        ? model.sheet.ranges?.find(({ range, key }) => key === 'alignment' && inRange(range, cursor))?.value
+        : undefined,
+    [cursor, model.sheet.ranges],
+  );
 
   return (
     <NaturalToolbar.ToggleGroup
       type='single'
-      // value={cellStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
+      value={value}
+      onValueChange={(value: AlignValue) => onAction?.({ key: 'align', value })}
     >
-      {alignmentOptions.map(({ type, getState, Icon }) => (
-        <ToolbarToggleButton
-          key={type}
-          value={type}
-          Icon={Icon}
-          // disabled={state?.blockType === 'codeblock'}
-          // onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
-          onClick={() => onAction?.({ type: type as Exclude<typeof type, 'comment'> })}
-        >
-          {t(`toolbar ${type} label`)}
-        </ToolbarToggleButton>
+      {alignmentOptions.map(({ value, icon }) => (
+        <ToolbarItem itemType='toggleGroupItem' key={value} value={value} icon={icon}>
+          {t(`toolbar ${value} label`)}
+        </ToolbarItem>
       ))}
     </NaturalToolbar.ToggleGroup>
   );
 };
 
-const styleOptions: ButtonProps[] = [
-  { type: 'clear', Icon: Eraser, getState: (state) => false },
-  { type: 'highlight', Icon: HighlighterCircle, getState: (state) => false },
-];
+const styleOptions: ButtonProps<StyleValue>[] = [{ value: 'highlight', icon: 'ph--highlighter--regular' }];
 
 const Styles = () => {
-  const { onAction } = useToolbarContext('Alignment');
+  const { cursor, model } = useSheetContext();
+  const { onAction } = useToolbarContext('Styles');
   const { t } = useTranslation(SHEET_PLUGIN);
 
+  const activeValues = useMemo(
+    () =>
+      cursor
+        ? model.sheet.ranges
+            ?.filter(({ range, key }) => key === 'style' && inRange(range, cursor))
+            .reduce((acc, { value }) => {
+              acc.add(value);
+              return acc;
+            }, new Set())
+        : undefined,
+    [cursor, model.sheet.ranges],
+  );
+
   return (
-    <NaturalToolbar.ToggleGroup
-      type='single'
-      // value={cellStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
-    >
-      {styleOptions.map(({ type, getState, Icon }) => (
-        <ToolbarToggleButton
-          key={type}
-          value={type}
-          Icon={Icon}
-          // disabled={state?.blockType === 'codeblock'}
-          // onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
-          onClick={() => onAction?.({ type: type as Exclude<typeof type, 'comment'> })}
+    <>
+      {styleOptions.map(({ value, icon }) => (
+        <ToolbarItem
+          itemType='toggle'
+          key={value}
+          pressed={activeValues?.has(value)}
+          onPressedChange={(nextPressed: boolean) => onAction?.({ key: 'style', value: nextPressed ? value : 'unset' })}
+          icon={icon}
         >
-          {t(`toolbar ${type} label`)}
-        </ToolbarToggleButton>
+          {t(`toolbar ${value} label`)}
+        </ToolbarItem>
       ))}
-    </NaturalToolbar.ToggleGroup>
+    </>
   );
 };
 
@@ -206,24 +296,25 @@ const Actions = () => {
         : 'comment label';
 
   return (
-    <ToolbarButton
+    <ToolbarItem
+      itemType='button'
       value='comment'
-      Icon={ChatText}
+      icon='ph--chat-text--regular'
       data-testid='editor.toolbar.comment'
       onClick={() => {
         if (!cursor) {
           return;
         }
         return onAction?.({
-          type: 'comment',
-          anchor: addressToIndex(model.sheet, cursor),
+          key: 'comment',
+          value: addressToIndex(model.sheet, cursor),
           cellContent: model.getCellText(cursor),
         });
       }}
       disabled={!cursorOnly || overlapsCommentAnchor}
     >
       {t(tooltipLabelKey)}
-    </ToolbarButton>
+    </ToolbarItem>
   );
 };
 
@@ -231,7 +322,6 @@ export const Toolbar = {
   Root: ToolbarRoot,
   Separator: ToolbarSeparator,
   Alignment,
-  Format,
   Styles,
   Actions,
 };

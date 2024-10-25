@@ -57,8 +57,9 @@ const StorybookAvatar = (props: PropsWithChildren<StorybookAvatarProps>) => {
 };
 
 export default {
-  title: 'react-ui/Avatar',
-  component: StorybookAvatar,
+  title: 'ui/react-ui-core/Avatar',
+  component: Avatar,
+  render: StorybookAvatar,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

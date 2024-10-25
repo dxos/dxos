@@ -8,7 +8,6 @@ import { EditorView } from '@codemirror/view';
 import React from 'react';
 
 import { Icon } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
 
 import { createElement, renderRoot } from './util';
 
@@ -17,7 +16,7 @@ export type FoldingOptions = {};
 /**
  * https://codemirror.net/examples/gutter
  */
-// TODO(burdon): Remember folding state.
+// TODO(burdon): Remember folding state (to state).
 export const folding = (_props: FoldingOptions = {}): Extension => [
   codeFolding({
     placeholderDOM: () => {
@@ -26,9 +25,11 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
   }),
   foldGutter({
     markerDOM: (open) => {
+      // TODO(burdon): Use sprite directly.
+      const el = createElement('div', { className: 'flex h-full items-center' });
       return renderRoot(
-        createElement('div', { className: 'flex h-full items-center' }),
-        <Icon icon='ph--caret-right--regular' classNames={[getSize(3), 'mx-3 cursor-pointer', open && 'rotate-90']} />,
+        el,
+        <Icon icon='ph--caret-right--regular' size={3} classNames={['mx-3 cursor-pointer', open && 'rotate-90']} />,
       );
     },
   }),
@@ -36,6 +37,7 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
     '.cm-foldGutter': {
       opacity: 0.3,
       transition: 'opacity 0.3s',
+      width: '32px',
     },
     '.cm-foldGutter:hover': {
       opacity: 1,

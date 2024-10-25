@@ -2,17 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
 import { effect } from '@preact/signals-core';
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
 import {
-  create,
   EchoObject,
-  type EchoReactiveObject,
   Expando,
+  TypedObject,
+  S,
+  create,
   foreignKey,
   getMeta,
   getSchema,
@@ -20,10 +20,8 @@ import {
   getTypeReference,
   isDeleted,
   ref,
-  TypedObject,
 } from '@dxos/echo-schema';
 import {
-  TEST_SCHEMA_TYPE,
   TestClass,
   TestNestedType,
   TestSchema,
@@ -31,20 +29,20 @@ import {
   type TestSchemaWithClass,
   TestType,
 } from '@dxos/echo-schema/testing';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
-import { createEchoObject, isEchoObject } from './create';
+import { type EchoReactiveObject, createObject, isEchoObject } from './create';
+import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
-import { getObjectCore } from '../core-db';
 import { loadObjectReferences } from '../proxy-db';
 import { Filter } from '../query';
 import { Contact, EchoTestBuilder, Task } from '../testing';
 
-registerSignalRuntime();
+registerSignalsRuntime();
 
 const TEST_OBJECT: TestSchema = {
   string: 'foo',
@@ -57,24 +55,23 @@ const TEST_OBJECT: TestSchema = {
 
 test('id property name is reserved', () => {
   const invalidSchema = S.Struct({ id: S.Number });
-  expect(() => createEchoObject(create(invalidSchema, { id: 42 }))).to.throw();
+  expect(() => createObject(create(invalidSchema, { id: 42 }))).to.throw();
 });
 
 // Pass undefined to test untyped proxy.
 for (const schema of [undefined, TestType, TestSchemaType]) {
-  const createObject = (props: Partial<TestSchemaWithClass> = {}): EchoReactiveObject<TestSchemaWithClass> => {
-    return createEchoObject(schema ? create(schema as any, props) : create(props));
+  const createTestObject = (props: Partial<TestSchemaWithClass> = {}): EchoReactiveObject<TestSchemaWithClass> => {
+    return createObject(schema ? create(schema as any, props) : create(props));
   };
 
   describe(`Echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
     test('has id', () => {
-      const obj = createObject({ string: 'bar' });
+      const obj = createTestObject({ string: 'bar' });
       expect(obj.id).not.to.be.undefined;
     });
 
     test('inspect', () => {
-      const obj = createObject({ string: 'bar' });
-
+      const obj = createTestObject({ string: 'bar' });
       const str = inspect(obj, { colors: false });
       expect(str.startsWith(`${schema == null ? '' : 'Typed'}EchoObject`)).to.be.true;
       expect(str.includes("string: 'bar'")).to.be.true;
@@ -85,23 +82,23 @@ for (const schema of [undefined, TestType, TestSchemaType]) {
 
     test('throws when assigning a class instances', () => {
       expect(() => {
-        createObject().classInstance = new TestClass();
+        createTestObject().classInstance = new TestClass();
       }).to.throw();
     });
 
     test('throws when creates with a class instances', () => {
       expect(() => {
-        createObject({ classInstance: new TestClass() });
+        createTestObject({ classInstance: new TestClass() });
       }).to.throw();
     });
 
     test('removes undefined fields on creation', () => {
-      const obj = createObject({ undefined });
+      const obj = createTestObject({ undefined });
       expect(obj).to.deep.eq({ id: obj.id });
     });
 
     test('isEchoObject', () => {
-      const obj = createObject({ string: 'bar' });
+      const obj = createTestObject({ string: 'bar' });
       expect(isEchoObject(obj)).to.be.true;
     });
   });
@@ -142,7 +139,7 @@ describe('Reactive Object with ECHO database', () => {
 
   test('existing proxy objects can be passed to create', async () => {
     const { db, graph } = await builder.createDatabase();
-    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.Any }) {}
+    class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({ field: S.Any }) {}
     graph.schemaRegistry.addSchema([Schema]);
     const objectHost = db.add(create(Schema, { field: [] }));
     const object = db.add(create(Schema, { field: 'foo' }));
@@ -247,7 +244,7 @@ describe('Reactive Object with ECHO database', () => {
       db.add(create(TestType, { string: 'foo' }));
 
       {
-        const queryResult = await db.query(Filter.typename(TEST_SCHEMA_TYPE.typename)).run();
+        const queryResult = await db.query(Filter.typename('example.com/type/Test')).run();
         expect(queryResult.objects.length).to.eq(1);
       }
 
@@ -320,13 +317,13 @@ describe('Reactive Object with ECHO database', () => {
   describe('references', () => {
     const Org = S.Struct({
       name: S.String,
-    }).pipe(EchoObject('example.Org', '1.0.0'));
+    }).pipe(EchoObject('example.Org', '0.1.0'));
 
     const Person = S.Struct({
       name: S.String,
       worksAt: ref(Org),
       previousEmployment: S.optional(S.Array(ref(Org))),
-    }).pipe(EchoObject('example.Person', '1.0.0'));
+    }).pipe(EchoObject('example.Person', '0.1.0'));
 
     test('references', async () => {
       const { db, graph } = await builder.createDatabase();
@@ -493,10 +490,10 @@ describe('Reactive Object with ECHO database', () => {
     });
 
     test('object with meta pushed to array', async () => {
-      class NestedType extends TypedObject({ ...TEST_SCHEMA_TYPE, typename: TEST_SCHEMA_TYPE.typename + '2' })({
+      class NestedType extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
         field: S.Number,
       }) {}
-      class TestType extends TypedObject(TEST_SCHEMA_TYPE)({
+      class TestType extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
         objects: S.mutable(S.Array(ref(NestedType))),
       }) {}
 
@@ -510,7 +507,9 @@ describe('Reactive Object with ECHO database', () => {
     });
 
     test('push key to object created with', async () => {
-      class TestType extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.Number }) {}
+      class TestType extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+        field: S.Number,
+      }) {}
       const { db, graph } = await builder.createDatabase();
       graph.schemaRegistry.addSchema([TestType]);
       const obj = db.add(create(TestType, { field: 1 }, { keys: [foreignKey('example.com', '123')] }));
@@ -611,7 +610,6 @@ describe('Reactive Object with ECHO database', () => {
 
   test('typed object is linked with the database on assignment to another db-linked object', async () => {
     const { db, graph } = await builder.createDatabase();
-
     graph.schemaRegistry.addSchema([TestSchemaType]);
 
     const obj = db.add(create(TestSchemaType, { string: 'Object 1' }));

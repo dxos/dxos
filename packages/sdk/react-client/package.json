@@ -1,11 +1,12 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "exports": {
     "./devtools": {
       "browser": "./dist/lib/browser/devtools/index.mjs",
@@ -121,9 +122,6 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@testing-library/dom": "^8.17.1",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^14.4.3",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",

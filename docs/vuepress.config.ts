@@ -6,10 +6,11 @@ import { viteBundler } from '@vuepress/bundler-vite';
 import { registerComponentsPlugin } from '@vuepress/plugin-register-components';
 import { searchPlugin } from '@vuepress/plugin-search';
 import { resolve } from 'node:path';
+import WasmPlugin from 'vite-plugin-wasm';
 import { defineUserConfig, type UserConfig } from 'vuepress';
 import { hopeTheme, sidebar } from 'vuepress-theme-hope';
 
-import { MarkdownIt } from '@dxos/apidoc';
+import { apiDocRenderDirective, showcaseRenderDirective } from '@dxos/apidoc';
 
 import { apiSidebar, telemetryPlugin } from './src';
 
@@ -33,8 +34,8 @@ const config: UserConfig = defineUserConfig({
     '!specs',
   ],
   extendsMarkdown: (md) => {
-    md.use(MarkdownIt.apiDocRenderDirective);
-    md.use(MarkdownIt.showcaseRenderDirective);
+    md.use(apiDocRenderDirective);
+    md.use(showcaseRenderDirective);
   },
   markdown: {
     toc: {
@@ -46,7 +47,7 @@ const config: UserConfig = defineUserConfig({
     iconAssets: 'https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css',
     iconPrefix: 'ph ph-',
     // Header logotype.
-    logo: '/images/logotype/dxos-horizontal.svg',
+    logo: '/images/logotype/dxos-horizontal-black.svg',
     logoDark: '/images/logotype/dxos-horizontal-white.svg',
     repo: 'dxos/dxos',
     // TODO(wittjosiah): Use release tag?
@@ -108,6 +109,7 @@ const config: UserConfig = defineUserConfig({
   ],
   bundler: viteBundler({
     viteOptions: {
+      plugins: [WasmPlugin()],
       define: {
         'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
         'process.env.DX_RELEASE': env(process.env.DX_RELEASE),

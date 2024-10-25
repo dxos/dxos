@@ -1,12 +1,13 @@
 {
   "name": "@dxos/log-hook",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "private": true,
   "description": "Logger",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "main": "dist/src/index.js",
   "browser": {
     "node:util": "util"
@@ -23,7 +24,5 @@
     "sorcery": "^0.10.0",
     "source-map": "^0.6.1"
   },
-  "devDependencies": {
-    "@types/node": "^22.6.1"
-  }
+  "devDependencies": {}
 }

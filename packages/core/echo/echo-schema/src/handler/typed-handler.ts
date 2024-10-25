@@ -2,20 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import { isTypeLiteral } from '@effect/schema/AST';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { type Reference } from '@dxos/echo-protocol';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
+import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { getTargetMeta } from './object';
+import { getObjectMeta } from './object';
+import { defineHiddenProperty } from './utils';
 import { SchemaValidator, symbolSchema } from '../ast';
-import { getTypeReference } from '../getter';
-import { createReactiveProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from '../proxy';
+import { getTypeReference } from '../proxy';
+import { createProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from '../proxy';
 import { data, type ObjectMeta } from '../types';
-import { defineHiddenProperty } from '../utils';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
@@ -42,7 +41,7 @@ type ProxyTarget = {
  * Typed in-memory reactive store (with Schema).
  */
 export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
-  public static readonly instance = new TypedReactiveHandler();
+  public static readonly instance: ReactiveHandler<any> = new TypedReactiveHandler();
 
   private constructor() {}
 
@@ -91,7 +90,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const value = Reflect.get(target, prop, receiver);
     if (isValidProxyTarget(value)) {
-      return createReactiveProxy(value, this);
+      return createProxy(value, this);
     }
 
     return value;
@@ -142,7 +141,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   getMeta(target: any): ObjectMeta {
-    return getTargetMeta(target);
+    return getObjectMeta(target);
   }
 
   private _validateValue(target: any, prop: string | symbol, value: any) {
@@ -191,7 +190,7 @@ const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
 };
 
 export const prepareTypedTarget = <T>(target: T, schema: S.Schema<T>) => {
-  if (!isTypeLiteral(schema.ast)) {
+  if (!AST.isTypeLiteral(schema.ast)) {
     throw new Error('schema has to describe an object type');
   }
 

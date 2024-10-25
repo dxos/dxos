@@ -34,8 +34,9 @@ const StorybookScrollArea = ({ children }: PropsWithChildren<{}>) => {
 };
 
 export default {
-  title: 'react-ui/Scroll area',
-  component: StorybookScrollArea,
+  title: 'ui/react-ui-core/Scroll area',
+  component: ScrollArea,
+  render: StorybookScrollArea,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

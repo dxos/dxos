@@ -1,11 +1,12 @@
 {
   "name": "@dxos/automerge",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Automerge adapter.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": false,
   "imports": {
     "#automerge-wasm": {
       "types": "./dist/types/src/automerge-wasm.d.ts",

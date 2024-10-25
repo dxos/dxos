@@ -5,7 +5,7 @@
     "composite": true,
     "emitDeclarationOnly": false,
     "module": "CommonJS",
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "outDir": "dist",
     "target": "ESNext",
     "types": [
@@ -20,9 +20,5 @@
   "include": [
     "src/**/*"
   ],
-  "references": [
-    {
-      "path": "../../packages/common/log"
-    }
-  ]
+  "references": []
 }

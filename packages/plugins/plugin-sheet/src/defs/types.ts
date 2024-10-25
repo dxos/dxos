@@ -13,6 +13,7 @@ export const MAX_COLUMNS = 26 * 2;
 export type CellAddress = { col: number; row: number };
 
 export type CellRange = { from: CellAddress; to?: CellAddress };
+export type CompleteCellRange = { from: CellAddress; to: CellAddress };
 
 export type CellIndex = string;
 
@@ -34,6 +35,7 @@ export const addressToA1Notation = ({ col, row }: CellAddress): string => {
   return `${columnLetter(col)}${row + 1}`;
 };
 
+// TODO(burdon): See simpleCellAddressFromString
 export const addressFromA1Notation = (ref: string): CellAddress => {
   const match = ref.match(/([A-Z]+)(\d+)/);
   invariant(match, `Invalid notation: ${ref}`);

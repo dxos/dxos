@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { RawString } from './automerge';
 import { type EncodedReference } from './reference';
 import type { SpaceDocVersion } from './space-doc-version';
 
@@ -27,7 +28,7 @@ export interface SpaceDoc {
    * Object id points to an automerge doc url where the object is embedded.
    */
   links?: {
-    [echoId: string]: string;
+    [echoId: string]: string | RawString;
   };
 }
 

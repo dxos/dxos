@@ -1,11 +1,12 @@
 {
   "name": "@dxos/apidoc",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Generate nice API documentation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": false,
   "type": "module",
   "main": "dist/src/index.js",
   "bin": {
@@ -23,7 +24,7 @@
     "@dxos/plate": "workspace:*",
     "@linkedmd/markdown-it-directive": "^1.0.1",
     "@types/lodash.memoize": "^4.1.7",
-    "@types/markdown-it": "^12.2.3",
+    "@types/markdown-it": "12.2.3",
     "@types/minimatch": "^5.1.2",
     "@types/recursive-readdir": "^2.2.1",
     "lodash.memoize": "^4.1.2",

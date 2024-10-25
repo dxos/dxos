@@ -1,11 +1,12 @@
 {
   "name": "@dxos/react-ui-grid",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "React component which manages a `dx-grid` Lit web component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -21,15 +22,20 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/autocomplete": "^6.18.1",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/view": "^6.34.1",
     "@dxos/lit-grid": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@lit/react": "^1.0.5",
     "@radix-ui/react-context": "^1.0.0",
+    "@radix-ui/react-popper": "^1.1.2",
     "@radix-ui/react-use-controllable-state": "^1.0.0"
   },
   "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
@@ -38,6 +44,8 @@
     "vite": "5.4.7"
   },
   "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

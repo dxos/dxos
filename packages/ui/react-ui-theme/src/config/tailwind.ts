@@ -64,6 +64,9 @@ export const tailwindConfig = ({
         transitionProperty: {
           'max-height': 'max-height',
         },
+        transitionTimingFunction: {
+          'in-out-symmetric': 'cubic-bezier(0.5,0,0.5,1)',
+        },
         keyframes: {
           // Popper chrome
           slideDownAndFade: {

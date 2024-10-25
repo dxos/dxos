@@ -1,12 +1,13 @@
 {
   "name": "@dxos/conform",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "private": true,
   "description": "A utility for conforming files across packages in a monorepo",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": false,
   "main": "dist/index.js",
   "bin": {
     "conform": "bin/conform.js",

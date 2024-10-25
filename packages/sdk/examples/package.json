@@ -1,12 +1,13 @@
 {
   "name": "@dxos/examples",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "private": true,
   "description": "Example stories used by the docs.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": false,
   "type": "module",
   "dependencies": {
     "@dxos/echo-schema": "workspace:*",

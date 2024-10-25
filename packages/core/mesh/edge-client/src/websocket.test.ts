@@ -3,16 +3,17 @@
 //
 
 import WebSocket from 'isomorphic-ws';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, onTestFinished } from 'vitest';
 
 import { Trigger, TriggerState } from '@dxos/async';
 
-import { createTestWsServer } from './test-utils';
+import { createTestEdgeWsServer } from './testing';
 
-// TODO(wittjosiah): Doesn't work in vitest.
-describe.skip('WebSocket', () => {
+describe('WebSocket', () => {
   test('swap `onclose` handler ', async () => {
-    const { endpoint } = await createTestWsServer(8003);
+    const { endpoint, cleanup } = await createTestEdgeWsServer(8003);
+    onTestFinished(cleanup);
+
     const ws = new WebSocket(endpoint);
     const opened = new Trigger();
     ws.onopen = () => {

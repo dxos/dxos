@@ -7,20 +7,21 @@ import React, { type PropsWithChildren } from 'react';
 
 import {
   type Plugin,
-  type Attention,
   type GraphProvides,
   resolvePlugin,
   parseGraphPlugin,
   type PluginDefinition,
 } from '@dxos/app-framework';
-import { create, type ReactiveObject } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
-import { AttentionProvider } from '@dxos/react-ui-attention';
+import { type Attention, AttentionManager, RootAttentionProvider } from '@dxos/react-ui-attention';
 
 import meta from './meta';
 
 type AttentionProvides = {
-  attention: Readonly<Attention>;
+  attention: {
+    attended: Readonly<string[]>;
+    getAttention: (path: string[]) => Attention;
+  };
 };
 
 export type AttentionPluginProvides = AttentionProvides;
@@ -29,10 +30,7 @@ export const parseAttentionPlugin = (plugin?: Plugin) =>
   typeof (plugin?.provides as any).attention === 'object' ? (plugin as Plugin<AttentionPluginProvides>) : undefined;
 
 export const AttentionPlugin = (): PluginDefinition<AttentionPluginProvides> => {
-  const attention = create<Attention>({
-    attended: new Set(),
-  });
-
+  const attention = new AttentionManager();
   let graphPlugin: Plugin<GraphProvides> | undefined;
 
   return {
@@ -41,7 +39,7 @@ export const AttentionPlugin = (): PluginDefinition<AttentionPluginProvides> => 
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
       effect(() => {
-        const id = Array.from(attention.attended ?? [])[0];
+        const id = Array.from(attention.current)[0];
         const path = id && graphPlugin?.provides.graph.getPath({ target: id });
         if (path) {
           Keyboard.singleton.setCurrentContext(path.join('/'));
@@ -51,13 +49,16 @@ export const AttentionPlugin = (): PluginDefinition<AttentionPluginProvides> => 
       setupDevtools(attention);
     },
     provides: {
-      attention,
+      attention: {
+        get attended() {
+          return attention.current;
+        },
+        getAttention: attention.get,
+      },
       context: (props: PropsWithChildren) => (
-        <AttentionProvider
-          attended={attention.attended}
-          onChangeAttend={(nextAttended) => {
-            attention.attended = nextAttended;
-
+        <RootAttentionProvider
+          attention={attention}
+          onChange={(nextAttended) => {
             // TODO(Zan): Workout why this was in deck plugin. It didn't seem to work?
             // if (layout.values.scrollIntoView && nextAttended.has(layout.values.scrollIntoView)) {
             //   layout.values.scrollIntoView = undefined;
@@ -65,21 +66,21 @@ export const AttentionPlugin = (): PluginDefinition<AttentionPluginProvides> => 
           }}
         >
           {props.children}
-        </AttentionProvider>
+        </RootAttentionProvider>
       ),
     },
   };
 };
 
-const setupDevtools = (attention: ReactiveObject<Attention>) => {
+const setupDevtools = (attention: AttentionManager) => {
   (globalThis as any).composer ??= {};
 
   (globalThis as any).composer.attention = {
     get attended() {
-      return [...(attention.attended ?? [])];
+      return attention.current;
     },
     get currentSpace() {
-      for (const id of attention.attended ?? []) {
+      for (const id of attention.current) {
         const [spaceId, objectId] = id.split(':');
         if (spaceId && objectId && spaceId.length === 33) {
           return spaceId;

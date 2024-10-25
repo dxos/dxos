@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Schema as S } from '@effect/schema';
+
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space, type SpaceId } from '@dxos/client/echo';
-import type { CoreDatabase } from '@dxos/echo-db';
-import { type EchoReactiveObject, type S } from '@dxos/echo-schema';
+import type { CoreDatabase, EchoReactiveObject } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
