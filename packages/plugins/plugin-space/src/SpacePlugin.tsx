@@ -48,6 +48,7 @@ import {
   isSpace,
   loadObjectReferences,
   parseFullyQualifiedId,
+  parseId,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { ClipboardProvider, InvitationManager, type InvitationManagerProps, osTranslations } from '@dxos/shell/react';
@@ -68,6 +69,7 @@ import {
   SmallPresenceLive,
   SpacePresence,
   SpaceSettings,
+  SpaceSettingsPanel,
   SyncStatus,
 } from './components';
 import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
@@ -381,7 +383,11 @@ export const SpacePlugin = ({
                 <MissingObject id={primary} />
               ) : null;
             case 'complementary--settings':
-              return isEchoObject(data.subject) ? <DefaultObjectSettings object={data.subject} /> : null;
+              return isSpace(data.subject) ? (
+                <SpaceSettingsPanel space={data.subject} />
+              ) : isEchoObject(data.subject) ? (
+                { node: <DefaultObjectSettings object={data.subject} />, disposition: 'fallback' }
+              ) : null;
             case 'dialog':
               if (data.component === 'dxos.org/plugin/space/InvitationManagerDialog') {
                 return (
@@ -731,9 +737,33 @@ export const SpacePlugin = ({
                   return;
                 }
 
+                const type = 'orphan-settings-for-subject';
+                const icon = 'ph--gear--regular';
+
                 const [subjectId] = id.split('~');
-                const [spaceId, objectId] = parseFullyQualifiedId(subjectId);
+                const { spaceId, objectId } = parseId(subjectId);
                 const space = client.spaces.get().find((space) => space.id === spaceId);
+                if (!objectId) {
+                  const label = space
+                    ? space.properties.name || ['unnamed space label', { ns: SPACE_PLUGIN }]
+                    : ['unnamed object settings label', { ns: SPACE_PLUGIN }];
+
+                  // TODO(wittjosiah): Support comments for arbitrary subjects.
+                  //   This is to ensure that the comments panel is not stuck on an old object.
+                  return {
+                    id,
+                    type,
+                    data: null,
+                    properties: {
+                      icon,
+                      label,
+                      showResolvedThreads: false,
+                      object: null,
+                      space,
+                    },
+                  };
+                }
+
                 const object = toSignal(
                   (onChange) => {
                     const timeout = setTimeout(async () => {
@@ -757,10 +787,10 @@ export const SpacePlugin = ({
 
                 return {
                   id,
-                  type: 'orphan-settings-for-subject',
+                  type,
                   data: null,
                   properties: {
-                    icon: 'ph--gear--regular',
+                    icon,
                     label,
                     object,
                   },

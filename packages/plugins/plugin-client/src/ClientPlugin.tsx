@@ -216,6 +216,24 @@ export const ClientPlugin = ({
                 ],
               };
             }
+
+            case ClientAction.RECOVER_IDENTITY: {
+              const data = await client.shell.recoverIdentity();
+              return {
+                data,
+                intents: [
+                  [
+                    {
+                      // NOTE: This action is hardcoded to avoid circular dependency with observability plugin.
+                      action: 'dxos.org/plugin/observability/send-event',
+                      data: {
+                        name: 'identity.recovered',
+                      },
+                    },
+                  ],
+                ],
+              };
+            }
           }
         },
       },

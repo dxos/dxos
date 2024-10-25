@@ -26,7 +26,7 @@ import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { SpaceAction } from '@dxos/plugin-space';
 import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
 import { create, type EchoReactiveObject, getTypename } from '@dxos/react-client/echo';
-import { getSpace, fullyQualifiedId, loadObjectReferences, parseFullyQualifiedId } from '@dxos/react-client/echo';
+import { getSpace, fullyQualifiedId, loadObjectReferences, parseId } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
 import {
@@ -122,14 +122,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             return [];
           }
 
-          const safeParseFullyQualifiedId = (id: string) => {
-            try {
-              return parseFullyQualifiedId(id);
-            } catch {
-              return [id];
-            }
-          };
-
           const type = 'orphan-comments-for-subject';
           const icon = 'ph--chat-text--regular';
 
@@ -143,7 +135,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 }
 
                 const [subjectId] = id.split('~');
-                const [spaceId, objectId] = safeParseFullyQualifiedId(subjectId);
+                const { spaceId, objectId } = parseId(subjectId);
+                const space = client.spaces.get().find((space) => space.id === spaceId);
                 if (!objectId) {
                   // TODO(wittjosiah): Support comments for arbitrary subjects.
                   //   This is to ensure that the comments panel is not stuck on an old object.
@@ -156,11 +149,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                       label: ['unnamed object threads label', { ns: THREAD_PLUGIN }],
                       showResolvedThreads: false,
                       object: null,
+                      space,
                     },
                   };
                 }
 
-                const space = client.spaces.get().find((space) => space.id === spaceId);
                 const object = toSignal(
                   (onChange) => {
                     const timeout = setTimeout(async () => {

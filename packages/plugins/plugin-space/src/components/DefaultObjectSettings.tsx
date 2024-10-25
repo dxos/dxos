@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type EchoReactiveObject } from '@dxos/client/echo';
+import { type EchoReactiveObject } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -21,7 +21,7 @@ export const DefaultObjectSettings = ({ object }: DefaultObjectSettingsProps) =>
         <Input.Label>{t('name label')}</Input.Label>
         <Input.TextInput
           placeholder={t('name placeholder')}
-          value={object.name}
+          value={object.name ?? ''}
           onChange={(event) => {
             object.name = event.target.value;
           }}

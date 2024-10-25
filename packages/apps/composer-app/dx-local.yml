@@ -6,11 +6,12 @@ runtime:
     edgeFeatures:
       echoReplicator: true
       feedReplicator: true
+      agents: true
     # disableP2pReplication: true
 
   services:
     edge:
       #  url: https://edge.dxos.workers.dev/
-      url: https://edge.dxos.workers.dev/
+      url: https://edge-main.dxos.workers.dev/
     agentHosting:
       type: LOCAL_TESTING

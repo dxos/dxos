@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Key, Plugs, PlugsConnected } from '@phosphor-icons/react';
+import { FirstAidKit, Key, Plugs, PlugsConnected } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { generateName } from '@dxos/display-name';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity, useDevices, useHaloInvitations } from '@dxos/react-client/halo';
@@ -51,6 +52,7 @@ const IdentityHeading = ({
   connectionState,
   onChangeConnectionState,
 }: IdentityPanelHeadingProps) => {
+  const client = useClient();
   const fallbackValue = keyToFallback(identity.identityKey);
   const { t } = useTranslation('os');
   const [displayName, setDisplayName] = useState(identity.profile?.displayName ?? '');
@@ -58,7 +60,7 @@ const IdentityHeading = ({
   const [hue, setHueDirectly] = useState<string>(getHueValue(identity));
   const { textValue, setTextValue } = useClipboardContext();
   const identityHex = identity.identityKey.toHex();
-  const copied = textValue === identityHex;
+  const publicKeyCopied = textValue === identityHex;
 
   const setEmoji = (nextEmoji: string) => {
     setEmojiDirectly(nextEmoji);
@@ -70,9 +72,14 @@ const IdentityHeading = ({
     void onUpdateProfile?.({ ...identity.profile, data: { ...identity.profile?.data, hue: nextHue } });
   };
 
-  const isConnected = connectionState === ConnectionState.ONLINE;
+  const handleSeedphrase = async () => {
+    invariant(client.services.services.IdentityService, 'IdentityService not available');
+    // TODO(wittjosiah): This need a proper api.
+    const { seedphrase } = await client.services.services.IdentityService.createRecoveryPhrase();
+    setTextValue(seedphrase);
+  };
 
-  const debug = true;
+  const isConnected = connectionState === ConnectionState.ONLINE;
 
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
@@ -103,47 +110,59 @@ const IdentityHeading = ({
         <Toolbar.Root classNames='flex justify-center items-center gap-1 pt-3'>
           <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='bs-[--rail-action]' />
           <HuePickerToolbarButton hue={hue} onChangeHue={setHue} classNames='bs-[--rail-action]' />
-          {debug && (
-            <>
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <Toolbar.Button
-                    classNames='bs-[--rail-action]'
-                    data-testid='update-profile-form-copy-key'
-                    onClick={() => setTextValue(identityHex)}
-                  >
-                    <span className='sr-only'>{t(copied ? 'copy success label' : 'copy self public key label')}</span>
-                    <Key className={getSize(5)} />
-                  </Toolbar.Button>
-                </Tooltip.Trigger>
-                <Tooltip.Portal>
-                  <Tooltip.Content side='bottom' classNames='z-50'>
-                    {t(copied ? 'copy success label' : 'copy self public key label')}
-                    <Tooltip.Arrow />
-                  </Tooltip.Content>
-                </Tooltip.Portal>
-                <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <Toolbar.Button
-                      classNames={['bs-[--rail-action]', !isConnected && 'text-error-500']}
-                      onClick={() =>
-                        onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)
-                      }
-                    >
-                      <span className='sr-only'>{t(isConnected ? 'disconnect label' : 'connect label')}</span>
-                      {isConnected ? <PlugsConnected className={getSize(5)} /> : <Plugs className={getSize(5)} />}
-                    </Toolbar.Button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Portal>
-                    <Tooltip.Content side='bottom' classNames='z-50'>
-                      {t(isConnected ? 'disconnect label' : 'connect label')}
-                      <Tooltip.Arrow />
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
-                </Tooltip.Root>
-              </Tooltip.Root>
-            </>
-          )}
+          <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+              <Toolbar.Button
+                classNames='bs-[--rail-action]'
+                data-testid='update-profile-form-copy-key'
+                onClick={() => setTextValue(identityHex)}
+              >
+                <span className='sr-only'>
+                  {t(publicKeyCopied ? 'copy success label' : 'copy self public key label')}
+                </span>
+                <Key className={getSize(5)} />
+              </Toolbar.Button>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content side='bottom' classNames='z-50'>
+                {t(publicKeyCopied ? 'copy success label' : 'copy self public key label')}
+                <Tooltip.Arrow />
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+          {/* TODO(wittjosiah): Remove. This should have its own flow. */}
+          <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+              <Toolbar.Button classNames='bs-[--rail-action]' onClick={handleSeedphrase}>
+                <FirstAidKit className={getSize(5)} />
+              </Toolbar.Button>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content side='bottom' classNames='z-50'>
+                {t('create recovery code label')}
+                <Tooltip.Arrow />
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+          <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+              <Toolbar.Button
+                classNames={['bs-[--rail-action]', !isConnected && 'text-error-500']}
+                onClick={() =>
+                  onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)
+                }
+              >
+                <span className='sr-only'>{t(isConnected ? 'disconnect label' : 'connect label')}</span>
+                {isConnected ? <PlugsConnected className={getSize(5)} /> : <Plugs className={getSize(5)} />}
+              </Toolbar.Button>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content side='bottom' classNames='z-50'>
+                {t(isConnected ? 'disconnect label' : 'connect label')}
+                <Tooltip.Arrow />
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
         </Toolbar.Root>
       </Avatar.Root>
     </Heading>
@@ -157,6 +176,7 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
     activeView,
     onUpdateProfile,
     onResetStorage,
+    onRecover,
     onJoinNewIdentity,
     IdentityActionChooser: IdentityActionChooserComponent = IdentityActionChooser,
     InvitationManager: InvitationManagerComponent = InvitationManager,
@@ -204,6 +224,15 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
               {...rest}
               mode='join new identity'
               onConfirm={onJoinNewIdentity}
+              onCancel={onCancelReset}
+            />
+          </Viewport.View>
+          <Viewport.View classNames={viewStyles} id='confirm recover'>
+            <ConfirmReset
+              active={activeView === 'confirm recover'}
+              {...rest}
+              mode='recover'
+              onConfirm={onRecover}
               onCancel={onCancelReset}
             />
           </Viewport.View>
@@ -270,6 +299,8 @@ export const IdentityPanel = ({
         return 'device invitation manager';
       case identityState.matches('confirmingResetStorage'):
         return 'confirm reset storage';
+      case identityState.matches('confirmingRecover'):
+        return 'confirm recover';
       case identityState.matches('confirmingJoinNewIdentity'):
         return 'confirm join new identity';
       default:

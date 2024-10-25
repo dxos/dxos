@@ -183,6 +183,8 @@ export const plugins = ({
       client.shell.onReset((target) => {
         if (target === 'deviceInvitation') {
           window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
+        } else if (target === 'recoverIdentity') {
+          window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
         } else {
           window.location.pathname = '/';
         }

@@ -57,6 +57,7 @@ export const IdentityActionChooserImpl = ({
         connectionState={connectionState}
         onClickAdd={onCreateInvitationClick}
         onClickJoinExisting={() => send?.({ type: 'chooseJoinNewIdentity' })}
+        onClickRecover={() => send?.({ type: 'chooseRecoverIdentity' })}
         onClickReset={() => send?.({ type: 'chooseResetStorage' })}
         onAgentDestroy={agentProps.onAgentDestroy!}
       />
