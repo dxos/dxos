@@ -256,6 +256,9 @@ export class ServiceContext extends Resource {
   }
 
   getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
+    if (this.identityManager.identity == null && invitation.kind === Invitation.Kind.SPACE) {
+      throw new Error('Identity must be created before joining a space.');
+    }
     const factory = this._handlerFactories.get(invitation.kind);
     invariant(factory, `Unknown invitation kind: ${invitation.kind}`);
     return factory(invitation);

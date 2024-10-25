@@ -63,12 +63,14 @@ export const Main = () => {
     [type, filter],
   );
 
+  const identity = client.halo.identity.get();
+
   // Handle invitation.
   useEffect(() => {
     const url = new URL(window.location.href);
     const invitationCode = url.searchParams.get('spaceInvitationCode');
     let t: ReturnType<typeof setTimeout>;
-    if (invitationCode) {
+    if (invitationCode && identity) {
       t = setTimeout(async () => {
         const { space } = await client.shell.joinSpace({ invitationCode });
         setSpace(space);
@@ -79,7 +81,7 @@ export const Main = () => {
     }
 
     return () => clearTimeout(t);
-  }, []);
+  }, [identity]);
 
   const handleObjectCreate = (n = 1) => {
     if (!space) {
