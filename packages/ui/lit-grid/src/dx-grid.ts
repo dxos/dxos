@@ -1152,6 +1152,12 @@ export class DxGrid extends LitElement {
   private cellReadonly(col: number, row: number, plane: DxGridPlane) {
     const colPlane = resolveColPlane(plane);
     const rowPlane = resolveRowPlane(plane);
+
+    const cellReadonly = this.cell(col, row, plane)?.readonly;
+    if (cellReadonly !== undefined) {
+      return cellReadonly;
+    }
+
     return (
       (this.columns?.[colPlane]?.[col]?.readonly ?? this.columnDefault?.[colPlane]?.readonly) ||
       (this.rows?.[rowPlane]?.[row]?.readonly ?? this.rowDefault?.[rowPlane]?.readonly)
