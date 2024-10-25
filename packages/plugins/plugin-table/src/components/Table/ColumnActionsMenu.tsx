@@ -6,29 +6,27 @@ import * as ModalPrimitive from '@radix-ui/react-popper';
 import React from 'react';
 
 import { LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
-import { DropdownMenu, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, type DropdownMenuRootProps, useThemeContext, useTranslation } from '@dxos/react-ui';
 
 import { TABLE_PLUGIN } from '../../meta';
 import { type TableModel } from '../../model';
 
 export type ColumnActionsMenuProps = {
-  tableModel?: TableModel;
+  model?: TableModel;
   columnId: string | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-};
+} & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
 
 // TODO(burdon): Factor out; take from common component from sheet.
-export const ColumnActionsMenu = ({ tableModel, columnId, open, onOpenChange }: ColumnActionsMenuProps) => {
+export const ColumnActionsMenu = ({ model, columnId, open, onOpenChange }: ColumnActionsMenuProps) => {
   const { tx } = useThemeContext();
   const { t } = useTranslation(TABLE_PLUGIN);
   const dispatch = useIntentDispatcher();
 
-  if (!tableModel || !columnId) {
+  if (!model || !columnId) {
     return null;
   }
 
-  const currentSort = tableModel.sorting.value;
+  const currentSort = model.sorting.value;
   const isCurrentColumnSorted = currentSort?.columnId === columnId;
 
   // TODO(thure): This is no good very (my) bad. Refactor as part of #7962.
@@ -38,19 +36,17 @@ export const ColumnActionsMenu = ({ tableModel, columnId, open, onOpenChange }: 
         {/* TODO(burdon): Reuse/adapt react-ui? Otherwise mixes styling systems. */}
         <ModalPrimitive.Content className={tx('menu.content', 'menu__content', {})}>
           {(!isCurrentColumnSorted || currentSort?.direction === 'asc') && (
-            <DropdownMenu.Item onClick={() => tableModel.setSort(columnId, 'desc')}>
+            <DropdownMenu.Item onClick={() => model.setSort(columnId, 'desc')}>
               {t('column action sort descending')}
             </DropdownMenu.Item>
           )}
           {(!isCurrentColumnSorted || currentSort?.direction === 'desc') && (
-            <DropdownMenu.Item onClick={() => tableModel.setSort(columnId, 'asc')}>
+            <DropdownMenu.Item onClick={() => model.setSort(columnId, 'asc')}>
               {t('column action sort ascending')}
             </DropdownMenu.Item>
           )}
           {isCurrentColumnSorted && (
-            <DropdownMenu.Item onClick={() => tableModel.clearSort()}>
-              {t('column action clear sorting')}
-            </DropdownMenu.Item>
+            <DropdownMenu.Item onClick={() => model.clearSort()}>{t('column action clear sorting')}</DropdownMenu.Item>
           )}
           <DropdownMenu.Item
             onClick={() => {
