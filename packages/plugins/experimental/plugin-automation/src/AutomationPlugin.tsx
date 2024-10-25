@@ -22,7 +22,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
         records: {
           [ChainType.typename]: {
             placeholder: ['object placeholder', { ns: AUTOMATION_PLUGIN }],
-            icon: 'ph--head-circuit--regular',
+            icon: 'ph--magic-wand--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (chain: ChainType) => loadObjectReferences(chain, (chain) => chain.prompts),
           },

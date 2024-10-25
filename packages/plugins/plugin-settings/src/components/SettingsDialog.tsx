@@ -52,6 +52,7 @@ export const SettingsDialog = ({
   return (
     <Dialog.Content classNames='p-0 bs-content max-bs-full md:max-is-[40rem] overflow-hidden'>
       <div role='none' className='flex justify-between mbe-1 pbs-3 pis-2 pie-3 @md:pbs-4 @md:pis-4 @md:pie-5'>
+        {/* TODO(burdon): Standardize dialogs. */}
         <Dialog.Title
           onClick={() => setTabsActivePart('list')}
           aria-description={t('click to return to tablist description')}
@@ -88,7 +89,7 @@ export const SettingsDialog = ({
       >
         <Tabs.Viewport classNames='flex-1 min-bs-0'>
           <div role='none' className='overflow-y-auto pli-3 @md:pis-2 @md:pie-0 mbe-4 border-r border-separator'>
-            <Tabs.Tablist classNames='flex flex-col gap-4 max-bs-none overflow-y-visible'>
+            <Tabs.Tablist classNames='flex flex-col max-bs-none min-is-[200px] gap-4 overflow-y-auto'>
               <PluginList title='Options' plugins={corePlugins} />
               {filteredPlugins.length > 0 && <PluginList title='Plugins' plugins={filteredPlugins} />}
             </Tabs.Tablist>
@@ -99,6 +100,7 @@ export const SettingsDialog = ({
               <Surface role='settings' data={{ plugin: plugin.id }} />
             </Tabs.Tabpanel>
           ))}
+
           {filteredPlugins.map((plugin) => (
             <Tabs.Tabpanel key={plugin.id} value={plugin.id} classNames='pli-3 @md:pli-5 max-bs-dvh overflow-y-auto'>
               <Surface role='settings' data={{ plugin: plugin.id }} />
