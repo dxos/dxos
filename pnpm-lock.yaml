@@ -1912,8 +1912,8 @@ importers:
         specifier: ^4.1.0
         version: 4.1.2
       inquirer:
-        specifier: ^8.2.6
-        version: 8.2.6
+        specifier: ^12.0.0
+        version: 12.0.0(@types/node@22.5.5)
       lodash.flatten:
         specifier: ^4.4.0
         version: 4.4.0
@@ -3758,8 +3758,8 @@ importers:
         specifier: ~3.0.0
         version: 3.0.0(ink@3.2.0(@types/react@18.2.79)(react@18.2.0))(react@18.2.0)
       inquirer:
-        specifier: ^8.2.6
-        version: 8.2.6
+        specifier: ^12.0.0
+        version: 12.0.0(@types/node@22.5.5)
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.17.0)
@@ -3966,8 +3966,8 @@ importers:
         specifier: ~3.0.0
         version: 3.0.0(ink@3.2.0(@types/react@18.2.79)(react@18.2.0))(react@18.2.0)
       inquirer:
-        specifier: ^8.2.6
-        version: 8.2.6
+        specifier: ^12.0.0
+        version: 12.0.0(@types/node@22.5.5)
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.17.0)
@@ -15095,10 +15095,6 @@ packages:
     resolution: {integrity: sha512-TNd+u1fAG8vf8YMgXzK2BI0u0xsphFv//T5rpF1eZ+8AAXby5Ll1qptr4/XVS45dvWDIzuBmmWIpVJRvnaNqzQ==}
     engines: {node: '>=18'}
 
-  '@inquirer/confirm@3.1.9':
-    resolution: {integrity: sha512-UF09aejxCi4Xqm6N/jJAiFXArXfi9al52AFaSD+2uIHnhZGtd1d6lIGTRMPouVSJxbGEi+HkOWSYaiEY/+szUw==}
-    engines: {node: '>=18'}
-
   '@inquirer/confirm@3.2.0':
     resolution: {integrity: sha512-oOIwPs0Dvq5220Z8lGL/6LHRTEr9TgLHmiI99Rj1PJ1p1czTys+olrgBqZk4E2qC0YTzeHprxSQmoHioVdJ7Lw==}
     engines: {node: '>=18'}
@@ -15109,10 +15105,6 @@ packages:
 
   '@inquirer/core@10.0.0':
     resolution: {integrity: sha512-7dwoKCGvgZGHWTZfOj2KLmbIAIdiXP9NTrwGaTO/XDfKMEmyBahZpnombiG6JDHmiOrmK3GLEJRXrWExXCDLmQ==}
-    engines: {node: '>=18'}
-
-  '@inquirer/core@8.2.2':
-    resolution: {integrity: sha512-K8SuNX45jEFlX3EBJpu9B+S2TISzMPGXZIuJ9ME924SqbdW6Pt6fIkKvXg7mOEOKJ4WxpQsxj0UTfcL/A434Ww==}
     engines: {node: '>=18'}
 
   '@inquirer/core@9.2.1':
@@ -15165,10 +15157,6 @@ packages:
 
   '@inquirer/select@4.0.0':
     resolution: {integrity: sha512-XTN4AIFusWbNCBU1Xm2YDxbtH94e/FOrC27U3QargSsoDT1mRm+aLfqE+oOZnUuxwtTnInRT8UHRU3MVOu52wg==}
-    engines: {node: '>=18'}
-
-  '@inquirer/type@1.3.3':
-    resolution: {integrity: sha512-xTUt0NulylX27/zMx04ZYar/kr1raaiFTVvQ5feljQsiAgdm0WPj4S73/ye0fbslh+15QrIuDvfCXTek7pMY5A==}
     engines: {node: '>=18'}
 
   '@inquirer/type@1.5.5':
@@ -21172,6 +21160,11 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -22287,10 +22280,6 @@ packages:
   cli-truncate@4.0.0:
     resolution: {integrity: sha512-nPdaFdQ0h/GEigbPClz11D0v/ZJEwxmeVZGeMo3Z5StPtUTkA9o1lD6QwoirYiSDzbcwn2XcjwmCp68W1IS4TA==}
     engines: {node: '>=18'}
-
-  cli-width@3.0.0:
-    resolution: {integrity: sha512-FxqpkPPwu1HjuN93Omfm4h8uIanXofW0RxVEW3k5RKx+mJJYSthzNhp32Kzxxy3YAEZ/Dc/EWN1vZRY0+kOhbw==}
-    engines: {node: '>= 10'}
 
   cli-width@4.1.0:
     resolution: {integrity: sha512-ouuZd4/dm2Sw5Gmqy6bGyNNNe1qt9RpmxveLSO7KcgsTnU7RXfsw+/bukWGo1abgBiMAic068rclZsO4IWmmxQ==}
@@ -25656,10 +25645,6 @@ packages:
     resolution: {integrity: sha512-W3mwgzLtWIqHndtAb82zCHbRfdPit3jcqEyYkAjM/4p15g/1tOoduYydx6IJ3sh31FHT82YoqYZB8RoTwoMy7w==}
     engines: {node: '>=18'}
 
-  inquirer@8.2.6:
-    resolution: {integrity: sha512-M1WuAmb7pn9zdFRtQYk26ZBoY043Sse0wVDdk4Bppr+JOXyQYybdtvK+l9wUibhtjdjvtoiNy8tk+EgsYIUqKg==}
-    engines: {node: '>=12.0.0'}
-
   inspect-custom-symbol@1.1.1:
     resolution: {integrity: sha512-GOucsp9EcdlLdhPUyOTvQDnbFJtp2WBWZV1Jqe+mVnkJQBL3w96+fB84C+JL+EKXOspMdB0eMDQPDp5w9fkfZA==}
 
@@ -28338,10 +28323,6 @@ packages:
     resolution: {integrity: sha512-zAKMgGXUim0Jyd6CXK9lraBnD3H5yPGBPPOkC23a2BG6hsm4Zu6OQSjQuEtV0BHDf4aKHcUFvJiGRrFuW3MG8g==}
     engines: {node: '>=10'}
 
-  ora@5.4.1:
-    resolution: {integrity: sha512-5b6Y85tPxZZ7QytO+BQzysW31HJku27cRIlkbAXaNx+BdcVi+LlRFmVXzeF6a7JCwJpyw5c4b+YSVImQIrBpuQ==}
-    engines: {node: '>=10'}
-
   ora@7.0.1:
     resolution: {integrity: sha512-0TUxTiFJWv+JnjWm4o9yvuskpEJLXTcng8MJuKd+SzAzp2o+OP3HWqNhB4OdJRt1Vsd9/mR0oyaEYlOnL7XIRw==}
     engines: {node: '>=16'}
@@ -30177,10 +30158,6 @@ packages:
   run-applescript@7.0.0:
     resolution: {integrity: sha512-9by4Ij99JUr/MCFBUkDKLWK3G9HVXmabKz9U5MlIAIuvuzkiOicRYs8XJLxX+xahD+mLiiCYDqF9dKAgtzKP1A==}
     engines: {node: '>=18'}
-
-  run-async@2.4.1:
-    resolution: {integrity: sha512-tvVnVv01b8c1RrA6Ep7JkStj85Guv/YrMcwqYQnwjsAS2cTmmPGBBjAjpCW7RrSodNSoE2/qg9O4bceNvUuDgQ==}
-    engines: {node: '>=0.12.0'}
 
   run-async@3.0.0:
     resolution: {integrity: sha512-540WwVDOMxA6dN6We19EcT9sc3hkXPw5mzRNGM3FkdN/vtE9NFvj5lFAPNwUDmJjXidm3v7TC1cTE7t17Ulm1Q==}
@@ -37483,11 +37460,6 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  '@inquirer/confirm@3.1.9':
-    dependencies:
-      '@inquirer/core': 8.2.2
-      '@inquirer/type': 1.3.3
-
   '@inquirer/confirm@3.2.0':
     dependencies:
       '@inquirer/core': 9.2.1
@@ -37513,22 +37485,6 @@ snapshots:
       yoctocolors-cjs: 2.1.2
     transitivePeerDependencies:
       - '@types/node'
-
-  '@inquirer/core@8.2.2':
-    dependencies:
-      '@inquirer/figures': 1.0.7
-      '@inquirer/type': 1.3.3
-      '@types/mute-stream': 0.0.4
-      '@types/node': 22.5.5
-      '@types/wrap-ansi': 3.0.0
-      ansi-escapes: 4.3.2
-      chalk: 4.1.2
-      cli-spinners: 2.9.2
-      cli-width: 4.1.0
-      mute-stream: 1.0.0
-      signal-exit: 4.1.0
-      strip-ansi: 6.0.1
-      wrap-ansi: 6.2.0
 
   '@inquirer/core@9.2.1':
     dependencies:
@@ -37639,8 +37595,6 @@ snapshots:
       yoctocolors-cjs: 2.1.2
     transitivePeerDependencies:
       - '@types/node'
-
-  '@inquirer/type@1.3.3': {}
 
   '@inquirer/type@1.5.5':
     dependencies:
@@ -45521,8 +45475,8 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1:
-    dependencies:
+  ajv-formats@2.1.1(ajv@8.12.0):
+    optionalDependencies:
       ajv: 8.12.0
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -46785,8 +46739,6 @@ snapshots:
       slice-ansi: 5.0.0
       string-width: 7.2.0
 
-  cli-width@3.0.0: {}
-
   cli-width@4.1.0: {}
 
   clipboardy@3.0.0:
@@ -47039,7 +46991,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -50933,24 +50885,6 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  inquirer@8.2.6:
-    dependencies:
-      ansi-escapes: 4.3.2
-      chalk: 4.1.2
-      cli-cursor: 3.1.0
-      cli-width: 3.0.0
-      external-editor: 3.1.0
-      figures: 3.2.0
-      lodash: 4.17.21
-      mute-stream: 0.0.8
-      ora: 5.4.1
-      run-async: 2.4.1
-      rxjs: 7.8.1
-      string-width: 4.2.3
-      strip-ansi: 6.0.1
-      through: 2.3.8
-      wrap-ansi: 6.2.0
-
   inspect-custom-symbol@1.1.1: {}
 
   interface-datastore@8.2.11:
@@ -53605,7 +53539,7 @@ snapshots:
       '@bundled-es-modules/cookie': 2.0.0
       '@bundled-es-modules/statuses': 1.0.1
       '@bundled-es-modules/tough-cookie': 0.1.6
-      '@inquirer/confirm': 3.1.9
+      '@inquirer/confirm': 3.2.0
       '@mswjs/interceptors': 0.35.8
       '@open-draft/until': 2.1.0
       '@types/cookie': 0.6.0
@@ -54273,18 +54207,6 @@ snapshots:
       cli-cursor: 3.1.0
       cli-spinners: 2.9.2
       is-interactive: 1.0.0
-      log-symbols: 4.1.0
-      strip-ansi: 6.0.1
-      wcwidth: 1.0.1
-
-  ora@5.4.1:
-    dependencies:
-      bl: 4.1.0
-      chalk: 4.1.2
-      cli-cursor: 3.1.0
-      cli-spinners: 2.9.2
-      is-interactive: 1.0.0
-      is-unicode-supported: 0.1.0
       log-symbols: 4.1.0
       strip-ansi: 6.0.1
       wcwidth: 1.0.1
@@ -56435,8 +56357,6 @@ snapshots:
 
   run-applescript@7.0.0: {}
 
-  run-async@2.4.1: {}
-
   run-async@3.0.0: {}
 
   run-parallel-limit@1.1.0:
@@ -56550,7 +56470,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       ajv-keywords: 5.1.0(ajv@8.12.0)
 
   scroll@3.0.1: {}
