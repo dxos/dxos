@@ -12,7 +12,7 @@ import { ghostHover, mx } from '@dxos/react-ui-theme';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { List, type ListRootProps } from './List';
-import { createList, TestItemSchema, type TestItemType } from '../../testing';
+import { createList, TestItemSchema, type TestItemType } from './testing';
 
 // TODO(burdon): var-icon-size.
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2rem] rounded';

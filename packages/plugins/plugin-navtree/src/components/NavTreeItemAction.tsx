@@ -5,6 +5,7 @@
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type MutableRefObject, type PropsWithChildren, useRef, useState } from 'react';
 
+import { type Action, type ActionLike, type Node } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
 import {
   Button,
@@ -16,30 +17,26 @@ import {
   toLocalizedString,
   Icon,
 } from '@dxos/react-ui';
-import { type MosaicActiveType, useMosaic } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
-import { translationKey } from '../translations';
-import {
-  type NavTreeActionNode,
-  type NavTreeActionNode as NavTreeItemActionNode,
-  type NavTreeActionProperties,
-} from '../types';
+import { NAVTREE_PLUGIN } from '../meta';
+import { type ActionProperties } from '../types';
 
-export type NavTreeItemActionMenuProps = NavTreeActionProperties & {
-  actionsNode: NavTreeActionNode;
-  menuActions?: NavTreeItemActionNode[];
-  active?: MosaicActiveType;
+export type NavTreeItemActionMenuProps = ActionProperties & {
+  parent: Node;
+  caller?: string;
+  monolithic?: boolean;
+  menuActions?: Action[];
   suppressNextTooltip?: MutableRefObject<boolean>;
   menuOpen?: boolean;
   defaultMenuOpen?: boolean;
   onChangeMenuOpen?: (nextOpen: boolean) => void;
-  onAction?: (action: NavTreeItemActionNode) => void;
+  onAction?: (action: Action) => void;
 };
 
-const getShortcut = (action: NavTreeItemActionNode) => {
+const getShortcut = (action: ActionLike) => {
   return typeof action.properties?.keyBinding === 'string'
     ? action.properties.keyBinding
     : action.properties?.keyBinding?.[getHostPlatform()];
@@ -48,7 +45,6 @@ const getShortcut = (action: NavTreeItemActionNode) => {
 const fallbackIcon = 'ph--placeholder--regular';
 
 export const NavTreeItemActionDropdownMenu = ({
-  active,
   label,
   icon,
   testId,
@@ -59,7 +55,7 @@ export const NavTreeItemActionDropdownMenu = ({
   onChangeMenuOpen,
   onAction,
 }: NavTreeItemActionMenuProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = useTranslation(NAVTREE_PLUGIN);
 
   const [optionsMenuOpen, setOptionsMenuOpen] = useControllableState({
     prop: menuOpen,
@@ -84,12 +80,7 @@ export const NavTreeItemActionDropdownMenu = ({
           <Button
             variant='ghost'
             density='fine'
-            classNames={[
-              'shrink-0 !pli-2 pointer-fine:!pli-1',
-              hoverableControlItem,
-              hoverableOpenControlItem,
-              active === 'overlay' && 'invisible',
-            ]}
+            classNames={mx('shrink-0 !pli-2 pointer-fine:!pli-1', hoverableControlItem, hoverableOpenControlItem)}
             data-testid={testId}
             aria-label={t('tree item actions label')}
           >
@@ -147,15 +138,13 @@ const NavTreeItemActionContextMenuImpl = ({
   onAction,
   children,
 }: PropsWithChildren<Pick<NavTreeItemActionMenuProps, 'menuActions' | 'onAction'>>) => {
-  const { t } = useTranslation(translationKey);
-  const { activeItem } = useMosaic();
+  const { t } = useTranslation(NAVTREE_PLUGIN);
 
   return (
     <ContextMenu.Root>
       <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
       <ContextMenu.Portal>
-        {/* ContextMenu’s `open` state is not controllable, so if it happens to be/become open during dragging, the best we can do is hide it. */}
-        <ContextMenu.Content classNames={mx('z-[31]', activeItem && 'hidden')}>
+        <ContextMenu.Content classNames='z-[31]'>
           <ContextMenu.Viewport>
             {menuActions?.map((action) => {
               const shortcut = getShortcut(action);
@@ -190,16 +179,15 @@ const NavTreeItemActionContextMenuImpl = ({
 export const NavTreeItemActionSearchList = ({
   menuActions,
   icon,
-  active,
   label,
   testId,
   suppressNextTooltip,
   onAction,
 }: Pick<
   NavTreeItemActionMenuProps,
-  'icon' | 'menuActions' | 'testId' | 'active' | 'label' | 'onAction' | 'suppressNextTooltip'
+  'icon' | 'menuActions' | 'testId' | 'label' | 'onAction' | 'suppressNextTooltip'
 >) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = useTranslation(NAVTREE_PLUGIN);
 
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
   const button = useRef<HTMLButtonElement | null>(null);
@@ -229,12 +217,7 @@ export const NavTreeItemActionSearchList = ({
           <Button
             variant='ghost'
             density='fine'
-            classNames={[
-              'shrink-0 !pli-2 pointer-fine:!pli-1',
-              hoverableControlItem,
-              hoverableOpenControlItem,
-              active === 'overlay' && 'invisible',
-            ]}
+            classNames={mx('shrink-0 !pli-2 pointer-fine:!pli-1', hoverableControlItem, hoverableOpenControlItem)}
             data-testid={testId}
             onKeyDownCapture={(event) => {
               // TODO(thure): Why is only this `Button` affected and not `DropdownMenu.Trigger`’s?
@@ -305,29 +288,24 @@ export const NavTreeItemActionSearchList = ({
 };
 
 export const NavTreeItemMonolithicAction = ({
-  active,
+  parent,
   properties: { disabled, caller, testId, label, icon } = { label: 'never' },
   data: invoke,
-}: NavTreeItemActionNode & { active?: MosaicActiveType; onAction?: (action: NavTreeItemActionNode) => void }) => {
-  const { t } = useTranslation(translationKey);
+}: Action & { parent: Node; onAction?: (action: Action) => void }) => {
+  const { t } = useTranslation(NAVTREE_PLUGIN);
   return (
     <Tooltip.Trigger asChild>
       <Button
         variant='ghost'
         density='fine'
-        classNames={[
-          'shrink-0 !pli-2 pointer-fine:!pli-1',
-          hoverableControlItem,
-          hoverableOpenControlItem,
-          active === 'overlay' && 'invisible',
-        ]}
+        classNames={mx('shrink-0 !pli-2 pointer-fine:!pli-1', hoverableControlItem, hoverableOpenControlItem)}
         disabled={disabled}
         onClick={(event) => {
           if (disabled) {
             return;
           }
           event.stopPropagation();
-          void invoke?.(caller ? { caller } : {});
+          void invoke?.(caller ? { node: parent, caller } : { node: parent });
         }}
         data-testid={testId}
       >
@@ -338,8 +316,8 @@ export const NavTreeItemMonolithicAction = ({
   );
 };
 
-export const NavTreeItemAction = ({ actionsNode, menuActions, ...props }: NavTreeItemActionMenuProps) => {
-  const { t } = useTranslation(translationKey);
+export const NavTreeItemAction = ({ monolithic, menuActions, parent: node, ...props }: NavTreeItemActionMenuProps) => {
+  const { t } = useTranslation(NAVTREE_PLUGIN);
   const suppressNextTooltip = useRef<boolean>(false);
   const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
 
@@ -366,22 +344,22 @@ export const NavTreeItemAction = ({ actionsNode, menuActions, ...props }: NavTre
           </Tooltip.Content>
         </Tooltip.Portal>
       )}
-      {monolithicAction ? (
-        <NavTreeItemMonolithicAction {...monolithicAction} />
+      {monolithic && menuActions?.length === 1 ? (
+        <NavTreeItemMonolithicAction parent={node} {...menuActions[0]} />
       ) : props.menuType === 'searchList' ? (
         <NavTreeItemActionSearchList
           {...props}
           menuActions={menuActions}
           suppressNextTooltip={suppressNextTooltip}
-          onAction={(action) => action.data?.(props.caller ? { caller: props.caller } : {})}
+          onAction={(action) => action.data?.(props.caller ? { node, caller: props.caller } : { node })}
         />
       ) : (
         <NavTreeItemActionDropdownMenu
           {...props}
-          actionsNode={actionsNode}
+          parent={node}
           menuActions={menuActions}
           suppressNextTooltip={suppressNextTooltip}
-          onAction={(action) => action.data?.(props.caller ? { caller: props.caller } : {})}
+          onAction={(action) => action.data?.(props.caller ? { node, caller: props.caller } : { node })}
         />
       )}
     </Tooltip.Root>
