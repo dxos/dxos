@@ -90,7 +90,7 @@ const filterMatchInner = (
   }
 
   if (filter.text !== undefined) {
-    log.warn('Text filter is not supported yet');
+    throw new Error('Text filter is not supported.');
   }
 
   // Untracked will prevent signals in the callback from being subscribed to.

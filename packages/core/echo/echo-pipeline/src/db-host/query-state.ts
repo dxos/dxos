@@ -190,9 +190,9 @@ const filterToIndexQuery = (filter: FilterProto): IndexQuery => {
     return {
       typenames:
         filter.type && filter.type.length > 0
-          ? filter.type.map((type) => mapDxnToIndexQueryTypename(DXN.parse(type)))
+          ? filter.type.map((type) => dxnToIndexerTypename(DXN.parse(type)))
           : (filter.or ?? [])
-              .flatMap((f) => f.type?.map((type) => mapDxnToIndexQueryTypename(DXN.parse(type))) ?? [])
+              .flatMap((f) => f.type?.map((type) => dxnToIndexerTypename(DXN.parse(type))) ?? [])
               .filter(nonNullable),
       inverted: filter.not,
     };
@@ -202,7 +202,7 @@ const filterToIndexQuery = (filter: FilterProto): IndexQuery => {
   }
 };
 
-const mapDxnToIndexQueryTypename = (dxn: DXN) => {
+const dxnToIndexerTypename = (dxn: DXN) => {
   switch (dxn.kind) {
     case DXN.kind.TYPE:
       return dxn.parts[0];
