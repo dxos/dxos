@@ -15,7 +15,7 @@ import {
   type DxGridCellValue,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { formatValue } from '@dxos/schema';
+import { type FieldType, formatValue } from '@dxos/schema';
 
 import { CellUpdateListener } from './update-listener';
 import { fromGridCell, type GridCell, type TableType } from '../types';
@@ -132,7 +132,7 @@ export class TableModel extends Resource {
       const values: DxGridPlaneCells = {};
       const fields = this.table.view?.fields ?? [];
 
-      const addCell = (row: any, field: any, colIndex: number, displayIndex: number): void => {
+      const addCell = (row: any, field: FieldType, colIndex: number, displayIndex: number): void => {
         // Cell value access is wrapped with a signal so we can listen to granular updates.
         const cellValueSignal = computed(() => {
           return row[field.path] !== undefined ? formatValue(field.type, row[field.path]) : '';
@@ -142,10 +142,12 @@ export class TableModel extends Resource {
           get value() {
             return cellValueSignal.value;
           },
-          ...(cellClassesForFieldType(field.type) && {
-            className: mx(cellClassesForFieldType(field.type)),
-          }),
         };
+
+        const cellClasses = cellClassesForFieldType(field.type);
+        if (cellClasses) {
+          cell.className = mx(cellClasses);
+        }
 
         values[fromGridCell({ col: colIndex, row: displayIndex })] = cell;
       };
