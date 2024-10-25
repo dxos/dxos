@@ -13,6 +13,8 @@ import { log } from '@dxos/log';
 import { waitForPidDeletion, waitForPidFileBeingFilledWithInfo } from './utils';
 import { type ProcessInfo, type WatchDogParams } from './watchdog';
 
+const scriptDir = typeof __dirname === 'string' ? __dirname : dirname(new URL(import.meta.url).pathname);
+
 /**
  * Utils to start/stop detached process with errors and logs handling.
  */
@@ -40,11 +42,10 @@ export class Phoenix {
       });
     }
 
-    const watchdogPath = join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin', 'watchdog');
+    const watchdogPath = join(dirname(pkgUp.sync({ cwd: scriptDir })!), 'bin', 'watchdog');
 
     const watchDog = fork(watchdogPath, [JSON.stringify(params)], {
       detached: true,
-      cwd: __dirname,
     });
 
     watchDog.on('exit', (code, signal) => {
