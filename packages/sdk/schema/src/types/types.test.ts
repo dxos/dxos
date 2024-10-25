@@ -12,7 +12,7 @@ import { testData, testView, TestSchema } from '../testing';
 
 describe('schema', () => {
   test('JSON path', () => {
-    const [p1] = AST.getPropertySignatures(TestSchema.ast);
+    const p1 = AST.getPropertySignatures(TestSchema.ast).find((p) => p.name.toString() === 'name')!;
     expect(pipe(AST.getDescriptionAnnotation(p1.type), Option.getOrNull)).to.eq('Full name.');
 
     const [col1, col2, col3] = testView.fields;
