@@ -33,7 +33,7 @@ const Story = () => {
         [TestSchemaType.organization]: 20,
         [TestSchemaType.contact]: 50,
       })
-      .catch();
+      .catch(() => {});
 
     const view = space.db.add(create(ViewType, { name: '', type: '' }));
     setSpace(space);
