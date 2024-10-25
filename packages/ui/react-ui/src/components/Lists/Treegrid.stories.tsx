@@ -144,7 +144,7 @@ const DefaultStory = () => {
 export const Default = {};
 
 export default {
-  title: 'ui/react-ui/Treegrid',
+  title: 'ui/react-ui-core/Treegrid',
   component: Tg.Root,
   render: DefaultStory,
   decorators: [withTheme],

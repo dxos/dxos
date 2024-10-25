@@ -177,6 +177,13 @@ The filter consists of a series of filename pattern/level tuples separated by co
 The script used to publish apps to a KUBE environment is [here](https://github.com/dxos/dxos/blob/main/.circleci/scripts/publish.sh).
 In order to include a new app in the publish loop it needs to be added to the `APPS` list in this script.
 
+## Dependencies
+
+Packages can be locked to a particular version as required by updating `pnpm.overrides` in `package.json`.
+
+Examples:
+- `"@types/node": "22.5.5"` (required by Cloudflare Workers).
+
 ## CI
 
 ### CircleCI

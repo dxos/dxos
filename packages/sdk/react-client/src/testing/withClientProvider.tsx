@@ -3,13 +3,14 @@
 //
 
 import { type Decorator } from '@storybook/react';
-import React, { useRef } from 'react';
-import { type FallbackProps, ErrorBoundary } from 'react-error-boundary';
+import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
+import { type FallbackProps, ErrorBoundary as NativeErrorBoundary } from 'react-error-boundary';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { performInvitation, TestBuilder } from '@dxos/client/testing';
+import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientProvider, type ClientProviderProps } from '../client';
@@ -66,7 +67,7 @@ export const withClientProvider = ({
     };
 
     return (
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <ErrorBoundary>
         <ClientProvider onInitialized={handleInitialized} {...props}>
           <Story />
         </ClientProvider>
@@ -99,16 +100,20 @@ export const withMultiClientProvider = ({
     const spaceReady = useRef(new Trigger<Space | undefined>());
 
     // Handle invitations.
-    const handleInitialized = async (client: Client) => {
+    // NOTE: The zeroth client isn't necessarily the first to be initialized.
+    const handleInitialized = async (client: Client, index: number) => {
+      log.info('initialized', { index });
       if (createSpace) {
         if (!hostRef.current) {
           hostRef.current = client;
           const space = await initializeClient(client, { createIdentity, createSpace, onSpaceCreated, onInitialized });
           spaceReady.current.wake(space);
+          log.info('inviting', { index });
         } else {
           await initializeClient(client, { createIdentity, onInitialized });
           const space = await spaceReady.current.wait();
           if (space) {
+            log.info('joining', { index });
             await Promise.all(performInvitation({ host: space, guest: client.spaces }));
           }
         }
@@ -116,28 +121,45 @@ export const withMultiClientProvider = ({
     };
 
     return (
-      <>
+      <ErrorBoundary>
         {Array.from({ length: numClients }).map((_, index) => (
-          <ErrorBoundary key={index} FallbackComponent={ErrorFallback}>
-            <ClientProvider
-              services={builder.current.createLocalClientServices()}
-              onInitialized={handleInitialized}
-              {...props}
-            >
-              <Story />
-            </ClientProvider>
-          </ErrorBoundary>
+          <ClientProvider
+            key={index}
+            services={builder.current.createLocalClientServices()}
+            onInitialized={(client) => handleInitialized(client, index)}
+            {...props}
+          >
+            <Story />
+          </ClientProvider>
         ))}
-      </>
+      </ErrorBoundary>
     );
   };
+};
+
+const ErrorBoundary = ({ children }: PropsWithChildren) => {
+  const [error, setError] = useState<Error>();
+  useEffect(() => {
+    const handleError = (event: PromiseRejectionEvent) => {
+      setError(event.reason);
+    };
+
+    window.addEventListener('unhandledrejection', handleError);
+    return () => window.removeEventListener('unhandledrejection', handleError);
+  }, []);
+
+  if (error) {
+    return <ErrorFallback error={error} resetErrorBoundary={() => setError(undefined)} />;
+  }
+
+  return <NativeErrorBoundary FallbackComponent={ErrorFallback}>{children}</NativeErrorBoundary>;
 };
 
 const ErrorFallback = ({ error }: FallbackProps) => {
   const { name, message, stack } =
     error instanceof Error ? error : { name: 'Error', message: String(error), stack: undefined };
   return (
-    <div role='alert' className='flex flex-col overflow-hidden p-4 gap-4'>
+    <div role='alert' className='flex flex-col p-4 gap-4 overflow-auto'>
       <h1 className='text-xl text-red-500'>{name}</h1>
       <div className='text-lg'>{message}</div>
       {stack && <pre className='whitespace-pre-wrap text-sm text-subdued'>{stack}</pre>}

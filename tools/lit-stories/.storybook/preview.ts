@@ -10,7 +10,7 @@ import { type Preview } from '@storybook/web-components';
  * Configure Storybook rendering.
  * https://storybook.js.org/docs/configure#configure-story-rendering
  */
-const preview: Preview = {
+export const preview: Preview = {
   // https://storybook.js.org/docs/writing-stories/parameters#global-parameters
   parameters: {
     actions: {
@@ -28,7 +28,3 @@ const preview: Preview = {
     },
   },
 };
-
-export const parameters: Preview['parameters'] = preview.parameters;
-
-export default preview;

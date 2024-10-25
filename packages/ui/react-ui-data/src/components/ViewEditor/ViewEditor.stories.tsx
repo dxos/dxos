@@ -18,7 +18,7 @@ import translations from '../../translations';
 import { TestPopup } from '../testing';
 
 const DefaultStory = (props: ViewEditorProps) => {
-  const resolver = useSchemaResolver();
+  const resolver = useSchemaResolver(); // TODO(burdon): Mock.
   return (
     <TestPopup>
       <ViewEditor schemaResolver={resolver} {...props} />

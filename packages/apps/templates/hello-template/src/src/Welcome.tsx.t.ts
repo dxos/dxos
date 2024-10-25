@@ -12,7 +12,7 @@ export default template.define.script({
       return (
         <div className='dxos flex justify-center align-middle'>
           <div className='max-w-md bg-zinc-100 dark:bg-zinc-800 p-6 m-8 rounded-md shadow-lg'>
-            <img src={isDark ? 'dxos-white.svg' : 'dxos.svg'} className='mb-10' />
+            <img src={isDark ? 'dxos-logo-white.svg' : 'dxos-logo-black.svg'} className='mb-10' />
             <h1>{name ?? 'hello'}</h1>
             <p>Your new DXOS app works.</p>
             <div className='demo'>

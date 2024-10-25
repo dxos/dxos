@@ -10,7 +10,7 @@ import { Status } from './Status';
 import { withTheme } from '../../testing';
 
 export default {
-  title: 'ui/react-ui/Status',
+  title: 'ui/react-ui-core/Status',
   component: Status,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

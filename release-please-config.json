@@ -194,6 +194,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/storybook-utils/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/test-utils/package.json",
           "jsonpath": "$.version"
         },
@@ -850,11 +855,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-types/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/storybook-utils/package.json",
           "jsonpath": "$.version"
         },
         {
