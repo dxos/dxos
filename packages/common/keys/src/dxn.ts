@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { inspect, InspectOptionsStylized } from 'node:util';
+
+import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
 /**
@@ -47,8 +50,16 @@ export class DXN {
     return new DXN(kind, parts);
   }
 
+  static equals(a: DXN, b: DXN) {
+    return a.kind === b.kind && a.parts.length === b.parts.length && a.parts.every((part, i) => part === b.parts[i]);
+  }
+
   static isDXNString(dxn: string) {
     return dxn.startsWith('dxn:');
+  }
+
+  static typename(type: string) {
+    return new DXN(DXN.kind.TYPE, [type]);
   }
 
   static localEchoObjectDXN(id: string) {
@@ -98,6 +109,19 @@ export class DXN {
 
   toString() {
     return `dxn:${this.#kind}:${this.#parts.join(':')}`;
+  }
+
+  /**
+   * Used by Node.js to get textual representation of this object when it's printed with a `console.log` statement.
+   */
+  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect) {
+    const printControlCode = (code: number) => {
+      return `\x1b[${code}m`;
+    };
+
+    return (
+      printControlCode(inspectFn.colors.blueBright![0]) + this.toString() + printControlCode(inspectFn.colors.reset![0])
+    );
   }
 }
 
