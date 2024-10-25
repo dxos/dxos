@@ -28,7 +28,7 @@ const createTableModel = (): TableModel => {
     },
   });
 
-  return new TableModel({ table: table as any, data: [] });
+  return new TableModel({ table: table as any });
 };
 
 describe('TableModel', () => {
@@ -130,7 +130,8 @@ describe('TableModel', () => {
           ],
         }));
 
-        model = new TableModel({ table: table as any, data });
+        model = new TableModel({ table: table as any });
+        model.updateData(data);
         await model.open();
       });
 

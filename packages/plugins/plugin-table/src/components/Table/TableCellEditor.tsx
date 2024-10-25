@@ -78,8 +78,8 @@ export const TableCellEditor = ({ __gridScope, gridRef, tableModel }: TableCellE
 
   const getCellContent = useCallback(() => {
     if (editing && tableModel) {
-      // TODO(Zan): Coercing to empty string on null/undefined values is temporary util we deeply integrate with fields.
-      return tableModel.getCellData(toGridCell(editing.index)) ?? '';
+      const cellData = tableModel.getCellData(toGridCell(editing.index));
+      return cellData !== undefined ? String(cellData) : '';
     }
   }, [editing, tableModel]);
 

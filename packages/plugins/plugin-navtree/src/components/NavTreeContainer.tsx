@@ -336,7 +336,7 @@ export const NavTreeContainer = ({
         <div role='none' className='!overflow-y-auto'>
           <List.Root<NavTreeItem> items={items} isItem={() => true}>
             {({ items }) =>
-              items.map((item) => (
+              items?.map((item) => (
                 <List.Item<NavTreeItem> key={item.id} item={item} classNames={mx('p-2', ghostHover)}>
                   <List.ItemDragHandle />
                   <List.ItemTitle classNames='p-2 text-sm' onClick={() => handleNavigate(item)}>
