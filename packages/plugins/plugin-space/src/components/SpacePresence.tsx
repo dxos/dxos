@@ -229,13 +229,14 @@ export const SmallPresenceLive = ({
 
 export const SmallPresence = ({ id, count }: { id?: string; count: number }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
-  const { isRelated } = useAttention(id);
+  const { hasAttention, isAncestor, isRelated } = useAttention(id);
+  const attention = hasAttention || isAncestor || isRelated;
 
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
         {/* TODO(wittjosiah): Don't depend on data attribute just pass prop to AttentionGlyph. */}
-        <div role='none' className='flex' data-attention={isRelated}>
+        <div role='none' className='flex' data-attention={attention}>
           <AttentionGlyph presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'} classNames='self-center mie-1' />
         </div>
       </Tooltip.Trigger>
