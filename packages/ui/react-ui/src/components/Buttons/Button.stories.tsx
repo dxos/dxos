@@ -54,7 +54,7 @@ export const Ghost = {
 };
 
 export default {
-  title: 'ui/react-ui/Button',
+  title: 'ui/react-ui-core/Button',
   component: Button,
   decorators: [withVariants(), withTheme],
   render: DefaultStory,
