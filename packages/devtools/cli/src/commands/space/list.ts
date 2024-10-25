@@ -34,7 +34,7 @@ export default class List extends BaseCommand<typeof List> {
       if (this.flags.json) {
         return mapSpaces(spaces);
       } else {
-        printSpaces(spaces, this.flags);
+        printSpaces(spaces, this.flags as any);
 
         if (this.flags.live) {
           // TODO(burdon): Use https://www.npmjs.com/package/ansi-escapes to reset screen.
@@ -54,7 +54,7 @@ export default class List extends BaseCommand<typeof List> {
     const update = new Event();
     update.debounce(1000).on(ctx, async () => {
       console.clear();
-      printSpaces(spaces, this.flags);
+      printSpaces(spaces, this.flags as any);
     });
 
     const subscribeToSpaceUpdate = (space: Space) => {

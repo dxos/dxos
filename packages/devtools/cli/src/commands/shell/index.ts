@@ -13,7 +13,11 @@ export default class Shell extends BaseCommand<typeof Shell> {
   async run(): Promise<void> {
     while (true) {
       // https://github.com/oclif/cli-ux
-      const { command } = await inquirer.prompt<{ command: string }>({ name: 'command' });
+      const { command } = await inquirer.prompt<{ command: string }>({
+        name: 'command',
+        type: 'input',
+        message: 'Command',
+      });
       if (command === 'quit') {
         break;
       }

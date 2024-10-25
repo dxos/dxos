@@ -11,7 +11,11 @@ import pkgUp from 'pkg-up';
 import { asyncTimeout } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 
-export const BIN_PATH = join(dirname(pkgUp.sync({ cwd: __dirname }) ?? failUndefined()), 'bin', 'run');
+export const BIN_PATH = join(
+  dirname(pkgUp.sync({ cwd: new URL(import.meta.url).pathname }) ?? failUndefined()),
+  'bin',
+  'run',
+);
 
 export const runCommand = async (command: string, cwd: string) => {
   mkdirSync(cwd, { recursive: true });
