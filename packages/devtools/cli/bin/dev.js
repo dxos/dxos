@@ -2,14 +2,19 @@
 
 // NOTE: Specify --no-warnings in production script.
 
+// process.env.NODE_ENV = 'development';
+
+//
+// Copyright 2024 DXOS.org
+//
+
+import { execute, settings } from '@oclif/core';
+
 if (process.env.DX_TRACK_LEAKS) {
   globalThis.wtf = require('wtfnode');
 }
 
 process.env.DX_ENVIRONMENT ??= 'development';
-// process.env.NODE_ENV = 'development';
-
-import { execute, settings } from '@oclif/core';
 
 settings.debug = true;
 

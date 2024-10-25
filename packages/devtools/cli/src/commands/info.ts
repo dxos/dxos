@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import chalk from 'chalk';
 import inquirer from 'inquirer';
 
 import { BaseCommand } from '../base';
