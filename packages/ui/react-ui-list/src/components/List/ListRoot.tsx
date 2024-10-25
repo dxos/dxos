@@ -9,7 +9,6 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type ReactNode, useEffect, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { arrayMove } from '@dxos/util';
 
 import { type ListItemRecord, idle, type ItemState } from './ListItem';
 
