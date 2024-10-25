@@ -2,6 +2,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@dxos/devtools": [
+        "packages/devtools/devtools/src/index.ts"
+      ],
       "@dxos/plugin-chain": [
         "packages/plugins/experimental/plugin-chain/src/index.ts"
       ],
@@ -379,9 +382,6 @@
       ],
       "@dxos/react-ui-types": [
         "packages/ui/react-ui-types/src/index.ts"
-      ],
-      "@dxos/storybook-utils": [
-        "packages/ui/storybook-utils/src/index.ts"
       ]
     }
   },

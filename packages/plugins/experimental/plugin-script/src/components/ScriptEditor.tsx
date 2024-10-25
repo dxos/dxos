@@ -21,6 +21,7 @@ import { type TemplateSelectProps, Toolbar, type ViewType } from './Toolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 import { Bundler } from '../bundler';
 import {
+  getInvocationUrl,
   getUserFunctionUrlInMetadata,
   publicKeyToDid,
   setUserFunctionUrlInMetadata,
@@ -41,6 +42,7 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
   const client = useClient();
   const identity = useIdentity();
   const space = getSpace(script);
+  // TODO(dmaretskyi): Parametric query.
   const [fn] = useQuery(
     space,
     Filter.schema(FunctionType, (fn) => fn.source === script),
@@ -161,14 +163,9 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
       return;
     }
 
-    const baseUrl = new URL('functions/', client.config.values.runtime?.services?.edge?.url);
-
-    // Leading slashes cause the URL to be treated as an absolute path.
-    const relativeUrl = existingFunctionUrl.replace(/^\//, '');
-    const url = new URL(`./${relativeUrl}`, baseUrl.toString());
-    space && url.searchParams.set('spaceId', space.id);
-    url.protocol = 'https';
-    return url.toString();
+    return getInvocationUrl(existingFunctionUrl, client.config.values.runtime?.services?.edge?.url ?? '', {
+      spaceId: space?.id,
+    });
   }, [existingFunctionUrl, space]);
 
   return (
@@ -196,7 +193,12 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
       )}
 
       {view !== 'editor' && (
-        <DebugPanel functionUrl={functionUrl} binding={fn?.binding} onBindingChange={handleBindingChange} />
+        <DebugPanel
+          functionUrl={functionUrl}
+          showBindingConfig
+          binding={fn?.binding}
+          onBindingChange={handleBindingChange}
+        />
       )}
     </div>
   );

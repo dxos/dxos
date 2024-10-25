@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { completionStatus } from '@codemirror/autocomplete';
 import { type Extension } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import React, { type DOMAttributes, type KeyboardEvent } from 'react';
@@ -17,7 +18,7 @@ import {
 
 import { type GridEditBox } from '../Grid';
 
-type EditorKeyEvent = Pick<KeyboardEvent<HTMLInputElement>, 'key'> & { shift?: boolean };
+export type EditorKeyEvent = Pick<KeyboardEvent<HTMLInputElement>, 'key'> & { shift?: boolean };
 
 export type EditorKeysProps = {
   onClose: (value: string | undefined, event: EditorKeyEvent) => void;
@@ -62,23 +63,39 @@ export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
     {
       key: 'Enter',
       run: (editor) => {
-        onClose(editor.state.doc.toString(), { key: 'Enter' });
-        return true;
+        if (completionStatus(editor.state)) {
+          return false;
+        } else {
+          onClose(editor.state.doc.toString(), { key: 'Enter' });
+          return true;
+        }
       },
       shift: (editor) => {
-        onClose(editor.state.doc.toString(), { key: 'Enter', shift: true });
-        return true;
+        if (completionStatus(editor.state)) {
+          return false;
+        } else {
+          onClose(editor.state.doc.toString(), { key: 'Enter', shift: true });
+          return true;
+        }
       },
     },
     {
       key: 'Tab',
       run: (editor) => {
-        onClose(editor.state.doc.toString(), { key: 'Tab' });
-        return true;
+        if (completionStatus(editor.state)) {
+          return false;
+        } else {
+          onClose(editor.state.doc.toString(), { key: 'Tab' });
+          return true;
+        }
       },
       shift: (editor) => {
-        onClose(editor.state.doc.toString(), { key: 'Tab', shift: true });
-        return true;
+        if (completionStatus(editor.state)) {
+          return false;
+        } else {
+          onClose(editor.state.doc.toString(), { key: 'Tab', shift: true });
+          return true;
+        }
       },
     },
     {

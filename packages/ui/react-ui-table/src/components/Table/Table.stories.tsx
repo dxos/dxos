@@ -5,13 +5,14 @@
 import '@dxos-theme';
 
 import { Plugs, PlugsConnected } from '@phosphor-icons/react';
+import { type StoryObj } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { Button, DensityProvider } from '@dxos/react-ui';
+import { Button } from '@dxos/react-ui';
 import { withSignals, withTheme } from '@dxos/storybook-utils';
 import { range } from '@dxos/util';
 
@@ -127,7 +128,7 @@ const MinimalTable = (props: any) => {
 };
 
 export default {
-  title: 'react-ui-table/Table',
+  title: 'ui/react-ui-table/Table',
   component: MinimalTable,
   args: {
     header: true,
@@ -157,14 +158,7 @@ export default {
     },
     rowsSelectable: { control: 'select', options: [false, true, 'multi'] },
   },
-  decorators: [
-    withTheme,
-    (Story: any) => (
-      <DensityProvider density='fine'>
-        <Story />
-      </DensityProvider>
-    ),
-  ],
+  decorators: [withTheme],
 };
 
 export const Default = {
@@ -417,7 +411,7 @@ type StoryProps = {
   insertionInterval: number;
 };
 
-const Story = ({
+const DefaultStory = ({
   periodicMutations,
   mutationInterval,
   periodicDeletions,
@@ -500,15 +494,9 @@ const Story = ({
   );
 };
 
-export const RealTimeUpdates = {
-  argTypes: {
-    periodicMutations: { control: 'boolean' },
-    mutationInterval: { control: 'number' },
-    periodicDeletions: { control: 'boolean' },
-    deletionInterval: { control: 'number' },
-    periodicInsertions: { control: 'boolean' },
-    insertionInterval: { control: 'number' },
-  },
+export const RealTimeUpdates: StoryObj<StoryProps> = {
+  render: DefaultStory,
+  decorators: [withSignals],
   args: {
     periodicMutations: true,
     mutationInterval: 1000,
@@ -516,7 +504,5 @@ export const RealTimeUpdates = {
     deletionInterval: 5000,
     periodicInsertions: false,
     insertionInterval: 3000,
-  } satisfies StoryProps,
-  decorators: [withSignals],
-  render: Story,
+  },
 };

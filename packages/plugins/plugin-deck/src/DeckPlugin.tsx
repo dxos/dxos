@@ -111,7 +111,7 @@ export const DeckPlugin = ({
   let handleNavigation: () => Promise<void> | undefined;
 
   const settings = new LocalStorageStore<DeckSettingsProps>('dxos.org/settings/layout', {
-    showHints: true,
+    showHints: false,
     customSlots: false,
     flatDeck: false,
     enableNativeRedirect: false,

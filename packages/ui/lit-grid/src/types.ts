@@ -22,6 +22,12 @@ export type DxGridPlanePosition = Record<DxGridAxis, number>;
 export type DxGridPosition = DxGridPlanePosition & { plane: DxGridPlane };
 export type DxGridPositionNullable = DxGridPosition | null;
 
+export type DxGridAnnotatedWheelEvent = WheelEvent &
+  Partial<{
+    overscrollInline: number;
+    overscrollBlock: number;
+  }>;
+
 export type DxGridPlaneCells = Record<DxGridCellIndex, DxGridCellValue>;
 export type DxGridCells = { grid: DxGridPlaneCells } & Partial<
   Record<DxGridFixedPlane | DxGridFrozenPlane, DxGridPlaneCells>
@@ -60,6 +66,10 @@ export type DxGridCellValue = {
    */
   className?: string;
   /**
+   * `data-refs` attribute to apply to the gridcell element.
+   */
+  dataRefs?: string;
+  /**
    * Whether to render a resize handle for this cell’s row or column.
    */
   resizeHandle?: DxGridAxis;
@@ -69,6 +79,7 @@ export type DxGridAxisMetaProps = {
   size: number;
   description?: string;
   resizeable?: boolean;
+  readonly?: boolean;
 };
 
 export type DxGridAxisSizes = DxGridPlaneRecord<DxGridFrozenPlane, Record<string, number>>;
@@ -76,7 +87,18 @@ export type DxGridAxisSizes = DxGridPlaneRecord<DxGridFrozenPlane, Record<string
 export type DxGridProps = Partial<
   Pick<
     DxGrid,
-    'initialCells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault' | 'limitRows' | 'limitColumns' | 'frozen'
+    | 'gridId'
+    | 'rowDefault'
+    | 'columnDefault'
+    | 'rows'
+    | 'columns'
+    | 'initialCells'
+    | 'mode'
+    | 'limitColumns'
+    | 'limitRows'
+    | 'frozen'
+    | 'overscroll'
+    | 'activeRefs'
   >
 >;
 

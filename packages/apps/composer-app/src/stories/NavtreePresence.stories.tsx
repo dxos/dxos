@@ -133,7 +133,7 @@ faker.seed(3);
 //
 // // TODO(burdon): Move to react-ui-navtree?
 export default {
-  title: 'composer-app/StorybookNavtreePresence',
+  title: 'apps/composer-app/StorybookNavtreePresence',
   component: () => <span>To do</span>,
   decorators: [withTheme],
   parameters: { translations },

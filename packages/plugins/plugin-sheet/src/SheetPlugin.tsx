@@ -13,11 +13,10 @@ import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Icon } from '@dxos/react-ui';
 
-import { ComputeGraphContextProvider, SheetContainer } from './components';
+import { ComputeGraphContextProvider, SheetContainer, useComputeGraph } from './components';
 import { compareIndexPositions, createSheet } from './defs';
 import { computeGraphFacet } from './extensions';
 import { type ComputeGraphRegistry } from './graph';
-import { useComputeGraph } from './hooks';
 import meta, { SHEET_PLUGIN } from './meta';
 import translations from './translations';
 import { SheetAction, SheetType, type SheetPluginProvides } from './types';

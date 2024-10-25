@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import {
-  type LayoutParts,
+  type LayoutCoordinate,
   NavigationAction,
   SLUG_PATH_SEPARATOR,
   Surface,
@@ -25,32 +25,29 @@ import { DECK_PLUGIN } from '../../meta';
 import { useLayout } from '../LayoutContext';
 
 export type ComplementarySidebarProps = {
-  context?: string;
-  layoutParts: LayoutParts;
+  panel?: string;
   flatDeck?: boolean;
 };
 
-const panels = ['comments', 'settings', 'debug'] as const;
+type Panel = { id: string; icon: string };
 
-const nodes = [
-  { id: 'comments', icon: 'ph--chat-text--regular' },
+// TODO(burdon): Should be provided by plugins.
+const panels: Panel[] = [
   { id: 'settings', icon: 'ph--gear--regular' },
+  { id: 'comments', icon: 'ph--chat-text--regular' },
+  { id: 'automation', icon: 'ph--atom--regular' },
   { id: 'debug', icon: 'ph--bug--regular' },
 ];
 
-type Panel = (typeof panels)[number];
-const getPanel = (part?: string): Panel => {
-  if (part && panels.findIndex((panel) => panel === part) !== -1) {
-    return part as Panel;
-  } else {
-    return 'settings';
-  }
+const getPanel = (id?: string): Panel['id'] => {
+  const panel = panels.find((p) => p.id === id) ?? panels[0];
+  return panel.id;
 };
 
-export const ComplementarySidebar = ({ layoutParts, flatDeck }: ComplementarySidebarProps) => {
+export const ComplementarySidebar = ({ panel, flatDeck }: ComplementarySidebarProps) => {
   const { popoverAnchorId } = useLayout();
   const attended = useAttended();
-  const part = getPanel(layoutParts.complementary?.[0].id);
+  const part = getPanel(panel);
   const id = attended[0] ? `${attended[0]}${SLUG_PATH_SEPARATOR}${part}` : undefined;
   const { graph } = useGraph();
   const node = useNode(graph, id);
@@ -59,13 +56,13 @@ export const ComplementarySidebar = ({ layoutParts, flatDeck }: ComplementarySid
 
   const actions = useMemo(
     () =>
-      nodes.map(({ id, icon }) => ({
+      panels.map(({ id, icon }) => ({
         id: `complementary-${id}`,
         data: () => {
           void dispatch({ action: NavigationAction.OPEN, data: { activeParts: { complementary: id } } });
         },
         properties: {
-          label: [`${id} label`, { ns: DECK_PLUGIN }],
+          label: [`open ${id} label`, { ns: DECK_PLUGIN }],
           icon,
           menuItemType: 'toggle',
           isChecked: part === id,
@@ -74,20 +71,20 @@ export const ComplementarySidebar = ({ layoutParts, flatDeck }: ComplementarySid
     [part],
   );
 
+  // TODO(wittjosiah): Ensure that id is always defined.
+  const coordinate: LayoutCoordinate = useMemo(() => ({ entryId: id ?? 'unknown', part: 'complementary' }), [id]);
+
   return (
     <Main.ComplementarySidebar>
       <div role='none' className={mx(deckGrid, 'grid-cols-1 bs-full')}>
         <NodePlankHeading
+          coordinate={coordinate}
           node={node}
-          id={id}
-          layoutParts={layoutParts}
-          layoutPart='complementary'
           popoverAnchorId={popoverAnchorId}
           flatDeck={flatDeck}
           actions={actions}
         />
-        {/* TODO(wittjosiah): Render some placeholder when node is undefined. */}
-        <div className='row-span-2'>
+        <div className='row-span-2 divide-y divide-separator'>
           {node && (
             <Surface
               role={`complementary--${part}`}

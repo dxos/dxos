@@ -14,7 +14,7 @@ export type DensityProviderProps = PropsWithChildren<{
   density?: Density;
 }>;
 
-export const DensityContext = createContext<DensityContextValue>({ density: 'coarse' });
+export const DensityContext = createContext<DensityContextValue>({ density: 'fine' });
 
 export const DensityProvider = ({ density, children }: DensityProviderProps) => (
   <DensityContext.Provider value={{ density }}>{children}</DensityContext.Provider>

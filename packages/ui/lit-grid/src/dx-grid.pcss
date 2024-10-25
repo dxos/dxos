@@ -65,21 +65,16 @@ dx-grid, dx-grid-axis-resize-handle {
     &[inert] {
       visibility: hidden;
     }
-    &:focus, &:focus-visible, &.dx-grid__cell--active {
-      cursor: text;
+    &:focus, &:focus-visible, &[data-dx-active] {
       z-index: 2;
       border-color: var(--dx-accentSurface);
       outline: none;
-    }
-  }
-  &[data-grid-mode="edit"] {
-    [role='gridcell'], [role='columnheader'], [role='rowheader'] {
-      &.dx-grid__cell--active {
-        color: transparent !important;
-        & > * {
-          opacity: 0 !important;
-        }
+      &:not([aria-readonly]) {
+        cursor: text;
       }
+    }
+    &.dx-grid__cell--commented {
+      background: var(--dx-grid-commented, var(--dx-gridCommented));
     }
   }
   &[data-grid-select] {

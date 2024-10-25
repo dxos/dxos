@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import * as Plot from '@observablehq/plot';
+import { type Meta } from '@storybook/react';
 import React from 'react';
 
 import { ClientRepeater } from '@dxos/react-client/testing';
@@ -13,19 +13,10 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Chart } from './Chart';
 import CitiesData from '../../../data/cities.js';
 
-// @ts-ignore
-
 // TODO(burdon): Generate data with geo lat/lng.
 // TODO(burdon): How to provide geo service via agent?
 
-export default {
-  title: 'plugin-explorer/Chart',
-  component: Plot,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-};
-
-export const Default = () => <ClientRepeater component={DefaultStory} />;
-const DefaultStory = () => {
+const Story = () => {
   if (!CitiesData) {
     return null;
   }
@@ -37,3 +28,14 @@ const DefaultStory = () => {
 
   return <Chart items={items} accessor={(obj) => ({ x: obj.x, y: obj.y })} options={{ stroke: 'blue' }} />;
 };
+
+// TODO(burdon): Change to decorator.
+export const Default = () => <ClientRepeater component={Story} />;
+
+const meta: Meta<typeof Chart> = {
+  title: 'plugins/plugin-explorer/Chart',
+  component: Chart,
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+};
+
+export default meta;

@@ -4,12 +4,13 @@
 
 import '@dxos-theme';
 
-import { type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
 import { create } from '@dxos/echo-schema';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { type ViewType } from '@dxos/schema';
-import { withTheme, withLayout, withSignals } from '@dxos/storybook-utils';
+import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 import { useSchemaResolver } from '../../hooks';
@@ -17,14 +18,8 @@ import { testView } from '../../testing';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
 
-type StoryProps = Omit<ViewEditorProps, 'schemaResolver'>;
-
-const Story = (props: StoryProps) => {
-  const resolver = useSchemaResolver();
-  if (!resolver) {
-    return null;
-  }
-
+const DefaultStory = (props: ViewEditorProps) => {
+  const resolver = useSchemaResolver(); // TODO(burdon): Mock.
   return (
     <TestPopup>
       <ViewEditor schemaResolver={resolver} {...props} />
@@ -32,22 +27,13 @@ const Story = (props: StoryProps) => {
   );
 };
 
-export default {
-  title: 'react-ui-data/ViewEditor',
-  decorators: [withTheme, withSignals, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],
-  render: Story,
-  parameters: {
-    translations,
-  },
-};
-
-export const Default: StoryObj<StoryProps> = {
+export const Default: StoryObj<typeof ViewEditor> = {
   args: {
     view: create(testView),
   },
 };
 
-export const Empty: StoryObj<StoryProps> = {
+export const Empty: StoryObj<typeof ViewEditor> = {
   args: {
     view: create<ViewType>({
       query: {
@@ -57,3 +43,19 @@ export const Empty: StoryObj<StoryProps> = {
     }),
   },
 };
+
+const meta: Meta<typeof ViewEditor> = {
+  title: 'ui/react-ui-data/ViewEditor',
+  component: ViewEditor,
+  render: DefaultStory,
+  decorators: [
+    withClientProvider(),
+    withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' }),
+    withTheme,
+  ],
+  parameters: {
+    translations,
+  },
+};
+
+export default meta;

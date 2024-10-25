@@ -5,7 +5,6 @@
 import React, { useState } from 'react';
 
 import {
-  DensityProvider,
   ElevationProvider,
   Icon,
   Select,
@@ -65,45 +64,43 @@ export const Toolbar = ({
 
   // TODO(burdon): Factor out common toolbar components with sheet/editor?
   return (
-    <DensityProvider density='fine'>
-      <ElevationProvider elevation='chrome'>
-        <NaturalToolbar.Root classNames={['p-1', classNames]} style={{ contain: 'layout' }}>
-          {templates && <TemplateSelect templates={templates} onTemplateSelect={onTemplateSelect} />}
-          {onFormat && <ToolbarIconButton icon='ph--magic-wand--regular' text={t('format label')} onClick={onFormat} />}
+    <ElevationProvider elevation='chrome'>
+      <NaturalToolbar.Root classNames={['p-1', classNames]} style={{ contain: 'layout' }}>
+        {templates && <TemplateSelect templates={templates} onTemplateSelect={onTemplateSelect} />}
+        {onFormat && <ToolbarIconButton icon='ph--magic-wand--regular' text={t('format label')} onClick={onFormat} />}
 
-          <div role='separator' className='grow' />
+        <div role='separator' className='grow' />
 
-          {error ? (
-            <Tooltip.Root>
-              <Tooltip.Trigger>
-                <Icon icon='ph--warning-circle--regular' size={4} />
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content>
-                  <Tooltip.Arrow />
-                  {error}
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
-          ) : null}
+        {error ? (
+          <Tooltip.Root>
+            <Tooltip.Trigger>
+              <Icon icon='ph--warning-circle--regular' size={4} />
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content>
+                <Tooltip.Arrow />
+                {error}
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        ) : null}
 
-          {functionUrl && deployed && (
-            <ToolbarIconButton icon='ph--link--regular' text={t('copy link label')} onClick={handleCopyLink} />
-          )}
+        {functionUrl && deployed && (
+          <ToolbarIconButton icon='ph--link--regular' text={t('copy link label')} onClick={handleCopyLink} />
+        )}
 
-          {onDeploy && (
-            <ToolbarIconButton
-              icon={pending ? 'ph--spinner-gap--regular' : 'ph--cloud-arrow-up--regular'}
-              classNames={[pending && 'animate-spin']}
-              text={pending ? t('pending label') : t('deploy label')}
-              onClick={handleDeploy}
-            />
-          )}
+        {onDeploy && (
+          <ToolbarIconButton
+            icon={pending ? 'ph--spinner-gap--regular' : 'ph--cloud-arrow-up--regular'}
+            classNames={[pending && 'animate-spin']}
+            text={pending ? t('pending label') : t('deploy label')}
+            onClick={handleDeploy}
+          />
+        )}
 
-          <ViewSelector view={view} onViewChange={onViewChange} />
-        </NaturalToolbar.Root>
-      </ElevationProvider>
-    </DensityProvider>
+        <ViewSelector view={view} onViewChange={onViewChange} />
+      </NaturalToolbar.Root>
+    </ElevationProvider>
   );
 };
 

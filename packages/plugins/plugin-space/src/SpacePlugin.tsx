@@ -57,7 +57,7 @@ import {
   AwaitingObject,
   CollectionMain,
   CollectionSection,
-  FallbackSettings,
+  DefaultObjectSettings,
   MenuFooter,
   MissingObject,
   PopoverRenameObject,
@@ -380,7 +380,7 @@ export const SpacePlugin = ({
                 <MissingObject id={primary} />
               ) : null;
             case 'complementary--settings':
-              return isEchoObject(data.subject) ? <FallbackSettings object={data.subject} /> : null;
+              return isEchoObject(data.subject) ? <DefaultObjectSettings object={data.subject} /> : null;
             case 'dialog':
               if (data.component === 'dxos.org/plugin/space/InvitationManagerDialog') {
                 return (

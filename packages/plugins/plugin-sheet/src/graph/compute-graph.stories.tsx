@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { FunctionType } from '@dxos/plugin-script/types';
@@ -14,8 +15,9 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { testFunctionPlugins } from './testing';
+import { useComputeGraph } from '../components';
 import { createSheet } from '../defs';
-import { useComputeGraph, useSheetModel } from '../hooks';
+import { useSheetModel } from '../model';
 import { withComputeGraphDecorator } from '../testing';
 import { SheetType } from '../types';
 
@@ -80,8 +82,10 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-sheet/functions',
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-sheet/functions',
   decorators: [
     withClientProvider({ types: [FunctionType, SheetType], createIdentity: true, createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
@@ -90,4 +94,4 @@ export default {
   render: (args: any) => <Story {...args} />,
 };
 
-export const Default = {};
+export default meta;

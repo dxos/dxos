@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useMemo } from 'react';
 
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
@@ -30,7 +31,7 @@ const code = [
   '}',
 ].join('\n');
 
-const Story = () => {
+const DefaultStory = () => {
   const client = useClient();
   const spaces = useSpaces();
   console.log(spaces.length);
@@ -45,7 +46,7 @@ const Story = () => {
           [TestSchemaType.organization]: 20,
           [TestSchemaType.contact]: 50,
         })
-        .catch();
+        .catch(() => {});
     } catch (err) {
       console.log(err);
     }
@@ -59,11 +60,13 @@ const Story = () => {
   return <ScriptBlock script={object} containerUrl={mainUrl} />;
 };
 
-export default {
-  title: 'plugin-script/ScriptBlock',
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-script/ScriptBlock',
   component: ScriptBlock,
+  render: DefaultStory,
   decorators: [withClientProvider({ createSpace: true }), withTheme, withLayout({ fullscreen: true, tooltips: true })],
-  render: Story,
 };
 
-export const Default = {};
+export default meta;

@@ -93,7 +93,7 @@ const DemoStackPlank = (rootProps: Partial<ComponentProps<typeof Plank.Root>>) =
 
 export default {
   // NOTE(thure): This is intentionally organized under `react-ui-deck` so that related stories appear together in Storybook despite needing to live in separate packages based on dependencies.
-  title: 'react-ui-deck/Deck',
+  title: 'ui/react-ui-deck/Deck',
   component: NaturalDeck.Root,
   decorators: [withTheme],
   args: {},
@@ -102,10 +102,9 @@ export default {
 export const StaticBasicStacks = {
   args: {},
   render: () => {
-    const [attention] = useState({ attended: [] });
     return (
       <Mosaic.Root>
-        <RootAttentionProvider attention={attention}>
+        <RootAttentionProvider>
           <Mosaic.DragOverlay />
           <NaturalDeck.Root classNames='fixed inset-0 z-0'>
             <DemoStackPlank />
@@ -125,10 +124,9 @@ export const StaticBasicStacks = {
 export const StaticBasicStacksWithOverscrolling = {
   args: {},
   render: () => {
-    const [attention] = useState({ attended: [] });
     return (
       <Mosaic.Root>
-        <RootAttentionProvider attention={attention}>
+        <RootAttentionProvider>
           <Mosaic.DragOverlay />
           <NaturalDeck.Root classNames='fixed inset-0 z-0'>
             <DemoStackPlank />
@@ -195,7 +193,6 @@ export const DynamicBasicStacks = () => {
         return acc;
       }, {}),
   );
-  const [attention] = useState({ attended: [] });
 
   const [navOpen, setNavOpen] = useState(true);
   const [c11yOpen, setC11yOpen] = useState(false);
@@ -285,7 +282,7 @@ export const DynamicBasicStacks = () => {
 
   return (
     <Mosaic.Root>
-      <RootAttentionProvider attention={attention}>
+      <RootAttentionProvider>
         <Main.Root complementarySidebarOpen={c11yOpen} navigationSidebarOpen={navOpen}>
           <Main.Overlay />
           <Mosaic.DragOverlay />

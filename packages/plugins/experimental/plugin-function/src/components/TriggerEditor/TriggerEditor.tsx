@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 import { ScriptType } from '@dxos/plugin-script/types';
 import { useClient } from '@dxos/react-client';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { DensityProvider, Input, Select } from '@dxos/react-ui';
+import { Input, Select } from '@dxos/react-ui';
 import { distinctBy } from '@dxos/util';
 
 import { InputRow } from './Form';
@@ -105,7 +105,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
           a.typename < b.typename ? -1 : 1,
         );
       })
-      .catch();
+      .catch(() => {});
   }, [space]);
 
   // Keen an enriched version of the schema in memory so we can share it with prompt editor.
@@ -162,73 +162,71 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   const TriggerMeta = getFunctionMetaExtension(trigger, script)?.component;
 
   return (
-    <DensityProvider density='fine'>
-      <div className='flex flex-col my-2'>
-        <table className='is-full table-fixed'>
-          <tbody>
-            <InputRow label='Function'>
-              <Select.Root value={script?.id} onValueChange={handleSelectFunction}>
-                <Select.TriggerButton placeholder={'Select function'} />
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      {scripts.map(({ id, name }) => (
-                        <Select.Option key={id} value={id}>
-                          {name ?? 'Unnamed'}
-                        </Select.Option>
-                      ))}
-                    </Select.Viewport>
-                  </Select.Content>
-                </Select.Portal>
-              </Select.Root>
-            </InputRow>
-            {script?.description?.length && (
-              <InputRow>
-                <div className='px-2'>
-                  <p className='text-sm text-description'>{script?.description?.length}</p>
-                </div>
-              </InputRow>
-            )}
-            <InputRow label='Type'>
-              <Select.Root value={trigger.spec?.type} onValueChange={handleSelectTriggerType}>
-                <Select.TriggerButton placeholder={'Select trigger'} />
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      {triggerTypes.map((trigger) => (
-                        <Select.Option key={trigger} value={trigger}>
-                          {trigger}
-                        </Select.Option>
-                      ))}
-                    </Select.Viewport>
-                  </Select.Content>
-                </Select.Portal>
-              </Select.Root>
-            </InputRow>
-          </tbody>
-          <tbody>
-            {trigger.spec && <TriggerSpec space={space} spec={trigger.spec} />}
-            <InputRow label='Enabled'>
-              {/* TODO(burdon): Hack to make the switch the same height as other controls. */}
-              <div className='flex items-center h-8'>
-                <Input.Switch checked={trigger.enabled} onCheckedChange={(checked) => (trigger.enabled = !!checked)} />
+    <div className='flex flex-col my-2'>
+      <table className='is-full table-fixed'>
+        <tbody>
+          <InputRow label='Function'>
+            <Select.Root value={script?.id} onValueChange={handleSelectFunction}>
+              <Select.TriggerButton placeholder={'Select function'} />
+              <Select.Portal>
+                <Select.Content>
+                  <Select.Viewport>
+                    {scripts.map(({ id, name }) => (
+                      <Select.Option key={id} value={id}>
+                        {name ?? 'Unnamed'}
+                      </Select.Option>
+                    ))}
+                  </Select.Viewport>
+                </Select.Content>
+              </Select.Portal>
+            </Select.Root>
+          </InputRow>
+          {script?.description?.length && (
+            <InputRow>
+              <div className='px-2'>
+                <p className='text-sm text-description'>{script?.description?.length}</p>
               </div>
             </InputRow>
-          </tbody>
-          {TriggerMeta && (
-            <tbody>
-              <tr>
-                <td />
-                <td className='py-2'>
-                  <div className='border-b border-separator' />
-                </td>
-              </tr>
-              <TriggerMeta meta={trigger.meta} />
-            </tbody>
           )}
-        </table>
-      </div>
-    </DensityProvider>
+          <InputRow label='Type'>
+            <Select.Root value={trigger.spec?.type} onValueChange={handleSelectTriggerType}>
+              <Select.TriggerButton placeholder={'Select trigger'} />
+              <Select.Portal>
+                <Select.Content>
+                  <Select.Viewport>
+                    {triggerTypes.map((trigger) => (
+                      <Select.Option key={trigger} value={trigger}>
+                        {trigger}
+                      </Select.Option>
+                    ))}
+                  </Select.Viewport>
+                </Select.Content>
+              </Select.Portal>
+            </Select.Root>
+          </InputRow>
+        </tbody>
+        <tbody>
+          {trigger.spec && <TriggerSpec space={space} spec={trigger.spec} />}
+          <InputRow label='Enabled'>
+            {/* TODO(burdon): Hack to make the switch the same height as other controls. */}
+            <div className='flex items-center h-8'>
+              <Input.Switch checked={trigger.enabled} onCheckedChange={(checked) => (trigger.enabled = !!checked)} />
+            </div>
+          </InputRow>
+        </tbody>
+        {TriggerMeta && (
+          <tbody>
+            <tr>
+              <td />
+              <td className='py-2'>
+                <div className='border-b border-separator' />
+              </td>
+            </tr>
+            <TriggerMeta meta={trigger.meta} />
+          </tbody>
+        )}
+      </table>
+    </div>
   );
 };
 
