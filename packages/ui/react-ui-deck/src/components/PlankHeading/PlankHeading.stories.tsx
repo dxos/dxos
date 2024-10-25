@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React from 'react';
 
 import { Icon } from '@dxos/react-ui';
-import { AttentionProvider } from '@dxos/react-ui-attention';
+import { AttentionManager, RootAttentionProvider } from '@dxos/react-ui-attention';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { PlankHeading } from './PlankHeading';
@@ -18,14 +18,14 @@ type StorybookPlankHeadingProps = {
   label?: string;
 };
 
-const storybookAttended = new Set(['attended-story']);
+const storybookAttention = new AttentionManager(['attended-story']);
 
 const StorybookPlankHeading = ({
   attendableId = '',
   label = 'Plank heading Storybook story',
 }: StorybookPlankHeadingProps) => {
   return (
-    <AttentionProvider attended={storybookAttended}>
+    <RootAttentionProvider attention={storybookAttention}>
       <PlankHeading.Root>
         <PlankHeading.Button attendableId={attendableId}>
           <Icon icon='ph--chat--regular' size={5} />
@@ -50,12 +50,12 @@ const StorybookPlankHeading = ({
         </PlankHeading.Button>
         <PlankHeading.Label attendableId={attendableId}>{label}</PlankHeading.Label>
       </PlankHeading.Root>
-    </AttentionProvider>
+    </RootAttentionProvider>
   );
 };
 
 export default {
-  title: 'react-ui-deck/PlankHeading',
+  title: 'ui/react-ui-deck/PlankHeading',
   component: StorybookPlankHeading,
   decorators: [withTheme],
   parameters: { translations },

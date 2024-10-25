@@ -2,10 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-// https://codemirror.net/examples/autocompletion
-// https://codemirror.net/docs/ref/#autocomplete.autocompletion
-// https://codemirror.net/docs/ref/#autocomplete.Completion
-
 import {
   autocompletion,
   completionKeymap,
@@ -15,6 +11,7 @@ import {
   type CompletionResult,
 } from '@codemirror/autocomplete';
 import { markdownLanguage } from '@codemirror/lang-markdown';
+import { type Extension } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 
 export type AutocompleteResult = Completion;
@@ -25,11 +22,15 @@ export type AutocompleteOptions = {
   onSearch?: (text: string) => Completion[];
 };
 
+// https://codemirror.net/examples/autocompletion
+// https://codemirror.net/docs/ref/#autocomplete.autocompletion
+// https://codemirror.net/docs/ref/#autocomplete.Completion
+
 /**
  * Autocomplete extension.
  */
-export const autocomplete = ({ activateOnTyping, override, onSearch }: AutocompleteOptions = {}) => {
-  const extentions = [
+export const autocomplete = ({ activateOnTyping, override, onSearch }: AutocompleteOptions = {}): Extension => {
+  const extensions: Extension[] = [
     // https://codemirror.net/docs/ref/#view.keymap
     // https://discuss.codemirror.net/t/how-can-i-replace-the-default-autocompletion-keymap-v6/3322
     // TODO(burdon): Set custom keymap.
@@ -50,7 +51,7 @@ export const autocomplete = ({ activateOnTyping, override, onSearch }: Autocompl
   ];
 
   if (onSearch) {
-    extentions.push(
+    extensions.push(
       // TODO(burdon): Optional decoration via addToOptions
       markdownLanguage.data.of({
         autocomplete: (context: CompletionContext): CompletionResult | null => {
@@ -68,5 +69,5 @@ export const autocomplete = ({ activateOnTyping, override, onSearch }: Autocompl
     );
   }
 
-  return extentions;
+  return extensions;
 };

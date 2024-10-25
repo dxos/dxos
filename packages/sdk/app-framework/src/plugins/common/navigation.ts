@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
 import { z } from 'zod';
-
-import { S } from '@dxos/echo-schema';
 
 import type { IntentData } from '../IntentPlugin';
 import type { Plugin } from '../PluginHost';
@@ -30,7 +29,9 @@ const LayoutPartSchema = S.Union(
 );
 export type LayoutPart = S.Schema.Type<typeof LayoutPartSchema>;
 
-const LayoutPartsSchema = S.partial(S.mutable(S.Record(LayoutPartSchema, S.mutable(S.Array(LayoutEntrySchema)))));
+const LayoutPartsSchema = S.partial(
+  S.mutable(S.Record({ key: LayoutPartSchema, value: S.mutable(S.Array(LayoutEntrySchema)) })),
+);
 export type LayoutParts = S.Schema.Type<typeof LayoutPartsSchema>;
 
 const LayoutCoordinateSchema = S.mutable(S.Struct({ part: LayoutPartSchema, entryId: S.String }));
@@ -50,14 +51,6 @@ export type ActiveParts = z.infer<typeof ActiveParts>;
 
 // TODO(burdon): Where should this go?
 export type LayoutContainerProps<T> = T & { role?: string; coordinate?: LayoutCoordinate };
-
-/**
- * Basic state provided by a navigation plugin.
- */
-export const Attention = z.object({
-  attended: z.set(z.string()).describe('Ids of items which have focus.'),
-});
-export type Attention = z.infer<typeof Attention>;
 
 /**
  * Provides for a plugin that can manage the app navigation.

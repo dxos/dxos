@@ -8,18 +8,18 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   LayoutAction,
   NavigationAction,
-  parseMetadataResolverPlugin,
   Surface,
+  parseMetadataResolverPlugin,
   useIntentDispatcher,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { create, getType, isReactiveObject } from '@dxos/echo-schema';
+import { create, getType, fullyQualifiedId, isReactiveObject } from '@dxos/client/echo';
 import { useGraph } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { type CollectionType } from '@dxos/plugin-space/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { type MosaicDataItem, type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/react-ui-mosaic';
+import { AttentionProvider } from '@dxos/react-ui-attention';
+import { type MosaicDataItem, type MosaicDropEvent, type MosaicMoveEvent, Mosaic, Path } from '@dxos/react-ui-mosaic';
 import {
   type AddSectionPosition,
   type CollapsedSections,
@@ -39,11 +39,12 @@ const SectionContent: StackProps['SectionContent'] = ({ data }) => {
 };
 
 type StackMainProps = {
+  id: string;
   collection: CollectionType;
   separation?: boolean;
 };
 
-const StackMain = ({ collection, separation }: StackMainProps) => {
+const StackMain = ({ id, collection, separation }: StackMainProps) => {
   const dispatch = useIntentDispatcher();
   const { graph } = useGraph();
   const { t } = useTranslation(STACK_PLUGIN);
@@ -58,7 +59,6 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
     }
   }, [collection, stack]);
 
-  const id = `stack-${collection.id}`;
   const items =
     collection.objects
       // TODO(wittjosiah): Should the database handle this differently?
@@ -172,47 +172,50 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
   };
 
   return (
-    <>
-      <Stack
-        id={id}
-        data-testid='main.stack'
-        SectionContent={SectionContent}
-        type={SECTION_IDENTIFIER}
-        items={items}
-        separation={separation}
-        emptyComponent={<span data-testid='stack.empty'></span>}
-        onDrop={handleDrop}
-        onOver={handleOver}
-        onDeleteSection={handleDelete}
-        onNavigateToSection={handleNavigate}
-        onAddSection={handleAddSection}
-        onCollapseSection={handleCollapseSection}
-      />
+    <AttentionProvider id={id}>
+      <Mosaic.Root>
+        <Mosaic.DragOverlay />
+        <Stack
+          id={id}
+          data-testid='main.stack'
+          SectionContent={SectionContent}
+          type={SECTION_IDENTIFIER}
+          items={items}
+          separation={separation}
+          emptyComponent={<span data-testid='stack.empty'></span>}
+          onDrop={handleDrop}
+          onOver={handleOver}
+          onDeleteSection={handleDelete}
+          onNavigateToSection={handleNavigate}
+          onAddSection={handleAddSection}
+          onCollapseSection={handleCollapseSection}
+        />
 
-      {items.length === 0 ? (
-        <AddSection collection={collection} />
-      ) : (
-        <div role='none' className='flex mlb-2 pli-2 justify-center'>
-          <Button
-            data-testid='stack.createSection'
-            classNames='gap-2'
-            onClick={() =>
-              dispatch?.({
-                action: LayoutAction.SET_LAYOUT,
-                data: {
-                  element: 'dialog',
-                  component: 'dxos.org/plugin/stack/AddSectionDialog',
-                  subject: { position: 'afterAll', collection },
-                },
-              })
-            }
-          >
-            <Plus />
-            <span className='sr-only'>{t('add section label')}</span>
-          </Button>
-        </div>
-      )}
-    </>
+        {items.length === 0 ? (
+          <AddSection collection={collection} />
+        ) : (
+          <div role='none' className='flex mlb-2 pli-2 justify-center'>
+            <Button
+              data-testid='stack.createSection'
+              classNames='gap-2'
+              onClick={() =>
+                dispatch?.({
+                  action: LayoutAction.SET_LAYOUT,
+                  data: {
+                    element: 'dialog',
+                    component: 'dxos.org/plugin/stack/AddSectionDialog',
+                    subject: { position: 'afterAll', collection },
+                  },
+                })
+              }
+            >
+              <Plus />
+              <span className='sr-only'>{t('add section label')}</span>
+            </Button>
+          </div>
+        )}
+      </Mosaic.Root>
+    </AttentionProvider>
   );
 };
 

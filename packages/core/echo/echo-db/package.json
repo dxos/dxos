@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -57,8 +57,7 @@
     "@dxos/teleport": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.67.16",
-    "effect": "^3.2.7",
+    "effect": "^3.9.1",
     "eventemitter3": "^5.0.1",
     "lodash.get": "^4.4.2",
     "lodash.isequal": "^4.5.0"

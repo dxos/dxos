@@ -1,6 +1,6 @@
 {
   "name": "@dxos/composer-app",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
@@ -74,7 +74,9 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-auth": "^0.4.77",
+    "@effect/schema": "^0.75.1",
     "@fontsource/poiret-one": "^5.0.20",
+    "effect": "^3.9.1",
     "isomorphic-fetch": "^3.0.0",
     "micromark": "^4.0.0",
     "micromark-extension-directive": "^3.0.0",
@@ -84,17 +86,15 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@cloudflare/workers-types": "^4.20240821.1",
+    "@cloudflare/workers-types": "^4.20241018.0",
     "@dxos/app-graph": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-navtree": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
@@ -115,7 +115,6 @@
     "workbox-window": "^7.0.0"
   },
   "peerDependencies": {
-    "@babel/core": ">=7.0.0 <8.0.0-0",
-    "@dxos/react-ui-card": "workspace:*"
+    "@babel/core": ">=7.0.0 <8.0.0-0"
   }
 }

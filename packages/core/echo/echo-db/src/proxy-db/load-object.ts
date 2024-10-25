@@ -3,9 +3,9 @@
 //
 
 import { asyncTimeout } from '@dxos/async';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
 
-import { getObjectCore } from '../core-db';
+import { type EchoReactiveObject } from '../echo-handler';
+import { getObjectCore } from '../echo-handler';
 
 /**
  * @param obj

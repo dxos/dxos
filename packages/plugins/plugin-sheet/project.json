@@ -12,7 +12,7 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/meta.tsx",
+          "{projectRoot}/src/meta.ts",
           "{projectRoot}/src/types.ts"
         ],
         "platforms": [
@@ -35,6 +35,7 @@
     "test": {}
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "node-std"
   ]
 }

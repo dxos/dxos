@@ -34,7 +34,7 @@ export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: Node;
           icon={activeNode.properties?.icon ?? 'ph--dots-three-vertical--regular'}
           attendableId={activeNode.id}
           triggerLabel={menuTriggerLabel}
-          actions={actions}
+          actions={[actions]}
           onAction={(action) =>
             typeof action.data === 'function' && action.data({ node: action as Node, caller: TREE_ITEM_MAIN_HEADING })
           }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/messaging",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Messaging",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -14,11 +14,23 @@
         "default": "./dist/lib/node-esm/index.mjs"
       },
       "types": "./dist/types/src/index.d.ts"
+    },
+    "./testing": {
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": {
+        "require": "./dist/lib/node/testing/index.cjs",
+        "default": "./dist/lib/node-esm/testing/index.mjs"
+      },
+      "types": "./dist/types/src/testing/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
   },
   "files": [
     "dist",
@@ -26,7 +38,6 @@
     "README.md"
   ],
   "dependencies": {
-    "@bufbuild/protobuf": "^2.0.0",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -43,9 +54,9 @@
     "ws": "^8.14.2"
   },
   "devDependencies": {
+    "@dxos/keyring": "workspace:*",
     "@dxos/signal": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
-    "@types/node": "^22.6.1"
+    "@dxos/test-utils": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

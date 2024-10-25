@@ -5,7 +5,6 @@
 import { invertedEffects } from '@codemirror/commands';
 import {
   type Extension,
-  Facet,
   StateEffect,
   StateField,
   type Text,
@@ -29,17 +28,14 @@ import { debounce, type UnsubscribeCallback } from '@dxos/async';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
-import { Cursor } from './cursor';
-import { type Comment, type Range } from './types';
 import { overlap } from './util';
+import { Cursor, documentId, singleValueFacet } from '../state';
+import { type Comment, type Range } from '../state';
 import { callbackWrapper } from '../util';
 
 //
 // State management.
 //
-
-// TODO(wittjosiah): Factor out, not comments-specific.
-const documentId = Facet.define<string | undefined, string | undefined>({ combine: (values) => values[0] });
 
 type CommentState = {
   comment: Comment;
@@ -369,7 +365,7 @@ export type CommentsOptions = {
   onHover?: (el: Element, shortcut: string) => void;
 };
 
-const optionsFacet = Facet.define<CommentsOptions, CommentsOptions>({ combine: (providers) => providers[0] });
+const optionsFacet = singleValueFacet<CommentsOptions>();
 
 /**
  * Comment threads.
@@ -389,7 +385,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 
   return [
     optionsFacet.of(options),
-    documentId.of(options.id),
+    options.id ? documentId.of(options.id) : undefined,
     commentsState,
     commentsDecorations,
     handleCommentClick,
@@ -398,45 +394,43 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     //
     // Keymap.
     //
-    options.onCreate
-      ? keymap.of([
-          {
-            key: shortcut,
-            run: callbackWrapper(createComment),
-          },
-        ])
-      : [],
+    options.onCreate &&
+      keymap.of([
+        {
+          key: shortcut,
+          run: callbackWrapper(createComment),
+        },
+      ]),
 
     //
     // Hover tooltip (for key shortcut hints, etc.)
     // TODO(burdon): Factor out to generic hints extension for current selection/line.
     //
-    options.onHover
-      ? hoverTooltip(
-          (view, pos) => {
-            const selection = view.state.selection.main;
-            if (selection && pos >= selection.from && pos <= selection.to) {
-              return {
-                pos: selection.from,
-                end: selection.to,
-                above: true,
-                create: () => {
-                  const el = document.createElement('div');
-                  options.onHover!(el, shortcut);
-                  return { dom: el, offset: { x: 0, y: 8 } };
-                },
-              };
-            }
+    options.onHover &&
+      hoverTooltip(
+        (view, pos) => {
+          const selection = view.state.selection.main;
+          if (selection && pos >= selection.from && pos <= selection.to) {
+            return {
+              pos: selection.from,
+              end: selection.to,
+              above: true,
+              create: () => {
+                const el = document.createElement('div');
+                options.onHover!(el, shortcut);
+                return { dom: el, offset: { x: 0, y: 8 } };
+              },
+            };
+          }
 
-            return null;
-          },
-          {
-            // TODO(burdon): Hide on change triggered immediately?
-            // hideOnChange: true,
-            hoverTime: 1_000,
-          },
-        )
-      : [],
+          return null;
+        },
+        {
+          // TODO(burdon): Hide on change triggered immediately?
+          // hideOnChange: true,
+          hoverTime: 1_000,
+        },
+      ),
 
     //
     // Track deleted ranges and update ranges for decorations.
@@ -511,8 +505,8 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       }
     }),
 
-    options.onUpdate ? trackPastedComments(options.onUpdate) : [],
-  ];
+    options.onUpdate && trackPastedComments(options.onUpdate),
+  ].filter(nonNullable);
 };
 
 //
@@ -553,9 +547,13 @@ export const scrollThreadIntoView = (view: EditorView, id: string, center = true
  * Query the editor state for the active formatting at the selection.
  */
 export const selectionOverlapsComment = (state: EditorState): boolean => {
-  const { selection } = state;
-  const commentState = state.field(commentsState);
+  // May not be defined if thread plugin not installed.
+  const commentState = state.field(commentsState, false);
+  if (commentState === undefined) {
+    return false;
+  }
 
+  const { selection } = state;
   for (const range of selection.ranges) {
     if (commentState.comments.some(({ range: commentRange }) => overlap(commentRange, range))) {
       return true;
@@ -597,6 +595,7 @@ class ExternalCommentSync implements PluginValue {
   };
 }
 
+// TODO(burdon): Needs comment.
 export const createExternalCommentSync = (
   id: string,
   subscribe: (sink: () => void) => UnsubscribeCallback,

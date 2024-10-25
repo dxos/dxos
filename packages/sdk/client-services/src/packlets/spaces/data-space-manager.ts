@@ -35,8 +35,8 @@ import {
   type ObjectStructure,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES, generateEchoId, getTypeReference } from '@dxos/echo-schema';
-import type { EdgeConnection } from '@dxos/edge-client';
+import { TYPE_PROPERTIES, createObjectId, getTypeReference } from '@dxos/echo-schema';
+import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages, type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -46,7 +46,7 @@ import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type SpaceMetadata, EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { SpaceMember, type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
@@ -110,6 +110,7 @@ export type DataSpaceManagerParams = {
   echoHost: EchoHost;
   invitationsManager: InvitationsManager;
   edgeConnection?: EdgeConnection;
+  edgeHttpClient?: EdgeHttpClient;
   meshReplicator?: MeshEchoReplicator;
   echoEdgeReplicator?: EchoEdgeReplicator;
   runtimeParams?: DataSpaceManagerRuntimeParams;
@@ -119,6 +120,7 @@ export type DataSpaceManagerParams = {
 export type DataSpaceManagerRuntimeParams = {
   spaceMemberPresenceAnnounceInterval?: number;
   spaceMemberPresenceOfflineTimeout?: number;
+  activeEdgeNotarizationPollingInterval?: number;
   disableP2pReplication?: boolean;
 };
 
@@ -138,6 +140,7 @@ export class DataSpaceManager extends Resource {
   private readonly _echoHost: EchoHost;
   private readonly _invitationsManager: InvitationsManager;
   private readonly _edgeConnection?: EdgeConnection = undefined;
+  private readonly _edgeHttpClient?: EdgeHttpClient = undefined;
   private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures = undefined;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
   private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
@@ -157,6 +160,7 @@ export class DataSpaceManager extends Resource {
     this._edgeConnection = params.edgeConnection;
     this._edgeFeatures = params.edgeFeatures;
     this._echoEdgeReplicator = params.echoEdgeReplicator;
+    this._edgeHttpClient = params.edgeHttpClient;
     this._runtimeParams = params.runtimeParams;
 
     trace.diagnostic({
@@ -293,7 +297,7 @@ export class DataSpaceManager extends Resource {
       },
     };
 
-    const propertiesId = generateEchoId();
+    const propertiesId = createObjectId();
     document.change((doc: SpaceDoc) => {
       setDeep(doc, ['objects', propertiesId], properties);
     });
@@ -391,6 +395,26 @@ export class DataSpaceManager extends Resource {
     });
   }
 
+  async setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting) {
+    const space = this._spaces.get(spaceKey);
+    invariant(space, 'Space not found.');
+
+    await this._metadataStore.setSpaceEdgeReplicationSetting(spaceKey, setting);
+
+    if (space.isOpen) {
+      switch (setting) {
+        case EdgeReplicationSetting.DISABLED:
+          await this._echoEdgeReplicator?.disconnectFromSpace(space.id);
+          break;
+        case EdgeReplicationSetting.ENABLED:
+          await this._echoEdgeReplicator?.connectToSpace(space.id);
+          break;
+      }
+    }
+
+    space.stateUpdate.emit();
+  }
+
   private async _constructSpace(metadata: SpaceMetadata) {
     log('construct space', { metadata });
     const gossip = new Gossip({
@@ -482,13 +506,23 @@ export class DataSpaceManager extends Resource {
       },
       cache: metadata.cache,
       edgeConnection: this._edgeConnection,
+      edgeHttpClient: this._edgeHttpClient,
       edgeFeatures: this._edgeFeatures,
+      activeEdgeNotarizationPollingInterval: this._runtimeParams?.activeEdgeNotarizationPollingInterval,
     });
     dataSpace.postOpen.append(async () => {
-      await this._echoEdgeReplicator?.connectToSpace(dataSpace.id);
+      const setting = dataSpace.getEdgeReplicationSetting();
+      if (setting === EdgeReplicationSetting.ENABLED) {
+        await this._echoEdgeReplicator?.connectToSpace(dataSpace.id);
+      } else if (this._echoEdgeReplicator) {
+        log('not connecting EchoEdgeReplicator because of EdgeReplicationSetting', { spaceId: dataSpace.id });
+      }
     });
     dataSpace.preClose.append(async () => {
-      await this._echoEdgeReplicator?.disconnectFromSpace(dataSpace.id);
+      const setting = dataSpace.getEdgeReplicationSetting();
+      if (setting === EdgeReplicationSetting.ENABLED) {
+        await this._echoEdgeReplicator?.disconnectFromSpace(dataSpace.id);
+      }
     });
 
     presence.newPeer.on((peerState) => {

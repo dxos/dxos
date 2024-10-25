@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { TypedObject, type S } from '@dxos/echo-schema';
+import { type S, TypedObject } from '@dxos/echo-schema';
 
 export class ContactsType extends TypedObject({ typename: 'dxos.org/type/Contacts', version: '0.1.0' })({}) {}
 

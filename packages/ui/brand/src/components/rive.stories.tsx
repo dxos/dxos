@@ -12,7 +12,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 export default {
-  title: 'brand/Rive',
+  title: 'ui/brand/Rive',
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: ['absolute inset-0 bg-black'] })],
 };
 
@@ -46,7 +46,7 @@ const Component = ({ buffer }: { buffer: ArrayBuffer }) => {
 };
 
 export const Default = () => {
-  const buffer = useAsyncState<ArrayBuffer>(async () => {
+  const [buffer] = useAsyncState<ArrayBuffer>(async () => {
     // CORS set via dashboard.
     const response = await fetch('https://dxos.network/dxos.riv', { mode: 'cors' });
     if (response.ok) {

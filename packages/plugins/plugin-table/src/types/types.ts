@@ -33,6 +33,4 @@ export type TablePluginProvides = SurfaceProvides &
   StackProvides &
   TranslationsProvides;
 
-export const isTable = (object: unknown): object is TableType => {
-  return object != null && object instanceof TableType;
-};
+export const isTable = (object: unknown): object is TableType => object != null && object instanceof TableType;

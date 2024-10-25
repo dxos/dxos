@@ -46,7 +46,7 @@ describe('Swarm', () => {
     signalManager?: SignalManager;
     initiationDelay?: number;
   }): Promise<TestPeer> => {
-    const protocol = new TestWireProtocol(PublicKey.from(peer.peerKey));
+    const protocol = new TestWireProtocol();
     const swarm = new Swarm(
       topic,
       peer,

@@ -201,7 +201,7 @@ describe.skip("Experimental API", () => {
       {
         const client2 = new Client();
         expect(client2.halo.identity).not.toBeDefined();
-        const profile = await client2.halo.recoverIdentity("invite code");
+        const profile = await client2.halo.recoverIdentity({ seedphrase: "words..." });
         // expect(
         //   PublicKey.equals(profile.publicKey, client2.halo.profile.publicKey)
         // ).toBeTruthy();

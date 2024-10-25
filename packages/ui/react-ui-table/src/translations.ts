@@ -10,7 +10,7 @@ export default [
       [translationKey]: {
         'no selection label': ' ',
         'number column type label': 'Number',
-        'boolean column type label': 'Toggle',
+        'boolean column type label': 'Boolean',
         'date column type label': 'Date',
         'string column type label': 'Text',
         'ref column type label': 'Reference',

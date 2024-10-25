@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Schema as S } from '@effect/schema';
 import React, { type JSX, type PropsWithChildren, useEffect } from 'react';
 
-import { type S } from '@dxos/echo-schema';
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -137,95 +137,93 @@ export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplat
   usePromptInputs(prompt);
 
   return (
-    <DensityProvider density='fine'>
-      <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
-        {commandEditable && (
-          <Section title='Command'>
-            <div className='flex items-center pl-4'>
-              <span className='text-neutral-500'>/</span>
-              <Input.Root>
-                <Input.TextInput
-                  placeholder={t('command placeholder')}
-                  classNames={mx('is-full bg-transparent m-2')}
-                  value={prompt.command ?? ''}
-                  onChange={(event) => {
-                    prompt.command = event.target.value.replace(/\w/g, '');
-                  }}
-                />
-              </Input.Root>
-            </div>
-          </Section>
-        )}
-
-        <Section title='Template'>
-          <div ref={parentRef} className={mx(attentionSurface, 'rounded', 'min-h-[120px]')} />
+    <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
+      {commandEditable && (
+        <Section title='Command'>
+          <div className='flex items-center pl-4'>
+            <span className='text-neutral-500'>/</span>
+            <Input.Root>
+              <Input.TextInput
+                placeholder={t('command placeholder')}
+                classNames={mx('is-full bg-transparent m-2')}
+                value={prompt.command ?? ''}
+                onChange={(event) => {
+                  prompt.command = event.target.value.replace(/\w/g, '');
+                }}
+              />
+            </Input.Root>
+          </div>
         </Section>
+      )}
 
-        {(prompt.inputs?.length ?? 0) > 0 && (
-          <Section title='Inputs'>
-            <div className='flex flex-col'>
-              {/* TODO(zan): Improve layout with grid */}
-              <table className='w-full table-fixed border-collapse my-2'>
-                <tbody>
-                  {prompt.inputs?.filter(nonNullable).map((input) => (
-                    <tr key={input.name}>
-                      <td className='w-[160px] p-1 font-mono text-sm whitespace-nowrap truncate'>
-                        <code className='px-2'>{input.name}</code>
-                      </td>
-                      <td className='w-[120px] p-1'>
-                        <Input.Root>
-                          <Select.Root
-                            value={String(input.type)}
-                            onValueChange={(type) => {
-                              input.type = getInputType(type) ?? ChainInputType.VALUE;
-                            }}
-                          >
-                            <Select.TriggerButton placeholder='Type' classNames='is-full' />
-                            <Select.Portal>
-                              <Select.Content>
-                                <Select.Viewport>
-                                  {inputTypes.map(({ value, label }) => (
-                                    <Select.Option key={value} value={String(value)}>
-                                      {label}
-                                    </Select.Option>
-                                  ))}
-                                </Select.Viewport>
-                              </Select.Content>
-                            </Select.Portal>
-                          </Select.Root>
-                        </Input.Root>
-                      </td>
-                      <td className='p-1 pr-2'>
-                        {input.type !== undefined &&
-                          [
-                            ChainInputType.VALUE,
-                            ChainInputType.CONTEXT,
-                            ChainInputType.RESOLVER,
-                            ChainInputType.SCHEMA,
-                          ].includes(input.type) && (
-                            <div>
-                              <Input.Root>
-                                <Input.TextInput
-                                  placeholder={t('command placeholder')}
-                                  classNames={mx('is-full bg-transparent')}
-                                  value={input.value ?? ''}
-                                  onChange={(event) => {
-                                    input.value = event.target.value;
-                                  }}
-                                />
-                              </Input.Root>
-                            </div>
-                          )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Section>
-        )}
-      </div>
-    </DensityProvider>
+      <Section title='Template'>
+        <div ref={parentRef} className={mx(attentionSurface, 'rounded', 'min-h-[120px]')} />
+      </Section>
+
+      {(prompt.inputs?.length ?? 0) > 0 && (
+        <Section title='Inputs'>
+          <div className='flex flex-col'>
+            {/* TODO(zan): Improve layout with grid */}
+            <table className='w-full table-fixed border-collapse my-2'>
+              <tbody>
+                {prompt.inputs?.filter(nonNullable).map((input) => (
+                  <tr key={input.name}>
+                    <td className='w-[160px] p-1 font-mono text-sm whitespace-nowrap truncate'>
+                      <code className='px-2'>{input.name}</code>
+                    </td>
+                    <td className='w-[120px] p-1'>
+                      <Input.Root>
+                        <Select.Root
+                          value={String(input.type)}
+                          onValueChange={(type) => {
+                            input.type = getInputType(type) ?? ChainInputType.VALUE;
+                          }}
+                        >
+                          <Select.TriggerButton placeholder='Type' classNames='is-full' />
+                          <Select.Portal>
+                            <Select.Content>
+                              <Select.Viewport>
+                                {inputTypes.map(({ value, label }) => (
+                                  <Select.Option key={value} value={String(value)}>
+                                    {label}
+                                  </Select.Option>
+                                ))}
+                              </Select.Viewport>
+                            </Select.Content>
+                          </Select.Portal>
+                        </Select.Root>
+                      </Input.Root>
+                    </td>
+                    <td className='p-1 pr-2'>
+                      {input.type !== undefined &&
+                        [
+                          ChainInputType.VALUE,
+                          ChainInputType.CONTEXT,
+                          ChainInputType.RESOLVER,
+                          ChainInputType.SCHEMA,
+                        ].includes(input.type) && (
+                          <div>
+                            <Input.Root>
+                              <Input.TextInput
+                                placeholder={t('command placeholder')}
+                                classNames={mx('is-full bg-transparent')}
+                                value={input.value ?? ''}
+                                onChange={(event) => {
+                                  input.value = event.target.value;
+                                }}
+                              />
+                            </Input.Root>
+                          </div>
+                        )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Section>
+      )}
+    </div>
   );
 };
 

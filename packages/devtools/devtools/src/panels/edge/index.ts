@@ -2,6 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
-export const EdgeDashboardPanel = React.lazy(() => import('./EdgeDashboardPanel'));
+export const EdgeDashboardPanel = lazy(() => import('./EdgeDashboardPanel'));

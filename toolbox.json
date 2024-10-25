@@ -31,6 +31,7 @@
     ],
     "pathMapping": {
       "include": [
+        "packages/devtools/devtools",
         "packages/plugins/*",
         "packages/plugins/experimental/*",
         "packages/sdk/app-graph",
@@ -39,6 +40,7 @@
         "packages/sdk/shell",
         "packages/ui/*"
       ]
-    }
+    },
+    "noProjectReferences": true
   }
 }

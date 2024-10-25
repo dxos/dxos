@@ -3,7 +3,7 @@
 //
 
 import { CheckCircle, X } from '@phosphor-icons/react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { MessageType } from '@dxos/plugin-space/types';
@@ -93,7 +93,6 @@ export const CommentContainer = ({
   detached,
   context,
   current,
-  autoFocusTextbox,
   onAttend,
   onThreadDelete,
   onMessageDelete,
@@ -106,7 +105,6 @@ export const CommentContainer = ({
   const activity = useStatus(space, fullyQualifiedId(thread));
   const { t } = useTranslation(THREAD_PLUGIN);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
-  const [autoFocus, setAutoFocus] = useState(!!autoFocusTextbox);
   const { themeMode } = useThemeContext();
 
   const textboxMetadata = getMessageMetadata(fullyQualifiedId(thread), identity);
@@ -123,13 +121,6 @@ export const CommentContainer = ({
     ],
     [_count],
   );
-
-  // TODO(thure): Because of the way the `autoFocus` property is handled by TextEditor,
-  //  this is the least-bad way of moving focus at the right time, though it is an anti-pattern.
-  //  Refactor to behave more like <input/>’s `autoFocus` or `autofocus` (yes, they’re different).
-  useEffect(() => {
-    setAutoFocus(!!autoFocusTextbox);
-  }, [autoFocusTextbox]);
 
   // TODO(thure): Factor out.
   const scrollToEnd = (behavior: ScrollBehavior) =>
@@ -151,7 +142,6 @@ export const CommentContainer = ({
     onComment?.(thread);
 
     messageRef.current = '';
-    setAutoFocus(true);
     scrollToEnd('instant');
     rerenderEditor();
 
@@ -200,7 +190,13 @@ export const CommentContainer = ({
           onDelete={(id: string) => onMessageDelete?.(id)}
         />
       ))}
-      <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
+      {/*
+        TODO(wittjosiah): Can't autofocus this generally.
+          There can be multiple threads with inputs and they can't all be focused.
+          Also, it steals focus from documents when first rendered.
+          Need to find a way to autofocus in one scenario only: when a new thread is created.
+      */}
+      <MessageTextbox extensions={extensions} onSend={handleCreate} {...textboxMetadata} />
       <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
       {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
       <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />

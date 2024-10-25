@@ -2,25 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { computed, effect } from '@preact/signals-core';
 import React from 'react';
 
 import {
   type IntentPluginProvides,
-  LayoutAction,
-  NavigationAction,
   type LocationProvides,
+  NavigationAction,
   type Plugin,
   type PluginDefinition,
+  isLayoutParts,
   parseIntentPlugin,
   parseNavigationPlugin,
-  resolvePlugin,
-  isLayoutParts,
   parseMetadataResolverPlugin,
+  resolvePlugin,
+  LayoutAction,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
@@ -28,40 +25,34 @@ import { type ActionGroup, createExtension, isActionGroup, toSignal } from '@dxo
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { SpaceAction } from '@dxos/plugin-space';
 import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
-import {
-  getSpace,
-  getTextInRange,
-  createDocAccessor,
-  fullyQualifiedId,
-  loadObjectReferences,
-} from '@dxos/react-client/echo';
-import { comments, createExternalCommentSync, listener } from '@dxos/react-ui-editor';
+import { create, type EchoReactiveObject, getTypename } from '@dxos/react-client/echo';
+import { getSpace, fullyQualifiedId, loadObjectReferences, parseFullyQualifiedId } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
-import { nonNullable } from '@dxos/util';
 
-import { ThreadMain, ThreadSettings, ChatContainer, ChatHeading, ThreadArticle } from './components';
-import { ThreadComplementary } from './components/ThreadComplementary';
+import {
+  ChatContainer,
+  ChatHeading,
+  ThreadArticle,
+  ThreadComplementary,
+  ThreadMain,
+  ThreadSettings,
+} from './components';
+import { threads } from './extensions';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
-import { ThreadAction, type ThreadPluginProvides, type ThreadSettingsProps } from './types';
-
-type ThreadState = {
-  /** An in-memory staging area for threads that are being drafted. */
-  staging: Record<string, ThreadType[]>;
-  current?: string | undefined;
-  focus?: boolean;
-};
+import { ThreadAction, type ThreadPluginProvides, type ThreadSettingsProps, type ThreadState } from './types';
 
 type SubjectId = string;
+
 const initialViewState = { showResolvedThreads: false };
+
 type ViewStore = Record<SubjectId, typeof initialViewState>;
 
-// TODO(Zan): More robust runtime check.
-
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
+//  NOTE(burdon): Review/discuss CursorConverter semantics.
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
-  const state = create<ThreadState>({ staging: {} });
+  const state = create<ThreadState>({ drafts: {} });
 
   const viewStore = create<ViewStore>({});
   const getViewState = (subjectId: string) => {
@@ -135,13 +126,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             createExtension({
               id: `${THREAD_PLUGIN}/comments-for-subject`,
               resolver: ({ id }) => {
+                // TODO(Zan): Find util (or make one).
                 if (!id.endsWith('~comments')) {
                   return;
                 }
 
-                // TODO(Zan): Find util (or make one).
-                const subjectId = id.split('~').at(0);
-                const [spaceId, objectId] = subjectId?.split(':') ?? [];
+                const [subjectId] = id.split('~');
+                const [spaceId, objectId] = parseFullyQualifiedId(subjectId);
                 const space = client.spaces.get().find((space) => space.id === spaceId);
                 const object = toSignal(
                   (onChange) => {
@@ -153,6 +144,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     return () => clearTimeout(timeout);
                   },
                   () => space?.db.getObjectById(objectId),
+                  subjectId,
                 );
                 if (!object || !subjectId) {
                   return;
@@ -168,11 +160,12 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 return {
                   id,
                   type: 'orphan-comments-for-subject',
-                  data: object,
+                  data: null,
                   properties: {
-                    icon: meta.icon,
+                    icon: 'ph--chat-text--regular',
                     label,
                     showResolvedThreads: viewState.showResolvedThreads,
+                    object,
                   },
                 };
               },
@@ -261,8 +254,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               return data.plugin === meta.id ? <ThreadSettings settings={settings.values} /> : null;
             }
 
-            case 'article':
-            case 'complementary': {
+            case 'article': {
               const location = navigationPlugin?.provides.location;
 
               if (data.object instanceof ChannelType && data.object.threads[0]) {
@@ -290,6 +282,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 );
               }
 
+              break;
+            }
+
+            case 'complementary--comments': {
               if (
                 data.subject &&
                 typeof data.subject === 'object' &&
@@ -302,13 +298,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   <ThreadComplementary
                     role={role}
                     subject={data.subject}
-                    stagedThreads={state.staging[fullyQualifiedId(data.subject)]}
+                    drafts={state.drafts[fullyQualifiedId(data.subject)]}
                     current={state.current}
-                    focus
                     showResolvedThreads={showResolvedThreads}
                   />
                 );
               }
+
+              break;
             }
           }
 
@@ -327,7 +324,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   try {
                     // Static schema will throw an error if subject does not support threads array property.
                     subject.threads = [];
-                  } catch (e) {
+                  } catch (err) {
                     log.error('Subject does not support threads array', subject?.typename);
                     return;
                   }
@@ -335,11 +332,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
                 const subjectId = fullyQualifiedId(subject);
                 const thread = create(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
-                const stagingArea = state.staging[subjectId];
-                if (stagingArea) {
-                  stagingArea.push(thread);
+                const draft = state.drafts[subjectId];
+                if (draft) {
+                  draft.push(thread);
                 } else {
-                  state.staging[subjectId] = [thread];
+                  state.drafts[subjectId] = [thread];
                 }
 
                 return {
@@ -348,13 +345,22 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     [
                       {
                         action: ThreadAction.SELECT,
-                        data: { current: fullyQualifiedId(thread), focus: true },
+                        data: { current: fullyQualifiedId(thread) },
                       },
+                    ],
+                    [
+                      {
+                        action: NavigationAction.OPEN,
+                        data: {
+                          activeParts: { complementary: 'comments' },
+                        },
+                      },
+                    ],
+                    [
                       {
                         action: LayoutAction.SET_LAYOUT,
                         data: {
                           element: 'complementary',
-                          subject: subjectId,
                           state: true,
                         },
                       },
@@ -363,14 +369,30 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 };
               } else {
                 // NOTE: This is the standalone thread creation case.
-                return { data: create(ChannelType, { threads: [create(ThreadType, { messages: [] })] }) };
+                return {
+                  data: create(ChannelType, { threads: [create(ThreadType, { messages: [] })] }),
+                };
               }
             }
 
             case ThreadAction.SELECT: {
-              state.focus = intent.data?.current === state.current ? state.focus : intent.data?.focus;
               state.current = intent.data?.current;
-              return { data: true };
+
+              return {
+                data: true,
+                intents: !intent.data?.skipOpen
+                  ? [
+                      [
+                        {
+                          action: NavigationAction.OPEN,
+                          data: {
+                            activeParts: { complementary: 'comments' },
+                          },
+                        },
+                      ],
+                    ]
+                  : [],
+              };
             }
 
             case ThreadAction.TOGGLE_RESOLVED: {
@@ -389,6 +411,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const spaceId = space?.id;
 
               return {
+                data: true,
                 intents: [
                   [
                     {
@@ -410,13 +433,12 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               }
 
               const subjectId = fullyQualifiedId(subject);
-              const stagingArea = state.staging[subjectId];
-              if (stagingArea) {
-                // Check if we're deleting a thread that's in the staging area.
-                // If so, remove it from the staging area without ceremony.
-                const index = stagingArea.findIndex((t) => t.id === thread.id);
+              const draft = state.drafts[subjectId];
+              if (draft) {
+                // Check if we're deleting a draft; if so, remove it.
+                const index = draft.findIndex((t) => t.id === thread.id);
                 if (index !== -1) {
-                  stagingArea.splice(index, 1);
+                  draft.splice(index, 1);
                   return { data: true };
                 }
               }
@@ -483,12 +505,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const intents = [];
               const analyticsProperties = { threadId: thread.id, spaceId: space?.id };
 
-              if (state.staging[subjectId]?.find((t) => t === thread)) {
-                // Move thread from staging to document.
+              if (state.drafts[subjectId]?.find((t) => t === thread)) {
+                // Move draft to document.
                 thread.status = 'active';
                 subject.threads ? subject.threads.push(thread) : (subject.threads = [thread]);
-                state.staging[subjectId] = state.staging[subjectId]?.filter((t) => t.id !== thread.id);
-
+                state.drafts[subjectId] = state.drafts[subjectId]?.filter(({ id }) => id !== thread.id);
                 intents.push({
                   action: ObservabilityAction.SEND_EVENT,
                   data: { name: 'threads.thread-created', properties: analyticsProperties },
@@ -556,13 +577,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               } else if (intent.undo) {
                 const message = intent.data?.message;
                 const messageIndex = intent.data?.messageIndex;
-
                 if (!(message instanceof MessageType) || !(typeof messageIndex === 'number')) {
                   return;
                 }
 
                 thread.messages.splice(messageIndex, 0, message);
-
                 return {
                   data: true,
                   intents: [
@@ -583,96 +602,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       markdown: {
-        // TODO(burdon): Factor out extension factory into separate file (for simplicity).
         extensions: ({ document: doc }) => {
-          const space = doc && getSpace(doc);
-          if (!doc || !space) {
-            // Include no-op comments extension here to ensure that the facets are always present when they are expected.
-            // TODO(wittjosiah): The Editor should only look for these facets when comments are available.
-            return [comments()];
-          }
-
-          // TODO(Zan): When we have the deepsignal specific equivalent of this we should use that instead.
-          const threads = computed(() =>
-            [...doc.threads.filter(nonNullable), ...(state.staging[fullyQualifiedId(doc)] ?? [])].filter(
-              (thread) => !(thread?.status === 'resolved'),
-            ),
-          );
-
-          return [
-            listener({
-              onChange: () => {
-                doc.threads.forEach((thread) => {
-                  if (thread?.anchor) {
-                    const [start, end] = thread.anchor.split(':');
-                    const name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
-                    // TODO(burdon): This seems unsafe; review.
-                    // Only update if the name has changed, otherwise this will cause an infinite loop.
-                    // Skip if the name is empty - this means comment text was deleted, but thread name should remain.
-                    if (name && name !== thread.name) {
-                      thread.name = name;
-                    }
-                  }
-                });
-              },
-            }),
-            createExternalCommentSync(
-              doc.id,
-              (sink) => effect(() => sink()),
-              () =>
-                threads.value
-                  .filter((thread) => thread?.anchor)
-                  .map((thread) => ({ id: fullyQualifiedId(thread), cursor: thread.anchor! })),
-            ),
-            comments({
-              id: doc.id,
-              onCreate: ({ cursor }) => {
-                const [start, end] = cursor.split(':');
-                const name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
-
-                void intentPlugin?.provides.intent.dispatch({
-                  action: ThreadAction.CREATE,
-                  data: {
-                    cursor,
-                    name,
-                    subject: doc,
-                  },
-                });
-              },
-              onDelete: ({ id }) => {
-                // If the thread is in the staging area, remove it.
-                const stagingArea = state.staging[fullyQualifiedId(doc)];
-                if (stagingArea) {
-                  const index = stagingArea.findIndex((thread) => fullyQualifiedId(thread) === id);
-                  if (index !== -1) {
-                    stagingArea.splice(index, 1);
-                  }
-                }
-
-                const thread = doc.threads.find((thread) => thread?.id === id);
-                if (thread) {
-                  thread.anchor = undefined;
-                }
-              },
-              onUpdate: ({ id, cursor }) => {
-                const thread =
-                  state.staging[fullyQualifiedId(doc)]?.find((thread) => fullyQualifiedId(thread) === id) ??
-                  doc.threads.find((thread) => thread?.id === id);
-
-                if (thread instanceof ThreadType && thread.anchor) {
-                  const [start, end] = thread.anchor.split(':');
-                  thread.name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
-                  thread.anchor = cursor;
-                }
-              },
-              onSelect: ({ selection: { current, closest } }) => {
-                const dispatch = intentPlugin?.provides.intent.dispatch;
-                if (dispatch) {
-                  void dispatch([{ action: ThreadAction.SELECT, data: { current: current ?? closest } }]);
-                }
-              },
-            }),
-          ];
+          return threads(state, doc, intentPlugin?.provides.intent.dispatch);
         },
       },
     },

@@ -2,28 +2,37 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
 import { describe, expect, test } from 'vitest';
+
+import { S } from '@dxos/effect';
 
 import { effectToJsonSchema, jsonToEffectSchema } from './json-schema';
 import { FieldMeta } from '../ast';
-import { ref } from '../ref-annotation';
-import { TEST_SCHEMA_TYPE } from '../testing';
-import { TypedObject } from '../typed-object-class';
+import { ref } from '../handler';
+import { TypedObject } from '../object';
 
 describe('effect-to-json', () => {
   const ECHO_KEY = '$echo';
 
   test('type annotation', () => {
-    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
+    class Schema extends TypedObject({
+      typename: 'example.com/type/Test',
+      version: '0.1.0',
+    })({ field: S.String }) {}
     const jsonSchema = effectToJsonSchema(Schema);
-    expect(jsonSchema[ECHO_KEY].type).to.deep.eq(TEST_SCHEMA_TYPE);
+    expect(jsonSchema[ECHO_KEY].type).to.deep.eq({
+      typename: 'example.com/type/Test',
+      version: '0.1.0',
+    });
   });
 
   test('field meta annotation', () => {
     const meta = { maxLength: 0 };
     const metaNamespace = 'dxos.test';
-    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({
+    class Schema extends TypedObject({
+      typename: 'example.com/type/Test',
+      version: '0.1.0',
+    })({
       field: S.String.pipe(FieldMeta(metaNamespace, meta)),
     }) {}
     const jsonSchema = effectToJsonSchema(Schema);
@@ -31,23 +40,35 @@ describe('effect-to-json', () => {
   });
 
   test('reference annotation', () => {
-    class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
-    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: ref(Nested) }) {}
+    class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
+      field: S.String,
+    }) {}
+    class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+      field: ref(Nested),
+    }) {}
     const jsonSchema = effectToJsonSchema(Schema);
     const nested = jsonSchema.properties.field;
     expectReferenceAnnotation(nested);
   });
 
   test('array of references', () => {
-    class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
-    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.Array(ref(Nested)) }) {}
+    class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
+      field: S.String,
+    }) {}
+    class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+      field: S.Array(ref(Nested)),
+    }) {}
     const jsonSchema = effectToJsonSchema(Schema);
     expectReferenceAnnotation(jsonSchema.properties.field.items);
   });
 
   test('optional references', () => {
-    class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
-    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.optional(ref(Nested)) }) {}
+    class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
+      field: S.String,
+    }) {}
+    class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+      field: S.optional(ref(Nested)),
+    }) {}
     const jsonSchema = effectToJsonSchema(Schema);
     expectReferenceAnnotation(jsonSchema.properties.field);
   });
@@ -60,23 +81,25 @@ describe('effect-to-json', () => {
   });
 
   const expectReferenceAnnotation = (object: any) => {
-    expect(object[ECHO_KEY].reference).to.deep.eq(TEST_SCHEMA_TYPE);
+    expect(object[ECHO_KEY].reference).to.deep.eq({ typename: 'example.com/type/TestNested', version: '0.1.0' });
   };
 });
 
 describe('json-to-effect', () => {
   for (const partial of [false, true]) {
     test('deserialized equals original', () => {
-      class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
+      class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
+        field: S.String,
+      }) {}
 
-      class Schema extends TypedObject(TEST_SCHEMA_TYPE)(
+      class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })(
         {
-          string: S.String.pipe(S.identifier('String')),
+          string: S.String.pipe(S.annotations({ identifier: 'String' })),
           number: S.Number.pipe(FieldMeta('dxos.test', { is_date: true })),
           boolean: S.Boolean,
           array: S.Array(S.String),
           twoDArray: S.Array(S.Array(S.String)),
-          record: S.Record(S.String, S.Number),
+          record: S.Record({ key: S.String, value: S.Number }),
           object: S.Struct({ id: S.String, field: ref(Nested) }),
           echoObject: ref(Nested),
           echoObjectArray: S.Array(ref(Nested)),
@@ -107,6 +130,7 @@ describe('json-to-effect', () => {
         result[key] = removeFilterFunction(obj[key]);
       }
     }
+
     return result;
   };
 });

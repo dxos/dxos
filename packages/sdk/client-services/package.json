@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-services",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "DXOS client services implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -87,7 +87,8 @@
     "@dxos/signal": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@types/platform": "^1.3.4",
-    "@types/readable-stream": "^2.3.9"
+    "@types/readable-stream": "^2.3.9",
+    "get-port-please": "^3.1.1"
   },
   "publishConfig": {
     "access": "public"

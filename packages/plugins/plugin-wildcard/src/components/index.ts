@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
-// Lazily load components for content surfaces.
-export const Wildcard = React.lazy(() => import('./Wildcard'));
+export const Wildcard = lazy(() => import('./Wildcard'));

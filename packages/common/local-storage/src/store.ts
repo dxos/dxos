@@ -4,13 +4,18 @@
 
 import { effect } from '@preact/signals-core';
 
-import type { UnsubscribeCallback } from '@dxos/async';
+import { type UnsubscribeCallback } from '@dxos/async';
 import { type ReactiveObject, create } from '@dxos/echo-schema';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 type PropType<T> = {
   get: (key: string) => T | undefined;
   set: (key: string, value: T | undefined) => void;
+};
+
+type PropParams = {
+  // TODO(burdon): Default to true.
+  allowUndefined?: boolean;
 };
 
 /**
@@ -20,8 +25,8 @@ type PropType<T> = {
  */
 export class LocalStorageStore<T extends object> {
   static string(): PropType<string>;
-  static string(params: { allowUndefined: boolean }): PropType<string | undefined>;
-  static string(params?: { allowUndefined: boolean }) {
+  static string(params: PropParams): PropType<string | undefined>;
+  static string(params?: PropParams) {
     const prop: PropType<string | undefined> = {
       get: (key) => {
         const value = localStorage.getItem(key);
@@ -40,16 +45,16 @@ export class LocalStorageStore<T extends object> {
   }
 
   static enum<U>(): PropType<U>;
-  static enum<U>(params: { allowUndefined: boolean }): PropType<U | undefined>;
-  static enum<U>(params?: { allowUndefined: boolean }) {
+  static enum<U>(params: PropParams): PropType<U | undefined>;
+  static enum<U>(params?: PropParams) {
     return params?.allowUndefined
       ? (LocalStorageStore.string(params) as PropType<U | undefined>)
       : (LocalStorageStore.string() as unknown as PropType<U>);
   }
 
   static number(): PropType<number>;
-  static number(params: { allowUndefined: boolean }): PropType<number | undefined>;
-  static number(params?: { allowUndefined: boolean }) {
+  static number(params: PropParams): PropType<number | undefined>;
+  static number(params?: PropParams) {
     const prop: PropType<number | undefined> = {
       get: (key) => {
         const value = parseInt(localStorage.getItem(key) ?? '');
@@ -68,8 +73,8 @@ export class LocalStorageStore<T extends object> {
   }
 
   static bool(): PropType<boolean>;
-  static bool(params: { allowUndefined: boolean }): PropType<boolean | undefined>;
-  static bool(params?: { allowUndefined: boolean }) {
+  static bool(params: PropParams): PropType<boolean | undefined>;
+  static bool(params?: PropParams) {
     const prop: PropType<boolean | undefined> = {
       get: (key) => {
         const value = localStorage.getItem(key);
@@ -105,14 +110,18 @@ export class LocalStorageStore<T extends object> {
 
   private readonly _subscriptions = new Map<string, UnsubscribeCallback>();
 
-  public readonly values: ReactiveObject<T>;
+  private readonly _values: ReactiveObject<T>;
 
   constructor(
     private readonly _prefix: string,
     defaults?: T,
   ) {
-    registerSignalRuntime();
-    this.values = create(defaults ?? ({} as T));
+    registerSignalsRuntime();
+    this._values = create(defaults ?? ({} as T));
+  }
+
+  get values(): ReactiveObject<T> {
+    return this._values;
   }
 
   // TODO(burdon): Reset method (keep track of binders).
@@ -136,14 +145,14 @@ export class LocalStorageStore<T extends object> {
 
     const current = type.get(storageKey);
     if (current !== undefined) {
-      this.values[key] = current;
+      this._values[key] = current;
     }
 
     // The subscribe callback is always called.
     this._subscriptions.set(
       storageKey,
       effect(() => {
-        const value = this.values[key];
+        const value = this._values[key];
         const current = type.get(storageKey);
         if (value !== current) {
           type.set(storageKey, value);

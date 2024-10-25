@@ -4,7 +4,7 @@
 
 import { Duplex, pipeline } from 'node:stream';
 import randomBytes from 'randombytes';
-import * as varint from 'varint';
+import varint from 'varint';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';

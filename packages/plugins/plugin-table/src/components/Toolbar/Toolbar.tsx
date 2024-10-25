@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ChatText } from '@phosphor-icons/react';
+import { ChatText, RowsPlusBottom } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
@@ -16,7 +16,7 @@ import { TABLE_PLUGIN } from '../../meta';
 //
 
 // TODO(Zan): This should become a union later.
-export type ToolbarAction = { type: 'comment' };
+export type ToolbarAction = { type: 'add-row' } | { type: 'comment' };
 
 export type ToolbarActionType = ToolbarAction['type'];
 
@@ -49,16 +49,24 @@ const Actions = () => {
   const { t } = useTranslation(TABLE_PLUGIN);
 
   return (
-    <ToolbarButton
-      value='comment'
-      Icon={ChatText}
-      data-testid='editor.toolbar.comment'
-      onClick={() => {
-        return onAction?.({ type: 'comment' });
-      }}
-    >
-      {t('create comment')}
-    </ToolbarButton>
+    <>
+      <ToolbarButton
+        value='add-row'
+        Icon={RowsPlusBottom}
+        data-testid='table.toolbar.add-row'
+        onClick={() => onAction?.({ type: 'add-row' })}
+      >
+        {t('add row')}
+      </ToolbarButton>
+      <ToolbarButton
+        value='comment'
+        Icon={ChatText}
+        data-testid='table.toolbar.comment'
+        onClick={() => onAction?.({ type: 'comment' })}
+      >
+        {t('create comment')}
+      </ToolbarButton>
+    </>
   );
 };
 

@@ -9,7 +9,7 @@ import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { getObjectCore } from '@dxos/echo-db';
-import { create, Expando, type Identifiable, type ReactiveObject, TYPE_PROPERTIES } from '@dxos/echo-schema';
+import { create, Expando, type HasId, type ReactiveObject, TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
@@ -83,7 +83,7 @@ describe('Spaces', () => {
 
     let objectId: string;
     {
-      await client.spaces.isReady.wait();
+      await client.spaces.waitUntilReady();
       const space = client.spaces.default;
       ({ objectId } = await testSpaceAutomerge(space.db));
       expect(space.members.get()).to.be.length(1);
@@ -177,7 +177,7 @@ describe('Spaces', () => {
     {
       // Create mutations and epoch.
       for (const i of range(amount)) {
-        const expando = createEchoObject({ id: i.toString(), data: i.toString() });
+        const expando = createObject({ id: i.toString(), data: i.toString() });
         space1.db.add(expando);
       }
       // Wait to process all mutations.
@@ -204,7 +204,7 @@ describe('Spaces', () => {
 
     {
       // Create more mutations on first peer.
-      const expando = createEchoObject({ id: 'another one', data: 'something' });
+      const expando = createObject({ id: 'another one', data: 'something' });
       space1.db.add(expando);
 
       // Wait to process new mutation on second peer.
@@ -234,7 +234,7 @@ describe('Spaces', () => {
 
     const space = await client.spaces.create();
 
-    const obj = space.db.add(createEchoObject({ data: 'test' }));
+    const obj = space.db.add(createObject({ data: 'test' }));
     expect(getSpace(obj)).to.equal(space);
   });
 
@@ -243,7 +243,7 @@ describe('Spaces', () => {
 
     const space = await client.spaces.create();
 
-    const { id } = space.db.add(createEchoObject({ data: 'test' }));
+    const { id } = space.db.add(createObject({ data: 'test' }));
     await space.db.flush();
 
     await space.close();
@@ -282,7 +282,7 @@ describe('Spaces', () => {
 
     const space1 = await client1.spaces.create();
 
-    const { id } = space1.db.add(createEchoObject({ data: 'test' }));
+    const { id } = space1.db.add(createObject({ data: 'test' }));
     await space1.db.flush();
 
     const space2 = await waitForSpace(client2, space1.key, { ready: true });
@@ -312,7 +312,7 @@ describe('Spaces', () => {
     await hostSpace.db.flush();
     await waitForObject(guestSpace, hostDocument);
 
-    (hostDocument.content as any).content = 'Hello, world!';
+    hostDocument.content!.content = 'Hello, world!';
 
     await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
   });
@@ -394,8 +394,8 @@ describe('Spaces', () => {
     const spaceA = await client.spaces.create();
     const spaceB = await client.spaces.create();
 
-    const objA = spaceA.db.add(createEchoObject({ data: 'object A' }));
-    const objB = spaceB.db.add(createEchoObject({ data: 'object B' }));
+    const objA = spaceA.db.add(createObject({ data: 'object A' }));
+    const objB = spaceB.db.add(createObject({ data: 'object B' }));
 
     await spaceA.db.flush();
     await spaceB.db.flush();
@@ -430,7 +430,7 @@ describe('Spaces', () => {
 
     const hostSpace = await host.spaces.create();
     await hostSpace.waitUntilReady();
-    const hostRoot = hostSpace.db.add(createEchoObject({ entries: [createEchoObject({ name: 'first' })] }));
+    const hostRoot = hostSpace.db.add(createObject({ entries: [createObject({ name: 'first' })] }));
 
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
     const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
@@ -449,7 +449,7 @@ describe('Spaces', () => {
 
       onTestFinished(() => unsub());
 
-      hostRoot.entries.push(createEchoObject({ name: 'second' }));
+      hostRoot.entries.push(createObject({ name: 'second' }));
       await done.wait({ timeout: 1_000 });
     }
   });
@@ -498,11 +498,11 @@ describe('Spaces', () => {
     });
   };
 
-  const createEchoObject = <T extends {}>(props: T): ReactiveObject<Expando> => {
+  const createObject = <T extends {}>(props: T): ReactiveObject<Expando> => {
     return create(Expando, props);
   };
 
-  const waitForObject = async (space: Space, object: Identifiable) => {
+  const waitForObject = async (space: Space, object: HasId) => {
     await expect.poll(() => space.db.getObjectById(object.id)).not.toEqual(undefined);
   };
 

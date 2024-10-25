@@ -4,18 +4,19 @@
 
 import React, { useMemo } from 'react';
 
-import { type Attention, type LayoutParts, openIds, Surface } from '@dxos/app-framework';
+import { type LayoutParts, openIds, Surface } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
+import { useAttended } from '@dxos/react-ui-attention';
 
 import { useLayout } from '../LayoutContext';
 
 export type SidebarProps = {
-  attention: Attention;
   layoutParts: LayoutParts;
 };
 
-export const Sidebar = ({ attention, layoutParts }: SidebarProps) => {
+export const Sidebar = ({ layoutParts }: SidebarProps) => {
   const { layoutMode, popoverAnchorId } = useLayout();
+  const attended = useAttended();
 
   const activeIds = useMemo(() => {
     if (layoutMode === 'solo') {
@@ -31,9 +32,9 @@ export const Sidebar = ({ attention, layoutParts }: SidebarProps) => {
     () => ({
       popoverAnchorId,
       activeIds,
-      attended: attention.attended,
+      attended,
     }),
-    [popoverAnchorId, activeIds, attention.attended],
+    [popoverAnchorId, activeIds, attended],
   );
   return (
     <Main.NavigationSidebar>

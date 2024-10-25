@@ -20,6 +20,7 @@ import {
   type IdentityRecord,
   type SpaceCache,
   type LargeSpaceMetadata,
+  type EdgeReplicationSetting,
 } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Directory, type File } from '@dxos/random-access-storage';
 import { type Timeframe } from '@dxos/timeframe';
@@ -229,9 +230,18 @@ export class MetadataStore {
       return this._metadata.identity.haloSpace;
     }
 
-    const space = this.spaces.find((space) => space.key === spaceKey);
+    const space = this.spaces.find((space) => space.key.equals(spaceKey));
     invariant(space, 'Space not found');
     return space;
+  }
+
+  hasSpace(spaceKey: PublicKey): boolean {
+    if (this._metadata.identity?.haloSpace.key.equals(spaceKey)) {
+      // Check if the space is the identity space.
+      return true;
+    }
+
+    return !!this.spaces.find((space) => space.key.equals(spaceKey));
   }
 
   private _getLargeSpaceMetadata(key: PublicKey): LargeSpaceMetadata {
@@ -288,7 +298,7 @@ export class MetadataStore {
 
   async addSpace(record: SpaceMetadata) {
     invariant(
-      !(this._metadata.spaces ?? []).find((space) => space.key === record.key),
+      !(this._metadata.spaces ?? []).find((space) => space.key.equals(record.key)),
       'Cannot overwrite existing space in metadata',
     );
 
@@ -334,6 +344,16 @@ export class MetadataStore {
   async setSpaceControlPipelineSnapshot(spaceKey: PublicKey, snapshot: ControlPipelineSnapshot) {
     this._getLargeSpaceMetadata(spaceKey).controlPipelineSnapshot = snapshot;
     await this._saveSpaceLargeMetadata(spaceKey);
+    await this.flush();
+  }
+
+  getSpaceEdgeReplicationSetting(spaceKey: PublicKey): EdgeReplicationSetting | undefined {
+    return this.hasSpace(spaceKey) ? this._getSpace(spaceKey).edgeReplication : undefined;
+  }
+
+  async setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting) {
+    this._getSpace(spaceKey).edgeReplication = setting;
+    await this._save();
     await this.flush();
   }
 }

@@ -18,14 +18,16 @@
       }
     },
     "bundle": {
-      "cache": false,
       "dependsOn": [
         "bundle-app"
       ],
       "executor": "nx:run-script",
       "options": {
         "script": "build:functions"
-      }
+      },
+      "outputs": [
+        "{projectRoot}/out/composer"
+      ]
     },
     "bundle-app": {
       "cache": true,

@@ -20,21 +20,5 @@
     "src/**/*.ts",
     "src/**/*.tsx"
   ],
-  "references": [
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../sdk/app-framework"
-    },
-    {
-      "path": "../../sdk/app-graph"
-    },
-    {
-      "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../ui/storybook-utils"
-    }
-  ]
+  "references": []
 }

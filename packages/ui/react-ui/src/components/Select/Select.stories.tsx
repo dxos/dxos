@@ -4,38 +4,21 @@
 
 import '@dxos-theme';
 
-import React, { type FC, type PropsWithChildren, useState } from 'react';
+import { type StoryObj } from '@storybook/react';
+import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { type Density } from '@dxos/react-ui-types';
 
 import { Select } from './Select';
-import { withTheme } from '../../testing';
-import { DensityProvider } from '../DensityProvider';
+import { withVariants, withTheme } from '../../testing';
 
 faker.seed(1234);
 
-// TODO(burdon): Factor out density test.
-const createDensityTest =
-  (Component: FC<any>) =>
-  ({ ...props }) => {
-    const densities: Density[] = ['coarse', 'fine'];
-    return (
-      <div className='grid grid-cols-2'>
-        {densities.map((density) => (
-          <div key={density}>
-            <DensityProvider density={density}>
-              <Component {...props} />
-            </DensityProvider>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
 type ItemProps = { id: string; text: string };
 
-const StorybookSelect = ({ items = [] }: PropsWithChildren<{ items: ItemProps[] }>) => {
+type StoryProps = { items: ItemProps[] };
+
+const DefaultStory = ({ items = [] }: StoryProps) => {
   const [value, setValue] = useState<string>();
   return (
     <Select.Root value={value} onValueChange={setValue}>
@@ -58,15 +41,15 @@ const StorybookSelect = ({ items = [] }: PropsWithChildren<{ items: ItemProps[] 
   );
 };
 
-export default {
-  title: 'react-ui/Select',
-  component: createDensityTest(StorybookSelect),
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
-};
-
-export const Default = {
+export const Default: StoryObj<StoryProps> = {
   args: {
     items: Array.from({ length: 16 }).map((_, i) => ({ id: `item-${i}`, text: faker.lorem.word() })),
   },
+};
+
+export default {
+  title: 'ui/react-ui-core/Select',
+  render: DefaultStory,
+  decorators: [withVariants(), withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
 };

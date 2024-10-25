@@ -15,7 +15,7 @@ import {
   type Space,
 } from '@dxos/echo-pipeline';
 import { SpaceDocVersion } from '@dxos/echo-protocol';
-import type { EdgeConnection } from '@dxos/edge-client';
+import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { failedInvariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -80,7 +80,9 @@ export type DataSpaceParams = {
   callbacks?: DataSpaceCallbacks;
   cache?: SpaceCache;
   edgeConnection?: EdgeConnection;
+  edgeHttpClient?: EdgeHttpClient;
   edgeFeatures?: Runtime.Client.EdgeFeatures;
+  activeEdgeNotarizationPollingInterval?: number;
 };
 
 export type CreateEpochOptions = {
@@ -101,7 +103,7 @@ export class DataSpace {
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _metadataStore: MetadataStore;
   private readonly _signingContext: SigningContext;
-  private readonly _notarizationPlugin = new NotarizationPlugin();
+  private readonly _notarizationPlugin: NotarizationPlugin;
   private readonly _callbacks: DataSpaceCallbacks;
   private readonly _cache?: SpaceCache = undefined;
   private readonly _echoHost: EchoHost;
@@ -141,6 +143,12 @@ export class DataSpace {
     this._signingContext = params.signingContext;
     this._callbacks = params.callbacks ?? {};
     this._echoHost = params.echoHost;
+    this._notarizationPlugin = new NotarizationPlugin({
+      spaceId: this._inner.id,
+      edgeClient: params.edgeHttpClient,
+      edgeFeatures: params.edgeFeatures,
+      activeEdgePollingInterval: params.activeEdgeNotarizationPollingInterval,
+    });
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
       trustedKeysProvider: () =>
@@ -236,6 +244,7 @@ export class DataSpace {
     }
 
     await this._inner.open(new Context());
+    await this._inner.startProtocol();
 
     await this._edgeFeedReplicator?.open();
 
@@ -323,6 +332,7 @@ export class DataSpace {
     this._state = SpaceState.SPACE_INITIALIZING;
     log('new state', { state: SpaceState[this._state] });
 
+    log('initializing control pipeline');
     await this._initializeAndReadControlPipeline();
 
     // Allow other tasks to run before loading the data pipeline.
@@ -330,10 +340,13 @@ export class DataSpace {
 
     const ready = this.stateUpdate.waitForCondition(() => this._state === SpaceState.SPACE_READY);
 
+    log('initializing automerge root');
     this._automergeSpaceState.startProcessingRootDocs();
 
     // TODO(dmaretskyi): Change so `initializeDataPipeline` doesn't wait for the space to be READY, but rather any state with a valid root.
+    log('waiting for space to be ready');
     await ready;
+    log('space is ready');
   }
 
   private async _enterReadyState() {
@@ -350,6 +363,7 @@ export class DataSpace {
   private async _initializeAndReadControlPipeline() {
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
       ctx: this._ctx,
+      timeout: 10_000,
       breakOnStall: false,
     });
 
@@ -413,8 +427,16 @@ export class DataSpace {
     }
 
     if (credentials.length > 0) {
-      // Never times out
-      await this.notarizationPlugin.notarize({ ctx: this._ctx, credentials, timeout: 0 });
+      try {
+        log('will notarize credentials for feed admission', { count: credentials.length });
+        // Never times out
+        await this.notarizationPlugin.notarize({ ctx: this._ctx, credentials, timeout: 0 });
+
+        log('credentials notarized');
+      } catch (err) {
+        log.error('error notarizing credentials for feed admission', err);
+        throw err;
+      }
 
       // Set this after credentials are notarized so that on failure we will retry.
       await this._metadataStore.setWritableFeedKeys(this.key, this.inner.controlFeedKey!, this.inner.dataFeedKey!);
@@ -549,6 +571,10 @@ export class DataSpace {
     this._state = SpaceState.SPACE_INACTIVE;
     log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
+  }
+
+  getEdgeReplicationSetting() {
+    return this._metadataStore.getSpaceEdgeReplicationSetting(this.key);
   }
 
   private _onFeedAdded = async (feed: FeedWrapper<any>) => {

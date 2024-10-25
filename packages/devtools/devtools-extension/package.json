@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools-extension",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,6 +24,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/shell": "workspace:*",
     "react": "~18.2.0",

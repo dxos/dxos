@@ -1,6 +1,6 @@
 {
   "name": "@dxos/proto-guard",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "private": true,
   "description": "Test to detect breaking change in DXOS protocols and version them.",
   "homepage": "https://dxos.org",
@@ -41,7 +41,6 @@
   },
   "devDependencies": {
     "@types/lodash.isequal": "^4.5.0",
-    "@types/node": "^22.6.1",
     "@types/yargs": "~16.0.1"
   },
   "publishConfig": {

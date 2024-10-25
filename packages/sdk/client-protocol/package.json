@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-protocol",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -37,6 +37,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@effect/schema": "^0.75.1",
     "base-x": "~3.0.9"
   },
   "publishConfig": {

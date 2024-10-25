@@ -20,5 +20,8 @@
     },
     "lint": {}
   },
-  "implicitDependencies": ["esbuild"]
+  "implicitDependencies": [
+    "esbuild",
+    "node-std"
+  ]
 }

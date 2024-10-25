@@ -6,12 +6,12 @@ import { effect } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
 import { updateCounter } from '@dxos/echo-schema/testing';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 import { Graph, ROOT_ID, ROOT_TYPE, getGraph } from './graph';
 import { type Node, type NodeFilter } from './node';
 
-registerSignalRuntime();
+registerSignalsRuntime();
 
 const longestPaths = new Map<string, string[]>();
 

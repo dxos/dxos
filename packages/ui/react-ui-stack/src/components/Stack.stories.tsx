@@ -39,7 +39,7 @@ const ComplexContent = ({
 };
 
 export default {
-  title: 'react-ui-stack/Stack',
+  title: 'ui/react-ui-stack/Stack',
   component: Stack,
   decorators: [withTheme],
   render: ({ debug, ...args }: DemoStackProps & { debug: boolean }) => {

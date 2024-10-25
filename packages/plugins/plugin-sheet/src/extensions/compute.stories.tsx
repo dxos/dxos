@@ -3,8 +3,11 @@
 //
 
 import '@dxos-theme';
-import React, { useEffect, useState } from 'react';
 
+import { type Meta } from '@storybook/react';
+import React, { useEffect, useMemo } from 'react';
+
+import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
@@ -13,16 +16,16 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  documentId,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { nonNullable } from '@dxos/util';
 
-import { compute } from './compute';
-import { Sheet } from '../components';
-import { type ComputeNode } from '../graph';
-import { useComputeGraph, useSheetModel } from '../hooks';
-import { useTestSheet, withGraphDecorator } from '../testing';
+import { compute, computeGraphFacet } from './compute';
+import { GridSheet, SheetProvider, useComputeGraph } from '../components';
+import { useSheetModel } from '../model';
+import { useTestSheet, withComputeGraphDecorator } from '../testing';
 import { SheetType } from '../types';
 
 const str = (...lines: string[]) => lines.join('\n');
@@ -34,20 +37,15 @@ type EditorProps = {
 // TODO(burdon): Implement named expressions.
 //  https://hyperformula.handsontable.com/guide/cell-references.html
 
-const DOC_NAME = 'Test Doc';
+// TODO(burdon): Inline Adobe eCharts.
+
 const SHEET_NAME = 'Test Sheet';
 
-const Editor = ({ text }: EditorProps) => {
+const EditorStory = ({ text }: EditorProps) => {
+  const id = useMemo(() => PublicKey.random(), []);
   const { themeMode } = useThemeContext();
   const space = useSpace();
-  const graph = useComputeGraph(space);
-  const [node, setNode] = useState<ComputeNode>();
-  // TODO(burdon): Virtualize SheetModel.
-  useEffect(() => {
-    if (graph) {
-      setNode(graph.getOrCreateNode(DOC_NAME));
-    }
-  }, [graph]);
+  const computeGraph = useComputeGraph(space);
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       initialValue: text,
@@ -55,11 +53,13 @@ const Editor = ({ text }: EditorProps) => {
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-        node && compute(node),
+        documentId.of(id.toHex()),
+        computeGraph && computeGraphFacet.of(computeGraph),
+        compute(),
         decorateMarkdown(),
       ].filter(nonNullable),
     }),
-    [node, themeMode],
+    [computeGraph, themeMode],
   );
 
   return <div className='w-[40rem] overflow-hidden' ref={parentRef} {...focusAttributes} />;
@@ -68,49 +68,39 @@ const Editor = ({ text }: EditorProps) => {
 const Grid = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
-  const sheet = useTestSheet(space, graph, { title: SHEET_NAME });
-  const model = useSheetModel(space, sheet);
+  const sheet = useTestSheet(space, graph, { name: SHEET_NAME });
+  const model = useSheetModel(graph, sheet);
   useEffect(() => {
     if (model) {
       model.setValues({ A1: { value: 100 }, A2: { value: 200 }, A3: { value: 300 }, A5: { value: '=SUM(A1:A3)' } });
     }
   }, [model]);
 
-  if (!space || !sheet) {
+  if (!graph || !sheet) {
     return null;
   }
 
   return (
     <div className='flex w-[40rem] overflow-hidden'>
-      <Sheet.Root space={space} sheet={sheet}>
-        <Sheet.Main classNames='border border-separator' />
-      </Sheet.Root>
+      <SheetProvider graph={graph} sheet={sheet}>
+        <GridSheet />
+      </SheetProvider>
     </div>
   );
 };
 
-const Story = (props: EditorProps) => {
+const GraphStory = (props: EditorProps) => {
   return (
     <div className='grid grid-rows-2'>
-      <Editor {...props} />
+      <EditorStory {...props} />
       <Grid />
     </div>
   );
 };
 
-export default {
-  title: 'plugin-sheet/extensions',
-  decorators: [
-    withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
-    withGraphDecorator,
-    withTheme,
-    withLayout({ fullscreen: true, classNames: 'justify-center' }),
-  ],
-  parameters: { layout: 'fullscreen' },
-};
-
+// TODO(burdon): Inline formulae.
 export const Default = {
-  render: Editor,
+  render: EditorStory,
   args: {
     text: str(
       //
@@ -134,7 +124,7 @@ export const Default = {
 };
 
 export const Graph = {
-  render: Story,
+  render: GraphStory,
   args: {
     text: str(
       //
@@ -146,6 +136,20 @@ export const Graph = {
       `="${SHEET_NAME}"!A5`,
       '```',
       '',
+      '',
     ),
   },
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-sheet/extensions',
+  decorators: [
+    withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
+    withComputeGraphDecorator(),
+    withTheme,
+    withLayout({ fullscreen: true, classNames: 'justify-center' }),
+  ],
+  parameters: { layout: 'fullscreen' },
+};
+
+export default meta;

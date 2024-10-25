@@ -13,15 +13,13 @@ import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
 import type { SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
-import { Contact, EchoTestBuilder, Todo } from './testing';
+import { Contact, EchoTestBuilder, Task } from './testing';
 
 describe('Serializer', () => {
   let builder: EchoTestBuilder;
-
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
   });
-
   afterEach(async () => {
     await builder.close();
   });
@@ -30,16 +28,16 @@ describe('Serializer', () => {
     test('export typed object', async () => {
       const serializer = new Serializer();
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([Todo]);
+      graph.schemaRegistry.addSchema([Task]);
 
-      const todo = db.add(create(Todo, { name: 'Testing' }));
-      const data = serializer.exportObject(todo);
+      const task = db.add(create(Task, { title: 'Testing' }));
+      const data = serializer.exportObject(task);
 
       expect(data).to.deep.include({
-        '@id': todo.id,
+        '@id': task.id,
         '@meta': { keys: [] },
-        '@type': { '/': `dxn:type:${Todo.typename}` },
-        name: 'Testing',
+        '@type': { '/': `dxn:type:${Task.typename}` },
+        title: 'Testing',
       });
     });
   });
@@ -48,7 +46,6 @@ describe('Serializer', () => {
     // TODO(dmaretskyi): Test with unloaded objects.
     test('basic', async () => {
       const serializer = new Serializer();
-
       let data: SerializedSpace;
 
       {

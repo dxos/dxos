@@ -60,7 +60,7 @@ export class SpacesServiceImpl implements SpacesService {
     return this._serializeSpace(space);
   }
 
-  async updateSpace({ spaceKey, state }: UpdateSpaceRequest) {
+  async updateSpace({ spaceKey, state, edgeReplication }: UpdateSpaceRequest) {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
 
@@ -76,6 +76,10 @@ export class SpacesServiceImpl implements SpacesService {
         default:
           throw new ApiError('Invalid space state');
       }
+    }
+
+    if (edgeReplication !== undefined) {
+      await dataSpaceManager.setSpaceEdgeReplicationSetting(spaceKey, edgeReplication);
     }
   }
 
@@ -308,6 +312,7 @@ export class SpacesServiceImpl implements SpacesService {
       creator: space.inner.spaceState.creator?.key,
       cache: space.cache,
       metrics: space.metrics,
+      edgeReplication: space.getEdgeReplicationSetting(),
     };
   }
 

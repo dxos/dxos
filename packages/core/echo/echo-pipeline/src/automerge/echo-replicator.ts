@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Message } from '@dxos/automerge/automerge-repo';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
+import type { AutomergeProtocolMessage } from '@dxos/protocols';
 
 export interface EchoReplicator {
   /**
@@ -44,12 +44,12 @@ export interface ReplicatorConnection {
   /**
    * Stream to read messages coming from the remote peer.
    */
-  readable: ReadableStream<Message>;
+  readable: ReadableStream<AutomergeProtocolMessage>;
 
   /**
    * Stream to write messages to the remote peer.
    */
-  writable: WritableStream<Message>;
+  writable: WritableStream<AutomergeProtocolMessage>;
 
   /**
    * @returns true if the document should be advertised to this peer.

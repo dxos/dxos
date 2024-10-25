@@ -5,7 +5,7 @@
 import React, { type FC } from 'react';
 
 import { getSpace } from '@dxos/react-client/echo';
-import { DensityProvider, Select, useTranslation } from '@dxos/react-ui';
+import { Select, useTranslation } from '@dxos/react-ui';
 import { nonNullable } from '@dxos/util';
 
 import { PromptTemplate, Section } from './PromptTemplate';
@@ -42,25 +42,23 @@ export const ChainPresets: FC<{ presets: Preset[]; onSelect: (preset: Preset) =>
   const { t } = useTranslation(CHAIN_PLUGIN);
 
   return (
-    <DensityProvider density='fine'>
-      <Select.Root
-        onValueChange={(value) => {
-          onSelect(presets.find(({ id }) => id === value)!);
-        }}
-      >
-        <Select.TriggerButton placeholder={t('select preset template placeholder')} />
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport>
-              {presets.map(({ id, title }) => (
-                <Select.Option key={id} value={id}>
-                  {title}
-                </Select.Option>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
-    </DensityProvider>
+    <Select.Root
+      onValueChange={(value) => {
+        onSelect(presets.find(({ id }) => id === value)!);
+      }}
+    >
+      <Select.TriggerButton placeholder={t('select preset template placeholder')} />
+      <Select.Portal>
+        <Select.Content>
+          <Select.Viewport>
+            {presets.map(({ id, title }) => (
+              <Select.Option key={id} value={id}>
+                {title}
+              </Select.Option>
+            ))}
+          </Select.Viewport>
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
   );
 };

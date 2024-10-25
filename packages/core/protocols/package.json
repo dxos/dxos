@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocols",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Protobuf definitions for DXOS protocols.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -74,16 +74,16 @@
     "tsc:cjs": "rm -rf dist/cjs; tsc --module commonjs --moduleResolution node --target es2018 --outdir ./dist/cjs && echo '{\"type\": \"commonjs\"}' > dist/cjs/package.json"
   },
   "dependencies": {
-    "@bufbuild/protobuf": "^2.0.0",
+    "@bufbuild/protobuf": "^2.1.0",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/timeframe": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.67.16"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@bufbuild/buf": "^1.42.0",
+    "@bufbuild/buf": "^1.43.0",
     "@bufbuild/protoc-gen-es": "^2.1.0"
   },
   "publishConfig": {

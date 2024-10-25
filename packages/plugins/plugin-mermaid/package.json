@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-mermaid",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Mermaid markdown plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -29,9 +29,9 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/language": "^6.10.2",
+    "@codemirror/language": "^6.10.3",
     "@codemirror/state": "^6.4.1",
-    "@codemirror/view": "^6.29.1",
+    "@codemirror/view": "^6.34.1",
     "@dxos/app-framework": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

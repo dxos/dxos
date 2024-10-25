@@ -2,8 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import find from 'find-process';
 import fetch from 'node-fetch';
-import { type ChildProcessWithoutNullStreams, execSync, spawn } from 'node:child_process';
+import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path, { dirname } from 'node:path';
 import pkgUp from 'pkg-up';
@@ -42,7 +43,7 @@ export class SignalServerRunner {
   private readonly _retriesLimit = 3;
   private _port: number | undefined;
   private readonly _timeout: number;
-  private _serverProcess: ChildProcessWithoutNullStreams;
+  private _serverProcess: ChildProcessWithoutNullStreams | undefined;
 
   constructor({
     binCommand,
@@ -64,11 +65,9 @@ export class SignalServerRunner {
     this._shell = shell;
     this._killExisting = killExisting;
     this.onError = onError;
-
-    this._serverProcess = this.startProcess();
   }
 
-  public startProcess(): ChildProcessWithoutNullStreams {
+  public async startProcess(): Promise<ChildProcessWithoutNullStreams> {
     if (this._cwd && !fs.existsSync(this._cwd)) {
       throw new Error(`CWD not exists: ${this._cwd}`);
     }
@@ -76,14 +75,14 @@ export class SignalServerRunner {
       // find a port that does not have another process listening on it.
       while (true) {
         this._port = randomInt(10000, 50000);
-        const pid = checkPort(this._port);
+        const pid = await checkPort(this._port);
 
         if (pid.length === 0) {
           break;
         }
       }
     } else {
-      const pid = checkPort(this._port);
+      const pid = await checkPort(this._port);
       if (pid.length > 0) {
         if (this._killExisting) {
           log.warn(`Port ${this._port} is already in use by process ${pid}, killing it`);
@@ -159,7 +158,7 @@ export class SignalServerRunner {
 
     if (waited >= this._timeout) {
       await this.stop();
-      this._serverProcess = this.startProcess();
+      await this.startProcess();
       this._startRetries++;
       if (this._startRetries > this._retriesLimit) {
         throw new Error(`Test Signal server was not started in ${this._retriesLimit} retries`);
@@ -170,7 +169,7 @@ export class SignalServerRunner {
   }
 
   public async stop(): Promise<void> {
-    const pid = this._serverProcess.pid;
+    const pid = this._serverProcess?.pid;
     if (!pid) {
       log.warn('pid not found');
       return;
@@ -235,14 +234,18 @@ export const runTestSignalServer = async ({
     port,
     killExisting,
   });
+  await server.startProcess();
   await server.waitUntilStarted();
   return server;
 };
 
-export const checkPort = (port: number) => {
+export const checkPort = async (port: number) => {
   let pid = '';
   try {
-    pid = execSync(`lsof -t -i:${port}`).toString().trim();
+    const list = await find('port', port);
+    if (list.length > 0) {
+      pid = list[0].pid.toString();
+    }
   } catch (err) {
     if (typeof err === 'object' && err !== null) {
       // lsof responds with status 1 if pattern does match, along with other errors :(, so this is the best we can do

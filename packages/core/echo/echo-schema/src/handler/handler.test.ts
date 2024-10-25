@@ -5,14 +5,14 @@
 import { inspect } from 'node:util';
 import { describe, expect, test } from 'vitest';
 
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { isNode } from '@dxos/util';
 
 import { create } from './object';
 import { TestClass, type TestSchema, TestSchemaWithClass, updateCounter } from '../testing';
 import { data, type ReactiveObject } from '../types';
 
-registerSignalRuntime();
+registerSignalsRuntime();
 
 const TEST_OBJECT: TestSchema = {
   string: 'foo',
@@ -125,7 +125,8 @@ describe('getters', () => {
     });
 
     using updates = updateCounter(() => {
-      obj.getter;
+      const value = obj.getter;
+      expect(value).to.exist;
     });
 
     innerObj.string = 'baz';

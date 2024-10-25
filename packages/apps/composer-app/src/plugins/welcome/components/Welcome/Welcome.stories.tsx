@@ -14,7 +14,7 @@ import { WelcomeState } from './types';
 import translations from '../../translations';
 
 export default {
-  title: 'plugin-welcome/Welcome',
+  title: 'apps/plugin-welcome/Welcome',
   component: Welcome,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false }, translations },

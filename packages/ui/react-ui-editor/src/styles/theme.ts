@@ -71,9 +71,11 @@ export const defaultTheme: ThemeStyles = {
   /**
    * Gutters
    * NOTE: Gutters should have the same top margin as the content.
+   * NOTE: They can't be transparent since the content needs to scroll below.
    */
   '.cm-gutters': {
     background: 'var(--surface-bg)',
+    borderRight: 'none',
   },
   '.cm-gutter': {},
   '.cm-gutter.cm-lineNumbers .cm-gutterElement': {

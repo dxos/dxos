@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React from 'react';
 
 import { SpaceId } from '@dxos/keys';
@@ -13,20 +14,12 @@ import { SyncStatusDetail, SyncStatusIndicator } from './SyncStatus';
 import { getSyncSummary, type SpaceSyncStateMap } from './types';
 import translations from '../../translations';
 
-const Story = (props: any) => {
+const DefaultStory = (props: any) => {
   return (
     <div className='flex flex-col-reverse p-4 '>
       <SyncStatusIndicator {...props} />
     </div>
   );
-};
-
-export default {
-  title: 'plugin-space/SyncStatusIndicator',
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  component: SyncStatusIndicator,
-  parameters: { translations },
-  render: Story,
 };
 
 const random = ({ min, max }: { min: number; max: number }) => min + Math.floor(Math.random() * (max - min));
@@ -60,3 +53,13 @@ export const Detail = {
     classNames: 'm-2 w-[200px] border border-separator rounded-md',
   },
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-space/SyncStatusIndicator',
+  component: SyncStatusIndicator,
+  render: DefaultStory,
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: { translations },
+};
+
+export default meta;

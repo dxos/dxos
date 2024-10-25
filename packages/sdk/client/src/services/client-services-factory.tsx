@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { UAParser } from 'ua-parser-js';
+
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 
@@ -39,7 +41,16 @@ export const createClientServices = (
     }
   }
 
-  return createWorker && typeof SharedWorker !== 'undefined'
+  let useWorker = false;
+  if (typeof navigator !== 'undefined' && navigator.userAgent) {
+    const parser = new UAParser(navigator.userAgent);
+
+    // TODO(wittjosiah): Ideally this should not need to do any user agent parsing.
+    //  However, while SharedWorker is supported by iOS, it is not fully working and there's no way to inspect it.
+    useWorker = typeof SharedWorker !== 'undefined' && parser.getOS().name !== 'iOS';
+  }
+
+  return createWorker && useWorker
     ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })
     : fromHost(config, {}, observabilityGroup, signalTelemetryEnabled);
 };

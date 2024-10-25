@@ -10,7 +10,7 @@ import {
   createAdmissionKeypair,
   type DataSpace,
   InvitationsServiceImpl,
-  ServiceContext,
+  type ServiceContext,
   InvitationsManager,
 } from '@dxos/client-services';
 import {
@@ -21,17 +21,11 @@ import {
   performInvitation,
 } from '@dxos/client-services/testing';
 import { MetadataStore } from '@dxos/echo-pipeline';
-import { EdgeClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
-import { EdgeSignalManager } from '@dxos/messaging';
-import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { openAndClose } from '@dxos/test-utils';
 
 import { Client } from '../client';
 import { InvitationsProxy } from '../invitations';
@@ -359,78 +353,6 @@ describe('Invitations', () => {
     });
   });
 
-  // TODO(mykola): Expects wrangler dev in edge repo to run. Skip to pass CI.
-  describe.skip('EDGE signaling', () => {
-    describe('space', () => {
-      const createPeer = async () => {
-        const edgeConnection = new EdgeClient(PublicKey.random().toHex(), PublicKey.random().toHex(), {
-          socketEndpoint: 'ws://localhost:8787',
-        });
-        await openAndClose(edgeConnection);
-        const signalManager = new EdgeSignalManager({ edgeConnection });
-        await openAndClose(signalManager);
-        const networkManager = new SwarmNetworkManager({
-          signalManager,
-          transportFactory: MemoryTransportFactory,
-        });
-        const level = createTestLevel();
-        await openAndClose(level);
-
-        const peer = new ServiceContext(
-          createStorage({ type: StorageType.RAM }),
-          level,
-          networkManager,
-          signalManager,
-          edgeConnection,
-          {
-            invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
-          },
-        );
-        await openAndClose(peer);
-        return peer;
-      };
-
-      let host: ServiceContext;
-      let guest: ServiceContext;
-      let space: DataSpace;
-
-      beforeEach(async () => {
-        host = await createPeer();
-        await host.createIdentity();
-        space = await host.dataSpaceManager!.createSpace();
-
-        guest = await createPeer();
-        await guest.createIdentity();
-      });
-
-      testSuite(
-        () => ({
-          host,
-          guest,
-          options: { kind: Invitation.Kind.SPACE, spaceKey: space.key },
-        }),
-        () => [host, guest],
-      );
-    });
-  });
-
-  describe('device', () => {
-    let host: ServiceContext;
-    let guest: ServiceContext;
-
-    beforeEach(async () => {
-      const peers = await asyncChain<ServiceContext>([closeAfterTest])(createPeers(2));
-      host = peers[0];
-      guest = peers[1];
-      await host.createIdentity();
-    });
-
-    testSuite(
-      () => ({ host, guest, options: { kind: Invitation.Kind.DEVICE } }),
-      () => [host, guest],
-    );
-  });
-
   describe('InvitationsProxy', () => {
     describe('invitation expiry', () => {
       let hostContext: ServiceContext;
@@ -676,7 +598,7 @@ describe('Invitations', () => {
         hostContext = peers[0];
         guestContext = peers[1];
 
-        await hostContext.identityManager.createIdentity();
+        await hostContext.createIdentity();
 
         const { service: hostService } = createInvitationsApi(hostContext);
         const { service: guestService } = createInvitationsApi(guestContext);

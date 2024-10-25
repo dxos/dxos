@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-graph",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Constructs knowledge graphs for the purpose of building applications on top of",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -49,6 +49,9 @@
     "vite": "5.4.7"
   },
   "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },
