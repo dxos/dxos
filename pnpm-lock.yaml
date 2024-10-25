@@ -1465,6 +1465,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../util
     devDependencies:
       '@effect/schema':
         specifier: ^0.75.1
@@ -1787,9 +1790,15 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../invariant
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../util
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0

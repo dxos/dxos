@@ -12,28 +12,26 @@ import { nonNullable } from '@dxos/util';
 
 import { SETTINGS_PLUGIN } from '../meta';
 
-export const SettingsDialog = ({
-  selected,
-  onSelected,
-}: {
+const sortPlugin = ({ name: a }: PluginMeta, { name: b }: PluginMeta) => a?.localeCompare(b ?? '') ?? 0;
+
+// TODO(burdon): Factor out common defs?
+const core = [
+  'dxos.org/plugin/deck',
+  'dxos.org/plugin/space',
+  'dxos.org/plugin/stack',
+  'dxos.org/plugin/observability',
+  'dxos.org/plugin/registry',
+  'dxos.org/plugin/settings',
+];
+
+export type SettingsDialogProps = {
   selected: string;
   onSelected: (plugin: string) => void;
-}) => {
+};
+
+export const SettingsDialog = ({ selected, onSelected }: SettingsDialogProps) => {
   const { t } = useTranslation(SETTINGS_PLUGIN);
   const { plugins, enabled } = usePlugins();
-
-  // TODO(burdon): Factor out common defs?
-  const core = [
-    'dxos.org/plugin/layout',
-    'dxos.org/plugin/deck',
-    'dxos.org/plugin/files',
-    'dxos.org/plugin/space',
-    'dxos.org/plugin/stack',
-    'dxos.org/plugin/observability',
-    'dxos.org/plugin/registry',
-  ];
-
-  const sortPlugin = ({ name: a }: PluginMeta, { name: b }: PluginMeta) => a?.localeCompare(b ?? '') ?? 0;
 
   const corePlugins = core
     .map((id) => plugins.find((plugin) => plugin.meta.id === id)?.meta)
@@ -49,10 +47,10 @@ export const SettingsDialog = ({
 
   const [tabsActivePart, setTabsActivePart] = useState<TabsActivePart>('list');
 
+  // TODO(burdon): Standardize dialogs.
   return (
     <Dialog.Content classNames='p-0 bs-content max-bs-full md:max-is-[40rem] overflow-hidden'>
       <div role='none' className='flex justify-between mbe-1 pbs-3 pis-2 pie-3 @md:pbs-4 @md:pis-4 @md:pie-5'>
-        {/* TODO(burdon): Standardize dialogs. */}
         <Dialog.Title
           onClick={() => setTabsActivePart('list')}
           aria-description={t('click to return to tablist description')}
@@ -90,8 +88,8 @@ export const SettingsDialog = ({
         <Tabs.Viewport classNames='flex-1 min-bs-0'>
           <div role='none' className='overflow-y-auto pli-3 @md:pis-2 @md:pie-0 mbe-4 border-r border-separator'>
             <Tabs.Tablist classNames='flex flex-col max-bs-none min-is-[200px] gap-4 overflow-y-auto'>
-              <PluginList title='Options' plugins={corePlugins} />
-              {filteredPlugins.length > 0 && <PluginList title='Plugins' plugins={filteredPlugins} />}
+              <PluginList title={t('core plugins label')} plugins={corePlugins} />
+              {filteredPlugins.length > 0 && <PluginList title={t('custom plugins label')} plugins={filteredPlugins} />}
             </Tabs.Tablist>
           </div>
 

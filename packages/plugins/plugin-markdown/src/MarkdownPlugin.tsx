@@ -66,16 +66,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     meta,
     ready: async (plugins) => {
       settings
-        .prop({
-          key: 'defaultViewMode',
-          storageKey: 'default-view-mode',
-          type: LocalStorageStore.enum<EditorViewMode>(),
-        })
-        .prop({
-          key: 'editorInputMode',
-          storageKey: 'editor-mode',
-          type: LocalStorageStore.enum<EditorInputMode>({ allowUndefined: true }),
-        })
+        .prop({ key: 'defaultViewMode', type: LocalStorageStore.enum<EditorViewMode>() })
+        .prop({ key: 'editorInputMode', type: LocalStorageStore.enum<EditorInputMode>({ allowUndefined: true }) })
         .prop({ key: 'toolbar', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({ key: 'experimental', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({ key: 'debug', type: LocalStorageStore.bool({ allowUndefined: true }) })
@@ -83,11 +75,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         .prop({ key: 'numberedHeadings', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({ key: 'folding', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
-      state.prop({
-        key: 'viewMode',
-        storageKey: 'view-mode',
-        type: LocalStorageStore.json<{ [key: string]: EditorViewMode }>(),
-      });
+      state.prop({ key: 'viewMode', type: LocalStorageStore.json<{ [key: string]: EditorViewMode }>() });
 
       markdownExtensionPlugins(plugins).forEach((plugin) => {
         const { extensions } = plugin.provides.markdown;

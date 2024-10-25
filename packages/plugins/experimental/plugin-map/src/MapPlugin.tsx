@@ -28,9 +28,9 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
     meta,
     ready: async (plugins) => {
       settings
-        .prop({ key: 'type', storageKey: 'type', type: LocalStorageStore.enum<MapControlType>() })
-        .prop({ key: 'zoom', storageKey: 'zoom', type: LocalStorageStore.number({ allowUndefined: true }) })
-        .prop({ key: 'center', storageKey: 'center', type: LocalStorageStore.json<LatLngLiteral | undefined>() });
+        .prop({ key: 'type', type: LocalStorageStore.enum<MapControlType>() })
+        .prop({ key: 'zoom', type: LocalStorageStore.number({ allowUndefined: true }) })
+        .prop({ key: 'center', type: LocalStorageStore.json<LatLngLiteral | undefined>() });
     },
     provides: {
       metadata: {
