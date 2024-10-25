@@ -77,7 +77,7 @@ export const ListRoot = <T extends ListItemRecord>({
           }),
         );
 
-        onMove?.(sourceData, targetIdx);
+        onMove?.(sourceData as T, targetIdx);
       },
     });
   }, [items]);
