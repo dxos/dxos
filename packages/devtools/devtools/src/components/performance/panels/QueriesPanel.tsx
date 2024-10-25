@@ -34,7 +34,7 @@ export const QueriesPanel = ({ queries, ...props }: CustomPanelProps<{ queries: 
                 />
               </td>
               <td className='p-1 text-right truncate' title={JSON.stringify(removeEmpty(query.filter), undefined, 2)}>
-                {query.filter.type?.objectId}
+                {query.filter.type?.map((dxn) => dxn.toString()).join(', ')}
               </td>
               <td className='p-1 w-[80px] text-right'>{query.metrics.objectsReturned.toLocaleString()}</td>
               <td className='p-1 w-[80px] text-right'>
