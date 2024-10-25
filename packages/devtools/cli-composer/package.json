@@ -11,6 +11,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": false,
   "type": "module",
   "exports": {
     "types": "./dist/src/index.d.ts",
