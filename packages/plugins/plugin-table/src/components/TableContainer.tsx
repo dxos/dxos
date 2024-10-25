@@ -27,8 +27,8 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     table.schema,
   ]);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
-
-  const tableModel = useTableModel({ table, objects: filteredObjects });
+  const onDeleteRow = useCallback((row: any) => space?.db.remove(row), [space]);
+  const tableModel = useTableModel({ table, objects: filteredObjects, onDeleteRow });
 
   const onThreadCreate = useCallback(() => {
     void dispatch({

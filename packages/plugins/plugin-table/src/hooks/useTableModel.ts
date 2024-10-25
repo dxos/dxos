@@ -14,13 +14,13 @@ import { createStarterSchema, createStarterView } from '../types';
 export type UseTableModelParams = {
   table: TableType;
   objects: EchoReactiveObject<any>[];
+  onDeleteRow?: (row: any) => void;
 };
 
-export const useTableModel = ({ table, objects }: UseTableModelParams): TableModel | undefined => {
+export const useTableModel = ({ table, objects, onDeleteRow }: UseTableModelParams): TableModel | undefined => {
   const space = getSpace(table);
 
-  // TODO(ZaymonFC): Not sure this belongs here. Seek feeback.
-  const onDeleteRow = useCallback(
+  const defaultOnDeleteRow = useCallback(
     (row: any) => {
       return space?.db.remove(row);
     },
@@ -44,7 +44,7 @@ export const useTableModel = ({ table, objects }: UseTableModelParams): TableMod
 
     let tableModel: TableModel | undefined;
     const t = setTimeout(async () => {
-      tableModel = new TableModel({ table, onDeleteRow });
+      tableModel = new TableModel({ table, onDeleteRow: onDeleteRow ?? defaultOnDeleteRow });
       await tableModel.open();
       setTableModel(tableModel);
     });
@@ -53,7 +53,7 @@ export const useTableModel = ({ table, objects }: UseTableModelParams): TableMod
       clearTimeout(t);
       void tableModel?.close();
     };
-  }, [table, onDeleteRow]);
+  }, [table, onDeleteRow, defaultOnDeleteRow]);
 
   useEffect(() => {
     tableModel?.updateData(objects);
