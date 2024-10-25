@@ -23,8 +23,8 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { nonNullable } from '@dxos/util';
 
 import { compute, computeGraphFacet } from './compute';
-import { GridSheet, SheetProvider } from '../components';
-import { useComputeGraph, useSheetModel } from '../hooks';
+import { GridSheet, SheetProvider, useComputeGraph } from '../components';
+import { useSheetModel } from '../model';
 import { useTestSheet, withComputeGraphDecorator } from '../testing';
 import { SheetType } from '../types';
 

@@ -2,6 +2,7 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "declarationDir": "dist/types",
+    "module": "ESNext",
     "types": [
       "@dxos/typings",
       "node"
