@@ -2,18 +2,26 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "lib": ["DOM", "ESNext"],
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "outDir": "dist",
     "rootDirs": [
-      "./src", // <-- KEEP "./src" FIRST
+      "./src" // <-- KEEP "./src" FIRST
     ],
-    "types": ["@dxos/typings", "node"],
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [],
   "ts-node": {
-    "transpileOnly": true,
-  },
+    "transpileOnly": true
+  }
 }

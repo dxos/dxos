@@ -17,7 +17,8 @@ export default class Info extends BaseCommand<typeof Info> {
 
   async run(): Promise<any> {
     const { input } = await inquirer.prompt<{ input: string }>({
-      prefix: chalk.green('>'),
+      type: 'input',
+      message: '>',
       name: 'input',
     });
     console.log(input);

@@ -2,19 +2,29 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "lib": ["DOM", "ESNext"],
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "outDir": "dist/src",
     "rootDirs": [
       "./src", // <-- KEEP "./src" FIRST
-      "./notebooks",
+      "./notebooks"
     ],
-    "types": ["@dxos/typings", "node"],
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
   },
-  "include": ["notebooks", "src", "src/util/telemetryrc.json"],
+  "include": [
+    "notebooks",
+    "src",
+    "src/util/telemetryrc.json"
+  ],
   "references": [],
   "ts-node": {
-    "transpileOnly": true,
-  },
+    "transpileOnly": true
+  }
 }
