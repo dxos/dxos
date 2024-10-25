@@ -94,7 +94,6 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/react-ui-navtree": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
