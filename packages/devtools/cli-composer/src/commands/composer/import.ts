@@ -9,7 +9,7 @@ import { Filter, type Space } from '@dxos/client/echo';
 import { compareForeignKeys, getTypename } from '@dxos/echo-schema';
 import { diff } from '@dxos/util';
 
-import { BaseCommand } from '../../base';
+import { BaseCommand } from '../../base.js';
 
 type DataFile = {
   objects: Record<string, any>[];

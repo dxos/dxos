@@ -42,7 +42,7 @@ export default class Tunnel extends BaseCommand<typeof Tunnel> {
       const { name } = this.flags;
       const response = await tunnel.rpc.tunnel({ name, enabled: command === 'start' });
       invariant(response, 'Unable to set tunnel.');
-      printTunnels([response], this.flags);
+      printTunnels([response], this.flags as any);
     });
   }
 }
