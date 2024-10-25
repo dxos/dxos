@@ -10,11 +10,12 @@ import { FieldValueType } from '@dxos/schema';
 
 import { TableType } from '../types';
 
-// TODO(burdon): Factor out to @dxos/schema/testing.
+// TODO(burdon): Factor out to @dxos/schema/testing!
 
 export const createEmptyTable = () => create(TableType, {});
 
 export const TestSchema = TypedObject({ typename: 'example.com/type/test', version: '0.1.0' })({
+  id: S.String,
   name: S.optional(S.String),
   age: S.optional(S.Number),
   active: S.optional(S.Boolean),
@@ -25,8 +26,7 @@ export const createTable = (schema?: MutableSchema) =>
   create(TableType, {
     schema,
     view: {
-      // TODO(Zan): What is the appropriate schema value for the query here?
-      query: { schema: '' },
+      schema: 'example.com/type/test',
       fields: [
         { id: 'name', path: 'name', label: 'Name', type: FieldValueType.String },
         { id: 'age', path: 'age', label: 'Age', type: FieldValueType.Number },

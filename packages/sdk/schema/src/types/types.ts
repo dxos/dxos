@@ -75,15 +75,20 @@ export type FieldType = S.Schema.Type<typeof FieldSchema>;
 // View
 //
 
-// TODO(burdon): ECHO Query DSL?
+// TODO(burdon): ECHO Query DSL.
 export const QuerySchema = S.Struct({
   // TODO(burdon): Schema DXN annotation.
   schema: S.String,
 });
 
-// TODO(burdon): Are views always flat projections?
+/**
+ * Views are generated or user-defined projections of a schema's properties.
+ * They are used to configure the visual representation of the data.
+ * The query is separate from the view (queries configure the projection of data objects).
+ */
 export const ViewSchema = S.Struct({
-  query: S.optional(QuerySchema),
+  // TODO(burdon): Schema DXN annotation.
+  schema: S.String,
   fields: S.mutable(S.Array(FieldSchema)),
 });
 
