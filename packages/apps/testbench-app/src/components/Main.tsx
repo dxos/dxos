@@ -90,20 +90,22 @@ export const Main = () => {
     Array.from({ length: n }).forEach(() => {
       let object: ReactiveObject<any>;
       switch (type) {
-        case DocumentType.typename:
+        case DocumentType.typename: {
           object = create(DocumentType, {
             title: randWord(),
             content: randSentence(),
           });
           break;
+        }
 
         case ItemType.typename:
-        default:
+        default: {
           object = create(ItemType, {
             content: randSentence(),
             // due: randBetweenDate(dateRange)
           });
           break;
+        }
       }
 
       space.db.add(object);

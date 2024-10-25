@@ -4,9 +4,6 @@
 
 import '@dxos-theme';
 
-import React from 'react';
-
-import { log } from '@dxos/log';
 import { withMultiClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -18,7 +15,10 @@ export default {
   component: Main,
   decorators: [
     withMultiClientProvider({ numClients: 2, types: [ItemType], createIdentity: true, createSpace: true }),
-    withLayout({ fullscreen: true, classNames: ['grid grid-row-2 h-full divide-y divide-separator'] }),
+    withLayout({
+      fullscreen: true,
+      classNames: ['grid grid-rows-2 h-full divide-y divide-separator grow overflow-hidden'],
+    }),
     withTheme,
   ],
   parameters: {
