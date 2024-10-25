@@ -151,7 +151,7 @@ const meta: Meta = {
         }
       }
     },
-  } satisfies Partial<NavTreeProps>,
+  },
 };
 
 export default meta;

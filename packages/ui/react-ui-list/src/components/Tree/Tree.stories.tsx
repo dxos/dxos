@@ -6,6 +6,7 @@ import '@dxos-theme';
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect } from 'react';
 
 import { create } from '@dxos/echo-schema';
@@ -67,7 +68,7 @@ const Story = (args: Partial<TreeProps>) => {
   return <Tree items={items} open={state.open} current={state.current} {...args} />;
 };
 
-export default {
+const meta: Meta<typeof Tree> = {
   title: 'ui/react-ui-list/Tree',
   component: Tree,
   render: Story,
@@ -101,13 +102,15 @@ export default {
         }
       }
     },
-  } satisfies Partial<TreeProps>,
+  },
 };
+
+export default meta;
 
 export const Default = {};
 
-export const Draggable = {
+export const Draggable: StoryObj<typeof Tree> = {
   args: {
     draggable: true,
-  } satisfies Partial<TreeProps>,
+  },
 };
