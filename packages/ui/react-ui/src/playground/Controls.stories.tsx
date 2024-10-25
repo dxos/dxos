@@ -84,7 +84,7 @@ const DefaultStory = () => {
 export const Default = {};
 
 export default {
-  title: 'ui/react-ui/Playground/Controls',
+  title: 'ui/react-ui-core/Playground/Controls',
   render: DefaultStory,
   decorators: [withVariants(), withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

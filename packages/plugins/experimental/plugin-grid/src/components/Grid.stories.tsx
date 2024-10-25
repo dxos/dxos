@@ -18,6 +18,7 @@ import {
   type MosaicDropEvent,
   type MosaicTileProps,
   type MosaicOperation,
+  type MosaicDraggedItem,
 } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -66,7 +67,7 @@ const DemoGrid = ({
               }),
             );
           })
-          .catch();
+          .catch(() => {});
         // TODO(wittjosiah): Use generator to create positions.
         return [];
       }),
@@ -162,7 +163,7 @@ const DemoCard: MosaicTileComponent<DemoCardProps> = forwardRef(
   },
 );
 
-const SurfaceCard: MosaicTileComponent<DemoCardProps> = forwardRef(({ item, ...props }, forwardRef) => {
+const SurfaceCard = forwardRef<HTMLDivElement, MosaicDraggedItem<DemoCardProps>>(({ item, ...props }, forwardRef) => {
   return <Surface ref={forwardRef} role='card' data={{ content: item }} {...props} />;
 });
 
