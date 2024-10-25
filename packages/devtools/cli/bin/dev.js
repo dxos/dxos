@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --loader ts-node/esm --no-warnings=ExperimentalWarning
+#!/usr/bin/env -S node --import=extensionless/register --loader ts-node/esm --no-warnings=ExperimentalWarning
 
 // NOTE: Specify --no-warnings in production script.
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --no-warnings
+#!/usr/bin/env -S node --import=extensionless/register --no-warnings
 
 // Note: `npm publish` or `pnpm deploy` will change the default depending on the DX_ENVIRONMENT at time of invocation.
 process.env.DX_ENVIRONMENT ??= 'development';
