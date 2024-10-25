@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
@@ -38,9 +38,12 @@ const DefaultStory = () => {
 
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
+  const onDeleteRow = useCallback((row: any) => space.db.remove(row), [space]);
+
   const tableModel = useTableModel({
     table: table!,
     objects: filteredObjects,
+    onDeleteRow,
   });
 
   const handleAction = useCallback(
@@ -97,12 +100,18 @@ const TablePerformanceStory = (props: StoryProps) => {
   const rows = useDefaultValue(props.rows, getDefaultRows);
   const table = useMemo(() => createTable(), []);
   const items = useMemo(() => createItems(rows), [rows]);
+  const itemsRef = useRef(items);
   const simulatorProps = useMemo(() => ({ table, items, ...props }), [table, items, props]);
   useSimulator(simulatorProps);
+
+  const onDeleteRow = useCallback((row: any) => {
+    itemsRef.current.splice(itemsRef.current.indexOf(row), 1);
+  }, []);
 
   const tableModel = useTableModel({
     table,
     objects: items as any,
+    onDeleteRow,
   });
 
   return (

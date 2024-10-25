@@ -25,7 +25,7 @@ const blockEndLine =
 
 const frozen = { frozenRowsStart: 1, frozenColsEnd: 1 };
 
-export type TableProps = { tableModel?: TableModel };
+export type TableProps = { tableModel?: TableModel; onDeleteRow?: (row: any) => void };
 
 export const Table = ({ tableModel }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
