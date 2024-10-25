@@ -120,10 +120,10 @@ export const defaults = ({ isDev }: PluginConfig): PluginMeta[] =>
 // TODO(burdon): Use meta tags to determine default/recommended/labs.
 export const recommended = ({ isLabs }: PluginConfig): PluginMeta[] => [
   // prettier-ignore
+  AutomationMeta,
   ChessMeta,
   ExcalidrawMeta,
   ExplorerMeta,
-  FunctionMeta,
   IpfsMeta,
   MapMeta,
   MermaidMeta,
@@ -134,7 +134,6 @@ export const recommended = ({ isLabs }: PluginConfig): PluginMeta[] => [
   ...(isLabs
     ? [
         // prettier-ignore
-        AutomationMeta,
         GithubMeta,
         GridMeta,
         InboxMeta,

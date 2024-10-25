@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { HeadCircuit } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { FunctionDef, FunctionTrigger } from '@dxos/functions/types';
 import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { ChainArticle } from './components';
@@ -34,14 +34,15 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
       },
       graph: {
         builder: (plugins) => {
-        }
+          return [];
+        },
       },
       surface: {
         component: ({ data, role }) => {
           switch (role) {
             case 'article':
               return data.object instanceof ChainType ? <ChainArticle chain={data.object} /> : null;
-            case 'complementary--automation': {
+            case 'complementary--automation':
               return <div>Automation</div>;
           }
 

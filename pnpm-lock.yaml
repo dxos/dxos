@@ -5487,6 +5487,15 @@ importers:
       '@dxos/chain':
         specifier: workspace:*
         version: link:../../../core/chain
+      '@dxos/chess-app':
+        specifier: workspace:*
+        version: link:../../../experimental/chess-app
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-db
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
@@ -5496,9 +5505,30 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugin-client
+      '@dxos/plugin-inbox':
+        specifier: workspace:*
+        version: link:../plugin-inbox
+      '@dxos/plugin-ipfs':
+        specifier: workspace:*
+        version: link:../plugin-ipfs
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../../plugin-markdown
+      '@dxos/plugin-script':
+        specifier: workspace:*
+        version: link:../plugin-script
+      '@dxos/plugin-sketch':
+        specifier: workspace:*
+        version: link:../../plugin-sketch
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugin-space
@@ -5524,9 +5554,6 @@ importers:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../../core/echo/echo-db
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random

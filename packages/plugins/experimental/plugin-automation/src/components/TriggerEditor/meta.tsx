@@ -7,8 +7,6 @@ import React, { type FC } from 'react';
 import { GameType } from '@dxos/chess-app';
 import { create, getMeta as getEchoMeta } from '@dxos/echo-schema';
 import { type FunctionTrigger } from '@dxos/functions/types';
-import { ChainPresets, chainPresets, PromptTemplate } from '@dxos/plugin-automation';
-import { type ChainPromptType } from '@dxos/plugin-automation/types';
 import { FileType } from '@dxos/plugin-ipfs/types';
 import { DocumentType } from '@dxos/plugin-markdown';
 import { type ScriptType } from '@dxos/plugin-script';
@@ -18,6 +16,12 @@ import { Input } from '@dxos/react-ui';
 import { safeParseInt } from '@dxos/util';
 
 import { InputRow } from './Form';
+import { chainPresets } from '../../presets';
+import { type ChainPromptType } from '../../types';
+import { ChainPresets } from '../Chain';
+import { PromptTemplate } from '../PromptTemplate';
+
+// TODO(burdon): Factor out deps (remove from package.json). Provide via plugins.
 
 type TriggerId = string;
 
