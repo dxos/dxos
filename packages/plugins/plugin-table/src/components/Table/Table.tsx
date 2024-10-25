@@ -25,9 +25,9 @@ const blockEndLine =
 
 const frozen = { frozenRowsStart: 1, frozenColsEnd: 1 };
 
-export type TableProps = { tableModel?: TableModel; onDeleteRow?: (row: any) => void };
+export type TableProps = { model?: TableModel; onDeleteRow?: (row: any) => void };
 
-export const Table = ({ tableModel }: TableProps) => {
+export const Table = ({ model }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
 
   const handleOnCellUpdate = useCallback((cell: GridCell) => {
@@ -35,19 +35,19 @@ export const Table = ({ tableModel }: TableProps) => {
   }, []);
 
   useEffect(() => {
-    if (tableModel) {
-      tableModel.setOnCellUpdate(handleOnCellUpdate);
+    if (model) {
+      model.setOnCellUpdate(handleOnCellUpdate);
     }
-  }, [tableModel, handleOnCellUpdate]);
+  }, [model, handleOnCellUpdate]);
 
   const handleAxisResize = useCallback(
     (event: DxAxisResize) => {
       if (event.axis === 'col') {
         const columnIndex = parseInt(event.index, 10);
-        tableModel?.setColumnWidth(columnIndex, event.size);
+        model?.setColumnWidth(columnIndex, event.size);
       }
     },
-    [tableModel],
+    [model],
   );
 
   const { state: menuState, triggerRef, handleClick, close } = useTableMenuController();
@@ -56,7 +56,7 @@ export const Table = ({ tableModel }: TableProps) => {
     <ModalPrimitive.Root>
       {/* TODO(burdon): Is this required to be unique? */}
       <Grid.Root id='table-next'>
-        <TableCellEditor tableModel={tableModel} gridRef={gridRef} />
+        <TableCellEditor tableModel={model} gridRef={gridRef} />
         <Grid.Content
           ref={gridRef}
           className={mx(
@@ -64,29 +64,29 @@ export const Table = ({ tableModel }: TableProps) => {
             inlineEndLine,
             blockEndLine,
           )}
-          initialCells={tableModel?.cells.value}
-          columns={tableModel?.columnMeta.value}
+          initialCells={model?.cells.value}
+          columns={model?.columnMeta.value}
           frozen={frozen}
-          limitRows={tableModel?.getRowCount() ?? 0}
-          limitColumns={tableModel?.table.view?.fields?.length ?? 0}
+          limitRows={model?.getRowCount() ?? 0}
+          limitColumns={model?.table.view?.fields?.length ?? 0}
           onAxisResize={handleAxisResize}
           onClick={handleClick}
         />
       </Grid.Root>
       <ModalPrimitive.Anchor virtualRef={triggerRef} />
       <ColumnActionsMenu
-        tableModel={tableModel}
+        model={model}
         columnId={menuState?.type === 'column' ? menuState.columnId : null}
         open={menuState?.type === 'column'}
         onOpenChange={close}
       />
       <RowActionsMenu
-        tableModel={tableModel}
+        model={model}
         rowIndex={menuState?.type === 'row' ? menuState.rowIndex : null}
         open={menuState?.type === 'row'}
         onOpenChange={close}
       />
-      <NewColumnForm tableModel={tableModel} open={menuState?.type === 'newColumn'} close={close} />
+      <NewColumnForm model={model} open={menuState?.type === 'newColumn'} onClose={close} />
     </ModalPrimitive.Root>
   );
 };

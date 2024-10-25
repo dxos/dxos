@@ -28,7 +28,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   ]);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
   const onDeleteRow = useCallback((row: any) => space?.db.remove(row), [space]);
-  const tableModel = useTableModel({ table, objects: filteredObjects, onDeleteRow });
+  const model = useTableModel({ table, objects: filteredObjects, onDeleteRow });
 
   const onThreadCreate = useCallback(() => {
     void dispatch({
@@ -80,7 +80,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
           role === 'slide' && 'bs-full overflow-auto grid place-items-center',
         )}
       >
-        <Table key={table.id} tableModel={tableModel} />
+        <Table key={table.id} model={model} />
       </div>
     </div>
   );

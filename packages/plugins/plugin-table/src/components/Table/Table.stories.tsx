@@ -20,32 +20,27 @@ import { TableType } from '../../types';
 import { Toolbar } from '../Toolbar';
 import { createEmptyTable, createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
 
+//
+// Story components.
+//
+
 const DefaultStory = () => {
-  const spaces = useSpaces();
   const [table, setTable] = useState<TableType | undefined>();
+  const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-
-  const tableObjects = useQuery(space, Filter.schema(TableType));
-  useEffect(() => {
-    if (tableObjects.length) {
-      setTable(tableObjects[0]);
-    }
-  }, [tableObjects]);
-
-  const queriedObjects = useQuery(space, table?.schema ? Filter.schema(table.schema) : () => false, undefined, [
+  const tables = useQuery(space, Filter.schema(TableType));
+  const objects = useQuery(space, table?.schema ? Filter.schema(table.schema) : () => false, undefined, [
     table?.schema,
   ]);
+  const filteredObjects = useGlobalFilteredObjects(objects);
 
-  const filteredObjects = useGlobalFilteredObjects(queriedObjects);
+  useEffect(() => {
+    if (tables.length > 0) {
+      setTable(tables[0]);
+    }
+  }, [tables]);
 
-  const onDeleteRow = useCallback((row: any) => space.db.remove(row), [space]);
-
-  const tableModel = useTableModel({
-    table: table!,
-    objects: filteredObjects,
-    onDeleteRow,
-  });
-
+  const handleDeleteRow = useCallback((row: any) => space.db.remove(row), [space]);
   const handleAction = useCallback(
     (action: { type: string }) => {
       switch (action.type) {
@@ -65,6 +60,12 @@ const DefaultStory = () => {
     [table, spaces],
   );
 
+  const model = useTableModel({
+    table: table!,
+    objects: filteredObjects,
+    onDeleteRow: handleDeleteRow,
+  });
+
   if (!table) {
     return null;
   }
@@ -79,7 +80,7 @@ const DefaultStory = () => {
           </Toolbar.Root>
         </div>
         <div className='relative is-full max-is-max min-is-0 min-bs-0'>
-          <Table tableModel={tableModel} />
+          <Table model={model} />
         </div>
       </div>
       <div className='border border-left border-separator -mt-px'>
@@ -88,8 +89,6 @@ const DefaultStory = () => {
     </div>
   );
 };
-
-export const Default = {};
 
 type StoryProps = {
   rows?: number;
@@ -108,7 +107,7 @@ const TablePerformanceStory = (props: StoryProps) => {
     itemsRef.current.splice(itemsRef.current.indexOf(row), 1);
   }, []);
 
-  const tableModel = useTableModel({
+  const model = useTableModel({
     table,
     objects: items as any,
     onDeleteRow,
@@ -116,10 +115,16 @@ const TablePerformanceStory = (props: StoryProps) => {
 
   return (
     <div className='relative is-full max-is-max min-is-0 min-bs-0'>
-      <Table tableModel={tableModel} />
+      <Table model={model} />
     </div>
   );
 };
+
+//
+// Story definitions.
+//
+
+export const Default = {};
 
 export const Mutations: StoryObj = {
   render: TablePerformanceStory,

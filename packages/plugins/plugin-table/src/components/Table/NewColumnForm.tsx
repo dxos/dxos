@@ -13,9 +13,9 @@ import { type FieldType, FieldValueType, getUniqueProperty, type ViewType } from
 import { type TableModel } from '../../model';
 
 type NewColumnFormProps = {
-  tableModel?: TableModel;
+  model?: TableModel;
   open: boolean;
-  close: () => void;
+  onClose: () => void;
 };
 
 // TODO(ZaymonFC): A util in `@dxos/schema` should look at the view and the
@@ -28,19 +28,19 @@ export const createNewField = (view: ViewType): FieldType => {
   return create(field);
 };
 
-export const NewColumnForm = ({ tableModel, open, close }: NewColumnFormProps) => {
+export const NewColumnForm = ({ model, open, onClose: close }: NewColumnFormProps) => {
   const { tx } = useThemeContext();
   const [field, setField] = useState<FieldType | undefined>(undefined);
 
   useEffect(() => {
     if (open) {
-      if (tableModel?.table?.view) {
-        setField(createNewField(tableModel.table.view));
+      if (model?.table?.view) {
+        setField(createNewField(model.table.view));
       } else {
         close();
       }
     }
-  }, [open, close, tableModel]);
+  }, [open, close, model]);
 
   const onCreate = useCallback(() => {
     if (!field) {
@@ -48,11 +48,11 @@ export const NewColumnForm = ({ tableModel, open, close }: NewColumnFormProps) =
       return;
     }
 
-    tableModel?.table?.view?.fields?.push(field);
+    model?.table?.view?.fields?.push(field);
     // TODO(ZaymonFC): Use a module to update the view and schema at the same time!
     // TODO(ZaymonFC): Validate: that path and name are unique. Path should be non-empty.
     close();
-  }, [tableModel, field]);
+  }, [model, field]);
 
   if (!field) {
     return null;

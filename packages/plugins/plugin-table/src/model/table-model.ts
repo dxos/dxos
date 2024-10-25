@@ -27,12 +27,12 @@ export type SortConfig = { columnId: ColumnId; direction: SortDirection };
 
 export type TableModelProps = {
   table: TableType;
-  onDeleteRow?: (row: any) => void;
-  onInsertRow?: (index?: number) => void;
-  onCellUpdate?: (cell: GridCell) => void;
   sorting?: SortConfig[];
   pinnedRows?: { top: number[]; bottom: number[] };
   rowSelection?: number[];
+  onDeleteRow?: (row: any) => void;
+  onInsertRow?: (index?: number) => void;
+  onCellUpdate?: (cell: GridCell) => void;
 };
 
 export class TableModel extends Resource {
@@ -63,12 +63,12 @@ export class TableModel extends Resource {
 
   constructor({
     table,
-    onDeleteRow,
-    onInsertRow,
-    onCellUpdate,
     sorting = [],
     pinnedRows = { top: [], bottom: [] },
     rowSelection = [],
+    onDeleteRow,
+    onInsertRow,
+    onCellUpdate,
   }: TableModelProps) {
     super();
     this.table = table;
