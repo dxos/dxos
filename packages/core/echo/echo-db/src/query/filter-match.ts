@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Reference } from '@dxos/echo-protocol';
 import { EXPANDO_TYPENAME, isReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type Filter } from './filter';
@@ -66,24 +66,12 @@ const filterMatchInner = (
   }
 
   if (filter.type) {
-    const type = core.getType();
+    const type = core.getType()?.toDXN() ?? DXN.typename(EXPANDO_TYPENAME);
 
-    /** @deprecated TODO(mykola): Remove */
-    const dynamicSchemaTypename = type?.objectId;
+    log.info('type compare', { type, filterType: filter.type });
 
-    // Separate branch for objects with dynamic schema and typename filters.
-    // TODO(dmaretskyi): Better way to check if schema is dynamic.
-    if (filter.type.protocol === 'protobuf' && dynamicSchemaTypename) {
-      if (dynamicSchemaTypename !== filter.type.objectId) {
-        return false;
-      }
-    } else {
-      if (!type && filter.type.objectId !== EXPANDO_TYPENAME) {
-        return false;
-      } else if (type && !compareType(filter.type, type, core.database?.spaceKey)) {
-        // Compare if types are equal.
-        return false;
-      }
+    if (!filter.type.some((filterType) => DXN.equals(filterType, type))) {
+      return false;
     }
   }
 
@@ -102,12 +90,7 @@ const filterMatchInner = (
   }
 
   if (filter.text !== undefined) {
-    const objectText = legacyGetTextForMatch(core);
-
-    const text = filter.text.toLowerCase();
-    if (!objectText.toLowerCase().includes(text)) {
-      return false;
-    }
+    throw new Error('Text filter is not supported.');
   }
 
   // Untracked will prevent signals in the callback from being subscribed to.
@@ -123,32 +106,3 @@ const filterMatchInner = (
 
   return true;
 };
-
-// Type comparison is a bit weird due to backwards compatibility requirements.
-// TODO(dmaretskyi): Deprecate `protobuf` protocol to clean this up.
-export const compareType = (expected: Reference, actual: Reference, spaceKey?: PublicKey) => {
-  const host = actual.protocol !== 'protobuf' ? actual?.host ?? spaceKey?.toHex() : actual.host ?? 'dxos.org';
-
-  if (
-    actual.objectId !== expected.objectId ||
-    actual.protocol !== expected.protocol ||
-    (host !== expected.host && actual.host !== expected.host)
-  ) {
-    return false;
-  } else {
-    return true;
-  }
-};
-
-/**
- * @deprecated
- */
-// TODO(dmaretskyi): Cleanup.
-const legacyGetTextForMatch = (core: ObjectCore): string => '';
-// compositeRuntime.untracked(() => {
-//   if (!isTypedObject(core.rootProxy)) {
-//     return '';
-//   }
-
-//   return JSON.stringify(core.rootProxy.toJSON());
-// });

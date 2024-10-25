@@ -10,9 +10,9 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { SheetContainer } from './SheetContainer';
-import { useComputeGraph } from '../../hooks';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { SheetType } from '../../types';
+import { useComputeGraph } from '../ComputeGraph';
 
 export const Basic = () => {
   const space = useSpace();

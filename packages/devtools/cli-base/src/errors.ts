@@ -26,7 +26,7 @@ export class IdentityWaitTimeoutError extends FriendlyError {
 
 export class ClientInitializationError extends FriendlyError {
   constructor(message: string, error: Error) {
-    super(`Error while initializing client: ${message}: ${error.message}`);
+    super(`Error while initializing client: ${message}: ${error.message}`, { cause: error });
   }
 }
 

@@ -12,7 +12,7 @@ import { getMeta, getTypename } from '@dxos/echo-schema';
 import { omit } from '@dxos/log';
 import { MessageType } from '@dxos/plugin-space/types';
 
-import { BaseCommand } from '../../base';
+import { BaseCommand } from '../../base.js';
 
 // TODO(burdon): Option no-wrap.
 export default class Query extends BaseCommand<typeof Query> {

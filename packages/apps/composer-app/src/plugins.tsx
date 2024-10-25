@@ -89,7 +89,7 @@ export const core = ({ isPwa, isSocket }: PluginConfig): PluginMeta[] =>
     NavTreeMeta,
     SettingsMeta,
     StatusBarMeta,
-    WildcardMeta,
+    WildcardMeta, // TODO(burdon): Remove?
 
     // Shell and help (client must precede help because help’s context depends on client’s)
     ClientMeta,
