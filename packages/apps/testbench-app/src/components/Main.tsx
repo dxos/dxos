@@ -24,18 +24,18 @@ import { exportData, importData } from '../util';
 
 export const Main = () => {
   const client = useClient();
-  // TODO(wittjosiah): Why filter out the default space?
+  // Filter default so that the first space visible is the shared space.
   const spaces = useSpaces({ all: true }).filter((space) => space !== client.spaces.default);
   const [space, setSpace] = useState<Space>();
-  const [stats, refreshStats] = useStats();
-  const [showStats, setShowStats] = useState(false);
-  const [showDevTools, setShowDevTools] = useState(false);
-
   useEffect(() => {
     if (!space && spaces.length) {
       setSpace(spaces[0]);
     }
   }, []);
+
+  const [showDevTools, setShowDevTools] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [stats, refreshStats] = useStats();
 
   const [view, setView] = useState<DataView>();
   const [type, setType] = useState<string>();
@@ -54,8 +54,8 @@ export const Main = () => {
       }, new Map<string, S.Schema<any>>()),
     [],
   );
-  const getSchema = (type: string | undefined) => typeMap.get(type ?? ItemType.typename) ?? ItemType;
 
+  const getSchema = (type: string | undefined) => typeMap.get(type ?? ItemType.typename) ?? ItemType;
   const objects = useQuery(
     space,
     Filter.schema(getSchema(type), (object: ItemType) => match(filter, object.content)),
@@ -90,20 +90,22 @@ export const Main = () => {
     Array.from({ length: n }).forEach(() => {
       let object: ReactiveObject<any>;
       switch (type) {
-        case DocumentType.typename:
+        case DocumentType.typename: {
           object = create(DocumentType, {
             title: randWord(),
             content: randSentence(),
           });
           break;
+        }
 
         case ItemType.typename:
-        default:
+        default: {
           object = create(ItemType, {
             content: randSentence(),
             // due: randBetweenDate(dateRange)
           });
           break;
+        }
       }
 
       space.db.add(object);
@@ -187,8 +189,8 @@ export const Main = () => {
   };
 
   return (
-    <div className='flex flex-row w-full h-full justify-center'>
-      <div className='flex flex-col grow max-w-[60rem] shadow-lg bg-white dark:bg-black'>
+    <div className='flex flex-row grow justify-center overflow-hidden'>
+      <div className='flex flex-col grow bg-base'>
         <AppToolbar
           onHome={() => window.open(defs.issueUrl, 'DXOS')}
           onProfile={() => {
@@ -200,28 +202,24 @@ export const Main = () => {
           spaces={spaces}
           selected={space?.key ?? spaces[0]?.key}
           onCreate={handleSpaceCreate}
-          onImport={handleSpaceImport}
           onSelect={handleSpaceSelect}
           onToggleOpen={handleSpaceToggleOpen}
-          onExport={handleSpaceExport}
           onInvite={handleSpaceInvite}
+          onImport={handleSpaceImport}
+          onExport={handleSpaceExport}
         />
         <div className='flex flex-col grow overflow-hidden'>
-          {space?.isOpen && (
-            <>
-              <DataToolbar
-                types={Array.from(typeMap.keys())}
-                onAdd={handleObjectCreate}
-                onTypeChange={(type) => setType(type)}
-                onFilterChange={setFilter}
-                onViewChange={(view) => setView(view)}
-              />
+          <DataToolbar
+            types={Array.from(typeMap.keys())}
+            onAdd={handleObjectCreate}
+            onTypeChange={(type) => setType(type)}
+            onFilterChange={setFilter}
+            onViewChange={(view) => setView(view)}
+          />
 
-              {view === 'table' && <ItemTable schema={getSchema(type)} objects={objects} />}
-              {view === 'list' && <ItemList objects={objects} onDelete={handleObjectDelete} />}
-              {view === 'debug' && <ItemList debug objects={objects} onDelete={handleObjectDelete} />}
-            </>
-          )}
+          {view === 'table' && <ItemTable schema={getSchema(type)} objects={objects} />}
+          {view === 'list' && <ItemList objects={objects} onDelete={handleObjectDelete} />}
+          {view === 'debug' && <ItemList debug objects={objects} onDelete={handleObjectDelete} />}
         </div>
         <div className='flex h-[32px] p-2 items-center relative text-xs'>
           <div>{objects.length} objects</div>

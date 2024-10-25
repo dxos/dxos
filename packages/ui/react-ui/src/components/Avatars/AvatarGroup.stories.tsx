@@ -44,8 +44,9 @@ const StorybookAvatarGroup = () => {
 };
 
 export default {
-  title: 'ui/react-ui/Avatar Group',
-  component: StorybookAvatarGroup,
+  title: 'ui/react-ui-core/AvatarGroup',
+  component: AvatarGroup,
+  render: StorybookAvatarGroup,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

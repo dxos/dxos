@@ -40,6 +40,7 @@ export const config = (
     '@storybook/addon-interactions',
     '@storybook/addon-links',
     '@storybook/addon-themes',
+    '@storybook/addon-toolbars',
     'storybook-dark-mode',
   ],
   /**
