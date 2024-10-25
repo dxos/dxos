@@ -380,7 +380,12 @@ export const SpacePlugin = ({
                 <MissingObject id={primary} />
               ) : null;
             case 'complementary--settings':
-              return isEchoObject(data.subject) ? <DefaultObjectSettings object={data.subject} /> : null;
+              return isEchoObject(data.subject)
+                ? {
+                    node: <DefaultObjectSettings object={data.subject} />,
+                    disposition: 'fallback',
+                  }
+                : null;
             case 'dialog':
               if (data.component === 'dxos.org/plugin/space/InvitationManagerDialog') {
                 return (

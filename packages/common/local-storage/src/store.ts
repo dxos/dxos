@@ -124,14 +124,13 @@ export class LocalStorageStore<T extends object> {
     return this._values;
   }
 
-  // TODO(burdon): Reset method (keep track of binders).
-
   /**
    * Binds signal property to local storage key.
    */
+  // TODO(burdon): Reset method (keep track of binders).
   prop<K extends keyof T>({
     key,
-    storageKey: _storageKey,
+    storageKey: _storageKey, // TODO(burdon): Generate.
     type,
   }: {
     key: K;
