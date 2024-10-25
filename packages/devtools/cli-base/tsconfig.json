@@ -1,13 +1,21 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "lib": ["DOM", "ESNext"],
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
     "outDir": "dist/types",
-    "types": ["@dxos/typings", "node"],
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [],
   "ts-node": {
-    "transpileOnly": true,
-  },
+    "transpileOnly": true
+  }
 }
