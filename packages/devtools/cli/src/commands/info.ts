@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import chalk from 'chalk';
 import inquirer from 'inquirer';
 
 import { BaseCommand } from '../base';
@@ -17,7 +16,8 @@ export default class Info extends BaseCommand<typeof Info> {
 
   async run(): Promise<any> {
     const { input } = await inquirer.prompt<{ input: string }>({
-      prefix: chalk.green('>'),
+      type: 'input',
+      message: '>',
       name: 'input',
     });
     console.log(input);

@@ -7,6 +7,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -36,7 +37,7 @@
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
-    "storybook": "^8.3.3"
+    "storybook": "^8.3.6"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

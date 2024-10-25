@@ -382,9 +382,6 @@
       ],
       "@dxos/react-ui-types": [
         "packages/ui/react-ui-types/src/index.ts"
-      ],
-      "@dxos/storybook-utils": [
-        "packages/ui/storybook-utils/src/index.ts"
       ]
     }
   },

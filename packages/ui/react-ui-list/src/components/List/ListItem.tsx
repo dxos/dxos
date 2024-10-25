@@ -228,7 +228,7 @@ export const ListItemTitle = ({
   children,
   ...props
 }: ThemedClassName<PropsWithChildren<ComponentProps<'div'>>>) => (
-  <div className={mx('grow items-center truncate', classNames)} {...props}>
+  <div className={mx('flex grow items-center truncate', classNames)} {...props}>
     {children}
   </div>
 );
