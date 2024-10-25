@@ -25,6 +25,7 @@ export default [
         'column action sort ascending': 'Sort Ascending',
         'column action clear sorting': 'Clear Sorting',
         'column action settings': 'Column Settings',
+        'delete row label': 'Delete row',
       },
     },
   },

@@ -22,7 +22,7 @@ const DefaultStory = (props: ViewEditorProps) => {
   const resolver = useSchemaResolver(); // TODO(burdon): Mock.
   return (
     <TestPopup>
-      <ViewEditor schemaResolver={resolver} {...props} />
+      <ViewEditor {...props} schemaResolver={resolver} />
     </TestPopup>
   );
 };
