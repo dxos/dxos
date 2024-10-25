@@ -9,7 +9,7 @@ import { MailboxType } from '@dxos/plugin-inbox/types';
 import { MessageType } from '@dxos/plugin-space/types';
 import { type Space, Filter } from '@dxos/react-client/echo';
 
-export const SOURCE_ID = 'hub.dxos.network/mailbox';
+export const SOURCE_ID = 'hub.dxos.network/api/mailbox';
 
 export const handleEmail = async (space: Space, data: any) => {
   const { messages } = data;

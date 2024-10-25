@@ -50,7 +50,7 @@ const DefaultStory = () => {
 export const Default = {};
 
 const meta: Meta = {
-  title: 'plugins/plugin-chain/PromptTemplate',
+  title: 'plugins/plugin-automation/PromptTemplate',
   render: DefaultStory,
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [ChainType, ChainPromptType] }),

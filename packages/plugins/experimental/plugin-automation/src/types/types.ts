@@ -10,20 +10,18 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-client';
-import type { StackProvides } from '@dxos/plugin-stack';
 
-import { FUNCTION_PLUGIN } from './meta';
+import { AUTOMATION_PLUGIN } from '../meta';
 
-const FUNCTION_ACTION = `${FUNCTION_PLUGIN}/action`;
+const AUTOMATION_ACTION = `${AUTOMATION_PLUGIN}/action`;
 
-export enum FunctionAction {
-  CREATE = `${FUNCTION_ACTION}/create`,
+export enum AutomationAction {
+  CREATE = `${AUTOMATION_ACTION}/create`,
 }
 
-export type FunctionPluginProvides = SurfaceProvides &
+export type AutomationPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   GraphBuilderProvides &
-  SchemaProvides &
-  StackProvides;
+  SchemaProvides;

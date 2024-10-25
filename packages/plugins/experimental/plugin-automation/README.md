@@ -1,6 +1,6 @@
-# @dxos/plugin-chain
+# @dxos/plugin-automation
 
-Prompt Chain.
+Automation plugin.
 
 ## DXOS Resources
 

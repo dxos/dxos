@@ -4,12 +4,11 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const CHAIN_PLUGIN = 'dxos.org/plugin/chain';
+export const AUTOMATION_PLUGIN = 'dxos.org/plugin/automation';
 
 export default {
-  id: CHAIN_PLUGIN,
-  name: 'Chain',
-  description: 'AI prompt configuration.',
-  tags: ['experimental'],
+  id: AUTOMATION_PLUGIN,
+  name: 'Automation',
+  description: 'Automation workflows.',
   icon: 'ph--head-circuit--regular',
 } satisfies PluginMeta;

@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { FunctionDef, FunctionTrigger } from '@dxos/functions/types';
-import { ChainPromptType } from '@dxos/plugin-chain/types';
+import { ChainPromptType } from '@dxos/plugin-automation/types';
 import { useSpace } from '@dxos/react-client/echo';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
@@ -54,7 +54,7 @@ const TriggerEditorStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
 export const Default = {};
 
 const meta: Meta = {
-  title: 'plugins/plugin-function/TriggerEditor',
+  title: 'plugins/plugin-automation/TriggerEditor',
   render: () => (
     <ClientRepeater
       component={TriggerEditorStory}

@@ -474,7 +474,7 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-chain/package.json",
+          "path": "packages/plugins/experimental/plugin-automation/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -485,11 +485,6 @@
         {
           "type": "json",
           "path": "packages/plugins/experimental/plugin-explorer/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-function/package.json",
           "jsonpath": "$.version"
         },
         {

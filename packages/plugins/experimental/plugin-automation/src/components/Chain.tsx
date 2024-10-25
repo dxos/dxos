@@ -9,7 +9,7 @@ import { Select, useTranslation } from '@dxos/react-ui';
 import { nonNullable } from '@dxos/util';
 
 import { PromptTemplate, Section } from './PromptTemplate';
-import { CHAIN_PLUGIN } from '../meta';
+import { AUTOMATION_PLUGIN } from '../meta';
 import { chainPresets, type Preset } from '../presets';
 import { type ChainType } from '../types';
 
@@ -39,7 +39,7 @@ export const Chain: FC<{ chain: ChainType }> = ({ chain }) => {
 };
 
 export const ChainPresets: FC<{ presets: Preset[]; onSelect: (preset: Preset) => void }> = ({ presets, onSelect }) => {
-  const { t } = useTranslation(CHAIN_PLUGIN);
+  const { t } = useTranslation(AUTOMATION_PLUGIN);
 
   return (
     <Select.Root

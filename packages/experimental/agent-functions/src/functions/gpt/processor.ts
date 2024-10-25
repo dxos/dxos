@@ -10,7 +10,7 @@ import { todo } from '@dxos/debug';
 import { Filter } from '@dxos/echo-db';
 import { type ReactiveObject, type JsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { type ChainInput, ChainInputType, ChainPromptType } from '@dxos/plugin-chain/types';
+import { type ChainInput, ChainInputType, ChainPromptType } from '@dxos/plugin-automation/types';
 import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
 import { nonNullable } from '@dxos/util';
 

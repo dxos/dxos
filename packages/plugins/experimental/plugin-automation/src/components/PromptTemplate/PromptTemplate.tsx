@@ -17,7 +17,7 @@ import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { nameRegex, promptExtension } from './prompt-extension';
-import { CHAIN_PLUGIN } from '../../meta';
+import { AUTOMATION_PLUGIN } from '../../meta';
 import { type ChainInput, ChainInputType, type ChainPromptType } from '../../types';
 
 const inputTypes = [
@@ -106,7 +106,7 @@ type PromptTemplateProps = {
 };
 
 export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplateProps) => {
-  const { t } = useTranslation(CHAIN_PLUGIN);
+  const { t } = useTranslation(AUTOMATION_PLUGIN);
   const { themeMode } = useThemeContext();
 
   const { parentRef } = useTextEditor(

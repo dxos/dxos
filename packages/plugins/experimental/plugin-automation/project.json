@@ -1,6 +1,6 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "plugin-chain",
+  "name": "plugin-automation",
   "tags": [
     "scope:experimental",
     "scope:plugins"

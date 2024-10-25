@@ -10,19 +10,18 @@ import { create } from '@dxos/echo-schema';
 import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { ChainArticle } from './components';
-import meta, { CHAIN_PLUGIN } from './meta';
+import meta, { AUTOMATION_PLUGIN } from './meta';
 import translations from './translations';
-import { ChainPromptType, ChainType } from './types';
-import { ChainAction, type ChainPluginProvides } from './types';
+import { ChainPromptType, ChainType, AutomationAction, type AutomationPluginProvides } from './types';
 
-export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
+export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> => {
   return {
     meta,
     provides: {
       metadata: {
         records: {
           [ChainType.typename]: {
-            placeholder: ['object placeholder', { ns: CHAIN_PLUGIN }],
+            placeholder: ['object placeholder', { ns: AUTOMATION_PLUGIN }],
             icon: 'ph--head-circuit--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (chain: ChainType) => loadObjectReferences(chain, (chain) => chain.prompts),
@@ -31,28 +30,19 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [ChainType, ChainPromptType],
+        schema: [ChainType, ChainPromptType, FunctionDef, FunctionTrigger],
       },
-      stack: {
-        creators: [
-          {
-            id: 'create-stack-section-chain',
-            testId: 'chainPlugin.createSection',
-            type: ['plugin name', { ns: CHAIN_PLUGIN }],
-            label: ['create stack section label', { ns: CHAIN_PLUGIN }],
-            icon: (props: any) => <HeadCircuit {...props} />,
-            intent: {
-              plugin: CHAIN_PLUGIN,
-              action: ChainAction.CREATE,
-            },
-          },
-        ],
+      graph: {
+        builder: (plugins) => {
+        }
       },
       surface: {
         component: ({ data, role }) => {
           switch (role) {
             case 'article':
               return data.object instanceof ChainType ? <ChainArticle chain={data.object} /> : null;
+            case 'complementary--automation': {
+              return <div>Automation</div>;
           }
 
           return null;
@@ -61,9 +51,10 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
-            case ChainAction.CREATE: {
+            case AutomationAction.CREATE: {
               return {
                 data: create(ChainType, { prompts: [] }),
+                // data: create(FunctionTrigger, { function: '', spec: { type: 'timer', cron: '' } }),
               };
             }
           }

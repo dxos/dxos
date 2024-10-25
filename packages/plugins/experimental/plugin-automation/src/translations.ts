@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CHAIN_PLUGIN } from './meta';
+import { AUTOMATION_PLUGIN } from './meta';
 
 export default [
   {
     'en-US': {
-      [CHAIN_PLUGIN]: {
-        'plugin name': 'Chain',
+      [AUTOMATION_PLUGIN]: {
+        'plugin name': 'Automation',
         'object placeholder': 'New prompt',
         'create object label': 'Create prompt',
         'create trigger label': 'Create trigger',
@@ -17,6 +17,13 @@ export default [
         'template placeholder': 'Enter template...',
         'value placeholder': 'Enter value...',
         'select preset template placeholder': 'Select preset',
+
+        // 'create object label': 'Create rule',
+        // 'create stack section label': 'Create rule',
+        // 'command placeholder': 'Enter command...',
+        // 'template placeholder': 'Enter template...',
+        // 'value placeholder': 'Enter value...',
+        // 'select preset template placeholder': 'Select preset',
       },
     },
   },
