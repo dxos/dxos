@@ -1342,7 +1342,7 @@ export class DxGrid extends LitElement {
         changedProperties.has('visRowMin') ||
         changedProperties.has('visRowMax'))
     ) {
-      this.updateCells();
+      this.updateCells(true);
     }
 
     if (changedProperties.has('rowDefault') || changedProperties.has('rows') || changedProperties.has('limitRows')) {

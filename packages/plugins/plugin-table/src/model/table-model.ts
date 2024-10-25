@@ -10,14 +10,14 @@ import { PublicKey } from '@dxos/react-client';
 import { parseValue, cellClassesForFieldType } from '@dxos/react-ui-data';
 import {
   type DxGridPlaneCells,
-  type DxGridCells,
   type DxGridAxisMeta,
+  type DxGridPlaneRange,
+  type DxGridPlane,
   type DxGridCellValue,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { type FieldType, formatValue } from '@dxos/schema';
+import { formatValue } from '@dxos/schema';
 
-import { CellUpdateListener } from './update-listener';
 import { fromGridCell, type GridCell, type TableType } from '../types';
 import { tableButtons } from '../util';
 
@@ -39,16 +39,14 @@ export class TableModel extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
 
   public readonly table: TableType;
-  public readonly data = signal<any[]>([]);
+  private rows = signal<any[]>([]);
+  private sortedRows!: ReadonlySignal<any[]>;
 
-  public cells!: ReadonlySignal<DxGridCells>;
-  public cellUpdateListener!: CellUpdateListener;
   public columnMeta!: ReadonlySignal<DxGridAxisMeta>;
 
+  public readonly sorting = signal<SortConfig | undefined>(undefined);
   public pinnedRows: { top: number[]; bottom: number[] };
   public rowSelection: number[];
-
-  public readonly sorting = signal<SortConfig | undefined>(undefined);
 
   /**
    * Maps display indices to data indices.
@@ -81,38 +79,23 @@ export class TableModel extends Resource {
   }
 
   public updateData = (newData: any[]): void => {
-    this.data.value = newData;
+    this.rows.value = newData;
   };
 
   protected override async _open() {
-    const headerCells: ReadonlySignal<DxGridPlaneCells> = computed(() => {
-      const fields = this.table.view?.fields ?? [];
-      return Object.fromEntries(
-        fields.map((field, index: number) => [
-          fromGridCell({ col: index, row: 0 }),
-          {
-            value: field.label ?? field.path,
-            resizeHandle: 'col',
-            accessoryHtml: tableButtons.columnSettings.render({ columnId: field.id }),
-            readonly: true,
-          },
-        ]),
-      );
-    });
-
-    const sortedRows = computed(() => {
+    this.sortedRows = computed(() => {
       this.displayToDataIndex.clear();
       const sort = this.sorting.value;
       if (!sort) {
-        return this.data.value;
+        return this.rows.value;
       }
 
       const field = this.table.view?.fields.find((field) => field.id === sort.columnId);
       if (!field) {
-        return this.data.value;
+        return this.rows.value;
       }
 
-      const dataWithIndices = this.data.value.map((item, index) => ({ item, index }));
+      const dataWithIndices = this.rows.value.map((item, index) => ({ item, index }));
       const sorted = sortBy(dataWithIndices, [(wrapper) => wrapper.item[field.path]]);
       if (sort.direction === 'desc') {
         sorted.reverse();
@@ -128,66 +111,6 @@ export class TableModel extends Resource {
       return sorted.map(({ item }) => item);
     });
 
-    const mainCells: ReadonlySignal<DxGridPlaneCells> = computed(() => {
-      const values: DxGridPlaneCells = {};
-      const fields = this.table.view?.fields ?? [];
-
-      const addCell = (row: any, field: FieldType, colIndex: number, displayIndex: number): void => {
-        // Cell value access is wrapped with a signal so we can listen to granular updates.
-        const cellValueSignal = computed(() => {
-          return row[field.path] !== undefined ? formatValue(field.type, row[field.path]) : '';
-        });
-
-        const cell: DxGridCellValue = {
-          get value() {
-            return cellValueSignal.value;
-          },
-        };
-
-        const cellClasses = cellClassesForFieldType(field.type);
-        if (cellClasses) {
-          cell.className = mx(cellClasses);
-        }
-
-        values[fromGridCell({ col: colIndex, row: displayIndex })] = cell;
-      };
-
-      sortedRows.value.forEach((row, displayIndex) => {
-        fields.forEach((field, colIndex) => {
-          addCell(row, field, colIndex, displayIndex);
-        });
-      });
-
-      return values;
-    });
-
-    // Create the frozen end column (action column)
-    const actionColumnCells: ReadonlySignal<DxGridPlaneCells> = computed(() => {
-      const values: DxGridPlaneCells = {};
-
-      // Add action cells for each row
-      for (let displayRow = 0; displayRow < this.data.value.length; displayRow++) {
-        values[fromGridCell({ col: 0, row: displayRow })] = {
-          value: '',
-          accessoryHtml: tableButtons.rowMenu.render({ rowIndex: displayRow }),
-          readonly: true,
-        };
-      }
-
-      return values;
-    });
-
-    const newColumnCell: DxGridPlaneCells = {
-      [fromGridCell({ col: 0, row: 0 })]: { value: '', accessoryHtml: tableButtons.newColumn.render(), readonly: true },
-    };
-
-    this.cells = computed(() => ({
-      grid: mainCells.value,
-      frozenRowsStart: headerCells.value,
-      frozenColsEnd: actionColumnCells.value,
-      fixedStartEnd: newColumnCell,
-    }));
-
     this.columnMeta = computed(() => {
       const fields = this.table.view?.fields ?? [];
       const meta = Object.fromEntries(
@@ -201,9 +124,6 @@ export class TableModel extends Resource {
         },
       };
     });
-
-    this.cellUpdateListener = new CellUpdateListener(mainCells, this.onCellUpdate);
-    this._ctx.onDispose(this.cellUpdateListener.dispose);
   }
 
   //
@@ -212,8 +132,100 @@ export class TableModel extends Resource {
 
   setOnCellUpdate(onCellUpdate: (cell: GridCell) => void): void {
     this.onCellUpdate = onCellUpdate;
-    this.cellUpdateListener.setOnCellUpdate(this.onCellUpdate);
   }
+
+  //
+  // Get Cells
+  //
+  public getCells = (range: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells | null => {
+    switch (plane) {
+      case 'grid': {
+        return this.getMainGridCells(range);
+      }
+      case 'frozenRowsStart': {
+        return this.getHeaderCells(range);
+      }
+      case 'frozenColsEnd': {
+        return this.getActionColumnCells(range);
+      }
+      case 'fixedStartEnd': {
+        return this.getNewColumnCell();
+      }
+      default: {
+        return null;
+      }
+    }
+  };
+
+  private getMainGridCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
+    const values: DxGridPlaneCells = {};
+    const fields = this.table.view?.fields ?? [];
+
+    const addCell = (row: any, field: any, colIndex: number, displayIndex: number): void => {
+      const cell: DxGridCellValue = {
+        value: row?.[field.path] !== undefined ? formatValue(field.type, row[field.path]) : '',
+      };
+      const classes = cellClassesForFieldType(field.type);
+      if (classes) {
+        cell.className = mx(classes);
+      }
+      values[fromGridCell({ col: colIndex, row: displayIndex })] = cell;
+    };
+
+    for (let row = range.start.row; row <= range.end.row && row < this.sortedRows.value.length; row++) {
+      for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
+        const field = fields[col];
+        if (!field) {
+          continue;
+        }
+        addCell(this.sortedRows.value[row], field, col, row);
+      }
+    }
+
+    return values;
+  };
+
+  private getHeaderCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
+    const values: DxGridPlaneCells = {};
+    const fields = this.table.view?.fields ?? [];
+
+    for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
+      const field = fields[col];
+      if (!field) {
+        continue;
+      }
+      values[fromGridCell({ col, row: 0 })] = {
+        value: field.label ?? field.path,
+        resizeHandle: 'col',
+        accessoryHtml: tableButtons.columnSettings.render({ columnId: field.id }),
+        readonly: true,
+      };
+    }
+    return values;
+  };
+
+  private getActionColumnCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
+    const values: DxGridPlaneCells = {};
+
+    for (let row = range.start.row; row <= range.end.row && row < this.rows.value.length; row++) {
+      values[fromGridCell({ col: 0, row })] = {
+        value: '',
+        accessoryHtml: tableButtons.rowMenu.render({ rowIndex: row }),
+        readonly: true,
+      };
+    }
+    return values;
+  };
+
+  private getNewColumnCell = (): DxGridPlaneCells => {
+    return {
+      [fromGridCell({ col: 0, row: 0 })]: {
+        value: '',
+        accessoryHtml: tableButtons.newColumn.render(),
+        readonly: true,
+      },
+    };
+  };
 
   //
   // Data
@@ -221,12 +233,12 @@ export class TableModel extends Resource {
 
   public deleteRow = (rowIndex: number): void => {
     const dataIndex = this.displayToDataIndex.get(rowIndex) ?? rowIndex;
-    this.onDeleteRow?.(this.data.value[dataIndex]);
+    this.onDeleteRow?.(this.rows.value[dataIndex]);
   };
 
   public insertRow = (rowIndex?: number): void => {
     const dataIndex =
-      rowIndex !== undefined ? this.displayToDataIndex.get(rowIndex) ?? rowIndex : this.data.value.length;
+      rowIndex !== undefined ? this.displayToDataIndex.get(rowIndex) ?? rowIndex : this.rows.value.length;
     this.onInsertRow?.(dataIndex);
   };
 
@@ -238,7 +250,7 @@ export class TableModel extends Resource {
 
     const field = fields[col];
     const dataIndex = this.displayToDataIndex.get(row) ?? row;
-    return this.data.value[dataIndex][field.path];
+    return this.rows.value[dataIndex][field.path];
   };
 
   public setCellData = ({ col, row }: GridCell, value: any): void => {
@@ -249,10 +261,10 @@ export class TableModel extends Resource {
 
     const field = fields[col];
     const dataIndex = this.displayToDataIndex.get(row) ?? row;
-    this.data.value[dataIndex][field.path] = parseValue(field.type, value);
+    this.rows.value[dataIndex][field.path] = parseValue(field.type, value);
   };
 
-  public getRowCount = (): number => this.data.value.length;
+  public getRowCount = (): number => this.rows.value.length;
 
   //
   // Move

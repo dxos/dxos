@@ -3,7 +3,7 @@
 //
 
 import * as ModalPrimitive from '@radix-ui/react-popper';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
 import { type DxGridElement, type DxAxisResize, Grid } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
@@ -33,6 +33,13 @@ export const Table = ({ model }: TableProps) => {
   const handleOnCellUpdate = useCallback((cell: GridCell) => {
     gridRef.current?.updateIfWithinBounds(cell);
   }, []);
+
+  useLayoutEffect(() => {
+    if (!gridRef.current || !model) {
+      return;
+    }
+    gridRef.current.getCells = model.getCells.bind(model);
+  }, [model]);
 
   useEffect(() => {
     if (model) {
@@ -64,7 +71,6 @@ export const Table = ({ model }: TableProps) => {
             inlineEndLine,
             blockEndLine,
           )}
-          initialCells={model?.cells.value}
           columns={model?.columnMeta.value}
           frozen={frozen}
           limitRows={model?.getRowCount() ?? 0}
