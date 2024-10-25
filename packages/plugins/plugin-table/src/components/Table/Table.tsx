@@ -36,7 +36,7 @@ export const Table = ({ tableModel }: TableProps) => {
 
   useEffect(() => {
     if (tableModel) {
-      tableModel.onCellUpdate = handleOnCellUpdate;
+      tableModel.setOnCellUpdate(handleOnCellUpdate);
     }
   }, [tableModel, handleOnCellUpdate]);
 

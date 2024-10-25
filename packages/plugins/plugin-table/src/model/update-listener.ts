@@ -31,6 +31,10 @@ export class CellUpdateListener {
     this.createInitialCellEffects();
   }
 
+  public setOnCellUpdate = (onCellUpdate: (cell: GridCell) => void): void => {
+    this.onCellUpdate = onCellUpdate;
+  };
+
   private setupCellListeners = (): void => {
     this.topLevelEffectUnsubscribe = effect(() => {
       const cellsObj = this.cells.value;

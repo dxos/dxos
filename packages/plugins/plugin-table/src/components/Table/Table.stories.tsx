@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -112,7 +112,7 @@ const TablePerformanceStory = (props: StoryProps) => {
   );
 };
 
-export const Mutations = {
+export const Mutations: StoryObj = {
   render: TablePerformanceStory,
   args: {
     rows: 1000,
@@ -120,7 +120,7 @@ export const Mutations = {
   },
 };
 
-export const RapidInsertions = {
+export const RapidInsertions: StoryObj = {
   render: TablePerformanceStory,
   args: {
     rows: 0,
