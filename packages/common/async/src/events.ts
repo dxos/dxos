@@ -43,6 +43,23 @@ export type ListenerOptions = {
 };
 
 /**
+ * Wraps `addEventListener` and return an unsubscription handler.
+ * @param target
+ * @param type
+ * @param listener
+ * @param options
+ */
+static const addEventListener<K extends keyof HTMLElementEventMap>(
+  target: EventTarget,
+  type: K,
+  listener: EventListenerOrEventListenerObject,
+  options?: boolean | AddEventListenerOptions,
+): UnsubscribeCallback {
+  target.addEventListener(type, listener, options);
+  return () => target.removeEventListener(type, listener, options);
+}
+
+/**
  * An EventEmitter variant that does not do event multiplexing and represents a single event.
  *
  * ## Typical usage:
@@ -73,23 +90,6 @@ export type ListenerOptions = {
  */
 // TODO(burdon): Rename EventSink? (Event is a built-in type).
 export class Event<T = void> implements ReadOnlyEvent<T> {
-  /**
-   * Wraps `addEventListener` and return an unsubscription handler.
-   * @param target
-   * @param type
-   * @param listener
-   * @param options
-   */
-  static on<K extends keyof HTMLElementEventMap>(
-    target: EventTarget,
-    type: K,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions,
-  ): UnsubscribeCallback {
-    target.addEventListener(type, listener, options);
-    return () => target.removeEventListener(type, listener, options);
-  }
-
   /**
    * Wrap objects that have on/off style event emitters.
    */
