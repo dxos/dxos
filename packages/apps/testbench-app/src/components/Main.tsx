@@ -31,7 +31,7 @@ export const Main = () => {
     if (!space && spaces.length) {
       setSpace(spaces[0]);
     }
-  }, []);
+  }, [spaces.length]);
 
   const [showDevTools, setShowDevTools] = useState(false);
   const [showStats, setShowStats] = useState(false);
