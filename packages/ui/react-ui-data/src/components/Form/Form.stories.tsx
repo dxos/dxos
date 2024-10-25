@@ -8,10 +8,10 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
 import { create } from '@dxos/echo-schema';
+import { testData, testView, TestSchema, type TestType } from '@dxos/schema/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Form, type FormProps } from './Form';
-import { testData, testView, TestSchema, type TestType } from '../../testing';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
 

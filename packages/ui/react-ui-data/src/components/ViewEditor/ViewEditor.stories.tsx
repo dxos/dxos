@@ -10,11 +10,11 @@ import React from 'react';
 import { create } from '@dxos/echo-schema';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { type ViewType } from '@dxos/schema';
+import { testView } from '@dxos/schema/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 import { useSchemaResolver } from '../../hooks';
-import { testView } from '../../testing';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
 
@@ -36,9 +36,7 @@ export const Default: StoryObj<typeof ViewEditor> = {
 export const Empty: StoryObj<typeof ViewEditor> = {
   args: {
     view: create<ViewType>({
-      query: {
-        schema: 'example.com/schema/TestSchema',
-      },
+      schema: 'example.com/schema/TestSchema',
       fields: [],
     }),
   },

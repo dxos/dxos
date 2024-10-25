@@ -7,10 +7,10 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
+import { TestSchema } from '@dxos/schema/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { SchemaEditor, type SchemaEditorProps } from './SchemaEditor';
-import { TestSchema } from '../../testing';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
 
