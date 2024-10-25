@@ -100,7 +100,7 @@ export class TableModel extends Resource {
       );
     });
 
-    const sortedData = computed(() => {
+    const sortedRows = computed(() => {
       this.displayToDataIndex.clear();
       const sort = this.sorting.value;
       if (!sort) {
@@ -128,11 +128,12 @@ export class TableModel extends Resource {
       return sorted.map(({ item }) => item);
     });
 
-    const mainCellValues: ReadonlySignal<DxGridPlaneCells> = computed(() => {
+    const mainCells: ReadonlySignal<DxGridPlaneCells> = computed(() => {
       const values: DxGridPlaneCells = {};
       const fields = this.table.view?.fields ?? [];
 
       const addCell = (row: any, field: any, colIndex: number, displayIndex: number): void => {
+        // Cell value access is wrapped with a signal so we can listen to granular updates.
         const cellValueSignal = computed(() => {
           return row[field.path] !== undefined ? formatValue(field.type, row[field.path]) : '';
         });
@@ -141,17 +142,15 @@ export class TableModel extends Resource {
           get value() {
             return cellValueSignal.value;
           },
+          ...(cellClassesForFieldType(field.type) && {
+            className: mx(cellClassesForFieldType(field.type)),
+          }),
         };
-
-        const cellClasses = cellClassesForFieldType(field.type);
-        if (cellClasses) {
-          cell.className = mx(cellClasses);
-        }
 
         values[fromGridCell({ col: colIndex, row: displayIndex })] = cell;
       };
 
-      sortedData.value.forEach((row, displayIndex) => {
+      sortedRows.value.forEach((row, displayIndex) => {
         fields.forEach((field, colIndex) => {
           addCell(row, field, colIndex, displayIndex);
         });
@@ -181,7 +180,7 @@ export class TableModel extends Resource {
     };
 
     this.cells = computed(() => ({
-      grid: mainCellValues.value,
+      grid: mainCells.value,
       frozenRowsStart: headerCells.value,
       frozenColsEnd: actionColumnCells.value,
       fixedStartEnd: newColumnCell,
@@ -201,7 +200,7 @@ export class TableModel extends Resource {
       };
     });
 
-    this.cellUpdateListener = new CellUpdateListener(mainCellValues, this.onCellUpdate);
+    this.cellUpdateListener = new CellUpdateListener(mainCells, this.onCellUpdate);
     this._ctx.onDispose(this.cellUpdateListener.dispose);
   }
 
