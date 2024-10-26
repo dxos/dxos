@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
 import { S } from '@dxos/echo-schema';
@@ -59,12 +58,14 @@ const TestSchema = S.mutable(
 
 export interface TestType extends S.Schema.Type<typeof TestSchema> {}
 
+const defaultValue: TestType = { nums: [], names: [] };
+
 describe('ObjectStore', () => {
   registerSignalsRuntime();
 
   test('init', () => {
     {
-      const store = new ObjectStore<TestType>(TestSchema, 'dxos.org/setting', { nums: [], names: [] }, mock);
+      const store = new ObjectStore<TestType>(TestSchema, 'dxos.org/setting', defaultValue, mock);
       expect(store.value.activePreset).to.be.undefined;
 
       store.value.activePreset = true;
@@ -82,8 +83,6 @@ describe('ObjectStore', () => {
       store.value.names.push('bar');
 
       store.value.status = TestEnum.ACTIVE;
-
-      store.save();
     }
 
     expect(mock.store).to.deep.eq({
@@ -96,9 +95,7 @@ describe('ObjectStore', () => {
     });
 
     {
-      const store = new ObjectStore<TestType>(TestSchema, 'dxos.org/setting', { nums: [], names: [] }, mock);
-
-      store.load();
+      const store = new ObjectStore<TestType>(TestSchema, 'dxos.org/setting', defaultValue, mock);
 
       expect(store.value.activePreset).to.be.false;
       expect(store.value.num).to.eq(42);

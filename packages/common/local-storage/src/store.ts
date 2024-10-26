@@ -11,6 +11,9 @@ import { visit } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { hyphenize } from '@dxos/util';
 
+/**
+ * Reactive key-value property store.
+ */
 export class ObjectStore<T extends {}> {
   public readonly value: ReactiveObject<T>;
 
@@ -19,12 +22,11 @@ export class ObjectStore<T extends {}> {
   constructor(
     private readonly _schema: S.Schema<T>,
     private readonly _prefix: string,
-    init: T = {} as T,
+    defaultValue: T = {} as T,
     private readonly _storage: Storage = localStorage,
   ) {
-    this.value = create(init);
+    this.value = create(defaultValue);
     this.load();
-    this.open();
   }
 
   open() {
