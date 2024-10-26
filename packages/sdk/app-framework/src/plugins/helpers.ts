@@ -57,8 +57,13 @@ class PluginContext {
     this._plugins = plugins;
   }
 
-  getPlugin<T>(resolver: PluginResolver<T>): Plugin<T>;
-  getPlugin<T>(resolver: PluginResolver<T>, required = false): Plugin<T> | undefined {
+  getPlugin<T>(id: string): Plugin<T> {
+    invariant(this._plugins);
+    return getPlugin(this._plugins, id);
+  }
+
+  resolvePlugin<T>(resolver: PluginResolver<T>): Plugin<T>;
+  resolvePlugin<T>(resolver: PluginResolver<T>, required = false): Plugin<T> | undefined {
     invariant(this._plugins);
     const plugin = resolvePlugin(this._plugins, resolver);
     if (required && !plugin) {

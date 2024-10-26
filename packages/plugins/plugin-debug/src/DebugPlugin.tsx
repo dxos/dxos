@@ -4,14 +4,7 @@
 
 import React, { type ReactNode, useEffect, useState } from 'react';
 
-import {
-  definePlugin,
-  getPlugin,
-  parseGraphPlugin,
-  parseIntentPlugin,
-  parseSettingsPlugin,
-  resolvePlugin,
-} from '@dxos/app-framework';
+import { definePlugin, parseGraphPlugin, parseIntentPlugin, parseSettingsPlugin } from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
 import { Devtools } from '@dxos/devtools';
 import { type SettingsStore } from '@dxos/local-storage';
@@ -47,7 +40,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
     meta,
     ready: async (plugins) => {
       context.init(plugins);
-      settings = context.getPlugin(parseSettingsPlugin).provides.settingsStore.createStore<DebugSettingsProps>({
+      settings = context.resolvePlugin(parseSettingsPlugin).provides.settingsStore.createStore<DebugSettingsProps>({
         schema: DebugSettingsSchema,
         prefix: DEBUG_PLUGIN,
         defaultValue: {
@@ -99,11 +92,8 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
         );
       },
       graph: {
-        builder: (plugins) => {
-          const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-
-          // TODO(burdon): Combine nodes into single subtree.
-
+        builder: () => {
+          const graphPlugin = context.resolvePlugin(parseGraphPlugin);
           return [
             // Devtools node.
             createExtension({
@@ -131,7 +121,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
                 {
                   id: 'dxos.org/plugin/debug/debug',
                   type: 'dxos.org/plugin/debug/debug',
-                  data: { graph: graphPlugin?.provides.graph },
+                  data: { graph: graphPlugin.provides.graph },
                   properties: {
                     label: ['debug label', { ns: DEBUG_PLUGIN }],
                     icon: 'ph--bug--regular',
@@ -166,7 +156,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
         resolver: async (intent, plugins) => {
           switch (intent.action) {
             case DebugAction.OPEN_DEVTOOLS: {
-              const clientPlugin = getPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
+              const clientPlugin = context.getPlugin<ClientPluginProvides>('dxos.org/plugin/client');
               const client = clientPlugin.provides.client;
               const vaultUrl = client.config.values?.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
 
@@ -221,7 +211,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
                       return;
                     }
 
-                    void context.getPlugin(parseIntentPlugin).provides.intent.dispatch(
+                    void context.resolvePlugin(parseIntentPlugin).provides.intent.dispatch(
                       objects.map((object) => ({
                         action: SpaceAction.ADD_OBJECT,
                         data: { target: collection, object },
