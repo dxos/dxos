@@ -30,8 +30,12 @@ export type TableProps = { model?: TableModel; onDeleteRow?: (row: any) => void 
 export const Table = ({ model }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
 
-  const handleOnCellUpdate = useCallback((cell: GridCell) => {
+  const handleCellUpdate = useCallback((cell: GridCell) => {
     gridRef.current?.updateIfWithinBounds(cell);
+  }, []);
+
+  const handleRowOrderChanged = useCallback(() => {
+    gridRef.current?.updateCells(true);
   }, []);
 
   useLayoutEffect(() => {
@@ -43,9 +47,10 @@ export const Table = ({ model }: TableProps) => {
 
   useEffect(() => {
     if (model) {
-      model.setOnCellUpdate(handleOnCellUpdate);
+      model.setOnCellUpdate(handleCellUpdate);
+      model.setOnRowOrderChange(handleRowOrderChanged);
     }
-  }, [model, handleOnCellUpdate]);
+  }, [model, handleCellUpdate, handleRowOrderChanged]);
 
   const handleAxisResize = useCallback(
     (event: DxAxisResize) => {

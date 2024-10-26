@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { computed, signal, type ReadonlySignal } from '@preact/signals-core';
+import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-core';
 import sortBy from 'lodash.sortby';
 
 import { Resource } from '@dxos/context';
@@ -33,6 +33,7 @@ export type TableModelProps = {
   onDeleteRow?: (row: any) => void;
   onInsertRow?: (index?: number) => void;
   onCellUpdate?: (cell: GridCell) => void;
+  onRowOrderChanged?: () => void;
 };
 
 export class TableModel extends Resource {
@@ -41,6 +42,13 @@ export class TableModel extends Resource {
   public readonly table: TableType;
   private rows = signal<any[]>([]);
   private sortedRows!: ReadonlySignal<any[]>;
+
+  private visibleRange = signal<DxGridPlaneRange>({
+    start: { row: 0, col: 0 },
+    end: { row: 0, col: 0 },
+  });
+
+  private rowEffects: Array<() => void> = [];
 
   public columnMeta!: ReadonlySignal<DxGridAxisMeta>;
 
@@ -58,6 +66,7 @@ export class TableModel extends Resource {
   private readonly onDeleteRow?: (id: string) => void;
   private readonly onInsertRow?: (index?: number) => void;
   public onCellUpdate?: (cell: GridCell) => void;
+  public onRowOrderChanged?: () => void;
 
   constructor({
     table,
@@ -67,15 +76,17 @@ export class TableModel extends Resource {
     onDeleteRow,
     onInsertRow,
     onCellUpdate,
+    onRowOrderChanged,
   }: TableModelProps) {
     super();
     this.table = table;
     this.onDeleteRow = onDeleteRow;
     this.onInsertRow = onInsertRow;
-    this.onCellUpdate = onCellUpdate;
     this.sorting.value = sorting.at(0);
     this.pinnedRows = pinnedRows;
     this.rowSelection = rowSelection;
+    this.onCellUpdate = onCellUpdate;
+    this.onRowOrderChanged = onRowOrderChanged;
   }
 
   public updateData = (newData: any[]): void => {
@@ -111,6 +122,37 @@ export class TableModel extends Resource {
       return sorted.map(({ item }) => item);
     });
 
+    const rowOrderWatcher = effect(() => {
+      const _sortedRows = this.sortedRows.value;
+      this.onRowOrderChanged?.();
+    });
+
+    this._ctx.onDispose(rowOrderWatcher);
+
+    // Watch rows for changes
+    const rowEffectManager = effect(() => {
+      // Create new effects that watch for changes to each row in the visible range
+      // and update the table when they change through onCellUpdate
+      const { start, end } = this.visibleRange.value;
+
+      for (let row = start.row; row <= end.row; row++) {
+        this.rowEffects.push(
+          effect(() => {
+            const rowData = this.sortedRows.value[row];
+            this?.table?.view?.fields.forEach((field) => rowData?.[field.path]);
+            this.onCellUpdate?.({ row, col: start.col });
+          }),
+        );
+      }
+
+      return () => {
+        this.rowEffects.forEach((cleanup) => cleanup());
+        this.rowEffects = [];
+      };
+    });
+
+    this._ctx.onDispose(rowEffectManager);
+
     this.columnMeta = computed(() => {
       const fields = this.table.view?.fields ?? [];
       const meta = Object.fromEntries(
@@ -134,12 +176,17 @@ export class TableModel extends Resource {
     this.onCellUpdate = onCellUpdate;
   }
 
+  setOnRowOrderChange(onRowOrderChange: () => void): void {
+    this.onRowOrderChanged = onRowOrderChange;
+  }
+
   //
   // Get Cells
   //
-  public getCells = (range: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells | null => {
+  public getCells = (range: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells => {
     switch (plane) {
       case 'grid': {
+        this.visibleRange.value = range;
         return this.getMainGridCells(range);
       }
       case 'frozenRowsStart': {
@@ -152,7 +199,7 @@ export class TableModel extends Resource {
         return this.getNewColumnCell();
       }
       default: {
-        return null;
+        return {};
       }
     }
   };
@@ -163,7 +210,9 @@ export class TableModel extends Resource {
 
     const addCell = (row: any, field: any, colIndex: number, displayIndex: number): void => {
       const cell: DxGridCellValue = {
-        value: row?.[field.path] !== undefined ? formatValue(field.type, row[field.path]) : '',
+        get value() {
+          return row?.[field.path] !== undefined ? formatValue(field.type, row[field.path]) : '';
+        },
       };
       const classes = cellClassesForFieldType(field.type);
       if (classes) {
