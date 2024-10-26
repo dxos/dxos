@@ -2,11 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '../PluginHost';
+import { type Plugin } from '../plugin-host';
 
-// TODO(burdon): Plugins should export ts-effect object (see local-storage).
-// TODO(burdon): Auto generate form.
-// TODO(burdon): Set surface's data.type to plugin id (allow custom settings surface).
+// TODO(burdon): Decouple from SettingsPlugin UX.
 
 export type SettingsProvides<T extends Record<string, any> = Record<string, any>> = {
   settings: T; // TODO(burdon): Read-only.

@@ -16,7 +16,7 @@ const cloneObject = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
 /**
  * Reactive key-value property store.
  */
-export class ObjectStore<T extends {}> {
+export class SettingsStore<T extends {}> {
   public _value: ReactiveObject<T>;
 
   private _unsubscribe?: () => void;
@@ -40,9 +40,9 @@ export class ObjectStore<T extends {}> {
   }
 
   open() {
-    // TODO(burdon): Import from '@dxos/signals' (rename echo-signals);
+    // TODO(burdon): Import from '@dxos/signals' (rename echo-signals).
     this._unsubscribe = effect(() => {
-      JSON.stringify(this._value);
+      this._value; // Reference triggers subscription.
       this.save();
     });
   }
@@ -52,6 +52,7 @@ export class ObjectStore<T extends {}> {
     this._unsubscribe = undefined;
   }
 
+  // TODO(burdon): Create singleton.
   reset() {
     this.close();
 

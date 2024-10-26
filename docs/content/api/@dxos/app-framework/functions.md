@@ -37,7 +37,7 @@ Returns: <code>[PluginDefinition](/api/@dxos/app-framework/types/PluginDefinitio
 
 Arguments: 
 
-`options`: <code>[BootstrapPluginsParams](/api/@dxos/app-framework/types/BootstrapPluginsParams)</code>
+`options`: <code>[HostPluginParams](/api/@dxos/app-framework/types/HostPluginParams)</code>
 
 
 ### [PluginProvider(props)](https://github.com/dxos/dxos/blob/56c97ac85/packages/sdk/app-framework/src/plugins/PluginHost/PluginContext.tsx#L84)
@@ -86,7 +86,7 @@ Returns: <code>function</code>
 
 Arguments: 
 
-`options`: <code>[BootstrapPluginsParams](/api/@dxos/app-framework/types/BootstrapPluginsParams)</code>
+`options`: <code>[HostPluginParams](/api/@dxos/app-framework/types/HostPluginParams)</code>
 
 
 ### [definePlugin(plugin)](https://github.com/dxos/dxos/blob/56c97ac85/packages/sdk/app-framework/src/plugins/helpers.ts#L12)

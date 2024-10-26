@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type BootstrapPluginsParams, NavigationAction, Plugin, type PluginMeta } from '@dxos/app-framework';
+import { type HostPluginParams, NavigationAction, Plugin, type PluginMeta } from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
 import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
@@ -83,20 +83,8 @@ export const core = ({ isPwa, isSocket }: PluginConfig): PluginMeta[] =>
     isSocket && NativeMeta,
     WelcomeMeta,
 
-    // UX
-    AttentionMeta,
-    DeckMeta,
-    StackMeta,
-    NavTreeMeta,
-    SettingsMeta,
-    StatusBarMeta,
-    WildcardMeta,
-
-    // Shell and help (client must precede help because help’s context depends on client’s)
-    ClientMeta,
-    HelpMeta,
-
     // Data integrations
+    ClientMeta,
     SpaceMeta,
 
     // Framework extensions
@@ -105,6 +93,16 @@ export const core = ({ isPwa, isSocket }: PluginConfig): PluginMeta[] =>
     GraphMeta,
     MetadataMeta,
     RegistryMeta,
+
+    // UX
+    AttentionMeta,
+    DeckMeta,
+    HelpMeta,
+    StackMeta,
+    NavTreeMeta,
+    SettingsMeta,
+    StatusBarMeta,
+    WildcardMeta,
   ].filter(isNotFalsy);
 
 export const defaults = ({ isDev }: PluginConfig): PluginMeta[] =>
@@ -157,7 +155,7 @@ export const plugins = ({
   observability,
   isPwa,
   isSocket,
-}: PluginConfig): BootstrapPluginsParams['plugins'] => ({
+}: PluginConfig): HostPluginParams['plugins'] => ({
   [AttentionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-attention')),
   [ChainMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chain')),
   [ChessMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chess')),

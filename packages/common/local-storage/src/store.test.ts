@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { S } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 
-import { ObjectStore } from './store';
+import { SettingsStore } from './store';
 import { createLocalStorageMock } from './testing';
 
 const mock = createLocalStorageMock();
@@ -37,7 +37,7 @@ describe('ObjectStore', () => {
 
   test('init', () => {
     {
-      const store = new ObjectStore<TestType>(TestSchema, 'dxos.org/setting', defaultValue, mock);
+      const store = new SettingsStore<TestType>(TestSchema, 'dxos.org/setting', defaultValue, mock);
       expect(store.value.activePreset).to.be.undefined;
 
       store.value.activePreset = true;
@@ -67,7 +67,7 @@ describe('ObjectStore', () => {
     });
 
     {
-      const store = new ObjectStore<TestType>(TestSchema, 'dxos.org/setting', defaultValue, mock);
+      const store = new SettingsStore<TestType>(TestSchema, 'dxos.org/setting', defaultValue, mock);
 
       expect(store.value.activePreset).to.be.false;
       expect(store.value.num).to.eq(42);
@@ -91,7 +91,7 @@ describe('ObjectStore', () => {
     });
 
     {
-      const store = new ObjectStore<TestType>(TestSchema, 'dxos.org/setting', defaultValue, mock);
+      const store = new SettingsStore<TestType>(TestSchema, 'dxos.org/setting', defaultValue, mock);
 
       expect(store.value.activePreset).to.be.undefined;
       expect(store.value.num).to.eq(42);

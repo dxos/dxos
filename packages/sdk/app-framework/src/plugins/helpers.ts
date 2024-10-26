@@ -4,7 +4,7 @@
 
 import { raise } from '@dxos/debug';
 
-import { type Plugin } from './PluginHost';
+import { type Plugin } from './plugin-host';
 
 /**
  * Define a plugin

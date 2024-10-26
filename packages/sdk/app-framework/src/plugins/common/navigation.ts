@@ -5,8 +5,8 @@
 import { Schema as S } from '@effect/schema';
 import { z } from 'zod';
 
-import type { IntentData } from '../IntentPlugin';
-import type { Plugin } from '../PluginHost';
+import { type Plugin } from '../plugin-host';
+import { type IntentData } from '../plugin-intent';
 
 // NOTE(thure): These are chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
 export const SLUG_LIST_SEPARATOR = '+';

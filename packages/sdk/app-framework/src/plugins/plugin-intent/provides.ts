@@ -4,7 +4,7 @@
 
 import { type IntentContext } from './IntentContext';
 import { type IntentResolver } from './intent';
-import { type Plugin } from '../PluginHost';
+import { type Plugin } from '../plugin-host';
 
 export type IntentResolverProvides = {
   intent: {
@@ -27,6 +27,7 @@ export const parseIntentResolverPlugin = (plugin: Plugin) =>
 //
 
 const INTENT_ACTION = 'dxos.org/plugin/intent';
+
 export enum IntentAction {
   /**
    * Fired after an intent is dispatched if the intent is undoable.

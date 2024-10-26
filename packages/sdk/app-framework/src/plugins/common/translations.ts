@@ -4,7 +4,7 @@
 
 import { z } from 'zod';
 
-import type { Plugin } from '../PluginHost';
+import { type Plugin } from '../plugin-host';
 
 export const ResourceKey = z.union([z.string(), z.record(z.any())]);
 export type ResourceKey = z.infer<typeof ResourceKey>;

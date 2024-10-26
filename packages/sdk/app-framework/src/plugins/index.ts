@@ -5,6 +5,6 @@
 export * from './common';
 export * from './helpers';
 
-export * from './IntentPlugin';
-export * from './PluginHost';
-export * from './SurfacePlugin';
+export * from './plugin-intent';
+export * from './plugin-host';
+export * from './plugin-surface';

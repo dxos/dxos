@@ -4,8 +4,8 @@
 
 import { z } from 'zod';
 
-import { type IntentData } from '../IntentPlugin';
-import type { Plugin } from '../PluginHost';
+import { type Plugin } from '../plugin-host';
+import { type IntentData } from '../plugin-intent';
 
 //
 // Provides
