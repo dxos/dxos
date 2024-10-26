@@ -5,15 +5,12 @@
 import React, { type ReactNode, useEffect, useState } from 'react';
 
 import {
+  definePlugin,
   getPlugin,
   parseGraphPlugin,
   parseIntentPlugin,
   parseSettingsPlugin,
   resolvePlugin,
-  type IntentPluginProvides,
-  type Plugin,
-  type PluginDefinition,
-  type SettingsPluginProvides,
 } from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
 import { Devtools } from '@dxos/devtools';
@@ -43,18 +40,14 @@ import {
   DebugAction,
 } from './types';
 
-export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
+export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
   let settings: SettingsStore<DebugSettingsProps> | undefined;
-  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
-  let settingsPlugin: Plugin<SettingsPluginProvides> | undefined;
 
   return {
     meta,
     ready: async (plugins) => {
-      // TODO(burdon): Helpers.
-      intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-      settingsPlugin = resolvePlugin(plugins, parseSettingsPlugin);
-      settings = settingsPlugin?.provides.settingsStore.createStore<DebugSettingsProps>({
+      context.init(plugins);
+      settings = context.getPlugin(parseSettingsPlugin).provides.settingsStore.createStore<DebugSettingsProps>({
         schema: DebugSettingsSchema,
         prefix: DEBUG_PLUGIN,
         defaultValue: {
@@ -78,7 +71,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       };
     },
     unload: async () => {
-      settings?.close();
+      context.dispose();
     },
     provides: {
       settings: settings!.value,
@@ -228,7 +221,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                       return;
                     }
 
-                    void intentPlugin?.provides.intent.dispatch(
+                    void context.getPlugin(parseIntentPlugin).provides.intent.dispatch(
                       objects.map((object) => ({
                         action: SpaceAction.ADD_OBJECT,
                         data: { target: collection, object },
@@ -286,4 +279,4 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
     },
   };
-};
+});
