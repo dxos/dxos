@@ -135,23 +135,9 @@ export class LocalStorageStore<T extends object> {
   /**
    * Binds signal property to local storage key.
    */
-<<<<<<< HEAD
-  // TODO(burdon): Reset method (keep track of binders).
-  prop<K extends keyof T>({
-    key,
-    storageKey: _storageKey, // TODO(burdon): Generate.
-    type,
-  }: {
-    key: K;
-    storageKey?: string;
-    type: PropType<T[K]>;
-  }) {
-    const storageKey = this._prefix + '/' + (_storageKey ?? key).toString();
-=======
   prop<K extends keyof T>({ key, type }: PropDef<K, T>) {
     invariant(typeof key === 'string');
     const storageKey = this._prefix + '/' + hyphenize(key);
->>>>>>> origin/main
     if (this._subscriptions.has(storageKey)) {
       return this;
     }
