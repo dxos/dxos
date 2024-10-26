@@ -7,10 +7,8 @@ import { describe, expect, test } from 'vitest';
 import { S } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 
-import { SettingsStore } from './store';
+import { RootSettingsStore, SettingsStore } from './store';
 import { createLocalStorageMock } from './testing';
-
-const mock = createLocalStorageMock();
 
 enum TestEnum {
   INACTIVE = 0,
@@ -35,7 +33,9 @@ const defaultValue: TestType = { nums: [], names: [] };
 describe('ObjectStore', () => {
   registerSignalsRuntime();
 
-  test('init', () => {
+  test('basic', () => {
+    const mock = createLocalStorageMock();
+
     {
       const store = new SettingsStore<TestType>(TestSchema, 'dxos.org/setting', defaultValue, mock);
       expect(store.value.activePreset).to.be.undefined;
@@ -106,6 +106,52 @@ describe('ObjectStore', () => {
     expect(mock.store).to.deep.eq({
       'dxos.org/setting/nums': '[]',
       'dxos.org/setting/names': '[]',
+    });
+  });
+
+  test('root', () => {
+    const mock = createLocalStorageMock();
+    const root = new RootSettingsStore(mock);
+
+    const store1 = root.createStore({ schema: TestSchema, prefix: 'dxos.org/foo', defaultValue });
+    const store2 = root.createStore({ schema: TestSchema, prefix: 'dxos.org/bar', defaultValue });
+
+    expect(mock.store).to.deep.eq({
+      'dxos.org/foo/names': '[]',
+      'dxos.org/foo/nums': '[]',
+      'dxos.org/bar/names': '[]',
+      'dxos.org/bar/nums': '[]',
+    });
+
+    store1.value.name = 'foo';
+    store2.value.name = 'bar';
+
+    expect(mock.store).to.deep.eq({
+      'dxos.org/foo/name': 'foo',
+      'dxos.org/foo/names': '[]',
+      'dxos.org/foo/nums': '[]',
+      'dxos.org/bar/name': 'bar',
+      'dxos.org/bar/names': '[]',
+      'dxos.org/bar/nums': '[]',
+    });
+
+    store2.reset();
+
+    expect(mock.store).to.deep.eq({
+      'dxos.org/foo/name': 'foo',
+      'dxos.org/foo/names': '[]',
+      'dxos.org/foo/nums': '[]',
+      'dxos.org/bar/names': '[]',
+      'dxos.org/bar/nums': '[]',
+    });
+
+    root.reset();
+
+    expect(mock.store).to.deep.eq({
+      'dxos.org/foo/names': '[]',
+      'dxos.org/foo/nums': '[]',
+      'dxos.org/bar/names': '[]',
+      'dxos.org/bar/nums': '[]',
     });
   });
 });

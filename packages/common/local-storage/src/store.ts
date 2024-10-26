@@ -8,10 +8,51 @@ import set from 'lodash.set';
 
 import { AST, type ReactiveObject, type S, create } from '@dxos/echo-schema';
 import { visit } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { hyphenize } from '@dxos/util';
 
 const cloneObject = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
+
+export type SettingsProps<T extends {}> = {
+  schema: S.Schema<T>;
+  prefix: string;
+  defaultValue?: T;
+};
+
+/**
+ * Root store.
+ */
+export class RootSettingsStore {
+  private readonly _stores = new Map<string, SettingsStore<any>>();
+
+  constructor(private readonly _storage: Storage = localStorage) {}
+
+  getStore<T extends {}>(prefix: string): SettingsStore<T> | undefined {
+    return this._stores.get(prefix);
+  }
+
+  createStore<T extends {}>({ schema, prefix, defaultValue }: SettingsProps<T>) {
+    invariant(!this._stores.has(prefix));
+    const store = new SettingsStore<T>(schema, prefix, defaultValue, this._storage);
+    this._stores.set(prefix, store);
+    return store;
+  }
+
+  destory() {
+    for (const store of this._stores.values()) {
+      store.close();
+    }
+
+    this._stores.clear();
+  }
+
+  reset() {
+    for (const store of this._stores.values()) {
+      store.reset();
+    }
+  }
+}
 
 /**
  * Reactive key-value property store.
@@ -53,7 +94,6 @@ export class SettingsStore<T extends {}> {
     this._unsubscribe = undefined;
   }
 
-  // TODO(burdon): Create singleton.
   reset() {
     this.close();
 
