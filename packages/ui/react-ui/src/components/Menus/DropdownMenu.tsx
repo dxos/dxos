@@ -10,12 +10,11 @@ import { createContextScope } from '@radix-ui/react-context';
 import type { Scope } from '@radix-ui/react-context';
 import { useId } from '@radix-ui/react-id';
 import * as MenuPrimitive from '@radix-ui/react-menu';
-import { createMenuScope, type MenuAnchorProps } from '@radix-ui/react-menu';
+import { createMenuScope } from '@radix-ui/react-menu';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
-  type RefObject,
   type ReactNode,
   type FC,
   useRef,
@@ -24,6 +23,9 @@ import React, {
   type ComponentPropsWithoutRef,
   forwardRef,
   type ComponentPropsWithRef,
+  useEffect,
+  type MutableRefObject,
+  type RefObject,
 } from 'react';
 
 import { useThemeContext } from '../../hooks';
@@ -43,7 +45,7 @@ const useMenuScope = createMenuScope();
 
 type DropdownMenuContextValue = {
   triggerId: string;
-  triggerRef: RefObject<HTMLButtonElement>;
+  triggerRef: MutableRefObject<HTMLButtonElement | null>;
   contentId: string;
   open: boolean;
   onOpenChange(open: boolean): void;
@@ -66,7 +68,7 @@ interface DropdownMenuRootProps {
 const DropdownMenuRoot: FC<DropdownMenuRootProps> = (props: ScopedProps<DropdownMenuRootProps>) => {
   const { __scopeDropdownMenu, children, dir, open: openProp, defaultOpen, onOpenChange, modal = true } = props;
   const menuScope = useMenuScope(__scopeDropdownMenu);
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [open = false, setOpen] = useControllableState({
     prop: openProp,
     defaultProp: defaultOpen,
@@ -77,7 +79,7 @@ const DropdownMenuRoot: FC<DropdownMenuRootProps> = (props: ScopedProps<Dropdown
     <DropdownMenuProvider
       scope={__scopeDropdownMenu}
       triggerId={useId()}
-      triggerRef={triggerRef}
+      triggerRef={triggerRef as MutableRefObject<HTMLButtonElement | null>}
       contentId={useId()}
       open={open}
       onOpenChange={setOpen}
@@ -163,12 +165,19 @@ DropdownMenuTrigger.displayName = TRIGGER_NAME;
 
 const VIRTUAL_TRIGGER_NAME = 'DropdownMenuVirtualTrigger';
 
-interface DropdownMenuVirtualTriggerProps extends Pick<MenuAnchorProps, 'virtualRef'> {}
+interface DropdownMenuVirtualTriggerProps {
+  virtualRef: RefObject<DropdownMenuTriggerElement>;
+}
 
-// TODO(thure): Update `context.triggerRef` here somehow.
 const DropdownMenuVirtualTrigger = (props: ScopedProps<DropdownMenuVirtualTriggerProps>) => {
   const { __scopeDropdownMenu, virtualRef } = props;
+  const context = useDropdownMenuContext(TRIGGER_NAME, __scopeDropdownMenu);
   const menuScope = useMenuScope(__scopeDropdownMenu);
+  useEffect(() => {
+    if (virtualRef.current) {
+      context.triggerRef.current = virtualRef.current;
+    }
+  });
   return <MenuPrimitive.Anchor {...menuScope} virtualRef={virtualRef} />;
 };
 
