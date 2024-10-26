@@ -1,188 +1,101 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import { effect } from '@preact/signals-core';
+import get from 'lodash.get';
+import set from 'lodash.set';
 
-import { type UnsubscribeCallback } from '@dxos/async';
-import { type ReactiveObject, create } from '@dxos/echo-schema';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { invariant } from '@dxos/invariant';
+import { AST, type ReactiveObject, type S, create } from '@dxos/echo-schema';
+import { visit } from '@dxos/effect';
+import { log } from '@dxos/log';
 import { hyphenize } from '@dxos/util';
 
-type PropType<T> = {
-  get: (key: string) => T | undefined;
-  set: (key: string, value: T | undefined) => void;
-};
+export class ObjectStore<T extends {}> {
+  public readonly value: ReactiveObject<T>;
 
-type PropDef<K extends keyof T, T> = {
-  key: K;
-  type: PropType<T[K]>;
-};
-
-type PropOptions = {
-  // TODO(burdon): Default to true.
-  allowUndefined?: boolean;
-};
-
-/**
- * Local storage backed store.
- * https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage
- * DevTools > Application > Local Storage
- */
-export class LocalStorageStore<T extends object> {
-  static string(): PropType<string>;
-  static string(params: PropOptions): PropType<string | undefined>;
-  static string(params?: PropOptions) {
-    const prop: PropType<string | undefined> = {
-      get: (key) => {
-        const value = localStorage.getItem(key);
-        return value === null ? undefined : value;
-      },
-      set: (key, value) => {
-        if (value === undefined) {
-          localStorage.removeItem(key);
-        } else {
-          localStorage.setItem(key, value);
-        }
-      },
-    };
-
-    return params?.allowUndefined ? (prop as PropType<string | undefined>) : (prop as PropType<string>);
-  }
-
-  static enum<U>(): PropType<U>;
-  static enum<U>(params: PropOptions): PropType<U | undefined>;
-  static enum<U>(params?: PropOptions) {
-    return params?.allowUndefined
-      ? (LocalStorageStore.string(params) as PropType<U | undefined>)
-      : (LocalStorageStore.string() as unknown as PropType<U>);
-  }
-
-  static number(): PropType<number>;
-  static number(params: PropOptions): PropType<number | undefined>;
-  static number(params?: PropOptions) {
-    const prop: PropType<number | undefined> = {
-      get: (key) => {
-        const value = parseInt(localStorage.getItem(key) ?? '');
-        return isNaN(value) ? undefined : value;
-      },
-      set: (key, value) => {
-        if (value === undefined) {
-          localStorage.removeItem(key);
-        } else {
-          localStorage.setItem(key, String(value));
-        }
-      },
-    };
-
-    return params?.allowUndefined ? (prop as PropType<number | undefined>) : (prop as PropType<number>);
-  }
-
-  static bool(): PropType<boolean>;
-  static bool(params: PropOptions): PropType<boolean | undefined>;
-  static bool(params?: PropOptions) {
-    const prop: PropType<boolean | undefined> = {
-      get: (key) => {
-        const value = localStorage.getItem(key);
-        return value === 'true' ? true : value === 'false' ? false : undefined;
-      },
-      set: (key, value) => {
-        if (value === undefined) {
-          localStorage.removeItem(key);
-        } else {
-          localStorage.setItem(key, String(value));
-        }
-      },
-    };
-
-    return params?.allowUndefined ? (prop as PropType<boolean | undefined>) : (prop as PropType<boolean>);
-  }
-
-  static json<U>(): PropType<U> {
-    return {
-      get: (key) => {
-        const value = localStorage.getItem(key);
-        return value ? JSON.parse(value) : undefined;
-      },
-      set: (key, value) => {
-        if (value === undefined) {
-          localStorage.removeItem(key);
-        } else {
-          localStorage.setItem(key, JSON.stringify(value));
-        }
-      },
-    };
-  }
-
-  private readonly _subscriptions = new Map<string, UnsubscribeCallback>();
-
-  private readonly _values: ReactiveObject<T>;
+  private _unsubscribe?: () => void;
 
   constructor(
+    private readonly _schema: S.Schema<T>,
     private readonly _prefix: string,
-    defaults?: T,
+    init: T = {} as T,
+    private readonly _storage: Storage = localStorage,
   ) {
-    // TODO(burdon): Should this be externalized.
-    registerSignalsRuntime();
-    this._values = create(defaults ?? ({} as T));
+    this.value = create(init);
+    this.load();
+    this.open();
   }
 
-  get values(): ReactiveObject<T> {
-    return this._values;
-  }
-
-  /**
-   * Binds signal property to local storage key.
-   */
-  prop<K extends keyof T>({ key, type }: PropDef<K, T>) {
-    invariant(typeof key === 'string');
-    const storageKey = this._prefix + '/' + hyphenize(key);
-    if (this._subscriptions.has(storageKey)) {
-      return this;
-    }
-
-    const current = type.get(storageKey);
-    if (current !== undefined) {
-      this._values[key as K] = current;
-    }
-
-    // The subscribe callback is always called.
-    this._subscriptions.set(
-      storageKey,
-      effect(() => {
-        const value = this._values[key];
-        const current = type.get(storageKey);
-        if (value !== current) {
-          type.set(storageKey, value);
-        }
-      }),
-    );
-
-    return this;
-  }
-
-  /**
-   * Delete all settings.
-   */
-  reset() {
-    localStorage.removeItem(this._prefix);
-    for (const key of Object.keys(localStorage)) {
-      if (key.startsWith(this._prefix)) {
-        localStorage.removeItem(key);
-      }
-    }
-  }
-
-  /**
-   * Expunges all store-related items from local storage.
-   */
-  expunge() {
-    this._subscriptions.forEach((_, key) => localStorage.removeItem(key));
+  open() {
+    // TODO(burdon): Import from '@dxos/signals' (rename echo-signals);
+    this._unsubscribe = effect(() => {
+      JSON.stringify(this.value);
+      this.save();
+    });
   }
 
   close() {
-    this._subscriptions.forEach((unsubscribe) => unsubscribe());
-    this._subscriptions.clear();
+    this._unsubscribe?.();
+    this._unsubscribe = undefined;
+  }
+
+  getKey(path: string[]) {
+    return [this._prefix, ...path.map((p) => hyphenize(p))].join('/');
+  }
+
+  load() {
+    this.close();
+    visit(this._schema.ast, (node, path) => {
+      const key = this.getKey(path);
+      const value = this._storage.getItem(key);
+      if (value != null) {
+        try {
+          if (AST.isStringKeyword(node)) {
+            set(this.value, path, value);
+          } else if (AST.isNumberKeyword(node)) {
+            set(this.value, path, parseInt(value));
+          } else if (AST.isBooleanKeyword(node)) {
+            set(this.value, path, value === 'true');
+          } else if (AST.isEnums(node)) {
+            const v = node.enums.find(([_, b]) => String(b) === value);
+            if (v !== undefined) {
+              set(this.value, path, v[1]);
+            }
+          } else if (AST.isTupleType(node)) {
+            set(this.value, path, JSON.parse(value));
+          } else if (AST.isTypeLiteral(node)) {
+            set(this.value, path, JSON.parse(value));
+          }
+        } catch (_err) {
+          log.warn(`invalid value: ${key}`);
+        }
+      }
+    });
+    this.open();
+  }
+
+  save() {
+    visit(this._schema.ast, (node, path) => {
+      const key = this.getKey(path);
+      const value = get(this.value, path);
+      if (value === undefined) {
+        this._storage.removeItem(key);
+      } else {
+        if (AST.isStringKeyword(node)) {
+          this._storage.setItem(key, value);
+        } else if (AST.isNumberKeyword(node)) {
+          this._storage.setItem(key, String(value));
+        } else if (AST.isBooleanKeyword(node)) {
+          this._storage.setItem(key, String(value));
+        } else if (AST.isEnums(node)) {
+          this._storage.setItem(key, String(value));
+        } else if (AST.isTupleType(node)) {
+          this._storage.setItem(key, JSON.stringify(value));
+        } else if (AST.isTypeLiteral(node)) {
+          this._storage.setItem(key, JSON.stringify(value));
+        }
+      }
+    });
   }
 }
