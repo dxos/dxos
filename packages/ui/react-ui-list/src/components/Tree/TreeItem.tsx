@@ -40,7 +40,7 @@ export type TreeItemProps = {
   open: boolean;
   current: boolean;
   draggable?: boolean;
-  renderColumns?: FC<{ item: ItemType }>;
+  renderColumns?: FC<{ item: ItemType; menuOpen: boolean; setMenuOpen: (open: boolean) => void }>;
   canDrop?: (data: unknown) => boolean;
   onOpenChange?: (item: ItemType, nextOpen: boolean) => void;
   onSelect?: (item: ItemType, nextState: boolean) => void;
@@ -69,6 +69,7 @@ export const TreeItem = memo(
     const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
     const [_state, setState] = useState<TreeItemState>('idle');
     const [instruction, setInstruction] = useState<Instruction | null>(null);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     const cancelExpand = useCallback(() => {
       if (cancelExpandRef.current) {
@@ -203,6 +204,10 @@ export const TreeItem = memo(
         //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
         aria-current={current ? ('' as 'page') : undefined}
         onKeyDown={handleKeyDown}
+        onContextMenu={(event) => {
+          event.preventDefault();
+          setMenuOpen(true);
+        }}
       >
         <Treegrid.Cell
           indent
@@ -221,7 +226,7 @@ export const TreeItem = memo(
               onSelect={handleSelect}
             />
           </div>
-          {Columns && <Columns item={item} />}
+          {Columns && <Columns item={item} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
           {instruction && <DropIndicator instruction={instruction} />}
         </Treegrid.Cell>
       </Treegrid.Row>
