@@ -165,6 +165,7 @@ const VIRTUAL_TRIGGER_NAME = 'DropdownMenuVirtualTrigger';
 
 interface DropdownMenuVirtualTriggerProps extends Pick<MenuAnchorProps, 'virtualRef'> {}
 
+// TODO(thure): Update `context.triggerRef` here somehow.
 const DropdownMenuVirtualTrigger = (props: ScopedProps<DropdownMenuVirtualTriggerProps>) => {
   const { __scopeDropdownMenu, virtualRef } = props;
   const menuScope = useMenuScope(__scopeDropdownMenu);
