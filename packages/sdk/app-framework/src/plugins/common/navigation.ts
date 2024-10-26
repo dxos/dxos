@@ -133,7 +133,10 @@ export const partLength = (layout: LayoutParts | undefined, part: LayoutPart | u
 // Intents
 //
 
-const NAVIGATION_ACTION = 'dxos.org/plugin/navigation';
+const NAVIGATION_PLUGIN = 'dxos.org/plugin/navigation';
+
+const NAVIGATION_ACTION = `${NAVIGATION_PLUGIN}/action`;
+
 export enum NavigationAction {
   OPEN = `${NAVIGATION_ACTION}/open`,
   ADD_TO_ACTIVE = `${NAVIGATION_ACTION}/add-to-active`,

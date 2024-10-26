@@ -41,6 +41,7 @@ export type PluginContext = {
    * Mark plugin as enabled.
    * Requires reload to take effect.
    */
+  // TODO(burdon): Functions should not be part of the settings type.
   setPlugin: (id: string, enabled: boolean) => void;
 };
 

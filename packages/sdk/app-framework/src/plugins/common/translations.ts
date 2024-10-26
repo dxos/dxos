@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 import { type Plugin } from '../plugin-host';
 
+// TODO(burdon): Replace zed with effect.
 export const ResourceKey = z.union([z.string(), z.record(z.any())]);
 export type ResourceKey = z.infer<typeof ResourceKey>;
 
@@ -25,13 +26,6 @@ export type Resource = z.infer<typeof Resource>;
 export type TranslationsProvides = {
   translations: Readonly<Resource[]>;
 };
-
-// TODO(wittjosiah): Add TranslationsProvides.
-// export type TranslationsProvides = {
-//   translations: {
-//     t: TFunction;
-//   };
-// };
 
 /**
  * Type guard for translation plugins.

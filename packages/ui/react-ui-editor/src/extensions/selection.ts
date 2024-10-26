@@ -2,16 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EditorState, type Extension, Transaction, type TransactionSpec } from '@codemirror/state';
+import { type Extension, Transaction, type TransactionSpec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 
 import { debounce } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { isNotFalsy } from '@dxos/util';
 
-import { documentId } from './doc';
+import { singleValueFacet } from '../util';
 
-const stateRestoreAnnotation = 'dxos.org/cm/state-restore';
+/**
+ * Currently edited document id as FQ string.
+ */
+export const documentId = singleValueFacet<string>();
 
 export type EditorSelection = {
   anchor: number;
@@ -23,13 +26,23 @@ export type EditorSelectionState = {
   selection?: EditorSelection;
 };
 
-export type EditorStateOptions = {
+export type EditorStateStore = {
   setState: (id: string, state: EditorSelectionState) => void;
   getState: (id: string) => EditorSelectionState | undefined;
 };
 
-const keyPrefix = 'dxos.org/react-ui-editor/state';
-export const localStorageStateStoreAdapter: EditorStateOptions = {
+const stateRestoreAnnotation = 'dxos.org/cm/state-restore';
+
+export const createEditorStateTransaction = ({ scrollTo, selection }: EditorSelectionState): TransactionSpec => {
+  return {
+    selection,
+    scrollIntoView: !scrollTo,
+    effects: scrollTo ? EditorView.scrollIntoView(scrollTo, { yMargin: 96 }) : undefined,
+    annotations: Transaction.userEvent.of(stateRestoreAnnotation),
+  };
+};
+
+export const createEditorStateStore = (keyPrefix: string): EditorStateStore => ({
   getState: (id) => {
     invariant(id);
     const state = localStorage.getItem(`${keyPrefix}/${id}`);
@@ -40,25 +53,12 @@ export const localStorageStateStoreAdapter: EditorStateOptions = {
     invariant(id);
     localStorage.setItem(`${keyPrefix}/${id}`, JSON.stringify(state));
   },
-};
-
-export const createEditorStateTransaction = (
-  state: EditorState,
-  { scrollTo, selection }: EditorSelectionState,
-): TransactionSpec => {
-  return {
-    selection,
-    scrollIntoView: !scrollTo,
-    effects: scrollTo ? EditorView.scrollIntoView(scrollTo, { yMargin: 96 }) : undefined,
-    annotations: Transaction.userEvent.of(stateRestoreAnnotation),
-  };
-};
+});
 
 /**
  * Track scrolling and selection state to be restored when switching to document.
  */
-// TODO(burdon): Rename.
-export const state = ({ getState, setState }: Partial<EditorStateOptions> = {}): Extension => {
+export const selectionState = ({ getState, setState }: Partial<EditorStateStore> = {}): Extension => {
   const setStateDebounced = debounce(setState!, 1_000);
 
   return [
@@ -90,7 +90,7 @@ export const state = ({ getState, setState }: Partial<EditorStateOptions> = {}):
           run: (view) => {
             const state = getState(view.state.facet(documentId));
             if (state) {
-              view.dispatch(createEditorStateTransaction(view.state, state));
+              view.dispatch(createEditorStateTransaction(state));
             }
             return true;
           },

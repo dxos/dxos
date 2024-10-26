@@ -14,7 +14,10 @@ export const parseSettingsPlugin = (plugin: Plugin) => {
   return typeof (plugin.provides as any).settings === 'object' ? (plugin as Plugin<SettingsProvides>) : undefined;
 };
 
-const SETTINGS_ACTION = 'dxos.org/plugin/settings';
+const SETTINGS_PLUGIN = 'dxos.org/plugin/settings';
+
+const SETTINGS_ACTION = `${SETTINGS_PLUGIN}/action`;
+
 export enum SettingsAction {
   OPEN = `${SETTINGS_ACTION}/open`,
 }

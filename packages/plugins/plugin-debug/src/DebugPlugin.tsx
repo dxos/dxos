@@ -41,8 +41,6 @@ import {
   DebugAction,
 } from './types';
 
-export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
-
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   const settings = new SettingsStore<DebugSettingsProps>(DebugSettingsSchema, DEBUG_PLUGIN, {
     debug: true,

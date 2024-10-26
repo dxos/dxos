@@ -47,6 +47,7 @@ export const HostPlugin = ({
     enabled: [...defaults],
     plugins: [],
     available: meta.filter(({ id }) => !core.includes(id)),
+    // TODO(burdon): Functions should not be part of the settings type.
     setPlugin: (id: string, enabled: boolean) => {
       if (enabled) {
         state.values.enabled.push(id);

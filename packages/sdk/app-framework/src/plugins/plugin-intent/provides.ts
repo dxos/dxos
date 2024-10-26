@@ -26,7 +26,9 @@ export const parseIntentResolverPlugin = (plugin: Plugin) =>
 // Intents
 //
 
-const INTENT_ACTION = 'dxos.org/plugin/intent';
+const INTENT_PLUGIN = 'dxos.org/plugin/intent';
+
+const INTENT_ACTION = `${INTENT_PLUGIN}/action`;
 
 export enum IntentAction {
   /**
