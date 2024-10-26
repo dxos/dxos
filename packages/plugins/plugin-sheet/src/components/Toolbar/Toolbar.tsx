@@ -26,6 +26,8 @@ import {
   type CommentKey,
   type CommentValue,
   inRange,
+  rangeFromIndex,
+  rangeToIndex,
   type StyleKey,
   type StyleValue,
 } from '../../defs';
@@ -120,9 +122,17 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
         case 'align':
           if (cursor && cursorFallbackRange) {
             const index = model.sheet.ranges?.findIndex(
-              (range) => range.key === action.key && inRange(range.range, cursor),
+              (range) => range.key === action.key && inRange(rangeFromIndex(model.sheet, range.range), cursor),
             );
+<<<<<<< HEAD
             const nextRangeEntity = { range: cursorFallbackRange, key: action.key, value: action.value };
+=======
+            const nextRangeEntity = {
+              range: rangeToIndex(model.sheet, cursorFallbackRange),
+              key: action.key,
+              value: action.value,
+            };
+>>>>>>> origin/main
             if (index < 0) {
               model.sheet.ranges?.push(nextRangeEntity);
             } else {
@@ -137,7 +147,15 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
               model.sheet.ranges?.splice(index, 1);
             }
           } else if (cursorFallbackRange) {
+<<<<<<< HEAD
             model.sheet.ranges?.push({ range: cursorFallbackRange, key: action.key, value: action.value });
+=======
+            model.sheet.ranges?.push({
+              range: rangeToIndex(model.sheet, cursorFallbackRange),
+              key: action.key,
+              value: action.value,
+            });
+>>>>>>> origin/main
           }
           break;
         case 'comment': {
@@ -200,7 +218,9 @@ const Alignment = () => {
   const value = useMemo(
     () =>
       cursor
-        ? model.sheet.ranges?.find(({ range, key }) => key === 'alignment' && inRange(range, cursor))?.value
+        ? model.sheet.ranges?.find(
+            ({ range, key }) => key === 'alignment' && inRange(rangeFromIndex(model.sheet, range), cursor),
+          )?.value
         : undefined,
     [cursor, model.sheet.ranges],
   );
@@ -231,7 +251,7 @@ const Styles = () => {
     () =>
       cursor
         ? model.sheet.ranges
-            ?.filter(({ range, key }) => key === 'style' && inRange(range, cursor))
+            ?.filter(({ range, key }) => key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursor))
             .reduce((acc, { value }) => {
               acc.add(value);
               return acc;

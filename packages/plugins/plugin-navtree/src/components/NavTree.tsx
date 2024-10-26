@@ -36,10 +36,12 @@ export const NavTree = ({
   ...props
 }: NavTreeProps) => {
   const renderColumns = useCallback(
-    ({ item }: { item: ItemType }) => {
+    ({ item, menuOpen, setMenuOpen }: { item: ItemType; menuOpen: boolean; setMenuOpen: (open: boolean) => void }) => {
       return (
         <NavTreeColumns
           item={item as NavTreeItem}
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
           loadDescendents={loadDescendents}
           renderPresence={renderPresence}
           popoverAnchorId={popoverAnchorId}
@@ -63,12 +65,21 @@ export const NavTree = ({
 
 type NavTreeColumnsProps = {
   item: NavTreeItem;
+  menuOpen: boolean;
+  setMenuOpen: (open: boolean) => void;
   loadDescendents?: (node: Node) => MaybePromise<void>;
   renderPresence?: FC<{ item: NavTreeItem }>;
   popoverAnchorId?: string;
 };
 
-const NavTreeColumns = ({ item, loadDescendents, renderPresence: Presence, popoverAnchorId }: NavTreeColumnsProps) => {
+const NavTreeColumns = ({
+  item,
+  menuOpen,
+  setMenuOpen,
+  loadDescendents,
+  renderPresence: Presence,
+  popoverAnchorId,
+}: NavTreeColumnsProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
 
   const level = item.path.length - 1;
@@ -119,6 +130,8 @@ const NavTreeColumns = ({ item, loadDescendents, renderPresence: Presence, popov
           menuActions={actions}
           menuType='dropdown'
           caller={NAV_TREE_ITEM}
+          menuOpen={menuOpen}
+          onChangeMenuOpen={setMenuOpen}
         />
       ) : (
         <Treegrid.Cell />
