@@ -11760,6 +11760,9 @@ importers:
       '@storybook/theming':
         specifier: ^8.3.6
         version: 8.3.6(storybook@8.3.6)
+      '@storybook/types':
+        specifier: ^8.3.6
+        version: 8.3.6(storybook@8.3.6)
       '@types/lodash.flatten':
         specifier: ^4.4.6
         version: 4.4.7
@@ -19243,6 +19246,11 @@ packages:
 
   '@storybook/theming@8.3.6':
     resolution: {integrity: sha512-LQjUk6GXRW9ELkoBKuqzQKFUW+ajfGPfVELcfs3/VQX61VhthJ4olov4bGPc04wsmmFMgN/qODxT485IwOHfPQ==}
+    peerDependencies:
+      storybook: ^8.3.6
+
+  '@storybook/types@8.3.6':
+    resolution: {integrity: sha512-EY+bjIxxmKkFrL7CyDQb3EXbmy0+Y9OieaPrNNM7QXTfGgp81lXhfqMX3HLMMjplk+rcxVJLyzXSBx0nIn91fQ==}
     peerDependencies:
       storybook: ^8.3.6
 
@@ -43913,6 +43921,10 @@ snapshots:
       util: 0.12.5
 
   '@storybook/theming@8.3.6(storybook@8.3.6)':
+    dependencies:
+      storybook: 8.3.6
+
+  '@storybook/types@8.3.6(storybook@8.3.6)':
     dependencies:
       storybook: 8.3.6
 
