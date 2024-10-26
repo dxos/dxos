@@ -1,0 +1,26 @@
+dx-grid-multiselect-cell {
+  display: contents;
+}
+
+.dx-grid__cell__multiselect{
+  display: flex;
+  flex-flow: row nowrap;
+  gap: 2px;
+  inline-size: 100%;
+  block-size: 100%;
+  & > span {
+    flex: 0 1 auto;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  & > .dx-grid__cell__multiselect__separator{
+    flex: 1 0 0;
+  }
+  & > svg {
+    flex: 0 0 auto;
+    margin-block: .25em;
+    inline-size: 1em;
+    block-size: 1em;
+  }
+}

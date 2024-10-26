@@ -4,11 +4,10 @@
 
 import '@dxos-theme';
 
-import * as ModalPrimitive from '@radix-ui/react-popper';
 import { type StoryObj } from '@storybook/react';
-import React, { type MouseEvent, useCallback, useRef, useState } from 'react';
+import React, { type MouseEvent, type MutableRefObject, useCallback, useRef, useState } from 'react';
 
-import { DropdownMenu, useThemeContext } from '@dxos/react-ui';
+import { DropdownMenu, Popover } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Grid, type GridContentProps, type GridRootProps } from './Grid';
@@ -17,33 +16,46 @@ type StoryGridProps = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
 
 const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const triggerRef = useRef<HTMLDivElement | null>(null);
-  const { tx } = useThemeContext();
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null) as MutableRefObject<HTMLButtonElement>;
 
   const handleClick = useCallback((event: MouseEvent) => {
-    const closestAction = (event.target as HTMLElement).closest('button[data-story-action]');
-    if (closestAction) {
-      triggerRef.current = closestAction as HTMLDivElement;
-      setMenuOpen(true);
+    const closestStoryAction = (event.target as HTMLElement).closest('button[data-story-action]');
+    if (closestStoryAction) {
+      triggerRef.current = closestStoryAction as HTMLButtonElement;
+      return setMenuOpen(true);
+    }
+    const closestAccessory = (event.target as HTMLElement).closest('[data-dx-grid-accessory]');
+    if (closestAccessory) {
+      const action = closestAccessory.getAttribute('data-dx-grid-accessory');
+      switch (action) {
+        case 'invoke-multiselect':
+          triggerRef.current = closestAccessory as HTMLButtonElement;
+          return setPopoverOpen(true);
+      }
     }
   }, []);
 
   return (
-    // TODO(thure): This is no good very (my) bad. Refactor as part of #7962.
-    <ModalPrimitive.Root>
+    <>
       <Grid.Root id='story' onEditingChange={onEditingChange}>
         <Grid.Content {...props} onClick={handleClick} />
       </Grid.Root>
-      <ModalPrimitive.Anchor virtualRef={triggerRef} />
       <DropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
-        <DropdownMenu.Content classNames='contents'>
-          <ModalPrimitive.Content className={tx('menu.content', 'menu__content', {})}>
-            <DropdownMenu.Item onClick={() => console.log('[Click on dropdown menu item]')}>Hello</DropdownMenu.Item>
-            <ModalPrimitive.Arrow className={tx('menu.arrow', 'menu__arrow', {})} />
-          </ModalPrimitive.Content>
+        <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
+        <DropdownMenu.Content>
+          <DropdownMenu.Item onClick={() => console.log('[Click on dropdown menu item]')}>Hello</DropdownMenu.Item>
+          <DropdownMenu.Arrow />
         </DropdownMenu.Content>
       </DropdownMenu.Root>
-    </ModalPrimitive.Root>
+      <Popover.Root open={popoverOpen} onOpenChange={setPopoverOpen}>
+        <Popover.VirtualTrigger virtualRef={triggerRef} />
+        <Popover.Content>
+          <span>Multiselect options</span>
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Root>
+    </>
   );
 };
 
@@ -63,6 +75,11 @@ export const Basic: StoryObj<StoryGridProps> = {
           accessoryHtml:
             '<button class="ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-1" data-story-action="menu"><svg><use href="/icons.svg#ph--arrow-right--regular"/></svg></button>',
           value: 'Weekly sales report',
+        },
+        '2,2': {
+          value: '',
+          accessoryHtml:
+            '<dx-grid-multiselect-cell values=\'[{"label": "Peach"},{"label": "Plum"},{"label": "Pear"}]\'></dx-grid-multiselect-cell>',
         },
       },
     },
