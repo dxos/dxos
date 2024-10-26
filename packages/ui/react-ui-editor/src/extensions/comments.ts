@@ -28,10 +28,9 @@ import { debounce, type UnsubscribeCallback } from '@dxos/async';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
-import { overlap } from './util';
-import { Cursor, documentId, singleValueFacet } from '../state';
-import { type Comment, type Range } from '../state';
-import { callbackWrapper } from '../util';
+import { documentId } from './selection';
+import { type Comment, type Range } from '../types';
+import { Cursor, overlap, singleValueFacet, callbackWrapper } from '../util';
 
 //
 // State management.

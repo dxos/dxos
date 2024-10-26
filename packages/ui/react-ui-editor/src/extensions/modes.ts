@@ -7,7 +7,7 @@ import { keymap } from '@codemirror/view';
 import { vim } from '@replit/codemirror-vim';
 import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
 
-import { singleValueFacet } from '../state';
+import { singleValueFacet } from '../util';
 
 export const focusEvent = 'focus.container';
 

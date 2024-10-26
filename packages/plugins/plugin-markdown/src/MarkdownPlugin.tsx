@@ -31,6 +31,7 @@ import {
   type EditorViewMode,
   EditorViewModes,
   translations as editorTranslations,
+  createEditorStateStore,
 } from '@dxos/react-ui-editor';
 
 import { MarkdownContainer, MarkdownSettings } from './components';
@@ -56,6 +57,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     folding: true,
     experimental: false,
   });
+
+  const editorStateStore = createEditorStateStore(`${MARKDOWN_PLUGIN}/editor`);
 
   const state = new LocalStorageStore<MarkdownPluginState>(MARKDOWN_PLUGIN, { extensionProviders: [], viewMode: {} });
 
@@ -263,6 +266,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   settings={settings.values}
                   extensionProviders={state.values.extensionProviders}
                   viewMode={getViewMode(id)}
+                  editorStateStore={editorStateStore}
                   onViewModeChange={setViewMode}
                 />
               );
