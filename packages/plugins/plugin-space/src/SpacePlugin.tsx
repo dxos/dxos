@@ -285,17 +285,8 @@ export const SpacePlugin = ({
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop({
-        key: 'showHidden',
-        storageKey: 'show-hidden',
-        type: LocalStorageStore.bool({ allowUndefined: true }),
-      });
-
-      state.prop({
-        key: 'spaceNames',
-        storageKey: 'space-names',
-        type: LocalStorageStore.json<Record<string, string>>(),
-      });
+      settings.prop({ key: 'showHidden', type: LocalStorageStore.bool({ allowUndefined: true }) });
+      state.prop({ key: 'spaceNames', type: LocalStorageStore.json<Record<string, string>>() });
 
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
