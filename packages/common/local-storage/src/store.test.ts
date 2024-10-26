@@ -126,6 +126,11 @@ describe('ObjectStore', () => {
     store1.value.name = 'foo';
     store2.value.name = 'bar';
 
+    expect(root.toJSON()).to.deep.eq({
+      'dxos.org/foo': { name: 'foo', names: [], nums: [] },
+      'dxos.org/bar': { name: 'bar', names: [], nums: [] },
+    });
+
     expect(mock.store).to.deep.eq({
       'dxos.org/foo/name': 'foo',
       'dxos.org/foo/names': '[]',
@@ -153,5 +158,9 @@ describe('ObjectStore', () => {
       'dxos.org/bar/names': '[]',
       'dxos.org/bar/nums': '[]',
     });
+
+    root.destroy();
+
+    expect(root.toJSON()).to.deep.eq({});
   });
 });

@@ -12,6 +12,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { hyphenize } from '@dxos/util';
 
+// TODO(burdon): Rename package to @dxos/settings-store?
+
 const cloneObject = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
 
 export type SettingsProps<T extends {}> = {
@@ -28,6 +30,13 @@ export class RootSettingsStore {
 
   constructor(private readonly _storage: Storage = localStorage) {}
 
+  toJSON() {
+    return Array.from(this._stores).reduce<Record<string, object>>((acc, [prefix, store]) => {
+      acc[prefix] = store.value;
+      return acc;
+    }, {});
+  }
+
   getStore<T extends {}>(prefix: string): SettingsStore<T> | undefined {
     return this._stores.get(prefix);
   }
@@ -39,7 +48,7 @@ export class RootSettingsStore {
     return store;
   }
 
-  destory() {
+  destroy() {
     for (const store of this._stores.values()) {
       store.close();
     }
@@ -57,7 +66,6 @@ export class RootSettingsStore {
 /**
  * Reactive key-value property store.
  */
-// TODO(burdon): Rename package to @dxos/settings-store?
 export class SettingsStore<T extends {}> {
   public _value: ReactiveObject<T>;
 
