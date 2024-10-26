@@ -32,6 +32,7 @@ import React, {
   type FC,
   useState,
   useEffect,
+  type MutableRefObject,
 } from 'react';
 import { RemoveScroll } from 'react-remove-scroll';
 
@@ -49,7 +50,7 @@ const [createPopoverContext, createPopoverScope] = createContextScope(POPOVER_NA
 const usePopperScope = createPopperScope();
 
 type PopoverContextValue = {
-  triggerRef: RefObject<HTMLButtonElement>;
+  triggerRef: MutableRefObject<HTMLButtonElement>;
   contentId: string;
   open: boolean;
   onOpenChange(open: boolean): void;
@@ -86,7 +87,7 @@ const PopoverRoot: FC<PopoverRootProps> = (props: ScopedProps<PopoverRootProps>)
       <PopoverProvider
         scope={__scopePopover}
         contentId={useId()}
-        triggerRef={triggerRef}
+        triggerRef={triggerRef as MutableRefObject<HTMLButtonElement>}
         open={open}
         onOpenChange={setOpen}
         onOpenToggle={useCallback(() => setOpen((prevOpen) => !prevOpen), [setOpen])}
@@ -172,6 +173,30 @@ const PopoverTrigger = forwardRef<PopoverTriggerElement, PopoverTriggerProps>(
 );
 
 PopoverTrigger.displayName = TRIGGER_NAME;
+
+/* -------------------------------------------------------------------------------------------------
+ * PopoverVirtualTrigger
+ * ----------------------------------------------------------------------------------------------- */
+
+const VIRTUAL_TRIGGER_NAME = 'PopoverVirtualTrigger';
+
+interface PopoverVirtualTriggerProps {
+  virtualRef: RefObject<PopoverTriggerElement>;
+}
+
+const PopoverVirtualTrigger = (props: ScopedProps<PopoverVirtualTriggerProps>) => {
+  const { __scopePopover, virtualRef } = props;
+  const context = usePopoverContext(VIRTUAL_TRIGGER_NAME, __scopePopover);
+  const popperScope = usePopperScope(__scopePopover);
+  useEffect(() => {
+    if (virtualRef.current) {
+      context.triggerRef.current = virtualRef.current;
+    }
+  });
+  return <PopperPrimitive.Anchor {...popperScope} virtualRef={virtualRef} />;
+};
+
+PopoverVirtualTrigger.displayName = VIRTUAL_TRIGGER_NAME;
 
 /* -------------------------------------------------------------------------------------------------
  * PopoverPortal
@@ -544,6 +569,7 @@ export const Popover = {
   Root: PopoverRoot,
   Anchor: PopoverAnchor,
   Trigger: PopoverTrigger,
+  VirtualTrigger: PopoverVirtualTrigger,
   Portal: PopoverPortal,
   Content: PopoverContent,
   Close: PopoverClose,
@@ -557,6 +583,7 @@ export type {
   PopoverRootProps,
   PopoverAnchorProps,
   PopoverTriggerProps,
+  PopoverVirtualTriggerProps,
   PopoverPortalProps,
   PopoverContentProps,
   PopoverCloseProps,

@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import React, { type PropsWithChildren, type ReactNode } from 'react';
+import React, { type PropsWithChildren, type ReactNode, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
 
@@ -40,5 +40,28 @@ export const Default = {
   args: {
     openTrigger: <Button>Open popover</Button>,
     children: faker.lorem.paragraphs(3),
+  },
+};
+
+export const VirtualTrigger = {
+  render: () => {
+    const [open, setOpen] = useState(true);
+    const buttonRef = useRef<HTMLButtonElement | null>(null);
+    return (
+      <>
+        <Button onClick={() => setOpen(true)} ref={buttonRef}>
+          Open popover
+        </Button>
+        <Popover.Root open={open} onOpenChange={setOpen}>
+          <Popover.VirtualTrigger virtualRef={buttonRef} />
+          <Popover.Content>
+            <Popover.Viewport>
+              <p className='pli-2 plb-1 min-is-[18rem] max-is-[38rem]'>{faker.lorem.paragraphs(3)}</p>
+            </Popover.Viewport>
+            <Popover.Arrow />
+          </Popover.Content>
+        </Popover.Root>
+      </>
+    );
   },
 };

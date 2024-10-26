@@ -171,7 +171,7 @@ interface DropdownMenuVirtualTriggerProps {
 
 const DropdownMenuVirtualTrigger = (props: ScopedProps<DropdownMenuVirtualTriggerProps>) => {
   const { __scopeDropdownMenu, virtualRef } = props;
-  const context = useDropdownMenuContext(TRIGGER_NAME, __scopeDropdownMenu);
+  const context = useDropdownMenuContext(VIRTUAL_TRIGGER_NAME, __scopeDropdownMenu);
   const menuScope = useMenuScope(__scopeDropdownMenu);
   useEffect(() => {
     if (virtualRef.current) {
