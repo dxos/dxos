@@ -25,12 +25,8 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
     meta,
     ready: async () => {
       settings
-        .prop({ key: 'showHints', storageKey: 'show-hints', type: LocalStorageStore.bool({ allowUndefined: true }) })
-        .prop({
-          key: 'showWelcome',
-          storageKey: 'show-welcome',
-          type: LocalStorageStore.bool({ allowUndefined: true }),
-        });
+        .prop({ key: 'showHints', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'showWelcome', type: LocalStorageStore.bool({ allowUndefined: true }) });
     },
     provides: {
       context: ({ children }) => {
