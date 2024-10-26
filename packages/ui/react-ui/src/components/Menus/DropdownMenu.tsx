@@ -2,13 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+// This is based upon `@radix-ui/react-dropdown-menu` fetched 25 Oct 2024 at https://github.com/radix-ui/primitives at commit 06de2d4.
+
 import { composeEventHandlers } from '@radix-ui/primitive';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContextScope } from '@radix-ui/react-context';
 import type { Scope } from '@radix-ui/react-context';
 import { useId } from '@radix-ui/react-id';
 import * as MenuPrimitive from '@radix-ui/react-menu';
-import { createMenuScope } from '@radix-ui/react-menu';
+import { createMenuScope, type MenuAnchorProps } from '@radix-ui/react-menu';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
@@ -154,6 +156,22 @@ const DropdownMenuTrigger = forwardRef<DropdownMenuTriggerElement, DropdownMenuT
 );
 
 DropdownMenuTrigger.displayName = TRIGGER_NAME;
+
+/* -------------------------------------------------------------------------------------------------
+ * DropdownMenuVirtualTrigger
+ * ----------------------------------------------------------------------------------------------- */
+
+const VIRTUAL_TRIGGER_NAME = 'DropdownMenuVirtualTrigger';
+
+interface DropdownMenuVirtualTriggerProps extends Pick<MenuAnchorProps, 'virtualRef'> {}
+
+const DropdownMenuVirtualTrigger = (props: ScopedProps<DropdownMenuVirtualTriggerProps>) => {
+  const { __scopeDropdownMenu, virtualRef } = props;
+  const menuScope = useMenuScope(__scopeDropdownMenu);
+  return <MenuPrimitive.Anchor {...menuScope} virtualRef={virtualRef} />;
+};
+
+DropdownMenuVirtualTrigger.displayName = VIRTUAL_TRIGGER_NAME;
 
 /* -------------------------------------------------------------------------------------------------
  * DropdownMenuPortal
@@ -562,6 +580,7 @@ DropdownMenuSubContent.displayName = SUB_CONTENT_NAME;
 export const DropdownMenu = {
   Root: DropdownMenuRoot,
   Trigger: DropdownMenuTrigger,
+  VirtualTrigger: DropdownMenuVirtualTrigger,
   Portal: DropdownMenuPortal,
   Content: DropdownMenuContent,
   Viewport: DropdownMenuViewport,
@@ -586,6 +605,7 @@ export { createDropdownMenuScope, useDropdownMenuContext, useDropdownMenuMenuSco
 export type {
   DropdownMenuRootProps,
   DropdownMenuTriggerProps,
+  DropdownMenuVirtualTriggerProps,
   DropdownMenuPortalProps,
   DropdownMenuContentProps,
   DropdownMenuViewportProps,
