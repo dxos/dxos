@@ -42,6 +42,7 @@ export const filterPlugins = <T>(
  * import { parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
  * const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
  */
+// TODO(burdon): Option to require or throw.
 export const resolvePlugin = <T>(
   plugins: Plugin[],
   predicate: (plugin: Plugin) => Plugin<T> | undefined,

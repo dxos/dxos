@@ -16,16 +16,22 @@ import { hyphenize } from '@dxos/util';
 
 const cloneObject = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
 
-export type SettingsProps<T extends {}> = {
+export type SettingsValue = Record<string, any>;
+
+export type SettingsProps<T extends SettingsValue> = {
   schema: S.Schema<T>;
   prefix: string;
   defaultValue?: T;
 };
 
+export interface SettingsStoreFactory {
+  createStore<T extends SettingsValue>(props: SettingsProps<T>): SettingsStore<T>;
+}
+
 /**
  * Root store.
  */
-export class RootSettingsStore {
+export class RootSettingsStore implements SettingsStoreFactory {
   private readonly _stores = new Map<string, SettingsStore<any>>();
 
   constructor(private readonly _storage: Storage = localStorage) {}
@@ -37,11 +43,11 @@ export class RootSettingsStore {
     }, {});
   }
 
-  getStore<T extends {}>(prefix: string): SettingsStore<T> | undefined {
+  getStore<T extends SettingsValue>(prefix: string): SettingsStore<T> | undefined {
     return this._stores.get(prefix);
   }
 
-  createStore<T extends {}>({ schema, prefix, defaultValue }: SettingsProps<T>) {
+  createStore<T extends SettingsValue>({ schema, prefix, defaultValue }: SettingsProps<T>): SettingsStore<T> {
     invariant(!this._stores.has(prefix));
     const store = new SettingsStore<T>(schema, prefix, defaultValue, this._storage);
     this._stores.set(prefix, store);
@@ -66,7 +72,7 @@ export class RootSettingsStore {
 /**
  * Reactive key-value property store.
  */
-export class SettingsStore<T extends {}> {
+export class SettingsStore<T extends SettingsValue> {
   public _value: ReactiveObject<T>;
 
   private _unsubscribe?: () => void;

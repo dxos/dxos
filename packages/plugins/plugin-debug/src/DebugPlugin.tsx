@@ -8,14 +8,16 @@ import {
   getPlugin,
   parseGraphPlugin,
   parseIntentPlugin,
+  parseSettingsPlugin,
   resolvePlugin,
   type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
+  type SettingsPluginProvides,
 } from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
 import { Devtools } from '@dxos/devtools';
-import { SettingsStore } from '@dxos/local-storage';
+import { type SettingsStore } from '@dxos/local-storage';
 import { type ClientPluginProvides } from '@dxos/plugin-client';
 import { createExtension, Graph, type Node } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
@@ -42,21 +44,24 @@ import {
 } from './types';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
-  const settings = new SettingsStore<DebugSettingsProps>(DebugSettingsSchema, DEBUG_PLUGIN, {
-    debug: true,
-    devtools: true,
-  });
-
-  let intentPlugin: Plugin<IntentPluginProvides>;
+  let settings: SettingsStore<DebugSettingsProps> | undefined;
+  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+  let settingsPlugin: Plugin<SettingsPluginProvides> | undefined;
 
   return {
     meta,
     ready: async (plugins) => {
-      intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
-      // settings
-      //   .prop({ key: 'debug', type: LocalStorageStore.bool({ allowUndefined: true }) })
-      //   .prop({ key: 'devtools', type: LocalStorageStore.bool({ allowUndefined: true }) })
-      //   .prop({ key: 'wireframe', type: LocalStorageStore.bool({ allowUndefined: true }) });
+      // TODO(burdon): Helpers.
+      intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+      settingsPlugin = resolvePlugin(plugins, parseSettingsPlugin);
+      settings = settingsPlugin?.provides.settingsStore.createStore<DebugSettingsProps>({
+        schema: DebugSettingsSchema,
+        prefix: DEBUG_PLUGIN,
+        defaultValue: {
+          debug: true,
+          devtools: true,
+        },
+      });
 
       // TODO(burdon): Remove hacky dependency on global variable.
       // Used to test how composer handles breaking protocol changes.
@@ -73,10 +78,10 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       };
     },
     unload: async () => {
-      settings.close();
+      settings?.close();
     },
     provides: {
-      settings: settings.value,
+      settings: settings!.value,
       translations,
       context: ({ children }) => {
         const [timer, setTimer] = useState<Timer>();
@@ -110,7 +115,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             // Devtools node.
             createExtension({
               id: 'dxos.org/plugin/debug/devtools',
-              filter: (node): node is Node<null> => !!settings.value.devtools && node.id === 'root',
+              filter: (node): node is Node<null> => !!settings!.value.devtools && node.id === 'root',
               connector: () => [
                 {
                   // TODO(zan): Removed `/` because it breaks deck layout reload. Fix?
@@ -128,7 +133,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             // Debug node.
             createExtension({
               id: 'dxos.org/plugin/debug/debug',
-              filter: (node): node is Node<null> => !!settings.value.debug && node.id === 'root',
+              filter: (node): node is Node<null> => !!settings!.value.debug && node.id === 'root',
               connector: () => [
                 {
                   id: 'dxos.org/plugin/debug/debug',
@@ -145,7 +150,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             // Space debug nodes.
             createExtension({
               id: 'dxos.org/plugin/debug/spaces',
-              filter: (node): node is Node<Space> => !!settings.value.debug && isSpace(node.data),
+              filter: (node): node is Node<Space> => !!settings!.value.debug && isSpace(node.data),
               connector: ({ node }) => {
                 const space = node.data;
                 return [
@@ -193,7 +198,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         component: ({ name, data, role }) => {
           switch (role) {
             case 'settings':
-              return data.plugin === meta.id ? <DebugSettings settings={settings.value} /> : null;
+              return data.plugin === meta.id ? <DebugSettings settings={settings!.value} /> : null;
             case 'status':
               return <DebugStatus />;
             case 'complementary--debug':
@@ -203,9 +208,9 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           const primary = data.active ?? data.object;
           let component: ReactNode;
           if (role === 'main' || role === 'article') {
-            if (primary === 'devtools' && settings.value.devtools) {
+            if (primary === 'devtools' && settings!.value.devtools) {
               component = <Devtools />;
-            } else if (!primary || typeof primary !== 'object' || !settings.value.debug) {
+            } else if (!primary || typeof primary !== 'object' || !settings!.value.debug) {
               component = null;
             } else if ('space' in primary && isSpace(primary.space)) {
               component = (
@@ -240,7 +245,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           }
 
           if (!component) {
-            if (settings.value.wireframe) {
+            if (settings!.value.wireframe) {
               if (role === 'main' || role === 'article' || role === 'section') {
                 const primary = data.active ?? data.object;
                 const isCollection = primary instanceof CollectionType;

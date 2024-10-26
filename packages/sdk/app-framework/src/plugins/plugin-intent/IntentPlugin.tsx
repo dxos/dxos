@@ -54,8 +54,7 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
           }
 
           const plugin = findPlugin<IntentResolverProvides>(plugins, intent.plugin);
-          const result = plugin?.provides.intent.resolver(intent, plugins);
-          return result;
+          return plugin?.provides.intent.resolver(intent, plugins);
         }
 
         for (const entry of dynamicResolvers) {

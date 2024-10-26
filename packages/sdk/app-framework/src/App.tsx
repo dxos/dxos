@@ -8,6 +8,7 @@ import { invariant } from '@dxos/invariant';
 
 import { type HostPluginParams, Plugin, HostPlugin } from './plugins';
 import IntentMeta from './plugins/plugin-intent/meta';
+import SettingsMeta from './plugins/plugin-settings/meta';
 import SurfaceMeta from './plugins/plugin-surface/meta';
 
 /**
@@ -41,11 +42,11 @@ export const createApp = ({ meta, plugins, core, ...params }: HostPluginParams) 
     plugins: {
       ...plugins,
       [IntentMeta.id]: Plugin.lazy(() => import('./plugins/plugin-intent')),
+      [SettingsMeta.id]: Plugin.lazy(() => import('./plugins/plugin-settings')),
       [SurfaceMeta.id]: Plugin.lazy(() => import('./plugins/plugin-surface')),
     },
-    // TODO(burdon): Why not include in core?
-    meta: [SurfaceMeta, IntentMeta, ...meta],
-    core: [SurfaceMeta.id, IntentMeta.id, ...core],
+    meta: [IntentMeta, SettingsMeta, SurfaceMeta, ...meta],
+    core: [IntentMeta.id, SettingsMeta.id, SurfaceMeta.id, ...core],
     ...params,
   });
 

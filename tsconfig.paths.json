@@ -173,6 +173,12 @@
       "@dxos/plugin-help/meta": [
         "packages/plugins/plugin-help/src/meta.ts"
       ],
+      "@dxos/plugin-manager": [
+        "packages/plugins/plugin-manager/src/index.ts"
+      ],
+      "@dxos/plugin-manager/meta": [
+        "packages/plugins/plugin-manager/src/meta.ts"
+      ],
       "@dxos/plugin-markdown": [
         "packages/plugins/plugin-markdown/src/index.ts"
       ],
@@ -223,12 +229,6 @@
       ],
       "@dxos/plugin-registry/meta": [
         "packages/plugins/plugin-registry/src/meta.ts"
-      ],
-      "@dxos/plugin-settings": [
-        "packages/plugins/plugin-settings/src/index.ts"
-      ],
-      "@dxos/plugin-settings/meta": [
-        "packages/plugins/plugin-settings/src/meta.ts"
       ],
       "@dxos/plugin-sheet": [
         "packages/plugins/plugin-sheet/src/index.ts"

@@ -2,16 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type SettingsStoreFactory, type SettingsValue } from '@dxos/local-storage';
+
 import { type Plugin } from '../plugin-host';
 
-// TODO(burdon): Decouple from SettingsPlugin UX.
+export type SettingsProvides<T extends SettingsValue> = {
+  settings: T;
+};
 
-export type SettingsProvides<T extends Record<string, any> = Record<string, any>> = {
-  settings: T; // TODO(burdon): Read-only.
+export type SettingsPluginProvides = {
+  settingsStore: SettingsStoreFactory;
 };
 
 export const parseSettingsPlugin = (plugin: Plugin) => {
-  return typeof (plugin.provides as any).settings === 'object' ? (plugin as Plugin<SettingsProvides>) : undefined;
+  return typeof (plugin.provides as any).settingsStore === 'object'
+    ? (plugin as Plugin<SettingsPluginProvides>)
+    : undefined;
 };
 
 const SETTINGS_PLUGIN = 'dxos.org/plugin/settings';

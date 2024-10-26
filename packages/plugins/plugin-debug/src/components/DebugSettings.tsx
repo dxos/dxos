@@ -8,9 +8,9 @@ import React, { useEffect, useState } from 'react';
 import { parseFileManagerPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { type ConfigProto, defs, SaveConfig, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
-import { SettingsValue } from '@dxos/plugin-settings';
 import { useClient } from '@dxos/react-client';
 import { useTranslation, Button, Toast, Input, useFileDownload, Select } from '@dxos/react-ui';
+import { FormInput } from '@dxos/react-ui-data';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { setDeep } from '@dxos/util';
 
@@ -80,25 +80,25 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
 
   return (
     <>
-      <SettingsValue label={t('settings show debug panel')}>
+      <FormInput label={t('settings show debug panel')}>
         <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
-      </SettingsValue>
-      <SettingsValue label={t('settings show devtools panel')}>
+      </FormInput>
+      <FormInput label={t('settings show devtools panel')}>
         <Input.Switch checked={settings.devtools} onCheckedChange={(checked) => (settings.devtools = !!checked)} />
-      </SettingsValue>
-      <SettingsValue label={t('settings wireframe')}>
+      </FormInput>
+      <FormInput label={t('settings wireframe')}>
         <Input.Switch checked={settings.wireframe} onCheckedChange={(checked) => (settings.wireframe = !!checked)} />
-      </SettingsValue>
-      <SettingsValue label={t('settings download diagnostics')}>
+      </FormInput>
+      <FormInput label={t('settings download diagnostics')}>
         <Button onClick={handleDownload}>
           <DownloadSimple className={getSize(5)} />
         </Button>
-      </SettingsValue>
-      <SettingsValue label={t('settings repair')}>
+      </FormInput>
+      <FormInput label={t('settings repair')}>
         <Button onClick={handleRepair}>
           <FirstAidKit className={getSize(5)} />
         </Button>
-      </SettingsValue>
+      </FormInput>
 
       {/* TODO(burdon): Move to layout? */}
       {toast && (
@@ -113,7 +113,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
         </Toast.Root>
       )}
 
-      <SettingsValue label={t('settings choose storage adaptor')}>
+      <FormInput label={t('settings choose storage adaptor')}>
         <Select.Root
           value={
             Object.entries(StorageAdapters).find(
@@ -144,7 +144,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
             </Select.Content>
           </Select.Portal>
         </Select.Root>
-      </SettingsValue>
+      </FormInput>
     </>
   );
 };
