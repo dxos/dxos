@@ -162,7 +162,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   const TriggerMeta = getFunctionMetaExtension(trigger, script)?.component;
 
   return (
-    <div className='flex flex-col my-2'>
+    <div className='flex flex-col py-1'>
       <table className='is-full table-fixed'>
         <tbody>
           <InputRow label='Function'>
@@ -250,7 +250,7 @@ const TriggerSpecSubscription = ({ spec }: TriggerSpecProps<SubscriptionTrigger>
           value={spec.filter.length > 0 ? spec.filter[0].type : undefined}
           onValueChange={handleSelectSchema}
         >
-          <Select.TriggerButton placeholder={'Select type'} />
+          <Select.TriggerButton classNames='w-full' placeholder={'Select type'} />
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>

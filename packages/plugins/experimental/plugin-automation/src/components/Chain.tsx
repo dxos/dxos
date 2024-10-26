@@ -47,7 +47,7 @@ export const ChainPresets: FC<{ presets: Preset[]; onSelect: (preset: Preset) =>
         onSelect(presets.find(({ id }) => id === value)!);
       }}
     >
-      <Select.TriggerButton placeholder={t('select preset template placeholder')} />
+      <Select.TriggerButton classNames='w-full' placeholder={t('select preset template placeholder')} />
       <Select.Portal>
         <Select.Content>
           <Select.Viewport>

@@ -12,6 +12,7 @@ import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-c
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TriggerEditor } from './TriggerEditor';
+import translations from '../../translations';
 import { ChainPromptType } from '../../types';
 
 const functions: Omit<FunctionDef, 'id'>[] = [
@@ -45,7 +46,7 @@ const TriggerEditorStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
   }
 
   return (
-    <div role='none' className='is-full pli-8'>
+    <div role='none' className='max-w-[300px] border border-separator overflow-hidden'>
       <TriggerEditor space={space} trigger={trigger} />
     </div>
   );
@@ -69,6 +70,10 @@ const meta: Meta = {
     />
   ),
   decorators: [withTheme],
+  parameters: {
+    layout: 'centered',
+    translations,
+  },
 };
 
 export default meta;
