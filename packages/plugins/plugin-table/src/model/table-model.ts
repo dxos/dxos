@@ -94,6 +94,12 @@ export class TableModel extends Resource {
   };
 
   protected override async _open() {
+    this.initializeSorting();
+    this.initializeEffects();
+    this.initializeColumnMeta();
+  }
+
+  private initializeSorting(): void {
     this.sortedRows = computed(() => {
       this.displayToDataIndex.clear();
       const sort = this.sorting.value;
@@ -121,7 +127,9 @@ export class TableModel extends Resource {
 
       return sorted.map(({ item }) => item);
     });
+  }
 
+  private initializeEffects(): void {
     const rowOrderWatcher = effect(() => {
       const _sortedRows = this.sortedRows.value;
       this.onRowOrderChanged?.();
@@ -129,10 +137,12 @@ export class TableModel extends Resource {
 
     this._ctx.onDispose(rowOrderWatcher);
 
-    // Watch rows for changes
+    /**
+     * Creates reactive effects for each row in the visible range.
+     * Subscribes to changes in the visible range, recreating row effects when it changes.
+     * When a row's data changes, invokes onCellUpdate to notify subscribers and trigger UI updates.
+     */
     const rowEffectManager = effect(() => {
-      // Create new effects that watch for changes to each row in the visible range
-      // and update the table when they change through onCellUpdate
       const { start, end } = this.visibleRange.value;
 
       for (let row = start.row; row <= end.row; row++) {
@@ -152,7 +162,9 @@ export class TableModel extends Resource {
     });
 
     this._ctx.onDispose(rowEffectManager);
+  }
 
+  private initializeColumnMeta(): void {
     this.columnMeta = computed(() => {
       const fields = this.table.view?.fields ?? [];
       const meta = Object.fromEntries(
