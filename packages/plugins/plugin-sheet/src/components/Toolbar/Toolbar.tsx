@@ -9,12 +9,12 @@ import { useIntentDispatcher } from '@dxos/app-framework';
 import {
   Icon,
   Toolbar as NaturalToolbar,
-  useTranslation,
   Tooltip,
   type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
   type ToolbarButtonProps as NaturalToolbarButtonProps,
   type ToolbarToggleProps as NaturalToolbarToggleProps,
   type ThemedClassName,
+  useTranslation,
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
@@ -113,7 +113,7 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
   const { hasAttention } = useAttention(id);
   const dispatch = useIntentDispatcher();
 
-  // TODO(Zan): Centralise the toolbar action handler. Current implementation in stories.
+  // TODO(Zan): Externalize the toolbar action handler. E.g., Toolbar/keys should both fire events.
   const handleAction = useCallback(
     (action: ToolbarAction) => {
       switch (action.key) {
@@ -122,11 +122,7 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
             const index = model.sheet.ranges?.findIndex(
               (range) => range.key === action.key && inRange(range.range, cursor),
             );
-            const nextRangeEntity = {
-              range: cursorFallbackRange,
-              key: action.key,
-              value: action.value,
-            };
+            const nextRangeEntity = { range: cursorFallbackRange, key: action.key, value: action.value };
             if (index < 0) {
               model.sheet.ranges?.push(nextRangeEntity);
             } else {
@@ -141,11 +137,7 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
               model.sheet.ranges?.splice(index, 1);
             }
           } else if (cursorFallbackRange) {
-            model.sheet.ranges?.push({
-              range: cursorFallbackRange,
-              key: action.key,
-              value: action.value,
-            });
+            model.sheet.ranges?.push({ range: cursorFallbackRange, key: action.key, value: action.value });
           }
           break;
         case 'comment': {
