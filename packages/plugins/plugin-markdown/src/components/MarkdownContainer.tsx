@@ -6,7 +6,6 @@ import React, { useEffect, useMemo } from 'react';
 
 import { useResolvePlugin, parseFileManagerPlugin } from '@dxos/app-framework';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
-import { localStorageStateStoreAdapter, type EditorSelectionState } from '@dxos/react-ui-editor';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { useExtensions } from '../extensions';
@@ -15,7 +14,7 @@ import { getFallbackName } from '../util';
 
 export type MarkdownContainerProps = Pick<
   MarkdownEditorProps,
-  'role' | 'coordinate' | 'extensionProviders' | 'viewMode' | 'onViewModeChange'
+  'role' | 'coordinate' | 'extensionProviders' | 'viewMode' | 'editorStateStore' | 'onViewModeChange'
 > & {
   id: string;
   object: DocumentType | any;
@@ -62,11 +61,12 @@ export const DocumentEditor = ({
   extensionProviders,
   settings,
   viewMode,
+  editorStateStore,
   ...props
 }: DocumentEditorProps) => {
   const space = getSpace(doc);
   const initialValue = useMemo(() => doc.content?.content, [doc.content]);
-  const extensions = useExtensions({ extensionProviders, document: doc, settings, viewMode });
+  const extensions = useExtensions({ extensionProviders, document: doc, settings, viewMode, editorStateStore });
 
   // Migrate gradually to `fallbackName`.
   useEffect(() => {
@@ -74,12 +74,6 @@ export const DocumentEditor = ({
       doc.fallbackName = getFallbackName(doc.content.content);
     }
   }, [doc, doc.content]);
-
-  // Restore last selection and scroll point.
-  const { scrollTo, selection } = useMemo<EditorSelectionState>(
-    () => localStorageStateStoreAdapter.getState(id) ?? {},
-    [id, doc],
-  );
 
   // File dragging.
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
@@ -97,8 +91,6 @@ export const DocumentEditor = ({
       id={id}
       initialValue={initialValue}
       extensions={extensions}
-      scrollTo={scrollTo}
-      selection={selection}
       toolbar={settings.toolbar}
       inputMode={settings.editorInputMode}
       viewMode={viewMode}

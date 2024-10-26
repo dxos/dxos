@@ -2,15 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { Transaction } from '@codemirror/state';
+import { type Transaction } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
 import { log } from '@dxos/log';
 
+export const wrapWithCatch = (fn: (...args: any[]) => any) => {
+  return (...args: any[]) => {
+    try {
+      return fn(...args);
+    } catch (err) {
+      log.catch(err);
+    }
+  };
+};
+
 /**
  * CodeMirror callbacks swallow errors so wrap handlers.
  */
-// TODO(burdon): EditorView.exceptionSink should catch errors.
+// TODO(burdon): Reconcile with wrapWithCatch.
 export const callbackWrapper = <T extends Function>(fn: T): T =>
   ((...args: any[]) => {
     try {
@@ -29,6 +39,9 @@ export const debugDispatcher = (trs: readonly Transaction[], view: EditorView) =
   view.update(trs);
 };
 
+/**
+ * Util to log transactions in update listener.
+ */
 export const logChanges = (trs: readonly Transaction[]) => {
   const changes = trs
     .flatMap((tr) => {
