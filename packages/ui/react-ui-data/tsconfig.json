@@ -1,12 +1,12 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
     "lib": [
       "DOM",
       "ESNext"
     ],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "types": [
       "node"
     ]

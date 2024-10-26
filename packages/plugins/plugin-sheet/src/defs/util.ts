@@ -9,6 +9,7 @@ import {
   addressFromA1Notation,
   type CellAddress,
   type CellRange,
+  type CompleteCellRange,
   DEFAULT_COLUMNS,
   DEFAULT_ROWS,
   MAX_COLUMNS,
@@ -111,7 +112,7 @@ export const rangeToIndex = (sheet: SheetType, range: CellRange): string => {
 /**
  * E.g., "CA2@CB3:CC4@CD5" => "A1:B2".
  */
-export const rangeFromIndex = (sheet: SheetType, idx: string): CellRange => {
+export const rangeFromIndex = (sheet: SheetType, idx: string): CompleteCellRange => {
   const [from, to] = idx.split(':').map((index) => addressFromIndex(sheet, index));
   return { from, to };
 };
