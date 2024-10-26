@@ -124,15 +124,11 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
             const index = model.sheet.ranges?.findIndex(
               (range) => range.key === action.key && inRange(rangeFromIndex(model.sheet, range.range), cursor),
             );
-<<<<<<< HEAD
-            const nextRangeEntity = { range: cursorFallbackRange, key: action.key, value: action.value };
-=======
             const nextRangeEntity = {
               range: rangeToIndex(model.sheet, cursorFallbackRange),
               key: action.key,
               value: action.value,
             };
->>>>>>> origin/main
             if (index < 0) {
               model.sheet.ranges?.push(nextRangeEntity);
             } else {
@@ -147,15 +143,11 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
               model.sheet.ranges?.splice(index, 1);
             }
           } else if (cursorFallbackRange) {
-<<<<<<< HEAD
-            model.sheet.ranges?.push({ range: cursorFallbackRange, key: action.key, value: action.value });
-=======
             model.sheet.ranges?.push({
               range: rangeToIndex(model.sheet, cursorFallbackRange),
               key: action.key,
               value: action.value,
             });
->>>>>>> origin/main
           }
           break;
         case 'comment': {
