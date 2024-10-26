@@ -20,7 +20,7 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type CellAddress, inRange, cellClassNameForRange } from '../../defs';
+import { type CellAddress, inRange, cellClassNameForRange, rangeFromIndex } from '../../defs';
 import { parseThreadAnchorAsCellRange } from '../../integrations';
 import { type SheetModel } from '../../model';
 
@@ -62,7 +62,7 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
   if (rawValue === undefined || rawValue === null) {
     return { value: '' };
   }
-  const ranges = model.sheet.ranges?.filter(({ range }) => inRange(range, address));
+  const ranges = model.sheet.ranges?.filter(({ range }) => inRange(rangeFromIndex(model.sheet, range), address));
   const threadRefs = model.sheet.threads
     ?.filter((thread) => {
       const range = thread?.anchor && parseThreadAnchorAsCellRange(thread!.anchor);

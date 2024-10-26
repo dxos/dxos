@@ -54,14 +54,13 @@ dx-grid, dx-grid-axis-resize-handle {
   [role='gridcell'], [role='columnheader'], [role='rowheader'] {
     position: relative;
     background: var(--dx-grid-base, var(--dx-base));
-    padding: 2px;
+    padding: 2px 3px;
     box-sizing: border-box;
     cursor: pointer;
     border: 1px solid transparent;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    align-content: center;
     &[inert] {
       visibility: hidden;
     }
