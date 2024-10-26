@@ -94,9 +94,25 @@ export class TableModel extends Resource {
   };
 
   protected override async _open() {
+    this.initializeColumnMeta();
     this.initializeSorting();
     this.initializeEffects();
-    this.initializeColumnMeta();
+  }
+
+  private initializeColumnMeta(): void {
+    this.columnMeta = computed(() => {
+      const fields = this.table.view?.fields ?? [];
+      const meta = Object.fromEntries(
+        fields.map((field, index: number) => [index, { size: field.size ?? 256, resizeable: true }]),
+      );
+
+      return {
+        grid: meta,
+        frozenColsEnd: {
+          0: { size: 40, resizeable: false },
+        },
+      };
+    });
   }
 
   private initializeSorting(): void {
@@ -162,22 +178,6 @@ export class TableModel extends Resource {
     });
 
     this._ctx.onDispose(rowEffectManager);
-  }
-
-  private initializeColumnMeta(): void {
-    this.columnMeta = computed(() => {
-      const fields = this.table.view?.fields ?? [];
-      const meta = Object.fromEntries(
-        fields.map((field, index: number) => [index, { size: field.size ?? 256, resizeable: true }]),
-      );
-
-      return {
-        grid: meta,
-        frozenColsEnd: {
-          0: { size: 40, resizeable: false },
-        },
-      };
-    });
   }
 
   //
