@@ -63,7 +63,7 @@ export const SyncStatusIndicator = ({ state }: { state: SpaceSyncStateMap }) => 
             classNames={classNames}
           />
         </Popover.Trigger>
-        <Popover.Content>
+        <Popover.Content sideOffset={16}>
           <SyncStatusDetail state={state} summary={summary} debug={false} />
         </Popover.Content>
       </Popover.Root>

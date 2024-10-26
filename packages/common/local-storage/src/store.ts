@@ -7,13 +7,20 @@ import { effect } from '@preact/signals-core';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type ReactiveObject, create } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { invariant } from '@dxos/invariant';
+import { hyphenize } from '@dxos/util';
 
 type PropType<T> = {
   get: (key: string) => T | undefined;
   set: (key: string, value: T | undefined) => void;
 };
 
-type PropParams = {
+type PropDef<K extends keyof T, T> = {
+  key: K;
+  type: PropType<T[K]>;
+};
+
+type PropOptions = {
   // TODO(burdon): Default to true.
   allowUndefined?: boolean;
 };
@@ -25,8 +32,8 @@ type PropParams = {
  */
 export class LocalStorageStore<T extends object> {
   static string(): PropType<string>;
-  static string(params: PropParams): PropType<string | undefined>;
-  static string(params?: PropParams) {
+  static string(params: PropOptions): PropType<string | undefined>;
+  static string(params?: PropOptions) {
     const prop: PropType<string | undefined> = {
       get: (key) => {
         const value = localStorage.getItem(key);
@@ -45,16 +52,16 @@ export class LocalStorageStore<T extends object> {
   }
 
   static enum<U>(): PropType<U>;
-  static enum<U>(params: PropParams): PropType<U | undefined>;
-  static enum<U>(params?: PropParams) {
+  static enum<U>(params: PropOptions): PropType<U | undefined>;
+  static enum<U>(params?: PropOptions) {
     return params?.allowUndefined
       ? (LocalStorageStore.string(params) as PropType<U | undefined>)
       : (LocalStorageStore.string() as unknown as PropType<U>);
   }
 
   static number(): PropType<number>;
-  static number(params: PropParams): PropType<number | undefined>;
-  static number(params?: PropParams) {
+  static number(params: PropOptions): PropType<number | undefined>;
+  static number(params?: PropOptions) {
     const prop: PropType<number | undefined> = {
       get: (key) => {
         const value = parseInt(localStorage.getItem(key) ?? '');
@@ -73,8 +80,8 @@ export class LocalStorageStore<T extends object> {
   }
 
   static bool(): PropType<boolean>;
-  static bool(params: PropParams): PropType<boolean | undefined>;
-  static bool(params?: PropParams) {
+  static bool(params: PropOptions): PropType<boolean | undefined>;
+  static bool(params?: PropOptions) {
     const prop: PropType<boolean | undefined> = {
       get: (key) => {
         const value = localStorage.getItem(key);
@@ -116,6 +123,7 @@ export class LocalStorageStore<T extends object> {
     private readonly _prefix: string,
     defaults?: T,
   ) {
+    // TODO(burdon): Should this be externalized.
     registerSignalsRuntime();
     this._values = create(defaults ?? ({} as T));
   }
@@ -124,28 +132,19 @@ export class LocalStorageStore<T extends object> {
     return this._values;
   }
 
-  // TODO(burdon): Reset method (keep track of binders).
-
   /**
    * Binds signal property to local storage key.
    */
-  prop<K extends keyof T>({
-    key,
-    storageKey: _storageKey,
-    type,
-  }: {
-    key: K;
-    storageKey?: string;
-    type: PropType<T[K]>;
-  }) {
-    const storageKey = this._prefix + '/' + (_storageKey ?? key).toString();
+  prop<K extends keyof T>({ key, type }: PropDef<K, T>) {
+    invariant(typeof key === 'string');
+    const storageKey = this._prefix + '/' + hyphenize(key);
     if (this._subscriptions.has(storageKey)) {
       return this;
     }
 
     const current = type.get(storageKey);
     if (current !== undefined) {
-      this._values[key] = current;
+      this._values[key as K] = current;
     }
 
     // The subscribe callback is always called.
@@ -161,6 +160,18 @@ export class LocalStorageStore<T extends object> {
     );
 
     return this;
+  }
+
+  /**
+   * Delete all settings.
+   */
+  reset() {
+    localStorage.removeItem(this._prefix);
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith(this._prefix)) {
+        localStorage.removeItem(key);
+      }
+    }
   }
 
   /**

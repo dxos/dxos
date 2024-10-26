@@ -8,4 +8,5 @@ export const SETTINGS_PLUGIN = 'dxos.org/plugin/settings';
 
 export default {
   id: SETTINGS_PLUGIN,
+  name: 'Settings',
 } satisfies PluginMeta;
