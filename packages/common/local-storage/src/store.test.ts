@@ -8,37 +8,9 @@ import { S } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 import { ObjectStore } from './store';
+import { createLocalStorageMock } from './testing';
 
-class MockStorage implements Storage {
-  store: Record<string, string> = {};
-
-  get length(): number {
-    return Object.keys(this.store).length;
-  }
-
-  clear(): void {
-    this.store = {};
-  }
-
-  key(index: number): string | null {
-    const keys = Object.keys(this.store);
-    return keys[index] || null;
-  }
-
-  getItem(key: string): string | null {
-    return this.store[key] || null;
-  }
-
-  removeItem(key: string): void {
-    delete this.store[key];
-  }
-
-  setItem(key: string, value: string): void {
-    this.store[key] = value;
-  }
-}
-
-const mock = new MockStorage();
+const mock = createLocalStorageMock();
 
 enum TestEnum {
   INACTIVE = 0,
@@ -127,6 +99,13 @@ describe('ObjectStore', () => {
       expect(store.value.name).to.be.undefined;
       expect(store.value.names).to.deep.eq(['bar']);
       expect(store.value.status).to.deep.eq(TestEnum.INACTIVE);
+
+      store.reset();
     }
+
+    expect(mock.store).to.deep.eq({
+      'dxos.org/setting/nums': '[]',
+      'dxos.org/setting/names': '[]',
+    });
   });
 });

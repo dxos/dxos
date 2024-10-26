@@ -11,28 +11,38 @@ import { visit } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { hyphenize } from '@dxos/util';
 
+const cloneObject = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
+
 /**
  * Reactive key-value property store.
  */
 export class ObjectStore<T extends {}> {
-  public readonly value: ReactiveObject<T>;
+  public _value: ReactiveObject<T>;
 
   private _unsubscribe?: () => void;
 
   constructor(
     private readonly _schema: S.Schema<T>,
     private readonly _prefix: string,
-    defaultValue: T = {} as T,
+    private readonly _defaultValue: T = {} as T,
     private readonly _storage: Storage = localStorage,
   ) {
-    this.value = create(defaultValue);
+    this._value = create(cloneObject(this._defaultValue));
     this.load();
+  }
+
+  get value(): T {
+    return this._value;
+  }
+
+  getKey(path: string[]) {
+    return [this._prefix, ...path.map((p) => hyphenize(p))].join('/');
   }
 
   open() {
     // TODO(burdon): Import from '@dxos/signals' (rename echo-signals);
     this._unsubscribe = effect(() => {
-      JSON.stringify(this.value);
+      JSON.stringify(this._value);
       this.save();
     });
   }
@@ -42,12 +52,23 @@ export class ObjectStore<T extends {}> {
     this._unsubscribe = undefined;
   }
 
-  getKey(path: string[]) {
-    return [this._prefix, ...path.map((p) => hyphenize(p))].join('/');
+  reset() {
+    this.close();
+
+    this._value = create(cloneObject(this._defaultValue));
+    this._storage.removeItem(this._prefix);
+    for (const key of Object.keys(this._storage)) {
+      if (key.startsWith(this._prefix)) {
+        this._storage.removeItem(key);
+      }
+    }
+
+    this.open();
   }
 
   load() {
     this.close();
+
     visit(this._schema.ast, (node, path) => {
       const key = this.getKey(path);
       const value = this._storage.getItem(key);
@@ -74,6 +95,7 @@ export class ObjectStore<T extends {}> {
         }
       }
     });
+
     this.open();
   }
 
