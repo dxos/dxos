@@ -103,6 +103,25 @@ describe('ObjectStore', () => {
       expect(store.value.name).to.eq('foobar');
       expect(store.value.names).to.deep.eq(['foo', 'bar']);
       expect(store.value.status).to.deep.eq(TestEnum.ACTIVE);
+
+      store.value.activePreset = undefined;
+      store.value.nums.splice(1, 1, 3);
+      store.value.name = undefined;
+      store.value.names.splice(0, 1);
+    }
+
+    expect(mock.store).to.deep.eq({
+      'dxos.org/setting/num': '42',
+      'dxos.org/setting/nums': '[1,3]',
+      'dxos.org/setting/names': '["bar"]',
+      'dxos.org/setting/status': '1',
+    });
+
+    {
+      const store = new ObjectStore<TestType>(TestSchema, 'dxos.org/setting', defaultValue, mock);
+
+      expect(store.value.activePreset).to.be.undefined;
+      expect(store.value.name).to.be.undefined;
     }
   });
 });
