@@ -67,9 +67,7 @@ const filterMatchInner = (
 
   if (filter.type) {
     const type = core.getType()?.toDXN() ?? DXN.typename(EXPANDO_TYPENAME);
-
-    log.info('type compare', { type, filterType: filter.type });
-
+    log('type compare', { type, filterType: filter.type });
     if (!filter.type.some((filterType) => DXN.equals(filterType, type))) {
       return false;
     }
@@ -82,7 +80,6 @@ const filterMatchInner = (
 
       // TODO(dmaretskyi): Should `id` be allowed in filter.properties?
       const actualValue = key === 'id' ? core.id : core.getDecoded(['data', key]);
-
       if (actualValue !== value) {
         return false;
       }
