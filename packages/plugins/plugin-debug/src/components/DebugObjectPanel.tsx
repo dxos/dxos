@@ -12,7 +12,6 @@ export type DebugObjectPanelProps = {
 };
 
 export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
-  console.log(JSON.stringify(object, null, 2));
   return (
     <div role='form' className='flex flex-col'>
       <SyntaxHighlighter classNames='flex text-xs' language='json'>

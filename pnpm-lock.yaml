@@ -1787,9 +1787,15 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
@@ -1799,10 +1805,22 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+      lodash.set:
+        specifier: ^4.3.2
+        version: 4.3.2
     devDependencies:
       '@dxos/async':
         specifier: workspace:*
         version: link:../async
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
+      '@types/lodash.set':
+        specifier: ^4.3.7
+        version: 4.3.7
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -45059,7 +45077,7 @@ snapshots:
 
   '@types/lodash.set@4.3.7':
     dependencies:
-      '@types/lodash': 4.17.0
+      '@types/lodash': 4.17.12
 
   '@types/lodash.sortby@4.7.7':
     dependencies:

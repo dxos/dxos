@@ -101,7 +101,9 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                 return null;
               }
 
-              return <TableViewEditor view={data.subject.view} />;
+              return {
+                node: <TableViewEditor view={data.subject.view} />,
+              };
             }
             default:
               return null;

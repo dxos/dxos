@@ -16,7 +16,7 @@ import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view
 
 import { type UnsubscribeCallback, debounce } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { documentId, singleValueFacet } from '@dxos/react-ui-editor/state';
+import { documentId, singleValueFacet } from '@dxos/react-ui-editor';
 
 import { type CellAddress } from '../defs';
 import { type ComputeGraph, type ComputeNode, createSheetName } from '../graph';

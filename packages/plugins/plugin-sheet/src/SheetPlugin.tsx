@@ -149,7 +149,9 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
               case 'section':
                 return <SheetContainer graph={graph} sheet={data.object} role={role} />;
               case 'complementary--settings':
-                return <div>Settings</div>;
+                return {
+                  node: <div>Settings!</div>,
+                };
             }
           }
 
