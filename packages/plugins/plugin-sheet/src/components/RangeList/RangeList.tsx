@@ -4,12 +4,13 @@
 
 import React from 'react';
 
-import { type TableType } from '../../';
+import { type SheetType } from '../../types';
 
 export type RangeListProps = {
-  table: TableType;
+  sheet: SheetType;
 };
 
-export const RangeList = ({ table }: RangeListProps) => {
-  return <div>RangeList</div>;
+export const RangeList = ({ sheet }: RangeListProps) => {
+  const ranges = sheet.ranges;
+  return <div className='p-2'>{JSON.stringify({ ranges })}</div>;
 };
