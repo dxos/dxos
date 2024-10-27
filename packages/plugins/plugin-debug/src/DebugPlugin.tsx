@@ -239,10 +239,10 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                 // TODO(burdon): Move into Container abstraction.
                 if (!isCollection) {
                   return {
-                    disposition: 'hoist',
                     node: (
                       <Wireframe label={`${role}:${name}`} object={primary} classNames='row-span-2 overflow-hidden' />
                     ),
+                    disposition: 'hoist',
                   };
                 }
               }

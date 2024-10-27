@@ -13,7 +13,7 @@ import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Icon } from '@dxos/react-ui';
 
-import { ComputeGraphContextProvider, SheetContainer, useComputeGraph } from './components';
+import { ComputeGraphContextProvider, RangeList, SheetContainer, useComputeGraph } from './components';
 import { compareIndexPositions, createSheet } from './defs';
 import { computeGraphFacet } from './extensions';
 import { type ComputeGraphRegistry } from './graph';
@@ -143,16 +143,23 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         component: ({ data, role }) => {
           const space = isEchoObject(data.object) ? getSpace(data.object) : undefined;
           const graph = useComputeGraph(space);
-          if (graph && data.object instanceof SheetType) {
-            switch (role) {
-              case 'article':
-              case 'section':
-                return <SheetContainer graph={graph} sheet={data.object} role={role} />;
-              case 'complementary--settings':
+
+          switch (role) {
+            case 'article':
+            case 'section':
+              if (data.object instanceof SheetType) {
+                return graph ? <SheetContainer graph={graph} sheet={data.object} role={role} /> : null;
+              }
+
+              return null;
+            case 'complementary--settings':
+              if (data.subject instanceof SheetType) {
                 return {
-                  node: <div>Settings!</div>,
+                  node: <RangeList table={data.subject} />,
                 };
-            }
+              }
+
+              return null;
           }
 
           return null;

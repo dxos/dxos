@@ -5,6 +5,7 @@
 import { type SurfaceComponent, type SurfaceRootContext } from './SurfaceRootContext';
 import { type Plugin } from '../PluginHost';
 
+// TODO(burdon): Predicate based providers?
 export type SurfaceProvides = {
   surface: {
     /**

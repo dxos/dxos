@@ -15,6 +15,7 @@ export type DefaultObjectSettingsProps = {
 
 export const DefaultObjectSettings = ({ object }: DefaultObjectSettingsProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
+  // TODO(burdon): Standardize forms.
   return (
     <div role='form' className='flex flex-col w-full p-2 gap-1'>
       <Input.Root>
