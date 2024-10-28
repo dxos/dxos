@@ -3,7 +3,7 @@
 //
 
 import * as ModalPrimitive from '@radix-ui/react-popper';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
 import { type DxGridElement, type DxAxisResize, Grid } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
@@ -30,15 +30,27 @@ export type TableProps = { model?: TableModel; onDeleteRow?: (row: any) => void 
 export const Table = ({ model }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
 
-  const handleOnCellUpdate = useCallback((cell: GridCell) => {
+  const handleCellUpdate = useCallback((cell: GridCell) => {
     gridRef.current?.updateIfWithinBounds(cell);
   }, []);
 
+  const handleRowOrderChanged = useCallback(() => {
+    gridRef.current?.updateCells(true);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!gridRef.current || !model) {
+      return;
+    }
+    gridRef.current.getCells = model.getCells.bind(model);
+  }, [model]);
+
   useEffect(() => {
     if (model) {
-      model.setOnCellUpdate(handleOnCellUpdate);
+      model.setOnCellUpdate(handleCellUpdate);
+      model.setOnRowOrderChange(handleRowOrderChanged);
     }
-  }, [model, handleOnCellUpdate]);
+  }, [model, handleCellUpdate, handleRowOrderChanged]);
 
   const handleAxisResize = useCallback(
     (event: DxAxisResize) => {
@@ -64,7 +76,6 @@ export const Table = ({ model }: TableProps) => {
             inlineEndLine,
             blockEndLine,
           )}
-          initialCells={model?.cells.value}
           columns={model?.columnMeta.value}
           frozen={frozen}
           limitRows={model?.getRowCount() ?? 0}
