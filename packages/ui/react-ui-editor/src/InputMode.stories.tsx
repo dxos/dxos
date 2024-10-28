@@ -26,7 +26,7 @@ import translations from './translations';
 
 type StoryProps = { placeholder?: string; readonly?: boolean } & UseTextEditorProps;
 
-const Story = ({ autoFocus, initialValue, placeholder, readonly }: StoryProps) => {
+const DefaultStory = ({ autoFocus, initialValue, placeholder, readonly }: StoryProps) => {
   const { themeMode } = useThemeContext();
   const [formattingState, trackFormatting] = useFormattingState();
   const [editorInputMode, setEditorInputMode] = useState<EditorInputMode>('default');
@@ -96,13 +96,6 @@ const EditorInputModeToolbar = ({
   );
 };
 
-export default {
-  title: 'react-ui-editor/InputMode',
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
-  parameters: { translations, layout: 'fullscreen' },
-  render: Story,
-};
-
 export const Default = {
   render: () => {
     const { themeMode } = useThemeContext();
@@ -124,4 +117,11 @@ export const Markdown = {
     placeholder: 'Text...',
     initialValue: '# Demo\n\nThis is a document.\n\n',
   },
+};
+
+export default {
+  title: 'ui/react-ui-editor/InputMode',
+  render: DefaultStory,
+  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  parameters: { translations, layout: 'fullscreen' },
 };

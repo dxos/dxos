@@ -26,9 +26,12 @@ import {
   type CommentKey,
   type CommentValue,
   inRange,
+  rangeFromIndex,
+  rangeToIndex,
   type StyleKey,
   type StyleValue,
 } from '../../defs';
+import { completeCellRangeToThreadCursor } from '../../integrations';
 import { SHEET_PLUGIN } from '../../meta';
 import { type SheetType } from '../../types';
 import { useSheetContext } from '../SheetContext';
@@ -108,7 +111,7 @@ const sectionToolbarLayout =
 type Range = SheetType['ranges'][number];
 
 const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
-  const { id, model, range, cursor } = useSheetContext();
+  const { id, model, cursorFallbackRange, cursor } = useSheetContext();
   const { hasAttention } = useAttention(id);
   const dispatch = useIntentDispatcher();
 
@@ -117,13 +120,12 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
     (action: ToolbarAction) => {
       switch (action.key) {
         case 'align':
-          if (cursor) {
+          if (cursor && cursorFallbackRange) {
             const index = model.sheet.ranges?.findIndex(
-              (range) => range.key === action.key && inRange(range.range, cursor),
+              (range) => range.key === action.key && inRange(rangeFromIndex(model.sheet, range.range), cursor),
             );
-            const nextRange = range ? { from: range.from, to: range.to ?? range.from } : { from: cursor, to: cursor };
             const nextRangeEntity = {
-              range: nextRange as Range['range'],
+              range: rangeToIndex(model.sheet, cursorFallbackRange),
               key: action.key,
               value: action.value,
             };
@@ -140,10 +142,9 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
             if (index >= 0) {
               model.sheet.ranges?.splice(index, 1);
             }
-          } else if (range || cursor) {
-            const nextRange = range ? { from: range.from, to: range.to ?? range.from } : { from: cursor, to: cursor };
+          } else if (cursorFallbackRange) {
             model.sheet.ranges?.push({
-              range: nextRange as Range['range'],
+              range: rangeToIndex(model.sheet, cursorFallbackRange),
               key: action.key,
               value: action.value,
             });
@@ -151,18 +152,20 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
           break;
         case 'comment': {
           // TODO(Zan): We shouldn't hardcode the action ID.
-          void dispatch({
-            action: 'dxos.org/plugin/thread/action/create',
-            data: {
-              cursor: action.value,
-              name: action.cellContent,
-              subject: model.sheet,
-            },
-          });
+          if (cursorFallbackRange) {
+            void dispatch({
+              action: 'dxos.org/plugin/thread/action/create',
+              data: {
+                cursor: completeCellRangeToThreadCursor(cursorFallbackRange),
+                name: action.cellContent,
+                subject: model.sheet,
+              },
+            });
+          }
         }
       }
     },
-    [model.sheet, range, cursor, dispatch],
+    [model.sheet, cursorFallbackRange, cursor, dispatch],
   );
 
   return (
@@ -207,7 +210,9 @@ const Alignment = () => {
   const value = useMemo(
     () =>
       cursor
-        ? model.sheet.ranges?.find(({ range, key }) => key === 'alignment' && inRange(range, cursor))?.value
+        ? model.sheet.ranges?.find(
+            ({ range, key }) => key === 'alignment' && inRange(rangeFromIndex(model.sheet, range), cursor),
+          )?.value
         : undefined,
     [cursor, model.sheet.ranges],
   );
@@ -238,7 +243,7 @@ const Styles = () => {
     () =>
       cursor
         ? model.sheet.ranges
-            ?.filter(({ range, key }) => key === 'style' && inRange(range, cursor))
+            ?.filter(({ range, key }) => key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursor))
             .reduce((acc, { value }) => {
               acc.add(value);
               return acc;

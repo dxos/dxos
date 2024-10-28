@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-db';
@@ -17,7 +18,7 @@ const createSketch = () => {
   return createObject(create(DiagramType, { canvas: createObject(create(CanvasType, { content: {} })) }));
 };
 
-const Story = () => {
+const DefaultStory = () => {
   const [sketch] = useState<DiagramType>(createSketch());
 
   return (
@@ -29,14 +30,16 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-excalidraw/SketchComponent',
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-excalidraw/SketchComponent',
   component: SketchComponent,
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },
 };
 
-export const Default = {};
+export default meta;

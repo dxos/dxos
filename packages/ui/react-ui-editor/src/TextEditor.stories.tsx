@@ -48,16 +48,18 @@ import {
   linkTooltip,
   listener,
   mention,
+  selectionState,
   table,
   typewriter,
   type CommandAction,
   type CommentsOptions,
   type DebugNode,
+  type EditorSelectionState,
 } from './extensions';
-import { renderRoot } from './extensions/util';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
-import { type Comment, type EditorSelectionState, state } from './state';
 import translations from './translations';
+import { type Comment } from './types';
+import { renderRoot } from './util';
 
 faker.seed(101);
 
@@ -265,7 +267,7 @@ type StoryProps = {
   onReady?: (view: EditorView) => void;
 } & Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'>;
 
-const Story = ({
+const DefaultStory = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
   debug,
   text,
@@ -333,9 +335,9 @@ const Story = ({
 };
 
 export default {
-  title: 'react-ui-editor/TextEditor',
+  title: 'ui/react-ui-editor/TextEditor',
   decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: Story,
+  render: DefaultStory,
   parameters: { translations, layout: 'fullscreen' },
 };
 
@@ -361,28 +363,28 @@ const allExtensions: Extension[] = [
 ];
 
 export const Default = {
-  render: () => <Story text={text} extensions={defaultExtensions} />,
+  render: () => <DefaultStory text={text} extensions={defaultExtensions} />,
 };
 
 export const Everything = {
-  render: () => <Story text={text} extensions={allExtensions} selection={{ anchor: 99, head: 110 }} />,
+  render: () => <DefaultStory text={text} extensions={allExtensions} selection={{ anchor: 99, head: 110 }} />,
 };
 
 export const Empty = {
-  render: () => <Story extensions={defaultExtensions} />,
+  render: () => <DefaultStory extensions={defaultExtensions} />,
 };
 
 export const Readonly = {
-  render: () => <Story text={text} extensions={defaultExtensions} readonly />,
+  render: () => <DefaultStory text={text} extensions={defaultExtensions} readonly />,
 };
 
 export const NoExtensions = {
-  render: () => <Story text={text} />,
+  render: () => <DefaultStory text={text} />,
 };
 
 export const Vim = {
   render: () => (
-    <Story
+    <DefaultStory
       text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', content.paragraphs)}
       extensions={[defaultExtensions, InputModeExtensions.vim]}
     />
@@ -409,14 +411,14 @@ const headings = str(
 const global = new Map<string, EditorSelectionState>();
 
 export const Folding = {
-  render: () => <Story text={text} extensions={[folding()]} />,
+  render: () => <DefaultStory text={text} extensions={[folding()]} />,
 };
 
 export const Scrolling = {
   render: () => (
-    <Story
+    <DefaultStory
       text={str('# Large Document', '', longText)}
-      extensions={state({
+      extensions={selectionState({
         setState: (id, state) => global.set(id, state),
         getState: (id) => global.get(id),
       })}
@@ -426,7 +428,7 @@ export const Scrolling = {
 
 export const ScrollingWithImages = {
   render: () => (
-    <Story text={str('# Large Document', '', largeWithImages)} extensions={[decorateMarkdown(), image()]} />
+    <DefaultStory text={str('# Large Document', '', largeWithImages)} extensions={[decorateMarkdown(), image()]} />
   ),
 };
 
@@ -437,7 +439,7 @@ export const ScrollTo = {
     const text = str('# Scroll To', longText, '', word, '', longText);
     const idx = text.indexOf(word);
     return (
-      <Story
+      <DefaultStory
         text={text}
         extensions={defaultExtensions}
         scrollTo={idx}
@@ -453,29 +455,37 @@ export const ScrollTo = {
 
 export const Blockquote = {
   render: () => (
-    <Story text={str('> Blockquote', 'continuation', content.footer)} extensions={decorateMarkdown()} debug='raw' />
+    <DefaultStory
+      text={str('> Blockquote', 'continuation', content.footer)}
+      extensions={decorateMarkdown()}
+      debug='raw'
+    />
   ),
 };
 
 export const Headings = {
-  render: () => <Story text={headings} extensions={decorateMarkdown({ numberedHeadings: { from: 2, to: 4 } })} />,
+  render: () => (
+    <DefaultStory text={headings} extensions={decorateMarkdown({ numberedHeadings: { from: 2, to: 4 } })} />
+  ),
 };
 
 export const Links = {
-  render: () => <Story text={str(content.links, content.footer)} extensions={[linkTooltip(renderLinkTooltip)]} />,
+  render: () => (
+    <DefaultStory text={str(content.links, content.footer)} extensions={[linkTooltip(renderLinkTooltip)]} />
+  ),
 };
 
 export const Image = {
-  render: () => <Story text={str(content.image, content.footer)} extensions={[image()]} />,
+  render: () => <DefaultStory text={str(content.image, content.footer)} extensions={[image()]} />,
 };
 
 export const Code = {
-  render: () => <Story text={str(content.codeblocks, content.footer)} extensions={[decorateMarkdown()]} />,
+  render: () => <DefaultStory text={str(content.codeblocks, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 export const Lists = {
   render: () => (
-    <Story
+    <DefaultStory
       text={str(content.tasks, '', content.bullets, '', content.numbered, content.footer)}
       extensions={[decorateMarkdown()]}
     />
@@ -483,24 +493,26 @@ export const Lists = {
 };
 
 export const BulletList = {
-  render: () => <Story text={str(content.bullets, content.footer)} extensions={[decorateMarkdown()]} />,
+  render: () => <DefaultStory text={str(content.bullets, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 export const OrderedList = {
-  render: () => <Story text={str(content.numbered, content.footer)} extensions={[decorateMarkdown()]} />,
+  render: () => <DefaultStory text={str(content.numbered, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 export const TaskList = {
-  render: () => <Story text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} debug='raw+tree' />,
+  render: () => (
+    <DefaultStory text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} debug='raw+tree' />
+  ),
 };
 
 export const Table = {
-  render: () => <Story text={str(content.table, content.footer)} extensions={[decorateMarkdown(), table()]} />,
+  render: () => <DefaultStory text={str(content.table, content.footer)} extensions={[decorateMarkdown(), table()]} />,
 };
 
 export const CommentedOut = {
   render: () => (
-    <Story
+    <DefaultStory
       text={str('# Commented out', '', content.comment, content.footer)}
       extensions={[
         decorateMarkdown(),
@@ -513,7 +525,11 @@ export const CommentedOut = {
 
 export const Typescript = {
   render: () => (
-    <Story text={content.typescript} lineNumbers extensions={[editorMonospace, javascript({ typescript: true })]} />
+    <DefaultStory
+      text={content.typescript}
+      lineNumbers
+      extensions={[editorMonospace, javascript({ typescript: true })]}
+    />
   ),
 };
 
@@ -523,7 +539,7 @@ export const Typescript = {
 
 export const Autocomplete = {
   render: () => (
-    <Story
+    <DefaultStory
       text={str('# Autocomplete', '', 'Press Ctrl-Space...', content.footer)}
       extensions={[
         decorateMarkdown({ renderLinkButton }),
@@ -537,7 +553,7 @@ export const Autocomplete = {
 
 export const Mention = {
   render: () => (
-    <Story
+    <DefaultStory
       text={str('# Mention', '', 'Type @...', content.footer)}
       extensions={[
         mention({
@@ -550,7 +566,11 @@ export const Mention = {
 
 export const Search = {
   render: () => (
-    <Story text={str('# Search', text)} extensions={defaultExtensions} onReady={(view) => openSearchPanel(view)} />
+    <DefaultStory
+      text={str('# Search', text)}
+      extensions={defaultExtensions}
+      onReady={(view) => openSearchPanel(view)}
+    />
   ),
 };
 
@@ -593,7 +613,7 @@ const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void 
 
 export const Command = {
   render: () => (
-    <Story
+    <DefaultStory
       text={str('# Command', '')}
       extensions={[
         command({
@@ -611,7 +631,7 @@ export const Comments = {
   render: () => {
     const _comments = useSignal<Comment[]>([]);
     return (
-      <Story
+      <DefaultStory
         text={str('# Comments', '', content.paragraphs, content.footer)}
         extensions={[
           createExternalCommentSync(
@@ -648,12 +668,14 @@ export const Comments = {
 };
 
 export const Annotations = {
-  render: () => <Story text={str('# Annotations', '', longText)} extensions={[annotations({ match: /volup/gi })]} />,
+  render: () => (
+    <DefaultStory text={str('# Annotations', '', longText)} extensions={[annotations({ match: /volup/gi })]} />
+  ),
 };
 
 export const DND = {
   render: () => (
-    <Story
+    <DefaultStory
       text={str('# DND', '')}
       extensions={[
         dropFile({
@@ -668,7 +690,7 @@ export const DND = {
 
 export const Listener = {
   render: () => (
-    <Story
+    <DefaultStory
       text={str('# Listener', '', content.footer)}
       extensions={[
         listener({
@@ -688,7 +710,7 @@ const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewrite
 
 export const Typewriter = {
   render: () => (
-    <Story
+    <DefaultStory
       text={str('# Typewriter', '', content.paragraphs, content.footer)}
       extensions={[typewriter({ items: typewriterItems })]}
     />
@@ -697,7 +719,7 @@ export const Typewriter = {
 
 export const Blast = {
   render: () => (
-    <Story
+    <DefaultStory
       text={str('# Blast', '', content.paragraphs, content.codeblocks, content.paragraphs)}
       extensions={[
         typewriter({ items: typewriterItems }),

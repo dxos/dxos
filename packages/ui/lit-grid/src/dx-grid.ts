@@ -243,6 +243,9 @@ export class DxGrid extends LitElement {
   @property({ type: String })
   overscroll: 'inline' | 'block' | undefined = undefined;
 
+  @property({ type: String })
+  activeRefs = '';
+
   /**
    * When this function is defined, it is used first to try to get a value for a cell, and otherwise will fall back
    * to `cells`.
@@ -391,18 +394,32 @@ export class DxGrid extends LitElement {
     }
   }
 
+  private dispatchSelectionChange() {
+    return this.dispatchEvent(
+      new DxGridCellsSelect({
+        start: this.selectionStart,
+        end: this.selectionEnd,
+      }),
+    );
+  }
+
   private handlePointerDown = (event: PointerEvent) => {
     if (event.isPrimary) {
       const { action, actionEl } = closestAction(event.target);
-      if (action) {
-        if (action === 'cell') {
+      if (action && action === 'cell') {
+        if (event.shiftKey) {
+          // Prevent focus moving so the pointerup handler can move selectionEnd.
+          event.preventDefault();
+        } else {
           const cellCoords = closestCell(event.target, actionEl);
           if (cellCoords) {
             this.pointer = { state: 'maybeSelecting', pageX: event.pageX, pageY: event.pageY };
             this.selectionStart = cellCoords;
             this.selectionEnd = cellCoords;
+            this.dispatchSelectionChange();
           }
           if (this.mode === 'edit') {
+            // Prevent focus moving when editing.
             event.preventDefault();
           } else {
             if (this.focusActive && isSameCell(this.focusedCell, cellCoords)) {
@@ -417,13 +434,7 @@ export class DxGrid extends LitElement {
   private handlePointerUp = (event: PointerEvent) => {
     const cell = closestCell(event.target);
     if (cell) {
-      this.selectionEnd = cell;
-      this.dispatchEvent(
-        new DxGridCellsSelect({
-          start: this.selectionStart,
-          end: this.selectionEnd,
-        }),
-      );
+      this.setSelectionEnd(cell);
     }
     this.pointer = null;
   };
@@ -438,30 +449,93 @@ export class DxGrid extends LitElement {
         cell.plane === this.selectionStart.plane &&
         (cell.col !== this.selectionEnd.col || cell.row !== this.selectionEnd.row)
       ) {
-        this.selectionEnd = cell;
+        this.setSelectionEnd(cell);
       }
     }
   };
+
+  /**
+   * Increments focus among all theoretically possible cells in a plane, cycling as tab would but accounting for the
+   * theoretical bounds of the grid plane (handling infinite planes heuristically).
+   */
+  private incrementFocusWithinPlane(reverse?: boolean) {
+    const colPlane = resolveColPlane(this.focusedCell.plane);
+    const rowPlane = resolveRowPlane(this.focusedCell.plane);
+    const colMax = (colPlane === 'grid' ? this.limitColumns : this.frozen[colPlane]!) - 1;
+    const rowMax = (rowPlane === 'grid' ? this.limitRows : this.frozen[rowPlane]!) - 1;
+    if (reverse ? this.focusedCell.col - 1 < 0 : this.focusedCell.col + 1 > colMax) {
+      if (reverse ? this.focusedCell.row - 1 < 0 : this.focusedCell.row + 1 > rowMax) {
+        this.setFocusedCell({
+          plane: this.focusedCell.plane,
+          row: reverse && Number.isFinite(rowMax) ? rowMax : 0,
+          col: reverse && Number.isFinite(colMax) ? colMax : 0,
+        });
+      } else {
+        this.setFocusedCell({
+          plane: this.focusedCell.plane,
+          row: this.focusedCell.row + (reverse ? -1 : 1),
+          col: reverse && Number.isFinite(colMax) ? colMax : 0,
+        });
+      }
+    } else {
+      this.setFocusedCell({ ...this.focusedCell, col: this.focusedCell.col + (reverse ? -1 : 1) });
+    }
+  }
+
+  /**
+   * Increments focus in a specific direction without cycling.
+   */
+  private moveFocusOrSelectionEndWithinPlane(deltaCol: number, deltaRow: number, selectionEnd?: boolean) {
+    const current = selectionEnd ? this.selectionEnd : this.focusedCell;
+
+    const colPlane = resolveColPlane(current.plane);
+    const colMax = (colPlane === 'grid' ? this.limitColumns : this.frozen[colPlane]!) - 1;
+    const nextCol = Math.max(0, Math.min(colMax, current.col + deltaCol));
+
+    const rowPlane = resolveRowPlane(current.plane);
+    const rowMax = (rowPlane === 'grid' ? this.limitRows : this.frozen[rowPlane]!) - 1;
+    const nextRow = Math.max(0, Math.min(rowMax, current.row + deltaRow));
+
+    if (selectionEnd) {
+      this.setSelectionEnd({ ...this.selectionEnd, col: nextCol, row: nextRow });
+    } else {
+      this.setFocusedCell({ ...this.focusedCell, row: nextRow, col: nextCol });
+    }
+  }
 
   private handleKeydown(event: KeyboardEvent) {
     if (this.focusActive && this.mode === 'browse') {
       // Adjust state
       switch (event.key) {
         case 'ArrowDown':
-          this.focusedCell = { ...this.focusedCell, row: Math.min(this.limitRows - 1, this.focusedCell.row + 1) };
+          event.preventDefault();
+          this.moveFocusOrSelectionEndWithinPlane(0, 1, event.shiftKey);
           break;
         case 'ArrowUp':
-          this.focusedCell = { ...this.focusedCell, row: Math.max(0, this.focusedCell.row - 1) };
+          event.preventDefault();
+          this.moveFocusOrSelectionEndWithinPlane(0, -1, event.shiftKey);
           break;
         case 'ArrowRight':
-          this.focusedCell = { ...this.focusedCell, col: Math.min(this.limitColumns - 1, this.focusedCell.col + 1) };
+          event.preventDefault();
+          this.moveFocusOrSelectionEndWithinPlane(1, 0, event.shiftKey);
           break;
         case 'ArrowLeft':
-          this.focusedCell = { ...this.focusedCell, col: Math.max(0, this.focusedCell.col - 1) };
+          event.preventDefault();
+          this.moveFocusOrSelectionEndWithinPlane(-1, 0, event.shiftKey);
           break;
-      }
-      // Emit edit request if relevant
-      switch (event.key) {
+        case 'Tab':
+          event.preventDefault();
+          this.incrementFocusWithinPlane(event.shiftKey);
+          break;
+        case 'Escape':
+          // Handle escape if selection is a superset of the focused cell.
+          if (this.selectionStart.col !== this.selectionEnd.col || this.selectionStart.row !== this.selectionEnd.row) {
+            event.preventDefault();
+            this.selectionStart = this.focusedCell;
+            this.selectionEnd = this.focusedCell;
+            this.dispatchSelectionChange();
+          }
+          break;
         case 'Enter':
           this.dispatchEditRequest();
           break;
@@ -469,16 +543,6 @@ export class DxGrid extends LitElement {
           if (event.key.length === 1 && event.key.match(/\P{Cc}/u) && !(event.metaKey || event.ctrlKey)) {
             this.dispatchEditRequest(event.key);
           }
-          break;
-      }
-      // Handle virtualization & focus consequences
-      switch (event.key) {
-        case 'ArrowDown':
-        case 'ArrowUp':
-        case 'ArrowRight':
-        case 'ArrowLeft':
-          event.preventDefault();
-          this.snapPosToFocusedCell();
           break;
       }
     }
@@ -507,6 +571,31 @@ export class DxGrid extends LitElement {
     return (
       this.focusActive && this.focusedCell.plane === plane && this.focusedCell.col === c && this.focusedCell.row === r
     );
+  }
+
+  private setFocusedCell(nextCoords: DxGridPosition) {
+    if (
+      this.focusedCell.plane !== nextCoords.plane ||
+      this.focusedCell.col !== nextCoords.col ||
+      this.focusedCell.row !== nextCoords.row
+    ) {
+      this.focusedCell = nextCoords;
+      this.selectionStart = nextCoords;
+      this.selectionEnd = nextCoords;
+      this.snapPosToFocusedCell();
+      this.dispatchSelectionChange();
+    }
+  }
+
+  private setSelectionEnd(nextCoords: DxGridPosition) {
+    if (
+      this.selectionEnd.plane !== nextCoords.plane ||
+      this.selectionEnd.col !== nextCoords.col ||
+      this.selectionEnd.row !== nextCoords.row
+    ) {
+      this.selectionEnd = nextCoords;
+      this.dispatchSelectionChange();
+    }
   }
 
   private focusedCellBox(): DxEditRequest['cellBox'] {
@@ -770,7 +859,7 @@ export class DxGrid extends LitElement {
   // Focus handlers
 
   setFocus(coords: DxGridPosition, snap = true) {
-    this.focusedCell = coords;
+    this.setFocusedCell(coords);
     this.focusActive = true;
     if (snap) {
       this.snapPosToFocusedCell();
@@ -781,13 +870,7 @@ export class DxGrid extends LitElement {
     const cellCoords = closestCell(event.target);
     if (cellCoords) {
       this.focusActive = true;
-      if (
-        this.focusedCell.plane !== cellCoords.plane ||
-        this.focusedCell.col !== cellCoords.col ||
-        this.focusedCell.row !== cellCoords.row
-      ) {
-        this.focusedCell = cellCoords;
-      }
+      this.setFocusedCell(cellCoords);
     }
   }
 
@@ -1001,8 +1084,8 @@ export class DxGrid extends LitElement {
             'grid-template-rows': this[`template${rowPlane}`],
           })}
         >
-          ${[...Array(cols)].map((_, c) => {
-            return [...Array(rows)].map((_, r) => {
+          ${[...Array(rows)].map((_, r) => {
+            return [...Array(cols)].map((_, c) => {
               return this.renderCell(c, r, plane, cellSelected(c, r, plane, selection));
             });
           })}
@@ -1027,8 +1110,8 @@ export class DxGrid extends LitElement {
             style="transform:translate3d(${offsetInline}px,0,0);grid-template-columns:${this
               .templateGridColumns};grid-template-rows:${this[`template${rowPlane}`]}"
           >
-            ${[...Array(visibleCols)].map((_, c0) => {
-              return [...Array(rows)].map((_, r) => {
+            ${[...Array(rows)].map((_, r) => {
+              return [...Array(visibleCols)].map((_, c0) => {
                 const c = this.visColMin + c0;
                 return this.renderCell(c, r, plane, cellSelected(c, r, plane, selection), c0, r);
               });
@@ -1055,8 +1138,8 @@ export class DxGrid extends LitElement {
             style="transform:translate3d(0,${offsetBlock}px,0);grid-template-rows:${this
               .templateGridRows};grid-template-columns:${this[`template${colPlane}`]}"
           >
-            ${[...Array(cols)].map((_, c) => {
-              return [...Array(visibleRows)].map((_, r0) => {
+            ${[...Array(visibleRows)].map((_, r0) => {
+              return [...Array(cols)].map((_, c) => {
                 const r = this.visRowMin + r0;
                 return this.renderCell(c, r, plane, cellSelected(c, r, plane, selection), c, r0);
               });
@@ -1069,6 +1152,12 @@ export class DxGrid extends LitElement {
   private cellReadonly(col: number, row: number, plane: DxGridPlane) {
     const colPlane = resolveColPlane(plane);
     const rowPlane = resolveRowPlane(plane);
+
+    const cellReadonly = this.cell(col, row, plane)?.readonly;
+    if (cellReadonly !== undefined) {
+      return cellReadonly;
+    }
+
     return (
       (this.columns?.[colPlane]?.[col]?.readonly ?? this.columnDefault?.[colPlane]?.readonly) ||
       (this.rows?.[rowPlane]?.[row]?.readonly ?? this.rowDefault?.[rowPlane]?.readonly)
@@ -1089,14 +1178,16 @@ export class DxGrid extends LitElement {
       aria-selected=${selected ? 'true' : nothing}
       aria-readonly=${readonly ? 'true' : nothing}
       class=${cell?.className ?? nothing}
+      data-refs=${cell?.dataRefs ?? nothing}
       ?data-dx-active=${active}
       data-dx-grid-action="cell"
       aria-colindex=${col}
       aria-rowindex=${row}
       style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
     >
-      ${cell?.value}${accessory}${cell?.resizeHandle &&
-      this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
+      ${this.mode === 'edit' && active ? null : cell?.value}${this.mode === 'edit' && active
+        ? null
+        : accessory}${cell?.resizeHandle && this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
         ? html`<dx-grid-axis-resize-handle
             axis=${cell.resizeHandle}
             plane=${resizePlane}
@@ -1114,57 +1205,67 @@ export class DxGrid extends LitElement {
     const offsetBlock = this.binBlockMin - this.posBlock - this.overscanBlock;
     const selection = selectionProps(this.selectionStart, this.selectionEnd);
 
-    return html`<div
-      role="none"
-      class="dx-grid"
-      style=${styleMap({
-        'grid-template-columns': `${this.templatefrozenColsStart ? 'min-content ' : ''}minmax(0, ${
-          Number.isFinite(this.limitColumns) ? `${this.intrinsicInlineSize}px` : '1fr'
-        })${this.templatefrozenColsEnd ? ' min-content' : ''}`,
-        'grid-template-rows': `${this.templatefrozenRowsStart ? 'min-content ' : ''}minmax(0, ${
-          Number.isFinite(this.limitRows) ? `${this.intrinsicBlockSize}px` : '1fr'
-        })${this.templatefrozenRowsEnd ? ' min-content' : ''}`,
-      })}
-      data-grid=${this.gridId}
-      data-grid-mode=${this.mode}
-      ?data-grid-select=${selection.visible}
-    >
-      ${this.renderFixed('fixedStartStart', selection)}${this.renderFrozenRows(
-        'frozenRowsStart',
-        visibleCols,
-        offsetInline,
-        selection,
-      )}${this.renderFixed('fixedStartEnd', selection)}${this.renderFrozenColumns(
-        'frozenColsStart',
-        visibleRows,
-        offsetBlock,
-        selection,
-      )}
-      <div role="grid" class="dx-grid__plane--grid" tabindex="0" ${ref(this.viewportRef)}>
-        <div
-          role="none"
-          class="dx-grid__plane--grid__content"
-          data-dx-grid-plane="grid"
-          style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:${this
-            .templateGridColumns};grid-template-rows:${this.templateGridRows};"
-        >
-          ${[...Array(visibleCols)].map((_, c0) => {
-            return [...Array(visibleRows)].map((_, r0) => {
-              const c = c0 + this.visColMin;
-              const r = r0 + this.visRowMin;
-              return this.renderCell(c, r, 'grid', cellSelected(c, r, 'grid', selection), c0, r0);
-            });
-          })}
+    return html`<style>
+        ${this.activeRefs
+          .split(' ')
+          .filter((value) => value)
+          .map(
+            (activeRef) =>
+              `[data-refs~="${activeRef}"] { background: var(--dx-grid-commented-active, var(--dx-gridCommentedActive)) !important; }`,
+          )
+          .join('\n')}
+      </style>
+      <div
+        role="none"
+        class="dx-grid"
+        style=${styleMap({
+          'grid-template-columns': `${this.templatefrozenColsStart ? 'min-content ' : ''}minmax(0, ${
+            Number.isFinite(this.limitColumns) ? `${this.intrinsicInlineSize}px` : '1fr'
+          })${this.templatefrozenColsEnd ? ' min-content' : ''}`,
+          'grid-template-rows': `${this.templatefrozenRowsStart ? 'min-content ' : ''}minmax(0, ${
+            Number.isFinite(this.limitRows) ? `${this.intrinsicBlockSize}px` : '1fr'
+          })${this.templatefrozenRowsEnd ? ' min-content' : ''}`,
+        })}
+        data-grid=${this.gridId}
+        data-grid-mode=${this.mode}
+        ?data-grid-select=${selection.visible}
+      >
+        ${this.renderFixed('fixedStartStart', selection)}${this.renderFrozenRows(
+          'frozenRowsStart',
+          visibleCols,
+          offsetInline,
+          selection,
+        )}${this.renderFixed('fixedStartEnd', selection)}${this.renderFrozenColumns(
+          'frozenColsStart',
+          visibleRows,
+          offsetBlock,
+          selection,
+        )}
+        <div role="grid" class="dx-grid__plane--grid" tabindex="0" ${ref(this.viewportRef)}>
+          <div
+            role="none"
+            class="dx-grid__plane--grid__content"
+            data-dx-grid-plane="grid"
+            style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:${this
+              .templateGridColumns};grid-template-rows:${this.templateGridRows};"
+          >
+            ${[...Array(visibleRows)].map((_, r0) => {
+              return [...Array(visibleCols)].map((_, c0) => {
+                const c = c0 + this.visColMin;
+                const r = r0 + this.visRowMin;
+                return this.renderCell(c, r, 'grid', cellSelected(c, r, 'grid', selection), c0, r0);
+              });
+            })}
+          </div>
         </div>
-      </div>
-      ${this.renderFrozenColumns('frozenColsEnd', visibleRows, offsetBlock, selection)}${this.renderFixed(
-        'fixedEndStart',
-        selection,
-      )}${this.renderFrozenRows('frozenRowsEnd', visibleCols, offsetInline, selection)}${this.renderFixed(
-        'fixedEndEnd',
-        selection,
-      )}
-    </div>`;
+        ${this.renderFrozenColumns('frozenColsEnd', visibleRows, offsetBlock, selection)}${this.renderFixed(
+          'fixedEndStart',
+          selection,
+        )}${this.renderFrozenRows('frozenRowsEnd', visibleCols, offsetInline, selection)}${this.renderFixed(
+          'fixedEndEnd',
+          selection,
+        )}
+      </div>`;
   }
 
   private updateIntrinsicInlineSize() {
@@ -1302,3 +1403,5 @@ export class DxGrid extends LitElement {
 }
 
 export { rowToA1Notation, colToA1Notation } from './util';
+
+export const commentedClassName = 'dx-grid__cell--commented';

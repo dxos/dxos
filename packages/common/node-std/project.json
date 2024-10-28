@@ -18,6 +18,7 @@
           "define-data-property",
           "define-properties",
           "es-abstract",
+          "es-errors",
           "es6-object-assign",
           "events",
           "for-each",

@@ -26,7 +26,7 @@ export default class List extends BaseCommand<typeof List> {
     return await this.execWithTunneling(async (tunnel: TunnelRpcPeer) => {
       const response = await tunnel.rpc.listTunnels();
       if (response.tunnels) {
-        printTunnels(response.tunnels, this.flags);
+        printTunnels(response.tunnels, this.flags as any);
       }
     });
   }

@@ -68,7 +68,6 @@ for (const schema of [undefined, TestSchemaWithClass]) {
         const original = { classInstance: new TestClass() };
         const reactive = createObject(original);
         expect(JSON.stringify(reactive)).to.eq(JSON.stringify(original));
-
         expect(reactive).to.deep.eq(original);
         expect(reactive).to.not.deep.eq({ ...original, number: 11 });
       });
@@ -76,7 +75,6 @@ for (const schema of [undefined, TestSchemaWithClass]) {
       test('jest deep equal works', () => {
         const original = { classInstance: new TestClass() };
         const reactive = createObject(original);
-
         expect(reactive).toEqual(original);
         expect(reactive).not.toEqual({ ...original, number: 11 });
       });
@@ -85,7 +83,6 @@ for (const schema of [undefined, TestSchemaWithClass]) {
     describe('signal updates', () => {
       test('not in nested class instances', () => {
         const obj = createObject({ classInstance: new TestClass() });
-
         using updates = updateCounter(() => {
           obj.classInstance!.field;
         });

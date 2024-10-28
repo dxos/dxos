@@ -47,7 +47,7 @@ const Surface = ({ children, level }: PropsWithChildren & { level: SurfaceLevel 
   );
 };
 
-const SurfacesStory = () => {
+const SurfaceStory = () => {
   return (
     <div className='bg-cubes p-10 m-0'>
       <Surface level='fixed' />
@@ -61,8 +61,9 @@ const SurfacesStory = () => {
 };
 
 export default {
-  title: 'react-ui/Playground/Surfaces',
-  component: SurfacesStory,
+  title: 'ui/react-ui-core/Playground/Surfaces',
+  component: Surface,
+  render: SurfaceStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

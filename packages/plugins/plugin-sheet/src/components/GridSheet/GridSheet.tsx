@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef, type FocusEvent, type WheelEvent } from 'react';
+import React, { useCallback, useMemo, useRef, type FocusEvent, type WheelEvent, type KeyboardEvent } from 'react';
 
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -18,7 +18,7 @@ import {
 import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
 import { rangeToA1Notation, type CellRange, DEFAULT_COLUMNS, DEFAULT_ROWS } from '../../defs';
 import { rangeExtension, sheetExtension, type CellRangeNotifier } from '../../extensions';
-import { useUpdateFocusedCellOnThreadSelection } from '../../hooks';
+import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
 import { useSheetContext } from '../SheetContext';
 
 const initialCells = {
@@ -42,7 +42,8 @@ const sheetRowDefault = { frozenRowsStart: { size: 32, readonly: true }, grid: {
 const sheetColDefault = { frozenColsStart: { size: 48, readonly: true }, grid: { size: 180, resizeable: true } };
 
 export const GridSheet = () => {
-  const { id, model, editing, setEditing, setCursor, setRange } = useSheetContext();
+  const { id, model, editing, setEditing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs } =
+    useSheetContext();
   const dxGrid = useRef<DxGridElement | null>(null);
   const rangeNotifier = useRef<CellRangeNotifier>();
   const { hasAttention } = useAttention(id);
@@ -118,6 +119,41 @@ export const GridSheet = () => {
     [hasAttention],
   );
 
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      switch (event.key) {
+        case 'Backspace':
+        case 'Delete':
+          event.preventDefault();
+          return cursorFallbackRange && model.clear(cursorFallbackRange);
+      }
+      if (event.metaKey || event.ctrlKey) {
+        switch (event.key) {
+          case 'x':
+          case 'X':
+            event.preventDefault();
+            return cursorFallbackRange && model.cut(cursorFallbackRange);
+          case 'c':
+          case 'C':
+            event.preventDefault();
+            return cursorFallbackRange && model.copy(cursorFallbackRange);
+          case 'v':
+          case 'V':
+            event.preventDefault();
+            return cursor && model.paste(cursor);
+          case 'z':
+            event.preventDefault();
+            return event.shiftKey ? model.redo() : model.undo();
+          case 'Z':
+          case 'y':
+            event.preventDefault();
+            return model.redo();
+        }
+      }
+    },
+    [cursorFallbackRange, model, cursor],
+  );
+
   const { columns, rows } = useSheetModelDxGridProps(dxGrid, model);
 
   const extension = useMemo(
@@ -137,7 +173,8 @@ export const GridSheet = () => {
     [model],
   );
 
-  useUpdateFocusedCellOnThreadSelection(model, dxGrid);
+  useUpdateFocusedCellOnThreadSelection(dxGrid);
+  useSelectThreadOnCellFocus();
 
   return (
     <>
@@ -155,8 +192,10 @@ export const GridSheet = () => {
         frozen={frozen}
         onFocus={handleFocus}
         onWheelCapture={handleWheel}
+        onKeyDown={handleKeyDown}
         overscroll='inline'
         className='[--dx-grid-base:var(--surface-bg)]'
+        activeRefs={activeRefs}
         ref={dxGrid}
       />
     </>

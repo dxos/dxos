@@ -3,6 +3,8 @@
 //
 
 import '@dxos-theme';
+
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useMemo } from 'react';
 
 import { PublicKey } from '@dxos/keys';
@@ -21,8 +23,8 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { nonNullable } from '@dxos/util';
 
 import { compute, computeGraphFacet } from './compute';
-import { GridSheet, SheetProvider } from '../components';
-import { useComputeGraph, useSheetModel } from '../hooks';
+import { GridSheet, SheetProvider, useComputeGraph } from '../components';
+import { useSheetModel } from '../model';
 import { useTestSheet, withComputeGraphDecorator } from '../testing';
 import { SheetType } from '../types';
 
@@ -39,7 +41,7 @@ type EditorProps = {
 
 const SHEET_NAME = 'Test Sheet';
 
-const Editor = ({ text }: EditorProps) => {
+const EditorStory = ({ text }: EditorProps) => {
   const id = useMemo(() => PublicKey.random(), []);
   const { themeMode } = useThemeContext();
   const space = useSpace();
@@ -87,29 +89,18 @@ const Grid = () => {
   );
 };
 
-const Story = (props: EditorProps) => {
+const GraphStory = (props: EditorProps) => {
   return (
     <div className='grid grid-rows-2'>
-      <Editor {...props} />
+      <EditorStory {...props} />
       <Grid />
     </div>
   );
 };
 
-export default {
-  title: 'plugin-sheet/extensions',
-  decorators: [
-    withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
-    withComputeGraphDecorator(),
-    withTheme,
-    withLayout({ fullscreen: true, classNames: 'justify-center' }),
-  ],
-  parameters: { layout: 'fullscreen' },
-};
-
 // TODO(burdon): Inline formulae.
 export const Default = {
-  render: Editor,
+  render: EditorStory,
   args: {
     text: str(
       //
@@ -133,7 +124,7 @@ export const Default = {
 };
 
 export const Graph = {
-  render: Story,
+  render: GraphStory,
   args: {
     text: str(
       //
@@ -149,3 +140,16 @@ export const Graph = {
     ),
   },
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-sheet/extensions',
+  decorators: [
+    withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
+    withComputeGraphDecorator(),
+    withTheme,
+    withLayout({ fullscreen: true, classNames: 'justify-center' }),
+  ],
+  parameters: { layout: 'fullscreen' },
+};
+
+export default meta;

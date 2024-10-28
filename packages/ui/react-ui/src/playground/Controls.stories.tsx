@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { Input, Select, Toggle, Toolbar } from '../components';
 import { withTheme, withVariants } from '../testing';
 
-const Story = () => {
+const DefaultStory = () => {
   const [checked, setChecked] = useState<boolean>(false);
   const [select, setSelect] = useState<string>();
 
@@ -81,11 +81,11 @@ const Story = () => {
   );
 };
 
+export const Default = {};
+
 export default {
-  title: 'react-ui/Playground/Controls',
-  render: Story,
+  title: 'ui/react-ui-core/Playground/Controls',
+  render: DefaultStory,
   decorators: [withVariants(), withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };
-
-export const Default = {};

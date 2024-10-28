@@ -7,15 +7,17 @@ import { S } from '@dxos/effect';
 import { type ObjectAnnotation, ObjectAnnotationId, schemaVariance } from '../ast';
 import { getSchema, getTypeReference } from '../proxy';
 
+export interface AbstractSchema {
+  // Fully qualified type name.
+  readonly typename: string;
+}
+
 /**
  * Marker interface for typed objects (for type inference).
  */
-export interface AbstractTypedObject<Fields, I> extends S.Schema<Fields, I> {
+export interface AbstractTypedObject<Fields, I> extends AbstractSchema, S.Schema<Fields, I> {
   // Type constructor.
   new (): Fields;
-
-  // Fully qualified type name.
-  readonly typename: string;
 }
 
 export type TypedObjectOptions = {
@@ -34,7 +36,7 @@ type TypeObjectOptions = {
 /**
  * Base class factory for typed objects.
  */
-// TODO(burdon): Document what is really going on here.
+// TODO(burdon): Need to document this and define a return type.
 // TODO(burdon): Support pipe(S.default({}))
 export const TypedObject = <Klass>({
   typename,

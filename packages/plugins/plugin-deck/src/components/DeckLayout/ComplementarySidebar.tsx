@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import {
-  type LayoutParts,
+  type LayoutCoordinate,
   NavigationAction,
   SLUG_PATH_SEPARATOR,
   Surface,
@@ -25,8 +25,7 @@ import { DECK_PLUGIN } from '../../meta';
 import { useLayout } from '../LayoutContext';
 
 export type ComplementarySidebarProps = {
-  context?: string;
-  layoutParts: LayoutParts;
+  panel?: string;
   flatDeck?: boolean;
 };
 
@@ -45,10 +44,10 @@ const getPanel = (id?: string): Panel['id'] => {
   return panel.id;
 };
 
-export const ComplementarySidebar = ({ layoutParts, flatDeck }: ComplementarySidebarProps) => {
+export const ComplementarySidebar = ({ panel, flatDeck }: ComplementarySidebarProps) => {
   const { popoverAnchorId } = useLayout();
   const attended = useAttended();
-  const part = getPanel(layoutParts.complementary?.[0].id);
+  const part = getPanel(panel);
   const id = attended[0] ? `${attended[0]}${SLUG_PATH_SEPARATOR}${part}` : undefined;
   const { graph } = useGraph();
   const node = useNode(graph, id);
@@ -72,14 +71,15 @@ export const ComplementarySidebar = ({ layoutParts, flatDeck }: ComplementarySid
     [part],
   );
 
+  // TODO(wittjosiah): Ensure that id is always defined.
+  const coordinate: LayoutCoordinate = useMemo(() => ({ entryId: id ?? 'unknown', part: 'complementary' }), [id]);
+
   return (
     <Main.ComplementarySidebar>
       <div role='none' className={mx(deckGrid, 'grid-cols-1 bs-full')}>
         <NodePlankHeading
+          coordinate={coordinate}
           node={node}
-          id={id}
-          layoutParts={layoutParts}
-          layoutPart='complementary'
           popoverAnchorId={popoverAnchorId}
           flatDeck={flatDeck}
           actions={actions}
@@ -87,6 +87,7 @@ export const ComplementarySidebar = ({ layoutParts, flatDeck }: ComplementarySid
         <div className='row-span-2 divide-y divide-separator'>
           {node && (
             <Surface
+              key={id}
               role={`complementary--${part}`}
               data={{ subject: node.properties.object, popoverAnchorId }}
               fallback={PlankContentError}

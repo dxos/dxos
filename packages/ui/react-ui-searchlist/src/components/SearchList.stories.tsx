@@ -37,7 +37,7 @@ const SearchListStory: FC<{ items: StoryItems }> = ({ items = defaultItems }) =>
 };
 
 export default {
-  title: 'react-ui-searchlist/SearchList',
+  title: 'ui/react-ui-searchlist/SearchList',
   component: SearchListStory,
   decorators: [withTheme],
 };

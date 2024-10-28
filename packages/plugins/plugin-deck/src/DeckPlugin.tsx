@@ -220,23 +220,15 @@ export const DeckPlugin = ({
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
 
       layout
-        .prop({ key: 'layoutMode', storageKey: 'layout-mode', type: LocalStorageStore.enum<LayoutMode>() })
-        .prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() })
-        .prop({
-          key: 'complementarySidebarOpen',
-          storageKey: 'complementary-sidebar-open',
-          type: LocalStorageStore.bool(),
-        });
+        .prop({ key: 'layoutMode', type: LocalStorageStore.enum<LayoutMode>() })
+        .prop({ key: 'sidebarOpen', type: LocalStorageStore.bool() })
+        .prop({ key: 'complementarySidebarOpen', type: LocalStorageStore.bool() });
 
-      deck.prop({
-        key: 'plankSizing',
-        storageKey: 'plank-sizing',
-        type: LocalStorageStore.json<Record<string, number>>(),
-      });
+      deck.prop({ key: 'plankSizing', type: LocalStorageStore.json<Record<string, number>>() });
 
       location
-        .prop({ key: 'active', storageKey: 'active', type: LocalStorageStore.json<LayoutParts>() })
-        .prop({ key: 'closed', storageKey: 'closed', type: LocalStorageStore.json<string[]>() });
+        .prop({ key: 'active', type: LocalStorageStore.json<LayoutParts>() })
+        .prop({ key: 'closed', type: LocalStorageStore.json<string[]>() });
 
       unsubscriptionCallbacks.push(
         clientPlugin?.provides.client.shell.onReset(() => {
@@ -247,17 +239,13 @@ export const DeckPlugin = ({
       );
 
       settings
-        .prop({ key: 'showHints', storageKey: 'show-hints', type: LocalStorageStore.bool() })
-        .prop({ key: 'customSlots', storageKey: 'customSlots', type: LocalStorageStore.bool() })
-        .prop({ key: 'flatDeck', storageKey: 'flatDeck', type: LocalStorageStore.bool() })
-        .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
-        .prop({ key: 'disableDeck', storageKey: 'disable-deck', type: LocalStorageStore.bool() }) // Deprecated.
-        .prop({
-          key: 'newPlankPositioning',
-          storageKey: 'newPlankPositioning',
-          type: LocalStorageStore.enum<NewPlankPositioning>(),
-        })
-        .prop({ key: 'overscroll', storageKey: 'overscroll', type: LocalStorageStore.enum<Overscroll>() });
+        .prop({ key: 'showHints', type: LocalStorageStore.bool() })
+        .prop({ key: 'customSlots', type: LocalStorageStore.bool() })
+        .prop({ key: 'flatDeck', type: LocalStorageStore.bool() })
+        .prop({ key: 'enableNativeRedirect', type: LocalStorageStore.bool() })
+        .prop({ key: 'disableDeck', type: LocalStorageStore.bool() }) // Deprecated.
+        .prop({ key: 'newPlankPositioning', type: LocalStorageStore.enum<NewPlankPositioning>() })
+        .prop({ key: 'overscroll', type: LocalStorageStore.enum<Overscroll>() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
