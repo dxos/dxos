@@ -3,4 +3,5 @@
 //
 
 export * from './SettingsDialog';
+export * from './SettingsSettings';
 export * from './SettingsValue';

@@ -4,15 +4,24 @@
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type SpaceId } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   EdgeCallFailedError,
   type EdgeHttpResponse,
   type GetNotarizationResponseBody,
   type PostNotarizationRequestBody,
+  type JoinSpaceRequest,
+  type JoinSpaceResponseBody,
+  EdgeAuthChallengeError,
+  type CreateAgentResponseBody,
+  type CreateAgentRequestBody,
+  type GetAgentStatusResponseBody,
+  type RecoverIdentityRequest,
+  type RecoverIdentityResponseBody,
 } from '@dxos/protocols';
 
+import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
 import { getEdgeUrlWithProtocol } from './utils';
 
 const DEFAULT_RETRY_TIMEOUT = 1500;
@@ -22,9 +31,30 @@ const DEFAULT_MAX_RETRIES_COUNT = 3;
 export class EdgeHttpClient {
   private readonly _baseUrl: string;
 
+  private _edgeIdentity: EdgeIdentity | undefined;
+  /**
+   * Auth header is cached until receiving the next 401 from EDGE, at which point it gets refreshed.
+   */
+  private _authHeader: string | undefined;
+
   constructor(baseUrl: string) {
     this._baseUrl = getEdgeUrlWithProtocol(baseUrl, 'http');
     log('created', { url: this._baseUrl });
+  }
+
+  setIdentity(identity: EdgeIdentity) {
+    this._edgeIdentity = identity;
+  }
+
+  public createAgent(body: CreateAgentRequestBody, args?: EdgeHttpGetArgs): Promise<CreateAgentResponseBody> {
+    return this._call('/agents/create', { ...args, method: 'POST', body });
+  }
+
+  public getAgentStatus(
+    request: { ownerIdentityKey: PublicKey },
+    args?: EdgeHttpGetArgs,
+  ): Promise<GetAgentStatusResponseBody> {
+    return this._call(`/users/${request.ownerIdentityKey.toHex()}/agent/status`, { ...args, method: 'GET' });
   }
 
   public getCredentialsForNotarization(spaceId: SpaceId, args?: EdgeHttpGetArgs): Promise<GetNotarizationResponseBody> {
@@ -39,18 +69,35 @@ export class EdgeHttpClient {
     await this._call(`/spaces/${spaceId}/notarization`, { ...args, body, method: 'POST' });
   }
 
+  public async joinSpaceByInvitation(
+    spaceId: SpaceId,
+    body: JoinSpaceRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<JoinSpaceResponseBody> {
+    return this._call(`/spaces/${spaceId}/join`, { ...args, body, method: 'POST' });
+  }
+
+  public async recoverIdentity(
+    body: RecoverIdentityRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<RecoverIdentityResponseBody> {
+    return this._call('/identity/recover', { ...args, body, method: 'POST' });
+  }
+
   private async _call<T>(path: string, args: EdgeHttpCallArgs): Promise<T> {
     const requestContext = args.context ?? new Context();
     const shouldRetry = createRetryHandler(args);
-    const request = createRequest(args);
     const url = `${this._baseUrl}${path.startsWith('/') ? path.slice(1) : path}`;
 
-    log.info('call', { method: args.method, path });
+    log.info('call', { method: args.method, path, request: args.body });
 
+    let handledAuth = false;
+    let authHeader = this._authHeader;
     while (true) {
       let processingError: EdgeCallFailedError;
       let retryAfterHeaderValue: number = Number.NaN;
       try {
+        const request = createRequest(args, authHeader);
         const response = await fetch(url, request);
 
         retryAfterHeaderValue = Number(response.headers.get('Retry-After'));
@@ -61,46 +108,43 @@ export class EdgeHttpClient {
             return body.data;
           }
 
-          const isNonRetryable = body.errorData != null;
-          if (isNonRetryable) {
-            throw new EdgeCallFailedError(body.reason, body.errorData);
-          }
+          log.info('unsuccessful edge response', { path, body });
 
-          processingError = new EdgeCallFailedError(body.reason);
-        } else {
-          processingError = EdgeCallFailedError.fromFailureResponse(response);
-          if (!isRetryable(response.status)) {
-            throw processingError;
+          if (body.errorData?.type === 'auth_challenge' && typeof body.errorData?.challenge === 'string') {
+            processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);
+          } else {
+            processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
           }
+        } else if (response.status === 401 && !handledAuth) {
+          authHeader = await this._handleUnauthorized(response);
+          handledAuth = true;
+          continue;
+        } else {
+          processingError = EdgeCallFailedError.fromHttpFailure(response);
         }
       } catch (error: any) {
         processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
       }
 
-      if (await shouldRetry(requestContext, retryAfterHeaderValue)) {
+      if (processingError.isRetryable && (await shouldRetry(requestContext, retryAfterHeaderValue))) {
         log.info('retrying edge request', { path, processingError });
       } else {
         throw processingError;
       }
     }
   }
-}
 
-const createRequest = (args: EdgeHttpCallArgs): RequestInit => {
-  return {
-    method: args.method,
-    body: args.body && JSON.stringify(args.body),
-  };
-};
-
-const isRetryable = (status: number) => {
-  if (status === 501) {
-    // Not Implemented
-    return false;
+  private async _handleUnauthorized(response: Response) {
+    if (!this._edgeIdentity) {
+      log.warn('edge unauthorized response received before identity was set');
+      throw EdgeCallFailedError.fromHttpFailure(response);
+    }
+    const challenge = await handleAuthChallenge(response, this._edgeIdentity);
+    this._authHeader = encodeAuthHeader(challenge);
+    log('auth header updated');
+    return this._authHeader;
   }
-  // TODO: handle 401 Not Authorized
-  return !(status >= 400 && status < 500);
-};
+}
 
 const createRetryHandler = (args: EdgeHttpCallArgs) => {
   if (!args.retry || args.retry.count < 1) {
@@ -150,4 +194,17 @@ type EdgeHttpCallArgs = {
   body?: any;
   context?: Context;
   retry?: RetryConfig;
+};
+
+const createRequest = (args: EdgeHttpCallArgs, authHeader: string | undefined): RequestInit => {
+  return {
+    method: args.method,
+    body: args.body && JSON.stringify(args.body),
+    headers: authHeader ? { Authorization: authHeader } : undefined,
+  };
+};
+
+const encodeAuthHeader = (challenge: Uint8Array) => {
+  const encodedChallenge = Buffer.from(challenge).toString('base64');
+  return `VerifiablePresentation pb;base64,${encodedChallenge}`;
 };

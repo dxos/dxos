@@ -6,7 +6,6 @@ import React, { useEffect, useMemo } from 'react';
 
 import { useResolvePlugin, parseFileManagerPlugin } from '@dxos/app-framework';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
-import { localStorageStateStoreAdapter, type EditorSelectionState } from '@dxos/react-ui-editor';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { useExtensions } from '../extensions';
@@ -15,20 +14,22 @@ import { getFallbackName } from '../util';
 
 export type MarkdownContainerProps = Pick<
   MarkdownEditorProps,
-  'role' | 'coordinate' | 'extensionProviders' | 'viewMode' | 'onViewModeChange'
+  'role' | 'coordinate' | 'extensionProviders' | 'viewMode' | 'editorStateStore' | 'onViewModeChange'
 > & {
   id: string;
   object: DocumentType | any;
   settings: MarkdownSettingsProps;
 };
 
+// TODO(burdon): Move toolbar here.
 // TODO(burdon): Factor out difference for ECHO and non-ECHO objects; i.e., single component.
-const MarkdownContainer = ({ role, id, object, settings, ...props }: MarkdownContainerProps) => {
+const MarkdownContainer = ({ id, role, object, settings, ...props }: MarkdownContainerProps) => {
   const scrollPastEnd = role === 'article';
   if (object instanceof DocumentType) {
     return (
       <DocumentEditor
         id={fullyQualifiedId(object)}
+        role={role}
         document={object}
         settings={settings}
         scrollPastEnd={scrollPastEnd}
@@ -39,6 +40,7 @@ const MarkdownContainer = ({ role, id, object, settings, ...props }: MarkdownCon
     return (
       <MarkdownEditor
         id={id}
+        role={role}
         initialValue={object.text}
         toolbar={settings.toolbar}
         scrollPastEnd={scrollPastEnd}
@@ -59,11 +61,12 @@ export const DocumentEditor = ({
   extensionProviders,
   settings,
   viewMode,
+  editorStateStore,
   ...props
 }: DocumentEditorProps) => {
   const space = getSpace(doc);
   const initialValue = useMemo(() => doc.content?.content, [doc.content]);
-  const extensions = useExtensions({ extensionProviders, document: doc, settings, viewMode });
+  const extensions = useExtensions({ extensionProviders, document: doc, settings, viewMode, editorStateStore });
 
   // Migrate gradually to `fallbackName`.
   useEffect(() => {
@@ -71,12 +74,6 @@ export const DocumentEditor = ({
       doc.fallbackName = getFallbackName(doc.content.content);
     }
   }, [doc, doc.content]);
-
-  // Restore last selection and scroll point.
-  const { scrollTo, selection } = useMemo<EditorSelectionState>(
-    () => localStorageStateStoreAdapter.getState(id) ?? {},
-    [id, doc],
-  );
 
   // File dragging.
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
@@ -94,8 +91,6 @@ export const DocumentEditor = ({
       id={id}
       initialValue={initialValue}
       extensions={extensions}
-      scrollTo={scrollTo}
-      selection={selection}
       toolbar={settings.toolbar}
       inputMode={settings.editorInputMode}
       viewMode={viewMode}

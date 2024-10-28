@@ -4,11 +4,12 @@
 
 import React, { useState } from 'react';
 
-import { S, generateEchoId } from '@dxos/echo-schema';
+import { S, createObjectId, type SchemaResolver } from '@dxos/echo-schema';
 import { Button, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { FieldValueType, FieldSchema, type FieldType, getUniqueProperty, type ViewType } from '@dxos/schema';
+import { getUniqueProperty, FieldValueType, FieldSchema, type FieldType, type ViewType } from '@dxos/schema';
+import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '../../translations';
 import { Field } from '../Field';
@@ -17,18 +18,20 @@ const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
 
 export type ViewEditorProps = ThemedClassName<{
   view: ViewType;
+  // TODO(burdon): Remove when we can represent the schema field as an object/reference.
+  schemaResolver?: SchemaResolver;
   readonly?: boolean;
 }>;
 
 /**
  * Schema-based object form.
  */
-export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
+export const ViewEditor = ({ classNames, view, schemaResolver, readonly }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [field, setField] = useState<FieldType | undefined>();
 
   const handleAdd = () => {
-    const field: FieldType = { id: generateEchoId(), path: getUniqueProperty(view), type: FieldValueType.String };
+    const field: FieldType = { id: createObjectId(), path: getUniqueProperty(view), type: FieldValueType.String };
     view.fields.push(field);
     setField(field);
   };
@@ -43,9 +46,13 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
     setField(undefined);
   };
 
+  const handleMove = (fromIndex: number, toIndex: number) => {
+    arrayMove(view.fields, fromIndex, toIndex);
+  };
+
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
-      <List.Root<FieldType> isItem={S.is(FieldSchema)} items={view.fields}>
+      <List.Root<FieldType> isItem={S.is(FieldSchema)} items={view.fields} onMove={handleMove}>
         {({ items }) => (
           <div className='w-full'>
             <div role='heading' className={grid}>
@@ -54,7 +61,7 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
             </div>
 
             <div role='list' className='flex flex-col w-full'>
-              {items.map((item) => (
+              {items?.map((item) => (
                 <List.Item<FieldType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
                   <List.ItemDragHandle />
                   <List.ItemTitle onClick={() => handleSelect(item)}>{item.path}</List.ItemTitle>
@@ -66,7 +73,9 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
         )}
       </List.Root>
 
-      {field && <Field classNames='p-2' autoFocus field={field} schema={view.query.schema} />}
+      {field && view.schema && (
+        <Field classNames='p-2' autoFocus field={field} schema={schemaResolver?.(view.schema)} />
+      )}
 
       {!readonly && (
         <div className='flex justify-center'>

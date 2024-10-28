@@ -1,11 +1,12 @@
 {
   "name": "@dxos/indexing",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": false,
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -46,8 +47,7 @@
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
-    "@types/lodash.isequal": "^4.5.0",
-    "@types/node": "^22.7.4"
+    "@types/lodash.isequal": "^4.5.0"
   },
   "publishConfig": {
     "access": "public"

@@ -4,35 +4,39 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
 import { create } from '@dxos/echo-schema';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { TestSchema, type TestType, testView } from '@dxos/schema/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Field, type FieldProps } from './Field';
-import { TestSchema, type TestType, testView } from '../../testing';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
 
-const Story = (props: FieldProps<TestType>) => (
+const DefaultStory = (args: FieldProps<typeof Field<TestType>>) => (
   <TestPopup>
-    <Field {...props} />
+    <Field {...args} />
   </TestPopup>
 );
 
-export default {
-  title: 'react-ui-data/Field',
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' })],
+export const Default: StoryObj<typeof Field<TestType>> = {
+  args: {
+    field: create(testView.fields[0]),
+    schema: TestSchema,
+  },
+};
+
+const meta: Meta<typeof Field<TestType>> = {
+  title: 'ui/react-ui-data/Field',
+  component: Field,
+  render: DefaultStory as any,
+  decorators: [withTheme],
   parameters: {
     layout: 'centered',
     translations,
   },
-  render: Story,
 };
 
-export const Default = {
-  args: {
-    field: create(testView.fields[0]),
-    schema: TestSchema,
-  } satisfies FieldProps<TestType>,
-};
+export default meta;

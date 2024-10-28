@@ -5,16 +5,13 @@
 import { describe, expect, test, onTestFinished } from 'vitest';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
-import { type PublicKey } from '@dxos/keys';
 import { range } from '@dxos/util';
 
-import { type SignalManager, WebsocketSignalManager } from './signal-manager';
+import { WebsocketSignalManager } from './signal-manager';
 import { type Message } from './signal-methods';
 import { messageEqual, PAYLOAD_1, PAYLOAD_2, PAYLOAD_3, TestBuilder } from './testing';
 
-export const messengerTests = (
-  signalManagerFactory: (identityKey: PublicKey, deviceKey: PublicKey) => Promise<SignalManager>,
-) => {
+export const messengerTests = (signalManagerFactory: TestBuilder['createSignalManager']) => {
   test('Message between peers', async () => {
     const builder = new TestBuilder({
       signalManagerFactory,

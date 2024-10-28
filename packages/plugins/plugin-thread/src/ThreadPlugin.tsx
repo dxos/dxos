@@ -6,19 +6,18 @@ import React from 'react';
 
 import {
   type IntentPluginProvides,
-  NavigationAction,
   type LocationProvides,
+  NavigationAction,
   type Plugin,
   type PluginDefinition,
+  isLayoutParts,
   parseIntentPlugin,
   parseNavigationPlugin,
-  resolvePlugin,
-  isLayoutParts,
   parseMetadataResolverPlugin,
+  resolvePlugin,
+  LayoutAction,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
@@ -26,11 +25,18 @@ import { type ActionGroup, createExtension, isActionGroup, toSignal } from '@dxo
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { SpaceAction } from '@dxos/plugin-space';
 import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
-import { getSpace, fullyQualifiedId, loadObjectReferences } from '@dxos/react-client/echo';
+import { create, type EchoReactiveObject, getTypename } from '@dxos/react-client/echo';
+import { getSpace, fullyQualifiedId, loadObjectReferences, parseFullyQualifiedId } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
-import { ThreadMain, ThreadSettings, ChatContainer, ChatHeading, ThreadArticle } from './components';
-import { ThreadComplementary } from './components/ThreadComplementary';
+import {
+  ChatContainer,
+  ChatHeading,
+  ThreadArticle,
+  ThreadComplementary,
+  ThreadMain,
+  ThreadSettings,
+} from './components';
 import { threads } from './extensions';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
@@ -116,17 +122,44 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             return [];
           }
 
+          const safeParseFullyQualifiedId = (id: string) => {
+            try {
+              return parseFullyQualifiedId(id);
+            } catch {
+              return [id];
+            }
+          };
+
+          const type = 'orphan-comments-for-subject';
+          const icon = 'ph--chat-text--regular';
+
           return [
             createExtension({
               id: `${THREAD_PLUGIN}/comments-for-subject`,
               resolver: ({ id }) => {
+                // TODO(Zan): Find util (or make one).
                 if (!id.endsWith('~comments')) {
                   return;
                 }
 
-                // TODO(Zan): Find util (or make one).
-                const subjectId = id.split('~').at(0);
-                const [spaceId, objectId] = subjectId?.split(':') ?? [];
+                const [subjectId] = id.split('~');
+                const [spaceId, objectId] = safeParseFullyQualifiedId(subjectId);
+                if (!objectId) {
+                  // TODO(wittjosiah): Support comments for arbitrary subjects.
+                  //   This is to ensure that the comments panel is not stuck on an old object.
+                  return {
+                    id,
+                    type,
+                    data: null,
+                    properties: {
+                      icon,
+                      label: ['unnamed object threads label', { ns: THREAD_PLUGIN }],
+                      showResolvedThreads: false,
+                      object: null,
+                    },
+                  };
+                }
+
                 const space = client.spaces.get().find((space) => space.id === spaceId);
                 const object = toSignal(
                   (onChange) => {
@@ -153,10 +186,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
                 return {
                   id,
-                  type: 'orphan-comments-for-subject',
+                  type,
                   data: null,
                   properties: {
-                    icon: 'ph--chat-text--regular',
+                    icon,
                     label,
                     showResolvedThreads: viewState.showResolvedThreads,
                     object,
@@ -347,6 +380,15 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         action: NavigationAction.OPEN,
                         data: {
                           activeParts: { complementary: 'comments' },
+                        },
+                      },
+                    ],
+                    [
+                      {
+                        action: LayoutAction.SET_LAYOUT,
+                        data: {
+                          element: 'complementary',
+                          state: true,
                         },
                       },
                     ],

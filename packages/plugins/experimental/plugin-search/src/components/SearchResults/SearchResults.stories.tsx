@@ -4,10 +4,10 @@
 
 import '@dxos-theme';
 
-import React, { type FC, useState } from 'react';
+import { type Meta } from '@storybook/react';
+import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { DensityProvider } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SearchResults, type SearchResultsProps } from './SearchResults';
@@ -15,28 +15,16 @@ import { filterObjectsSync } from '../../search-sync';
 
 faker.seed(1);
 
-const Story: FC<SearchResultsProps> = (args) => {
+const DefaultStory = (args: SearchResultsProps) => {
   const [selected, setSelected] = useState<string>();
 
   return (
-    <DensityProvider density='fine'>
-      <div className='flex grow justify-center overflow-hidden'>
-        <div className='flex w-[300px] m-4 overflow-hidden'>
-          <SearchResults {...args} selected={selected} onSelect={setSelected} />
-        </div>
+    <div className='flex grow justify-center overflow-hidden'>
+      <div className='flex w-[300px] m-4 overflow-hidden'>
+        <SearchResults {...args} selected={selected} onSelect={setSelected} />
       </div>
-    </DensityProvider>
+    </div>
   );
-};
-
-export default {
-  title: 'plugin-search/SearchResults',
-  component: SearchResults,
-  render: Story,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: {
-    layout: 'fullscreen',
-  },
 };
 
 const word = 'hello';
@@ -55,3 +43,15 @@ export const Default = {
     match,
   },
 };
+
+const meta: Meta<typeof SearchResults> = {
+  title: 'plugins/plugin-search/SearchResults',
+  component: SearchResults,
+  render: DefaultStory,
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+};
+
+export default meta;

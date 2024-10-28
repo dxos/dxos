@@ -33,12 +33,10 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       settings
         .prop({
           key: 'autoHideControls',
-          storageKey: 'auto-hide-controls',
           type: LocalStorageStore.bool({ allowUndefined: true }),
         })
         .prop({
           key: 'gridType',
-          storageKey: 'grid-type',
           type: LocalStorageStore.enum<SketchGridType>({ allowUndefined: true }),
         });
     },

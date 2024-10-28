@@ -1,11 +1,12 @@
 {
   "name": "@dxos/plugin-observability",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "DXOS app framework plugin for hooking up app observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",

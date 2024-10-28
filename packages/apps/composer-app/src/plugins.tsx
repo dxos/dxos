@@ -47,6 +47,7 @@ import TableMeta from '@dxos/plugin-table/meta';
 import ThemeMeta from '@dxos/plugin-theme/meta';
 import ThreadMeta from '@dxos/plugin-thread/meta';
 import WildcardMeta from '@dxos/plugin-wildcard/meta';
+import WnfsMeta from '@dxos/plugin-wnfs/meta';
 import { isNotFalsy } from '@dxos/util';
 
 import { INITIAL_COLLECTION_TITLE, INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
@@ -131,6 +132,7 @@ export const recommended = ({ isLabs }: PluginConfig): PluginMeta[] => [
   PresenterMeta,
   ScriptMeta,
   SearchMeta,
+  WnfsMeta,
 
   ...(isLabs
     ? [
@@ -180,8 +182,12 @@ export const plugins = ({
         LegacyTypes.ThreadType,
       ]);
 
-      client.shell.onReset(() => {
-        window.location.pathname = '/';
+      client.shell.onReset((target) => {
+        if (target === 'deviceInvitation') {
+          window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
+        } else {
+          window.location.pathname = '/';
+        }
       });
     },
   }),
@@ -256,4 +262,5 @@ export const plugins = ({
   [ThreadMeta.id]: Plugin.lazy(() => import('@dxos/plugin-thread')),
   [WelcomeMeta.id]: Plugin.lazy(() => import('./plugins/welcome'), { firstRun }),
   [WildcardMeta.id]: Plugin.lazy(() => import('@dxos/plugin-wildcard')),
+  [WnfsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-wnfs')),
 });

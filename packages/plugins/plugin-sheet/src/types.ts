@@ -15,7 +15,6 @@ import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { type StackProvides } from '@dxos/plugin-stack';
-import { FieldValueType } from '@dxos/schema';
 
 import { SHEET_PLUGIN } from './meta';
 
@@ -58,14 +57,11 @@ export const CellValue = S.Struct({
 export type CellValue = S.Schema.Type<typeof CellValue>;
 
 // TODO(burdon): IMPORTANT: Reconcile with Field definition.
-export const Formatting = S.Struct({
-  type: S.optional(S.Enums(FieldValueType)),
-  format: S.optional(S.String),
-  precision: S.optional(S.Number),
-  classNames: S.optional(S.Array(S.String)),
+export const Range = S.Struct({
+  range: S.String,
+  key: S.String,
+  value: S.String,
 });
-
-export type Formatting = S.Schema.Type<typeof Formatting>;
 
 // TODO(burdon): Visibility, locked, frozen, etc.
 export const RowColumnMeta = S.Struct({
@@ -91,9 +87,8 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
   // Column metadata referenced by index.
   columnMeta: S.mutable(S.Record({ key: S.String, value: S.mutable(RowColumnMeta) })),
 
-  // TODO(burdon): Change to array.
   // Cell formatting referenced by indexed range.
-  formatting: S.mutable(S.Record({ key: S.String, value: S.mutable(Formatting) })),
+  ranges: S.mutable(S.Array(Range)),
 
   // Threads associated with the sheet
   threads: S.optional(S.mutable(S.Array(ref(ThreadType)))),

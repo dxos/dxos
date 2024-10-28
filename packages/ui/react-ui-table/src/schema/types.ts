@@ -4,6 +4,9 @@
 
 import { type FieldValueType } from '@dxos/schema';
 
+/**
+ * @deprecated
+ */
 // TODO(burdon): Reconcile with @dxos/schema/View.
 export type TableDef = {
   id: string;
@@ -11,6 +14,9 @@ export type TableDef = {
   columns: ColumnDef[];
 };
 
+/**
+ * @deprecated
+ */
 // TODO(burdon): Reconcile with @dxos/schema/Field.
 export type ColumnDef = {
   id: string;

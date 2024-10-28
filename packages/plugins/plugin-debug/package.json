@@ -1,11 +1,12 @@
 {
   "name": "@dxos/plugin-debug",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "DXOS Surface plugin for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -64,11 +65,9 @@
     "date-fns": "^3.3.1",
     "lodash.get": "^4.4.2",
     "react-json-tree": "^0.18.0",
-    "react-resize-detector": "^11.0.1",
-    "react-syntax-highlighter": "^15.5.0"
+    "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
@@ -76,7 +75,6 @@
     "@types/lodash.get": "^4.4.7",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "@types/react-syntax-highlighter": "^15.5.13",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "vite": "5.4.7"

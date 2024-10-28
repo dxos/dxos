@@ -1,11 +1,12 @@
 {
   "name": "@dxos/gem-core",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "GEM core components and utils.",
   "homepage": "https://github.com/dxos",
   "bugs": "https://github.com/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",

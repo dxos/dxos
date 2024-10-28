@@ -26,11 +26,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
   return {
     meta,
     ready: async () => {
-      settings.prop({
-        key: 'gridType',
-        storageKey: 'grid-type',
-        type: LocalStorageStore.enum<SketchGridType>({ allowUndefined: true }),
-      });
+      settings.prop({ key: 'gridType', type: LocalStorageStore.enum<SketchGridType>({ allowUndefined: true }) });
     },
     provides: {
       metadata: {

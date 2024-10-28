@@ -1,11 +1,12 @@
 {
   "name": "@dxos/lit-grid",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "A grid Web Component using Lit",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "exports": {
     ".": {
       "import": "./dist/src/index.js",

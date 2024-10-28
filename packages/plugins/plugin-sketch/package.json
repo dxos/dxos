@@ -1,11 +1,12 @@
 {
   "name": "@dxos/plugin-sketch",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -23,14 +24,6 @@
       },
       "types": "./dist/types/src/meta.d.ts"
     },
-    "./types": {
-      "browser": "./dist/lib/browser/types/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/types/index.cjs",
-        "default": "./dist/lib/node-esm/types/index.mjs"
-      },
-      "types": "./dist/types/src/types/index.d.ts"
-    },
     "./sdk": {
       "browser": "./dist/lib/browser/sdk.mjs",
       "node": {
@@ -38,6 +31,14 @@
         "default": "./dist/lib/node-esm/sdk.mjs"
       },
       "types": "./dist/types/src/sdk.d.ts"
+    },
+    "./types": {
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": {
+        "require": "./dist/lib/node/types/index.cjs",
+        "default": "./dist/lib/node-esm/types/index.mjs"
+      },
+      "types": "./dist/types/src/types/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -46,11 +47,11 @@
       "meta": [
         "dist/types/src/meta.d.ts"
       ],
-      "types": [
-        "dist/types/src/types/index.d.ts"
-      ],
       "sdk": [
         "dist/types/src/sdk.d.ts"
+      ],
+      "types": [
+        "dist/types/src/types/index.d.ts"
       ]
     }
   },

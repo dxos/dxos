@@ -82,6 +82,7 @@ export type DataSpaceParams = {
   edgeConnection?: EdgeConnection;
   edgeHttpClient?: EdgeHttpClient;
   edgeFeatures?: Runtime.Client.EdgeFeatures;
+  activeEdgeNotarizationPollingInterval?: number;
 };
 
 export type CreateEpochOptions = {
@@ -146,6 +147,7 @@ export class DataSpace {
       spaceId: this._inner.id,
       edgeClient: params.edgeHttpClient,
       edgeFeatures: params.edgeFeatures,
+      activeEdgePollingInterval: params.activeEdgeNotarizationPollingInterval,
     });
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
@@ -242,6 +244,7 @@ export class DataSpace {
     }
 
     await this._inner.open(new Context());
+    await this._inner.startProtocol();
 
     await this._edgeFeedReplicator?.open();
 

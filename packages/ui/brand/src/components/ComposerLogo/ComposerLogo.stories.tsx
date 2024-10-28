@@ -21,7 +21,7 @@ import { DXOS } from '../../icons';
 // https://pixabay.com/sound-effects/search/logo/?pagi=2
 
 export default {
-  title: 'brand/Logo',
+  title: 'ui/brand/Logo',
   component: ComposerLogo,
   decorators: [withTheme],
 };

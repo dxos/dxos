@@ -15,7 +15,7 @@ import { threadLayout } from '../Thread';
 import { ThreadStoryContainer, MessageStoryText, type MessageEntity } from '../testing';
 import translations from '../translations';
 
-const Story = () => {
+const DefaultStory = () => {
   const [identityKey] = useState(PublicKey.random());
   const [message] = useState<MessageEntity>({
     id: 'm1',
@@ -36,9 +36,9 @@ const Story = () => {
 };
 
 export default {
-  title: 'react-ui-thread/Message',
+  title: 'ui/react-ui-thread/Message',
   component: MessageRoot,
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { translations },
 };

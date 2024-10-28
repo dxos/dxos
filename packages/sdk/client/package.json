@@ -1,12 +1,13 @@
 {
   "name": "@dxos/client",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "exports": {
     "./devtools": {
       "browser": "./dist/lib/browser/devtools/index.mjs",
@@ -149,7 +150,6 @@
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.isequal": "^4.5.0",
     "@types/lodash.isequalwith": "^4.4.0",
-    "@types/node": "^22.7.4",
     "@types/ua-parser-js": "^0.7.39",
     "fast-check": "^3.19.0",
     "source-map-support": "^0.5.12"

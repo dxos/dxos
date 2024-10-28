@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect, signal } from '@preact/signals-core';
+import { signal } from '@preact/signals-core';
 import React from 'react';
 
 import {
@@ -23,7 +23,8 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject, type Identifiable, isReactiveObject } from '@dxos/echo-schema';
+import { type HasId, isReactiveObject } from '@dxos/echo-schema';
+import { scheduledEffect } from '@dxos/echo-signals/core';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
@@ -34,6 +35,7 @@ import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
   Expando,
+  type EchoReactiveObject,
   Filter,
   type PropertiesTypeProps,
   type Space,
@@ -45,6 +47,7 @@ import {
   isEchoObject,
   isSpace,
   loadObjectReferences,
+  parseFullyQualifiedId,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { ClipboardProvider, InvitationManager, type InvitationManagerProps, osTranslations } from '@dxos/shell/react';
@@ -54,7 +57,7 @@ import {
   AwaitingObject,
   CollectionMain,
   CollectionSection,
-  FallbackSettings,
+  DefaultObjectSettings,
   MenuFooter,
   MissingObject,
   PopoverRenameObject,
@@ -125,6 +128,7 @@ export const SpacePlugin = ({
     awaiting: undefined,
     spaceNames: {},
     viewersByObject: {},
+    // TODO(wittjosiah): Stop using (Complex)Map inside reactive object.
     viewersByIdentity: new ComplexMap(PublicKey.hash),
     sdkMigrationRunning: {},
   });
@@ -173,9 +177,10 @@ export const SpacePlugin = ({
           .filter((space) => space.state.get() === SpaceState.SPACE_READY)
           .forEach((space) => {
             subscriptions.add(
-              effect(() => {
-                state.values.spaceNames[space.id] = space.properties.name;
-              }),
+              scheduledEffect(
+                () => ({ name: space.properties.name }),
+                ({ name }) => (state.values.spaceNames[space.id] = name),
+              ),
             );
           });
       }).unsubscribe,
@@ -183,54 +188,56 @@ export const SpacePlugin = ({
 
     // Broadcast active node to other peers in the space.
     subscriptions.add(
-      effect(() => {
-        const send = () => {
-          const spaces = client.spaces.get();
-          const identity = client.halo.identity.get();
-          if (identity && location.active) {
-            const ids = openIds(location.active);
+      scheduledEffect(
+        () => ({
+          ids: openIds(location.active),
+          removed: location.closed ? [location.closed].flat() : [],
+        }),
+        ({ ids, removed }) => {
+          const send = () => {
+            const spaces = client.spaces.get();
+            const identity = client.halo.identity.get();
+            if (identity && location.active) {
+              // Group parts by space for efficient messaging.
+              const idsBySpace = reduceGroupBy(ids, (id) => {
+                const [spaceId] = id.split(':'); // TODO(burdon): Factor out.
+                return spaceId;
+              });
 
-            // Group parts by space for efficient messaging.
-            const idsBySpace = reduceGroupBy(ids, (id) => {
-              const [spaceId] = id.split(':'); // TODO(burdon): Factor out.
-              return spaceId;
-            });
-
-            // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
-            for (const space of spaces) {
-              if (!idsBySpace.has(space.id)) {
-                idsBySpace.set(space.id, []);
-              }
-            }
-
-            for (const [spaceId, ids] of idsBySpace) {
-              const space = spaces.find((space) => space.id === spaceId);
-              if (!space) {
-                continue;
+              // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
+              for (const space of spaces) {
+                if (!idsBySpace.has(space.id)) {
+                  idsBySpace.set(space.id, []);
+                }
               }
 
-              const removed = location.closed ? [location.closed].flat() : [];
+              for (const [spaceId, ids] of idsBySpace) {
+                const space = spaces.find((space) => space.id === spaceId);
+                if (!space) {
+                  continue;
+                }
 
-              void space
-                .postMessage('viewing', {
-                  identityKey: identity.identityKey.toHex(),
-                  attended: attention.attended ? [...attention.attended] : [],
-                  added: ids,
-                  // TODO(Zan): When we re-open a part, we should remove it from the removed list in the navigation plugin.
-                  removed: removed.filter((id) => !ids.includes(id)),
-                })
-                // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
-                .catch((err) => {
-                  log.warn('Failed to broadcast active node for presence.', { err: err.message });
-                });
+                void space
+                  .postMessage('viewing', {
+                    identityKey: identity.identityKey.toHex(),
+                    attended: attention.attended ? [...attention.attended] : [],
+                    added: ids,
+                    // TODO(Zan): When we re-open a part, we should remove it from the removed list in the navigation plugin.
+                    removed: removed.filter((id) => !ids.includes(id)),
+                  })
+                  // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
+                  .catch((err) => {
+                    log.warn('Failed to broadcast active node for presence.', { err: err.message });
+                  });
+              }
             }
-          }
-        };
+          };
 
-        send();
-        const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
-        return () => clearInterval(interval);
-      }),
+          send();
+          const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
+          return () => clearInterval(interval);
+        },
+      ),
     );
 
     // Listen for active nodes from other peers in the space.
@@ -278,17 +285,8 @@ export const SpacePlugin = ({
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop({
-        key: 'showHidden',
-        storageKey: 'show-hidden',
-        type: LocalStorageStore.bool({ allowUndefined: true }),
-      });
-
-      state.prop({
-        key: 'spaceNames',
-        storageKey: 'space-names',
-        type: LocalStorageStore.json<Record<string, string>>(),
-      });
+      settings.prop({ key: 'showHidden', type: LocalStorageStore.bool({ allowUndefined: true }) });
+      state.prop({ key: 'spaceNames', type: LocalStorageStore.json<Record<string, string>>() });
 
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
@@ -374,7 +372,7 @@ export const SpacePlugin = ({
                 <MissingObject id={primary} />
               ) : null;
             case 'complementary--settings':
-              return isEchoObject(data.subject) ? <FallbackSettings object={data.subject} /> : null;
+              return isEchoObject(data.subject) ? <DefaultObjectSettings object={data.subject} /> : null;
             case 'dialog':
               if (data.component === 'dxos.org/plugin/space/InvitationManagerDialog') {
                 return (
@@ -398,9 +396,12 @@ export const SpacePlugin = ({
             // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
-                <SmallPresenceLive viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]} />
+                <SmallPresenceLive
+                  id={data.id as string}
+                  viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]}
+                />
               ) : (
-                <SmallPresence count={0} />
+                <SmallPresence id={data.id as string} count={0} />
               );
             }
             case 'navbar-start': {
@@ -497,7 +498,6 @@ export const SpacePlugin = ({
                     type: SPACES,
                     properties: {
                       label: ['spaces label', { ns: SPACE_PLUGIN }],
-                      palette: 'teal',
                       testId: 'spacePlugin.spaces',
                       role: 'branch',
                       childrenPersistenceClass: 'echo',
@@ -547,7 +547,7 @@ export const SpacePlugin = ({
                   properties: {
                     label: ['create space label', { ns: SPACE_PLUGIN }],
                     icon: 'ph--plus--regular',
-                    disposition: 'toolbar',
+                    disposition: 'item',
                     testId: 'spacePlugin.createSpace',
                   },
                 },
@@ -567,6 +567,7 @@ export const SpacePlugin = ({
                   properties: {
                     label: ['join space label', { ns: SPACE_PLUGIN }],
                     icon: 'ph--sign-in--regular',
+                    disposition: 'item',
                     testId: 'spacePlugin.joinSpace',
                   },
                 },
@@ -716,13 +717,13 @@ export const SpacePlugin = ({
             createExtension({
               id: `${SPACE_PLUGIN}/settings-for-subject`,
               resolver: ({ id }) => {
+                // TODO(Zan): Find util (or make one).
                 if (!id.endsWith('~settings')) {
                   return;
                 }
 
-                // TODO(Zan): Find util (or make one).
-                const subjectId = id.split('~').at(0);
-                const [spaceId, objectId] = subjectId?.split(':') ?? [];
+                const [subjectId] = id.split('~');
+                const [spaceId, objectId] = parseFullyQualifiedId(subjectId);
                 const space = client.spaces.get().find((space) => space.id === spaceId);
                 const object = toSignal(
                   (onChange) => {
@@ -852,8 +853,11 @@ export const SpacePlugin = ({
               }
 
               return {
-                data: { space, id: space.id, activeParts: { main: [space.id] } },
-
+                data: {
+                  space,
+                  id: space.id,
+                  activeParts: { main: [space.id] },
+                },
                 intents: [
                   ...(settings.values.onSpaceCreate
                     ? [
@@ -884,9 +888,26 @@ export const SpacePlugin = ({
                 const { space } = await client.shell.joinSpace({ invitationCode: intent.data?.invitationCode });
                 if (space) {
                   return {
-                    data: { space, id: space.id, activeParts: { main: [space.id] } },
-
+                    data: {
+                      space,
+                      id: space.id,
+                      activeParts: { main: [space.id] },
+                    },
                     intents: [
+                      [
+                        {
+                          action: LayoutAction.SET_LAYOUT,
+                          data: {
+                            element: 'toast',
+                            subject: {
+                              id: `${SPACE_PLUGIN}/join-success`,
+                              duration: 10_000,
+                              title: translations[0]['en-US'][SPACE_PLUGIN]['join success label'],
+                              closeLabel: translations[0]['en-US'][SPACE_PLUGIN]['dismiss label'],
+                            },
+                          },
+                        },
+                      ],
                       [
                         {
                           action: ObservabilityAction.SEND_EVENT,
@@ -1105,14 +1126,14 @@ export const SpacePlugin = ({
               }
 
               if (intent.data?.target instanceof CollectionType) {
-                intent.data?.target.objects.push(object as Identifiable);
+                intent.data?.target.objects.push(object as HasId);
               } else if (isSpace(intent.data?.target)) {
                 const collection = space.properties[CollectionType.typename];
                 if (collection instanceof CollectionType) {
-                  collection.objects.push(object as Identifiable);
+                  collection.objects.push(object as HasId);
                 } else {
                   // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-                  const collection = create(CollectionType, { objects: [object as Identifiable], views: {} });
+                  const collection = create(CollectionType, { objects: [object as HasId], views: {} });
                   space.properties[CollectionType.typename] = collection;
                 }
               }

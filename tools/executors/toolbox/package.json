@@ -1,11 +1,12 @@
 {
   "name": "@dxos/toolbox",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -32,8 +33,7 @@
     "@types/deep-equal": "^1.0.4",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.pick": "^4.4.7",
-    "@types/lodash.sortby": "^4.7.7",
-    "@types/node": "^22.7.4"
+    "@types/lodash.sortby": "^4.7.7"
   },
   "executors": "./executors.json"
 }

@@ -1,11 +1,12 @@
 {
   "name": "@dxos/plugin-sheet",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "imports": {
     "#hyperformula": {
       "types": "hyperformula",
@@ -43,9 +44,6 @@
     "*": {
       "meta": [
         "dist/types/src/meta.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing.d.ts"
       ],
       "types": [
         "dist/types/src/types.d.ts"
@@ -88,6 +86,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-data": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-grid": "workspace:*",
     "@dxos/schema": "workspace:*",
@@ -117,7 +116,6 @@
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@lezer/generator": "^1.7.1",
-    "@phosphor-icons/react": "^2.1.5",
     "@tldraw/indices": "^2.0.0-alpha.14",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~18.2.0",
@@ -130,7 +128,6 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

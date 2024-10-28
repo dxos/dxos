@@ -6,6 +6,8 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "outDir": "dist/src",
     "rootDirs": [
       "./src", // <-- KEEP "./src" FIRST

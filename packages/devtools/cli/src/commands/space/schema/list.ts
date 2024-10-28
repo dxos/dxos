@@ -32,7 +32,7 @@ export default class List extends BaseCommand<typeof List> {
       const space = await this.getSpace(client, key);
       const typenameFilter = createTypenameFilter(this.flags.typename);
       const schemas = (await space.db.schema.listAll()).filter(typenameFilter);
-      printSchema(schemas, this.flags);
+      printSchema(schemas, this.flags as any);
     });
   }
 }

@@ -9,27 +9,23 @@ import { subtleCrypto } from './subtle';
 /**
  * Verify a signature with the given key.
  */
-export const verifySignature = async (key: PublicKey, message: Uint8Array, signature: Uint8Array): Promise<boolean> => {
+export const verifySignature = async (
+  key: PublicKey,
+  message: Uint8Array,
+  signature: Uint8Array,
+  algorithm: { name: string; namedCurve?: string } = { name: 'ECDSA', namedCurve: 'P-256' },
+): Promise<boolean> => {
   let publicKey!: CryptoKey;
 
   try {
-    publicKey = await subtleCrypto.importKey(
-      'raw',
-      key.asUint8Array(),
-      {
-        name: 'ECDSA',
-        namedCurve: 'P-256',
-      },
-      true,
-      ['verify'],
-    );
+    publicKey = await subtleCrypto.importKey('raw', key.asUint8Array(), algorithm, true, ['verify']);
   } catch {
     return false;
   }
 
   return subtleCrypto.verify(
     {
-      name: 'ECDSA',
+      name: algorithm.name,
       hash: 'SHA-256',
     },
     publicKey,

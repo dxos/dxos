@@ -10,15 +10,14 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
 registerSignalsRuntime();
 
+// Sanity test for signals.
 test('signals', ({ expect }) => {
-  const sig = compositeRuntime.createSignal();
-
+  const signal = compositeRuntime.createSignal();
   using updates = updateCounter(() => {
-    sig.notifyRead();
+    signal.notifyRead();
   });
   expect(updates.count).toEqual(0);
 
-  sig.notifyWrite();
-
+  signal.notifyWrite();
   expect(updates.count).toEqual(1);
 });

@@ -1,11 +1,12 @@
 {
   "name": "@dxos/protocols",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Protobuf definitions for DXOS protocols.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {

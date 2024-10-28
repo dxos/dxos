@@ -1,11 +1,12 @@
 {
   "name": "@dxos/bare-template",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "An application template for local-first progressive web apps",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": false,
   "main": "dist/src/template.t.js",
   "types": "dist/src/template.t.d.ts",
   "scripts": {
@@ -20,7 +21,6 @@
   },
   "devDependencies": {
     "@types/lodash.merge": "^4.6.6",
-    "@types/node": "^22.7.4",
     "tmp-promise": "^3.0.3",
     "ts-node": "10.9.1",
     "types-package-json": "^2.0.39"

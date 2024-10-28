@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
@@ -13,7 +14,7 @@ import { nonNullable } from '@dxos/util';
 import { MessageList, type MessageListProps } from './MessageList';
 import { createInbox } from '../../testing';
 
-const Story = () => {
+const DefaultStory = () => {
   const [inbox] = useState(() => createInbox(100));
   const [selected, setSelected] = useState<string>();
 
@@ -31,11 +32,13 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'plugin-inbox/MessageList',
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-inbox/MessageList',
   component: MessageList,
-  render: Story,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
-export const Default = {};
+export default meta;

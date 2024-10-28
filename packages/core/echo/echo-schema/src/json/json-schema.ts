@@ -8,50 +8,53 @@ import { AST, JSONSchema, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import {
-  type EchoObjectAnnotation,
-  EchoObjectAnnotationId,
   type FieldMetaAnnotation,
   FieldMetaAnnotationId,
+  type ObjectAnnotation,
+  ObjectAnnotationId,
   ReferenceAnnotationId,
 } from '../ast';
-import { createEchoReferenceSchema } from '../ref-annotation';
+import { createEchoReferenceSchema } from '../handler';
 
 const ECHO_REFINEMENT_KEY = '$echo';
+
 interface EchoRefinement {
-  type?: EchoObjectAnnotation;
-  reference?: EchoObjectAnnotation;
+  type?: ObjectAnnotation;
+  reference?: ObjectAnnotation;
   fieldMeta?: FieldMetaAnnotation;
 }
+
 const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
-  [EchoObjectAnnotationId]: 'type',
+  [ObjectAnnotationId]: 'type',
   [ReferenceAnnotationId]: 'reference',
   [FieldMetaAnnotationId]: 'fieldMeta',
 };
 
+// TODO(burdon): Are these values stored (can they be changed?)
 export enum PropType {
   NONE = 0,
   STRING = 1, // TODO(burdon): vs TEXT?
   NUMBER = 2,
   BOOLEAN = 3,
   DATE = 4,
-  REF = 5, // TODO(burdon): Add RICH text separately?
+  REF = 5,
   RECORD = 6,
   ENUM = 7,
 }
 
-// TODO(burdon): Reconcile with plugin-table.
-export const toFieldValueType = (type?: PropType): string => {
+// TODO(burdon): Reconcile with @dxos/schema.
+export const toPropType = (type?: PropType): string => {
   switch (type) {
-    case PropType.REF:
-      return 'ref';
-    case PropType.BOOLEAN:
-      return 'boolean';
-    case PropType.NUMBER:
-      return 'number';
-    case PropType.DATE:
-      return 'date';
     case PropType.STRING:
       return 'string';
+    case PropType.NUMBER:
+      return 'number';
+    case PropType.BOOLEAN:
+      return 'boolean';
+    case PropType.DATE:
+      return 'date';
+    case PropType.REF:
+      return 'ref';
     case PropType.RECORD:
       return 'object';
     default:
@@ -72,19 +75,6 @@ export interface JsonSchema {
   properties?: { [key: string]: JsonSchema };
   items?: JsonSchema;
 }
-
-/**
- * @deprecated
- */
-// TODO(burdon): Remove.
-export const getSchemaTypename = (schema: JsonSchema): string | undefined => {
-  const match = schema.$ref?.match(/#\/\$defs\/(.+)/);
-  if (match) {
-    return match[1];
-  } else {
-    return undefined;
-  }
-};
 
 export const effectToJsonSchema = (schema: S.Schema<any>): any => {
   const withEchoRefinements = (ast: AST.AST): AST.AST => {
@@ -117,7 +107,7 @@ export const effectToJsonSchema = (schema: S.Schema<any>): any => {
       );
     }
     const refinement: EchoRefinement = {};
-    for (const annotation of [EchoObjectAnnotationId, ReferenceAnnotationId, FieldMetaAnnotationId]) {
+    for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, FieldMetaAnnotationId]) {
       if (ast.annotations[annotation] != null) {
         refinement[annotationToRefinementKey[annotation]] = ast.annotations[annotation] as any;
       }
@@ -181,7 +171,7 @@ const jsonToEffectTypeSchema = (
   invariant(immutableIdField, 'no id in echo type');
   const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
   const annotations: Mutable<S.Annotations.Schema<any>> = {};
-  for (const annotation of [EchoObjectAnnotationId, ReferenceAnnotationId, FieldMetaAnnotationId]) {
+  for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, FieldMetaAnnotationId]) {
     if (echoRefinement[annotationToRefinementKey[annotation]]) {
       annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
     }

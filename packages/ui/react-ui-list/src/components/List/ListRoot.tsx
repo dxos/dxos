@@ -4,12 +4,11 @@
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
+import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
 import { createContext } from '@radix-ui/react-context';
 import React, { type ReactNode, useEffect, useState } from 'react';
-import { flushSync } from 'react-dom';
 
-import { type ThemedClassName, useControlledValue } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 
 import { type ListItemRecord, idle, type ItemState } from './ListItem';
 
@@ -26,25 +25,30 @@ export const [ListProvider, useListContext] = createContext<ListContext<any>>(LI
 
 export type ListRendererProps<T extends ListItemRecord> = {
   state: ListContext<T>['state'];
-  items: T[];
+  items?: T[];
 };
 
 export type ListRootProps<T extends ListItemRecord> = ThemedClassName<{
   children?: (props: ListRendererProps<T>) => ReactNode;
   items?: T[];
+  onMove?: (fromIndex: number, toIndex: number) => void;
 }> &
   Pick<ListContext<T>, 'isItem' | 'dragPreview'>;
 
 export const ListRoot = <T extends ListItemRecord>({
   classNames,
   children,
-  items: _items = [],
+  items,
   isItem,
+  onMove,
   ...props
 }: ListRootProps<T>) => {
-  const [items, setItems] = useControlledValue<T[]>(_items);
   const [state, setState] = useState<ListContext<T>['state']>(idle);
   useEffect(() => {
+    if (!items) {
+      return;
+    }
+
     return monitorForElements({
       canMonitor: ({ source }) => isItem(source.data),
       onDrop: ({ location, source }) => {
@@ -64,19 +68,14 @@ export const ListRoot = <T extends ListItemRecord>({
         if (targetIdx < 0 || sourceIdx < 0) {
           return;
         }
-
         const closestEdgeOfTarget = extractClosestEdge(targetData);
-        flushSync(() => {
-          setItems(
-            reorderWithEdge({
-              list: items,
-              startIndex: sourceIdx,
-              indexOfTarget: targetIdx,
-              axis: 'vertical',
-              closestEdgeOfTarget,
-            }),
-          );
+        const destinationIndex = getReorderDestinationIndex({
+          closestEdgeOfTarget,
+          startIndex: sourceIdx,
+          indexOfTarget: targetIdx,
+          axis: 'vertical',
         });
+        onMove?.(sourceIdx, destinationIndex);
       },
     });
   }, [items]);

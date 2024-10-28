@@ -18,7 +18,7 @@ import { type SyntaxNode } from '@lezer/common';
 import { tags } from '@lezer/highlight';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
-import { singleValueFacet } from '@dxos/react-ui-editor/state';
+import { singleValueFacet } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type FunctionDefinition } from '../../graph';

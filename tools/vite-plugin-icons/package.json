@@ -1,12 +1,13 @@
 {
   "name": "@dxos/vite-plugin-icons",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "private": true,
   "description": "Vite plugin for generating icon sprites.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": false,
   "exports": {
     ".": {
       "default": "./dist/src/index.js",
@@ -25,7 +26,6 @@
     "vite": "5.4.7"
   },
   "devDependencies": {
-    "@types/node": "^22.7.4",
     "@types/picomatch": "^3.0.1"
   }
 }

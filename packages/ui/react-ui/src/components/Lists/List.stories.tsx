@@ -9,7 +9,7 @@ import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities';
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { DotsSixVertical, PushPin } from '@phosphor-icons/react';
-import React, { type FC, type ReactNode, useState } from 'react';
+import React, { type ReactNode, useState } from 'react';
 
 import {
   getSize,
@@ -20,12 +20,12 @@ import {
   surfaceElevation,
 } from '@dxos/react-ui-theme';
 
-import { List, ListItem, type ListProps, type ListScopedProps } from './List';
+import { List, ListItem, type ListScopedProps } from './List';
 import { withTheme } from '../../testing';
 
 export default {
-  title: 'react-ui/List',
-  component: List as FC<ListProps>,
+  title: 'ui/react-ui-core/List',
+  component: List,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

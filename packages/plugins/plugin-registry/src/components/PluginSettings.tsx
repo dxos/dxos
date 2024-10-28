@@ -13,7 +13,7 @@ import { PluginList } from './PluginList';
 import { type RegistrySettingsProps } from '../RegistryPlugin';
 import { REGISTRY_PLUGIN } from '../meta';
 
-const sort = ({ name: a = '' }: PluginMeta, { name: b = '' }: PluginMeta) => a.localeCompare(b);
+const sortPluginMeta = ({ name: a = '' }: PluginMeta, { name: b = '' }: PluginMeta) => a.localeCompare(b);
 
 export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
@@ -27,12 +27,15 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
         .filter(({ meta }) => !core.includes(meta.id))
         .filter(({ meta }) => enabled.includes(meta.id))
         .map(({ meta }) => meta)
-        .sort(sort),
+        .sort(sortPluginMeta),
     [],
   );
 
   const pluginIds = plugins.map(({ meta }) => meta.id);
-  const available = useMemo(() => pluginContext.available.filter(({ id }) => !enabled.includes(id)).sort(sort), []);
+  const available = useMemo(
+    () => pluginContext.available.filter(({ id }) => !enabled.includes(id)).sort(sortPluginMeta),
+    [],
+  );
   const recommended = available.filter((meta) => !meta.tags?.includes('experimental'));
   const experimental = available.filter((meta) => meta.tags?.includes('experimental'));
 

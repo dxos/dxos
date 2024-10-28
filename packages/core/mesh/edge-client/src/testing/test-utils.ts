@@ -61,6 +61,9 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
     cleanup: () => server.close(),
     currentConnection: () => connection,
     sendResponseMessage,
+    sendMessage: (msg: Message) => {
+      connection!.send(buf.toBinary(MessageSchema, msg));
+    },
     closeConnection: () => {
       closeTrigger.reset();
       connection!.close(1011);

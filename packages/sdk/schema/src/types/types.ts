@@ -12,27 +12,36 @@ import { S } from '@dxos/effect';
 // Fields
 //
 
+// TODO(burdon): Reconcile with echo-schema/PropType... (which uses enum integers).
+//  PropType = low-level primitives.
+//  FieldValueType = higher-level "kind".
+//  { type: 'number', kind: 'percent' }
 export enum FieldValueType {
-  Number = 'number',
-  Boolean = 'boolean',
   String = 'string',
-  Text = 'text',
 
+  Boolean = 'boolean',
+
+  Number = 'number',
+  Percent = 'percent',
+  Currency = 'currency',
+
+  Text = 'text',
   Ref = 'ref',
   User = 'user',
-  Formula = 'formula',
+
+  JSON = 'json',
 
   Timestamp = 'timestamp',
   DateTime = 'datetime',
   Date = 'date',
   Time = 'time',
 
-  Percent = 'percent',
-  Currency = 'currency',
-  JSON = 'json',
+  Formula = 'formula',
+  Email = 'email',
+  URL = 'url',
+  DID = 'did',
 
   // TODO(burdon): Other types:
-  //  - Email, URL, DID
   //  - Duration, Rating
   //  - Address, Phone number
 }
@@ -66,14 +75,20 @@ export type FieldType = S.Schema.Type<typeof FieldSchema>;
 // View
 //
 
-// TODO(burdon): ECHO Query DSL?
+// TODO(burdon): ECHO Query DSL.
 export const QuerySchema = S.Struct({
-  schema: S.Any, // TODO(burdon): Serialized as FQ typename.
+  // TODO(burdon): Schema DXN annotation.
+  schema: S.String,
 });
 
-// TODO(burdon): Are views always flat projections?
+/**
+ * Views are generated or user-defined projections of a schema's properties.
+ * They are used to configure the visual representation of the data.
+ * The query is separate from the view (queries configure the projection of data objects).
+ */
 export const ViewSchema = S.Struct({
-  query: QuerySchema, // TODO(burdon): Rename projection?
+  // TODO(burdon): Schema DXN annotation.
+  schema: S.String,
   fields: S.mutable(S.Array(FieldSchema)),
 });
 

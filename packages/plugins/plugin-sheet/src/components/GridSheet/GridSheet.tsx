@@ -2,26 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef, type FocusEvent, type WheelEvent, type KeyboardEvent } from 'react';
 
+import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridElement,
   Grid,
   type GridContentProps,
-  type GridScopedProps,
-  useGridContext,
   editorKeys,
   type EditorKeysProps,
   GridCellEditor,
+  closestCell,
 } from '@dxos/react-ui-grid';
 
 import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
-import { rangeToA1Notation, type CellRange } from '../../defs';
+import { rangeToA1Notation, type CellRange, DEFAULT_COLUMNS, DEFAULT_ROWS } from '../../defs';
 import { rangeExtension, sheetExtension, type CellRangeNotifier } from '../../extensions';
-import { type ComputeGraph } from '../../graph';
-import { useFormattingModel, useSheetModel, type UseSheetModelOptions } from '../../hooks';
-import { type SheetModel, type FormattingModel } from '../../model';
-import { type SheetType } from '../../types';
+import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
+import { useSheetContext } from '../SheetContext';
 
 const initialCells = {
   grid: {},
@@ -40,17 +38,27 @@ const frozen = {
   frozenRowsStart: 1,
 };
 
-const sheetRowDefault = { grid: { size: 32, resizeable: true } };
-const sheetColDefault = { frozenColsStart: { size: 48 }, grid: { size: 180, resizeable: true } };
+const sheetRowDefault = { frozenRowsStart: { size: 32, readonly: true }, grid: { size: 32, resizeable: true } };
+const sheetColDefault = { frozenColsStart: { size: 48, readonly: true }, grid: { size: 180, resizeable: true } };
 
-const GridSheetImpl = ({
-  model,
-  formatting,
-  __gridScope,
-}: GridScopedProps<{ model: SheetModel; formatting: FormattingModel }>) => {
-  const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
+export const GridSheet = () => {
+  const { id, model, editing, setEditing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs } =
+    useSheetContext();
   const dxGrid = useRef<DxGridElement | null>(null);
   const rangeNotifier = useRef<CellRangeNotifier>();
+  const { hasAttention } = useAttention(id);
+
+  const handleFocus = useCallback(
+    (event: FocusEvent) => {
+      if (!editing) {
+        const cell = closestCell(event.target);
+        if (cell && cell.plane === 'grid') {
+          setCursor({ col: cell.col, row: cell.row });
+        }
+      }
+    },
+    [editing],
+  );
 
   // TODO(burdon): Validate formula before closing: hf.validateFormula();
   const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
@@ -87,19 +95,66 @@ const GridSheetImpl = ({
 
   const handleSelect = useCallback<NonNullable<GridContentProps['onSelect']>>(
     ({ minCol, maxCol, minRow, maxRow }) => {
+      const range: CellRange = { from: { col: minCol, row: minRow } };
+      if (minCol !== maxCol || minRow !== maxRow) {
+        range.to = { col: maxCol, row: maxRow };
+      }
       if (editing) {
-        const range: CellRange = { from: { col: minCol, row: minRow } };
-        if (minCol !== maxCol || minRow !== maxRow) {
-          range.to = { col: maxCol, row: maxRow };
-        }
         // Update range selection in formula.
         rangeNotifier.current?.(rangeToA1Notation(range));
+      } else {
+        // Setting range while editing causes focus to move to null, avoid doing so.
+        setRange(range.to ? range : undefined);
       }
     },
     [editing],
   );
 
-  const { columns, rows } = useSheetModelDxGridProps(dxGrid, model, formatting);
+  const handleWheel = useCallback(
+    (event: WheelEvent) => {
+      if (!hasAttention) {
+        event.stopPropagation();
+      }
+    },
+    [hasAttention],
+  );
+
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      switch (event.key) {
+        case 'Backspace':
+        case 'Delete':
+          event.preventDefault();
+          return cursorFallbackRange && model.clear(cursorFallbackRange);
+      }
+      if (event.metaKey || event.ctrlKey) {
+        switch (event.key) {
+          case 'x':
+          case 'X':
+            event.preventDefault();
+            return cursorFallbackRange && model.cut(cursorFallbackRange);
+          case 'c':
+          case 'C':
+            event.preventDefault();
+            return cursorFallbackRange && model.copy(cursorFallbackRange);
+          case 'v':
+          case 'V':
+            event.preventDefault();
+            return cursor && model.paste(cursor);
+          case 'z':
+            event.preventDefault();
+            return event.shiftKey ? model.redo() : model.undo();
+          case 'Z':
+          case 'y':
+            event.preventDefault();
+            return model.redo();
+        }
+      }
+    },
+    [cursorFallbackRange, model, cursor],
+  );
+
+  const { columns, rows } = useSheetModelDxGridProps(dxGrid, model);
 
   const extension = useMemo(
     () => [
@@ -118,11 +173,16 @@ const GridSheetImpl = ({
     [model],
   );
 
+  useUpdateFocusedCellOnThreadSelection(dxGrid);
+  useSelectThreadOnCellFocus();
+
   return (
     <>
       <GridCellEditor getCellContent={getCellContent} extension={extension} />
       <Grid.Content
         initialCells={initialCells}
+        limitColumns={DEFAULT_COLUMNS}
+        limitRows={DEFAULT_ROWS}
         columns={columns}
         rows={rows}
         onAxisResize={handleAxisResize}
@@ -130,24 +190,14 @@ const GridSheetImpl = ({
         rowDefault={sheetRowDefault}
         columnDefault={sheetColDefault}
         frozen={frozen}
+        onFocus={handleFocus}
+        onWheelCapture={handleWheel}
+        onKeyDown={handleKeyDown}
+        overscroll='inline'
+        className='[--dx-grid-base:var(--surface-bg)]'
+        activeRefs={activeRefs}
         ref={dxGrid}
       />
     </>
-  );
-};
-
-export type GridSheetProps = { graph?: ComputeGraph; sheet?: SheetType } & UseSheetModelOptions;
-
-export const GridSheet = ({ graph, sheet, ...options }: GridSheetProps) => {
-  const model = useSheetModel(graph, sheet, options);
-  const formatting = useFormattingModel(model);
-  if (!model || !formatting) {
-    return null;
-  }
-
-  return (
-    <Grid.Root id={model.id}>
-      <GridSheetImpl model={model} formatting={formatting} />
-    </Grid.Root>
   );
 };

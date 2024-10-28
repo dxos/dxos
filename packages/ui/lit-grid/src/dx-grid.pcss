@@ -52,8 +52,9 @@ dx-grid, dx-grid-axis-resize-handle {
 
 .dx-grid {
   [role='gridcell'], [role='columnheader'], [role='rowheader'] {
+    position: relative;
     background: var(--dx-grid-base, var(--dx-base));
-    padding: 2px;
+    padding: 2px 3px;
     box-sizing: border-box;
     cursor: pointer;
     border: 1px solid transparent;
@@ -63,19 +64,16 @@ dx-grid, dx-grid-axis-resize-handle {
     &[inert] {
       visibility: hidden;
     }
-    &:focus, &:focus-visible, &.dx-grid__cell--active {
-      cursor: text;
-      position: relative;
+    &:focus, &:focus-visible, &[data-dx-active] {
       z-index: 2;
       border-color: var(--dx-accentSurface);
       outline: none;
-    }
-  }
-  &[data-grid-mode="edit"] {
-    [role='gridcell'], [role='columnheader'], [role='rowheader'] {
-      &.dx-grid__cell--active {
-        color: transparent !important;
+      &:not([aria-readonly]) {
+        cursor: text;
       }
+    }
+    &.dx-grid__cell--commented {
+      background: var(--dx-grid-commented, var(--dx-gridCommented));
     }
   }
   &[data-grid-select] {

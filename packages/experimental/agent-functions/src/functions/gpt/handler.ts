@@ -18,7 +18,15 @@ import { ModelInvokerFactory } from '../../chain';
 
 const AI_SOURCE = 'dxos.org/service/ai';
 
-const types = [ChainPromptType, DocumentType, MessageType, CollectionType, TextType, ThreadType];
+const types = [
+  // Default types.
+  ChainPromptType,
+  CollectionType,
+  DocumentType,
+  MessageType,
+  TextType,
+  ThreadType,
+];
 
 /**
  * Trigger configuration.
@@ -113,7 +121,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
                 sender: { identityKey: resources.identityKey },
                 timestamp: new Date().toISOString(),
                 text,
-                parts,
+                // parts, // TODO(burdon): Type.
               },
               {
                 keys: [metaKey],

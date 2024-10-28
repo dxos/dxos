@@ -4,19 +4,20 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
 import { create, S } from '@dxos/echo-schema';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { withTheme, withLayout, withSignals } from '@dxos/storybook-utils';
+import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { List, type ListRootProps } from './List';
-import { createList, TestItemSchema, type TestItemType } from '../../testing';
+import { createList, TestItemSchema, type TestItemType } from './testing';
 
 // TODO(burdon): var-icon-size.
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2rem] rounded';
 
-const Story = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
+const DefaultStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
   const handleSelect = (item: TestItemType) => {
     console.log('select', item);
   };
@@ -36,7 +37,7 @@ const Story = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
             </div>
 
             <div role='list' className='w-full h-full overflow-auto'>
-              {items.map((item) => (
+              {items?.map((item) => (
                 <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
                   <List.ItemDragHandle />
                   <List.ItemTitle onClick={() => handleSelect(item)}>{item.name}</List.ItemTitle>
@@ -47,7 +48,7 @@ const Story = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
 
             <div role='none' className={grid}>
               <div />
-              <div className='flex items-center text-sm'>{items.length} Items</div>
+              <div className='flex items-center text-sm'>{items?.length} Items</div>
             </div>
           </div>
 
@@ -70,7 +71,7 @@ const SimpleStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
     <List.Root<TestItemType> dragPreview items={items} {...props}>
       {({ items }) => (
         <div role='list' className='w-full h-full overflow-auto'>
-          {items.map((item) => (
+          {items?.map((item) => (
             <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
               <List.ItemDragHandle />
               <List.ItemTitle>{item.name}</List.ItemTitle>
@@ -83,26 +84,27 @@ const SimpleStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
   );
 };
 
-export default {
-  // TODO(burdon): Storybook collides with react-ui/List.
-  title: 'react-ui-list/List',
-  decorators: [withTheme, withSignals, withLayout({ fullscreen: true })],
-  render: Story,
-};
-
 const list = create(createList(100));
 
-export const Default = {
+export const Default: StoryObj<ListRootProps<TestItemType>> = {
+  render: DefaultStory,
   args: {
     items: list.items,
     isItem: S.is(TestItemSchema),
-  } satisfies ListRootProps<TestItemType>,
-} as any; // TODO(burdon): TS2742: The inferred type of Default cannot be named without a reference to... (AST)
+  },
+};
 
-export const Simple = {
+export const Simple: StoryObj<ListRootProps<TestItemType>> = {
   render: SimpleStory,
   args: {
     items: list.items,
     isItem: S.is(TestItemSchema),
-  } satisfies ListRootProps<TestItemType>,
-} as any; // TODO(burdon): TS2742: The inferred type of Default cannot be named without a reference to... (AST)
+  },
+};
+
+const meta: Meta = {
+  title: 'ui/react-ui-list/List',
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+};
+
+export default meta;

@@ -154,6 +154,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/merkle-search-tree/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/node-std/package.json",
           "jsonpath": "$.version"
         },
@@ -185,6 +190,11 @@
         {
           "type": "json",
           "path": "packages/common/random-access-storage/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/storybook-utils/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -444,6 +454,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/script-toolbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/spyglass/package.json",
           "jsonpath": "$.version"
         },
@@ -535,6 +550,11 @@
         {
           "type": "json",
           "path": "packages/plugins/experimental/plugin-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/experimental/plugin-wnfs/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -799,11 +819,6 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-navtree/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/ui/react-ui-searchlist/package.json",
           "jsonpath": "$.version"
         },
@@ -845,11 +860,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-types/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/storybook-utils/package.json",
           "jsonpath": "$.version"
         },
         {

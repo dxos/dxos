@@ -16,7 +16,7 @@ import {
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 
-import { singleValueFacet, Cursor, type CursorConverter } from '../../state';
+import { singleValueFacet, Cursor, type CursorConverter } from '../../util';
 
 export interface AwarenessProvider {
   remoteStateChange: Event<void>;

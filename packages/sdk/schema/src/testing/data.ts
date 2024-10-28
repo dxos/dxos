@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, S, generateEchoId } from '@dxos/echo-schema';
+import { AST, S, createObjectId } from '@dxos/echo-schema';
 
 import { EmailFormat, FormatAnnotationId, FieldValueType, type ViewType } from '../types';
 
@@ -11,6 +11,7 @@ import { EmailFormat, FormatAnnotationId, FieldValueType, type ViewType } from '
 //
 
 export const TestSchema = S.Struct({
+  id: S.String, // TODO(burdon): ID annotation.
   name: S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Full name.' })),
   email: S.String.pipe(S.annotations({ [FormatAnnotationId]: EmailFormat })),
   address: S.optional(
@@ -26,7 +27,11 @@ export const TestSchema = S.Struct({
   ),
   admin: S.optional(S.Boolean),
   rating: S.optional(S.Number),
-}).pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Test schema.' }));
+}).pipe(
+  S.annotations({
+    [AST.DescriptionAnnotationId]: 'Test schema.',
+  }),
+);
 
 export type TestType = S.Schema.Type<typeof TestSchema>;
 
@@ -35,6 +40,7 @@ export type TestType = S.Schema.Type<typeof TestSchema>;
 //
 
 export const testData: TestType = {
+  id: createObjectId(),
   name: 'Tester',
   email: 'test@example.com',
   address: {
@@ -44,36 +50,34 @@ export const testData: TestType = {
 
 const fields = [
   {
-    id: generateEchoId(),
+    id: createObjectId(),
     path: 'name',
     type: FieldValueType.String,
   },
   {
-    id: generateEchoId(),
+    id: createObjectId(),
     path: 'email',
     type: FieldValueType.String,
   },
   {
-    id: generateEchoId(),
+    id: createObjectId(),
     path: 'address.zip',
     label: 'ZIP',
     type: FieldValueType.String,
   },
   {
-    id: generateEchoId(),
+    id: createObjectId(),
     path: 'rating',
     type: FieldValueType.Number,
   },
   {
-    id: generateEchoId(),
+    id: createObjectId(),
     path: 'admin',
     type: FieldValueType.Boolean,
   },
 ];
 
 export const testView: ViewType = {
-  query: {
-    schema: TestSchema,
-  },
+  schema: 'example.com/schema/TestSchema',
   fields,
 };

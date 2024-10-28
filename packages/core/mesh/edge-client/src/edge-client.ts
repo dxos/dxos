@@ -6,14 +6,12 @@ import WebSocket from 'isomorphic-ws';
 
 import { Trigger, Event, scheduleTaskInterval, scheduleTask, TriggerState } from '@dxos/async';
 import { Context, LifecycleState, Resource, type Lifecycle } from '@dxos/context';
-import { randomBytes } from '@dxos/crypto';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { schema } from '@dxos/protocols/proto';
-import { type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { protocol } from './defs';
+import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
 import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors';
 import { PersistentLifecycle } from './persistent-lifecycle';
 import { type Protocol, toUint8Array } from './protocol';
@@ -45,17 +43,6 @@ export type MessengerConfig = {
   disableAuth?: boolean;
 };
 
-export interface EdgeIdentity {
-  peerKey: string;
-  identityKey: string;
-  /**
-   * Returns credential presentation issued by the identity key.
-   * Presentation must have the provided challenge.
-   * Presentation may include ServiceAccess credentials.
-   */
-  presentCredentials({ challenge }: { challenge: Uint8Array }): Promise<Presentation>;
-}
-
 /**
  * Messenger client.
  */
@@ -74,14 +61,16 @@ export class EdgeClient extends Resource implements EdgeConnection {
   private _keepaliveCtx?: Context = undefined;
   private _heartBeatContext?: Context = undefined;
 
-  private _baseUrl: string;
+  private _baseWsUrl: string;
+  private _baseHttpUrl: string;
 
   constructor(
     private _identity: EdgeIdentity,
     private readonly _config: MessengerConfig,
   ) {
     super();
-    this._baseUrl = getEdgeUrlWithProtocol(_config.socketEndpoint, 'ws');
+    this._baseWsUrl = getEdgeUrlWithProtocol(_config.socketEndpoint, 'ws');
+    this._baseHttpUrl = getEdgeUrlWithProtocol(_config.socketEndpoint, 'http');
   }
 
   // TODO(burdon): Attach logging.
@@ -106,8 +95,11 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   setIdentity(identity: EdgeIdentity) {
-    this._identity = identity;
-    this._persistentLifecycle.scheduleRestart();
+    if (identity.identityKey !== this._identity.identityKey || identity.peerKey !== this._identity.peerKey) {
+      log('Edge identity changed', { identity, oldIdentity: this._identity });
+      this._identity = identity;
+      this._persistentLifecycle.scheduleRestart();
+    }
   }
 
   public addListener(listener: MessageListener): () => void {
@@ -134,16 +126,13 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   private async _openWebSocket() {
-    let protocolHeader: string | undefined;
-
-    if (!this._config.disableAuth) {
-      // TODO(dmaretskyi): Get challenge from the WWW-Authenticate header returned by the endpoint.
-      const challenge = randomBytes(32);
-      const credential = await this._identity.presentCredentials({ challenge });
-      protocolHeader = encodePresentationIntoAuthHeader(credential);
+    if (this._ctx.disposed) {
+      return;
     }
+    const path = `/ws/${this._identity.identityKey}/${this._identity.peerKey}`;
+    const protocolHeader = this._config.disableAuth ? undefined : await this._createAuthHeader(path);
 
-    const url = new URL(`/ws/${this._identity.identityKey}/${this._identity.peerKey}`, this._baseUrl);
+    const url = new URL(path, this._baseWsUrl);
     log('Opening websocket', { url: url.toString(), protocolHeader });
     this._ws = new WebSocket(url, protocolHeader ? [protocolHeader] : []);
 
@@ -184,6 +173,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
 
     // TODO(dmaretskyi): Potential race condition here since web socket errors don't resolve this trigger.
     await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
+    log('Websocket is ready', { identity: this._identity.identityKey, peer: this._identity.peerKey });
 
     // TODO(dmaretskyi): Potential leak: context re-assigned without disposing the previous one.
     this._keepaliveCtx = new Context();
@@ -263,12 +253,22 @@ export class EdgeClient extends Resource implements EdgeConnection {
       2 * SIGNAL_KEEPALIVE_INTERVAL,
     );
   }
+
+  private async _createAuthHeader(path: string): Promise<string | undefined> {
+    const httpUrl = new URL(path, this._baseHttpUrl);
+    httpUrl.protocol = getEdgeUrlWithProtocol(this._baseWsUrl.toString(), 'http');
+    const response = await fetch(httpUrl, { method: 'GET' });
+    if (response.status === 401) {
+      return encodePresentationWsAuthHeader(await handleAuthChallenge(response, this._identity));
+    } else {
+      log.warn('no auth challenge from edge', { status: response.status, statusText: response.statusText });
+      return undefined;
+    }
+  }
 }
 
-const encodePresentationIntoAuthHeader = (presentation: Presentation): string => {
-  const encoded = schema.getCodecForType('dxos.halo.credentials.Presentation').encode(presentation);
+const encodePresentationWsAuthHeader = (encodedPresentation: Uint8Array): string => {
   // = and / characters are not allowed in the WebSocket subprotocol header.
-  const encodedToken = Buffer.from(encoded).toString('base64').replace(/=*$/, '').replaceAll('/', '|');
-
+  const encodedToken = Buffer.from(encodedPresentation).toString('base64').replace(/=*$/, '').replaceAll('/', '|');
   return `base64url.bearer.authorization.dxos.org.${encodedToken}`;
 };
