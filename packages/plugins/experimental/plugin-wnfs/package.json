@@ -52,6 +52,7 @@
     "@dxos/react-ui-mosaic": "workspace:*",
     "blockstore-core": "^5.0.1",
     "blockstore-idb": "^2.0.0",
+    "idb-keyval": "^6.2.1",
     "interface-blockstore": "^5.2.10",
     "multiformats": "^13.2.2",
     "uint8arrays": "^5.1.0",

@@ -4,7 +4,8 @@
 
 import { BaseBlockstore } from 'blockstore-core';
 import { IDBBlockstore } from 'blockstore-idb';
-import type { CID } from 'multiformats';
+import * as IDB from 'idb-keyval';
+import { CID } from 'multiformats';
 
 import { storeName } from './common';
 
@@ -18,17 +19,32 @@ export const create = (apiHost?: string) => {
  */
 export class MixedBlockstore extends BaseBlockstore {
   readonly #apiHost: string | undefined;
-  readonly #idbStore: IDBBlockstore;
+  readonly #localStore: IDBBlockstore;
+
+  #isConnected: boolean;
+  #queue: string[];
 
   constructor(apiHost?: string) {
     super();
 
-    this.#apiHost = apiHost;
-    this.#idbStore = new IDBBlockstore(storeName());
+    this.#apiHost = apiHost ? apiHost.replace(/\/?$/, '') : undefined;
+    this.#localStore = new IDBBlockstore(storeName());
+    this.#isConnected = navigator.onLine;
+    this.#queue = [];
   }
 
   async open() {
-    await this.#idbStore.open();
+    await this.#localStore.open();
+    await this.#restoreQueue();
+
+    window.addEventListener('offline', async () => {
+      this.#isConnected = false;
+    });
+
+    window.addEventListener('online', async () => {
+      this.#isConnected = true;
+      await this.#flushQueue();
+    });
   }
 
   url(apiHost: string, cid?: CID) {
@@ -36,11 +52,12 @@ export class MixedBlockstore extends BaseBlockstore {
     return `${apiHost}/api/file/${path}`;
   }
 
-  // Blockstore implementation
-  override async delete(key: CID): Promise<void> {
-    await this.#idbStore.delete(key);
+  // BLOCKSTORE IMPLEMENTATION
 
-    if (this.#apiHost) {
+  override async delete(key: CID): Promise<void> {
+    await this.#localStore.delete(key);
+
+    if (this.#isConnected && this.#apiHost) {
       await fetch(this.url(this.#apiHost, key), {
         method: 'DELETE',
       });
@@ -48,11 +65,11 @@ export class MixedBlockstore extends BaseBlockstore {
   }
 
   override async get(key: CID): Promise<Uint8Array> {
-    if (await this.#idbStore.has(key)) {
-      return await this.#idbStore.get(key);
+    if (await this.#localStore.has(key)) {
+      return await this.#localStore.get(key);
     }
 
-    if (this.#apiHost) {
+    if (this.#isConnected && this.#apiHost) {
       return await fetch(this.url(this.#apiHost, key), {
         method: 'GET',
       })
@@ -60,15 +77,15 @@ export class MixedBlockstore extends BaseBlockstore {
         .then((r) => new Uint8Array(r));
     }
 
-    return await this.#idbStore.get(key);
+    return await this.#localStore.get(key);
   }
 
   override async has(key: CID): Promise<boolean> {
-    if (await this.#idbStore.has(key)) {
+    if (await this.#localStore.has(key)) {
       return true;
     }
 
-    if (this.#apiHost) {
+    if (this.#isConnected && this.#apiHost) {
       return await fetch(this.url(this.#apiHost, key), {
         method: 'HEAD',
       }).then((r) => r.ok);
@@ -78,19 +95,87 @@ export class MixedBlockstore extends BaseBlockstore {
   }
 
   override async put(key: CID, val: Uint8Array): Promise<CID> {
-    await this.#idbStore.put(key, val);
+    await this.#localStore.put(key, val);
 
+    await this.#addToQueue(key);
+    await this.#flushQueue();
+
+    return key;
+  }
+
+  async destroy(): Promise<void> {
+    await this.#localStore.destroy();
+  }
+
+  // REMOTE
+
+  async putRemote(key: CID, val: Uint8Array) {
     if (this.#apiHost) {
       await fetch(this.url(this.#apiHost, key), {
         method: 'POST',
         body: val,
       });
     }
-
-    return key;
   }
 
-  async destroy(): Promise<void> {
-    await this.#idbStore.destroy();
+  // QUEUE
+
+  readonly queueCacheName = `${storeName()}/state/queue`;
+
+  async #addToQueue(key: CID) {
+    await this.#saveQueue([...this.#queue, key.toString()]);
+  }
+
+  async #flushQueue() {
+    if (!this.#isConnected || !this.#apiHost) {
+      return;
+    }
+
+    const keys = [...this.#queue];
+
+    // Try to put each key on the remote sequentially
+    const state = await keys.reduce(
+      async (
+        acc: Promise<{ failed: string[]; succeeded: string[] }>,
+        key: string,
+      ): Promise<{ failed: string[]; succeeded: string[] }> => {
+        const obj = await acc;
+        const cid = CID.parse(key);
+        const val = await this.#localStore.get(cid);
+
+        try {
+          await this.putRemote(cid, val);
+          return { ...obj, succeeded: [...obj.succeeded, key] };
+        } catch (err) {
+          return { ...obj, failed: [...obj.failed, key] };
+        }
+      },
+      Promise.resolve({
+        succeeded: [],
+        failed: [],
+      }),
+    );
+
+    // Adjust queue
+    const queue = [...this.#queue].filter((k) => {
+      if (state.succeeded.includes(k)) return false;
+      return true;
+    });
+
+    await this.#saveQueue(queue);
+  }
+
+  async #restoreQueue() {
+    const fromCache = await IDB.get(this.queueCacheName);
+    if (fromCache && Array.isArray(fromCache)) {
+      this.#queue = fromCache;
+      await this.#flushQueue();
+    }
+  }
+
+  async #saveQueue(items: string[]) {
+    const arr = [...items];
+    this.#queue = arr;
+    await IDB.set(this.queueCacheName, arr);
   }
 }
