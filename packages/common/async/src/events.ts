@@ -43,7 +43,7 @@ export type ListenerOptions = {
 };
 
 /**
- * An EventEmitter variant that does not do event multiplexing and respresents a single event.
+ * An EventEmitter variant that does not do event multiplexing and represents a single event.
  *
  * ## Typical usage:
  * ```javascript
