@@ -125,6 +125,15 @@
       "@dxos/plugin-template/meta": [
         "packages/plugins/experimental/plugin-template/src/meta.ts"
       ],
+      "@dxos/plugin-wnfs": [
+        "packages/plugins/experimental/plugin-wnfs/src/index.ts"
+      ],
+      "@dxos/plugin-wnfs/meta": [
+        "packages/plugins/experimental/plugin-wnfs/src/meta.tsx"
+      ],
+      "@dxos/plugin-wnfs/types": [
+        "packages/plugins/experimental/plugin-wnfs/src/types/index.ts"
+      ],
       "@dxos/plugin-attention": [
         "packages/plugins/plugin-attention/src/index.ts"
       ],
@@ -343,9 +352,6 @@
       ],
       "@dxos/react-ui-editor": [
         "packages/ui/react-ui-editor/src/index.ts"
-      ],
-      "@dxos/react-ui-editor/state": [
-        "packages/ui/react-ui-editor/src/state/index.ts"
       ],
       "@dxos/react-ui-grid": [
         "packages/ui/react-ui-grid/src/index.ts"
