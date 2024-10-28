@@ -42,7 +42,7 @@ export type ObservabilityPluginState = {
 
 export type ObservabilityPluginProvides = IntentResolverProvides &
   SurfaceProvides &
-  SettingsProvides &
+  SettingsProvides<ObservabilitySettingsProps> &
   TranslationsProvides & {
     observability: ObservabilityPluginState;
   };
@@ -64,7 +64,6 @@ export const ObservabilityPlugin = (options: {
     initialize: async () => {
       settings.enabled = !(await isObservabilityDisabled(options.namespace));
       state.values.group = await getObservabilityGroup(options.namespace);
-
       state.prop({ key: 'notified', type: LocalStorageStore.bool({ allowUndefined: true }) });
     },
     ready: async (plugins) => {

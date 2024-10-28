@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type BootstrapPluginsParams, NavigationAction, Plugin, type PluginMeta } from '@dxos/app-framework';
+import { type HostPluginParams, NavigationAction, Plugin, type PluginMeta } from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
 import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
@@ -22,6 +22,7 @@ import HelpMeta from '@dxos/plugin-help/meta';
 import InboxMeta from '@dxos/plugin-inbox/meta';
 import IpfsMeta from '@dxos/plugin-ipfs/meta';
 import KanbanMeta from '@dxos/plugin-kanban/meta';
+import ManagerMeta from '@dxos/plugin-manager/meta';
 import MapMeta from '@dxos/plugin-map/meta';
 import MarkdownMeta from '@dxos/plugin-markdown/meta';
 import MermaidMeta from '@dxos/plugin-mermaid/meta';
@@ -35,7 +36,6 @@ import PwaMeta from '@dxos/plugin-pwa/meta';
 import RegistryMeta from '@dxos/plugin-registry/meta';
 import ScriptMeta from '@dxos/plugin-script/meta';
 import SearchMeta from '@dxos/plugin-search/meta';
-import SettingsMeta from '@dxos/plugin-settings/meta';
 import SheetMeta from '@dxos/plugin-sheet/meta';
 import SketchMeta from '@dxos/plugin-sketch/meta';
 import SpaceMeta from '@dxos/plugin-space/meta';
@@ -46,6 +46,7 @@ import TableMeta from '@dxos/plugin-table/meta';
 import ThemeMeta from '@dxos/plugin-theme/meta';
 import ThreadMeta from '@dxos/plugin-thread/meta';
 import WildcardMeta from '@dxos/plugin-wildcard/meta';
+import WnfsMeta from '@dxos/plugin-wnfs/meta';
 import { isNotFalsy } from '@dxos/util';
 
 import { INITIAL_COLLECTION_TITLE, INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
@@ -82,20 +83,8 @@ export const core = ({ isPwa, isSocket }: PluginConfig): PluginMeta[] =>
     isSocket && NativeMeta,
     WelcomeMeta,
 
-    // UX
-    AttentionMeta,
-    DeckMeta,
-    StackMeta,
-    NavTreeMeta,
-    SettingsMeta,
-    StatusBarMeta,
-    WildcardMeta, // TODO(burdon): Remove?
-
-    // Shell and help (client must precede help because help’s context depends on client’s)
-    ClientMeta,
-    HelpMeta,
-
     // Data integrations
+    ClientMeta,
     SpaceMeta,
 
     // Framework extensions
@@ -103,7 +92,17 @@ export const core = ({ isPwa, isSocket }: PluginConfig): PluginMeta[] =>
     //  Root folder needs to be created before the graph is built or else it's not ordered first.
     GraphMeta,
     MetadataMeta,
+
+    // UX
+    AttentionMeta,
+    DeckMeta,
+    HelpMeta,
+    NavTreeMeta,
+    ManagerMeta,
     RegistryMeta,
+    StackMeta,
+    StatusBarMeta,
+    WildcardMeta,
   ].filter(isNotFalsy);
 
 export const defaults = ({ isDev }: PluginConfig): PluginMeta[] =>
@@ -130,6 +129,7 @@ export const recommended = ({ isLabs }: PluginConfig): PluginMeta[] => [
   PresenterMeta,
   ScriptMeta,
   SearchMeta,
+  WnfsMeta,
 
   ...(isLabs
     ? [
@@ -155,7 +155,7 @@ export const plugins = ({
   observability,
   isPwa,
   isSocket,
-}: PluginConfig): BootstrapPluginsParams['plugins'] => ({
+}: PluginConfig): HostPluginParams['plugins'] => ({
   [AttentionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-attention')),
   [AutomationMeta.id]: Plugin.lazy(() => import('@dxos/plugin-automation')),
   [ChessMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chess')),
@@ -199,6 +199,7 @@ export const plugins = ({
   [IpfsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-ipfs')),
   [KanbanMeta.id]: Plugin.lazy(() => import('@dxos/plugin-kanban')),
   [DeckMeta.id]: Plugin.lazy(() => import('@dxos/plugin-deck'), { observability: true }),
+  [ManagerMeta.id]: Plugin.lazy(() => import('@dxos/plugin-manager')),
   [MapMeta.id]: Plugin.lazy(() => import('@dxos/plugin-map')),
   [MarkdownMeta.id]: Plugin.lazy(() => import('@dxos/plugin-markdown')),
   [MermaidMeta.id]: Plugin.lazy(() => import('@dxos/plugin-mermaid')),
@@ -217,7 +218,6 @@ export const plugins = ({
     containerUrl: '/script-frame/index.html',
   }),
   [SearchMeta.id]: Plugin.lazy(() => import('@dxos/plugin-search')),
-  [SettingsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-settings')),
   [SheetMeta.id]: Plugin.lazy(() => import('@dxos/plugin-sheet')),
   [SketchMeta.id]: Plugin.lazy(() => import('@dxos/plugin-sketch')),
   [SpaceMeta.id]: Plugin.lazy(() => import('@dxos/plugin-space'), {
@@ -257,4 +257,5 @@ export const plugins = ({
   [ThreadMeta.id]: Plugin.lazy(() => import('@dxos/plugin-thread')),
   [WelcomeMeta.id]: Plugin.lazy(() => import('./plugins/welcome'), { firstRun }),
   [WildcardMeta.id]: Plugin.lazy(() => import('@dxos/plugin-wildcard')),
+  [WnfsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-wnfs')),
 });

@@ -119,6 +119,15 @@
       "@dxos/plugin-template/meta": [
         "packages/plugins/experimental/plugin-template/src/meta.ts"
       ],
+      "@dxos/plugin-wnfs": [
+        "packages/plugins/experimental/plugin-wnfs/src/index.ts"
+      ],
+      "@dxos/plugin-wnfs/meta": [
+        "packages/plugins/experimental/plugin-wnfs/src/meta.tsx"
+      ],
+      "@dxos/plugin-wnfs/types": [
+        "packages/plugins/experimental/plugin-wnfs/src/types/index.ts"
+      ],
       "@dxos/plugin-attention": [
         "packages/plugins/plugin-attention/src/index.ts"
       ],
@@ -166,6 +175,12 @@
       ],
       "@dxos/plugin-help/meta": [
         "packages/plugins/plugin-help/src/meta.ts"
+      ],
+      "@dxos/plugin-manager": [
+        "packages/plugins/plugin-manager/src/index.ts"
+      ],
+      "@dxos/plugin-manager/meta": [
+        "packages/plugins/plugin-manager/src/meta.ts"
       ],
       "@dxos/plugin-markdown": [
         "packages/plugins/plugin-markdown/src/index.ts"
@@ -217,12 +232,6 @@
       ],
       "@dxos/plugin-registry/meta": [
         "packages/plugins/plugin-registry/src/meta.ts"
-      ],
-      "@dxos/plugin-settings": [
-        "packages/plugins/plugin-settings/src/index.ts"
-      ],
-      "@dxos/plugin-settings/meta": [
-        "packages/plugins/plugin-settings/src/meta.ts"
       ],
       "@dxos/plugin-sheet": [
         "packages/plugins/plugin-sheet/src/index.ts"

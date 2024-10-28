@@ -4,6 +4,7 @@
 
 import { type Brand } from 'effect';
 
+import type { UnsubscribeCallback } from '@dxos/async';
 import { type GenericSignal } from '@dxos/echo-signals/runtime';
 import { type ComplexMap } from '@dxos/util';
 
@@ -74,6 +75,8 @@ export type ObjectInternals = {
    * Set only when the object is not bound to a database.
    */
   linkCache: Map<string, EchoReactiveObject<any>> | undefined;
+
+  subscriptions: UnsubscribeCallback[];
 };
 
 /**

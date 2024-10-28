@@ -4,7 +4,7 @@
 
 import jp from 'jsonpath';
 
-import { AST, type S, visit } from '@dxos/effect';
+import { AST, type S, isLeafType, visit } from '@dxos/effect';
 
 import { type FieldType, FieldValueType, type ViewType } from './types';
 
@@ -19,7 +19,9 @@ export const setFieldValue = <T>(data: any, field: FieldType, value: T): T => jp
 export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FieldValueType][] => {
   const fields: [string, FieldValueType][] = [];
   visit(schema.ast, (node, path) => {
-    fields.push([path.join('.'), toFieldValueType(node)]);
+    if (isLeafType(node)) {
+      fields.push([path.join('.'), toFieldValueType(node)]);
+    }
   });
   return fields;
 };

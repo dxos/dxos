@@ -22,7 +22,7 @@ export const DefaultObjectSettings = ({ object }: DefaultObjectSettingsProps) =>
         <Input.Label>{t('name label')}</Input.Label>
         <Input.TextInput
           placeholder={t('name placeholder')}
-          value={object.name}
+          value={object.name ?? ''}
           onChange={(event) => {
             object.name = event.target.value;
           }}

@@ -18,7 +18,7 @@
         "entryPoints": [
           "{projectRoot}/src/index.ts"
         ],
-        "injectGlobals": false
+        "importGlobals": true
       }
     },
     "lint": {},
