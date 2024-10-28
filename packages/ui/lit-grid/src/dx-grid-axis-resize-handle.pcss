@@ -1,0 +1,23 @@
+dx-grid-axis-resize-handle {
+  display: contents;
+}
+
+.dx-grid__resize-handle {
+  position: absolute;
+  background: transparent;
+  &:hover {
+    background: var(--dx-grid-resizeHandleHover, var(--dx-hoverSurface));
+  }
+  &[data-dx-grid-axis='col'] {
+    inset-block: 0;
+    inset-inline-end: 0;
+    inline-size: .5rem;
+    cursor: col-resize;
+  }
+  &[data-dx-grid-axis='row'] {
+    inset-inline: 0;
+    inset-block-end: 0;
+    block-size: .5rem;
+    cursor: row-resize;
+  }
+}
