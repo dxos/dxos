@@ -12,6 +12,7 @@ export * from './comments';
 export * from './debug';
 export * from './dnd';
 export * from './factories';
+export * from './focus';
 export * from './folding';
 export * from './listener';
 export * from './markdown';

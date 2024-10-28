@@ -12,7 +12,7 @@ import { type EditorView } from '@codemirror/view';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, type KeyboardEvent, useEffect, useState } from 'react';
+import React, { useEffect, useState, type FC, type KeyboardEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { create, Expando } from '@dxos/echo-schema';
@@ -22,12 +22,11 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { Button, Input, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, mx, getSize } from '@dxos/react-ui-theme';
+import { baseSurface, getSize, mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { editorContent, editorGutter, editorMonospace } from './defaults';
 import {
-  InputModeExtensions,
   annotations,
   autocomplete,
   blast,
@@ -45,6 +44,7 @@ import {
   folding,
   formattingKeymap,
   image,
+  InputModeExtensions,
   linkTooltip,
   listener,
   mention,
