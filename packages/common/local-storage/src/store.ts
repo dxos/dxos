@@ -6,7 +6,7 @@ import { effect } from '@preact/signals-core';
 import get from 'lodash.get';
 import set from 'lodash.set';
 
-import { AST, type ReactiveObject, type S, create } from '@dxos/echo-schema';
+import { AST, type ReactiveObject, type S, create, isReactiveObject } from '@dxos/echo-schema';
 import { type Path, visit } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -24,7 +24,7 @@ export type SettingsValue = Record<string, any>;
 export type SettingsProps<T extends SettingsValue> = {
   schema: S.Schema<T>;
   prefix: string;
-  defaultValue?: T;
+  value?: ReactiveObject<T> | T;
 };
 
 export interface SettingsStoreFactory {
@@ -50,9 +50,9 @@ export class RootSettingsStore implements SettingsStoreFactory {
     return this._stores.get(prefix);
   }
 
-  createStore<T extends SettingsValue>({ schema, prefix, defaultValue }: SettingsProps<T>): SettingsStore<T> {
+  createStore<T extends SettingsValue>({ schema, prefix, value }: SettingsProps<T>): SettingsStore<T> {
     invariant(!this._stores.has(prefix));
-    const store = new SettingsStore<T>(schema, prefix, defaultValue, this._storage);
+    const store = new SettingsStore<T>(schema, prefix, value, this._storage);
     this._stores.set(prefix, store);
     return store;
   }
@@ -76,17 +76,18 @@ export class RootSettingsStore implements SettingsStoreFactory {
  * Reactive key-value property store.
  */
 export class SettingsStore<T extends SettingsValue> {
-  public _value: ReactiveObject<T>;
-
+  private readonly _value: ReactiveObject<T>;
+  private readonly _defaults: T;
   private _unsubscribe?: () => void;
 
   constructor(
     private readonly _schema: S.Schema<T>,
     private readonly _prefix: string,
-    private readonly _defaultValue: T = {} as T,
+    value: ReactiveObject<T> | T = {} as T,
     private readonly _storage: Storage = localStorage,
   ) {
-    this._value = create(cloneObject(this._defaultValue));
+    this._value = isReactiveObject(value) ? value : create(value);
+    this._defaults = cloneObject(this._value);
     this.load();
   }
 
@@ -114,7 +115,16 @@ export class SettingsStore<T extends SettingsValue> {
   reset() {
     this.close();
 
-    this._value = create(cloneObject(this._defaultValue));
+    // TODO(burdon): Factor out.
+    for (const prop of Object.keys(this._value)) {
+      const value = this._defaults[prop];
+      if (value !== undefined) {
+        set(this._value, prop, value);
+      } else {
+        delete this._value[prop];
+      }
+    }
+
     this._storage.removeItem(this._prefix);
     for (const key of Object.keys(this._storage)) {
       if (key.startsWith(this._prefix)) {

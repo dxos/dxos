@@ -7,13 +7,12 @@ import React, { type ReactNode, useEffect, useState } from 'react';
 import { definePlugin, parseGraphPlugin, parseIntentPlugin, parseSettingsPlugin } from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
 import { Devtools } from '@dxos/devtools';
-import { type SettingsStore } from '@dxos/local-storage';
 import { type ClientPluginProvides } from '@dxos/plugin-client';
 import { createExtension, Graph, type Node } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
-import { type Space, SpaceState, isEchoObject, isSpace } from '@dxos/react-client/echo';
+import { create, isEchoObject, isSpace, type Space, SpaceState } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
@@ -22,31 +21,31 @@ import {
   topbarBlockPaddingStart,
 } from '@dxos/react-ui-theme';
 
-import { DebugGlobal, DebugSettings, DebugSpace, DebugObjectPanel, DebugStatus, Wireframe } from './components';
+import { DebugGlobal, DebugObjectPanel, DebugSettings, DebugSpace, DebugStatus, Wireframe } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
 import translations from './translations';
 import {
-  DebugContext,
-  DebugSettingsSchema,
-  type DebugSettingsProps,
-  type DebugPluginProvides,
   DebugAction,
+  DebugContext,
+  type DebugPluginProvides,
+  type DebugSettingsProps,
+  DebugSettingsSchema,
 } from './types';
 
 export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
-  let settings: SettingsStore<DebugSettingsProps> | undefined;
+  const settings = create<DebugSettingsProps>({
+    debug: true,
+    devtools: true,
+  });
 
   return {
     meta,
     ready: async (plugins) => {
       context.init(plugins);
-      settings = context.resolvePlugin(parseSettingsPlugin).provides.settingsStore.createStore<DebugSettingsProps>({
+      context.resolvePlugin(parseSettingsPlugin).provides.settingsStore.createStore({
         schema: DebugSettingsSchema,
         prefix: DEBUG_PLUGIN,
-        defaultValue: {
-          debug: true,
-          devtools: true,
-        },
+        value: settings,
       });
 
       // TODO(burdon): Remove hacky dependency on global variable.
@@ -67,7 +66,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
       context.dispose();
     },
     provides: {
-      settings: settings!.value,
+      settings,
       translations,
       context: ({ children }) => {
         const [timer, setTimer] = useState<Timer>();
@@ -98,7 +97,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
             // Devtools node.
             createExtension({
               id: 'dxos.org/plugin/debug/devtools',
-              filter: (node): node is Node<null> => !!settings!.value.devtools && node.id === 'root',
+              filter: (node): node is Node<null> => !!settings.devtools && node.id === 'root',
               connector: () => [
                 {
                   // TODO(zan): Removed `/` because it breaks deck layout reload. Fix?
@@ -116,7 +115,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
             // Debug node.
             createExtension({
               id: 'dxos.org/plugin/debug/debug',
-              filter: (node): node is Node<null> => !!settings!.value.debug && node.id === 'root',
+              filter: (node): node is Node<null> => !!settings.debug && node.id === 'root',
               connector: () => [
                 {
                   id: 'dxos.org/plugin/debug/debug',
@@ -133,7 +132,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
             // Space debug nodes.
             createExtension({
               id: 'dxos.org/plugin/debug/spaces',
-              filter: (node): node is Node<Space> => !!settings!.value.debug && isSpace(node.data),
+              filter: (node): node is Node<Space> => !!settings.debug && isSpace(node.data),
               connector: ({ node }) => {
                 const space = node.data;
                 return [
@@ -181,7 +180,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
         component: ({ name, data, role }) => {
           switch (role) {
             case 'settings':
-              return data.plugin === meta.id ? <DebugSettings settings={settings!.value} /> : null;
+              return data.plugin === meta.id ? <DebugSettings settings={settings} /> : null;
             case 'status':
               return <DebugStatus />;
             case 'complementary--debug':
@@ -191,9 +190,9 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
           const primary = data.active ?? data.object;
           let component: ReactNode;
           if (role === 'main' || role === 'article') {
-            if (primary === 'devtools' && settings!.value.devtools) {
+            if (primary === 'devtools' && settings.devtools) {
               component = <Devtools />;
-            } else if (!primary || typeof primary !== 'object' || !settings!.value.debug) {
+            } else if (!primary || typeof primary !== 'object' || !settings.debug) {
               component = null;
             } else if ('space' in primary && isSpace(primary.space)) {
               component = (
@@ -228,7 +227,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
           }
 
           if (!component) {
-            if (settings!.value.wireframe) {
+            if (settings.wireframe) {
               if (role === 'main' || role === 'article' || role === 'section') {
                 const primary = data.active ?? data.object;
                 const isCollection = primary instanceof CollectionType;
