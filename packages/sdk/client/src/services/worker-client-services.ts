@@ -127,6 +127,9 @@ export class WorkerClientServices implements ClientServicesProvider {
         case LogLevel.DEBUG:
           log.debug(entry.message, entry.context, mapLogMeta(entry.meta));
           break;
+        case LogLevel.VERBOSE:
+          log.verbose(entry.message, entry.context, mapLogMeta(entry.meta));
+          break;
         case LogLevel.INFO:
           log.info(entry.message, entry.context, mapLogMeta(entry.meta));
           break;
