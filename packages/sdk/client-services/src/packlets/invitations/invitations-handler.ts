@@ -96,19 +96,16 @@ export class InvitationsHandler {
         },
 
         onStateUpdate: (newState: Invitation.State): Invitation => {
-          log.verbose('dxos.sdk.invitations-handler.host.onStateUpdate', {
-            oldState: guardedState.current.state,
-            newState,
-            invitationId: invitation.invitationId,
-            kind: invitation.kind,
-            type: invitation.type,
-          });
           guardedState.set(extension, newState);
           return guardedState.current;
         },
 
         admit: async (admissionRequest) => {
           try {
+            log.verbose('dxos.sdk.invitations-handler.host.admit', {
+              invitationId: invitation.invitationId,
+              ...protocol.toJSON(),
+            });
             const deviceKey = admissionRequest.device?.deviceKey ?? admissionRequest.space?.deviceKey;
             invariant(deviceKey);
             const admissionResponse = await protocol.admit(invitation, admissionRequest, extension.guestProfile);
@@ -288,16 +285,23 @@ export class InvitationsHandler {
                 timeout,
               );
 
-              log('connected', { ...protocol.toJSON() });
+              log.verbose('dxos.sdk.invitations-handler.guest.connected', { ...protocol.toJSON() });
               guardedState.set(extension, Invitation.State.CONNECTED);
 
               // 1. Introduce guest to host.
-              log('introduce', { ...protocol.toJSON() });
+              log.verbose('dxos.sdk.invitations-handler.guest.introduce', {
+                invitationId: invitation.invitationId,
+                ...protocol.toJSON(),
+              });
               const introductionResponse = await extension.rpc.InvitationHostService.introduce({
                 invitationId: invitation.invitationId,
                 ...protocol.createIntroduction(),
               });
-              log('introduce response', { ...protocol.toJSON(), response: introductionResponse });
+              log.verbose('dxos.sdk.invitations-handler.guest.introduce-response', {
+                invitationId: invitation.invitationId,
+                ...protocol.toJSON(),
+                authMethod: introductionResponse.authMethod,
+              });
               invitation.authMethod = introductionResponse.authMethod;
 
               // 2. Get authentication code.
@@ -323,7 +327,10 @@ export class InvitationsHandler {
               }
 
               // 3. Send admission credentials to host (with local space keys).
-              log('request admission', { ...protocol.toJSON() });
+              log.verbose('dxos.sdk.invitations-handler.guest.request-admission', {
+                invitationId: invitation.invitationId,
+                ...protocol.toJSON(),
+              });
               const admissionRequest = await protocol.createAdmissionRequest(deviceProfile);
               const admissionResponse = await extension.rpc.InvitationHostService.admit(admissionRequest);
 
@@ -334,7 +341,10 @@ export class InvitationsHandler {
               const result = await protocol.accept(admissionResponse, admissionRequest);
 
               // 5. Success.
-              log('admitted by host', { ...protocol.toJSON() });
+              log.verbose('dxos.sdk.invitations-handler.guest.admitted-by-host', {
+                invitationId: invitation.invitationId,
+                ...protocol.toJSON(),
+              });
               guardedState.complete({
                 ...guardedState.current,
                 ...result,
