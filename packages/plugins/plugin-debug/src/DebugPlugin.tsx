@@ -4,7 +4,13 @@
 
 import React, { type ReactNode, useEffect, useState } from 'react';
 
-import { definePlugin, parseGraphPlugin, parseIntentPlugin, parseSettingsPlugin, resolvePlugin } from '@dxos/app-framework';
+import {
+  definePlugin,
+  parseGraphPlugin,
+  parseIntentPlugin,
+  parseSettingsPlugin,
+  resolvePlugin,
+} from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
 import { Devtools } from '@dxos/devtools';
 import { type ClientPluginProvides } from '@dxos/plugin-client';
