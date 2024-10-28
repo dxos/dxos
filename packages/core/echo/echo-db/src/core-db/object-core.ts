@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event, type UnsubscribeCallback } from '@dxos/async';
+import { Event } from '@dxos/async';
 import { type ChangeFn, type ChangeOptions, type Doc, type Heads, next as A } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
 import {

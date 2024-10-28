@@ -4,6 +4,7 @@
 
 import { type Brand } from 'effect';
 
+import type { UnsubscribeCallback } from '@dxos/async';
 import { type GenericSignal } from '@dxos/echo-signals/runtime';
 import { type ComplexMap } from '@dxos/util';
 
@@ -12,7 +13,6 @@ import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
 import type { ObjectCore, KeyPath } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
-import type { UnsubscribeCallback } from '@dxos/async';
 
 export const symbolPath = Symbol('path');
 export const symbolNamespace = Symbol('namespace');
