@@ -8,7 +8,7 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "dependencies": {
     "@baselime/node-opentelemetry": "^0.5.8",
     "@baselime/react-rum": "^0.2.9",
