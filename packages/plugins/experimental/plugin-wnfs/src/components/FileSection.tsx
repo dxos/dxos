@@ -12,7 +12,7 @@ const FileSection: FC<{ file: FileType; height?: number }> = ({ file, height = 4
 
   return (
     <div style={{ height }} className='flex w-full p-2 justify-center align-center'>
-      <FilePreview type={file.type} url={url} className='object-contain' />
+      <FilePreview type={file.type} url={url} classNames='object-contain' />
     </div>
   );
 };

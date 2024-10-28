@@ -12,7 +12,7 @@ const FileSlide: FC<{ file: FileType; cover?: boolean }> = ({ file, cover }) => 
 
   return (
     <div className='h-full flex justify-center align-center'>
-      <FilePreview type={file.type} url={url} className={cover ? 'object-cover' : 'object-contain'} />
+      <FilePreview type={file.type} url={url} classNames={cover ? 'object-cover' : 'object-contain'} />
     </div>
   );
 };
