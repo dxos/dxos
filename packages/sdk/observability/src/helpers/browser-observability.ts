@@ -103,7 +103,8 @@ export const initializeAppObservability = async ({
         replay: replayEnable,
         // TODO(wittjosiah): Configure these.
         sampleRate: 1.0,
-        replaySampleRate: 0.1,
+        // TODO(mykola): Lower this to 0.1.
+        replaySampleRate: 1.0,
         replaySampleRateOnError: 1.0,
       },
     },
