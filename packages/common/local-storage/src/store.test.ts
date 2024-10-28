@@ -35,7 +35,7 @@ describe('ObjectStore', () => {
     const mock = createLocalStorageMock();
 
     const value = create<TestType>({ nums: [], names: [] });
-    const store = new SettingsStore<TestType>(TestSchema, 'dxos.org/setting', value, mock);
+    const store = new SettingsStore(TestSchema, 'dxos.org/setting', value, mock);
     store.value.num = 42;
     expect(mock.store).to.deep.eq({
       'dxos.org/setting/num': '42',
@@ -55,7 +55,7 @@ describe('ObjectStore', () => {
 
     {
       const value = create<TestType>({ nums: [], names: [] });
-      const store = new SettingsStore<TestType>(TestSchema, 'dxos.org/setting', value, mock);
+      const store = new SettingsStore(TestSchema, 'dxos.org/setting', value, mock);
       expect(store.value.activePreset).to.be.undefined;
 
       store.value.activePreset = true;
@@ -86,7 +86,7 @@ describe('ObjectStore', () => {
 
     {
       const value = create<TestType>({ nums: [], names: [] });
-      const store = new SettingsStore<TestType>(TestSchema, 'dxos.org/setting', value, mock);
+      const store = new SettingsStore(TestSchema, 'dxos.org/setting', value, mock);
 
       expect(store.value.activePreset).to.be.false;
       expect(store.value.num).to.eq(42);
@@ -111,7 +111,7 @@ describe('ObjectStore', () => {
 
     {
       const value = create<TestType>({ nums: [], names: [] });
-      const store = new SettingsStore<TestType>(TestSchema, 'dxos.org/setting', value, mock);
+      const store = new SettingsStore(TestSchema, 'dxos.org/setting', value, mock);
 
       expect(store.value.activePreset).to.be.undefined;
       expect(store.value.num).to.eq(42);
