@@ -4,8 +4,8 @@
 
 import { z } from 'zod';
 
-import { type IntentData } from '../IntentPlugin';
-import type { Plugin } from '../PluginHost';
+import { type Plugin } from '../plugin-host';
+import { type IntentData } from '../plugin-intent';
 
 //
 // Provides
@@ -90,7 +90,10 @@ export const parseLayoutPlugin = (plugin: Plugin) => {
 // Intents
 //
 
-const LAYOUT_ACTION = 'dxos.org/plugin/layout';
+const LAYOUT_PLUGIN = 'dxos.org/plugin/layout';
+
+const LAYOUT_ACTION = `${LAYOUT_PLUGIN}/action`;
+
 export enum LayoutAction {
   SET_LAYOUT = `${LAYOUT_ACTION}/set-layout`,
   SET_LAYOUT_MODE = `${LAYOUT_ACTION}/set-layout-mode`,

@@ -1,4 +1,4 @@
-# @dxos/plugin-settings
+# @dxos/plugin-manager
 
 DXOS app plugin for aggregating and rendering plugin settings.
 

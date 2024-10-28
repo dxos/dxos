@@ -629,6 +629,9 @@ importers:
       '@dxos/plugin-kanban':
         specifier: workspace:*
         version: link:../../plugins/experimental/plugin-kanban
+      '@dxos/plugin-manager':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-manager
       '@dxos/plugin-map':
         specifier: workspace:*
         version: link:../../plugins/experimental/plugin-map
@@ -668,9 +671,6 @@ importers:
       '@dxos/plugin-search':
         specifier: workspace:*
         version: link:../../plugins/experimental/plugin-search
-      '@dxos/plugin-settings':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-settings
       '@dxos/plugin-sheet':
         specifier: workspace:*
         version: link:../../plugins/plugin-sheet
@@ -5616,9 +5616,6 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../../plugin-graph
-      '@dxos/plugin-settings':
-        specifier: workspace:*
-        version: link:../../plugin-settings
       '@dxos/plugin-sketch':
         specifier: workspace:*
         version: link:../../plugin-sketch
@@ -5634,6 +5631,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../../ui/react-ui-attention
+      '@dxos/react-ui-data':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-data
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -5777,9 +5777,6 @@ importers:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -5952,15 +5949,15 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugin-markdown
-      '@dxos/plugin-settings':
-        specifier: workspace:*
-        version: link:../../plugin-settings
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugin-space
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-data':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-data
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -6617,9 +6614,6 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugin-markdown
-      '@dxos/plugin-settings':
-        specifier: workspace:*
-        version: link:../../plugin-settings
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugin-space
@@ -6638,6 +6632,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../../ui/react-ui-attention
+      '@dxos/react-ui-data':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-data
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -7146,9 +7143,6 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@dxos/plugin-settings':
-        specifier: workspace:*
-        version: link:../plugin-settings
       '@dxos/plugin-sketch':
         specifier: workspace:*
         version: link:../plugin-sketch
@@ -7179,6 +7173,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-data':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-data
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -7279,9 +7276,6 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
-      '@dxos/plugin-settings':
-        specifier: workspace:*
-        version: link:../plugin-settings
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -7291,6 +7285,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-data':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-data
       '@dxos/react-ui-deck':
         specifier: workspace:*
         version: link:../../ui/react-ui-deck
@@ -7361,15 +7358,15 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@dxos/plugin-settings':
-        specifier: workspace:*
-        version: link:../plugin-settings
       '@dxos/plugin-status-bar':
         specifier: workspace:*
         version: link:../plugin-status-bar
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
+      '@dxos/react-ui-data':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-data
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
@@ -7527,6 +7524,49 @@ importers:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
 
+  packages/plugins/plugin-manager:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../common/local-storage
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@dxos/react-ui-data':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-data
+      '@dxos/react-ui-tabs':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-tabs
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@types/react':
+        specifier: ~18.2.0
+        version: 18.2.79
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      vite:
+        specifier: 5.4.7
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
+
   packages/plugins/plugin-markdown:
     dependencies:
       '@codemirror/search':
@@ -7565,9 +7605,6 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@dxos/plugin-settings':
-        specifier: workspace:*
-        version: link:../plugin-settings
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -7586,6 +7623,9 @@ importers:
       '@dxos/react-ui-card':
         specifier: workspace:*
         version: link:../../ui/react-ui-card
+      '@dxos/react-ui-data':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-data
       '@dxos/react-ui-deck':
         specifier: workspace:*
         version: link:../../ui/react-ui-deck
@@ -7860,15 +7900,15 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-settings':
-        specifier: workspace:*
-        version: link:../plugin-settings
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui-data':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-data
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -7927,9 +7967,6 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@dxos/plugin-settings':
-        specifier: workspace:*
-        version: link:../plugin-settings
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -7939,6 +7976,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui-data':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-data
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -8067,9 +8107,9 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
-      '@dxos/plugin-settings':
+      '@dxos/react-ui-data':
         specifier: workspace:*
-        version: link:../plugin-settings
+        version: link:../../ui/react-ui-data
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8104,46 +8144,6 @@ importers:
       react-dom:
         specifier: ~18.2.0
         version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
-
-  packages/plugins/plugin-settings:
-    dependencies:
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../sdk/app-framework
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
-      '@dxos/react-ui-tabs':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tabs
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-    devDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/react':
-        specifier: ~18.2.0
-        version: 18.2.79
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -8379,9 +8379,6 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@dxos/plugin-settings':
-        specifier: workspace:*
-        version: link:../plugin-settings
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -8394,6 +8391,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-data':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-data
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8521,9 +8521,6 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
-      '@dxos/plugin-settings':
-        specifier: workspace:*
-        version: link:../plugin-settings
       '@dxos/plugin-status-bar':
         specifier: workspace:*
         version: link:../plugin-status-bar
@@ -8536,6 +8533,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-data':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-data
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
@@ -8633,9 +8633,6 @@ importers:
       '@dxos/plugin-ipfs':
         specifier: workspace:*
         version: link:../experimental/plugin-ipfs
-      '@dxos/plugin-settings':
-        specifier: workspace:*
-        version: link:../plugin-settings
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -8645,6 +8642,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-data':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-data
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -8958,9 +8958,6 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
-      '@dxos/plugin-settings':
-        specifier: workspace:*
-        version: link:../plugin-settings
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -8970,6 +8967,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-data':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-data
       '@dxos/react-ui-deck':
         specifier: workspace:*
         version: link:../../ui/react-ui-deck
@@ -9086,6 +9086,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../client-protocol
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -21302,6 +21305,11 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -46328,8 +46336,8 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1:
-    dependencies:
+  ajv-formats@2.1.1(ajv@8.12.0):
+    optionalDependencies:
       ajv: 8.12.0
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -47892,7 +47900,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -57376,7 +57384,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       ajv-keywords: 5.1.0(ajv@8.12.0)
 
   scroll@3.0.1: {}

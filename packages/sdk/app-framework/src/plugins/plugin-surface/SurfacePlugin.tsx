@@ -9,13 +9,13 @@ import { create } from '@dxos/echo-schema';
 import { SurfaceProvider, type SurfaceRootContext } from './SurfaceRootContext';
 import SurfaceMeta from './meta';
 import { parseSurfacePlugin, type SurfacePluginProvides } from './provides';
-import { type PluginDefinition } from '../PluginHost';
 import { filterPlugins } from '../helpers';
+import { type PluginDefinition } from '../plugin-host';
 
 /**
  * Provides a registry of surface components.
  */
-const SurfacePlugin = (): PluginDefinition<SurfacePluginProvides> => {
+export const SurfacePlugin = (): PluginDefinition<SurfacePluginProvides> => {
   const state = create<SurfaceRootContext>({ components: {}, debugInfo: new Map() });
 
   return {
@@ -31,5 +31,3 @@ const SurfacePlugin = (): PluginDefinition<SurfacePluginProvides> => {
     },
   };
 };
-
-export default SurfacePlugin;

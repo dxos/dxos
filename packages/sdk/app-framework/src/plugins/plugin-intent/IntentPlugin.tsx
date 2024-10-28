@@ -17,8 +17,8 @@ import {
   parseIntentResolverPlugin,
   IntentAction,
 } from './provides';
-import type { PluginDefinition } from '../PluginHost';
 import { filterPlugins, findPlugin } from '../helpers';
+import { type PluginDefinition } from '../plugin-host';
 
 const EXECUTION_LIMIT = 1000;
 const HISTORY_LIMIT = 100;
@@ -27,7 +27,7 @@ const HISTORY_LIMIT = 100;
  * Allows plugins to register intent handlers and routes sent intents to the appropriate plugin.
  * Inspired by https://developer.android.com/reference/android/content/Intent.
  */
-const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
+export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
   const state = create<IntentContext>({
     dispatch: async () => ({}),
     undo: async () => ({}),
@@ -54,8 +54,7 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
           }
 
           const plugin = findPlugin<IntentResolverProvides>(plugins, intent.plugin);
-          const result = plugin?.provides.intent.resolver(intent, plugins);
-          return result;
+          return plugin?.provides.intent.resolver(intent, plugins);
         }
 
         for (const entry of dynamicResolvers) {
@@ -150,5 +149,3 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
     },
   };
 };
-
-export default IntentPlugin;

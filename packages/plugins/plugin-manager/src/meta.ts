@@ -4,9 +4,9 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const SETTINGS_PLUGIN = 'dxos.org/plugin/settings';
+export const MANAGER_PLUGIN = 'dxos.org/plugin/manager';
 
 export default {
-  id: SETTINGS_PLUGIN,
+  id: MANAGER_PLUGIN,
   name: 'Settings',
 } satisfies PluginMeta;

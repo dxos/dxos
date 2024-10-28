@@ -117,7 +117,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
           const metadataResolver = resolvePlugin(plugins, parseMetadataResolverPlugin)?.provides.metadata.resolver;
-
           if (!client || !dispatch || !metadataResolver) {
             return [];
           }

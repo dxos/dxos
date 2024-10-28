@@ -3,5 +3,6 @@
 //
 
 export * from './plugin';
+
+export * from './HostPlugin';
 export * from './PluginContext';
-export * from './PluginHost';

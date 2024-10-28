@@ -10,7 +10,7 @@ import { Tabs, type TabsActivePart } from '@dxos/react-ui-tabs';
 import { getSize } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
-import { SETTINGS_PLUGIN } from '../meta';
+import { MANAGER_PLUGIN } from '../meta';
 
 const sortPlugin = ({ name: a }: PluginMeta, { name: b }: PluginMeta) => a?.localeCompare(b ?? '') ?? 0;
 
@@ -30,7 +30,7 @@ export type SettingsDialogProps = {
 };
 
 export const SettingsDialog = ({ selected, onSelected }: SettingsDialogProps) => {
-  const { t } = useTranslation(SETTINGS_PLUGIN);
+  const { t } = useTranslation(MANAGER_PLUGIN);
   const { plugins, enabled } = usePlugins();
 
   const corePlugins = core

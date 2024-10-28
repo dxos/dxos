@@ -6,12 +6,12 @@ import React from 'react';
 
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
+import { FormInput } from '@dxos/react-ui-data';
 
-import { SettingsValue } from './SettingsValue';
-import { SETTINGS_PLUGIN } from '../meta';
+import { MANAGER_PLUGIN } from '../meta';
 
 export const SettingsSettings = () => {
-  const { t } = useTranslation(SETTINGS_PLUGIN);
+  const { t } = useTranslation(MANAGER_PLUGIN);
 
   const handleReset = () => {
     const store = new LocalStorageStore('dxos.org');
@@ -19,10 +19,10 @@ export const SettingsSettings = () => {
   };
 
   return (
-    <SettingsValue label={t('reset settings label')}>
+    <FormInput label={t('reset settings label')}>
       <Button onClick={handleReset}>
         <Icon icon='ph--recycle--regular' />
       </Button>
-    </SettingsValue>
+    </FormInput>
   );
 };

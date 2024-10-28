@@ -6,11 +6,11 @@ import React, { type JSX, type FC, type PropsWithChildren, type ReactNode, useEf
 
 import { log } from '@dxos/log';
 
+import { type HostPluginParams } from './HostPlugin';
 import { type PluginContext } from './PluginContext';
-import { type BootstrapPluginsParams } from './PluginHost';
 import { type Plugin, type PluginDefinition, type PluginProvides } from './plugin';
 
-export type PluginContainerProps = Pick<BootstrapPluginsParams, 'core'> & {
+export type PluginContainerProps = Pick<HostPluginParams, 'core'> & {
   plugins: Record<string, () => Promise<PluginDefinition>>;
   state: PluginContext;
   placeholder: ReactNode;

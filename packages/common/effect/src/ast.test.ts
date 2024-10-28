@@ -5,7 +5,7 @@
 import { Schema as S } from '@effect/schema';
 import { describe, expect, test } from 'vitest';
 
-import { getProperty, visit } from './ast';
+import { getProperty, isLeafType, visit } from './ast';
 
 describe('AST', () => {
   test('getProperty', () => {
@@ -30,9 +30,10 @@ describe('AST', () => {
     }
   });
 
-  test('visitNode', () => {
+  test('visit', () => {
     const TestSchema = S.Struct({
       name: S.optional(S.String),
+      emails: S.mutable(S.Array(S.String)),
       address: S.optional(
         S.Struct({
           zip: S.String,
@@ -41,8 +42,10 @@ describe('AST', () => {
     });
 
     const props: string[] = [];
-    visit(TestSchema.ast, (_node, prop) => {
-      props.push(prop.join('.'));
+    visit(TestSchema.ast, (node, path) => {
+      if (isLeafType(node)) {
+        props.push(path.join('.'));
+      }
     });
     expect(props).to.deep.eq(['name', 'address.zip']);
   });

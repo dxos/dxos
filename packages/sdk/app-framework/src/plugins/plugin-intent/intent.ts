@@ -4,7 +4,7 @@
 
 import type { MaybePromise } from '@dxos/util';
 
-import type { Plugin } from '../PluginHost';
+import type { Plugin } from '../plugin-host';
 
 export type IntentData<T extends Record<string, any> = Record<string, any>> = T & {
   /**
