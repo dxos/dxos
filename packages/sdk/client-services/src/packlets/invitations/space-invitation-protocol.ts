@@ -40,6 +40,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
 
   toJSON(): object {
     return {
+      kind: 'space',
       deviceKey: this._signingContext.deviceKey,
       spaceKey: this._spaceKey,
     };
