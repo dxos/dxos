@@ -19,8 +19,7 @@ import {
 import { log } from '@dxos/log';
 import { getProviderValue, isNotFalsy, type MaybeProvider } from '@dxos/util';
 
-import { editorInputMode } from '../extensions';
-import { type EditorSelection, documentId, createEditorStateTransaction } from '../state';
+import { editorInputMode, type EditorSelection, documentId, createEditorStateTransaction } from '../extensions';
 import { debugDispatcher } from '../util';
 
 export type UseTextEditor = {
@@ -150,7 +149,7 @@ export const useTextEditor = (
           return;
         }
 
-        view.dispatch(createEditorStateTransaction(view.state, { scrollTo, selection }));
+        view.dispatch(createEditorStateTransaction({ scrollTo, selection }));
       }
     }
   }, [view, scrollTo, selection]);

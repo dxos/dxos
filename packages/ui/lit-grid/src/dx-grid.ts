@@ -792,7 +792,7 @@ export class DxGrid extends LitElement {
     this.updateVisBlock();
   }
 
-  private updateCells(includeFixed?: boolean) {
+  public updateCells(includeFixed?: boolean) {
     this.cells.grid = this.getCells!(
       {
         start: { col: this.visColMin, row: this.visRowMin },
@@ -1340,9 +1340,13 @@ export class DxGrid extends LitElement {
         changedProperties.has('visColMin') ||
         changedProperties.has('visColMax') ||
         changedProperties.has('visRowMin') ||
-        changedProperties.has('visRowMax'))
+        changedProperties.has('visRowMax') ||
+        changedProperties.has('columns') ||
+        changedProperties.has('rows') ||
+        changedProperties.has('limitColumns') ||
+        changedProperties.has('limitRows'))
     ) {
-      this.updateCells();
+      this.updateCells(true);
     }
 
     if (changedProperties.has('rowDefault') || changedProperties.has('rows') || changedProperties.has('limitRows')) {

@@ -58,7 +58,7 @@ export type CellValue = S.Schema.Type<typeof CellValue>;
 
 // TODO(burdon): IMPORTANT: Reconcile with Field definition.
 export const Range = S.Struct({
-  range: S.Struct({ from: S.Struct({ col: S.Number, row: S.Number }), to: S.Struct({ col: S.Number, row: S.Number }) }),
+  range: S.String,
   key: S.String,
   value: S.String,
 });

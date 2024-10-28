@@ -18,7 +18,7 @@ import {
 import { LocalStorageStore } from '@dxos/local-storage';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
-import { SettingsDialog } from './components';
+import { SettingsDialog, SettingsSettings } from './components';
 import meta, { SETTINGS_PLUGIN } from './meta';
 import translations from './translations';
 
@@ -46,19 +46,22 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
     },
     provides: {
       surface: {
-        component: ({ data }) => {
-          switch (data.component) {
-            case `${SETTINGS_PLUGIN}/Settings`:
-              return (
-                <SettingsDialog
-                  selected={settings.values.selected}
-                  onSelected={(selected) => (settings.values.selected = selected)}
-                />
-              );
-
-            default:
-              return null;
+        component: ({ data, role }) => {
+          if (data.component === `${SETTINGS_PLUGIN}/Settings`) {
+            return (
+              <SettingsDialog
+                selected={settings.values.selected}
+                onSelected={(selected) => (settings.values.selected = selected)}
+              />
+            );
           }
+
+          switch (role) {
+            case 'settings':
+              return data.plugin === meta.id ? <SettingsSettings /> : null;
+          }
+
+          return null;
         },
       },
       intent: {
@@ -90,7 +93,6 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
       graph: {
         builder: (plugins) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
           return createExtension({
             id: SETTINGS_PLUGIN,
             filter: (node): node is Node<null> => node.id === 'root',

@@ -15,7 +15,7 @@ import { image } from './image';
 import { formattingStyles, bulletListIndentationWidth, orderedListIndentationWidth } from './styles';
 import { table } from './table';
 import { theme, type HeadingLevel } from '../../styles';
-import { wrapWithCatch } from '../util';
+import { wrapWithCatch } from '../../util';
 
 /**
  * Unicode characters.

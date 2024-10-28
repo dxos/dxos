@@ -10,17 +10,20 @@ import { invariant } from '@dxos/invariant';
 import { createDocAccessor, fullyQualifiedId, getSpace, type Query } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';
-import { createDataExtensions, listener, localStorageStateStoreAdapter, state } from '@dxos/react-ui-editor';
 import {
   type AutocompleteResult,
+  type EditorStateStore,
   type EditorViewMode,
   type Extension,
   InputModeExtensions,
+  createDataExtensions,
   autocomplete,
   decorateMarkdown,
   folding,
   formattingKeymap,
   linkTooltip,
+  listener,
+  selectionState,
   typewriter,
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
@@ -35,16 +38,17 @@ type ExtensionsOptions = {
   query?: Query<DocumentType>;
   settings: MarkdownSettingsProps;
   viewMode?: EditorViewMode;
+  editorStateStore?: EditorStateStore;
 };
 
-// TODO(burdon): Merge with createBaseExtensions above.
+// TODO(burdon): Merge with createBaseExtensions below.
 export const useExtensions = ({
-  extensionProviders,
   document,
   settings,
   viewMode,
-}: Pick<ExtensionsOptions, 'document' | 'settings' | 'viewMode'> &
-  Pick<MarkdownPluginState, 'extensionProviders'>): Extension[] => {
+  editorStateStore,
+  extensionProviders,
+}: ExtensionsOptions & Pick<MarkdownPluginState, 'extensionProviders'>): Extension[] => {
   const dispatch = useIntentDispatcher();
   const identity = useIdentity();
   const space = getSpace(document);
@@ -94,7 +98,7 @@ export const useExtensions = ({
           space,
           identity,
         }),
-        state(localStorageStateStoreAdapter),
+        selectionState(editorStateStore),
         listener({
           onChange: (text) => setFallbackName(document, text),
         }),

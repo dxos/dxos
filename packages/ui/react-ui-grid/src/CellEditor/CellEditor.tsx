@@ -127,7 +127,8 @@ const editorVariants = {
   grid: {
     root: 'absolute z-[1]',
     editor: '[&>.cm-scroller]:scrollbar-none tabular-nums',
-    content: '!border !border-transparent !p-0.5',
+    // This must match cell styling in `dx-grid.pcss`.
+    content: '!border !border-transparent !pli-[3px] !plb-0.5',
   },
 };
 

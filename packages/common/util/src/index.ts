@@ -8,6 +8,7 @@ export * from './binder';
 export * from './bitfield';
 export * from './callback';
 export * from './callback-collection';
+export * from './case';
 export * from './chunk-array';
 export * from './circular-buffer';
 export * from './complex';
