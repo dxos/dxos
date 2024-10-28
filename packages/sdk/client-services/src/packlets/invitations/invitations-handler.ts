@@ -80,6 +80,12 @@ export class InvitationsHandler {
     protocol: InvitationProtocol,
     invitation: Invitation,
   ): void {
+    log.verbose('dxos.sdk.invitations-handler.handleInvitationFlow', {
+      state: invitation.state,
+      invitationId: invitation.invitationId,
+      kind: invitation.kind,
+      type: invitation.type,
+    });
     metrics.increment('dxos.invitation.created');
     const guardedState = createGuardedInvitationState(ctx, invitation, stream);
     // Called for every connecting peer.
@@ -90,6 +96,13 @@ export class InvitationsHandler {
         },
 
         onStateUpdate: (newState: Invitation.State): Invitation => {
+          log.verbose('dxos.sdk.invitations-handler.host.onStateUpdate', {
+            oldState: guardedState.current.state,
+            newState,
+            invitationId: invitation.invitationId,
+            kind: invitation.kind,
+            type: invitation.type,
+          });
           guardedState.set(extension, newState);
           return guardedState.current;
         },
@@ -207,6 +220,12 @@ export class InvitationsHandler {
     otpEnteredTrigger: Trigger<string>,
     deviceProfile?: DeviceProfileDocument,
   ): void {
+    log.verbose('dxos.sdk.invitations-handler.acceptInvitation', {
+      state: invitation.state,
+      invitationId: invitation.invitationId,
+      kind: invitation.kind,
+      type: invitation.type,
+    });
     const { timeout = INVITATION_TIMEOUT } = invitation;
 
     if (deviceProfile) {
