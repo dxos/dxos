@@ -7,7 +7,7 @@ import React from 'react';
 import { type S } from '@dxos/effect';
 import { Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type FormatAnnotation, type FieldValueType, type FieldType, FieldValueTypes } from '@dxos/schema';
+import { type FormatAnnotation, FieldValueType, type FieldType, FieldValueTypes } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
 import { TextInput } from '../TextInput';
@@ -16,6 +16,22 @@ const PropertyFormat: FormatAnnotation = {
   filter: /^\w*$/,
   valid: /^\w+$/,
 };
+
+const configSections = {
+  base: ['path', 'label', 'type'] as const,
+  numeric: ['digits'] as const,
+  ref: ['schema', 'property'] as const,
+} as const;
+
+type ConfigSection = keyof typeof configSections;
+
+// TODO(zaymonad): Should this move to the schema module?
+const typeFeatures: Partial<Record<FieldValueType, ConfigSection[]>> = {
+  [FieldValueType.Number]: ['numeric'],
+  [FieldValueType.Percent]: ['numeric'],
+  [FieldValueType.Currency]: ['numeric'],
+  [FieldValueType.Ref]: ['ref'],
+} as const;
 
 export type FieldProps<T = {}> = ThemedClassName<{
   field: FieldType;
@@ -26,6 +42,7 @@ export type FieldProps<T = {}> = ThemedClassName<{
 
 export const Field = <T = {},>({ classNames, field, autoFocus, readonly }: FieldProps<T>) => {
   const { t } = useTranslation(translationKey);
+  const features = React.useMemo(() => typeFeatures[field.type] ?? [], [field.type]);
 
   return (
     <div className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
@@ -79,6 +96,41 @@ export const Field = <T = {},>({ classNames, field, autoFocus, readonly }: Field
           </Select.Root>
         </Input.Root>
       </div>
+
+      {features.includes('numeric') && (
+        <div className='flex flex-col w-full gap-1'>
+          <Input.Root>
+            <Input.Label classNames='px-1'>{t('field digits label')}</Input.Label>
+            <Input.TextInput
+              disabled={readonly}
+              value={field.digits ?? ''}
+              type='number'
+              onChange={(event) => {
+                field.digits = parseInt(event.target.value, 10);
+              }}
+            />
+          </Input.Root>
+        </div>
+      )}
+
+      {features.includes('ref') && (
+        <>
+          {/* TODO(Zaymonad):  */}
+          <div className='flex flex-col w-full gap-1'>
+            <Input.Root>
+              <Input.Label classNames='px-1'>{t('field ref schema label')}</Input.Label>
+              <Input.TextInput disabled={readonly} value={''} />
+            </Input.Root>
+          </div>
+
+          <div className='flex flex-col w-full gap-1'>
+            <Input.Root>
+              <Input.Label classNames='px-1'>{t('field ref property label')}</Input.Label>
+              <Input.TextInput disabled={readonly} value={''} />
+            </Input.Root>
+          </div>
+        </>
+      )}
     </div>
   );
 };
