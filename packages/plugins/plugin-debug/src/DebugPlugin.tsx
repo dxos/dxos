@@ -4,7 +4,7 @@
 
 import React, { type ReactNode, useEffect, useState } from 'react';
 
-import { definePlugin, parseGraphPlugin, parseIntentPlugin, parseSettingsPlugin } from '@dxos/app-framework';
+import { definePlugin, parseGraphPlugin, parseIntentPlugin, parseSettingsPlugin, resolvePlugin } from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
 import { Devtools } from '@dxos/devtools';
 import { type ClientPluginProvides } from '@dxos/plugin-client';
@@ -91,8 +91,8 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
         );
       },
       graph: {
-        builder: () => {
-          const graphPlugin = context.resolvePlugin(parseGraphPlugin);
+        builder: (plugins) => {
+          const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
           return [
             // Devtools node.
             createExtension({
@@ -120,7 +120,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
                 {
                   id: 'dxos.org/plugin/debug/debug',
                   type: 'dxos.org/plugin/debug/debug',
-                  data: { graph: graphPlugin.provides.graph },
+                  data: { graph: graphPlugin?.provides.graph },
                   properties: {
                     label: ['debug label', { ns: DEBUG_PLUGIN }],
                     icon: 'ph--bug--regular',

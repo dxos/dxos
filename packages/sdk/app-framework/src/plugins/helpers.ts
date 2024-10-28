@@ -52,7 +52,6 @@ class PluginContext {
 
   private _plugins?: Plugin[];
 
-  // TODO(burdon): Shouldn't need to call this.
   init(plugins: Plugin[]) {
     this._plugins = plugins;
   }
@@ -64,7 +63,7 @@ class PluginContext {
 
   resolvePlugin<T>(resolver: PluginResolver<T>): Plugin<T>;
   resolvePlugin<T>(resolver: PluginResolver<T>, required = false): Plugin<T> | undefined {
-    invariant(this._plugins);
+    invariant(this._plugins, 'context not initialized');
     const plugin = resolvePlugin(this._plugins, resolver);
     if (required && !plugin) {
       // TODO(burdon): Resolver should have a name.
