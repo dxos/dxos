@@ -12,9 +12,10 @@ import { type LogProcessor } from './context';
 export enum LogLevel {
   TRACE = 5,
   DEBUG = 10,
-  INFO = 11,
-  WARN = 12,
-  ERROR = 13,
+  VERBOSE = 11,
+  INFO = 12,
+  WARN = 13,
+  ERROR = 14,
 }
 
 export const levels: { [index: string]: LogLevel } = {
@@ -28,6 +29,7 @@ export const levels: { [index: string]: LogLevel } = {
 export const shortLevelName = {
   [LogLevel.TRACE]: 'T',
   [LogLevel.DEBUG]: 'D',
+  [LogLevel.VERBOSE]: 'V',
   [LogLevel.INFO]: 'I',
   [LogLevel.WARN]: 'W',
   [LogLevel.ERROR]: 'E',
