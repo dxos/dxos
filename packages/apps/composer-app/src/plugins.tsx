@@ -7,7 +7,7 @@ import { type Trigger } from '@dxos/async';
 import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 import AttentionMeta from '@dxos/plugin-attention/meta';
-import ChainMeta from '@dxos/plugin-chain/meta';
+import AutomationMeta from '@dxos/plugin-automation/meta';
 import ChessMeta from '@dxos/plugin-chess/meta';
 import ClientMeta from '@dxos/plugin-client/meta';
 import DebugMeta from '@dxos/plugin-debug/meta';
@@ -15,7 +15,6 @@ import DeckMeta from '@dxos/plugin-deck/meta';
 import ExcalidrawMeta from '@dxos/plugin-excalidraw/meta';
 import ExplorerMeta from '@dxos/plugin-explorer/meta';
 import FilesMeta from '@dxos/plugin-files/meta';
-import FunctionMeta from '@dxos/plugin-function/meta';
 import GithubMeta from '@dxos/plugin-github/meta';
 import GraphMeta from '@dxos/plugin-graph/meta';
 import GridMeta from '@dxos/plugin-grid/meta';
@@ -120,10 +119,10 @@ export const defaults = ({ isDev }: PluginConfig): PluginMeta[] =>
 // TODO(burdon): Use meta tags to determine default/recommended/labs.
 export const recommended = ({ isLabs }: PluginConfig): PluginMeta[] => [
   // prettier-ignore
+  AutomationMeta,
   ChessMeta,
   ExcalidrawMeta,
   ExplorerMeta,
-  FunctionMeta,
   IpfsMeta,
   MapMeta,
   MermaidMeta,
@@ -135,7 +134,6 @@ export const recommended = ({ isLabs }: PluginConfig): PluginMeta[] => [
   ...(isLabs
     ? [
         // prettier-ignore
-        ChainMeta,
         GithubMeta,
         GridMeta,
         InboxMeta,
@@ -159,7 +157,7 @@ export const plugins = ({
   isSocket,
 }: PluginConfig): HostPluginParams['plugins'] => ({
   [AttentionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-attention')),
-  [ChainMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chain')),
+  [AutomationMeta.id]: Plugin.lazy(() => import('@dxos/plugin-automation')),
   [ChessMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chess')),
   [ClientMeta.id]: Plugin.lazy(() => import('@dxos/plugin-client'), {
     appKey,
@@ -193,7 +191,6 @@ export const plugins = ({
   [ExcalidrawMeta.id]: Plugin.lazy(() => import('@dxos/plugin-excalidraw')),
   [ExplorerMeta.id]: Plugin.lazy(() => import('@dxos/plugin-explorer')),
   [FilesMeta.id]: Plugin.lazy(() => import('@dxos/plugin-files')),
-  [FunctionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-function')),
   [GithubMeta.id]: Plugin.lazy(() => import('@dxos/plugin-github')),
   [GraphMeta.id]: Plugin.lazy(() => import('@dxos/plugin-graph')),
   [GridMeta.id]: Plugin.lazy(() => import('@dxos/plugin-grid')),

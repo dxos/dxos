@@ -7,7 +7,7 @@ import { Plugin } from '../plugin';
 /**
  * Implements knowledge pipeline.
  */
-export class ChainPlugin extends Plugin {
+export class AutomationPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/chain';
 
   // TODO(burdon): Expose chain/model service API to functions.

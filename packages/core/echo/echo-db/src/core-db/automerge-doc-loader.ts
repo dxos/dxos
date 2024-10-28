@@ -122,7 +122,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       const documentUrl = this._getLinkedDocumentUrl(objectId);
       if (documentUrl == null) {
         this._objectsPendingDocumentLoad.add(objectId);
-        log.info('loading delayed until object links are initialized', { objectId });
+        log('loading delayed until object links are initialized', { objectId });
       } else {
         urlsToLoad[objectId] = documentUrl;
         hasUrlsToLoad = true;

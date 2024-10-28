@@ -5,14 +5,14 @@
       "@dxos/devtools": [
         "packages/devtools/devtools/src/index.ts"
       ],
-      "@dxos/plugin-chain": [
-        "packages/plugins/experimental/plugin-chain/src/index.ts"
+      "@dxos/plugin-automation": [
+        "packages/plugins/experimental/plugin-automation/src/index.ts"
       ],
-      "@dxos/plugin-chain/meta": [
-        "packages/plugins/experimental/plugin-chain/src/meta.ts"
+      "@dxos/plugin-automation/meta": [
+        "packages/plugins/experimental/plugin-automation/src/meta.ts"
       ],
-      "@dxos/plugin-chain/types": [
-        "packages/plugins/experimental/plugin-chain/src/types/index.ts"
+      "@dxos/plugin-automation/types": [
+        "packages/plugins/experimental/plugin-automation/src/types/index.ts"
       ],
       "@dxos/plugin-excalidraw": [
         "packages/plugins/experimental/plugin-excalidraw/src/index.ts"
@@ -28,12 +28,6 @@
       ],
       "@dxos/plugin-explorer/types": [
         "packages/plugins/experimental/plugin-explorer/src/types/index.ts"
-      ],
-      "@dxos/plugin-function": [
-        "packages/plugins/experimental/plugin-function/src/index.ts"
-      ],
-      "@dxos/plugin-function/meta": [
-        "packages/plugins/experimental/plugin-function/src/meta.ts"
       ],
       "@dxos/plugin-github": [
         "packages/plugins/experimental/plugin-github/src/index.ts"

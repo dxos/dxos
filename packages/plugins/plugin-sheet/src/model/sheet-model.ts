@@ -16,14 +16,18 @@ import { FieldValueType } from '@dxos/schema';
 
 import { DetailedCellError, ExportedCellChange } from '#hyperformula';
 import {
+  addressFromIndex,
+  addressToIndex,
+  initialize,
+  insertIndices,
   addressFromA1Notation,
   addressToA1Notation,
   type CellAddress,
   type CellRange,
+  ReadonlyException,
   MAX_COLUMNS,
   MAX_ROWS,
 } from '../defs';
-import { addressFromIndex, addressToIndex, initialize, insertIndices, ReadonlyException } from '../defs';
 import { type ComputeNode, type ComputeGraph, createSheetName, type ComputeNodeEvent } from '../graph';
 import { type CellScalarValue, type CellValue, type SheetType } from '../types';
 

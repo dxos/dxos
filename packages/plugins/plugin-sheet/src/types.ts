@@ -63,6 +63,8 @@ export const Range = S.Struct({
   value: S.String,
 });
 
+export type Range = S.Schema.Type<typeof Range>;
+
 // TODO(burdon): Visibility, locked, frozen, etc.
 export const RowColumnMeta = S.Struct({
   size: S.optional(S.Number),
