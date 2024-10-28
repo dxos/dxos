@@ -68,8 +68,7 @@ export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, proxy);
 
-    // TODO(dmaretskyi): Does this need to be disposed?
-    core.subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
+    target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
 
     // NOTE: This call is recursively linking all nested objects
     //  which can cause recursive loops of `createObject` if `EchoReactiveHandler` is not set prior to this call.
@@ -91,8 +90,7 @@ export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
       ...(props as any),
     };
 
-    // TODO(dmaretskyi): Does this need to be disposed?
-    core.subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
+    target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
 
     initCore(core, target);
     const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
@@ -106,7 +104,7 @@ export const destroyObject = <T extends {}>(proxy: EchoReactiveObject<T>) => {
   invariant(isEchoObject(proxy));
   const target: ProxyTarget = getProxyTarget(proxy);
   const internals: ObjectInternals = target[symbolInternals];
-  for (const unsubscribe of internals.core.subscriptions) {
+  for (const unsubscribe of internals.subscriptions) {
     unsubscribe();
   }
 };
@@ -186,4 +184,5 @@ const initInternals = (core: ObjectCore, database?: EchoDatabase): ObjectInterna
   signal: compositeRuntime.createSignal(),
   linkCache: new Map<string, EchoReactiveObject<any>>(),
   database,
+  subscriptions: [],
 });

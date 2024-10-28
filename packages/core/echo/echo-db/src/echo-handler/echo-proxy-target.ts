@@ -12,6 +12,7 @@ import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
 import type { ObjectCore, KeyPath } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
+import type { UnsubscribeCallback } from '@dxos/async';
 
 export const symbolPath = Symbol('path');
 export const symbolNamespace = Symbol('namespace');
@@ -74,6 +75,8 @@ export type ObjectInternals = {
    * Set only when the object is not bound to a database.
    */
   linkCache: Map<string, EchoReactiveObject<any>> | undefined;
+
+  subscriptions: UnsubscribeCallback[];
 };
 
 /**

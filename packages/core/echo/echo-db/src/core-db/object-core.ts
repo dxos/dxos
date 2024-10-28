@@ -82,8 +82,6 @@ export class ObjectCore {
    */
   public readonly updates = new Event();
 
-  public readonly subscriptions: UnsubscribeCallback[] = [];
-
   /**
    * Create local doc with initial state from this object.
    */

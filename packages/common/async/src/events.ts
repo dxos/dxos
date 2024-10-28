@@ -43,23 +43,6 @@ export type ListenerOptions = {
 };
 
 /**
- * Wraps `addEventListener` and return an unsubscription handler.
- * @param target
- * @param type
- * @param listener
- * @param options
- */
-static const addEventListener<K extends keyof HTMLElementEventMap>(
-  target: EventTarget,
-  type: K,
-  listener: EventListenerOrEventListenerObject,
-  options?: boolean | AddEventListenerOptions,
-): UnsubscribeCallback {
-  target.addEventListener(type, listener, options);
-  return () => target.removeEventListener(type, listener, options);
-}
-
-/**
  * An EventEmitter variant that does not do event multiplexing and represents a single event.
  *
  * ## Typical usage:
