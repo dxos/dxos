@@ -2,9 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+import { CarWriter } from '@ipld/car';
+import type { Block } from '@ipld/car/api';
 import { BaseBlockstore } from 'blockstore-core';
 import { IDBBlockstore } from 'blockstore-idb';
-import type { CID } from 'multiformats';
+import debounce from 'debounce';
+import * as IDB from 'idb-keyval';
+import all from 'it-all';
+import { CID } from 'multiformats';
+import * as Uint8Arrays from 'uint8arrays';
 
 import { storeName } from './common';
 
@@ -18,29 +24,48 @@ export const create = (apiHost?: string) => {
  */
 export class MixedBlockstore extends BaseBlockstore {
   readonly #apiHost: string | undefined;
-  readonly #idbStore: IDBBlockstore;
+  readonly #localStore: IDBBlockstore;
+
+  #isConnected: boolean;
+  #flushQueue: () => void;
+  #queue: string[];
 
   constructor(apiHost?: string) {
     super();
 
-    this.#apiHost = apiHost;
-    this.#idbStore = new IDBBlockstore(storeName());
+    this.#apiHost = apiHost ? apiHost.replace(/\/?$/, '') : undefined;
+    this.#localStore = new IDBBlockstore(storeName());
+    this.#isConnected = navigator.onLine;
+    this.#queue = [];
+
+    this.#flushQueue = debounce(this.#flushQueueInt, 5000);
   }
 
   async open() {
-    await this.#idbStore.open();
+    await this.#localStore.open();
+    await this.#restoreQueue();
+
+    window.addEventListener('offline', async () => {
+      this.#isConnected = false;
+    });
+
+    window.addEventListener('online', async () => {
+      this.#isConnected = true;
+      this.#flushQueue();
+    });
   }
 
   url(apiHost: string, cid?: CID) {
     const path = cid ? cid.toString() : '';
-    return `${apiHost}/api/file/${path}`;
+    return `${apiHost}/api/file${path.length ? '/' + path : ''}`;
   }
 
-  // Blockstore implementation
-  override async delete(key: CID): Promise<void> {
-    await this.#idbStore.delete(key);
+  // BLOCKSTORE IMPLEMENTATION
 
-    if (this.#apiHost) {
+  override async delete(key: CID): Promise<void> {
+    await this.#localStore.delete(key);
+
+    if (this.#isConnected && this.#apiHost) {
       await fetch(this.url(this.#apiHost, key), {
         method: 'DELETE',
       });
@@ -48,27 +73,32 @@ export class MixedBlockstore extends BaseBlockstore {
   }
 
   override async get(key: CID): Promise<Uint8Array> {
-    if (await this.#idbStore.has(key)) {
-      return await this.#idbStore.get(key);
+    if (await this.#localStore.has(key)) {
+      return await this.#localStore.get(key);
     }
 
-    if (this.#apiHost) {
-      return await fetch(this.url(this.#apiHost, key), {
+    if (this.#isConnected && this.#apiHost) {
+      const block = await fetch(this.url(this.#apiHost, key), {
         method: 'GET',
       })
         .then((r) => r.arrayBuffer())
         .then((r) => new Uint8Array(r));
+
+      // Make sure it is cached locally
+      await this.#localStore.put(key, block);
+
+      return block;
     }
 
-    return await this.#idbStore.get(key);
+    return await this.#localStore.get(key);
   }
 
   override async has(key: CID): Promise<boolean> {
-    if (await this.#idbStore.has(key)) {
+    if (await this.#localStore.has(key)) {
       return true;
     }
 
-    if (this.#apiHost) {
+    if (this.#isConnected && this.#apiHost) {
       return await fetch(this.url(this.#apiHost, key), {
         method: 'HEAD',
       }).then((r) => r.ok);
@@ -78,19 +108,119 @@ export class MixedBlockstore extends BaseBlockstore {
   }
 
   override async put(key: CID, val: Uint8Array): Promise<CID> {
-    await this.#idbStore.put(key, val);
+    await this.#localStore.put(key, val);
 
+    await this.#addToQueue(key);
+    this.#flushQueue();
+
+    return key;
+  }
+
+  async destroy(): Promise<void> {
+    await this.#localStore.destroy();
+  }
+
+  // REMOTE
+
+  async putRemote(key: CID, val: Uint8Array) {
     if (this.#apiHost) {
       await fetch(this.url(this.#apiHost, key), {
         method: 'POST',
         body: val,
       });
     }
-
-    return key;
   }
 
-  async destroy(): Promise<void> {
-    await this.#idbStore.destroy();
+  async putCarRemote(car: Uint8Array) {
+    if (this.#apiHost) {
+      await fetch(this.url(this.#apiHost), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/vnd.ipld.car',
+        },
+        body: car,
+      });
+    }
+  }
+
+  // QUEUE
+
+  readonly queueCacheName = `${storeName()}/state/queue`;
+
+  async #addToQueue(key: CID) {
+    await this.#saveQueue([...this.#queue, key.toString()]);
+  }
+
+  async #flushQueueInt() {
+    if (!this.#isConnected || !this.#apiHost) {
+      return;
+    }
+
+    const keys = [...this.#queue];
+    if (keys.length === 0) {
+      return;
+    }
+
+    // Collect blocks
+    const blocks = await Promise.all(
+      keys.map(async (key) => {
+        const cid = CID.parse(key);
+        const bytes = await this.#localStore.get(cid);
+        return { cid, bytes };
+      }),
+    );
+
+    // TODO: Create & submit CAR
+    //       DEPENDS ON EDGE BLOB-SERVICE CHANGES
+    // const car = await this.#createCar(blocks);
+    // await this.putCarRemote(car);
+    //
+    // Temporary solution:
+    await Promise.all(
+      blocks.map((block: Block) => {
+        return this.putRemote(block.cid, block.bytes);
+      }),
+    );
+
+    // Adjust queue
+    const queue = [...this.#queue].filter((k) => {
+      if (keys.includes(k)) {
+        return false;
+      }
+
+      return true;
+    });
+
+    await this.#saveQueue(queue);
+  }
+
+  async #restoreQueue() {
+    const fromCache = await IDB.get(this.queueCacheName);
+    if (fromCache && Array.isArray(fromCache)) {
+      this.#queue = fromCache;
+      this.#flushQueue();
+    }
+  }
+
+  async #saveQueue(items: string[]) {
+    const arr = [...items];
+    this.#queue = arr;
+    await IDB.set(this.queueCacheName, arr);
+  }
+
+  // 🛠️
+
+  async #createCar(blocks: Block[]) {
+    const { writer, out } = CarWriter.create();
+    const outPromise = all(out);
+
+    await Promise.all(
+      blocks.map((block) => {
+        return writer.put(block);
+      }),
+    );
+
+    await writer.close();
+    return Uint8Arrays.concat(await outPromise);
   }
 }
