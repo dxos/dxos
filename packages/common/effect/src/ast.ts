@@ -56,21 +56,38 @@ export const getProperty = (schema: S.Schema<any>, path: string): AST.AST | unde
 
 export type Visitor = (node: AST.AST, path: string[]) => boolean | void;
 
+export const isLeafNode: Visitor = (node: AST.AST) => !AST.isTupleType(node) && !AST.isTypeLiteral(node);
+
 /**
  * Visit leaf nodes.
- * Ref: https://www.npmjs.com/package/unist-util-visit#visitor
+ * Refs:
+ * - https://www.npmjs.com/package/unist-util-visit#visitor
+ * - https://github.com/syntax-tree/unist-util-is?tab=readme-ov-file#test
  */
-export const visit = (node: AST.AST, visitor: Visitor) => visitNode(node, visitor);
+export const visit: {
+  (node: AST.AST, visitor: Visitor): void;
+  (node: AST.AST, test: Visitor, visitor: Visitor): void;
+} = (node: AST.AST, testOrVisitor: Visitor, visitor?: Visitor): void => {
+  if (!visitor) {
+    visitNode(node, undefined, testOrVisitor);
+  } else {
+    visitNode(node, testOrVisitor, visitor);
+  }
+};
 
-const visitNode = (node: AST.AST, visitor: Visitor, path: string[] = []) => {
+// TODO(burdon): Optional test (objects, arrays, etc.)
+const visitNode = (node: AST.AST, test: Visitor | undefined, visitor: Visitor, path: string[] = []): void => {
   for (const prop of AST.getPropertySignatures(node)) {
     const currentPath = [...path, prop.name.toString()];
     const type = getType(prop.type);
     if (type) {
+      // NOTE: Only visits leaf nodes.
       if (AST.isTypeLiteral(type)) {
-        visitNode(type, visitor, currentPath);
+        // const ok = visitor(type, currentPath);
+        // if (ok !== false) {
+        visitNode(type, test, visitor, currentPath);
+        // }
       } else {
-        // NOTE: Only visits leaf nodes.
         const ok = visitor(type, currentPath);
         if (ok === false) {
           return;

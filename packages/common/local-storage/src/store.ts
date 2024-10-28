@@ -16,6 +16,9 @@ import { hyphenize } from '@dxos/util';
 
 const cloneObject = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
 
+/**
+ * Settings group.
+ */
 export type SettingsValue = Record<string, any>;
 
 export type SettingsProps<T extends SettingsValue> = {
@@ -145,6 +148,7 @@ export class SettingsStore<T extends SettingsValue> {
             set(this.value, path, JSON.parse(value));
           } else if (AST.isTypeLiteral(node)) {
             set(this.value, path, JSON.parse(value));
+            return false;
           }
         } catch (_err) {
           log.warn(`invalid value: ${key}`);
@@ -174,6 +178,7 @@ export class SettingsStore<T extends SettingsValue> {
           this._storage.setItem(key, JSON.stringify(value));
         } else if (AST.isTypeLiteral(node)) {
           this._storage.setItem(key, JSON.stringify(value));
+          return false;
         }
       }
     });
