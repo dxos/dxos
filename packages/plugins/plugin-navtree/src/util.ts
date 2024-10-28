@@ -12,19 +12,14 @@ import {
   isAction,
 } from '@dxos/app-graph';
 import { Path } from '@dxos/react-ui-mosaic';
-import {
-  type NavTreeActionNode,
-  type NavTreeItemActions,
-  type NavTreeItemNode,
-  type NavTreeItemNodeProperties,
-  type OpenItemIds,
-} from '@dxos/react-ui-navtree';
 import { type MaybePromise, nonNullable } from '@dxos/util';
+
+import { type NodeProperties, type NavTreeItem } from './types';
 
 export type NavTreeItemGraphNode = Node<
   any,
-  NavTreeItemNodeProperties &
-    Partial<{
+  Partial<
+    NodeProperties & {
       persistenceClass: string;
       persistenceKey: string;
       acceptPersistenceClass: Set<string>;
@@ -33,9 +28,9 @@ export type NavTreeItemGraphNode = Node<
       onCopy: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
       onTransferStart: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
       onTransferEnd: (activeNode: NavTreeItemGraphNode, destinationParent: NavTreeItemGraphNode) => MaybePromise<void>;
-    }>
+    }
+  >
 >;
-export type NavTreeItem = NavTreeItemNode<NavTreeItemGraphNode>;
 
 export const getParent = (
   graph: Graph,
@@ -73,9 +68,9 @@ export const resolveMigrationOperation = (
       const activeKey = activeNode.properties.persistenceKey;
       if (activeKey && persistenceParent?.properties.acceptPersistenceKey) {
         return persistenceParent.properties.acceptPersistenceKey.has(activeKey) &&
-          destinationRelatedNode.properties.onTransferStart
+          persistenceParent.properties.onTransferStart
           ? 'transfer'
-          : destinationRelatedNode.properties.onCopy
+          : persistenceParent.properties.onCopy
             ? 'copy'
             : 'reject';
       } else {
@@ -103,7 +98,7 @@ export const sortActions = (actions: Action[]): Action[] =>
     return 1;
   });
 
-export const getTreeItemNode = (treeItems: NavTreeItemNode[], path?: string[]): NavTreeItemNode | undefined => {
+export const getTreeItemNode = (treeItems: NavTreeItem[], path?: string[]): NavTreeItem | undefined => {
   if (!path) {
     return undefined;
   }
@@ -117,7 +112,7 @@ export const getChildren = (
   graph: Graph,
   node: NavTreeItemGraphNode,
   filter?: NodeFilter,
-  path: string[] = [],
+  path: readonly string[] = [],
 ): NavTreeItemGraphNode[] => {
   return graph
     .nodes(node, { relation: 'outbound', filter })
@@ -129,15 +124,19 @@ export const getChildren = (
     .filter(nonNullable) as NavTreeItemGraphNode[];
 };
 
-type FlattenedActions = Required<Pick<NavTreeItemNode, 'actions' | 'groupedActions'>>;
+type FlattenedActions = Required<Pick<NavTreeItem, 'actions' | 'groupedActions'>>;
 
-export const getActions = (graph: Graph, node: NavTreeItemGraphNode): FlattenedActions => {
+export const getActions = (graph: Graph, node: Node): FlattenedActions => {
   return graph.actions(node).reduce(
     (acc: FlattenedActions, arg) => {
-      acc.actions.push(arg as unknown as NavTreeItemActions[number]);
+      if (arg.properties.disposition === 'item') {
+        return acc;
+      }
+
+      acc.actions.push(arg);
       if (!isAction(arg)) {
         const actionGroup = graph.actions(arg);
-        acc.groupedActions[arg.id] = actionGroup as unknown as NavTreeActionNode[];
+        acc.groupedActions[arg.id] = actionGroup;
       }
       return acc;
     },
@@ -157,50 +156,39 @@ export const expandActions = (graph: Graph, node: Node) => {
   return Promise.all([graph.expand(node, 'outbound', ACTION_TYPE), graph.expand(node, 'outbound', ACTION_GROUP_TYPE)]);
 };
 
-function* navTreeItemVisitor(
-  graph: Graph,
-  node: NavTreeItemGraphNode,
-  openItemIds: OpenItemIds,
-  path: string[] = [],
-  filter?: NodeFilter,
-): Generator<NavTreeItem> {
-  const l0Children = getChildren(graph, node, filter, path);
-  const { actions: l0Actions, groupedActions: l0GroupedActions } = getActions(graph, node);
-
-  const stack: NavTreeItem[] = [
-    {
-      id: node.id,
-      node,
-      path: [],
-      parentOf: (l0Children ?? []).map(({ id }) => id),
-      actions: l0Actions,
-      groupedActions: l0GroupedActions,
-    },
-  ];
-
+function* navTreeItemVisitor({
+  graph,
+  node,
+  open,
+  getItem,
+  path = [],
+  filter,
+}: {
+  graph: Graph;
+  node: NavTreeItemGraphNode;
+  open: string[];
+  getItem: (node: NavTreeItemGraphNode, parent: readonly string[], filter?: NodeFilter) => NavTreeItem;
+  path?: readonly string[];
+  filter?: NodeFilter;
+}): Generator<NavTreeItem> {
+  const stack: NavTreeItem[] = [getItem(node, path, filter)];
   while (stack.length > 0) {
     const nextItem = stack.pop()!;
-    if ((nextItem.path?.length ?? 0) > 0) {
+    if (nextItem.path.length > 1) {
       yield nextItem;
     }
-    const { id, node, path } = nextItem;
+    const { node, path } = nextItem;
     const children = getChildren(graph, node, filter, path);
-    if (path?.length === 0 || (id ?? 'never') in openItemIds) {
+    const actions = graph.actions(node);
+    if (path.length === 1 || open.includes(Path.create(...path))) {
+      for (let i = actions.length - 1; i >= 0; i--) {
+        if (actions[i].properties.disposition === 'item') {
+          stack.push(getItem(actions[i], path, filter));
+        }
+      }
       for (let i = children.length - 1; i >= 0; i--) {
         const child = children[i] as NavTreeItemGraphNode;
-        const childPath = path ? [...path, child.id] : [child.id];
-        const childChildren = getChildren(graph, child, filter, childPath);
-        const { actions: childActions, groupedActions: childGroupedActions } = getActions(graph, child);
-        stack.push({
-          id: Path.create(...childPath),
-          node: child,
-          path: childPath,
-          ...((childChildren?.length ?? 0) > 0 && {
-            parentOf: childChildren!.map(({ id }) => Path.create(...childPath, id)),
-          }),
-          actions: childActions,
-          groupedActions: childGroupedActions,
-        });
+        stack.push(getItem(child, path, filter));
       }
     }
   }
@@ -212,18 +200,19 @@ function* navTreeItemVisitor(
 export const treeItemsFromRootNode = (
   graph: Graph,
   rootNode: NavTreeItemGraphNode,
-  openItemIds: OpenItemIds,
-  path: string[] = [],
+  open: string[],
+  getItem: (node: NavTreeItemGraphNode, parent: readonly string[]) => NavTreeItem,
+  path?: readonly string[],
   filter?: NodeFilter,
 ): NavTreeItem[] => {
-  return Array.from(navTreeItemVisitor(graph, rootNode, openItemIds, path, filter));
+  return Array.from(navTreeItemVisitor({ graph, node: rootNode, open, getItem, path, filter }));
 };
 
-export const expandOpenGraphNodes = (graph: Graph, openItemIds: OpenItemIds) => {
+export const expandOpenGraphNodes = (graph: Graph, open: string[]) => {
   return Promise.all(
-    Object.keys(openItemIds)
-      .map((openItemId) => {
-        const node = graph.findNode(Path.last(openItemId));
+    open
+      .map((id) => {
+        const node = graph.findNode(Path.last(id));
         return node && expandChildrenAndActions(graph, node as NavTreeItemGraphNode);
       })
       .filter(nonNullable),

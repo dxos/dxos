@@ -14,6 +14,8 @@ import {
   type DNDOptions,
   type EditorViewMode,
   type EditorInputMode,
+  type EditorSelectionState,
+  type EditorStateStore,
   Toolbar,
   type UseTextEditorProps,
   createBasicExtensions,
@@ -47,9 +49,10 @@ export type MarkdownEditorProps = {
   scrollPastEnd?: boolean;
   toolbar?: boolean;
   viewMode?: EditorViewMode;
+  editorStateStore?: EditorStateStore;
   onViewModeChange?: (id: string, mode: EditorViewMode) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
-} & Pick<UseTextEditorProps, 'initialValue' | 'scrollTo' | 'selection' | 'extensions'> &
+} & Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
   Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
 
 /**
@@ -65,10 +68,9 @@ export const MarkdownEditor = ({
   extensions,
   extensionProviders,
   scrollPastEnd,
-  scrollTo,
-  selection,
   toolbar,
   viewMode,
+  editorStateStore,
   onFileUpload,
   onViewModeChange,
 }: MarkdownEditorProps) => {
@@ -78,6 +80,9 @@ export const MarkdownEditor = ({
   const [formattingState, formattingObserver] = useFormattingState();
   const attendableAttributes = useAttendableAttributes(id);
   const { hasAttention } = useAttention(id);
+
+  // Restore last selection and scroll point.
+  const { scrollTo, selection } = useMemo<EditorSelectionState>(() => editorStateStore?.getState(id) ?? {}, [id]);
 
   // Extensions from other plugins.
   // TODO(burdon): Reconcile with DocumentEditor.useExtensions.

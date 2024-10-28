@@ -378,7 +378,7 @@ class SpaceQuerySource implements QuerySource {
 
   close() {
     this._results = undefined;
-    void this._ctx.dispose().catch();
+    void this._ctx.dispose().catch(() => {});
   }
 
   private _onUpdate = (updateEvent: ItemsUpdatedEvent) => {
@@ -437,7 +437,7 @@ class SpaceQuerySource implements QuerySource {
       return;
     }
 
-    void this._ctx.dispose().catch();
+    void this._ctx.dispose().catch(() => {});
     this._ctx = new Context();
     this._filter = filter;
 

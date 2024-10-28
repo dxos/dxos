@@ -9,6 +9,7 @@ import {
   addressFromA1Notation,
   type CellAddress,
   type CellRange,
+  type CompleteCellRange,
   DEFAULT_COLUMNS,
   DEFAULT_ROWS,
   MAX_COLUMNS,
@@ -69,6 +70,7 @@ export const createSheet = ({ name, cells, ...size }: CreateSheetOptions = {}): 
     rowMeta: {},
     columnMeta: {},
     ranges: [],
+    threads: [],
   });
 
   initialize(sheet, size);
@@ -111,27 +113,9 @@ export const rangeToIndex = (sheet: SheetType, range: CellRange): string => {
 /**
  * E.g., "CA2@CB3:CC4@CD5" => "A1:B2".
  */
-export const rangeFromIndex = (sheet: SheetType, idx: string): CellRange => {
+export const rangeFromIndex = (sheet: SheetType, idx: string): CompleteCellRange => {
   const [from, to] = idx.split(':').map((index) => addressFromIndex(sheet, index));
   return { from, to };
-};
-
-/**
- * Find closest cell to cursor.
- */
-export const closest = (cursor: CellAddress, cells: CellAddress[]): CellAddress | undefined => {
-  let closestCell: CellAddress | undefined;
-  let closestDistance = Number.MAX_SAFE_INTEGER;
-
-  for (const cell of cells) {
-    const distance = Math.abs(cell.row - cursor.row) + Math.abs(cell.col - cursor.col);
-    if (distance < closestDistance) {
-      closestCell = cell;
-      closestDistance = distance;
-    }
-  }
-
-  return closestCell;
 };
 
 /**

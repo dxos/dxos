@@ -36,10 +36,10 @@ export default class List extends BaseCommand<typeof List> {
           setInterval(async () => {
             const result = await daemon.list();
             console.clear();
-            printAgents(result, this.flags);
+            printAgents(result, this.flags as any);
           }, 1_000);
         } else {
-          printAgents(result, this.flags);
+          printAgents(result, this.flags as any);
         }
       }
     }, this.flags.system);

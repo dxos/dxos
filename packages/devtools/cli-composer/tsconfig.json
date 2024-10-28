@@ -6,10 +6,11 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist/src",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "outDir": "dist",
     "rootDirs": [
-      "./src", // <-- KEEP "./src" FIRST
-      "./notebooks"
+      "./src" // <-- KEEP "./src" FIRST
     ],
     "types": [
       "@dxos/typings",
@@ -17,9 +18,7 @@
     ]
   },
   "include": [
-    "notebooks",
-    "src",
-    "src/util/telemetryrc.json"
+    "src"
   ],
   "references": [],
   "ts-node": {

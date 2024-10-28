@@ -67,7 +67,7 @@ const DemoGrid = ({
               }),
             );
           })
-          .catch();
+          .catch(() => {});
         // TODO(wittjosiah): Use generator to create positions.
         return [];
       }),

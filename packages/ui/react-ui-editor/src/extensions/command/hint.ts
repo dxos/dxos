@@ -7,7 +7,7 @@ import { Decoration, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from 
 
 import { type CommandOptions } from './command';
 import { commandState } from './state';
-import { clientRectsFor, flattenRect } from '../util';
+import { clientRectsFor, flattenRect } from '../../util';
 
 class CommandHint extends WidgetType {
   constructor(readonly content: string | HTMLElement) {

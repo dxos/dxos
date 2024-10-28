@@ -4,20 +4,24 @@
 
 import '@dxos-theme';
 
+import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { batch } from '@preact/signals-core';
 import { type Meta } from '@storybook/react';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect } from 'react';
 
-import { Graph } from '@dxos/app-graph';
+import { Graph, ROOT_ID, type NodeFilter } from '@dxos/app-graph';
+import { create } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
+import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
-import { Treegrid } from '@dxos/react-ui';
-import { Mosaic, Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation } from '@dxos/react-ui-mosaic';
-import { NavTree, type NavTreeItemNode, type OpenItemIds } from '@dxos/react-ui-navtree';
+import { isItem } from '@dxos/react-ui-list';
+import { Path } from '@dxos/react-ui-mosaic';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
-import { arrayMove } from '@dxos/util';
 
-import { type NavTreeItemGraphNode, treeItemsFromRootNode } from '../util';
+import { NavTree, type NavTreeProps } from '../components';
+import { type NavTreeItem } from '../types';
+import { getActions, getChildren, type NavTreeItemGraphNode, treeItemsFromRootNode } from '../util';
 
 faker.seed(3);
 registerSignalsRuntime();
@@ -46,106 +50,108 @@ const createGraph = () => {
   return graph;
 };
 
-const ROOT_ID = 'root';
+type State = {
+  flatTree: NavTreeItem[];
+  open: string[];
+  current: string[];
+};
+
 const graph = createGraph();
+const itemCache = new Map<string, NavTreeItem>();
+const state = create<State>({
+  get flatTree() {
+    return treeItemsFromRootNode(graph, graph.root, this.open, getItem);
+  },
+  open: [],
+  current: [],
+});
 
-const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
-  const [openItemIds, setopenItemIds] = useState<OpenItemIds>({});
-  const items = useMemo(
-    () => treeItemsFromRootNode(graph, graph.root as NavTreeItemGraphNode, openItemIds),
-    [openItemIds],
-  );
-  const handleopenItemIdsChange = (item: NavTreeItemNode, nextOpen: boolean) => {
-    const itemId = item.path?.join(Treegrid.PATH_SEPARATOR) ?? 'never';
-    setopenItemIds((prevOpenItemIds) => {
-      if (nextOpen) {
-        return { ...prevOpenItemIds, [itemId]: true };
-      } else {
-        const { [itemId]: _, ...nextOpenItemIds } = prevOpenItemIds;
-        return nextOpenItemIds;
-      }
-    });
-  };
+const getItem = (node: NavTreeItemGraphNode, parent: readonly string[], filter?: NodeFilter) => {
+  invariant(graph);
+  const path = [...parent, node.id];
+  const { actions, groupedActions } = getActions(graph, node);
+  const children = getChildren(graph, node, filter, path);
+  const parentOf =
+    children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
+  const item = {
+    id: node.id,
+    label: node.properties.label ?? node.id,
+    icon: node.properties.icon,
+    path,
+    parentOf,
+    node,
+    actions,
+    groupedActions,
+  } satisfies NavTreeItem;
 
-  const handleOver = ({ active, over }: MosaicMoveEvent<number>): MosaicOperation => {
-    // Reject all operations that don’t match the graph’s root id
-    if (Path.first(active.path) !== id || Path.first(over.path) !== Path.first(active.path)) {
-      return 'reject';
-    }
-    // Rearrange if rearrange is supported and active and over are siblings
-    else if (Path.siblings(over.path, active.path)) {
-      return graph.findNode(Path.last(Path.parent(over.path)))?.properties.onRearrangeChildren ? 'rearrange' : 'reject';
-    }
-    // Rearrange if rearrange is supported and active is or would be a child of over
-    else if (Path.hasChild(over.path, active.path)) {
-      return graph.findNode(Path.last(over.path))?.properties.onRearrangeChildren ? 'rearrange' : 'reject';
-    }
-    // Check if transfer is supported
-    else {
-      const overNode = graph.findNode(Path.last(over.path));
-      const activeNode = graph.findNode(Path.last(active.path));
-      if (overNode && activeNode) {
-        return 'transfer';
-      } else {
-        return 'reject';
-      }
-    }
-  };
-
-  const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
-    batch(() => {
-      const activeNode = graph.findNode(active.item.id);
-      const overNode = graph.findNode(over.item.id);
-      const activeParent = activeNode && graph.nodes(activeNode, { relation: 'inbound' })[0];
-      const overParent = overNode && graph.nodes(overNode, { relation: 'inbound' })[0];
-      if (
-        activeNode &&
-        overNode &&
-        activeParent &&
-        overParent &&
-        activeParent.id === overParent.id &&
-        activeNode.id !== overNode.id &&
-        operation === 'rearrange'
-      ) {
-        const ids = graph.nodes(activeParent).map((node) => node.id);
-        const activeIndex = ids.indexOf(activeNode.id);
-        const overIndex = ids.indexOf(overNode.id);
-        (graph as any)._sortEdges(
-          activeParent.id,
-          'outbound',
-          arrayMove(ids, activeIndex, overIndex > -1 ? overIndex : ids.length - 1),
-        );
-      } else if (activeNode && activeParent && overParent && operation === 'transfer') {
-        (graph as any)._removeEdges([{ source: activeParent.id, target: activeNode.id }]);
-        (graph as any)._addEdges([{ source: overNode.id, target: activeNode.id }]);
-      }
-    });
-  };
-
-  return (
-    <NavTree
-      id='storybook navtree'
-      items={items}
-      onItemOpenChange={handleopenItemIdsChange}
-      onDrop={handleDrop}
-      onOver={handleOver}
-    />
-  );
+  const cachedItem = itemCache.get(node.id);
+  // TODO(wittjosiah): This is not a good enough check.
+  //   Consider better ways to doing reactive transformations which retain referential equality.
+  if (cachedItem && JSON.stringify(item) === JSON.stringify(cachedItem)) {
+    return cachedItem;
+  } else {
+    itemCache.set(node.id, item);
+    return item;
+  }
 };
 
-export const Default = {
-  render: ({ debug }: { debug?: boolean }) => (
-    <Mosaic.Root debug={debug}>
-      <StorybookNavTree />
-      <Mosaic.DragOverlay />
-    </Mosaic.Root>
-  ),
+const Story = (args: Partial<NavTreeProps>) => {
+  // NOTE: If passed directly to args, this won't be reactive.
+  const items = state.flatTree;
+
+  useEffect(() => {
+    return monitorForElements({
+      canMonitor: ({ source }) => isItem(source.data),
+      onDrop: ({ location, source }) => {
+        // Didn't drop on anything.
+        if (!location.current.dropTargets.length) {
+          return;
+        }
+
+        const target = location.current.dropTargets[0];
+
+        const instruction: Instruction | null = extractInstruction(target.data);
+        if (instruction !== null) {
+          // TODO(wittjosiah): Implement drop logic.
+          console.log('update', instruction);
+        }
+      },
+    });
+  }, []);
+
+  return <NavTree items={items} open={state.open} current={state.current} {...args} />;
 };
+
+export const Default = {};
 
 const meta: Meta = {
   title: 'plugins/plugin-navtree/Graph',
   component: NavTree,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  render: Story,
+  decorators: [withTheme, withLayout({ tooltips: true })],
+  args: {
+    onOpenChange: (item: NavTreeItem, open: boolean) => {
+      const path = Path.create(...item.path);
+      if (open) {
+        state.open.push(path);
+      } else {
+        const index = state.open.indexOf(path);
+        if (index > -1) {
+          state.open.splice(index, 1);
+        }
+      }
+    },
+    onSelect: (item: NavTreeItem, current: boolean) => {
+      if (current) {
+        state.current.push(item.id);
+      } else {
+        const index = state.current.indexOf(item.id);
+        if (index > -1) {
+          state.current.splice(index, 1);
+        }
+      }
+    },
+  },
 };
 
 export default meta;

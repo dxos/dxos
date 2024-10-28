@@ -48,16 +48,18 @@ import {
   linkTooltip,
   listener,
   mention,
+  selectionState,
   table,
   typewriter,
   type CommandAction,
   type CommentsOptions,
   type DebugNode,
+  type EditorSelectionState,
 } from './extensions';
-import { renderRoot } from './extensions/util';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
-import { type Comment, type EditorSelectionState, state } from './state';
 import translations from './translations';
+import { type Comment } from './types';
+import { renderRoot } from './util';
 
 faker.seed(101);
 
@@ -416,7 +418,7 @@ export const Scrolling = {
   render: () => (
     <DefaultStory
       text={str('# Large Document', '', longText)}
-      extensions={state({
+      extensions={selectionState({
         setState: (id, state) => global.set(id, state),
         getState: (id) => global.get(id),
       })}
