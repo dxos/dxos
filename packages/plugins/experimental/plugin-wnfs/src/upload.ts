@@ -3,11 +3,11 @@
 //
 
 import type { Blockstore } from 'interface-blockstore';
-import type { Space } from '@dxos/client/echo';
 import { CID } from 'multiformats';
 import * as Raw from 'multiformats/codecs/raw';
 import { sha256 } from 'multiformats/hashes/sha2';
 
+import type { Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 
 import { Rng, filePath, store } from './common';
