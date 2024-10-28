@@ -7,7 +7,7 @@ import get from 'lodash.get';
 import set from 'lodash.set';
 
 import { AST, type ReactiveObject, type S, create } from '@dxos/echo-schema';
-import { visit } from '@dxos/effect';
+import { type Path, visit } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { hyphenize } from '@dxos/util';
@@ -94,8 +94,8 @@ export class SettingsStore<T extends SettingsValue> {
     return this._value;
   }
 
-  getKey(path: string[]) {
-    return [this._prefix, ...path.map((p) => hyphenize(p))].join('/');
+  getKey(path: Path) {
+    return [this._prefix, ...path.map((p) => (typeof p === 'string' ? hyphenize(p) : String(p)))].join('/');
   }
 
   open() {

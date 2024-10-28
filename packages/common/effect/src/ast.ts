@@ -14,6 +14,8 @@ import { invariant } from '@dxos/invariant';
 // https://effect-ts.github.io/effect/schema/AST.ts.html
 //
 
+export const isLeafType = (node: AST.AST) => !AST.isTupleType(node) && !AST.isTypeLiteral(node);
+
 /**
  * Get annotation or return undefined.
  */
@@ -54,17 +56,22 @@ export const getProperty = (schema: S.Schema<any>, path: string): AST.AST | unde
   return node;
 };
 
-export enum State {
+export enum VisitResult {
   CONTINUE = 0,
+  /**
+   * Skip visiting children.
+   */
   SKIP = 1,
+  /**
+   * Stop traversing immeditaely.
+   */
   EXIT = 2,
 }
 
-export type Tester = (node: AST.AST, path: string[], depth: number) => State | void;
-export type Visitor = (node: AST.AST, path: string[], depth: number) => void;
+export type Path = (string | number)[];
 
-export const isLeafNode: Tester = (node: AST.AST) =>
-  AST.isTupleType(node) || AST.isTypeLiteral(node) ? State.SKIP : State.CONTINUE;
+export type Tester = (node: AST.AST, path: Path, depth: number) => VisitResult;
+export type Visitor = (node: AST.AST, path: Path, depth: number) => void;
 
 /**
  * Visit leaf nodes.
@@ -79,32 +86,38 @@ export const visit: {
   if (!visitor) {
     visitNode(node, undefined, testOrVisitor);
   } else {
-    visitNode(node, testOrVisitor, visitor);
+    visitNode(node, testOrVisitor as Tester, visitor);
   }
 };
 
-// TODO(burdon): Optional test (objects, arrays, etc.)
 const visitNode = (
   node: AST.AST,
-  test: Visitor | undefined,
+  test: Tester | undefined,
   visitor: Visitor,
-  path: string[] = [],
+  path: Path = [],
   depth = 0,
-): void => {
+): VisitResult | undefined => {
   for (const prop of AST.getPropertySignatures(node)) {
     const currentPath = [...path, prop.name.toString()];
     const type = getType(prop.type);
     if (type) {
-      // NOTE: Only visits leaf nodes.
-      if (AST.isTypeLiteral(type)) {
-        // const ok = visitor(type, currentPath);
-        // if (ok !== false) {
-        visitNode(type, test, visitor, currentPath, depth + 1);
-        // }
-      } else {
-        const ok = visitor(type, currentPath, depth);
-        if (ok === false) {
-          return;
+      const result = test?.(node, path, depth) ?? VisitResult.CONTINUE;
+      if (result === VisitResult.EXIT) {
+        return result;
+      }
+
+      visitor(type, currentPath, depth);
+
+      if (result !== VisitResult.SKIP) {
+        if (AST.isTypeLiteral(type)) {
+          visitNode(type, test, visitor, currentPath, depth + 1);
+        } else if (AST.isTupleType(type)) {
+          for (const [i, elementType] of type.elements.entries()) {
+            const type = getType(elementType.type);
+            if (type) {
+              visitNode(type, test, visitor, [i, ...currentPath], depth);
+            }
+          }
         }
       }
     }
