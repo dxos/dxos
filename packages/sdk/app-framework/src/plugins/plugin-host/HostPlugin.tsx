@@ -9,9 +9,9 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { PluginContainer } from './PluginContainer';
 import { type PluginContext, PluginProvider } from './PluginContext';
 import { type Plugin, type PluginDefinition, type PluginMeta } from './plugin';
-import { ErrorBoundary } from '../SurfacePlugin';
+import { ErrorBoundary } from '../plugin-surface';
 
-export type BootstrapPluginsParams = {
+export type HostPluginParams = {
   plugins: Record<string, () => Promise<PluginDefinition>>;
   // Ordered list of plugins.
   meta: PluginMeta[];
@@ -21,32 +21,33 @@ export type BootstrapPluginsParams = {
   placeholder?: ReactNode;
 };
 
-export type PluginHostProvides = {
+export type HostPluginProvides = {
   plugins: PluginContext;
 };
 
 export const parsePluginHost = (plugin: Plugin) =>
-  (plugin.provides as PluginHostProvides).plugins ? (plugin as Plugin<PluginHostProvides>) : undefined;
+  (plugin.provides as HostPluginProvides).plugins ? (plugin as Plugin<HostPluginProvides>) : undefined;
 
-const PLUGIN_HOST = 'dxos.org/plugin/host';
+const HOST_PLUGIN = 'dxos.org/plugin/host';
 
 /**
  * Bootstraps an application by initializing plugins and rendering root components.
  */
-export const PluginHost = ({
+export const HostPlugin = ({
   plugins,
   meta,
   core,
   defaults = [],
   fallback = DefaultFallback,
   placeholder = null,
-}: BootstrapPluginsParams): PluginDefinition<PluginHostProvides> => {
-  const state = new LocalStorageStore<PluginContext>(PLUGIN_HOST, {
+}: HostPluginParams): PluginDefinition<HostPluginProvides> => {
+  const state = new LocalStorageStore<PluginContext>(HOST_PLUGIN, {
     ready: false,
     core,
     enabled: [...defaults],
     plugins: [],
     available: meta.filter(({ id }) => !core.includes(id)),
+    // TODO(burdon): Functions should not be part of the settings type.
     setPlugin: (id: string, enabled: boolean) => {
       if (enabled) {
         state.values.enabled.push(id);
@@ -62,7 +63,7 @@ export const PluginHost = ({
 
   return {
     meta: {
-      id: PLUGIN_HOST,
+      id: HOST_PLUGIN,
       name: 'Plugin host',
     },
     provides: {

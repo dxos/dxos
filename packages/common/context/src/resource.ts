@@ -160,6 +160,5 @@ export abstract class Resource implements Lifecycle {
 export const openInContext = async <T extends Lifecycle>(ctx: Context, resource: T): Promise<T> => {
   await resource.open?.(ctx);
   ctx.onDispose(() => resource.close?.());
-
   return resource;
 };

@@ -6,23 +6,21 @@ import React from 'react';
 
 import {
   type IntentResolverProvides,
+  type GraphBuilderProvides,
+  LayoutAction,
   type PluginDefinition,
+  SettingsAction,
   type SurfaceProvides,
+  type TranslationsProvides,
   parseIntentPlugin,
   resolvePlugin,
-  LayoutAction,
-  SettingsAction,
-  type GraphBuilderProvides,
-  type TranslationsProvides,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
 import { SettingsDialog, SettingsSettings } from './components';
-import meta, { SETTINGS_PLUGIN } from './meta';
+import meta, { MANAGER_PLUGIN } from './meta';
 import translations from './translations';
-
-const DEFAULT_PLUGIN = 'dxos.org/plugin/registry';
 
 export type SettingsPluginProvides = SurfaceProvides &
   IntentResolverProvides &
@@ -36,8 +34,10 @@ type SettingsSettingsProps = {
 /**
  * Plugin for aggregating and rendering plugin settings.
  */
-export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
-  const settings = new LocalStorageStore<SettingsSettingsProps>(SETTINGS_PLUGIN, { selected: DEFAULT_PLUGIN });
+export const ManagerPlugin = (): PluginDefinition<SettingsPluginProvides> => {
+  const settings = new LocalStorageStore<SettingsSettingsProps>(MANAGER_PLUGIN, {
+    selected: 'dxos.org/plugin/settings',
+  });
 
   return {
     meta,
@@ -47,7 +47,7 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
     provides: {
       surface: {
         component: ({ data, role }) => {
-          if (data.component === `${SETTINGS_PLUGIN}/Settings`) {
+          if (data.component === `${MANAGER_PLUGIN}/Settings`) {
             return (
               <SettingsDialog
                 selected={settings.values.selected}
@@ -79,7 +79,7 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
                       action: LayoutAction.SET_LAYOUT,
                       data: {
                         element: 'dialog',
-                        component: `${SETTINGS_PLUGIN}/Settings`,
+                        component: `${MANAGER_PLUGIN}/Settings`,
                         dialogBlockAlign: 'start',
                       },
                     },
@@ -94,19 +94,19 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
         builder: (plugins) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           return createExtension({
-            id: SETTINGS_PLUGIN,
+            id: MANAGER_PLUGIN,
             filter: (node): node is Node<null> => node.id === 'root',
             actions: () => [
               {
-                id: SETTINGS_PLUGIN,
+                id: MANAGER_PLUGIN,
                 data: async () => {
                   await intentPlugin?.provides.intent.dispatch({
-                    plugin: SETTINGS_PLUGIN,
+                    plugin: MANAGER_PLUGIN,
                     action: SettingsAction.OPEN,
                   });
                 },
                 properties: {
-                  label: ['open settings label', { ns: SETTINGS_PLUGIN }],
+                  label: ['open settings label', { ns: MANAGER_PLUGIN }],
                   icon: 'ph--gear--regular',
                   keyBinding: {
                     macos: 'meta+,',

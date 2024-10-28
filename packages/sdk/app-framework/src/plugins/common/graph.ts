@@ -5,7 +5,7 @@
 import type { Graph, GraphBuilder, Node } from '@dxos/app-graph';
 import { type MaybePromise } from '@dxos/util';
 
-import type { Plugin } from '../PluginHost';
+import type { Plugin } from '../plugin-host';
 
 // TODO(wittjosiah): Factor out.
 export type SerializedNode = {

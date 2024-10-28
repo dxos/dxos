@@ -3,7 +3,7 @@
 //
 
 import { type SurfaceComponent, type SurfaceRootContext } from './SurfaceRootContext';
-import { type Plugin } from '../PluginHost';
+import { type Plugin } from '../plugin-host';
 
 export type SurfaceProvides = {
   surface: {

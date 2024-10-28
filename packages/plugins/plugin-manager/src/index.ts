@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SettingsPlugin } from './SettingsPlugin';
+import { ManagerPlugin } from './ManagerPlugin';
 
-export default SettingsPlugin;
+export default ManagerPlugin;
 
-export * from './SettingsPlugin';
+export * from './ManagerPlugin';
 
 // TODO(wittjosiah): Remove.
 //  Settings should be exposed from plugins as state and intents rather than components.

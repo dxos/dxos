@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SETTINGS_PLUGIN } from './meta';
+import { MANAGER_PLUGIN } from './meta';
 
 export default [
   {
     'en-US': {
-      [SETTINGS_PLUGIN]: {
+      [MANAGER_PLUGIN]: {
         'open settings label': 'Show settings',
         'settings dialog title': 'Settings',
         'back label': 'Back',
