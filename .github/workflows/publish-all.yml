@@ -78,11 +78,53 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Bump Versions
+        run: node .github/workflows/scripts/bump-version.js ${{ env.DX_ENVIRONMENT }}
+        if: env.BRANCH != 'production'
+
+      - name: Build
+        run: pnpm nx run-many --target=build
+        env:
+          # NOTE: @dxos/cli is the only thing consuming these at build time, the apps all consume them at bundle.
+          DX_SENTRY_DESTINATION: ${{ env.CLI_SENTRY_DESTINATION }}
+          DX_TELEMETRY_API_KEY: ${{ env.CLI_SEGMENT_API_KEY }}
+          NODE_ENV: production
+
+      # NOTE: Shell must be bundled before npm publish.
+      - name: Bundle Shell
+        run: pnpm nx bundle shell
+        env:
+          NODE_ENV: production
+
+      - name: Publish to NPM
+        id: npm-publish
+        run: .github/workflows/scripts/publish.sh
+        if: env.BRANCH == 'production' || env.BRANCH == 'staging' || github.event.inputs.publish_npm == 'true'
+
       - name: Publish Apps
         run: .github/workflows/scripts/publish-apps.sh
         env:
           NODE_ENV: production
           NODE_OPTIONS: '--max_old_space_size=12288'
+
+      - name: Bundle Devtools
+        run: pnpm nx bundle devtools-extension
+        env:
+          NODE_ENV: production
+
+      - name: Gather Artifacts for Devtools extension
+        run: |
+          ROOT_CWD="$(pwd)"
+          mkdir artifacts
+          pushd packages/devtools/devtools-extension/out/devtools-extension && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
+        if: github.event_name == 'release' && github.event.action == 'published'
+
+      - name: Upload Devtools extension
+        uses: fnkr/github-action-ghr@v1
+        env:
+          GHR_PATH: artifacts/
+          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+        if: github.event_name == 'release' && github.event.action == 'published'
 
       - name: Monitor publish
         run: node .github/workflows/scripts/monitor.js
