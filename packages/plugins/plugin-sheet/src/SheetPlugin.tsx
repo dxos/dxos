@@ -143,19 +143,21 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         component: ({ data, role }) => {
           const space = isEchoObject(data.object) ? getSpace(data.object) : undefined;
           const graph = useComputeGraph(space);
+          const handleSelectRange = () => {};
+          const handleDeleteRange = () => {};
 
           switch (role) {
             case 'article':
             case 'section':
-              if (data.object instanceof SheetType) {
-                return graph ? <SheetContainer graph={graph} sheet={data.object} role={role} /> : null;
+              if (graph && data.object instanceof SheetType) {
+                return <SheetContainer graph={graph} sheet={data.object} role={role} />;
               }
 
               return null;
             case 'complementary--settings':
               if (data.subject instanceof SheetType) {
                 return {
-                  node: <RangeList table={data.subject} />,
+                  node: <RangeList sheet={data.subject} onSelect={handleSelectRange} onDelete={handleDeleteRange} />,
                 };
               }
 

@@ -3,11 +3,11 @@
 //
 
 import type {
-  GraphBuilderProvides,
-  IntentResolverProvides,
-  MetadataRecordsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
+    GraphBuilderProvides,
+    IntentResolverProvides,
+    MetadataRecordsProvides,
+    SurfaceProvides,
+    TranslationsProvides,
 } from '@dxos/app-framework';
 import { ref, S, TypedObject } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-client';
@@ -62,6 +62,8 @@ export const Range = S.Struct({
   key: S.String,
   value: S.String,
 });
+
+export type Range = S.Schema.Type<typeof Range>;
 
 // TODO(burdon): Visibility, locked, frozen, etc.
 export const RowColumnMeta = S.Struct({

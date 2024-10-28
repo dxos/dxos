@@ -5,11 +5,11 @@
 import React, { useMemo } from 'react';
 
 import {
-  type LayoutCoordinate,
-  NavigationAction,
-  SLUG_PATH_SEPARATOR,
-  Surface,
-  useIntentDispatcher,
+    type LayoutCoordinate,
+    NavigationAction,
+    SLUG_PATH_SEPARATOR,
+    Surface,
+    useIntentDispatcher,
 } from '@dxos/app-framework';
 import { useGraph } from '@dxos/plugin-graph';
 import { Main } from '@dxos/react-ui';
@@ -17,12 +17,12 @@ import { useAttended } from '@dxos/react-ui-attention';
 import { deckGrid } from '@dxos/react-ui-deck';
 import { mx } from '@dxos/react-ui-theme';
 
-import { NodePlankHeading } from './NodePlankHeading';
-import { PlankContentError } from './PlankError';
-import { PlankLoading } from './PlankLoading';
 import { useNode, useNodeActionExpander } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 import { useLayout } from '../LayoutContext';
+import { NodePlankHeading } from './NodePlankHeading';
+import { PlankContentError } from './PlankError';
+import { PlankLoading } from './PlankLoading';
 
 export type ComplementarySidebarProps = {
   panel?: string;
@@ -85,7 +85,7 @@ export const ComplementarySidebar = ({ panel, flatDeck }: ComplementarySidebarPr
           flatDeck={flatDeck}
           actions={actions}
         />
-        <div className='row-span-2 divide-y divide-separator overflow-y-scroll'>
+        <div className='row-span-2 divide-y divide-separator overflow-x-hidden overflow-y-scroll'>
           {node && (
             <Surface
               key={id}

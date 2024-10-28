@@ -8046,6 +8046,9 @@ importers:
       '@dxos/react-ui-grid':
         specifier: workspace:*
         version: link:../../ui/react-ui-grid
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-list
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema

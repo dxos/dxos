@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Edge, attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentProps,
@@ -22,14 +21,13 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { Icon } from '@dxos/react-ui';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { DropIndicator } from './DropIndicator';
 import { useListContext } from './ListRoot';
 
-export type ListItemRecord = { id: string };
+export type ListItemRecord = {};
 
 export type ItemState =
   | {
