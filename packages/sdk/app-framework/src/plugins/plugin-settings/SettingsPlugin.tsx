@@ -10,6 +10,7 @@ import { type PluginDefinition } from '../plugin-host';
 
 export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
   // Global settings singleton.
+  // TODO(burdon): Make settings storage extensible so that other plugins can decide the persistence of them.
   const settingsStore = new RootSettingsStore();
 
   return {

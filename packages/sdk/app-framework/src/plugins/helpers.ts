@@ -11,8 +11,7 @@ import { type Plugin, type PluginDefinition } from './plugin-host';
 /**
  * Resolvers allow different instances of plugins to provide a particular capability.
  */
-// TODO(burdon): Use ts-effect?
-export type PluginResolver<T> = (plugins: Plugin) => Plugin<T> | undefined;
+export type PluginResolver<T> = (plugin: Plugin) => Plugin<T> | undefined;
 
 /**
  * Find a plugin by ID.
