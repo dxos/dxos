@@ -86,6 +86,8 @@ const convertLevel = (level: LogLevel): SeverityNumber => {
   switch (level) {
     case LogLevel.DEBUG:
       return SeverityNumber.DEBUG;
+    case LogLevel.VERBOSE:
+      return SeverityNumber.INFO;
     case LogLevel.INFO:
       return SeverityNumber.INFO;
     case LogLevel.WARN:
