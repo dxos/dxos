@@ -66,6 +66,7 @@
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
     "@dxos/plugin-wildcard": "workspace:*",
+    "@dxos/plugin-wnfs": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",

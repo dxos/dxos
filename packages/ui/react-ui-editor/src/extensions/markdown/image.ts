@@ -63,6 +63,10 @@ const buildDecorations = (from: number, to: number, state: EditorState) => {
         if (urlNode) {
           const hide = state.readOnly || cursor < node.from || cursor > node.to;
           const url = state.sliceDoc(urlNode.from, urlNode.to);
+          // Some plugins might be using custom URLs, avoid attempts to render those URLs
+          if (url.match(/^https?:\/\//) === null && url.match(/^file?:\/\//) === null) {
+            return;
+          }
           // TODO(burdon): Doesn't load if scrolling with mouse.
           preloadImage(url);
           decorations.push(
