@@ -1,4 +1,4 @@
-# Type `BootstrapPluginsParams`
+# Type `HostPluginParams`
 <sub>Declared in [packages/sdk/app-framework/src/plugins/PluginHost/PluginHost.tsx:14](https://github.com/dxos/dxos/blob/56c97ac85/packages/sdk/app-framework/src/plugins/PluginHost/PluginHost.tsx#L14)</sub>
 
 

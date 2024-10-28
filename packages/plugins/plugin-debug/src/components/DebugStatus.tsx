@@ -199,7 +199,7 @@ const PerformanceIndicator = () => {
       {visible && (
         <div
           className={mx(
-            'z-20 absolute bottom-[--statusbar-size] right-2 w-[450px] max-h-[600px]',
+            'z-20 absolute bottom-[--statusbar-size] right-4 w-[450px]',
             'overflow-x-hidden overflow-y-auto scrollbar-thin',
             'border-x border-y border-separator',
           )}

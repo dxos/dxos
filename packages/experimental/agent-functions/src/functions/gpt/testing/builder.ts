@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChainInputType, ChainPromptType, ChainType } from '@dxos/plugin-chain/types';
-import { MessageType, ThreadType } from '@dxos/plugin-space/types';
-import { TextType } from '@dxos/plugin-markdown/types';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { invariant } from '@dxos/invariant';
+import { ChainPromptType, ChainType } from '@dxos/plugin-automation/types';
+import { TextType } from '@dxos/plugin-markdown/types';
+import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 
 import { type ChainResources, type ChainVariant, createChainResources } from '../../../chain';
 import { getConfig, getKey } from '../../../util';

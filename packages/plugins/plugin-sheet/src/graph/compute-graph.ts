@@ -116,7 +116,7 @@ export class ComputeGraph extends Resource {
   getOrCreateNode(name: string): ComputeNode {
     invariant(name.length);
     if (!this._hf.doesSheetExist(name)) {
-      log.info('created node', { space: this._space?.id, sheet: name });
+      log('created node', { space: this._space?.id, sheet: name });
       this._hf.addSheet(name);
     }
 

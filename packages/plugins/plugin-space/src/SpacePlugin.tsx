@@ -367,12 +367,20 @@ export const SpacePlugin = ({
                   {...rest}
                 />
               ) : primary instanceof CollectionType ? (
-                { node: <CollectionMain collection={primary} />, disposition: 'fallback' }
+                {
+                  node: <CollectionMain collection={primary} />,
+                  disposition: 'fallback',
+                }
               ) : typeof primary === 'string' && primary.length === OBJECT_ID_LENGTH ? (
                 <MissingObject id={primary} />
               ) : null;
             case 'complementary--settings':
-              return isEchoObject(data.subject) ? <DefaultObjectSettings object={data.subject} /> : null;
+              return isEchoObject(data.subject)
+                ? {
+                    node: <DefaultObjectSettings object={data.subject} />,
+                    disposition: 'hoist',
+                  }
+                : null;
             case 'dialog':
               if (data.component === 'dxos.org/plugin/space/InvitationManagerDialog') {
                 return (
@@ -382,9 +390,8 @@ export const SpacePlugin = ({
                     </ClipboardProvider>
                   </Dialog.Content>
                 );
-              } else {
-                return null;
               }
+              return null;
             case 'popover':
               if (data.component === 'dxos.org/plugin/space/RenameSpacePopover' && isSpace(data.subject)) {
                 return <PopoverRenameSpace space={data.subject} />;
@@ -418,6 +425,7 @@ export const SpacePlugin = ({
                   ? (space?.properties[CollectionType.typename] as CollectionType)
                   : undefined
                 : data.object;
+
               return space && object
                 ? {
                     node: (
@@ -435,10 +443,10 @@ export const SpacePlugin = ({
             case 'settings':
               return data.plugin === meta.id ? <SpaceSettings settings={settings.values} /> : null;
             case 'menu-footer':
-              if (!isEchoObject(data.object)) {
-                return null;
-              } else {
+              if (isEchoObject(data.object)) {
                 return <MenuFooter object={data.object} />;
+              } else {
+                return null;
               }
             case 'status': {
               return (
@@ -463,8 +471,7 @@ export const SpacePlugin = ({
           const dispatch = intentPlugin?.provides.intent.dispatch;
           const resolve = metadataPlugin?.provides.metadata.resolver;
           const graph = graphPlugin?.provides.graph;
-
-          if (!graph || !dispatch || !resolve || !client) {
+          if (!client || !dispatch || !resolve || !graph) {
             return [];
           }
 
