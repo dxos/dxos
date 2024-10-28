@@ -7,16 +7,34 @@ import '@dxos-theme';
 import { type StoryObj } from '@storybook/react';
 import React, { type MouseEvent, type MutableRefObject, useCallback, useRef, useState } from 'react';
 
-import { DropdownMenu, Popover } from '@dxos/react-ui';
+import { faker } from '@dxos/random';
+import { DropdownMenu } from '@dxos/react-ui';
+import { PopoverCombobox } from '@dxos/react-ui-searchlist';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Grid, type GridContentProps, type GridRootProps } from './Grid';
 
 type StoryGridProps = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
 
+const storybookItems = faker.helpers.uniqueArray(faker.commerce.productName, 16);
+
+const storybookInitialCells = (value?: string) => ({
+  grid: {
+    '1,1': {
+      accessoryHtml:
+        '<button class="ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-1" data-story-action="menu"><svg><use href="/icons.svg#ph--arrow-right--regular"/></svg></button>',
+      value: 'Weekly sales report',
+    },
+    '2,2': {
+      accessoryHtml: `<dx-grid-multiselect-cell ${value ? `values='${JSON.stringify([{ label: value }])}'` : ''} placeholder="Select…"></dx-grid-multiselect-cell>`,
+    },
+  },
+});
+
 const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [multiSelectValue, setInternalMultiselectValue] = useState('');
   const triggerRef = useRef<HTMLButtonElement>(null) as MutableRefObject<HTMLButtonElement>;
 
   const handleClick = useCallback((event: MouseEvent) => {
@@ -36,10 +54,19 @@ const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
     }
   }, []);
 
+  const [initialCells, setInitialCells] = useState<GridContentProps['initialCells']>(storybookInitialCells());
+
+  const setMultiselectValue = useCallback((nextValue: string) => {
+    const nextInitialCells = storybookInitialCells(nextValue);
+    console.log('[set initial cells]', nextInitialCells);
+    setInitialCells(nextInitialCells);
+    setInternalMultiselectValue(nextValue);
+  }, []);
+
   return (
     <>
       <Grid.Root id='story' onEditingChange={onEditingChange}>
-        <Grid.Content {...props} onClick={handleClick} />
+        <Grid.Content {...props} initialCells={initialCells} onClick={handleClick} />
       </Grid.Root>
       <DropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
@@ -48,13 +75,23 @@ const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>
       </DropdownMenu.Root>
-      <Popover.Root open={popoverOpen} onOpenChange={setPopoverOpen}>
-        <Popover.VirtualTrigger virtualRef={triggerRef} />
-        <Popover.Content>
-          <span>Multiselect options</span>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Root>
+      <PopoverCombobox.Root
+        open={popoverOpen}
+        onOpenChange={setPopoverOpen}
+        value={multiSelectValue}
+        onValueChange={setMultiselectValue}
+      >
+        <PopoverCombobox.VirtualTrigger virtualRef={triggerRef} />
+        <PopoverCombobox.Content filter={(value, search) => (value.includes(search) ? 1 : 0)}>
+          <PopoverCombobox.Input placeholder='Search...' />
+          <PopoverCombobox.List>
+            {storybookItems.map((value) => (
+              <PopoverCombobox.Item key={value}>{value}</PopoverCombobox.Item>
+            ))}
+          </PopoverCombobox.List>
+          <PopoverCombobox.Arrow />
+        </PopoverCombobox.Content>
+      </PopoverCombobox.Root>
     </>
   );
 };
@@ -69,20 +106,6 @@ export default {
 export const Basic: StoryObj<StoryGridProps> = {
   args: {
     id: 'story',
-    initialCells: {
-      grid: {
-        '1,1': {
-          accessoryHtml:
-            '<button class="ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-1" data-story-action="menu"><svg><use href="/icons.svg#ph--arrow-right--regular"/></svg></button>',
-          value: 'Weekly sales report',
-        },
-        '2,2': {
-          value: '',
-          accessoryHtml:
-            '<dx-grid-multiselect-cell values=\'[{"label": "Peach"},{"label": "Plum"},{"label": "Pear"}]\'></dx-grid-multiselect-cell>',
-        },
-      },
-    },
     columnDefault: {
       grid: {
         size: 180,

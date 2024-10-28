@@ -10883,9 +10883,15 @@ importers:
         specifier: ^1.0.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
     devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-searchlist':
+        specifier: workspace:*
+        version: link:../react-ui-searchlist
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
