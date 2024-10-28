@@ -28,9 +28,9 @@ addons.register('dxos', () => {
         brandImage: darkMode ? '/dxos-horizontal-white.png' : '/dxos-horizontal-black.png',
         brandTarget: '_blank',
         brandUrl: 'https://github.com/dxos',
-      })
-    })
-  }
+      }),
+    });
+  };
 
   const currentDarkMode = undefined;
   const channel = addons.getChannel();

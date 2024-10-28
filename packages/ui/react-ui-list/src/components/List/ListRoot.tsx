@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
-import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { createContext } from '@radix-ui/react-context';
 import React, { type ReactNode, useEffect, useState } from 'react';
 
@@ -14,7 +14,7 @@ import { idle, type ItemState, type ListItemRecord } from './ListItem';
 
 type ListContext<T extends ListItemRecord> = {
   isItem: (item: any) => boolean;
-  isEqual?: (item1: T, item2: T) => boolean,
+  isEqual?: (item1: T, item2: T) => boolean;
   getId?: (item: T) => string; // TODO(burdon): Require if T doesn't conform to type.
   dragPreview?: boolean;
   state: ItemState & { item?: T };
@@ -42,7 +42,7 @@ export const ListRoot = <T extends ListItemRecord>({
   children,
   items,
   isItem,
-  isEqual = (a, b) => getId ? getId(a) === getId(b) : a === b,
+  isEqual = (a, b) => (getId ? getId(a) === getId(b) : a === b),
   getId,
   onMove,
   ...props
@@ -84,5 +84,7 @@ export const ListRoot = <T extends ListItemRecord>({
     });
   }, [items]);
 
-  return <ListProvider {...{ isItem, state, setState, ...props }}>{children?.({ state, items: items ?? [] })}</ListProvider>;
+  return (
+    <ListProvider {...{ isItem, state, setState, ...props }}>{children?.({ state, items: items ?? [] })}</ListProvider>
+  );
 };
