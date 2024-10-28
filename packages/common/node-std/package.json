@@ -7,7 +7,8 @@
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": [
-    "./dist/lib/browser/globals.mjs"
+    "./dist/lib/browser/globals.mjs",
+    "./src/globals.js"
   ],
   "exports": {
     "./_/config": {
