@@ -18,6 +18,7 @@ import React, {
 } from 'react';
 
 import { raise } from '@dxos/debug';
+import { log } from '@dxos/log';
 
 import { ErrorBoundary } from './ErrorBoundary';
 import { type SurfaceComponent, type SurfaceResult, useSurfaceRoot } from './SurfaceRootContext';
@@ -31,6 +32,11 @@ export type Direction = 'inline' | 'inline-reverse' | 'block' | 'block-reverse';
  * SurfaceProps are the props that are passed to the Surface component.
  */
 export type SurfaceProps = PropsWithChildren<{
+  /**
+   * Optional ID for debugging.
+   */
+  id?: string;
+
   /**
    * Role defines how the data should be rendered.
    */
@@ -82,40 +88,45 @@ export type SurfaceProps = PropsWithChildren<{
   [key: string]: unknown;
 }>;
 
+let count = 0;
+
 /**
  * A surface is a named region of the screen that can be populated by plugins.
  */
 export const Surface = memo(
-  forwardRef<HTMLElement, SurfaceProps>(({ role, name = role, fallback, placeholder, ...rest }, forwardedRef) => {
-    const props = { role, name, fallback, ...rest };
-    const { debugInfo } = useSurfaceRoot();
+  forwardRef<HTMLElement, SurfaceProps>(
+    ({ id: _id, role, name = role, fallback, placeholder, ...rest }, forwardedRef) => {
+      const props = { role, name, fallback, ...rest };
+      const { debugInfo } = useSurfaceRoot();
 
-    // Track debug info.
-    const [id] = useState<string>(Math.random().toString(36).slice(2));
-    useEffect(() => {
-      debugInfo?.set(id, { id, created: Date.now(), name, role, renderCount: 0 });
-      return () => {
-        debugInfo?.delete(id);
-      };
-    }, [id]);
-    if (debugInfo?.get(id)) {
-      debugInfo.get(id)!.renderCount++;
-    }
+      // Track debug info.
+      const [id] = useState<string>(() => _id ?? `surface-${++count}`);
+      useEffect(() => {
+        debugInfo?.set(id, { id, created: Date.now(), name, role, renderCount: 0 });
+        return () => {
+          debugInfo?.delete(id);
+        };
+      }, [id]);
 
-    const context = useContext(SurfaceContext);
-    const data = props.data ?? ((name && context?.surfaces?.[name]?.data) || {});
+      if (debugInfo?.get(id)) {
+        debugInfo.get(id)!.renderCount++;
+      }
 
-    const resolver = <SurfaceResolver {...props} ref={forwardedRef} />;
-    const suspense = placeholder ? <Suspense fallback={placeholder}>{resolver}</Suspense> : resolver;
+      const context = useContext(SurfaceContext);
+      const data = props.data ?? ((name && context?.surfaces?.[name]?.data) || {});
 
-    return fallback ? (
-      <ErrorBoundary data={data} fallback={fallback}>
-        {suspense}
-      </ErrorBoundary>
-    ) : (
-      suspense
-    );
-  }),
+      const resolver = <SurfaceResolver {...props} id={id} ref={forwardedRef} />;
+      const suspense = placeholder ? <Suspense fallback={placeholder}>{resolver}</Suspense> : resolver;
+
+      return fallback ? (
+        <ErrorBoundary data={data} fallback={fallback}>
+          {suspense}
+        </ErrorBoundary>
+      ) : (
+        suspense
+      );
+    },
+  ),
 );
 
 const SurfaceContext = createContext<SurfaceProps | undefined>(undefined);
@@ -123,6 +134,9 @@ const SurfaceContext = createContext<SurfaceProps | undefined>(undefined);
 export const useSurface = (): SurfaceProps =>
   useContext(SurfaceContext) ?? raise(new Error('Surface context not found'));
 
+/**
+ * Root surface component.
+ */
 const SurfaceResolver = forwardRef<HTMLElement, SurfaceProps>((props, forwardedRef) => {
   const { components } = useSurfaceRoot();
   const parent = useContext(SurfaceContext);
@@ -152,30 +166,30 @@ const resolveNodes = (
     ...props.data,
   };
 
-  const nodes = Object.entries(components)
+  const candidates = Object.entries(components)
     .map(([key, component]): [string, SurfaceResult] | undefined => {
+      // TODO(burdon): Avoid variable return types in plugin contract.
       const result = component({ ...props, data }, forwardedRef);
       if (!result || typeof result !== 'object') {
         return undefined;
       }
 
-      return 'node' in result ? [key, result] : isValidElement(result) ? [key, { node: result }] : undefined;
+      // Normalize tuple.
+      if ('node' in result) {
+        return [key, result];
+      } else if (isValidElement(result)) {
+        return [key, { node: result }];
+      } else {
+        log.warn('invalid result', { result });
+        return undefined;
+      }
     })
     .filter((result): result is [string, SurfaceResult] => Boolean(result))
-    .sort(([, a], [, b]) => {
-      const aDisposition = a.disposition ?? 'default';
-      const bDisposition = b.disposition ?? 'default';
-      if (aDisposition === bDisposition) {
-        return 0;
-      } else if (aDisposition === 'hoist' || bDisposition === 'fallback') {
-        return -1;
-      } else if (bDisposition === 'hoist' || aDisposition === 'fallback') {
-        return 1;
-      }
+    .sort(([, { disposition: a = 'default' }], [, { disposition: b = 'default' }]) => {
+      return a === b ? 0 : a === 'hoist' || b === 'fallback' ? -1 : b === 'hoist' || a === 'fallback' ? 1 : 0;
+    });
 
-      return 0;
-    })
-    .map(([key, result]) => <Fragment key={key}>{result.node}</Fragment>);
-
+  // TODO(burdon): Does this prematurely process the node?
+  const nodes = candidates.map(([key, result]) => <Fragment key={key}>{result.node}</Fragment>);
   return props.limit ? nodes.slice(0, props.limit) : nodes;
 };

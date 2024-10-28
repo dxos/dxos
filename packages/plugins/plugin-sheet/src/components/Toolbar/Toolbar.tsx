@@ -9,12 +9,12 @@ import { useIntentDispatcher } from '@dxos/app-framework';
 import {
   Icon,
   Toolbar as NaturalToolbar,
-  useTranslation,
   Tooltip,
   type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
   type ToolbarButtonProps as NaturalToolbarButtonProps,
   type ToolbarToggleProps as NaturalToolbarToggleProps,
   type ThemedClassName,
+  useTranslation,
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
@@ -115,7 +115,7 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
   const { hasAttention } = useAttention(id);
   const dispatch = useIntentDispatcher();
 
-  // TODO(Zan): Centralise the toolbar action handler. Current implementation in stories.
+  // TODO(Zan): Externalize the toolbar action handler. E.g., Toolbar/keys should both fire events.
   const handleAction = useCallback(
     (action: ToolbarAction) => {
       switch (action.key) {

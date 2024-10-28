@@ -18,6 +18,7 @@ export const packages = resolve(__dirname, '../../../packages');
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
 
 /**
+ * https://storybook.js.org/docs/configure
  * https://storybook.js.org/docs/api/main-config/main-config
  * https://nx.dev/recipes/storybook/one-storybook-for-all
  */
@@ -40,7 +41,6 @@ export const config = (
     '@storybook/addon-interactions',
     '@storybook/addon-links',
     '@storybook/addon-themes',
-    '@storybook/addon-toolbars',
     'storybook-dark-mode',
   ],
   /**
