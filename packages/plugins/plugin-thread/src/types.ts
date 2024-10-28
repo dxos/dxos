@@ -38,7 +38,7 @@ export type ThreadPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
-  SettingsProvides &
+  SettingsProvides<ThreadSettingsProps> &
   TranslationsProvides &
   SchemaProvides &
   MarkdownExtensionProvides;

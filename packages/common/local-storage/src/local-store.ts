@@ -29,7 +29,9 @@ type PropOptions = {
  * Local storage backed store.
  * https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage
  * DevTools > Application > Local Storage
+ * @deprecated
  */
+// TODO(burdon): Remove.
 export class LocalStorageStore<T extends object> {
   static string(): PropType<string>;
   static string(params: PropOptions): PropType<string | undefined>;

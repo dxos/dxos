@@ -599,6 +599,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-manager/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-markdown/package.json",
           "jsonpath": "$.version"
         },
@@ -635,11 +640,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-registry/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-settings/package.json",
           "jsonpath": "$.version"
         },
         {
