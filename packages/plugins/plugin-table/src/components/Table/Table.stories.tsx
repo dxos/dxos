@@ -19,6 +19,7 @@ import { useTableModel } from '../../hooks';
 import { TableType } from '../../types';
 import { Toolbar } from '../Toolbar';
 import { createEmptyTable, createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
+import translations from '../../translations';
 
 //
 // Story components.
@@ -146,6 +147,7 @@ const meta: Meta<typeof Table> = {
   title: 'plugins/plugin-table/Table',
   component: Table,
   render: DefaultStory as any,
+  parameters: { translations },
   decorators: [
     withClientProvider({
       types: [TableType],
