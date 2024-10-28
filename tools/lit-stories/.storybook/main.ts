@@ -4,12 +4,14 @@
 
 import { type StorybookConfig } from '@storybook/web-components-vite';
 import { resolve } from 'node:path';
+import { join } from 'path';
 import { mergeConfig } from 'vite';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 export const packages = resolve(__dirname, '../../../packages');
+const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
 
 const contentFiles = '*.{ts,tsx,js,jsx}';
 
@@ -43,11 +45,9 @@ export const config = (baseConfig: Partial<StorybookConfig> & Pick<StorybookConf
         IconsPlugin({
           symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
           assetPath: (name, variant) =>
-            `./packages/icons/node_modules/@phosphor-icons/core/assets/${variant}/${name}${
-              variant === 'regular' ? '' : `-${variant}`
-            }.svg`,
-          spriteFile: 'icons.svg',
-          contentPaths: ['**/*.stories.{ts,tsx}'],
+            `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+          spriteFile: resolve(__dirname, '../static/icons.svg'),
+          contentPaths: [join(packages, '/**/src/**/*.{ts,tsx}')],
         }),
       ],
     });
