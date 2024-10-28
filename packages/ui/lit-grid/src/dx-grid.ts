@@ -928,7 +928,7 @@ export class DxGrid extends LitElement {
   /**
    * Moves focus to the cell with actual focus, otherwise moves focus to the viewport.
    */
-  refocus(increment?: 'col' | 'row', delta: 1 | -1 = 1) {
+  refocus(increment?: 'col' | 'row', delta: 1 | -1 | 0 = 1) {
     if (increment) {
       switch (increment) {
         case 'col': {
@@ -944,11 +944,9 @@ export class DxGrid extends LitElement {
     }
 
     queueMicrotask(() => {
-      const outOfVis = this.focusedCellOutOfVis();
-      const cellVisible = outOfVis.col === 0 && outOfVis.row === 0;
-      if (cellVisible) {
-        const cellElement = this.focusedCellElement();
-        if (cellElement && cellElement !== document.activeElement) {
+      const cellElement = this.focusedCellElement();
+      if (cellElement) {
+        if (cellElement !== document.activeElement) {
           cellElement.focus({ preventScroll: true });
         }
       } else {
