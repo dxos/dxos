@@ -8,7 +8,7 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "dependencies": {
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
