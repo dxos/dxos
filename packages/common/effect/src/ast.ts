@@ -54,20 +54,28 @@ export const getProperty = (schema: S.Schema<any>, path: string): AST.AST | unde
   return node;
 };
 
-export type Visitor = (node: AST.AST, path: string[]) => boolean | void;
+export enum State {
+  CONTINUE = 0,
+  SKIP = 1,
+  EXIT = 2,
+}
 
-export const isLeafNode: Visitor = (node: AST.AST) => !AST.isTupleType(node) && !AST.isTypeLiteral(node);
+export type Tester = (node: AST.AST, path: string[], depth: number) => State | void;
+export type Visitor = (node: AST.AST, path: string[], depth: number) => void;
+
+export const isLeafNode: Tester = (node: AST.AST) =>
+  AST.isTupleType(node) || AST.isTypeLiteral(node) ? State.SKIP : State.CONTINUE;
 
 /**
  * Visit leaf nodes.
  * Refs:
- * - https://www.npmjs.com/package/unist-util-visit#visitor
+ * - https://github.com/syntax-tree/unist-util-visit?tab=readme-ov-file#visitor
  * - https://github.com/syntax-tree/unist-util-is?tab=readme-ov-file#test
  */
 export const visit: {
   (node: AST.AST, visitor: Visitor): void;
-  (node: AST.AST, test: Visitor, visitor: Visitor): void;
-} = (node: AST.AST, testOrVisitor: Visitor, visitor?: Visitor): void => {
+  (node: AST.AST, test: Tester, visitor: Visitor): void;
+} = (node: AST.AST, testOrVisitor: Tester | Visitor, visitor?: Visitor): void => {
   if (!visitor) {
     visitNode(node, undefined, testOrVisitor);
   } else {
@@ -76,7 +84,13 @@ export const visit: {
 };
 
 // TODO(burdon): Optional test (objects, arrays, etc.)
-const visitNode = (node: AST.AST, test: Visitor | undefined, visitor: Visitor, path: string[] = []): void => {
+const visitNode = (
+  node: AST.AST,
+  test: Visitor | undefined,
+  visitor: Visitor,
+  path: string[] = [],
+  depth = 0,
+): void => {
   for (const prop of AST.getPropertySignatures(node)) {
     const currentPath = [...path, prop.name.toString()];
     const type = getType(prop.type);
@@ -85,10 +99,10 @@ const visitNode = (node: AST.AST, test: Visitor | undefined, visitor: Visitor, p
       if (AST.isTypeLiteral(type)) {
         // const ok = visitor(type, currentPath);
         // if (ok !== false) {
-        visitNode(type, test, visitor, currentPath);
+        visitNode(type, test, visitor, currentPath, depth + 1);
         // }
       } else {
-        const ok = visitor(type, currentPath);
+        const ok = visitor(type, currentPath, depth);
         if (ok === false) {
           return;
         }
