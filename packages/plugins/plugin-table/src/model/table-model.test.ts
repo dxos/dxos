@@ -108,7 +108,7 @@ describe('TableModel', () => {
       expect(innerCounter.count).toBe(1);
     });
 
-    describe('cell reactivity', () => {
+    describe('row reactivity', () => {
       let data: any[];
 
       beforeEach(async () => {
@@ -135,51 +135,70 @@ describe('TableModel', () => {
         await model.open();
       });
 
-      it('should update cell value reactively', () => {
-        using cellUpdates = updateCounter(() => {
-          model.cells.value.grid['0,0']?.value;
+      it('should update with row-level reactivity', () => {
+        let updateCount = 0;
+        model.setOnCellUpdate(() => {
+          updateCount++;
         });
 
+        // Set up visible range to include our test data
+        model.getCells({ start: { row: 0, col: 0 }, end: { row: 1, col: 2 } }, 'grid');
+
+        // Trigger a row update
         data[0].col1 = 'New Value';
 
-        expect(cellUpdates.count).toBe(1);
-        expect(model.cells.value.grid['0,0']?.value).toBe('New Value');
+        expect(updateCount).toBe(1);
+
+        // Verify the new value through getCells
+        const cells = model.getCells({ start: { row: 0, col: 0 }, end: { row: 0, col: 0 } }, 'grid');
+        expect(cells['0,0']?.value).toBe('New Value');
       });
 
-      it('should update cells reactively when adding a new row', () => {
-        using cellsUpdates = updateCounter(() => {
-          model.cells.value;
+      it('should update reactively when adding a new row', () => {
+        let updateCount = 0;
+        model.setOnCellUpdate(() => {
+          updateCount++;
         });
+
+        // Set up visible range to include our test data
+        model.getCells({ start: { row: 0, col: 0 }, end: { row: 2, col: 2 } }, 'grid');
 
         data.push({ col1: 'C', col2: 3, col3: true });
 
-        expect(cellsUpdates.count).toBe(1);
-        expect(Object.keys(model.cells.value.grid).length).toBe(9); // 3 rows * 3 columns
-        expect(model.cells.value.grid['0,2']?.value).toBe('C');
+        expect(updateCount).toBe(1);
+
+        const cells = model.getCells({ start: { row: 0, col: 0 }, end: { row: 2, col: 2 } }, 'grid');
+
+        // Verify the new row's data
+        expect(cells['0,2']?.value).toBe('C');
+        expect(cells['1,2']?.value).toBe('3');
+        expect(cells['2,2']?.value).toBe('true');
       });
 
       it('should handle combined operations reactively', () => {
-        using cellsUpdates = updateCounter(() => model.cells.value);
-        using specificCellUpdates = updateCounter(() => model.cells.value.grid['0,0']?.value);
+        let updateCount = 0;
+        model.setOnCellUpdate(() => {
+          updateCount++;
+        });
 
+        // Set up visible range
+        model.getCells({ start: { row: 0, col: 0 }, end: { row: 2, col: 2 } }, 'grid');
+
+        // Multiple operations
         data[0].col1 = 'Updated A';
         data.push({ col1: 'C', col2: 3, col3: true });
         data.splice(1, 1);
 
-        expect(cellsUpdates.count).toBe(2);
-        expect(Object.keys(model.cells.value.grid).length).toBe(6);
+        // We expect one update per operation affecting visible rows
+        expect(updateCount).toBe(3);
 
-        expect(specificCellUpdates.count).toBe(3);
-        expect(model.cells.value.grid['0,0']?.value).toBe('Updated A');
+        const cells = model.getCells({ start: { row: 0, col: 0 }, end: { row: 1, col: 2 } }, 'grid');
 
-        expect(Object.entries(model.cells.value.grid)).toEqual([
-          ['0,0', expect.objectContaining({ value: 'Updated A' })],
-          ['1,0', expect.objectContaining({ value: '1' })],
-          ['2,0', expect.objectContaining({ value: 'true' })],
-          ['0,1', expect.objectContaining({ value: 'C' })],
-          ['1,1', expect.objectContaining({ value: '3' })],
-          ['2,1', expect.objectContaining({ value: 'true' })],
-        ]);
+        // Verify final state
+        expect(cells['0,0']?.value).toBe('Updated A');
+        expect(cells['0,1']?.value).toBe('C');
+        expect(cells['1,1']?.value).toBe('3');
+        expect(cells['2,1']?.value).toBe('true');
       });
     });
   });
