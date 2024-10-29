@@ -76,7 +76,7 @@ const IdentityHeading = ({
     invariant(client.services.services.IdentityService, 'IdentityService not available');
     // TODO(wittjosiah): This need a proper api.
     const { seedphrase } = await client.services.services.IdentityService.createRecoveryPhrase();
-    setTextValue(seedphrase);
+    void setTextValue(seedphrase);
   };
 
   const isConnected = connectionState === ConnectionState.ONLINE;

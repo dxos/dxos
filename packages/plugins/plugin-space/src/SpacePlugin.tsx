@@ -47,7 +47,6 @@ import {
   isEchoObject,
   isSpace,
   loadObjectReferences,
-  parseFullyQualifiedId,
   parseId,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';

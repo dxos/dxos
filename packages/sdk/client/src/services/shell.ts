@@ -172,10 +172,10 @@ export class Shell {
   }
 
   /**
-  * Initialize a new device with an existing identity using a recovery code.
-  *
-  * @returns Shell result with the identity.
-  */
+   * Initialize a new device with an existing identity using a recovery code.
+   *
+   * @returns Shell result with the identity.
+   */
   async recoverIdentity(): Promise<InitializeIdentityResult> {
     await this._shellManager.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY_FROM_RECOVERY });
     return new Promise((resolve) => {
