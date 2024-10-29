@@ -58,8 +58,8 @@ const selectTolerance = 4;
 //
 // `overscan` is the number of columns or rows to render outside of the viewport
 //
-const overscanCol = 1;
-const overscanRow = 1;
+const overscanCol = 0;
+const overscanRow = 0;
 
 //
 // `defaultSize`, the final fallbacks
@@ -280,10 +280,10 @@ export class DxGrid extends LitElement {
   //
 
   @state()
-  private overscanInline = 0;
+  private overscanInlineStart = 0;
 
   @state()
-  private overscanBlock = 0;
+  private overscanBlockStart = 0;
 
   //
   // `bin`, not short for anything, is the range in pixels within which virtualization does not need to reassess.
@@ -713,24 +713,30 @@ export class DxGrid extends LitElement {
       pxInline += this.colSize(colIndex, 'grid') + gap;
     }
 
-    this.visColMin = colIndex - overscanCol;
+    this.visColMin = colIndex;
 
-    this.binInlineMin = pxInline - this.colSize(colIndex, 'grid') - gap;
-    this.binInlineMax = pxInline + gap;
+    this.overscanInlineStart = pxInline - this.colSize(colIndex, 'grid') - gap;
+    const bifurcateStart = pxInline;
 
-    this.overscanInline =
-      [...Array(overscanCol)].reduce((acc, _, c0) => {
-        acc += this.colSize(this.visColMin + c0, 'grid');
-        return acc;
-      }, 0) +
-      gap * (overscanCol - 1);
-
-    while (pxInline < this.binInlineMax + this.sizeInline - gap * 2) {
+    while (pxInline < this.posInline + this.sizeInline) {
       colIndex += 1;
       pxInline += this.colSize(colIndex, 'grid') + gap;
     }
 
-    this.visColMax = Math.min(this.limitColumns, colIndex + overscanCol);
+    const bifurcateEnd = pxInline - this.sizeInline;
+
+    const bifurcateMin = Math.min(bifurcateStart, bifurcateEnd);
+    const bifurcateMax = Math.max(bifurcateStart, bifurcateEnd);
+
+    if (this.posInline < bifurcateMin) {
+      this.binInlineMin = this.overscanInlineStart;
+      this.binInlineMax = bifurcateMin + gap;
+    } else {
+      this.binInlineMin = bifurcateMin;
+      this.binInlineMax = bifurcateMax;
+    }
+
+    this.visColMax = Math.min(this.limitColumns, colIndex + 1);
 
     this.templateGridColumns = [...Array(this.visColMax - this.visColMin)]
       .map((_, c0) => `${this.colSize(this.visColMin + c0, 'grid')}px`)
@@ -760,7 +766,7 @@ export class DxGrid extends LitElement {
     this.binBlockMin = pxBlock - this.rowSize(rowIndex, 'grid') - gap;
     this.binBlockMax = pxBlock + gap;
 
-    this.overscanBlock =
+    this.overscanBlockStart =
       [...Array(overscanRow)].reduce((acc, _, r0) => {
         acc += this.rowSize(this.visRowMin + r0, 'grid');
         return acc;
@@ -1199,8 +1205,8 @@ export class DxGrid extends LitElement {
   override render() {
     const visibleCols = this.visColMax - this.visColMin;
     const visibleRows = this.visRowMax - this.visRowMin;
-    const offsetInline = this.binInlineMin - this.posInline - this.overscanInline;
-    const offsetBlock = this.binBlockMin - this.posBlock - this.overscanBlock;
+    const offsetInline = this.overscanInlineStart - this.posInline;
+    const offsetBlock = this.binBlockMin - this.posBlock - this.overscanBlockStart;
     const selection = selectionProps(this.selectionStart, this.selectionEnd);
 
     return html`<style>
