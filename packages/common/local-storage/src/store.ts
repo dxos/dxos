@@ -100,6 +100,22 @@ export class SettingsStore<T extends SettingsValue> {
   }
 
   open() {
+    // TODO(dmaretskyi): .
+    /*
+    this._unsubscribe = effect(() => {
+      const updates = this.getSaveUpdates(); // [[path, value], ...]
+
+
+      let cancelled = false;
+      queueMicrotask(async () => {
+        if(cancelled) return;
+
+        await this.flushUpdates(updates)
+      });
+      return () => { cancelled = true; };
+    });
+    */
+
     this._unsubscribe = effect(() => {
       this.save();
     });
