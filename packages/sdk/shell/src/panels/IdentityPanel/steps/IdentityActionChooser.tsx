@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useHaloInvitations, DeviceType } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
@@ -25,9 +26,7 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
       const subscription = invitation.subscribe((invitation: Invitation) => {
         const invitationCode = InvitationEncoder.encode(invitation);
         if (invitation.state === Invitation.State.CONNECTING) {
-          // TODO(wittjosiah): `log.info` isn't actually logging currently.
-          // eslint-disable-next-line no-console
-          console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+          log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
           subscription.unsubscribe();
         }
       });
