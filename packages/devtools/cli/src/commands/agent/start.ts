@@ -9,7 +9,7 @@ import { rmSync } from 'node:fs';
 import {
   Agent,
   type AgentHttpParams,
-  ChainPlugin,
+  AutomationPlugin,
   DashboardPlugin,
   DiscordPlugin,
   EchoProxyPlugin,
@@ -106,7 +106,7 @@ export default class Start extends BaseCommand<typeof Start> {
         ...(httpParams ? { http: httpParams } : {}),
       },
       plugins: [
-        new ChainPlugin(),
+        new AutomationPlugin(),
         new DashboardPlugin(),
         new DiscordPlugin(),
         new EchoProxyPlugin(),

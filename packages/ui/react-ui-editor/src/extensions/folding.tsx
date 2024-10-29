@@ -9,7 +9,7 @@ import React from 'react';
 
 import { Icon } from '@dxos/react-ui';
 
-import { createElement, renderRoot } from './util';
+import { createElement, renderRoot } from '../util';
 
 export type FoldingOptions = {};
 

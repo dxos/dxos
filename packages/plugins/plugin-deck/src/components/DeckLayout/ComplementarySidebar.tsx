@@ -74,6 +74,7 @@ export const ComplementarySidebar = ({ panel, flatDeck }: ComplementarySidebarPr
   // TODO(wittjosiah): Ensure that id is always defined.
   const coordinate: LayoutCoordinate = useMemo(() => ({ entryId: id ?? 'unknown', part: 'complementary' }), [id]);
 
+  // TODO(burdon): Debug panel doesn't change when switching even though id has chagned.
   return (
     <Main.ComplementarySidebar>
       <div role='none' className={mx(deckGrid, 'grid-cols-1 bs-full')}>
@@ -84,11 +85,12 @@ export const ComplementarySidebar = ({ panel, flatDeck }: ComplementarySidebarPr
           flatDeck={flatDeck}
           actions={actions}
         />
-        <div className='row-span-2 divide-y divide-separator'>
+        <div className='row-span-2 divide-y divide-separator overflow-x-hidden overflow-y-scroll'>
           {node && (
             <Surface
+              key={id}
               role={`complementary--${part}`}
-              data={{ subject: node.properties.object ?? node.properties.space, popoverAnchorId }}
+              data={{ id, subject: node.properties.object ?? node.properties.space, popoverAnchorId }}
               fallback={PlankContentError}
               placeholder={<PlankLoading />}
             />

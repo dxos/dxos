@@ -16,7 +16,6 @@ import { type EchoReactiveObject } from '../echo-handler';
 /**
  * Query logic that checks if object complaint with a filter.
  * @param echoObject used for predicate filters only.
- * @returns
  */
 export const filterMatch = (
   filter: Filter,
@@ -27,9 +26,10 @@ export const filterMatch = (
   if (!core) {
     return false;
   }
+
   invariant(!echoObject || isReactiveObject(echoObject));
   const result = filterMatchInner(filter, core, echoObject);
-  // don't apply filter negation to deleted object handling, as it's part of filter options
+  // Don't apply filter negation to deleted object handling, as it's part of filter options.
   return filter.not && !core.isDeleted() ? !result : result;
 };
 
@@ -67,9 +67,7 @@ const filterMatchInner = (
 
   if (filter.type) {
     const type = core.getType()?.toDXN() ?? DXN.typename(EXPANDO_TYPENAME);
-
     log('type compare', { type, filterType: filter.type });
-
     if (!filter.type.some((filterType) => DXN.equals(filterType, type))) {
       return false;
     }
@@ -82,7 +80,6 @@ const filterMatchInner = (
 
       // TODO(dmaretskyi): Should `id` be allowed in filter.properties?
       const actualValue = key === 'id' ? core.id : core.getDecoded(['data', key]);
-
       if (actualValue !== value) {
         return false;
       }

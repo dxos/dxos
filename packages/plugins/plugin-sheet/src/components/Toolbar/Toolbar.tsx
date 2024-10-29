@@ -9,12 +9,12 @@ import { useIntentDispatcher } from '@dxos/app-framework';
 import {
   Icon,
   Toolbar as NaturalToolbar,
-  useTranslation,
   Tooltip,
   type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
   type ToolbarButtonProps as NaturalToolbarButtonProps,
   type ToolbarToggleProps as NaturalToolbarToggleProps,
   type ThemedClassName,
+  useTranslation,
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
@@ -26,6 +26,8 @@ import {
   type CommentKey,
   type CommentValue,
   inRange,
+  rangeFromIndex,
+  rangeToIndex,
   type StyleKey,
   type StyleValue,
 } from '../../defs';
@@ -113,17 +115,17 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
   const { hasAttention } = useAttention(id);
   const dispatch = useIntentDispatcher();
 
-  // TODO(Zan): Centralise the toolbar action handler. Current implementation in stories.
+  // TODO(Zan): Externalize the toolbar action handler. E.g., Toolbar/keys should both fire events.
   const handleAction = useCallback(
     (action: ToolbarAction) => {
       switch (action.key) {
         case 'align':
           if (cursor && cursorFallbackRange) {
             const index = model.sheet.ranges?.findIndex(
-              (range) => range.key === action.key && inRange(range.range, cursor),
+              (range) => range.key === action.key && inRange(rangeFromIndex(model.sheet, range.range), cursor),
             );
             const nextRangeEntity = {
-              range: cursorFallbackRange,
+              range: rangeToIndex(model.sheet, cursorFallbackRange),
               key: action.key,
               value: action.value,
             };
@@ -142,7 +144,7 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
             }
           } else if (cursorFallbackRange) {
             model.sheet.ranges?.push({
-              range: cursorFallbackRange,
+              range: rangeToIndex(model.sheet, cursorFallbackRange),
               key: action.key,
               value: action.value,
             });
@@ -208,7 +210,9 @@ const Alignment = () => {
   const value = useMemo(
     () =>
       cursor
-        ? model.sheet.ranges?.find(({ range, key }) => key === 'alignment' && inRange(range, cursor))?.value
+        ? model.sheet.ranges?.find(
+            ({ range, key }) => key === 'alignment' && inRange(rangeFromIndex(model.sheet, range), cursor),
+          )?.value
         : undefined,
     [cursor, model.sheet.ranges],
   );
@@ -239,7 +243,7 @@ const Styles = () => {
     () =>
       cursor
         ? model.sheet.ranges
-            ?.filter(({ range, key }) => key === 'style' && inRange(range, cursor))
+            ?.filter(({ range, key }) => key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursor))
             .reduce((acc, { value }) => {
               acc.add(value);
               return acc;

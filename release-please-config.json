@@ -479,7 +479,7 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-chain/package.json",
+          "path": "packages/plugins/experimental/plugin-automation/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -490,11 +490,6 @@
         {
           "type": "json",
           "path": "packages/plugins/experimental/plugin-explorer/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-function/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -554,6 +549,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/experimental/plugin-wnfs/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-attention/package.json",
           "jsonpath": "$.version"
         },
@@ -594,6 +594,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-manager/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-markdown/package.json",
           "jsonpath": "$.version"
         },
@@ -630,11 +635,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-registry/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-settings/package.json",
           "jsonpath": "$.version"
         },
         {

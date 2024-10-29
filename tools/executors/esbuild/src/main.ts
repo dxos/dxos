@@ -24,6 +24,7 @@ export interface EsbuildExecutorOptions {
   entryPoints: string[];
   format?: Format;
   injectGlobals: boolean;
+  importGlobals: boolean;
   metafile: boolean;
   outputPath: string;
   platforms: Platform[];
@@ -87,6 +88,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         plugins: [
           NodeExternalPlugin({
             injectGlobals: options.injectGlobals,
+            importGlobals: options.importGlobals,
             nodeStd: Boolean(packageJson.dependencies?.['@dxos/node-std']),
           }),
           replaceRequire ? fixRequirePlugin() : undefined,

@@ -5,8 +5,8 @@
 import { Schema as S } from '@effect/schema';
 import { z } from 'zod';
 
-import type { IntentData } from '../IntentPlugin';
-import type { Plugin } from '../PluginHost';
+import { type Plugin } from '../plugin-host';
+import { type IntentData } from '../plugin-intent';
 
 // NOTE(thure): These are chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
 export const SLUG_LIST_SEPARATOR = '+';
@@ -133,7 +133,10 @@ export const partLength = (layout: LayoutParts | undefined, part: LayoutPart | u
 // Intents
 //
 
-const NAVIGATION_ACTION = 'dxos.org/plugin/navigation';
+const NAVIGATION_PLUGIN = 'dxos.org/plugin/navigation';
+
+const NAVIGATION_ACTION = `${NAVIGATION_PLUGIN}/action`;
+
 export enum NavigationAction {
   OPEN = `${NAVIGATION_ACTION}/open`,
   ADD_TO_ACTIVE = `${NAVIGATION_ACTION}/add-to-active`,

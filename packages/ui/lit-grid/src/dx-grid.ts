@@ -792,7 +792,7 @@ export class DxGrid extends LitElement {
     this.updateVisBlock();
   }
 
-  private updateCells(includeFixed?: boolean) {
+  public updateCells(includeFixed?: boolean) {
     this.cells.grid = this.getCells!(
       {
         start: { col: this.visColMin, row: this.visRowMin },
@@ -1152,6 +1152,12 @@ export class DxGrid extends LitElement {
   private cellReadonly(col: number, row: number, plane: DxGridPlane) {
     const colPlane = resolveColPlane(plane);
     const rowPlane = resolveRowPlane(plane);
+
+    const cellReadonly = this.cell(col, row, plane)?.readonly;
+    if (cellReadonly !== undefined) {
+      return cellReadonly;
+    }
+
     return (
       (this.columns?.[colPlane]?.[col]?.readonly ?? this.columnDefault?.[colPlane]?.readonly) ||
       (this.rows?.[rowPlane]?.[row]?.readonly ?? this.rowDefault?.[rowPlane]?.readonly)
@@ -1334,9 +1340,13 @@ export class DxGrid extends LitElement {
         changedProperties.has('visColMin') ||
         changedProperties.has('visColMax') ||
         changedProperties.has('visRowMin') ||
-        changedProperties.has('visRowMax'))
+        changedProperties.has('visRowMax') ||
+        changedProperties.has('columns') ||
+        changedProperties.has('rows') ||
+        changedProperties.has('limitColumns') ||
+        changedProperties.has('limitRows'))
     ) {
-      this.updateCells();
+      this.updateCells(true);
     }
 
     if (changedProperties.has('rowDefault') || changedProperties.has('rows') || changedProperties.has('limitRows')) {

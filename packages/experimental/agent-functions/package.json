@@ -7,7 +7,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -47,7 +47,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/plugin-chain": "workspace:*",
+    "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-ipfs": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",

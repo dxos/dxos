@@ -4,6 +4,6 @@
 
 import { SheetPlugin } from './SheetPlugin';
 
-export default SheetPlugin;
-
 export * from './SheetPlugin';
+
+export default SheetPlugin;

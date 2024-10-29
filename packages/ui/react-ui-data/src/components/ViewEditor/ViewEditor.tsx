@@ -5,10 +5,11 @@
 import React, { useState } from 'react';
 
 import { S, createObjectId, type SchemaResolver } from '@dxos/echo-schema';
-import { Button, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { getUniqueProperty, FieldValueType, FieldSchema, type FieldType, type ViewType } from '@dxos/schema';
+import { FieldSchema, FieldValueType, getUniqueProperty, type FieldType, type ViewType } from '@dxos/schema';
+import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '../../translations';
 import { Field } from '../Field';
@@ -45,10 +46,8 @@ export const ViewEditor = ({ classNames, view, schemaResolver, readonly }: ViewE
     setField(undefined);
   };
 
-  const handleMove = (field: FieldType, idx: number) => {
-    const from = view.fields.findIndex((f) => field.id === f.id);
-    view.fields.splice(idx, 0, field);
-    view.fields.splice(from, 1);
+  const handleMove = (fromIndex: number, toIndex: number) => {
+    arrayMove(view.fields, fromIndex, toIndex);
   };
 
   return (
@@ -62,7 +61,7 @@ export const ViewEditor = ({ classNames, view, schemaResolver, readonly }: ViewE
             </div>
 
             <div role='list' className='flex flex-col w-full'>
-              {items.map((item) => (
+              {items?.map((item) => (
                 <List.Item<FieldType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
                   <List.ItemDragHandle />
                   <List.ItemTitle onClick={() => handleSelect(item)}>{item.path}</List.ItemTitle>

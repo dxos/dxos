@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '../PluginHost';
+import { type Plugin } from '../plugin-host';
 
 export type Metadata = Record<string, any>;
 
