@@ -14,6 +14,8 @@ import { invariant } from '@dxos/invariant';
 // https://effect-ts.github.io/effect/schema/AST.ts.html
 //
 
+export const isLeafType = (node: AST.AST) => !AST.isTupleType(node) && !AST.isTypeLiteral(node);
+
 /**
  * Get annotation or return undefined.
  */
@@ -54,26 +56,68 @@ export const getProperty = (schema: S.Schema<any>, path: string): AST.AST | unde
   return node;
 };
 
-export type Visitor = (node: AST.AST, path: string[]) => boolean | void;
+export enum VisitResult {
+  CONTINUE = 0,
+  /**
+   * Skip visiting children.
+   */
+  SKIP = 1,
+  /**
+   * Stop traversing immeditaely.
+   */
+  EXIT = 2,
+}
+
+export type Path = (string | number)[];
+
+export type Tester = (node: AST.AST, path: Path, depth: number) => VisitResult;
+export type Visitor = (node: AST.AST, path: Path, depth: number) => void;
 
 /**
  * Visit leaf nodes.
- * Ref: https://www.npmjs.com/package/unist-util-visit#visitor
+ * Refs:
+ * - https://github.com/syntax-tree/unist-util-visit?tab=readme-ov-file#visitor
+ * - https://github.com/syntax-tree/unist-util-is?tab=readme-ov-file#test
  */
-export const visit = (node: AST.AST, visitor: Visitor) => visitNode(node, visitor);
+export const visit: {
+  (node: AST.AST, visitor: Visitor): void;
+  (node: AST.AST, test: Tester, visitor: Visitor): void;
+} = (node: AST.AST, testOrVisitor: Tester | Visitor, visitor?: Visitor): void => {
+  if (!visitor) {
+    visitNode(node, undefined, testOrVisitor);
+  } else {
+    visitNode(node, testOrVisitor as Tester, visitor);
+  }
+};
 
-const visitNode = (node: AST.AST, visitor: Visitor, path: string[] = []) => {
+const visitNode = (
+  node: AST.AST,
+  test: Tester | undefined,
+  visitor: Visitor,
+  path: Path = [],
+  depth = 0,
+): VisitResult | undefined => {
   for (const prop of AST.getPropertySignatures(node)) {
     const currentPath = [...path, prop.name.toString()];
     const type = getType(prop.type);
     if (type) {
-      if (AST.isTypeLiteral(type)) {
-        visitNode(type, visitor, currentPath);
-      } else {
-        // NOTE: Only visits leaf nodes.
-        const ok = visitor(type, currentPath);
-        if (ok === false) {
-          return;
+      const result = test?.(node, path, depth) ?? VisitResult.CONTINUE;
+      if (result === VisitResult.EXIT) {
+        return result;
+      }
+
+      visitor(type, currentPath, depth);
+
+      if (result !== VisitResult.SKIP) {
+        if (AST.isTypeLiteral(type)) {
+          visitNode(type, test, visitor, currentPath, depth + 1);
+        } else if (AST.isTupleType(type)) {
+          for (const [i, elementType] of type.elements.entries()) {
+            const type = getType(elementType.type);
+            if (type) {
+              visitNode(type, test, visitor, [i, ...currentPath], depth);
+            }
+          }
         }
       }
     }

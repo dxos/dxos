@@ -52,7 +52,7 @@ export type DxGridCellValue = {
   /**
    * The content value
    */
-  value: string;
+  value?: string;
   /**
    * Accessory HTML to render alongside the value.
    */

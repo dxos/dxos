@@ -7,7 +7,7 @@ import { S, create, foreignKey, getMeta, getTypename } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ChainPromptType } from '@dxos/plugin-chain/types';
+import { ChainPromptType } from '@dxos/plugin-automation/types';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { CollectionType, MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { nonNullable } from '@dxos/util';

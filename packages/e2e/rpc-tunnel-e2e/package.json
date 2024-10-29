@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "files": [
     "dist",
     "src"

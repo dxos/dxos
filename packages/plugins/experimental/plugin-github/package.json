@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -38,9 +38,9 @@
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-data": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",

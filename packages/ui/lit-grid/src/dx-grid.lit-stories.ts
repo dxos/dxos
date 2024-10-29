@@ -5,6 +5,8 @@
 import './dx-grid.ts';
 import './dx-grid.pcss';
 
+import './dx-grid-multiselect-cell.ts';
+
 import { html, nothing } from 'lit';
 
 import { type DxGridFrozenPlane, type DxGridPlaneCells, type DxGridProps } from './types';
@@ -47,6 +49,10 @@ Basic.args = {
       '1,1': {
         // end: '8,1',
         value: 'Weekly sales report',
+      },
+      '2,2': {
+        value: '',
+        accessoryHtml: '<dx-grid-multiselect-cell values=\'[{"label": "Peaches"}]\'></dx-grid-multiselect-cell>',
       },
     },
     ...initialLabels,

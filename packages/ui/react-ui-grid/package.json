@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -34,7 +34,9 @@
     "@radix-ui/react-use-controllable-state": "^1.0.0"
   },
   "devDependencies": {
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "~18.2.0",

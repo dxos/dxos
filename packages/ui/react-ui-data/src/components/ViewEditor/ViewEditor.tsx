@@ -5,10 +5,10 @@
 import React, { useState } from 'react';
 
 import { S, createObjectId, type SchemaResolver } from '@dxos/echo-schema';
-import { Button, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { getUniqueProperty, FieldValueType, FieldSchema, type FieldType, type ViewType } from '@dxos/schema';
+import { FieldSchema, FieldValueType, getUniqueProperty, type FieldType, type ViewType } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '../../translations';
