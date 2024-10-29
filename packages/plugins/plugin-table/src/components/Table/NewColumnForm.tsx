@@ -21,7 +21,7 @@ type NewColumnFormProps = {
 // TODO(ZaymonFC): A util in `@dxos/schema` should look at the view and the
 // schema and generate the new field. That's why I haven't moved this to ../../seed.
 export const createNewField = (view: ViewType): FieldType => {
-  const field: FieldType = { id: createObjectId(), path: getUniqueProperty(view), type: FieldValueType.String };
+  const field: FieldType = { path: getUniqueProperty(view), type: FieldValueType.String };
 
   // TODO(ZaymonFC): Can't currently supply a schema since it's not in the registry when we
   // try to add it to the table

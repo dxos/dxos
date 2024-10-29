@@ -50,7 +50,6 @@ export const FieldValueTypes = Object.values(FieldValueType).sort();
 
 export const FieldSchema = S.mutable(
   S.Struct({
-    id: S.String,
     path: S.String,
     // TODO(burdon): Single/multi-select enums?
     type: S.Enums(FieldValueType),

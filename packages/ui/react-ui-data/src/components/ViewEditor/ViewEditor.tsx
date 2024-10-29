@@ -31,7 +31,7 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
   const [field, setField] = useState<FieldType | undefined>();
 
   const handleAdd = () => {
-    const field: FieldType = { id: 'delete-me', path: getUniqueProperty(view), type: FieldValueType.String };
+    const field: FieldType = { path: getUniqueProperty(view), type: FieldValueType.String };
     view.fields.push(field);
     setField(field);
   };
@@ -66,7 +66,7 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
 
             <div role='list' className='flex flex-col w-full'>
               {items?.map((item) => (
-                <List.Item<FieldType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
+                <List.Item<FieldType> key={item.path} item={item} classNames={mx(grid, ghostHover)}>
                   <List.ItemDragHandle />
                   <List.ItemTitle onClick={() => handleSelect(item)}>{item.path}</List.ItemTitle>
                   <List.ItemDeleteButton onClick={() => handleDelete(item)} />

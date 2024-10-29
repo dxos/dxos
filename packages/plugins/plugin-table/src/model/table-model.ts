@@ -121,7 +121,7 @@ export class TableModel extends Resource {
         return this.rows.value;
       }
 
-      const field = this.table.view?.fields.find((field) => field.id === sort.columnId);
+      const field = this.table.view?.fields.find((field) => field.path === sort.columnId);
       if (!field) {
         return this.rows.value;
       }
@@ -252,7 +252,7 @@ export class TableModel extends Resource {
       values[fromGridCell({ col, row: 0 })] = {
         value: field.label ?? field.path,
         resizeHandle: 'col',
-        accessoryHtml: tableButtons.columnSettings.render({ columnId: field.id }),
+        accessoryHtml: tableButtons.columnSettings.render({ columnId: field.path }),
         readonly: true,
       };
     }
@@ -327,7 +327,7 @@ export class TableModel extends Resource {
 
   public moveColumn(columnId: ColumnId, newIndex: number): void {
     const fields = this.table.view?.fields ?? [];
-    const currentIndex = fields.findIndex((field) => field.id === columnId);
+    const currentIndex = fields.findIndex((field) => field.path === columnId);
     if (currentIndex !== -1 && this.table.view) {
       const [removed] = fields.splice(currentIndex, 1);
       // Ensure we don't move past the action column
