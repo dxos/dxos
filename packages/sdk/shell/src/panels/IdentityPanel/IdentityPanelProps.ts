@@ -21,6 +21,7 @@ export type IdentityPanelImplProps = {
     | 'device invitation manager'
     | 'identity action chooser'
     | 'confirm join new identity'
+    | 'confirm recover'
     | 'confirm reset storage';
   initialDisposition?: IdentityPanelInitialDisposition;
   identity: Identity;
@@ -29,6 +30,7 @@ export type IdentityPanelImplProps = {
   onChangeConnectionState?: (nextState: ConnectionState) => Promise<void>;
   onUpdateProfile?: (profile: NonNullable<Identity['profile']>) => Promise<void>;
   onResetStorage?: () => Promise<void>;
+  onRecover?: () => Promise<void>;
   onJoinNewIdentity?: () => Promise<void>;
   createInvitationUrl: (invitationCode: string) => string;
   send?: (event: SingleOrArray<Event<IdentityEvent>>) => void;
