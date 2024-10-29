@@ -28,16 +28,28 @@ export const IdentityInput = (props: IdentityInputProps) => {
   const client = useClient();
   const { t } = useTranslation('os');
   const [validationMessage, setValidationMessage] = useState('');
-  const createIdentity = (displayName: string) => {
-    void client.halo.createIdentity({ [isRecover ? 'seedphrase' : 'displayName']: displayName }).then(
-      (identity) => {
-        send?.({ type: 'selectIdentity' as const, identity });
-      },
-      (error) => {
-        log.catch(error);
-        setValidationMessage(t(isRecover ? 'failed to recover identity message' : 'failed to create identity message'));
-      },
-    );
+  const createIdentity = (value: string) => {
+    if (isRecover) {
+      void client.halo.recoverIdentity({ seedphrase: value }).then(
+        (identity) => {
+          send?.({ type: 'selectIdentity' as const, identity });
+        },
+        (error) => {
+          log.catch(error);
+          setValidationMessage(t('failed to recover identity message'));
+        },
+      );
+    } else {
+      void client.halo.createIdentity({ displayName: value }).then(
+        (identity) => {
+          send?.({ type: 'selectIdentity' as const, identity });
+        },
+        (error) => {
+          log.catch(error);
+          setValidationMessage(t('failed to create identity message'));
+        },
+      );
+    }
   };
   return <IdentityInputImpl {...props} onDisplayNameConfirm={createIdentity} validationMessage={validationMessage} />;
 };

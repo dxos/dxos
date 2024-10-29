@@ -18,6 +18,7 @@ export const DeviceList = ({
   onClickAdd,
   onClickEdit,
   onClickReset,
+  onClickRecover,
   onClickJoinExisting,
   onAgentDestroy,
 }: DeviceListProps & Pick<AgentFormProps, 'onAgentDestroy'>) => {
@@ -33,7 +34,7 @@ export const DeviceList = ({
                 key={device.deviceKey.toHex()}
                 device={device}
                 onClickEdit={() => onClickEdit?.(device)}
-                {...{ onClickReset, onClickJoinExisting, connectionState, onAgentDestroy }}
+                {...{ onClickReset, onClickRecover, onClickJoinExisting, connectionState, onAgentDestroy }}
               />
             );
           })}

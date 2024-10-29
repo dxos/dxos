@@ -92,11 +92,12 @@ export const WelcomePlugin = ({
       const searchParams = new URLSearchParams(window.location.search);
       const token = searchParams.get('token') ?? undefined;
       const deviceInvitationCode = searchParams.get('deviceInvitationCode') ?? undefined;
+      const recoverIdentity = searchParams.get('recoverIdentity') === 'true';
 
       // If identity already exists, continue with existing identity.
       // If not, only create identity if token is present.
       let identity = client.halo.identity.get();
-      if (!identity && deviceInvitationCode === undefined && (token || skipAuth)) {
+      if (!identity && !recoverIdentity && deviceInvitationCode === undefined && (token || skipAuth)) {
         const result = await dispatch({
           plugin: CLIENT_PLUGIN,
           action: ClientAction.CREATE_IDENTITY,
@@ -111,6 +112,14 @@ export const WelcomePlugin = ({
         });
 
         removeQueryParamByValue(deviceInvitationCode);
+        return;
+      } else if (recoverIdentity) {
+        await dispatch({
+          plugin: CLIENT_PLUGIN,
+          action: ClientAction.RECOVER_IDENTITY,
+        });
+
+        removeQueryParamByValue('true');
         return;
       }
 
