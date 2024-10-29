@@ -5,10 +5,11 @@
 import * as ModalPrimitive from '@radix-ui/react-popper';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { create, createObjectId } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { DropdownMenu, useThemeContext } from '@dxos/react-ui';
 import { Field } from '@dxos/react-ui-data';
-import { type FieldType, FieldValueType, getUniqueProperty, type ViewType } from '@dxos/schema';
+import { addFieldToView, type FieldType, FieldValueType, getUniqueProperty, type ViewType } from '@dxos/schema';
+import { getSpace, useSpace } from '@dxos/react-client/echo';
 
 import { type TableModel } from '../../model';
 
@@ -29,6 +30,7 @@ export const createNewField = (view: ViewType): FieldType => {
 };
 
 export const NewColumnForm = ({ model, open, onClose: close }: NewColumnFormProps) => {
+  const space = getSpace(model?.table);
   const { tx } = useThemeContext();
   const [field, setField] = useState<FieldType | undefined>(undefined);
 
@@ -43,16 +45,26 @@ export const NewColumnForm = ({ model, open, onClose: close }: NewColumnFormProp
   }, [open, close, model]);
 
   const onCreate = useCallback(() => {
-    if (!field) {
+    if (!space || !field || !model || !model?.table?.view) {
       close();
       return;
     }
 
-    model?.table?.view?.fields?.push(field);
-    // TODO(ZaymonFC): Use a module to update the view and schema at the same time!
-    // TODO(ZaymonFC): Validate: that path and name are unique. Path should be non-empty.
+    const view = model.table.view;
+
+    try {
+      const schema = space.db.schema.getSchemaByTypename(view.schema);
+      if (!schema) {
+        console.log('Schema not found', view.schema);
+      } else {
+        addFieldToView(schema, model.table.view, field);
+      }
+    } catch (err) {
+      console.error('Error adding field to view:', err);
+    }
+
     close();
-  }, [model, field]);
+  }, [model, field, space, close]);
 
   if (!field) {
     return null;
