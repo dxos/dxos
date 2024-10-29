@@ -19,7 +19,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { formatValue } from '@dxos/schema';
 
 import { fromGridCell, type GridCell, type TableType } from '../types';
-import { tableButtons } from '../util';
+import { tableButtons, touch } from '../util';
 
 export type ColumnId = string;
 export type SortDirection = 'asc' | 'desc';
@@ -47,8 +47,6 @@ export class TableModel extends Resource {
     start: { row: 0, col: 0 },
     end: { row: 0, col: 0 },
   });
-
-  private rowEffects: Array<() => void> = [];
 
   public columnMeta!: ReadonlySignal<DxGridAxisMeta>;
 
@@ -147,10 +145,9 @@ export class TableModel extends Resource {
 
   private initializeEffects(): void {
     const rowOrderWatcher = effect(() => {
-      const _sortedRows = this.sortedRows.value;
+      touch(this.sortedRows.value);
       this.onRowOrderChanged?.();
     });
-
     this._ctx.onDispose(rowOrderWatcher);
 
     /**
@@ -159,24 +156,21 @@ export class TableModel extends Resource {
      * When a row's data changes, invokes onCellUpdate to notify subscribers and trigger UI updates.
      */
     const rowEffectManager = effect(() => {
-      const { start, end } = this.visibleRange.value;
+      const { start, end } = touch(this.visibleRange.value);
 
+      const rowEffects: ReturnType<typeof effect>[] = [];
       for (let row = start.row; row <= end.row; row++) {
-        this.rowEffects.push(
+        rowEffects.push(
           effect(() => {
             const rowData = this.sortedRows.value[row];
-            this?.table?.view?.fields.forEach((field) => rowData?.[field.path]);
+            this?.table?.view?.fields.forEach((field) => touch(rowData?.[field.path]));
             this.onCellUpdate?.({ row, col: start.col });
           }),
         );
       }
 
-      return () => {
-        this.rowEffects.forEach((cleanup) => cleanup());
-        this.rowEffects = [];
-      };
+      return () => rowEffects.forEach((cleanup) => cleanup());
     });
-
     this._ctx.onDispose(rowEffectManager);
   }
 
