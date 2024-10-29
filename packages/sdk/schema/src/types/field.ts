@@ -64,6 +64,7 @@ export const toFieldValueType = (type: AST.AST): FieldValueType => {
 
 // TODO(ZaymonFC): Find all the appropriate annotations.
 // TODO(ZaymonFC): Pipe S.Pattern (regex) for email, url, etc.
+// TODO(ZaymonFC): Enforce real / whole numbers where appropriate.
 export const schemaForType: Record<FieldValueType, S.Schema<any> | undefined> = {
   [FieldValueType.String]: S.String,
   [FieldValueType.Text]: S.String,
