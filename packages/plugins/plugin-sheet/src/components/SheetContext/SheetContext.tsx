@@ -7,11 +7,11 @@ import React, { type PropsWithChildren, createContext, useCallback, useContext, 
 import { invariant } from '@dxos/invariant';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import {
-    Grid,
-    type GridContentProps,
-    type GridEditing,
-    type GridScopedProps,
-    useGridContext,
+  Grid,
+  type GridContentProps,
+  type GridEditing,
+  type GridScopedProps,
+  useGridContext,
 } from '@dxos/react-ui-grid';
 
 import { type ComputeGraph } from '../../compute-graph';
