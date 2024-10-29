@@ -4,11 +4,13 @@
 
 import { type AST, getAnnotation } from '@dxos/effect';
 
+// TODO(burdon): Replace with Schema.pattern?
+//  https://effect.website/docs/guides/schema/basic-usage#string-filters
+
 //
 // FormatType
 // TODO(burdon): Convert to/from string.
 // TODO(burdon): Allow pasting and adapting non-conforming values (e.g., with spaces/hyphens).
-// TODO(burdon): Tests.
 //
 
 export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/format');
