@@ -100,7 +100,6 @@ export class SettingsStore<T extends SettingsValue> {
   }
 
   open() {
-    // TODO(burdon): Import from '@dxos/signals' (rename echo-signals).
     this._unsubscribe = effect(() => {
       this.save();
     });
