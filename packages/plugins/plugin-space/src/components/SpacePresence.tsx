@@ -17,7 +17,6 @@ import {
   type Size,
   type ThemedClassName,
   Tooltip,
-  useDensityContext,
   useTranslation,
   List,
   ListItem,
@@ -40,7 +39,6 @@ const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
 
 export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?: PublicKey }) => {
-  const density = useDensityContext();
   const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
   const client = useClient();
   const identity = useIdentity();
@@ -86,11 +84,7 @@ export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?
     })
     .toSorted((a, b) => a.lastSeen - b.lastSeen);
 
-  return density === 'fine' ? (
-    <SmallPresence count={membersForObject.length} />
-  ) : (
-    <FullPresence members={membersForObject} />
-  );
+  return <FullPresence members={membersForObject} />;
 };
 
 export type Member = SpaceMember & {
