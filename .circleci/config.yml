@@ -208,7 +208,7 @@ jobs:
       - *codecov_upload
       - *store_test_results
       - store_artifacts:
-          path: tmp/playwright
+          path: dist/.playwright
 
   #
   # Quarantine for flaky tests.
