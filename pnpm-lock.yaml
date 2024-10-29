@@ -1805,22 +1805,10 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-      lodash.set:
-        specifier: ^4.3.2
-        version: 4.3.2
     devDependencies:
       '@dxos/async':
         specifier: workspace:*
         version: link:../async
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/lodash.set':
-        specifier: ^4.3.7
-        version: 4.3.7
       react:
         specifier: ~18.2.0
         version: 18.2.0
