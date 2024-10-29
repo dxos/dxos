@@ -56,6 +56,7 @@ export const createGuardedInvitationState = (
     },
     // disposing context prevents any further state updates
     complete: (newState: Partial<Invitation>) => {
+      logStateUpdate(currentInvitation, undefined, invitation.state);
       currentInvitation = { ...currentInvitation, ...newState };
       stream.next(currentInvitation);
       return ctx.dispose();
@@ -94,9 +95,9 @@ const logStateUpdate = (invitation: Invitation, actor: any, newState: Invitation
     errorStack: error?.stack,
   };
   if (isNonTerminalState(newState)) {
-    log.verbose('dxos.sdk.invitation-handler.state.update', logContext);
+    log.verbose('dxos.sdk.invitations-handler.state.update', logContext);
   } else {
-    log.info('dxos.sdk.invitation-handler.state.update', logContext);
+    log.info('dxos.sdk.invitations-handler.state.update', logContext);
   }
 };
 
