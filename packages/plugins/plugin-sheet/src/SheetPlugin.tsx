@@ -20,6 +20,7 @@ import { type ComputeGraphRegistry } from './graph';
 import meta, { SHEET_PLUGIN } from './meta';
 import translations from './translations';
 import { SheetAction, SheetType, type SheetPluginProvides } from './types';
+import { serializer } from './serializer';
 
 export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
   let computeGraphRegistry: ComputeGraphRegistry | undefined;
@@ -51,6 +52,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
             label: (object: any) => (object instanceof SheetType ? object.name : undefined),
             placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
             icon: 'ph--grid-nine--regular',
+            serializer,
           },
         },
       },

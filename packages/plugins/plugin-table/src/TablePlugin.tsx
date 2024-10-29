@@ -17,6 +17,7 @@ import meta, { TABLE_PLUGIN } from './meta';
 import translations from './translations';
 import { TableType } from './types';
 import { TableAction, type TablePluginProvides, isTable } from './types';
+import { serializer } from './serializer';
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
   return {
@@ -34,6 +35,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             icon: 'ph--table--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (table: TableType) => [], // loadObjectReferences(table, (table) => [table.schema]),
+            serializer,
           },
         },
       },
