@@ -60,7 +60,7 @@ export const TreeItem = memo(
     onSelect,
   }: TreeItemProps) => {
     const { id, label, icon, className, disabled, path, parentOf } = item;
-    const level = path.length - 1;
+    const level = path.length - 2;
     const isBranch = !!parentOf;
 
     const rowRef = useRef<HTMLDivElement | null>(null);
@@ -186,7 +186,7 @@ export const TreeItem = memo(
       <Treegrid.Row
         ref={rowRef}
         key={id}
-        id={path.join(Treegrid.PATH_SEPARATOR)}
+        id={id}
         aria-labelledby={`${id}__label`}
         parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
         classNames={mx(

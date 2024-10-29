@@ -37,7 +37,9 @@ const activeActionKey = 'dxos:react-shell/space-manager/active-action';
 const handleInvitationEvent = (invitation: Invitation, subscription: ZenObservable.Subscription) => {
   const invitationCode = InvitationEncoder.encode(invitation);
   if (invitation.state === Invitation.State.CONNECTING) {
-    log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+    // TODO(wittjosiah): `log.info` isn't actually logging currently.
+    // eslint-disable-next-line no-console
+    console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
     subscription.unsubscribe();
   }
 };

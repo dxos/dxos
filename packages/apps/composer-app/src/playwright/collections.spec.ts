@@ -34,7 +34,8 @@ test.describe('Collection tests', () => {
     await host.renameObject('Collection 1', 1);
     await host.renameObject('Collection 2', 2);
 
-    await host.dragTo(host.getObjectByName('Collection 2'), host.getObjectByName('Collection 1'), { x: 1, y: -1 });
+    // Items are 32px tall.
+    await host.dragTo(host.getObjectByName('Collection 2'), host.getObjectByName('Collection 1'), { x: 0, y: -15 });
 
     // Folders are now in reverse order.
     await expect(host.getObject(1)).toContainText('Collection 2');
@@ -48,10 +49,10 @@ test.describe('Collection tests', () => {
     await host.createSpace();
     await host.createCollection(1);
     await host.toggleCollectionCollapsed(1);
-    await host.dragTo(host.getObjectByName('New document'), host.getObjectByName('New collection'), { x: 17, y: 1 });
+    await host.dragTo(host.getObjectByName('New document'), host.getObjectByName('New collection'), { x: 0, y: 0 });
     // Document is now inside the collection.
     const docId = await host.getObjectByName('New document').getAttribute('id');
-    await expect(await host.getObjectByName('New collection').getAttribute('aria-owns')).toEqual(docId);
+    expect(await host.getObjectByName('New collection').getAttribute('aria-owns')).toEqual(docId);
   });
 
   test('delete a collection', async () => {

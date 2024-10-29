@@ -98,7 +98,7 @@ export const NavTreeContainer = ({
         closeNavigationSidebar();
       }
     },
-    [dispatch, isLg, closeNavigationSidebar],
+    [items, dispatch, isLg, closeNavigationSidebar],
   );
 
   // TODO(wittjosiah): Factor out hook.
@@ -125,7 +125,7 @@ export const NavTreeContainer = ({
             ? items.filter((item) => item.path.slice(0, -1).join() === targetPath.slice(0, -1).join())
             : items.filter((item) => item.path.slice(0, -1).join() === targetPath.join());
           const operation =
-            sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join()
+            sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join() && instruction.type !== 'make-child'
               ? 'rearrange'
               : resolveMigrationOperation(graph, sourceNode, targetPath, targetNode);
 
@@ -136,7 +136,7 @@ export const NavTreeContainer = ({
           const targetIndex = nextItems.findIndex(({ id }) => id === targetNode.id);
           const migrationIndex =
             instruction.type === 'make-child'
-              ? nextItems.length - 1
+              ? nextItems.length
               : instruction.type === 'reorder-below'
                 ? targetIndex + 1
                 : targetIndex;

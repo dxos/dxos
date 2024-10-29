@@ -26,7 +26,9 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
       const subscription = invitation.subscribe((invitation: Invitation) => {
         const invitationCode = InvitationEncoder.encode(invitation);
         if (invitation.state === Invitation.State.CONNECTING) {
-          log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+          // TODO(wittjosiah): `log.info` isn't actually logging currently.
+          // eslint-disable-next-line no-console
+          console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
           subscription.unsubscribe();
         }
       });

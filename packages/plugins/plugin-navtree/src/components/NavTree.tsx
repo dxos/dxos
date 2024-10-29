@@ -48,7 +48,7 @@ export const NavTree = ({
         />
       );
     },
-    [renderPresence],
+    [renderPresence, popoverAnchorId, loadDescendents],
   );
 
   return (
@@ -82,7 +82,7 @@ const NavTreeColumns = ({
 }: NavTreeColumnsProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
 
-  const level = item.path.length - 1;
+  const level = item.path.length - 2;
 
   const [primaryAction, ...secondaryActions] = item.actions.toSorted((a, b) =>
     a.properties?.disposition === 'toolbar' ? -1 : 1,
@@ -106,7 +106,7 @@ const NavTreeColumns = ({
   }, [primaryAction]);
 
   return (
-    <ActionRoot>
+    <>
       {primaryAction?.properties?.disposition === 'toolbar' ? (
         <NavTreeItemAction
           testId={primaryAction.properties?.testId}
@@ -121,22 +121,24 @@ const NavTreeColumns = ({
       ) : (
         <Treegrid.Cell />
       )}
-      {actions.length > 0 ? (
-        <NavTreeItemAction
-          testId={`navtree.treeItem.actionsLevel${level}`}
-          label={t('tree item actions label')}
-          icon='ph--dots-three-vertical--regular'
-          parent={item.node}
-          menuActions={actions}
-          menuType='dropdown'
-          caller={NAV_TREE_ITEM}
-          menuOpen={menuOpen}
-          onChangeMenuOpen={setMenuOpen}
-        />
-      ) : (
-        <Treegrid.Cell />
-      )}
+      <ActionRoot>
+        {actions.length > 0 ? (
+          <NavTreeItemAction
+            testId={`navtree.treeItem.actionsLevel${level}`}
+            label={t('tree item actions label')}
+            icon='ph--dots-three-vertical--regular'
+            parent={item.node}
+            menuActions={actions}
+            menuType='dropdown'
+            caller={NAV_TREE_ITEM}
+            menuOpen={menuOpen}
+            onChangeMenuOpen={setMenuOpen}
+          />
+        ) : (
+          <Treegrid.Cell />
+        )}
+      </ActionRoot>
       {Presence && <Presence item={item} />}
-    </ActionRoot>
+    </>
   );
 };

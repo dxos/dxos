@@ -14,7 +14,7 @@ import { type Space, type SpaceMember, useSpaces } from '@dxos/react-client/echo
 import { useIdentity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
-import { ClientRepeater } from '@dxos/react-client/testing';
+import { useMultiClient, withMultiClientProvider } from '@dxos/react-client/testing';
 import { Button, ButtonGroup, List } from '@dxos/react-ui';
 import { getSize, groupSurface } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -24,7 +24,7 @@ import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
 import { osTranslations } from '../translations';
 
 export default {
-  title: 'Invitations',
+  title: 'sdk/shell/Invitations',
 };
 
 export type PanelType = Space | 'identity' | 'devices' | 'join';
@@ -43,7 +43,9 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
         invitation.subscribe((invitation) => {
           const invitationCode = InvitationEncoder.encode(invitation);
           if (invitation.state === Invitation.State.CONNECTING) {
-            log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+            // TODO(wittjosiah): `log.info` isn't actually logging currently.
+            // eslint-disable-next-line no-console
+            console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
           }
         });
       };
@@ -113,8 +115,8 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
   }
 };
 
-const Invitations = (args: { id: number; count: number }) => {
-  const { id }: { id: number } = args;
+const Invitations = () => {
+  const { id } = useMultiClient();
   const client = useClient();
   const networkStatus = useNetworkStatus().swarm;
   const identity = useIdentity();
@@ -127,7 +129,9 @@ const Invitations = (args: { id: number; count: number }) => {
       invitation.subscribe((invitation) => {
         const invitationCode = InvitationEncoder.encode(invitation);
         if (invitation.state === Invitation.State.CONNECTING) {
-          log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+          // TODO(wittjosiah): `log.info` isn't actually logging currently.
+          // eslint-disable-next-line no-console
+          console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
         }
       });
     };
@@ -220,12 +224,19 @@ const Invitations = (args: { id: number; count: number }) => {
 //   The issue appears to be related to dynamic imports during client initialization.
 //   This does not seem to be a problem in other browsers nor in Safari in the app.
 export const Default = {
-  render: (args: { id: number }) => (
-    <ClipboardProvider>
-      <ClientRepeater component={Invitations} count={3} />
-    </ClipboardProvider>
-  ),
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  render: () => {
+    return (
+      // TODO(wittjosiah): Factor out ClipboardProvider to react-ui and include in layout decorator.
+      <ClipboardProvider>
+        <Invitations />
+      </ClipboardProvider>
+    );
+  },
+  decorators: [
+    withMultiClientProvider({ numClients: 3 }),
+    withLayout({ tooltips: true, classNames: 'grid grid-cols-3' }),
+    withTheme,
+  ],
   parameters: {
     chromatic: { disableSnapshot: true },
     translations: [osTranslations],
