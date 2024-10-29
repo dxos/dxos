@@ -705,25 +705,25 @@ export class DxGrid extends LitElement {
 
   private updateVisInline() {
     // todo: avoid starting from zero
-    let colIndex = 0;
-    let pxInline = this.colSize(colIndex, 'grid');
+    let axisCursor = 0;
+    let pxCursor = this.colSize(axisCursor, 'grid');
 
-    while (pxInline < this.posInline) {
-      colIndex += 1;
-      pxInline += this.colSize(colIndex, 'grid') + gap;
+    while (pxCursor < this.posInline) {
+      axisCursor += 1;
+      pxCursor += this.colSize(axisCursor, 'grid') + gap;
     }
 
-    this.visColMin = colIndex;
+    this.visColMin = axisCursor;
 
-    this.overscanInlineStart = pxInline - this.colSize(colIndex, 'grid') - gap;
-    const bifurcateStart = pxInline;
+    this.overscanInlineStart = pxCursor - this.colSize(axisCursor, 'grid') - gap;
+    const bifurcateStart = pxCursor;
 
-    while (pxInline < this.posInline + this.sizeInline) {
-      colIndex += 1;
-      pxInline += this.colSize(colIndex, 'grid') + gap;
+    while (pxCursor < this.posInline + this.sizeInline) {
+      axisCursor += 1;
+      pxCursor += this.colSize(axisCursor, 'grid') + gap;
     }
 
-    const bifurcateEnd = pxInline - this.sizeInline;
+    const bifurcateEnd = pxCursor - this.sizeInline;
 
     const bifurcateMin = Math.min(bifurcateStart, bifurcateEnd);
     const bifurcateMax = Math.max(bifurcateStart, bifurcateEnd);
@@ -736,7 +736,7 @@ export class DxGrid extends LitElement {
       this.binInlineMax = bifurcateMax;
     }
 
-    this.visColMax = Math.min(this.limitColumns, colIndex + 1);
+    this.visColMax = Math.min(this.limitColumns, axisCursor + 1);
 
     this.templateGridColumns = [...Array(this.visColMax - this.visColMin)]
       .map((_, c0) => `${this.colSize(this.visColMin + c0, 'grid')}px`)
@@ -753,32 +753,38 @@ export class DxGrid extends LitElement {
 
   private updateVisBlock() {
     // todo: avoid starting from zero
-    let rowIndex = 0;
-    let pxBlock = this.rowSize(rowIndex, 'grid');
+    let axisCursor = 0;
+    let pxCursor = this.rowSize(axisCursor, 'grid');
 
-    while (pxBlock < this.posBlock) {
-      rowIndex += 1;
-      pxBlock += this.rowSize(rowIndex, 'grid') + gap;
+    while (pxCursor < this.posBlock) {
+      axisCursor += 1;
+      pxCursor += this.rowSize(axisCursor, 'grid') + gap;
     }
 
-    this.visRowMin = rowIndex - overscanRow;
+    this.visRowMin = axisCursor;
 
-    this.binBlockMin = pxBlock - this.rowSize(rowIndex, 'grid') - gap;
-    this.binBlockMax = pxBlock + gap;
+    this.overscanBlockStart = pxCursor - this.rowSize(axisCursor, 'grid') - gap;
+    const bifurcateStart = pxCursor;
 
-    this.overscanBlockStart =
-      [...Array(overscanRow)].reduce((acc, _, r0) => {
-        acc += this.rowSize(this.visRowMin + r0, 'grid');
-        return acc;
-      }, 0) +
-      gap * (overscanRow - 1);
-
-    while (pxBlock < this.binBlockMax + this.sizeBlock - gap * 2) {
-      rowIndex += 1;
-      pxBlock += this.rowSize(rowIndex, 'grid') + gap;
+    while (pxCursor < this.posBlock + this.sizeBlock) {
+      axisCursor += 1;
+      pxCursor += this.rowSize(axisCursor, 'grid') + gap;
     }
 
-    this.visRowMax = Math.min(this.limitRows, rowIndex + overscanRow);
+    const bifurcateEnd = pxCursor - this.sizeBlock;
+
+    const bifurcateMin = Math.min(bifurcateStart, bifurcateEnd);
+    const bifurcateMax = Math.max(bifurcateStart, bifurcateEnd);
+
+    if (this.posBlock < bifurcateMin) {
+      this.binBlockMin = this.overscanBlockStart;
+      this.binBlockMax = bifurcateMin + gap;
+    } else {
+      this.binInlineMin = bifurcateMin;
+      this.binInlineMax = bifurcateMax;
+    }
+
+    this.visRowMax = Math.min(this.limitRows, axisCursor + 1);
 
     this.templateGridRows = [...Array(this.visRowMax - this.visRowMin)]
       .map((_, r0) => `${this.rowSize(this.visRowMin + r0, 'grid')}px`)
@@ -901,15 +907,14 @@ export class DxGrid extends LitElement {
   //
 
   private focusedCellRowOutOfVis() {
-    return this.focusedCell.row < this.visRowMin
-      ? this.focusedCell.row - this.visRowMin
-      : this.focusedCell.row > this.visRowMax
-        ? -(this.focusedCell.row - this.visRowMax)
+    return this.focusedCell.row <= this.visRowMin
+      ? this.focusedCell.row - this.visRowMin - 1
+      : this.focusedCell.row >= this.visRowMax - 1
+        ? this.focusedCell.row + 2 - this.visRowMax
         : 0;
   }
 
   private focusedCellColOutOfVis() {
-    console.log('[fccoov]', this.focusedCell.col, this.visColMin, this.visColMax);
     return this.focusedCell.col <= this.visColMin
       ? this.focusedCell.col - this.visColMin - 1
       : this.focusedCell.col >= this.visColMax - 1
@@ -962,13 +967,6 @@ export class DxGrid extends LitElement {
     });
   }
 
-  private findPosBlockFromVisRowMin(deltaRows: number) {
-    return [...Array(deltaRows)].reduce(
-      (acc, _, r0) => acc - this.rowSize(this.visRowMin - r0, 'grid') - gap,
-      this.binBlockMin + gap,
-    );
-  }
-
   private clampPosInline(nextPos: number) {
     return Math.max(0, Math.min(this.intrinsicInlineSize - this.sizeInline, nextPos));
   }
@@ -982,7 +980,6 @@ export class DxGrid extends LitElement {
    */
   snapPosToFocusedCell() {
     const outOfVis = this.focusedCellOutOfVis();
-    console.log('[snap pos]', outOfVis);
     if (outOfVis.col < 0) {
       // align viewport start edge with focused cell start edge
       this.posInline = this.clampPosInline(
@@ -1002,16 +999,19 @@ export class DxGrid extends LitElement {
     }
 
     if (outOfVis.row < 0) {
-      this.posBlock = this.findPosBlockFromVisRowMin(-outOfVis.row);
+      // align viewport start edge with focused cell start edge
+      this.posBlock = this.clampPosBlock(
+        [...Array(this.focusedCell.row)].reduce((acc, _, r0) => {
+          return acc + this.rowSize(r0, 'grid') + gap;
+        }, 0),
+      );
       this.updateVisBlock();
     } else if (outOfVis.row > 0) {
-      const sizeSumRow = [...Array(this.focusedCell.row - this.visRowMin)].reduce((acc, _, r0) => {
-        acc += this.rowSize(this.visRowMin + overscanRow + r0, 'grid') + gap;
-        return acc;
-      }, 0);
-      this.posBlock = Math.max(
-        0,
-        Math.min(this.intrinsicBlockSize - this.sizeBlock, this.binBlockMin + sizeSumRow - this.sizeBlock),
+      // align viewport end edge with focused cell end edge
+      this.posBlock = this.clampPosBlock(
+        [...Array(this.focusedCell.row + 1)].reduce((acc, _, r0) => {
+          return acc + this.rowSize(r0, 'grid') + gap;
+        }, -this.sizeBlock),
       );
       this.updateVisBlock();
     }
@@ -1212,7 +1212,7 @@ export class DxGrid extends LitElement {
     const visibleCols = this.visColMax - this.visColMin;
     const visibleRows = this.visRowMax - this.visRowMin;
     const offsetInline = this.overscanInlineStart - this.posInline + gap;
-    const offsetBlock = this.binBlockMin - this.posBlock - this.overscanBlockStart;
+    const offsetBlock = this.overscanBlockStart - this.posBlock + gap;
     const selection = selectionProps(this.selectionStart, this.selectionEnd);
 
     return html`<style>
