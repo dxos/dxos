@@ -6,10 +6,10 @@ import * as ModalPrimitive from '@radix-ui/react-popper';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
+import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu, useThemeContext } from '@dxos/react-ui';
 import { Field } from '@dxos/react-ui-data';
 import { addFieldToView, type FieldType, FieldValueType, getUniqueProperty, type ViewType } from '@dxos/schema';
-import { getSpace } from '@dxos/react-client/echo';
 
 import { type TableModel } from '../../model';
 
