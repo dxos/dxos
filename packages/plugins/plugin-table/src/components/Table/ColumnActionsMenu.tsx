@@ -49,14 +49,7 @@ export const ColumnActionsMenu = ({ model, columnId, open, onOpenChange }: Colum
           {isCurrentColumnSorted && (
             <DropdownMenu.Item onClick={() => model.clearSort()}>{t('column action clear sorting')}</DropdownMenu.Item>
           )}
-          <DropdownMenu.Item
-            onClick={() => {
-              void dispatch({
-                action: TableAction.DELETE_COLUMN,
-                data: { table: model.table, path: columnId },
-              });
-            }}
-          >
+          <DropdownMenu.Item onClick={() => model.deleteColumn(columnId)}>
             {t('column action delete')}
           </DropdownMenu.Item>
           <DropdownMenu.Item

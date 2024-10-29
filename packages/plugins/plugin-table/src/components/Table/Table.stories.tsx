@@ -8,10 +8,11 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
+import { Filter, useSpaces, useQuery, create, getSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-data';
+import { addFieldToView, FieldType, removeFieldFromView } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
@@ -42,6 +43,23 @@ const DefaultStory = () => {
   }, [tables]);
 
   const handleDeleteRow = useCallback((row: any) => space.db.remove(row), [space]);
+  const handleAddColumn = useCallback(
+    (field: any) => {
+      if (table && table.schema?.schema && table.view) {
+        addFieldToView(table.schema, table.view, field);
+      }
+    },
+    [table],
+  );
+  const handleDeleteColumn = useCallback(
+    (field: any) => {
+      if (table && table.schema?.schema && table.view) {
+        removeFieldFromView(table.schema, table.view, field);
+      }
+    },
+    [table],
+  );
+
   const handleAction = useCallback(
     (action: { type: string }) => {
       switch (action.type) {
@@ -65,6 +83,8 @@ const DefaultStory = () => {
     table: table!,
     objects: filteredObjects,
     onDeleteRow: handleDeleteRow,
+    onAddColumn: handleAddColumn,
+    onDeleteColumn: handleDeleteColumn,
   });
 
   if (!table) {
@@ -104,14 +124,35 @@ const TablePerformanceStory = (props: StoryProps) => {
   const simulatorProps = useMemo(() => ({ table, items, ...props }), [table, items, props]);
   useSimulator(simulatorProps);
 
-  const onDeleteRow = useCallback((row: any) => {
+  const handleDeleteRow = useCallback((row: any) => {
     itemsRef.current.splice(itemsRef.current.indexOf(row), 1);
   }, []);
+
+  const handleAddColumn = useCallback(
+    (field: FieldType) => {
+      if (table && table.view) {
+        table.view.fields.push(field);
+      }
+    },
+    [table],
+  );
+
+  const handleDeleteColumn = useCallback(
+    (field: FieldType) => {
+      if (table && table.view) {
+        const fieldPosition = table.view.fields.indexOf(field);
+        table.view.fields.splice(fieldPosition, 1);
+      }
+    },
+    [table],
+  );
 
   const model = useTableModel({
     table,
     objects: items as any,
-    onDeleteRow,
+    onDeleteRow: handleDeleteRow,
+    onAddColumn: handleAddColumn,
+    onDeleteColumn: handleDeleteColumn,
   });
 
   return (

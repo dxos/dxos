@@ -6,10 +6,9 @@ import * as ModalPrimitive from '@radix-ui/react-popper';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
-import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu, useThemeContext } from '@dxos/react-ui';
 import { Field } from '@dxos/react-ui-data';
-import { addFieldToView, type FieldType, FieldValueType, getUniqueProperty, type ViewType } from '@dxos/schema';
+import { type FieldType, FieldValueType, getUniqueProperty, type ViewType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
@@ -27,7 +26,6 @@ export const createNewField = (view: ViewType): FieldType => {
 };
 
 export const NewColumnForm = ({ model, open, onClose: close }: NewColumnFormProps) => {
-  const space = getSpace(model?.table);
   const { tx } = useThemeContext();
   const [field, setField] = useState<FieldType | undefined>(undefined);
 
@@ -42,21 +40,12 @@ export const NewColumnForm = ({ model, open, onClose: close }: NewColumnFormProp
   }, [open, close, model]);
 
   const onCreate = useCallback(() => {
-    if (!space || !field || !model || !model?.table?.view) {
+    if (!field || !model || !model?.table?.view) {
       return;
     }
-
-    try {
-      const schema = space.db.schema.getSchemaByTypename(model.table.view.schema);
-      if (schema) {
-        addFieldToView(schema, model.table.view, field);
-        close();
-      }
-    } catch (err) {
-      // TODO(ZaymonFC): Present the error to the user.
-      // This should be reconciled with error handling in the Field component.
-    }
-  }, [model, field, space, close]);
+    model.addColumn(field);
+    close();
+  }, [model, field, close]);
 
   if (!field) {
     return null;

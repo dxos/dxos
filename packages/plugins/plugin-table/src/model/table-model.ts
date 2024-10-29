@@ -16,7 +16,7 @@ import {
   type DxGridCellValue,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { formatValue } from '@dxos/schema';
+import { FieldType, formatValue } from '@dxos/schema';
 
 import { fromGridCell, type GridCell, type TableType } from '../types';
 import { tableButtons, touch } from '../util';
@@ -30,6 +30,8 @@ export type TableModelProps = {
   sorting?: SortConfig[];
   pinnedRows?: { top: number[]; bottom: number[] };
   rowSelection?: number[];
+  onAddColumn?: (field: FieldType) => void;
+  onDeleteColumn?: (field: FieldType) => void;
   onDeleteRow?: (row: any) => void;
   onInsertRow?: (index?: number) => void;
   onCellUpdate?: (cell: GridCell) => void;
@@ -60,7 +62,8 @@ export class TableModel extends Resource {
    * Keys are display indices, values are corresponding data indices.
    */
   private readonly displayToDataIndex: Map<number, number> = new Map();
-
+  private readonly onAddColumn?: (field: FieldType) => void;
+  private readonly onDeleteColumn?: (field: FieldType) => void;
   private readonly onDeleteRow?: (id: string) => void;
   private readonly onInsertRow?: (index?: number) => void;
   public onCellUpdate?: (cell: GridCell) => void;
@@ -71,6 +74,8 @@ export class TableModel extends Resource {
     sorting = [],
     pinnedRows = { top: [], bottom: [] },
     rowSelection = [],
+    onAddColumn,
+    onDeleteColumn,
     onDeleteRow,
     onInsertRow,
     onCellUpdate,
@@ -78,11 +83,14 @@ export class TableModel extends Resource {
   }: TableModelProps) {
     super();
     this.table = table;
-    this.onDeleteRow = onDeleteRow;
-    this.onInsertRow = onInsertRow;
     this.sorting.value = sorting.at(0);
     this.pinnedRows = pinnedRows;
     this.rowSelection = rowSelection;
+
+    this.onAddColumn = onAddColumn;
+    this.onDeleteColumn = onDeleteColumn;
+    this.onDeleteRow = onDeleteRow;
+    this.onInsertRow = onInsertRow;
     this.onCellUpdate = onCellUpdate;
     this.onRowOrderChanged = onRowOrderChanged;
   }
@@ -322,17 +330,26 @@ export class TableModel extends Resource {
   public getRowCount = (): number => this.rows.value.length;
 
   //
-  // Move
+  // Column Operations
   //
 
-  public moveColumn(columnId: ColumnId, newIndex: number): void {
-    const fields = this.table.view?.fields ?? [];
-    const currentIndex = fields.findIndex((field) => field.path === columnId);
-    if (currentIndex !== -1 && this.table.view) {
-      const [removed] = fields.splice(currentIndex, 1);
-      // Ensure we don't move past the action column
-      const adjustedNewIndex = Math.min(newIndex, fields.length);
-      fields.splice(adjustedNewIndex, 0, removed);
+  public addColumn(field: FieldType): void {
+    if (this.onAddColumn) {
+      this.onAddColumn(field);
+    }
+  }
+
+  public deleteColumn(columnId: string): void {
+    if (!this.table.view) {
+      return;
+    }
+
+    const field = this.table.view.fields.find((field) => field.path === columnId);
+    if (field && this.onDeleteColumn) {
+      if (this.sorting.value?.columnId === columnId) {
+        this.clearSort();
+      }
+      this.onDeleteColumn(field);
     }
   }
 
@@ -350,6 +367,7 @@ export class TableModel extends Resource {
       }
     }
   }
+
 
   //
   // Sorting

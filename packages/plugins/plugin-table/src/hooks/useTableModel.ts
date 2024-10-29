@@ -7,25 +7,17 @@ import { useCallback, useEffect, useState } from 'react';
 import { create } from '@dxos/echo-schema';
 import { type EchoReactiveObject, getSpace } from '@dxos/react-client/echo';
 
-import { TableModel } from '../model';
+import { TableModel, TableModelProps } from '../model';
 import { type TableType } from '../types';
 import { createStarterSchema, createStarterView } from '../types';
 
 export type UseTableModelParams = {
   table: TableType;
   objects: EchoReactiveObject<any>[];
-  onDeleteRow?: (row: any) => void;
-};
+} & Pick<TableModelProps, 'onAddColumn' | 'onDeleteColumn' | 'onDeleteRow'>
 
-export const useTableModel = ({ table, objects, onDeleteRow }: UseTableModelParams): TableModel | undefined => {
+export const useTableModel = ({ table, objects, onAddColumn, onDeleteColumn, onDeleteRow }: UseTableModelParams): TableModel | undefined => {
   const space = getSpace(table);
-
-  const defaultOnDeleteRow = useCallback(
-    (row: any) => {
-      return space?.db.remove(row);
-    },
-    [space],
-  );
 
   // TODO(ZaymonFC): Not sure this belongs here. Seek feeback.
   useEffect(() => {
@@ -44,7 +36,7 @@ export const useTableModel = ({ table, objects, onDeleteRow }: UseTableModelPara
 
     let tableModel: TableModel | undefined;
     const t = setTimeout(async () => {
-      tableModel = new TableModel({ table, onDeleteRow: onDeleteRow ?? defaultOnDeleteRow });
+      tableModel = new TableModel({ table, onAddColumn, onDeleteColumn, onDeleteRow });
       await tableModel.open();
       setTableModel(tableModel);
     });
@@ -53,7 +45,7 @@ export const useTableModel = ({ table, objects, onDeleteRow }: UseTableModelPara
       clearTimeout(t);
       void tableModel?.close();
     };
-  }, [table, onDeleteRow, defaultOnDeleteRow]);
+  }, [table, onAddColumn, onDeleteColumn, onDeleteRow]);
 
   useEffect(() => {
     tableModel?.updateData(objects);

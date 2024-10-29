@@ -137,26 +137,28 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               };
             }
 
-            case TableAction.DELETE_COLUMN: {
-              const { table, path } = intent.data as TableAction.DeleteColumn;
-              if (!isTable(table)) {
+            case TableAction.ADD_COLUMN: {
+              const { table, field } = intent.data as TableAction.AddColumn;
+              if (!isTable(table) || !table.schema || !table.view) {
                 return;
               }
+              addFieldToView(table.schema, table.view, field);
+              return { data: true };
+            }
 
-              const space = getSpace(table);
-              if (!space || !table.view) {
+            case TableAction.DELETE_COLUMN: {
+              const { table, field } = intent.data as TableAction.DeleteColumn;
+              if (!isTable(table) || !table.view || !table.schema) {
                 return;
               }
 
               if (!intent.undo) {
-                const fieldPosition = table.view?.fields.findIndex((field) => field.path === path);
-                const schema = space.db.schema.getSchemaByTypename(table?.view.schema);
-                if (fieldPosition === undefined || schema === undefined) {
+                const fieldPosition = table.view.fields.indexOf(field);
+                if (fieldPosition === undefined) {
                   return;
                 }
 
-                const field = table.view?.fields[fieldPosition];
-                removeFieldFromView(schema, table.view, field);
+                removeFieldFromView(table.schema, table.view, field);
 
                 return {
                   undoable: {
@@ -165,18 +167,10 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                   },
                 };
               } else if (intent.undo) {
-                const { field, fieldPosition } = intent.data as {
-                  field: FieldType;
-                  fieldPosition: number;
-                };
-
-                const schema = space.db.schema.getSchemaByTypename(table.view.schema);
-                if (!schema) {
-                  return;
-                }
+                const { field, fieldPosition } = intent.data as { field: FieldType; fieldPosition: number };
 
                 try {
-                  addFieldToView(schema, table.view, field, fieldPosition);
+                  addFieldToView(table.schema, table.view, field, fieldPosition);
                 } catch (error) {
                   // TODO(ZaymonFC): Handle error.
                 }
