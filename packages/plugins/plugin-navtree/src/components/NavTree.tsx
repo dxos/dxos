@@ -6,7 +6,7 @@ import React, { Fragment, useCallback, useEffect, type FC } from 'react';
 
 import { isAction, type Node } from '@dxos/app-graph';
 import { Popover, toLocalizedString, Treegrid, useTranslation } from '@dxos/react-ui';
-import { type ItemType, Tree, type TreeProps } from '@dxos/react-ui-list';
+import { Tree, type TreeProps } from '@dxos/react-ui-list';
 import { type MaybePromise } from '@dxos/util';
 
 import { NavTreeItemAction } from './NavTreeItemAction';
@@ -15,31 +15,15 @@ import { type NavTreeItem } from '../types';
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
-export type NavTreeProps = Omit<
-  TreeProps,
-  'items' | 'draggable' | 'gridTemplateColumns' | 'renderColumns' | 'onOpenChange' | 'onSelect'
-> & {
-  items: NavTreeItem[];
-  loadDescendents?: NavTreeColumnsProps['loadDescendents'];
-  renderPresence?: NavTreeColumnsProps['renderPresence'];
-  popoverAnchorId?: NavTreeColumnsProps['popoverAnchorId'];
-  onOpenChange?: (item: NavTreeItem, open: boolean) => void;
-  onSelect?: (item: NavTreeItem, state: boolean) => void;
-};
+export type NavTreeProps = Omit<TreeProps<NavTreeItem>, 'draggable' | 'gridTemplateColumns' | 'renderColumns'> &
+  Pick<NavTreeColumnsProps, 'loadDescendents' | 'renderPresence' | 'popoverAnchorId'>;
 
-export const NavTree = ({
-  loadDescendents,
-  renderPresence,
-  popoverAnchorId,
-  onOpenChange,
-  onSelect,
-  ...props
-}: NavTreeProps) => {
-  const renderColumns = useCallback(
-    ({ item, menuOpen, setMenuOpen }: { item: ItemType; menuOpen: boolean; setMenuOpen: (open: boolean) => void }) => {
+export const NavTree = ({ loadDescendents, renderPresence, popoverAnchorId, ...props }: NavTreeProps) => {
+  const renderColumns = useCallback<NonNullable<TreeProps<NavTreeItem>['renderColumns']>>(
+    ({ item, menuOpen, setMenuOpen }) => {
       return (
         <NavTreeColumns
-          item={item as NavTreeItem}
+          item={item}
           menuOpen={menuOpen}
           setMenuOpen={setMenuOpen}
           loadDescendents={loadDescendents}
@@ -52,13 +36,11 @@ export const NavTree = ({
   );
 
   return (
-    <Tree
+    <Tree<NavTreeItem>
       {...props}
       draggable
       gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
       renderColumns={renderColumns}
-      onOpenChange={onOpenChange as TreeProps['onOpenChange']}
-      onSelect={onSelect as TreeProps['onSelect']}
     />
   );
 };
@@ -121,6 +103,7 @@ const NavTreeColumns = ({
       ) : (
         <Treegrid.Cell />
       )}
+
       {actions.length > 0 ? (
         <NavTreeItemAction
           testId={`navtree.treeItem.actionsLevel${level}`}
@@ -136,6 +119,7 @@ const NavTreeColumns = ({
       ) : (
         <Treegrid.Cell />
       )}
+
       {Presence && <Presence item={item} />}
     </ActionRoot>
   );
