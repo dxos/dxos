@@ -4,7 +4,8 @@
 
 import React, { useState } from 'react';
 
-import { S, createObjectId, type SchemaResolver } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
+import { useSpace } from '@dxos/react-client/echo';
 import { Button, Icon, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
@@ -18,20 +19,19 @@ const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
 
 export type ViewEditorProps = ThemedClassName<{
   view: ViewType;
-  // TODO(burdon): Remove when we can represent the schema field as an object/reference.
-  schemaResolver?: SchemaResolver;
   readonly?: boolean;
 }>;
 
 /**
  * Schema-based object form.
  */
-export const ViewEditor = ({ classNames, view, schemaResolver, readonly }: ViewEditorProps) => {
+export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
+  const space = useSpace();
   const [field, setField] = useState<FieldType | undefined>();
 
   const handleAdd = () => {
-    const field: FieldType = { id: createObjectId(), path: getUniqueProperty(view), type: FieldValueType.String };
+    const field: FieldType = { id: 'delete-me', path: getUniqueProperty(view), type: FieldValueType.String };
     view.fields.push(field);
     setField(field);
   };
@@ -41,7 +41,7 @@ export const ViewEditor = ({ classNames, view, schemaResolver, readonly }: ViewE
   };
 
   const handleDelete = (field: FieldType) => {
-    const idx = view.fields.findIndex((f) => field.id === f.id);
+    const idx = view.fields.findIndex((f) => field.path === f.path);
     view.fields.splice(idx, 1);
     setField(undefined);
   };
@@ -49,6 +49,10 @@ export const ViewEditor = ({ classNames, view, schemaResolver, readonly }: ViewE
   const handleMove = (fromIndex: number, toIndex: number) => {
     arrayMove(view.fields, fromIndex, toIndex);
   };
+
+  if (!space) {
+    return null;
+  }
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
@@ -74,7 +78,7 @@ export const ViewEditor = ({ classNames, view, schemaResolver, readonly }: ViewE
       </List.Root>
 
       {field && view.schema && (
-        <Field classNames='p-2' autoFocus field={field} schema={schemaResolver?.(view.schema)} />
+        <Field classNames='p-2' autoFocus field={field} schema={space.db.schema.getSchemaByTypename(view.schema)} />
       )}
 
       {!readonly && (
