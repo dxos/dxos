@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
+import { effect, untracked } from '@preact/signals-core';
 import get from 'lodash.get';
 import set from 'lodash.set';
 
@@ -102,7 +102,6 @@ export class SettingsStore<T extends SettingsValue> {
   open() {
     // TODO(burdon): Import from '@dxos/signals' (rename echo-signals).
     this._unsubscribe = effect(() => {
-      this._value; // Reference triggers subscription.
       this.save();
     });
   }
@@ -172,7 +171,7 @@ export class SettingsStore<T extends SettingsValue> {
   save() {
     visit(this._schema.ast, (node, path) => {
       const key = this.getKey(path);
-      const value = get(this.value, path);
+      const value = get(this.value, path); // Reference triggers subscription.
       if (value === undefined) {
         this._storage.removeItem(key);
       } else {
@@ -187,7 +186,7 @@ export class SettingsStore<T extends SettingsValue> {
         } else if (AST.isTupleType(node)) {
           this._storage.setItem(key, JSON.stringify(value));
         } else if (AST.isTypeLiteral(node)) {
-          this._storage.setItem(key, JSON.stringify(value));
+          this._storage.setItem(key, JSON.stringify(value)); // JSON.stringify triggers subscription.
           return false;
         }
       }
