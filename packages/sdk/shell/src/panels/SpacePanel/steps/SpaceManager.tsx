@@ -5,7 +5,6 @@
 import { Placeholder, UserPlus, UsersThree } from '@phosphor-icons/react';
 import React, { type Dispatch, type FC, type SetStateAction, useCallback, useState } from 'react';
 
-import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';

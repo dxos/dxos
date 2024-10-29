@@ -4,7 +4,6 @@
 
 import React from 'react';
 
-import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useHaloInvitations, DeviceType } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
