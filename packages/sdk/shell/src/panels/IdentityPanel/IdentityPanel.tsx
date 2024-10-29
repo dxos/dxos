@@ -72,14 +72,15 @@ const IdentityHeading = ({
     void onUpdateProfile?.({ ...identity.profile, data: { ...identity.profile?.data, hue: nextHue } });
   };
 
-  const handleSeedphrase = async () => {
+  const handleRecoveryCode = async () => {
     invariant(client.services.services.IdentityService, 'IdentityService not available');
-    // TODO(wittjosiah): This need a proper api.
+    // TODO(wittjosiah): This needs a proper api.
     const { seedphrase } = await client.services.services.IdentityService.createRecoveryPhrase();
     void setTextValue(seedphrase);
   };
 
   const isConnected = connectionState === ConnectionState.ONLINE;
+  const isProduction = client.config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'production';
 
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
@@ -131,19 +132,21 @@ const IdentityHeading = ({
             </Tooltip.Portal>
           </Tooltip.Root>
           {/* TODO(wittjosiah): Remove. This should have its own flow. */}
-          <Tooltip.Root>
-            <Tooltip.Trigger asChild>
-              <Toolbar.Button classNames='bs-[--rail-action]' onClick={handleSeedphrase}>
-                <FirstAidKit className={getSize(5)} />
-              </Toolbar.Button>
-            </Tooltip.Trigger>
-            <Tooltip.Portal>
-              <Tooltip.Content side='bottom' classNames='z-50'>
-                {t('create recovery code label')}
-                <Tooltip.Arrow />
-              </Tooltip.Content>
-            </Tooltip.Portal>
-          </Tooltip.Root>
+          {!isProduction && (
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <Toolbar.Button classNames='bs-[--rail-action]' onClick={handleRecoveryCode}>
+                  <FirstAidKit className={getSize(5)} />
+                </Toolbar.Button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content side='bottom' classNames='z-50'>
+                  {t('create recovery code label')}
+                  <Tooltip.Arrow />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          )}
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <Toolbar.Button

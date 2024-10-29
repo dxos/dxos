@@ -156,10 +156,12 @@ export const DeviceListItem = forwardRef<
                       <ShareFat className={getSize(5)} />
                       {t('choose join new identity label')}
                     </DropdownMenu.Item>
-                    <DropdownMenu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
-                      <FirstAidKit className={getSize(5)} />
-                      {t('choose recover identity label')}
-                    </DropdownMenu.Item>
+                    {onClickRecover && (
+                      <DropdownMenu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
+                        <FirstAidKit className={getSize(5)} />
+                        {t('choose recover identity label')}
+                      </DropdownMenu.Item>
+                    )}
                     <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
                       <Power className={getSize(5)} />
                       {t('reset device label')}
