@@ -7,7 +7,7 @@ import React from 'react';
 import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { addressToA1Notation, rangeToA1Notation } from '../../defs';
+import { addressToA1Notation, isFunction, rangeToA1Notation } from '../../defs';
 import { useSheetContext } from '../SheetContext';
 
 export const FunctionEditor = () => {
@@ -17,7 +17,7 @@ export const FunctionEditor = () => {
   let isFormula = false;
   if (cursor) {
     value = model.getCellValue(cursor);
-    if (typeof value === 'string' && value.charAt(0) === '=') {
+    if (isFunction(value)) {
       value = model.graph.mapFunctionBindingFromId(model.mapFormulaIndicesToRefs(value));
       isFormula = true;
     } else if (value != null) {

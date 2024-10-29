@@ -15,6 +15,7 @@ import { log } from '@dxos/log';
 import { FieldValueType } from '@dxos/schema';
 
 import { DetailedCellError, ExportedCellChange } from '#hyperformula';
+import { type ComputeNode, type ComputeGraph, createSheetName, type ComputeNodeEvent } from '../compute-graph';
 import {
   addressFromIndex,
   addressToIndex,
@@ -27,8 +28,8 @@ import {
   ReadonlyException,
   MAX_COLUMNS,
   MAX_ROWS,
+  isFunction,
 } from '../defs';
-import { type ComputeNode, type ComputeGraph, createSheetName, type ComputeNodeEvent } from '../compute-graph';
 import { type CellScalarValue, type CellValue, type SheetType } from '../types';
 
 // Map sheet types to system types.
@@ -132,7 +133,7 @@ export class SheetModel extends Resource {
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
       invariant(this._node);
       const { col, row } = addressFromIndex(this._sheet, key);
-      if (typeof value === 'string' && value.charAt(0) === '=') {
+      if (isFunction(value)) {
         value = this._graph.mapFormulaToNative(
           this._graph.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value)),
         );
@@ -244,7 +245,7 @@ export class SheetModel extends Resource {
       return undefined;
     }
 
-    if (typeof value === 'string' && value.charAt(0) === '=') {
+    if (isFunction(value)) {
       return this._graph.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value));
     } else {
       return String(value);
@@ -309,7 +310,7 @@ export class SheetModel extends Resource {
 
     // Insert into engine.
     this._node.graph.hf.setCellContents({ sheet: this._node.sheetId, row: cell.row, col: cell.col }, [
-      [typeof value === 'string' && value.charAt(0) === '=' ? this._graph.mapFormulaToNative(value) : value],
+      [isFunction(value) ? this._graph.mapFormulaToNative(value) : value],
     ]);
 
     // Insert into sheet.
@@ -317,7 +318,7 @@ export class SheetModel extends Resource {
     if (value === undefined || value === null) {
       delete this._sheet.cells[idx];
     } else {
-      if (typeof value === 'string' && value.charAt(0) === '=') {
+      if (isFunction(value)) {
         value = this._graph.mapFunctionBindingToId(this.mapFormulaRefsToIndices(value));
       }
 
@@ -375,7 +376,7 @@ export class SheetModel extends Resource {
    * Map from A1 notation to indices.
    */
   mapFormulaRefsToIndices(formula: string): string {
-    invariant(formula.charAt(0) === '=');
+    invariant(isFunction(formula));
     return formula.replace(/([a-zA-Z]+)([0-9]+)/g, (match) => {
       return addressToIndex(this._sheet, addressFromA1Notation(match));
     });
@@ -385,7 +386,7 @@ export class SheetModel extends Resource {
    * Map from indices to A1 notation.
    */
   mapFormulaIndicesToRefs(formula: string): string {
-    invariant(formula.charAt(0) === '=');
+    invariant(isFunction(formula));
     return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (idx) => {
       return addressToA1Notation(addressFromIndex(this._sheet, idx));
     });

@@ -19,6 +19,8 @@ export type CellIndex = string;
 
 export type CellContentValue = number | string | boolean | null;
 
+export const isFunction = (value: any): value is string => typeof value === 'string' && value.charAt(0) === '=';
+
 export const posEquals = (a: CellAddress | undefined, b: CellAddress | undefined) => {
   return a?.col === b?.col && a?.row === b?.row;
 };
@@ -35,7 +37,7 @@ export const addressToA1Notation = ({ col, row }: CellAddress): string => {
   return `${columnLetter(col)}${row + 1}`;
 };
 
-// TODO(burdon): See simpleCellAddressFromString
+// TODO(burdon): See (HF) simpleCellAddressFromString.
 export const addressFromA1Notation = (ref: string): CellAddress => {
   const match = ref.match(/([A-Z]+)(\d+)/);
   invariant(match, `Invalid notation: ${ref}`);

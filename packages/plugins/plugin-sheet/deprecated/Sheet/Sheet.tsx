@@ -67,12 +67,13 @@ import { getRectUnion, getRelativeClientRect, scrollIntoView } from './util';
 import {
   type CellIndex,
   type CellAddress,
+  addressFromIndex,
   addressToA1Notation,
+  addressToIndex,
   columnLetter,
+  isFunction,
   posEquals,
   rangeToA1Notation,
-  addressToIndex,
-  addressFromIndex,
 } from '../../defs';
 import { rangeExtension, sheetExtension, type CellRangeNotifier } from '../../extensions';
 
@@ -1125,7 +1126,7 @@ const SheetStatusBar = () => {
   let isFormula = false;
   if (cursor) {
     value = model.getCellValue(cursor);
-    if (typeof value === 'string' && value.charAt(0) === '=') {
+    if (isFunction(value)) {
       value = model.graph.mapFunctionBindingFromId(model.mapFormulaIndicesToRefs(value));
       isFormula = true;
     } else if (value != null) {
