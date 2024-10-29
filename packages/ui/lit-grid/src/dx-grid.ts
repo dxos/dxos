@@ -56,12 +56,6 @@ const resizeTolerance = 1;
 const selectTolerance = 4;
 
 //
-// `overscan` is the number of columns or rows to render outside of the viewport
-//
-const overscanCol = 0;
-const overscanRow = 0;
-
-//
 // `defaultSize`, the final fallbacks
 //
 const defaultSizeRow = 32;
@@ -887,8 +881,8 @@ export class DxGrid extends LitElement {
   }
 
   private handleBlur(event: FocusEvent) {
-    // Only unset `focusActive` if focus is not moving to an element within the grid.
-    if (!event.relatedTarget || !(event.relatedTarget as HTMLElement).closest(`[data-grid="${this.gridId}"]`)) {
+    // Only unset `focusActive` if focus is moving to an element outside the grid.
+    if (event.relatedTarget && !(event.relatedTarget as HTMLElement).closest(`[data-grid="${this.gridId}"]`)) {
       this.focusActive = false;
     }
   }
@@ -1389,7 +1383,11 @@ export class DxGrid extends LitElement {
     // Update the focused element if there is a change in bounds (otherwise Lit keeps focus on the relative element).
     if (
       this.focusActive &&
-      (changedProperties.has('visRowMin') || changedProperties.has('visColMin') || changedProperties.has('focusedCell'))
+      (changedProperties.has('visColMin') ||
+        changedProperties.has('visColMax') ||
+        changedProperties.has('visRowMin') ||
+        changedProperties.has('visRowMax') ||
+        changedProperties.has('focusedCell'))
     ) {
       this.refocus();
     }
