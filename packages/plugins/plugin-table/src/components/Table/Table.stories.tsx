@@ -16,10 +16,10 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
 import { useTableModel } from '../../hooks';
+import translations from '../../translations';
 import { TableType } from '../../types';
 import { Toolbar } from '../Toolbar';
 import { createEmptyTable, createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
-import translations from '../../translations';
 
 //
 // Story components.
