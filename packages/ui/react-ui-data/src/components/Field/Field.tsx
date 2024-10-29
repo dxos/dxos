@@ -25,7 +25,7 @@ const configSections = {
 
 type ConfigSection = keyof typeof configSections;
 
-// TODO(zaymonad): Should this move to the schema module?
+// TODO(ZaymonFC): Should this move to the schema module?
 const typeFeatures: Partial<Record<FieldValueType, ConfigSection[]>> = {
   [FieldValueType.Number]: ['numeric'],
   [FieldValueType.Percent]: ['numeric'],
@@ -33,14 +33,17 @@ const typeFeatures: Partial<Record<FieldValueType, ConfigSection[]>> = {
   [FieldValueType.Ref]: ['ref'],
 } as const;
 
+export type SchematicChangeType = 'path' | 'type' | 'digits' | 'ref';
+
 export type FieldProps<T = {}> = ThemedClassName<{
   field: FieldType;
   schema?: S.Schema<T>;
   autoFocus?: boolean;
   readonly?: boolean;
+  onSchematicChange?: (field: FieldType, changeType: SchematicChangeType) => void;
 }>;
 
-export const Field = <T = {},>({ classNames, field, autoFocus, readonly }: FieldProps<T>) => {
+export const Field = <T = {},>({ classNames, field, autoFocus, readonly, onSchematicChange }: FieldProps<T>) => {
   const { t } = useTranslation(translationKey);
   const features = React.useMemo(() => typeFeatures[field.type] ?? [], [field.type]);
 
@@ -55,7 +58,10 @@ export const Field = <T = {},>({ classNames, field, autoFocus, readonly }: Field
             placeholder={t('field path placeholder')}
             format={PropertyFormat}
             value={field.path ?? ''}
-            onChange={(event) => (field.path = event.target.value)}
+            onChange={(event) => {
+              field.path = event.target.value;
+              onSchematicChange?.(field, 'path');
+            }}
           />
         </Input.Root>
       </div>
@@ -79,6 +85,7 @@ export const Field = <T = {},>({ classNames, field, autoFocus, readonly }: Field
             value={field.type}
             onValueChange={(value) => {
               field.type = value as FieldValueType;
+              onSchematicChange?.(field, 'type');
             }}
           >
             <Select.TriggerButton classNames='is-full' placeholder='Type' />
@@ -107,6 +114,7 @@ export const Field = <T = {},>({ classNames, field, autoFocus, readonly }: Field
               type='number'
               onChange={(event) => {
                 field.digits = parseInt(event.target.value, 10);
+                onSchematicChange?.(field, 'digits');
               }}
             />
           </Input.Root>
