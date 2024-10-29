@@ -53,7 +53,7 @@ export const Default = (props: any) => {
 Default.parameters = { layout: 'fullscreen' };
 
 export default {
-  title: 'sdk/react-shell/All',
+  title: 'sdk/shell/All',
   decorators: [withTheme],
   component: StoryRow,
   parameters: { chromatic: { disableSnapshot: false }, translations: [osTranslations] },
