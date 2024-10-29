@@ -987,7 +987,7 @@ export class DxGrid extends LitElement {
       this.posInline = this.clampPosInline(
         [...Array(this.focusedCell.col + 1)].reduce((acc, _, c0) => {
           return acc + this.colSize(c0, 'grid') + gap;
-        }, -this.sizeInline),
+        }, -this.sizeInline) - gap,
       );
       this.updateVisInline();
     }
@@ -1005,7 +1005,7 @@ export class DxGrid extends LitElement {
       this.posBlock = this.clampPosBlock(
         [...Array(this.focusedCell.row + 1)].reduce((acc, _, r0) => {
           return acc + this.rowSize(r0, 'grid') + gap;
-        }, -this.sizeBlock),
+        }, -this.sizeBlock) - gap,
       );
       this.updateVisBlock();
     }
