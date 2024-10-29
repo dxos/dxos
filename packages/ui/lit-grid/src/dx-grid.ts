@@ -406,7 +406,7 @@ export class DxGrid extends LitElement {
           event.preventDefault();
         } else {
           const cellCoords = closestCell(event.target, actionEl);
-          if (cellCoords) {
+          if (cellCoords && !this.cellReadonly(cellCoords.col, cellCoords.row, cellCoords.plane)) {
             this.pointer = { state: 'maybeSelecting', pageX: event.pageX, pageY: event.pageY };
             this.selectionStart = cellCoords;
             this.selectionEnd = cellCoords;
@@ -874,7 +874,7 @@ export class DxGrid extends LitElement {
 
   private handleFocus(event: FocusEvent) {
     const cellCoords = closestCell(event.target);
-    if (cellCoords) {
+    if (cellCoords && !this.cellReadonly(cellCoords.col, cellCoords.row, cellCoords.plane)) {
       this.focusActive = true;
       this.setFocusedCell(cellCoords);
     }
