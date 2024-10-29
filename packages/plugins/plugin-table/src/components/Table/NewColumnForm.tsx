@@ -9,7 +9,7 @@ import { create } from '@dxos/echo-schema';
 import { DropdownMenu, useThemeContext } from '@dxos/react-ui';
 import { Field } from '@dxos/react-ui-data';
 import { addFieldToView, type FieldType, FieldValueType, getUniqueProperty, type ViewType } from '@dxos/schema';
-import { getSpace, useSpace } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 
 import { type TableModel } from '../../model';
 
@@ -23,9 +23,6 @@ type NewColumnFormProps = {
 // schema and generate the new field. That's why I haven't moved this to ../../seed.
 export const createNewField = (view: ViewType): FieldType => {
   const field: FieldType = { path: getUniqueProperty(view), type: FieldValueType.String };
-
-  // TODO(ZaymonFC): Can't currently supply a schema since it's not in the registry when we
-  // try to add it to the table
   return create(field);
 };
 
@@ -46,24 +43,19 @@ export const NewColumnForm = ({ model, open, onClose: close }: NewColumnFormProp
 
   const onCreate = useCallback(() => {
     if (!space || !field || !model || !model?.table?.view) {
-      close();
       return;
     }
 
-    const view = model.table.view;
-
     try {
-      const schema = space.db.schema.getSchemaByTypename(view.schema);
-      if (!schema) {
-        console.log('Schema not found', view.schema);
-      } else {
+      const schema = space.db.schema.getSchemaByTypename(model.table.view.schema);
+      if (schema) {
         addFieldToView(schema, model.table.view, field);
+        close();
       }
     } catch (err) {
-      console.error('Error adding field to view:', err);
+      // TODO(ZaymonFC): Present the error to the user.
+      // This should be reconciled with error handling in the Field component.
     }
-
-    close();
   }, [model, field, space, close]);
 
   if (!field) {
