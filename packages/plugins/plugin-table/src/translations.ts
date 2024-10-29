@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { translations as tableTranslations } from '@dxos/react-ui-table';
-
 import { TABLE_PLUGIN } from './meta';
 
 export default [
@@ -25,9 +23,10 @@ export default [
         'column action sort ascending': 'Sort Ascending',
         'column action clear sorting': 'Clear Sorting',
         'column action settings': 'Column Settings',
+        'column action delete': 'Delete Column',
         'delete row label': 'Delete row',
+        'column deleted label': 'Column deleted',
       },
     },
   },
-  ...tableTranslations,
-];
+]

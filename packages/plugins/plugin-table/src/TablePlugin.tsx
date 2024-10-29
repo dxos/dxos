@@ -10,7 +10,9 @@ import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
+import { getSpace } from '@dxos/react-client/echo';
 import { translations as dataTranslations, ViewEditor } from '@dxos/react-ui-data';
+import { addFieldToView, FieldType, removeFieldFromView } from '@dxos/schema';
 
 import { TableContainer } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
@@ -133,6 +135,53 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               return {
                 data: create(TableType, { name: '', threads: [] }),
               };
+            }
+
+            case TableAction.DELETE_COLUMN: {
+              const { table, path } = intent.data as TableAction.DeleteColumn;
+              if (!isTable(table)) {
+                return;
+              }
+
+              const space = getSpace(table);
+              if (!space || !table.view) {
+                return;
+              }
+
+              if (!intent.undo) {
+                const fieldPosition = table.view?.fields.findIndex((field) => field.path === path);
+                const schema = space.db.schema.getSchemaByTypename(table?.view.schema);
+                if (fieldPosition === undefined || schema === undefined) {
+                  return;
+                }
+
+                const field = table.view?.fields[fieldPosition];
+                removeFieldFromView(schema, table.view, field);
+
+                return {
+                  undoable: {
+                    message: translations[0]['en-US'][TABLE_PLUGIN]['column deleted label'],
+                    data: { view: table.view, field, fieldPosition },
+                  },
+                };
+              } else if (intent.undo) {
+                const { field, fieldPosition } = intent.data as {
+                  field: FieldType;
+                  fieldPosition: number;
+                };
+
+                const schema = space.db.schema.getSchemaByTypename(table.view.schema);
+                if (!schema) {
+                  return;
+                }
+
+                try {
+                  addFieldToView(schema, table.view, field, fieldPosition);
+                } catch (error) {
+                  // TODO(ZaymonFC): Handle error.
+                }
+                return { data: true };
+              }
             }
           }
         },

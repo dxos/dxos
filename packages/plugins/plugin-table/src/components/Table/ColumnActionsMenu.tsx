@@ -10,6 +10,7 @@ import { DropdownMenu, type DropdownMenuRootProps, useThemeContext, useTranslati
 
 import { TABLE_PLUGIN } from '../../meta';
 import { type TableModel } from '../../model';
+import { TableAction } from '../../types';
 
 export type ColumnActionsMenuProps = {
   model?: TableModel;
@@ -48,6 +49,16 @@ export const ColumnActionsMenu = ({ model, columnId, open, onOpenChange }: Colum
           {isCurrentColumnSorted && (
             <DropdownMenu.Item onClick={() => model.clearSort()}>{t('column action clear sorting')}</DropdownMenu.Item>
           )}
+          <DropdownMenu.Item
+            onClick={() => {
+              void dispatch({
+                action: TableAction.DELETE_COLUMN,
+                data: { table: model.table, path: columnId },
+              });
+            }}
+          >
+            {t('column action delete')}
+          </DropdownMenu.Item>
           <DropdownMenu.Item
             onClick={() => {
               // TODO(Zan): Implement inline field editor.

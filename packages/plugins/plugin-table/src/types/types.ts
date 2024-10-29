@@ -4,6 +4,7 @@
 
 import type {
   GraphBuilderProvides,
+  IntentData,
   IntentResolverProvides,
   MetadataRecordsProvides,
   SurfaceProvides,
@@ -20,6 +21,12 @@ const TABLE_ACTION = `${TABLE_PLUGIN}/action`;
 
 export enum TableAction {
   CREATE = `${TABLE_ACTION}/create`,
+  DELETE_COLUMN = `${TABLE_ACTION}/delete-column`,
+}
+
+export namespace TableAction {
+  export type Create = IntentData<{ table: TableType }>;
+  export type DeleteColumn = IntentData<{ table: TableType; path: string }>;
 }
 
 export type TableProvides = {};
