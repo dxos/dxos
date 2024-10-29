@@ -9,7 +9,7 @@ export const transformServerSentEvents = (input: ReadableStream): ReadableStream
   const { readable, writable } = new TransformStream({
     transform: (chunk, controller) => {
       const line = textDecoder.decode(chunk);
-      if (!line.startsWith(DATA_PREFIX)) {
+      if (line.startsWith(DATA_PREFIX)) {
         controller.enqueue(textEncoder.encode(JSON.parse(line.slice(DATA_PREFIX.length)).response));
       }
     },
