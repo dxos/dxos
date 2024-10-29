@@ -3,7 +3,7 @@
 //
 
 import { type Decorator } from '@storybook/react';
-import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
+import React, { createContext, type PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
 import { type FallbackProps, ErrorBoundary as NativeErrorBoundary } from 'react-error-boundary';
 
 import { Trigger } from '@dxos/async';
@@ -81,6 +81,10 @@ export const withClientProvider = ({
 // TODO(burdon): Delay/jitter for creation of other clients.
 export type WithMultiClientProviderProps = InitializeProps & ClientProviderProps & { numClients?: number };
 
+const MultiClientContext = createContext<{ id: number }>({ id: 0 });
+
+export const useMultiClient = () => useContext(MultiClientContext);
+
 /**
  * Decorator that creates a scaffold for multiple clients.
  * Orchestrates invitations between a randomly selected host and the remaining clients.
@@ -123,14 +127,15 @@ export const withMultiClientProvider = ({
     return (
       <ErrorBoundary>
         {Array.from({ length: numClients }).map((_, index) => (
-          <ClientProvider
-            key={index}
-            services={builder.current.createLocalClientServices()}
-            onInitialized={(client) => handleInitialized(client, index)}
-            {...props}
-          >
-            <Story />
-          </ClientProvider>
+          <MultiClientContext.Provider key={index} value={{ id: index }}>
+            <ClientProvider
+              services={builder.current.createLocalClientServices()}
+              onInitialized={(client) => handleInitialized(client, index)}
+              {...props}
+            >
+              <Story />
+            </ClientProvider>
+          </MultiClientContext.Provider>
         ))}
       </ErrorBoundary>
     );

@@ -13,7 +13,7 @@ const storybookUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=
 
 test.describe('Stack', () => {
   test('remove', async ({ browser }) => {
-    const { page } = await setupPage(browser, { url: storybookUrl('react-ui-stack-stack--transfer') });
+    const { page } = await setupPage(browser, { url: storybookUrl('ui-react-ui-stack-stack--transfer') });
     await page.getByTestId('stack-transfer').waitFor({ state: 'visible' });
 
     const stack = new StackManager(page.getByTestId('stack-1'));
@@ -26,7 +26,7 @@ test.describe('Stack', () => {
   });
 
   test('rearrange', async ({ browser }) => {
-    const { page } = await setupPage(browser, { url: storybookUrl('react-ui-stack-stack--transfer') });
+    const { page } = await setupPage(browser, { url: storybookUrl('ui-react-ui-stack-stack--transfer') });
     await page.getByTestId('stack-transfer').waitFor({ state: 'visible' });
 
     const stack = new StackManager(page.getByTestId('stack-1'));
@@ -43,7 +43,7 @@ test.describe('Stack', () => {
       test.skip();
     }
 
-    const { page } = await setupPage(browser, { url: storybookUrl('react-ui-stack-stack--transfer') });
+    const { page } = await setupPage(browser, { url: storybookUrl('ui-react-ui-stack-stack--transfer') });
     await page.getByTestId('stack-transfer').waitFor({ state: 'visible' });
 
     const stack1 = new StackManager(page.getByTestId('stack-1'));
@@ -63,7 +63,7 @@ test.describe('Stack', () => {
   });
 
   test('copy', async ({ browser }) => {
-    const { page } = await setupPage(browser, { url: storybookUrl('react-ui-stack-stack--copy') });
+    const { page } = await setupPage(browser, { url: storybookUrl('ui-react-ui-stack-stack--copy') });
     await page.getByTestId('stack-copy').waitFor({ state: 'visible' });
 
     const stack1 = new StackManager(page.getByTestId('stack-1'));

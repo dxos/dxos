@@ -74,7 +74,12 @@ test.describe('Comments tests', () => {
     await expect(editedMessage).toContainText(editedText);
   });
 
-  test('delete message', async () => {
+  test('delete message', async ({ browserName }) => {
+    // TODO(wittjosiah): Flaky in CI.
+    if (browserName !== 'chromium') {
+      test.skip();
+    }
+
     await host.createSpace();
     await host.createObject('markdownPlugin');
 

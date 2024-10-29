@@ -14,7 +14,7 @@ import { type FailReason } from '../../types';
 
 export type JoinPanelMode = 'default' | 'halo-only';
 
-export type JoinPanelInitialDisposition = 'default' | 'accept-halo-invitation';
+export type JoinPanelInitialDisposition = 'default' | 'accept-halo-invitation' | 'recover-identity';
 
 export type JoinStepProps = Omit<StepProps, 'send' | 'onDone'> & {
   send: JoinSend;

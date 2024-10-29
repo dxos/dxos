@@ -15,7 +15,7 @@ import { Action, Actions, StepHeading, Input } from '../components';
 type ConfirmResetOptions = Partial<{
   onCancel: () => void;
   onConfirm: () => Promise<void>;
-  mode: 'join new identity' | 'reset storage';
+  mode: 'join new identity' | 'recover' | 'reset storage';
 }>;
 
 export type ConfirmResetProps = StepProps & ConfirmResetOptions;
@@ -64,7 +64,8 @@ export const ConfirmResetImpl = ({
   const { t } = useTranslation('os');
   const confirmationValue = t('confirmation value');
   const [inputValue, setInputValue] = useState('');
-  const testIdAffix = mode === 'join new identity' ? 'join-new-identity' : 'reset-storage';
+  const testIdAffix =
+    mode === 'join new identity' ? 'join-new-identity' : mode === 'recover' ? 'recover' : 'reset-storage';
   return (
     <>
       <div role='none' className='grow flex flex-col gap-2 justify-center'>
@@ -79,9 +80,16 @@ export const ConfirmResetImpl = ({
           {...{ validationMessage }}
           label={
             <StepHeading className='text-start mlb-2'>
-              {t(mode === 'join new identity' ? 'join new identity input label' : 'reset storage input label', {
-                confirmationValue,
-              })}
+              {t(
+                mode === 'join new identity'
+                  ? 'join new identity input label'
+                  : mode === 'recover'
+                    ? 'recover reset input label'
+                    : 'reset storage input label',
+                {
+                  confirmationValue,
+                },
+              )}
             </StepHeading>
           }
           disabled={disabled}
