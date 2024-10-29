@@ -2,20 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useContext, useState, useCallback } from 'react';
+import React, { type PropsWithChildren, createContext, useCallback, useContext, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import {
-  Grid,
-  type GridContentProps,
-  useGridContext,
-  type GridScopedProps,
-  type GridEditing,
+    Grid,
+    type GridContentProps,
+    type GridEditing,
+    type GridScopedProps,
+    useGridContext,
 } from '@dxos/react-ui-grid';
 
+import { type ComputeGraph } from '../../compute-graph';
 import { type CellAddress, type CellRange, type CompleteCellRange } from '../../defs';
-import { type ComputeGraph } from '../../graph';
 import { type SheetModel, useSheetModel } from '../../model';
 import { type SheetType } from '../../types';
 

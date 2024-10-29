@@ -121,12 +121,11 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
               break;
             }
 
-            // case 'complementary--settings': {
-            // return <div>Settings!</div>;
-            // }
-
             case 'complementary--automation': {
-              return <AutomationPanel subject={data.subject as any} />;
+              return {
+                node: <AutomationPanel subject={data.subject as any} />,
+                disposition: 'hoist',
+              };
             }
           }
 

@@ -21,7 +21,7 @@ import { spreadsheet } from 'codemirror-lang-spreadsheet';
 import { singleValueFacet } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type FunctionDefinition } from '../../graph';
+import { type FunctionDefinition } from '../../compute-graph';
 
 /**
  * https://codemirror.net/examples/styling

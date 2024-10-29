@@ -19,7 +19,7 @@ import { invariant } from '@dxos/invariant';
 import { documentId, singleValueFacet } from '@dxos/react-ui-editor';
 
 import { type CellAddress } from '../defs';
-import { type ComputeGraph, type ComputeNode, createSheetName } from '../graph';
+import { type ComputeGraph, type ComputeNode, createSheetName } from '../compute-graph';
 import { type CellScalarValue } from '../types';
 
 const LANGUAGE_TAG = 'dx';

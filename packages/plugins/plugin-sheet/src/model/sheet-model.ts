@@ -28,7 +28,7 @@ import {
   MAX_COLUMNS,
   MAX_ROWS,
 } from '../defs';
-import { type ComputeNode, type ComputeGraph, createSheetName, type ComputeNodeEvent } from '../graph';
+import { type ComputeNode, type ComputeGraph, createSheetName, type ComputeNodeEvent } from '../compute-graph';
 import { type CellScalarValue, type CellValue, type SheetType } from '../types';
 
 // Map sheet types to system types.
