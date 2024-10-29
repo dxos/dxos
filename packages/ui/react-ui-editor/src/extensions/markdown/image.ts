@@ -107,8 +107,12 @@ class ImageWidget extends WidgetType {
     const img = document.createElement('img');
     img.setAttribute('src', this._url);
     img.setAttribute('class', 'cm-image');
-    // Images are hidden until successfully loaded to avoid flickering effects.
-    img.onload = () => img.classList.add('cm-loaded-image');
+    // If focused, hide image until successfully loaded to avoid flickering effects.
+    if (view.state.field(focusField)) {
+      img.onload = () => img.classList.add('cm-loaded-image');
+    } else {
+      img.classList.add('cm-loaded-image');
+    }
     return img;
   }
 }
