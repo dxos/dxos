@@ -10,6 +10,10 @@ import { invariant } from '@dxos/invariant';
 
 import { SpaceProxy } from './space-proxy';
 
+export const SPACE_ID_LENGTH = 33;
+export const OBJECT_ID_LENGTH = 26;
+export const FQ_ID_LENGTH = SPACE_ID_LENGTH + OBJECT_ID_LENGTH + 1;
+
 export const isSpace = (object: unknown): object is Space => object instanceof SpaceProxy;
 
 export const getSpace = (object?: ReactiveObject<any>): Space | undefined => {
@@ -42,4 +46,17 @@ export const parseFullyQualifiedId = (id: string): [string, string] => {
   const [spaceId, objectId] = id.split(':');
   invariant(objectId, 'invalid id');
   return [spaceId, objectId];
+};
+
+export const parseId = (id: string) => {
+  if (id.length === SPACE_ID_LENGTH) {
+    return { spaceId: id };
+  } else if (id.length === OBJECT_ID_LENGTH) {
+    return { objectId: id };
+  } else if (id.length === FQ_ID_LENGTH && id.indexOf(':') === SPACE_ID_LENGTH) {
+    const [spaceId, objectId] = id.split(':');
+    return { spaceId, objectId };
+  } else {
+    return {};
+  }
 };

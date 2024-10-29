@@ -51,4 +51,4 @@ export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
-export { getSpace, isSpace, fullyQualifiedId, parseFullyQualifiedId } from './util';
+export { getSpace, isSpace, fullyQualifiedId, parseFullyQualifiedId, parseId } from './util';

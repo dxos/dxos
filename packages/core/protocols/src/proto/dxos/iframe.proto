@@ -41,7 +41,7 @@ message AppContextRequest {
 
   /// The id of the joined space.
   optional string space_id = 5;
-  
+
   /// Target to redirect to after a successful invitation.
   optional string target = 3;
 
@@ -60,6 +60,7 @@ enum ShellLayout {
   DEFAULT = 0;
   INITIALIZE_IDENTITY = 1;
   INITIALIZE_IDENTITY_FROM_INVITATION = 2;
+  INITIALIZE_IDENTITY_FROM_RECOVERY = 9;
   IDENTITY = 3;
   SHARE_IDENTITY = 4;
   EDIT_PROFILE = 5;
@@ -72,7 +73,7 @@ message LayoutRequest {
   /// Determins which panel of the shell is opened.
   ShellLayout layout = 1;
 
-  /// Invitation code to join a space.
+  /// Invitation code to join a space/identity.
   optional string invitation_code = 2;
 
   // TODO(wittjosiah): Remove.
