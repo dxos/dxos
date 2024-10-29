@@ -9,7 +9,7 @@ import { useClient } from '@dxos/react-client';
 import { useHaloInvitations, DeviceType } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
-import { AgentConfig, type AgentFormProps, DeviceList, DeviceListProps } from '../../../components';
+import { AgentConfig, type AgentFormProps, DeviceList, type DeviceListProps } from '../../../components';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps';
 
 export type IdentityActionChooserProps = IdentityPanelStepProps;
