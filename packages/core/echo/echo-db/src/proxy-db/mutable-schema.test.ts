@@ -72,7 +72,7 @@ describe('MutableSchema', () => {
     const { db } = await setupTest();
     const schema = db.schema.addSchema(EmptySchemaType);
     const object = create(schema, {});
-    schema.addColumns({ field1: S.String });
+    schema.addFields({ field1: S.String });
     object.field1 = 'works';
     object.field1 = undefined;
     expect(() => {

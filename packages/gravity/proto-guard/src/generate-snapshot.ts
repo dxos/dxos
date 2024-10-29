@@ -117,7 +117,7 @@ const main = async () => {
     const dynamicSchema = space.db.schema.addSchema(TestType);
     client.addTypes([TestType]);
     const object = space.db.add(create(dynamicSchema, {}));
-    dynamicSchema.addColumns({ name: S.String, todo: ref(Todo) });
+    dynamicSchema.addFields({ name: S.String, todo: ref(Todo) });
     object.name = 'Test';
     object.todo = create(Todo, { name: 'Test todo' });
     await space.db.flush();
