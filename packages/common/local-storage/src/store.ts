@@ -3,14 +3,12 @@
 //
 
 import { effect } from '@preact/signals-core';
-import get from 'lodash.get';
-import set from 'lodash.set';
 
-import { AST, type ReactiveObject, type S, create, isReactiveObject } from '@dxos/echo-schema';
-import { type Path, visit } from '@dxos/effect';
+import { AST, create, isReactiveObject, type ReactiveObject, type S } from '@dxos/echo-schema';
+import { getType, type Path } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { hyphenize } from '@dxos/util';
+import { getDeep, hyphenize, setDeep } from '@dxos/util';
 
 // TODO(burdon): Rename package to @dxos/settings-store?
 
@@ -102,7 +100,6 @@ export class SettingsStore<T extends SettingsValue> {
   open() {
     // TODO(burdon): Import from '@dxos/signals' (rename echo-signals).
     this._unsubscribe = effect(() => {
-      this._value; // Reference triggers subscription.
       this.save();
     });
   }
@@ -115,11 +112,10 @@ export class SettingsStore<T extends SettingsValue> {
   reset() {
     this.close();
 
-    // TODO(burdon): Factor out.
     for (const prop of Object.keys(this._value)) {
       const value = this._defaults[prop];
       if (value !== undefined) {
-        set(this._value, prop, value);
+        setDeep(this._value, [prop], value);
       } else {
         delete this._value[prop];
       }
@@ -138,46 +134,50 @@ export class SettingsStore<T extends SettingsValue> {
   load() {
     this.close();
 
-    visit(this._schema.ast, (node, path) => {
+    for (const prop of AST.getPropertySignatures(this._schema.ast)) {
+      const node = getType(prop.type)!;
+      const path = [prop.name.toString()];
       const key = this.getKey(path);
       const value = this._storage.getItem(key);
       if (value != null) {
         try {
           if (AST.isStringKeyword(node)) {
-            set(this.value, path, value);
+            setDeep(this.value, path, value);
           } else if (AST.isNumberKeyword(node)) {
-            set(this.value, path, parseInt(value));
+            setDeep(this.value, path, parseInt(value));
           } else if (AST.isBooleanKeyword(node)) {
-            set(this.value, path, value === 'true');
+            setDeep(this.value, path, value === 'true');
           } else if (AST.isEnums(node)) {
             const v = node.enums.find(([_, b]) => String(b) === value);
             if (v !== undefined) {
-              set(this.value, path, v[1]);
+              setDeep(this.value, path, v[1]);
             }
           } else if (AST.isTupleType(node)) {
-            set(this.value, path, JSON.parse(value));
+            setDeep(this.value, path, JSON.parse(value));
           } else if (AST.isTypeLiteral(node)) {
-            set(this.value, path, JSON.parse(value));
+            setDeep(this.value, path, JSON.parse(value));
             return false;
           }
         } catch (_err) {
           log.warn(`invalid value: ${key}`);
         }
       }
-    });
+    }
 
     this.open();
   }
 
   save() {
-    visit(this._schema.ast, (node, path) => {
+    for (const prop of AST.getPropertySignatures(this._schema.ast)) {
+      const node = getType(prop.type)!;
+      const path = [prop.name.toString()];
       const key = this.getKey(path);
-      const value = get(this.value, path);
-      if (value === undefined) {
+      const value = getDeep(this.value, path);
+      if (value == null) {
         this._storage.removeItem(key);
       } else {
         if (AST.isStringKeyword(node)) {
-          this._storage.setItem(key, value);
+          this._storage.setItem(key, String(value));
         } else if (AST.isNumberKeyword(node)) {
           this._storage.setItem(key, String(value));
         } else if (AST.isBooleanKeyword(node)) {
@@ -191,6 +191,6 @@ export class SettingsStore<T extends SettingsValue> {
           return false;
         }
       }
-    });
+    }
   }
 }
