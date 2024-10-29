@@ -900,32 +900,33 @@ export class DxGrid extends LitElement {
   // `delta`, otherwise zero if it is within that range.
   //
 
-  private focusedCellRowOutOfVis(minDelta = 0, maxDelta = minDelta) {
-    return this.focusedCell.row <= this.visRowMin + minDelta
-      ? this.focusedCell.row - (this.visRowMin + minDelta)
-      : this.focusedCell.row >= this.visRowMax - maxDelta
-        ? -(this.focusedCell.row - this.visRowMax - maxDelta)
+  private focusedCellRowOutOfVis() {
+    return this.focusedCell.row < this.visRowMin
+      ? this.focusedCell.row - this.visRowMin
+      : this.focusedCell.row > this.visRowMax
+        ? -(this.focusedCell.row - this.visRowMax)
         : 0;
   }
 
-  private focusedCellColOutOfVis(minDelta = 0, maxDelta = minDelta) {
-    return this.focusedCell.col <= this.visColMin + minDelta
-      ? this.focusedCell.col - (this.visColMin + minDelta)
-      : this.focusedCell.col >= this.visColMax - maxDelta
-        ? -(this.focusedCell.col - this.visColMax - maxDelta)
+  private focusedCellColOutOfVis() {
+    console.log('[fccoov]', this.focusedCell.col, this.visColMin, this.visColMax);
+    return this.focusedCell.col <= this.visColMin
+      ? this.focusedCell.col - this.visColMin - 1
+      : this.focusedCell.col >= this.visColMax - 1
+        ? this.focusedCell.col + 2 - this.visColMax
         : 0;
   }
 
-  private focusedCellOutOfVis(colDelta = 0, rowDelta = colDelta): { col: number; row: number } {
+  private focusedCellOutOfVis(): { col: number; row: number } {
     switch (this.focusedCell.plane) {
       case 'grid':
-        return { row: this.focusedCellRowOutOfVis(rowDelta), col: this.focusedCellColOutOfVis(colDelta) };
+        return { row: this.focusedCellRowOutOfVis(), col: this.focusedCellColOutOfVis() };
       case 'frozenRowsStart':
       case 'frozenRowsEnd':
-        return { col: this.focusedCellColOutOfVis(colDelta), row: 0 };
+        return { col: this.focusedCellColOutOfVis(), row: 0 };
       case 'frozenColsStart':
       case 'frozenColsEnd':
-        return { col: 0, row: this.focusedCellRowOutOfVis(rowDelta) };
+        return { col: 0, row: this.focusedCellRowOutOfVis() };
       default:
         return { col: 0, row: 0 };
     }
@@ -961,13 +962,6 @@ export class DxGrid extends LitElement {
     });
   }
 
-  private findPosInlineFromVisColMin(deltaCols: number) {
-    return [...Array(deltaCols)].reduce(
-      (acc, _, c0) => acc - this.colSize(this.visColMin - c0, 'grid') - gap,
-      this.binInlineMin + gap,
-    );
-  }
-
   private findPosBlockFromVisRowMin(deltaRows: number) {
     return [...Array(deltaRows)].reduce(
       (acc, _, r0) => acc - this.rowSize(this.visRowMin - r0, 'grid') - gap,
@@ -975,22 +969,34 @@ export class DxGrid extends LitElement {
     );
   }
 
+  private clampPosInline(nextPos: number) {
+    return Math.max(0, Math.min(this.intrinsicInlineSize - this.sizeInline, nextPos));
+  }
+
+  private clampPosBlock(nextPos: number) {
+    return Math.max(0, Math.min(this.intrinsicBlockSize - this.sizeBlock, nextPos));
+  }
+
   /**
    * Updates `pos` so that a cell in focus is fully within the viewport
    */
   snapPosToFocusedCell() {
-    const outOfVis = this.focusedCellOutOfVis(overscanCol, overscanRow);
+    const outOfVis = this.focusedCellOutOfVis();
+    console.log('[snap pos]', outOfVis);
     if (outOfVis.col < 0) {
-      this.posInline = this.findPosInlineFromVisColMin(-outOfVis.col);
+      // align viewport start edge with focused cell start edge
+      this.posInline = this.clampPosInline(
+        [...Array(this.focusedCell.col)].reduce((acc, _, c0) => {
+          return acc + this.colSize(c0, 'grid') + gap;
+        }, 0),
+      );
       this.updateVisInline();
     } else if (outOfVis.col > 0) {
-      const sizeSumCol = [...Array(this.focusedCell.col - this.visColMin)].reduce((acc, _, c0) => {
-        acc += this.colSize(this.visColMin + overscanCol + c0, 'grid') + gap;
-        return acc;
-      }, 0);
-      this.posInline = Math.max(
-        0,
-        Math.min(this.intrinsicInlineSize - this.sizeInline, this.binInlineMin + sizeSumCol - this.sizeInline),
+      // align viewport end edge with focused cell end edge
+      this.posInline = this.clampPosInline(
+        [...Array(this.focusedCell.col + 1)].reduce((acc, _, c0) => {
+          return acc + this.colSize(c0, 'grid') + gap;
+        }, -this.sizeInline),
       );
       this.updateVisInline();
     }
@@ -1205,7 +1211,7 @@ export class DxGrid extends LitElement {
   override render() {
     const visibleCols = this.visColMax - this.visColMin;
     const visibleRows = this.visRowMax - this.visRowMin;
-    const offsetInline = this.overscanInlineStart - this.posInline;
+    const offsetInline = this.overscanInlineStart - this.posInline + gap;
     const offsetBlock = this.binBlockMin - this.posBlock - this.overscanBlockStart;
     const selection = selectionProps(this.selectionStart, this.selectionEnd);
 
