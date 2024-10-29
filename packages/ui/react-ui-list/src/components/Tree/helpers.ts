@@ -9,7 +9,7 @@ import { type ItemType } from './types';
 export const DEFAULT_INDENTATION = 8;
 
 export const paddingIndendation = (level: number, indentation = DEFAULT_INDENTATION) => ({
-  paddingInlineStart: `${level > 1 ? (level - 2) * indentation : 0}px`,
+  paddingInlineStart: `${(level - 1) * indentation}px`,
 });
 
 export const getMode = (items: ItemType[], index: number): ItemMode => {
