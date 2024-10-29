@@ -5519,6 +5519,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugin-client
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../../plugin-graph
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
