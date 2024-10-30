@@ -11,7 +11,7 @@ export const AutomationPanel = () => {
 
   return (
     <div className='flex flex-col'>
-      <Toolbar.Root>
+      <Toolbar.Root classNames='p-2'>
         <Button onClick={handleCreate}>
           <Icon icon='ph--plus--regular' />
         </Button>
