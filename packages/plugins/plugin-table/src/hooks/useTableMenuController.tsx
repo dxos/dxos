@@ -10,6 +10,7 @@ type MenuState =
   | { type: 'column'; columnId: string }
   | { type: 'row'; rowIndex: number }
   | { type: 'newColumn' }
+  | { type: 'columnSettings'; columnId: string }
   | undefined;
 
 export const useTableMenuController = () => {
@@ -42,10 +43,17 @@ export const useTableMenuController = () => {
     }
   }, []);
 
+  const showColumnSettings = useCallback(() => {
+    if (state?.type === 'column') {
+      setTimeout(() => setState({ type: 'columnSettings', columnId: state.columnId }), 1);
+    }
+  }, [state]);
+
   return {
     state,
     triggerRef,
     handleClick,
     close: () => setState(undefined),
+    showColumnSettings,
   };
 };

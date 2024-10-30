@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { create } from '@dxos/echo-schema';
 import { DropdownMenu, useThemeContext } from '@dxos/react-ui';
 import { Field } from '@dxos/react-ui-data';
-import { type FieldType, FieldValueType, getUniqueProperty, type ViewType } from '@dxos/schema';
+import { createUniqueFieldForView, type FieldType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
@@ -18,13 +18,6 @@ type NewColumnFormProps = {
   onClose: () => void;
 };
 
-// TODO(ZaymonFC): A util in `@dxos/schema` should look at the view and the
-// schema and generate the new field. That's why I haven't moved this to ../../seed.
-export const createNewField = (view: ViewType): FieldType => {
-  const field: FieldType = { path: getUniqueProperty(view), type: FieldValueType.String };
-  return create(field);
-};
-
 export const NewColumnForm = ({ model, open, onClose: close }: NewColumnFormProps) => {
   const { tx } = useThemeContext();
   const [field, setField] = useState<FieldType | undefined>(undefined);
@@ -32,18 +25,18 @@ export const NewColumnForm = ({ model, open, onClose: close }: NewColumnFormProp
   useEffect(() => {
     if (open) {
       if (model?.table?.view) {
-        setField(createNewField(model.table.view));
+        setField(create(createUniqueFieldForView(model.table.view)));
       } else {
         close();
       }
     }
   }, [open, close, model]);
 
-  const onCreate = useCallback(() => {
+  const handleCreate = useCallback(() => {
     if (!field || !model || !model?.table?.view) {
       return;
     }
-    model.addColumn(field);
+    model.addColumn({ ...field });
     close();
   }, [model, field, close]);
 
@@ -51,13 +44,15 @@ export const NewColumnForm = ({ model, open, onClose: close }: NewColumnFormProp
     return null;
   }
 
+  // TODO(ZaymonFC): Translations.
+  // TODO(ZaymonFC): React-UI-Button.
   return (
     <DropdownMenu.Root open={open} onOpenChange={close}>
       <DropdownMenu.Content classNames='contents'>
         <ModalPrimitive.Content className={tx('menu.content', 'menu__content', {})}>
           <div role='none' className='flex flex-col align-end'>
             <Field field={field} />
-            <button className='ch-button mx-2 mb-2' onClick={onCreate}>
+            <button className='ch-button mx-2 mb-2' onClick={handleCreate}>
               Create
             </button>
           </div>

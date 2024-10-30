@@ -12,7 +12,7 @@ import { Filter, useSpaces, useQuery, create, getSpace } from '@dxos/react-clien
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-data';
-import { addFieldToView, FieldType, removeFieldFromView } from '@dxos/schema';
+import { addFieldToView, type FieldType, removeFieldFromView } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
@@ -68,11 +68,13 @@ const DefaultStory = () => {
           break;
         }
         case 'add-row': {
-          const lastSpace = spaces[spaces.length - 1];
-          if (table?.schema && lastSpace) {
-            lastSpace.db.add(create(table.schema, {}));
+          if (table) {
+            const space = getSpace(table);
+            if (table?.schema && space) {
+              space.db.add(create(table.schema, {}));
+            }
+            break;
           }
-          break;
         }
       }
     },
@@ -92,9 +94,9 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='grid grid-cols-[1fr_256px] h-dvh w-dvw'>
-      <div>
-        <div className='border-b border-separator'>
+    <div className='grid grid-cols-[1fr_256px] h-[100vh]'>
+      <div className='flex flex-col h-full'>
+        <div className='border-b border-separator flex-none'>
           <Toolbar.Root onAction={handleAction}>
             <Toolbar.Separator />
             <Toolbar.Actions />
@@ -104,8 +106,11 @@ const DefaultStory = () => {
           <Table model={model} />
         </div>
       </div>
-      <div className='border border-left border-separator -mt-px'>
-        {table.view && <ViewEditor view={table?.view} />}
+      <div className='border-l border-separator -mt-px flex flex-col h-full'>
+        <div className='flex-none'>{table.view && <ViewEditor view={table?.view} />}</div>
+        <div className='flex-1 min-h-0 overflow-auto'>
+          <pre className='text-[10px] pli-2 font-mono text-wrap'>{JSON.stringify(table, null, 2)}</pre>
+        </div>
       </div>
     </div>
   );

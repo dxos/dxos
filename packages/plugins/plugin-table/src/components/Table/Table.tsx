@@ -15,6 +15,7 @@ import { TableCellEditor } from './TableCellEditor';
 import { useTableMenuController } from '../../hooks';
 import { type TableModel } from '../../model';
 import { type GridCell } from '../../types';
+import { ColumnSettingsModal } from './ColumnSettingsModal';
 
 // NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
 // These are offset by 1px to avoid double borders in planks.
@@ -62,7 +63,7 @@ export const Table = ({ model }: TableProps) => {
     [model],
   );
 
-  const { state: menuState, triggerRef, handleClick, close } = useTableMenuController();
+  const { state: menuState, triggerRef, handleClick, close, showColumnSettings } = useTableMenuController();
 
   return (
     <ModalPrimitive.Root>
@@ -87,17 +88,24 @@ export const Table = ({ model }: TableProps) => {
       <ModalPrimitive.Anchor virtualRef={triggerRef} />
       <ColumnActionsMenu
         model={model}
-        columnId={menuState?.type === 'column' ? menuState.columnId : null}
+        columnId={menuState?.type === 'column' ? menuState.columnId : undefined}
         open={menuState?.type === 'column'}
         onOpenChange={close}
+        onShowColumnSettings={showColumnSettings}
       />
       <RowActionsMenu
         model={model}
-        rowIndex={menuState?.type === 'row' ? menuState.rowIndex : null}
+        rowIndex={menuState?.type === 'row' ? menuState.rowIndex : undefined}
         open={menuState?.type === 'row'}
         onOpenChange={close}
       />
       <NewColumnForm model={model} open={menuState?.type === 'newColumn'} onClose={close} />
+      <ColumnSettingsModal
+        model={model}
+        open={menuState?.type === 'columnSettings'}
+        columnId={menuState?.type === 'columnSettings' ? menuState.columnId : undefined}
+        onOpenChange={close}
+      />
     </ModalPrimitive.Root>
   );
 };

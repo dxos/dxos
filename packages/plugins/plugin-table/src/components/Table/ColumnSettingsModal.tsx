@@ -5,21 +5,25 @@
 import * as ModalPrimitive from '@radix-ui/react-popper';
 import React from 'react';
 
-import { DropdownMenu, type DropdownMenuRootProps, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, type DropdownMenuRootProps, useThemeContext } from '@dxos/react-ui';
+import { Field } from '@dxos/react-ui-data';
 
-import { TABLE_PLUGIN } from '../../meta';
 import { type TableModel } from '../../model';
 
-export type RowActionsMenuProps = {
+export type ColumnSettingsModalProps = {
   model?: TableModel;
-  rowIndex?: number;
+  columnId?: string;
 } & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
 
-export const RowActionsMenu = ({ model, rowIndex, open, onOpenChange }: RowActionsMenuProps) => {
+export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange }: ColumnSettingsModalProps) => {
   const { tx } = useThemeContext();
-  const { t } = useTranslation(TABLE_PLUGIN);
 
-  if (!model || rowIndex === undefined) {
+  const field = React.useMemo(
+    () => model?.table?.view?.fields.find((f) => f.path === columnId),
+    [model?.table?.view?.fields, columnId],
+  );
+
+  if (!field) {
     return null;
   }
 
@@ -27,7 +31,7 @@ export const RowActionsMenu = ({ model, rowIndex, open, onOpenChange }: RowActio
     <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.Content classNames='contents'>
         <ModalPrimitive.Content className={tx('menu.content', 'menu__content', {})}>
-          <DropdownMenu.Item onClick={() => model.deleteRow(rowIndex)}>{t('delete row label')}</DropdownMenu.Item>
+          <Field field={field} />
           <ModalPrimitive.Arrow className={tx('menu.arrow', 'menu__arrow', {})} />
         </ModalPrimitive.Content>
       </DropdownMenu.Content>

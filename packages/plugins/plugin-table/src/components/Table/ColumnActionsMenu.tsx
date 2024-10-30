@@ -5,23 +5,27 @@
 import * as ModalPrimitive from '@radix-ui/react-popper';
 import React from 'react';
 
-import { LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { DropdownMenu, type DropdownMenuRootProps, useThemeContext, useTranslation } from '@dxos/react-ui';
 
 import { TABLE_PLUGIN } from '../../meta';
 import { type TableModel } from '../../model';
-import { TableAction } from '../../types';
 
 export type ColumnActionsMenuProps = {
   model?: TableModel;
-  columnId: string | null;
+  columnId?: string;
+  onShowColumnSettings: () => void;
 } & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
 
 // TODO(burdon): Factor out; take from common component from sheet.
-export const ColumnActionsMenu = ({ model, columnId, open, onOpenChange }: ColumnActionsMenuProps) => {
+export const ColumnActionsMenu = ({
+  model,
+  columnId,
+  open,
+  onOpenChange,
+  onShowColumnSettings,
+}: ColumnActionsMenuProps) => {
   const { tx } = useThemeContext();
   const { t } = useTranslation(TABLE_PLUGIN);
-  const dispatch = useIntentDispatcher();
 
   if (!model || !columnId) {
     return null;
@@ -52,18 +56,7 @@ export const ColumnActionsMenu = ({ model, columnId, open, onOpenChange }: Colum
           <DropdownMenu.Item onClick={() => model.deleteColumn(columnId)}>
             {t('column action delete')}
           </DropdownMenu.Item>
-          <DropdownMenu.Item
-            onClick={() => {
-              // TODO(Zan): Implement inline field editor.
-              // Currently we'll just show the view editor in the c11y sidebar.
-              void dispatch({
-                action: LayoutAction.SET_LAYOUT,
-                data: { element: 'complementary', state: true },
-              });
-            }}
-          >
-            {t('column action settings')}
-          </DropdownMenu.Item>
+          <DropdownMenu.Item onClick={onShowColumnSettings}>{t('column action settings')}</DropdownMenu.Item>
           <ModalPrimitive.Arrow className={tx('menu.arrow', 'menu__arrow', {})} />
         </ModalPrimitive.Content>
       </DropdownMenu.Content>

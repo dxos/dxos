@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 
 import { S } from '@dxos/echo-schema';
-import { useSpace } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { Button, Icon, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { FieldSchema, FieldValueType, getUniqueProperty, type FieldType, type ViewType } from '@dxos/schema';
+import { FieldSchema, createUniqueFieldForView, type FieldType, type ViewType } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '../../translations';
@@ -27,11 +27,11 @@ export type ViewEditorProps = ThemedClassName<{
  */
 export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
-  const space = useSpace();
+  const space = getSpace(view);
   const [field, setField] = useState<FieldType | undefined>();
 
   const handleAdd = () => {
-    const field: FieldType = { path: getUniqueProperty(view), type: FieldValueType.String };
+    const field = createUniqueFieldForView(view);
     view.fields.push(field);
     setField(field);
   };
@@ -49,10 +49,6 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
   const handleMove = (fromIndex: number, toIndex: number) => {
     arrayMove(view.fields, fromIndex, toIndex);
   };
-
-  if (!space) {
-    return null;
-  }
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
@@ -78,7 +74,7 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
       </List.Root>
 
       {field && view.schema && (
-        <Field classNames='p-2' autoFocus field={field} schema={space.db.schema.getSchemaByTypename(view.schema)} />
+        <Field classNames='p-2' autoFocus field={field} schema={space?.db.schema.getSchemaByTypename(view.schema)} />
       )}
 
       {!readonly && (

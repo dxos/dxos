@@ -7,9 +7,10 @@ import React from 'react';
 import { type S } from '@dxos/effect';
 import { Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type FormatAnnotation, FieldValueType, type FieldType, FieldValueTypes } from '@dxos/schema';
+import { type FormatAnnotation, type FieldValueType, type FieldType, FieldValueTypes } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
+import { typeFeatures } from '../../util';
 import { TextInput } from '../TextInput';
 
 const PropertyFormat: FormatAnnotation = {
@@ -17,33 +18,14 @@ const PropertyFormat: FormatAnnotation = {
   valid: /^\w+$/,
 };
 
-const configSections = {
-  base: ['path', 'label', 'type'] as const,
-  numeric: ['digits'] as const,
-  ref: ['schema', 'property'] as const,
-} as const;
-
-type ConfigSection = keyof typeof configSections;
-
-// TODO(ZaymonFC): Should this move to the schema module?
-const typeFeatures: Partial<Record<FieldValueType, ConfigSection[]>> = {
-  [FieldValueType.Number]: ['numeric'],
-  [FieldValueType.Percent]: ['numeric'],
-  [FieldValueType.Currency]: ['numeric'],
-  [FieldValueType.Ref]: ['ref'],
-} as const;
-
-export type SchematicChangeType = 'path' | 'type' | 'digits' | 'ref';
-
 export type FieldProps<T = {}> = ThemedClassName<{
   field: FieldType;
   schema?: S.Schema<T>;
   autoFocus?: boolean;
   readonly?: boolean;
-  onSchematicChange?: (field: FieldType, changeType: SchematicChangeType) => void;
 }>;
 
-export const Field = <T = {},>({ classNames, field, autoFocus, readonly, onSchematicChange }: FieldProps<T>) => {
+export const Field = <T = {},>({ classNames, field, autoFocus, readonly }: FieldProps<T>) => {
   const { t } = useTranslation(translationKey);
   const features = React.useMemo(() => typeFeatures[field.type] ?? [], [field.type]);
 
@@ -60,7 +42,6 @@ export const Field = <T = {},>({ classNames, field, autoFocus, readonly, onSchem
             value={field.path ?? ''}
             onChange={(event) => {
               field.path = event.target.value;
-              onSchematicChange?.(field, 'path');
             }}
           />
         </Input.Root>
@@ -85,7 +66,6 @@ export const Field = <T = {},>({ classNames, field, autoFocus, readonly, onSchem
             value={field.type}
             onValueChange={(value) => {
               field.type = value as FieldValueType;
-              onSchematicChange?.(field, 'type');
             }}
           >
             <Select.TriggerButton classNames='is-full' placeholder='Type' />
@@ -114,7 +94,6 @@ export const Field = <T = {},>({ classNames, field, autoFocus, readonly, onSchem
               type='number'
               onChange={(event) => {
                 field.digits = parseInt(event.target.value, 10);
-                onSchematicChange?.(field, 'digits');
               }}
             />
           </Input.Root>
@@ -123,14 +102,14 @@ export const Field = <T = {},>({ classNames, field, autoFocus, readonly, onSchem
 
       {features.includes('ref') && (
         <>
-          {/* TODO(Zaymonad):  */}
+          {/* TODO(ZaymonFC): Implement. */}
           <div className='flex flex-col w-full gap-1'>
             <Input.Root>
               <Input.Label classNames='px-1'>{t('field ref schema label')}</Input.Label>
               <Input.TextInput disabled={readonly} value={''} />
             </Input.Root>
           </div>
-
+          {/* TODO(ZaymonFC): Implement. */}
           <div className='flex flex-col w-full gap-1'>
             <Input.Root>
               <Input.Label classNames='px-1'>{t('field ref property label')}</Input.Label>

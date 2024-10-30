@@ -96,3 +96,7 @@ export const getUniqueProperty = (view: ViewType) => {
     }
   }
 };
+
+export const createUniqueFieldForView = (view: ViewType): FieldType => {
+  return { path: getUniqueProperty(view), type: FieldValueType.String };
+};

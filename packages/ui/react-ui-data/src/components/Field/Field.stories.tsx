@@ -8,6 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
 import { create } from '@dxos/echo-schema';
+import { FieldSchema } from '@dxos/schema';
 import { TestSchema, type TestType, testView } from '@dxos/schema/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -23,7 +24,7 @@ const DefaultStory = (args: FieldProps<typeof Field<TestType>>) => (
 
 export const Default: StoryObj<typeof Field<TestType>> = {
   args: {
-    field: create(testView.fields[0]),
+    field: create(FieldSchema, testView.fields[0]),
     schema: TestSchema,
   },
 };
