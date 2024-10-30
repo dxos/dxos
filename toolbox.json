@@ -21,7 +21,19 @@
     ],
     "withCustomExports": [
       "@dxos/shell",
-      "@dxos/node-std"
+      "@dxos/node-std",
+      "@dxos/invariant",
+      "@dxos/log",
+      "@dxos/codec-protobuf",
+      "@dxos/context",
+      "@dxos/debug",
+      "@dxos/util",
+      "@dxos/async",
+      "@dxos/keys",
+      "@dxos/timeframe",
+      "@dxos/tracing",
+      "@dxos/lit-grid",
+      "@dxos/plate"
     ]
   },
   "tsconfig": {
