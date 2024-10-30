@@ -15,6 +15,7 @@ import type {
 import { type Expando } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-client';
 import { type PublicKey } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
 import { type Label } from '@dxos/react-ui';
 import { type ComplexMap } from '@dxos/util';
 
@@ -99,7 +100,8 @@ export interface TypedObjectSerializer<T extends Expando = Expando> {
 
   /**
    * @param params.content
+   * @param params.space Space to use for deserializing schema references.
    * @param params.newId Generate new ID for deserialized object.
    */
-  deserialize(params: { content: string; newId?: boolean }): Promise<T>;
+  deserialize(params: { content: string; space: Space; newId?: boolean }): Promise<T>;
 }

@@ -154,7 +154,7 @@ const getCollectionGraphNodePartials = ({
     },
     onCopy: async (child: Node<EchoReactiveObject<any>>, index?: number) => {
       // Create clone of child and add to destination space.
-      const newObject = await cloneObject(child.data, resolve);
+      const newObject = await cloneObject(child.data, resolve, space);
       space.db.add(newObject);
       if (typeof index !== 'undefined') {
         collection.objects.splice(index, 0, newObject);
@@ -596,12 +596,12 @@ export const getNestedObjects = async (
  * @deprecated Workaround for ECHO not supporting clone.
  */
 // TODO(burdon): Remove.
-export const cloneObject = async (object: Expando, resolve: MetadataResolver): Promise<Expando> => {
+export const cloneObject = async (object: Expando, resolve: MetadataResolver, newSpace: Space): Promise<Expando> => {
   const schema = getSchema(object);
   const typename = schema ? getObjectAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
   const metadata = resolve(typename);
   const serializer = metadata.serializer;
   invariant(serializer, `No serializer for type: ${typename}`);
   const content = await serializer.serialize({ object });
-  return serializer.deserialize({ content, newId: true });
+  return serializer.deserialize({ content, space: newSpace, newId: true });
 };
