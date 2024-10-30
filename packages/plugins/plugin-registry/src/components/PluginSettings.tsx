@@ -6,14 +6,14 @@ import React, { useMemo, type PropsWithChildren } from 'react';
 
 import { type PluginMeta, useIntentDispatcher, usePlugins } from '@dxos/app-framework';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
-import { SettingsValue } from '@dxos/plugin-settings';
 import { Input, useTranslation } from '@dxos/react-ui';
+import { FormInput } from '@dxos/react-ui-data';
 
 import { PluginList } from './PluginList';
 import { type RegistrySettingsProps } from '../RegistryPlugin';
 import { REGISTRY_PLUGIN } from '../meta';
 
-const sort = ({ name: a = '' }: PluginMeta, { name: b = '' }: PluginMeta) => a.localeCompare(b);
+const sortPluginMeta = ({ name: a = '' }: PluginMeta, { name: b = '' }: PluginMeta) => a.localeCompare(b);
 
 export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
@@ -27,12 +27,15 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
         .filter(({ meta }) => !core.includes(meta.id))
         .filter(({ meta }) => enabled.includes(meta.id))
         .map(({ meta }) => meta)
-        .sort(sort),
+        .sort(sortPluginMeta),
     [],
   );
 
   const pluginIds = plugins.map(({ meta }) => meta.id);
-  const available = useMemo(() => pluginContext.available.filter(({ id }) => !enabled.includes(id)).sort(sort), []);
+  const available = useMemo(
+    () => pluginContext.available.filter(({ id }) => !enabled.includes(id)).sort(sortPluginMeta),
+    [],
+  );
   const recommended = available.filter((meta) => !meta.tags?.includes('experimental'));
   const experimental = available.filter((meta) => meta.tags?.includes('experimental'));
 
@@ -53,13 +56,13 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
 
   return (
     <>
-      <SettingsValue label={t('settings show experimental label')}>
+      <FormInput label={t('settings show experimental label')}>
         <Input.Switch
           data-testid='pluginSettings.experimental'
           checked={settings.experimental}
           onCheckedChange={(checked) => (settings.experimental = !!checked)}
         />
-      </SettingsValue>
+      </FormInput>
 
       <Section label={t('settings section installed label')}>
         <PluginList

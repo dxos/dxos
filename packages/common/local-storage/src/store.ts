@@ -1,177 +1,196 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import { effect } from '@preact/signals-core';
 
-import { type UnsubscribeCallback } from '@dxos/async';
-import { type ReactiveObject, create } from '@dxos/echo-schema';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { AST, create, isReactiveObject, type ReactiveObject, type S } from '@dxos/echo-schema';
+import { getType, type Path } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import { getDeep, hyphenize, setDeep } from '@dxos/util';
 
-type PropType<T> = {
-  get: (key: string) => T | undefined;
-  set: (key: string, value: T | undefined) => void;
-};
+// TODO(burdon): Rename package to @dxos/settings-store?
 
-type PropParams = {
-  // TODO(burdon): Default to true.
-  allowUndefined?: boolean;
-};
+const cloneObject = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
 
 /**
- * Local storage backed store.
- * https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage
- * DevTools > Application > Local Storage
+ * Settings group.
  */
-export class LocalStorageStore<T extends object> {
-  static string(): PropType<string>;
-  static string(params: PropParams): PropType<string | undefined>;
-  static string(params?: PropParams) {
-    const prop: PropType<string | undefined> = {
-      get: (key) => {
-        const value = localStorage.getItem(key);
-        return value === null ? undefined : value;
-      },
-      set: (key, value) => {
-        if (value === undefined) {
-          localStorage.removeItem(key);
-        } else {
-          localStorage.setItem(key, value);
-        }
-      },
-    };
+export type SettingsValue = Record<string, any>;
 
-    return params?.allowUndefined ? (prop as PropType<string | undefined>) : (prop as PropType<string>);
+export type SettingsProps<T extends SettingsValue> = {
+  schema: S.Schema<T>;
+  prefix: string;
+  value?: ReactiveObject<T> | T;
+};
+
+export interface SettingsStoreFactory {
+  createStore<T extends SettingsValue>(props: SettingsProps<T>): SettingsStore<T>;
+}
+
+/**
+ * Root store.
+ */
+export class RootSettingsStore implements SettingsStoreFactory {
+  private readonly _stores = new Map<string, SettingsStore<any>>();
+
+  constructor(private readonly _storage: Storage = localStorage) {}
+
+  toJSON() {
+    return Array.from(this._stores).reduce<Record<string, object>>((acc, [prefix, store]) => {
+      acc[prefix] = store.value;
+      return acc;
+    }, {});
   }
 
-  static enum<U>(): PropType<U>;
-  static enum<U>(params: PropParams): PropType<U | undefined>;
-  static enum<U>(params?: PropParams) {
-    return params?.allowUndefined
-      ? (LocalStorageStore.string(params) as PropType<U | undefined>)
-      : (LocalStorageStore.string() as unknown as PropType<U>);
+  getStore<T extends SettingsValue>(prefix: string): SettingsStore<T> | undefined {
+    return this._stores.get(prefix);
   }
 
-  static number(): PropType<number>;
-  static number(params: PropParams): PropType<number | undefined>;
-  static number(params?: PropParams) {
-    const prop: PropType<number | undefined> = {
-      get: (key) => {
-        const value = parseInt(localStorage.getItem(key) ?? '');
-        return isNaN(value) ? undefined : value;
-      },
-      set: (key, value) => {
-        if (value === undefined) {
-          localStorage.removeItem(key);
-        } else {
-          localStorage.setItem(key, String(value));
-        }
-      },
-    };
-
-    return params?.allowUndefined ? (prop as PropType<number | undefined>) : (prop as PropType<number>);
+  createStore<T extends SettingsValue>({ schema, prefix, value }: SettingsProps<T>): SettingsStore<T> {
+    invariant(!this._stores.has(prefix));
+    const store = new SettingsStore<T>(schema, prefix, value, this._storage);
+    this._stores.set(prefix, store);
+    return store;
   }
 
-  static bool(): PropType<boolean>;
-  static bool(params: PropParams): PropType<boolean | undefined>;
-  static bool(params?: PropParams) {
-    const prop: PropType<boolean | undefined> = {
-      get: (key) => {
-        const value = localStorage.getItem(key);
-        return value === 'true' ? true : value === 'false' ? false : undefined;
-      },
-      set: (key, value) => {
-        if (value === undefined) {
-          localStorage.removeItem(key);
-        } else {
-          localStorage.setItem(key, String(value));
-        }
-      },
-    };
+  destroy() {
+    for (const store of this._stores.values()) {
+      store.close();
+    }
 
-    return params?.allowUndefined ? (prop as PropType<boolean | undefined>) : (prop as PropType<boolean>);
+    this._stores.clear();
   }
 
-  static json<U>(): PropType<U> {
-    return {
-      get: (key) => {
-        const value = localStorage.getItem(key);
-        return value ? JSON.parse(value) : undefined;
-      },
-      set: (key, value) => {
-        if (value === undefined) {
-          localStorage.removeItem(key);
-        } else {
-          localStorage.setItem(key, JSON.stringify(value));
-        }
-      },
-    };
+  reset() {
+    for (const store of this._stores.values()) {
+      store.reset();
+    }
   }
+}
 
-  private readonly _subscriptions = new Map<string, UnsubscribeCallback>();
-
-  private readonly _values: ReactiveObject<T>;
+/**
+ * Reactive key-value property store.
+ */
+export class SettingsStore<T extends SettingsValue> {
+  private readonly _value: ReactiveObject<T>;
+  private readonly _defaults: T;
+  private _unsubscribe?: () => void;
 
   constructor(
+    private readonly _schema: S.Schema<T>,
     private readonly _prefix: string,
-    defaults?: T,
+    value: ReactiveObject<T> | T = {} as T,
+    private readonly _storage: Storage = localStorage,
   ) {
-    registerSignalsRuntime();
-    this._values = create(defaults ?? ({} as T));
+    this._value = isReactiveObject(value) ? value : create(value);
+    this._defaults = cloneObject(this._value);
+    this.load();
   }
 
-  get values(): ReactiveObject<T> {
-    return this._values;
+  get value(): T {
+    return this._value;
   }
 
-  // TODO(burdon): Reset method (keep track of binders).
-
-  /**
-   * Binds signal property to local storage key.
-   */
-  prop<K extends keyof T>({
-    key,
-    storageKey: _storageKey,
-    type,
-  }: {
-    key: K;
-    storageKey?: string;
-    type: PropType<T[K]>;
-  }) {
-    const storageKey = this._prefix + '/' + (_storageKey ?? key).toString();
-    if (this._subscriptions.has(storageKey)) {
-      return this;
-    }
-
-    const current = type.get(storageKey);
-    if (current !== undefined) {
-      this._values[key] = current;
-    }
-
-    // The subscribe callback is always called.
-    this._subscriptions.set(
-      storageKey,
-      effect(() => {
-        const value = this._values[key];
-        const current = type.get(storageKey);
-        if (value !== current) {
-          type.set(storageKey, value);
-        }
-      }),
-    );
-
-    return this;
+  getKey(path: Path) {
+    return [this._prefix, ...path.map((p) => (typeof p === 'string' ? hyphenize(p) : String(p)))].join('/');
   }
 
-  /**
-   * Expunges all store-related items from local storage.
-   */
-  expunge() {
-    this._subscriptions.forEach((_, key) => localStorage.removeItem(key));
+  open() {
+    // TODO(burdon): Import from '@dxos/signals' (rename echo-signals).
+    this._unsubscribe = effect(() => {
+      this.save();
+    });
   }
 
   close() {
-    this._subscriptions.forEach((unsubscribe) => unsubscribe());
-    this._subscriptions.clear();
+    this._unsubscribe?.();
+    this._unsubscribe = undefined;
+  }
+
+  reset() {
+    this.close();
+
+    for (const prop of Object.keys(this._value)) {
+      const value = this._defaults[prop];
+      if (value !== undefined) {
+        setDeep(this._value, [prop], value);
+      } else {
+        delete this._value[prop];
+      }
+    }
+
+    this._storage.removeItem(this._prefix);
+    for (const key of Object.keys(this._storage)) {
+      if (key.startsWith(this._prefix)) {
+        this._storage.removeItem(key);
+      }
+    }
+
+    this.open();
+  }
+
+  load() {
+    this.close();
+
+    for (const prop of AST.getPropertySignatures(this._schema.ast)) {
+      const node = getType(prop.type)!;
+      const path = [prop.name.toString()];
+      const key = this.getKey(path);
+      const value = this._storage.getItem(key);
+      if (value != null) {
+        try {
+          if (AST.isStringKeyword(node)) {
+            setDeep(this.value, path, value);
+          } else if (AST.isNumberKeyword(node)) {
+            setDeep(this.value, path, parseInt(value));
+          } else if (AST.isBooleanKeyword(node)) {
+            setDeep(this.value, path, value === 'true');
+          } else if (AST.isEnums(node)) {
+            const v = node.enums.find(([_, b]) => String(b) === value);
+            if (v !== undefined) {
+              setDeep(this.value, path, v[1]);
+            }
+          } else if (AST.isTupleType(node)) {
+            setDeep(this.value, path, JSON.parse(value));
+          } else if (AST.isTypeLiteral(node)) {
+            setDeep(this.value, path, JSON.parse(value));
+            return false;
+          }
+        } catch (_err) {
+          log.warn(`invalid value: ${key}`);
+        }
+      }
+    }
+
+    this.open();
+  }
+
+  save() {
+    for (const prop of AST.getPropertySignatures(this._schema.ast)) {
+      const node = getType(prop.type)!;
+      const path = [prop.name.toString()];
+      const key = this.getKey(path);
+      const value = getDeep(this.value, path);
+      if (value == null) {
+        this._storage.removeItem(key);
+      } else {
+        if (AST.isStringKeyword(node)) {
+          this._storage.setItem(key, String(value));
+        } else if (AST.isNumberKeyword(node)) {
+          this._storage.setItem(key, String(value));
+        } else if (AST.isBooleanKeyword(node)) {
+          this._storage.setItem(key, String(value));
+        } else if (AST.isEnums(node)) {
+          this._storage.setItem(key, String(value));
+        } else if (AST.isTupleType(node)) {
+          this._storage.setItem(key, JSON.stringify(value));
+        } else if (AST.isTypeLiteral(node)) {
+          this._storage.setItem(key, JSON.stringify(value));
+          return false;
+        }
+      }
+    }
   }
 }

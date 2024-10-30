@@ -26,7 +26,7 @@ import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { SpaceAction } from '@dxos/plugin-space';
 import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
 import { create, type EchoReactiveObject, getTypename } from '@dxos/react-client/echo';
-import { getSpace, fullyQualifiedId, loadObjectReferences, parseFullyQualifiedId } from '@dxos/react-client/echo';
+import { getSpace, fullyQualifiedId, loadObjectReferences, parseId } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
 import {
@@ -117,10 +117,12 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
           const metadataResolver = resolvePlugin(plugins, parseMetadataResolverPlugin)?.provides.metadata.resolver;
-
           if (!client || !dispatch || !metadataResolver) {
             return [];
           }
+
+          const type = 'orphan-comments-for-subject';
+          const icon = 'ph--chat-text--regular';
 
           return [
             createExtension({
@@ -132,8 +134,25 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 }
 
                 const [subjectId] = id.split('~');
-                const [spaceId, objectId] = parseFullyQualifiedId(subjectId);
+                const { spaceId, objectId } = parseId(subjectId);
                 const space = client.spaces.get().find((space) => space.id === spaceId);
+                if (!objectId) {
+                  // TODO(wittjosiah): Support comments for arbitrary subjects.
+                  //   This is to ensure that the comments panel is not stuck on an old object.
+                  return {
+                    id,
+                    type,
+                    data: null,
+                    properties: {
+                      icon,
+                      label: ['unnamed object threads label', { ns: THREAD_PLUGIN }],
+                      showResolvedThreads: false,
+                      object: null,
+                      space,
+                    },
+                  };
+                }
+
                 const object = toSignal(
                   (onChange) => {
                     const timeout = setTimeout(async () => {
@@ -159,10 +178,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
                 return {
                   id,
-                  type: 'orphan-comments-for-subject',
+                  type,
                   data: null,
                   properties: {
-                    icon: 'ph--chat-text--regular',
+                    icon,
                     label,
                     showResolvedThreads: viewState.showResolvedThreads,
                     object,

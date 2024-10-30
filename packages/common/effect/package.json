@@ -26,7 +26,8 @@
   ],
   "dependencies": {
     "@dxos/invariant": "workspace:*",
-    "@dxos/node-std": "workspace:*"
+    "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@effect/schema": "^0.75.1",

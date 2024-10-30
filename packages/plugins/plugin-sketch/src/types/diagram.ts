@@ -26,4 +26,4 @@ export const isDiagramType = (object: any, schema: string): object is DiagramTyp
   object instanceof DiagramType && object.canvas?.schema === schema;
 
 export const createDiagramType = (schema: string, content: Record<string, any> = {}) =>
-  create(DiagramType, { canvas: create(CanvasType, { schema, content }) });
+  create(DiagramType, { canvas: create(CanvasType, { schema, content }), threads: [] });

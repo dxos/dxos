@@ -60,9 +60,10 @@ enum LogLevel {
   NONE = 0;
   TRACE = 5;
   DEBUG = 10;
-  INFO = 11;
-  WARN = 12;
-  ERROR = 13;
+  VERBOSE = 11;
+  INFO = 12;
+  WARN = 13;
+  ERROR = 14;
 }
 
 message QueryLogsRequest {

@@ -21,7 +21,7 @@ type IdentityMachineContext = {
 };
 
 type IdentityChooseActionEvent = {
-  type: 'chooseResetStorage' | 'chooseJoinNewIdentity' | 'unchooseAction';
+  type: 'chooseResetStorage' | 'chooseRecoverIdentity' | 'chooseJoinNewIdentity' | 'unchooseAction';
 };
 
 type IdentitySelectDeviceInvitationEvent = {
@@ -67,6 +67,7 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
       choosingAction: {},
       managingDeviceInvitation: {},
       confirmingResetStorage: {},
+      confirmingRecover: {},
       confirmingJoinNewIdentity: {},
     },
     on: {
@@ -74,6 +75,7 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
       deselectInvitation: { target: '.choosingAction', actions: ['unsetInvitation', 'log'] },
       selectInvitation: { target: '.managingDeviceInvitation', actions: ['setInvitation', 'log'] },
       chooseJoinNewIdentity: { target: '.confirmingJoinNewIdentity', actions: 'log' },
+      chooseRecoverIdentity: { target: '.confirmingRecover', actions: 'log' },
       chooseResetStorage: { target: '.confirmingResetStorage', actions: 'log' },
     },
   },

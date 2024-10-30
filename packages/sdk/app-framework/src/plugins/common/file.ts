@@ -4,7 +4,7 @@
 
 import { type Space } from '@dxos/client-protocol';
 
-import { type Plugin } from '../PluginHost';
+import { type Plugin } from '../plugin-host';
 
 // TODO(burdon): See Accept attribute (uses MIME types).
 // E.g., 'image/*': ['.jpg', '.jpeg', '.png', '.gif'],

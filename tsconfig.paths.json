@@ -5,14 +5,14 @@
       "@dxos/devtools": [
         "packages/devtools/devtools/src/index.ts"
       ],
-      "@dxos/plugin-chain": [
-        "packages/plugins/experimental/plugin-chain/src/index.ts"
+      "@dxos/plugin-automation": [
+        "packages/plugins/experimental/plugin-automation/src/index.ts"
       ],
-      "@dxos/plugin-chain/meta": [
-        "packages/plugins/experimental/plugin-chain/src/meta.ts"
+      "@dxos/plugin-automation/meta": [
+        "packages/plugins/experimental/plugin-automation/src/meta.ts"
       ],
-      "@dxos/plugin-chain/types": [
-        "packages/plugins/experimental/plugin-chain/src/types/index.ts"
+      "@dxos/plugin-automation/types": [
+        "packages/plugins/experimental/plugin-automation/src/types/index.ts"
       ],
       "@dxos/plugin-excalidraw": [
         "packages/plugins/experimental/plugin-excalidraw/src/index.ts"
@@ -28,12 +28,6 @@
       ],
       "@dxos/plugin-explorer/types": [
         "packages/plugins/experimental/plugin-explorer/src/types/index.ts"
-      ],
-      "@dxos/plugin-function": [
-        "packages/plugins/experimental/plugin-function/src/index.ts"
-      ],
-      "@dxos/plugin-function/meta": [
-        "packages/plugins/experimental/plugin-function/src/meta.ts"
       ],
       "@dxos/plugin-github": [
         "packages/plugins/experimental/plugin-github/src/index.ts"
@@ -125,6 +119,15 @@
       "@dxos/plugin-template/meta": [
         "packages/plugins/experimental/plugin-template/src/meta.ts"
       ],
+      "@dxos/plugin-wnfs": [
+        "packages/plugins/experimental/plugin-wnfs/src/index.ts"
+      ],
+      "@dxos/plugin-wnfs/meta": [
+        "packages/plugins/experimental/plugin-wnfs/src/meta.tsx"
+      ],
+      "@dxos/plugin-wnfs/types": [
+        "packages/plugins/experimental/plugin-wnfs/src/types/index.ts"
+      ],
       "@dxos/plugin-attention": [
         "packages/plugins/plugin-attention/src/index.ts"
       ],
@@ -172,6 +175,12 @@
       ],
       "@dxos/plugin-help/meta": [
         "packages/plugins/plugin-help/src/meta.ts"
+      ],
+      "@dxos/plugin-manager": [
+        "packages/plugins/plugin-manager/src/index.ts"
+      ],
+      "@dxos/plugin-manager/meta": [
+        "packages/plugins/plugin-manager/src/meta.ts"
       ],
       "@dxos/plugin-markdown": [
         "packages/plugins/plugin-markdown/src/index.ts"
@@ -223,12 +232,6 @@
       ],
       "@dxos/plugin-registry/meta": [
         "packages/plugins/plugin-registry/src/meta.ts"
-      ],
-      "@dxos/plugin-settings": [
-        "packages/plugins/plugin-settings/src/index.ts"
-      ],
-      "@dxos/plugin-settings/meta": [
-        "packages/plugins/plugin-settings/src/meta.ts"
       ],
       "@dxos/plugin-sheet": [
         "packages/plugins/plugin-sheet/src/index.ts"
@@ -329,6 +332,9 @@
       "@dxos/react-ui-attention": [
         "packages/ui/react-ui-attention/src/index.ts"
       ],
+      "@dxos/react-ui-attention/testing": [
+        "packages/ui/react-ui-attention/src/testing/index.ts"
+      ],
       "@dxos/react-ui-card": [
         "packages/ui/react-ui-card/src/index.ts"
       ],
@@ -341,9 +347,6 @@
       "@dxos/react-ui-editor": [
         "packages/ui/react-ui-editor/src/index.ts"
       ],
-      "@dxos/react-ui-editor/state": [
-        "packages/ui/react-ui-editor/src/state/index.ts"
-      ],
       "@dxos/react-ui-grid": [
         "packages/ui/react-ui-grid/src/index.ts"
       ],
@@ -352,9 +355,6 @@
       ],
       "@dxos/react-ui-mosaic": [
         "packages/ui/react-ui-mosaic/src/index.ts"
-      ],
-      "@dxos/react-ui-navtree": [
-        "packages/ui/react-ui-navtree/src/index.ts"
       ],
       "@dxos/react-ui-searchlist": [
         "packages/ui/react-ui-searchlist/src/index.ts"

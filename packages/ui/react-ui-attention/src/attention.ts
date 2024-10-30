@@ -17,19 +17,23 @@ export const AttentionSchema = S.mutable(
 
 export type Attention = S.Schema.Type<typeof AttentionSchema>;
 
+// TODO(wittjosiah): Use mosaic path utility?
 const stringKey = (key: string[]) => key.join(',');
 
 /**
  * Manages attention state for an application.
  */
+// TODO(wittjosiah): Write unit tests.
 export class AttentionManager {
   // Each attention path is associated with an attention object.
   // The lookup is not a reactive object to ensure that attention for each path is subscribable independently.
   private readonly _map = new ComplexMap<string[], ReactiveObject<Attention>>(stringKey);
-  private readonly _state: ReactiveObject<{ current: string[] }>;
+  private readonly _state = create<{ current: string[] }>({ current: [] });
 
   constructor(initial: string[] = []) {
-    this._state = create({ current: initial });
+    if (initial.length > 0) {
+      this.update(initial);
+    }
   }
 
   /**
@@ -43,7 +47,7 @@ export class AttentionManager {
    * All attention paths.
    */
   keys() {
-    return this._map.keys();
+    return Array.from(this._map.keys());
   }
 
   /**
@@ -67,6 +71,9 @@ export class AttentionManager {
     const currentKey = untracked(() => this.current);
     const currentRelatedTo = currentKey[0];
     const nextRelatedTo = nextKey[0];
+
+    // Ensure related attention object is initialized.
+    this.get([nextRelatedTo]);
 
     const currentRelatedKeys = this.keys().filter((key) => key[0] === currentRelatedTo);
     const nextRelatedKeys = this.keys().filter(

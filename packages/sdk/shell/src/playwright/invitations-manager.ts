@@ -32,7 +32,7 @@ export class InvitationsManager extends ScopedShellManager {
     }
 
     const { page } = await setupPage(this._browser, {
-      url: storybookUrl('invitations--default'),
+      url: storybookUrl('sdk-shell-invitations--default'),
     });
 
     this.page = page;
@@ -144,7 +144,8 @@ export class InvitationsManager extends ScopedShellManager {
       },
       { id, type, options },
     );
-    return this._invitationCode.wait();
+
+    return this._invitationCode.wait({ timeout: 1_000 });
   }
 
   async acceptInvitation(id: number, type: 'device' | 'space', invitation: string) {

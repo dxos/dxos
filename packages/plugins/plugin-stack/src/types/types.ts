@@ -15,7 +15,7 @@ import type {
 import { type SchemaProvides } from '@dxos/plugin-client';
 
 // TODO(wittjosiah): Creators/choosers likely aren't stack-specific.
-//   Also distinct from graph actions though, output should be inserted into current view rather than navigated to.
+//  Also distinct from graph actions though, output should be inserted into current view rather than navigated to.
 type StackSectionAction = {
   id: string;
   testId: string;

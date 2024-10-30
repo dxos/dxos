@@ -19,6 +19,7 @@ type LogFunction = (message: string, context?: LogContext, meta?: CallMetadata) 
 export interface LogMethods {
   trace: LogFunction;
   debug: LogFunction;
+  verbose: LogFunction;
   info: LogFunction;
   warn: LogFunction;
   error: LogFunction;
@@ -66,6 +67,7 @@ const createLog = (): LogImp => {
 
   log.trace = (...params) => processLog(LogLevel.TRACE, ...params);
   log.debug = (...params) => processLog(LogLevel.DEBUG, ...params);
+  log.verbose = (...params) => processLog(LogLevel.VERBOSE, ...params);
   log.info = (...params) => processLog(LogLevel.INFO, ...params);
   log.warn = (...params) => processLog(LogLevel.WARN, ...params);
   log.error = (...params) => processLog(LogLevel.ERROR, ...params);

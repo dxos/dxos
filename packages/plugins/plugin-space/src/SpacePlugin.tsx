@@ -47,7 +47,7 @@ import {
   isEchoObject,
   isSpace,
   loadObjectReferences,
-  parseFullyQualifiedId,
+  parseId,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { ClipboardProvider, InvitationManager, type InvitationManagerProps, osTranslations } from '@dxos/shell/react';
@@ -68,6 +68,7 @@ import {
   SmallPresenceLive,
   SpacePresence,
   SpaceSettings,
+  SpaceSettingsPanel,
   SyncStatus,
 } from './components';
 import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
@@ -128,6 +129,7 @@ export const SpacePlugin = ({
     awaiting: undefined,
     spaceNames: {},
     viewersByObject: {},
+    // TODO(wittjosiah): Stop using (Complex)Map inside reactive object.
     viewersByIdentity: new ComplexMap(PublicKey.hash),
     sdkMigrationRunning: {},
   });
@@ -284,17 +286,8 @@ export const SpacePlugin = ({
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop({
-        key: 'showHidden',
-        storageKey: 'show-hidden',
-        type: LocalStorageStore.bool({ allowUndefined: true }),
-      });
-
-      state.prop({
-        key: 'spaceNames',
-        storageKey: 'space-names',
-        type: LocalStorageStore.json<Record<string, string>>(),
-      });
+      settings.prop({ key: 'showHidden', type: LocalStorageStore.bool({ allowUndefined: true }) });
+      state.prop({ key: 'spaceNames', type: LocalStorageStore.json<Record<string, string>>() });
 
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
@@ -375,12 +368,19 @@ export const SpacePlugin = ({
                   {...rest}
                 />
               ) : primary instanceof CollectionType ? (
-                { node: <CollectionMain collection={primary} />, disposition: 'fallback' }
+                {
+                  node: <CollectionMain collection={primary} />,
+                  disposition: 'fallback',
+                }
               ) : typeof primary === 'string' && primary.length === OBJECT_ID_LENGTH ? (
                 <MissingObject id={primary} />
               ) : null;
             case 'complementary--settings':
-              return isEchoObject(data.subject) ? <DefaultObjectSettings object={data.subject} /> : null;
+              return isSpace(data.subject) ? (
+                <SpaceSettingsPanel space={data.subject} />
+              ) : isEchoObject(data.subject) ? (
+                { node: <DefaultObjectSettings object={data.subject} />, disposition: 'fallback' }
+              ) : null;
             case 'dialog':
               if (data.component === 'dxos.org/plugin/space/InvitationManagerDialog') {
                 return (
@@ -390,9 +390,8 @@ export const SpacePlugin = ({
                     </ClipboardProvider>
                   </Dialog.Content>
                 );
-              } else {
-                return null;
               }
+              return null;
             case 'popover':
               if (data.component === 'dxos.org/plugin/space/RenameSpacePopover' && isSpace(data.subject)) {
                 return <PopoverRenameSpace space={data.subject} />;
@@ -404,9 +403,12 @@ export const SpacePlugin = ({
             // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
-                <SmallPresenceLive viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]} />
+                <SmallPresenceLive
+                  id={data.id as string}
+                  viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]}
+                />
               ) : (
-                <SmallPresence count={0} />
+                <SmallPresence id={data.id as string} count={0} />
               );
             }
             case 'navbar-start': {
@@ -423,6 +425,7 @@ export const SpacePlugin = ({
                   ? (space?.properties[CollectionType.typename] as CollectionType)
                   : undefined
                 : data.object;
+
               return space && object
                 ? {
                     node: (
@@ -440,10 +443,10 @@ export const SpacePlugin = ({
             case 'settings':
               return data.plugin === meta.id ? <SpaceSettings settings={settings.values} /> : null;
             case 'menu-footer':
-              if (!isEchoObject(data.object)) {
-                return null;
-              } else {
+              if (isEchoObject(data.object)) {
                 return <MenuFooter object={data.object} />;
+              } else {
+                return null;
               }
             case 'status': {
               return (
@@ -468,8 +471,7 @@ export const SpacePlugin = ({
           const dispatch = intentPlugin?.provides.intent.dispatch;
           const resolve = metadataPlugin?.provides.metadata.resolver;
           const graph = graphPlugin?.provides.graph;
-
-          if (!graph || !dispatch || !resolve || !client) {
+          if (!client || !dispatch || !resolve || !graph) {
             return [];
           }
 
@@ -503,7 +505,6 @@ export const SpacePlugin = ({
                     type: SPACES,
                     properties: {
                       label: ['spaces label', { ns: SPACE_PLUGIN }],
-                      palette: 'teal',
                       testId: 'spacePlugin.spaces',
                       role: 'branch',
                       childrenPersistenceClass: 'echo',
@@ -553,7 +554,7 @@ export const SpacePlugin = ({
                   properties: {
                     label: ['create space label', { ns: SPACE_PLUGIN }],
                     icon: 'ph--plus--regular',
-                    disposition: 'toolbar',
+                    disposition: 'item',
                     testId: 'spacePlugin.createSpace',
                   },
                 },
@@ -573,6 +574,7 @@ export const SpacePlugin = ({
                   properties: {
                     label: ['join space label', { ns: SPACE_PLUGIN }],
                     icon: 'ph--sign-in--regular',
+                    disposition: 'item',
                     testId: 'spacePlugin.joinSpace',
                   },
                 },
@@ -727,9 +729,33 @@ export const SpacePlugin = ({
                   return;
                 }
 
+                const type = 'orphan-settings-for-subject';
+                const icon = 'ph--gear--regular';
+
                 const [subjectId] = id.split('~');
-                const [spaceId, objectId] = parseFullyQualifiedId(subjectId);
+                const { spaceId, objectId } = parseId(subjectId);
                 const space = client.spaces.get().find((space) => space.id === spaceId);
+                if (!objectId) {
+                  const label = space
+                    ? space.properties.name || ['unnamed space label', { ns: SPACE_PLUGIN }]
+                    : ['unnamed object settings label', { ns: SPACE_PLUGIN }];
+
+                  // TODO(wittjosiah): Support comments for arbitrary subjects.
+                  //   This is to ensure that the comments panel is not stuck on an old object.
+                  return {
+                    id,
+                    type,
+                    data: null,
+                    properties: {
+                      icon,
+                      label,
+                      showResolvedThreads: false,
+                      object: null,
+                      space,
+                    },
+                  };
+                }
+
                 const object = toSignal(
                   (onChange) => {
                     const timeout = setTimeout(async () => {
@@ -753,10 +779,10 @@ export const SpacePlugin = ({
 
                 return {
                   id,
-                  type: 'orphan-settings-for-subject',
+                  type,
                   data: null,
                   properties: {
-                    icon: 'ph--gear--regular',
+                    icon,
                     label,
                     object,
                   },

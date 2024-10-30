@@ -153,4 +153,6 @@ export const os = {
   'agent requested description':
     'The agent service is creating an agent for you. Once the agent connects, it will display in the devices list.',
   'authenticating label': 'Authenticating…',
+  'create recovery code label': 'Create recovery code',
+  'choose recover identity label': 'Recover identity',
 };

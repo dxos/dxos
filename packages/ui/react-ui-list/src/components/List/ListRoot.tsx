@@ -4,16 +4,18 @@
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
+import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
 import { createContext } from '@radix-ui/react-context';
 import React, { type ReactNode, useEffect, useState } from 'react';
 
-import { type ThemedClassName, useControlledValue } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 
-import { type ListItemRecord, idle, type ItemState } from './ListItem';
+import { idle, type ItemState, type ListItemRecord } from './ListItem';
 
 type ListContext<T extends ListItemRecord> = {
   isItem: (item: any) => boolean;
+  isEqual?: (item1: T, item2: T) => boolean;
+  getId?: (item: T) => string; // TODO(burdon): Require if T doesn't conform to type.
   dragPreview?: boolean;
   state: ItemState & { item?: T };
   setState: (state: ItemState & { item?: T }) => void;
@@ -31,21 +33,26 @@ export type ListRendererProps<T extends ListItemRecord> = {
 export type ListRootProps<T extends ListItemRecord> = ThemedClassName<{
   children?: (props: ListRendererProps<T>) => ReactNode;
   items?: T[];
-  onMove?: (source: T, index: number) => void;
+  onMove?: (fromIndex: number, toIndex: number) => void;
 }> &
-  Pick<ListContext<T>, 'isItem' | 'dragPreview'>;
+  Pick<ListContext<T>, 'isItem' | 'isEqual' | 'getId' | 'dragPreview'>;
 
 export const ListRoot = <T extends ListItemRecord>({
   classNames,
   children,
-  items: _items = [],
+  items,
   isItem,
+  isEqual = (a, b) => (getId ? getId(a) === getId(b) : a === b),
+  getId,
   onMove,
   ...props
 }: ListRootProps<T>) => {
-  const [items, setItems] = useControlledValue<T[]>(_items);
   const [state, setState] = useState<ListContext<T>['state']>(idle);
   useEffect(() => {
+    if (!items) {
+      return;
+    }
+
     return monitorForElements({
       canMonitor: ({ source }) => isItem(source.data),
       onDrop: ({ location, source }) => {
@@ -60,27 +67,24 @@ export const ListRoot = <T extends ListItemRecord>({
           return;
         }
 
-        const sourceIdx = items.findIndex((item) => item.id === sourceData.id);
-        const targetIdx = items.findIndex((item) => item.id === targetData.id);
+        const sourceIdx = items.findIndex((item) => isEqual(item, sourceData as T));
+        const targetIdx = items.findIndex((item) => isEqual(item, targetData as T));
         if (targetIdx < 0 || sourceIdx < 0) {
           return;
         }
-
         const closestEdgeOfTarget = extractClosestEdge(targetData);
-        setItems(
-          reorderWithEdge({
-            list: items,
-            startIndex: sourceIdx,
-            indexOfTarget: targetIdx,
-            axis: 'vertical',
-            closestEdgeOfTarget,
-          }),
-        );
-
-        onMove?.(sourceData as T, targetIdx);
+        const destinationIndex = getReorderDestinationIndex({
+          closestEdgeOfTarget,
+          startIndex: sourceIdx,
+          indexOfTarget: targetIdx,
+          axis: 'vertical',
+        });
+        onMove?.(sourceIdx, destinationIndex);
       },
     });
   }, [items]);
 
-  return <ListProvider {...{ isItem, state, setState, ...props }}>{children?.({ state, items })}</ListProvider>;
+  return (
+    <ListProvider {...{ isItem, state, setState, ...props }}>{children?.({ state, items: items ?? [] })}</ListProvider>
+  );
 };

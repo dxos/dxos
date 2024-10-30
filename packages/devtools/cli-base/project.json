@@ -16,22 +16,12 @@
         "script": "bin"
       }
     },
-    "build": {
-      "dependsOn": [
-        "compile"
-      ],
-      "executor": "nx:noop"
-    },
+    "build": {},
     "compile": {
-      "cache": true,
-      "dependsOn": [
-        "^build"
-      ],
-      "executor": "@nx/js:tsc",
       "options": {
-        "main": "{projectRoot}/src/index.ts",
-        "outputPath": "{projectRoot}/dist",
-        "tsConfig": "{projectRoot}/tsconfig.json"
+        "entryPoints": [
+          "{projectRoot}/src/index.ts"
+        ]
       }
     },
     "lint": {}

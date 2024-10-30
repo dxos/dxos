@@ -312,6 +312,11 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
             target: '#join.choosingIdentity.acceptingHaloInvitation',
             actions: 'log',
           },
+          {
+            cond: 'initiallyRecoveringIdentity',
+            target: '#join.choosingIdentity.recoveringIdentity',
+            actions: 'log',
+          },
           { cond: 'noSelectedIdentity', target: 'choosingIdentity', actions: 'log' },
           { target: 'acceptingSpaceInvitation', actions: 'log' },
         ],
@@ -364,6 +369,8 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
       noSelectedIdentity: ({ identity }, _event) => !identity,
       initiallyAcceptingHaloInvitation: ({ identity, initialDisposition }, _event) =>
         !identity && initialDisposition === 'accept-halo-invitation',
+      initiallyRecoveringIdentity: ({ identity, initialDisposition }, _event) =>
+        !identity && initialDisposition === 'recover-identity',
       hasHaloUnredeemedCode: ({ halo }, _event) => !!halo.unredeemedCode,
       noSpaceInvitation: ({ space }, _event) => !space.invitation && !space.unredeemedCode,
     },

@@ -37,7 +37,7 @@ const noOpProps: IdentityPanelImplProps = {
 };
 
 export default {
-  title: 'sdk/react-shell/IdentityPanel',
+  title: 'sdk/shell/IdentityPanel',
   decorators: [withTheme],
   parameters: {
     translations: [osTranslations],

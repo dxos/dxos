@@ -10,6 +10,7 @@ import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
+import { translations as dataTranslations } from '@dxos/react-ui-data';
 
 import { TableContainer, TableViewEditor } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
@@ -36,7 +37,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           },
         },
       },
-      translations,
+      translations: [...translations, ...dataTranslations],
       echo: {
         schema: [TableType],
       },
@@ -97,11 +98,13 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             case 'article':
               return isTable(data.object) ? <TableContainer role={role} table={data.object} /> : null;
             case 'complementary--settings': {
-              if (!(data.subject instanceof TableType) || !data.subject.view) {
-                return null;
+              if (data.subject instanceof TableType && data.subject.view) {
+                return {
+                  node: <TableViewEditor view={data.subject.view} />,
+                };
               }
 
-              return <TableViewEditor view={data.subject.view} />;
+              return null;
             }
             default:
               return null;
@@ -128,7 +131,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           switch (intent.action) {
             case TableAction.CREATE: {
               return {
-                data: create(TableType, { name: '' }),
+                data: create(TableType, { name: '', threads: [] }),
               };
             }
           }

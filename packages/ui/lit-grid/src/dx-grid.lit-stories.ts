@@ -5,6 +5,8 @@
 import './dx-grid.ts';
 import './dx-grid.pcss';
 
+import './dx-grid-multiselect-cell.ts';
+
 import { html, nothing } from 'lit';
 
 import { type DxGridFrozenPlane, type DxGridPlaneCells, type DxGridProps } from './types';
@@ -48,6 +50,10 @@ Basic.args = {
         // end: '8,1',
         value: 'Weekly sales report',
       },
+      '2,2': {
+        value: '',
+        accessoryHtml: '<dx-grid-multiselect-cell values=\'[{"label": "Peaches"}]\'></dx-grid-multiselect-cell>',
+      },
     },
     ...initialLabels,
   } satisfies DxGridProps['initialCells']),
@@ -73,11 +79,16 @@ Basic.args = {
   } satisfies DxGridProps['rowDefault']),
   columns: JSON.stringify({
     grid: {
-      0: { size: 200 },
-      1: { size: 210 },
-      2: { size: 230 },
-      3: { size: 250 },
-      4: { size: 270 },
+      0: { size: 64 },
+      1: { size: 512 },
+      2: { size: 64 },
+      3: { size: 512 },
+      4: { size: 64 },
+      5: { size: 512 },
+      6: { size: 64 },
+      7: { size: 512 },
+      8: { size: 64 },
+      9: { size: 512 },
     },
   } satisfies DxGridProps['columns']),
   frozen: JSON.stringify({

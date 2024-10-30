@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import type { EchoReactiveObject } from '@dxos/client/echo';
+import { type EchoReactiveObject } from '@dxos/client/echo';
 import { failUndefined } from '@dxos/debug';
 import { useClient } from '@dxos/react-client';
 import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';

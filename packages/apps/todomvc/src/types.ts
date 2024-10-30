@@ -5,12 +5,12 @@
 import { ref, S, TypedObject } from '@dxos/echo-schema';
 import { type Space, create } from '@dxos/react-client/echo';
 
-export class TodoType extends TypedObject({ typename: 'dxos.app.todomvc.Todo', version: '0.1.0' })({
+export class TodoType extends TypedObject({ typename: 'dxos.org/type/Todo', version: '0.1.0' })({
   title: S.String,
   completed: S.Boolean,
 }) {}
 
-export class TodoListType extends TypedObject({ typename: 'dxos.app.todomvc.TodoList', version: '0.1.0' })({
+export class TodoListType extends TypedObject({ typename: 'dxos.org/type/TodoList', version: '0.1.0' })({
   todos: S.mutable(S.Array(ref(TodoType))),
 }) {}
 

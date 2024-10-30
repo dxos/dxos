@@ -10,19 +10,24 @@ const GLOBALS = ['global', 'Buffer', 'process'];
 /**
  * Rewrite `node:` imports to `@dxos/node-std` package and mark them as external.
  */
-export const NodeExternalPlugin = ({ injectGlobals = false, nodeStd = false } = {}): Plugin => ({
+export const NodeExternalPlugin = ({ injectGlobals = false, importGlobals = false, nodeStd = false } = {}): Plugin => ({
   name: 'node-external',
   setup: ({ initialOptions, onResolve, onLoad }) => {
     if (initialOptions.platform === 'node') {
       return;
     }
 
-    if (injectGlobals) {
+    if (importGlobals && injectGlobals) {
       if (!nodeStd) {
         throw new Error('Missing @dxos/node-std dependency.');
       }
+    }
 
+    if (importGlobals) {
       initialOptions.inject = ['@inject-globals'];
+    }
+
+    if (injectGlobals) {
       initialOptions.banner ||= {};
       initialOptions.banner.js = 'import "@dxos/node-std/globals";';
     }

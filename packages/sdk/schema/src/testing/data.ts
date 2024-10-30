@@ -11,6 +11,7 @@ import { EmailFormat, FormatAnnotationId, FieldValueType, type ViewType } from '
 //
 
 export const TestSchema = S.Struct({
+  id: S.String, // TODO(burdon): ID annotation.
   name: S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Full name.' })),
   email: S.String.pipe(S.annotations({ [FormatAnnotationId]: EmailFormat })),
   address: S.optional(
@@ -39,6 +40,7 @@ export type TestType = S.Schema.Type<typeof TestSchema>;
 //
 
 export const testData: TestType = {
+  id: createObjectId(),
   name: 'Tester',
   email: 'test@example.com',
   address: {
@@ -76,8 +78,6 @@ const fields = [
 ];
 
 export const testView: ViewType = {
-  query: {
-    schema: 'example.com/schema/TestSchema',
-  },
+  schema: 'example.com/schema/TestSchema',
   fields,
 };
