@@ -15,11 +15,11 @@ import {
   type GridContentProps,
 } from '@dxos/react-ui-grid';
 
+import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
 import { DEFAULT_COLUMNS, DEFAULT_ROWS, rangeToA1Notation, type CellRange } from '../../defs';
 import { rangeExtension, sheetExtension, type CellRangeNotifier } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
 import { useSheetContext } from '../SheetContext';
-import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
 
 const initialCells = {
   grid: {},
@@ -163,6 +163,7 @@ export const GridSheet = () => {
         onInit: (fn) => (rangeController.current = fn),
         onStateChange: (state) => {
           // TODO(burdon): Update grid.
+          console.log('::::', state);
         },
       }),
     ],

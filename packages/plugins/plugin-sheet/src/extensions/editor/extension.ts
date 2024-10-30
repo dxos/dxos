@@ -214,11 +214,6 @@ export const rangeExtension = ({ onInit, onStateChange }: RangeExtensionOptions)
   let view: EditorView;
   let activeRange: Range | undefined;
 
-  const onRangeChange = (range: Range | undefined) => {
-    activeRange = range;
-    onStateChange?.({ activeRange });
-  };
-
   // Called externally to provide current range.
   const notifier: RangeController = {
     setRange: (range: string) => {
@@ -278,6 +273,8 @@ export const rangeExtension = ({ onInit, onStateChange }: RangeExtensionOptions)
         if (!activeRange && view.state.doc.toString()[0] === '=') {
           activeRange = { from: 1, to: view.state.doc.toString().length };
         }
+
+        onStateChange?.({ activeRange });
       }
     },
   );
