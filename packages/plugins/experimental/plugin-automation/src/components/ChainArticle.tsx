@@ -4,8 +4,8 @@
 
 import React, { type FC } from 'react';
 
-import { type ChainType } from '../types';
 import { Chain } from './Chain';
+import { type ChainType } from '../types';
 
 const PromptArticle: FC<{ chain: ChainType }> = ({ chain }) => {
   return (

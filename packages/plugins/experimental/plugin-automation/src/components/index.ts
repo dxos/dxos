@@ -11,4 +11,3 @@ export const TriggerSection = lazy(() => import('./TriggerSection'));
 export * from './AutomationPanel';
 export * from './Chain';
 export * from './PromptTemplate';
-
