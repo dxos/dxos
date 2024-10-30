@@ -20,7 +20,6 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
 
 import {
-  addressToIndex,
   type AlignKey,
   type AlignValue,
   type CommentKey,
@@ -275,29 +274,24 @@ const Styles = () => {
 
 const Actions = () => {
   const { onAction } = useToolbarContext('Actions');
-  const { cursor, range, model } = useSheetContext();
+  const { cursorFallbackRange, cursor, model } = useSheetContext();
   const { t } = useTranslation(SHEET_PLUGIN);
 
   const overlapsCommentAnchor = (model.sheet.threads ?? [])
     .filter(nonNullable)
     .filter((thread) => thread.status !== 'resolved')
     .some((thread) => {
-      if (!cursor) {
+      if (!cursorFallbackRange) {
         return false;
       }
-      return addressToIndex(model.sheet, cursor) === thread.anchor;
+      return rangeToIndex(model.sheet, cursorFallbackRange) === thread.anchor;
     });
 
-  const hasCursor = !!cursor;
-  const cursorOnly = hasCursor && !range && !overlapsCommentAnchor;
-
-  const tooltipLabelKey = !hasCursor
+  const tooltipLabelKey = !cursor
     ? 'no cursor label'
     : overlapsCommentAnchor
       ? 'selection overlaps existing comment label'
-      : range
-        ? 'comment ranges not supported label'
-        : 'comment label';
+      : 'comment label';
 
   return (
     <ToolbarItem
@@ -306,16 +300,16 @@ const Actions = () => {
       icon='ph--chat-text--regular'
       data-testid='editor.toolbar.comment'
       onClick={() => {
-        if (!cursor) {
+        if (!(cursorFallbackRange && cursor)) {
           return;
         }
         return onAction?.({
           key: 'comment',
-          value: addressToIndex(model.sheet, cursor),
+          value: rangeToIndex(model.sheet, cursorFallbackRange),
           cellContent: model.getCellText(cursor),
         });
       }}
-      disabled={!cursorOnly || overlapsCommentAnchor}
+      disabled={!cursor || overlapsCommentAnchor}
     >
       {t(tooltipLabelKey)}
     </ToolbarItem>
