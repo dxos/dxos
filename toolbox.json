@@ -29,7 +29,9 @@
       "@dxos/debug",
       "@dxos/util",
       "@dxos/async",
-      "@dxos/keys"
+      "@dxos/keys",
+      "@dxos/timeframe",
+      "@dxos/tracing"
     ]
   },
   "tsconfig": {
