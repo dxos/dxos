@@ -9,19 +9,19 @@
   "sideEffects": true,
   "exports": {
     ".": {
-      "browser": "./dist/lib/browser/index.mjs",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs"
     },
     "./testing": {
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "types": "./dist/types/src/testing/index.d.ts"
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "./testing": [
-        "./dist/types/src/testing/index.d.ts"
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
       ]
     }
   },

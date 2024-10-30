@@ -15,7 +15,7 @@ export type TreeProps<T extends ItemType = ItemType> = {
   items: T[];
   open: string[];
   current: string[];
-} & Partial<Pick<TreegridRootProps, 'gridTemplateColumns'>> &
+} & Partial<Pick<TreegridRootProps, 'gridTemplateColumns' | 'classNames'>> &
   Pick<TreeItemProps<T>, 'draggable' | 'renderColumns' | 'canDrop' | 'onOpenChange' | 'onSelect'>;
 
 export const Tree = <T extends ItemType = ItemType>({
@@ -24,13 +24,14 @@ export const Tree = <T extends ItemType = ItemType>({
   current,
   draggable = false,
   gridTemplateColumns = '[tree-row-start] 1fr min-content [tree-row-end]',
+  classNames,
   renderColumns,
   canDrop,
   onOpenChange,
   onSelect,
 }: TreeProps<T>) => {
   return (
-    <Treegrid.Root gridTemplateColumns={gridTemplateColumns}>
+    <Treegrid.Root gridTemplateColumns={gridTemplateColumns} classNames={classNames}>
       {items.map((item, i) => {
         const path = Path.create(...item.path);
 
