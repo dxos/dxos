@@ -14,10 +14,10 @@ import { translations as dataTranslations } from '@dxos/react-ui-data';
 
 import { TableContainer, TableViewEditor } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
+import { serializer } from './serializer';
 import translations from './translations';
 import { TableType } from './types';
 import { TableAction, type TablePluginProvides, isTable } from './types';
-import { serializer } from './serializer';
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
   return {

@@ -16,10 +16,13 @@ export const serializer: TypedObjectSerializer<TableType> = {
   },
 
   deserialize: async ({ content, space, newId }) => {
-    const { schema: { id: schemaId, ...parsedSchema }, ...parsed } = JSON.parse(content);
+    const {
+      schema: { id: schemaId, ...parsedSchema },
+      ...parsed
+    } = JSON.parse(content);
     // TODO(wittjosiah): This is a hack to get the schema to be deserialized correctly.
     const storedSchema = space.db.add(create(StoredSchema, parsedSchema));
-    const schema = space.db.schema.registerSchema(storedSchema)
+    const schema = space.db.schema.registerSchema(storedSchema);
     const table = create(TableType, { name: parsed.name, view: parsed.view, schema });
 
     // TODO(wittjosiah): Should the rows also be copied?

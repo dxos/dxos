@@ -18,9 +18,9 @@ import { compareIndexPositions, createSheet } from './defs';
 import { computeGraphFacet } from './extensions';
 import { type ComputeGraphRegistry } from './graph';
 import meta, { SHEET_PLUGIN } from './meta';
+import { serializer } from './serializer';
 import translations from './translations';
 import { SheetAction, SheetType, type SheetPluginProvides } from './types';
-import { serializer } from './serializer';
 
 export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
   let computeGraphRegistry: ComputeGraphRegistry | undefined;
