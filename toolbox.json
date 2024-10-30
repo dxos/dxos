@@ -32,7 +32,8 @@
       "@dxos/keys",
       "@dxos/timeframe",
       "@dxos/tracing",
-      "@dxos/lit-grid"
+      "@dxos/lit-grid",
+      "@dxos/plate"
     ]
   },
   "tsconfig": {
