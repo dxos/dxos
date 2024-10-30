@@ -566,16 +566,13 @@ export class Toolbox {
 
         // console.log({ relativePath, exportName, distSlug });
         packageJson.exports[exportName] = {};
+        (packageJson.exports[exportName] as any).types = `./dist/types/src/${distSlug}.d.ts`;
         if (isBrowser) {
           (packageJson.exports[exportName] as any).browser = `./dist/lib/browser/${distSlug}.mjs`;
         }
         if (isNode) {
-          (packageJson.exports[exportName] as any).node = {
-            require: `./dist/lib/node/${distSlug}.cjs`,
-            default: `./dist/lib/node-esm/${distSlug}.mjs`,
-          };
+          (packageJson.exports[exportName] as any).node = `./dist/lib/node-esm/${distSlug}.mjs`;
         }
-        (packageJson.exports[exportName] as any).types = `./dist/types/src/${distSlug}.d.ts`;
 
         // exports.types are only used with modern module resolution strategies so we keep this for compatibility.
         if (exportName !== '.') {
