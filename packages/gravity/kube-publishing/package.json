@@ -10,20 +10,14 @@
   "sideEffects": true,
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./main": {
+      "types": "./dist/types/src/main.d.ts",
       "browser": "./dist/lib/browser/main.mjs",
-      "node": {
-        "require": "./dist/lib/node/main.cjs",
-        "default": "./dist/lib/node-esm/main.mjs"
-      },
-      "types": "./dist/types/src/main.d.ts"
+      "node": "./dist/lib/node-esm/main.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
