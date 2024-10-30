@@ -18,6 +18,7 @@ import { compareIndexPositions, createSheet } from './defs';
 import { computeGraphFacet } from './extensions';
 import { type ComputeGraphRegistry } from './graph';
 import meta, { SHEET_PLUGIN } from './meta';
+import { serializer } from './serializer';
 import translations from './translations';
 import { SheetAction, SheetType, type SheetPluginProvides } from './types';
 
@@ -51,6 +52,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
             label: (object: any) => (object instanceof SheetType ? object.name : undefined),
             placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
             icon: 'ph--grid-nine--regular',
+            serializer,
           },
         },
       },

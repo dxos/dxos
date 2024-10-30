@@ -38,11 +38,13 @@ export const setFallbackName = debounce((doc: DocumentType, content: string) => 
 export const serializer: TypedObjectSerializer<DocumentType> = {
   serialize: async ({ object }): Promise<string> => {
     const content = await loadObjectReferences(object, (doc) => doc.content);
-    return JSON.stringify({ name: object.name, content: content.content });
+    return JSON.stringify({ name: object.name, fallbackName: object.fallbackName, content: content.content });
   },
 
   deserialize: async ({ content: serialized }) => {
-    const { name, content } = JSON.parse(serialized);
-    return createObject(create(DocumentType, { name, content: create(TextType, { content }), threads: [] }));
+    const { name, fallbackName, content } = JSON.parse(serialized);
+    return createObject(
+      create(DocumentType, { name, fallbackName, content: create(TextType, { content }), threads: [] }),
+    );
   },
 };

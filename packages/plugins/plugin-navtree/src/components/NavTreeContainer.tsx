@@ -142,7 +142,9 @@ export const NavTreeContainer = ({ items, current, open, popoverAnchorId, ...pro
           const targetIndex = nextItems.findIndex(({ id }) => id === targetNode.id);
           const migrationIndex =
             instruction.type === 'make-child'
-              ? nextItems.length
+              ? nextItems.length > 0
+                ? nextItems.length - 1
+                : 0
               : instruction.type === 'reorder-below'
                 ? targetIndex + 1
                 : targetIndex;
