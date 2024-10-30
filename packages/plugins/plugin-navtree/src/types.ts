@@ -17,6 +17,8 @@ type SharedProperties = {
   icon?: string;
   disabled?: boolean;
   testId?: string;
+  className?: string;
+  headingClassName?: string;
 };
 
 export type NodeProperties = SharedProperties & {

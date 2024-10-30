@@ -9,6 +9,7 @@ import React, { useCallback, useEffect } from 'react';
 import { NavigationAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { isAction, isActionLike, type Node } from '@dxos/app-graph';
 import { useGraph } from '@dxos/plugin-graph';
+import { isEchoObject, isSpace } from '@dxos/react-client/echo';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { isItem } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
@@ -60,6 +61,17 @@ export const NavTreeContainer = ({ items, current, open, popoverAnchorId, ...pro
     },
     [graph],
   );
+
+  const canDrop = useCallback((source: NavTreeItem, target: NavTreeItem) => {
+    if (isSpace(target.node.data)) {
+      // TODO(wittjosiah): Find a way to only allow space as source for rearranging.
+      return isEchoObject(source.node.data) || isSpace(source.node.data);
+    } else if (isEchoObject(target.node.data)) {
+      return isEchoObject(source.node.data);
+    } else {
+      return false;
+    }
+  }, []);
 
   const handleSelect = useCallback(
     ({ node, actions, path }: NavTreeItem) => {
@@ -183,6 +195,7 @@ export const NavTreeContainer = ({ items, current, open, popoverAnchorId, ...pro
             loadDescendents={loadDescendents}
             renderPresence={renderPresence}
             popoverAnchorId={popoverAnchorId}
+            canDrop={canDrop}
             onSelect={handleSelect}
             {...props}
           />

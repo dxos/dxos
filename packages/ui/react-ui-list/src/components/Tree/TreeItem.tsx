@@ -42,7 +42,7 @@ export type TreeItemProps<T extends ItemType = ItemType> = {
   current: boolean;
   draggable?: boolean;
   renderColumns?: FC<{ item: T; menuOpen: boolean; setMenuOpen: (open: boolean) => void }>;
-  canDrop?: (data: unknown) => boolean;
+  canDrop?: (source: T, target: T) => boolean;
   onOpenChange?: (item: T, nextOpen: boolean) => void;
   onSelect?: (item: T, nextState: boolean) => void;
 };
@@ -59,7 +59,7 @@ export const RawTreeItem = <T extends ItemType = ItemType>({
   onOpenChange,
   onSelect,
 }: TreeItemProps<T>) => {
-  const { id, label, icon, className, disabled, path, parentOf } = item;
+  const { id, label, icon, className, headingClassName, disabled, path, parentOf } = item;
   const level = path.length - 2;
   const isBranch = !!parentOf;
 
@@ -118,7 +118,7 @@ export const RawTreeItem = <T extends ItemType = ItemType>({
         },
         canDrop: ({ source }) => {
           const _canDrop = canDrop ?? (() => true);
-          return source.element !== buttonRef.current && _canDrop(source.data);
+          return source.element !== buttonRef.current && _canDrop(source.data as T, item);
         },
         getIsSticky: () => true,
         onDrag: ({ self, source }) => {
@@ -196,6 +196,7 @@ export const RawTreeItem = <T extends ItemType = ItemType>({
         hoverableFocusedWithinControls,
         hoverableDescriptionIcons,
         focusRing,
+        className,
       )}
       data-itemid={item.id}
       data-testid={item.testId}
@@ -220,7 +221,7 @@ export const RawTreeItem = <T extends ItemType = ItemType>({
             ref={buttonRef}
             label={label}
             icon={icon}
-            className={className}
+            className={headingClassName}
             disabled={disabled}
             current={current}
             onSelect={handleSelect}

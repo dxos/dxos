@@ -16,10 +16,14 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     }
   },
-  "types": "./dist/types/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "dependencies": {
     "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
