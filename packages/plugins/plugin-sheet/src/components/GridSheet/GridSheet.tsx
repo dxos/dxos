@@ -15,11 +15,11 @@ import {
   type GridContentProps,
 } from '@dxos/react-ui-grid';
 
+import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
 import { DEFAULT_COLUMNS, DEFAULT_ROWS, rangeToA1Notation, type CellRange } from '../../defs';
 import { rangeExtension, sheetExtension, type RangeController } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
 import { useSheetContext } from '../SheetContext';
-import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
 
 const initialCells = {
   grid: {},
