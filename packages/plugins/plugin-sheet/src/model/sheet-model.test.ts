@@ -8,8 +8,8 @@ import { Trigger } from '@dxos/async';
 import { FunctionType } from '@dxos/plugin-script/types';
 
 import { SheetModel } from './sheet-model';
+import { TestBuilder, testFunctionPlugins } from '../compute-graph/testing';
 import { addressFromA1Notation, createSheet } from '../defs';
-import { TestBuilder, testFunctionPlugins } from '../graph/testing';
 import { type CellScalarValue } from '../types';
 
 describe('SheetModel', () => {

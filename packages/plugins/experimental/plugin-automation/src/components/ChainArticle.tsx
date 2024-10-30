@@ -7,7 +7,7 @@ import React, { type FC } from 'react';
 import { Chain } from './Chain';
 import { type ChainType } from '../types';
 
-const ChainArticle: FC<{ chain: ChainType }> = ({ chain }) => {
+const PromptArticle: FC<{ chain: ChainType }> = ({ chain }) => {
   return (
     <div role='none' className={'row-span-2 is-full pli-2'}>
       <Chain chain={chain} />
@@ -15,4 +15,4 @@ const ChainArticle: FC<{ chain: ChainType }> = ({ chain }) => {
   );
 };
 
-export default ChainArticle;
+export default PromptArticle;

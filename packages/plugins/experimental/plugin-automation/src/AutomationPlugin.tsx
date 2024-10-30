@@ -4,15 +4,18 @@
 
 import React from 'react';
 
-import { type PluginDefinition } from '@dxos/app-framework';
+import { type PluginDefinition, parseMetadataResolverPlugin, resolvePlugin } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { FunctionDef, FunctionTrigger } from '@dxos/functions/types';
-import { loadObjectReferences } from '@dxos/react-client/echo';
+import { invariant } from '@dxos/invariant';
+import { parseClientPlugin } from '@dxos/plugin-client';
+import { createExtension, toSignal } from '@dxos/plugin-graph';
+import { getTypename, loadObjectReferences, parseId } from '@dxos/react-client/echo';
 
-import { ChainArticle } from './components';
+import { AutomationPanel, ChainArticle } from './components';
 import meta, { AUTOMATION_PLUGIN } from './meta';
 import translations from './translations';
-import { ChainPromptType, ChainType, AutomationAction, type AutomationPluginProvides } from './types';
+import { AutomationAction, type AutomationPluginProvides, ChainPromptType, ChainType } from './types';
 
 export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> => {
   return {
@@ -34,7 +37,84 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
       },
       graph: {
         builder: (plugins) => {
-          return [];
+          const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+          const metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
+          const resolve = metadataPlugin?.provides.metadata.resolver;
+          const client = clientPlugin?.provides.client;
+          invariant(resolve);
+          invariant(client);
+
+          return [
+            // Create nodes for object settings.
+            createExtension({
+              id: `${AUTOMATION_PLUGIN}/automation-for-subject`,
+              resolver: ({ id }) => {
+                if (!id.endsWith('~automation')) {
+                  return;
+                }
+
+                const type = 'orphan-settings-for-subject';
+                const icon = 'ph--magic-wand--regular';
+
+                const [subjectId] = id.split('~');
+                const { spaceId, objectId } = parseId(subjectId);
+                const space = client.spaces.get().find((space) => space.id === spaceId);
+                if (!objectId) {
+                  // TODO(burdon): Ref SPACE_PLUGIN ns.
+                  const label = space
+                    ? space.properties.name || ['unnamed space label', { ns: AUTOMATION_PLUGIN }]
+                    : ['unnamed object settings label', { ns: AUTOMATION_PLUGIN }];
+
+                  // TODO(wittjosiah): Support comments for arbitrary subjects.
+                  //   This is to ensure that the comments panel is not stuck on an old object.
+                  return {
+                    id,
+                    type,
+                    data: null,
+                    properties: {
+                      icon,
+                      label,
+                      showResolvedThreads: false,
+                      object: null,
+                      space,
+                    },
+                  };
+                }
+
+                const object = toSignal(
+                  (onChange) => {
+                    const timeout = setTimeout(async () => {
+                      await space?.db.loadObjectById(objectId);
+                      onChange();
+                    });
+
+                    return () => clearTimeout(timeout);
+                  },
+                  () => space?.db.getObjectById(objectId),
+                  subjectId,
+                );
+                if (!object || !subjectId) {
+                  return;
+                }
+
+                const meta = resolve(getTypename(object) ?? '');
+                const label = meta.label?.(object) ||
+                  object.name ||
+                  meta.placeholder || ['unnamed object settings label', { ns: AUTOMATION_PLUGIN }];
+
+                return {
+                  id,
+                  type,
+                  data: null,
+                  properties: {
+                    icon,
+                    label,
+                    object,
+                  },
+                };
+              },
+            }),
+          ];
         },
       },
       surface: {
@@ -42,8 +122,9 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
           switch (role) {
             case 'article':
               return data.object instanceof ChainType ? <ChainArticle chain={data.object} /> : null;
+
             case 'complementary--automation':
-              return <div>Automation</div>;
+              return <AutomationPanel />;
           }
 
           return null;
