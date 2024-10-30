@@ -33,7 +33,8 @@
       "@dxos/timeframe",
       "@dxos/tracing",
       "@dxos/lit-grid",
-      "@dxos/plate"
+      "@dxos/plate",
+      "@dxos/gem-spore"
     ]
   },
   "tsconfig": {
