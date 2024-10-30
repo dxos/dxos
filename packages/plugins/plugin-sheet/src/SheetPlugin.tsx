@@ -14,9 +14,9 @@ import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Icon } from '@dxos/react-ui';
 
 import { ComputeGraphContextProvider, RangeList, SheetContainer, useComputeGraph } from './components';
+import { type ComputeGraphRegistry } from './compute-graph';
 import { compareIndexPositions, createSheet } from './defs';
 import { computeGraphFacet } from './extensions';
-import { type ComputeGraphRegistry } from './graph';
 import meta, { SHEET_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
@@ -38,8 +38,8 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       }
 
       // Async import removes direct dependency on hyperformula.
-      const { ComputeGraphRegistry } = await import('./graph');
-      computeGraphRegistry = new ComputeGraphRegistry({ remoteFunctionUrl });
+      const { defaultPlugins, ComputeGraphRegistry } = await import('./compute-graph');
+      computeGraphRegistry = new ComputeGraphRegistry({ plugins: defaultPlugins, remoteFunctionUrl });
     },
     provides: {
       context: ({ children }) => {

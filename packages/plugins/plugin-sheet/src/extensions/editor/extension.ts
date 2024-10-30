@@ -21,7 +21,8 @@ import { spreadsheet } from 'codemirror-lang-spreadsheet';
 import { singleValueFacet } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type FunctionDefinition } from '../../graph';
+import { type FunctionDefinition } from '../../compute-graph';
+import { RANGE_NOTATION } from '../../defs';
 
 /**
  * https://codemirror.net/examples/styling
@@ -195,34 +196,53 @@ export const sheetExtension = ({ functions = [] }: SheetExtensionOptions): Exten
   ];
 };
 
-export type CellRangeNotifier = (range: string) => void;
+export type SelectionRange = { from: number; to: number };
 
-type Range = { from: number; to: number };
+export interface RangeController {
+  setRange(range: string): void;
+}
+
+export type RangeExtensionOptions = {
+  /**
+   * Provides controller callback when extension is initialized.
+   */
+  onInit?: (controller: RangeController) => void;
+  /**
+   * Called when the active range changes.
+   * @param state The current state.
+   * @param state.activeRange undefined if no range is active, otherwise a possibly partially defined range.
+   */
+  onStateChange?: (state: { activeRange: string | undefined }) => void;
+};
 
 /**
  * Tracks the currently active cell within a formula and provides a callback to modify it.
  */
-export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): Extension => {
+export const rangeExtension = ({ onInit, onStateChange }: RangeExtensionOptions): Extension => {
   let view: EditorView;
-  let activeRange: Range | undefined;
-  const provider: CellRangeNotifier = (range: string) => {
-    if (activeRange) {
-      view.dispatch(
-        view.state.update({
-          changes: { ...activeRange, insert: range.toString() },
-          selection: { anchor: activeRange.from + range.length },
-        }),
-      );
-    }
+  let activeRange: SelectionRange | undefined;
 
-    view.focus();
+  // Called externally to provide current range.
+  const notifier: RangeController = {
+    setRange: (range: string) => {
+      if (activeRange) {
+        view.dispatch(
+          view.state.update({
+            changes: { ...activeRange, insert: range.toString() },
+            selection: { anchor: activeRange.from + range.length },
+          }),
+        );
+      }
+
+      view.focus();
+    },
   };
 
   return ViewPlugin.fromClass(
     class {
       constructor(_view: EditorView) {
         view = _view;
-        onInit(provider);
+        onInit?.(notifier);
       }
 
       update(view: ViewUpdate) {
@@ -235,17 +255,15 @@ export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): E
         visitTree(topNode, ({ type, from, to }) => {
           if (from <= anchor && to >= anchor) {
             switch (type.name) {
-              case 'Function': {
+              case 'Function':
                 // Mark but keep looking.
                 activeRange = { from: to, to };
                 break;
-              }
 
-              case 'CloseParen': {
+              case 'CloseParen':
                 // Mark but keep looking.
                 activeRange = { from, to: from };
                 break;
-              }
 
               case 'RangeToken':
               case 'CellToken':
@@ -259,8 +277,15 @@ export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): E
 
         // Allow start of formula.
         if (!activeRange && view.state.doc.toString()[0] === '=') {
-          activeRange = { from: 1, to: view.state.doc.toString().length };
+          const str = view.state.doc.sliceString(1);
+          if (RANGE_NOTATION.test(str)) {
+            activeRange = { from: 1, to: str.length + 1 };
+          }
         }
+
+        onStateChange?.({
+          activeRange: activeRange ? view.state.doc.sliceString(activeRange.from, activeRange.to) : undefined,
+        });
       }
     },
   );

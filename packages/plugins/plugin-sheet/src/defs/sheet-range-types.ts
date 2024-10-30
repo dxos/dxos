@@ -18,6 +18,7 @@ export const styleKey = 'style';
 export type StyleKey = typeof styleKey;
 export type StyleValue = 'highlight' | 'unset';
 
+// TODO(burdon): Reconcile with plugin-table.
 export const cellClassNameForRange = ({ key, value }: SheetType['ranges'][number]): ClassNameValue => {
   switch (key) {
     case 'align':
