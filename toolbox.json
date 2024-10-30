@@ -23,7 +23,13 @@
       "@dxos/shell",
       "@dxos/node-std",
       "@dxos/invariant",
-      "@dxos/log"
+      "@dxos/log",
+      "@dxos/codec-protobuf",
+      "@dxos/context",
+      "@dxos/debug",
+      "@dxos/util",
+      "@dxos/async",
+      "@dxos/keys"
     ]
   },
   "tsconfig": {
