@@ -18,6 +18,10 @@
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
+    },
+    "./styles": {
+      "import": "./styles/defaults.css",
+      "require": "./styles/defaults.css"
     }
   },
   "types": "dist/types/src/index.d.ts",
