@@ -92,7 +92,7 @@ jobs:
 
       - name: Link DXOS packages inside EDGE repo
         working-directory: ./edge
-        run: node ./scripts/link-packages.mjs ../dxos --all
+        run: node ./scripts/link-packages.mjs ../dxos --deps --transitive
 
       - name: Install linked dependencies
         working-directory: ./edge
