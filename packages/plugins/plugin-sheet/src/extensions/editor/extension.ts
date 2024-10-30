@@ -22,6 +22,7 @@ import { singleValueFacet } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type FunctionDefinition } from '../../compute-graph';
+import { RANGE_NOTATION } from '../../defs';
 
 /**
  * https://codemirror.net/examples/styling
@@ -195,16 +196,23 @@ export const sheetExtension = ({ functions = [] }: SheetExtensionOptions): Exten
   ];
 };
 
-// TODO(burdon): Reuse type def.
-export type Range = { from: number; to: number };
+export type SelectionRange = { from: number; to: number };
 
 export interface RangeController {
   setRange(range: string): void;
 }
 
 export type RangeExtensionOptions = {
+  /**
+   * Provides controller callback when extension is initialized.
+   */
   onInit?: (controller: RangeController) => void;
-  onStateChange?: (state: { activeRange: Range | undefined }) => void;
+  /**
+   * Called when the active range changes.
+   * @param state The current state.
+   * @param state.activeRange undefined if no range is active, otherwise a possibly partially defined range.
+   */
+  onStateChange?: (state: { activeRange: string | undefined }) => void;
 };
 
 /**
@@ -212,7 +220,7 @@ export type RangeExtensionOptions = {
  */
 export const rangeExtension = ({ onInit, onStateChange }: RangeExtensionOptions): Extension => {
   let view: EditorView;
-  let activeRange: Range | undefined;
+  let activeRange: SelectionRange | undefined;
 
   // Called externally to provide current range.
   const notifier: RangeController = {
@@ -247,17 +255,15 @@ export const rangeExtension = ({ onInit, onStateChange }: RangeExtensionOptions)
         visitTree(topNode, ({ type, from, to }) => {
           if (from <= anchor && to >= anchor) {
             switch (type.name) {
-              case 'Function': {
+              case 'Function':
                 // Mark but keep looking.
                 activeRange = { from: to, to };
                 break;
-              }
 
-              case 'CloseParen': {
+              case 'CloseParen':
                 // Mark but keep looking.
                 activeRange = { from, to: from };
                 break;
-              }
 
               case 'RangeToken':
               case 'CellToken':
@@ -271,10 +277,15 @@ export const rangeExtension = ({ onInit, onStateChange }: RangeExtensionOptions)
 
         // Allow start of formula.
         if (!activeRange && view.state.doc.toString()[0] === '=') {
-          activeRange = { from: 1, to: view.state.doc.toString().length };
+          const str = view.state.doc.sliceString(1);
+          if (RANGE_NOTATION.test(str)) {
+            activeRange = { from: 1, to: str.length + 1 };
+          }
         }
 
-        onStateChange?.({ activeRange });
+        onStateChange?.({
+          activeRange: activeRange ? view.state.doc.sliceString(activeRange.from, activeRange.to) : undefined,
+        });
       }
     },
   );

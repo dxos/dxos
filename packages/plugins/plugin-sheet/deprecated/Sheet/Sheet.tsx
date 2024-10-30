@@ -52,7 +52,7 @@ import {
   addressToA1Notation,
   addressToIndex,
   columnLetter,
-  isFunction,
+  isFormula,
   posEquals,
   rangeToA1Notation,
 } from '../../defs';
@@ -1126,7 +1126,7 @@ const SheetStatusBar = () => {
   let isFormula = false;
   if (cursor) {
     value = model.getCellValue(cursor);
-    if (isFunction(value)) {
+    if (isFormula(value)) {
       value = model.graph.mapFunctionBindingFromId(model.mapFormulaIndicesToRefs(value));
       isFormula = true;
     } else if (value != null) {

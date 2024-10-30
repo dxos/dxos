@@ -19,7 +19,9 @@ export type CellIndex = string;
 
 export type CellContentValue = number | string | boolean | null;
 
-export const isFunction = (value: any): value is string => typeof value === 'string' && value.charAt(0) === '=';
+export const RANGE_NOTATION = /^[A-Z]+[0-9]+(:[A-Z]+[0-9]+)?$/;
+
+export const isFormula = (value: any): value is string => typeof value === 'string' && value.charAt(0) === '=';
 
 export const posEquals = (a: CellAddress | undefined, b: CellAddress | undefined) => {
   return a?.col === b?.col && a?.row === b?.row;

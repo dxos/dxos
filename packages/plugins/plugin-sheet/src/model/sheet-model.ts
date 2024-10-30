@@ -15,20 +15,20 @@ import { log } from '@dxos/log';
 import { FieldValueType } from '@dxos/schema';
 
 import { DetailedCellError, ExportedCellChange } from '#hyperformula';
-import { type ComputeNode, type ComputeGraph, createSheetName, type ComputeNodeEvent } from '../compute-graph';
+import { type ComputeGraph, type ComputeNode, type ComputeNodeEvent, createSheetName } from '../compute-graph';
 import {
-  addressFromIndex,
-  addressToIndex,
-  initialize,
-  insertIndices,
   addressFromA1Notation,
+  addressFromIndex,
   addressToA1Notation,
+  addressToIndex,
   type CellAddress,
   type CellRange,
-  ReadonlyException,
+  initialize,
+  insertIndices,
+  isFormula,
   MAX_COLUMNS,
   MAX_ROWS,
-  isFunction,
+  ReadonlyException,
 } from '../defs';
 import { type CellScalarValue, type CellValue, type SheetType } from '../types';
 
@@ -133,7 +133,7 @@ export class SheetModel extends Resource {
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
       invariant(this._node);
       const { col, row } = addressFromIndex(this._sheet, key);
-      if (isFunction(value)) {
+      if (isFormula(value)) {
         value = this._graph.mapFormulaToNative(
           this._graph.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value)),
         );
@@ -245,7 +245,7 @@ export class SheetModel extends Resource {
       return undefined;
     }
 
-    if (isFunction(value)) {
+    if (isFormula(value)) {
       return this._graph.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value));
     } else {
       return String(value);
@@ -310,7 +310,7 @@ export class SheetModel extends Resource {
 
     // Insert into engine.
     this._node.graph.hf.setCellContents({ sheet: this._node.sheetId, row: cell.row, col: cell.col }, [
-      [isFunction(value) ? this._graph.mapFormulaToNative(value) : value],
+      [isFormula(value) ? this._graph.mapFormulaToNative(value) : value],
     ]);
 
     // Insert into sheet.
@@ -318,7 +318,7 @@ export class SheetModel extends Resource {
     if (value === undefined || value === null) {
       delete this._sheet.cells[idx];
     } else {
-      if (isFunction(value)) {
+      if (isFormula(value)) {
         value = this._graph.mapFunctionBindingToId(this.mapFormulaRefsToIndices(value));
       }
 
@@ -376,7 +376,7 @@ export class SheetModel extends Resource {
    * Map from A1 notation to indices.
    */
   mapFormulaRefsToIndices(formula: string): string {
-    invariant(isFunction(formula));
+    invariant(isFormula(formula));
     return formula.replace(/([a-zA-Z]+)([0-9]+)/g, (match) => {
       return addressToIndex(this._sheet, addressFromA1Notation(match));
     });
@@ -386,7 +386,7 @@ export class SheetModel extends Resource {
    * Map from indices to A1 notation.
    */
   mapFormulaIndicesToRefs(formula: string): string {
-    invariant(isFunction(formula));
+    invariant(isFormula(formula));
     return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (idx) => {
       return addressToA1Notation(addressFromIndex(this._sheet, idx));
     });

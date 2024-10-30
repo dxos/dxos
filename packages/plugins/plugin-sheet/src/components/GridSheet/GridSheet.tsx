@@ -15,11 +15,11 @@ import {
   type GridContentProps,
 } from '@dxos/react-ui-grid';
 
-import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
 import { DEFAULT_COLUMNS, DEFAULT_ROWS, rangeToA1Notation, type CellRange } from '../../defs';
-import { rangeExtension, sheetExtension, type CellRangeNotifier } from '../../extensions';
+import { rangeExtension, sheetExtension, type RangeController } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
 import { useSheetContext } from '../SheetContext';
+import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
 
 const initialCells = {
   grid: {},
@@ -45,7 +45,7 @@ export const GridSheet = () => {
   const { id, model, editing, setEditing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs } =
     useSheetContext();
   const dxGrid = useRef<DxGridElement | null>(null);
-  const rangeController = useRef<CellRangeNotifier>();
+  const rangeController = useRef<RangeController>();
   const { hasAttention } = useAttention(id);
 
   const handleFocus = useCallback(
@@ -163,7 +163,7 @@ export const GridSheet = () => {
         onInit: (fn) => (rangeController.current = fn),
         onStateChange: (state) => {
           // TODO(burdon): Update grid.
-          console.log('::::', state);
+          console.log('::::', JSON.stringify(state));
         },
       }),
     ],

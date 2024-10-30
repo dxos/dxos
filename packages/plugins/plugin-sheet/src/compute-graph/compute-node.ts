@@ -9,9 +9,9 @@ import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 
 import { DetailedCellError } from '#hyperformula';
-import { type ComputeGraph } from './compute-graph';
-import { type CellAddress, isFunction } from '../defs';
+import { type CellAddress, isFormula } from '../defs';
 import { type CellScalarValue } from '../types';
+import { type ComputeGraph } from './compute-graph';
 
 export type ComputeNodeEvent = {
   type: keyof Listeners;
@@ -50,7 +50,7 @@ export class ComputeNode extends Resource {
   }
 
   setValue(cell: CellAddress, value: CellScalarValue) {
-    const mappedValue = isFunction(value) ? this._graph.mapFormulaToNative(value) : value;
+    const mappedValue = isFormula(value) ? this._graph.mapFormulaToNative(value) : value;
     this._graph.hf.setCellContents({ sheet: this.sheetId, row: cell.row, col: cell.col }, [[mappedValue]]);
   }
 
