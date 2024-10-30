@@ -53,7 +53,7 @@ export const preview: Preview = {
   },
 
   initialGlobals: {
-    logLevel: 'WARN',
+    logLevel: 'INFO',
   },
 
   /**

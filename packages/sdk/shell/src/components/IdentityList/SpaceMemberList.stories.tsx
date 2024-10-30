@@ -12,7 +12,7 @@ import { SpaceMemberListImpl } from './SpaceMemberList';
 import { alice } from '../../testing';
 
 export default {
-  title: 'sdk/react-shell/SpaceMemberList',
+  title: 'sdk/shell/SpaceMemberList',
   component: SpaceMemberListImpl,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

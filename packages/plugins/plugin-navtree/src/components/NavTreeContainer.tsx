@@ -33,23 +33,17 @@ const renderPresence = ({ item }: { item: NavTreeItem }) => (
   <Surface role='presence--glyph' data={{ object: item.node.data, id: item.node.id }} />
 );
 
-export const NavTreeContainer = ({
-  items,
-  current,
-  open,
-  onOpenChange,
-  popoverAnchorId,
-}: {
+export type NavTreeContainerProps = {
   items: NavTreeItem[];
   current: string[];
   open: string[];
-  onOpenChange: NavTreeProps['onOpenChange'];
   popoverAnchorId?: string;
-}) => {
+} & Pick<NavTreeProps, 'onOpenChange'>;
+
+export const NavTreeContainer = ({ items, current, open, popoverAnchorId, ...props }: NavTreeContainerProps) => {
   const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const dispatch = useIntentDispatcher();
-
   const { graph } = useGraph();
 
   const loadDescendents = useCallback(
@@ -94,11 +88,12 @@ export const NavTreeContainer = ({
       if (isAction(defaultAction)) {
         void (defaultAction.data as () => void)();
       }
+
       if (!isLg) {
         closeNavigationSidebar();
       }
     },
-    [dispatch, isLg, closeNavigationSidebar],
+    [items, dispatch, isLg, closeNavigationSidebar],
   );
 
   // TODO(wittjosiah): Factor out hook.
@@ -112,7 +107,6 @@ export const NavTreeContainer = ({
         }
 
         const target = location.current.dropTargets[0];
-
         const instruction: Instruction | null = extractInstruction(target.data);
         if (instruction !== null && instruction.type !== 'instruction-blocked') {
           const sourceNode = source.data.node as NavTreeItemGraphNode;
@@ -125,7 +119,7 @@ export const NavTreeContainer = ({
             ? items.filter((item) => item.path.slice(0, -1).join() === targetPath.slice(0, -1).join())
             : items.filter((item) => item.path.slice(0, -1).join() === targetPath.join());
           const operation =
-            sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join()
+            sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join() && instruction.type !== 'make-child'
               ? 'rearrange'
               : resolveMigrationOperation(graph, sourceNode, targetPath, targetNode);
 
@@ -136,7 +130,7 @@ export const NavTreeContainer = ({
           const targetIndex = nextItems.findIndex(({ id }) => id === targetNode.id);
           const migrationIndex =
             instruction.type === 'make-child'
-              ? nextItems.length - 1
+              ? nextItems.length
               : instruction.type === 'reorder-below'
                 ? targetIndex + 1
                 : targetIndex;
@@ -187,8 +181,8 @@ export const NavTreeContainer = ({
             loadDescendents={loadDescendents}
             renderPresence={renderPresence}
             popoverAnchorId={popoverAnchorId}
-            onOpenChange={onOpenChange}
             onSelect={handleSelect}
+            {...props}
           />
         </div>
 

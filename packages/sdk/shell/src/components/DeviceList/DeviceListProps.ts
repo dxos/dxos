@@ -13,6 +13,7 @@ export type DeviceListProps = {
   onClickEdit?: (device: Device) => void;
   onClickReset?: () => void;
   onClickJoinExisting?: () => void;
+  onClickRecover?: () => void;
 };
 
 export type AgentFormProps = {
@@ -32,4 +33,5 @@ export type DeviceListItemProps = {
   onClickEdit?: () => void;
   onClickReset?: () => void;
   onClickJoinExisting?: () => void;
+  onClickRecover?: () => void;
 };

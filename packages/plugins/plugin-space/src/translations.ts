@@ -92,6 +92,8 @@ export default [
         'join success label': 'Successfully joined space',
         'name label': 'Name',
         'name placeholder': 'Name',
+        'unnamed object settings label': 'Settings',
+        'edge replication label': 'Enable EDGE Replication',
       },
     },
   },

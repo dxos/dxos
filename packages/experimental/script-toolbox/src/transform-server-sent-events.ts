@@ -8,13 +8,17 @@
 export const transformServerSentEvents = (input: ReadableStream): ReadableStream => {
   const { readable, writable } = new TransformStream({
     transform: (chunk, controller) => {
-      controller.enqueue(
-        new TextEncoder().encode(JSON.parse(textDecoder.decode(chunk).slice('data: '.length)).response),
-      );
+      const line = textDecoder.decode(chunk);
+      if (line.startsWith(DATA_PREFIX)) {
+        controller.enqueue(textEncoder.encode(JSON.parse(line.slice(DATA_PREFIX.length)).response));
+      }
     },
   });
   void input.pipeTo(writable);
   return readable;
 };
 
+const DATA_PREFIX = 'data: ';
+
+const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();

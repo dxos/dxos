@@ -44,7 +44,6 @@ test.describe('Invitations', () => {
       await manager.acceptInvitation(1, 'device', invitation);
       await manager.readyToAuthenticate('device', manager.peer(1));
       await manager.authenticateInvitation('device', authCode, manager.peer(1));
-      await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).toEqual(await manager.getDisplayName(1));
     });
@@ -56,7 +55,6 @@ test.describe('Invitations', () => {
 
       await manager.openPanel(1, 'identity');
       await manager.acceptInvitation(1, 'device', invitation);
-      await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).toEqual(await manager.getDisplayName(1));
     });
@@ -72,7 +70,6 @@ test.describe('Invitations', () => {
       await manager.authenticateInvitation('device', '000000', manager.peer(1));
       await manager.clearAuthCode('device', manager.peer(1));
       await manager.authenticateInvitation('device', authCode, manager.peer(1));
-      await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).toEqual(await manager.getDisplayName(1));
     });
@@ -99,7 +96,6 @@ test.describe('Invitations', () => {
       await manager.invitationInputContinue('device', manager.peer(1));
       await manager.clearAuthCode('device', manager.peer(1));
       await manager.authenticateInvitation('device', authCode, manager.peer(1));
-      await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).toEqual(await manager.getDisplayName(1));
     });
@@ -144,7 +140,6 @@ test.describe('Invitations', () => {
       await manager.invitationInputContinue('device', manager.peer(1));
       await manager.clearAuthCode('device', manager.peer(1));
       await manager.authenticateInvitation('device', authCode, manager.peer(1));
-      await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).toEqual(await manager.getDisplayName(1));
     });
@@ -167,7 +162,6 @@ test.describe('Invitations', () => {
       await manager.invitationInputContinue('device', manager.peer(1));
       await manager.clearAuthCode('device', manager.peer(1));
       await manager.authenticateInvitation('device', authCode, manager.peer(1));
-      await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).toEqual(await manager.getDisplayName(1));
     });
@@ -186,7 +180,6 @@ test.describe('Invitations', () => {
       await manager.acceptInvitation(1, 'space', invitation);
       await manager.readyToAuthenticate('space', manager.peer(1));
       await manager.authenticateInvitation('space', authCode, manager.peer(1));
-      await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
       expect(await manager.getSpaceName(0, 1)).toEqual(await manager.getSpaceName(1, 1));
@@ -202,11 +195,9 @@ test.describe('Invitations', () => {
       await manager.createIdentity(1);
       await manager.openPanel(1, 'join');
       await manager.acceptInvitation(1, 'space', invitation1);
-      await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(1, 'join');
       await manager.acceptInvitation(1, 'space', invitation2);
-      await manager.doneInvitation('space', manager.peer(1));
 
       expect(await manager.getSpaceMembersCount(0)).toEqual(2);
     });
@@ -220,7 +211,6 @@ test.describe('Invitations', () => {
       await manager.createIdentity(1);
       await manager.openPanel(1, 'join');
       await manager.acceptInvitation(1, 'space', invitation);
-      await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
       expect(await manager.getSpaceName(0, 1)).toEqual(await manager.getSpaceName(1, 1));
@@ -242,7 +232,6 @@ test.describe('Invitations', () => {
 
       await manager.clearAuthCode('space', manager.peer(1));
       await manager.authenticateInvitation('space', authCode, manager.peer(1));
-      await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
       expect(await manager.getSpaceName(0, 1)).toEqual(await manager.getSpaceName(1, 1));
@@ -272,7 +261,6 @@ test.describe('Invitations', () => {
       await manager.invitationInputContinue('space', manager.peer(1));
       await manager.clearAuthCode('space', manager.peer(1));
       await manager.authenticateInvitation('space', authCode, manager.peer(1));
-      await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
       expect(await manager.getSpaceName(0, 1)).toEqual(await manager.getSpaceName(1, 1));
@@ -323,7 +311,6 @@ test.describe('Invitations', () => {
       await manager.invitationInputContinue('space', manager.peer(1));
       await manager.clearAuthCode('space', manager.peer(1));
       await manager.authenticateInvitation('space', authCode, manager.peer(1));
-      await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
       expect(await manager.getSpaceName(0, 1)).toEqual(await manager.getSpaceName(1, 1));
@@ -349,7 +336,6 @@ test.describe('Invitations', () => {
       await manager.invitationInputContinue('space', manager.peer(1));
       await manager.clearAuthCode('space', manager.peer(1));
       await manager.authenticateInvitation('space', authCode, manager.peer(1));
-      await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
       expect(await manager.getSpaceName(0, 1)).toEqual(await manager.getSpaceName(1, 1));
@@ -380,8 +366,6 @@ test.describe('Invitations', () => {
       // Helps to ensure both auth codes are fully input (especially in webkit).
       await sleep(100);
       await manager.authenticateInvitation('space', authCode2, manager.peer(2));
-      await manager.doneInvitation('space', manager.peer(1));
-      await manager.doneInvitation('space', manager.peer(2));
 
       await manager.openPanel(0, 'spaces');
       expect(await manager.getSpaceName(0, 1)).toEqual(await manager.getSpaceName(1, 1));
