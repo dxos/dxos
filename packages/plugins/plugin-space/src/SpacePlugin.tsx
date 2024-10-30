@@ -1314,11 +1314,12 @@ export const SpacePlugin = ({
             case SpaceAction.DUPLICATE_OBJECT: {
               const originalObject = intent.data?.object ?? intent.data?.result;
               const resolve = resolvePlugin(plugins, parseMetadataResolverPlugin)?.provides.metadata.resolver;
-              if (!isEchoObject(originalObject) || !resolve) {
+              const space = isSpace(intent.data?.target) ? intent.data?.target : getSpace(intent.data?.target);
+              if (!isEchoObject(originalObject) || !resolve || !space) {
                 return;
               }
 
-              const newObject = await cloneObject(originalObject, resolve);
+              const newObject = await cloneObject(originalObject, resolve, space);
               return {
                 intents: [
                   [{ action: SpaceAction.ADD_OBJECT, data: { object: newObject, target: intent.data?.target } }],
