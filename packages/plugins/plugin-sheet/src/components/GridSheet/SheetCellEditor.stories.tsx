@@ -14,9 +14,9 @@ import { CellEditor, type CellEditorProps } from '@dxos/react-ui-grid';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { HyperFormula } from '#hyperformula';
+import { defaultFunctions } from '../../compute-graph';
 import { createSheet } from '../../defs';
 import { sheetExtension } from '../../extensions';
-import { defaultFunctions } from '../../graph';
 import { SheetType } from '../../types';
 
 type StoryProps = CellEditorProps;

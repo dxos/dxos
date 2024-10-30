@@ -34,8 +34,8 @@ import { type Node, createExtension, memoize, toSignal } from '@dxos/plugin-grap
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
-  Expando,
   type EchoReactiveObject,
+  Expando,
   Filter,
   type PropertiesTypeProps,
   type Space,
@@ -392,7 +392,7 @@ export const SpacePlugin = ({
                 );
               }
               return null;
-            case 'popover':
+            case 'popover': {
               if (data.component === 'dxos.org/plugin/space/RenameSpacePopover' && isSpace(data.subject)) {
                 return <PopoverRenameSpace space={data.subject} />;
               }
@@ -400,6 +400,7 @@ export const SpacePlugin = ({
                 return <PopoverRenameObject object={data.subject} />;
               }
               return null;
+            }
             // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
