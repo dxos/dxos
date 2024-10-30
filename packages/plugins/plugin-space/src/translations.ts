@@ -10,8 +10,8 @@ export default [
       [SPACE_PLUGIN]: {
         'plugin name': 'Spaces',
         'first run message': 'Nothing selected.',
-        'create space label': 'Create a new space',
-        'join space label': 'Join a space',
+        'create space label': 'Create space',
+        'join space label': 'Join space',
         'empty space message': 'No documents',
         'empty tree message': 'No spaces',
         'unnamed space label': 'New space',
