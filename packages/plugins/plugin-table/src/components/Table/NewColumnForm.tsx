@@ -6,7 +6,7 @@ import * as ModalPrimitive from '@radix-ui/react-popper';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { create, createObjectId } from '@dxos/echo-schema';
-import { DropdownMenu, useThemeContext } from '@dxos/react-ui';
+import { Button, DropdownMenu, Icon, useThemeContext } from '@dxos/react-ui';
 import { Field } from '@dxos/react-ui-data';
 import { type FieldType, FieldValueType, getUniqueProperty, type ViewType } from '@dxos/schema';
 
@@ -19,12 +19,12 @@ type NewColumnFormProps = {
 };
 
 // TODO(ZaymonFC): A util in `@dxos/schema` should look at the view and the
-// schema and generate the new field. That's why I haven't moved this to ../../seed.
+//  schema and generate the new field. That's why I haven't moved this to ../../seed.
 export const createNewField = (view: ViewType): FieldType => {
   const field: FieldType = { id: createObjectId(), path: getUniqueProperty(view), type: FieldValueType.String };
 
   // TODO(ZaymonFC): Can't currently supply a schema since it's not in the registry when we
-  // try to add it to the table
+  //  try to add it to the table
   return create(field);
 };
 
@@ -42,7 +42,7 @@ export const NewColumnForm = ({ model, open, onClose: close }: NewColumnFormProp
     }
   }, [open, close, model]);
 
-  const onCreate = useCallback(() => {
+  const handleCreate = useCallback(() => {
     if (!field) {
       close();
       return;
@@ -64,9 +64,11 @@ export const NewColumnForm = ({ model, open, onClose: close }: NewColumnFormProp
         <ModalPrimitive.Content className={tx('menu.content', 'menu__content', {})}>
           <div role='none' className='flex flex-col align-end'>
             <Field field={field} />
-            <button className='ch-button mx-2 mb-2' onClick={onCreate}>
-              Create
-            </button>
+            <div className='flex justify-center'>
+              <Button onClick={handleCreate}>
+                <Icon icon='ph--plus--regular' />
+              </Button>
+            </div>
           </div>
           <ModalPrimitive.Arrow className={tx('menu.arrow', 'menu__arrow', {})} />
         </ModalPrimitive.Content>

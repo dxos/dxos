@@ -180,6 +180,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
                 const { spaceId, objectId } = parseId(subjectId);
                 const space = client.spaces.get().find((space) => space.id === spaceId);
                 if (!objectId) {
+                  // TODO(burdon): Ref SPACE_PLUGIN ns.
                   const label = space
                     ? space.properties.name || ['unnamed space label', { ns: DEBUG_PLUGIN }]
                     : ['unnamed object settings label', { ns: DEBUG_PLUGIN }];

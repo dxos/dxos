@@ -122,10 +122,12 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
             }
 
             case 'complementary--automation': {
-              return {
-                node: <AutomationPanel subject={data.subject as any} />,
-                disposition: 'hoist',
-              };
+              if (data.object instanceof ScriptType) {
+                return {
+                  node: <AutomationPanel subject={data.subject as any} />,
+                  disposition: 'hoist',
+                };
+              }
             }
           }
 
@@ -136,7 +138,13 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ScriptAction.CREATE: {
-              return { data: create(ScriptType, { source: create(TextType, { content: templates[0].source }) }) };
+              return {
+                data: create(ScriptType, {
+                  source: create(TextType, {
+                    content: templates[0].source,
+                  }),
+                }),
+              };
             }
           }
         },

@@ -195,34 +195,51 @@ export const sheetExtension = ({ functions = [] }: SheetExtensionOptions): Exten
   ];
 };
 
-export type CellRangeNotifier = (range: string) => void;
+// TODO(burdon): Reuse type def.
+export type Range = { from: number; to: number };
 
-type Range = { from: number; to: number };
+export interface RangeController {
+  setRange(range: string): void;
+}
+
+export type RangeExtensionOptions = {
+  onInit?: (controller: RangeController) => void;
+  onStateChange?: (state: { activeRange: Range | undefined }) => void;
+};
 
 /**
  * Tracks the currently active cell within a formula and provides a callback to modify it.
  */
-export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): Extension => {
+export const rangeExtension = ({ onInit, onStateChange }: RangeExtensionOptions): Extension => {
   let view: EditorView;
   let activeRange: Range | undefined;
-  const provider: CellRangeNotifier = (range: string) => {
-    if (activeRange) {
-      view.dispatch(
-        view.state.update({
-          changes: { ...activeRange, insert: range.toString() },
-          selection: { anchor: activeRange.from + range.length },
-        }),
-      );
-    }
 
-    view.focus();
+  const onRangeChange = (range: Range | undefined) => {
+    activeRange = range;
+    onStateChange?.({ activeRange });
+  };
+
+  // Called externally to provide current range.
+  const notifier: RangeController = {
+    setRange: (range: string) => {
+      if (activeRange) {
+        view.dispatch(
+          view.state.update({
+            changes: { ...activeRange, insert: range.toString() },
+            selection: { anchor: activeRange.from + range.length },
+          }),
+        );
+      }
+
+      view.focus();
+    },
   };
 
   return ViewPlugin.fromClass(
     class {
       constructor(_view: EditorView) {
         view = _view;
-        onInit(provider);
+        onInit?.(notifier);
       }
 
       update(view: ViewUpdate) {

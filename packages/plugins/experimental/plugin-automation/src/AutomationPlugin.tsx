@@ -12,7 +12,7 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, toSignal } from '@dxos/plugin-graph';
 import { getTypename, loadObjectReferences, parseId } from '@dxos/react-client/echo';
 
-import { ChainArticle } from './components';
+import { AutomationPanel, ChainArticle } from './components';
 import meta, { AUTOMATION_PLUGIN } from './meta';
 import translations from './translations';
 import { AutomationAction, type AutomationPluginProvides, ChainPromptType, ChainType } from './types';
@@ -49,7 +49,6 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
             createExtension({
               id: `${AUTOMATION_PLUGIN}/automation-for-subject`,
               resolver: ({ id }) => {
-                // TODO(Zan): Find util (or make one).
                 if (!id.endsWith('~automation')) {
                   return;
                 }
@@ -61,6 +60,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
                 const { spaceId, objectId } = parseId(subjectId);
                 const space = client.spaces.get().find((space) => space.id === spaceId);
                 if (!objectId) {
+                  // TODO(burdon): Ref SPACE_PLUGIN ns.
                   const label = space
                     ? space.properties.name || ['unnamed space label', { ns: AUTOMATION_PLUGIN }]
                     : ['unnamed object settings label', { ns: AUTOMATION_PLUGIN }];
@@ -122,8 +122,9 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
           switch (role) {
             case 'article':
               return data.object instanceof ChainType ? <ChainArticle chain={data.object} /> : null;
+
             case 'complementary--automation':
-              return <div>Automation</div>;
+              return <AutomationPanel />;
           }
 
           return null;

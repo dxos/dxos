@@ -8,12 +8,16 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Select, useTranslation } from '@dxos/react-ui';
 import { nonNullable } from '@dxos/util';
 
-import { PromptTemplate, Section } from './PromptTemplate';
 import { AUTOMATION_PLUGIN } from '../meta';
 import { chainPresets, type Preset } from '../presets';
 import { type ChainType } from '../types';
+import { PromptTemplate, Section } from './PromptTemplate';
 
-export const Chain: FC<{ chain: ChainType }> = ({ chain }) => {
+export type ChainProps = {
+  chain: ChainType;
+};
+
+export const Chain = ({ chain }: ChainProps) => {
   const space = getSpace(chain);
   if (!space) {
     return null;
