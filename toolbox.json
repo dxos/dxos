@@ -31,7 +31,8 @@
       "@dxos/async",
       "@dxos/keys",
       "@dxos/timeframe",
-      "@dxos/tracing"
+      "@dxos/tracing",
+      "@dxos/lit-grid"
     ]
   },
   "tsconfig": {
