@@ -21,7 +21,9 @@
     ],
     "withCustomExports": [
       "@dxos/shell",
-      "@dxos/node-std"
+      "@dxos/node-std",
+      "@dxos/invariant",
+      "@dxos/log"
     ]
   },
   "tsconfig": {
