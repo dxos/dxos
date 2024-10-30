@@ -570,10 +570,7 @@ export class Toolbox {
           (packageJson.exports[exportName] as any).browser = `./dist/lib/browser/${distSlug}.mjs`;
         }
         if (isNode) {
-          (packageJson.exports[exportName] as any).node = {
-            require: `./dist/lib/node/${distSlug}.cjs`,
-            default: `./dist/lib/node-esm/${distSlug}.mjs`,
-          };
+          (packageJson.exports[exportName] as any).node = `./dist/lib/node-esm/${distSlug}.mjs`;
         }
         (packageJson.exports[exportName] as any).types = `./dist/types/src/${distSlug}.d.ts`;
 
