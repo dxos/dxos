@@ -162,8 +162,7 @@ export const GridSheet = () => {
       rangeExtension({
         onInit: (fn) => (rangeController.current = fn),
         onStateChange: (state) => {
-          // TODO(burdon): Update grid.
-          console.log('::::', JSON.stringify(state));
+          // TODO(burdon): Update grid to allow range selection if state.activeRange is not undefined.
         },
       }),
     ],
