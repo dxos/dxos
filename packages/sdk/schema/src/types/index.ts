@@ -4,5 +4,4 @@
 
 export * from './annotations';
 export * from './date';
-export * from './field';
-export * from './types';
+export * from './view';

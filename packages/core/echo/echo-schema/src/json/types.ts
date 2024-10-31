@@ -1,4 +1,8 @@
-import { Schema as S, JSONSchema } from '@effect/schema';
+//
+// Copyright 2024 DXOS.org
+//
+
+import { Schema as S, type JSONSchema } from '@effect/schema';
 
 // TODO(dmaretskyi): Define more precise type.
 

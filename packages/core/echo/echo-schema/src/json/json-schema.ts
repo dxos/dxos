@@ -8,8 +8,8 @@ import { AST, JSONSchema, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import {
-  type FieldMetaAnnotation,
-  FieldMetaAnnotationId,
+  type PropertyMetaAnnotation,
+  PropertyMetaAnnotationId,
   type ObjectAnnotation,
   ObjectAnnotationId,
   ReferenceAnnotationId,
@@ -21,13 +21,13 @@ const ECHO_REFINEMENT_KEY = '$echo';
 interface EchoRefinement {
   type?: ObjectAnnotation;
   reference?: ObjectAnnotation;
-  annotations?: FieldMetaAnnotation;
+  annotations?: PropertyMetaAnnotation;
 }
 
 const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
   [ObjectAnnotationId]: 'type',
   [ReferenceAnnotationId]: 'reference',
-  [FieldMetaAnnotationId]: 'annotations',
+  [PropertyMetaAnnotationId]: 'annotations',
 };
 
 // TODO(burdon): Are these values stored (can they be changed?)
@@ -107,7 +107,7 @@ export const effectToJsonSchema = (schema: S.Schema<any>): any => {
       );
     }
     const refinement: EchoRefinement = {};
-    for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, FieldMetaAnnotationId]) {
+    for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
       if (ast.annotations[annotation] != null) {
         refinement[annotationToRefinementKey[annotation]] = ast.annotations[annotation] as any;
       }
@@ -171,7 +171,7 @@ const jsonToEffectTypeSchema = (
   invariant(immutableIdField, 'no id in echo type');
   const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
   const annotations: Mutable<S.Annotations.Schema<any>> = {};
-  for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, FieldMetaAnnotationId]) {
+  for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
     if (echoRefinement[annotationToRefinementKey[annotation]]) {
       annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
     }
@@ -256,5 +256,5 @@ export const jsonToEffectSchema = (
   }
 
   const refinement: EchoRefinement | undefined = (root as any)[ECHO_REFINEMENT_KEY];
-  return refinement?.annotations ? result.annotations({ [FieldMetaAnnotationId]: refinement.annotations }) : result;
+  return refinement?.annotations ? result.annotations({ [PropertyMetaAnnotationId]: refinement.annotations }) : result;
 };

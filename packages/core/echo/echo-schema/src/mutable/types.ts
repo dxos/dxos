@@ -5,9 +5,9 @@
 import { S } from '@dxos/effect';
 
 import { getObjectAnnotation } from '../ast';
+import { JsonSchemaType } from '../json/types';
 import { TypedObject } from '../object';
 import { requireTypeReference } from '../proxy';
-import { JsonSchemaType } from '../json/types';
 
 export class StoredSchema extends TypedObject({ typename: 'dxos.org/type/StoredSchema', version: '0.1.0' })({
   typename: S.String,

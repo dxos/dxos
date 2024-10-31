@@ -129,7 +129,7 @@ export class MutableSchemaRegistry {
     const schemaToStore = create(StoredSchema, {
       typename: typeAnnotation.typename,
       version: typeAnnotation.version,
-      jsonSchema: {},
+      jsonSchema: {} as any, // TODO(dmaretskyi): createEmptyJsonSchema().
     });
 
     const updatedSchema = schema.annotations({

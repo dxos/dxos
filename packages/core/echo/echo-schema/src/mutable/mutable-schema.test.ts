@@ -10,7 +10,7 @@ import { AST, S } from '@dxos/effect';
 
 import { MutableSchema } from './mutable-schema';
 import { StoredSchema } from './types';
-import { FieldMeta, getObjectAnnotation, getFieldMetaAnnotation } from '../ast';
+import { PropertyMeta, getObjectAnnotation, getPropertyMetaAnnotation } from '../ast';
 import { create } from '../handler';
 import { effectToJsonSchema } from '../json';
 import { TypedObject } from '../object';
@@ -83,7 +83,7 @@ describe('dynamic schema', () => {
     const metaInfo = { maxLength: 10 };
     const registered = createMutableSchema(EmptySchemaType);
     registered.addColumns({
-      field1: S.String.pipe(FieldMeta(metaNamespace, metaInfo)),
+      field1: S.String.pipe(PropertyMeta(metaNamespace, metaInfo)),
       field2: S.String,
     });
     registered.addColumns({ field3: S.String });
@@ -93,7 +93,7 @@ describe('dynamic schema', () => {
       typename: 'example.com/type/Empty',
       version: '0.1.0',
     });
-    expect(getFieldMetaAnnotation(registered.getProperties()[0], metaNamespace)).to.deep.eq(metaInfo);
+    expect(getPropertyMetaAnnotation(registered.getProperties()[0], metaNamespace)).to.deep.eq(metaInfo);
   });
 
   const createMutableSchema = (schema: S.Schema<any>): MutableSchema => {

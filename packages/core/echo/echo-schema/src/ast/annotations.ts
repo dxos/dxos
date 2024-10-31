@@ -34,7 +34,7 @@ export type ObjectAnnotation = {
 };
 
 // TODO(burdon): Rename ObjectAnnotation.
-// TODO(dmaretskyi): Add `id` field to the schema type.
+// TODO(dmaretskyi): Add `id` property to the schema type.
 export const EchoObject =
   (typename: string, version: string) =>
   <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<HasId & ToMutable<A>>> => {
@@ -59,6 +59,37 @@ export const getObjectAnnotation = (schema: S.Schema<any>): ObjectAnnotation | u
 export const getSchemaTypename = (schema: S.Schema<any>): string | undefined => getObjectAnnotation(schema)?.typename;
 
 //
+// PropertyMeta (metadata for dynamic schema properties)
+//
+
+export const PropertyMetaAnnotationId = Symbol.for('@dxos/schema/annotation/PropertyMeta');
+
+export type PropertyMetaValue = Record<string, string | number | boolean | undefined>;
+
+export type PropertyMetaAnnotation = {
+  [namespace: string]: PropertyMetaValue;
+};
+
+export const PropertyMeta =
+  (namespace: string, meta: PropertyMetaValue) =>
+  <A, I, R>(self: S.Schema<A, I, R>): S.Schema<A, I, R> => {
+    const existingMeta = self.ast.annotations[PropertyMetaAnnotationId] as PropertyMetaAnnotation;
+    return self.annotations({
+      [PropertyMetaAnnotationId]: {
+        ...existingMeta,
+        [namespace]: { ...(existingMeta ?? {})[namespace], ...meta },
+      },
+    });
+  };
+
+export const getPropertyMetaAnnotation = <T>(prop: AST.PropertySignature, namespace: string) =>
+  pipe(
+    AST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(prop.type),
+    Option.map((meta) => meta[namespace] as T),
+    Option.getOrElse(() => undefined),
+  );
+
+//
 // Reference
 //
 
@@ -69,36 +100,5 @@ export type ReferenceAnnotationValue = ObjectAnnotation;
 export const getReferenceAnnotation = (schema: S.Schema<any>) =>
   pipe(
     AST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId)(schema.ast),
-    Option.getOrElse(() => undefined),
-  );
-
-//
-// FieldMeta
-//
-
-export const FieldMetaAnnotationId = Symbol.for('@dxos/schema/annotation/FieldMeta');
-
-export type FieldMetaValue = Record<string, string | number | boolean | undefined>;
-
-export type FieldMetaAnnotation = {
-  [namespace: string]: FieldMetaValue;
-};
-
-export const FieldMeta =
-  (namespace: string, meta: FieldMetaValue) =>
-  <A, I, R>(self: S.Schema<A, I, R>): S.Schema<A, I, R> => {
-    const existingMeta = self.ast.annotations[FieldMetaAnnotationId] as FieldMetaAnnotation;
-    return self.annotations({
-      [FieldMetaAnnotationId]: {
-        ...existingMeta,
-        [namespace]: { ...(existingMeta ?? {})[namespace], ...meta },
-      },
-    });
-  };
-
-export const getFieldMetaAnnotation = <T>(field: AST.PropertySignature, namespace: string) =>
-  pipe(
-    AST.getAnnotation<FieldMetaAnnotation>(FieldMetaAnnotationId)(field.type),
-    Option.map((meta) => meta[namespace] as T),
     Option.getOrElse(() => undefined),
   );
