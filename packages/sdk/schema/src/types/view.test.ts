@@ -5,7 +5,9 @@
 import { describe, test, beforeEach, afterEach } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { TypedObject } from '@dxos/echo-schema';
+import { TypedObject, effectToJsonSchema } from '@dxos/echo-schema';
+
+import { type ViewType } from './view';
 
 describe('view', () => {
   let builder: EchoTestBuilder;
@@ -18,26 +20,17 @@ describe('view', () => {
     await builder.close();
   });
 
-  test('addFieldToView should add field to view and schema', async () => {
-    const { db } = await setupTest();
+  test('adds property to schema', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
     class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({}) {}
     const schema = db.schema.addSchema(TestSchema);
-    const view = { schema: 'example.com/type/Test', fields: [] };
+    const view: ViewType = {
+      schema: effectToJsonSchema(TestSchema),
+      query: {
+        __typename: schema.typename,
+      },
+    };
 
-    // {
-    //   const field = { id: 'delete-me', path: 'name', type: FieldValueType.String };
-    //   addFieldToView(initialSchema, view, field);
-    //   expect(view.fields).to.have.length(1);
-    //   expect(getProperty(initialSchema, field.path)).to.exist;
-    // }
-    // {
-    //   const field = { id: 'delete-me', path: 'name', type: FieldValueType.String };
-    //   expect(() => addFieldToView(initialSchema, view, field)).toThrow();
-    // }
+    expect(view.query.__typename).to.eq(TestSchema.typename);
   });
-
-  const setupTest = async () => {
-    const { db } = await builder.createDatabase();
-    return { db };
-  };
 });

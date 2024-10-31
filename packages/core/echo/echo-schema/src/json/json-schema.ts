@@ -65,7 +65,7 @@ export const toPropType = (type?: PropType): string => {
 /**
  * @deprecated Use TS-Effect types to generate JSON Schema
  */
-export interface JsonSchema {
+export type JsonSchema = {
   $schema?: string;
   $id?: string;
   $ref?: string;
@@ -74,9 +74,9 @@ export interface JsonSchema {
   type: string;
   properties?: { [key: string]: JsonSchema };
   items?: JsonSchema;
-}
+};
 
-export const effectToJsonSchema = (schema: S.Schema<any>): any => {
+export const effectToJsonSchema = (schema: S.Schema.Any): any => {
   const withEchoRefinements = (ast: AST.AST): AST.AST => {
     let recursiveResult: AST.AST = ast;
     if (AST.isTypeLiteral(ast)) {

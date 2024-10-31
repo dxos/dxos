@@ -18,25 +18,28 @@ import {
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { setColumnSize, ColumnSize, PropertyKind, FieldValueType, ViewPath, ViewSchema } from './view';
+import { setColumnSize, ColumnSize, PropertyKind, FieldValueType, ViewPath } from './annotations';
+import { ViewSchema } from './view';
 
-describe.only('schema composition', () => {
-  // TODO(burdon): Move test to
+// TODO(burdon): Move tests to echo-schema?
+// TODO(burdon): Add expects.
+describe('schema composition', () => {
   test('schema composition', ({ expect }) => {
-    class PersonType extends TypedObject({ typename: 'example.com/Person', version: '0.1.0' })({
+    class BaseType extends TypedObject({ typename: 'example.com/Person', version: '0.1.0' })({
       name: S.String,
       email: S.String.pipe(PropertyKind(FieldValueType.Email)),
     }) {}
 
-    const ViewSchema = S.Struct({
+    const OverlaySchema = S.Struct({
       name: S.String.pipe(ViewPath('$.name' as JsonPath)).pipe(ColumnSize(50)),
       email: S.String.pipe(ViewPath('$.email' as JsonPath)).pipe(ColumnSize(100)),
     });
 
-    const personSchema = effectToJsonSchema(PersonType);
-    const viewSchema = effectToJsonSchema(ViewSchema);
+    const baseSchema = effectToJsonSchema(BaseType);
+    const overlaySchema = effectToJsonSchema(OverlaySchema);
 
-    const composedSchema = composeSchema(personSchema, viewSchema);
+    const composedSchema = composeSchema(baseSchema, overlaySchema);
+    // TODO(burdon): Remove any cast.
     expect((composedSchema as any).properties).toEqual({
       name: {
         type: 'string',
@@ -57,7 +60,7 @@ describe.only('schema composition', () => {
       },
     });
 
-    log.info('schema', { typeSchemaJson: personSchema, viewSchema, composedSchema });
+    log.info('schema', { typeSchemaJson: baseSchema, viewSchema: overlaySchema, composedSchema });
   });
 
   test('static schema definitions with references', async () => {
