@@ -1,8 +1,14 @@
-import { create, effectToJsonSchema, ref, TypedObject } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { Schema as S } from '@effect/schema';
 import { DescriptionAnnotationId } from '@effect/schema/AST';
 import { test } from 'vitest';
+
+import { create, effectToJsonSchema, ref, TypedObject } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
+
 import { composeSchema } from './composition';
 import {
   ColumnSize,
@@ -65,7 +71,7 @@ test('schema composition', ({ expect }) => {
   log.info('schema', { typeSchemaJson: testSchemaJson, projectionSchemaJson, composedSchema });
 });
 
-test('scratch', async () => {
+test('objects with references', async () => {
   class Org extends TypedObject({ typename: 'example.com/Org', version: '0.1.0' })({
     name: S.String,
   }) {}
@@ -85,7 +91,7 @@ test('scratch', async () => {
   log.info('schema', { org, person });
 });
 
-test('scratch', async () => {
+test('view and composition', async () => {
   // empty schema
   const orgSchema = createEmptySchema('example.com/Org', '0.1.0');
 

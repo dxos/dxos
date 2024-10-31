@@ -1,7 +1,9 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import type { JsonSchemaType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-import { JSONSchema } from '@effect/schema';
 
 export const composeSchema = (source: JsonSchemaType, projection: JsonSchemaType): JsonSchemaType => {
   const result = structuredClone(projection);
@@ -12,14 +14,14 @@ export const composeSchema = (source: JsonSchemaType, projection: JsonSchemaType
   for (const field in result.properties) {
     const fieldSchema = source.properties[field]; // TODO(dmaretskyi): Find by json-path instead.
 
-    const annotations = (fieldSchema as any)?.['$echo']?.annotations;
+    const annotations = (fieldSchema as any)?.$echo?.annotations;
     if (annotations) {
-      (result.properties[field] as any)['$echo'] ??= {};
-      (result.properties[field] as any)['$echo'].annotations ??= {};
+      (result.properties[field] as any).$echo ??= {};
+      (result.properties[field] as any).$echo.annotations ??= {};
       for (const key in annotations) {
-        (result.properties[field] as any)['$echo'].annotations[key] ??= {};
-        Object.assign((result.properties[field] as any)['$echo'].annotations[key], annotations[key], {
-          ...(result.properties[field] as any)['$echo'].annotations[key],
+        (result.properties[field] as any).$echo.annotations[key] ??= {};
+        Object.assign((result.properties[field] as any).$echo.annotations[key], annotations[key], {
+          ...(result.properties[field] as any).$echo.annotations[key],
         });
       }
     }

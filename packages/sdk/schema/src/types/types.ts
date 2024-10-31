@@ -2,8 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
+import {
+  QueryType,
+  JsonSchemaType,
+  FieldMeta,
+  effectToJsonSchema,
+  create,
+  StoredSchema,
+  type ReactiveObject,
+  ReferenceAnnotationId,
+  type ReferenceAnnotationValue,
+} from '@dxos/echo-schema';
 import { S } from '@dxos/effect';
-import { QueryType, JsonSchemaType, FieldMeta, effectToJsonSchema, create, StoredSchema, type ReactiveObject, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo-schema';
 
 // TODO(burdon): JSON path alternatives.
 //  - https://datatracker.ietf.org/doc/html/rfc6901
@@ -105,7 +115,6 @@ export const FieldKind = (kind: FieldValueType) => FieldMeta('dxos.schema', { ki
  */
 export const ColumnSize = (size: number) => FieldMeta('dxos.view', { size });
 
-
 export const setColumnSize = (schema: JsonSchemaType, property: string, size: number): void =>
   setAnnotation(schema, property, 'dxos.view', { size });
 
@@ -121,11 +130,9 @@ export type JsonPath = string & { __JsonPath: true };
  */
 export const ViewPath = (path: JsonPath) => FieldMeta('dxos.view', { path });
 
-
 //
 // New stuff
 //
-
 
 export const createEmptyJsonSchema = () => {
   const schema = effectToJsonSchema(S.Struct({}));
