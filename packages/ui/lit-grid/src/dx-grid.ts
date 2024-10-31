@@ -121,6 +121,10 @@ export const closestCell = (target: EventTarget | null, actionEl?: HTMLElement |
   }
 };
 
+const targetIsPlane = (target: EventTarget | null): DxGridPlane | null => {
+  return ((target as HTMLElement | null)?.getAttribute('data-dx-grid-plane') as DxGridPlane | undefined | null) ?? null;
+};
+
 const resolveRowPlane = (plane: DxGridPlane): 'grid' | DxGridFrozenRowsPlane => {
   switch (plane) {
     case 'fixedStartStart':
@@ -406,14 +410,18 @@ export class DxGrid extends LitElement {
           event.preventDefault();
         } else {
           const cellCoords = closestCell(event.target, actionEl);
-          if (cellCoords && !this.cellReadonly(cellCoords.col, cellCoords.row, cellCoords.plane)) {
+          if (
+            cellCoords &&
+            this.mode !== 'edit' &&
+            !this.cellReadonly(cellCoords.col, cellCoords.row, cellCoords.plane)
+          ) {
             this.pointer = { state: 'maybeSelecting', pageX: event.pageX, pageY: event.pageY };
             this.selectionStart = cellCoords;
             this.selectionEnd = cellCoords;
             this.dispatchSelectionChange();
           }
-          if (this.mode === 'edit') {
-            // Prevent focus moving when editing.
+          if (this.mode === 'edit-select') {
+            // Prevent focus moving when editing while selection is possible
             event.preventDefault();
           } else {
             if (this.focusActive && isSameCell(this.focusedCell, cellCoords)) {
@@ -427,7 +435,7 @@ export class DxGrid extends LitElement {
 
   private handlePointerUp = (event: PointerEvent) => {
     const cell = closestCell(event.target);
-    if (cell) {
+    if (cell && this.pointer?.state === 'selecting') {
       this.setSelectionEnd(cell);
     }
     this.pointer = null;
@@ -452,7 +460,8 @@ export class DxGrid extends LitElement {
    * Increments focus among all theoretically possible cells in a plane, cycling as tab would but accounting for the
    * theoretical bounds of the grid plane (handling infinite planes heuristically).
    */
-  private incrementFocusWithinPlane(reverse?: boolean) {
+  private incrementFocusWithinPlane(event: KeyboardEvent) {
+    const reverse = event.shiftKey;
     const colPlane = resolveColPlane(this.focusedCell.plane);
     const rowPlane = resolveRowPlane(this.focusedCell.plane);
     const colMax = (colPlane === 'grid' ? this.limitColumns : this.frozen[colPlane]!) - 1;
@@ -479,8 +488,10 @@ export class DxGrid extends LitElement {
   /**
    * Increments focus in a specific direction without cycling.
    */
-  private moveFocusOrSelectionEndWithinPlane(deltaCol: number, deltaRow: number, selectionEnd?: boolean) {
-    const current = selectionEnd ? this.selectionEnd : this.focusedCell;
+  private moveFocusOrSelectionEndWithinPlane(event: KeyboardEvent) {
+    const current = event.shiftKey ? this.selectionEnd : this.focusedCell;
+    const deltaCol = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0;
+    const deltaRow = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
 
     const colPlane = resolveColPlane(current.plane);
     const colMax = (colPlane === 'grid' ? this.limitColumns : this.frozen[colPlane]!) - 1;
@@ -490,54 +501,102 @@ export class DxGrid extends LitElement {
     const rowMax = (rowPlane === 'grid' ? this.limitRows : this.frozen[rowPlane]!) - 1;
     const nextRow = Math.max(0, Math.min(rowMax, current.row + deltaRow));
 
-    if (selectionEnd) {
+    if (event.shiftKey) {
       this.setSelectionEnd({ ...this.selectionEnd, col: nextCol, row: nextRow });
     } else {
       this.setFocusedCell({ ...this.focusedCell, row: nextRow, col: nextCol });
     }
   }
 
+  private moveFocusBetweenPlanes(event: KeyboardEvent, plane: DxGridPlane) {
+    const planeElement = this.gridRef.value?.querySelector(`[data-dx-grid-plane="${plane}"]`) as HTMLElement | null;
+    if (planeElement) {
+      const axis = event.key === 'ArrowUp' || event.key === 'ArrowDown' ? 'col' : 'row';
+      const delta = event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1;
+
+      const planeAxis = planeElement?.getAttribute(`data-dx-grid-plane-${axis}`);
+      const adjacentPlanes = Array.from(
+        this.gridRef.value?.querySelectorAll(`[data-dx-grid-plane-${axis}="${planeAxis}"]`) ?? [planeElement],
+      ).filter((el) => !!el) as HTMLElement[];
+
+      adjacentPlanes[
+        (adjacentPlanes.length + adjacentPlanes.indexOf(planeElement!) + delta) % adjacentPlanes.length
+      ]?.focus({ preventScroll: true });
+    }
+  }
+
+  private moveFocusIntoPlane(plane: DxGridPlane) {
+    if (this.focusedCell.plane !== plane) {
+      const colPlane = resolveColPlane(plane);
+      const rowPlane = resolveRowPlane(plane);
+      this.focusedCell = {
+        plane,
+        col: colPlane === 'grid' ? this.visColMin : 0,
+        row: rowPlane === 'grid' ? this.visRowMin : 0,
+      };
+    }
+    this.focusedCellElement()?.focus({ preventScroll: true });
+  }
+
+  private moveFocusToPlane() {
+    this.focusedPlaneElement()?.focus({ preventScroll: true });
+  }
+
   private handleKeydown(event: KeyboardEvent) {
     if (this.focusActive && this.mode === 'browse') {
-      // Adjust state
-      switch (event.key) {
-        case 'ArrowDown':
-          event.preventDefault();
-          this.moveFocusOrSelectionEndWithinPlane(0, 1, event.shiftKey);
-          break;
-        case 'ArrowUp':
-          event.preventDefault();
-          this.moveFocusOrSelectionEndWithinPlane(0, -1, event.shiftKey);
-          break;
-        case 'ArrowRight':
-          event.preventDefault();
-          this.moveFocusOrSelectionEndWithinPlane(1, 0, event.shiftKey);
-          break;
-        case 'ArrowLeft':
-          event.preventDefault();
-          this.moveFocusOrSelectionEndWithinPlane(-1, 0, event.shiftKey);
-          break;
-        case 'Tab':
-          event.preventDefault();
-          this.incrementFocusWithinPlane(event.shiftKey);
-          break;
-        case 'Escape':
-          // Handle escape if selection is a superset of the focused cell.
-          if (this.selectionStart.col !== this.selectionEnd.col || this.selectionStart.row !== this.selectionEnd.row) {
+      const plane = targetIsPlane(event.target);
+      if (plane) {
+        switch (event.key) {
+          case 'ArrowDown':
+          case 'ArrowUp':
+          case 'ArrowRight':
+          case 'ArrowLeft':
             event.preventDefault();
-            this.selectionStart = this.focusedCell;
-            this.selectionEnd = this.focusedCell;
-            this.dispatchSelectionChange();
-          }
-          break;
-        case 'Enter':
-          this.dispatchEditRequest();
-          break;
-        default:
-          if (event.key.length === 1 && event.key.match(/\P{Cc}/u) && !(event.metaKey || event.ctrlKey)) {
-            this.dispatchEditRequest(event.key);
-          }
-          break;
+            this.moveFocusBetweenPlanes(event, plane);
+            break;
+          case 'Enter':
+            event.preventDefault();
+            this.moveFocusIntoPlane(plane);
+            break;
+        }
+      } else {
+        // Adjust cell-scope state
+        switch (event.key) {
+          case 'ArrowDown':
+          case 'ArrowUp':
+          case 'ArrowRight':
+          case 'ArrowLeft':
+            event.preventDefault();
+            this.moveFocusOrSelectionEndWithinPlane(event);
+            break;
+          case 'Tab':
+            event.preventDefault();
+            this.incrementFocusWithinPlane(event);
+            break;
+          case 'Escape':
+            // Handle escape if selection is a superset of the focused cell.
+            event.preventDefault();
+            if (
+              this.selectionStart.col !== this.selectionEnd.col ||
+              this.selectionStart.row !== this.selectionEnd.row
+            ) {
+              this.selectionStart = this.focusedCell;
+              this.selectionEnd = this.focusedCell;
+              this.dispatchSelectionChange();
+            } else {
+              this.moveFocusToPlane();
+            }
+            break;
+          case 'Enter':
+            event.preventDefault();
+            this.dispatchEditRequest();
+            break;
+          default:
+            if (event.key.length === 1 && event.key.match(/\P{Cc}/u) && !(event.metaKey || event.ctrlKey)) {
+              this.dispatchEditRequest(event.key);
+            }
+            break;
+        }
       }
     }
   }
@@ -636,6 +695,7 @@ export class DxGrid extends LitElement {
     }
   });
 
+  private gridRef: Ref<HTMLDivElement> = createRef();
   private viewportRef: Ref<HTMLDivElement> = createRef();
 
   private maybeUpdateVisInline = () => {
@@ -888,11 +948,19 @@ export class DxGrid extends LitElement {
   }
 
   private focusedCellQuery() {
-    return `[data-dx-grid-plane=${this.focusedCell.plane}] > [aria-colindex="${this.focusedCell.col}"][aria-rowindex="${this.focusedCell.row}"]`;
+    return `[data-dx-grid-plane=${this.focusedCell.plane}] [aria-colindex="${this.focusedCell.col}"][aria-rowindex="${this.focusedCell.row}"]`;
+  }
+
+  private focusedPlaneQuery() {
+    return `[data-dx-grid-plane=${this.focusedCell.plane}]`;
   }
 
   private focusedCellElement() {
-    return this.viewportRef.value?.querySelector(this.focusedCellQuery()) as HTMLElement | null;
+    return this.gridRef.value?.querySelector(this.focusedCellQuery()) as HTMLElement | null;
+  }
+
+  private focusedPlaneElement() {
+    return this.gridRef.value?.querySelector(this.focusedPlaneQuery()) as HTMLElement | null;
   }
 
   //
@@ -931,6 +999,8 @@ export class DxGrid extends LitElement {
     }
   }
 
+  private focusPlaneElement() {}
+
   /**
    * Moves focus to the cell with actual focus, otherwise moves focus to the viewport.
    */
@@ -956,7 +1026,7 @@ export class DxGrid extends LitElement {
           cellElement.focus({ preventScroll: true });
         }
       } else {
-        this.viewportRef.value?.focus({ preventScroll: true });
+        this.moveFocusToPlane();
       }
     });
   }
@@ -1081,7 +1151,10 @@ export class DxGrid extends LitElement {
     return (cols ?? 0) > 0 && (rows ?? 0) > 0
       ? html`<div
           role="none"
+          tabindex="0"
           data-dx-grid-plane=${plane}
+          data-dx-grid-plane-row=${plane === 'fixedStartStart' || plane === 'fixedStartEnd' ? 0 : 2}
+          data-dx-grid-plane-col=${plane === 'fixedStartStart' || plane === 'fixedEndStart' ? 0 : 2}
           class="dx-grid__plane--fixed"
           style=${styleMap({
             'grid-template-columns': this[`template${colPlane}`],
@@ -1106,10 +1179,16 @@ export class DxGrid extends LitElement {
     const rowPlane = resolveRowPlane(plane) as DxGridFrozenPlane;
     const rows = this.frozen[rowPlane];
     return (rows ?? 0) > 0
-      ? html`<div role="none" class="dx-grid__plane--frozen-row">
+      ? html`<div
+          role="none"
+          class="dx-grid__plane--frozen-row"
+          tabindex="0"
+          data-dx-grid-plane=${plane}
+          data-dx-grid-plane-row=${plane === 'frozenRowsStart' ? 0 : 2}
+          data-dx-grid-plane-col="1"
+        >
           <div
             role="none"
-            data-dx-grid-plane=${plane}
             class="dx-grid__plane--frozen-row__content"
             style="transform:translate3d(${offsetInline}px,0,0);grid-template-columns:${this
               .templateGridColumns};grid-template-rows:${this[`template${rowPlane}`]}"
@@ -1134,10 +1213,16 @@ export class DxGrid extends LitElement {
     const colPlane = resolveColPlane(plane) as DxGridFrozenPlane;
     const cols = this.frozen[colPlane];
     return (cols ?? 0) > 0
-      ? html`<div role="none" class="dx-grid__plane--frozen-col">
+      ? html`<div
+          role="none"
+          class="dx-grid__plane--frozen-col"
+          tabindex="0"
+          data-dx-grid-plane=${plane}
+          data-dx-grid-plane-col=${plane === 'frozenColsStart' ? 0 : 2}
+          data-dx-grid-plane-row="1"
+        >
           <div
             role="none"
-            data-dx-grid-plane=${plane}
             class="dx-grid__plane--frozen-col__content"
             style="transform:translate3d(0,${offsetBlock}px,0);grid-template-rows:${this
               .templateGridRows};grid-template-columns:${this[`template${colPlane}`]}"
@@ -1189,9 +1274,11 @@ export class DxGrid extends LitElement {
       aria-rowindex=${row}
       style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
     >
-      ${this.mode === 'edit' && active ? null : cell?.value}${this.mode === 'edit' && active
+      ${this.mode !== 'browse' && active ? null : cell?.value}${this.mode !== 'browse' && active
         ? null
-        : accessory}${cell?.resizeHandle && this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
+        : accessory}${cell?.resizeHandle &&
+      this.mode === 'browse' &&
+      this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
         ? html`<dx-grid-axis-resize-handle
             axis=${cell.resizeHandle}
             plane=${resizePlane}
@@ -1233,6 +1320,7 @@ export class DxGrid extends LitElement {
         data-grid=${this.gridId}
         data-grid-mode=${this.mode}
         ?data-grid-select=${selection.visible}
+        ${ref(this.gridRef)}
       >
         ${this.renderFixed('fixedStartStart', selection)}${this.renderFrozenRows(
           'frozenRowsStart',
@@ -1245,11 +1333,18 @@ export class DxGrid extends LitElement {
           offsetBlock,
           selection,
         )}
-        <div role="grid" class="dx-grid__plane--grid" tabindex="0" ${ref(this.viewportRef)}>
+        <div
+          role="grid"
+          class="dx-grid__plane--grid"
+          tabindex="0"
+          data-dx-grid-plane="grid"
+          data-dx-grid-plane-row="1"
+          data-dx-grid-plane-col="1"
+          ${ref(this.viewportRef)}
+        >
           <div
             role="none"
             class="dx-grid__plane--grid__content"
-            data-dx-grid-plane="grid"
             style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:${this
               .templateGridColumns};grid-template-rows:${this.templateGridRows};"
           >
