@@ -1,20 +1,25 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { AST, Schema as S } from '@effect/schema';
+import { test } from 'vitest';
+
 import { create, effectToJsonSchema, ref, TypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { Schema as S } from '@effect/schema';
-import { DescriptionAnnotationId } from '@effect/schema/AST';
-import { test } from 'vitest';
+
 import { composeSchema } from './composition';
 import {
-  ColumnSize,
   createEmptySchema,
   dynamicRef,
-  FieldKind,
-  FieldValueType,
   setColumnSize,
   setProperty,
+  ColumnSize,
+  FieldKind,
+  FieldValueType,
+  type JsonPath,
   ViewPath,
   ViewSchema,
-  type JsonPath,
 } from './types';
 
 test('schema composition', ({ expect }) => {
@@ -90,7 +95,7 @@ test('scratch', async () => {
   const orgSchema = createEmptySchema('example.com/Org', '0.1.0');
 
   // add name field
-  setProperty(orgSchema.jsonSchema, 'name', S.String.annotations({ [DescriptionAnnotationId]: 'Org name' }));
+  setProperty(orgSchema.jsonSchema, 'name', S.String.annotations({ [AST.DescriptionAnnotationId]: 'Org name' }));
 
   log.info('org', { orgSchema });
 
@@ -98,20 +103,20 @@ test('scratch', async () => {
   const personSchema = createEmptySchema('example.com/Person', '0.1.0');
 
   // add name field
-  setProperty(personSchema.jsonSchema, 'name', S.String.annotations({ [DescriptionAnnotationId]: 'Person name' }));
+  setProperty(personSchema.jsonSchema, 'name', S.String.annotations({ [AST.DescriptionAnnotationId]: 'Person name' }));
 
   // add email field
   setProperty(
     personSchema.jsonSchema,
     'email',
-    S.String.pipe(FieldKind(FieldValueType.Email)).annotations({ [DescriptionAnnotationId]: 'Person email' }),
+    S.String.pipe(FieldKind(FieldValueType.Email)).annotations({ [AST.DescriptionAnnotationId]: 'Person email' }),
   );
 
   // add org field
   setProperty(
     personSchema.jsonSchema,
     'org',
-    dynamicRef(orgSchema).annotations({ [DescriptionAnnotationId]: 'Person org' }),
+    dynamicRef(orgSchema).annotations({ [AST.DescriptionAnnotationId]: 'Person org' }),
   );
 
   log.info('person', { personSchema });
@@ -124,7 +129,7 @@ test('scratch', async () => {
       S.Struct({
         name: S.String.pipe(ColumnSize(50)),
         email: S.String.pipe(ColumnSize(100)),
-        org: dynamicRef(orgSchema).annotations({ [DescriptionAnnotationId]: 'Person org' }),
+        org: dynamicRef(orgSchema).annotations({ [AST.DescriptionAnnotationId]: 'Person org' }),
       }),
     ),
   });

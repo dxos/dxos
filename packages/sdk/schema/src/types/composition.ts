@@ -1,7 +1,12 @@
-import type { JsonSchemaType } from '@dxos/echo-schema';
+//
+// Copyright 2024 DXOS.org
+//
+
+import { JSONSchema } from '@effect/schema';
+
+import { type JsonSchemaType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { JSONSchema } from '@effect/schema';
 
 export const composeSchema = (source: JsonSchemaType, projection: JsonSchemaType): JsonSchemaType => {
   const result = structuredClone(projection);
