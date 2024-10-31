@@ -26,6 +26,7 @@ export default [
         'column action delete': 'Delete Column',
         'delete row label': 'Delete row',
         'column deleted label': 'Column deleted',
+        'new column button label': 'Create column',
       },
     },
   },

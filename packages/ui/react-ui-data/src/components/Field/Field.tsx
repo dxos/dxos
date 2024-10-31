@@ -22,9 +22,10 @@ export type FieldProps<T = {}> = ThemedClassName<{
   schema?: S.Schema<T>;
   autoFocus?: boolean;
   readonly?: boolean;
+  onSave?: (field: FieldType) => void;
 }>;
 
-export const Field = <T = {},>({ classNames, field, autoFocus, readonly, schema }: FieldProps<T>) => {
+export const Field = <T = {},>({ classNames, field, autoFocus, readonly, schema, onSave }: FieldProps<T>) => {
   const { t } = useTranslation(translationKey);
   const { values, getInputProps, errors, handleSubmit, canSubmit, touched } = useForm({
     initialValues: { ...field },
@@ -41,6 +42,7 @@ export const Field = <T = {},>({ classNames, field, autoFocus, readonly, schema 
         field[key] = values[key];
       });
 
+      onSave?.(field);
       // TODO(ZaymonFC): Update the associated schema type here if changed.
       // What's the nicest way to do this? Why do we store the type in field at all?
     },
@@ -136,7 +138,7 @@ export const Field = <T = {},>({ classNames, field, autoFocus, readonly, schema 
       {!readonly && (
         <FieldRow>
           <Button onClick={handleSubmit} disabled={!canSubmit}>
-            {t('field save button')}
+            {t('field save button label')}
           </Button>
         </FieldRow>
       )}

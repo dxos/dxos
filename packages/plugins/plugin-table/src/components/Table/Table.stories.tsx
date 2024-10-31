@@ -94,7 +94,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='grid grid-cols-[1fr_256px] h-[100vh]'>
+    <div className='grid grid-cols-[1fr_256px] w-dvw h-dvh'>
       <div className='flex flex-col h-full'>
         <div className='border-b border-separator flex-none'>
           <Toolbar.Root onAction={handleAction}>
