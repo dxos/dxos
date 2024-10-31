@@ -5,17 +5,19 @@
 import React from 'react';
 
 import { type PluginDefinition, parseMetadataResolverPlugin, resolvePlugin } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
 import { FunctionDef, FunctionTrigger } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, toSignal } from '@dxos/plugin-graph';
 import { getTypename, loadObjectReferences, parseId } from '@dxos/react-client/echo';
 
-import { AutomationPanel, ChainArticle } from './components';
+import { AutomationPanel } from './components';
 import meta, { AUTOMATION_PLUGIN } from './meta';
 import translations from './translations';
 import { AutomationAction, type AutomationPluginProvides, ChainPromptType, ChainType } from './types';
+
+// TODO(burdon): Prompt article.
+// TODO(burdon): Trigger panel.
 
 export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> => {
   return {
@@ -120,8 +122,8 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
       surface: {
         component: ({ data, role }) => {
           switch (role) {
-            case 'article':
-              return data.object instanceof ChainType ? <ChainArticle chain={data.object} /> : null;
+            // case 'article':
+              // return data.object instanceof ChainType ? <ChainArticle chain={data.object} /> : null;
 
             case 'complementary--automation':
               return <AutomationPanel />;
@@ -135,7 +137,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
           switch (intent.action) {
             case AutomationAction.CREATE: {
               return {
-                data: create(ChainType, { prompts: [] }),
+                // data: create(ChainType, { prompts: [] }),
                 // data: create(FunctionTrigger, { function: '', spec: { type: 'timer', cron: '' } }),
               };
             }

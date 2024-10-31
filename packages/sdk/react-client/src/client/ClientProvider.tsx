@@ -3,9 +3,9 @@
 //
 
 import React, {
+  forwardRef,
   type FunctionComponent,
   type PropsWithChildren,
-  forwardRef,
   useEffect,
   useImperativeHandle,
   useState,
@@ -18,8 +18,8 @@ import { log } from '@dxos/log';
 import { useControlledValue } from '@dxos/react-hooks';
 import { getAsyncProviderValue, type MaybePromise, type Provider } from '@dxos/util';
 
-import { ClientContext, type ClientContextProps } from './context';
 import { printBanner } from '../banner';
+import { ClientContext, type ClientContextProps } from './context';
 
 /**
  * Properties for the ClientProvider.
@@ -68,8 +68,6 @@ export type ClientProviderProps = Omit<ClientOptions, 'config' | 'services'> &
 
     /**
      * Post initialization hook to enable to caller to do custom initialization.
-     *
-     * @param Client
      */
     onInitialized?: (client: Client) => MaybePromise<void>;
   }>;
