@@ -36,27 +36,29 @@ export type ListRootProps<T extends ListItemRecord> = ThemedClassName<{
 }> &
   Pick<ListContext<T>, 'isItem' | 'getId' | 'dragPreview'>;
 
+const defaultGetId = <T extends ListItemRecord>(item: T) => (item as any)?.id;
+
 export const ListRoot = <T extends ListItemRecord>({
   classNames,
   children,
   items,
   isItem,
-  getId,
+  getId = defaultGetId,
   onMove,
   ...props
 }: ListRootProps<T>) => {
   const isEqual = useCallback(
     (a: T, b: T) => {
-      if (getId) {
-        return getId(a) === getId(b);
+      const idA = getId?.(a);
+      const idB = getId?.(b);
+
+      if (idA !== undefined && idB !== undefined) {
+        return idA === idB;
       } else {
-        // Fallback for primitive values or when getId isn't provided.
-        // NOTE(ZaymonFC): Pragmatic seems to be serializing the drop target data so reference equality doesn't work.
-        try {
-          return JSON.stringify(a) === JSON.stringify(b);
-        } catch {
-          return a === b;
-        }
+        // Fallback for primitive values or when getId fails.
+        // NOTE(ZaymonFC): After drag and drop, pragmatic internally serializes drop targets which breaks reference equality.
+        // You must provide an `getId` function that returns a stable identifier for your items.
+        return a === b;
       }
     },
     [getId],
@@ -78,6 +80,7 @@ export const ListRoot = <T extends ListItemRecord>({
 
         const sourceData = source.data;
         const targetData = target.data;
+
         if (!isItem(sourceData) || !isItem(targetData)) {
           return;
         }
