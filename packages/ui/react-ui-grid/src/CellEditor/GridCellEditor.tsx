@@ -10,9 +10,12 @@ import { type GridScopedProps, useGridContext } from '../Grid';
 export const GridCellEditor = ({
   extension,
   getCellContent,
+  onBlur,
   __gridScope,
-}: GridScopedProps<Pick<CellEditorProps, 'extension'> & { getCellContent: (index: string) => string | undefined }>) => {
-  const { id, editing, setEditing, editBox } = useGridContext('GridSheetCellEditor', __gridScope);
+}: GridScopedProps<
+  Pick<CellEditorProps, 'extension' | 'onBlur'> & { getCellContent: (index: string) => string | undefined }
+>) => {
+  const { id, editing, editBox } = useGridContext('GridSheetCellEditor', __gridScope);
 
   return editing ? (
     <CellEditor
@@ -20,7 +23,7 @@ export const GridCellEditor = ({
       value={editing.initialContent ?? getCellContent(editing.index)}
       autoFocus
       box={editBox}
-      onBlur={() => setEditing(null)}
+      onBlur={onBlur}
       extension={extension}
       gridId={id}
     />

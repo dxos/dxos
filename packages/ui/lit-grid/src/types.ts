@@ -44,7 +44,7 @@ export type DxGridPointer =
 export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'plane' | 'index' | 'size'>;
 export type DxAxisResizeInternalProps = DxAxisResizeProps & { delta: number; state: 'dragging' | 'dropped' };
 
-export type DxGridMode = 'browse' | 'edit';
+export type DxGridMode = 'browse' | 'edit' | 'edit-select';
 
 export type DxGridFrozenAxes = Partial<Record<DxGridFrozenPlane, number>>;
 

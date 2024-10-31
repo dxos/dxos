@@ -48,7 +48,7 @@ Basic.args = {
     grid: {
       '1,1': {
         // end: '8,1',
-        value: 'Weekly sales report',
+        value: 'Waffle production',
       },
       '2,2': {
         value: '',
