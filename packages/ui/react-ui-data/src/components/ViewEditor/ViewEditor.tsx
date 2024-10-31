@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 
 import { S } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';

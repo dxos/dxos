@@ -9,7 +9,7 @@ import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
-import { addFieldToView, type FieldType } from '@dxos/schema';
+import { type FieldType } from '@dxos/schema';
 
 import { Table } from './Table';
 import { Toolbar, type ToolbarAction } from './Toolbar';
@@ -32,7 +32,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const handleDeleteRow = useCallback((row: any) => space?.db.remove(row), [space]);
   const handleAddColumn = useCallback(
     (field: any) => {
-      dispatch({
+      void dispatch({
         action: TableAction.ADD_COLUMN,
         data: { table, field } satisfies TableAction.AddColumn,
       });
@@ -41,7 +41,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   );
   const handleDeleteColumn = useCallback(
     (field: FieldType) => {
-      dispatch({
+      void dispatch({
         action: TableAction.DELETE_COLUMN,
         data: { table, field } satisfies TableAction.DeleteColumn,
       });

@@ -2,21 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { type EchoReactiveObject, getSpace } from '@dxos/react-client/echo';
 
-import { TableModel, TableModelProps } from '../model';
+import { TableModel, type TableModelProps } from '../model';
 import { type TableType } from '../types';
 import { createStarterSchema, createStarterView } from '../types';
 
 export type UseTableModelParams = {
   table: TableType;
   objects: EchoReactiveObject<any>[];
-} & Pick<TableModelProps, 'onAddColumn' | 'onDeleteColumn' | 'onDeleteRow'>
+} & Pick<TableModelProps, 'onAddColumn' | 'onDeleteColumn' | 'onDeleteRow'>;
 
-export const useTableModel = ({ table, objects, onAddColumn, onDeleteColumn, onDeleteRow }: UseTableModelParams): TableModel | undefined => {
+export const useTableModel = ({
+  table,
+  objects,
+  onAddColumn,
+  onDeleteColumn,
+  onDeleteRow,
+}: UseTableModelParams): TableModel | undefined => {
   const space = getSpace(table);
 
   // TODO(ZaymonFC): Not sure this belongs here. Seek feeback.

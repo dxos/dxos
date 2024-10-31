@@ -10,9 +10,8 @@ import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
-import { getSpace } from '@dxos/react-client/echo';
 import { translations as dataTranslations, ViewEditor } from '@dxos/react-ui-data';
-import { addFieldToView, FieldType, removeFieldFromView } from '@dxos/schema';
+import { addFieldToView, type FieldType, removeFieldFromView } from '@dxos/schema';
 
 import { TableContainer } from './components';
 import meta, { TABLE_PLUGIN } from './meta';

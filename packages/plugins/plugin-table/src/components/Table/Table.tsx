@@ -9,13 +9,13 @@ import { type DxGridElement, type DxAxisResize, Grid } from '@dxos/react-ui-grid
 import { mx } from '@dxos/react-ui-theme';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
+import { ColumnSettingsModal } from './ColumnSettingsModal';
 import { NewColumnForm } from './NewColumnForm';
 import { RowActionsMenu } from './RowActionsMenu';
 import { TableCellEditor } from './TableCellEditor';
 import { useTableMenuController } from '../../hooks';
 import { type TableModel } from '../../model';
 import { type GridCell } from '../../types';
-import { ColumnSettingsModal } from './ColumnSettingsModal';
 
 // NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
 // These are offset by 1px to avoid double borders in planks.

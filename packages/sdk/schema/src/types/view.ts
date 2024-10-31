@@ -13,7 +13,7 @@ export const addFieldToView = (
   schema: MutableSchema,
   view: ViewType,
   field: FieldType,
-  position = view.fields.length
+  position = view.fields.length,
 ) => {
   invariant(!getProperty(schema, field.path), `Field path already exists in schema: ${field.path}`);
   invariant(position >= 0 && position <= view.fields.length, `Invalid field position: ${position}`);
