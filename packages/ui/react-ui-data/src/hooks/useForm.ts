@@ -43,7 +43,6 @@ type Form<T> = {
   canSubmit: boolean;
   touched: Record<keyof T, boolean>;
   handleBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  onValidate: (values: T) => boolean;
   getInputProps: (key: keyof T) => InputProps<T>;
 };
 
@@ -174,7 +173,6 @@ export const useForm = <T extends object>({
     canSubmit,
     touched,
     handleBlur,
-    onValidate: validate,
     getInputProps,
   } satisfies Form<T>;
 };
