@@ -410,14 +410,18 @@ export class DxGrid extends LitElement {
           event.preventDefault();
         } else {
           const cellCoords = closestCell(event.target, actionEl);
-          if (cellCoords && !this.cellReadonly(cellCoords.col, cellCoords.row, cellCoords.plane)) {
+          if (
+            cellCoords &&
+            this.mode !== 'edit' &&
+            !this.cellReadonly(cellCoords.col, cellCoords.row, cellCoords.plane)
+          ) {
             this.pointer = { state: 'maybeSelecting', pageX: event.pageX, pageY: event.pageY };
             this.selectionStart = cellCoords;
             this.selectionEnd = cellCoords;
             this.dispatchSelectionChange();
           }
-          if (this.mode === 'edit') {
-            // Prevent focus moving when editing.
+          if (this.mode === 'edit-select') {
+            // Prevent focus moving when editing while selection is possible
             event.preventDefault();
           } else {
             if (this.focusActive && isSameCell(this.focusedCell, cellCoords)) {
@@ -1270,7 +1274,7 @@ export class DxGrid extends LitElement {
       aria-rowindex=${row}
       style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
     >
-      ${this.mode === 'edit' && active ? null : cell?.value}${this.mode === 'edit' && active
+      ${this.mode !== 'browse' && active ? null : cell?.value}${this.mode !== 'browse' && active
         ? null
         : accessory}${cell?.resizeHandle &&
       this.mode === 'browse' &&
