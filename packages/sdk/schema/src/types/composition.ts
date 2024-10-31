@@ -11,14 +11,14 @@ export const composeSchema = (source: JsonSchemaType, projection: JsonSchemaType
   for (const field in result.properties) {
     const fieldSchema = source.properties[field]; // TODO(dmaretskyi): Find by json-path instead.
 
-    const fieldMeta = (fieldSchema as any)?.['$echo']?.fieldMeta;
-    if (fieldMeta) {
+    const annotations = (fieldSchema as any)?.['$echo']?.annotations;
+    if (annotations) {
       (result.properties[field] as any)['$echo'] ??= {};
-      (result.properties[field] as any)['$echo'].fieldMeta ??= {};
-      for (const key in fieldMeta) {
-        (result.properties[field] as any)['$echo'].fieldMeta[key] ??= {};
-        Object.assign((result.properties[field] as any)['$echo'].fieldMeta[key], fieldMeta[key], {
-          ...(result.properties[field] as any)['$echo'].fieldMeta[key],
+      (result.properties[field] as any)['$echo'].annotations ??= {};
+      for (const key in annotations) {
+        (result.properties[field] as any)['$echo'].annotations[key] ??= {};
+        Object.assign((result.properties[field] as any)['$echo'].annotations[key], annotations[key], {
+          ...(result.properties[field] as any)['$echo'].annotations[key],
         });
       }
     }

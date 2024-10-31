@@ -36,7 +36,7 @@ describe('effect-to-json', () => {
       field: S.String.pipe(FieldMeta(metaNamespace, meta)),
     }) {}
     const jsonSchema = effectToJsonSchema(Schema);
-    expect(jsonSchema.properties.field[ECHO_KEY].fieldMeta[metaNamespace]).to.deep.eq(meta);
+    expect(jsonSchema.properties.field[ECHO_KEY].annotations[metaNamespace]).to.deep.eq(meta);
   });
 
   test('reference annotation', () => {

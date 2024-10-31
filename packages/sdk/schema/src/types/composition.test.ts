@@ -36,13 +36,13 @@ test.skip('schema composition', ({ expect }) => {
     name: {
       type: 'string',
       $echo: {
-        fieldMeta: { 'dxos.view': { dataSource: '$.name', size: 50 } },
+        annotations: { 'dxos.view': { dataSource: '$.name', size: 50 } },
       },
     },
     email: {
       type: 'string',
       $echo: {
-        fieldMeta: {
+        annotations: {
           'dxos.view': { dataSource: '$.email', size: 100 },
           'dxos.schema': { kind: 'email' },
         },
@@ -158,7 +158,7 @@ test('scratch', async () => {
 TODO:
 
 $echo -> echo
-fieldMeta -> annotations
+annotations -> annotations
 anyOf: ReactiveArray(2) [ { type: 'object' }, { type: 'array' } ], on effectToJsonSchema(S.Struct({}))
 
 

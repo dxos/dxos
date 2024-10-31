@@ -21,13 +21,13 @@ const ECHO_REFINEMENT_KEY = '$echo';
 interface EchoRefinement {
   type?: ObjectAnnotation;
   reference?: ObjectAnnotation;
-  fieldMeta?: FieldMetaAnnotation;
+  annotations?: FieldMetaAnnotation;
 }
 
 const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
   [ObjectAnnotationId]: 'type',
   [ReferenceAnnotationId]: 'reference',
-  [FieldMetaAnnotationId]: 'fieldMeta',
+  [FieldMetaAnnotationId]: 'annotations',
 };
 
 // TODO(burdon): Are these values stored (can they be changed?)
@@ -256,5 +256,5 @@ export const jsonToEffectSchema = (
   }
 
   const refinement: EchoRefinement | undefined = (root as any)[ECHO_REFINEMENT_KEY];
-  return refinement?.fieldMeta ? result.annotations({ [FieldMetaAnnotationId]: refinement.fieldMeta }) : result;
+  return refinement?.annotations ? result.annotations({ [FieldMetaAnnotationId]: refinement.annotations }) : result;
 };
