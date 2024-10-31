@@ -81,11 +81,11 @@ const ObjectTableImpl = ({ table, role, stickyHeader }: ObjectTableProps) => {
     (oldId: string, column: ColumnDef) => {
       const { id, type, refTable, refProp, digits, label } = column;
       updateTableProp(table.props, oldId, { id, refProp, label });
-      table.schema?.updateColumns({
+      table.schema?.updateFields({
         [oldId]: getSchema(tables, type, { digits, refTable, refProp }),
       });
       if (oldId !== column.id) {
-        table.schema?.updatePropertyName({ before: oldId, after: id });
+        table.schema?.updateFieldPropertyName({ before: oldId, after: id });
       }
     },
     [table.props, table.schema, tables],
@@ -93,7 +93,7 @@ const ObjectTableImpl = ({ table, role, stickyHeader }: ObjectTableProps) => {
 
   const onColumnDelete = useCallback(
     (id: string) => {
-      table.schema?.removeColumns([id]);
+      table.schema?.removeFields([id]);
       deleteTableProp(table.props, id);
     },
     [table.schema, table.props],

@@ -8,14 +8,16 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
+import { Filter, useSpaces, useQuery, create, getSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-data';
+import { addFieldToView, type FieldType, removeFieldFromView } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
 import { useTableModel } from '../../hooks';
+import translations from '../../translations';
 import { TableType } from '../../types';
 import { Toolbar } from '../Toolbar';
 import { createEmptyTable, createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
@@ -41,6 +43,23 @@ const DefaultStory = () => {
   }, [tables]);
 
   const handleDeleteRow = useCallback((row: any) => space.db.remove(row), [space]);
+  const handleAddColumn = useCallback(
+    (field: any) => {
+      if (table && table.schema?.schema && table.view) {
+        addFieldToView(table.schema, table.view, field);
+      }
+    },
+    [table],
+  );
+  const handleDeleteColumn = useCallback(
+    (field: any) => {
+      if (table && table.schema?.schema && table.view) {
+        removeFieldFromView(table.schema, table.view, field);
+      }
+    },
+    [table],
+  );
+
   const handleAction = useCallback(
     (action: { type: string }) => {
       switch (action.type) {
@@ -49,11 +68,13 @@ const DefaultStory = () => {
           break;
         }
         case 'add-row': {
-          const lastSpace = spaces[spaces.length - 1];
-          if (table?.schema && lastSpace) {
-            lastSpace.db.add(create(table.schema, {}));
+          if (table) {
+            const space = getSpace(table);
+            if (table?.schema && space) {
+              space.db.add(create(table.schema, {}));
+            }
+            break;
           }
-          break;
         }
       }
     },
@@ -64,6 +85,8 @@ const DefaultStory = () => {
     table: table!,
     objects: filteredObjects,
     onDeleteRow: handleDeleteRow,
+    onAddColumn: handleAddColumn,
+    onDeleteColumn: handleDeleteColumn,
   });
 
   if (!table) {
@@ -71,9 +94,9 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='grid grid-cols-[1fr_256px] h-dvh w-dvw'>
-      <div>
-        <div className='border-b border-separator'>
+    <div className='grid grid-cols-[1fr_256px] w-dvw h-dvh'>
+      <div className='flex flex-col h-full'>
+        <div className='border-b border-separator flex-none'>
           <Toolbar.Root onAction={handleAction}>
             <Toolbar.Separator />
             <Toolbar.Actions />
@@ -83,8 +106,11 @@ const DefaultStory = () => {
           <Table model={model} />
         </div>
       </div>
-      <div className='border border-left border-separator -mt-px'>
-        {table.view && <ViewEditor view={table?.view} />}
+      <div className='border-l border-separator -mt-px flex flex-col h-full'>
+        <div className='flex-none'>{table.view && <ViewEditor view={table?.view} />}</div>
+        <div className='flex-1 min-h-0 overflow-auto'>
+          <pre className='text-[10px] pli-2 font-mono text-wrap'>{JSON.stringify(table, null, 2)}</pre>
+        </div>
       </div>
     </div>
   );
@@ -103,14 +129,35 @@ const TablePerformanceStory = (props: StoryProps) => {
   const simulatorProps = useMemo(() => ({ table, items, ...props }), [table, items, props]);
   useSimulator(simulatorProps);
 
-  const onDeleteRow = useCallback((row: any) => {
+  const handleDeleteRow = useCallback((row: any) => {
     itemsRef.current.splice(itemsRef.current.indexOf(row), 1);
   }, []);
+
+  const handleAddColumn = useCallback(
+    (field: FieldType) => {
+      if (table && table.view) {
+        table.view.fields.push(field);
+      }
+    },
+    [table],
+  );
+
+  const handleDeleteColumn = useCallback(
+    (field: FieldType) => {
+      if (table && table.view) {
+        const fieldPosition = table.view.fields.indexOf(field);
+        table.view.fields.splice(fieldPosition, 1);
+      }
+    },
+    [table],
+  );
 
   const model = useTableModel({
     table,
     objects: items as any,
-    onDeleteRow,
+    onDeleteRow: handleDeleteRow,
+    onAddColumn: handleAddColumn,
+    onDeleteColumn: handleDeleteColumn,
   });
 
   return (
@@ -146,6 +193,7 @@ const meta: Meta<typeof Table> = {
   title: 'plugins/plugin-table/Table',
   component: Table,
   render: DefaultStory as any,
+  parameters: { translations },
   decorators: [
     withClientProvider({
       types: [TableType],

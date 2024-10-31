@@ -60,6 +60,7 @@ export const getSchemaTypename = (schema: S.Schema<any>): string | undefined => 
 
 //
 // PropertyMeta (metadata for dynamic schema properties)
+// TODO(burdon): Reconcile/define Property vs Field.
 //
 
 export const PropertyMetaAnnotationId = Symbol.for('@dxos/schema/annotation/PropertyMeta');

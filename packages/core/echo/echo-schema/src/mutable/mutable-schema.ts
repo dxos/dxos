@@ -5,6 +5,12 @@
 import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
+import {
+  addFieldsToSchema,
+  updateFieldsInSchema,
+  removeFieldsFromSchema,
+  updateFieldNameInSchema,
+} from './manipulation';
 import { StoredSchema } from './types';
 import { type HasId, schemaVariance } from '../ast';
 import { effectToJsonSchema, jsonToEffectSchema } from '../json';
@@ -97,59 +103,30 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
     this._isDirty = true;
   }
 
-  // TODO(burdon): Rename addFields?
-  public addColumns(fields: S.Struct.Fields) {
-    const oldSchema = this._getSchema();
-    const schemaExtension = S.partial(S.Struct(fields));
-    const extended = S.extend(oldSchema, schemaExtension).annotations(
-      oldSchema.ast.annotations,
-    ) as any as S.Schema<any>;
+  public addFields(fields: S.Struct.Fields) {
+    const extended = addFieldsToSchema(this._getSchema(), fields);
     this.serializedSchema.jsonSchema = effectToJsonSchema(extended);
   }
 
-  // TODO(burdon): Rename updateFields?
-  public updateColumns(fields: S.Struct.Fields) {
-    const oldAst = this._getSchema().ast;
-    invariant(AST.isTypeLiteral(oldAst));
-    const propertiesToUpdate = (S.partial(S.Struct(fields)).ast as AST.TypeLiteral).propertySignatures;
-    const updatedProperties: AST.PropertySignature[] = [...oldAst.propertySignatures];
-    for (const property of propertiesToUpdate) {
-      const index = updatedProperties.findIndex((p) => p.name === property.name);
-      if (index !== -1) {
-        updatedProperties.splice(index, 1, property);
-      } else {
-        updatedProperties.push(property);
-      }
-    }
-
-    const newAst: any = { ...oldAst, propertySignatures: updatedProperties };
-    const schemaWithUpdatedColumns = S.make(newAst);
-    this.serializedSchema.jsonSchema = effectToJsonSchema(schemaWithUpdatedColumns);
+  public updateFields(fields: S.Struct.Fields) {
+    const updated = updateFieldsInSchema(this._getSchema(), fields);
+    this.serializedSchema.jsonSchema = effectToJsonSchema(updated);
   }
 
-  // TODO(burdon): Rename removeFields?
-  public removeColumns(columnsNames: string[]) {
-    const oldSchema = this._getSchema();
-    const newSchema = S.make(AST.omit(oldSchema.ast, columnsNames)).annotations(oldSchema.ast.annotations);
-    this.serializedSchema.jsonSchema = effectToJsonSchema(newSchema);
+  public updateFieldPropertyName({ before, after }: { before: PropertyKey; after: PropertyKey }) {
+    const renamed = updateFieldNameInSchema(this._getSchema(), { before, after });
+    this.serializedSchema.jsonSchema = effectToJsonSchema(renamed);
+  }
+
+  public removeFields(fieldNames: string[]) {
+    const removed = removeFieldsFromSchema(this._getSchema(), fieldNames);
+    this.serializedSchema.jsonSchema = effectToJsonSchema(removed);
   }
 
   public getProperties(): AST.PropertySignature[] {
     const ast = this._getSchema().ast;
     invariant(AST.isTypeLiteral(ast));
     return [...ast.propertySignatures].filter((p) => p.name !== 'id').map(unwrapOptionality);
-  }
-
-  // TODO(burdon): Rename updateProperty?
-  public updatePropertyName({ before, after }: { before: PropertyKey; after: PropertyKey }) {
-    const oldAST = this._getSchema().ast;
-    invariant(AST.isTypeLiteral(oldAST));
-    const newAst: any = {
-      ...oldAST,
-      propertySignatures: oldAST.propertySignatures.map((p) => (p.name === before ? { ...p, name: after } : p)),
-    };
-    const schemaWithUpdatedColumns = S.make(newAst);
-    this.serializedSchema.jsonSchema = effectToJsonSchema(schemaWithUpdatedColumns);
   }
 
   private _getSchema() {

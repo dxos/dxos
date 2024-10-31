@@ -4,6 +4,8 @@
 
 import { FieldValueType } from '@dxos/schema';
 
+import { type ValidationError } from './';
+
 /**
  * Parse value by field value type.
  * Used by Table, Sheet, etc.
@@ -105,3 +107,29 @@ export const cellClassesForFieldType = (type: FieldValueType): string[] | undefi
       return undefined;
   }
 };
+
+//
+// Type Configs
+//
+
+// TODO(ZaymonFC): Should this move to '@dxos/schema' field module? Annotation?
+const typeConfigSections = {
+  base: ['path', 'label', 'type'] as const,
+  numeric: ['digits'] as const,
+  ref: ['schema', 'property'] as const,
+} as const;
+
+type TypeConfigSection = keyof typeof typeConfigSections;
+
+export const typeFeatures: Partial<Record<FieldValueType, TypeConfigSection[]>> = {
+  [FieldValueType.Number]: ['numeric'],
+  [FieldValueType.Percent]: ['numeric'],
+  [FieldValueType.Currency]: ['numeric'],
+  [FieldValueType.Ref]: ['ref'],
+} as const;
+
+// TODO(ZaymonFC): How to do this with translations?
+export const pathNotUniqueError = (path: string): ValidationError => ({
+  path: 'path',
+  message: `'${path}' is already present`,
+});

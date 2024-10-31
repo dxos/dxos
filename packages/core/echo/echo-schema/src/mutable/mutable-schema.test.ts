@@ -45,7 +45,7 @@ describe('dynamic schema', () => {
     }) {}
 
     const registered = createMutableSchema(GeneratedSchema);
-    registered.addColumns({ field2: S.Boolean });
+    registered.addFields({ field2: S.Boolean });
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', AST.stringKeyword],
       ['field2', AST.booleanKeyword],
@@ -54,10 +54,10 @@ describe('dynamic schema', () => {
 
   test('updateColumns preserves order of existing and appends new fields', async () => {
     const registered = createMutableSchema(EmptySchemaType);
-    registered.addColumns({ field1: S.String });
-    registered.addColumns({ field2: S.Boolean });
-    registered.addColumns({ field3: S.Number });
-    registered.updateColumns({ field4: S.Boolean, field2: S.String });
+    registered.addFields({ field1: S.String });
+    registered.addFields({ field2: S.Boolean });
+    registered.addFields({ field3: S.Number });
+    registered.updateFields({ field4: S.Boolean, field2: S.String });
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', AST.stringKeyword],
       ['field2', AST.stringKeyword],
@@ -68,10 +68,10 @@ describe('dynamic schema', () => {
 
   test('removeColumns', async () => {
     const registered = createMutableSchema(EmptySchemaType);
-    registered.addColumns({ field1: S.String });
-    registered.addColumns({ field2: S.Boolean });
-    registered.addColumns({ field3: S.Number });
-    registered.removeColumns(['field2']);
+    registered.addFields({ field1: S.String });
+    registered.addFields({ field2: S.Boolean });
+    registered.addFields({ field3: S.Number });
+    registered.removeFields(['field2']);
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', AST.stringKeyword],
       ['field3', AST.numberKeyword],
@@ -82,13 +82,13 @@ describe('dynamic schema', () => {
     const metaNamespace = 'dxos.test';
     const metaInfo = { maxLength: 10 };
     const registered = createMutableSchema(EmptySchemaType);
-    registered.addColumns({
+    registered.addFields({
       field1: S.String.pipe(PropertyMeta(metaNamespace, metaInfo)),
       field2: S.String,
     });
-    registered.addColumns({ field3: S.String });
-    registered.updateColumns({ field3: S.Boolean });
-    registered.removeColumns(['field2']);
+    registered.addFields({ field3: S.String });
+    registered.updateFields({ field3: S.Boolean });
+    registered.removeFields(['field2']);
     expect(getObjectAnnotation(registered)).to.deep.contain({
       typename: 'example.com/type/Empty',
       version: '0.1.0',

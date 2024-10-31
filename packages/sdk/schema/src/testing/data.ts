@@ -50,28 +50,23 @@ export const testData: TestType = {
 
 const fields = [
   {
-    id: createObjectId(),
     path: 'name',
     type: FieldValueType.String,
   },
   {
-    id: createObjectId(),
     path: 'email',
     type: FieldValueType.String,
   },
   {
-    id: createObjectId(),
     path: 'address.zip',
     label: 'ZIP',
     type: FieldValueType.String,
   },
   {
-    id: createObjectId(),
     path: 'rating',
     type: FieldValueType.Number,
   },
   {
-    id: createObjectId(),
     path: 'admin',
     type: FieldValueType.Boolean,
   },
