@@ -18,11 +18,11 @@ import {
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { setColumnSize, ColumnSize, FieldKind, FieldKindEnum, FieldPath } from './annotations';
+import { ColumnWidth, FieldKind, FieldKindEnum, FieldPath, setColumnWidth } from './annotations';
 import { ViewSchema } from './view';
 
-// TODO(burdon): Move tests to echo-schema?
 // TODO(burdon): Add expects.
+// TODO(burdon): Move tests to echo-schema?
 describe('schema composition', () => {
   test('schema composition', ({ expect }) => {
     class BaseType extends TypedObject({ typename: 'example.com/Person', version: '0.1.0' })({
@@ -31,8 +31,8 @@ describe('schema composition', () => {
     }) {}
 
     const OverlaySchema = S.Struct({
-      name: S.String.pipe(FieldPath('$.name' as JsonPath)).pipe(ColumnSize(50)),
-      email: S.String.pipe(FieldPath('$.email' as JsonPath)).pipe(ColumnSize(100)),
+      name: S.String.pipe(FieldPath('$.name' as JsonPath)).pipe(ColumnWidth(50)),
+      email: S.String.pipe(FieldPath('$.email' as JsonPath)).pipe(ColumnWidth(100)),
     });
 
     const baseSchema = effectToJsonSchema(BaseType);
@@ -45,7 +45,7 @@ describe('schema composition', () => {
         type: 'string',
         $echo: {
           annotations: {
-            'dxos.view': { path: '$.name', size: 50 },
+            'dxos.view': { path: '$.name', width: 50 },
           },
         },
       },
@@ -53,8 +53,7 @@ describe('schema composition', () => {
         type: 'string',
         $echo: {
           annotations: {
-            'dxos.view': { path: '$.email', size: 100 },
-            'dxos.schema': { kind: 'email' },
+            'dxos.view': { path: '$.email', kind: 'email', width: 100 },
           },
         },
       },
@@ -116,15 +115,15 @@ describe('schema composition', () => {
       },
       schema: effectToJsonSchema(
         S.Struct({
-          name: S.String.pipe(ColumnSize(50)),
-          email: S.String.pipe(ColumnSize(100)),
+          name: S.String.pipe(ColumnWidth(50)),
+          email: S.String.pipe(ColumnWidth(100)),
           org: dynamicRef(orgSchema).annotations({ [AST.DescriptionAnnotationId]: 'Employer' }),
         }),
       ),
     });
 
     // Update column size.
-    setColumnSize(personView.schema, 'name', 200);
+    setColumnWidth(personView.schema, 'name', 200);
     log.info('view', { personView });
 
     const composedSchema = composeSchema(

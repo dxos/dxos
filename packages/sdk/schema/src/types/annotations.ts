@@ -107,7 +107,7 @@ export const schemaForKind: Record<FieldKindEnum, S.Schema<any> | undefined> = {
   [FieldKindEnum.DID]: undefined,
 };
 
-// TODO(burdon): Rename 'dxos.view' namespace.
+// TODO(burdon): Rename 'dxos.view' namespace? Unique for each annotation?
 
 /**
  * Annotation to set field kind.
@@ -126,10 +126,11 @@ export const FieldPath = (path: JsonPath) => PropertyMeta('dxos.view', { path })
 //
 
 /**
- * Annotation to set column size.
+ * Annotation to set column width.
  */
-export const ColumnSize = (size: number) => PropertyMeta('dxos.view', { size });
+// TODO(burdon): Move this back to View (not type?) Same with sort order.
+export const ColumnWidth = (width: number) => PropertyMeta('dxos.view', { width });
 
-export const setColumnSize = (schema: JsonSchemaType, property: string, size: number) => {
-  setAnnotation(schema, property, 'dxos.view', { size });
+export const setColumnWidth = (schema: JsonSchemaType, property: string, width: number) => {
+  setAnnotation(schema, property, 'dxos.view', { width });
 };
