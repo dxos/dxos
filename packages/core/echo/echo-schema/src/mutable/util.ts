@@ -31,6 +31,7 @@ export const createEmptyJsonSchema = () => {
 /**
  *
  */
+// TODO(burdon): Rename createSchema.
 export const createEmptySchema = (typename: string, version: string): ReactiveObject<StoredSchema> => {
   return create(StoredSchema, {
     typename,
@@ -42,16 +43,17 @@ export const createEmptySchema = (typename: string, version: string): ReactiveOb
 /**
  *
  */
-export const setProperty = (schema: JsonSchemaType, field: string, type: S.Schema.Any) => {
+export const setProperty = (schema: JsonSchemaType, property: string, type: S.Schema.Any) => {
   const jsonSchema = effectToJsonSchema(type as S.Schema<any>);
   delete jsonSchema.$schema; // Remove $schema on leaf nodes.
   (schema as any).properties ??= {};
-  (schema as any).properties[field] = jsonSchema;
+  (schema as any).properties[property] = jsonSchema;
 };
 
 /**
  *
  */
+// TODO(burdon): Change annotation to FQ symbol?
 export const setAnnotation = (schema: JsonSchemaType, property: string, annotation: string, value: any) => {
   (schema as any).properties[property].$echo ??= {};
   (schema as any).properties[property].$echo.annotations ??= {};

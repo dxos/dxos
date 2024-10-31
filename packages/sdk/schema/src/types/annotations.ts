@@ -65,7 +65,8 @@ export const UrlFormat: FormatAnnotation = {
 // Fields
 //
 
-// TODO(burdon): Can this be derived from teh annotation?
+// TODO(burdon): Can this be derived from the annotation? Or just be a union of all the annotation symbols?
+//  - E.g., use a common annotation namespace.
 export enum FieldKindEnum {
   Text = 'text',
   JSON = 'json',
@@ -107,7 +108,7 @@ export const schemaForKind: Record<FieldKindEnum, S.Schema<any> | undefined> = {
   [FieldKindEnum.DID]: undefined,
 };
 
-// TODO(burdon): Rename 'dxos.view' namespace? Unique for each annotation?
+// TODO(burdon): Rename 'dxos.view' namespace? Unique for each annotation? Should these be symbols instead of strings?
 
 /**
  * Annotation to set field kind.
@@ -120,17 +121,3 @@ export const FieldKind = (kind: FieldKindEnum) => PropertyMeta('dxos.view', { ki
  * @param path Data source path in the json path format. This is the field path in the source object.
  */
 export const FieldPath = (path: JsonPath) => PropertyMeta('dxos.view', { path });
-
-//
-// View UX annotations
-//
-
-/**
- * Annotation to set column width.
- */
-// TODO(burdon): Move this back to View (not type?) Same with sort order.
-export const ColumnWidth = (width: number) => PropertyMeta('dxos.view', { width });
-
-export const setColumnWidth = (schema: JsonSchemaType, property: string, width: number) => {
-  setAnnotation(schema, property, 'dxos.view', { width });
-};

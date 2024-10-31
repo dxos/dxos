@@ -29,6 +29,7 @@ describe('view', () => {
       query: {
         __typename: schema.typename,
       },
+      fields: [],
     };
 
     expect(view.query.__typename).to.eq(TestSchema.typename);
