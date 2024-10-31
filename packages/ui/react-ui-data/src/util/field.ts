@@ -131,5 +131,5 @@ export const typeFeatures: Partial<Record<FieldValueType, TypeConfigSection[]>> 
 // TODO(ZaymonFC): How to do this with translations?
 export const pathNotUniqueError = (path: string): ValidationError => ({
   path: 'path',
-  message: `'${path}' is already a present in the view`,
+  message: `'${path}' is already present`,
 });

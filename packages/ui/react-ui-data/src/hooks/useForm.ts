@@ -27,6 +27,26 @@ interface FormOptions<T> {
   onSubmit: (values: T) => void;
 }
 
+type InputProps<T> = {
+  name: keyof T;
+  value: T[keyof T] | string;
+  onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onValueChange: (value: InputValue) => void;
+};
+
+type Form<T> = {
+  values: T;
+  handleChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleSubmit: () => void;
+  errors: Record<keyof T, string>;
+  canSubmit: boolean;
+  touched: Record<keyof T, boolean>;
+  handleBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onValidate: (values: T) => boolean;
+  getInputProps: (key: keyof T) => InputProps<T>;
+};
+
 /**
  * Creates a hook for managing form state, including values, validation, and submission.
  */
@@ -35,7 +55,7 @@ export const useForm = <T extends object>({
   schema,
   additionalValidation,
   onSubmit,
-}: FormOptions<T>) => {
+}: FormOptions<T>): Form<T> => {
   const [values, setValues] = useState<T>(initialValues);
   const [errors, setErrors] = useState<Record<keyof T, string>>({} as Record<keyof T, string>);
   const [touched, setTouched] = useState<Record<keyof T, boolean>>(
@@ -121,7 +141,6 @@ export const useForm = <T extends object>({
       onChange: handleChange,
       onBlur: handleBlur,
       onValueChange: (value: InputValue) => onValueChange(key, value),
-      'aria-invalid': errors[key] !== undefined,
     }),
     [values, handleChange, handleBlur, errors],
   );
@@ -138,6 +157,10 @@ export const useForm = <T extends object>({
     getInputProps,
   };
 };
+
+//
+// Util. (Keeping this here until useForm gets its own library).
+//
 
 const mkAllTouched = <T extends Record<keyof T, any>>(values: T) => {
   return Object.keys(values).reduce((acc, key) => ({ ...acc, [key]: true }), {} as Record<keyof T, boolean>);

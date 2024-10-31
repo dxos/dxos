@@ -51,7 +51,10 @@ export const FieldValueTypes = Object.values(FieldValueType).sort();
 export const FieldSchema = S.mutable(
   S.Struct({
     // TODO(ZaymonFC): Should validations be common? Think about translations?
-    path: S.String.pipe(S.nonEmptyString({ message: () => 'Property is required.' })),
+    path: S.String.pipe(
+      S.nonEmptyString({ message: () => 'Property is required.' }),
+      S.pattern(/^\w+$/, { message: () => 'Invalid property name.' }),
+    ),
 
     // TODO(burdon): Single/multi-select enums?
     type: S.Enums(FieldValueType),

@@ -7,17 +7,11 @@ import React from 'react';
 import { getProperty, type S } from '@dxos/effect';
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type FormatAnnotation, type FieldType, FieldValueTypes, FieldSchema } from '@dxos/schema';
+import { type FieldType, FieldValueTypes, FieldSchema } from '@dxos/schema';
 
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 import { pathNotUniqueError, typeFeatures } from '../../util';
-import { TextInput } from '../TextInput';
-
-const PropertyFormat: FormatAnnotation = {
-  filter: /^\w*$/,
-  valid: /^\w+$/,
-};
 
 const FieldRow = ({ children }: { children: React.ReactNode }) => {
   return <div className='flex flex-col w-full gap-1'>{children}</div>;
@@ -48,7 +42,7 @@ export const Field = <T = {},>({ classNames, field, autoFocus, readonly, schema 
       });
 
       // TODO(ZaymonFC): Update the associated schema type here if changed.
-      // What's the nicest way to do this? Why do we store the type in field at all.
+      // What's the nicest way to do this? Why do we store the type in field at all?
     },
   });
 
@@ -59,11 +53,10 @@ export const Field = <T = {},>({ classNames, field, autoFocus, readonly, schema 
       <FieldRow>
         <Input.Root validationValence={touched.path && errors.path ? 'error' : undefined}>
           <Input.Label>{t('field path label')}</Input.Label>
-          <TextInput
+          <Input.TextInput
             autoFocus={autoFocus}
             disabled={readonly}
             placeholder={t('field path placeholder')}
-            format={PropertyFormat}
             {...getInputProps('path')}
           />
           <Input.DescriptionAndValidation>
@@ -110,7 +103,7 @@ export const Field = <T = {},>({ classNames, field, autoFocus, readonly, schema 
           <Input.Root validationValence={touched.digits && errors.digits ? 'error' : undefined}>
             <Input.Label>{t('field digits label')}</Input.Label>
             <Input.TextInput disabled={readonly} type='number' {...getInputProps('digits')} />
-            <Input.DescriptionAndValidation>
+            <Input.DescriptionAndValidation classNames='min-bs-[1em]'>
               <Input.Validation>{touched.digits && errors.digits}</Input.Validation>
             </Input.DescriptionAndValidation>
           </Input.Root>

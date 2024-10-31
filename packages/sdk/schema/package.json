@@ -35,7 +35,6 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -48,6 +47,7 @@
     "jsonpath": "^1.1.1"
   },
   "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",
     "@types/jsonpath": "~0.2.4",

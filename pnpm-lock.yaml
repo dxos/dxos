@@ -9759,9 +9759,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -9793,6 +9790,9 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1
     devDependencies:
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals

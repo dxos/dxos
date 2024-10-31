@@ -16,7 +16,7 @@ import {
   type DxGridCellValue,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { FieldType, formatValue } from '@dxos/schema';
+import { type FieldType, formatValue } from '@dxos/schema';
 
 import { fromGridCell, type GridCell, type TableType } from '../types';
 import { tableButtons, touch } from '../util';
@@ -367,7 +367,6 @@ export class TableModel extends Resource {
       }
     }
   }
-
 
   //
   // Sorting
