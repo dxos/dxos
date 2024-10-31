@@ -2,8 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef, type FocusEvent, type KeyboardEvent, type WheelEvent } from 'react';
+import React, {
+  useCallback,
+  useMemo,
+  useRef,
+  type FocusEvent,
+  type KeyboardEvent,
+  type WheelEvent,
+  type MouseEvent,
+  useState,
+} from 'react';
 
+import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   closestCell,
@@ -13,13 +23,17 @@ import {
   type DxGridElement,
   type EditorKeysProps,
   type GridContentProps,
+  type DxGridPosition,
 } from '@dxos/react-ui-grid';
 
 import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
 import { DEFAULT_COLUMNS, DEFAULT_ROWS, rangeToA1Notation, type CellRange } from '../../defs';
 import { rangeExtension, sheetExtension, type RangeController } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
+import { SHEET_PLUGIN } from '../../meta';
 import { useSheetContext } from '../SheetContext';
+
+const inertPosition: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
 
 const initialCells = {
   grid: {},
@@ -42,6 +56,7 @@ const sheetRowDefault = { frozenRowsStart: { size: 32, readonly: true }, grid: {
 const sheetColDefault = { frozenColsStart: { size: 48, readonly: true }, grid: { size: 180, resizeable: true } };
 
 export const GridSheet = () => {
+  const { t } = useTranslation(SHEET_PLUGIN);
   const { id, model, editing, setEditing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs } =
     useSheetContext();
   const dxGrid = useRef<DxGridElement | null>(null);
@@ -163,6 +178,36 @@ export const GridSheet = () => {
     [cursorFallbackRange, model, cursor],
   );
 
+  const contextMenuAnchorRef = useRef<HTMLButtonElement | null>(null);
+  const [contextMenuOpen, setContextMenuOpen] = useState<DxGridPosition | null>(null);
+  const contextMenuAxis = contextMenuOpen?.plane.startsWith('frozenRows') ? 'col' : 'row';
+
+  const handleContextMenu = useCallback((event: MouseEvent) => {
+    const cell = closestCell(event.target);
+    if (cell && cell.plane.startsWith('frozen')) {
+      event.preventDefault();
+      contextMenuAnchorRef.current = event.target as HTMLButtonElement;
+      setContextMenuOpen(cell);
+    }
+  }, []);
+
+  const handleAxisMenuAction = useCallback(
+    (operation: 'add-before' | 'add-after' | 'remove') => {
+      switch (operation) {
+        case 'add-before':
+        case 'add-after':
+          model[contextMenuAxis === 'col' ? 'insertColumns' : 'insertRows'](
+            contextMenuOpen![contextMenuAxis] + (operation === 'add-before' ? 0 : 1),
+            1,
+          );
+          break;
+        case 'remove':
+        // console.warn('[model does not implement]');
+      }
+    },
+    [contextMenuAxis, contextMenuOpen, model],
+  );
+
   const { columns, rows } = useSheetModelDxGridProps(dxGrid, model);
 
   const extension = useMemo(
@@ -210,11 +255,42 @@ export const GridSheet = () => {
         onFocus={handleFocus}
         onWheelCapture={handleWheel}
         onKeyDown={handleKeyDown}
+        onContextMenu={handleContextMenu}
         overscroll='inline'
         className='[--dx-grid-base:var(--surface-bg)]'
         activeRefs={activeRefs}
         ref={dxGrid}
       />
+      <DropdownMenu.Root
+        modal={false}
+        open={!!contextMenuOpen}
+        onOpenChange={(nextOpen) => setContextMenuOpen(nextOpen ? inertPosition : null)}
+      >
+        <DropdownMenu.VirtualTrigger virtualRef={contextMenuAnchorRef} />
+        <DropdownMenu.Content side={contextMenuAxis === 'col' ? 'bottom' : 'right'} sideOffset={4} collisionPadding={8}>
+          <DropdownMenu.Viewport>
+            <DropdownMenu.Item onClick={() => handleAxisMenuAction('add-before')}>
+              <Icon
+                size={5}
+                icon={contextMenuAxis === 'col' ? 'ph--columns-plus-left--regular' : 'ph--rows-plus-top--regular'}
+              />
+              <span>{t(`add ${contextMenuAxis} before label`)}</span>
+            </DropdownMenu.Item>
+            <DropdownMenu.Item onClick={() => handleAxisMenuAction('add-after')}>
+              <Icon
+                size={5}
+                icon={contextMenuAxis === 'col' ? 'ph--columns-plus-right--regular' : 'ph--rows-plus-bottom--regular'}
+              />
+              <span>{t(`add ${contextMenuAxis} after label`)}</span>
+            </DropdownMenu.Item>
+            <DropdownMenu.Item disabled onClick={() => handleAxisMenuAction('remove')}>
+              <Icon size={5} icon='ph--backspace--regular' />
+              <span>{t(`delete ${contextMenuAxis} label`)}</span>
+            </DropdownMenu.Item>
+          </DropdownMenu.Viewport>
+          <DropdownMenu.Arrow />
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
     </>
   );
 };
