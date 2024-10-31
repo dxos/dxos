@@ -29,7 +29,6 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/chess-app": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -45,6 +44,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
+    "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-ipfs": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",

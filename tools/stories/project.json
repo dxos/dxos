@@ -87,7 +87,6 @@
   },
   "implicitDependencies": [
     "app-graph",
-    "chess-app",
     "composer-app",
     "devtools",
     "examples",
