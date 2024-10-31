@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GameType } from '@dxos/chess-app/types';
 import { AST, S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
+import { GameType } from '@dxos/plugin-chess/types';
 
 import { Engine } from './engine';
 

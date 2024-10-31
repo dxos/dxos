@@ -53,25 +53,24 @@ export enum FieldValueType {
 // TODO(dmaretskyi): Remove.
 export const FieldValueTypes = Object.values(FieldValueType).sort();
 
+// TODO(burdon): Is a View just a S.Struct overlay (with additional refinements)?
+//  ISSUE: We only persist schema as JSONSchema which has concurency issues.
+// TODO(burdon): Single/multi-select enums?
+// If num digits was an annotation could we update the number of digits.
 // TODO(dmaretskyi): Remove.
 export const FieldSchema = S.mutable(
   S.Struct({
     id: S.String,
     path: S.String,
-    // TODO(burdon): Single/multi-select enums?
+
+    // TODO(burdon): Replace with annotations?
     type: S.Enums(FieldValueType),
+    digits: S.optional(S.Number), // TODO(burdon): Presentational vs. type precision.
+
+    // UX concerns.
     label: S.optional(S.String),
-
-    /** Default value for new records. */
-    defaultValue: S.optional(S.Any),
-
-    /** Number of decimal digits. */
-    digits: S.optional(S.Number),
-
     // TODO(burdon): Table/Form-specific layout, or keep generic?
     size: S.optional(S.Number),
-
-    // TODO(burdon): Add format/template string (e.g., time format).
   }),
 );
 

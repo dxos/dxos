@@ -12,7 +12,8 @@ import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { PromptTemplate } from './PromptTemplate';
+import { PromptEditor } from './PromptEditor';
+import translations from '../../translations';
 import { ChainPromptType, ChainType } from '../../types';
 
 const template = [
@@ -39,10 +40,8 @@ const DefaultStory = () => {
   });
 
   return (
-    <div className='flex justify-center'>
-      <div className='flex w-full max-w-[800px] overflow-hidden overflow-y-scroll py-4'>
-        <PromptTemplate prompt={chain.prompts![0]!} />
-      </div>
+    <div role='none' className='flex w-[350px] border border-separator overflow-hidden'>
+      <PromptEditor prompt={chain.prompts![0]!} />
     </div>
   );
 };
@@ -54,9 +53,12 @@ const meta: Meta = {
   render: DefaultStory,
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [ChainType, ChainPromptType] }),
+    withLayout({ fullscreen: true, classNames: 'flex justify-center m-2' }),
     withTheme,
-    withLayout(),
   ],
+  parameters: {
+    translations,
+  },
 };
 
 export default meta;

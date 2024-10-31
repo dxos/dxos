@@ -49,6 +49,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
           all: triggers.map((t) => t.id),
           enabled: triggers.filter((t) => t.enabled).map((t) => t.id),
         });
+
         for (const trigger of triggers) {
           if (trigger.enabled) {
             if (registry.has(trigger.id)) {
