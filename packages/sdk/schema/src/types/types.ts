@@ -7,6 +7,8 @@ import { S } from '@dxos/effect';
 // TODO(burdon): JSON path alternatives.
 //  - https://datatracker.ietf.org/doc/html/rfc6901
 //  - https://blog.json-everything.net/posts/paths-and-pointers
+// Schema refs:
+//  - https://json-schema.org/understanding-json-schema/structuring#dollarref
 
 //
 // Fields
@@ -17,25 +19,26 @@ import { S } from '@dxos/effect';
 //  FieldValueType = higher-level "kind".
 //  { type: 'number', kind: 'percent' }
 export enum FieldValueType {
+  // Effect schema.
   String = 'string',
-
   Boolean = 'boolean',
-
   Number = 'number',
-  Percent = 'percent',
-  Currency = 'currency',
 
-  Text = 'text',
+  // Primitives from echo-schema.
   Ref = 'ref',
+
+  // Arrays/Maps/Enum?
   User = 'user',
-
+  Text = 'text',
   JSON = 'json',
-
   Timestamp = 'timestamp',
   DateTime = 'datetime',
   Date = 'date',
   Time = 'time',
 
+  // Kind.
+  Percent = 'percent',
+  Currency = 'currency',
   Formula = 'formula',
   Email = 'email',
   URL = 'url',

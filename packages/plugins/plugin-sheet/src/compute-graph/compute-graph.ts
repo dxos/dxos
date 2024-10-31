@@ -24,6 +24,8 @@ import {
   EDGE_FUNCTION_NAME,
 } from './functions';
 
+// TODO(burdon): Factor out compute-graph.
+
 // TODO(wittjosiah): Factor out.
 const OBJECT_ID_LENGTH = 60; // 33 (space id) + 1 (separator) + 26 (object id).
 
@@ -71,6 +73,7 @@ export class ComputeGraph extends Resource {
   ) {
     super();
     this._hf.updateConfig({ context: this.context });
+
     // TODO(burdon): If debounce then aggregate changes.
     const onValuesUpdate: Listeners['valuesUpdated'] = (changes) => {
       for (const change of changes) {
@@ -130,7 +133,7 @@ export class ComputeGraph extends Resource {
 
   /**
    * Map bound value to custom function invocation.
-   * E.g., "HELLO(...args)" => "EDGE("HELLO", ...args)".
+   * E.g., "HELLO(...args)" => "DX("HELLO", ...args)".
    */
   mapFormulaToNative(formula: string): string {
     return (

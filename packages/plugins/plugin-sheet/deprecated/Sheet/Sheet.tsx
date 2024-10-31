@@ -38,7 +38,7 @@ import { createPortal } from 'react-dom';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { debounce } from '@dxos/async';
-import { fullyQualifiedId, createDocAccessor } from '@dxos/client/echo';
+import { createDocAccessor, fullyQualifiedId } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { ATTENABLE_ATTRIBUTE, useAttendableAttributes, useAttention, useAttentionPath } from '@dxos/react-ui-attention';
@@ -46,35 +46,36 @@ import { CellEditor, type EditorKeysProps, editorKeys } from '@dxos/react-ui-gri
 import { mx } from '@dxos/react-ui-theme';
 
 import {
+  type CellAddress,
+  type CellIndex,
+  addressFromIndex,
+  addressToA1Notation,
+  addressToIndex,
+  columnLetter,
+  isFormula,
+  posEquals,
+  rangeToA1Notation,
+} from '../../defs';
+import { type CellRangeNotifier, rangeExtension, sheetExtension } from '../../extensions';
+import {
+  CELL_DATA_KEY,
   type GridLayoutProps,
   type SizeMap,
-  CELL_DATA_KEY,
   axisHeight,
   axisWidth,
   defaultHeight,
   defaultWidth,
-  maxWidth,
-  maxHeight,
-  minWidth,
-  minHeight,
   getCellElement,
+  maxHeight,
+  maxWidth,
+  minHeight,
+  minWidth,
   useGridLayout,
 } from './grid';
 import { type GridSize, handleArrowNav, handleNav, useRangeSelect } from './nav';
 import { type SheetContextProps, SheetContextProvider, useSheetContext } from './sheet-context';
 import { useThreads } from './threads';
 import { getRectUnion, getRelativeClientRect, scrollIntoView } from './util';
-import {
-  type CellIndex,
-  type CellAddress,
-  addressToA1Notation,
-  columnLetter,
-  posEquals,
-  rangeToA1Notation,
-  addressToIndex,
-  addressFromIndex,
-} from '../../defs';
-import { rangeExtension, sheetExtension, type CellRangeNotifier } from '../../extensions';
 
 // TODO(burdon): Virtualization bug.
 // TODO(burdon): Toolbar styles and formatting.
@@ -1097,7 +1098,7 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
     () => [
       editorKeys({ onNav, onClose }),
       sheetExtension({ functions: model.graph.getFunctions() }),
-      rangeExtension((fn) => (notifier.current = fn)),
+      rangeExtension({ onInit: (fn) => (notifier.current = fn) }),
     ],
     [model],
   );
@@ -1125,7 +1126,7 @@ const SheetStatusBar = () => {
   let isFormula = false;
   if (cursor) {
     value = model.getCellValue(cursor);
-    if (typeof value === 'string' && value.charAt(0) === '=') {
+    if (isFormula(value)) {
       value = model.graph.mapFunctionBindingFromId(model.mapFormulaIndicesToRefs(value));
       isFormula = true;
     } else if (value != null) {
@@ -1206,4 +1207,4 @@ export const Sheet = {
   Debug: SheetDebug,
 };
 
-export type { SheetRootProps, SheetMainProps, SheetRowsProps, SheetColumnsProps, SheetGridProps, SheetCellProps };
+export type { SheetCellProps, SheetColumnsProps, SheetGridProps, SheetMainProps, SheetRootProps, SheetRowsProps };
