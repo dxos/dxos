@@ -58,9 +58,11 @@ const setupNetworking = async (
 
   const signals = config.get('runtime.services.signaling');
   const edgeFeatures = config.get('runtime.client.edgeFeatures');
-  if (signals) {
+  if (signals || edgeFeatures?.signaling) {
     const {
-      signalManager = edgeFeatures?.signaling ? undefined : new WebsocketSignalManager(signals, signalMetadata),
+      signalManager = edgeFeatures?.signaling || !signals
+        ? undefined // EdgeSignalManager needs EdgeConnection and will be created in service-host
+        : new WebsocketSignalManager(signals, signalMetadata),
       transportFactory = createRtcTransportFactory(
         { iceServers: config.get('runtime.services.ice') },
         config.get('runtime.services.iceProviders') && createIceProvider(config.get('runtime.services.iceProviders')!),
