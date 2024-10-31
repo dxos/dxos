@@ -105,6 +105,10 @@ export const FieldKind = (kind: FieldValueType) => FieldMeta('dxos.schema', { ki
  */
 export const ColumnSize = (size: number) => FieldMeta('dxos.view', { size });
 
+
+export const setColumnSize = (schema: JsonSchemaType, property: string, size: number): void =>
+  setAnnotation(schema, property, 'dxos.view', { size });
+
 /**
  * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
  * @example $.name
@@ -116,3 +120,39 @@ export type JsonPath = string & { __JsonPath: true };
  * @param dataSource Data source path in the json path format. This is the field path in the source object.
  */
 export const ViewPath = (path: JsonPath) => FieldMeta('dxos.view', { path });
+
+
+//
+// New stuff
+//
+
+
+export const createEmptySchema = (typename: string, version: string): ReactiveObject<StoredSchema> =>
+  create(StoredSchema, {
+    typename,
+    version,
+    jsonSchema: effectToJsonSchema(S.Struct({})),
+  });
+
+  export const setProperty = (schema: JsonSchemaType, field: string, type: S.Schema.Any): void => {
+  const jsonSchema = effectToJsonSchema(type as S.Schema<any>);
+  delete jsonSchema.$schema; // Remove $schema on leaf nodes.
+  (schema as any).properties ??= {};
+  (schema as any).properties[field] = jsonSchema;
+};
+
+export const dynamicRef = (obj: StoredSchema): S.Schema.Any =>
+  S.Any.annotations({
+    [ReferenceAnnotationId]: {
+      schemaId: obj.id,
+      typename: obj.typename,
+      version: obj.version,
+    } satisfies ReferenceAnnotationValue,
+  });
+
+  export const setAnnotation = (schema: JsonSchemaType, property: string, annotation: string, value: any): void => {
+  (schema as any).properties[property].$echo ??= {};
+  (schema as any).properties[property].$echo.annotations ??= {};
+  (schema as any).properties[property].$echo.annotations[annotation] ??= {};
+  Object.assign((schema as any).properties[property].$echo.annotations[annotation], value);
+};

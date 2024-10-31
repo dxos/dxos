@@ -1,5 +1,5 @@
 import { Schema as S } from '@effect/schema';
-import { ColumnSize, ViewPath, FieldKind, FieldValueType, ViewSchema, type JsonPath } from './types';
+import { ColumnSize, ViewPath, FieldKind, FieldValueType, ViewSchema, type JsonPath, setColumnSize } from './types';
 import { test } from 'vitest';
 import {
   create,
@@ -15,6 +15,7 @@ import {
 import { composeSchema } from './composition';
 import { log } from '@dxos/log';
 import { DescriptionAnnotationId } from '@effect/schema/AST';
+import { setDeep } from '@dxos/util';
 
 test.skip('schema composition', ({ expect }) => {
   const TestSchema = S.Struct({
@@ -94,7 +95,8 @@ const createEmptySchema = (typename: string, version: string): ReactiveObject<St
 const setProperty = (schema: JsonSchemaType, field: string, type: S.Schema.Any): void => {
   const jsonSchema = effectToJsonSchema(type as S.Schema<any>);
   delete jsonSchema.$schema; // Remove $schema on leaf nodes.
-  ((schema as any).properties ??= {})[field] = jsonSchema;
+  (schema as any).properties ??= {};
+  (schema as any).properties[field] = jsonSchema;
 };
 
 const dynamicRef = (obj: StoredSchema): S.Schema.Any =>
@@ -105,6 +107,16 @@ const dynamicRef = (obj: StoredSchema): S.Schema.Any =>
       version: obj.version,
     } satisfies ReferenceAnnotationValue,
   });
+
+const setAnnotation = (schema: JsonSchemaType, property: string, annotation: string, value: any): void => {
+  (schema as any).properties[property].$echo ??= {};
+  (schema as any).properties[property].$echo.annotations ??= {};
+  (schema as any).properties[property].$echo.annotations[annotation] ??= {};
+  Object.assign((schema as any).properties[property].$echo.annotations[annotation], value);
+};
+
+const setColumnSize = (schema: JsonSchemaType, property: string, size: number): void =>
+  setAnnotation(schema, property, 'dxos.view', { size });
 
 test('scratch', async () => {
   // empty schema
@@ -143,14 +155,20 @@ test('scratch', async () => {
     },
     schema: effectToJsonSchema(
       S.Struct({
-        name: S.String.pipe(ViewPath('$.name' as JsonPath)).pipe(ColumnSize(50)),
-        email: S.String.pipe(ViewPath('$.email' as JsonPath)).pipe(ColumnSize(100)),
-        org: S.Any.pipe(ViewPath('$.org' as JsonPath)),
+        name: S.String.pipe(ColumnSize(50)),
+        email: S.String.pipe(ColumnSize(100)),
+        org: dynamicRef(orgSchema).annotations({ [DescriptionAnnotationId]: 'Person org' }),
       }),
     ),
   });
 
+  // set column size for name field
+  setColumnSize(personView.schema, 'name', 200);
+
   log.info('view', { personView });
+
+  // const composedSchema = composeSchema(personSchema.jsonSchema, personView.schema);
+  // log.info('composed', { composedSchema });
 });
 
 /*
@@ -161,5 +179,6 @@ $echo -> echo
 annotations -> annotations
 anyOf: ReactiveArray(2) [ { type: 'object' }, { type: 'array' } ], on effectToJsonSchema(S.Struct({}))
 
+FieldMeta -> PropertyMeta
 
 */
