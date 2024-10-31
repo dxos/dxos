@@ -15,6 +15,20 @@ import { validateSchema, type ValidationError } from '../util';
 
 type FormInputValue = string | number | readonly string[] | undefined;
 
+type BaseProps<T> = {
+  name: keyof T;
+  value: T[keyof T] | string;
+};
+
+type InputProps<T> = BaseProps<T> & {
+  onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+};
+
+type SelectProps<T> = BaseProps<T> & {
+  onValueChange: (value: FormInputValue) => void;
+};
+
 interface FormOptions<T> {
   initialValues: T;
   schema?: S.Schema<T>;
@@ -27,14 +41,6 @@ interface FormOptions<T> {
   onSubmit: (values: T) => void;
 }
 
-type InputProps<T> = {
-  name: keyof T;
-  value: T[keyof T] | string;
-  onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  onValueChange: (value: FormInputValue) => void;
-};
-
 type Form<T> = {
   values: T;
   handleChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
@@ -43,7 +49,7 @@ type Form<T> = {
   canSubmit: boolean;
   touched: Record<keyof T, boolean>;
   handleBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  getInputProps: (key: keyof T) => InputProps<T>;
+  getInputProps: (key: keyof T, type?: 'input' | 'select') => InputProps<T> | SelectProps<T>;
 };
 
 /**
@@ -156,14 +162,26 @@ export const useForm = <T extends object>({
   //
 
   const getInputProps = useCallback(
-    (key: keyof T) => ({
-      name: key,
-      value: values[key] ?? '',
-      onChange: handleChange,
-      onBlur: handleBlur,
-      onValueChange: (value: FormInputValue) => onValueChange(key, value),
-    }),
-    [values, handleChange, handleBlur, errors],
+    (key: keyof T, type: 'input' | 'select' = 'input'): InputProps<T> | SelectProps<T> => {
+      const baseProps: BaseProps<T> = {
+        name: key,
+        value: values[key] ?? '',
+      };
+
+      if (type === 'select') {
+        return {
+          ...baseProps,
+          onValueChange: (value: FormInputValue) => onValueChange(key, value),
+        };
+      }
+
+      return {
+        ...baseProps,
+        onChange: handleChange,
+        onBlur: handleBlur,
+      };
+    },
+    [values, handleChange, handleBlur, onValueChange],
   );
 
   return {

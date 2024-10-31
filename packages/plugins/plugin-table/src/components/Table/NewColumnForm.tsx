@@ -36,6 +36,7 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
       return;
     }
     model.addColumn({ ...field });
+    setField(undefined);
     close();
   }, [model, field, close]);
 

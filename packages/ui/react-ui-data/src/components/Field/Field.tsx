@@ -80,7 +80,7 @@ export const Field = <T = {},>({ classNames, field, autoFocus, readonly, schema,
       <FieldRow>
         <Input.Root validationValence={touched.type && errors.type ? 'error' : undefined}>
           <Input.Label>{t('field type label')}</Input.Label>
-          <Select.Root {...getInputProps('type')}>
+          <Select.Root {...getInputProps('type', 'select')}>
             <Select.TriggerButton classNames='is-full' placeholder='Type' />
             <Select.Portal>
               <Select.Content>
