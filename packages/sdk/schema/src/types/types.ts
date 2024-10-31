@@ -50,7 +50,6 @@ export enum FieldValueType {
   //  - Address, Phone number
 }
 
-// TODO(dmaretskyi): Remove.
 export const FieldValueTypes = Object.values(FieldValueType).sort();
 
 // TODO(burdon): Is a View just a S.Struct overlay (with additional refinements)?
@@ -58,6 +57,9 @@ export const FieldValueTypes = Object.values(FieldValueType).sort();
 // TODO(burdon): Single/multi-select enums?
 // If num digits was an annotation could we update the number of digits.
 // TODO(dmaretskyi): Remove.
+/**
+ * @deprecated
+ */
 export const FieldSchema = S.mutable(
   S.Struct({
     id: S.String,
@@ -95,6 +97,7 @@ export type ViewType = S.Schema.Type<typeof ViewSchema>;
 /**
  * Annotation to set field kind.
  */
+// TODO(dmaretskyi): Rename `KindAnnotation`.
 export const FieldKind = (kind: FieldValueType) => FieldMeta('dxos.schema', { kind });
 
 /**
@@ -109,7 +112,7 @@ export const ColumnSize = (size: number) => FieldMeta('dxos.view', { size });
 export type JsonPath = string & { __JsonPath: true };
 
 /**
- * Sets the data source for the field.
+ * Sets the dViewPathe for the field.
  * @param dataSource Data source path in the json path format. This is the field path in the source object.
  */
-export const DataSource = (dataSource: JsonPath) => FieldMeta('dxos.view', { dataSource });
+export const ViewPath = (path: JsonPath) => FieldMeta('dxos.view', { path });

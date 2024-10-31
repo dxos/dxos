@@ -78,6 +78,6 @@ const fields = [
 ];
 
 export const testView: ViewType = {
-  schema: 'example.com/schema/TestSchema',
+  query: { __typename: 'example.com/schema/TestSchema' },
   fields,
 };

@@ -5,9 +5,6 @@ import { Schema as S, JSONSchema } from '@effect/schema';
 /**
  * Type of the JSON schema stored in an ECHO object.
  */
-export const JsonSchemaType = S.Record({
-  key: S.String,
-  value: S.Any,
-}) as any as S.Schema<JSONSchema.JsonSchema7>;
+export const JsonSchemaType = S.Any as S.Schema<JSONSchema.JsonSchema7>;
 
 export type JsonSchemaType = JSONSchema.JsonSchema7;
