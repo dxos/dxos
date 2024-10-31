@@ -18,7 +18,7 @@ import {
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { setColumnSize, ColumnSize, PropertyKind, FieldValueType, ViewPath } from './annotations';
+import { setColumnSize, ColumnSize, FieldKind, FieldKindEnum, FieldPath } from './annotations';
 import { ViewSchema } from './view';
 
 // TODO(burdon): Move tests to echo-schema?
@@ -27,12 +27,12 @@ describe('schema composition', () => {
   test('schema composition', ({ expect }) => {
     class BaseType extends TypedObject({ typename: 'example.com/Person', version: '0.1.0' })({
       name: S.String,
-      email: S.String.pipe(PropertyKind(FieldValueType.Email)),
+      email: S.String.pipe(FieldKind(FieldKindEnum.Email)),
     }) {}
 
     const OverlaySchema = S.Struct({
-      name: S.String.pipe(ViewPath('$.name' as JsonPath)).pipe(ColumnSize(50)),
-      email: S.String.pipe(ViewPath('$.email' as JsonPath)).pipe(ColumnSize(100)),
+      name: S.String.pipe(FieldPath('$.name' as JsonPath)).pipe(ColumnSize(50)),
+      email: S.String.pipe(FieldPath('$.email' as JsonPath)).pipe(ColumnSize(100)),
     });
 
     const baseSchema = effectToJsonSchema(BaseType);
@@ -70,7 +70,7 @@ describe('schema composition', () => {
 
     class Person extends TypedObject({ typename: 'example.com/type/Person', version: '0.1.0' })({
       name: S.String,
-      email: S.String.pipe(PropertyKind(FieldValueType.Email)),
+      email: S.String.pipe(FieldKind(FieldKindEnum.Email)),
       org: ref(Org),
     }) {}
 
@@ -99,7 +99,7 @@ describe('schema composition', () => {
     setProperty(
       personSchema.jsonSchema,
       'email',
-      S.String.pipe(PropertyKind(FieldValueType.Email)).annotations({ [AST.DescriptionAnnotationId]: 'Primary email' }),
+      S.String.pipe(FieldKind(FieldKindEnum.Email)).annotations({ [AST.DescriptionAnnotationId]: 'Primary email' }),
     );
 
     setProperty(

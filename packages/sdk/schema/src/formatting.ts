@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FieldValueType } from './types';
+import { FieldKindEnum } from './types';
 
 /**
  * Format value by type.
@@ -11,7 +11,7 @@ import { FieldValueType } from './types';
 // TODO(burdon): Kind vs type.
 // TODO(burdon): Reconcile with FormattingModel.
 // TODO(burdon): Handle parsing also.
-export const formatValue = (type: FieldValueType, value: any, locale: string | undefined = undefined): string => {
+export const formatValue = (type: FieldKindEnum, value: any, locale: string | undefined = undefined): string => {
   switch (type) {
     // case FieldValueType.Boolean: {
     //   return (value as boolean).toLocaleString().toUpperCase();
@@ -25,11 +25,11 @@ export const formatValue = (type: FieldValueType, value: any, locale: string | u
     //   return value.toLocaleString(locale);
     // }
 
-    case FieldValueType.Percent: {
+    case FieldKindEnum.Percent: {
       return (value as number) * 100 + '%';
     }
 
-    case FieldValueType.Currency: {
+    case FieldKindEnum.Currency: {
       return (value as number).toLocaleString(locale, {
         style: 'currency',
         currency: 'USD',
@@ -42,17 +42,17 @@ export const formatValue = (type: FieldValueType, value: any, locale: string | u
     // Dates.
     //
 
-    case FieldValueType.DateTime: {
+    case FieldKindEnum.DateTime: {
       const date = new Date(value as number);
       return date.toLocaleString(locale);
     }
 
-    case FieldValueType.Date: {
+    case FieldKindEnum.Date: {
       const date = new Date(value as number);
       return date.toLocaleDateString(locale);
     }
 
-    case FieldValueType.Time: {
+    case FieldKindEnum.Time: {
       const date = new Date(value as number);
       return date.toLocaleTimeString(locale);
     }

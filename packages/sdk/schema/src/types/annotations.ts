@@ -5,11 +5,10 @@
 import { setAnnotation, PropertyMeta, type JsonPath, type JsonSchemaType } from '@dxos/echo-schema';
 import { type AST, S, getAnnotation } from '@dxos/effect';
 
-// TODO(burdon): Replace with Schema.pattern?
-//  https://effect.website/docs/guides/schema/basic-usage#string-filters
-
 //
 // FormatType
+// TODO(burdon): Replace with Schema.pattern?
+//  https://effect.website/docs/guides/schema/basic-usage#string-filters
 // TODO(burdon): Convert to/from string.
 // TODO(burdon): Allow pasting and adapting non-conforming values (e.g., with spaces/hyphens).
 //
@@ -66,32 +65,19 @@ export const UrlFormat: FormatAnnotation = {
 // Fields
 //
 
-// TODO(burdon): Reconcile with echo-schema/PropType... (which uses enum integers).
-//  PropType = low-level primitives.
-//  FieldValueType = higher-level "kind".
-//  { type: 'number', kind: 'percent' }
-export enum FieldValueType {
-  // Effect schema.
-  // String = 'string',
-  // Boolean = 'boolean',
-  // Number = 'number',
-  // Primitives from echo-schema.
-  // Ref = 'ref',
-
-  // Arrays/Maps/Enum?
-  User = 'user',
+// TODO(burdon): Can this be derived from teh annotation?
+export enum FieldKindEnum {
   Text = 'text',
   JSON = 'json',
   Timestamp = 'timestamp',
   DateTime = 'datetime',
   Date = 'date',
   Time = 'time',
-
-  // Kind.
   Percent = 'percent',
   Currency = 'currency',
   Formula = 'formula',
   Email = 'email',
+  // User = 'user',
   URL = 'url',
   DID = 'did',
 
@@ -100,38 +86,40 @@ export enum FieldValueType {
   //  - Address, Phone number
 }
 
-export const FieldValueTypes = Object.values(FieldValueType).sort();
+export const FieldValueTypes = Object.values(FieldKindEnum).sort();
+
+// TODO(ZaymonFC): Find all the appropriate annotations.
+// TODO(ZaymonFC): Pipe S.Pattern (regex) for email, url, etc.
+// TODO(ZaymonFC): Enforce real / whole numbers where appropriate.
+export const schemaForKind: Record<FieldKindEnum, S.Schema<any> | undefined> = {
+  [FieldKindEnum.Text]: S.String,
+  [FieldKindEnum.Date]: S.DateFromString,
+  [FieldKindEnum.Email]: S.String.annotations({ [FormatAnnotationId]: EmailFormat }),
+  [FieldKindEnum.URL]: S.String.annotations({ [FormatAnnotationId]: UrlFormat }),
+  [FieldKindEnum.Percent]: S.Number,
+  [FieldKindEnum.Currency]: S.Number,
+  // [FieldValueType.User]: undefined,
+  [FieldKindEnum.JSON]: undefined,
+  [FieldKindEnum.Timestamp]: undefined,
+  [FieldKindEnum.DateTime]: undefined,
+  [FieldKindEnum.Time]: undefined,
+  [FieldKindEnum.Formula]: undefined,
+  [FieldKindEnum.DID]: undefined,
+};
+
+// TODO(burdon): Rename 'dxos.view' namespace.
 
 /**
  * Annotation to set field kind.
  */
-// TODO(dmaretskyi): Rename `KindAnnotation`.
-export const PropertyKind = (kind: FieldValueType) => PropertyMeta('dxos.schema', { kind });
+// TODO(burdon): Instead of adding a "kind" annotation as a value, add an actual annotation representing the kind.
+export const FieldKind = (kind: FieldKindEnum) => PropertyMeta('dxos.view', { kind });
 
 /**
  * Sets the path for the field.
  * @param path Data source path in the json path format. This is the field path in the source object.
  */
-export const ViewPath = (path: JsonPath) => PropertyMeta('dxos.view', { path });
-
-// TODO(ZaymonFC): Find all the appropriate annotations.
-// TODO(ZaymonFC): Pipe S.Pattern (regex) for email, url, etc.
-// TODO(ZaymonFC): Enforce real / whole numbers where appropriate.
-export const schemaForType: Record<FieldValueType, S.Schema<any> | undefined> = {
-  [FieldValueType.Text]: S.String,
-  [FieldValueType.Date]: S.DateFromString,
-  [FieldValueType.Email]: S.String.annotations({ [FormatAnnotationId]: EmailFormat }),
-  [FieldValueType.URL]: S.String.annotations({ [FormatAnnotationId]: UrlFormat }),
-  [FieldValueType.Percent]: S.Number,
-  [FieldValueType.Currency]: S.Number,
-  [FieldValueType.User]: undefined,
-  [FieldValueType.JSON]: undefined,
-  [FieldValueType.Timestamp]: undefined,
-  [FieldValueType.DateTime]: undefined,
-  [FieldValueType.Time]: undefined,
-  [FieldValueType.Formula]: undefined,
-  [FieldValueType.DID]: undefined,
-};
+export const FieldPath = (path: JsonPath) => PropertyMeta('dxos.view', { path });
 
 //
 // View UX annotations
