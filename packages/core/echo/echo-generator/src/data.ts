@@ -41,7 +41,7 @@ const createDynamicSchema = (typename: string, fields: S.Struct.Fields): Mutable
   const schemaToStore = create(StoredSchema, {
     typename,
     version: '1.0.0',
-    jsonSchema: {},
+    jsonSchema: {} as any, // TODO(dmaretskyi): createEmptyJsonSchema().
   });
   const updatedSchema = typeSchema.annotations({
     [ObjectAnnotationId]: { ...typeAnnotation, schemaId: schemaToStore.id },
