@@ -50,8 +50,8 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
 
   const { errors, handleSubmit, canSubmit, touched, getInputProps } = useForm<FeedbackFormState>({
     initialValues,
-    validate: (values) => validateSchema(FeedbackFormSchema, values),
-    onSubmit: (values) => onSubmit(values),
+    schema: FeedbackFormSchema,
+    onSubmit,
   });
 
   return (

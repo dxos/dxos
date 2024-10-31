@@ -4,18 +4,23 @@
 
 import React from 'react';
 
-import { type S } from '@dxos/effect';
-import { Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { getProperty, type S } from '@dxos/effect';
+import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type FormatAnnotation, type FieldValueType, type FieldType, FieldValueTypes } from '@dxos/schema';
+import { type FormatAnnotation, type FieldType, FieldValueTypes, FieldSchema } from '@dxos/schema';
 
+import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
-import { typeFeatures } from '../../util';
+import { pathNotUniqueError, typeFeatures } from '../../util';
 import { TextInput } from '../TextInput';
 
 const PropertyFormat: FormatAnnotation = {
   filter: /^\w*$/,
   valid: /^\w+$/,
+};
+
+const FieldRow = ({ children }: { children: React.ReactNode }) => {
+  return <div className='flex flex-col w-full gap-1'>{children}</div>;
 };
 
 export type FieldProps<T = {}> = ThemedClassName<{
@@ -25,49 +30,62 @@ export type FieldProps<T = {}> = ThemedClassName<{
   readonly?: boolean;
 }>;
 
-export const Field = <T = {},>({ classNames, field, autoFocus, readonly }: FieldProps<T>) => {
+export const Field = <T = {},>({ classNames, field, autoFocus, readonly, schema }: FieldProps<T>) => {
   const { t } = useTranslation(translationKey);
-  const features = React.useMemo(() => typeFeatures[field.type] ?? [], [field.type]);
+  const { values, getInputProps, errors, handleSubmit, canSubmit, touched } = useForm({
+    initialValues: { ...field },
+    schema: FieldSchema,
+    additionalValidation: (values) => {
+      if (schema && values.path !== field.path && getProperty(schema, values.path)) {
+        return [pathNotUniqueError(values.path)];
+      }
+    },
+    onSubmit: (values) => {
+      // For object keys in values, set that value on field.
+      // TODO(ZaymonFC): Is there a nicer way to do this?
+      (Object.keys(values) as Array<keyof typeof values>).forEach((key) => {
+        field[key] = values[key];
+      });
+
+      // TODO(ZaymonFC): Update the associated schema type here if changed.
+      // What's the nicest way to do this? Why do we store the type in field at all.
+    },
+  });
+
+  const features = React.useMemo(() => typeFeatures[values.type] ?? [], [values.type]);
 
   return (
-    <div className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
-      <div className='flex flex-col w-full gap-1'>
-        <Input.Root>
-          <Input.Label classNames='px-1'>{t('field path label')}</Input.Label>
+    <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
+      <FieldRow>
+        <Input.Root validationValence={touched.path && errors.path ? 'error' : undefined}>
+          <Input.Label>{t('field path label')}</Input.Label>
           <TextInput
             autoFocus={autoFocus}
             disabled={readonly}
             placeholder={t('field path placeholder')}
             format={PropertyFormat}
-            value={field.path ?? ''}
-            onChange={(event) => {
-              field.path = event.target.value;
-            }}
+            {...getInputProps('path')}
           />
+          <Input.DescriptionAndValidation>
+            <Input.Validation>{touched.path && errors.path}</Input.Validation>
+          </Input.DescriptionAndValidation>
         </Input.Root>
-      </div>
+      </FieldRow>
 
-      <div className='flex flex-col w-full gap-1'>
-        <Input.Root>
-          <Input.Label classNames='px-1'>{t('field label label')}</Input.Label>
-          <Input.TextInput
-            disabled={readonly}
-            placeholder={t('field label placeholder')}
-            value={field.label ?? ''}
-            onChange={(event) => (field.label = event.target.value)}
-          />
+      <FieldRow>
+        <Input.Root validationValence={touched.label && errors.label ? 'error' : undefined}>
+          <Input.Label>{t('field label label')}</Input.Label>
+          <Input.TextInput disabled={readonly} placeholder={t('field label placeholder')} {...getInputProps('label')} />
+          <Input.DescriptionAndValidation>
+            <Input.Validation>{touched.label && errors.label}</Input.Validation>
+          </Input.DescriptionAndValidation>
         </Input.Root>
-      </div>
+      </FieldRow>
 
-      <div className='flex flex-col w-full gap-1'>
-        <Input.Root>
-          <Input.Label classNames='px-1'>{t('field type label')}</Input.Label>
-          <Select.Root
-            value={field.type}
-            onValueChange={(value) => {
-              field.type = value as FieldValueType;
-            }}
-          >
+      <FieldRow>
+        <Input.Root validationValence={touched.type && errors.type ? 'error' : undefined}>
+          <Input.Label>{t('field type label')}</Input.Label>
+          <Select.Root {...getInputProps('type')}>
             <Select.TriggerButton classNames='is-full' placeholder='Type' />
             <Select.Portal>
               <Select.Content>
@@ -81,42 +99,53 @@ export const Field = <T = {},>({ classNames, field, autoFocus, readonly }: Field
               </Select.Content>
             </Select.Portal>
           </Select.Root>
+          <Input.DescriptionAndValidation>
+            <Input.Validation>{touched.type && errors.type}</Input.Validation>
+          </Input.DescriptionAndValidation>
         </Input.Root>
-      </div>
+      </FieldRow>
 
       {features.includes('numeric') && (
-        <div className='flex flex-col w-full gap-1'>
-          <Input.Root>
-            <Input.Label classNames='px-1'>{t('field digits label')}</Input.Label>
-            <Input.TextInput
-              disabled={readonly}
-              value={field.digits ?? ''}
-              type='number'
-              onChange={(event) => {
-                field.digits = parseInt(event.target.value, 10);
-              }}
-            />
+        <FieldRow>
+          <Input.Root validationValence={touched.digits && errors.digits ? 'error' : undefined}>
+            <Input.Label>{t('field digits label')}</Input.Label>
+            <Input.TextInput disabled={readonly} type='number' {...getInputProps('digits')} />
+            <Input.DescriptionAndValidation>
+              <Input.Validation>{touched.digits && errors.digits}</Input.Validation>
+            </Input.DescriptionAndValidation>
           </Input.Root>
-        </div>
+        </FieldRow>
       )}
 
-      {features.includes('ref') && (
+      {/* {features.includes('ref') && (
         <>
-          {/* TODO(ZaymonFC): Implement. */}
-          <div className='flex flex-col w-full gap-1'>
-            <Input.Root>
-              <Input.Label classNames='px-1'>{t('field ref schema label')}</Input.Label>
-              <Input.TextInput disabled={readonly} value={''} />
+          <FieldRow>
+            <Input.Root validationValence={touched.refSchema && errors.refSchema ? 'error' : undefined}>
+              <Input.Label>{t('field ref schema label')}</Input.Label>
+              <Input.TextInput disabled={readonly} {...getInputProps('refSchema')} />
+              <Input.DescriptionAndValidation>
+                <Input.Validation>{touched.refSchema && errors.refSchema}</Input.Validation>
+              </Input.DescriptionAndValidation>
             </Input.Root>
-          </div>
-          {/* TODO(ZaymonFC): Implement. */}
-          <div className='flex flex-col w-full gap-1'>
-            <Input.Root>
-              <Input.Label classNames='px-1'>{t('field ref property label')}</Input.Label>
-              <Input.TextInput disabled={readonly} value={''} />
+          </FieldRow>
+          <FieldRow>
+            <Input.Root validationValence={touched.refProperty && errors.refProperty ? 'error' : undefined}>
+              <Input.Label>{t('field ref property label')}</Input.Label>
+              <Input.TextInput disabled={readonly} {...getInputProps('refProperty')} />
+              <Input.DescriptionAndValidation>
+                <Input.Validation>{touched.refProperty && errors.refProperty}</Input.Validation>
+              </Input.DescriptionAndValidation>
             </Input.Root>
-          </div>
+          </FieldRow>
         </>
+      )} */}
+
+      {!readonly && (
+        <FieldRow>
+          <Button onClick={handleSubmit} disabled={!canSubmit}>
+            {t('field save button')}
+          </Button>
+        </FieldRow>
       )}
     </div>
   );

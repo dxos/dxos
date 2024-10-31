@@ -50,7 +50,9 @@ export const FieldValueTypes = Object.values(FieldValueType).sort();
 
 export const FieldSchema = S.mutable(
   S.Struct({
-    path: S.String,
+    // TODO(ZaymonFC): Should validations be common? Think about translations?
+    path: S.String.pipe(S.nonEmptyString({ message: () => 'Property is required.' })),
+
     // TODO(burdon): Single/multi-select enums?
     type: S.Enums(FieldValueType),
     label: S.optional(S.String),
@@ -59,7 +61,7 @@ export const FieldSchema = S.mutable(
     defaultValue: S.optional(S.Any),
 
     /** Number of decimal digits. */
-    digits: S.optional(S.Number),
+    digits: S.optional(S.Number.pipe(S.int(), S.nonNegative())),
 
     // TODO(burdon): Table/Form-specific layout, or keep generic?
     size: S.optional(S.Number),

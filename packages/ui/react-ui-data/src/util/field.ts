@@ -4,6 +4,8 @@
 
 import { FieldValueType } from '@dxos/schema';
 
+import { type ValidationError } from './';
+
 /**
  * Parse value by field value type.
  * Used by Table, Sheet, etc.
@@ -125,3 +127,9 @@ export const typeFeatures: Partial<Record<FieldValueType, TypeConfigSection[]>> 
   [FieldValueType.Currency]: ['numeric'],
   [FieldValueType.Ref]: ['ref'],
 } as const;
+
+// TODO(ZaymonFC): How to do this with translations?
+export const pathNotUniqueError = (path: string): ValidationError => ({
+  path: 'path',
+  message: `'${path}' is already a present in the view`,
+});

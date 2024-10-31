@@ -4,52 +4,85 @@
 
 import { type ChangeEvent, type FocusEvent, useCallback, useState } from 'react';
 
-import { type ValidationError } from '../util';
+import { type S } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 
-// TODO(Zan): This module will be generally useful and we should factor it out after the
-// API crystallizes a bit more.
+import { validateSchema, type ValidationError } from '../util';
+
+// TODO(ZaymonFC): Instead of delegating validation of a schema to the validate call
+// you should be able to provide a schema for `values`. Note that there should still
+// be a facility for custom validation logic.
+
+type InputValue = string | number | readonly string[] | undefined;
 
 interface FormOptions<T> {
   initialValues: T;
-  validate: (values: any) => ValidationError[] | undefined;
+  schema?: S.Schema<T>;
+  /**
+   * Custom validation function that runs only after schema validation passes.
+   * Use this for complex validation logic that can't be expressed in the schema.
+   * @returns Array of validation errors, or undefined if validation passes
+   */
+  additionalValidation?: (values: T) => ValidationError[] | undefined;
   onSubmit: (values: T) => void;
 }
 
 /**
  * Creates a hook for managing form state, including values, validation, and submission.
- *
- * @example
- * const { values, handleChange, handleSubmit, errors, canSubmit, getInputProps } = useForm({
- *   initialValues: { name: '', email: '' },
- *   validate: (values) => { yourValidationLogic(values); },
- *   onSubmit: (values) => { submissionLogic(values); },
- * });
  */
-export const useForm = <T extends object>({ initialValues, validate, onSubmit }: FormOptions<T>) => {
+export const useForm = <T extends object>({
+  initialValues,
+  schema,
+  additionalValidation,
+  onSubmit,
+}: FormOptions<T>) => {
   const [values, setValues] = useState<T>(initialValues);
   const [errors, setErrors] = useState<Record<keyof T, string>>({} as Record<keyof T, string>);
   const [touched, setTouched] = useState<Record<keyof T, boolean>>(
     Object.keys(initialValues).reduce((acc, key) => ({ ...acc, [key]: false }), {} as Record<keyof T, boolean>),
   );
 
+  invariant(additionalValidation != null || schema != null, 'useForm must be called with schema and/or validate');
+
   const runValidation = useCallback(
     (values: T) => {
-      const validationErrors = validate(values);
-      setErrors(collapseErrorArray(validationErrors ?? []));
+      if (schema) {
+        const schemaErrors = validateSchema(schema, values) ?? [];
+        if (schemaErrors.length > 0) {
+          setErrors(collapseErrorArray(schemaErrors));
+          return false;
+        }
+      }
 
-      return validationErrors === undefined;
+      if (additionalValidation) {
+        const validateErrors = additionalValidation(values) ?? [];
+        setErrors(collapseErrorArray(validateErrors));
+        return validateErrors.length === 0;
+      }
+
+      setErrors({} as Record<keyof T, string>);
+      return true;
     },
-    [validate],
+    [schema, additionalValidation],
   );
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const { name, value } = event.target;
-      const newValues = { ...values, [name]: value };
+      const { name: property, value, type } = event.target;
+      const parsedValue = type === 'number' ? parseFloat(value) || 0 : value;
+      // TODO(ZaymonFC): Think about nesting!
+      const newValues = { ...values, [property]: parsedValue };
       setValues(newValues);
       runValidation(newValues);
     },
     [values, runValidation],
+  );
+
+  const onValueChange = useCallback(
+    (key: keyof T, value: InputValue) => {
+      handleChange({ target: { name: key, value } } as ChangeEvent<HTMLInputElement>);
+    },
+    [handleChange],
   );
 
   const touchAll = useCallback(() => setTouched(mkAllTouched(values)), [values, setTouched]);
@@ -84,9 +117,10 @@ export const useForm = <T extends object>({ initialValues, validate, onSubmit }:
   const getInputProps = useCallback(
     (key: keyof T) => ({
       name: key,
-      value: values[key],
+      value: values[key] ?? '',
       onChange: handleChange,
       onBlur: handleBlur,
+      onValueChange: (value: InputValue) => onValueChange(key, value),
       'aria-invalid': errors[key] !== undefined,
     }),
     [values, handleChange, handleBlur, errors],

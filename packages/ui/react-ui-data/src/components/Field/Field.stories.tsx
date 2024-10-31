@@ -17,9 +17,15 @@ import translations from '../../translations';
 import { TestPopup } from '../testing';
 
 const DefaultStory = (args: FieldProps<typeof Field<TestType>>) => (
-  <TestPopup>
-    <Field {...args} />
-  </TestPopup>
+  <div>
+    <TestPopup>
+      <Field {...args} />
+    </TestPopup>
+
+    <div className='absolute right-2 bottom-2 font-mono text-xs p-2 border border-separator rounded'>
+      <pre>{JSON.stringify(args, null, 2)}</pre>
+    </div>
+  </div>
 );
 
 export const Default: StoryObj<typeof Field<TestType>> = {
