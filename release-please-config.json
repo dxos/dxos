@@ -414,11 +414,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/chess-app/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/discord-bot/package.json",
           "jsonpath": "$.version"
         },

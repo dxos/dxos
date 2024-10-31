@@ -10,7 +10,7 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { customPieces, phosphorPieces, riohachaPieces } from './media';
+import { customPieces, phosphorPieces, riohachaPieces } from './pieces';
 
 export enum ChessPieces {
   STANDARD = 0,
