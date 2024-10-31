@@ -9,10 +9,6 @@ import { invariant } from '@dxos/invariant';
 
 import { validateSchema, type ValidationError } from '../util';
 
-// TODO(ZaymonFC): Instead of delegating validation of a schema to the validate call
-// you should be able to provide a schema for `values`. Note that there should still
-// be a facility for custom validation logic.
-
 type FormInputValue = string | number | readonly string[] | undefined;
 
 type BaseProps<T> = {
