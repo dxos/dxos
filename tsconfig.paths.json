@@ -140,6 +140,9 @@
       "@dxos/plugin-chess/meta": [
         "packages/plugins/plugin-chess/src/meta.ts"
       ],
+      "@dxos/plugin-chess/types": [
+        "packages/plugins/plugin-chess/src/types/index.ts"
+      ],
       "@dxos/plugin-client": [
         "packages/plugins/plugin-client/src/index.ts"
       ],
