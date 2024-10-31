@@ -17,16 +17,15 @@ const FieldRow = ({ children }: { children: React.ReactNode }) => {
   return <div className='flex flex-col w-full gap-1'>{children}</div>;
 };
 
-export type FieldProps<T = {}> = ThemedClassName<{
+export type FieldProps = ThemedClassName<{
   view: ViewType;
   field: FieldType;
-  schema?: S.Schema<T>;
   autoFocus?: boolean;
   readonly?: boolean;
   onSave?: (field: FieldType) => void;
 }>;
 
-export const Field = <T = {},>({ classNames, field, autoFocus, readonly, schema, onSave }: FieldProps<T>) => {
+export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: FieldProps) => {
   const { t } = useTranslation(translationKey);
   const { values, getInputProps, errors, handleSubmit, canSubmit, touched } = useForm({
     initialValues: { ...field },
