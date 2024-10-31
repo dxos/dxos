@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { PromptEditor, PromptEditorProps } from './PromptEditor';
+import { PromptEditor, type PromptEditorProps } from './PromptEditor';
 
 type PromptContainerProps = PromptEditorProps;
 

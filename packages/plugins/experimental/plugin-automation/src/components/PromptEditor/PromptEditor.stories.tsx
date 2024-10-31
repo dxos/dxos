@@ -12,9 +12,9 @@ import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { PromptEditor } from './PromptEditor';
 import translations from '../../translations';
 import { ChainPromptType, ChainType } from '../../types';
-import { PromptEditor } from './PromptEditor';
 
 const template = [
   '# Comment',
@@ -53,7 +53,7 @@ const meta: Meta = {
   render: DefaultStory,
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [ChainType, ChainPromptType] }),
-    withLayout({ fullscreen: true, classNames: 'flex justify-center m-2'}),
+    withLayout({ fullscreen: true, classNames: 'flex justify-center m-2' }),
     withTheme,
   ],
   parameters: {

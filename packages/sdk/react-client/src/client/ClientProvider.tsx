@@ -18,8 +18,8 @@ import { log } from '@dxos/log';
 import { useControlledValue } from '@dxos/react-hooks';
 import { getAsyncProviderValue, type MaybePromise, type Provider } from '@dxos/util';
 
-import { printBanner } from '../banner';
 import { ClientContext, type ClientContextProps } from './context';
+import { printBanner } from '../banner';
 
 /**
  * Properties for the ClientProvider.

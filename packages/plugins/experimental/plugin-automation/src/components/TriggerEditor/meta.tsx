@@ -15,11 +15,11 @@ import { CollectionType, MessageType } from '@dxos/plugin-space';
 import { Input } from '@dxos/react-ui';
 import { safeParseInt } from '@dxos/util';
 
+import { InputRow } from './Form';
 import { chainPresets } from '../../presets';
 import { type ChainPromptType } from '../../types';
 import { ChainPresets } from '../Chain';
 import { PromptEditor } from '../PromptEditor';
-import { InputRow } from './Form';
 
 // TODO(burdon): Factor out deps (remove from package.json). Provide via plugins.
 

@@ -8,17 +8,17 @@ import React, { useEffect } from 'react';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-    createBasicExtensions,
-    createDataExtensions,
-    createThemeExtensions,
-    useTextEditor,
+  createBasicExtensions,
+  createDataExtensions,
+  createThemeExtensions,
+  useTextEditor,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
+import { nameRegex, promptExtension } from './prompt-extension';
 import { AUTOMATION_PLUGIN } from '../../meta';
 import { type ChainInput, ChainInputType, type ChainPromptType } from '../../types';
-import { nameRegex, promptExtension } from './prompt-extension';
 
 const inputTypes = [
   {

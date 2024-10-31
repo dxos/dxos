@@ -12,8 +12,8 @@ import { useMembers, type Space, type SpaceMember } from '@dxos/react-client/ech
 import { Input, Select, useThemeContext } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { type GameType } from '../types';
 import { Chessboard, type ChessModel, type ChessMove } from './Chessboard';
+import { type GameType } from '../types';
 
 const useChessModel = (game: GameType) => {
   const [model, setModel] = useState<ChessModel>();

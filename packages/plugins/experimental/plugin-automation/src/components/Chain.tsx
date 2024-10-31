@@ -8,10 +8,10 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Select, useTranslation } from '@dxos/react-ui';
 import { nonNullable } from '@dxos/util';
 
+import { PromptEditor } from './PromptEditor';
 import { AUTOMATION_PLUGIN } from '../meta';
 import { chainPresets, type Preset } from '../presets';
 import { type ChainType } from '../types';
-import { PromptEditor } from './PromptEditor';
 
 export type ChainProps = {
   chain: ChainType;

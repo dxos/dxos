@@ -8,13 +8,13 @@ import { Mutex } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createSubscriptionTrigger, createWebsocketTrigger, type TriggerFactory } from '@dxos/functions';
 import {
-    FunctionTrigger,
-    type FunctionTriggerType,
-    type SubscriptionTrigger,
-    type TimerTrigger,
-    type TriggerSpec,
-    type WebhookTrigger,
-    type WebsocketTrigger,
+  FunctionTrigger,
+  type FunctionTriggerType,
+  type SubscriptionTrigger,
+  type TimerTrigger,
+  type TriggerSpec,
+  type WebhookTrigger,
+  type WebsocketTrigger,
 } from '@dxos/functions/types';
 import { log } from '@dxos/log';
 import { ScriptType } from '@dxos/plugin-script/types';

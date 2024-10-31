@@ -11,9 +11,9 @@ import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { TriggerEditor } from './TriggerEditor';
 import translations from '../../translations';
 import { ChainPromptType } from '../../types';
-import { TriggerEditor } from './TriggerEditor';
 
 const functions: Omit<FunctionDef, 'id'>[] = [
   {
@@ -71,7 +71,7 @@ const meta: Meta = {
         }
       },
     }),
-    withLayout({ fullscreen: true, classNames: 'flex justify-center m-2'}),
+    withLayout({ fullscreen: true, classNames: 'flex justify-center m-2' }),
     withTheme,
   ],
   parameters: {

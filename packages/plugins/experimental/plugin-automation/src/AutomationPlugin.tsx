@@ -123,7 +123,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
         component: ({ data, role }) => {
           switch (role) {
             // case 'article':
-              // return data.object instanceof ChainType ? <ChainArticle chain={data.object} /> : null;
+            // return data.object instanceof ChainType ? <ChainArticle chain={data.object} /> : null;
 
             case 'complementary--automation':
               return <AutomationPanel />;
