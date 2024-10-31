@@ -68,6 +68,7 @@ export const FieldSchema = S.mutable(
 
     // UX concerns.
     label: S.optional(S.String),
+    size: S.optional(S.Number.pipe(S.int(), S.nonNegative())),
 
     /** Default value for new records. */
     defaultValue: S.optional(S.Any),
