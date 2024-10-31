@@ -74,7 +74,13 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
       </List.Root>
 
       {field && view.schema && (
-        <Field classNames='p-2' autoFocus field={field} schema={space?.db.schema.getSchemaByTypename(view.schema)} />
+        <Field
+          key={field.path}
+          classNames='p-2'
+          autoFocus
+          field={field}
+          schema={space?.db.schema.getSchemaByTypename(view.schema)}
+        />
       )}
 
       {!readonly && (

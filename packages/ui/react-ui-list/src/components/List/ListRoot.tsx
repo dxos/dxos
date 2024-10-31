@@ -45,7 +45,22 @@ export const ListRoot = <T extends ListItemRecord>({
   onMove,
   ...props
 }: ListRootProps<T>) => {
-  const isEqual = useCallback((a: T, b: T) => (getId ? getId(a) === getId(b) : a === b), [getId]);
+  const isEqual = useCallback(
+    (a: T, b: T) => {
+      if (getId) {
+        return getId(a) === getId(b);
+      } else {
+        // Fallback for primitive values or when getId isn't provided.
+        // NOTE(ZaymonFC): Pragmatic seems to be serializing the drop target data so reference equality doesn't work.
+        try {
+          return JSON.stringify(a) === JSON.stringify(b);
+        } catch {
+          return a === b;
+        }
+      }
+    },
+    [getId],
+  );
 
   const [state, setState] = useState<ListContext<T>['state']>(idle);
   useEffect(() => {

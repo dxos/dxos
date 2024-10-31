@@ -10,6 +10,7 @@ import React from 'react';
 import { create, S } from '@dxos/echo-schema';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { arrayMove } from '@dxos/util';
 
 import { List, type ListRootProps } from './List';
 import { createList, TestItemSchema, type TestItemType } from './testing';
@@ -25,9 +26,12 @@ const DefaultStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => 
     const idx = items.findIndex((i) => i.id === item.id);
     items.splice(idx, 1);
   };
+  const handleMove = (from: number, to: number) => {
+    arrayMove(items, from, to);
+  };
 
   return (
-    <List.Root<TestItemType> dragPreview items={items} {...props}>
+    <List.Root<TestItemType> dragPreview items={items} getId={(item) => item.id} onMove={handleMove} {...props}>
       {({ items }) => (
         <>
           <div className='flex flex-col w-full'>
