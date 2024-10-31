@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { memo, useEffect } from 'react';
 import { type Decorator, type Preview } from '@storybook/react';
 import { themes } from '@storybook/theming';
-// import { type IndexEntry } from '@storybook/types';
+import React, { memo, useEffect } from 'react';
 
 import { log, LogLevel } from '@dxos/log';
 
@@ -86,16 +85,5 @@ export const preview: Preview = {
       light: { ...themes.light },
       lightClass: 'light',
     },
-
-    // https://storybook.js.org/docs/api/parameters#options
-    // options: {
-    // https://storybook.js.org/docs/writing-stories/naming-components-and-hierarchy#sorting-stories
-    // TODO(burdon): storySort isn't called.
-    // The options parameter can only be applied at the project level.
-    //   storySort: (a: IndexEntry, b: IndexEntry) => {
-    //     console.log(a, b);
-    //     return a.id === b.id ? 0 : a.id.localeCompare(b.id, undefined, { numeric: true });
-    //   },
-    // },
   },
 };

@@ -4,12 +4,13 @@
 
 import { Chess } from 'chess.js';
 import { join } from 'node:path';
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { GameType } from '@dxos/chess-app/types';
 import { TestBuilder } from '@dxos/client/testing';
 import { getObjectCore } from '@dxos/echo-db';
+import { GameType } from '@dxos/plugin-chess/types';
+
 import { create } from '@dxos/echo-schema';
 import { FunctionDef, type FunctionManifest, FunctionTrigger } from '@dxos/functions';
 import { startFunctionsHost } from '@dxos/functions/testing';
