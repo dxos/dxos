@@ -1,5 +1,6 @@
 import type { JsonSchemaType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { JSONSchema } from '@effect/schema';
 
 export const composeSchema = (source: JsonSchemaType, projection: JsonSchemaType): JsonSchemaType => {

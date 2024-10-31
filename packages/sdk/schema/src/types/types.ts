@@ -3,7 +3,7 @@
 //
 
 import { S } from '@dxos/effect';
-import { QueryType, JsonSchemaType, FieldMeta } from '@dxos/echo-schema';
+import { QueryType, JsonSchemaType, FieldMeta, effectToJsonSchema, create, StoredSchema, type ReactiveObject, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo-schema';
 
 // TODO(burdon): JSON path alternatives.
 //  - https://datatracker.ietf.org/doc/html/rfc6901
@@ -127,21 +127,27 @@ export const ViewPath = (path: JsonPath) => FieldMeta('dxos.view', { path });
 //
 
 
+export const createEmptyJsonSchema = () => {
+  const schema = effectToJsonSchema(S.Struct({}));
+  schema.type = 'object';
+  return schema;
+};
+
 export const createEmptySchema = (typename: string, version: string): ReactiveObject<StoredSchema> =>
   create(StoredSchema, {
     typename,
     version,
-    jsonSchema: effectToJsonSchema(S.Struct({})),
+    jsonSchema: createEmptyJsonSchema(),
   });
 
-  export const setProperty = (schema: JsonSchemaType, field: string, type: S.Schema.Any): void => {
+export const setProperty = (schema: JsonSchemaType, field: string, type: S.Schema.Any): void => {
   const jsonSchema = effectToJsonSchema(type as S.Schema<any>);
   delete jsonSchema.$schema; // Remove $schema on leaf nodes.
   (schema as any).properties ??= {};
   (schema as any).properties[field] = jsonSchema;
 };
 
-export const dynamicRef = (obj: StoredSchema): S.Schema.Any =>
+export const dynamicRef = (obj: StoredSchema): S.Schema.AnyNoContext =>
   S.Any.annotations({
     [ReferenceAnnotationId]: {
       schemaId: obj.id,
@@ -150,7 +156,7 @@ export const dynamicRef = (obj: StoredSchema): S.Schema.Any =>
     } satisfies ReferenceAnnotationValue,
   });
 
-  export const setAnnotation = (schema: JsonSchemaType, property: string, annotation: string, value: any): void => {
+export const setAnnotation = (schema: JsonSchemaType, property: string, annotation: string, value: any): void => {
   (schema as any).properties[property].$echo ??= {};
   (schema as any).properties[property].$echo.annotations ??= {};
   (schema as any).properties[property].$echo.annotations[annotation] ??= {};

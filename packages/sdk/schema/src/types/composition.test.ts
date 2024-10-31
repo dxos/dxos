@@ -1,21 +1,21 @@
-import { Schema as S } from '@effect/schema';
-import { ColumnSize, ViewPath, FieldKind, FieldValueType, ViewSchema, type JsonPath, setColumnSize } from './types';
-import { test } from 'vitest';
-import {
-  create,
-  effectToJsonSchema,
-  ref,
-  ReferenceAnnotationId,
-  StoredSchema,
-  TypedObject,
-  type JsonSchemaType,
-  type ReactiveObject,
-  type ReferenceAnnotationValue,
-} from '@dxos/echo-schema';
-import { composeSchema } from './composition';
+import { create, effectToJsonSchema, ref, TypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
+import { Schema as S } from '@effect/schema';
 import { DescriptionAnnotationId } from '@effect/schema/AST';
-import { setDeep } from '@dxos/util';
+import { test } from 'vitest';
+import { composeSchema } from './composition';
+import {
+  ColumnSize,
+  createEmptySchema,
+  dynamicRef,
+  FieldKind,
+  FieldValueType,
+  setColumnSize,
+  setProperty,
+  ViewPath,
+  ViewSchema,
+  type JsonPath,
+} from './types';
 
 test.skip('schema composition', ({ expect }) => {
   const TestSchema = S.Struct({
@@ -85,39 +85,6 @@ test.skip('scratch', async () => {
   log.info('schema', { org, person });
 });
 
-const createEmptySchema = (typename: string, version: string): ReactiveObject<StoredSchema> =>
-  create(StoredSchema, {
-    typename,
-    version,
-    jsonSchema: effectToJsonSchema(S.Struct({})),
-  });
-
-const setProperty = (schema: JsonSchemaType, field: string, type: S.Schema.Any): void => {
-  const jsonSchema = effectToJsonSchema(type as S.Schema<any>);
-  delete jsonSchema.$schema; // Remove $schema on leaf nodes.
-  (schema as any).properties ??= {};
-  (schema as any).properties[field] = jsonSchema;
-};
-
-const dynamicRef = (obj: StoredSchema): S.Schema.Any =>
-  S.Any.annotations({
-    [ReferenceAnnotationId]: {
-      schemaId: obj.id,
-      typename: obj.typename,
-      version: obj.version,
-    } satisfies ReferenceAnnotationValue,
-  });
-
-const setAnnotation = (schema: JsonSchemaType, property: string, annotation: string, value: any): void => {
-  (schema as any).properties[property].$echo ??= {};
-  (schema as any).properties[property].$echo.annotations ??= {};
-  (schema as any).properties[property].$echo.annotations[annotation] ??= {};
-  Object.assign((schema as any).properties[property].$echo.annotations[annotation], value);
-};
-
-const setColumnSize = (schema: JsonSchemaType, property: string, size: number): void =>
-  setAnnotation(schema, property, 'dxos.view', { size });
-
 test('scratch', async () => {
   // empty schema
   const orgSchema = createEmptySchema('example.com/Org', '0.1.0');
@@ -167,8 +134,11 @@ test('scratch', async () => {
 
   log.info('view', { personView });
 
-  // const composedSchema = composeSchema(personSchema.jsonSchema, personView.schema);
-  // log.info('composed', { composedSchema });
+  const composedSchema = composeSchema(
+    JSON.parse(JSON.stringify(personSchema)).jsonSchema,
+    JSON.parse(JSON.stringify(personView)).schema,
+  );
+  log.info('composed', { composedSchema });
 });
 
 /*
