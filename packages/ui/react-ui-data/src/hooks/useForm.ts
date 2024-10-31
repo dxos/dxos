@@ -48,6 +48,7 @@ type Form<T> = {
 
 /**
  * Creates a hook for managing form state, including values, validation, and submission.
+ * Deeply integrated with `@dxos/schema` for schema-based validation.
  */
 export const useForm = <T extends object>({
   initialValues,
