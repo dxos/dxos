@@ -435,7 +435,7 @@ export class DxGrid extends LitElement {
 
   private handlePointerUp = (event: PointerEvent) => {
     const cell = closestCell(event.target);
-    if (cell) {
+    if (cell && this.pointer?.state === 'selecting') {
       this.setSelectionEnd(cell);
     }
     this.pointer = null;
