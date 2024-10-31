@@ -60,7 +60,7 @@ export const FieldSchema = S.mutable(
     // TODO(ZaymonFC): Should validations be common? Think about translations?
     path: S.String.pipe(
       S.nonEmptyString({ message: () => 'Property is required.' }),
-      S.pattern(/^\w+$/, { message: () => 'Invalid property name.' }),
+      S.pattern(/^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*$/, { message: () => 'Invalid property path.' }),
     ),
 
     // TODO(burdon): Replace with annotations?
