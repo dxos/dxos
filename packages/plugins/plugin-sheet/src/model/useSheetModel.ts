@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { type ComputeGraph } from '../graph';
+import { type ComputeGraph } from '../compute-graph';
 import { SheetModel } from '../model';
 import { type SheetType } from '../types';
 

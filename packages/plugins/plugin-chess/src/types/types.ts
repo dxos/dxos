@@ -9,12 +9,12 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { GameType } from '@dxos/chess-app';
 import { isReactiveObject } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-client';
 import { type SpaceInitProvides } from '@dxos/plugin-space';
 
-import { CHESS_PLUGIN } from './meta';
+import { GameType } from './schema';
+import { CHESS_PLUGIN } from '../meta';
 
 const CHESS_ACTION = `${CHESS_PLUGIN}/action`;
 

@@ -24,6 +24,7 @@ export const RangeList = ({ sheet, onSelect, onDelete }: RangeListProps) => {
         {({ items }) =>
           items.map((item, i) => (
             <List.Item key={i} item={item} classNames={['p-2', ghostHover]}>
+              <List.ItemDragHandle />
               <List.ItemTitle onClick={() => onSelect?.(item)}>
                 {rangeToA1Notation(rangeFromIndex(sheet, item.range))}
               </List.ItemTitle>

@@ -60,7 +60,7 @@ export const IconsPlugin = ({
 
         // Process chunks.
         server.middlewares.use((req, res, next) => {
-          if (!req.url?.startsWith('/virtual:')) {
+          if (req.url?.indexOf('/virtual:') === -1) {
             const match = req.url?.match(/^(\/@fs)?(.+)\.(\w+)$/);
             if (match) {
               const [, prefix, path, ext] = match;

@@ -6,12 +6,14 @@ import { CrownCross } from '@phosphor-icons/react';
 import { Chess as ChessJs } from 'chess.js';
 import React, { useEffect, useState } from 'react';
 
-import { Chessboard, type ChessModel, type ChessMove, type GameType } from '@dxos/chess-app';
 import { generateName } from '@dxos/display-name';
 import { invariant } from '@dxos/invariant';
-import { type SpaceMember, useMembers, type Space } from '@dxos/react-client/echo';
+import { useMembers, type Space, type SpaceMember } from '@dxos/react-client/echo';
 import { Input, Select, useThemeContext } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
+
+import { Chessboard, type ChessModel, type ChessMove } from './Chessboard';
+import { type GameType } from '../types';
 
 const useChessModel = (game: GameType) => {
   const [model, setModel] = useState<ChessModel>();
