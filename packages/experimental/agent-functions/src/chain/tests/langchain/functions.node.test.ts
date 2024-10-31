@@ -42,7 +42,6 @@ describe.skip('Functions', () => {
 
     // TODO(burdon): How to invoke tool?
     const result = await model.bind(options).invoke('Where am i?');
-    console.log('>>', result);
     expect(result).to.exist;
   });
 });

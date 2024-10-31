@@ -15,6 +15,7 @@ import { addFieldToView, type FieldType, removeFieldFromView } from '@dxos/schem
 
 import { TableContainer } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
+import { serializer } from './serializer';
 import translations from './translations';
 import { TableType } from './types';
 import { TableAction, type TablePluginProvides, isTable } from './types';
@@ -35,6 +36,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             icon: 'ph--table--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (table: TableType) => [], // loadObjectReferences(table, (table) => [table.schema]),
+            serializer,
           },
         },
       },

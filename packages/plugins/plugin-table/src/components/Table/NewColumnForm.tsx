@@ -33,6 +33,7 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
 
   const handleCreate = useCallback(() => {
     if (!field || !model || !model?.table?.view) {
+      close();
       return;
     }
     model.addColumn({ ...field });

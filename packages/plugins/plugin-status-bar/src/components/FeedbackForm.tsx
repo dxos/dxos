@@ -3,7 +3,7 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { X, PaperPlaneTilt } from '@phosphor-icons/react';
+import { PaperPlaneTilt, X } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';

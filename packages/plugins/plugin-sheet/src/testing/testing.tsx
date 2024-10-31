@@ -9,8 +9,8 @@ import { type Space } from '@dxos/react-client/echo';
 import { useAsyncState } from '@dxos/react-hooks';
 
 import { ComputeGraphContextProvider } from '../components';
+import { type ComputeGraph, type ComputeGraphOptions, ComputeGraphRegistry } from '../compute-graph';
 import { createSheet } from '../defs';
-import { type ComputeGraph, type ComputeGraphOptions, ComputeGraphRegistry } from '../graph';
 import { type CellValue, type CreateSheetOptions } from '../types';
 
 const testSheetName = 'test';

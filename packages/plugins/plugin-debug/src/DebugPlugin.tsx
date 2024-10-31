@@ -8,17 +8,19 @@ import {
   definePlugin,
   parseGraphPlugin,
   parseIntentPlugin,
+  parseMetadataResolverPlugin,
   parseSettingsPlugin,
   resolvePlugin,
 } from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
 import { Devtools } from '@dxos/devtools';
-import { type ClientPluginProvides } from '@dxos/plugin-client';
-import { createExtension, Graph, type Node } from '@dxos/plugin-graph';
+import { invariant } from '@dxos/invariant';
+import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
+import { createExtension, Graph, type Node, toSignal } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
-import { create, isEchoObject, isSpace, type Space, SpaceState } from '@dxos/react-client/echo';
+import { create, getTypename, isEchoObject, isSpace, parseId, type Space, SpaceState } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
@@ -98,7 +100,14 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
       },
       graph: {
         builder: (plugins) => {
+          const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+          const metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
           const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+          const resolve = metadataPlugin?.provides.metadata.resolver;
+          const client = clientPlugin?.provides.client;
+          invariant(resolve);
+          invariant(client);
+
           return [
             // Devtools node.
             createExtension({
@@ -152,6 +161,77 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
                     },
                   },
                 ];
+              },
+            }),
+
+            // Create nodes for debug sidebar.
+            createExtension({
+              id: `${DEBUG_PLUGIN}/debug-for-subject`,
+              resolver: ({ id }) => {
+                // TODO(Zan): Find util (or make one).
+                if (!id.endsWith('~debug')) {
+                  return;
+                }
+
+                const type = 'orphan-settings-for-subject';
+                const icon = 'ph--bug--regular';
+
+                const [subjectId] = id.split('~');
+                const { spaceId, objectId } = parseId(subjectId);
+                const space = client.spaces.get().find((space) => space.id === spaceId);
+                if (!objectId) {
+                  // TODO(burdon): Ref SPACE_PLUGIN ns.
+                  const label = space
+                    ? space.properties.name || ['unnamed space label', { ns: DEBUG_PLUGIN }]
+                    : ['unnamed object settings label', { ns: DEBUG_PLUGIN }];
+
+                  // TODO(wittjosiah): Support comments for arbitrary subjects.
+                  //   This is to ensure that the comments panel is not stuck on an old object.
+                  return {
+                    id,
+                    type,
+                    data: null,
+                    properties: {
+                      icon,
+                      label,
+                      showResolvedThreads: false,
+                      object: null,
+                      space,
+                    },
+                  };
+                }
+
+                const object = toSignal(
+                  (onChange) => {
+                    const timeout = setTimeout(async () => {
+                      await space?.db.loadObjectById(objectId);
+                      onChange();
+                    });
+
+                    return () => clearTimeout(timeout);
+                  },
+                  () => space?.db.getObjectById(objectId),
+                  subjectId,
+                );
+                if (!object || !subjectId) {
+                  return;
+                }
+
+                const meta = resolve(getTypename(object) ?? '');
+                const label = meta.label?.(object) ||
+                  object.name ||
+                  meta.placeholder || ['unnamed object settings label', { ns: DEBUG_PLUGIN }];
+
+                return {
+                  id,
+                  type,
+                  data: null,
+                  properties: {
+                    icon,
+                    label,
+                    object,
+                  },
+                };
               },
             }),
           ];

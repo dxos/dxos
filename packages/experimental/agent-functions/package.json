@@ -10,12 +10,9 @@
   "sideEffects": true,
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -32,7 +29,6 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/chess-app": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -48,6 +44,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
+    "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-ipfs": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",

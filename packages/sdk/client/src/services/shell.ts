@@ -172,6 +172,28 @@ export class Shell {
   }
 
   /**
+   * Initialize a new device with an existing identity using a recovery code.
+   *
+   * @returns Shell result with the identity.
+   */
+  async recoverIdentity(): Promise<InitializeIdentityResult> {
+    await this._shellManager.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY_FROM_RECOVERY });
+    return new Promise((resolve) => {
+      this._shellManager.contextUpdate.on((context) => {
+        if (context.display === ShellDisplay.NONE) {
+          resolve({ cancelled: true });
+        }
+      });
+
+      this._identity.subscribe((identity) => {
+        if (identity) {
+          resolve({ identity, cancelled: false });
+        }
+      });
+    });
+  }
+
+  /**
    * Invite new members to join the current space.
    * Opens the shell to the specified space, showing current members and allowing new members to be invited.
    *

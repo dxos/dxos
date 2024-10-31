@@ -14,10 +14,11 @@ import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Icon } from '@dxos/react-ui';
 
 import { ComputeGraphContextProvider, RangeList, SheetContainer, useComputeGraph } from './components';
+import { type ComputeGraphRegistry } from './compute-graph';
 import { compareIndexPositions, createSheet } from './defs';
 import { computeGraphFacet } from './extensions';
-import { type ComputeGraphRegistry } from './graph';
 import meta, { SHEET_PLUGIN } from './meta';
+import { serializer } from './serializer';
 import translations from './translations';
 import { SheetAction, SheetType, type SheetPluginProvides } from './types';
 
@@ -37,8 +38,8 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       }
 
       // Async import removes direct dependency on hyperformula.
-      const { ComputeGraphRegistry } = await import('./graph');
-      computeGraphRegistry = new ComputeGraphRegistry({ remoteFunctionUrl });
+      const { defaultPlugins, ComputeGraphRegistry } = await import('./compute-graph');
+      computeGraphRegistry = new ComputeGraphRegistry({ plugins: defaultPlugins, remoteFunctionUrl });
     },
     provides: {
       context: ({ children }) => {
@@ -51,6 +52,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
             label: (object: any) => (object instanceof SheetType ? object.name : undefined),
             placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
             icon: 'ph--grid-nine--regular',
+            serializer,
           },
         },
       },

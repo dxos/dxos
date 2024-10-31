@@ -305,7 +305,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
     const configExists = await exists(configFile);
     if (!configExists) {
       const defaultConfigPath = join(
-        dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('Could not find package.json'))),
+        dirname(pkgUp.sync({ cwd: import.meta.dirname }) ?? raise(new Error('Could not find package.json'))),
         DEFAULT_CONFIG,
       );
 

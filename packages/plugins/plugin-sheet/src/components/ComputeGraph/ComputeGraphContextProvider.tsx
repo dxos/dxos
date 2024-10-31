@@ -8,7 +8,7 @@ import { raise } from '@dxos/debug';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncState } from '@dxos/react-hooks';
 
-import { type ComputeGraph, type ComputeGraphRegistry } from '../../graph';
+import { type ComputeGraph, type ComputeGraphRegistry } from '../../compute-graph';
 
 export type ComputeGraphContextType = {
   registry: ComputeGraphRegistry;

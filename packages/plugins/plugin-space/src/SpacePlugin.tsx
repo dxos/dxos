@@ -34,8 +34,8 @@ import { type Node, createExtension, memoize, toSignal } from '@dxos/plugin-grap
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
-  Expando,
   type EchoReactiveObject,
+  Expando,
   Filter,
   type PropertiesTypeProps,
   type Space,
@@ -47,7 +47,7 @@ import {
   isEchoObject,
   isSpace,
   loadObjectReferences,
-  parseFullyQualifiedId,
+  parseId,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { ClipboardProvider, InvitationManager, type InvitationManagerProps, osTranslations } from '@dxos/shell/react';
@@ -68,6 +68,7 @@ import {
   SmallPresenceLive,
   SpacePresence,
   SpaceSettings,
+  SpaceSettingsPanel,
   SyncStatus,
 } from './components';
 import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
@@ -375,12 +376,11 @@ export const SpacePlugin = ({
                 <MissingObject id={primary} />
               ) : null;
             case 'complementary--settings':
-              return isEchoObject(data.subject)
-                ? {
-                    node: <DefaultObjectSettings object={data.subject} />,
-                    disposition: 'hoist',
-                  }
-                : null;
+              return isSpace(data.subject) ? (
+                <SpaceSettingsPanel space={data.subject} />
+              ) : isEchoObject(data.subject) ? (
+                { node: <DefaultObjectSettings object={data.subject} />, disposition: 'fallback' }
+              ) : null;
             case 'dialog':
               if (data.component === 'dxos.org/plugin/space/InvitationManagerDialog') {
                 return (
@@ -392,7 +392,7 @@ export const SpacePlugin = ({
                 );
               }
               return null;
-            case 'popover':
+            case 'popover': {
               if (data.component === 'dxos.org/plugin/space/RenameSpacePopover' && isSpace(data.subject)) {
                 return <PopoverRenameSpace space={data.subject} />;
               }
@@ -400,6 +400,7 @@ export const SpacePlugin = ({
                 return <PopoverRenameObject object={data.subject} />;
               }
               return null;
+            }
             // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
@@ -556,6 +557,7 @@ export const SpacePlugin = ({
                     icon: 'ph--plus--regular',
                     disposition: 'item',
                     testId: 'spacePlugin.createSpace',
+                    className: 'pbs-4',
                   },
                 },
                 {
@@ -576,6 +578,7 @@ export const SpacePlugin = ({
                     icon: 'ph--sign-in--regular',
                     disposition: 'item',
                     testId: 'spacePlugin.joinSpace',
+                    className: 'pbe-4',
                   },
                 },
               ],
@@ -729,9 +732,33 @@ export const SpacePlugin = ({
                   return;
                 }
 
+                const type = 'orphan-settings-for-subject';
+                const icon = 'ph--gear--regular';
+
                 const [subjectId] = id.split('~');
-                const [spaceId, objectId] = parseFullyQualifiedId(subjectId);
+                const { spaceId, objectId } = parseId(subjectId);
                 const space = client.spaces.get().find((space) => space.id === spaceId);
+                if (!objectId) {
+                  const label = space
+                    ? space.properties.name || ['unnamed space label', { ns: SPACE_PLUGIN }]
+                    : ['unnamed object settings label', { ns: SPACE_PLUGIN }];
+
+                  // TODO(wittjosiah): Support comments for arbitrary subjects.
+                  //   This is to ensure that the comments panel is not stuck on an old object.
+                  return {
+                    id,
+                    type,
+                    data: null,
+                    properties: {
+                      icon,
+                      label,
+                      showResolvedThreads: false,
+                      object: null,
+                      space,
+                    },
+                  };
+                }
+
                 const object = toSignal(
                   (onChange) => {
                     const timeout = setTimeout(async () => {
@@ -755,10 +782,10 @@ export const SpacePlugin = ({
 
                 return {
                   id,
-                  type: 'orphan-settings-for-subject',
+                  type,
                   data: null,
                   properties: {
-                    icon: 'ph--gear--regular',
+                    icon,
                     label,
                     object,
                   },
@@ -1288,11 +1315,12 @@ export const SpacePlugin = ({
             case SpaceAction.DUPLICATE_OBJECT: {
               const originalObject = intent.data?.object ?? intent.data?.result;
               const resolve = resolvePlugin(plugins, parseMetadataResolverPlugin)?.provides.metadata.resolver;
-              if (!isEchoObject(originalObject) || !resolve) {
+              const space = isSpace(intent.data?.target) ? intent.data?.target : getSpace(intent.data?.target);
+              if (!isEchoObject(originalObject) || !resolve || !space) {
                 return;
               }
 
-              const newObject = await cloneObject(originalObject, resolve);
+              const newObject = await cloneObject(originalObject, resolve, space);
               return {
                 intents: [
                   [{ action: SpaceAction.ADD_OBJECT, data: { object: newObject, target: intent.data?.target } }],

@@ -2,22 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef, type FocusEvent, type WheelEvent, type KeyboardEvent } from 'react';
+import React, { useCallback, useMemo, useRef, type FocusEvent, type KeyboardEvent, type WheelEvent } from 'react';
 
 import { useAttention } from '@dxos/react-ui-attention';
 import {
-  type DxGridElement,
-  Grid,
-  type GridContentProps,
-  editorKeys,
-  type EditorKeysProps,
-  GridCellEditor,
   closestCell,
+  editorKeys,
+  Grid,
+  GridCellEditor,
+  type DxGridElement,
+  type EditorKeysProps,
+  type GridContentProps,
 } from '@dxos/react-ui-grid';
 
 import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
-import { rangeToA1Notation, type CellRange, DEFAULT_COLUMNS, DEFAULT_ROWS } from '../../defs';
-import { rangeExtension, sheetExtension, type CellRangeNotifier } from '../../extensions';
+import { DEFAULT_COLUMNS, DEFAULT_ROWS, rangeToA1Notation, type CellRange } from '../../defs';
+import { rangeExtension, sheetExtension, type RangeController } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
 import { useSheetContext } from '../SheetContext';
 
@@ -45,7 +45,7 @@ export const GridSheet = () => {
   const { id, model, editing, setEditing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs } =
     useSheetContext();
   const dxGrid = useRef<DxGridElement | null>(null);
-  const rangeNotifier = useRef<CellRangeNotifier>();
+  const rangeController = useRef<RangeController>();
   const { hasAttention } = useAttention(id);
 
   const handleFocus = useCallback(
@@ -75,7 +75,17 @@ export const GridSheet = () => {
       const delta = key.startsWith('Arrow') ? (['ArrowUp', 'ArrowLeft'].includes(key) ? -1 : 1) : shift ? -1 : 1;
       dxGrid.current?.refocus(axis, delta);
     },
-    [model, editing, setEditing],
+    [model, editing],
+  );
+
+  const handleBlur = useCallback(
+    (value?: string) => {
+      if (value !== undefined) {
+        model.setValue(dxGridCellIndexToSheetCellAddress(editing!.index), value);
+      }
+      setEditing(null);
+    },
+    [model, editing],
   );
 
   const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
@@ -101,7 +111,7 @@ export const GridSheet = () => {
       }
       if (editing) {
         // Update range selection in formula.
-        rangeNotifier.current?.(rangeToA1Notation(range));
+        rangeController.current?.setRange(rangeToA1Notation(range));
       } else {
         // Setting range while editing causes focus to move to null, avoid doing so.
         setRange(range.to ? range : undefined);
@@ -109,7 +119,6 @@ export const GridSheet = () => {
     },
     [editing],
   );
-
   const handleWheel = useCallback(
     (event: WheelEvent) => {
       if (!hasAttention) {
@@ -160,7 +169,15 @@ export const GridSheet = () => {
     () => [
       editorKeys({ onClose: handleClose, ...(editing?.initialContent && { onNav: handleClose }) }),
       sheetExtension({ functions: model.graph.getFunctions() }),
-      rangeExtension((fn) => (rangeNotifier.current = fn)),
+      rangeExtension({
+        onInit: (fn) => (rangeController.current = fn),
+        onStateChange: (state) => {
+          if (dxGrid.current) {
+            // This can’t dispatch a setState in this component, otherwise the cell editor remounts and loses focus.
+            dxGrid.current.mode = typeof state.activeRange === 'undefined' ? 'edit' : 'edit-select';
+          }
+        },
+      }),
     ],
     [model, handleClose, editing],
   );
@@ -178,7 +195,7 @@ export const GridSheet = () => {
 
   return (
     <>
-      <GridCellEditor getCellContent={getCellContent} extension={extension} />
+      <GridCellEditor getCellContent={getCellContent} extension={extension} onBlur={handleBlur} />
       <Grid.Content
         initialCells={initialCells}
         limitColumns={DEFAULT_COLUMNS}

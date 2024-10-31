@@ -9,28 +9,19 @@
   "sideEffects": true,
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./meta": {
+      "types": "./dist/types/src/meta.d.ts",
       "browser": "./dist/lib/browser/meta.mjs",
-      "node": {
-        "require": "./dist/lib/node/meta.cjs",
-        "default": "./dist/lib/node-esm/meta.mjs"
-      },
-      "types": "./dist/types/src/meta.d.ts"
+      "node": "./dist/lib/node-esm/meta.mjs"
     },
     "./types": {
+      "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/types/index.cjs",
-        "default": "./dist/lib/node-esm/types/index.mjs"
-      },
-      "types": "./dist/types/src/types/index.d.ts"
+      "node": "./dist/lib/node-esm/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -56,7 +47,6 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/chain": "workspace:*",
-    "@dxos/chess-app": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
@@ -64,7 +54,9 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-ipfs": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",

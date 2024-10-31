@@ -8,12 +8,16 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Select, useTranslation } from '@dxos/react-ui';
 import { nonNullable } from '@dxos/util';
 
-import { PromptTemplate, Section } from './PromptTemplate';
+import { PromptEditor } from './PromptEditor';
 import { AUTOMATION_PLUGIN } from '../meta';
 import { chainPresets, type Preset } from '../presets';
 import { type ChainType } from '../types';
 
-export const Chain: FC<{ chain: ChainType }> = ({ chain }) => {
+export type ChainProps = {
+  chain: ChainType;
+};
+
+export const Chain = ({ chain }: ChainProps) => {
   const space = getSpace(chain);
   if (!space) {
     return null;
@@ -28,12 +32,10 @@ export const Chain: FC<{ chain: ChainType }> = ({ chain }) => {
 
   return (
     <div className='flex flex-col my-2 gap-4'>
-      {chain.prompts?.filter(nonNullable).map((prompt, i) => <PromptTemplate key={i} prompt={prompt} />)}
-      <Section title='Presets'>
-        <div className='p-2'>
-          <ChainPresets presets={chainPresets} onSelect={handleSelectPreset} />
-        </div>
-      </Section>
+      {chain.prompts?.filter(nonNullable).map((prompt, i) => <PromptEditor key={i} prompt={prompt} />)}
+      <div className='p-2'>
+        <ChainPresets presets={chainPresets} onSelect={handleSelectPreset} />
+      </div>
     </div>
   );
 };
