@@ -3,6 +3,7 @@ import { ColumnSize, DataSource, FieldKind, FieldValueType, type JsonPath } from
 import { test } from 'vitest';
 import { effectToJsonSchema } from '@dxos/echo-schema';
 import { composeSchema } from './composition';
+import { log } from '@dxos/log';
 
 test('schema composition', () => {
   const TypeSchema = S.Struct({
@@ -20,5 +21,5 @@ test('schema composition', () => {
 
   const composedSchema = composeSchema(typeSchemaJson, projectionSchemaJson);
 
-  console.log(composedSchema);
+  log.info('composedSchema', { composedSchema });
 });
