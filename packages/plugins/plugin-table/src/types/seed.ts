@@ -19,9 +19,9 @@ export const createStarterView = (schema: AbstractSchema): ViewType => {
   return {
     schema: schema.typename,
     fields: [
-      { id: 'name', path: 'name', label: 'Name', type: FieldValueType.String },
-      { id: 'description', path: 'description', label: 'Description', type: FieldValueType.String },
-      { id: 'quantity', path: 'quantity', label: 'Quantity', type: FieldValueType.Number },
+      { path: 'name', label: 'Name', type: FieldValueType.String },
+      { path: 'description', label: 'Description', type: FieldValueType.String },
+      { path: 'quantity', label: 'Quantity', type: FieldValueType.Number },
     ],
   };
 };

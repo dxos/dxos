@@ -45,6 +45,7 @@
     "jsonpath": "^1.1.1"
   },
   "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",
     "@types/jsonpath": "~0.2.4",

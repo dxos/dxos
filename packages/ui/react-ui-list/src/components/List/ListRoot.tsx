@@ -6,7 +6,7 @@ import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/ad
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
 import { createContext } from '@radix-ui/react-context';
-import React, { type ReactNode, useEffect, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 
@@ -14,7 +14,6 @@ import { idle, type ItemState, type ListItemRecord } from './ListItem';
 
 type ListContext<T extends ListItemRecord> = {
   isItem: (item: any) => boolean;
-  isEqual?: (item1: T, item2: T) => boolean;
   getId?: (item: T) => string; // TODO(burdon): Require if T doesn't conform to type.
   dragPreview?: boolean;
   state: ItemState & { item?: T };
@@ -35,18 +34,19 @@ export type ListRootProps<T extends ListItemRecord> = ThemedClassName<{
   items?: T[];
   onMove?: (fromIndex: number, toIndex: number) => void;
 }> &
-  Pick<ListContext<T>, 'isItem' | 'isEqual' | 'getId' | 'dragPreview'>;
+  Pick<ListContext<T>, 'isItem' | 'getId' | 'dragPreview'>;
 
 export const ListRoot = <T extends ListItemRecord>({
   classNames,
   children,
   items,
   isItem,
-  isEqual = (a, b) => (getId ? getId(a) === getId(b) : a === b),
   getId,
   onMove,
   ...props
 }: ListRootProps<T>) => {
+  const isEqual = useCallback((a: T, b: T) => (getId ? getId(a) === getId(b) : a === b), [getId]);
+
   const [state, setState] = useState<ListContext<T>['state']>(idle);
   useEffect(() => {
     if (!items) {
@@ -79,10 +79,11 @@ export const ListRoot = <T extends ListItemRecord>({
           indexOfTarget: targetIdx,
           axis: 'vertical',
         });
+
         onMove?.(sourceIdx, destinationIndex);
       },
     });
-  }, [items]);
+  }, [items, isEqual, onMove]);
 
   return (
     <ListProvider {...{ isItem, state, setState, ...props }}>{children?.({ state, items: items ?? [] })}</ListProvider>

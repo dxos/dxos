@@ -9,11 +9,12 @@ import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
+import { type FieldType } from '@dxos/schema';
 
 import { Table } from './Table';
 import { Toolbar, type ToolbarAction } from './Toolbar';
 import { useTableModel } from '../hooks';
-import { type TableType } from '../types';
+import { TableAction, type TableType } from '../types';
 
 // TODO(zantonio): Factor out, copied this from MarkdownPlugin.
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
@@ -27,8 +28,33 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     table.schema,
   ]);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
-  const onDeleteRow = useCallback((row: any) => space?.db.remove(row), [space]);
-  const model = useTableModel({ table, objects: filteredObjects, onDeleteRow });
+
+  const handleDeleteRow = useCallback((row: any) => space?.db.remove(row), [space]);
+  const handleAddColumn = useCallback(
+    (field: any) => {
+      void dispatch({
+        action: TableAction.ADD_COLUMN,
+        data: { table, field } satisfies TableAction.AddColumn,
+      });
+    },
+    [table],
+  );
+  const handleDeleteColumn = useCallback(
+    (field: FieldType) => {
+      void dispatch({
+        action: TableAction.DELETE_COLUMN,
+        data: { table, field } satisfies TableAction.DeleteColumn,
+      });
+    },
+    [space],
+  );
+  const model = useTableModel({
+    table,
+    objects: filteredObjects,
+    onDeleteRow: handleDeleteRow,
+    onAddColumn: handleAddColumn,
+    onDeleteColumn: handleDeleteColumn,
+  });
 
   const onThreadCreate = useCallback(() => {
     void dispatch({

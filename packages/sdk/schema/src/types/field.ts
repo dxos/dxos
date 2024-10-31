@@ -4,8 +4,9 @@
 
 import jp from 'jsonpath';
 
-import { AST, type S, isLeafType, visit } from '@dxos/effect';
+import { AST, S, isLeafType, visit } from '@dxos/effect';
 
+import { EmailFormat, FormatAnnotationId, UrlFormat } from './annotations';
 import { type FieldType, FieldValueType, type ViewType } from './types';
 
 // TODO(burdon): Just use lodash.get?
@@ -61,6 +62,29 @@ export const toFieldValueType = (type: AST.AST): FieldValueType => {
   return FieldValueType.JSON;
 };
 
+// TODO(ZaymonFC): Find all the appropriate annotations.
+// TODO(ZaymonFC): Pipe S.Pattern (regex) for email, url, etc.
+// TODO(ZaymonFC): Enforce real / whole numbers where appropriate.
+export const schemaForType: Record<FieldValueType, S.Schema<any> | undefined> = {
+  [FieldValueType.String]: S.String,
+  [FieldValueType.Text]: S.String,
+  [FieldValueType.Number]: S.Number,
+  [FieldValueType.Boolean]: S.Boolean,
+  [FieldValueType.Date]: S.DateFromString,
+  [FieldValueType.Email]: S.String.annotations({ [FormatAnnotationId]: EmailFormat }),
+  [FieldValueType.URL]: S.String.annotations({ [FormatAnnotationId]: UrlFormat }),
+  [FieldValueType.Percent]: S.Number,
+  [FieldValueType.Currency]: S.Number,
+  [FieldValueType.Ref]: undefined,
+  [FieldValueType.User]: undefined,
+  [FieldValueType.JSON]: undefined,
+  [FieldValueType.Timestamp]: undefined,
+  [FieldValueType.DateTime]: undefined,
+  [FieldValueType.Time]: undefined,
+  [FieldValueType.Formula]: undefined,
+  [FieldValueType.DID]: undefined,
+};
+
 // TODO(burdon): Check unique name against schema.
 export const getUniqueProperty = (view: ViewType) => {
   let n = 1;
@@ -71,4 +95,8 @@ export const getUniqueProperty = (view: ViewType) => {
       return path;
     }
   }
+};
+
+export const createUniqueFieldForView = (view: ViewType): FieldType => {
+  return { path: getUniqueProperty(view), type: FieldValueType.String };
 };

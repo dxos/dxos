@@ -2,13 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as ModalPrimitive from '@radix-ui/react-popper';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { create, createObjectId } from '@dxos/echo-schema';
-import { Button, DropdownMenu, Icon, useThemeContext } from '@dxos/react-ui';
+import { create } from '@dxos/echo-schema';
+import { DropdownMenu } from '@dxos/react-ui';
 import { Field } from '@dxos/react-ui-data';
-import { type FieldType, FieldValueType, getUniqueProperty, type ViewType } from '@dxos/schema';
+import { createUniqueFieldForView, type FieldType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
@@ -16,26 +15,16 @@ type NewColumnFormProps = {
   model?: TableModel;
   open: boolean;
   onClose: () => void;
+  triggerRef: React.RefObject<HTMLButtonElement>;
 };
 
-// TODO(ZaymonFC): A util in `@dxos/schema` should look at the view and the
-//  schema and generate the new field. That's why I haven't moved this to ../../seed.
-export const createNewField = (view: ViewType): FieldType => {
-  const field: FieldType = { id: createObjectId(), path: getUniqueProperty(view), type: FieldValueType.String };
-
-  // TODO(ZaymonFC): Can't currently supply a schema since it's not in the registry when we
-  //  try to add it to the table
-  return create(field);
-};
-
-export const NewColumnForm = ({ model, open, onClose: close }: NewColumnFormProps) => {
-  const { tx } = useThemeContext();
+export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewColumnFormProps) => {
   const [field, setField] = useState<FieldType | undefined>(undefined);
 
   useEffect(() => {
     if (open) {
       if (model?.table?.view) {
-        setField(createNewField(model.table.view));
+        setField(create(createUniqueFieldForView(model.table.view)));
       } else {
         close();
       }
@@ -43,16 +32,14 @@ export const NewColumnForm = ({ model, open, onClose: close }: NewColumnFormProp
   }, [open, close, model]);
 
   const handleCreate = useCallback(() => {
-    if (!field) {
+    if (!field || !model || !model?.table?.view) {
       close();
       return;
     }
-
-    model?.table?.view?.fields?.push(field);
-    // TODO(ZaymonFC): Use a module to update the view and schema at the same time!
-    // TODO(ZaymonFC): Validate: that path and name are unique. Path should be non-empty.
+    model.addColumn({ ...field });
+    setField(undefined);
     close();
-  }, [model, field]);
+  }, [model, field, close]);
 
   if (!field) {
     return null;
@@ -60,18 +47,10 @@ export const NewColumnForm = ({ model, open, onClose: close }: NewColumnFormProp
 
   return (
     <DropdownMenu.Root open={open} onOpenChange={close}>
-      <DropdownMenu.Content classNames='contents'>
-        <ModalPrimitive.Content className={tx('menu.content', 'menu__content', {})}>
-          <div role='none' className='flex flex-col align-end'>
-            <Field field={field} />
-            <div className='flex justify-center'>
-              <Button onClick={handleCreate}>
-                <Icon icon='ph--plus--regular' />
-              </Button>
-            </div>
-          </div>
-          <ModalPrimitive.Arrow className={tx('menu.arrow', 'menu__arrow', {})} />
-        </ModalPrimitive.Content>
+      <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
+      <DropdownMenu.Content>
+        <Field field={field} schema={model?.table.schema} onSave={handleCreate} />
+        <DropdownMenu.Arrow />
       </DropdownMenu.Content>
     </DropdownMenu.Root>
   );

@@ -28,10 +28,10 @@ export const createTable = (schema?: MutableSchema) =>
     view: {
       schema: 'example.com/type/test',
       fields: [
-        { id: 'name', path: 'name', label: 'Name', type: FieldValueType.String },
-        { id: 'age', path: 'age', label: 'Age', type: FieldValueType.Number },
-        { id: 'active', path: 'active', label: 'Active', type: FieldValueType.Boolean },
-        { id: 'netWorth', path: 'netWorth', label: 'Net Worth', type: FieldValueType.Currency },
+        { path: 'name', label: 'Name', type: FieldValueType.String },
+        { path: 'age', label: 'Age', type: FieldValueType.Number },
+        { path: 'active', label: 'Active', type: FieldValueType.Boolean },
+        { path: 'netWorth', label: 'Net Worth', type: FieldValueType.Currency },
       ],
     },
   });

@@ -33,6 +33,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/react-ui-data": "workspace:*",
     "@effect/schema": "^0.75.1",
     "@fluentui/react-tabster": "^9.19.0",
     "@preact/signals-core": "^1.6.0",
