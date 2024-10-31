@@ -504,9 +504,39 @@ export class DxGrid extends LitElement {
     }
   }
 
-  private moveFocusBetweenPlanes(event: KeyboardEvent, plane: DxGridPlane) {}
-  private moveFocusIntoPlane(event: KeyboardEvent, plane: DxGridPlane) {}
-  private moveFocusToPlane() {}
+  private moveFocusBetweenPlanes(event: KeyboardEvent, plane: DxGridPlane) {
+    const planeElement = this.gridRef.value?.querySelector(`[data-dx-grid-plane="${plane}"]`) as HTMLElement | null;
+    if (planeElement) {
+      const axis = event.key === 'ArrowUp' || event.key === 'ArrowDown' ? 'col' : 'row';
+      const delta = event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1;
+
+      const planeAxis = planeElement?.getAttribute(`data-dx-grid-plane-${axis}`);
+      const adjacentPlanes = Array.from(
+        this.gridRef.value?.querySelectorAll(`[data-dx-grid-plane-${axis}="${planeAxis}"]`) ?? [planeElement],
+      ).filter((el) => !!el) as HTMLElement[];
+
+      adjacentPlanes[
+        (adjacentPlanes.length + adjacentPlanes.indexOf(planeElement!) + delta) % adjacentPlanes.length
+      ]?.focus({ preventScroll: true });
+    }
+  }
+
+  private moveFocusIntoPlane(plane: DxGridPlane) {
+    if (this.focusedCell.plane !== plane) {
+      const colPlane = resolveColPlane(plane);
+      const rowPlane = resolveRowPlane(plane);
+      this.focusedCell = {
+        plane,
+        col: colPlane === 'grid' ? this.visColMin : 0,
+        row: rowPlane === 'grid' ? this.visRowMin : 0,
+      };
+    }
+    this.focusedCellElement()?.focus({ preventScroll: true });
+  }
+
+  private moveFocusToPlane() {
+    this.focusedPlaneElement()?.focus({ preventScroll: true });
+  }
 
   private handleKeydown(event: KeyboardEvent) {
     if (this.focusActive && this.mode === 'browse') {
@@ -522,7 +552,7 @@ export class DxGrid extends LitElement {
             break;
           case 'Enter':
             event.preventDefault();
-            this.moveFocusIntoPlane(event, plane);
+            this.moveFocusIntoPlane(plane);
             break;
         }
       } else {
@@ -992,7 +1022,7 @@ export class DxGrid extends LitElement {
           cellElement.focus({ preventScroll: true });
         }
       } else {
-        this.focusedPlaneElement()?.focus({ preventScroll: true });
+        this.moveFocusToPlane();
       }
     });
   }
@@ -1119,6 +1149,8 @@ export class DxGrid extends LitElement {
           role="none"
           tabindex="0"
           data-dx-grid-plane=${plane}
+          data-dx-grid-plane-row=${plane === 'fixedStartStart' || plane === 'fixedStartEnd' ? 0 : 2}
+          data-dx-grid-plane-col=${plane === 'fixedStartStart' || plane === 'fixedEndStart' ? 0 : 2}
           class="dx-grid__plane--fixed"
           style=${styleMap({
             'grid-template-columns': this[`template${colPlane}`],
@@ -1143,7 +1175,14 @@ export class DxGrid extends LitElement {
     const rowPlane = resolveRowPlane(plane) as DxGridFrozenPlane;
     const rows = this.frozen[rowPlane];
     return (rows ?? 0) > 0
-      ? html`<div role="none" class="dx-grid__plane--frozen-row" tabindex="0" data-dx-grid-plane=${plane}>
+      ? html`<div
+          role="none"
+          class="dx-grid__plane--frozen-row"
+          tabindex="0"
+          data-dx-grid-plane=${plane}
+          data-dx-grid-plane-row=${plane === 'frozenRowsStart' ? 0 : 2}
+          data-dx-grid-plane-col="1"
+        >
           <div
             role="none"
             class="dx-grid__plane--frozen-row__content"
@@ -1170,7 +1209,14 @@ export class DxGrid extends LitElement {
     const colPlane = resolveColPlane(plane) as DxGridFrozenPlane;
     const cols = this.frozen[colPlane];
     return (cols ?? 0) > 0
-      ? html`<div role="none" class="dx-grid__plane--frozen-col" tabindex="0" data-dx-grid-plane=${plane}>
+      ? html`<div
+          role="none"
+          class="dx-grid__plane--frozen-col"
+          tabindex="0"
+          data-dx-grid-plane=${plane}
+          data-dx-grid-plane-col=${plane === 'frozenColsStart' ? 0 : 2}
+          data-dx-grid-plane-row="1"
+        >
           <div
             role="none"
             class="dx-grid__plane--frozen-col__content"
@@ -1281,7 +1327,15 @@ export class DxGrid extends LitElement {
           offsetBlock,
           selection,
         )}
-        <div role="grid" class="dx-grid__plane--grid" data-dx-grid-plane="grid" tabindex="0" ${ref(this.viewportRef)}>
+        <div
+          role="grid"
+          class="dx-grid__plane--grid"
+          tabindex="0"
+          data-dx-grid-plane="grid"
+          data-dx-grid-plane-row="1"
+          data-dx-grid-plane-col="1"
+          ${ref(this.viewportRef)}
+        >
           <div
             role="none"
             class="dx-grid__plane--grid__content"

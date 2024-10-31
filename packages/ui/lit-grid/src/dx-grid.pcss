@@ -68,7 +68,7 @@ dx-grid {
     &[inert] {
       visibility: hidden;
     }
-    &:focus, &:focus-visible, &[data-dx-active] {
+    &:focus, &:focus-visible{
       z-index: 2;
       border-color: var(--dx-accentSurface);
       outline: none;
@@ -85,6 +85,13 @@ dx-grid {
       &[aria-selected] {
         background: var(--dx-gridSelectionOverlay);
       }
+    }
+  }
+  &[data-grid-mode="edit"]{
+    [role='gridcell'], [role='columnheader'], [role='rowheader'] {
+     &[data-dx-active] {
+       border-color: var(--dx-accentSurface);
+     }
     }
   }
 }
