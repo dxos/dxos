@@ -75,7 +75,17 @@ export const GridSheet = () => {
       const delta = key.startsWith('Arrow') ? (['ArrowUp', 'ArrowLeft'].includes(key) ? -1 : 1) : shift ? -1 : 1;
       dxGrid.current?.refocus(axis, delta);
     },
-    [model, editing, setEditing],
+    [model, editing],
+  );
+
+  const handleBlur = useCallback(
+    (value?: string) => {
+      if (value !== undefined) {
+        model.setValue(dxGridCellIndexToSheetCellAddress(editing!.index), value);
+      }
+      setEditing(null);
+    },
+    [model, editing],
   );
 
   const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
@@ -162,7 +172,10 @@ export const GridSheet = () => {
       rangeExtension({
         onInit: (fn) => (rangeController.current = fn),
         onStateChange: (state) => {
-          // TODO(burdon): Update grid to allow range selection if state.activeRange is not undefined.
+          if (dxGrid.current) {
+            // This can’t dispatch a setState in this component, otherwise the cell editor remounts and loses focus.
+            dxGrid.current.mode = typeof state.activeRange === 'undefined' ? 'edit' : 'edit-select';
+          }
         },
       }),
     ],
@@ -182,7 +195,7 @@ export const GridSheet = () => {
 
   return (
     <>
-      <GridCellEditor getCellContent={getCellContent} extension={extension} />
+      <GridCellEditor getCellContent={getCellContent} extension={extension} onBlur={handleBlur} />
       <Grid.Content
         initialCells={initialCells}
         limitColumns={DEFAULT_COLUMNS}
