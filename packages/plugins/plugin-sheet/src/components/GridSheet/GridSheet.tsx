@@ -75,15 +75,18 @@ export const GridSheet = () => {
       const delta = key.startsWith('Arrow') ? (['ArrowUp', 'ArrowLeft'].includes(key) ? -1 : 1) : shift ? -1 : 1;
       dxGrid.current?.refocus(axis, delta);
     },
-    [model, editing, setEditing],
+    [model, editing],
   );
 
-  const handleBlur = useCallback((value?: string) => {
-    if (value !== undefined) {
-      model.setValue(dxGridCellIndexToSheetCellAddress(editing!.index), value);
-    }
-    setEditing(null);
-  }, []);
+  const handleBlur = useCallback(
+    (value?: string) => {
+      if (value !== undefined) {
+        model.setValue(dxGridCellIndexToSheetCellAddress(editing!.index), value);
+      }
+      setEditing(null);
+    },
+    [model, editing],
+  );
 
   const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
     ({ axis, size, index: numericIndex }) => {
