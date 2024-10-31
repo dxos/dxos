@@ -1272,7 +1272,9 @@ export class DxGrid extends LitElement {
     >
       ${this.mode === 'edit' && active ? null : cell?.value}${this.mode === 'edit' && active
         ? null
-        : accessory}${cell?.resizeHandle && this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
+        : accessory}${cell?.resizeHandle &&
+      this.mode === 'browse' &&
+      this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
         ? html`<dx-grid-axis-resize-handle
             axis=${cell.resizeHandle}
             plane=${resizePlane}
