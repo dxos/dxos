@@ -3,3 +3,4 @@
 //
 
 export * from './json-schema';
+export * from './types';
