@@ -2,21 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-<<<<<<< HEAD
-import jp from 'jsonpath';
+import { PropertyMeta, JsonSchemaType, type JsonPath, QueryType, setAnnotation } from '@dxos/echo-schema';
+import { S } from '@dxos/effect';
 
-import {
-  create,
-  effectToJsonSchema,
-  PropertyMeta,
-  JsonSchemaType,
-  QueryType,
-  ReferenceAnnotationId,
-  type ReactiveObject,
-  type ReferenceAnnotationValue,
-  StoredSchema,
-} from '@dxos/echo-schema';
-import { AST, S, isLeafType, visit } from '@dxos/effect';
+import { FormatAnnotationId, EmailFormat, UrlFormat } from './annotations';
 
 // TODO(burdon): JSON path alternatives.
 //  - https://datatracker.ietf.org/doc/html/rfc6901
@@ -34,12 +23,11 @@ import { AST, S, isLeafType, visit } from '@dxos/effect';
 //  { type: 'number', kind: 'percent' }
 export enum FieldValueType {
   // Effect schema.
-  String = 'string',
-  Boolean = 'boolean',
-  Number = 'number',
-
+  // String = 'string',
+  // Boolean = 'boolean',
+  // Number = 'number',
   // Primitives from echo-schema.
-  Ref = 'ref',
+  // Ref = 'ref',
 
   // Arrays/Maps/Enum?
   User = 'user',
@@ -65,31 +53,24 @@ export enum FieldValueType {
 
 export const FieldValueTypes = Object.values(FieldValueType).sort();
 
-// TODO(burdon): Is a View just a S.Struct overlay (with additional refinements)?
-//  ISSUE: We only persist schema as JSONSchema which has concurency issues.
-// TODO(burdon): Single/multi-select enums?
-// If num digits was an annotation could we update the number of digits.
-// TODO(dmaretskyi): Remove.
-/**
- * @deprecated
- */
-export const FieldSchema = S.mutable(
-  S.Struct({
-    id: S.String,
-    path: S.String,
-
-    // TODO(burdon): Replace with annotations?
-    type: S.Enums(FieldValueType),
-    digits: S.optional(S.Number), // TODO(burdon): Presentational vs. type precision.
-
-    // UX concerns.
-    label: S.optional(S.String),
-    // TODO(burdon): Table/Form-specific layout, or keep generic?
-    size: S.optional(S.Number),
-  }),
-);
-
-export type FieldType = S.Schema.Type<typeof FieldSchema>;
+// TODO(ZaymonFC): Find all the appropriate annotations.
+// TODO(ZaymonFC): Pipe S.Pattern (regex) for email, url, etc.
+// TODO(ZaymonFC): Enforce real / whole numbers where appropriate.
+export const schemaForType: Record<FieldValueType, S.Schema<any> | undefined> = {
+  [FieldValueType.Text]: S.String,
+  [FieldValueType.Date]: S.DateFromString,
+  [FieldValueType.Email]: S.String.annotations({ [FormatAnnotationId]: EmailFormat }),
+  [FieldValueType.URL]: S.String.annotations({ [FormatAnnotationId]: UrlFormat }),
+  [FieldValueType.Percent]: S.Number,
+  [FieldValueType.Currency]: S.Number,
+  [FieldValueType.User]: undefined,
+  [FieldValueType.JSON]: undefined,
+  [FieldValueType.Timestamp]: undefined,
+  [FieldValueType.DateTime]: undefined,
+  [FieldValueType.Time]: undefined,
+  [FieldValueType.Formula]: undefined,
+  [FieldValueType.DID]: undefined,
+};
 
 //
 // View
@@ -114,6 +95,12 @@ export type ViewType = S.Schema.Type<typeof ViewSchema>;
 export const PropertyKind = (kind: FieldValueType) => PropertyMeta('dxos.schema', { kind });
 
 /**
+ * Sets the path for the field.
+ * @param path Data source path in the json path format. This is the field path in the source object.
+ */
+export const ViewPath = (path: JsonPath) => PropertyMeta('dxos.view', { path });
+
+/**
  * Annotation to set column size.
  */
 export const ColumnSize = (size: number) => PropertyMeta('dxos.view', { size });
@@ -122,92 +109,30 @@ export const setColumnSize = (schema: JsonSchemaType, property: string, size: nu
   setAnnotation(schema, property, 'dxos.view', { size });
 };
 
-/**
- * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
- * @example $.name
- */
-export type JsonPath = string & { __JsonPath: true };
-
-/**
- * Sets the dViewPathe for the field.
- * @param dataSource Data source path in the json path format. This is the field path in the source object.
- */
-export const ViewPath = (path: JsonPath) => PropertyMeta('dxos.view', { path });
-
-/**
- *
- */
-export const createEmptyJsonSchema = () => {
-  const schema = effectToJsonSchema(S.Struct({}));
-  schema.type = 'object';
-  return schema;
-};
-
-/**
- *
- */
-export const createEmptySchema = (typename: string, version: string): ReactiveObject<StoredSchema> =>
-  create(StoredSchema, {
-    typename,
-    version,
-    jsonSchema: createEmptyJsonSchema(),
-  });
-
-/**
- *
- */
-export const setProperty = (schema: JsonSchemaType, field: string, type: S.Schema.Any): void => {
-  const jsonSchema = effectToJsonSchema(type as S.Schema<any>);
-  delete jsonSchema.$schema; // Remove $schema on leaf nodes.
-  (schema as any).properties ??= {};
-  (schema as any).properties[field] = jsonSchema;
-};
-
-/**
- *
- */
-export const dynamicRef = (obj: StoredSchema): S.Schema.AnyNoContext =>
-  S.Any.annotations({
-    [ReferenceAnnotationId]: {
-      schemaId: obj.id,
-      typename: obj.typename,
-      version: obj.version,
-    } satisfies ReferenceAnnotationValue,
-  });
-
-/**
- *
- */
-export const setAnnotation = (schema: JsonSchemaType, property: string, annotation: string, value: any): void => {
-  (schema as any).properties[property].$echo ??= {};
-  (schema as any).properties[property].$echo.annotations ??= {};
-  (schema as any).properties[property].$echo.annotations[annotation] ??= {};
-  Object.assign((schema as any).properties[property].$echo.annotations[annotation], value);
-};
+/*
 
 // TODO(burdon): Just use lodash.get?
-export const getFieldValue = <T>(data: any, field: FieldType, defaultValue?: T): T | undefined =>
-  (jp.value(data, '$.' + field.path) as T) ?? defaultValue;
+// export const getFieldValue = <T>(data: any, field: FieldType, defaultValue?: T): T | undefined =>
+//   (jp.value(data, '$.' + field.path) as T) ?? defaultValue;
 
 // TODO(burdon): Determine if path can be written back (or is a compute value).
-export const setFieldValue = <T>(data: any, field: FieldType, value: T): T => jp.value(data, '$.' + field.path, value);
+// export const setFieldValue = <T>(data: any, field: FieldType, value: T): T => jp.value(data, '$.' + field.path, value);
 
 // TODO(burdon): Return Field objects.
-export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FieldValueType][] => {
-  const fields: [string, FieldValueType][] = [];
-  visit(schema.ast, (node, path) => {
-    if (isLeafType(node)) {
-      fields.push([path.join('.'), toFieldValueType(node)]);
-    }
-  });
-  return fields;
-};
+// export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FieldValueType][] => {
+//   const fields: [string, FieldValueType][] = [];
+//   visit(schema.ast, (node, path) => {
+//     if (isLeafType(node)) {
+//       fields.push([path.join('.'), toFieldValueType(node)]);
+//     }
+//   });
+//   return fields;
+// };
 
 // TODO(burdon): Reconcile with:
 //  - echo-schema/toFieldValueType
 export const toFieldValueType = (type: AST.AST): FieldValueType => {
   if (AST.isTypeLiteral(type)) {
-    // TODO(burdon): ???
     return FieldValueType.Ref;
   } else if (AST.isNumberKeyword(type)) {
     return FieldValueType.Number;
@@ -248,35 +173,10 @@ export const getUniqueProperty = (view: ViewType) => {
       return path;
     }
   }
-=======
-import { type MutableSchema } from '@dxos/echo-schema';
-import { getProperty } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
-
-import { schemaForType } from './field';
-import { type FieldType, type ViewType } from './types';
-
-export const addFieldToView = (
-  schema: MutableSchema,
-  view: ViewType,
-  field: FieldType,
-  position = view.fields.length,
-) => {
-  invariant(!getProperty(schema, field.path), `Field path already exists in schema: ${field.path}`);
-  invariant(position >= 0 && position <= view.fields.length, `Invalid field position: ${position}`);
-
-  const propertySchema = schemaForType[field.type];
-  invariant(propertySchema, `No schema for field type: ${field.type}`);
-
-  schema.addFields({ [field.path]: propertySchema });
-  view.fields.splice(position, 0, field);
 };
 
-export const removeFieldFromView = (schema: MutableSchema, view: ViewType, field: FieldType) => {
-  const index = view.fields.findIndex((f) => f.path === field.path);
-  if (index !== -1) {
-    view.fields.splice(index, 1);
-  }
-  schema.removeFields([field.path]);
->>>>>>> origin/main
+export const createUniqueFieldForView = (view: ViewType): FieldType => {
+  return { path: getUniqueProperty(view), type: FieldValueType.String };
 };
+
+*/

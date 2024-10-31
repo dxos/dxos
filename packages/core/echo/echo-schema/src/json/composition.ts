@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type JsonSchemaType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+
+import { type JsonSchemaType } from './types';
 
 /*
 TODO(dima)

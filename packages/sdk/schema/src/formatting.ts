@@ -8,21 +8,22 @@ import { FieldValueType } from './types';
  * Format value by type.
  * Used by Table, Sheet, etc.
  */
+// TODO(burdon): Kind vs type.
 // TODO(burdon): Reconcile with FormattingModel.
 // TODO(burdon): Handle parsing also.
 export const formatValue = (type: FieldValueType, value: any, locale: string | undefined = undefined): string => {
   switch (type) {
-    case FieldValueType.Boolean: {
-      return (value as boolean).toLocaleString().toUpperCase();
-    }
+    // case FieldValueType.Boolean: {
+    //   return (value as boolean).toLocaleString().toUpperCase();
+    // }
 
     //
     // Numbers.
     //
 
-    case FieldValueType.Number: {
-      return value.toLocaleString(locale);
-    }
+    // case FieldValueType.Number: {
+    //   return value.toLocaleString(locale);
+    // }
 
     case FieldValueType.Percent: {
       return (value as number) * 100 + '%';

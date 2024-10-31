@@ -5,28 +5,27 @@
 import { AST, Schema as S } from '@effect/schema';
 import { describe, test } from 'vitest';
 
-import { create, effectToJsonSchema, ref, TypedObject } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
-
-import { composeSchema } from './composition';
 import {
+  composeSchema,
+  create,
   createEmptySchema,
   dynamicRef,
-  setColumnSize,
+  effectToJsonSchema,
+  ref,
   setProperty,
-  ColumnSize,
-  FieldKind,
-  FieldValueType,
   type JsonPath,
-  ViewPath,
-  ViewSchema,
-} from './types';
+  TypedObject,
+} from '@dxos/echo-schema';
+import { log } from '@dxos/log';
+
+import { setColumnSize, ColumnSize, PropertyKind, FieldValueType, ViewPath, ViewSchema } from './view';
 
 describe.only('schema composition', () => {
+  // TODO(burdon): Move test to
   test('schema composition', ({ expect }) => {
     class PersonType extends TypedObject({ typename: 'example.com/Person', version: '0.1.0' })({
       name: S.String,
-      email: S.String.pipe(FieldKind(FieldValueType.Email)),
+      email: S.String.pipe(PropertyKind(FieldValueType.Email)),
     }) {}
 
     const ViewSchema = S.Struct({
@@ -68,7 +67,7 @@ describe.only('schema composition', () => {
 
     class Person extends TypedObject({ typename: 'example.com/type/Person', version: '0.1.0' })({
       name: S.String,
-      email: S.String.pipe(FieldKind(FieldValueType.Email)),
+      email: S.String.pipe(PropertyKind(FieldValueType.Email)),
       org: ref(Org),
     }) {}
 
@@ -97,7 +96,7 @@ describe.only('schema composition', () => {
     setProperty(
       personSchema.jsonSchema,
       'email',
-      S.String.pipe(FieldKind(FieldValueType.Email)).annotations({ [AST.DescriptionAnnotationId]: 'Primary email' }),
+      S.String.pipe(PropertyKind(FieldValueType.Email)).annotations({ [AST.DescriptionAnnotationId]: 'Primary email' }),
     );
 
     setProperty(

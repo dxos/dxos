@@ -4,7 +4,7 @@
 
 import { AST, S, createObjectId } from '@dxos/echo-schema';
 
-import { EmailFormat, FormatAnnotationId, FieldValueType, type ViewType } from '../types';
+import { EmailFormat, FormatAnnotationId } from '../types';
 
 //
 // Schema
@@ -48,31 +48,30 @@ export const testData: TestType = {
   },
 };
 
-const fields = [
-  {
-    path: 'name',
-    type: FieldValueType.String,
-  },
-  {
-    path: 'email',
-    type: FieldValueType.String,
-  },
-  {
-    path: 'address.zip',
-    label: 'ZIP',
-    type: FieldValueType.String,
-  },
-  {
-    path: 'rating',
-    type: FieldValueType.Number,
-  },
-  {
-    path: 'admin',
-    type: FieldValueType.Boolean,
-  },
-];
+// const fields = [
+// {
+//   path: 'name',
+//   type: FieldValueType.String,
+// },
+// {
+//   path: 'email',
+//   type: FieldValueType.String,
+// },
+// {
+//   path: 'address.zip',
+//   label: 'ZIP',
+//   type: FieldValueType.String,
+// },
+// {
+//   path: 'rating',
+//   type: FieldValueType.Number,
+// },
+// {
+//   path: 'admin',
+//   type: FieldValueType.Boolean,
+// },
+// ];
 
-export const testView: ViewType = {
-  query: { __typename: 'example.com/schema/TestSchema' },
-  fields,
-};
+// export const testView: ViewType = {
+//   query: { __typename: 'example.com/schema/TestSchema' },
+// };
