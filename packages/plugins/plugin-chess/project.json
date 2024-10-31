@@ -1,10 +1,7 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "plugin-chess",
-  "tags": [
-    "scope:experimental",
-    "scope:plugins"
-  ],
+  "tags": ["scope:experimental", "scope:plugins"],
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
@@ -16,16 +13,10 @@
           "{projectRoot}/src/meta.ts",
           "{projectRoot}/src/types/index.ts"
         ],
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "platforms": ["browser", "node"]
       }
     },
     "lint": {}
   },
-  "implicitDependencies": [
-    "esbuild",
-    "node-std"
-  ]
+  "implicitDependencies": ["esbuild", "node-std"]
 }
