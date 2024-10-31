@@ -50,6 +50,7 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
     arrayMove(view.fields, fromIndex, toIndex);
   };
 
+  // TODO(burdon): Get getId.
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
       <List.Root<FieldType> isItem={S.is(FieldSchema)} items={view.fields} onMove={handleMove}>
@@ -74,7 +75,7 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
       </List.Root>
 
       {field && view.schema && (
-        <Field classNames='p-2' autoFocus field={field} schema={space?.db.schema.getSchemaByTypename(view.schema)} />
+        <Field classNames='p-2' autoFocus view={view} field={field} schema={space?.db.schema.getSchemaByTypename(view.schema)} />
       )}
 
       {!readonly && (

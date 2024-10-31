@@ -41,13 +41,20 @@ export const createEmptySchema = (typename: string, version: string): ReactiveOb
 };
 
 /**
- *
+ * Set or update property.
  */
 export const setProperty = (schema: JsonSchemaType, property: string, type: S.Schema.Any) => {
   const jsonSchema = effectToJsonSchema(type as S.Schema<any>);
   delete jsonSchema.$schema; // Remove $schema on leaf nodes.
   (schema as any).properties ??= {};
   (schema as any).properties[property] = jsonSchema;
+};
+
+/**
+ * Delete property.
+ */
+export const deleteProperty = (schema: JsonSchemaType, property: string) => {
+  delete (schema as any).properties[property];
 };
 
 /**
@@ -59,6 +66,16 @@ export const setAnnotation = (schema: JsonSchemaType, property: string, annotati
   (schema as any).properties[property].$echo.annotations ??= {};
   (schema as any).properties[property].$echo.annotations[annotation] ??= {};
   Object.assign((schema as any).properties[property].$echo.annotations[annotation], value);
+};
+
+/**
+ *
+ */
+export const deleteAnnotation = (schema: JsonSchemaType, property: string, annotation: string) => {
+  const annotations = (schema as any).properties[property]?.$echo?.annotations;
+  if (annotation) {
+    delete annotations[annotation];
+  }
 };
 
 /**

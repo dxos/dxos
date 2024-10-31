@@ -7,7 +7,7 @@ import React from 'react';
 import { getProperty, type S } from '@dxos/effect';
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type FieldType, FieldValueTypes, FieldSchema } from '@dxos/schema';
+import { type FieldType, type ViewType } from '@dxos/schema';
 
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -18,6 +18,7 @@ const FieldRow = ({ children }: { children: React.ReactNode }) => {
 };
 
 export type FieldProps<T = {}> = ThemedClassName<{
+  view: ViewType;
   field: FieldType;
   schema?: S.Schema<T>;
   autoFocus?: boolean;
