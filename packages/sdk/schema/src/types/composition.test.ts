@@ -17,7 +17,7 @@ import {
   type JsonPath,
 } from './types';
 
-test.skip('schema composition', ({ expect }) => {
+test('schema composition', ({ expect }) => {
   const TestSchema = S.Struct({
     name: S.String,
     email: S.String.pipe(FieldKind(FieldValueType.Email)),
@@ -37,14 +37,14 @@ test.skip('schema composition', ({ expect }) => {
     name: {
       type: 'string',
       $echo: {
-        annotations: { 'dxos.view': { dataSource: '$.name', size: 50 } },
+        annotations: { 'dxos.view': { path: '$.name', size: 50 } },
       },
     },
     email: {
       type: 'string',
       $echo: {
         annotations: {
-          'dxos.view': { dataSource: '$.email', size: 100 },
+          'dxos.view': { path: '$.email', size: 100 },
           'dxos.schema': { kind: 'email' },
         },
       },
@@ -65,7 +65,7 @@ test.skip('schema composition', ({ expect }) => {
   log.info('schema', { typeSchemaJson: testSchemaJson, projectionSchemaJson, composedSchema });
 });
 
-test.skip('scratch', async () => {
+test('scratch', async () => {
   class Org extends TypedObject({ typename: 'example.com/Org', version: '0.1.0' })({
     name: S.String,
   }) {}
