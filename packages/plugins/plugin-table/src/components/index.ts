@@ -5,4 +5,3 @@
 import { lazy } from 'react';
 
 export const TableContainer = lazy(() => import('./TableContainer'));
-export const TableViewEditor = lazy(() => import('./TableViewEditor'));

@@ -118,7 +118,7 @@ describe('schema registry', () => {
     const storedSchema = db.add(createTestSchemas()[0]);
     const mutableSchema = registry.getSchemaById(storedSchema.id)!;
     expect(mutableSchema.getProperties().length).to.eq(1);
-    mutableSchema.addColumns({ newField: S.Number });
+    mutableSchema.addFields({ newField: S.Number });
     expect(mutableSchema.getProperties().length).to.eq(2);
   });
 
