@@ -57,17 +57,24 @@ export const FieldValueTypes = Object.values(FieldValueType).sort();
 // If num digits was an annotation could we update the number of digits.
 export const FieldSchema = S.mutable(
   S.Struct({
-    id: S.String,
-    path: S.String,
+    // TODO(ZaymonFC): Should validations be common? Think about translations?
+    path: S.String.pipe(
+      S.nonEmptyString({ message: () => 'Property is required.' }),
+      S.pattern(/^\w+$/, { message: () => 'Invalid property name.' }),
+    ),
 
     // TODO(burdon): Replace with annotations?
     type: S.Enums(FieldValueType),
-    digits: S.optional(S.Number), // TODO(burdon): Presentational vs. type precision.
 
     // UX concerns.
     label: S.optional(S.String),
-    // TODO(burdon): Table/Form-specific layout, or keep generic?
-    size: S.optional(S.Number),
+    size: S.optional(S.Number.pipe(S.int(), S.nonNegative())),
+
+    /** Default value for new records. */
+    defaultValue: S.optional(S.Any),
+
+    /** Number of decimal digits. */
+    digits: S.optional(S.Number.pipe(S.int(), S.nonNegative())),
   }),
 );
 

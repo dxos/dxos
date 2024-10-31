@@ -4,11 +4,12 @@
 
 import React, { useState } from 'react';
 
-import { S, createObjectId, type SchemaResolver } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
+import { getSpace } from '@dxos/react-client/echo';
 import { Button, Icon, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { FieldSchema, FieldValueType, getUniqueProperty, type FieldType, type ViewType } from '@dxos/schema';
+import { FieldSchema, createUniqueFieldForView, type FieldType, type ViewType } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '../../translations';
@@ -18,20 +19,19 @@ const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
 
 export type ViewEditorProps = ThemedClassName<{
   view: ViewType;
-  // TODO(burdon): Remove when we can represent the schema field as an object/reference.
-  schemaResolver?: SchemaResolver;
   readonly?: boolean;
 }>;
 
 /**
  * Schema-based object form.
  */
-export const ViewEditor = ({ classNames, view, schemaResolver, readonly }: ViewEditorProps) => {
+export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
+  const space = getSpace(view);
   const [field, setField] = useState<FieldType | undefined>();
 
   const handleAdd = () => {
-    const field: FieldType = { id: createObjectId(), path: getUniqueProperty(view), type: FieldValueType.String };
+    const field = createUniqueFieldForView(view);
     view.fields.push(field);
     setField(field);
   };
@@ -41,7 +41,7 @@ export const ViewEditor = ({ classNames, view, schemaResolver, readonly }: ViewE
   };
 
   const handleDelete = (field: FieldType) => {
-    const idx = view.fields.findIndex((f) => field.id === f.id);
+    const idx = view.fields.findIndex((f) => field.path === f.path);
     view.fields.splice(idx, 1);
     setField(undefined);
   };
@@ -62,7 +62,7 @@ export const ViewEditor = ({ classNames, view, schemaResolver, readonly }: ViewE
 
             <div role='list' className='flex flex-col w-full'>
               {items?.map((item) => (
-                <List.Item<FieldType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
+                <List.Item<FieldType> key={item.path} item={item} classNames={mx(grid, ghostHover)}>
                   <List.ItemDragHandle />
                   <List.ItemTitle onClick={() => handleSelect(item)}>{item.path}</List.ItemTitle>
                   <List.ItemDeleteButton onClick={() => handleDelete(item)} />
@@ -74,7 +74,7 @@ export const ViewEditor = ({ classNames, view, schemaResolver, readonly }: ViewE
       </List.Root>
 
       {field && view.schema && (
-        <Field classNames='p-2' autoFocus field={field} schema={schemaResolver?.(view.schema)} />
+        <Field classNames='p-2' autoFocus field={field} schema={space?.db.schema.getSchemaByTypename(view.schema)} />
       )}
 
       {!readonly && (
