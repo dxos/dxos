@@ -8,12 +8,11 @@ import React, { useCallback } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
+import { useForm, validateSchema } from '@dxos/react-ui-data';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { useForm } from '../hooks';
 import { STATUS_BAR_PLUGIN } from '../meta';
 import { mkTranslation } from '../translations';
-import { validate } from '../util';
 
 const Email = S.String.pipe(
   S.nonEmptyString({ message: () => 'Email is required.' }),
@@ -51,7 +50,7 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
 
   const { errors, handleSubmit, canSubmit, touched, getInputProps } = useForm<FeedbackFormState>({
     initialValues,
-    validate: (values) => validate(FeedbackFormSchema, values),
+    validate: (values) => validateSchema(FeedbackFormSchema, values),
     onSubmit: (values) => onSubmit(values),
   });
 

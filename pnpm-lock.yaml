@@ -8615,6 +8615,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/react-ui-data':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-data
       '@effect/schema':
         specifier: ^0.75.1
         version: 0.75.1(effect@3.9.1)
