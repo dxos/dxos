@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ChangeEvent, type FocusEvent, useCallback, useState } from 'react';
+import { type ChangeEvent, type FocusEvent, useCallback, useMemo, useState } from 'react';
 
 import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -13,7 +13,7 @@ import { validateSchema, type ValidationError } from '../util';
 // you should be able to provide a schema for `values`. Note that there should still
 // be a facility for custom validation logic.
 
-type InputValue = string | number | readonly string[] | undefined;
+type FormInputValue = string | number | readonly string[] | undefined;
 
 interface FormOptions<T> {
   initialValues: T;
@@ -32,7 +32,7 @@ type InputProps<T> = {
   value: T[keyof T] | string;
   onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  onValueChange: (value: InputValue) => void;
+  onValueChange: (value: FormInputValue) => void;
 };
 
 type Form<T> = {
@@ -56,15 +56,17 @@ export const useForm = <T extends object>({
   additionalValidation,
   onSubmit,
 }: FormOptions<T>): Form<T> => {
-  const [values, setValues] = useState<T>(initialValues);
-  const [errors, setErrors] = useState<Record<keyof T, string>>({} as Record<keyof T, string>);
-  const [touched, setTouched] = useState<Record<keyof T, boolean>>(
-    Object.keys(initialValues).reduce((acc, key) => ({ ...acc, [key]: false }), {} as Record<keyof T, boolean>),
-  );
-
   invariant(additionalValidation != null || schema != null, 'useForm must be called with schema and/or validate');
 
-  const runValidation = useCallback(
+  const [values, setValues] = useState<T>(initialValues);
+  const [errors, setErrors] = useState<Record<keyof T, string>>({} as Record<keyof T, string>);
+  const [touched, setTouched] = useState<Record<keyof T, boolean>>(initialiseKeysWithValue(initialValues, false));
+
+  //
+  // Validation.
+  //
+
+  const validate = useCallback(
     (values: T) => {
       if (schema) {
         const schemaErrors = validateSchema(schema, values) ?? [];
@@ -86,6 +88,10 @@ export const useForm = <T extends object>({
     [schema, additionalValidation],
   );
 
+  //
+  // Values.
+  //
+
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name: property, value, type } = event.target;
@@ -93,19 +99,23 @@ export const useForm = <T extends object>({
       // TODO(ZaymonFC): Think about nesting!
       const newValues = { ...values, [property]: parsedValue };
       setValues(newValues);
-      runValidation(newValues);
+      validate(newValues);
     },
-    [values, runValidation],
+    [values, validate],
   );
 
   const onValueChange = useCallback(
-    (key: keyof T, value: InputValue) => {
+    (key: keyof T, value: FormInputValue) => {
       handleChange({ target: { name: key, value } } as ChangeEvent<HTMLInputElement>);
     },
     [handleChange],
   );
 
-  const touchAll = useCallback(() => setTouched(mkAllTouched(values)), [values, setTouched]);
+  //
+  //  Touch and Blur.
+  //
+
+  const touchAll = useCallback(() => setTouched(markAllTouched(values)), [values, setTouched]);
 
   const handleBlur = useCallback(
     (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -119,20 +129,31 @@ export const useForm = <T extends object>({
         touchAll();
       }
 
-      runValidation(values);
+      validate(values);
     },
-    [runValidation, values, touchAll],
+    [validate, values, touchAll],
   );
 
+  //
+  // Submission.
+  //
+
   const handleSubmit = useCallback(() => {
-    if (runValidation(values)) {
+    if (validate(values)) {
       onSubmit(values);
     }
-  }, [values, runValidation, onSubmit]);
+  }, [values, validate, onSubmit]);
 
-  // NOTE: We can submit if there is no touched field that has an error.
-  // - Basically, if there's a validation message present in the form, submit should be disabled.
-  const canSubmit = Object.keys(values).every((key) => touched[key as keyof T] === false || !errors[key as keyof T]);
+  const canSubmit = useMemo(
+    // NOTE: We can submit if there is no touched field that has an error.
+    // - Basically, if there's a validation message visible in the form, submit should be disabled.
+    () => Object.keys(values).every((key) => touched[key as keyof T] === false || !errors[key as keyof T]),
+    [values, touched, errors],
+  );
+
+  //
+  // Input Interface.
+  //
 
   const getInputProps = useCallback(
     (key: keyof T) => ({
@@ -140,7 +161,7 @@ export const useForm = <T extends object>({
       value: values[key] ?? '',
       onChange: handleChange,
       onBlur: handleBlur,
-      onValueChange: (value: InputValue) => onValueChange(key, value),
+      onValueChange: (value: FormInputValue) => onValueChange(key, value),
     }),
     [values, handleChange, handleBlur, errors],
   );
@@ -153,17 +174,21 @@ export const useForm = <T extends object>({
     canSubmit,
     touched,
     handleBlur,
-    onValidate: runValidation,
+    onValidate: validate,
     getInputProps,
-  };
+  } satisfies Form<T>;
 };
 
 //
 // Util. (Keeping this here until useForm gets its own library).
 //
 
-const mkAllTouched = <T extends Record<keyof T, any>>(values: T) => {
-  return Object.keys(values).reduce((acc, key) => ({ ...acc, [key]: true }), {} as Record<keyof T, boolean>);
+const initialiseKeysWithValue = <T extends object, V>(obj: T, value: V): Record<keyof T, V> => {
+  return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<keyof T, V>);
+};
+
+const markAllTouched = <T extends Record<keyof T, any>>(values: T) => {
+  return initialiseKeysWithValue(values, true);
 };
 
 const collapseErrorArray = <T>(errors: ValidationError[]) =>
