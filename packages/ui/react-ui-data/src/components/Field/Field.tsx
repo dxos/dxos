@@ -27,9 +27,10 @@ export type FieldProps = ThemedClassName<{
 
 // TODO(ZaymonFC): This is a composite, but we need to build up a description of everything this form might
 //  handle. Maybe we'll compose this too.
-//
-// Basic form schema requirements.
-// Source validations from annotations / .... somewhere?
+
+/**
+ * Validated input for `useForm`.
+ */
 const FormSchema = S.mutable(
   S.Struct({
     // TODO(ZaymonFC): Reconcile this with a source of truth for these refinements.

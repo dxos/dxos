@@ -26,7 +26,24 @@ type SelectProps<T> = BaseProps<T> & {
   value: string | undefined;
 };
 
-interface FormOptions<T> {
+export type Form<T = {}> = {
+  values: T;
+  /**
+   * Provider for props for input controls.
+   */
+  getInputProps: <InputType extends 'input' | 'select' = 'input'>(
+    key: keyof T,
+    type?: InputType,
+  ) => InputType extends 'select' ? SelectProps<T> : InputProps<T>;
+  errors: Record<keyof T, string>;
+  touched: Record<keyof T, boolean>;
+  canSubmit: boolean;
+  handleChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleSubmit: () => void;
+};
+
+export interface FormOptions<T> {
   initialValues: T;
   schema?: S.Schema<T>;
   /**
@@ -37,20 +54,6 @@ interface FormOptions<T> {
   additionalValidation?: (values: T) => ValidationError[] | undefined;
   onSubmit: (values: T) => void;
 }
-
-type Form<T> = {
-  values: T;
-  errors: Record<keyof T, string>;
-  canSubmit: boolean;
-  touched: Record<keyof T, boolean>;
-  getInputProps: <InputT extends 'input' | 'select' = 'input'>(
-    key: keyof T,
-    type?: InputT,
-  ) => InputT extends 'select' ? SelectProps<T> : InputProps<T>;
-  handleBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  handleChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  handleSubmit: () => void;
-};
 
 /**
  * Creates a hook for managing form state, including values, validation, and submission.
@@ -131,7 +134,7 @@ export const useForm = <T extends object>({
       // TODO(Zan): This should be configurable behavior.
       if (event.relatedTarget?.getAttribute('type') === 'submit') {
         // NOTE: We do this here instead of onSubmit, because the blur event is triggered before the submit event
-        //       and results in the submit button being disabled when the form is invalid.
+        //  and results in the submit button being disabled when the form is invalid.
         touchAll();
       }
 
@@ -189,13 +192,13 @@ export const useForm = <T extends object>({
 
   return {
     values,
-    handleChange,
-    handleSubmit,
-    errors,
-    canSubmit,
-    touched,
-    handleBlur,
     getInputProps,
+    errors,
+    touched,
+    canSubmit,
+    handleChange,
+    handleBlur,
+    handleSubmit,
   } satisfies Form<T>;
 };
 
