@@ -129,20 +129,15 @@ export const toJsonSchema = (schema: S.Schema.Any): JSONSchema.JsonSchema7Object
       );
     }
 
-    const refinement: EchoRefinement = {};
-    for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
-      if (ast.annotations[annotation] != null) {
-        refinement[annotationToRefinementKey[annotation]] = ast.annotations[annotation] as any;
-      }
-    }
+    const annotationFields = annotationsToJsonSchemaFields(ast.annotations);
 
-    if (Object.keys(refinement).length === 0) {
+    if (Object.keys(annotationFields).length === 0) {
       return recursiveResult;
+    } else {
+      return new AST.Refinement(recursiveResult, () => null as any, {
+        [AST.JSONSchemaAnnotationId]: annotationFields,
+      });
     }
-
-    return new AST.Refinement(recursiveResult, () => null as any, {
-      [AST.JSONSchemaAnnotationId]: { [ECHO_REFINEMENT_KEY]: refinement },
-    });
   };
 
   const schemaWithRefinements = S.make(withEchoRefinements(schema.ast));
@@ -189,20 +184,15 @@ const jsonToEffectTypeSchema = (
     }
   }
 
+  const annotations = extractAnnotationsFromJsonSchema(root);
   if (echoRefinement == null) {
     return schemaWithoutEchoId as any;
-  }
+  } else {
+    invariant(immutableIdField, 'no id in echo type');
 
-  invariant(immutableIdField, 'no id in echo type');
-  const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
-  const annotations: Types.Mutable<S.Annotations.Schema<any>> = {};
-  for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
-    if (echoRefinement[annotationToRefinementKey[annotation]]) {
-      annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
-    }
+    const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
+    return schema.annotations(annotations) as any;
   }
-
-  return schema.annotations(annotations) as any;
 };
 
 const parseJsonSchemaAny = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
@@ -282,4 +272,36 @@ export const jsonToEffectSchema = (
 
   const refinement: EchoRefinement | undefined = (root as any)[ECHO_REFINEMENT_KEY];
   return refinement?.annotations ? result.annotations({ [PropertyMetaAnnotationId]: refinement.annotations }) : result;
+};
+
+const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<string, any> => {
+  const refinement: EchoRefinement = {};
+  for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
+    if (annotations[annotation] != null) {
+      refinement[annotationToRefinementKey[annotation]] = annotations[annotation] as any;
+    }
+  }
+
+  if (Object.keys(refinement).length === 0) {
+    return {};
+  }
+
+  return { [ECHO_REFINEMENT_KEY]: refinement };
+};
+
+const extractAnnotationsFromJsonSchema = (schema: JSONSchema.JsonSchema7): AST.Annotations => {
+  const echoRefinement: EchoRefinement = (schema as any)[ECHO_REFINEMENT_KEY];
+
+  if (echoRefinement == null) {
+    return {};
+  }
+
+  const annotations: Types.Mutable<S.Annotations.Schema<any>> = {};
+  for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
+    if (echoRefinement[annotationToRefinementKey[annotation]]) {
+      annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
+    }
+  }
+
+  return annotations;
 };

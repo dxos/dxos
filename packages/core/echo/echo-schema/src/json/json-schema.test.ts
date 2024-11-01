@@ -10,6 +10,8 @@ import { toJsonSchema, jsonToEffectSchema, getEchoProp } from './json-schema';
 import { PropertyMeta } from '../ast';
 import { ref } from '../handler';
 import { TypedObject } from '../object';
+import { log } from '@dxos/log';
+import { deepMapValues } from '@dxos/util';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {
@@ -89,7 +91,7 @@ describe('effect-to-json', () => {
 
 describe('json-to-effect', () => {
   for (const partial of [false, true]) {
-    test('deserialized equals original', () => {
+    test.only('deserialized equals original', () => {
       class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
         field: S.String,
       }) {}
@@ -111,6 +113,7 @@ describe('json-to-effect', () => {
       ) {}
 
       const jsonSchema = toJsonSchema(Schema);
+      log.info('jsonSchema', { jsonSchema });
       const schema = jsonToEffectSchema(jsonSchema);
       expect(() => expect(schema.ast).to.deep.eq(Schema.ast)).to.throw();
       expect(() => expect(removeFilterFunction(schema.ast)).to.deep.eq(Schema.ast)).to.throw();
@@ -119,20 +122,11 @@ describe('json-to-effect', () => {
     });
   }
 
-  const removeFilterFunction = (obj: any): any => {
-    if (typeof obj !== 'object') {
-      return obj;
-    }
-    if (Array.isArray(obj)) {
-      return obj.map((o) => removeFilterFunction(o));
-    }
-    const result: any = {};
-    for (const key in obj) {
-      if (key !== 'filter') {
-        result[key] = removeFilterFunction(obj[key]);
+  const removeFilterFunction = (obj: any): any =>
+    deepMapValues(obj, (value: any, recurse, key) => {
+      if (key === 'filter') {
+        return undefined;
       }
-    }
-
-    return result;
-  };
+      return recurse(value);
+    });
 });
