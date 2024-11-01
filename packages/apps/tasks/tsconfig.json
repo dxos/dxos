@@ -1,16 +1,16 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
     "outDir": "out/tasks",
     "module": "ESNext",
-    "types": ["node", "sharedworker"]
+    "types": ["node", "sharedworker"],
   },
   "include": ["src"],
   "exclude": ["vite.config.ts"],
   "references": [
     {
-      "path": "./tsconfig.node.json"
-    }
-  ]
+      "path": "./tsconfig.node.json",
+    },
+  ],
 }
