@@ -52,7 +52,12 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
-      <List.Root<FieldType> isItem={S.is(FieldSchema)} items={view.fields} onMove={handleMove}>
+      <List.Root<FieldType>
+        isItem={S.is(FieldSchema)}
+        items={view.fields}
+        onMove={handleMove}
+        getId={(field) => field.path}
+      >
         {({ items }) => (
           <div className='w-full'>
             <div role='heading' className={grid}>
@@ -74,7 +79,13 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
       </List.Root>
 
       {field && view.schema && (
-        <Field classNames='p-2' autoFocus field={field} schema={space?.db.schema.getSchemaByTypename(view.schema)} />
+        <Field
+          key={field.path}
+          classNames='p-2'
+          autoFocus
+          field={field}
+          schema={space?.db.schema.getSchemaByTypename(view.schema)}
+        />
       )}
 
       {!readonly && (
