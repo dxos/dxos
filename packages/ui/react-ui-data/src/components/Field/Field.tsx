@@ -4,17 +4,14 @@
 
 import React from 'react';
 
-<<<<<<< HEAD
-=======
 import { S } from '@dxos/effect';
->>>>>>> 82a0e94ef617bb71682fa720f0b2dab0ca50f492
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { FieldValueTypes, type FieldType, type ViewType } from '@dxos/schema';
+import { FieldKindEnums, type FieldType, type ViewType } from '@dxos/schema';
 
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
-import { typeFeatures } from '../../util';
+import { pathNotUniqueError, typeFeatures } from '../../util';
 
 const FieldRow = ({ children }: { children: React.ReactNode }) => {
   return <div className='flex flex-col w-full gap-1'>{children}</div>;
@@ -33,7 +30,7 @@ export type FieldProps = ThemedClassName<{
 //
 // Basic form schema requirements.
 // Source validations from annotations / .... somewhere?
-const formSchema = S.mutable(
+const FormSchema = S.mutable(
   S.Struct({
     // TODO(ZaymonFC): Reconcile this with a source of truth for these refinements.
     path: S.String.pipe(
@@ -48,7 +45,7 @@ const formSchema = S.mutable(
   }),
 );
 
-type FormType = S.Schema.Type<typeof formSchema>;
+type FormType = S.Schema.Type<typeof FormSchema>;
 
 export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: FieldProps) => {
   const { t } = useTranslation(translationKey);

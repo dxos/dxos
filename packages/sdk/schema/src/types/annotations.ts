@@ -104,6 +104,7 @@ export const schemaForKind: Record<FieldKindEnum, S.Schema<any> | undefined> = {
   [FieldKindEnum.String]: S.String,
   [FieldKindEnum.Number]: S.Number,
   [FieldKindEnum.Boolean]: S.Boolean,
+  [FieldKindEnum.Ref]: undefined,
 
   [FieldKindEnum.Text]: S.String,
   [FieldKindEnum.Date]: S.DateFromString,
