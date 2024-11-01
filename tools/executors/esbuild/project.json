@@ -4,23 +4,15 @@
   "sourceRoot": "{projectRoot}/src",
   "targets": {
     "compile": {
-      "dependsOn": [
-        "^compile"
-      ],
+      "dependsOn": ["^compile"],
       "executor": "@nx/js:tsc",
       "options": {
         "main": "{projectRoot}/src/index.ts",
         "outputPath": "{projectRoot}/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
         "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
     "lint": {}
   },
-  "implicitDependencies": [
-    "esbuild-plugins",
-    "log-hook"
-  ]
+  "implicitDependencies": ["esbuild-plugins", "log-hook"]
 }
