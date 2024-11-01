@@ -18,11 +18,11 @@ export const Basic = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
   const sheet = useTestSheet(space, graph, { cells: createTestCells() });
-  if (!sheet || !graph) {
+  if (!sheet || !space) {
     return null;
   }
 
-  return <SheetContainer graph={graph} sheet={sheet} role='article' />;
+  return <SheetContainer space={space} sheet={sheet} role='article' />;
 };
 
 const meta: Meta = {
