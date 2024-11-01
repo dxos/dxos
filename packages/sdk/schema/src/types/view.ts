@@ -13,25 +13,38 @@ export const PathSchema = S.String.pipe(
   S.pattern(/^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*$/, { message: () => 'Invalid property path.' }),
 );
 
+/**
+ * Stored field metadata.
+ */
 export const FieldSchema = S.mutable(
   S.Struct({
     path: PathSchema,
     visible: S.optional(S.Boolean),
-    width: S.optional(S.Number),
+    size: S.optional(S.Number),
   }),
 );
 
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
 
+/**
+ * Computed (aggregate) field metadata.
+ */
 // TODO(burdon): IMPORTANT This should be a computed composite of Schema defined field annotations.
 export const FieldPropertiesSchema = S.mutable(
   S.Struct({
-    // TODO(ZaymonFC): Reconcile this with a source of truth for these refinements.
     path: PathSchema,
     kind: S.Enums(FieldKindEnum),
+
     // TODO(burdon): Replace with AST.TitleAnnotation
     label: S.optional(S.String),
+
+    // TODO(burdon): S.pattern.
+    // filter: S.optional(S.filter),
+
+    // TODO(burdon): Technically known as `scale`.
     digits: S.optional(S.Number.pipe(S.int(), S.nonNegative())),
+
+    // TODO(burdon): Define types?
     refSchema: S.optional(S.String),
     refProperty: S.optional(S.String),
   }),
