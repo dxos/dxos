@@ -5,8 +5,13 @@
 import { expect, test } from '@playwright/test';
 
 import { sleep } from '@dxos/async';
-import { Invitation } from '@dxos/react-client/invitations';
-import { ConnectionState } from '@dxos/react-client/mesh';
+
+// TODO(wittjosiah): Can't import these because of ESM/CJS issues.
+// import { Invitation } from '@dxos/react-client/invitations';
+// import { ConnectionState } from '@dxos/react-client/mesh';
+const InvitationAuthMethodNone = 0;
+const ConnectionStateOffline = 0;
+const ConnectionStateOnline = 1;
 
 import { InvitationsManager } from './invitations-manager';
 
@@ -51,7 +56,7 @@ test.describe('Invitations', () => {
     test('no auth method', async () => {
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
-      const invitation = await manager.createInvitation(0, 'device', { authMethod: Invitation.AuthMethod.NONE });
+      const invitation = await manager.createInvitation(0, 'device', { authMethod: InvitationAuthMethodNone });
 
       await manager.openPanel(1, 'identity');
       await manager.acceptInvitation(1, 'device', invitation);
@@ -155,9 +160,9 @@ test.describe('Invitations', () => {
       await manager.acceptInvitation(1, 'device', invitation);
       expect(await manager.readyToAuthenticate('device', manager.peer(1))).toBe(true);
       await manager.toggleNetworkStatus(0);
-      expect(await manager.getNetworkStatus(0)).toEqual(ConnectionState.OFFLINE);
+      expect(await manager.getNetworkStatus(0)).toEqual(ConnectionStateOffline);
       await manager.toggleNetworkStatus(0);
-      expect(await manager.getNetworkStatus(0)).toEqual(ConnectionState.ONLINE);
+      expect(await manager.getNetworkStatus(0)).toEqual(ConnectionStateOnline);
       await manager.resetInvitation(manager.peer(1));
       await manager.invitationInputContinue('device', manager.peer(1));
       await manager.clearAuthCode('device', manager.peer(1));
@@ -189,7 +194,7 @@ test.describe('Invitations', () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 1);
-      const invitation1 = await manager.createInvitation(0, 'space', { authMethod: Invitation.AuthMethod.NONE });
+      const invitation1 = await manager.createInvitation(0, 'space', { authMethod: InvitationAuthMethodNone });
       const invitation2 = await manager.createInvitation(0, 'space');
 
       await manager.createIdentity(1);
@@ -206,7 +211,7 @@ test.describe('Invitations', () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 1);
-      const invitation = await manager.createInvitation(0, 'space', { authMethod: Invitation.AuthMethod.NONE });
+      const invitation = await manager.createInvitation(0, 'space', { authMethod: InvitationAuthMethodNone });
 
       await manager.createIdentity(1);
       await manager.openPanel(1, 'join');
@@ -329,9 +334,9 @@ test.describe('Invitations', () => {
       await manager.acceptInvitation(1, 'space', invitation);
       expect(await manager.readyToAuthenticate('space', manager.peer(1))).toBe(true);
       await manager.toggleNetworkStatus(0);
-      expect(await manager.getNetworkStatus(0)).toEqual(ConnectionState.OFFLINE);
+      expect(await manager.getNetworkStatus(0)).toEqual(ConnectionStateOffline);
       await manager.toggleNetworkStatus(0);
-      expect(await manager.getNetworkStatus(0)).toEqual(ConnectionState.ONLINE);
+      expect(await manager.getNetworkStatus(0)).toEqual(ConnectionStateOnline);
       await manager.resetInvitation(manager.peer(1));
       await manager.invitationInputContinue('space', manager.peer(1));
       await manager.clearAuthCode('space', manager.peer(1));
