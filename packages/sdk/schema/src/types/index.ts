@@ -4,4 +4,5 @@
 
 export * from './annotations';
 export * from './date';
+export * from './util';
 export * from './view';

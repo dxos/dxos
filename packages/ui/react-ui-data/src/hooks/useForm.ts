@@ -40,16 +40,16 @@ interface FormOptions<T> {
 
 type Form<T> = {
   values: T;
-  handleChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  handleSubmit: () => void;
   errors: Record<keyof T, string>;
   canSubmit: boolean;
   touched: Record<keyof T, boolean>;
-  handleBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   getInputProps: <InputT extends 'input' | 'select' = 'input'>(
     key: keyof T,
     type?: InputT,
   ) => InputT extends 'select' ? SelectProps<T> : InputProps<T>;
+  handleBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleSubmit: () => void;
 };
 
 /**

@@ -26,7 +26,7 @@ export type FieldProps = ThemedClassName<{
 }>;
 
 // TODO(ZaymonFC): This is a composite, but we need to build up a description of everything this form might
-// handle. Maybe we'll compose this too.
+//  handle. Maybe we'll compose this too.
 //
 // Basic form schema requirements.
 // Source validations from annotations / .... somewhere?
@@ -50,9 +50,9 @@ type FormType = S.Schema.Type<typeof FormSchema>;
 export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: FieldProps) => {
   const { t } = useTranslation(translationKey);
 
-  const { values, getInputProps, errors, handleSubmit, canSubmit, touched } = useForm({
+  const { values, getInputProps, errors, touched, canSubmit, handleSubmit } = useForm({
+    // TODO(burdon): Caller should pass in the value (and clone if necessary).
     initialValues: { ...field } as FormType,
-    // schema: FieldSchema,
     additionalValidation: (values) => {
       // Check that the path doesn't already exist in the schema.
       const pathChanged = values.path !== field.path;
