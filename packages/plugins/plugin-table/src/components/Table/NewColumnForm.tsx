@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 // import { create } from '@dxos/echo-schema';
 import { DropdownMenu } from '@dxos/react-ui';
 import { Field } from '@dxos/react-ui-data';
-import { type FieldType } from '@dxos/schema';
+import { type FieldPropertiesType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
@@ -19,7 +19,7 @@ type NewColumnFormProps = {
 };
 
 export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewColumnFormProps) => {
-  const [field, setField] = useState<FieldType | undefined>(undefined);
+  const [field, setField] = useState<FieldPropertiesType | undefined>(undefined);
 
   useEffect(() => {
     if (open) {
@@ -38,7 +38,8 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
       close();
       return;
     }
-    model.addColumn({ ...field });
+    // TODO(ZaymonFC): Handle FieldPropertiesType instead.
+    // model.addColumn({ ...field });
     setField(undefined);
     close();
   }, [model, field, close]);
