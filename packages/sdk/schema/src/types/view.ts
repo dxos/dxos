@@ -5,14 +5,14 @@
 import { JsonSchemaType, QueryType } from '@dxos/echo-schema';
 import { S } from '@dxos/effect';
 
+import { FieldKindEnum } from './annotations';
+
 // TODO(burdon): Pattern for error IDs (i.e., don't put user-facing messages in the annotation).
 export const PathSchema = S.String.pipe(
   S.nonEmptyString({ message: () => 'Property is required.' }),
   S.pattern(/^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*$/, { message: () => 'Invalid property path.' }),
 );
 
-// TODO(burdon): Rename.
-// TODO(burdon): Should this have the label? Or should we use the TitleAnnotation?
 export const FieldSchema = S.mutable(
   S.Struct({
     path: PathSchema,
@@ -22,6 +22,22 @@ export const FieldSchema = S.mutable(
 );
 
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
+
+// TODO(burdon): IMPORTANT This should be a computed composite of Schema defined field annotations.
+export const FieldPropertiesSchema = S.mutable(
+  S.Struct({
+    // TODO(ZaymonFC): Reconcile this with a source of truth for these refinements.
+    path: PathSchema,
+    kind: S.Enums(FieldKindEnum),
+    // TODO(burdon): Replace with AST.TitleAnnotation
+    label: S.optional(S.String),
+    digits: S.optional(S.Number.pipe(S.int(), S.nonNegative())),
+    refSchema: S.optional(S.String),
+    refProperty: S.optional(S.String),
+  }),
+);
+
+export type FieldPropertiesType = S.Schema.Type<typeof FieldPropertiesSchema>;
 
 /**
  * Views are generated or user-defined projections of a schema's properties.

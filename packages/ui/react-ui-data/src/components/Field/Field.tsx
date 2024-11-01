@@ -4,18 +4,13 @@
 
 import React from 'react';
 
-import { S } from '@dxos/effect';
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { FieldKindEnum, FieldKindEnums, type FieldType, type ViewType } from '@dxos/schema';
+import { FieldKindEnums, type FieldType, type FieldPropertiesType, type ViewType } from '@dxos/schema';
 
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 import { pathNotUniqueError, typeFeatures } from '../../util';
-
-const FieldRow = ({ children }: { children: React.ReactNode }) => {
-  return <div className='flex flex-col w-full gap-1'>{children}</div>;
-};
 
 export type FieldProps = ThemedClassName<{
   view: ViewType;
@@ -25,35 +20,12 @@ export type FieldProps = ThemedClassName<{
   onSave?: (field: FieldType) => void;
 }>;
 
-// TODO(ZaymonFC): This is a composite, but we need to build up a description of everything this form might
-//  handle. Maybe we'll compose this too.
-
-/**
- * Validated input for `useForm`.
- */
-const FormSchema = S.mutable(
-  S.Struct({
-    // TODO(ZaymonFC): Reconcile this with a source of truth for these refinements.
-    path: S.String.pipe(
-      S.nonEmptyString({ message: () => 'Property is required.' }),
-      S.pattern(/^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*$/, { message: () => 'Invalid property path.' }),
-    ),
-    label: S.optional(S.String),
-    kind: S.Enums(FieldKindEnum),
-    digits: S.optional(S.Number.pipe(S.int(), S.nonNegative())),
-    refSchema: S.optional(S.String),
-    refProperty: S.optional(S.String),
-  }),
-);
-
-type FormType = S.Schema.Type<typeof FormSchema>;
-
 export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: FieldProps) => {
   const { t } = useTranslation(translationKey);
 
-  const { values, getInputProps, errors, touched, canSubmit, handleSubmit } = useForm({
+  const { values, getInputProps, errors, touched, canSubmit, handleSubmit } = useForm<FieldPropertiesType>({
     // TODO(burdon): Caller should pass in the value (and clone if necessary).
-    initialValues: { ...field } as FormType,
+    initialValues: { ...field } as FieldPropertiesType,
     additionalValidation: (values) => {
       // Check that the path doesn't already exist in the schema.
       const pathChanged = values.path !== field.path;
@@ -170,4 +142,8 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
       )}
     </div>
   );
+};
+
+const FieldRow = ({ children }: { children: React.ReactNode }) => {
+  return <div className='flex flex-col w-full gap-1'>{children}</div>;
 };

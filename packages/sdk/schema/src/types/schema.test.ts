@@ -19,7 +19,7 @@ import {
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { FieldKind, FieldPath, FieldKindEnum } from './annotations';
+import { FieldKind, FieldPath, FieldKindEnum, ANNOTATION_NS } from './annotations';
 import { ViewSchema } from './view';
 
 describe('schema composition', () => {
@@ -43,7 +43,7 @@ describe('schema composition', () => {
         type: 'string',
         $echo: {
           annotations: {
-            'dxos.view': { path: '$.email', kind: 'email' },
+            [ANNOTATION_NS]: { path: '$.email', kind: 'email' },
           },
         },
       },
