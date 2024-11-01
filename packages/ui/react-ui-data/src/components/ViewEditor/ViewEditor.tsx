@@ -5,7 +5,6 @@
 import React, { useState } from 'react';
 
 import { S } from '@dxos/echo-schema';
-import { getSpace } from '@dxos/react-client/echo';
 import { Button, Icon, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
@@ -27,7 +26,6 @@ export type ViewEditorProps = ThemedClassName<{
  */
 export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
-  const space = getSpace(view);
   const [field, setField] = useState<FieldType | undefined>();
 
   const handleAdd = () => {
@@ -79,15 +77,7 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
         )}
       </List.Root>
 
-      {field && view.schema && (
-        <Field
-          key={field.path}
-          classNames='p-2'
-          autoFocus
-          view={view}
-          field={field}
-        />
-      )}
+      {field && view.schema && <Field key={field.path} classNames='p-2' autoFocus view={view} field={field} />}
 
       {!readonly && (
         <div className='flex justify-center'>

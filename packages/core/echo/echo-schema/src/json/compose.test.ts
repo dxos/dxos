@@ -23,7 +23,7 @@ describe('schema composition', () => {
     }) {}
 
     const OverlaySchema = S.Struct({
-      email: S.String.annotations({ [AST.TitleAnnotationId]: 'Email' })
+      email: S.String.annotations({ [AST.TitleAnnotationId]: 'Email' }),
     });
 
     const baseSchema = toJsonSchema(BaseType);
