@@ -13,11 +13,13 @@ export const PathSchema = S.String.pipe(
 
 // TODO(burdon): Rename.
 // TODO(burdon): Should this have the label? Or should we use the TitleAnnotation?
-export const FieldSchema = S.Struct({
-  path: PathSchema,
-  visible: S.optional(S.Boolean),
-  width: S.optional(S.Number),
-});
+export const FieldSchema = S.mutable(
+  S.Struct({
+    path: PathSchema,
+    visible: S.optional(S.Boolean),
+    width: S.optional(S.Number),
+  }),
+);
 
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
 
