@@ -15,7 +15,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type StackSectionContent, type StackSectionItem } from './Section';
 import { Stack, type StackProps } from './Stack';
-import { TestObjectGenerator } from '../testing';
+import { TestObjectGenerator } from '../testing/generator';
 
 faker.seed(3);
 
