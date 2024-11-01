@@ -21,7 +21,7 @@ export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, trigg
     [model?.table?.view?.fields, columnId],
   );
 
-  if (!field) {
+  if (!field || !model?.table?.view) {
     return null;
   }
 
@@ -29,7 +29,7 @@ export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, trigg
     <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
       <DropdownMenu.Content>
-        <Field field={field} onSave={() => onOpenChange?.(false)} />
+        <Field view={model.table.view} field={field} onSave={() => onOpenChange?.(false)} />
         <DropdownMenu.Arrow />
       </DropdownMenu.Content>
     </DropdownMenu.Root>

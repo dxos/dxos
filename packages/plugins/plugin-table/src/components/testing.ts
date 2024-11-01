@@ -84,7 +84,8 @@ export const useSimulator = ({ items, table, insertInterval, updateInterval }: S
 
       if (field) {
         const path = field.path;
-        switch (field.type) {
+        // TODO(ZaymonFC): Restore this once I know how to derive the type from the schema.
+        switch ('' as any as FieldKindEnum) {
           case FieldKindEnum.String: {
             item[path] = `Updated ${Date.now()}`;
             break;

@@ -43,7 +43,7 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
     close();
   }, [model, field, close]);
 
-  if (!field) {
+  if (!field || !model?.table?.view) {
     return null;
   }
 
@@ -51,7 +51,7 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
     <DropdownMenu.Root open={open} onOpenChange={close}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
       <DropdownMenu.Content>
-        <Field field={field} schema={model?.table.schema} onSave={handleCreate} />
+        <Field view={model.table.view} field={field} onSave={handleCreate} />
         <DropdownMenu.Arrow />
       </DropdownMenu.Content>
     </DropdownMenu.Root>
