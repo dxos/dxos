@@ -8,18 +8,17 @@ import { invariant } from '@dxos/invariant';
 import {
   addFieldsToSchema,
   removeFieldsFromSchema,
-  updateFieldsInSchema,
   updateFieldNameInSchema,
+  updateFieldsInSchema,
 } from './manipulation';
 import { StoredSchema } from './types';
 import { type HasId, schemaVariance } from '../ast';
-import { toJsonSchema, jsonToEffectSchema } from '../json';
+import { jsonToEffectSchema, toJsonSchema } from '../json';
 
 export interface MutableSchemaConstructor extends S.Schema<MutableSchema> {
   new (): HasId;
 }
 
-// TODO(burdon): Rename StoredSchemaBase.
 export const MutableSchemaBase = (): MutableSchemaConstructor => {
   return class {
     static get ast() {

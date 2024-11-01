@@ -5,20 +5,14 @@
 import { JsonPath, JsonSchemaType, QueryType } from '@dxos/echo-schema';
 import { S } from '@dxos/effect';
 
-import { FieldKind, FieldKindEnum } from './annotations';
-
-// TODO(burdon): Pattern for error IDs (i.e., don't put user-facing messages in the annotation).
-export const PathSchema = S.String.pipe(
-  S.nonEmptyString({ message: () => 'Property is required.' }),
-  S.pattern(/^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*$/, { message: () => 'Invalid property path.' }),
-);
+import { FieldKindEnum } from './annotations';
 
 /**
  * Stored field metadata (e.g., for UX).
  */
 export const FieldSchema = S.mutable(
   S.Struct({
-    path: PathSchema,
+    path: JsonPath,
     visible: S.optional(S.Boolean),
     size: S.optional(S.Number),
     referenceProperty: S.optional(JsonPath),
@@ -27,54 +21,18 @@ export const FieldSchema = S.mutable(
 
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
 
-
-const s = {
-  org: {
-    '$schema': 'http://json-schema.org/draft-07/schema#',
-    '$id': 'dxn:type:example.com/type/Org',
-    version: '0.1.0',
-    type: 'object',
-    required: [ 'name', 'id' ],
-    properties: { id: { type: 'string' }, name: { type: 'string' } },
-    additionalProperties: false,
-  },
-  person: {
-    '$schema': 'http://json-schema.org/draft-07/schema#',
-    '$id': 'dxn:type:example.com/type/Person',
-    version: '0.1.0',
-    type: 'object',
-    required: [ 'name', 'email', 'org', 'id' ],
-    properties: {
-      id: { type: 'string' }, // TODO(burdon):
-
-      name: { type: 'string' },
-      email: { type: 'string', format: 'email' },
-      org: {
-        "$ref": "http://json-schema.dxos.network/ref.json",
-        reference: {
-          schema: {
-            '$ref': 'dxn:type:example.com/type/Org', // => $id?
-          },
-          schemaVersion: '0.1.0',
-          schemaObject: 'dnx:echo:@:xxx', // Temp.
-        }
-      }
-    },
-    additionalProperties: false,
-  }
-}
-
 /**
  * Computed (aggregate) field metadata (from annotations).
  */
 // TODO(burdon): IMPORTANT This should be a computed composite of Schema defined field annotations.
+// TODO(burdon): get/set
 export const FieldPropertiesSchema = S.mutable(
   S.Struct({
     // FieldPath
-    path: PathSchema,
+    path: JsonPath,
 
     // FieldKind
-    kind: S.Enums(FieldKindEnum),
+    format: S.Enums(FieldKindEnum),
 
     // AST.TitleAnnotation
     title: S.optional(S.String),

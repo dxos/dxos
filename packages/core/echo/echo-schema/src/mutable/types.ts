@@ -9,12 +9,14 @@ import { JsonSchemaType } from '../json';
 import { TypedObject } from '../object';
 import { requireTypeReference } from '../proxy';
 
-export class StoredSchema extends TypedObject({ typename: 'dxos.org/type/StoredSchema', version: '0.1.0' })({
+// TODO(burdon): Consider renaming type.
+export class StoredSchema extends TypedObject({ typename: 'dxos.org/type/Schema', version: '0.1.0' })({
   typename: S.String,
   version: S.String,
   jsonSchema: JsonSchemaType,
 }) {}
 
+// TODO(burdon): Reconcile this with schema registry?
 export type StaticSchema = {
   id?: string;
   typename: string;

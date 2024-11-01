@@ -10,7 +10,11 @@ export type JsonPath = string & { __JsonPath: true };
  * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
  * @example $.name
  */
-export const JsonPath = S.String as S.Schema<JsonPath>;
+// TODO(burdon): Pattern for error IDs (i.e., don't put user-facing messages in the annotation).
+export const JsonPath = S.String.pipe(
+  S.nonEmptyString({ message: () => 'Property is required.' }),
+  S.pattern(/^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*$/, { message: () => 'Invalid property path.' }),
+) as any as S.Schema<JsonPath>;
 
 // TODO(dmaretskyi): Define more precise types.
 export type JsonSchemaType = JSONSchema.JsonSchema7;

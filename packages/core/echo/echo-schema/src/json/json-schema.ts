@@ -280,6 +280,7 @@ const parseJsonSchemaAny = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
   if (echoRefinement?.reference != null) {
     return createEchoReferenceSchema(echoRefinement.reference);
   }
+
   return S.Any;
 };
 
