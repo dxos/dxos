@@ -23,6 +23,7 @@ type InputProps<T> = BaseProps<T> & {
 
 type SelectProps<T> = BaseProps<T> & {
   onValueChange: (value: string | undefined) => void;
+  value: string | undefined;
 };
 
 interface FormOptions<T> {
