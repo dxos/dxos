@@ -209,7 +209,7 @@ export const ListItemDeleteButton = ({
 
 export const ListItemDragHandle = () => {
   const { dragHandleRef } = useListItemContext('DRAG_HANDLE');
-  return <IconButton ref={dragHandleRef as any} icon='ph--dots-six--regular' />;
+  return <IconButton ref={dragHandleRef as any} icon='ph--dots-six-vertical--regular' />;
 };
 
 export const ListItemDragPreview = <T extends ListItemRecord>({
@@ -222,7 +222,7 @@ export const ListItemDragPreview = <T extends ListItemRecord>({
 };
 
 export const ListItemWrapper = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
-  <div className={mx('flex w-full', classNames)}>{children}</div>
+  <div className={mx('flex is-full gap-2', classNames)}>{children}</div>
 );
 
 export const ListItemTitle = ({
