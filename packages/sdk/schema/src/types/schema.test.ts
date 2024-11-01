@@ -6,12 +6,12 @@ import { AST, Schema as S } from '@effect/schema';
 import { describe, test } from 'vitest';
 
 import {
-  createStoredSchema,
-  createReferenceAnnotation,
-  setProperty,
   composeSchema,
   create,
+  createStoredSchema,
+  createReferenceAnnotation,
   getTypename,
+  setProperty,
   toJsonSchema,
   ref,
   type JsonPath,
