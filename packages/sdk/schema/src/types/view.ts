@@ -46,8 +46,8 @@ export const FieldPropertiesSchema = S.mutable(
     digits: S.optional(S.Number.pipe(S.int(), S.nonNegative())),
 
     // TODO(burdon): Define types? Single type? Property on field for ux picker?
-    refSchema: S.optional(S.String),
-    refProperty: S.optional(S.String),
+    referenceSchema: S.optional(S.String),
+    referenceProperty: S.optional(S.String),
   }),
 );
 
@@ -78,6 +78,6 @@ export const ViewSchema = S.Struct({
   fields: S.mutable(S.Array(FieldSchema)),
 
   // TODO(burdon): Add array of sort orders (which might be tuples).
-});
+}).pipe(S.mutable);
 
 export type ViewType = S.Schema.Type<typeof ViewSchema>;
