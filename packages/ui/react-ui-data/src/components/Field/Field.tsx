@@ -7,7 +7,7 @@ import React from 'react';
 import { S } from '@dxos/effect';
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { FieldKindEnums, type FieldType, type ViewType } from '@dxos/schema';
+import { FieldKindEnum, FieldKindEnums, type FieldType, type ViewType } from '@dxos/schema';
 
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -38,7 +38,7 @@ const FormSchema = S.mutable(
       S.pattern(/^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*$/, { message: () => 'Invalid property path.' }),
     ),
     label: S.optional(S.String),
-    type: S.String,
+    kind: S.Enums(FieldKindEnum),
     digits: S.optional(S.Number.pipe(S.int(), S.nonNegative())),
     refSchema: S.optional(S.String),
     refProperty: S.optional(S.String),
@@ -73,7 +73,7 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
     },
   });
 
-  const features = React.useMemo(() => typeFeatures[values.type] ?? [], [values.type]);
+  const features = React.useMemo(() => typeFeatures[values.kind] ?? [], [values.kind]);
 
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
@@ -103,9 +103,9 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
       </FieldRow>
 
       <FieldRow>
-        <Input.Root validationValence={touched.type && errors.type ? 'error' : undefined}>
+        <Input.Root validationValence={touched.kind && errors.kind ? 'error' : undefined}>
           <Input.Label>{t('field type label')}</Input.Label>
-          <Select.Root {...getInputProps('type', 'select')}>
+          <Select.Root {...getInputProps('kind', 'select')}>
             <Select.TriggerButton classNames='is-full' placeholder='Type' />
             <Select.Portal>
               <Select.Content>
@@ -120,7 +120,7 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
             </Select.Portal>
           </Select.Root>
           <Input.DescriptionAndValidation>
-            <Input.Validation>{touched.type && errors.type}</Input.Validation>
+            <Input.Validation>{touched.kind && errors.kind}</Input.Validation>
           </Input.DescriptionAndValidation>
         </Input.Root>
       </FieldRow>
