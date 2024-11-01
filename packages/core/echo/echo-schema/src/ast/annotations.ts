@@ -6,10 +6,10 @@ import { Option, pipe } from 'effect';
 import { type Simplify } from 'effect/Types';
 
 import { AST, S } from '@dxos/effect';
+import type { Primitive } from '@dxos/util';
 
 import { checkIdNotPresentOnSchema } from './schema-validator';
 import { type StoredSchema } from '../mutable';
-import type { Primitive } from '@dxos/util';
 
 /**
  * Marker interface for object with an `id`.

@@ -5,13 +5,12 @@
 import { describe, expect, test } from 'vitest';
 
 import { type JSONSchema, S } from '@dxos/effect';
+import { deepMapValues } from '@dxos/util';
 
 import { toJsonSchema, jsonToEffectSchema, getEchoProp } from './json-schema';
 import { PropertyMeta } from '../ast';
 import { ref } from '../handler';
 import { TypedObject } from '../object';
-import { log } from '@dxos/log';
-import { deepMapValues } from '@dxos/util';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {
