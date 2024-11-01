@@ -22,7 +22,7 @@ type InputProps<T> = BaseProps<T> & {
 };
 
 type SelectProps<T> = BaseProps<T> & {
-  onValueChange: (value: FormInputValue) => void;
+  onValueChange: (value: string | undefined) => void;
 };
 
 interface FormOptions<T> {
@@ -45,7 +45,10 @@ type Form<T> = {
   canSubmit: boolean;
   touched: Record<keyof T, boolean>;
   handleBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  getInputProps: (key: keyof T, type?: 'input' | 'select') => InputProps<T> | SelectProps<T>;
+  getInputProps: <InputT extends 'input' | 'select' = 'input'>(
+    key: keyof T,
+    type?: InputT,
+  ) => InputT extends 'select' ? SelectProps<T> : InputProps<T>;
 };
 
 /**
@@ -158,7 +161,10 @@ export const useForm = <T extends object>({
   //
 
   const getInputProps = useCallback(
-    (key: keyof T, type: 'input' | 'select' = 'input'): InputProps<T> | SelectProps<T> => {
+    <InputT extends 'input' | 'select' = 'input'>(
+      key: keyof T,
+      type?: InputT,
+    ): InputT extends 'select' ? SelectProps<T> : InputProps<T> => {
       const baseProps: BaseProps<T> = {
         name: key,
         value: values[key] ?? '',
@@ -168,14 +174,14 @@ export const useForm = <T extends object>({
         return {
           ...baseProps,
           onValueChange: (value: FormInputValue) => onValueChange(key, value),
-        };
+        } as InputT extends 'select' ? SelectProps<T> : InputProps<T>;
       }
 
       return {
         ...baseProps,
         onChange: handleChange,
         onBlur: handleBlur,
-      };
+      } as InputT extends 'select' ? SelectProps<T> : InputProps<T>;
     },
     [values, handleChange, handleBlur, onValueChange],
   );

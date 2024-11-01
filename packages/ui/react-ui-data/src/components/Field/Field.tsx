@@ -57,13 +57,12 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
         return [pathNotUniqueError(values.path)];
       }
     },
-    onSubmit: (values) => {
+    onSubmit: (values: FormType) => {
       // TODO(ZaymonFC):
-      // Values is a validated set of FormType.
+      // Values is a validated instance of FormSchema.
 
       // If path, visible, width change, update the field.
       // If label / type / digits / ref schema / ref property changes, update view.schema
-      //
 
       onSave?.(field);
       // TODO(ZaymonFC): Update the associated schema type here if changed.
