@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { JsonSchemaType, QueryType } from '@dxos/echo-schema';
+import { JsonPath, JsonSchemaType, QueryType } from '@dxos/echo-schema';
 import { S } from '@dxos/effect';
 
-import { FieldKindEnum } from './annotations';
+import { FieldKind, FieldKindEnum } from './annotations';
 
 // TODO(burdon): Pattern for error IDs (i.e., don't put user-facing messages in the annotation).
 export const PathSchema = S.String.pipe(
@@ -14,17 +14,55 @@ export const PathSchema = S.String.pipe(
 );
 
 /**
- * Stored field metadata.
+ * Stored field metadata (e.g., for UX).
  */
 export const FieldSchema = S.mutable(
   S.Struct({
     path: PathSchema,
     visible: S.optional(S.Boolean),
     size: S.optional(S.Number),
+    referenceProperty: S.optional(JsonPath),
   }),
 );
 
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
+
+
+const s = {
+  org: {
+    '$schema': 'http://json-schema.org/draft-07/schema#',
+    '$id': 'dxn:type:example.com/type/Org',
+    version: '0.1.0',
+    type: 'object',
+    required: [ 'name', 'id' ],
+    properties: { id: { type: 'string' }, name: { type: 'string' } },
+    additionalProperties: false,
+  },
+  person: {
+    '$schema': 'http://json-schema.org/draft-07/schema#',
+    '$id': 'dxn:type:example.com/type/Person',
+    version: '0.1.0',
+    type: 'object',
+    required: [ 'name', 'email', 'org', 'id' ],
+    properties: {
+      id: { type: 'string' }, // TODO(burdon):
+
+      name: { type: 'string' },
+      email: { type: 'string', format: 'email' },
+      org: {
+        "$ref": "http://json-schema.dxos.network/ref.json",
+        reference: {
+          schema: {
+            '$ref': 'dxn:type:example.com/type/Org', // => $id?
+          },
+          schemaVersion: '0.1.0',
+          schemaObject: 'dnx:echo:@:xxx', // Temp.
+        }
+      }
+    },
+    additionalProperties: false,
+  }
+}
 
 /**
  * Computed (aggregate) field metadata (from annotations).
@@ -32,7 +70,10 @@ export type FieldType = S.Schema.Type<typeof FieldSchema>;
 // TODO(burdon): IMPORTANT This should be a computed composite of Schema defined field annotations.
 export const FieldPropertiesSchema = S.mutable(
   S.Struct({
+    // FieldPath
     path: PathSchema,
+
+    // FieldKind
     kind: S.Enums(FieldKindEnum),
 
     // AST.TitleAnnotation
@@ -46,7 +87,7 @@ export const FieldPropertiesSchema = S.mutable(
     // TODO(burdon): Technically known as the precision `scale`.
     digits: S.optional(S.Number.pipe(S.int(), S.nonNegative())),
 
-    // TODO(burdon): Define types? Single type.
+    // TODO(burdon): Define types? Single type? Property on field for ux picker?
     refSchema: S.optional(S.String),
     refProperty: S.optional(S.String),
   }),

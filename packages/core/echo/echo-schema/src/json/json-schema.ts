@@ -21,7 +21,7 @@ import { createEchoReferenceSchema } from '../handler';
  */
 const ECHO_REFINEMENT_KEY = 'echo';
 
-export const getEchoProp = (obj: JSONSchema.JsonSchema7Object | JSONSchema.JsonSchema7): any => {
+export const getEchoProp = (obj: JSONSchema.JsonSchema7): any => {
   return (obj as any)[ECHO_REFINEMENT_KEY];
 };
 

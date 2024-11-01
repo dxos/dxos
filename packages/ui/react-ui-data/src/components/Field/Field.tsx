@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -46,7 +46,7 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
     },
   });
 
-  const features = React.useMemo(() => typeFeatures[values.kind] ?? [], [values.kind]);
+  const features = useMemo(() => typeFeatures[values.kind] ?? [], [values.kind]);
 
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>

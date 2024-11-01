@@ -5,15 +5,34 @@
 import { PropertyMeta, type JsonPath } from '@dxos/echo-schema';
 import { type AST, S, getAnnotation } from '@dxos/effect';
 
-// TODO(burdon): Should we have a namespace or just contribute to the global "mixin" (like description)?
-export const FILED_KIND_ANNOTATION = 'fieldKind';
-export const FILED_PATH_ANNOTATION = 'fieldPath';
+export const FILED_PATH_ANNOTATION = 'path';
+
+/**
+ * Sets the path for the field.
+ * @param path Data source path in the json path format. This is the field path in the source object.
+ */
+export const FieldPath = (path: JsonPath) => PropertyMeta(FILED_PATH_ANNOTATION, path);
+
+// https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
+export const FILED_KIND_ANNOTATION = 'format';
+
+/**
+ * Annotation to set field kind.
+ */
+// TODO(burdon): Instead of adding a "kind" annotation as a value, add an actual annotation representing the kind.
+export const FieldKind = (kind: FieldKindEnum) => PropertyMeta(FILED_KIND_ANNOTATION, kind);
+
+// TODO(burdon):
+//  - flat annotations using effect annotations at top level
+//  - S.pattern annotations
+//  - digits
+//  - refs
 
 //
 // FormatType
+// https://json-schema.org/understanding-json-schema/reference
 // TODO(burdon): Replace with Schema.pattern?
 //  https://effect.website/docs/guides/schema/basic-usage#string-filters
-// TODO(burdon): Convert to/from string.
 // TODO(burdon): Allow pasting and adapting non-conforming values (e.g., with spaces/hyphens).
 //
 
@@ -67,6 +86,7 @@ export const UrlFormat: FormatAnnotation = {
 
 //
 // Fields
+// TODO(burdon): Built-in formats https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
 //
 
 // TODO(burdon): Can this be derived from the annotation? Or just be a union of all the annotation symbols?
@@ -124,15 +144,3 @@ export const schemaForKind: Record<FieldKindEnum, S.Schema<any> | undefined> = {
   [FieldKindEnum.Formula]: undefined,
   [FieldKindEnum.DID]: undefined,
 };
-
-/**
- * Annotation to set field kind.
- */
-// TODO(burdon): Instead of adding a "kind" annotation as a value, add an actual annotation representing the kind.
-export const FieldKind = (kind: FieldKindEnum) => PropertyMeta(FILED_KIND_ANNOTATION, kind);
-
-/**
- * Sets the path for the field.
- * @param path Data source path in the json path format. This is the field path in the source object.
- */
-export const FieldPath = (path: JsonPath) => PropertyMeta(FILED_PATH_ANNOTATION, path);
