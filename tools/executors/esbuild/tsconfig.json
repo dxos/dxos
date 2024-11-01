@@ -2,8 +2,10 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "outDir": "dist",
+    "outDir": "dist"
   },
-  "include": ["src"],
-  "references": [],
+  "include": [
+    "src"
+  ],
+  "references": []
 }
