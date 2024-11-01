@@ -4,6 +4,7 @@
 
 import { type MutableRefObject, useEffect, useLayoutEffect, useState } from 'react';
 
+import { log } from '@dxos/log';
 import { createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
 import { parseValue, cellClassesForFieldType } from '@dxos/react-ui-data';
 import {
@@ -80,7 +81,9 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
 const gridCellGetter = (model: SheetModel) => {
   // TODO(thure): Actually use the cache.
   const cachedGridCells: DxGridPlaneCells = {};
+  log('[grid cell getter created]');
   return (nextBounds: DxGridPlaneRange): DxGridPlaneCells => {
+    log('[grid cell getter called]', { nextBounds });
     [...Array(nextBounds.end.col - nextBounds.start.col)].forEach((_, c0) => {
       return [...Array(nextBounds.end.row - nextBounds.start.row)].forEach((_, r0) => {
         const col = nextBounds.start.col + c0;
@@ -102,7 +105,9 @@ export const colLabelCell = (col: number) => ({ value: colToA1Notation(col), res
 
 const cellGetter = (model: SheetModel) => {
   const getGridCells = gridCellGetter(model);
+  log('[sheet cell getter created]', { getGridCells });
   return (nextBounds: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells => {
+    log('[sheet cell getter called]', { nextBounds, plane, getGridCells });
     switch (plane) {
       case 'grid':
         return getGridCells(nextBounds);
@@ -133,10 +138,12 @@ export const useSheetModelDxGridProps = (
 
   useLayoutEffect(() => {
     const cellsAccessor = createDocAccessor(model.sheet, ['cells']);
+    log('[sheet cell accessor mounting to grid]', { dxGridRef, cellsAccessor });
     if (dxGridRef.current) {
       dxGridRef.current.getCells = cellGetter(model);
     }
     const handleCellsUpdate = () => {
+      log('[sheet requesting update of grid]', { dxGridRef });
       dxGridRef.current?.requestUpdate('initialCells');
     };
     cellsAccessor.handle.addListener('change', handleCellsUpdate);
