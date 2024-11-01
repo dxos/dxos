@@ -1,24 +1,10 @@
 {
   "project": {
-    "ignored": [
-      "@dxos/dxos"
-    ],
-    "fixedKeys": [
-      "$schema",
-      "name",
-      "tags",
-      "sourceRoot",
-      "projectType",
-      "targets"
-    ]
+    "ignored": ["@dxos/dxos"],
+    "fixedKeys": ["$schema", "name", "tags", "sourceRoot", "projectType", "targets"]
   },
   "package": {
-    "commonKeys": [
-      "license",
-      "author",
-      "homepage",
-      "bugs"
-    ],
+    "commonKeys": ["license", "author", "homepage", "bugs"],
     "withCustomExports": [
       "@dxos/shell",
       "@dxos/node-std",
@@ -34,14 +20,14 @@
       "@dxos/tracing",
       "@dxos/lit-grid",
       "@dxos/plate",
-      "@dxos/gem-spore"
+      "@dxos/gem-spore",
+      "@dxos/test-utils",
+      "@dxos/react-ui-stack",
+      "@dxos/random"
     ]
   },
   "tsconfig": {
-    "fixedKeys": [
-      "extends",
-      "compilerOptions"
-    ],
+    "fixedKeys": ["extends", "compilerOptions"],
     "pathMapping": {
       "include": [
         "packages/devtools/devtools",
