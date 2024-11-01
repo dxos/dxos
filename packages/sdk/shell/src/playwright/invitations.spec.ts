@@ -6,14 +6,14 @@ import { expect, test } from '@playwright/test';
 
 import { sleep } from '@dxos/async';
 
+import { InvitationsManager } from './invitations-manager';
+
 // TODO(wittjosiah): Can't import these because of ESM/CJS issues.
 // import { Invitation } from '@dxos/react-client/invitations';
 // import { ConnectionState } from '@dxos/react-client/mesh';
 const InvitationAuthMethodNone = 0;
 const ConnectionStateOffline = 0;
 const ConnectionStateOnline = 1;
-
-import { InvitationsManager } from './invitations-manager';
 
 test.describe('Invitations', () => {
   let manager: InvitationsManager;
