@@ -25,21 +25,6 @@ const DefaultStory = (props: ViewEditorProps) => {
   );
 };
 
-export const Default: StoryObj<typeof ViewEditor> = {
-  args: {
-    view: create(testView),
-  },
-};
-
-export const Empty: StoryObj<typeof ViewEditor> = {
-  args: {
-    view: create<ViewType>({
-      schema: 'example.com/schema/TestSchema',
-      fields: [],
-    }),
-  },
-};
-
 const meta: Meta<typeof ViewEditor> = {
   title: 'ui/react-ui-data/ViewEditor',
   component: ViewEditor,
@@ -55,3 +40,11 @@ const meta: Meta<typeof ViewEditor> = {
 };
 
 export default meta;
+
+type Story = StoryObj<typeof ViewEditor>;
+
+export const Default: Story = {
+  args: {
+    view: create(testView),
+  },
+};

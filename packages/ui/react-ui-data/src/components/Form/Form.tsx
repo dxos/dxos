@@ -12,9 +12,9 @@ import { RealNumberFormat, type ViewType, getFormatAnnotation, getFieldValue, se
 
 import { TextInput } from '../TextInput';
 
-export type FormProps<T = {}> = ThemedClassName<{
+export type FormProps<T extends {} = {}> = ThemedClassName<{
   view: ViewType;
-  data?: T;
+  object: T;
   schema?: S.Schema<T>;
   readonly?: boolean;
 }>;
@@ -22,13 +22,13 @@ export type FormProps<T = {}> = ThemedClassName<{
 /**
  * Schema-based object form.
  */
-export const Form = <T = {},>({ classNames, view, data, schema, readonly }: FormProps<T>) => {
+export const Form = <T extends {} = {}>({ classNames, view, object, schema, readonly }: FormProps<T>) => {
   return (
     <div role='none' className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
       {view.fields.map((field) => {
         const prop = schema && getProperty(schema, field.path);
-        const label = field.label ?? (prop && pipe(AST.getTitleAnnotation(prop), Option.getOrUndefined));
-        const description = (prop && pipe(AST.getDescriptionAnnotation(prop), Option.getOrUndefined)) ?? label;
+        const title = (prop && pipe(AST.getTitleAnnotation(prop), Option.getOrUndefined)) ?? '';
+        const description = (prop && pipe(AST.getDescriptionAnnotation(prop), Option.getOrUndefined)) ?? title;
         const format =
           (prop && (getFormatAnnotation(prop) ?? (AST.isNumberKeyword(prop) && RealNumberFormat))) || undefined;
 
@@ -37,15 +37,15 @@ export const Form = <T = {},>({ classNames, view, data, schema, readonly }: Form
         //
 
         if (prop && AST.isBooleanKeyword(prop)) {
-          const value = data && getFieldValue(data, field);
+          const value = object && getFieldValue(object, field);
           const onChange = (checked: boolean) => {
-            setFieldValue(data, field, checked);
+            setFieldValue(object, field, checked);
           };
 
           return (
             <div key={field.path} className='flex flex-col w-full gap-1'>
               <Input.Root>
-                <Input.Label classNames='px-1'>{label}</Input.Label>
+                <Input.Label classNames='px-1'>{title}</Input.Label>
                 <Input.Switch disabled={readonly} checked={!!value} onCheckedChange={(checked) => onChange(checked)} />
               </Input.Root>
             </div>
@@ -61,18 +61,18 @@ export const Form = <T = {},>({ classNames, view, data, schema, readonly }: Form
         //  - Enum (single/multi-select)
         //
 
-        const value = data ? getFieldValue(data, field) : undefined;
+        const value = object ? getFieldValue(object, field) : undefined;
 
         return (
           <div key={field.path} className='flex flex-col w-full gap-1'>
             <Input.Root>
-              <Input.Label classNames='px-1'>{label}</Input.Label>
+              <Input.Label classNames='px-1'>{title}</Input.Label>
               <TextInput
                 disabled={readonly}
                 placeholder={description}
                 format={format}
                 value={value ? String(value) : ''}
-                onChange={(event) => setFieldValue(data, field, event.target.value)}
+                onChange={(event) => setFieldValue(object, field, event.target.value)}
               />
             </Input.Root>
           </div>

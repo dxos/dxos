@@ -21,30 +21,6 @@ const DefaultStory = (props: FormProps) => (
   </TestPopup>
 );
 
-export const Default: StoryObj<FormProps<TestType>> = {
-  args: {
-    data: create(testData),
-    view: create(testView),
-    schema: TestSchema,
-  },
-};
-
-export const Empty: StoryObj<FormProps<TestType>> = {
-  args: {
-    view: create(testView),
-    schema: TestSchema,
-  },
-};
-
-export const Readonly: StoryObj<FormProps<TestType>> = {
-  args: {
-    data: create(testData),
-    view: create(testView),
-    schema: TestSchema,
-    readonly: true,
-  },
-};
-
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-data/Form',
   component: Form,
@@ -57,3 +33,29 @@ const meta: Meta<typeof DefaultStory> = {
 };
 
 export default meta;
+
+type Story = StoryObj<FormProps<TestType>>;
+
+export const Default: Story = {
+  args: {
+    object: create(testData),
+    view: create(testView),
+    schema: TestSchema,
+  },
+};
+
+export const Empty: Story = {
+  args: {
+    view: create(testView),
+    schema: TestSchema,
+  },
+};
+
+export const Readonly: Story = {
+  args: {
+    object: create(testData),
+    view: create(testView),
+    schema: TestSchema,
+    readonly: true,
+  },
+};

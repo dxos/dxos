@@ -27,7 +27,7 @@ export const FieldSchema = S.mutable(
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
 
 /**
- * Computed (aggregate) field metadata.
+ * Computed (aggregate) field metadata (from annotations).
  */
 // TODO(burdon): IMPORTANT This should be a computed composite of Schema defined field annotations.
 export const FieldPropertiesSchema = S.mutable(
@@ -35,16 +35,18 @@ export const FieldPropertiesSchema = S.mutable(
     path: PathSchema,
     kind: S.Enums(FieldKindEnum),
 
-    // TODO(burdon): Replace with AST.TitleAnnotation
-    label: S.optional(S.String),
+    // AST.TitleAnnotation
+    title: S.optional(S.String),
+    // AST.DescriptionAnnotation
+    description: S.optional(S.String),
 
     // TODO(burdon): S.pattern.
     // filter: S.optional(S.filter),
 
-    // TODO(burdon): Technically known as `scale`.
+    // TODO(burdon): Technically known as the precision `scale`.
     digits: S.optional(S.Number.pipe(S.int(), S.nonNegative())),
 
-    // TODO(burdon): Define types?
+    // TODO(burdon): Define types? Single type.
     refSchema: S.optional(S.String),
     refProperty: S.optional(S.String),
   }),

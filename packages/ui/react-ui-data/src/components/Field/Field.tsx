@@ -33,7 +33,7 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
         return [pathNotUniqueError(values.path)];
       }
     },
-    onSubmit: (values: FormType) => {
+    onSubmit: (values: FieldPropertiesType) => {
       // TODO(ZaymonFC):
       // Values is a validated instance of FormSchema.
 
@@ -66,11 +66,11 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
       </FieldRow>
 
       <FieldRow>
-        <Input.Root validationValence={touched.label && errors.label ? 'error' : undefined}>
+        <Input.Root validationValence={touched.title && errors.title ? 'error' : undefined}>
           <Input.Label>{t('field label label')}</Input.Label>
-          <Input.TextInput disabled={readonly} placeholder={t('field label placeholder')} {...getInputProps('label')} />
+          <Input.TextInput disabled={readonly} placeholder={t('field label placeholder')} {...getInputProps('title')} />
           <Input.DescriptionAndValidation>
-            <Input.Validation>{touched.label && errors.label}</Input.Validation>
+            <Input.Validation>{touched.title && errors.title}</Input.Validation>
           </Input.DescriptionAndValidation>
         </Input.Root>
       </FieldRow>

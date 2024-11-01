@@ -10,7 +10,7 @@ import React from 'react';
 import { create } from '@dxos/echo-schema';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { FieldSchema } from '@dxos/schema';
-import { TestSchema, type TestType } from '@dxos/schema/testing';
+import { testView } from '@dxos/schema/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Field, type FieldProps } from './Field';
@@ -29,13 +29,6 @@ const DefaultStory = (args: FieldProps) => (
   </div>
 );
 
-export const Default: StoryObj<typeof Field> = {
-  args: {
-    field: create(FieldSchema, testView.fields[0]),
-    schema: TestSchema,
-  },
-};
-
 const meta: Meta<typeof Field> = {
   title: 'ui/react-ui-data/Field',
   component: Field,
@@ -48,3 +41,10 @@ const meta: Meta<typeof Field> = {
 };
 
 export default meta;
+
+export const Default: StoryObj<typeof Field> = {
+  args: {
+    view: testView,
+    field: create(FieldSchema, testView.fields[0]),
+  },
+};

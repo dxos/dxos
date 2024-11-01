@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, S, createObjectId } from '@dxos/echo-schema';
+import { AST, S, createObjectId, toJsonSchema } from '@dxos/echo-schema';
 
-import { EmailFormat, FormatAnnotationId } from '../types';
+import { EmailFormat, type FieldType, FormatAnnotationId, type ViewType } from '../types';
 
 //
 // Schema
@@ -48,30 +48,26 @@ export const testData: TestType = {
   },
 };
 
-// const fields = [
-// {
-//   path: 'name',
-//   type: FieldKindEnum.String,
-// },
-// {
-//   path: 'email',
-//   type: FieldKindEnum.String,
-// },
-// {
-//   path: 'address.zip',
-//   label: 'ZIP',
-//   type: FieldKindEnum.String,
-// },
-// {
-//   path: 'rating',
-//   type: FieldKindEnum.Number,
-// },
-// {
-//   path: 'admin',
-//   type: FieldKindEnum.Boolean,
-// },
-// ];
+const fields: FieldType[] = [
+  {
+    path: 'name',
+  },
+  {
+    path: 'email',
+  },
+  {
+    path: 'address.zip',
+  },
+  {
+    path: 'rating',
+  },
+  {
+    path: 'admin',
+  },
+];
 
-// export const testView: ViewType = {
-//   query: { __typename: 'example.com/schema/TestSchema' },
-// };
+export const testView: ViewType = {
+  schema: toJsonSchema(TestSchema),
+  query: { __typename: 'example.com/type/Test' },
+  fields,
+};
