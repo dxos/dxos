@@ -34,7 +34,8 @@
       "@dxos/tracing",
       "@dxos/lit-grid",
       "@dxos/plate",
-      "@dxos/gem-spore"
+      "@dxos/gem-spore",
+      "@dxos/test-utils"
     ]
   },
   "tsconfig": {
