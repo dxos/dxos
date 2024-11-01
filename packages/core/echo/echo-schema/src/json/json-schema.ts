@@ -141,7 +141,14 @@ export const toJsonSchema = (schema: S.Schema.Any): JSONSchema.JsonSchema7Object
   };
 
   const schemaWithRefinements = S.make(withEchoRefinements(schema.ast));
-  return JSONSchema.make(schemaWithRefinements) as JSONSchema.JsonSchema7Object;
+  const jsonSchema = JSONSchema.make(schemaWithRefinements) as JSONSchema.JsonSchema7Object;
+
+  if ('id' in jsonSchema.properties) {
+    // Put id first.
+    jsonSchema.properties = Object.assign({ id: undefined }, jsonSchema.properties);
+  }
+
+  return jsonSchema;
 };
 
 const jsonToEffectTypeSchema = (

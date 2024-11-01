@@ -81,6 +81,37 @@ describe('effect-to-json', () => {
     expect(getEchoProp(jsonSchema.properties.field)).to.be.undefined;
   });
 
+  test.only('annotations', () => {
+    class Schema extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
+      name: S.String.annotations({ description: 'Person name' }),
+      email: S.String.annotations({ description: 'Email address' }).pipe(
+        PropertyMeta('dxos.schema', { format: 'email' }),
+      ),
+    }) {}
+    const jsonSchema = toJsonSchema(Schema);
+
+    expect(jsonSchema).toEqual({
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      type: 'object',
+      required: ['name', 'email', 'id'],
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string', description: 'Person name' },
+        email: {
+          type: 'string',
+          description: 'Email address',
+          $echo: { annotations: { 'dxos.schema': { format: 'email' } } },
+        },
+      },
+      additionalProperties: false,
+      $echo: {
+        type: { typename: 'example.com/type/Contact', version: '0.1.0' },
+      },
+    });
+
+    log.info('', { jsonSchema });
+  });
+
   const expectReferenceAnnotation = (object: JSONSchema.JsonSchema7) => {
     expect(getEchoProp(object).reference).to.deep.eq({
       typename: 'example.com/type/TestNested',
@@ -107,13 +138,13 @@ describe('json-to-effect', () => {
           object: S.Struct({ id: S.String, field: ref(Nested) }),
           echoObject: ref(Nested),
           echoObjectArray: S.Array(ref(Nested)),
+          email: S.String.pipe(PropertyMeta('dxos.schema', { format: 'email' })),
           null: S.Null,
         },
         partial ? { partial } : {},
       ) {}
 
       const jsonSchema = toJsonSchema(Schema);
-      log.info('jsonSchema', { jsonSchema });
       const schema = jsonToEffectSchema(jsonSchema);
       expect(() => expect(schema.ast).to.deep.eq(Schema.ast)).to.throw();
       expect(() => expect(removeFilterFunction(schema.ast)).to.deep.eq(Schema.ast)).to.throw();
