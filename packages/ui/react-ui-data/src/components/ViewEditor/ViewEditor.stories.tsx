@@ -9,7 +9,7 @@ import React from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { type ViewType } from '@dxos/schema';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { testView } from '@dxos/schema/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
@@ -17,23 +17,22 @@ import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
 
-const DefaultStory = (props: ViewEditorProps) => {
-  return (
-    <TestPopup>
-      <ViewEditor {...props} />
-    </TestPopup>
-  );
-};
+const DefaultStory = (props: ViewEditorProps) => (
+  <div className='w-full grid grid-cols-3'>
+    <div className='flex col-span-2 w-full justify-center p-4'>
+      <TestPopup>
+        <ViewEditor {...props} />
+      </TestPopup>
+    </div>
+    <SyntaxHighlighter className='w-full text-xs'>{JSON.stringify(props, null, 2)}</SyntaxHighlighter>
+  </div>
+);
 
 const meta: Meta<typeof ViewEditor> = {
   title: 'ui/react-ui-data/ViewEditor',
   component: ViewEditor,
   render: DefaultStory,
-  decorators: [
-    withClientProvider(),
-    withLayout({ fullscreen: true, classNames: 'flex p-4 justify-center' }),
-    withTheme,
-  ],
+  decorators: [withClientProvider(), withLayout({ fullscreen: true }), withTheme],
   parameters: {
     translations,
   },

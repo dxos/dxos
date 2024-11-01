@@ -5,6 +5,7 @@
 import translations from './translations';
 
 export * from './components';
+export * from './hooks';
 export * from './util';
 
 export { translations };

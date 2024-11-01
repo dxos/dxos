@@ -26,7 +26,7 @@ type SelectProps<T> = BaseProps<T> & {
   value: string | undefined;
 };
 
-export type Form<T = {}> = {
+export type FormResult<T = {}> = {
   values: T;
   /**
    * Provider for props for input controls.
@@ -64,7 +64,7 @@ export const useForm = <T extends object>({
   schema,
   additionalValidation,
   onSubmit,
-}: FormOptions<T>): Form<T> => {
+}: FormOptions<T>): FormResult<T> => {
   invariant(additionalValidation != null || schema != null, 'useForm must be called with schema and/or validate');
 
   const [values, setValues] = useState<T>(initialValues);
@@ -191,15 +191,15 @@ export const useForm = <T extends object>({
   );
 
   return {
-    values,
-    getInputProps,
-    errors,
-    touched,
     canSubmit,
+    errors,
+    getInputProps,
     handleChange,
     handleBlur,
     handleSubmit,
-  } satisfies Form<T>;
+    touched,
+    values,
+  } satisfies FormResult<T>;
 };
 
 //
