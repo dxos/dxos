@@ -19,6 +19,7 @@ export type RangeListProps = {
 
 export const RangeList = ({ sheet }: RangeListProps) => {
   const { t } = useTranslation(SHEET_PLUGIN);
+  // TODO(thure): Implement similar to comments, #8121
   const handleSelectRange = (range: Range) => {};
   const handleDeleteRange = useCallback(
     (range: Range) => {
