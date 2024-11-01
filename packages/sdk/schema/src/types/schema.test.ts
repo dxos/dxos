@@ -8,18 +8,18 @@ import { describe, test } from 'vitest';
 import {
   composeSchema,
   create,
-  createStoredSchema,
   createReferenceAnnotation,
+  createStoredSchema,
   getTypename,
+  ref,
   setProperty,
   toJsonSchema,
-  ref,
-  type JsonPath,
   TypedObject,
+  type JsonPath,
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { FieldKind, FieldPath, FieldKindEnum, FILED_KIND_ANNOTATION, FILED_PATH_ANNOTATION } from './annotations';
+import { FieldKind, FieldKindEnum, FieldPath, FILED_KIND_ANNOTATION, FILED_PATH_ANNOTATION } from './annotations';
 import { ViewSchema } from './view';
 
 describe('schema composition', () => {
@@ -103,13 +103,13 @@ describe('schema composition', () => {
       },
       fields: [
         {
-          path: 'name',
+          path: 'name' as JsonPath,
         },
         {
-          path: 'email',
+          path: 'email' as JsonPath,
         },
         {
-          path: 'org',
+          path: 'org' as JsonPath,
         },
       ],
     });

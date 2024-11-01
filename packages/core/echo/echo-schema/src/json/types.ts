@@ -4,6 +4,7 @@
 
 import { Schema as S, type JSONSchema } from '@effect/schema';
 
+// Branded type.
 export type JsonPath = string & { __JsonPath: true };
 
 /**

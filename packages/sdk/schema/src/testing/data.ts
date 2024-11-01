@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, S, createObjectId, toJsonSchema } from '@dxos/echo-schema';
+import { AST, type JsonPath, S, createObjectId, toJsonSchema } from '@dxos/echo-schema';
 
 import { EmailFormat, type FieldType, FormatAnnotationId, type ViewType } from '../types';
 
@@ -50,19 +50,19 @@ export const testData: TestType = {
 
 const fields: FieldType[] = [
   {
-    path: 'name',
+    path: 'name' as JsonPath,
   },
   {
-    path: 'email',
+    path: 'email' as JsonPath,
   },
   {
-    path: 'address.zip',
+    path: 'address.zip' as JsonPath,
   },
   {
-    path: 'rating',
+    path: 'rating' as JsonPath,
   },
   {
-    path: 'admin',
+    path: 'admin' as JsonPath,
   },
 ];
 

@@ -4,6 +4,7 @@
 
 import jp from 'jsonpath';
 
+import { type JsonPath } from '@dxos/echo-schema';
 import { AST, type S, isLeafType, visit } from '@dxos/effect';
 
 import { FieldKindEnum } from './annotations';
@@ -70,13 +71,13 @@ export const toFieldValueType = (type: AST.AST): FieldKindEnum => {
 };
 
 // TODO(burdon): Check unique name against schema.
-export const getUniqueProperty = (view: ViewType) => {
+export const getUniqueProperty = (view: ViewType): JsonPath => {
   let n = 1;
   while (true) {
     const path = `prop_${n++}`;
     const idx = view.fields.findIndex((field) => field.path === path);
     if (idx === -1) {
-      return path;
+      return path as JsonPath;
     }
   }
 };
