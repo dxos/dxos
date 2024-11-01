@@ -17,7 +17,7 @@ import { SpaceManagerImpl } from './steps';
 import { InvitationListItemImpl, SpaceMemberListImpl, InvitationList } from '../../components';
 import { StorybookDialog } from '../../components/StorybookDialog';
 import { InvitationManager, type InvitationManagerProps } from '../../steps';
-import { inviteWithState } from '../../testing';
+import { inviteWithState } from '../../testing/fixtures';
 
 const noOpProps: SpacePanelImplProps = {
   titleId: 'storybookSpacePanel__title',
