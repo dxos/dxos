@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { type ReactNode, useMemo } from 'react';
 
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { FieldKindEnums, type FieldType, type FieldPropertiesType, type ViewType } from '@dxos/schema';
+import { FieldKindEnums, type FieldPropertiesType, type FieldType, type ViewType } from '@dxos/schema';
 
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -46,7 +46,7 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
     },
   });
 
-  const features = useMemo(() => typeFeatures[values.kind] ?? [], [values.kind]);
+  const features = useMemo(() => typeFeatures[values.format] ?? [], [values.format]);
 
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
@@ -76,9 +76,9 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
       </FieldRow>
 
       <FieldRow>
-        <Input.Root validationValence={touched.kind && errors.kind ? 'error' : undefined}>
+        <Input.Root validationValence={touched.format && errors.format ? 'error' : undefined}>
           <Input.Label>{t('field type label')}</Input.Label>
-          <Select.Root {...getInputProps('kind', 'select')}>
+          <Select.Root {...getInputProps('format', 'select')}>
             <Select.TriggerButton classNames='is-full' placeholder='Type' />
             <Select.Portal>
               <Select.Content>
@@ -93,7 +93,7 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
             </Select.Portal>
           </Select.Root>
           <Input.DescriptionAndValidation>
-            <Input.Validation>{touched.kind && errors.kind}</Input.Validation>
+            <Input.Validation>{touched.format && errors.format}</Input.Validation>
           </Input.DescriptionAndValidation>
         </Input.Root>
       </FieldRow>
@@ -144,6 +144,6 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
   );
 };
 
-const FieldRow = ({ children }: { children: React.ReactNode }) => {
+const FieldRow = ({ children }: { children: ReactNode }) => {
   return <div className='flex flex-col w-full gap-1'>{children}</div>;
 };
