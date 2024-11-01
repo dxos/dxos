@@ -11,7 +11,7 @@ import {
   createReferenceAnnotation,
   createStoredSchema,
   getTypename,
-  jsonToEffectSchema,
+  toEffectSchema,
   ref,
   setProperty,
   toJsonSchema,
@@ -75,7 +75,7 @@ describe('schema composition', () => {
     const orgSchema = createStoredSchema('example.com/type/Org', '0.1.0');
     setProperty(orgSchema.jsonSchema, 'name', S.String.annotations({ [AST.DescriptionAnnotationId]: 'Org name' }));
 
-    const OrgSchema = jsonToEffectSchema(orgSchema.jsonSchema);
+    const OrgSchema = toEffectSchema(orgSchema.jsonSchema);
     const org = create(OrgSchema, { name: 'DXOS.org' });
     log.info('objects', { org });
 

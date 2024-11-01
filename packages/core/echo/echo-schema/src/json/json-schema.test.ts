@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { type JSONSchema, S } from '@dxos/effect';
 import { deepMapValues } from '@dxos/util';
 
-import { toJsonSchema, jsonToEffectSchema, getEchoProp } from './json-schema';
+import { toJsonSchema, toEffectSchema, getEchoProp } from './json-schema';
 import { PropertyMeta } from '../ast';
 import { ref } from '../handler';
 import { TypedObject } from '../object';
@@ -140,7 +140,7 @@ describe('json-to-effect', () => {
       ) {}
 
       const jsonSchema = toJsonSchema(Schema);
-      const schema = jsonToEffectSchema(jsonSchema);
+      const schema = toEffectSchema(jsonSchema);
       expect(() => expect(schema.ast).to.deep.eq(Schema.ast)).to.throw();
       expect(() => expect(removeFilterFunction(schema.ast)).to.deep.eq(Schema.ast)).to.throw();
       expect(() => expect(schema.ast).to.deep.eq(removeFilterFunction(Schema.ast))).to.throw();

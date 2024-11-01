@@ -22,7 +22,10 @@ export const ref = <T extends HasId>(schema: S.Schema<T, any>): ref<T> => {
   return createEchoReferenceSchema(annotation);
 };
 
-// TODO(burdon): Move to json schema and make private.
+/**
+ * @internal
+ */
+// TODO(burdon): Move to json schema and make private?
 export const createEchoReferenceSchema = (annotation: ObjectAnnotation): S.Schema<any> => {
   const typePredicate =
     annotation.typename === EXPANDO_TYPENAME

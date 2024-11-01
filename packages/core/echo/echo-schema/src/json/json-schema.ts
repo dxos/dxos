@@ -153,20 +153,20 @@ const withEchoRefinements = (ast: AST.AST): AST.AST => {
  * @param root
  * @param definitions
  */
-export const jsonToEffectSchema = (
+export const toEffectSchema = (
   root: JSONSchema.JsonSchema7Root,
-  definitions?: JSONSchema.JsonSchema7Root['$defs'],
+  _defs?: JSONSchema.JsonSchema7Root['$defs'],
 ): S.Schema<any> => {
-  const defs = root.$defs ? { ...definitions, ...root.$defs } : definitions ?? {};
+  const defs = root.$defs ? { ..._defs, ...root.$defs } : _defs ?? {};
   if ('type' in root && root.type === 'object') {
-    return jsonToEffectTypeSchema(root, defs);
+    return objectToEffectSchema(root, defs);
   }
 
   let result: S.Schema<any> = S.Unknown;
   if ('$id' in root) {
     switch (root.$id) {
       case '/schemas/any': {
-        result = parseJsonSchemaAny(root);
+        result = anyToEffectSchema(root);
         break;
       }
       case '/schemas/unknown': {
@@ -182,7 +182,7 @@ export const jsonToEffectSchema = (
   } else if ('enum' in root) {
     result = S.Union(...root.enum.map((e) => S.Literal(e)));
   } else if ('anyOf' in root) {
-    result = S.Union(...root.anyOf.map((v) => jsonToEffectSchema(v, defs)));
+    result = S.Union(...root.anyOf.map((v) => toEffectSchema(v, defs)));
   } else if ('type' in root) {
     switch (root.type) {
       case 'string': {
@@ -203,10 +203,10 @@ export const jsonToEffectSchema = (
       }
       case 'array': {
         if (Array.isArray(root.items)) {
-          result = S.Tuple(...root.items.map((v) => jsonToEffectSchema(v, defs)));
+          result = S.Tuple(...root.items.map((v) => toEffectSchema(v, defs)));
         } else {
           invariant(root.items);
-          result = S.Array(jsonToEffectSchema(root.items, defs));
+          result = S.Array(toEffectSchema(root.items, defs));
         }
         break;
       }
@@ -215,7 +215,7 @@ export const jsonToEffectSchema = (
     const refSegments = root.$ref.split('/');
     const jsonSchema = defs[refSegments[refSegments.length - 1]];
     invariant(jsonSchema, `missing definition for ${root.$ref}`);
-    result = jsonToEffectSchema(jsonSchema, defs).pipe(
+    result = toEffectSchema(jsonSchema, defs).pipe(
       S.annotations({ identifier: refSegments[refSegments.length - 1] }),
     );
   }
@@ -224,7 +224,7 @@ export const jsonToEffectSchema = (
   return refinement?.annotations ? result.annotations({ [PropertyMetaAnnotationId]: refinement.annotations }) : result;
 };
 
-const jsonToEffectTypeSchema = (
+const objectToEffectSchema = (
   root: JSONSchema.JsonSchema7Object,
   defs: JSONSchema.JsonSchema7Root['$defs'],
 ): S.Schema<any> => {
@@ -235,12 +235,12 @@ const jsonToEffectTypeSchema = (
   let immutableIdField: S.Schema<any> | undefined;
   for (const [key, value] of propertyList) {
     if (echoRefinement?.type && key === 'id') {
-      immutableIdField = jsonToEffectSchema(value, defs);
+      immutableIdField = toEffectSchema(value, defs);
     } else {
       // TODO(burdon): Mutable cast.
       (fields as any)[key] = root.required.includes(key)
-        ? jsonToEffectSchema(value, defs)
-        : S.optional(jsonToEffectSchema(value, defs));
+        ? toEffectSchema(value, defs)
+        : S.optional(toEffectSchema(value, defs));
     }
   }
 
@@ -252,11 +252,11 @@ const jsonToEffectTypeSchema = (
       'only one pattern property is supported',
     );
 
-    schemaWithoutEchoId = S.Record({ key: S.String, value: jsonToEffectSchema(root.patternProperties[''], defs) });
+    schemaWithoutEchoId = S.Record({ key: S.String, value: toEffectSchema(root.patternProperties[''], defs) });
   } else if (typeof root.additionalProperties !== 'object') {
     schemaWithoutEchoId = S.Struct(fields);
   } else {
-    const indexValue = jsonToEffectSchema(root.additionalProperties, defs);
+    const indexValue = toEffectSchema(root.additionalProperties, defs);
     if (propertyList.length > 0) {
       schemaWithoutEchoId = S.Struct(fields, { key: S.String, value: indexValue });
     } else {
@@ -264,7 +264,7 @@ const jsonToEffectTypeSchema = (
     }
   }
 
-  const annotations = extractAnnotationsFromJsonSchema(root);
+  const annotations = jsonSchemaFieldsToAnnotations(root);
   if (echoRefinement == null) {
     return schemaWithoutEchoId as any;
   } else {
@@ -275,7 +275,7 @@ const jsonToEffectTypeSchema = (
   }
 };
 
-const parseJsonSchemaAny = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
+const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
   const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
   if (echoRefinement?.reference != null) {
     return createEchoReferenceSchema(echoRefinement.reference);
@@ -303,7 +303,7 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<str
   return { [ECHO_REFINEMENT_KEY]: refinement };
 };
 
-const extractAnnotationsFromJsonSchema = (schema: JSONSchema.JsonSchema7): AST.Annotations => {
+const jsonSchemaFieldsToAnnotations = (schema: JSONSchema.JsonSchema7): AST.Annotations => {
   const echoRefinement: EchoRefinement = (schema as any)[ECHO_REFINEMENT_KEY];
   if (echoRefinement == null) {
     return {};

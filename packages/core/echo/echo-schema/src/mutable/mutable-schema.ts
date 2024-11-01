@@ -13,7 +13,7 @@ import {
 } from './manipulation';
 import { StoredSchema } from './types';
 import { type HasId, schemaVariance } from '../ast';
-import { jsonToEffectSchema, toJsonSchema } from '../json';
+import { toEffectSchema, toJsonSchema } from '../json';
 
 export interface MutableSchemaConstructor extends S.Schema<MutableSchema> {
   new (): HasId;
@@ -131,7 +131,7 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
 
   private _getSchema() {
     if (this._isDirty || this._schema == null) {
-      this._schema = jsonToEffectSchema(unwrapProxy(this.serializedSchema.jsonSchema));
+      this._schema = toEffectSchema(unwrapProxy(this.serializedSchema.jsonSchema));
       this._isDirty = false;
     }
 
