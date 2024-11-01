@@ -144,11 +144,14 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           const space = isEchoObject(data.object) ? getSpace(data.object) : undefined;
+          if (!space) {
+            return null;
+          }
 
           switch (role) {
             case 'article':
             case 'section':
-              if (space && data.object instanceof SheetType) {
+              if (data.object instanceof SheetType) {
                 return <SheetContainer space={space} sheet={data.object} role={role} />;
               }
 
