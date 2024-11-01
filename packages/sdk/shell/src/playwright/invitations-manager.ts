@@ -6,7 +6,6 @@ import { expect, type Browser, type ConsoleMessage } from '@playwright/test';
 
 import { Trigger } from '@dxos/async';
 import { type Invitation } from '@dxos/react-client/invitations';
-import { ConnectionState } from '@dxos/react-client/mesh';
 import { setupPage } from '@dxos/test-utils/playwright';
 
 import { ScopedShellManager } from '../testing';
@@ -56,9 +55,9 @@ export class InvitationsManager extends ScopedShellManager {
 
     try {
       await selector.waitFor({ timeout: 500 });
-      return ConnectionState.OFFLINE;
+      return 0;
     } catch {
-      return ConnectionState.ONLINE;
+      return 1;
     }
   }
 
