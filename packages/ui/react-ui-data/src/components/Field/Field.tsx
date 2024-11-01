@@ -30,11 +30,11 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
   const { values, getInputProps, errors, handleSubmit, canSubmit, touched } = useForm({
     initialValues: { ...field },
     schema: FieldSchema,
-    additionalValidation: (values) => {
-      if (schema && values.path !== field.path && getProperty(schema, values.path)) {
-        return [pathNotUniqueError(values.path)];
-      }
-    },
+    // additionalValidation: (values) => {
+    //   if (schema && values.path !== field.path && getProperty(schema, values.path)) {
+    //     return [pathNotUniqueError(values.path)];
+    //   }
+    // },
     onSubmit: (values) => {
       // For object keys in values, set that value on field.
       // TODO(ZaymonFC): Is there a nicer way to do this?

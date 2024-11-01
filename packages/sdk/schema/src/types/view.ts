@@ -29,6 +29,7 @@ export type FieldType = S.Schema.Type<typeof FieldSchema>;
 export const ViewSchema = S.Struct({
   /**
    * Schema used to render the view.
+   * The view may be entirely responsible for creating this schema, or it may just reference an existing schema.
    */
   schema: JsonSchemaType,
 
