@@ -12,7 +12,7 @@ import { Filter, useSpaces, useQuery, create, getSpace } from '@dxos/react-clien
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-data';
-import { addFieldToView, type FieldType, removeFieldFromView } from '@dxos/schema';
+import { type FieldType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
@@ -43,22 +43,25 @@ const DefaultStory = () => {
   }, [tables]);
 
   const handleDeleteRow = useCallback((row: any) => space.db.remove(row), [space]);
-  const handleAddColumn = useCallback(
-    (field: any) => {
-      if (table && table.schema?.schema && table.view) {
-        addFieldToView(table.schema, table.view, field);
-      }
-    },
-    [table],
-  );
-  const handleDeleteColumn = useCallback(
-    (field: any) => {
-      if (table && table.schema?.schema && table.view) {
-        removeFieldFromView(table.schema, table.view, field);
-      }
-    },
-    [table],
-  );
+
+  // TODO(ZaymonFC): Reimplement these with the new schema manipulation features.
+  //
+  // const handleAddColumn = useCallback(
+  //   (field: any) => {
+  //     if (table && table.schema?.schema && table.view) {
+  //       addFieldToView(table.schema, table.view, field);
+  //     }
+  //   },
+  //   [table],
+  // );
+  // const handleDeleteColumn = useCallback(
+  //   (field: any) => {
+  //     if (table && table.schema?.schema && table.view) {
+  //       removeFieldFromView(table.schema, table.view, field);
+  //     }
+  //   },
+  //   [table],
+  // );
 
   const handleAction = useCallback(
     (action: { type: string }) => {

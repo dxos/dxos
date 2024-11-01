@@ -11,7 +11,7 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { translations as dataTranslations, ViewEditor } from '@dxos/react-ui-data';
-import { addFieldToView, type FieldType, removeFieldFromView } from '@dxos/schema';
+import { type FieldType } from '@dxos/schema';
 
 import { TableContainer } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
@@ -139,11 +139,13 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             }
 
             case TableAction.ADD_COLUMN: {
-              const { table, field } = intent.data as TableAction.AddColumn;
+              const { table, field: _field } = intent.data as TableAction.AddColumn;
               if (!isTable(table) || !table.schema || !table.view) {
                 return;
               }
-              addFieldToView(table.schema, table.view, field);
+
+              // TODO(ZaymonFC): We need to manipulate the schema with another method here.
+              // addFieldToView(table.schema, table.view, field);
               return { data: true };
             }
 
@@ -159,7 +161,8 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                   return;
                 }
 
-                removeFieldFromView(table.schema, table.view, field);
+                // TODO(ZaymonFC): We need to manipulate the schema with another method here.
+                // removeFieldFromView(table.schema, table.view, field);
 
                 return {
                   undoable: {
@@ -168,10 +171,14 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                   },
                 };
               } else if (intent.undo) {
-                const { field, fieldPosition } = intent.data as { field: FieldType; fieldPosition: number };
+                const { field: _field, fieldPosition: _fieldPosition } = intent.data as {
+                  field: FieldType;
+                  fieldPosition: number;
+                };
 
                 try {
-                  addFieldToView(table.schema, table.view, field, fieldPosition);
+                  // TODO(ZaymonFC): We need to manipulate the schema with another method here.
+                  // addFieldToView(table.schema, table.view, field, fieldPosition);
                 } catch (error) {
                   // TODO(ZaymonFC): Handle error.
                 }

@@ -4,10 +4,10 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { create } from '@dxos/echo-schema';
+// import { create } from '@dxos/echo-schema';
 import { DropdownMenu } from '@dxos/react-ui';
 import { Field } from '@dxos/react-ui-data';
-import { createUniqueFieldForView, type FieldType } from '@dxos/schema';
+import { type FieldType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
@@ -24,7 +24,9 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
   useEffect(() => {
     if (open) {
       if (model?.table?.view) {
-        setField(create(createUniqueFieldForView(model.table.view)));
+        // TODO(ZaymonFC): Create a unique field for the view field set and schema.
+        //
+        // setField(create(createUniqueFieldForView(model.table.view)));
       } else {
         close();
       }

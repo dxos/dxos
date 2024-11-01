@@ -7,7 +7,7 @@ import sortBy from 'lodash.sortby';
 
 import { Resource } from '@dxos/context';
 import { PublicKey } from '@dxos/react-client';
-import { parseValue, cellClassesForFieldType } from '@dxos/react-ui-data';
+import { cellClassesForFieldType } from '@dxos/react-ui-data';
 import {
   type DxGridPlaneCells,
   type DxGridAxisMeta,
@@ -109,7 +109,7 @@ export class TableModel extends Resource {
     this.columnMeta = computed(() => {
       const fields = this.table.view?.fields ?? [];
       const meta = Object.fromEntries(
-        fields.map((field, index: number) => [index, { size: field.size ?? 256, resizeable: true }]),
+        fields.map((field, index: number) => [index, { size: field?.width ?? 256, resizeable: true }]),
       );
 
       return {
@@ -258,7 +258,8 @@ export class TableModel extends Resource {
         continue;
       }
       values[fromGridCell({ col, row: 0 })] = {
-        value: field.label ?? field.path,
+        // TODO(ZaymonFC): Restore the label here.
+        value: field.path,
         resizeHandle: 'col',
         accessoryHtml: tableButtons.columnSettings.render({ columnId: field.path }),
         readonly: true,
@@ -324,7 +325,9 @@ export class TableModel extends Resource {
 
     const field = fields[col];
     const dataIndex = this.displayToDataIndex.get(row) ?? row;
-    this.rows.value[dataIndex][field.path] = parseValue(field.type, value);
+    // TODO(ZaymonFC): We used to be able to discriminate on the type of the field here, but now we
+    // need to inspect the view schema to discriminate.
+    this.rows.value[dataIndex][field.path] = ''; // parseValue(field.type, value);
   };
 
   public getRowCount = (): number => this.rows.value.length;
@@ -363,7 +366,7 @@ export class TableModel extends Resource {
       const newWidth = Math.max(0, width);
       const field = fields[columnIndex];
       if (field) {
-        field.size = newWidth;
+        field.width = newWidth;
       }
     }
   }

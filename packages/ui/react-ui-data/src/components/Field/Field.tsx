@@ -4,9 +4,13 @@
 
 import React from 'react';
 
+<<<<<<< HEAD
+=======
+import { S } from '@dxos/effect';
+>>>>>>> 82a0e94ef617bb71682fa720f0b2dab0ca50f492
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type FieldType, type ViewType } from '@dxos/schema';
+import { FieldValueTypes, type FieldType, type ViewType } from '@dxos/schema';
 
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -24,22 +28,47 @@ export type FieldProps = ThemedClassName<{
   onSave?: (field: FieldType) => void;
 }>;
 
+// TODO(ZaymonFC): This is a composite, but we need to build up a description of everything this form might
+// handle. Maybe we'll compose this too.
+//
+// Basic form schema requirements.
+// Source validations from annotations / .... somewhere?
+const formSchema = S.mutable(
+  S.Struct({
+    // TODO(ZaymonFC): Reconcile this with a source of truth for these refinements.
+    path: S.String.pipe(
+      S.nonEmptyString({ message: () => 'Property is required.' }),
+      S.pattern(/^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*$/, { message: () => 'Invalid property path.' }),
+    ),
+    label: S.optional(S.String),
+    type: S.String,
+    digits: S.optional(S.Number.pipe(S.int(), S.nonNegative())),
+    refSchema: S.optional(S.String),
+    refProperty: S.optional(S.String),
+  }),
+);
+
+type FormType = S.Schema.Type<typeof formSchema>;
+
 export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: FieldProps) => {
   const { t } = useTranslation(translationKey);
+
   const { values, getInputProps, errors, handleSubmit, canSubmit, touched } = useForm({
-    initialValues: { ...field },
-    schema: FieldSchema,
-    // additionalValidation: (values) => {
-    //   if (schema && values.path !== field.path && getProperty(schema, values.path)) {
-    //     return [pathNotUniqueError(values.path)];
-    //   }
-    // },
-    onSubmit: (values) => {
-      // For object keys in values, set that value on field.
-      // TODO(ZaymonFC): Is there a nicer way to do this?
-      (Object.keys(values) as Array<keyof typeof values>).forEach((key) => {
-        field[key] = values[key];
-      });
+    initialValues: { ...field } as FormType,
+    // schema: FieldSchema,
+    additionalValidation: (values) => {
+      // Check that the path doesn't already exist in the schema.
+      const pathChanged = values.path !== field.path;
+      if (pathChanged && view.schema && (view.schema as any).properties[values.path]) {
+        return [pathNotUniqueError(values.path)];
+      }
+    },
+    onSubmit: (values: FormType) => {
+      // TODO(ZaymonFC):
+      // Values is a validated instance of FormSchema.
+
+      // If path, visible, width change, update the field.
+      // If label / type / digits / ref schema / ref property changes, update view.schema
 
       onSave?.(field);
       // TODO(ZaymonFC): Update the associated schema type here if changed.
