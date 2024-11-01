@@ -8,7 +8,7 @@ import { create, type MutableSchema, S, TypedObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { FieldKindEnum } from '@dxos/schema';
 
-import { TableType } from '../types';
+import { createStarterView, TableType } from '../types';
 
 // TODO(burdon): Factor out to @dxos/schema/testing!
 
@@ -22,19 +22,15 @@ export const TestSchema = TypedObject({ typename: 'example.com/type/test', versi
   netWorth: S.optional(S.Number),
 });
 
-export const createTable = (schema?: MutableSchema) =>
-  create(TableType, {
+// TODO(ZaymonFC): Reconcile this with the new view schema system.
+export const createTable = (schema?: MutableSchema) => {
+  const schemaToUse = schema || TestSchema;
+
+  return create(TableType, {
     schema,
-    view: {
-      schema: 'example.com/type/test',
-      fields: [
-        { path: 'name', label: 'Name', type: FieldKindEnum.String },
-        { path: 'age', label: 'Age', type: FieldKindEnum.Number },
-        { path: 'active', label: 'Active', type: FieldKindEnum.Boolean },
-        { path: 'netWorth', label: 'Net Worth', type: FieldKindEnum.Currency },
-      ],
-    },
+    view: createStarterView(schemaToUse),
   });
+};
 
 export const createItems = (n: number) => {
   const { data } = create({
