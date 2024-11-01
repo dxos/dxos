@@ -6,7 +6,8 @@ import { PropertyMeta, type JsonPath } from '@dxos/echo-schema';
 import { type AST, S, getAnnotation } from '@dxos/effect';
 
 // TODO(burdon): Should we have a namespace or just contribute to the global "mixin" (like description)?
-export const ANNOTATION_NS = 'dxos.schema';
+export const FILED_KIND_ANNOTATION = 'fieldKind';
+export const FILED_PATH_ANNOTATION = 'fieldPath';
 
 //
 // FormatType
@@ -128,10 +129,10 @@ export const schemaForKind: Record<FieldKindEnum, S.Schema<any> | undefined> = {
  * Annotation to set field kind.
  */
 // TODO(burdon): Instead of adding a "kind" annotation as a value, add an actual annotation representing the kind.
-export const FieldKind = (kind: FieldKindEnum) => PropertyMeta(ANNOTATION_NS, { kind });
+export const FieldKind = (kind: FieldKindEnum) => PropertyMeta(FILED_KIND_ANNOTATION, kind);
 
 /**
  * Sets the path for the field.
  * @param path Data source path in the json path format. This is the field path in the source object.
  */
-export const FieldPath = (path: JsonPath) => PropertyMeta(ANNOTATION_NS, { path });
+export const FieldPath = (path: JsonPath) => PropertyMeta(FILED_PATH_ANNOTATION, path);

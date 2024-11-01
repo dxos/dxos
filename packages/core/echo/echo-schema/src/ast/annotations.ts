@@ -9,6 +9,7 @@ import { AST, S } from '@dxos/effect';
 
 import { checkIdNotPresentOnSchema } from './schema-validator';
 import { type StoredSchema } from '../mutable';
+import type { Primitive } from '@dxos/util';
 
 /**
  * Marker interface for object with an `id`.
@@ -66,28 +67,28 @@ export const getSchemaTypename = (schema: S.Schema<any>): string | undefined => 
 
 export const PropertyMetaAnnotationId = Symbol.for('@dxos/schema/annotation/PropertyMeta');
 
-export type PropertyMetaValue = Record<string, string | number | boolean | undefined>;
+export type PropertyMetaValue = Primitive | Record<string, Primitive> | Primitive[];
 
 export type PropertyMetaAnnotation = {
-  [namespace: string]: PropertyMetaValue;
+  [name: string]: PropertyMetaValue;
 };
 
 export const PropertyMeta =
-  (namespace: string, meta: PropertyMetaValue) =>
+  (name: string, value: PropertyMetaValue) =>
   <A, I, R>(self: S.Schema<A, I, R>): S.Schema<A, I, R> => {
     const existingMeta = self.ast.annotations[PropertyMetaAnnotationId] as PropertyMetaAnnotation;
     return self.annotations({
       [PropertyMetaAnnotationId]: {
         ...existingMeta,
-        [namespace]: { ...(existingMeta ?? {})[namespace], ...meta },
+        [name]: value,
       },
     });
   };
 
-export const getPropertyMetaAnnotation = <T>(prop: AST.PropertySignature, namespace: string) =>
+export const getPropertyMetaAnnotation = <T>(prop: AST.PropertySignature, name: string) =>
   pipe(
     AST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(prop.type),
-    Option.map((meta) => meta[namespace] as T),
+    Option.map((meta) => meta[name] as T),
     Option.getOrElse(() => undefined),
   );
 

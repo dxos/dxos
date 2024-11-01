@@ -81,15 +81,12 @@ describe('effect-to-json', () => {
     expect(getEchoProp(jsonSchema.properties.field)).to.be.undefined;
   });
 
-  test.only('annotations', () => {
+  test('annotations', () => {
     class Schema extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
       name: S.String.annotations({ description: 'Person name' }),
-      email: S.String.annotations({ description: 'Email address' }).pipe(
-        PropertyMeta('dxos.schema', { format: 'email' }),
-      ),
+      email: S.String.annotations({ description: 'Email address' }).pipe(PropertyMeta('dxos.format', 'email')),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
-
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
       type: 'object',
@@ -100,7 +97,7 @@ describe('effect-to-json', () => {
         email: {
           type: 'string',
           description: 'Email address',
-          $echo: { annotations: { 'dxos.schema': { format: 'email' } } },
+          $echo: { annotations: { 'dxos.format': 'email' } },
         },
       },
       additionalProperties: false,
@@ -108,8 +105,7 @@ describe('effect-to-json', () => {
         type: { typename: 'example.com/type/Contact', version: '0.1.0' },
       },
     });
-
-    log.info('', { jsonSchema });
+    // log.info('', { jsonSchema });
   });
 
   const expectReferenceAnnotation = (object: JSONSchema.JsonSchema7) => {
@@ -138,7 +134,7 @@ describe('json-to-effect', () => {
           object: S.Struct({ id: S.String, field: ref(Nested) }),
           echoObject: ref(Nested),
           echoObjectArray: S.Array(ref(Nested)),
-          email: S.String.pipe(PropertyMeta('dxos.schema', { format: 'email' })),
+          email: S.String.pipe(PropertyMeta('dxos.format', 'email')),
           null: S.Null,
         },
         partial ? { partial } : {},
