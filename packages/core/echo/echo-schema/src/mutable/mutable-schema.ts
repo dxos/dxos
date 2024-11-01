@@ -19,6 +19,7 @@ export interface MutableSchemaConstructor extends S.Schema<MutableSchema> {
   new (): HasId;
 }
 
+// TODO(burdon): Rename StoredSchemaBase.
 export const MutableSchemaBase = (): MutableSchemaConstructor => {
   return class {
     static get ast() {

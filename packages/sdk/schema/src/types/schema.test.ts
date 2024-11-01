@@ -6,8 +6,8 @@ import { AST, Schema as S } from '@effect/schema';
 import { describe, test } from 'vitest';
 
 import {
-  createEmptySchema,
-  dynamicRef,
+  createStoredSchema,
+  createReferenceAnnotation,
   setProperty,
   composeSchema,
   create,
@@ -70,10 +70,10 @@ describe('schema composition', () => {
   });
 
   test('dynamic schema definitions with references', async () => {
-    const orgSchema = createEmptySchema('example.com/type/Org', '0.1.0');
+    const orgSchema = createStoredSchema('example.com/type/Org', '0.1.0');
     setProperty(orgSchema.jsonSchema, 'name', S.String.annotations({ [AST.DescriptionAnnotationId]: 'Org name' }));
 
-    const personSchema = createEmptySchema('example.com/type/Person', '0.1.0');
+    const personSchema = createStoredSchema('example.com/type/Person', '0.1.0');
     setProperty(
       personSchema.jsonSchema,
       'name',
@@ -92,7 +92,7 @@ describe('schema composition', () => {
     setProperty(
       personSchema.jsonSchema,
       'org',
-      dynamicRef(orgSchema).annotations({ [AST.DescriptionAnnotationId]: 'Employer' }),
+      createReferenceAnnotation(orgSchema).annotations({ [AST.DescriptionAnnotationId]: 'Employer' }),
     );
 
     const personView = create(ViewSchema, {

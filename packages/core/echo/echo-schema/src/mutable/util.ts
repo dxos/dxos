@@ -2,41 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S } from '@dxos/effect';
+import { type S } from '@dxos/effect';
 
 import { StoredSchema } from './types';
-import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '../ast';
 import { create } from '../handler';
-import { type JsonSchemaType, toJsonSchema } from '../json';
+import { type JsonSchemaType, createJsonSchema, toJsonSchema } from '../json';
 import { type ReactiveObject } from '../types';
 
-// TODO(burdon): Move to different file?
-
 /**
- * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
- * @example $.name
+ * Create empty stored schema.
  */
-export type JsonPath = string & { __JsonPath: true };
-
-/**
- *
- */
-// TODO(burdon): Move to json.
-export const createEmptyJsonSchema = () => {
-  const schema = toJsonSchema(S.Struct({}));
-  schema.type = 'object';
-  return schema;
-};
-
-/**
- *
- */
-// TODO(burdon): Rename createSchema.
-export const createEmptySchema = (typename: string, version: string): ReactiveObject<StoredSchema> => {
+export const createStoredSchema = (typename: string, version: string): ReactiveObject<StoredSchema> => {
   return create(StoredSchema, {
+    jsonSchema: createJsonSchema(),
     typename,
     version,
-    jsonSchema: createEmptyJsonSchema(),
   });
 };
 
@@ -77,18 +57,4 @@ export const deleteAnnotation = (schema: JsonSchemaType, property: string, annot
   if (annotation) {
     delete annotations[annotation];
   }
-};
-
-/**
- *
- */
-// TODO(burdon): Rename createReferenceAnnotation?
-export const dynamicRef = (obj: StoredSchema): S.Schema.AnyNoContext => {
-  return S.Any.annotations({
-    [ReferenceAnnotationId]: {
-      schemaId: obj.id,
-      typename: obj.typename,
-      version: obj.version,
-    } satisfies ReferenceAnnotationValue,
-  });
 };

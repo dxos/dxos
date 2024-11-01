@@ -8,6 +8,7 @@ import { type Simplify } from 'effect/Types';
 import { AST, S } from '@dxos/effect';
 
 import { checkIdNotPresentOnSchema } from './schema-validator';
+import { type StoredSchema } from '../mutable';
 
 /**
  * Marker interface for object with an `id`.
@@ -103,3 +104,12 @@ export const getReferenceAnnotation = (schema: S.Schema<any>) =>
     AST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId)(schema.ast),
     Option.getOrElse(() => undefined),
   );
+
+export const createReferenceAnnotation = (obj: StoredSchema): S.Schema.AnyNoContext =>
+  S.Any.annotations({
+    [ReferenceAnnotationId]: {
+      schemaId: obj.id,
+      typename: obj.typename,
+      version: obj.version,
+    } satisfies ReferenceAnnotationValue,
+  });

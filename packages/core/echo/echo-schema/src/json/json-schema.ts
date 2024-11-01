@@ -25,6 +25,15 @@ export const getEchoProp = (obj: JSONSchema.JsonSchema7Object | JSONSchema.JsonS
   return (obj as any)[ECHO_REFINEMENT_KEY];
 };
 
+/**
+ *
+ */
+export const createJsonSchema = (schema: S.Struct<any> = S.Struct({})) => {
+  const jsonSchema = toJsonSchema(schema);
+  jsonSchema.type = 'object';
+  return jsonSchema;
+};
+
 interface EchoRefinement {
   type?: ObjectAnnotation;
   reference?: ObjectAnnotation;
