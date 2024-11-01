@@ -6,7 +6,13 @@ import React, { type ReactNode, useMemo } from 'react';
 
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { FieldKindEnums, type FieldPropertiesType, type FieldType, type ViewType } from '@dxos/schema';
+import {
+  FieldKindEnums,
+  FieldPropertiesSchema,
+  type FieldPropertiesType,
+  type FieldType,
+  type ViewType,
+} from '@dxos/schema';
 
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -24,6 +30,7 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
   const { t } = useTranslation(translationKey);
 
   const { values, getInputProps, errors, touched, canSubmit, handleSubmit } = useForm<FieldPropertiesType>({
+    schema: FieldPropertiesSchema,
     // TODO(burdon): Caller should pass in the value (and clone if necessary).
     initialValues: { ...field } as FieldPropertiesType,
     additionalValidation: (values) => {
