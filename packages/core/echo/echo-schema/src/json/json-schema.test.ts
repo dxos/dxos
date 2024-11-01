@@ -96,11 +96,11 @@ describe('effect-to-json', () => {
         email: {
           type: 'string',
           description: 'Email address',
-          $echo: { annotations: { 'dxos.format': 'email' } },
+          echo: { annotations: { 'dxos.format': 'email' } },
         },
       },
       additionalProperties: false,
-      $echo: {
+      echo: {
         type: { typename: 'example.com/type/Contact', version: '0.1.0' },
       },
     });

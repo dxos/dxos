@@ -44,16 +44,16 @@ export const deleteProperty = (schema: JsonSchemaType, property: string) => {
 // TODO(burdon): Change annotation to FQ symbol?
 // TODO(burdon): Can we normalize this API to be more like `.annotations({ [key]: value })`?
 export const setAnnotation = (schema: JsonSchemaType, property: string, annotations: Record<string, any>) => {
-  (schema as any).properties[property].$echo ??= {};
-  (schema as any).properties[property].$echo.annotations ??= {};
-  Object.assign((schema as any).properties[property].$echo.annotations, annotations);
+  (schema as any).properties[property].echo ??= {};
+  (schema as any).properties[property].echo.annotations ??= {};
+  Object.assign((schema as any).properties[property].echo.annotations, annotations);
 };
 
 /**
  *
  */
 export const deleteAnnotation = (schema: JsonSchemaType, property: string, annotation: string) => {
-  const annotations = (schema as any).properties[property]?.$echo?.annotations;
+  const annotations = (schema as any).properties[property]?.echo?.annotations;
   if (annotation) {
     delete annotations[annotation];
   }

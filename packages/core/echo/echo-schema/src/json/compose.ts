@@ -8,8 +8,8 @@ import { type JsonSchemaType } from './types';
 
 /*
 TODO(dima)
-- $echo -> echo
-- $echo.annotations -> annotations?
+- echo -> echo
+- echo.annotations -> annotations?
 - anyOf: ReactiveArray(2) [ { type: 'object' }, { type: 'array' } ], on toJsonSchema(S.Struct({}))
 - FieldMeta -> PropertyMeta
 */
@@ -25,14 +25,14 @@ export const composeSchema = (source: JsonSchemaType, target: JsonSchemaType): J
 
   for (const prop in result.properties) {
     const propSchema = source.properties[prop]; // TODO(dmaretskyi): Find by json-path instead.
-    const annotations = (propSchema as any)?.$echo?.annotations;
+    const annotations = (propSchema as any)?.echo?.annotations;
     if (annotations) {
-      (result.properties[prop] as any).$echo ??= {};
-      (result.properties[prop] as any).$echo.annotations ??= {};
+      (result.properties[prop] as any).echo ??= {};
+      (result.properties[prop] as any).echo.annotations ??= {};
       for (const key in annotations) {
-        (result.properties[prop] as any).$echo.annotations[key] ??= {};
-        Object.assign((result.properties[prop] as any).$echo.annotations[key], annotations[key], {
-          ...(result.properties[prop] as any).$echo.annotations[key],
+        (result.properties[prop] as any).echo.annotations[key] ??= {};
+        Object.assign((result.properties[prop] as any).echo.annotations[key], annotations[key], {
+          ...(result.properties[prop] as any).echo.annotations[key],
         });
       }
     }

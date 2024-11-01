@@ -41,7 +41,7 @@ describe('schema composition', () => {
     expect((composedSchema as any).properties).toEqual({
       email: {
         type: 'string',
-        $echo: {
+        echo: {
           annotations: {
             [FILED_KIND_ANNOTATION]: FieldKindEnum.Email,
             [FILED_PATH_ANNOTATION]: '$.email',

@@ -126,7 +126,7 @@
           "todo": {
             "$id": "/schemas/any",
             "title": "any",
-            "$echo": {
+            "echo": {
               "reference": {
                 "typename": "example.org/type/Todo",
                 "version": "0.1.0"
@@ -135,7 +135,7 @@
           }
         },
         "additionalProperties": false,
-        "$echo": {
+        "echo": {
           "type": {
             "schemaId": "01J0RBDM1Q53NQDW8TFG9EBA72",
             "typename": "example.org/type/TestType",
