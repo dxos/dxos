@@ -10,7 +10,7 @@ import { Invitation } from '@dxos/react-client/invitations';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { InvitationList } from './InvitationList';
-import { inviteWithState } from '../../testing';
+import { inviteWithState } from '../../testing/fixtures';
 
 export default {
   title: 'sdk/shell/InvitationList',
