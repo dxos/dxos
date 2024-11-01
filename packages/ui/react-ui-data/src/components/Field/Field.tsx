@@ -25,6 +25,9 @@ export type FieldProps = ThemedClassName<{
   onSave?: (field: FieldType) => void;
 }>;
 
+// TODO(ZaymonFC): This is a composite, but we need to build up a description of everything this form might
+// handle. Maybe we'll compose this too.
+//
 // Basic form schema requirements.
 // Source validations from annotations / .... somewhere?
 const formSchema = S.mutable(
