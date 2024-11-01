@@ -8,7 +8,7 @@ import {
   MutableSchema,
   type ObjectAnnotation,
   ObjectAnnotationId,
-  effectToJsonSchema,
+  toJsonSchema,
   getObjectAnnotation,
   makeStaticSchema,
   type StaticSchema,
@@ -136,7 +136,7 @@ export class MutableSchemaRegistry {
       [ObjectAnnotationId]: { ...typeAnnotation, schemaId: schemaToStore.id } satisfies ObjectAnnotation,
     });
 
-    schemaToStore.jsonSchema = effectToJsonSchema(updatedSchema);
+    schemaToStore.jsonSchema = toJsonSchema(updatedSchema);
     const storedSchema = this._db.add(schemaToStore);
     const result = this._register(storedSchema);
     this._notifySchemaListChanged();

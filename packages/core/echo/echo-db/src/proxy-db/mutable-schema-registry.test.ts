@@ -9,7 +9,7 @@ import {
   MutableSchema,
   type ObjectAnnotation,
   ObjectAnnotationId,
-  effectToJsonSchema,
+  toJsonSchema,
   makeStaticSchema,
   StoredSchema,
   TypedObject,
@@ -24,12 +24,12 @@ const TestType: ObjectAnnotation = { typename: 'example.com/TestType', version: 
 const createTestSchemas = () => [
   create(StoredSchema, {
     ...TestType,
-    jsonSchema: effectToJsonSchema(S.Struct({ field: S.String })),
+    jsonSchema: toJsonSchema(S.Struct({ field: S.String })),
   }),
   create(StoredSchema, {
     ...TestType,
     typename: TestType.typename + '2',
-    jsonSchema: effectToJsonSchema(S.Struct({ field: S.Number })),
+    jsonSchema: toJsonSchema(S.Struct({ field: S.Number })),
   }),
 ];
 
@@ -95,7 +95,7 @@ describe('schema registry', () => {
     const { db, registry } = await setupTest();
     const schemaToStore = create(StoredSchema, {
       ...TestType,
-      jsonSchema: effectToJsonSchema(S.Struct({ field: S.Number })),
+      jsonSchema: toJsonSchema(S.Struct({ field: S.Number })),
     });
     expect(registry.hasSchema(new MutableSchema(schemaToStore))).to.be.false;
     const storedSchema = db.add(schemaToStore);
@@ -106,7 +106,7 @@ describe('schema registry', () => {
     const { db, registry } = await setupTest();
     const schemaToStore = create(StoredSchema, {
       ...TestType,
-      jsonSchema: effectToJsonSchema(S.Struct({ field: S.Number })),
+      jsonSchema: toJsonSchema(S.Struct({ field: S.Number })),
     });
     expect(() => registry.registerSchema(schemaToStore)).to.throw();
     db.add(schemaToStore);

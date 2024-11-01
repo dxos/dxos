@@ -2,21 +2,28 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Mutable } from 'effect/Types';
+import { type Types } from 'effect';
 
 import { AST, JSONSchema, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import {
-  type PropertyMetaAnnotation,
-  PropertyMetaAnnotationId,
   type ObjectAnnotation,
   ObjectAnnotationId,
+  type PropertyMetaAnnotation,
+  PropertyMetaAnnotationId,
   ReferenceAnnotationId,
 } from '../ast';
 import { createEchoReferenceSchema } from '../handler';
 
+/**
+ * @internal
+ */
 const ECHO_REFINEMENT_KEY = '$echo';
+
+export const getEchoProp = (obj: JSONSchema.JsonSchema7Object | JSONSchema.JsonSchema7): any => {
+  return (obj as any)[ECHO_REFINEMENT_KEY];
+};
 
 interface EchoRefinement {
   type?: ObjectAnnotation;
@@ -65,6 +72,7 @@ export const toPropType = (type?: PropType): string => {
 /**
  * @deprecated Use TS-Effect types to generate JSON Schema
  */
+// TODO(burdon): Remove.
 export type JsonSchema = {
   $schema?: string;
   $id?: string;
@@ -76,7 +84,12 @@ export type JsonSchema = {
   items?: JsonSchema;
 };
 
-export const effectToJsonSchema = (schema: S.Schema.Any): any => {
+/**
+ * Convert effect schema to JSON Schema.
+ * @param schema
+ */
+// TODO(burdon): Return type def.
+export const toJsonSchema = (schema: S.Schema.Any): JSONSchema.JsonSchema7Object => {
   const withEchoRefinements = (ast: AST.AST): AST.AST => {
     let recursiveResult: AST.AST = ast;
     if (AST.isTypeLiteral(ast)) {
@@ -106,22 +119,25 @@ export const effectToJsonSchema = (schema: S.Schema.Any): any => {
         ast.annotations,
       );
     }
+
     const refinement: EchoRefinement = {};
     for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
       if (ast.annotations[annotation] != null) {
         refinement[annotationToRefinementKey[annotation]] = ast.annotations[annotation] as any;
       }
     }
+
     if (Object.keys(refinement).length === 0) {
       return recursiveResult;
     }
+
     return new AST.Refinement(recursiveResult, () => null as any, {
       [AST.JSONSchemaAnnotationId]: { [ECHO_REFINEMENT_KEY]: refinement },
     });
   };
 
   const schemaWithRefinements = S.make(withEchoRefinements(schema.ast));
-  return JSONSchema.make(schemaWithRefinements);
+  return JSONSchema.make(schemaWithRefinements) as JSONSchema.JsonSchema7Object;
 };
 
 const jsonToEffectTypeSchema = (
@@ -170,7 +186,7 @@ const jsonToEffectTypeSchema = (
 
   invariant(immutableIdField, 'no id in echo type');
   const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
-  const annotations: Mutable<S.Annotations.Schema<any>> = {};
+  const annotations: Types.Mutable<S.Annotations.Schema<any>> = {};
   for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
     if (echoRefinement[annotationToRefinementKey[annotation]]) {
       annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];

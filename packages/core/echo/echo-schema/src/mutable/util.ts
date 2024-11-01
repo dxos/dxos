@@ -7,7 +7,7 @@ import { S } from '@dxos/effect';
 import { StoredSchema } from './types';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '../ast';
 import { create } from '../handler';
-import { type JsonSchemaType, effectToJsonSchema } from '../json';
+import { type JsonSchemaType, toJsonSchema } from '../json';
 import { type ReactiveObject } from '../types';
 
 // TODO(burdon): Move to different file?
@@ -23,7 +23,7 @@ export type JsonPath = string & { __JsonPath: true };
  */
 // TODO(burdon): Move to json.
 export const createEmptyJsonSchema = () => {
-  const schema = effectToJsonSchema(S.Struct({}));
+  const schema = toJsonSchema(S.Struct({}));
   schema.type = 'object';
   return schema;
 };
@@ -44,8 +44,9 @@ export const createEmptySchema = (typename: string, version: string): ReactiveOb
  * Set or update property.
  */
 export const setProperty = (schema: JsonSchemaType, property: string, type: S.Schema.Any) => {
-  const jsonSchema = effectToJsonSchema(type as S.Schema<any>);
-  delete jsonSchema.$schema; // Remove $schema on leaf nodes.
+  const jsonSchema = toJsonSchema(type as S.Schema<any>);
+  // TODO(burdon): Is this required?
+  delete (jsonSchema as any).$schema; // Remove $schema on leaf nodes.
   (schema as any).properties ??= {};
   (schema as any).properties[property] = jsonSchema;
 };

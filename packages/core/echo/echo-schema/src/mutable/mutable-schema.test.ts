@@ -12,7 +12,7 @@ import { MutableSchema } from './mutable-schema';
 import { StoredSchema } from './types';
 import { PropertyMeta, getObjectAnnotation, getPropertyMetaAnnotation } from '../ast';
 import { create } from '../handler';
-import { effectToJsonSchema } from '../json';
+import { toJsonSchema } from '../json';
 import { TypedObject } from '../object';
 import { getTypeReference } from '../proxy';
 import { EmptySchemaType } from '../testing';
@@ -101,7 +101,7 @@ describe('dynamic schema', () => {
       create(StoredSchema, {
         typename: getTypeReference(schema)!.objectId,
         version: '0.1.0',
-        jsonSchema: effectToJsonSchema(schema),
+        jsonSchema: toJsonSchema(schema),
       }),
     );
 

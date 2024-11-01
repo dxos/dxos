@@ -60,7 +60,7 @@ const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
     //   return object(StoredEchoSchema, {
     //     typename: 'Project',
     //     version: '0.1.0',
-    //     jsonSchema: effectToJsonSchema(
+    //     jsonSchema: toJsonSchema(
     //
     //     ),
     //   })

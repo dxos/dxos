@@ -6,25 +6,24 @@ import { AST, Schema as S } from '@effect/schema';
 import { describe, test } from 'vitest';
 
 import {
-  composeSchema,
-  create,
   createEmptySchema,
   dynamicRef,
-  effectToJsonSchema,
-  ref,
   setProperty,
+  composeSchema,
+  create,
+  getTypename,
+  toJsonSchema,
+  ref,
   type JsonPath,
   TypedObject,
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { FieldKind, FieldKindEnum, FieldPath } from './annotations';
+import { FieldKind, FieldPath, FieldKindEnum } from './annotations';
 import { ViewSchema } from './view';
 
-// TODO(burdon): Add expects.
-// TODO(burdon): Move tests to echo-schema?
 describe('schema composition', () => {
-  test.only('schema composition', ({ expect }) => {
+  test('schema composition', ({ expect }) => {
     class BaseType extends TypedObject({ typename: 'example.com/Person', version: '0.1.0' })({
       name: S.String,
       email: S.String,
@@ -34,8 +33,8 @@ describe('schema composition', () => {
       email: S.String.pipe(FieldPath('$.email' as JsonPath)).pipe(FieldKind(FieldKindEnum.Email)),
     });
 
-    const baseSchema = effectToJsonSchema(BaseType);
-    const overlaySchema = effectToJsonSchema(OverlaySchema);
+    const baseSchema = toJsonSchema(BaseType);
+    const overlaySchema = toJsonSchema(OverlaySchema);
     const composedSchema = composeSchema(baseSchema, overlaySchema);
 
     // TODO(burdon): Remove any cast?
@@ -51,7 +50,7 @@ describe('schema composition', () => {
     });
   });
 
-  test('static schema definitions with references', async () => {
+  test('static schema definitions with references', async ({ expect }) => {
     class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
       name: S.String,
     }) {}
@@ -62,23 +61,19 @@ describe('schema composition', () => {
       org: ref(Org),
     }) {}
 
-    log.info('schema', { org: effectToJsonSchema(Org), person: effectToJsonSchema(Person) });
-
     const org = create(Org, { name: 'Org' });
     const person = create(Person, { name: 'John', email: 'john@example.com', org });
-
-    log.info('schema', { org, person });
+    log.info('schema', { org: toJsonSchema(Org), person: toJsonSchema(Person) });
+    log.info('objects', { org, person });
+    expect(getTypename(org)).to.eq(Org.typename);
+    expect(getTypename(person)).to.eq(Person.typename);
   });
 
   test('dynamic schema definitions with references', async () => {
     const orgSchema = createEmptySchema('example.com/type/Org', '0.1.0');
-
     setProperty(orgSchema.jsonSchema, 'name', S.String.annotations({ [AST.DescriptionAnnotationId]: 'Org name' }));
 
-    log.info('org', { orgSchema });
-
     const personSchema = createEmptySchema('example.com/type/Person', '0.1.0');
-
     setProperty(
       personSchema.jsonSchema,
       'name',
@@ -100,30 +95,25 @@ describe('schema composition', () => {
       dynamicRef(orgSchema).annotations({ [AST.DescriptionAnnotationId]: 'Employer' }),
     );
 
-    log.info('person', { personSchema });
-
     const personView = create(ViewSchema, {
       schema: personSchema.jsonSchema,
-      // schema: effectToJsonSchema(
-      // S.Struct({
-      // name: S.String,
-      // email: S.String,
-      // org: dynamicRef(orgSchema).annotations({ [AST.DescriptionAnnotationId]: 'Employer' }),
-      // }),
-      // ),
       query: {
         __typename: personSchema.typename,
       },
-      fields: [],
+      fields: [
+        {
+          path: 'name',
+        },
+        {
+          path: 'email',
+        },
+        {
+          path: 'org',
+        },
+      ],
     });
 
-    log.info('view', { personView });
-
-    // const composedSchema = composeSchema(
-    // JSON.parse(JSON.stringify(personSchema)).jsonSchema,
-    // JSON.parse(JSON.stringify(personView)).schema,
-    // );
-
-    // log.info('composed', { composedSchema });
+    log.info('schema', { org: orgSchema, person: personSchema });
+    log.info('view', { person: personView });
   });
 });

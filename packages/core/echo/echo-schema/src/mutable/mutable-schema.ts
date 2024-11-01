@@ -13,7 +13,7 @@ import {
 } from './manipulation';
 import { StoredSchema } from './types';
 import { type HasId, schemaVariance } from '../ast';
-import { effectToJsonSchema, jsonToEffectSchema } from '../json';
+import { toJsonSchema, jsonToEffectSchema } from '../json';
 
 export interface MutableSchemaConstructor extends S.Schema<MutableSchema> {
   new (): HasId;
@@ -105,22 +105,22 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
 
   public addFields(fields: S.Struct.Fields) {
     const extended = addFieldsToSchema(this._getSchema(), fields);
-    this.serializedSchema.jsonSchema = effectToJsonSchema(extended);
+    this.serializedSchema.jsonSchema = toJsonSchema(extended);
   }
 
   public updateFields(fields: S.Struct.Fields) {
     const updated = updateFieldsInSchema(this._getSchema(), fields);
-    this.serializedSchema.jsonSchema = effectToJsonSchema(updated);
+    this.serializedSchema.jsonSchema = toJsonSchema(updated);
   }
 
   public updateFieldPropertyName({ before, after }: { before: PropertyKey; after: PropertyKey }) {
     const renamed = updateFieldNameInSchema(this._getSchema(), { before, after });
-    this.serializedSchema.jsonSchema = effectToJsonSchema(renamed);
+    this.serializedSchema.jsonSchema = toJsonSchema(renamed);
   }
 
   public removeFields(fieldNames: string[]) {
     const removed = removeFieldsFromSchema(this._getSchema(), fieldNames);
-    this.serializedSchema.jsonSchema = effectToJsonSchema(removed);
+    this.serializedSchema.jsonSchema = toJsonSchema(removed);
   }
 
   public getProperties(): AST.PropertySignature[] {

@@ -9,7 +9,7 @@ import {
   MutableSchema,
   EchoObject,
   ObjectAnnotationId,
-  effectToJsonSchema,
+  toJsonSchema,
   getObjectAnnotation,
   ref,
   StoredSchema,
@@ -46,7 +46,7 @@ const createDynamicSchema = (typename: string, fields: S.Struct.Fields): Mutable
   const updatedSchema = typeSchema.annotations({
     [ObjectAnnotationId]: { ...typeAnnotation, schemaId: schemaToStore.id },
   });
-  schemaToStore.jsonSchema = effectToJsonSchema(updatedSchema);
+  schemaToStore.jsonSchema = toJsonSchema(updatedSchema);
   return new MutableSchema(schemaToStore);
 };
 

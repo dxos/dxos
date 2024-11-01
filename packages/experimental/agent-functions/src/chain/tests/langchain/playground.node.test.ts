@@ -34,7 +34,7 @@ import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { z } from 'zod';
 
-import { effectToJsonSchema } from '@dxos/echo-schema';
+import { toJsonSchema } from '@dxos/echo-schema';
 
 import { getConfig, getKey } from '../../../util';
 
@@ -247,7 +247,7 @@ describe.skip('LangChain', () => {
       ).annotations({ [AST.DescriptionAnnotationId]: 'An array of people mentioned in the text' }),
     });
 
-    const jsonSchema: Record<string, unknown> = effectToJsonSchema(defs) as any;
+    const jsonSchema: Record<string, unknown> = toJsonSchema(defs) as any;
     const model = createModel().bind({
       functions: [
         {

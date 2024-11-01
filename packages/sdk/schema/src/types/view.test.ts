@@ -5,7 +5,7 @@
 import { describe, test, beforeEach, afterEach } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { TypedObject, effectToJsonSchema } from '@dxos/echo-schema';
+import { TypedObject, toJsonSchema } from '@dxos/echo-schema';
 
 import { type ViewType } from './view';
 
@@ -25,7 +25,7 @@ describe('view', () => {
     class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({}) {}
     const schema = db.schema.addSchema(TestSchema);
     const view: ViewType = {
-      schema: effectToJsonSchema(TestSchema),
+      schema: toJsonSchema(TestSchema),
       query: {
         __typename: schema.typename,
       },

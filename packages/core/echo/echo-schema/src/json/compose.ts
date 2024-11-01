@@ -10,7 +10,7 @@ import { type JsonSchemaType } from './types';
 TODO(dima)
 - $echo -> echo
 - $echo.annotations -> annotations?
-- anyOf: ReactiveArray(2) [ { type: 'object' }, { type: 'array' } ], on effectToJsonSchema(S.Struct({}))
+- anyOf: ReactiveArray(2) [ { type: 'object' }, { type: 'array' } ], on toJsonSchema(S.Struct({}))
 - FieldMeta -> PropertyMeta
 */
 

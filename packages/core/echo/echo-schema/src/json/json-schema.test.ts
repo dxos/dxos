@@ -4,23 +4,21 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { S } from '@dxos/effect';
+import { type JSONSchema, S } from '@dxos/effect';
 
-import { effectToJsonSchema, jsonToEffectSchema } from './json-schema';
+import { toJsonSchema, jsonToEffectSchema, getEchoProp } from './json-schema';
 import { PropertyMeta } from '../ast';
 import { ref } from '../handler';
 import { TypedObject } from '../object';
 
 describe('effect-to-json', () => {
-  const ECHO_KEY = '$echo';
-
   test('type annotation', () => {
     class Schema extends TypedObject({
       typename: 'example.com/type/Test',
       version: '0.1.0',
     })({ field: S.String }) {}
-    const jsonSchema = effectToJsonSchema(Schema);
-    expect(jsonSchema[ECHO_KEY].type).to.deep.eq({
+    const jsonSchema = toJsonSchema(Schema);
+    expect(getEchoProp(jsonSchema).type).to.deep.eq({
       typename: 'example.com/type/Test',
       version: '0.1.0',
     });
@@ -35,8 +33,8 @@ describe('effect-to-json', () => {
     })({
       field: S.String.pipe(PropertyMeta(metaNamespace, meta)),
     }) {}
-    const jsonSchema = effectToJsonSchema(Schema);
-    expect(jsonSchema.properties.field[ECHO_KEY].annotations[metaNamespace]).to.deep.eq(meta);
+    const jsonSchema = toJsonSchema(Schema);
+    expect(getEchoProp(jsonSchema.properties.field).annotations[metaNamespace]).to.deep.eq(meta);
   });
 
   test('reference annotation', () => {
@@ -46,7 +44,7 @@ describe('effect-to-json', () => {
     class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
       field: ref(Nested),
     }) {}
-    const jsonSchema = effectToJsonSchema(Schema);
+    const jsonSchema = toJsonSchema(Schema);
     const nested = jsonSchema.properties.field;
     expectReferenceAnnotation(nested);
   });
@@ -58,8 +56,9 @@ describe('effect-to-json', () => {
     class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
       field: S.Array(ref(Nested)),
     }) {}
-    const jsonSchema = effectToJsonSchema(Schema);
-    expectReferenceAnnotation(jsonSchema.properties.field.items);
+
+    const jsonSchema = toJsonSchema(Schema);
+    expectReferenceAnnotation((jsonSchema.properties.field as any).items);
   });
 
   test('optional references', () => {
@@ -69,19 +68,22 @@ describe('effect-to-json', () => {
     class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
       field: S.optional(ref(Nested)),
     }) {}
-    const jsonSchema = effectToJsonSchema(Schema);
+    const jsonSchema = toJsonSchema(Schema);
     expectReferenceAnnotation(jsonSchema.properties.field);
   });
 
   test('regular objects are not annotated', () => {
     const object = S.Struct({ field: S.Struct({ field: S.String }) });
-    const jsonSchema = effectToJsonSchema(object);
-    expect(jsonSchema[ECHO_KEY]).to.be.undefined;
-    expect(jsonSchema.properties.field[ECHO_KEY]).to.be.undefined;
+    const jsonSchema = toJsonSchema(object);
+    expect(getEchoProp(jsonSchema)).to.be.undefined;
+    expect(getEchoProp(jsonSchema.properties.field)).to.be.undefined;
   });
 
-  const expectReferenceAnnotation = (object: any) => {
-    expect(object[ECHO_KEY].reference).to.deep.eq({ typename: 'example.com/type/TestNested', version: '0.1.0' });
+  const expectReferenceAnnotation = (object: JSONSchema.JsonSchema7) => {
+    expect(getEchoProp(object).reference).to.deep.eq({
+      typename: 'example.com/type/TestNested',
+      version: '0.1.0',
+    });
   };
 });
 
@@ -108,7 +110,7 @@ describe('json-to-effect', () => {
         partial ? { partial } : {},
       ) {}
 
-      const jsonSchema = effectToJsonSchema(Schema);
+      const jsonSchema = toJsonSchema(Schema);
       const schema = jsonToEffectSchema(jsonSchema);
       expect(() => expect(schema.ast).to.deep.eq(Schema.ast)).to.throw();
       expect(() => expect(removeFilterFunction(schema.ast)).to.deep.eq(Schema.ast)).to.throw();
