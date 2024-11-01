@@ -44,7 +44,6 @@ export const getType = <T extends {}>(obj: T | undefined): Reference | undefined
   if (obj == null) {
     return undefined;
   }
-
   if (isReactiveObject(obj)) {
     return getProxyHandler(obj).getTypeReference(obj);
   }

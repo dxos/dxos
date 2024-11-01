@@ -4,7 +4,9 @@
   "sourceRoot": "{projectRoot}/src",
   "targets": {
     "compile": {
-      "dependsOn": ["^compile"],
+      "dependsOn": [
+        "^compile"
+      ],
       "executor": "@nx/js:tsc",
       "options": {
         "main": "{projectRoot}/src/index.ts",
@@ -14,5 +16,8 @@
     },
     "lint": {}
   },
-  "implicitDependencies": ["esbuild-plugins", "log-hook"]
+  "implicitDependencies": [
+    "esbuild-plugins",
+    "log-hook"
+  ]
 }

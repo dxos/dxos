@@ -97,52 +97,9 @@ export type JsonSchema = {
  * Convert effect schema to JSON Schema.
  * @param schema
  */
-// TODO(burdon): Return type def.
 export const toJsonSchema = (schema: S.Schema.Any): JSONSchema.JsonSchema7Object => {
-  const withEchoRefinements = (ast: AST.AST): AST.AST => {
-    let recursiveResult: AST.AST = ast;
-    if (AST.isTypeLiteral(ast)) {
-      recursiveResult = new AST.TypeLiteral(
-        ast.propertySignatures.map(
-          (prop) =>
-            new AST.PropertySignature(
-              prop.name,
-              withEchoRefinements(prop.type),
-              prop.isOptional,
-              prop.isReadonly,
-              prop.annotations,
-            ),
-        ),
-        ast.indexSignatures,
-      );
-    } else if (AST.isUnion(ast)) {
-      recursiveResult = AST.Union.make(
-        ast.types.map((t) => withEchoRefinements(t)),
-        ast.annotations,
-      );
-    } else if (AST.isTupleType(ast)) {
-      recursiveResult = new AST.TupleType(
-        ast.elements.map((t) => new AST.OptionalType(withEchoRefinements(t.type), t.isOptional, t.annotations)),
-        ast.rest.map((t) => new AST.Type(withEchoRefinements(t.type), t.annotations)),
-        ast.isReadonly,
-        ast.annotations,
-      );
-    }
-
-    const annotationFields = annotationsToJsonSchemaFields(ast.annotations);
-
-    if (Object.keys(annotationFields).length === 0) {
-      return recursiveResult;
-    } else {
-      return new AST.Refinement(recursiveResult, () => null as any, {
-        [AST.JSONSchemaAnnotationId]: annotationFields,
-      });
-    }
-  };
-
   const schemaWithRefinements = S.make(withEchoRefinements(schema.ast));
   const jsonSchema = JSONSchema.make(schemaWithRefinements) as JSONSchema.JsonSchema7Object;
-
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     // Put id first.
     jsonSchema.properties = Object.assign({ id: undefined }, jsonSchema.properties);
@@ -151,65 +108,51 @@ export const toJsonSchema = (schema: S.Schema.Any): JSONSchema.JsonSchema7Object
   return jsonSchema;
 };
 
-const jsonToEffectTypeSchema = (
-  root: JSONSchema.JsonSchema7Object,
-  defs: JSONSchema.JsonSchema7Root['$defs'],
-): S.Schema<any> => {
-  invariant('type' in root && root.type === 'object', `not an object: ${root}`);
-  const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
-  const fields: S.Struct.Fields = {};
-  const propertyList = Object.entries(root.properties ?? {});
-  let immutableIdField: S.Schema<any> | undefined;
-  for (const [key, value] of propertyList) {
-    if (echoRefinement?.type && key === 'id') {
-      immutableIdField = jsonToEffectSchema(value, defs);
-    } else {
-      // TODO(burdon): Mutable cast.
-      (fields as any)[key] = root.required.includes(key)
-        ? jsonToEffectSchema(value, defs)
-        : S.optional(jsonToEffectSchema(value, defs));
-    }
-  }
-
-  let schemaWithoutEchoId: S.Schema<any, any, unknown>;
-  if (root.patternProperties) {
-    invariant(propertyList.length === 0, 'pattern properties mixed with regular properties are not supported');
-    invariant(
-      Object.keys(root.patternProperties).length === 1 && Object.keys(root.patternProperties)[0] === '',
-      'only one pattern property is supported',
+const withEchoRefinements = (ast: AST.AST): AST.AST => {
+  let recursiveResult: AST.AST = ast;
+  if (AST.isTypeLiteral(ast)) {
+    recursiveResult = new AST.TypeLiteral(
+      ast.propertySignatures.map(
+        (prop) =>
+          new AST.PropertySignature(
+            prop.name,
+            withEchoRefinements(prop.type),
+            prop.isOptional,
+            prop.isReadonly,
+            prop.annotations,
+          ),
+      ),
+      ast.indexSignatures,
     );
-
-    schemaWithoutEchoId = S.Record({ key: S.String, value: jsonToEffectSchema(root.patternProperties[''], defs) });
-  } else if (typeof root.additionalProperties !== 'object') {
-    schemaWithoutEchoId = S.Struct(fields);
-  } else {
-    const indexValue = jsonToEffectSchema(root.additionalProperties, defs);
-    if (propertyList.length > 0) {
-      schemaWithoutEchoId = S.Struct(fields, { key: S.String, value: indexValue });
-    } else {
-      schemaWithoutEchoId = S.Record({ key: S.String, value: indexValue });
-    }
+  } else if (AST.isUnion(ast)) {
+    recursiveResult = AST.Union.make(
+      ast.types.map((t) => withEchoRefinements(t)),
+      ast.annotations,
+    );
+  } else if (AST.isTupleType(ast)) {
+    recursiveResult = new AST.TupleType(
+      ast.elements.map((t) => new AST.OptionalType(withEchoRefinements(t.type), t.isOptional, t.annotations)),
+      ast.rest.map((t) => new AST.Type(withEchoRefinements(t.type), t.annotations)),
+      ast.isReadonly,
+      ast.annotations,
+    );
   }
 
-  const annotations = extractAnnotationsFromJsonSchema(root);
-  if (echoRefinement == null) {
-    return schemaWithoutEchoId as any;
+  const annotationFields = annotationsToJsonSchemaFields(ast.annotations);
+  if (Object.keys(annotationFields).length === 0) {
+    return recursiveResult;
   } else {
-    invariant(immutableIdField, 'no id in echo type');
-
-    const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
-    return schema.annotations(annotations) as any;
+    return new AST.Refinement(recursiveResult, () => null as any, {
+      [AST.JSONSchemaAnnotationId]: annotationFields,
+    });
   }
 };
 
-const parseJsonSchemaAny = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
-  const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
-  if (echoRefinement?.reference != null) {
-    return createEchoReferenceSchema(echoRefinement.reference);
-  }
-  return S.Any;
-};
-
+/**
+ * Convert JSON schema to effect schema.
+ * @param root
+ * @param definitions
+ */
 export const jsonToEffectSchema = (
   root: JSONSchema.JsonSchema7Root,
   definitions?: JSONSchema.JsonSchema7Root['$defs'],
@@ -281,6 +224,69 @@ export const jsonToEffectSchema = (
   return refinement?.annotations ? result.annotations({ [PropertyMetaAnnotationId]: refinement.annotations }) : result;
 };
 
+const jsonToEffectTypeSchema = (
+  root: JSONSchema.JsonSchema7Object,
+  defs: JSONSchema.JsonSchema7Root['$defs'],
+): S.Schema<any> => {
+  invariant('type' in root && root.type === 'object', `not an object: ${root}`);
+  const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
+  const fields: S.Struct.Fields = {};
+  const propertyList = Object.entries(root.properties ?? {});
+  let immutableIdField: S.Schema<any> | undefined;
+  for (const [key, value] of propertyList) {
+    if (echoRefinement?.type && key === 'id') {
+      immutableIdField = jsonToEffectSchema(value, defs);
+    } else {
+      // TODO(burdon): Mutable cast.
+      (fields as any)[key] = root.required.includes(key)
+        ? jsonToEffectSchema(value, defs)
+        : S.optional(jsonToEffectSchema(value, defs));
+    }
+  }
+
+  let schemaWithoutEchoId: S.Schema<any, any, unknown>;
+  if (root.patternProperties) {
+    invariant(propertyList.length === 0, 'pattern properties mixed with regular properties are not supported');
+    invariant(
+      Object.keys(root.patternProperties).length === 1 && Object.keys(root.patternProperties)[0] === '',
+      'only one pattern property is supported',
+    );
+
+    schemaWithoutEchoId = S.Record({ key: S.String, value: jsonToEffectSchema(root.patternProperties[''], defs) });
+  } else if (typeof root.additionalProperties !== 'object') {
+    schemaWithoutEchoId = S.Struct(fields);
+  } else {
+    const indexValue = jsonToEffectSchema(root.additionalProperties, defs);
+    if (propertyList.length > 0) {
+      schemaWithoutEchoId = S.Struct(fields, { key: S.String, value: indexValue });
+    } else {
+      schemaWithoutEchoId = S.Record({ key: S.String, value: indexValue });
+    }
+  }
+
+  const annotations = extractAnnotationsFromJsonSchema(root);
+  if (echoRefinement == null) {
+    return schemaWithoutEchoId as any;
+  } else {
+    invariant(immutableIdField, 'no id in echo type');
+
+    const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
+    return schema.annotations(annotations) as any;
+  }
+};
+
+const parseJsonSchemaAny = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
+  const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
+  if (echoRefinement?.reference != null) {
+    return createEchoReferenceSchema(echoRefinement.reference);
+  }
+  return S.Any;
+};
+
+//
+// Annotations
+//
+
 const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<string, any> => {
   const refinement: EchoRefinement = {};
   for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
@@ -298,7 +304,6 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<str
 
 const extractAnnotationsFromJsonSchema = (schema: JSONSchema.JsonSchema7): AST.Annotations => {
   const echoRefinement: EchoRefinement = (schema as any)[ECHO_REFINEMENT_KEY];
-
   if (echoRefinement == null) {
     return {};
   }

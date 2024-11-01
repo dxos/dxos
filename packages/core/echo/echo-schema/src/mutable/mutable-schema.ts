@@ -7,8 +7,8 @@ import { invariant } from '@dxos/invariant';
 
 import {
   addFieldsToSchema,
-  updateFieldsInSchema,
   removeFieldsFromSchema,
+  updateFieldsInSchema,
   updateFieldNameInSchema,
 } from './manipulation';
 import { StoredSchema } from './types';
