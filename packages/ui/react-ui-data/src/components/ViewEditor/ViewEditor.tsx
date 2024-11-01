@@ -48,11 +48,8 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
   }, [view]);
 
   const handleSelect = useCallback((field: FieldType) => {
-    console.log('Selected:', field);
     setField((f) => (f === field ? undefined : field));
   }, []);
-
-  console.log(fieldProperties);
 
   const handleDelete = useCallback(
     (field: FieldType) => {
