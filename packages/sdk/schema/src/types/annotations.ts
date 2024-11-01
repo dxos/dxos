@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { setAnnotation, PropertyMeta, type JsonPath, type JsonSchemaType } from '@dxos/echo-schema';
+import { PropertyMeta, type JsonPath } from '@dxos/echo-schema';
 import { type AST, S, getAnnotation } from '@dxos/effect';
 
 //
@@ -68,6 +68,14 @@ export const UrlFormat: FormatAnnotation = {
 // TODO(burdon): Can this be derived from the annotation? Or just be a union of all the annotation symbols?
 //  - E.g., use a common annotation namespace.
 export enum FieldKindEnum {
+  // TODO(burdon): Array/Enum?
+  // NOTE: Currently including these as a convenience.
+  String = 'string',
+  Number = 'number',
+  Boolean = 'boolean',
+  // TODO(burdon): ?
+  Ref = 'ref',
+
   Text = 'text',
   JSON = 'json',
   Timestamp = 'timestamp',
@@ -87,19 +95,23 @@ export enum FieldKindEnum {
   //  - Address, Phone number
 }
 
-export const FieldValueTypes = Object.values(FieldKindEnum).sort();
+export const FieldKindEnums = Object.values(FieldKindEnum).sort();
 
 // TODO(ZaymonFC): Find all the appropriate annotations.
 // TODO(ZaymonFC): Pipe S.Pattern (regex) for email, url, etc.
 // TODO(ZaymonFC): Enforce real / whole numbers where appropriate.
 export const schemaForKind: Record<FieldKindEnum, S.Schema<any> | undefined> = {
+  [FieldKindEnum.String]: S.String,
+  [FieldKindEnum.Number]: S.Number,
+  [FieldKindEnum.Boolean]: S.Boolean,
+
   [FieldKindEnum.Text]: S.String,
   [FieldKindEnum.Date]: S.DateFromString,
   [FieldKindEnum.Email]: S.String.annotations({ [FormatAnnotationId]: EmailFormat }),
   [FieldKindEnum.URL]: S.String.annotations({ [FormatAnnotationId]: UrlFormat }),
   [FieldKindEnum.Percent]: S.Number,
   [FieldKindEnum.Currency]: S.Number,
-  // [FieldValueType.User]: undefined,
+  // [FieldKindEnum.User]: undefined,
   [FieldKindEnum.JSON]: undefined,
   [FieldKindEnum.Timestamp]: undefined,
   [FieldKindEnum.DateTime]: undefined,

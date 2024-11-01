@@ -17,7 +17,7 @@ import {
   type TableDef,
 } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
-import { FieldValueType } from '@dxos/schema';
+import { FieldKindEnum } from '@dxos/schema';
 
 import { getUniqueProperty } from './types';
 
@@ -88,18 +88,18 @@ export const createColumns = (
     };
 
     switch (type) {
-      case FieldValueType.Ref:
+      case FieldKindEnum.Ref:
         return helper.accessor(
           id,
           builder.combobox({ ...options, model: new QueryModel(space!.db, column.refTable!, column.refProp!) }),
         );
-      case FieldValueType.Number:
+      case FieldKindEnum.Number:
         return helper.accessor(id, builder.number(options));
-      case FieldValueType.Boolean:
+      case FieldKindEnum.Boolean:
         return helper.accessor(id, builder.switch(options));
-      case FieldValueType.Date:
+      case FieldKindEnum.Date:
         return helper.accessor(id, builder.date(options));
-      case FieldValueType.String:
+      case FieldKindEnum.String:
       default:
         return helper.accessor(id, builder.string(options));
     }
@@ -120,7 +120,7 @@ export const createActionColumn = (
     onColumnUpdate?.(id, {
       id,
       prop: id,
-      type: FieldValueType.String,
+      type: FieldKindEnum.String,
       editable: true,
       resizable: true,
     });

@@ -13,7 +13,7 @@ import { FieldKindEnum } from './types';
 // TODO(burdon): Handle parsing also.
 export const formatValue = (type: FieldKindEnum, value: any, locale: string | undefined = undefined): string => {
   switch (type) {
-    // case FieldValueType.Boolean: {
+    // case FieldKindEnum.Boolean: {
     //   return (value as boolean).toLocaleString().toUpperCase();
     // }
 
@@ -21,7 +21,7 @@ export const formatValue = (type: FieldKindEnum, value: any, locale: string | un
     // Numbers.
     //
 
-    // case FieldValueType.Number: {
+    // case FieldKindEnum.Number: {
     //   return value.toLocaleString(locale);
     // }
 

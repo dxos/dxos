@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 
 import { create, type MutableSchema, S, TypedObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { FieldValueType } from '@dxos/schema';
+import { FieldKindEnum } from '@dxos/schema';
 
 import { TableType } from '../types';
 
@@ -28,10 +28,10 @@ export const createTable = (schema?: MutableSchema) =>
     view: {
       schema: 'example.com/type/test',
       fields: [
-        { path: 'name', label: 'Name', type: FieldValueType.String },
-        { path: 'age', label: 'Age', type: FieldValueType.Number },
-        { path: 'active', label: 'Active', type: FieldValueType.Boolean },
-        { path: 'netWorth', label: 'Net Worth', type: FieldValueType.Currency },
+        { path: 'name', label: 'Name', type: FieldKindEnum.String },
+        { path: 'age', label: 'Age', type: FieldKindEnum.Number },
+        { path: 'active', label: 'Active', type: FieldKindEnum.Boolean },
+        { path: 'netWorth', label: 'Net Worth', type: FieldKindEnum.Currency },
       ],
     },
   });
@@ -85,19 +85,19 @@ export const useSimulator = ({ items, table, insertInterval, updateInterval }: S
       if (field) {
         const path = field.path;
         switch (field.type) {
-          case FieldValueType.String: {
+          case FieldKindEnum.String: {
             item[path] = `Updated ${Date.now()}`;
             break;
           }
-          case FieldValueType.Number: {
+          case FieldKindEnum.Number: {
             item[path] = Math.floor(Math.random() * 100);
             break;
           }
-          case FieldValueType.Boolean: {
+          case FieldKindEnum.Boolean: {
             item[path] = !item[path];
             break;
           }
-          case FieldValueType.Currency: {
+          case FieldKindEnum.Currency: {
             item[path] = Math.floor(Math.random() * 1000);
             break;
           }

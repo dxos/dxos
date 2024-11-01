@@ -4,14 +4,13 @@
 
 import React from 'react';
 
-import { getProperty, type S } from '@dxos/effect';
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type FieldType, type ViewType } from '@dxos/schema';
 
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
-import { pathNotUniqueError, typeFeatures } from '../../util';
+import { typeFeatures } from '../../util';
 
 const FieldRow = ({ children }: { children: React.ReactNode }) => {
   return <div className='flex flex-col w-full gap-1'>{children}</div>;
@@ -85,7 +84,7 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
             <Select.Portal>
               <Select.Content>
                 <Select.Viewport>
-                  {FieldValueTypes.map((type) => (
+                  {FieldKindEnums.map((type) => (
                     <Select.Option key={type} value={type}>
                       {t(`field type ${type}`)}
                     </Select.Option>

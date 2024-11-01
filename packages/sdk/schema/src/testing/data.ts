@@ -51,24 +51,24 @@ export const testData: TestType = {
 // const fields = [
 // {
 //   path: 'name',
-//   type: FieldValueType.String,
+//   type: FieldKindEnum.String,
 // },
 // {
 //   path: 'email',
-//   type: FieldValueType.String,
+//   type: FieldKindEnum.String,
 // },
 // {
 //   path: 'address.zip',
 //   label: 'ZIP',
-//   type: FieldValueType.String,
+//   type: FieldKindEnum.String,
 // },
 // {
 //   path: 'rating',
-//   type: FieldValueType.Number,
+//   type: FieldKindEnum.Number,
 // },
 // {
 //   path: 'admin',
-//   type: FieldValueType.Boolean,
+//   type: FieldKindEnum.Boolean,
 // },
 // ];
 

@@ -13,7 +13,7 @@ import {
 } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 import { type ColumnDef, type TableDef } from '@dxos/react-ui-table';
-import { FieldValueType } from '@dxos/schema';
+import { FieldKindEnum } from '@dxos/schema';
 
 import { type TableType } from '../types';
 
@@ -22,7 +22,7 @@ const FIELD_META_NAMESPACE = 'plugin-table';
 /**
  * @deprecated
  */
-const typeToSchema: Partial<{ [key in FieldValueType]: S.Schema<any> }> = {
+const typeToSchema: Partial<{ [key in FieldKindEnum]: S.Schema<any> }> = {
   number: S.Number,
   boolean: S.Boolean,
   string: S.String,
@@ -42,11 +42,11 @@ interface ColumnAnnotation {
  */
 export const getSchema = (
   tables: TableType[],
-  type: FieldValueType | undefined,
+  type: FieldKindEnum | undefined,
   options: { digits?: number; refProp?: string; refTable?: string },
 ): S.Schema<any> => {
   let schema: S.Schema<any>;
-  if (FieldValueType.Ref) {
+  if (FieldKindEnum.Ref) {
     const referencedSchema = tables.find((table) => table.schema?.id === options.refTable)?.schema;
     schema = referencedSchema ? ref(referencedSchema) : S.String;
   } else {
@@ -75,7 +75,7 @@ export const mapTableToColumns =
     return {
       id: String(id),
       prop: String(id),
-      type: toFieldValueType(type),
+      type: toFieldKindEnum(type),
       refTable: refAnnotation?.schemaId,
       refProp: refProp ?? undefined,
       label: label ?? undefined,
@@ -91,19 +91,19 @@ export const mapTableToColumns =
  * @deprecated
  */
 // TODO(burdon): Reconcile with react-ui-data/typeToColumn
-const toFieldValueType = (type?: AST.AST): FieldValueType => {
+const toFieldKindEnum = (type?: AST.AST): FieldKindEnum => {
   if (type == null) {
-    return FieldValueType.String;
+    return FieldKindEnum.String;
   }
 
   if (AST.isTypeLiteral(type)) {
-    return FieldValueType.Ref;
+    return FieldKindEnum.Ref;
   } else if (AST.isBooleanKeyword(type)) {
-    return FieldValueType.Boolean;
+    return FieldKindEnum.Boolean;
   } else if (AST.isNumberKeyword(type)) {
-    return FieldValueType.Number;
+    return FieldKindEnum.Number;
   } else {
-    return FieldValueType.String;
+    return FieldKindEnum.String;
   }
 };
 

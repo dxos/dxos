@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type FieldValueType } from '@dxos/schema';
+import { type FieldKindEnum } from '@dxos/schema';
 
 /**
  * @deprecated
@@ -21,7 +21,7 @@ export type TableDef = {
 export type ColumnDef = {
   id: string;
   prop: string;
-  type: FieldValueType;
+  type: FieldKindEnum;
   size?: number;
   label?: string;
 

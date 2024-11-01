@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FieldValueType } from '@dxos/schema';
+import { FieldKindEnum } from '@dxos/schema';
 
 import { type ValidationError } from './';
 
@@ -12,7 +12,7 @@ import { type ValidationError } from './';
  * Handles various data types including booleans, numbers, dates, and strings.
  * Returns undefined for empty or null inputs.
  */
-export const parseValue = (type: FieldValueType, value: any) => {
+export const parseValue = (type: FieldKindEnum, value: any) => {
   if (value === undefined || value === null || value === '') {
     return undefined;
   }
@@ -22,7 +22,7 @@ export const parseValue = (type: FieldValueType, value: any) => {
     // Boolean.
     //
 
-    case FieldValueType.Boolean: {
+    case FieldKindEnum.Boolean: {
       if (typeof value === 'string') {
         const lowercaseValue = value.toLowerCase();
         if (lowercaseValue === '0' || lowercaseValue === 'false') {
@@ -38,17 +38,17 @@ export const parseValue = (type: FieldValueType, value: any) => {
     // Numbers.
     //
 
-    case FieldValueType.Number: {
+    case FieldKindEnum.Number: {
       const num = Number(value);
       return Number.isNaN(num) ? null : num;
     }
 
-    case FieldValueType.Percent: {
+    case FieldKindEnum.Percent: {
       const num = Number(value);
       return Number.isNaN(num) ? null : num / 100;
     }
 
-    case FieldValueType.Currency: {
+    case FieldKindEnum.Currency: {
       if (typeof value !== 'string') {
         return null;
       }
@@ -60,10 +60,10 @@ export const parseValue = (type: FieldValueType, value: any) => {
     // Dates.
     //
 
-    case FieldValueType.DateTime:
-    case FieldValueType.Date:
-    case FieldValueType.Time:
-    case FieldValueType.Timestamp: {
+    case FieldKindEnum.DateTime:
+    case FieldKindEnum.Date:
+    case FieldKindEnum.Time:
+    case FieldKindEnum.Timestamp: {
       const date = new Date(value as string | number);
       return isNaN(date.getTime()) ? null : date;
     }
@@ -72,8 +72,8 @@ export const parseValue = (type: FieldValueType, value: any) => {
     // Strings.
     //
 
-    case FieldValueType.String:
-    case FieldValueType.Text: {
+    case FieldKindEnum.String:
+    case FieldKindEnum.Text: {
       return String(value);
     }
 
@@ -83,25 +83,25 @@ export const parseValue = (type: FieldValueType, value: any) => {
   }
 };
 
-export const cellClassesForFieldType = (type: FieldValueType): string[] | undefined => {
+export const cellClassesForFieldType = (type: FieldKindEnum): string[] | undefined => {
   switch (type) {
-    case FieldValueType.Number:
+    case FieldKindEnum.Number:
       return ['text-right', 'font-mono'];
-    case FieldValueType.Boolean:
+    case FieldKindEnum.Boolean:
       return ['text-right', 'font-mono'];
-    case FieldValueType.String:
-    case FieldValueType.Text:
+    case FieldKindEnum.String:
+    case FieldKindEnum.Text:
       return undefined;
-    case FieldValueType.Timestamp:
-    case FieldValueType.DateTime:
-    case FieldValueType.Date:
-    case FieldValueType.Time:
+    case FieldKindEnum.Timestamp:
+    case FieldKindEnum.DateTime:
+    case FieldKindEnum.Date:
+    case FieldKindEnum.Time:
       return ['font-mono'];
-    case FieldValueType.Percent:
+    case FieldKindEnum.Percent:
       return ['text-right'];
-    case FieldValueType.Currency:
+    case FieldKindEnum.Currency:
       return ['text-right'];
-    case FieldValueType.JSON:
+    case FieldKindEnum.JSON:
       return ['font-mono'];
     default:
       return undefined;
@@ -121,11 +121,11 @@ const typeConfigSections = {
 
 type TypeConfigSection = keyof typeof typeConfigSections;
 
-export const typeFeatures: Partial<Record<FieldValueType, TypeConfigSection[]>> = {
-  [FieldValueType.Number]: ['numeric'],
-  [FieldValueType.Percent]: ['numeric'],
-  [FieldValueType.Currency]: ['numeric'],
-  [FieldValueType.Ref]: ['ref'],
+export const typeFeatures: Partial<Record<FieldKindEnum, TypeConfigSection[]>> = {
+  [FieldKindEnum.Number]: ['numeric'],
+  [FieldKindEnum.Percent]: ['numeric'],
+  [FieldKindEnum.Currency]: ['numeric'],
+  [FieldKindEnum.Ref]: ['ref'],
 } as const;
 
 // TODO(ZaymonFC): How to do this with translations?

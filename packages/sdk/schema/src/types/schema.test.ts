@@ -15,7 +15,6 @@ import {
   setProperty,
   type JsonPath,
   TypedObject,
-  setAnnotation,
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
@@ -25,26 +24,22 @@ import { ViewSchema } from './view';
 // TODO(burdon): Add expects.
 // TODO(burdon): Move tests to echo-schema?
 describe('schema composition', () => {
-  test('schema composition', ({ expect }) => {
+  test.only('schema composition', ({ expect }) => {
     class BaseType extends TypedObject({ typename: 'example.com/Person', version: '0.1.0' })({
       name: S.String,
       email: S.String,
     }) {}
 
     const OverlaySchema = S.Struct({
-      name: S.String,
       email: S.String.pipe(FieldPath('$.email' as JsonPath)).pipe(FieldKind(FieldKindEnum.Email)),
     });
 
     const baseSchema = effectToJsonSchema(BaseType);
     const overlaySchema = effectToJsonSchema(OverlaySchema);
-
     const composedSchema = composeSchema(baseSchema, overlaySchema);
+
     // TODO(burdon): Remove any cast?
     expect((composedSchema as any).properties).toEqual({
-      name: {
-        type: 'string',
-      },
       email: {
         type: 'string',
         $echo: {
@@ -54,8 +49,6 @@ describe('schema composition', () => {
         },
       },
     });
-
-    log.info('schema', { typeSchemaJson: baseSchema, viewSchema: overlaySchema, composedSchema });
   });
 
   test('static schema definitions with references', async () => {

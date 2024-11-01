@@ -3,7 +3,7 @@
 
 import { S, type AbstractSchema, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
-import { FieldValueType, type ViewType } from '@dxos/schema';
+import { FieldKindEnum, type ViewType } from '@dxos/schema';
 
 // TODO(burdon): Prompt user for typename.
 export const createStarterSchema = (typename?: string) => {
@@ -19,9 +19,9 @@ export const createStarterView = (schema: AbstractSchema): ViewType => {
   return {
     schema: schema.typename,
     fields: [
-      { path: 'name', label: 'Name', type: FieldValueType.String },
-      { path: 'description', label: 'Description', type: FieldValueType.String },
-      { path: 'quantity', label: 'Quantity', type: FieldValueType.Number },
+      { path: 'name', label: 'Name', type: FieldKindEnum.String },
+      { path: 'description', label: 'Description', type: FieldKindEnum.String },
+      { path: 'quantity', label: 'Quantity', type: FieldKindEnum.Number },
     ],
   };
 };
