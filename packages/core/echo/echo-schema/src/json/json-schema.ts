@@ -302,7 +302,7 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
 const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<string, any> => {
   const refinement: EchoRefinement = {};
   const schemaFields: Record<string, any> = {};
-  for (const annotation of [ReferenceAnnotationId, PropertyMetaAnnotationId]) {
+  for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
     if (annotations[annotation] != null) {
       refinement[annotationToRefinementKey[annotation]] = annotations[annotation] as any;
     }
@@ -336,12 +336,12 @@ const jsonSchemaFieldsToAnnotations = (schema: JSONSchema.JsonSchema7): AST.Anno
     }
   }
 
-  if ('$id' in schema && typeof schema.$id === 'string' && schema.$id.startsWith('dxn:')) {
-    annotations[ObjectAnnotationId] = {
-      typename: DXN.parse(schema.$id).parts[0],
-      version: (schema as any).version,
-    };
-  }
+  // if ('$id' in schema && typeof schema.$id === 'string' && schema.$id.startsWith('dxn:')) {
+  //   annotations[ObjectAnnotationId] = {
+  //     typename: DXN.parse(schema.$id).parts[0],
+  //     version: (schema as any).version,
+  //   };
+  // }
 
   return annotations;
 };

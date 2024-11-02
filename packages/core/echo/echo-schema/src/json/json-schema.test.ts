@@ -88,6 +88,14 @@ describe('effect-to-json', () => {
     expect(jsonSchema).to.deep.eq({
       $schema: 'http://json-schema.org/draft-07/schema#',
       $id: 'dxn:type:example.com/type/Contact',
+
+      // TODO(dmaretskyi): Remvoe this.
+      echo: {
+        type: {
+          typename: 'example.com/type/Contact',
+          version: '0.1.0',
+        },
+      },
       version: '0.1.0',
       type: 'object',
       required: ['name', 'email', 'id'],
