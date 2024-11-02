@@ -13,7 +13,7 @@ import type { JsonSchema7 } from '@effect/schema/JSONSchema';
  */
 export const FieldSchema = S.mutable(
   S.Struct({
-    path: JsonPath,
+    property: S.String,
     visible: S.optional(S.Boolean),
     size: S.optional(S.Number),
     referenceProperty: S.optional(JsonPath),
@@ -21,7 +21,6 @@ export const FieldSchema = S.mutable(
 );
 
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
-
 
 /**
  * Computed (aggregate) field metadata (from annotations).

@@ -52,7 +52,7 @@ describe('view', () => {
 
     const baseSchema = toJsonSchema(BaseType);
     const overlaySchema = toJsonSchema(OverlaySchema);
-    const composedSchema = composeSchema(baseSchema, overlaySchema);
+    const composedSchema = composeSchema(baseSchema as any, overlaySchema as any);
 
     // TODO(burdon): Remove any cast?
     expect((composedSchema as any).properties).toEqual({
@@ -127,13 +127,13 @@ describe('view', () => {
       },
       fields: [
         {
-          path: 'name' as JsonPath,
+          property: 'name',
         },
         {
-          path: 'email' as JsonPath,
+          property: 'email',
         },
         {
-          path: 'org' as JsonPath,
+          property: 'org',
         },
       ],
     });
@@ -181,17 +181,45 @@ describe('view', () => {
     // TODO(burdon): Throws.
     const projection = new FieldProjection();
     const view = createView(schema);
-    const properties = projection.getFieldProperties(view, 'name' as JsonPath);
+    const properties = projection.getFieldProperties(schema, view, 'name');
     expect(properties).to.exist;
   });
 
   test('projection', async ({ expect }) => {
     const projection = new FieldProjection();
     const schema = createStoredSchema('example.com/type/Org', '0.1.0');
-    setProperty(schema.jsonSchema as any, 'name', S.String);
+    setProperty(schema.jsonSchema as any, 'name', S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }));
+    setProperty(
+      schema.jsonSchema as any,
+      'email',
+      S.String.annotations({ [AST.DescriptionAnnotationId]: 'Email address', [FormatAnnotationId]: 'email' }),
+    );
+
     const view = createView(schema);
     expect(view.fields).to.have.length(0); // TODO(burdon): Option to create fields.
-    const properties = projection.getFieldProperties(view, 'name' as JsonPath);
-    expect(properties).to.exist;
+
+    projection.setFieldProperties(view, { property: 'name', size: 50 });
+    projection.setFieldProperties(view, { property: 'email', size: 100 });
+
+    const [fieldProps, propertySchema] = projection.getFieldProperties(schema, view, 'name');
+    expect(fieldProps).toEqual({
+      property: 'name',
+      size: 50,
+    });
+    expect(propertySchema).toEqual({
+      type: 'string',
+      title: 'Name',
+    });
+
+    const [emailProps, emailSchema] = projection.getFieldProperties(schema, view, 'email');
+    expect(emailProps).toEqual({
+      property: 'email',
+      size: 100,
+    });
+    expect(emailSchema).toEqual({
+      type: 'string',
+      description: 'Email address',
+      format: 'email',
+    });
   });
 });

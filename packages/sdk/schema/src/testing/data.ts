@@ -50,19 +50,19 @@ export const testData: TestType = {
 
 const fields: FieldType[] = [
   {
-    path: 'name' as JsonPath,
+    property: 'name',
   },
   {
-    path: 'email' as JsonPath,
+    property: 'email',
   },
   {
-    path: 'address.zip' as JsonPath,
+    property: 'addressZip',
   },
   {
-    path: 'rating' as JsonPath,
+    property: 'rating',
   },
   {
-    path: 'admin' as JsonPath,
+    property: 'admin',
   },
 ];
 
