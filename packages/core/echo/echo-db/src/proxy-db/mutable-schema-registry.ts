@@ -45,13 +45,14 @@ export class MutableSchemaRegistry {
     private readonly _db: EchoDatabase,
     { reactiveQuery = true }: MutableSchemaRegistryOptions = {},
   ) {
+    // TODO(burdon): This shouldn't go here in the constructor and should be unregisterd. Open/dispose pattern.
     if (reactiveQuery) {
       this._db.query(Filter.schema(StoredSchema)).subscribe(({ objects }) => {
         const currentObjectIds = new Set(objects.map((o) => o.id));
-        const newObjects = objects.filter((o) => !this._schemaById.has(o.id));
+        const newObjects = objects.filter((object) => !this._schemaById.has(object.id));
         const removedObjects = [...this._schemaById.keys()].filter((oid) => !currentObjectIds.has(oid));
         newObjects.forEach((obj) => this._register(obj));
-        removedObjects.forEach((oid) => this._unregisterById(oid));
+        removedObjects.forEach((idoid) => this._unregister(idoid));
         if (newObjects.length > 0 || removedObjects.length > 0) {
           this._notifySchemaListChanged();
         }
@@ -171,7 +172,7 @@ export class MutableSchemaRegistry {
     return mutableSchema;
   }
 
-  private _unregisterById(id: string) {
+  private _unregister(id: string) {
     const schema = this._schemaById.get(id);
     if (schema != null) {
       this._schemaById.delete(id);

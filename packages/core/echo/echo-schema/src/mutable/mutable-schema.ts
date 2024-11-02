@@ -47,7 +47,7 @@ export const MutableSchemaBase = (): MutableSchemaConstructor => {
 /**
  * Schema that can be modified at runtime via the API.
  */
-// TODO(burdon): Document; does this impersonate an S.Schema (hence implements).
+// TODO(burdon): Document; does this impersonate an S.Schema (hence implements S.Schema). Reconcile with StoredSchema.
 export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> {
   private _schema: S.Schema<any> | undefined;
   private _isDirty = true;

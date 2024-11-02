@@ -86,7 +86,7 @@ describe('effect-to-json', () => {
       email: S.String.annotations({ description: 'Email address' }).pipe(PropertyMeta('dxos.format', 'email')),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
-    expect(jsonSchema).toEqual({
+    expect(jsonSchema).to.deep.eq({
       $schema: 'http://json-schema.org/draft-07/schema#',
       type: 'object',
       required: ['name', 'email', 'id'],

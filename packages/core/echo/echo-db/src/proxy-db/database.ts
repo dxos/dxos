@@ -127,6 +127,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   _coreDatabase: CoreDatabase;
 
+  // TODO(burdon): Rename schemaRegistry.
   public readonly schema: MutableSchemaRegistry;
 
   private _rootUrl: string | undefined = undefined;
