@@ -90,7 +90,7 @@ export const toPropType = (type?: PropType): string => {
  */
 export const toJsonSchema = (schema: S.Schema.Any): JSONSchema.JsonSchema7Object => {
   const schemaWithRefinements = S.make(withEchoRefinements(schema.ast));
-  let jsonSchema = JSONSchema.make(schemaWithRefinements) as JSONSchema.JsonSchema7Object;
+  const jsonSchema = JSONSchema.make(schemaWithRefinements) as JSONSchema.JsonSchema7Object;
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     // Put id first.
     jsonSchema.properties = Object.assign({ id: undefined }, jsonSchema.properties);
@@ -279,7 +279,7 @@ const objectToEffectSchema = (
     return schemaWithoutEchoId as any;
   } else {
     invariant(immutableIdField, 'no id in echo type');
-    
+
     const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
     const annotations = jsonSchemaFieldsToAnnotations(root);
     return schema.annotations(annotations) as any;

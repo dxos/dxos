@@ -5,8 +5,6 @@
 import { AST, Schema as S } from '@effect/schema';
 import { describe, test } from 'vitest';
 
-import { log } from '@dxos/log';
-
 import { composeSchema } from './compose';
 import { toJsonSchema } from './json-schema';
 import { create, ref } from '../handler';

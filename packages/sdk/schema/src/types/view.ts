@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { JsonSchema7Object } from '@effect/schema/JSONSchema';
+
 import { create, JsonPath, JsonSchemaType, type ReactiveObject, QueryType, type StoredSchema } from '@dxos/echo-schema';
 import { S } from '@dxos/effect';
-
-import { FieldFormatEnum } from './annotations';
-import type { JsonSchema7, JsonSchema7Object } from '@effect/schema/JSONSchema';
 
 /**
  * Stored field metadata (e.g., for UX).
@@ -21,7 +20,6 @@ export const FieldSchema = S.mutable(
 );
 
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
-
 
 /**
  * Views are generated or user-defined projections of a schema's properties.

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type JsonPath, S, createObjectId, toJsonSchema } from '@dxos/echo-schema';
+import { AST, S, createObjectId, toJsonSchema } from '@dxos/echo-schema';
 
 import { EmailFormat, type FieldType, PatternAnnotationId, type ViewType } from '../types';
 
