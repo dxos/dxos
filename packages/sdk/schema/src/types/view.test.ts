@@ -89,11 +89,15 @@ describe('view', () => {
 
   test('dynamic schema definitions with references', async () => {
     const orgSchema = createStoredSchema('example.com/type/Org', '0.1.0');
-    setProperty(orgSchema.jsonSchema, 'name', S.String.annotations({ [AST.DescriptionAnnotationId]: 'Org name' }));
+    setProperty(
+      orgSchema.jsonSchema as any,
+      'name',
+      S.String.annotations({ [AST.DescriptionAnnotationId]: 'Org name' }),
+    );
 
     const personSchema = createStoredSchema('example.com/type/Person', '0.1.0');
     setProperty(
-      personSchema.jsonSchema,
+      personSchema.jsonSchema as any,
       'name',
       S.String.annotations({
         [AST.TitleAnnotationId]: 'Name',
@@ -102,7 +106,7 @@ describe('view', () => {
     );
 
     setProperty(
-      personSchema.jsonSchema,
+      personSchema.jsonSchema as any,
       'email',
       S.String.annotations({
         [AST.DescriptionAnnotationId]: 'Primary email',
@@ -111,7 +115,7 @@ describe('view', () => {
     );
 
     setProperty(
-      personSchema.jsonSchema,
+      personSchema.jsonSchema as any,
       'org',
       createReferenceAnnotation(orgSchema).annotations({ [AST.DescriptionAnnotationId]: 'Employer' }),
     );
@@ -168,8 +172,8 @@ describe('view', () => {
     const before = mutable.schema.ast.toJSON();
 
     const jsonSchema = schema.jsonSchema;
-    setProperty(jsonSchema, 'name', S.String);
-    setAnnotation(jsonSchema, 'name', { [AST.TitleAnnotationId]: 'Name' });
+    setProperty(jsonSchema as any, 'name', S.String);
+    setAnnotation(jsonSchema as any, 'name', { [AST.TitleAnnotationId]: 'Name' });
 
     // Check schema updated.
     expect(before).not.to.deep.eq(mutable.schema.ast.toJSON());
@@ -184,7 +188,7 @@ describe('view', () => {
   test('projection', async ({ expect }) => {
     const projection = new FieldProjection();
     const schema = createStoredSchema('example.com/type/Org', '0.1.0');
-    setProperty(schema.jsonSchema, 'name', S.String);
+    setProperty(schema.jsonSchema as any, 'name', S.String);
     const view = createView(schema);
     expect(view.fields).to.have.length(0); // TODO(burdon): Option to create fields.
     const properties = projection.getFieldProperties(view, 'name' as JsonPath);
