@@ -4,6 +4,10 @@
 
 import { Schema as S, type JSONSchema } from '@effect/schema';
 
+//
+// https://json-schema.org/draft-07/schema#
+//
+
 // Branded type.
 export type JsonPath = string & { __JsonPath: true };
 
@@ -17,7 +21,7 @@ export const JsonPath = S.String.pipe(
   S.pattern(/^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*$/, { message: () => 'Invalid property path.' }),
 ) as any as S.Schema<JsonPath>;
 
-// TODO(dmaretskyi): Define more precise types.
+// TODO(dmaretskyi): Use a flat type instead: https://json-schema.org/draft-07/schema#.
 export type JsonSchemaType = JSONSchema.JsonSchema7 & {
   // Fixing the existing types
   $id: string;
@@ -32,4 +36,5 @@ export type JsonSchemaType = JSONSchema.JsonSchema7 & {
 /**
  * Type of the JSON schema stored in an ECHO object.
  */
+// TODO(dmaretskyi): Define effect schema for json schema.
 export const JsonSchemaType = S.Any as S.Schema<JSONSchema.JsonSchema7>;
