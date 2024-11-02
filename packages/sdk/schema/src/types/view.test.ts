@@ -20,6 +20,7 @@ import {
   toJsonSchema,
   TypedObject,
   type JsonPath,
+  type JsonSchemaType,
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
@@ -52,7 +53,7 @@ describe('view', () => {
 
     const baseSchema = toJsonSchema(BaseType);
     const overlaySchema = toJsonSchema(OverlaySchema);
-    const composedSchema = composeSchema(baseSchema, overlaySchema);
+    const composedSchema = composeSchema(baseSchema as any, overlaySchema as any);
 
     // TODO(burdon): Remove any cast?
     expect((composedSchema as any).properties).to.deep.eq({
@@ -89,11 +90,15 @@ describe('view', () => {
 
   test('dynamic schema definitions with references', async () => {
     const orgSchema = createStoredSchema('example.com/type/Org', '0.1.0');
-    setProperty(orgSchema.jsonSchema, 'name', S.String.annotations({ [AST.DescriptionAnnotationId]: 'Org name' }));
+    setProperty(
+      orgSchema.jsonSchema as any,
+      'name',
+      S.String.annotations({ [AST.DescriptionAnnotationId]: 'Org name' }),
+    );
 
     const personSchema = createStoredSchema('example.com/type/Person', '0.1.0');
     setProperty(
-      personSchema.jsonSchema,
+      personSchema.jsonSchema as any,
       'name',
       S.String.annotations({
         [AST.TitleAnnotationId]: 'Name',
@@ -102,7 +107,7 @@ describe('view', () => {
     );
 
     setProperty(
-      personSchema.jsonSchema,
+      personSchema.jsonSchema as any,
       'email',
       S.String.annotations({
         [AST.DescriptionAnnotationId]: 'Primary email',
@@ -111,7 +116,7 @@ describe('view', () => {
     );
 
     setProperty(
-      personSchema.jsonSchema,
+      personSchema.jsonSchema as any,
       'org',
       createReferenceAnnotation(orgSchema).annotations({ [AST.DescriptionAnnotationId]: 'Employer' }),
     );
@@ -123,13 +128,13 @@ describe('view', () => {
       },
       fields: [
         {
-          path: 'name' as JsonPath,
+          property: 'name',
         },
         {
-          path: 'email' as JsonPath,
+          property: 'email',
         },
         {
-          path: 'org' as JsonPath,
+          property: 'org',
         },
       ],
     });
@@ -168,8 +173,8 @@ describe('view', () => {
     const before = mutable.schema.ast.toJSON();
 
     const jsonSchema = schema.jsonSchema;
-    setProperty(jsonSchema, 'name', S.String);
-    setAnnotation(jsonSchema, 'name', { [AST.TitleAnnotationId]: 'Name' });
+    setProperty(jsonSchema as any, 'name', S.String);
+    setAnnotation(jsonSchema as any, 'name', { [AST.TitleAnnotationId]: 'Name' });
 
     // Check schema updated.
     expect(before).not.to.deep.eq(mutable.schema.ast.toJSON());
@@ -177,17 +182,80 @@ describe('view', () => {
     // TODO(burdon): Throws.
     const projection = new FieldProjection();
     const view = createView(schema);
-    const properties = projection.getFieldProperties(view, 'name' as JsonPath);
+    const properties = projection.getFieldProperties(schema, view, 'name');
     expect(properties).to.exist;
   });
 
   test('projection', async ({ expect }) => {
     const projection = new FieldProjection();
+
+    //
+    // Object type.
+    //
+
     const schema = createStoredSchema('example.com/type/Org', '0.1.0');
-    setProperty(schema.jsonSchema, 'name', S.String);
+    setProperty(schema.jsonSchema as any, 'name', S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }));
+    setProperty(schema.jsonSchema as any, 'email', PROPERTY_TYPES[FieldFormatEnum.Email]!);
+
+    //
+    // View.
+    //
+
     const view = createView(schema);
-    expect(view.fields).to.have.length(0); // TODO(burdon): Option to create fields.
-    const properties = projection.getFieldProperties(view, 'name' as JsonPath);
-    expect(properties).to.exist;
+    expect(view.fields).to.have.length(2);
+
+    // Update email column size.
+    projection.setField(view, { property: 'email', size: 100 });
+
+    const [fieldProps, propertySchema] = projection.getFieldProperties(schema, view, 'name');
+    expect(fieldProps).toEqual({
+      property: 'name',
+    });
+    expect(propertySchema).toEqual({
+      type: 'string',
+      title: 'Name',
+    });
+
+    const [emailProps, emailSchema] = projection.getFieldProperties(schema, view, 'email');
+    expect(emailProps).toEqual({
+      property: 'email',
+      size: 100,
+    });
+    expect(emailSchema).toEqual({
+      type: 'string',
+      description: 'Email address',
+      pattern: 'xxxxxxxx',
+      format: 'email',
+    });
+    expect(propertySchemaToFieldFormat(emailSchema)).to.eq(FieldFormatEnum.Email);
   });
 });
+
+// TODO(dmaretskyi): Move to sdk code.
+const PROPERTY_TYPES: Partial<Record<FieldFormatEnum, S.Schema.All>> = {
+  // NOTE: pattern must come first so that it does not override description annotation.
+  [FieldFormatEnum.Email]: S.String.pipe(S.pattern(/xxxxxxxx/)).pipe(
+    S.annotations({ [AST.DescriptionAnnotationId]: 'Email address', [FormatAnnotationId]: 'email' }),
+  ),
+
+  [FieldFormatEnum.Currency]: S.String.pipe(
+    S.annotations({
+      [AST.DescriptionAnnotationId]: 'Currency value',
+      [FormatAnnotationId]: 'currency',
+      [AST.JSONSchemaAnnotationId]: { multipleOf: 0.01 }, // TODO(dmaretskyi): Might not work currently.
+    }),
+  ),
+};
+
+// TODO(dmaretskyi): Move to sdk code.
+const propertySchemaToFieldFormat = (propertySchema: JsonSchemaType): FieldFormatEnum | undefined => {
+  const format = propertySchema.format;
+
+  // TODO(dmaretskyi): map .
+  switch (format) {
+    case 'email':
+      return FieldFormatEnum.Email;
+    default:
+      return undefined;
+  }
+};

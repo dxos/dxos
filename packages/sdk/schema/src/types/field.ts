@@ -2,48 +2,74 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, deleteProperty, type JsonPath, getAnnotation, setAnnotation } from '@dxos/echo-schema';
+import { deleteProperty, type JsonSchemaType, type StoredSchema } from '@dxos/echo-schema';
 
-import { type FieldType, type FieldPropertiesType, type ViewType } from './view';
+import type { JsonSchema7Object } from '@effect/schema/JSONSchema';
+import { type FieldType, type ViewType } from './view';
 
 /**
  * Maps view fields and schema annotations onto in-memory projections used by UX components.
  */
+// TODO(dmaretskyi): Turn back into functions.
 export class FieldProjection {
-  constructor(private readonly _annotationIds: symbol[] = [AST.TitleAnnotationId, AST.DescriptionAnnotationId]) {}
+  /**
+   * Gets combined information about a property: combined schema from the object type and view projection schema + field info.
+   */
+  getFieldProperties(objectType: StoredSchema, view: ViewType, property: string): [FieldType, JsonSchemaType] {
+    const field = view.fields.find((f) => f.property === property) ?? { property };
 
-  getFieldProperties(view: ViewType, path: JsonPath): [FieldType, FieldPropertiesType] {
-    const field = view.fields.find((f) => f.path === path) ?? { path };
+    // TODO(dmaretskyi): Add projection later on.
+    // const composedSchema = composeSchema(objectType.jsonSchema as any, view.schema as any);
 
-    // TODO(burdon): Mixin properties from all annotations.
-    const properties: FieldPropertiesType = { path };
-    for (const annotationId of this._annotationIds) {
-      (properties as any)[annotationId] = getAnnotation(view.schema, path, annotationId);
+    const propertySchema = (objectType.jsonSchema as JsonSchema7Object).properties[property];
+    if (!propertySchema) {
+      throw new Error(`Property not found: ${property}`);
     }
 
-    return [field, properties];
+    return [field, propertySchema as JsonSchemaType];
   }
 
+  /**
+   * Updates field info only.
+   * Does not mutate the schema.
+   */
   // TODO(burdon): Re-order.
-  setFieldProperties(view: ViewType, field: FieldType, properties: FieldPropertiesType) {
-    const current = view.fields.find((f) => f.path === field.path);
+  setField(view: ViewType, field: FieldType) {
+    const current = view.fields.find((f) => f.property === field.property);
+    if (!current) {
+      view.fields.push(field);
+    } else {
+      Object.assign(current, field);
+    }
+  }
+
+  /**
+   * Updates the field info and the property schema.
+   */
+  setPropertySchema(objectType: StoredSchema, view: ViewType, field: FieldType, propertySchema: JsonSchemaType) {
+    const current = view.fields.find((f) => f.property === field.property);
     if (!current) {
       view.fields.push(field);
     } else {
       Object.assign(current, field);
     }
 
-    for (const annotationId of this._annotationIds) {
-      const value = (properties as any)[annotationId];
-      setAnnotation(view.schema, field.path, { [annotationId]: value });
-    }
+    // TODO(dmaretskyi): Currently we update both the view and type schema but in the future we only want to update the relevant parts.
+    (objectType.jsonSchema as JsonSchema7Object).properties[field.property] = propertySchema;
+    // TODO(dmaretskyi): Add projection later on.
+    // (view.schema as JsonSchema7Object).properties[field.property] = propertySchema;
   }
 
-  deleteField(view: ViewType, field: FieldType) {
-    const idx = view.fields.findIndex((f) => f.path === field.path);
+  /**
+   * Deletes the field and the schema property (on both the view and the object type).
+   */
+  deleteProperty(objectType: StoredSchema, view: ViewType, field: FieldType) {
+    const idx = view.fields.findIndex((f) => f.property === field.property);
     if (idx !== -1) {
       view.fields.splice(idx, 1);
-      deleteProperty(view.schema, field.path);
+      deleteProperty(objectType.jsonSchema as any, field.property);
+      // TODO(dmaretskyi): Add projection later on.
+      // deleteProperty(view.schema as any, field.property);
     }
   }
 }

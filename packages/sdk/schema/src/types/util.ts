@@ -14,11 +14,11 @@ export const getFieldValue = <T extends {} = {}, V = any>(
   object: T,
   field: FieldType,
   defaultValue?: V,
-): V | undefined => (jp.value(object, '$.' + field.path) as V) ?? defaultValue;
+): V | undefined => (jp.value(object, '$.' + field.property) as V) ?? defaultValue;
 
 // TODO(burdon): Determine if path can be written back (or is a compute value).
 export const setFieldValue = <T extends {} = {}, V = any>(object: T, field: FieldType, value: V): V =>
-  jp.value(object, '$.' + field.path, value);
+  jp.value(object, '$.' + field.property, value);
 
 /**
  * @deprecated
@@ -71,17 +71,18 @@ export const toFieldValueType = (type: AST.AST): FieldFormatEnum => {
 };
 
 // TODO(burdon): Check unique name against schema.
+// TODO(dmaretskyi): Not json-path anymore.
 export const getUniqueProperty = (view: ViewType): JsonPath => {
   let n = 1;
   while (true) {
-    const path = `prop_${n++}`;
-    const idx = view.fields.findIndex((field) => field.path === path);
+    const property = `prop_${n++}`;
+    const idx = view.fields.findIndex((field) => field.property === property);
     if (idx === -1) {
-      return path as JsonPath;
+      return property as JsonPath;
     }
   }
 };
 
 export const createUniqueFieldForView = (view: ViewType): FieldType => {
-  return { path: getUniqueProperty(view) };
+  return { property: getUniqueProperty(view) };
 };

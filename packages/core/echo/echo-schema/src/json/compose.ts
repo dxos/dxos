@@ -19,7 +19,8 @@ TODO(dima)
  */
 // TODO(burdon): Can avoid having to call this every time we modify any property on the view?
 export const composeSchema = (source: JsonSchemaType, target: JsonSchemaType): JsonSchemaType => {
-  const result = structuredClone(target);
+  // TODO(dmaretskyi): Better way to clone echo proxies.
+  const result = JSON.parse(JSON.stringify(target));
   invariant('type' in result && result.type === 'object', 'source schema must be an object');
   invariant('type' in source && source.type === 'object', 'target schema must be an object');
 
