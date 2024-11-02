@@ -8,6 +8,7 @@ import { StoredSchema } from './types';
 import { create } from '../handler';
 import { type JsonSchemaType, createJsonSchema, toJsonSchema } from '../json';
 import { type ReactiveObject } from '../types';
+import { invariant } from '@dxos/invariant';
 
 /**
  * Create empty stored schema.
@@ -26,7 +27,7 @@ export const createStoredSchema = (typename: string, version: string): ReactiveO
 
 export const getProperty: any | undefined = (schema: JsonSchemaType, property: string) => {
   return (schema as any).properties[property];
-}
+};
 
 export const setProperty = (schema: JsonSchemaType, property: string, type: S.Schema.Any) => {
   const jsonSchema = toJsonSchema(type as S.Schema<any>);
@@ -45,9 +46,10 @@ export const deleteProperty = (schema: JsonSchemaType, property: string) => {
 //
 
 export const getAnnotation: any | undefined = (schema: JsonSchemaType, property: string, annotationId: symbol) => {
+  invariant(schema && (schema as any).properties);
   const p = (schema as any).properties[property];
-  return p.echo.annotations?.[annotationId];
-}
+  return p.echo?.annotations?.[annotationId];
+};
 
 // TODO(burdon): Normalize to use regular annotations.
 export const setAnnotation = (schema: JsonSchemaType, property: string, annotations: Record<symbol, any>) => {

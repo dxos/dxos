@@ -14,15 +14,15 @@ import {
   createStoredSchema,
   getTypename,
   ref,
+  setAnnotation,
   setProperty,
   toJsonSchema,
-  type JsonPath,
   TypedObject,
-  setAnnotation,
+  type JsonPath,
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { FieldFormat, FieldFormatEnum, FieldPath, FIELD_FORMAT_ANNOTATION, FILED_PATH_ANNOTATION } from './annotations';
+import { FIELD_FORMAT_ANNOTATION, FieldFormat, FieldFormatEnum, FieldPath, FILED_PATH_ANNOTATION } from './annotations';
 import { FieldProjection } from './field';
 import { createView, ViewSchema, type ViewType } from './view';
 
@@ -178,6 +178,7 @@ describe('view', () => {
   test('projection', async ({ expect }) => {
     const projection = new FieldProjection();
     const schema = createStoredSchema('example.com/type/Org', '0.1.0');
+    setProperty(schema.jsonSchema, 'name', S.String);
     const view = createView(schema);
     expect(view.fields).to.have.length(0); // TODO(burdon): Option to create fields.
     const properties = projection.getFieldProperties(view, 'name' as JsonPath);

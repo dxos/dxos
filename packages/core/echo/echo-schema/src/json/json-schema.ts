@@ -26,11 +26,15 @@ export const getEchoProp = (obj: JSONSchema.JsonSchema7): any => {
 };
 
 /**
- *
+ * Create object jsonSchema.
  */
 export const createJsonSchema = (schema: S.Struct<any> = S.Struct({})) => {
   const jsonSchema = toJsonSchema(schema);
+
+  // TODO(dmaretskyi): Fix those in the serializer.
   jsonSchema.type = 'object';
+  delete (jsonSchema as any).anyOf;
+
   return jsonSchema;
 };
 
@@ -76,7 +80,7 @@ export const toPropType = (type?: PropType): string => {
     default:
       throw new Error(`Invalid type: ${type}`);
   }
-}
+};
 /**
  * Convert effect schema to JSON Schema.
  * @param schema
@@ -199,9 +203,7 @@ export const toEffectSchema = (
     const refSegments = root.$ref.split('/');
     const jsonSchema = defs[refSegments[refSegments.length - 1]];
     invariant(jsonSchema, `missing definition for ${root.$ref}`);
-    result = toEffectSchema(jsonSchema, defs).pipe(
-      S.annotations({ identifier: refSegments[refSegments.length - 1] }),
-    );
+    result = toEffectSchema(jsonSchema, defs).pipe(S.annotations({ identifier: refSegments[refSegments.length - 1] }));
   }
 
   const refinement: EchoRefinement | undefined = (root as any)[ECHO_REFINEMENT_KEY];
