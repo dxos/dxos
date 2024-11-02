@@ -2,18 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, deleteProperty, JsonPath, getAnnotation, setAnnotation, toEffectSchema } from '@dxos/echo-schema';
+import { AST, deleteProperty, type JsonPath, getAnnotation, setAnnotation } from '@dxos/echo-schema';
 
-import { FieldType, FieldPropertiesType, ViewType } from './view';
+import { type FieldType, type FieldPropertiesType, type ViewType } from './view';
 
 /**
  * Maps view fields and schema annotations onto in-memory projections used by UX components.
  */
-export class FieldAnnotations {
-  constructor (private readonly _annotationIds: symbol[] = [AST.TitleAnnotationId, AST.DescriptionAnnotationId]) {}
+export class FieldProjection {
+  constructor(private readonly _annotationIds: symbol[] = [AST.TitleAnnotationId, AST.DescriptionAnnotationId]) {}
 
   getFieldProperties(view: ViewType, path: JsonPath): [FieldType, FieldPropertiesType] {
-    const field = view.fields.find(f => f.path === path) ?? { path };
+    const field = view.fields.find((f) => f.path === path) ?? { path };
 
     // TODO(burdon): Mixin properties from all annotations.
     const properties: FieldPropertiesType = { path };
@@ -26,9 +26,9 @@ export class FieldAnnotations {
 
   // TODO(burdon): Re-order.
   setFieldProperties(view: ViewType, field: FieldType, properties: FieldPropertiesType) {
-    const current = view.fields.find(f => f.path === field.path);
+    const current = view.fields.find((f) => f.path === field.path);
     if (!current) {
-      view.fields.push(field)
+      view.fields.push(field);
     } else {
       Object.assign(current, field);
     }
@@ -40,7 +40,7 @@ export class FieldAnnotations {
   }
 
   deleteField(view: ViewType, field: FieldType) {
-    const idx = view.fields.findIndex(f => f.path === field.path);
+    const idx = view.fields.findIndex((f) => f.path === field.path);
     if (idx !== -1) {
       view.fields.splice(idx, 1);
       deleteProperty(view.schema, field.path);

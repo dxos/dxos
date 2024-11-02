@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { JsonPath, JsonSchemaType, QueryType } from '@dxos/echo-schema';
+import { create, JsonPath, JsonSchemaType, type ReactiveObject, QueryType, type StoredSchema } from '@dxos/echo-schema';
 import { S } from '@dxos/effect';
 
 import { FieldFormatEnum } from './annotations';
@@ -82,3 +82,20 @@ export const ViewSchema = S.Struct({
 }).pipe(S.mutable);
 
 export type ViewType = S.Schema.Type<typeof ViewSchema>;
+
+/**
+ * Create view from existing schema.
+ */
+// TODO(burdon): Pass in MutableSchema from registry?
+export const createView = (schema: ReactiveObject<StoredSchema>): ReactiveObject<ViewType> => {
+  const view = create(ViewSchema, {
+    schema: schema.jsonSchema,
+    query: {
+      __typename: schema.typename,
+    },
+    fields: [],
+  });
+
+  // TODO(burdon): Option to create default fields.
+  return view;
+};

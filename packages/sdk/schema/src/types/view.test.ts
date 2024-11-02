@@ -2,13 +2,29 @@
 // Copyright 2024 DXOS.org
 //
 
+import { AST, Schema as S } from '@effect/schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { MutableSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { AST, S, createStoredSchema, setAnnotation, setProperty, toJsonSchema, TypedObject } from '@dxos/echo-schema';
+import {
+  composeSchema,
+  create,
+  createReferenceAnnotation,
+  createStoredSchema,
+  getTypename,
+  ref,
+  setProperty,
+  toJsonSchema,
+  type JsonPath,
+  TypedObject,
+  setAnnotation,
+} from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 
-import { type ViewType } from './view';
+import { FieldFormat, FieldFormatEnum, FieldPath, FIELD_FORMAT_ANNOTATION, FILED_PATH_ANNOTATION } from './annotations';
+import { FieldProjection } from './field';
+import { createView, ViewSchema, type ViewType } from './view';
 
 describe('view', () => {
   let builder: EchoTestBuilder;
@@ -19,6 +35,101 @@ describe('view', () => {
 
   afterEach(async () => {
     await builder.close();
+  });
+
+  test('schema composition', ({ expect }) => {
+    class BaseType extends TypedObject({ typename: 'example.com/Person', version: '0.1.0' })({
+      name: S.String,
+      email: S.String,
+    }) {}
+
+    const OverlaySchema = S.Struct({
+      email: S.String.pipe(FieldPath('$.email' as JsonPath)).pipe(FieldFormat(FieldFormatEnum.Email)),
+    });
+
+    const baseSchema = toJsonSchema(BaseType);
+    const overlaySchema = toJsonSchema(OverlaySchema);
+    const composedSchema = composeSchema(baseSchema, overlaySchema);
+
+    // TODO(burdon): Remove any cast?
+    expect((composedSchema as any).properties).toEqual({
+      email: {
+        type: 'string',
+        echo: {
+          annotations: {
+            [FIELD_FORMAT_ANNOTATION]: FieldFormatEnum.Email,
+            [FILED_PATH_ANNOTATION]: '$.email',
+          },
+        },
+      },
+    });
+  });
+
+  test('static schema definitions with references', async ({ expect }) => {
+    class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
+      name: S.String,
+    }) {}
+
+    class Person extends TypedObject({ typename: 'example.com/type/Person', version: '0.1.0' })({
+      name: S.String,
+      email: S.String.pipe(FieldFormat(FieldFormatEnum.Email)),
+      org: ref(Org),
+    }) {}
+
+    const org = create(Org, { name: 'Org' });
+    const person = create(Person, { name: 'John', email: 'john@example.com', org });
+    log('schema', { org: toJsonSchema(Org), person: toJsonSchema(Person) });
+    log('objects', { org, person });
+    expect(getTypename(org)).to.eq(Org.typename);
+    expect(getTypename(person)).to.eq(Person.typename);
+  });
+
+  test('dynamic schema definitions with references', async () => {
+    const orgSchema = createStoredSchema('example.com/type/Org', '0.1.0');
+    setProperty(orgSchema.jsonSchema, 'name', S.String.annotations({ [AST.DescriptionAnnotationId]: 'Org name' }));
+
+    const personSchema = createStoredSchema('example.com/type/Person', '0.1.0');
+    setProperty(
+      personSchema.jsonSchema,
+      'name',
+      S.String.annotations({
+        [AST.TitleAnnotationId]: 'Name',
+        [AST.DescriptionAnnotationId]: 'Full name',
+      }),
+    );
+
+    setProperty(
+      personSchema.jsonSchema,
+      'email',
+      S.String.pipe(FieldFormat(FieldFormatEnum.Email)).annotations({ [AST.DescriptionAnnotationId]: 'Primary email' }),
+    );
+
+    setProperty(
+      personSchema.jsonSchema,
+      'org',
+      createReferenceAnnotation(orgSchema).annotations({ [AST.DescriptionAnnotationId]: 'Employer' }),
+    );
+
+    const personView = create(ViewSchema, {
+      schema: personSchema.jsonSchema,
+      query: {
+        __typename: personSchema.typename,
+      },
+      fields: [
+        {
+          path: 'name' as JsonPath,
+        },
+        {
+          path: 'email' as JsonPath,
+        },
+        {
+          path: 'org' as JsonPath,
+        },
+      ],
+    });
+
+    log('schema', { org: orgSchema, person: personSchema });
+    log('view', { person: personView });
   });
 
   test('adds property to schema', async ({ expect }) => {
@@ -37,11 +148,15 @@ describe('view', () => {
     expect(view.query.__typename).to.eq(TestSchema.typename);
   });
 
-  test('adds dynamic schema', async ({ expect }) => {
+  test('adds dynamic schema to registry', async ({ expect }) => {
     const { db } = await builder.createDatabase();
     const registry = new MutableSchemaRegistry(db);
+
     const schema = createStoredSchema('example.com/type/Org', '0.1.0');
     db.add(schema);
+
+    // TODO(burdon): Should registration be automatic?
+    // TODO(burdon): Mutable? or property on StoredSchema?
     const mutable = registry.registerSchema(schema);
     expect(await registry.list()).to.have.length(1);
     const before = mutable.schema.ast.toJSON();
@@ -52,5 +167,20 @@ describe('view', () => {
 
     // Check schema updated.
     expect(before).not.to.deep.eq(mutable.schema.ast.toJSON());
+
+    // TODO(burdon): Throws.
+    const projection = new FieldProjection();
+    const view = createView(schema);
+    const properties = projection.getFieldProperties(view, 'name' as JsonPath);
+    expect(properties).to.exist;
+  });
+
+  test('projection', async ({ expect }) => {
+    const projection = new FieldProjection();
+    const schema = createStoredSchema('example.com/type/Org', '0.1.0');
+    const view = createView(schema);
+    expect(view.fields).to.have.length(0); // TODO(burdon): Option to create fields.
+    const properties = projection.getFieldProperties(view, 'name' as JsonPath);
+    expect(properties).to.exist;
   });
 });
