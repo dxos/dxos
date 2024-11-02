@@ -24,7 +24,7 @@ export type FieldType = S.Schema.Type<typeof FieldSchema>;
 /**
  * Computed (aggregate) field metadata (from annotations).
  */
-// TODO(burdon): Rename FieldProjectionType.
+// TODO(burdon): Rename FieldProjectionType?
 // TODO(burdon): Handle arrays?
 export const FieldPropertiesSchema = S.mutable(
   S.Struct({

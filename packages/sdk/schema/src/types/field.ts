@@ -15,6 +15,7 @@ export class FieldAnnotations {
   getFieldProperties(view: ViewType, path: JsonPath): [FieldType, FieldPropertiesType] {
     const field = view.fields.find(f => f.path === path) ?? { path };
 
+    // TODO(burdon): Mixin properties from all annotations.
     const properties: FieldPropertiesType = { path };
     for (const annotationId of this._annotationIds) {
       (properties as any)[annotationId] = getAnnotation(view.schema, path, annotationId);
