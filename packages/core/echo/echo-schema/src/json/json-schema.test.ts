@@ -89,7 +89,7 @@ describe('effect-to-json', () => {
       $schema: 'http://json-schema.org/draft-07/schema#',
       $id: 'dxn:type:example.com/type/Contact',
 
-      // TODO(dmaretskyi): Remvoe this.
+      // TODO(dmaretskyi): Remove this.
       echo: {
         type: {
           typename: 'example.com/type/Contact',
