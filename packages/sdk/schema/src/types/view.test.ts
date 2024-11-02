@@ -55,7 +55,7 @@ describe('view', () => {
     const composedSchema = composeSchema(baseSchema, overlaySchema);
 
     // TODO(burdon): Remove any cast?
-    expect((composedSchema as any).properties).toEqual({
+    expect((composedSchema as any).properties).to.deep.eq({
       email: {
         type: 'string',
         format: FieldFormatEnum.Email,
