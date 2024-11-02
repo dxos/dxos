@@ -20,6 +20,7 @@ import {
   toJsonSchema,
   TypedObject,
   type JsonPath,
+  type JsonSchemaType,
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
@@ -187,24 +188,28 @@ describe('view', () => {
 
   test('projection', async ({ expect }) => {
     const projection = new FieldProjection();
+
+    //
+    // Object type.
+    //
+
     const schema = createStoredSchema('example.com/type/Org', '0.1.0');
     setProperty(schema.jsonSchema as any, 'name', S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }));
-    setProperty(
-      schema.jsonSchema as any,
-      'email',
-      S.String.annotations({ [AST.DescriptionAnnotationId]: 'Email address', [FormatAnnotationId]: 'email' }),
-    );
+    setProperty(schema.jsonSchema as any, 'email', PROPERTY_TYPES[FieldFormatEnum.Email]!);
+
+    //
+    // View.
+    //
 
     const view = createView(schema);
-    expect(view.fields).to.have.length(0); // TODO(burdon): Option to create fields.
+    expect(view.fields).to.have.length(2);
 
-    projection.setFieldProperties(view, { property: 'name', size: 50 });
-    projection.setFieldProperties(view, { property: 'email', size: 100 });
+    // Update email column size.
+    projection.setField(view, { property: 'email', size: 100 });
 
     const [fieldProps, propertySchema] = projection.getFieldProperties(schema, view, 'name');
     expect(fieldProps).toEqual({
       property: 'name',
-      size: 50,
     });
     expect(propertySchema).toEqual({
       type: 'string',
@@ -219,7 +224,36 @@ describe('view', () => {
     expect(emailSchema).toEqual({
       type: 'string',
       description: 'Email address',
+      pattern: 'xxxxxxxx',
       format: 'email',
     });
+    expect(propertySchemaToFieldFormat(emailSchema)).to.eq(FieldFormatEnum.Email);
   });
 });
+
+const PROPERTY_TYPES: Partial<Record<FieldFormatEnum, S.Schema.All>> = {
+  // NOTE: pattern must come first so that it does not override description annotation.
+  [FieldFormatEnum.Email]: S.String.pipe(S.pattern(/xxxxxxxx/)).pipe(
+    S.annotations({ [AST.DescriptionAnnotationId]: 'Email address', [FormatAnnotationId]: 'email' }),
+  ),
+
+  [FieldFormatEnum.Currency]: S.String.pipe(
+    S.annotations({
+      [AST.DescriptionAnnotationId]: 'Currency value',
+      [FormatAnnotationId]: 'currency',
+      [AST.JSONSchemaAnnotationId]: { multipleOf: 0.01 }, // TODO(dmaretskyi): Might not work currently.
+    }),
+  ),
+};
+
+const propertySchemaToFieldFormat = (propertySchema: JsonSchemaType): FieldFormatEnum | undefined => {
+  const format = propertySchema.format;
+
+  // TODO(dmaretskyi): map .
+  switch (format) {
+    case 'email':
+      return FieldFormatEnum.Email;
+    default:
+      return undefined;
+  }
+};

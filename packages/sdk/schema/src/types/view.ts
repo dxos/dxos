@@ -6,7 +6,7 @@ import { create, JsonPath, JsonSchemaType, type ReactiveObject, QueryType, type 
 import { S } from '@dxos/effect';
 
 import { FieldFormatEnum } from './annotations';
-import type { JsonSchema7 } from '@effect/schema/JSONSchema';
+import type { JsonSchema7, JsonSchema7Object } from '@effect/schema/JSONSchema';
 
 /**
  * Stored field metadata (e.g., for UX).
@@ -97,6 +97,9 @@ export const createView = (schema: ReactiveObject<StoredSchema>): ReactiveObject
     fields: [],
   });
 
-  // TODO(burdon): Option to create default fields.
+  for (const property of Object.keys((schema.jsonSchema as JsonSchema7Object).properties)) {
+    view.fields.push(create(FieldSchema, { property }));
+  }
+
   return view;
 };

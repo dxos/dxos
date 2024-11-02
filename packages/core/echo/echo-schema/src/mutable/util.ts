@@ -29,7 +29,7 @@ export const getProperty: any | undefined = (schema: JsonSchemaType, property: s
   return (schema as any).properties[property];
 };
 
-export const setProperty = (schema: JsonSchemaType, property: string, type: S.Schema.Any) => {
+export const setProperty = (schema: JsonSchemaType, property: string, type: S.Schema.All) => {
   const jsonSchema = toJsonSchema(type as S.Schema<any>);
   // TODO(burdon): Is this required?
   delete (jsonSchema as any).$schema; // Remove $schema on leaf nodes.

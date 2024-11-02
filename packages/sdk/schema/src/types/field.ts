@@ -19,9 +19,8 @@ import type { JsonSchema7, JsonSchema7Object } from '@effect/schema/JSONSchema';
 /**
  * Maps view fields and schema annotations onto in-memory projections used by UX components.
  */
+// TODO(dmaretskyi): Turn back into functions.
 export class FieldProjection {
-  constructor(private readonly _annotationIds: symbol[] = [AST.TitleAnnotationId, AST.DescriptionAnnotationId]) {}
-
   /**
    * Gets combined information about a property: combined schema from the object type and view projection schema + field info.
    */
@@ -43,7 +42,7 @@ export class FieldProjection {
    * Does not mutate the schema.
    */
   // TODO(burdon): Re-order.
-  setFieldProperties(view: ViewType, field: FieldType) {
+  setField(view: ViewType, field: FieldType) {
     const current = view.fields.find((f) => f.property === field.property);
     if (!current) {
       view.fields.push(field);
@@ -71,7 +70,7 @@ export class FieldProjection {
   /**
    * Deletes the field and the schema property (on both the view and the object type).
    */
-  deleteField(objectType: StoredSchema, view: ViewType, field: FieldType) {
+  deleteProperty(objectType: StoredSchema, view: ViewType, field: FieldType) {
     const idx = view.fields.findIndex((f) => f.property === field.property);
     if (idx !== -1) {
       view.fields.splice(idx, 1);
