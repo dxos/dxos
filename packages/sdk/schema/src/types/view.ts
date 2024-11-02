@@ -24,30 +24,30 @@ export type FieldType = S.Schema.Type<typeof FieldSchema>;
 /**
  * Computed (aggregate) field metadata (from annotations).
  */
-// TODO(burdon): IMPORTANT This should be a computed composite of Schema defined field annotations.
-// TODO(burdon): get/set
+// TODO(burdon): Rename FieldProjectionType.
+// TODO(burdon): Handle arrays?
 export const FieldPropertiesSchema = S.mutable(
   S.Struct({
     // FieldPath
     path: JsonPath,
 
     // FieldKind
-    format: S.Enums(FieldKindEnum),
+    format: S.optional(S.Enums(FieldKindEnum)),
+
+    // TODO(burdon): Define types? Single type? Property on field for ux picker?
+    refSchema: S.optional(S.String),
 
     // AST.TitleAnnotation
     title: S.optional(S.String),
+
     // AST.DescriptionAnnotation
     description: S.optional(S.String),
 
     // TODO(burdon): S.pattern.
     // filter: S.optional(S.filter),
 
-    // TODO(burdon): Technically known as the precision `scale`.
+    // TODO(burdon): Technically known as the precision `scale` or JsonSchema `multipleOf`.
     digits: S.optional(S.Number.pipe(S.int(), S.nonNegative())),
-
-    // TODO(burdon): Define types? Single type? Property on field for ux picker?
-    refSchema: S.optional(S.String),
-    refProperty: S.optional(S.String),
   }),
 );
 
@@ -63,6 +63,7 @@ export const ViewSchema = S.Struct({
    * Schema used to render the view.
    * The view may be entirely responsible for creating this schema, or it may just reference an existing schema.
    */
+  // TODO(burdon): Change to MutableSchema?
   schema: JsonSchemaType,
 
   /**

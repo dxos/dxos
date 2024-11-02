@@ -5,15 +5,15 @@
 import { type UnsubscribeCallback } from '@dxos/async';
 import {
   create,
+  getObjectAnnotation,
+  makeStaticSchema,
   MutableSchema,
   type ObjectAnnotation,
   ObjectAnnotationId,
-  toJsonSchema,
-  getObjectAnnotation,
-  makeStaticSchema,
+  type S,
   type StaticSchema,
   StoredSchema,
-  type S,
+  toJsonSchema,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -87,7 +87,7 @@ export class MutableSchemaRegistry {
     return this._register(typeObject);
   }
 
-  // TODO(burdon): Remove?
+  // TODO(burdon): Remove? Rename query (list shouldn't be async).
   public async list(): Promise<MutableSchema[]> {
     const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
     return objects.map((stored) => {

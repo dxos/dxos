@@ -76,23 +76,7 @@ export const toPropType = (type?: PropType): string => {
     default:
       throw new Error(`Invalid type: ${type}`);
   }
-};
-
-/**
- * @deprecated Use TS-Effect types to generate JSON Schema
- */
-// TODO(burdon): Remove.
-export type JsonSchema = {
-  $schema?: string;
-  $id?: string;
-  $ref?: string;
-  title?: string;
-  description?: string;
-  type: string;
-  properties?: { [key: string]: JsonSchema };
-  items?: JsonSchema;
-};
-
+}
 /**
  * Convert effect schema to JSON Schema.
  * @param schema
@@ -238,7 +222,7 @@ const objectToEffectSchema = (
       immutableIdField = toEffectSchema(value, defs);
     } else {
       // TODO(burdon): Mutable cast.
-      (fields as any)[key] = root.required.includes(key)
+      (fields as any)[key] = root.required?.includes(key)
         ? toEffectSchema(value, defs)
         : S.optional(toEffectSchema(value, defs));
     }

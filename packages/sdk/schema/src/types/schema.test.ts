@@ -11,12 +11,11 @@ import {
   createReferenceAnnotation,
   createStoredSchema,
   getTypename,
-  toEffectSchema,
   ref,
   setProperty,
   toJsonSchema,
-  TypedObject,
   type JsonPath,
+  TypedObject,
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
@@ -65,8 +64,8 @@ describe('schema composition', () => {
 
     const org = create(Org, { name: 'Org' });
     const person = create(Person, { name: 'John', email: 'john@example.com', org });
-    log.info('schema', { org: toJsonSchema(Org), person: toJsonSchema(Person) });
-    log.info('objects', { org, person });
+    log('schema', { org: toJsonSchema(Org), person: toJsonSchema(Person) });
+    log('objects', { org, person });
     expect(getTypename(org)).to.eq(Org.typename);
     expect(getTypename(person)).to.eq(Person.typename);
   });
@@ -74,10 +73,6 @@ describe('schema composition', () => {
   test('dynamic schema definitions with references', async () => {
     const orgSchema = createStoredSchema('example.com/type/Org', '0.1.0');
     setProperty(orgSchema.jsonSchema, 'name', S.String.annotations({ [AST.DescriptionAnnotationId]: 'Org name' }));
-
-    const OrgSchema = toEffectSchema(orgSchema.jsonSchema);
-    const org = create(OrgSchema, { name: 'DXOS.org' });
-    log.info('objects', { org });
 
     const personSchema = createStoredSchema('example.com/type/Person', '0.1.0');
     setProperty(
@@ -119,7 +114,7 @@ describe('schema composition', () => {
       ],
     });
 
-    log.info('schema', { org: orgSchema, person: personSchema });
-    log.info('view', { person: personView });
+    log('schema', { org: orgSchema, person: personSchema });
+    log('view', { person: personView });
   });
 });

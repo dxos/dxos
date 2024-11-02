@@ -92,7 +92,6 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     // Merge existing schema in space with defaults.
     Object.entries<MutableSchema | S.Schema<any>>(schemaMap).forEach(([type, dynamicSchema]) => {
       const schema = this._maybeRegisterSchema(type, dynamicSchema);
-
       this.setSchema(type as T, schema);
     });
   }

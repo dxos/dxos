@@ -104,7 +104,6 @@ describe('effect-to-json', () => {
         type: { typename: 'example.com/type/Contact', version: '0.1.0' },
       },
     });
-    // log.info('', { jsonSchema });
   });
 
   const expectReferenceAnnotation = (object: JSONSchema.JsonSchema7) => {
@@ -117,7 +116,7 @@ describe('effect-to-json', () => {
 
 describe('json-to-effect', () => {
   for (const partial of [false, true]) {
-    test.only('deserialized equals original', () => {
+    test('deserialized equals original', () => {
       class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
         field: S.String,
       }) {}

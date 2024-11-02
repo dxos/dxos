@@ -20,9 +20,14 @@ export const createStoredSchema = (typename: string, version: string): ReactiveO
   });
 };
 
-/**
- * Set or update property.
- */
+//
+// Properties
+//
+
+export const getProperty: any | undefined = (schema: JsonSchemaType, property: string) => {
+  return (schema as any).properties[property];
+}
+
 export const setProperty = (schema: JsonSchemaType, property: string, type: S.Schema.Any) => {
   const jsonSchema = toJsonSchema(type as S.Schema<any>);
   // TODO(burdon): Is this required?
@@ -31,27 +36,29 @@ export const setProperty = (schema: JsonSchemaType, property: string, type: S.Sc
   (schema as any).properties[property] = jsonSchema;
 };
 
-/**
- * Delete property.
- */
 export const deleteProperty = (schema: JsonSchemaType, property: string) => {
   delete (schema as any).properties[property];
 };
 
-/**
- *
- */
-// TODO(burdon): Change annotation to FQ symbol?
-// TODO(burdon): Can we normalize this API to be more like `.annotations({ [key]: value })`?
-export const setAnnotation = (schema: JsonSchemaType, property: string, annotations: Record<string, any>) => {
-  (schema as any).properties[property].echo ??= {};
-  (schema as any).properties[property].echo.annotations ??= {};
-  Object.assign((schema as any).properties[property].echo.annotations, annotations);
+//
+// Annotations
+//
+
+export const getAnnotation: any | undefined = (schema: JsonSchemaType, property: string, annotationId: symbol) => {
+  const p = (schema as any).properties[property];
+  return p.echo.annotations?.[annotationId];
+}
+
+// TODO(burdon): Normalize to use regular annotations.
+export const setAnnotation = (schema: JsonSchemaType, property: string, annotations: Record<symbol, any>) => {
+  const p = (schema as any).properties[property];
+  p.echo ??= {};
+  p.echo.annotations ??= {};
+  for (const [key, value] of Object.entries(annotations)) {
+    p.echo.annotations[key] = value;
+  }
 };
 
-/**
- *
- */
 export const deleteAnnotation = (schema: JsonSchemaType, property: string, annotation: string) => {
   const annotations = (schema as any).properties[property]?.echo?.annotations;
   if (annotation) {

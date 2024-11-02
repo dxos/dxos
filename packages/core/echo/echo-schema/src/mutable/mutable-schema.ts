@@ -47,6 +47,7 @@ export const MutableSchemaBase = (): MutableSchemaConstructor => {
 /**
  * Schema that can be modified at runtime via the API.
  */
+// TODO(burdon): Document; does this impersonate an S.Schema (hence implements).
 export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> {
   private _schema: S.Schema<any> | undefined;
   private _isDirty = true;
@@ -59,16 +60,16 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
     return this.serializedSchema.id;
   }
 
-  public get Type() {
-    return this.serializedSchema;
+  public get [S.TypeId]() {
+    return schemaVariance;
   }
 
-  public get Encoded() {
-    return this.serializedSchema;
+  public get schema(): S.Schema<any> {
+    return this._getSchema();
   }
 
-  public get Context() {
-    return this._getSchema().Context;
+  public get typename(): string {
+    return this.serializedSchema.typename;
   }
 
   public get ast() {
@@ -85,24 +86,32 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
     return schema.pipe.bind(schema);
   }
 
-  // TODO(burdon): Comment?
-  public get [S.TypeId]() {
-    return schemaVariance;
+  public get Type() {
+    return this.serializedSchema;
   }
 
-  public get schema(): S.Schema<any> {
-    return this._getSchema();
+  public get Encoded() {
+    return this.serializedSchema;
   }
 
-  public get typename(): string {
-    return this.serializedSchema.typename;
+  public get Context() {
+    return this._getSchema().Context;
   }
 
-  // TODO(burdon): Rename.
+  /**
+   * Called by MutableSchemaRegistry on update.
+   */
   invalidate() {
     this._isDirty = true;
   }
 
+  public getProperties(): AST.PropertySignature[] {
+    const ast = this._getSchema().ast;
+    invariant(AST.isTypeLiteral(ast));
+    return [...ast.propertySignatures].filter((p) => p.name !== 'id').map(unwrapOptionality);
+  }
+
+  // TODO(burdon): Fields or Properties?
   public addFields(fields: S.Struct.Fields) {
     const extended = addFieldsToSchema(this._getSchema(), fields);
     this.serializedSchema.jsonSchema = toJsonSchema(extended);
@@ -121,12 +130,6 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
   public removeFields(fieldNames: string[]) {
     const removed = removeFieldsFromSchema(this._getSchema(), fieldNames);
     this.serializedSchema.jsonSchema = toJsonSchema(removed);
-  }
-
-  public getProperties(): AST.PropertySignature[] {
-    const ast = this._getSchema().ast;
-    invariant(AST.isTypeLiteral(ast));
-    return [...ast.propertySignatures].filter((p) => p.name !== 'id').map(unwrapOptionality);
   }
 
   private _getSchema() {

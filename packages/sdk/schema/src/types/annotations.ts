@@ -97,7 +97,7 @@ export enum FieldKindEnum {
   String = 'string',
   Number = 'number',
   Boolean = 'boolean',
-  // TODO(burdon): ?
+  // ?
   Ref = 'ref',
 
   Text = 'text',
