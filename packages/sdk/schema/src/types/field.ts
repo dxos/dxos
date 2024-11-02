@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { JsonSchema7Object } from '@effect/schema/JSONSchema';
+
 import { deleteProperty, type JsonSchemaType, type StoredSchema } from '@dxos/echo-schema';
 
-import type { JsonSchema7Object } from '@effect/schema/JSONSchema';
 import { type FieldType, type ViewType } from './view';
 
 /**

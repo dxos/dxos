@@ -4,15 +4,13 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { AST, type JSONSchema, S } from '@dxos/effect';
+import { type JSONSchema, S } from '@dxos/effect';
 import { deepMapValues } from '@dxos/util';
 
 import { toJsonSchema, toEffectSchema, getEchoProp } from './json-schema';
 import { FormatAnnotationId, PropertyMeta } from '../ast';
 import { ref } from '../handler';
 import { TypedObject } from '../object';
-import { log } from '@dxos/log';
-import { format } from 'path';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {
@@ -91,6 +89,15 @@ describe('effect-to-json', () => {
       $schema: 'http://json-schema.org/draft-07/schema#',
       $id: 'dxn:type:example.com/type/Contact',
       version: '0.1.0',
+
+      // TODO(dmaretskyi): Remove this.
+      echo: {
+        type: {
+          typename: 'example.com/type/Contact',
+          version: '0.1.0',
+        },
+      },
+      
       type: 'object',
       required: ['name', 'email', 'id'],
       properties: {

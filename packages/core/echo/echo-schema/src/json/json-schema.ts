@@ -6,6 +6,7 @@ import { type Types } from 'effect';
 
 import { AST, JSONSchema, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 
 import {
   FormatAnnotationId,
@@ -89,7 +90,7 @@ export const toPropType = (type?: PropType): string => {
  */
 export const toJsonSchema = (schema: S.Schema.Any): JSONSchema.JsonSchema7Object => {
   const schemaWithRefinements = S.make(withEchoRefinements(schema.ast));
-  let jsonSchema = JSONSchema.make(schemaWithRefinements) as JSONSchema.JsonSchema7Object;
+  const jsonSchema = JSONSchema.make(schemaWithRefinements) as JSONSchema.JsonSchema7Object;
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     // Put id first.
     jsonSchema.properties = Object.assign({ id: undefined }, jsonSchema.properties);
@@ -104,15 +105,15 @@ export const toJsonSchema = (schema: S.Schema.Any): JSONSchema.JsonSchema7Object
   // Fix field order.
   // TODO(dmaretskyi): Makes sure undefined is not left on optional fields for the resulting object .
   // TODO(dmaretskyi): `orderFields` util.
-  jsonSchema = Object.assign(
-    {
-      $schema: undefined,
-      $id: undefined,
-      version: undefined,
-      type: undefined,
-    },
-    jsonSchema,
-  );
+  // jsonSchema = Object.assign(
+  //   {
+  //     $schema: undefined,
+  //     $id: undefined,
+  //     version: undefined,
+  //     type: undefined,
+  //   },
+  //   jsonSchema,
+  // );
 
   return jsonSchema;
 };
@@ -274,14 +275,13 @@ const objectToEffectSchema = (
     }
   }
 
-  const annotations = jsonSchemaFieldsToAnnotations(root);
-
   if (!isEchoObject) {
     return schemaWithoutEchoId as any;
   } else {
     invariant(immutableIdField, 'no id in echo type');
 
     const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
+    const annotations = jsonSchemaFieldsToAnnotations(root);
     return schema.annotations(annotations) as any;
   }
 };
@@ -302,7 +302,7 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
 const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<string, any> => {
   const refinement: EchoRefinement = {};
   const schemaFields: Record<string, any> = {};
-  for (const annotation of [ReferenceAnnotationId, PropertyMetaAnnotationId]) {
+  for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
     if (annotations[annotation] != null) {
       refinement[annotationToRefinementKey[annotation]] = annotations[annotation] as any;
     }
@@ -327,6 +327,7 @@ const jsonSchemaFieldsToAnnotations = (schema: JSONSchema.JsonSchema7): AST.Anno
   }
 
   const echoRefinement: EchoRefinement = (schema as any)[ECHO_REFINEMENT_KEY];
+
   if (echoRefinement != null) {
     for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
       if (echoRefinement[annotationToRefinementKey[annotation]]) {
@@ -334,6 +335,13 @@ const jsonSchemaFieldsToAnnotations = (schema: JSONSchema.JsonSchema7): AST.Anno
       }
     }
   }
+
+  // if ('$id' in schema && typeof schema.$id === 'string' && schema.$id.startsWith('dxn:')) {
+  //   annotations[ObjectAnnotationId] = {
+  //     typename: DXN.parse(schema.$id).parts[0],
+  //     version: (schema as any).version,
+  //   };
+  // }
 
   return annotations;
 };

@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { JsonSchema7Object } from '@effect/schema/JSONSchema';
+
 import { create, JsonPath, JsonSchemaType, type ReactiveObject, QueryType, type StoredSchema } from '@dxos/echo-schema';
 import { S } from '@dxos/effect';
-
-import { FieldFormatEnum } from './annotations';
-import type { JsonSchema7, JsonSchema7Object } from '@effect/schema/JSONSchema';
 
 /**
  * Stored field metadata (e.g., for UX).
@@ -21,38 +20,6 @@ export const FieldSchema = S.mutable(
 );
 
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
-
-/**
- * Computed (aggregate) field metadata (from annotations).
- */
-// TODO(burdon): Rename FieldProjectionType?
-// TODO(burdon): Handle arrays?
-export const FieldPropertiesSchema = S.mutable(
-  S.Struct({
-    // FieldPath
-    path: JsonPath,
-
-    // FieldKind
-    format: S.optional(S.Enums(FieldFormatEnum)),
-
-    // TODO(burdon): ?
-    referenceSchema: S.optional(S.String),
-
-    // AST.TitleAnnotation
-    title: S.optional(S.String),
-
-    // AST.DescriptionAnnotation
-    description: S.optional(S.String),
-
-    // TODO(burdon): S.pattern.
-    // filter: S.optional(S.filter),
-
-    // TODO(burdon): Technically known as the precision `scale` or JsonSchema `multipleOf`.
-    digits: S.optional(S.Number.pipe(S.int(), S.nonNegative())),
-  }),
-);
-
-export type FieldPropertiesType = S.Schema.Type<typeof FieldPropertiesSchema>;
 
 /**
  * Views are generated or user-defined projections of a schema's properties.

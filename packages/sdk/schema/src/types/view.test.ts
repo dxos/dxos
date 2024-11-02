@@ -196,13 +196,14 @@ describe('view', () => {
     const schema = createStoredSchema('example.com/type/Org', '0.1.0');
     setProperty(schema.jsonSchema as any, 'name', S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }));
     setProperty(schema.jsonSchema as any, 'email', PROPERTY_TYPES[FieldFormatEnum.Email]!);
+    setProperty(schema.jsonSchema as any, 'netWorth', PROPERTY_TYPES[FieldFormatEnum.Currency]!);
 
     //
     // View.
     //
 
     const view = createView(schema);
-    expect(view.fields).to.have.length(2);
+    expect(view.fields).to.have.length(3);
 
     // Update email column size.
     projection.setField(view, { property: 'email', size: 100 });
@@ -228,12 +229,45 @@ describe('view', () => {
       format: 'email',
     });
     expect(propertySchemaToFieldFormat(emailSchema)).to.eq(FieldFormatEnum.Email);
+
+    const [netWorthProps, netWorthSchema] = projection.getFieldProperties(schema, view, 'netWorth');
+    expect(netWorthProps).toEqual({
+      property: 'netWorth',
+    });
+    expect(netWorthSchema).toEqual({
+      type: 'string',
+      description: 'Currency value',
+      format: 'currency',
+      // multipleOf: 0.01,
+    });
+
+    // TODO(dmaretskyi): References.
+    if (false) {
+      const [orgProps, orgSchema] = projection.getFieldProperties(schema, view, 'org');
+      expect(orgProps).toEqual({
+        projection: 'org',
+        referenceProperty: 'name',
+      });
+      expect(orgSchema).toEqual({
+        $id: '/echo/ref',
+        reference: {
+          schema: {
+            $ref: 'dxn:type:example.com/type/Org', // Same as $id of the org schema.
+          },
+          schemaVersion: '0.1.0',
+          schemaObject: 'dnx:echo:@:XXXXXXXXX', // Temp.
+        },
+      });
+    }
+
+    log.info('', { jsonSchema: schema.jsonSchema });
   });
 });
 
 // TODO(dmaretskyi): Move to sdk code.
 const PROPERTY_TYPES: Partial<Record<FieldFormatEnum, S.Schema.All>> = {
   // NOTE: pattern must come first so that it does not override description annotation.
+  // TODO(dmaretskyi): Serialize pattern.
   [FieldFormatEnum.Email]: S.String.pipe(S.pattern(/xxxxxxxx/)).pipe(
     S.annotations({ [AST.DescriptionAnnotationId]: 'Email address', [FormatAnnotationId]: 'email' }),
   ),
@@ -242,7 +276,8 @@ const PROPERTY_TYPES: Partial<Record<FieldFormatEnum, S.Schema.All>> = {
     S.annotations({
       [AST.DescriptionAnnotationId]: 'Currency value',
       [FormatAnnotationId]: 'currency',
-      [AST.JSONSchemaAnnotationId]: { multipleOf: 0.01 }, // TODO(dmaretskyi): Might not work currently.
+      // TODO(dmaretskyi): Add separate symbol for MultipleOfAnnotation.
+      // [AST.JSONSchemaAnnotationId]: { multipleOf: 0.01 }, // Currently breaking the serializer.
     }),
   ),
 };

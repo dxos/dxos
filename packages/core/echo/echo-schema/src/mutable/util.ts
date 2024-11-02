@@ -3,12 +3,12 @@
 //
 
 import { type S } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 
 import { StoredSchema } from './types';
 import { create } from '../handler';
 import { type JsonSchemaType, createJsonSchema, toJsonSchema } from '../json';
 import { type ReactiveObject } from '../types';
-import { invariant } from '@dxos/invariant';
 
 /**
  * Create empty stored schema.

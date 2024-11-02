@@ -6,13 +6,7 @@ import React, { type ReactNode, useMemo } from 'react';
 
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import {
-  FieldFormatEnums,
-  FieldPropertiesSchema,
-  type FieldPropertiesType,
-  type FieldType,
-  type ViewType,
-} from '@dxos/schema';
+import { FieldFormatEnums, FieldPropertiesSchema, type FieldPropertiesType, type ViewType } from '@dxos/schema';
 
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -46,7 +40,7 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
     onSubmit: (values: FieldPropertiesType) => onSave?.(values),
   });
 
-  const features = useMemo(() => values.format ? typeFeatures[values.format] ?? [] : [], [values.format]);
+  const features = useMemo(() => (values.format ? typeFeatures[values.format] ?? [] : []), [values.format]);
 
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
