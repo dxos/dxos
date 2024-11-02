@@ -98,13 +98,17 @@ export const toJsonSchema = (schema: S.Schema.Any): JSONSchema.JsonSchema7Object
   const objectAnnotation = getObjectAnnotation(schema);
   if (objectAnnotation) {
     (jsonSchema as any).$id = `dxn:type:${objectAnnotation.typename}`;
+    (jsonSchema as any).version = objectAnnotation.version;
   }
 
   // Fix field order.
+  // TODO(dmaretskyi): Makes sure undefined is not left on optional fields for the resulting object .
+  // TODO(dmaretskyi): `orderFields` util.
   jsonSchema = Object.assign(
     {
       $schema: undefined,
       $id: undefined,
+      version: undefined,
       type: undefined,
     },
     jsonSchema,
