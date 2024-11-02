@@ -106,7 +106,7 @@ describe('dynamic schema', () => {
     );
 
     effect(() => {
-      const _ = mutableSchema.serializedSchema.jsonSchema;
+      const _ = mutableSchema.jsonSchema;
       mutableSchema.invalidate();
     });
 

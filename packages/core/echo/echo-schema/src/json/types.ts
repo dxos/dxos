@@ -37,4 +37,4 @@ export type JsonSchemaType = JSONSchema.JsonSchema7 & {
  * Type of the JSON schema stored in an ECHO object.
  */
 // TODO(dmaretskyi): Define effect schema for json schema.
-export const JsonSchemaType = S.Any as S.Schema<JSONSchema.JsonSchema7>;
+export const JsonSchemaType = S.Any as S.Schema<JSONSchema.JsonSchema7Object>;

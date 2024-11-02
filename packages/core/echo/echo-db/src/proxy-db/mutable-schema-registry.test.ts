@@ -46,7 +46,7 @@ describe('schema registry', () => {
 
   const setupTest = async () => {
     const { db } = await builder.createDatabase();
-    return { db, registry: db.schema };
+    return { db, registry: db.schemaRegistry };
   };
 
   test('add new schema', async () => {
@@ -126,7 +126,7 @@ describe('schema registry', () => {
     const { db, registry } = await setupTest();
     const storedSchema = db.add(createTestSchemas()[0]);
     db.graph.schemaRegistry.addSchema([TestSchemaType]);
-    const listed = await db.schema.listAll();
+    const listed = await db.schemaRegistry.listAll();
     expect(listed.length).to.eq(3);
     expect(listed.slice(0, 2)).to.deep.eq([makeStaticSchema(StoredSchema), makeStaticSchema(TestSchemaType)]);
     expect(listed[2]).to.deep.contain({

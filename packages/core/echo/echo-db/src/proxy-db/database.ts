@@ -41,7 +41,7 @@ export interface EchoDatabase {
 
   get spaceId(): SpaceId;
 
-  get schema(): MutableSchemaRegistry;
+  get schemaRegistry(): MutableSchemaRegistry;
 
   /**
    * All loaded objects.
@@ -104,7 +104,6 @@ export type EchoDatabaseParams = {
   graph: Hypergraph;
   dataService: DataService;
   queryService: QueryService;
-
   spaceId: SpaceId;
 
   /**
@@ -127,9 +126,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   _coreDatabase: CoreDatabase;
 
-  // TODO(burdon): Rename schemaRegistry.
-  public readonly schema: MutableSchemaRegistry;
-
   private _rootUrl: string | undefined = undefined;
 
   /**
@@ -137,6 +133,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * @internal
    */
   readonly _rootProxies = new Map<ObjectCore, EchoReactiveObject<any>>();
+
+  public readonly schemaRegistry: MutableSchemaRegistry;
 
   constructor(params: EchoDatabaseParams) {
     super();
@@ -149,7 +147,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       spaceKey: params.spaceKey,
     });
 
-    this.schema = new MutableSchemaRegistry(this, { reactiveQuery: params.reactiveSchemaQuery });
+    this.schemaRegistry = new MutableSchemaRegistry(this, { reactiveQuery: params.reactiveSchemaQuery });
   }
 
   get graph(): Hypergraph {
@@ -249,7 +247,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     if (!isEchoObject(echoObject)) {
       const schema = getSchema(obj);
       if (schema != null) {
-        if (!this.schema.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
+        if (!this.schemaRegistry.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
           throw createSchemaNotRegisteredError(schema);
         }
       }

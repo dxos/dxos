@@ -7,7 +7,7 @@ import { S } from '@dxos/effect';
 import { type ObjectAnnotation, ObjectAnnotationId, schemaVariance } from '../ast';
 import { getSchema, getTypeReference } from '../proxy';
 
-export interface AbstractSchema {
+export interface AbstractSchema<Fields = any, I = any> extends S.Schema<Fields, I> {
   // Fully qualified type name.
   readonly typename: string;
 }
@@ -15,7 +15,7 @@ export interface AbstractSchema {
 /**
  * Marker interface for typed objects (for type inference).
  */
-export interface AbstractTypedObject<Fields, I> extends AbstractSchema, S.Schema<Fields, I> {
+export interface AbstractTypedObject<Fields, I> extends AbstractSchema<Fields, I> {
   // Type constructor.
   new (): Fields;
 }
@@ -38,7 +38,7 @@ type TypeObjectOptions = {
  */
 // TODO(burdon): Need to document this and define a return type.
 // TODO(burdon): Support pipe(S.default({}))
-export const TypedObject = <Klass>({
+export const TypedObject = <ClassType>({
   typename,
   version,
   skipTypenameFormatCheck,
@@ -75,11 +75,10 @@ export const TypedObject = <Klass>({
 
     return class {
       static readonly typename = typename;
-      static [Symbol.hasInstance](obj: unknown): obj is Klass {
+      static [Symbol.hasInstance](obj: unknown): obj is ClassType {
         return obj != null && getTypeReference(getSchema(obj))?.objectId === typename;
       }
 
-      // TODO(burdon): Comment.
       static readonly [S.TypeId] = schemaVariance;
       static readonly ast = annotatedSchema.ast;
       static readonly annotations = annotatedSchema.annotations.bind(annotatedSchema);

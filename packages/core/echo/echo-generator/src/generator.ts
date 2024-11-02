@@ -111,12 +111,12 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
   private _maybeRegisterSchema(typename: string, schema: MutableSchema | S.Schema<any>): MutableSchema | S.Schema<any> {
     if (schema instanceof MutableSchema) {
-      const existingSchema = this._space.db.schema.getSchemaByTypename(typename);
+      const existingSchema = this._space.db.schemaRegistry.getSchemaByTypename(typename);
       if (existingSchema != null) {
         return existingSchema;
       }
-      this._space.db.add(schema.serializedSchema);
-      return this._space.db.schema.registerSchema(schema.serializedSchema);
+      this._space.db.add(schema.storedSchema);
+      return this._space.db.schemaRegistry.registerSchema(schema.storedSchema);
     } else {
       const existingSchema = this._space.db.graph.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {

@@ -2,9 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { JsonSchema7Object } from '@effect/schema/JSONSchema';
-
-import { create, JsonPath, JsonSchemaType, type ReactiveObject, QueryType, type StoredSchema } from '@dxos/echo-schema';
+import {
+  create,
+  type JSONSchema,
+  JsonPath,
+  JsonSchemaType,
+  type ReactiveObject,
+  QueryType,
+  TypedObject,
+} from '@dxos/echo-schema';
 import { S } from '@dxos/effect';
 
 /**
@@ -26,8 +32,10 @@ export type FieldType = S.Schema.Type<typeof FieldSchema>;
  * They are used to configure the visual representation of the data.
  * The query is separate from the view (queries configure the projection of data objects).
  */
-// TODO(dmaretskyi): Make typed object.
-export const ViewSchema = S.Struct({
+export class ViewType extends TypedObject({
+  typename: 'dxos.org/type/View',
+  version: '0.1.0',
+})({
   /**
    * This is the projection schema!! -- not the object type.
    * Schema used to render the view.
@@ -49,27 +57,21 @@ export const ViewSchema = S.Struct({
    */
   fields: S.mutable(S.Array(FieldSchema)),
 
+  // TODO(burdon): Readonly flag?
   // TODO(burdon): Add array of sort orders (which might be tuples).
-}).pipe(S.mutable);
-
-export type ViewType = S.Schema.Type<typeof ViewSchema>;
+}) {}
 
 /**
  * Create view from existing schema.
  */
-// TODO(burdon): Pass in MutableSchema from registry?
-export const createView = (schema: ReactiveObject<StoredSchema>): ReactiveObject<ViewType> => {
-  const view = create(ViewSchema, {
-    // schema: schema.jsonSchema,
+// TODO(burdon): What is the minimal type that can be passed here that included TypedObjects (i.e., AbstractSchema).
+export const createView = (jsonSchema: JSONSchema.JsonSchema7Object, typename: string): ReactiveObject<ViewType> => {
+  return create(ViewType, {
+    schema: jsonSchema,
     query: {
-      __typename: schema.typename,
+      __typename: typename,
     },
-    fields: [],
+    // Create initial fields.
+    fields: Object.keys(jsonSchema.properties).map((property) => create(FieldSchema, { property })),
   });
-
-  for (const property of Object.keys((schema.jsonSchema as JsonSchema7Object).properties)) {
-    view.fields.push(create(FieldSchema, { property }));
-  }
-
-  return view;
 };

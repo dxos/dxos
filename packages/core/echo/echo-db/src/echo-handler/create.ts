@@ -158,8 +158,8 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
       delete target[key];
     } else if (typeof value === 'object') {
       if (value instanceof MutableSchema) {
-        target[key] = value.serializedSchema;
-        validateInitialProps(value.serializedSchema, seen);
+        target[key] = value.storedSchema;
+        validateInitialProps(value.storedSchema, seen);
       } else if (!isEchoObject(value)) {
         throwIfCustomClass(key, value);
         validateInitialProps(target[key], seen);

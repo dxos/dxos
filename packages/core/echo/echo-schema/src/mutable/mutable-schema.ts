@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, S } from '@dxos/effect';
+import { AST, type JSONSchema, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import {
@@ -15,11 +15,11 @@ import { StoredSchema } from './types';
 import { type HasId, schemaVariance } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
 
-export interface MutableSchemaConstructor extends S.Schema<MutableSchema> {
+interface MutableSchemaConstructor extends S.Schema<MutableSchema> {
   new (): HasId;
 }
 
-export const MutableSchemaBase = (): MutableSchemaConstructor => {
+const MutableSchemaBase = (): MutableSchemaConstructor => {
   return class {
     static get ast() {
       return this._schema.ast;
@@ -47,21 +47,30 @@ export const MutableSchemaBase = (): MutableSchemaConstructor => {
 /**
  * Schema that can be modified at runtime via the API.
  */
-// TODO(burdon): Document; does this impersonate an S.Schema (hence implements S.Schema). Reconcile with StoredSchema.
+// TODO(burdon): Why does this have a schema property AND implement schema.
 export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> {
   private _schema: S.Schema<any> | undefined;
   private _isDirty = true;
 
-  constructor(public readonly serializedSchema: StoredSchema) {
+  constructor(private readonly _storedSchema: StoredSchema) {
     super();
-  }
-
-  public override get id() {
-    return this.serializedSchema.id;
   }
 
   public get [S.TypeId]() {
     return schemaVariance;
+  }
+
+  public override get id() {
+    return this._storedSchema.id;
+  }
+
+  public get jsonSchema(): JSONSchema.JsonSchema7 {
+    return this._storedSchema.jsonSchema;
+  }
+
+  // TODO(burdon): Remove?
+  public get storedSchema(): StoredSchema {
+    return this._storedSchema;
   }
 
   public get schema(): S.Schema<any> {
@@ -69,7 +78,7 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
   }
 
   public get typename(): string {
-    return this.serializedSchema.typename;
+    return this._storedSchema.typename;
   }
 
   public get ast() {
@@ -87,11 +96,11 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
   }
 
   public get Type() {
-    return this.serializedSchema;
+    return this._storedSchema;
   }
 
   public get Encoded() {
-    return this.serializedSchema;
+    return this._storedSchema;
   }
 
   public get Context() {
@@ -114,27 +123,27 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
   // TODO(burdon): Fields or Properties?
   public addFields(fields: S.Struct.Fields) {
     const extended = addFieldsToSchema(this._getSchema(), fields);
-    this.serializedSchema.jsonSchema = toJsonSchema(extended);
+    this._storedSchema.jsonSchema = toJsonSchema(extended);
   }
 
   public updateFields(fields: S.Struct.Fields) {
     const updated = updateFieldsInSchema(this._getSchema(), fields);
-    this.serializedSchema.jsonSchema = toJsonSchema(updated);
+    this._storedSchema.jsonSchema = toJsonSchema(updated);
   }
 
   public updateFieldPropertyName({ before, after }: { before: PropertyKey; after: PropertyKey }) {
     const renamed = updateFieldNameInSchema(this._getSchema(), { before, after });
-    this.serializedSchema.jsonSchema = toJsonSchema(renamed);
+    this._storedSchema.jsonSchema = toJsonSchema(renamed);
   }
 
   public removeFields(fieldNames: string[]) {
     const removed = removeFieldsFromSchema(this._getSchema(), fieldNames);
-    this.serializedSchema.jsonSchema = toJsonSchema(removed);
+    this._storedSchema.jsonSchema = toJsonSchema(removed);
   }
 
   private _getSchema() {
     if (this._isDirty || this._schema == null) {
-      this._schema = toEffectSchema(unwrapProxy(this.serializedSchema.jsonSchema));
+      this._schema = toEffectSchema(unwrapProxy(this._storedSchema.jsonSchema));
       this._isDirty = false;
     }
 

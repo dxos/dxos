@@ -4,7 +4,7 @@
 
 import { AST, S, createObjectId, toJsonSchema } from '@dxos/echo-schema';
 
-import { EmailFormat, type FieldType, PatternAnnotationId, type ViewType } from '../types';
+import { createView, EmailFormat, type FieldType, PatternAnnotationId } from '../types';
 
 //
 // Schema
@@ -66,8 +66,4 @@ const fields: FieldType[] = [
   },
 ];
 
-export const testView: ViewType = {
-  schema: toJsonSchema(TestSchema),
-  query: { __typename: 'example.com/type/Test' },
-  fields,
-};
+export const testView = createView(toJsonSchema(TestSchema), 'example.com/type/Test');

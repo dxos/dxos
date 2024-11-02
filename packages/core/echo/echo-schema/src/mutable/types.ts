@@ -10,8 +10,13 @@ import { TypedObject } from '../object';
 import { requireTypeReference } from '../proxy';
 
 /**
- * Stored representation of a schame.
+ * TypedObjects are stored in the database.
  */
+
+/**
+ * Stored representation of a schema.
+ */
+// TODO(burdon): How to get the S.Schema object that this represents?
 export class StoredSchema extends TypedObject({ typename: 'dxos.org/type/Schema', version: '0.1.0' })({
   typename: S.String,
   version: S.String,
@@ -22,7 +27,7 @@ export class StoredSchema extends TypedObject({ typename: 'dxos.org/type/Schema'
  * Wrapper around a schema that is stored in the database (from a type definition) but cannot be modified at runtime.
  * @deprecated
  */
-// TODO(burdon): Replace with property on StoredSchema.
+// TODO(burdon): Reconcile with StoredSchema.
 export type StaticSchema = {
   id?: string;
   typename: string;

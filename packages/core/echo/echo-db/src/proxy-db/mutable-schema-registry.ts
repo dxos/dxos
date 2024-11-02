@@ -35,6 +35,7 @@ export type MutableSchemaRegistryOptions = {
 /**
  * Per-space set of mutable schemas.
  */
+// TODO(burdon): Reconcile with RuntimeSchemaRegistry.
 export class MutableSchemaRegistry {
   private readonly _schemaById: Map<string, MutableSchema> = new Map();
   private readonly _schemaByType: Map<string, MutableSchema> = new Map();
@@ -65,10 +66,6 @@ export class MutableSchemaRegistry {
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
-  public getSchemaByTypename(typename: string): MutableSchema | undefined {
-    return this._schemaByType.get(typename);
-  }
-
   public getSchemaById(id: string): MutableSchema | undefined {
     const existing = this._schemaById.get(id);
     if (existing != null) {
@@ -88,14 +85,13 @@ export class MutableSchemaRegistry {
     return this._register(typeObject);
   }
 
-  // TODO(burdon): Remove? Rename query (list shouldn't be async).
-  public async list(): Promise<MutableSchema[]> {
-    const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
-    return objects.map((stored) => {
-      return this._register(stored);
-    });
+  public getSchemaByTypename(typename: string): MutableSchema | undefined {
+    return this._schemaByType.get(typename);
   }
 
+  /**
+   * @deprecated
+   */
   // TODO(burdon): Reconcile with list.
   public async listAll(): Promise<StaticSchema[]> {
     const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
@@ -111,6 +107,14 @@ export class MutableSchemaRegistry {
 
     const runtimeSchemas = this._db.graph.schemaRegistry.schemas.map(makeStaticSchema);
     return [...runtimeSchemas, ...storedSchemas];
+  }
+
+  // TODO(burdon): Rename query (`list` shouldn't be async).
+  public async list(): Promise<MutableSchema[]> {
+    const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
+    return objects.map((stored) => {
+      return this._register(stored);
+    });
   }
 
   public subscribe(callback: SchemaListChangedCallback): UnsubscribeCallback {

@@ -26,7 +26,7 @@ import { log } from '@dxos/log';
 
 import { FieldFormatEnum, FieldPath, FILED_PATH_ANNOTATION } from './annotations';
 import { FieldProjection } from './field';
-import { createView, ViewSchema, type ViewType } from './view';
+import { createView } from './view';
 
 describe('view', () => {
   let builder: EchoTestBuilder;
@@ -88,6 +88,12 @@ describe('view', () => {
     expect(getTypename(person)).to.eq(Person.typename);
   });
 
+  test('create view from TypedObject', async ({ expect }) => {
+    class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({}) {}
+    const view = createView(toJsonSchema(TestSchema), TestSchema.typename);
+    expect(view.query.__typename).to.eq(TestSchema.typename);
+  });
+
   test('dynamic schema definitions with references', async () => {
     const orgSchema = createStoredSchema('example.com/type/Org', '0.1.0');
     setProperty(
@@ -121,42 +127,9 @@ describe('view', () => {
       createReferenceAnnotation(orgSchema).annotations({ [AST.DescriptionAnnotationId]: 'Employer' }),
     );
 
-    const personView = create(ViewSchema, {
-      schema: personSchema.jsonSchema,
-      query: {
-        __typename: personSchema.typename,
-      },
-      fields: [
-        {
-          property: 'name',
-        },
-        {
-          property: 'email',
-        },
-        {
-          property: 'org',
-        },
-      ],
-    });
-
+    const personView = createView(personSchema.jsonSchema, personSchema.typename);
     log.info('schema', { org: orgSchema, person: personSchema });
     log('view', { person: personView });
-  });
-
-  test('adds property to schema', async ({ expect }) => {
-    const { db } = await builder.createDatabase();
-    class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({}) {}
-    const schema = db.schema.addSchema(TestSchema);
-
-    const view: ViewType = {
-      schema: toJsonSchema(TestSchema),
-      query: {
-        __typename: schema.typename,
-      },
-      fields: [],
-    };
-
-    expect(view.query.__typename).to.eq(TestSchema.typename);
   });
 
   test('adds dynamic schema to registry', async ({ expect }) => {
@@ -167,7 +140,6 @@ describe('view', () => {
     db.add(schema);
 
     // TODO(burdon): Should registration be automatic?
-    // TODO(burdon): Mutable? or property on StoredSchema?
     const mutable = registry.registerSchema(schema);
     expect(await registry.list()).to.have.length(1);
     const before = mutable.schema.ast.toJSON();
@@ -179,9 +151,8 @@ describe('view', () => {
     // Check schema updated.
     expect(before).not.to.deep.eq(mutable.schema.ast.toJSON());
 
-    // TODO(burdon): Throws.
     const projection = new FieldProjection();
-    const view = createView(schema);
+    const view = createView(jsonSchema, schema.typename);
     const properties = projection.getFieldProperties(schema, view, 'name');
     expect(properties).to.exist;
   });
@@ -202,7 +173,7 @@ describe('view', () => {
     // View.
     //
 
-    const view = createView(schema);
+    const view = createView(schema.jsonSchema, schema.typename);
     expect(view.fields).to.have.length(3);
 
     // Update email column size.
@@ -242,23 +213,23 @@ describe('view', () => {
     });
 
     // TODO(dmaretskyi): References.
-    if (false) {
-      const [orgProps, orgSchema] = projection.getFieldProperties(schema, view, 'org');
-      expect(orgProps).toEqual({
-        projection: 'org',
-        referenceProperty: 'name',
-      });
-      expect(orgSchema).toEqual({
-        $id: '/echo/ref',
-        reference: {
-          schema: {
-            $ref: 'dxn:type:example.com/type/Org', // Same as $id of the org schema.
-          },
-          schemaVersion: '0.1.0',
-          schemaObject: 'dnx:echo:@:XXXXXXXXX', // Temp.
-        },
-      });
-    }
+    // if (false) {
+    //   const [orgProps, orgSchema] = projection.getFieldProperties(schema, view, 'org');
+    //   expect(orgProps).toEqual({
+    //     projection: 'org',
+    //     referenceProperty: 'name',
+    //   });
+    //   expect(orgSchema).toEqual({
+    //     $id: '/echo/ref',
+    //     reference: {
+    //       schema: {
+    //         $ref: 'dxn:type:example.com/type/Org', // Same as $id of the org schema.
+    //       },
+    //       schemaVersion: '0.1.0',
+    //       schemaObject: 'dnx:echo:@:XXXXXXXXX', // Temp.
+    //     },
+    //   });
+    // }
 
     log.info('', { jsonSchema: schema.jsonSchema });
   });
