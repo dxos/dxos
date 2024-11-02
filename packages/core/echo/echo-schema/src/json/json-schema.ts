@@ -275,19 +275,13 @@ const objectToEffectSchema = (
     }
   }
 
-  const annotations = jsonSchemaFieldsToAnnotations(root);
-
-  console.log({
-    annotations,
-    isEchoObject,
-  });
-
   if (!isEchoObject) {
     return schemaWithoutEchoId as any;
   } else {
     invariant(immutableIdField, 'no id in echo type');
-
+    
     const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
+    const annotations = jsonSchemaFieldsToAnnotations(root);
     return schema.annotations(annotations) as any;
   }
 };
