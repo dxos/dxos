@@ -241,6 +241,25 @@ describe('view', () => {
       // multipleOf: 0.01,
     });
 
+    // TODO(dmaretskyi): References.
+    if (false) {
+      const [orgProps, orgSchema] = projection.getFieldProperties(schema, view, 'org');
+      expect(orgProps).toEqual({
+        projection: 'org',
+        referenceProperty: 'name',
+      });
+      expect(orgSchema).toEqual({
+        $id: '/echo/ref',
+        reference: {
+          schema: {
+            $ref: 'dxn:type:example.com/type/Org', // Same as $id of the org schema.
+          },
+          schemaVersion: '0.1.0',
+          schemaObject: 'dnx:echo:@:XXXXXXXXX', // Temp.
+        },
+      });
+    }
+
     log.info('', { jsonSchema: schema.jsonSchema });
   });
 });
