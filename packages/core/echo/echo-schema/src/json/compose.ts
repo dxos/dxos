@@ -4,7 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { type JsonSchemaType } from './types';
+import { type JsonSchemaType } from '../ast';
 
 /*
 TODO(dima)

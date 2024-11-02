@@ -6,8 +6,9 @@ import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { StoredSchema } from './types';
+import { type JsonSchemaType } from '../ast';
 import { create } from '../handler';
-import { type JsonSchemaType, createJsonSchema, toJsonSchema } from '../json';
+import { createJsonSchema, toJsonSchema } from '../json';
 import { type ReactiveObject } from '../types';
 
 /**

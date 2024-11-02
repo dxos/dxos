@@ -6,10 +6,8 @@ import { type Types } from 'effect';
 
 import { AST, JSONSchema, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
 
 import {
-  FormatAnnotationId,
   getObjectAnnotation,
   type ObjectAnnotation,
   ObjectAnnotationId,
@@ -17,13 +15,14 @@ import {
   PropertyMetaAnnotationId,
   ReferenceAnnotationId,
 } from '../ast';
+import { CustomAnnotations } from '../formats';
 import { createEchoReferenceSchema } from '../handler';
+
+const ECHO_REFINEMENT_KEY = 'echo';
 
 /**
  * @internal
  */
-const ECHO_REFINEMENT_KEY = 'echo';
-
 export const getEchoProp = (obj: JSONSchema.JsonSchema7): any => {
   return (obj as any)[ECHO_REFINEMENT_KEY];
 };
@@ -37,7 +36,6 @@ export const createJsonSchema = (schema: S.Struct<any> = S.Struct({})) => {
   // TODO(dmaretskyi): Fix those in the serializer.
   jsonSchema.type = 'object';
   delete (jsonSchema as any).anyOf;
-
   return jsonSchema;
 };
 
@@ -89,6 +87,7 @@ export const toPropType = (type?: PropType): string => {
  * @param schema
  */
 export const toJsonSchema = (schema: S.Schema.Any): JSONSchema.JsonSchema7Object => {
+  invariant(schema);
   const schemaWithRefinements = S.make(withEchoRefinements(schema.ast));
   const jsonSchema = JSONSchema.make(schemaWithRefinements) as JSONSchema.JsonSchema7Object;
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
@@ -279,7 +278,6 @@ const objectToEffectSchema = (
     return schemaWithoutEchoId as any;
   } else {
     invariant(immutableIdField, 'no id in echo type');
-
     const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
     const annotations = jsonSchemaFieldsToAnnotations(root);
     return schema.annotations(annotations) as any;
@@ -297,23 +295,28 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
 
 //
 // Annotations
+// TODO(burdon): Pass in CustomAnnotations to keep separate.
 //
 
-const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<string, any> => {
+const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<symbol, any> => {
   const refinement: EchoRefinement = {};
-  const schemaFields: Record<string, any> = {};
   for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
     if (annotations[annotation] != null) {
       refinement[annotationToRefinementKey[annotation]] = annotations[annotation] as any;
     }
   }
 
+  const schemaFields: Record<string, any> = {};
   if (Object.keys(refinement).length > 0) {
     schemaFields[ECHO_REFINEMENT_KEY] = refinement;
   }
 
-  if (annotations[FormatAnnotationId] != null) {
-    schemaFields.format = annotations[FormatAnnotationId];
+  for (const [key, annotationId] of Object.entries(CustomAnnotations)) {
+    const value = annotations[annotationId];
+    if (value != null) {
+      // TODO(burdon): Clone?
+      schemaFields[key] = value;
+    }
   }
 
   return schemaFields;
@@ -321,9 +324,11 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<str
 
 const jsonSchemaFieldsToAnnotations = (schema: JSONSchema.JsonSchema7): AST.Annotations => {
   const annotations: Types.Mutable<S.Annotations.Schema<any>> = {};
-
-  if ('format' in schema && typeof schema.format === 'string') {
-    annotations[FormatAnnotationId] = schema.format;
+  for (const [key, annotationId] of Object.entries(CustomAnnotations)) {
+    if (key in schema) {
+      // TODO(burdon): Clone?
+      annotations[annotationId] = (schema as any)[key];
+    }
   }
 
   const echoRefinement: EchoRefinement = (schema as any)[ECHO_REFINEMENT_KEY];
@@ -336,6 +341,7 @@ const jsonSchemaFieldsToAnnotations = (schema: JSONSchema.JsonSchema7): AST.Anno
     }
   }
 
+  // TODO(burdon): References.
   // if ('$id' in schema && typeof schema.$id === 'string' && schema.$id.startsWith('dxn:')) {
   //   annotations[ObjectAnnotationId] = {
   //     typename: DXN.parse(schema.$id).parts[0],

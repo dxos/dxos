@@ -16,6 +16,7 @@ export { AST, JSONSchema, S } from '@dxos/effect';
 // TODO(burdon): Fix defaults.
 
 export * from './ast';
+export * from './formats';
 export * from './handler';
 export * from './json';
 export * from './mutable';

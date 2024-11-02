@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FieldFormatEnum } from './types';
+import { FormatEnum } from '@dxos/echo-schema';
 
 /**
  * Format value by type.
@@ -11,9 +11,9 @@ import { FieldFormatEnum } from './types';
 // TODO(burdon): Kind vs type.
 // TODO(burdon): Reconcile with FormattingModel.
 // TODO(burdon): Handle parsing also.
-export const formatValue = (type: FieldFormatEnum, value: any, locale: string | undefined = undefined): string => {
+export const formatValue = (type: FormatEnum, value: any, locale: string | undefined = undefined): string => {
   switch (type) {
-    case FieldFormatEnum.Boolean: {
+    case FormatEnum.Boolean: {
       return (value as boolean).toLocaleString().toUpperCase();
     }
 
@@ -21,15 +21,15 @@ export const formatValue = (type: FieldFormatEnum, value: any, locale: string | 
     // Numbers.
     //
 
-    case FieldFormatEnum.Number: {
+    case FormatEnum.Number: {
       return value.toLocaleString(locale);
     }
 
-    case FieldFormatEnum.Percent: {
+    case FormatEnum.Percent: {
       return (value as number) * 100 + '%';
     }
 
-    case FieldFormatEnum.Currency: {
+    case FormatEnum.Currency: {
       return (value as number).toLocaleString(locale, {
         style: 'currency',
         currency: 'USD',
@@ -42,17 +42,17 @@ export const formatValue = (type: FieldFormatEnum, value: any, locale: string | 
     // Dates.
     //
 
-    case FieldFormatEnum.DateTime: {
+    case FormatEnum.DateTime: {
       const date = new Date(value as number);
       return date.toLocaleString(locale);
     }
 
-    case FieldFormatEnum.Date: {
+    case FormatEnum.Date: {
       const date = new Date(value as number);
       return date.toLocaleDateString(locale);
     }
 
-    case FieldFormatEnum.Time: {
+    case FormatEnum.Time: {
       const date = new Date(value as number);
       return date.toLocaleTimeString(locale);
     }

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FieldFormatEnum } from '@dxos/schema';
+import { FormatEnum } from '@dxos/schema';
 
 import { type ValidationError } from './';
 
@@ -12,7 +12,7 @@ import { type ValidationError } from './';
  * Handles various data types including booleans, numbers, dates, and strings.
  * Returns undefined for empty or null inputs.
  */
-export const parseValue = (type: FieldFormatEnum, value: any) => {
+export const parseValue = (type: FormatEnum, value: any) => {
   if (value === undefined || value === null || value === '') {
     return undefined;
   }
@@ -22,7 +22,7 @@ export const parseValue = (type: FieldFormatEnum, value: any) => {
     // Boolean.
     //
 
-    case FieldFormatEnum.Boolean: {
+    case FormatEnum.Boolean: {
       if (typeof value === 'string') {
         const lowercaseValue = value.toLowerCase();
         if (lowercaseValue === '0' || lowercaseValue === 'false') {
@@ -38,17 +38,17 @@ export const parseValue = (type: FieldFormatEnum, value: any) => {
     // Numbers.
     //
 
-    case FieldFormatEnum.Number: {
+    case FormatEnum.Number: {
       const num = Number(value);
       return Number.isNaN(num) ? null : num;
     }
 
-    case FieldFormatEnum.Percent: {
+    case FormatEnum.Percent: {
       const num = Number(value);
       return Number.isNaN(num) ? null : num / 100;
     }
 
-    case FieldFormatEnum.Currency: {
+    case FormatEnum.Currency: {
       if (typeof value !== 'string') {
         return null;
       }
@@ -60,10 +60,10 @@ export const parseValue = (type: FieldFormatEnum, value: any) => {
     // Dates.
     //
 
-    case FieldFormatEnum.DateTime:
-    case FieldFormatEnum.Date:
-    case FieldFormatEnum.Time:
-    case FieldFormatEnum.Timestamp: {
+    case FormatEnum.DateTime:
+    case FormatEnum.Date:
+    case FormatEnum.Time:
+    case FormatEnum.Timestamp: {
       const date = new Date(value as string | number);
       return isNaN(date.getTime()) ? null : date;
     }
@@ -72,8 +72,8 @@ export const parseValue = (type: FieldFormatEnum, value: any) => {
     // Strings.
     //
 
-    case FieldFormatEnum.String:
-    case FieldFormatEnum.Text: {
+    case FormatEnum.String:
+    case FormatEnum.Text: {
       return String(value);
     }
 
@@ -83,25 +83,25 @@ export const parseValue = (type: FieldFormatEnum, value: any) => {
   }
 };
 
-export const cellClassesForFieldType = (type: FieldFormatEnum): string[] | undefined => {
+export const cellClassesForFieldType = (type: FormatEnum): string[] | undefined => {
   switch (type) {
-    case FieldFormatEnum.Number:
+    case FormatEnum.Number:
       return ['text-right', 'font-mono'];
-    case FieldFormatEnum.Boolean:
+    case FormatEnum.Boolean:
       return ['text-right', 'font-mono'];
-    case FieldFormatEnum.String:
-    case FieldFormatEnum.Text:
+    case FormatEnum.String:
+    case FormatEnum.Text:
       return undefined;
-    case FieldFormatEnum.Timestamp:
-    case FieldFormatEnum.DateTime:
-    case FieldFormatEnum.Date:
-    case FieldFormatEnum.Time:
+    case FormatEnum.Timestamp:
+    case FormatEnum.DateTime:
+    case FormatEnum.Date:
+    case FormatEnum.Time:
       return ['font-mono'];
-    case FieldFormatEnum.Percent:
+    case FormatEnum.Percent:
       return ['text-right'];
-    case FieldFormatEnum.Currency:
+    case FormatEnum.Currency:
       return ['text-right'];
-    case FieldFormatEnum.JSON:
+    case FormatEnum.JSON:
       return ['font-mono'];
     default:
       return undefined;
@@ -121,11 +121,11 @@ const typeConfigSections = {
 
 type TypeConfigSection = keyof typeof typeConfigSections;
 
-export const typeFeatures: Partial<Record<FieldFormatEnum, TypeConfigSection[]>> = {
-  [FieldFormatEnum.Number]: ['numeric'],
-  [FieldFormatEnum.Percent]: ['numeric'],
-  [FieldFormatEnum.Currency]: ['numeric'],
-  [FieldFormatEnum.Ref]: ['ref'],
+export const typeFeatures: Partial<Record<FormatEnum, TypeConfigSection[]>> = {
+  [FormatEnum.Number]: ['numeric'],
+  [FormatEnum.Percent]: ['numeric'],
+  [FormatEnum.Currency]: ['numeric'],
+  [FormatEnum.Ref]: ['ref'],
 } as const;
 
 // TODO(ZaymonFC): How to do this with translations?

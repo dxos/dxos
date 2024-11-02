@@ -8,7 +8,8 @@ import { type JSONSchema, S } from '@dxos/effect';
 import { deepMapValues } from '@dxos/util';
 
 import { toJsonSchema, toEffectSchema, getEchoProp } from './json-schema';
-import { FormatAnnotationId, PropertyMeta } from '../ast';
+import { PropertyMeta } from '../ast';
+import { FormatAnnotationId } from '../formats';
 import { ref } from '../handler';
 import { TypedObject } from '../object';
 
@@ -97,7 +98,7 @@ describe('effect-to-json', () => {
           version: '0.1.0',
         },
       },
-      
+
       type: 'object',
       required: ['name', 'email', 'id'],
       properties: {

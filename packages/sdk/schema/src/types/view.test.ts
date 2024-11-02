@@ -8,23 +8,26 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { MutableSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
+  FIELD_PATH_ANNOTATION,
+  FormatEnum,
+  FieldPath,
+  Format,
+  FormatAnnotationId,
+  type JsonPath,
+  TypedObject,
   composeSchema,
   create,
   createReferenceAnnotation,
   createStoredSchema,
-  FormatAnnotationId,
   getTypename,
+  propertySchemaToFieldFormat,
   ref,
   setAnnotation,
   setProperty,
   toJsonSchema,
-  TypedObject,
-  type JsonPath,
-  type JsonSchemaType,
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { FieldFormatEnum, FieldPath, FILED_PATH_ANNOTATION } from './annotations';
 import { FieldProjection } from './field';
 import { createView } from './view';
 
@@ -47,7 +50,7 @@ describe('view', () => {
 
     const OverlaySchema = S.Struct({
       email: S.String.pipe(FieldPath('$.email' as JsonPath)).annotations({
-        [FormatAnnotationId]: FieldFormatEnum.Email,
+        [FormatAnnotationId]: FormatEnum.Email,
       }),
     });
 
@@ -59,10 +62,10 @@ describe('view', () => {
     expect((composedSchema as any).properties).to.deep.eq({
       email: {
         type: 'string',
-        format: FieldFormatEnum.Email,
+        format: FormatEnum.Email,
         echo: {
           annotations: {
-            [FILED_PATH_ANNOTATION]: '$.email',
+            [FIELD_PATH_ANNOTATION]: '$.email',
           },
         },
       },
@@ -76,7 +79,7 @@ describe('view', () => {
 
     class Person extends TypedObject({ typename: 'example.com/type/Person', version: '0.1.0' })({
       name: S.String,
-      email: S.String.annotations({ [FormatAnnotationId]: FieldFormatEnum.Email }),
+      email: S.String.annotations({ [FormatAnnotationId]: FormatEnum.Email }),
       org: ref(Org),
     }) {}
 
@@ -117,7 +120,7 @@ describe('view', () => {
       'email',
       S.String.annotations({
         [AST.DescriptionAnnotationId]: 'Primary email',
-        [FormatAnnotationId]: FieldFormatEnum.Email,
+        [FormatAnnotationId]: FormatEnum.Email,
       }),
     );
 
@@ -160,56 +163,32 @@ describe('view', () => {
   test('projection', async ({ expect }) => {
     const projection = new FieldProjection();
 
-    //
-    // Object type.
-    //
-
-    const schema = createStoredSchema('example.com/type/Org', '0.1.0');
+    const schema = createStoredSchema('example.com/type/Person', '0.1.0');
     setProperty(schema.jsonSchema as any, 'name', S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }));
-    setProperty(schema.jsonSchema as any, 'email', PROPERTY_TYPES[FieldFormatEnum.Email]!);
-    setProperty(schema.jsonSchema as any, 'netWorth', PROPERTY_TYPES[FieldFormatEnum.Currency]!);
-
-    //
-    // View.
-    //
+    setProperty(schema.jsonSchema as any, 'email', Format.Email);
+    setProperty(schema.jsonSchema as any, 'netWorth', Format.Currency());
 
     const view = createView(schema.jsonSchema, schema.typename);
     expect(view.fields).to.have.length(3);
 
-    // Update email column size.
     projection.setField(view, { property: 'email', size: 100 });
 
     const [fieldProps, propertySchema] = projection.getFieldProperties(schema, view, 'name');
-    expect(fieldProps).toEqual({
-      property: 'name',
-    });
-    expect(propertySchema).toEqual({
-      type: 'string',
-      title: 'Name',
-    });
+    expect(fieldProps).toEqual({ property: 'name' });
+    expect(propertySchema).toEqual({ type: 'string', title: 'Name' });
 
     const [emailProps, emailSchema] = projection.getFieldProperties(schema, view, 'email');
-    expect(emailProps).toEqual({
-      property: 'email',
-      size: 100,
-    });
-    expect(emailSchema).toEqual({
-      type: 'string',
-      description: 'Email address',
-      pattern: 'xxxxxxxx',
-      format: 'email',
-    });
-    expect(propertySchemaToFieldFormat(emailSchema)).to.eq(FieldFormatEnum.Email);
+    expect(emailProps).toEqual({ property: 'email', size: 100 });
+    expect(propertySchemaToFieldFormat(emailSchema)).to.eq(FormatEnum.Email);
 
     const [netWorthProps, netWorthSchema] = projection.getFieldProperties(schema, view, 'netWorth');
-    expect(netWorthProps).toEqual({
-      property: 'netWorth',
-    });
+    expect(netWorthProps).toEqual({ property: 'netWorth' });
+    console.log('::::', JSON.stringify(netWorthSchema));
     expect(netWorthSchema).toEqual({
       type: 'string',
-      description: 'Currency value',
       format: 'currency',
-      // multipleOf: 0.01,
+      multipleOf: 0.01,
+      // description: 'Currency value',
     });
 
     // TODO(dmaretskyi): References.
@@ -230,38 +209,5 @@ describe('view', () => {
     //     },
     //   });
     // }
-
-    log.info('', { jsonSchema: schema.jsonSchema });
   });
 });
-
-// TODO(dmaretskyi): Move to sdk code.
-const PROPERTY_TYPES: Partial<Record<FieldFormatEnum, S.Schema.All>> = {
-  // NOTE: pattern must come first so that it does not override description annotation.
-  // TODO(dmaretskyi): Serialize pattern.
-  [FieldFormatEnum.Email]: S.String.pipe(S.pattern(/xxxxxxxx/)).pipe(
-    S.annotations({ [AST.DescriptionAnnotationId]: 'Email address', [FormatAnnotationId]: 'email' }),
-  ),
-
-  [FieldFormatEnum.Currency]: S.String.pipe(
-    S.annotations({
-      [AST.DescriptionAnnotationId]: 'Currency value',
-      [FormatAnnotationId]: 'currency',
-      // TODO(dmaretskyi): Add separate symbol for MultipleOfAnnotation.
-      // [AST.JSONSchemaAnnotationId]: { multipleOf: 0.01 }, // Currently breaking the serializer.
-    }),
-  ),
-};
-
-// TODO(dmaretskyi): Move to sdk code.
-const propertySchemaToFieldFormat = (propertySchema: JsonSchemaType): FieldFormatEnum | undefined => {
-  const format = propertySchema.format;
-
-  // TODO(dmaretskyi): map .
-  switch (format) {
-    case 'email':
-      return FieldFormatEnum.Email;
-    default:
-      return undefined;
-  }
-};

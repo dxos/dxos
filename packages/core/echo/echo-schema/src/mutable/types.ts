@@ -4,8 +4,7 @@
 
 import { S } from '@dxos/effect';
 
-import { getObjectAnnotation } from '../ast';
-import { JsonSchemaType } from '../json';
+import { getObjectAnnotation, JsonSchemaType } from '../ast';
 import { TypedObject } from '../object';
 import { requireTypeReference } from '../proxy';
 

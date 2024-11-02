@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type FieldFormatEnum } from '@dxos/schema';
+import { type FormatEnum } from '@dxos/schema';
 
 /**
  * @deprecated
@@ -21,7 +21,7 @@ export type TableDef = {
 export type ColumnDef = {
   id: string;
   prop: string;
-  type: FieldFormatEnum;
+  type: FormatEnum;
   size?: number;
   label?: string;
 

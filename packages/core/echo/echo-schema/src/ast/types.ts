@@ -2,11 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S, type JSONSchema } from '@effect/schema';
+import type { JSONSchema } from '@effect/schema';
 
-//
-// https://json-schema.org/draft-07/schema#
-//
+import { S } from '@dxos/effect';
+
+import { FIELD_PATH_ANNOTATION, PropertyMeta } from './annotations';
+
+export type ToMutable<T> = T extends {}
+  ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
+  : T;
 
 // Branded type.
 export type JsonPath = string & { __JsonPath: true };
@@ -20,6 +24,39 @@ export const JsonPath = S.String.pipe(
   S.nonEmptyString({ message: () => 'Property is required.' }),
   S.pattern(/^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*$/, { message: () => 'Invalid property path.' }),
 ) as any as S.Schema<JsonPath>;
+
+/**
+ * Sets the path for the field.
+ * @param path Data source path in the json path format. This is the field path in the source object.
+ */
+// TODO(burdon): Field, vs. path vs. property
+export const FieldPath = (path: JsonPath) => PropertyMeta(FIELD_PATH_ANNOTATION, path);
+
+// TODO(burdon): Document.
+export const schemaVariance = {
+  _A: (_: any) => _,
+  _I: (_: any) => _,
+  _R: (_: never) => _,
+};
+
+// TODO(burdon): Factor out.
+// TODO(burdon): Reconcile with ObjectAnnotation.
+export type SchemaMeta = {
+  id: string;
+  typename: string;
+  version: string;
+};
+
+/**
+ * Marker interface for object with an `id`.
+ */
+export interface HasId {
+  readonly id: string;
+}
+
+//
+// https://json-schema.org/draft-07/schema
+//
 
 // TODO(dmaretskyi): Use a flat type instead: https://json-schema.org/draft-07/schema#.
 export type JsonSchemaType = JSONSchema.JsonSchema7 & {

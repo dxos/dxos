@@ -2,16 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, S, createObjectId, toJsonSchema } from '@dxos/echo-schema';
+import { AST, S, createObjectId, toJsonSchema, EmailFormat, PatternAnnotationId } from '@dxos/echo-schema';
 
-import { createView, EmailFormat, type FieldType, PatternAnnotationId } from '../types';
+import { createView } from '../types';
 
 //
 // Schema
 //
 
+// TODO(burdon): TypedObject?
 export const TestSchema = S.Struct({
-  id: S.String, // TODO(burdon): ID annotation.
+  id: S.String, // TODO(burdon): ID type?
   name: S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Full name.' })),
   email: S.String.pipe(S.annotations({ [PatternAnnotationId]: EmailFormat })),
   address: S.optional(
@@ -35,6 +36,8 @@ export const TestSchema = S.Struct({
 
 export type TestType = S.Schema.Type<typeof TestSchema>;
 
+export const testView = createView(toJsonSchema(TestSchema), 'example.com/type/Test');
+
 //
 // Data
 //
@@ -47,23 +50,3 @@ export const testData: TestType = {
     zip: '11205',
   },
 };
-
-const fields: FieldType[] = [
-  {
-    property: 'name',
-  },
-  {
-    property: 'email',
-  },
-  {
-    property: 'addressZip',
-  },
-  {
-    property: 'rating',
-  },
-  {
-    property: 'admin',
-  },
-];
-
-export const testView = createView(toJsonSchema(TestSchema), 'example.com/type/Test');

@@ -5,7 +5,7 @@
 import { type ColumnDef } from '@tanstack/react-table';
 
 import { type S } from '@dxos/echo-schema';
-import { FieldFormatEnum, mapSchemaToFields } from '@dxos/schema';
+import { FormatEnum, mapSchemaToFields } from '@dxos/schema';
 
 import { createColumnBuilder } from '../helpers';
 
@@ -18,23 +18,23 @@ export const schemaToColumnDefs = <T>(schema: S.Schema<T, any>): ColumnDef<T, an
 
     let column: Partial<ColumnDef<any, any>> | undefined;
     switch (type) {
-      case FieldFormatEnum.String: {
+      case FormatEnum.String: {
         column = builder.string({ label: propertyKey, classNames: [name === 'id' && 'font-mono'] });
         break;
       }
-      case FieldFormatEnum.Number: {
+      case FormatEnum.Number: {
         column = builder.number({ label: propertyKey });
         break;
       }
-      case FieldFormatEnum.Boolean: {
+      case FormatEnum.Boolean: {
         column = builder.switch({ label: propertyKey });
         break;
       }
-      case FieldFormatEnum.Date: {
+      case FormatEnum.Date: {
         column = builder.date({ label: propertyKey });
         break;
       }
-      case FieldFormatEnum.JSON: {
+      case FormatEnum.JSON: {
         column = builder.json({ label: propertyKey, id: propertyKey });
         break;
       }

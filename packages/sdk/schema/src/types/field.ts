@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { JsonSchema7Object } from '@effect/schema/JSONSchema';
-
 import { deleteProperty, type JsonSchemaType, type StoredSchema } from '@dxos/echo-schema';
 
 import { type FieldType, type ViewType } from './view';
@@ -22,7 +20,7 @@ export class FieldProjection {
     // TODO(dmaretskyi): Add projection later on.
     // const composedSchema = composeSchema(objectType.jsonSchema as any, view.schema as any);
 
-    const propertySchema = (objectType.jsonSchema as JsonSchema7Object).properties[property];
+    const propertySchema = objectType.jsonSchema.properties[property];
     if (!propertySchema) {
       throw new Error(`Property not found: ${property}`);
     }
@@ -56,7 +54,7 @@ export class FieldProjection {
     }
 
     // TODO(dmaretskyi): Currently we update both the view and type schema but in the future we only want to update the relevant parts.
-    (objectType.jsonSchema as JsonSchema7Object).properties[field.property] = propertySchema;
+    objectType.jsonSchema.properties[field.property] = propertySchema;
     // TODO(dmaretskyi): Add projection later on.
     // (view.schema as JsonSchema7Object).properties[field.property] = propertySchema;
   }
