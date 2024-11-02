@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 
 import { create, type MutableSchema, S, TypedObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { FieldKindEnum } from '@dxos/schema';
+import { FieldFormatEnum } from '@dxos/schema';
 
 import { createStarterView, TableType } from '../types';
 
@@ -81,20 +81,20 @@ export const useSimulator = ({ items, table, insertInterval, updateInterval }: S
       if (field) {
         const path = field.path;
         // TODO(ZaymonFC): Restore this once I know how to derive the type from the schema.
-        switch ('' as any as FieldKindEnum) {
-          case FieldKindEnum.String: {
+        switch ('' as any as FieldFormatEnum) {
+          case FieldFormatEnum.String: {
             item[path] = `Updated ${Date.now()}`;
             break;
           }
-          case FieldKindEnum.Number: {
+          case FieldFormatEnum.Number: {
             item[path] = Math.floor(Math.random() * 100);
             break;
           }
-          case FieldKindEnum.Boolean: {
+          case FieldFormatEnum.Boolean: {
             item[path] = !item[path];
             break;
           }
-          case FieldKindEnum.Currency: {
+          case FieldFormatEnum.Currency: {
             item[path] = Math.floor(Math.random() * 1000);
             break;
           }

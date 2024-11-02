@@ -5,7 +5,7 @@
 import { JsonPath, JsonSchemaType, QueryType } from '@dxos/echo-schema';
 import { S } from '@dxos/effect';
 
-import { FieldKindEnum } from './annotations';
+import { FieldFormatEnum } from './annotations';
 
 /**
  * Stored field metadata (e.g., for UX).
@@ -32,7 +32,7 @@ export const FieldPropertiesSchema = S.mutable(
     path: JsonPath,
 
     // FieldKind
-    format: S.optional(S.Enums(FieldKindEnum)),
+    format: S.optional(S.Enums(FieldFormatEnum)),
 
     // TODO(burdon): ?
     referenceSchema: S.optional(S.String),

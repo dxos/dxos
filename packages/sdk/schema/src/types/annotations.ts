@@ -14,13 +14,13 @@ export const FILED_PATH_ANNOTATION = 'path';
 export const FieldPath = (path: JsonPath) => PropertyMeta(FILED_PATH_ANNOTATION, path);
 
 // https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
-export const FILED_KIND_ANNOTATION = 'format';
+export const FIELD_FORMAT_ANNOTATION = 'format';
 
 /**
  * Annotation to set field kind.
  */
 // TODO(burdon): Instead of adding a "kind" annotation as a value, add an actual annotation representing the kind.
-export const FieldKind = (kind: FieldKindEnum) => PropertyMeta(FILED_KIND_ANNOTATION, kind);
+export const FieldFormat = (format: FieldFormatEnum) => PropertyMeta(FIELD_FORMAT_ANNOTATION, format);
 
 // TODO(burdon):
 //  - flat annotations using effect annotations at top level
@@ -29,22 +29,22 @@ export const FieldKind = (kind: FieldKindEnum) => PropertyMeta(FILED_KIND_ANNOTA
 //  - refs
 
 //
-// FormatType
+// PatternAnnotation
 // https://json-schema.org/understanding-json-schema/reference
-// TODO(burdon): Replace with Schema.pattern?
+// TODO(burdon): Replace with Schema.pattern
 //  https://effect.website/docs/guides/schema/basic-usage#string-filters
 // TODO(burdon): Allow pasting and adapting non-conforming values (e.g., with spaces/hyphens).
 //
 
-export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/format');
+export const PatternAnnotationId = Symbol.for('@dxos/schema/annotation/pattern');
 
-export type FormatAnnotation = {
+export type PatternAnnotation = {
   filter: RegExp;
   valid?: RegExp;
 };
 
-export const getFormatAnnotation = (annotated: AST.Annotated) =>
-  getAnnotation<FormatAnnotation>(FormatAnnotationId, annotated);
+export const getPatternAnnotation = (annotated: AST.Annotated) =>
+  getAnnotation<PatternAnnotation>(PatternAnnotationId, annotated);
 
 //
 // Number
@@ -52,15 +52,15 @@ export const getFormatAnnotation = (annotated: AST.Annotated) =>
 
 export const NumberAnnotationId = Symbol.for('@dxos/schema/annotation/number');
 
-export type NumberFormatAnnotation = {
+export type NumberPatternAnnotation = {
   decimal: number;
 };
 
-export const RealNumberFormat: FormatAnnotation = {
+export const RealNumberFormat: PatternAnnotation = {
   filter: /^[+-]?(\d*(\.\d*)?)?$/,
 };
 
-export const WholeNumberFormat: FormatAnnotation = {
+export const WholeNumberFormat: PatternAnnotation = {
   filter: /^\d*$/,
 };
 
@@ -73,14 +73,14 @@ export const PercentAnnotationId = Symbol.for('@dxos/schema/annotation/percent')
 
 export const EmailAnnotationId = Symbol.for('@dxos/schema/annotation/email');
 
-export const EmailFormat: FormatAnnotation = {
+export const EmailFormat: PatternAnnotation = {
   filter: /^[a-zA-Z0-9._%+-]*@?[a-zA-Z0-9.-]*\.?[a-zA-Z]*$/,
   valid: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
 };
 
 export const UrlAnnotationId = Symbol.for('@dxos/schema/annotation/url');
 
-export const UrlFormat: FormatAnnotation = {
+export const UrlFormat: PatternAnnotation = {
   filter: /^(\w+?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/,
 };
 
@@ -91,7 +91,7 @@ export const UrlFormat: FormatAnnotation = {
 
 // TODO(burdon): Can this be derived from the annotation? Or just be a union of all the annotation symbols?
 //  - E.g., use a common annotation namespace.
-export enum FieldKindEnum {
+export enum FieldFormatEnum {
   // TODO(burdon): Array/Enum?
   // NOTE: Currently including these as a convenience.
   String = 'string',
@@ -119,28 +119,28 @@ export enum FieldKindEnum {
   //  - Address, Phone number
 }
 
-export const FieldKindEnums = Object.values(FieldKindEnum).sort();
+export const FieldFormatEnums = Object.values(FieldFormatEnum).sort();
 
 // TODO(ZaymonFC): Find all the appropriate annotations.
 // TODO(ZaymonFC): Pipe S.Pattern (regex) for email, url, etc.
 // TODO(ZaymonFC): Enforce real / whole numbers where appropriate.
-export const schemaForKind: Record<FieldKindEnum, S.Schema<any> | undefined> = {
-  [FieldKindEnum.String]: S.String,
-  [FieldKindEnum.Number]: S.Number,
-  [FieldKindEnum.Boolean]: S.Boolean,
-  [FieldKindEnum.Ref]: undefined,
+export const formatToSchema: Record<FieldFormatEnum, S.Schema<any> | undefined> = {
+  [FieldFormatEnum.String]: S.String,
+  [FieldFormatEnum.Number]: S.Number,
+  [FieldFormatEnum.Boolean]: S.Boolean,
+  [FieldFormatEnum.Ref]: undefined,
 
-  [FieldKindEnum.Text]: S.String,
-  [FieldKindEnum.Date]: S.DateFromString,
-  [FieldKindEnum.Email]: S.String.annotations({ [FormatAnnotationId]: EmailFormat }),
-  [FieldKindEnum.URL]: S.String.annotations({ [FormatAnnotationId]: UrlFormat }),
-  [FieldKindEnum.Percent]: S.Number,
-  [FieldKindEnum.Currency]: S.Number,
-  // [FieldKindEnum.User]: undefined,
-  [FieldKindEnum.JSON]: undefined,
-  [FieldKindEnum.Timestamp]: undefined,
-  [FieldKindEnum.DateTime]: undefined,
-  [FieldKindEnum.Time]: undefined,
-  [FieldKindEnum.Formula]: undefined,
-  [FieldKindEnum.DID]: undefined,
+  [FieldFormatEnum.Text]: S.String,
+  [FieldFormatEnum.Date]: S.DateFromString,
+  [FieldFormatEnum.Email]: S.String.annotations({ [PatternAnnotationId]: EmailFormat }),
+  [FieldFormatEnum.URL]: S.String.annotations({ [PatternAnnotationId]: UrlFormat }),
+  [FieldFormatEnum.Percent]: S.Number,
+  [FieldFormatEnum.Currency]: S.Number,
+  // [FieldFormatEnum.User]: undefined,
+  [FieldFormatEnum.JSON]: undefined,
+  [FieldFormatEnum.Timestamp]: undefined,
+  [FieldFormatEnum.DateTime]: undefined,
+  [FieldFormatEnum.Time]: undefined,
+  [FieldFormatEnum.Formula]: undefined,
+  [FieldFormatEnum.DID]: undefined,
 };

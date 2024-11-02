@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type SortDirection } from '@tanstack/react-table';
 import React, { useState } from 'react';
 
-import { FieldKindEnum } from '@dxos/schema';
+import { FieldFormatEnum } from '@dxos/schema';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { ColumnMenu } from './ColumnMenu';
@@ -24,18 +24,18 @@ const defs: Pick<ColumnSettingsProps, 'tableDef' | 'tablesToReference'> = {
   tableDef: {
     id: '1',
     name: 'table 1',
-    columns: [{ id: 'col-1', prop: 'one', type: FieldKindEnum.String }],
+    columns: [{ id: 'col-1', prop: 'one', type: FieldFormatEnum.String }],
   },
   tablesToReference: [
     {
       id: '1',
       name: 'table 1',
-      columns: [{ id: 'col-1', prop: 'one', type: FieldKindEnum.String }],
+      columns: [{ id: 'col-1', prop: 'one', type: FieldFormatEnum.String }],
     },
     {
       id: '2',
       name: 'table 2',
-      columns: [{ id: 'col-1', prop: 'two', type: FieldKindEnum.String }],
+      columns: [{ id: 'col-1', prop: 'two', type: FieldFormatEnum.String }],
     },
   ],
 };

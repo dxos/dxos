@@ -7,7 +7,7 @@ import React, { type ReactNode, useMemo } from 'react';
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import {
-  FieldKindEnums,
+  FieldFormatEnums,
   FieldPropertiesSchema,
   type FieldPropertiesType,
   type FieldType,
@@ -83,7 +83,7 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
             <Select.Portal>
               <Select.Content>
                 <Select.Viewport>
-                  {FieldKindEnums.map((type) => (
+                  {FieldFormatEnums.map((type) => (
                     <Select.Option key={type} value={type}>
                       {t(`field type ${type}`)}
                     </Select.Option>

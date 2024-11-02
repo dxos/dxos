@@ -5,10 +5,10 @@
 import React, { useState } from 'react';
 
 import { Input, type TextInputProps as NativeTextInputProps } from '@dxos/react-ui';
-import { type FormatAnnotation } from '@dxos/schema';
+import { type PatternAnnotation } from '@dxos/schema';
 
 export type TextInputProps = {
-  format?: FormatAnnotation;
+  format?: PatternAnnotation;
 } & Omit<NativeTextInputProps, 'style'>;
 
 // TODO(burdon): Move to react-ui.

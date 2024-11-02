@@ -8,7 +8,7 @@ import React from 'react';
 import { AST, type S, getProperty } from '@dxos/effect';
 import { Input, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { RealNumberFormat, type ViewType, getFormatAnnotation, getFieldValue, setFieldValue } from '@dxos/schema';
+import { RealNumberFormat, type ViewType, getPatternAnnotation, getFieldValue, setFieldValue } from '@dxos/schema';
 
 import { TextInput } from '../TextInput';
 
@@ -30,7 +30,7 @@ export const Form = <T extends {} = {}>({ classNames, view, object, schema, read
         const title = (prop && pipe(AST.getTitleAnnotation(prop), Option.getOrUndefined)) ?? '';
         const description = (prop && pipe(AST.getDescriptionAnnotation(prop), Option.getOrUndefined)) ?? title;
         const format =
-          (prop && (getFormatAnnotation(prop) ?? (AST.isNumberKeyword(prop) && RealNumberFormat))) || undefined;
+          (prop && (getPatternAnnotation(prop) ?? (AST.isNumberKeyword(prop) && RealNumberFormat))) || undefined;
 
         //
         // Boolean

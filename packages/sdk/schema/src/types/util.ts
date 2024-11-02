@@ -7,7 +7,7 @@ import jp from 'jsonpath';
 import { type JsonPath } from '@dxos/echo-schema';
 import { AST, type S, isLeafType, visit } from '@dxos/effect';
 
-import { FieldKindEnum } from './annotations';
+import { FieldFormatEnum } from './annotations';
 import { type FieldType, type ViewType } from './view';
 
 export const getFieldValue = <T extends {} = {}, V = any>(
@@ -23,8 +23,8 @@ export const setFieldValue = <T extends {} = {}, V = any>(object: T, field: Fiel
 /**
  * @deprecated
  */
-export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FieldKindEnum][] => {
-  const fields: [string, FieldKindEnum][] = [];
+export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FieldFormatEnum][] => {
+  const fields: [string, FieldFormatEnum][] = [];
   visit(schema.ast, (node, path) => {
     if (isLeafType(node)) {
       fields.push([path.join('.'), toFieldValueType(node)]);
@@ -37,16 +37,16 @@ export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FieldKin
 /**
  * @deprecated
  */
-export const toFieldValueType = (type: AST.AST): FieldKindEnum => {
+export const toFieldValueType = (type: AST.AST): FieldFormatEnum => {
   if (AST.isTypeLiteral(type)) {
     // TODO(burdon): ???
-    return FieldKindEnum.Ref;
+    return FieldFormatEnum.Ref;
   } else if (AST.isNumberKeyword(type)) {
-    return FieldKindEnum.Number;
+    return FieldFormatEnum.Number;
   } else if (AST.isBooleanKeyword(type)) {
-    return FieldKindEnum.Boolean;
+    return FieldFormatEnum.Boolean;
   } else if (AST.isStringKeyword(type)) {
-    return FieldKindEnum.String;
+    return FieldFormatEnum.String;
   }
 
   if (AST.isRefinement(type)) {
@@ -61,13 +61,13 @@ export const toFieldValueType = (type: AST.AST): FieldKindEnum => {
     const identifier = AST.getIdentifierAnnotation(type);
     if (identifier._tag === 'Some') {
       if (identifier.value === 'DateFromString') {
-        return FieldKindEnum.Date;
+        return FieldFormatEnum.Date;
       }
     }
   }
 
   // TODO(burdon): Better fallback?
-  return FieldKindEnum.JSON;
+  return FieldFormatEnum.JSON;
 };
 
 // TODO(burdon): Check unique name against schema.

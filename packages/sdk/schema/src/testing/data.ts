@@ -4,7 +4,7 @@
 
 import { AST, type JsonPath, S, createObjectId, toJsonSchema } from '@dxos/echo-schema';
 
-import { EmailFormat, type FieldType, FormatAnnotationId, type ViewType } from '../types';
+import { EmailFormat, type FieldType, PatternAnnotationId, type ViewType } from '../types';
 
 //
 // Schema
@@ -13,14 +13,14 @@ import { EmailFormat, type FieldType, FormatAnnotationId, type ViewType } from '
 export const TestSchema = S.Struct({
   id: S.String, // TODO(burdon): ID annotation.
   name: S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Full name.' })),
-  email: S.String.pipe(S.annotations({ [FormatAnnotationId]: EmailFormat })),
+  email: S.String.pipe(S.annotations({ [PatternAnnotationId]: EmailFormat })),
   address: S.optional(
     S.Struct({
       city: S.optional(S.String),
       zip: S.String.pipe(
         S.annotations({
           [AST.DescriptionAnnotationId]: 'ZIP code.',
-          [FormatAnnotationId]: { filter: /^[0-9]{0,5}(?:-[0-9]{0,4})?$/, valid: /^[0-9]{5}(?:-[0-9]{4})?$/ },
+          [PatternAnnotationId]: { filter: /^[0-9]{0,5}(?:-[0-9]{0,4})?$/, valid: /^[0-9]{5}(?:-[0-9]{4})?$/ },
         }),
       ),
     }),
