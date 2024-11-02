@@ -12,6 +12,7 @@ import { FormatAnnotationId, PropertyMeta } from '../ast';
 import { ref } from '../handler';
 import { TypedObject } from '../object';
 import { log } from '@dxos/log';
+import { format } from 'path';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {
@@ -83,21 +84,23 @@ describe('effect-to-json', () => {
 
   test('annotations', () => {
     class Schema extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
-      name: S.String.annotations({ description: 'Person name' }),
-      email: S.String.annotations({ description: 'Email address' }).pipe(PropertyMeta('dxos.format', 'email')),
+      name: S.String.annotations({ description: 'Person name', title: 'Name' }),
+      email: S.String.annotations({ description: 'Email address', [FormatAnnotationId]: 'email' }),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
+    // log.info('', { jsonSchema });
     expect(jsonSchema).to.deep.eq({
       $schema: 'http://json-schema.org/draft-07/schema#',
+      $id: 'dxn:type:example.com/type/Contact',
       type: 'object',
       required: ['name', 'email', 'id'],
       properties: {
         id: { type: 'string' },
-        name: { type: 'string', description: 'Person name' },
+        name: { type: 'string', title: 'Name', description: 'Person name' },
         email: {
           type: 'string',
           description: 'Email address',
-          echo: { annotations: { 'dxos.format': 'email' } },
+          format: 'email',
         },
       },
       additionalProperties: false,

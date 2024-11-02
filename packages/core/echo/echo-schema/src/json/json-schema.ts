@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 
 import {
   FormatAnnotationId,
+  getObjectAnnotation,
   type ObjectAnnotation,
   ObjectAnnotationId,
   type PropertyMetaAnnotation,
@@ -88,11 +89,26 @@ export const toPropType = (type?: PropType): string => {
  */
 export const toJsonSchema = (schema: S.Schema.Any): JSONSchema.JsonSchema7Object => {
   const schemaWithRefinements = S.make(withEchoRefinements(schema.ast));
-  const jsonSchema = JSONSchema.make(schemaWithRefinements) as JSONSchema.JsonSchema7Object;
+  let jsonSchema = JSONSchema.make(schemaWithRefinements) as JSONSchema.JsonSchema7Object;
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     // Put id first.
     jsonSchema.properties = Object.assign({ id: undefined }, jsonSchema.properties);
   }
+
+  const objectAnnotation = getObjectAnnotation(schema);
+  if (objectAnnotation) {
+    (jsonSchema as any).$id = `dxn:type:${objectAnnotation.typename}`;
+  }
+
+  // Fix field order.
+  jsonSchema = Object.assign(
+    {
+      $schema: undefined,
+      $id: undefined,
+      type: undefined,
+    },
+    jsonSchema,
+  );
 
   return jsonSchema;
 };
@@ -252,6 +268,7 @@ const objectToEffectSchema = (
   }
 
   const annotations = jsonSchemaFieldsToAnnotations(root);
+
   if (echoRefinement == null) {
     return schemaWithoutEchoId as any;
   } else {

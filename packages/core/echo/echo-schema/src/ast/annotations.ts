@@ -52,13 +52,13 @@ export const EchoObject =
     return S.make(ast) as S.Schema<Simplify<HasId & ToMutable<A>>>;
   };
 
-export const getObjectAnnotation = (schema: S.Schema<any>): ObjectAnnotation | undefined =>
+export const getObjectAnnotation = (schema: S.Schema.All): ObjectAnnotation | undefined =>
   pipe(
     AST.getAnnotation<ObjectAnnotation>(ObjectAnnotationId)(schema.ast),
     Option.getOrElse(() => undefined),
   );
 
-export const getSchemaTypename = (schema: S.Schema<any>): string | undefined => getObjectAnnotation(schema)?.typename;
+export const getSchemaTypename = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.typename;
 
 //
 // PropertyMeta (metadata for dynamic schema properties)
