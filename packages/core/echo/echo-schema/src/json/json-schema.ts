@@ -104,15 +104,15 @@ export const toJsonSchema = (schema: S.Schema.Any): JSONSchema.JsonSchema7Object
   // Fix field order.
   // TODO(dmaretskyi): Makes sure undefined is not left on optional fields for the resulting object .
   // TODO(dmaretskyi): `orderFields` util.
-  jsonSchema = Object.assign(
-    {
-      $schema: undefined,
-      $id: undefined,
-      version: undefined,
-      type: undefined,
-    },
-    jsonSchema,
-  );
+  // jsonSchema = Object.assign(
+  //   {
+  //     $schema: undefined,
+  //     $id: undefined,
+  //     version: undefined,
+  //     type: undefined,
+  //   },
+  //   jsonSchema,
+  // );
 
   return jsonSchema;
 };
