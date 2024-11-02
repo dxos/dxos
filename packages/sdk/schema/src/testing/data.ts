@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, S, createObjectId, toJsonSchema, EmailFormat, PatternAnnotationId } from '@dxos/echo-schema';
+import { AST, Format, S, createObjectId, toJsonSchema } from '@dxos/echo-schema';
 
 import { createView } from '../types';
 
@@ -14,14 +14,14 @@ import { createView } from '../types';
 export const TestSchema = S.Struct({
   id: S.String, // TODO(burdon): ID type?
   name: S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Full name.' })),
-  email: S.String.pipe(S.annotations({ [PatternAnnotationId]: EmailFormat })),
+  email: Format.Email,
   address: S.optional(
     S.Struct({
       city: S.optional(S.String),
       zip: S.String.pipe(
+        S.pattern(/^[0-9]{5}(?:-[0-9]{4})?$/),
         S.annotations({
           [AST.DescriptionAnnotationId]: 'ZIP code.',
-          [PatternAnnotationId]: { filter: /^[0-9]{0,5}(?:-[0-9]{0,4})?$/, valid: /^[0-9]{5}(?:-[0-9]{4})?$/ },
         }),
       ),
     }),

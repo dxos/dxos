@@ -9,7 +9,9 @@ import { AST, S } from '@dxos/effect';
 import { type Primitive } from '@dxos/util';
 
 import { checkIdNotPresentOnSchema } from './schema-validator';
-import { type SchemaMeta, type HasId, type ToMutable } from './types';
+import { type HasId } from './types';
+
+type ToMutable<T> = T extends {} ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] } : T;
 
 /**
  * ECHO object.
@@ -46,8 +48,6 @@ export const EchoObject = (typename: string, version: string) => {
     return S.make(ast) as S.Schema<Simplify<HasId & ToMutable<A>>>;
   };
 };
-
-export const FIELD_PATH_ANNOTATION = 'path';
 
 /**
  * PropertyMeta (metadata for dynamic schema properties).
@@ -91,6 +91,14 @@ export const getReferenceAnnotation = (schema: S.Schema<any>) =>
     AST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId)(schema.ast),
     Option.getOrElse(() => undefined),
   );
+
+// TODO(burdon): Factor out.
+// TODO(burdon): Reconcile with ObjectAnnotation above.
+export type SchemaMeta = {
+  id: string;
+  typename: string;
+  version: string;
+};
 
 export const createReferenceAnnotation = (schema: SchemaMeta): S.Schema.AnyNoContext =>
   S.Any.annotations({

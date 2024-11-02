@@ -8,7 +8,6 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { MutableSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
-  FIELD_PATH_ANNOTATION,
   FormatEnum,
   FieldPath,
   Format,
@@ -20,7 +19,6 @@ import {
   createReferenceAnnotation,
   createStoredSchema,
   getTypename,
-  propertySchemaToFieldFormat,
   ref,
   setAnnotation,
   setProperty,
@@ -63,11 +61,6 @@ describe('view', () => {
       email: {
         type: 'string',
         format: FormatEnum.Email,
-        echo: {
-          annotations: {
-            [FIELD_PATH_ANNOTATION]: '$.email',
-          },
-        },
       },
     });
   });
@@ -166,30 +159,29 @@ describe('view', () => {
     const schema = createStoredSchema('example.com/type/Person', '0.1.0');
     setProperty(schema.jsonSchema as any, 'name', S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }));
     setProperty(schema.jsonSchema as any, 'email', Format.Email);
-    setProperty(schema.jsonSchema as any, 'netWorth', Format.Currency());
+    setProperty(schema.jsonSchema as any, 'salary', Format.Currency());
 
     const view = createView(schema.jsonSchema, schema.typename);
     expect(view.fields).to.have.length(3);
-
     projection.setField(view, { property: 'email', size: 100 });
 
-    const [fieldProps, propertySchema] = projection.getFieldProperties(schema, view, 'name');
-    expect(fieldProps).toEqual({ property: 'name' });
-    expect(propertySchema).toEqual({ type: 'string', title: 'Name' });
+    {
+      const [field, props] = projection.getFieldProperties(schema, view, 'name');
+      expect(field).toEqual({ property: 'name' });
+      expect(props).toEqual({ type: 'string', title: 'Name' });
+    }
 
-    const [emailProps, emailSchema] = projection.getFieldProperties(schema, view, 'email');
-    expect(emailProps).toEqual({ property: 'email', size: 100 });
-    expect(propertySchemaToFieldFormat(emailSchema)).to.eq(FormatEnum.Email);
+    {
+      const [field, props] = projection.getFieldProperties(schema, view, 'email');
+      expect(props).toEqual({ property: 'email' });
+      expect(field).toEqual({ property: 'email', size: 100 });
+    }
 
-    const [netWorthProps, netWorthSchema] = projection.getFieldProperties(schema, view, 'netWorth');
-    expect(netWorthProps).toEqual({ property: 'netWorth' });
-    console.log('::::', JSON.stringify(netWorthSchema));
-    expect(netWorthSchema).toEqual({
-      type: 'string',
-      format: 'currency',
-      multipleOf: 0.01,
-      // description: 'Currency value',
-    });
+    {
+      const [field, props] = projection.getFieldProperties(schema, view, 'salary');
+      expect(field).toEqual({ property: 'salary' });
+      expect(props).toEqual({ type: 'string', format: 'currency', multipleOf: 0.02 });
+    }
 
     // TODO(dmaretskyi): References.
     // if (false) {

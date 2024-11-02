@@ -4,8 +4,6 @@
 
 import { AST, S } from '@dxos/effect';
 
-import { type JsonSchemaType } from '../ast';
-
 //
 // Custom annotations
 // https://json-schema.org/understanding-json-schema/reference/schema
@@ -102,15 +100,3 @@ export namespace Format {
     }),
   );
 }
-
-export const propertySchemaToFieldFormat = (propertySchema: JsonSchemaType): FormatEnum | undefined => {
-  const format = propertySchema.format;
-
-  // TODO(dmaretskyi): map .
-  switch (format) {
-    case 'email':
-      return FormatEnum.Email;
-    default:
-      return undefined;
-  }
-};
