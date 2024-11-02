@@ -52,8 +52,8 @@ describe('schema composition', () => {
 
     const org = create(Org, { name: 'Org' });
     const person = create(Person, { name: 'John', email: 'john@example.com', org });
-    log.info('schema', { org: toJsonSchema(Org), person: toJsonSchema(Person) });
-    log.info('objects', { org, person });
+    // log.info('schema', { org: toJsonSchema(Org), person: toJsonSchema(Person) });
+    // log.info('objects', { org, person });
     expect(getTypename(org)).to.eq(Org.typename);
     expect(getTypename(person)).to.eq(Person.typename);
   });
