@@ -88,8 +88,8 @@ const DefaultStory = () => {
     table: table!,
     objects: filteredObjects,
     onDeleteRow: handleDeleteRow,
-    onAddColumn: handleAddColumn,
-    onDeleteColumn: handleDeleteColumn,
+    // onAddColumn: handleAddColumn,
+    // onDeleteColumn: handleDeleteColumn,
   });
 
   if (!table) {

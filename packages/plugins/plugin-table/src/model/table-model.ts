@@ -109,7 +109,7 @@ export class TableModel extends Resource {
     this.columnMeta = computed(() => {
       const fields = this.table.view?.fields ?? [];
       const meta = Object.fromEntries(
-        fields.map((field, index: number) => [index, { size: field?.width ?? 256, resizeable: true }]),
+        fields.map((field, index: number) => [index, { size: field?.size ?? 256, resizeable: true }]),
       );
 
       return {
@@ -366,7 +366,7 @@ export class TableModel extends Resource {
       const newWidth = Math.max(0, width);
       const field = fields[columnIndex];
       if (field) {
-        field.width = newWidth;
+        field.size = newWidth;
       }
     }
   }

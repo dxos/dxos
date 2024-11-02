@@ -6,7 +6,13 @@ import React, { type ReactNode, useMemo } from 'react';
 
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { FieldKindEnums, type FieldPropertiesType, type FieldType, type ViewType } from '@dxos/schema';
+import {
+  FieldKindEnums,
+  FieldPropertiesSchema,
+  type FieldPropertiesType,
+  type FieldType,
+  type ViewType,
+} from '@dxos/schema';
 
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -14,36 +20,30 @@ import { pathNotUniqueError, typeFeatures } from '../../util';
 
 export type FieldProps = ThemedClassName<{
   view: ViewType;
-  field: FieldType;
+  field: FieldPropertiesType;
   autoFocus?: boolean;
   readonly?: boolean;
-  onSave?: (field: FieldType) => void;
+  onSave?: (field: FieldPropertiesType) => void;
 }>;
 
 export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: FieldProps) => {
   const { t } = useTranslation(translationKey);
 
   const { values, getInputProps, errors, touched, canSubmit, handleSubmit } = useForm<FieldPropertiesType>({
+    schema: FieldPropertiesSchema,
     // TODO(burdon): Caller should pass in the value (and clone if necessary).
-    initialValues: { ...field } as FieldPropertiesType,
+    initialValues: field,
     additionalValidation: (values) => {
       // Check that the path doesn't already exist in the schema.
+      // TODO(ZaymonFC) Need to use some sort of json path accessor to check paths like:
+      // 'address.zip'.
+      // This should be a util.
       const pathChanged = values.path !== field.path;
       if (pathChanged && view.schema && (view.schema as any).properties[values.path]) {
         return [pathNotUniqueError(values.path)];
       }
     },
-    onSubmit: (values: FieldPropertiesType) => {
-      // TODO(ZaymonFC):
-      // Values is a validated instance of FormSchema.
-
-      // If path, visible, width change, update the field.
-      // If label / type / digits / ref schema / ref property changes, update view.schema
-
-      onSave?.(field);
-      // TODO(ZaymonFC): Update the associated schema type here if changed.
-      // What's the nicest way to do this? Why do we store the type in field at all?
-    },
+    onSubmit: (values: FieldPropertiesType) => onSave?.(values),
   });
 
   const features = useMemo(() => typeFeatures[values.format] ?? [], [values.format]);

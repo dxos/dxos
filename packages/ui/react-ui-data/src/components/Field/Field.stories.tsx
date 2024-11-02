@@ -9,7 +9,7 @@ import React from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { FieldSchema } from '@dxos/schema';
+import { type FieldPropertiesType, ViewSchema } from '@dxos/schema';
 import { testView } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -42,9 +42,12 @@ export default meta;
 
 type Story = StoryObj<typeof Field>;
 
+const createDefaultArgs = () => {
+  const view = create(ViewSchema, testView);
+  const field = view.fields[0] as FieldPropertiesType;
+  return { view, field } as const;
+};
+
 export const Default: Story = {
-  args: {
-    view: testView,
-    field: create(FieldSchema, testView.fields[0]),
-  },
+  args: createDefaultArgs(),
 };

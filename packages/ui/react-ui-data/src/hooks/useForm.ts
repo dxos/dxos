@@ -38,6 +38,7 @@ export type FormResult<T = {}> = {
   errors: Record<keyof T, string>;
   touched: Record<keyof T, boolean>;
   canSubmit: boolean;
+  changed: Record<keyof T, boolean>;
   handleChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSubmit: () => void;
@@ -52,7 +53,7 @@ export interface FormOptions<T> {
    * @returns Array of validation errors, or undefined if validation passes
    */
   additionalValidation?: (values: T) => ValidationError[] | undefined;
-  onSubmit: (values: T) => void;
+  onSubmit: (values: T, meta: { changed: FormResult<T>['changed'] }) => void;
 }
 
 /**
@@ -68,6 +69,7 @@ export const useForm = <T extends object>({
   invariant(additionalValidation != null || schema != null, 'useForm must be called with schema and/or validate');
 
   const [values, setValues] = useState<T>(initialValues);
+  const [changed, setChanged] = useState<Record<keyof T, boolean>>(initialiseKeysWithValue(initialValues, false));
   const [errors, setErrors] = useState<Record<keyof T, string>>({} as Record<keyof T, string>);
   const [touched, setTouched] = useState<Record<keyof T, boolean>>(initialiseKeysWithValue(initialValues, false));
 
@@ -109,6 +111,7 @@ export const useForm = <T extends object>({
       const newValues = { ...values, [property]: parsedValue };
       setValues(newValues);
       validate(newValues);
+      setChanged((prev) => ({ ...prev, [property]: true }));
     },
     [values, validate],
   );
@@ -149,7 +152,7 @@ export const useForm = <T extends object>({
 
   const handleSubmit = useCallback(() => {
     if (validate(values)) {
-      onSubmit(values);
+      onSubmit(values, { changed });
     }
   }, [values, validate, onSubmit]);
 
@@ -191,14 +194,15 @@ export const useForm = <T extends object>({
   );
 
   return {
-    canSubmit,
+    values,
+    changed,
     errors,
+    canSubmit,
     getInputProps,
     handleChange,
     handleBlur,
     handleSubmit,
     touched,
-    values,
   } satisfies FormResult<T>;
 };
 

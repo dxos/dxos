@@ -34,8 +34,8 @@ export const FieldPropertiesSchema = S.mutable(
     // FieldKind
     format: S.optional(S.Enums(FieldKindEnum)),
 
-    // TODO(burdon): Define types? Single type? Property on field for ux picker?
-    refSchema: S.optional(S.String),
+    // TODO(burdon): ?
+    referenceSchema: S.optional(S.String),
 
     // AST.TitleAnnotation
     title: S.optional(S.String),
@@ -79,6 +79,6 @@ export const ViewSchema = S.Struct({
   fields: S.mutable(S.Array(FieldSchema)),
 
   // TODO(burdon): Add array of sort orders (which might be tuples).
-});
+}).pipe(S.mutable);
 
 export type ViewType = S.Schema.Type<typeof ViewSchema>;

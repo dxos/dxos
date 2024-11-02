@@ -6,6 +6,7 @@ import React from 'react';
 
 import { DropdownMenu, type DropdownMenuRootProps } from '@dxos/react-ui';
 import { Field } from '@dxos/react-ui-data';
+import { type FieldPropertiesType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
@@ -21,7 +22,7 @@ export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, trigg
     [model?.table?.view?.fields, columnId],
   );
 
-  if (!field) {
+  if (!field || !model?.table?.view) {
     return null;
   }
 
@@ -29,7 +30,7 @@ export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, trigg
     <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
       <DropdownMenu.Content>
-        <Field field={field} onSave={() => onOpenChange?.(false)} />
+        <Field view={model.table.view} field={field as FieldPropertiesType} onSave={() => onOpenChange?.(false)} />
         <DropdownMenu.Arrow />
       </DropdownMenu.Content>
     </DropdownMenu.Root>
