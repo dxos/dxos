@@ -62,15 +62,17 @@ jobs:
         uses: ./.github/actions/setup
         with:
           node-version: ${{ matrix.node-version }}
-          stop-agents-after: test
+          # TODO(wittjosiah): Nx Agents were flaky.
+          # stop-agents-after: test
 
+      # TODO(wittjosiah): Coverage is causing CI failures.
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected -t test --coverage
+        run: pnpm exec nx affected -t test
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many -t test --coverage
+        run: pnpm exec nx run-many -t test
 
       - uses: codecov/codecov-action@v4
         if: ${{ matrix.node-version == '20.12.1' }}
@@ -105,7 +107,8 @@ jobs:
         uses: ./.github/actions/setup
         with:
           node-version: 20.12.1
-          stop-agents-after: build
+          # TODO(wittjosiah): Nx Agents were flaky.
+          # stop-agents-after: build
 
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
