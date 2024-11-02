@@ -8,6 +8,7 @@ import { AST, JSONSchema, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import {
+  FormatAnnotationId,
   type ObjectAnnotation,
   ObjectAnnotationId,
   type PropertyMetaAnnotation,
@@ -276,29 +277,37 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
 
 const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<string, any> => {
   const refinement: EchoRefinement = {};
+  const schemaFields: Record<string, any> = {};
   for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
     if (annotations[annotation] != null) {
       refinement[annotationToRefinementKey[annotation]] = annotations[annotation] as any;
     }
   }
 
-  if (Object.keys(refinement).length === 0) {
-    return {};
+  if (Object.keys(refinement).length > 0) {
+    schemaFields[ECHO_REFINEMENT_KEY] = refinement;
   }
 
-  return { [ECHO_REFINEMENT_KEY]: refinement };
+  if (annotations[FormatAnnotationId] != null) {
+    schemaFields.format = annotations[FormatAnnotationId];
+  }
+
+  return schemaFields;
 };
 
 const jsonSchemaFieldsToAnnotations = (schema: JSONSchema.JsonSchema7): AST.Annotations => {
-  const echoRefinement: EchoRefinement = (schema as any)[ECHO_REFINEMENT_KEY];
-  if (echoRefinement == null) {
-    return {};
+  const annotations: Types.Mutable<S.Annotations.Schema<any>> = {};
+
+  if ('format' in schema && typeof schema.format === 'string') {
+    annotations[FormatAnnotationId] = schema.format;
   }
 
-  const annotations: Types.Mutable<S.Annotations.Schema<any>> = {};
-  for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
-    if (echoRefinement[annotationToRefinementKey[annotation]]) {
-      annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
+  const echoRefinement: EchoRefinement = (schema as any)[ECHO_REFINEMENT_KEY];
+  if (echoRefinement != null) {
+    for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
+      if (echoRefinement[annotationToRefinementKey[annotation]]) {
+        annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
+      }
     }
   }
 

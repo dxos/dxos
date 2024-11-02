@@ -114,3 +114,14 @@ export const createReferenceAnnotation = (obj: StoredSchema): S.Schema.AnyNoCont
       version: obj.version,
     } satisfies ReferenceAnnotationValue,
   });
+
+/**
+ * https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
+ */
+export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
+
+export const getFormatAnnotation = (schema: S.Schema<any>) =>
+  pipe(
+    AST.getAnnotation<string>(FormatAnnotationId)(schema.ast),
+    Option.getOrElse(() => undefined),
+  );

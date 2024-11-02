@@ -13,15 +13,6 @@ export const FILED_PATH_ANNOTATION = 'path';
  */
 export const FieldPath = (path: JsonPath) => PropertyMeta(FILED_PATH_ANNOTATION, path);
 
-// https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
-export const FIELD_FORMAT_ANNOTATION = 'format';
-
-/**
- * Annotation to set field kind.
- */
-// TODO(burdon): Instead of adding a "kind" annotation as a value, add an actual annotation representing the kind.
-export const FieldFormat = (format: FieldFormatEnum) => PropertyMeta(FIELD_FORMAT_ANNOTATION, format);
-
 // TODO(burdon):
 //  - flat annotations using effect annotations at top level
 //  - S.pattern annotations

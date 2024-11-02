@@ -6,6 +6,7 @@ import { create, JsonPath, JsonSchemaType, type ReactiveObject, QueryType, type 
 import { S } from '@dxos/effect';
 
 import { FieldFormatEnum } from './annotations';
+import type { JsonSchema7 } from '@effect/schema/JSONSchema';
 
 /**
  * Stored field metadata (e.g., for UX).
@@ -20,6 +21,7 @@ export const FieldSchema = S.mutable(
 );
 
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
+
 
 /**
  * Computed (aggregate) field metadata (from annotations).

@@ -4,13 +4,14 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type JSONSchema, S } from '@dxos/effect';
+import { AST, type JSONSchema, S } from '@dxos/effect';
 import { deepMapValues } from '@dxos/util';
 
 import { toJsonSchema, toEffectSchema, getEchoProp } from './json-schema';
-import { PropertyMeta } from '../ast';
+import { FormatAnnotationId, PropertyMeta } from '../ast';
 import { ref } from '../handler';
 import { TypedObject } from '../object';
+import { log } from '@dxos/log';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {
@@ -132,7 +133,7 @@ describe('json-to-effect', () => {
           object: S.Struct({ id: S.String, field: ref(Nested) }),
           echoObject: ref(Nested),
           echoObjectArray: S.Array(ref(Nested)),
-          email: S.String.pipe(PropertyMeta('dxos.format', 'email')),
+          email: S.String.annotations({ [FormatAnnotationId]: 'email' }),
           null: S.Null,
         },
         partial ? { partial } : {},
@@ -140,10 +141,20 @@ describe('json-to-effect', () => {
 
       const jsonSchema = toJsonSchema(Schema);
       const schema = toEffectSchema(jsonSchema);
+
       expect(() => expect(schema.ast).to.deep.eq(Schema.ast)).to.throw();
       expect(() => expect(removeFilterFunction(schema.ast)).to.deep.eq(Schema.ast)).to.throw();
       expect(() => expect(schema.ast).to.deep.eq(removeFilterFunction(Schema.ast))).to.throw();
+      // TODO(dmaretskyi): Does not compare symbols!!!! -- important for annotations.
       expect(removeFilterFunction(schema.ast)).to.deep.eq(removeFilterFunction(Schema.ast));
+      // log.info('', { type: AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'email')! });
+
+      // TODO(dmaretskyi): Fix.
+      // expect(
+      //   AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'email')!.type.annotations[
+      //     FormatAnnotationId
+      //   ],
+      // ).toEqual('email');
     });
   }
 

@@ -12,6 +12,7 @@ import {
   create,
   createReferenceAnnotation,
   createStoredSchema,
+  FormatAnnotationId,
   getTypename,
   ref,
   setAnnotation,
@@ -22,7 +23,7 @@ import {
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { FIELD_FORMAT_ANNOTATION, FieldFormat, FieldFormatEnum, FieldPath, FILED_PATH_ANNOTATION } from './annotations';
+import { FieldFormatEnum, FieldPath, FILED_PATH_ANNOTATION } from './annotations';
 import { FieldProjection } from './field';
 import { createView, ViewSchema, type ViewType } from './view';
 
@@ -44,7 +45,9 @@ describe('view', () => {
     }) {}
 
     const OverlaySchema = S.Struct({
-      email: S.String.pipe(FieldPath('$.email' as JsonPath)).pipe(FieldFormat(FieldFormatEnum.Email)),
+      email: S.String.pipe(FieldPath('$.email' as JsonPath)).annotations({
+        [FormatAnnotationId]: FieldFormatEnum.Email,
+      }),
     });
 
     const baseSchema = toJsonSchema(BaseType);
@@ -55,9 +58,9 @@ describe('view', () => {
     expect((composedSchema as any).properties).toEqual({
       email: {
         type: 'string',
+        format: FieldFormatEnum.Email,
         echo: {
           annotations: {
-            [FIELD_FORMAT_ANNOTATION]: FieldFormatEnum.Email,
             [FILED_PATH_ANNOTATION]: '$.email',
           },
         },
@@ -72,7 +75,7 @@ describe('view', () => {
 
     class Person extends TypedObject({ typename: 'example.com/type/Person', version: '0.1.0' })({
       name: S.String,
-      email: S.String.pipe(FieldFormat(FieldFormatEnum.Email)),
+      email: S.String.annotations({ [FormatAnnotationId]: FieldFormatEnum.Email }),
       org: ref(Org),
     }) {}
 
@@ -101,7 +104,10 @@ describe('view', () => {
     setProperty(
       personSchema.jsonSchema,
       'email',
-      S.String.pipe(FieldFormat(FieldFormatEnum.Email)).annotations({ [AST.DescriptionAnnotationId]: 'Primary email' }),
+      S.String.annotations({
+        [AST.DescriptionAnnotationId]: 'Primary email',
+        [FormatAnnotationId]: FieldFormatEnum.Email,
+      }),
     );
 
     setProperty(
@@ -128,7 +134,7 @@ describe('view', () => {
       ],
     });
 
-    log('schema', { org: orgSchema, person: personSchema });
+    log.info('schema', { org: orgSchema, person: personSchema });
     log('view', { person: personView });
   });
 
