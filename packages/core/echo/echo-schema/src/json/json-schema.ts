@@ -6,6 +6,7 @@ import { type Types } from 'effect';
 
 import { AST, JSONSchema, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 
 import {
   FormatAnnotationId,
@@ -276,6 +277,11 @@ const objectToEffectSchema = (
 
   const annotations = jsonSchemaFieldsToAnnotations(root);
 
+  console.log({
+    annotations,
+    isEchoObject,
+  });
+
   if (!isEchoObject) {
     return schemaWithoutEchoId as any;
   } else {
@@ -327,12 +333,20 @@ const jsonSchemaFieldsToAnnotations = (schema: JSONSchema.JsonSchema7): AST.Anno
   }
 
   const echoRefinement: EchoRefinement = (schema as any)[ECHO_REFINEMENT_KEY];
+
   if (echoRefinement != null) {
     for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
       if (echoRefinement[annotationToRefinementKey[annotation]]) {
         annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
       }
     }
+  }
+
+  if ('$id' in schema && typeof schema.$id === 'string' && schema.$id.startsWith('dxn:')) {
+    annotations[ObjectAnnotationId] = {
+      typename: DXN.parse(schema.$id).parts[0],
+      version: (schema as any).version,
+    };
   }
 
   return annotations;
