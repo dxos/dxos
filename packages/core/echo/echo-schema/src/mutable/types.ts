@@ -9,14 +9,20 @@ import { JsonSchemaType } from '../json';
 import { TypedObject } from '../object';
 import { requireTypeReference } from '../proxy';
 
-// TODO(burdon): Consider renaming type.
+/**
+ * Stored representation of a schame.
+ */
 export class StoredSchema extends TypedObject({ typename: 'dxos.org/type/Schema', version: '0.1.0' })({
   typename: S.String,
   version: S.String,
   jsonSchema: JsonSchemaType,
 }) {}
 
-// TODO(burdon): Reconcile this with schema registry?
+/**
+ * Wrapper around a schema that is stored in the database (from a type definition) but cannot be modified at runtime.
+ * @deprecated
+ */
+// TODO(burdon): Replace with property on StoredSchema.
 export type StaticSchema = {
   id?: string;
   typename: string;
@@ -24,6 +30,9 @@ export type StaticSchema = {
   schema: S.Schema<any>;
 };
 
+/**
+ * @deprecated
+ */
 export const makeStaticSchema = (schema: S.Schema<any>): StaticSchema => {
   requireTypeReference(schema);
   const schemaAnnotation = getObjectAnnotation(schema)!;
