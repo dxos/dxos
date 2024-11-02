@@ -59,13 +59,16 @@ export type FieldPropertiesType = S.Schema.Type<typeof FieldPropertiesSchema>;
  * They are used to configure the visual representation of the data.
  * The query is separate from the view (queries configure the projection of data objects).
  */
+// TODO(dmaretskyi): Make typed object.
 export const ViewSchema = S.Struct({
   /**
+   * This is the projection schema!! -- not the object type.
    * Schema used to render the view.
    * The view may be entirely responsible for creating this schema, or it may just reference an existing schema.
    */
   // TODO(burdon): Change to MutableSchema?
-  schema: JsonSchemaType,
+  // TODO(dmaretskyi): Currently empty since we don't do projection.
+  schema: S.optional(JsonSchemaType),
 
   /**
    * Query used to retrieve data.
@@ -90,7 +93,7 @@ export type ViewType = S.Schema.Type<typeof ViewSchema>;
 // TODO(burdon): Pass in MutableSchema from registry?
 export const createView = (schema: ReactiveObject<StoredSchema>): ReactiveObject<ViewType> => {
   const view = create(ViewSchema, {
-    schema: schema.jsonSchema,
+    // schema: schema.jsonSchema,
     query: {
       __typename: schema.typename,
     },

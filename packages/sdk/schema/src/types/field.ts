@@ -2,19 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  AST,
-  deleteProperty,
-  type JsonPath,
-  getAnnotation,
-  setAnnotation,
-  type StoredSchema,
-  type JsonSchemaType,
-  composeSchema,
-} from '@dxos/echo-schema';
+import { deleteProperty, type JsonSchemaType, type StoredSchema } from '@dxos/echo-schema';
 
-import { type FieldType, type FieldPropertiesType, type ViewType } from './view';
-import type { JsonSchema7, JsonSchema7Object } from '@effect/schema/JSONSchema';
+import type { JsonSchema7Object } from '@effect/schema/JSONSchema';
+import { type FieldType, type ViewType } from './view';
 
 /**
  * Maps view fields and schema annotations onto in-memory projections used by UX components.
@@ -27,9 +18,10 @@ export class FieldProjection {
   getFieldProperties(objectType: StoredSchema, view: ViewType, property: string): [FieldType, JsonSchemaType] {
     const field = view.fields.find((f) => f.property === property) ?? { property };
 
-    const composedSchema = composeSchema(objectType.jsonSchema as any, view.schema as any);
+    // TODO(dmaretskyi): Add projection later on.
+    // const composedSchema = composeSchema(objectType.jsonSchema as any, view.schema as any);
 
-    const propertySchema = (composedSchema as JsonSchema7Object).properties[property];
+    const propertySchema = (objectType.jsonSchema as JsonSchema7Object).properties[property];
     if (!propertySchema) {
       throw new Error(`Property not found: ${property}`);
     }
@@ -64,7 +56,8 @@ export class FieldProjection {
 
     // TODO(dmaretskyi): Currently we update both the view and type schema but in the future we only want to update the relevant parts.
     (objectType.jsonSchema as JsonSchema7Object).properties[field.property] = propertySchema;
-    (view.schema as JsonSchema7Object).properties[field.property] = propertySchema;
+    // TODO(dmaretskyi): Add projection later on.
+    // (view.schema as JsonSchema7Object).properties[field.property] = propertySchema;
   }
 
   /**
@@ -75,7 +68,8 @@ export class FieldProjection {
     if (idx !== -1) {
       view.fields.splice(idx, 1);
       deleteProperty(objectType.jsonSchema as any, field.property);
-      deleteProperty(view.schema as any, field.property);
+      // TODO(dmaretskyi): Add projection later on.
+      // deleteProperty(view.schema as any, field.property);
     }
   }
 }

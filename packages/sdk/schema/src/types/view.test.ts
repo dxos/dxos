@@ -231,6 +231,7 @@ describe('view', () => {
   });
 });
 
+// TODO(dmaretskyi): Move to sdk code.
 const PROPERTY_TYPES: Partial<Record<FieldFormatEnum, S.Schema.All>> = {
   // NOTE: pattern must come first so that it does not override description annotation.
   [FieldFormatEnum.Email]: S.String.pipe(S.pattern(/xxxxxxxx/)).pipe(
@@ -246,6 +247,7 @@ const PROPERTY_TYPES: Partial<Record<FieldFormatEnum, S.Schema.All>> = {
   ),
 };
 
+// TODO(dmaretskyi): Move to sdk code.
 const propertySchemaToFieldFormat = (propertySchema: JsonSchemaType): FieldFormatEnum | undefined => {
   const format = propertySchema.format;
 
