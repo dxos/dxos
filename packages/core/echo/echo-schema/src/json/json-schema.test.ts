@@ -21,10 +21,8 @@ describe('effect-to-json', () => {
       version: '0.1.0',
     })({ field: S.String }) {}
     const jsonSchema = toJsonSchema(Schema);
-    expect(getEchoProp(jsonSchema).type).to.deep.eq({
-      typename: 'example.com/type/Test',
-      version: '0.1.0',
-    });
+    expect((jsonSchema as any).$id).toEqual('dxn:type:example.com/type/Test');
+    expect((jsonSchema as any).version).toEqual('0.1.0');
   });
 
   test('field meta annotation', () => {
@@ -105,9 +103,6 @@ describe('effect-to-json', () => {
         },
       },
       additionalProperties: false,
-      echo: {
-        type: { typename: 'example.com/type/Contact', version: '0.1.0' },
-      },
     });
   });
 

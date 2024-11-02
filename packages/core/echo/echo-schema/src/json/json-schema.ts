@@ -237,11 +237,14 @@ const objectToEffectSchema = (
 ): S.Schema<any> => {
   invariant('type' in root && root.type === 'object', `not an object: ${root}`);
   const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
+  const isEchoObject =
+    echoRefinement != null || ('$id' in root && typeof root.$id === 'string' && root.$id.startsWith('dxn:'));
+
   const fields: S.Struct.Fields = {};
   const propertyList = Object.entries(root.properties ?? {});
   let immutableIdField: S.Schema<any> | undefined;
   for (const [key, value] of propertyList) {
-    if (echoRefinement?.type && key === 'id') {
+    if (isEchoObject && key === 'id') {
       immutableIdField = toEffectSchema(value, defs);
     } else {
       // TODO(burdon): Mutable cast.
@@ -273,7 +276,7 @@ const objectToEffectSchema = (
 
   const annotations = jsonSchemaFieldsToAnnotations(root);
 
-  if (echoRefinement == null) {
+  if (!isEchoObject) {
     return schemaWithoutEchoId as any;
   } else {
     invariant(immutableIdField, 'no id in echo type');
@@ -299,7 +302,7 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
 const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<string, any> => {
   const refinement: EchoRefinement = {};
   const schemaFields: Record<string, any> = {};
-  for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
+  for (const annotation of [ReferenceAnnotationId, PropertyMetaAnnotationId]) {
     if (annotations[annotation] != null) {
       refinement[annotationToRefinementKey[annotation]] = annotations[annotation] as any;
     }

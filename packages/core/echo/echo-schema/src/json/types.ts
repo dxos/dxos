@@ -18,7 +18,16 @@ export const JsonPath = S.String.pipe(
 ) as any as S.Schema<JsonPath>;
 
 // TODO(dmaretskyi): Define more precise types.
-export type JsonSchemaType = JSONSchema.JsonSchema7;
+export type JsonSchemaType = JSONSchema.JsonSchema7 & {
+  // Fixing the existing types
+  $id: string;
+
+  //
+  // Custom dialect
+  //
+  version: string;
+  format?: string;
+};
 
 /**
  * Type of the JSON schema stored in an ECHO object.

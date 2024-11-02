@@ -28,7 +28,7 @@ describe('schema composition', () => {
 
     const baseSchema = toJsonSchema(BaseType);
     const overlaySchema = toJsonSchema(OverlaySchema);
-    const composedSchema = composeSchema(baseSchema, overlaySchema);
+    const composedSchema = composeSchema(baseSchema as any, overlaySchema as any);
 
     // TODO(burdon): Remove any cast?
     expect((composedSchema as any).properties).toEqual({
