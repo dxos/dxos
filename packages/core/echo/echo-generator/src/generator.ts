@@ -111,7 +111,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
   private _maybeRegisterSchema(typename: string, schema: MutableSchema | S.Schema<any>): MutableSchema | S.Schema<any> {
     if (schema instanceof MutableSchema) {
-      const existingSchema = this._space.db.schemaRegistry.getSchemaByTypename(typename);
+      const existingSchema = this._space.db.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {
         return existingSchema;
       }

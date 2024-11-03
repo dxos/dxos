@@ -12,11 +12,11 @@ import { validateSchema, type ValidationError } from '../util';
 type FormInputValue = string | number | readonly string[] | undefined;
 
 type BaseProps<T> = {
+  value: T[keyof T] | string;
   name: keyof T;
 };
 
 type InputProps<T> = BaseProps<T> & {
-  value: T[keyof T] | string;
   onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 };
@@ -26,7 +26,7 @@ type SelectProps<T> = BaseProps<T> & {
   onValueChange: (value: string | undefined) => void;
 };
 
-export type FormResult<T = {}> = {
+export type FormResult<T extends object> = {
   values: T;
   /**
    * Provider for props for input controls.
@@ -44,7 +44,7 @@ export type FormResult<T = {}> = {
   handleSubmit: () => void;
 };
 
-export interface FormOptions<T> {
+export interface FormOptions<T extends object> {
   initialValues: T;
   schema?: S.Schema<T>;
   /**
@@ -218,7 +218,7 @@ const markAllTouched = <T extends Record<keyof T, any>>(values: T) => {
   return initialiseKeysWithValue(values, true);
 };
 
-const collapseErrorArray = <T>(errors: ValidationError[]) =>
+const collapseErrorArray = <T extends object>(errors: ValidationError[]) =>
   errors.reduce(
     (acc, { path, message }) => {
       // TODO(Zan): This won't play well with nesting.
