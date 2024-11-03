@@ -4,7 +4,6 @@
 
 import { type UnsubscribeCallback } from '@dxos/async';
 import {
-  create,
   getObjectAnnotation,
   makeStaticSchema,
   toJsonSchema,
@@ -15,6 +14,7 @@ import {
   type StaticSchema,
   StoredSchema,
 } from '@dxos/echo-schema';
+import { createStoredSchema } from '@dxos/echo-schema/src';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -133,16 +133,11 @@ export class MutableSchemaRegistry implements SchemaResolver {
   }
 
   public addSchema(schema: S.Schema<any>): MutableSchema {
-    const typeAnnotation = getObjectAnnotation(schema);
-    invariant(typeAnnotation, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');
-    const schemaToStore = create(StoredSchema, {
-      typename: typeAnnotation.typename,
-      version: typeAnnotation.version,
-      jsonSchema: {} as any, // TODO(dmaretskyi): createEmptyJsonSchema().
-    });
-
+    const meta = getObjectAnnotation(schema);
+    invariant(meta, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');
+    const schemaToStore = createStoredSchema(meta);
     const updatedSchema = schema.annotations({
-      [ObjectAnnotationId]: { ...typeAnnotation, schemaId: schemaToStore.id } satisfies ObjectAnnotation,
+      [ObjectAnnotationId]: { ...meta, schemaId: schemaToStore.id } satisfies ObjectAnnotation,
     });
 
     schemaToStore.jsonSchema = toJsonSchema(updatedSchema);

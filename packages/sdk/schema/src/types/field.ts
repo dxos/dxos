@@ -3,7 +3,6 @@
 //
 
 import { FormatSchema, type ReactiveObject, S, type StoredSchema, type FormatType } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 
 import { FieldSchema, type FieldType, type ViewType } from './view';
 
@@ -24,7 +23,6 @@ export class ViewProjection {
   getFieldProjection(property: string): FieldProjectionType {
     const field = this._view.fields.find((f) => f.property === property) ?? { property };
     const properties = this._schema.jsonSchema.properties[property] as any as FormatType;
-    invariant(properties);
     return { ...field, ...properties };
   }
 

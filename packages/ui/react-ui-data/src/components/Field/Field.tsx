@@ -7,21 +7,20 @@ import React, { type ReactNode, useMemo } from 'react';
 import { FormatEnums } from '@dxos/echo-schema';
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type FieldProjectionType, FieldProjectionSchema, type ViewType } from '@dxos/schema';
+import { type FieldProjectionType, FieldProjectionSchema } from '@dxos/schema';
 
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 import { typeFeatures } from '../../util';
 
 export type FieldProps = ThemedClassName<{
-  view: ViewType;
   field: FieldProjectionType;
   autoFocus?: boolean;
   readonly?: boolean;
   onSave?: (field: FieldProjectionType) => void;
 }>;
 
-export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: FieldProps) => {
+export const Field = ({ classNames, field, autoFocus, readonly, onSave }: FieldProps) => {
   const { t } = useTranslation(translationKey);
 
   const { values, getInputProps, errors, touched, canSubmit, handleSubmit } = useForm<FieldProjectionType>({

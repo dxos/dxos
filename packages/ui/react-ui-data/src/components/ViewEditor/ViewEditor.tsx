@@ -9,9 +9,9 @@ import { Button, Icon, useTranslation, type ThemedClassName } from '@dxos/react-
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 import {
+  createUniqueFieldForView,
   type FieldProjectionType,
   FieldSchema,
-  createUniqueFieldForView,
   type FieldType,
   type ViewType,
   ViewProjection,
@@ -109,7 +109,6 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
           key={field.property}
           classNames='p-2'
           autoFocus
-          view={view}
           field={fieldProperties}
           onSave={(props) => handleSet(field, props)}
         />

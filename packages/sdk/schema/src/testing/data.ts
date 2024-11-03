@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Format, S, createObjectId, createStoredSchema, toJsonSchema } from '@dxos/echo-schema';
+import { AST, Format, S, createObjectId, toJsonSchema, createStoredSchema } from '@dxos/echo-schema';
 
 import { createView } from '../types';
 
@@ -36,13 +36,13 @@ export const TestSchema = S.Struct({
 
 export type TestType = S.Schema.Type<typeof TestSchema>;
 
-export const testView = createView(toJsonSchema(TestSchema), 'example.com/type/Test');
+export const testSchema = createStoredSchema({
+  typename: 'example.com/type/Test',
+  version: '0.1.0',
+  jsonSchema: toJsonSchema(TestSchema),
+});
 
-export const testSchema = createStoredSchema({ typename: 'example.com/type/Test', version: '0.1.0' });
-
-//
-// Data
-//
+export const testView = createView(toJsonSchema(TestSchema), testSchema.typename);
 
 export const testData: TestType = {
   id: createObjectId(),

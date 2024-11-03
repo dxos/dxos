@@ -7,8 +7,8 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
+import { FormatEnum } from '@dxos/echo-schema';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { testView } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Field, type FieldProps } from './Field';
@@ -42,6 +42,6 @@ type Story = StoryObj<typeof Field>;
 
 export const Default: Story = {
   args: {
-    view: testView,
+    field: { property: 'email', format: FormatEnum.String },
   },
 };

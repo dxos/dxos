@@ -5,24 +5,26 @@
 import React, { useState } from 'react';
 
 import { Input, type TextInputProps as NativeTextInputProps } from '@dxos/react-ui';
-import { type PatternAnnotation } from '@dxos/schema';
 
 export type TextInputProps = {
-  format?: PatternAnnotation;
+  // format?: PatternAnnotation;
 } & Omit<NativeTextInputProps, 'style'>;
 
-// TODO(burdon): Move to react-ui.
-export const TextInput = ({ format, onChange, ...props }: TextInputProps) => {
+/**
+ * @deprecated
+ * Remove.
+ */
+export const TextInput = ({ onChange, ...props }: TextInputProps) => {
   const [valid, setValid] = useState(true);
 
   const handleChange: NativeTextInputProps['onChange'] = (ev) => {
-    const text = ev.target.value;
-    if (!format?.filter || text.match(format.filter)) {
-      onChange?.(ev);
-      if (format?.valid) {
-        setValid(format.valid.test(text));
-      }
-    }
+    // const text = ev.target.value;
+    // if (!format?.filter || text.match(format.filter)) {
+    onChange?.(ev);
+    //   if (format?.valid) {
+    //     setValid(format.valid.test(text));
+    //   }
+    // }
   };
 
   return (

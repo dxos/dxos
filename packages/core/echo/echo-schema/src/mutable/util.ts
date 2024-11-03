@@ -11,19 +11,20 @@ import { create } from '../handler';
 import { createJsonSchema, toJsonSchema } from '../json';
 import { type ReactiveObject } from '../types';
 
-// TODO(burdon): Reconcile all basic types. Pick, etc.
-type SchemaMeta = {
-  typename: string;
-  version: string;
-};
-
 /**
- * Create empty stored schema.
+ * Create stored schema.
  */
-export const createStoredSchema = (props: SchemaMeta): ReactiveObject<StoredSchema> => {
+// TODO(burdon): Use uniformly.
+export const createStoredSchema = ({
+  typename,
+  version,
+  jsonSchema,
+}: Pick<StoredSchema, 'typename' | 'version'> &
+  Partial<Pick<StoredSchema, 'jsonSchema'>>): ReactiveObject<StoredSchema> => {
   return create(StoredSchema, {
-    jsonSchema: createJsonSchema(),
-    ...props,
+    typename,
+    version,
+    jsonSchema: jsonSchema ?? createJsonSchema(),
   });
 };
 
