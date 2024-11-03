@@ -18,7 +18,10 @@ import {
 import { CustomAnnotations } from '../formats';
 import { createEchoReferenceSchema } from '../handler';
 
-const ECHO_REFINEMENT_KEY = 'echo';
+/**
+ * @internal
+ */
+export const ECHO_REFINEMENT_KEY = 'echo';
 
 /**
  * @internal

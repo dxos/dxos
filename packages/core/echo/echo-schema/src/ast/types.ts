@@ -38,7 +38,7 @@ export const FIELD_PATH_ANNOTATION = 'path';
  * @param path Data source path in the json path format. This is the field path in the source object.
  */
 // TODO(burdon): Field, vs. path vs. property
-export const FieldPath = (path: JsonPath) => PropertyMeta(FIELD_PATH_ANNOTATION, path);
+export const FieldPath = (path: string) => PropertyMeta(FIELD_PATH_ANNOTATION, path);
 
 /**
  * Marker interface for object with an `id`.
@@ -51,6 +51,7 @@ export interface HasId {
  * https://json-schema.org/draft-07/schema
  */
 // TODO(dmaretskyi): Use a flat type instead: https://json-schema.org/draft-07/schema#.
+// TODO(burdon): Add typename.
 export type JsonSchemaType = JSONSchema.JsonSchema7 & {
   // Fixing the existing types
   $id: string;

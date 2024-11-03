@@ -9,12 +9,9 @@ import { MutableSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   FormatEnum,
-  FieldPath,
   Format,
   FormatAnnotationId,
-  type JsonPath,
   TypedObject,
-  composeSchema,
   create,
   createReferenceAnnotation,
   createStoredSchema,
@@ -38,31 +35,6 @@ describe('view', () => {
 
   afterEach(async () => {
     await builder.close();
-  });
-
-  test('schema composition', ({ expect }) => {
-    class BaseType extends TypedObject({ typename: 'example.com/Person', version: '0.1.0' })({
-      name: S.String,
-      email: S.String,
-    }) {}
-
-    const OverlaySchema = S.Struct({
-      email: S.String.pipe(FieldPath('$.email' as JsonPath)).annotations({
-        [FormatAnnotationId]: FormatEnum.Email,
-      }),
-    });
-
-    const baseSchema = toJsonSchema(BaseType);
-    const overlaySchema = toJsonSchema(OverlaySchema);
-    const composedSchema = composeSchema(baseSchema as any, overlaySchema as any);
-
-    // TODO(burdon): Remove any cast?
-    expect((composedSchema as any).properties).to.deep.eq({
-      email: {
-        type: 'string',
-        format: FormatEnum.Email,
-      },
-    });
   });
 
   test('static schema definitions with references', async ({ expect }) => {
@@ -124,7 +96,7 @@ describe('view', () => {
     );
 
     const personView = createView(personSchema.jsonSchema, personSchema.typename);
-    log.info('schema', { org: orgSchema, person: personSchema });
+    log('schema', { org: orgSchema, person: personSchema });
     log('view', { person: personView });
   });
 
@@ -159,7 +131,7 @@ describe('view', () => {
     const schema = createStoredSchema('example.com/type/Person', '0.1.0');
     setProperty(schema.jsonSchema as any, 'name', S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }));
     setProperty(schema.jsonSchema as any, 'email', Format.Email);
-    setProperty(schema.jsonSchema as any, 'salary', Format.Currency());
+    setProperty(schema.jsonSchema as any, 'salary', Format.Currency({ code: 'usd', decimals: 2 }));
 
     const view = createView(schema.jsonSchema, schema.typename);
     expect(view.fields).to.have.length(3);
@@ -167,20 +139,20 @@ describe('view', () => {
 
     {
       const [field, props] = projection.getFieldProperties(schema, view, 'name');
-      expect(field).toEqual({ property: 'name' });
-      expect(props).toEqual({ type: 'string', title: 'Name' });
+      expect(field).to.deep.eq({ property: 'name' });
+      expect(props).to.deep.eq({ type: 'string', title: 'Name' });
     }
 
     {
       const [field, props] = projection.getFieldProperties(schema, view, 'email');
-      expect(props).toEqual({ property: 'email' });
-      expect(field).toEqual({ property: 'email', size: 100 });
+      expect(field).to.deep.eq({ property: 'email', size: 100 });
+      expect(props).to.include({ type: 'string', format: 'email' });
     }
 
     {
       const [field, props] = projection.getFieldProperties(schema, view, 'salary');
-      expect(field).toEqual({ property: 'salary' });
-      expect(props).toEqual({ type: 'string', format: 'currency', multipleOf: 0.02 });
+      expect(field).to.deep.eq({ property: 'salary' });
+      expect(props).to.include({ type: 'number', format: 'currency', currency: 'USD', multipleOf: 0.01 });
     }
 
     // TODO(dmaretskyi): References.

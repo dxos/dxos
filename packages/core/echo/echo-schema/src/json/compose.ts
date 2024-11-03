@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
+import type { JSONSchema } from '@effect/schema';
 
-import { type JsonSchemaType } from '../ast';
+import { invariant } from '@dxos/invariant';
 
 /*
 TODO(dima)
@@ -18,7 +18,10 @@ TODO(dima)
  * Creates a composite schema from the source and projection schemas.
  */
 // TODO(burdon): Can avoid having to call this every time we modify any property on the view?
-export const composeSchema = (source: JsonSchemaType, target: JsonSchemaType): JsonSchemaType => {
+export const composeSchema = (
+  source: JSONSchema.JsonSchema7Object,
+  target: JSONSchema.JsonSchema7Object,
+): JSONSchema.JsonSchema7Object => {
   // TODO(dmaretskyi): Better way to clone echo proxies.
   const result = JSON.parse(JSON.stringify(target));
   invariant('type' in result && result.type === 'object', 'source schema must be an object');
