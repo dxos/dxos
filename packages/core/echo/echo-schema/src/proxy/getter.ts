@@ -51,9 +51,6 @@ export const getType = <T extends {}>(obj: T | undefined): Reference | undefined
   return undefined;
 };
 
-// TODO(burdon): Make async.
-export type SchemaResolver = (type: string) => S.Schema<any> | undefined;
-
 // TODO(burdon): Reconcile functions.
 export const getTypename = <T extends {}>(obj: T): string | undefined => getType(obj)?.objectId;
 export const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).objectId;

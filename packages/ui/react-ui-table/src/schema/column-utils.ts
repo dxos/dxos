@@ -5,7 +5,7 @@
 import { type ColumnDef } from '@tanstack/react-table';
 
 import { type S } from '@dxos/echo-schema';
-import { FormatEnum, mapSchemaToFields } from '@dxos/schema';
+import { FormatEnum, mapSchemaToFields } from '@dxos/echo-schema';
 
 import { createColumnBuilder } from '../helpers';
 

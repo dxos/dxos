@@ -399,7 +399,7 @@ describe('Integration tests', () => {
         // Can query by stored schema ref.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
         await db.schemaRegistry.list(); // Have to preload schema.
-        const schema = db.schemaRegistry.getSchemaByTypename('example.com/type/Test');
+        const schema = db.schemaRegistry.getSchema('example.com/type/Test');
 
         const { objects } = await db.query(Filter.schema(schema!)).run();
         expect(objects.length).to.eq(1);

@@ -7,13 +7,13 @@ import {
   create,
   getObjectAnnotation,
   makeStaticSchema,
+  toJsonSchema,
   MutableSchema,
   type ObjectAnnotation,
   ObjectAnnotationId,
   type S,
   type StaticSchema,
   StoredSchema,
-  toJsonSchema,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -21,6 +21,10 @@ import { log } from '@dxos/log';
 import { type EchoDatabase } from './database';
 import { getObjectCore } from '../echo-handler';
 import { Filter } from '../query';
+
+export interface SchemaResolver {
+  getSchema(typename: string): MutableSchema | undefined;
+}
 
 type SchemaListChangedCallback = (schema: MutableSchema[]) => void;
 
@@ -36,7 +40,7 @@ export type MutableSchemaRegistryOptions = {
  * Per-space set of mutable schemas.
  */
 // TODO(burdon): Reconcile with RuntimeSchemaRegistry.
-export class MutableSchemaRegistry {
+export class MutableSchemaRegistry implements SchemaResolver {
   private readonly _schemaById: Map<string, MutableSchema> = new Map();
   private readonly _schemaByType: Map<string, MutableSchema> = new Map();
   private readonly _unsubscribeById: Map<string, UnsubscribeCallback> = new Map();
@@ -66,6 +70,10 @@ export class MutableSchemaRegistry {
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
+  public getSchema(typename: string): MutableSchema | undefined {
+    return this._schemaByType.get(typename);
+  }
+
   public getSchemaById(id: string): MutableSchema | undefined {
     const existing = this._schemaById.get(id);
     if (existing != null) {
@@ -83,10 +91,6 @@ export class MutableSchemaRegistry {
     }
 
     return this._register(typeObject);
-  }
-
-  public getSchemaByTypename(typename: string): MutableSchema | undefined {
-    return this._schemaByType.get(typename);
   }
 
   /**

@@ -2,15 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  create,
-  type JSONSchema,
-  JsonPath,
-  JsonSchemaType,
-  type ReactiveObject,
-  QueryType,
-  TypedObject,
-} from '@dxos/echo-schema';
+import { create, type JSONSchema, JsonPath, type ReactiveObject, QueryType, TypedObject } from '@dxos/echo-schema';
 import { S } from '@dxos/effect';
 
 /**
@@ -37,20 +29,20 @@ export class ViewType extends TypedObject({
   version: '0.1.0',
 })({
   /**
+   * Query used to retrieve data.
+   * This includes the base type that the view schema (above) references.
+   * It may include predicates that represent a persistent "drill-down" query.
+   */
+  query: QueryType,
+
+  /**
    * This is the projection schema!! -- not the object type.
    * Schema used to render the view.
    * The view may be entirely responsible for creating this schema, or it may just reference an existing schema.
    */
   // TODO(burdon): Change to MutableSchema?
   // TODO(dmaretskyi): Currently empty since we don't do projection.
-  schema: S.optional(JsonSchemaType),
-
-  /**
-   * Query used to retrieve data.
-   * This includes the base type that the view schema (above) references.
-   * It may include predicates that represent a persistent "drill-down" query.
-   */
-  query: QueryType,
+  // schema: S.optional(JsonSchemaType),
 
   /**
    * UX metadata associated with displayed fields (in table, form, etc.)
@@ -67,7 +59,7 @@ export class ViewType extends TypedObject({
 // TODO(burdon): What is the minimal type that can be passed here that included TypedObjects (i.e., AbstractSchema).
 export const createView = (jsonSchema: JSONSchema.JsonSchema7Object, typename: string): ReactiveObject<ViewType> => {
   return create(ViewType, {
-    schema: jsonSchema,
+    // schema: jsonSchema,
     query: {
       __typename: typename,
     },

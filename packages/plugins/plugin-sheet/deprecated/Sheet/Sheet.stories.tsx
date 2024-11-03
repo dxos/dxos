@@ -12,7 +12,7 @@ import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { FieldFormatEnum } from '@dxos/schema';
+import { FormatEnum } from '@dxos/echo-schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Sheet } from './Sheet';
@@ -71,12 +71,12 @@ const SheetWithToolbar = ({ graph, debug }: { graph: ComputeGraph; debug?: boole
       }
 
       case 'date': {
-        format.type = FieldFormatEnum.Date;
+        format.type = FormatEnum.Date;
         format.format = 'YYYY-MM-DD';
         break;
       }
       case 'currency': {
-        format.type = FieldFormatEnum.Currency;
+        format.type = FormatEnum.Currency;
         format.precision = 2;
         break;
       }

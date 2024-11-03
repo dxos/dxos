@@ -23,7 +23,7 @@ import {
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { FieldProjection } from './field';
+import { getFieldProjection } from './field';
 import { createView } from './view';
 
 describe('view', () => {
@@ -119,40 +119,46 @@ describe('view', () => {
     // Check schema updated.
     expect(before).not.to.deep.eq(mutable.schema.ast.toJSON());
 
-    const projection = new FieldProjection();
     const view = createView(jsonSchema, schema.typename);
-    const properties = projection.getFieldProperties(schema, view, 'name');
+    const properties = getFieldProjection(registry, view, 'name');
     expect(properties).to.exist;
   });
 
   test('projection', async ({ expect }) => {
-    const projection = new FieldProjection();
+    const { db } = await builder.createDatabase();
+    const registry = new MutableSchemaRegistry(db);
 
     const schema = createStoredSchema('example.com/type/Person', '0.1.0');
+    db.add(schema);
+    registry.registerSchema(schema);
+
     setProperty(schema.jsonSchema as any, 'name', S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }));
     setProperty(schema.jsonSchema as any, 'email', Format.Email);
     setProperty(schema.jsonSchema as any, 'salary', Format.Currency({ code: 'usd', decimals: 2 }));
 
     const view = createView(schema.jsonSchema, schema.typename);
     expect(view.fields).to.have.length(3);
-    projection.setField(view, { property: 'email', size: 100 });
+    // projection.setField(view, { property: 'email', size: 100 });
 
     {
-      const [field, props] = projection.getFieldProperties(schema, view, 'name');
-      expect(field).to.deep.eq({ property: 'name' });
-      expect(props).to.deep.eq({ type: 'string', title: 'Name' });
+      const props = getFieldProjection(registry, view, 'name');
+      expect(props).to.deep.eq({ property: 'name', type: 'string', title: 'Name' });
     }
 
     {
-      const [field, props] = projection.getFieldProperties(schema, view, 'email');
-      expect(field).to.deep.eq({ property: 'email', size: 100 });
-      expect(props).to.include({ type: 'string', format: 'email' });
+      const props = getFieldProjection(registry, view, 'email');
+      expect(props).to.include({ property: 'email', type: 'string', format: 'email' });
     }
 
     {
-      const [field, props] = projection.getFieldProperties(schema, view, 'salary');
-      expect(field).to.deep.eq({ property: 'salary' });
-      expect(props).to.include({ type: 'number', format: 'currency', currency: 'USD', multipleOf: 0.01 });
+      const props = getFieldProjection(registry, view, 'salary');
+      expect(props).to.include({
+        property: 'salary',
+        type: 'number',
+        format: 'currency',
+        currency: 'USD',
+        multipleOf: 0.01,
+      });
     }
 
     // TODO(dmaretskyi): References.

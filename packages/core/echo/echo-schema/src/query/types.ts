@@ -5,7 +5,7 @@
 import { Schema as S } from '@effect/schema';
 
 const QuerySchema = S.Struct({
-  __typename: S.String.pipe(S.optional),
+  __typename: S.String,
 });
 
 /**

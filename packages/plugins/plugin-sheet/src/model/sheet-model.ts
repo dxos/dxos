@@ -8,11 +8,10 @@ import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateT
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { getTypename } from '@dxos/echo-schema';
+import { getTypename, FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FormatEnum } from '@dxos/schema';
 
 import { DetailedCellError, ExportedCellChange } from '#hyperformula';
 import { type ComputeGraph, type ComputeNode, type ComputeNodeEvent, createSheetName } from '../compute-graph';

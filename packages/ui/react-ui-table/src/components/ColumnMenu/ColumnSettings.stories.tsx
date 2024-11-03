@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { FieldFormatEnum } from '@dxos/schema';
+import { FormatEnum } from '@dxos/echo-schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ColumnSettings, type ColumnSettingsProps } from './ColumnSettings';
@@ -33,8 +33,8 @@ const sampleTableDef: TableDef = {
   id: '1',
   name: 'Sample Table',
   columns: [
-    { id: 'col-1', prop: 'name', type: FieldFormatEnum.String, label: 'Name' },
-    { id: 'col-2', prop: 'age', type: FieldFormatEnum.Number, label: 'Age', digits: 0 },
+    { id: 'col-1', prop: 'name', type: FormatEnum.String, label: 'Name' },
+    { id: 'col-2', prop: 'age', type: FormatEnum.Number, label: 'Age', digits: 0 },
   ],
 };
 
@@ -44,8 +44,8 @@ const sampleTablesToReference: TableDef[] = [
     id: '2',
     name: 'Reference Table',
     columns: [
-      { id: 'ref-col-1', prop: 'id', type: FieldFormatEnum.String, label: 'ID' },
-      { id: 'ref-col-2', prop: 'description', type: FieldFormatEnum.String, label: 'Description' },
+      { id: 'ref-col-1', prop: 'id', type: FormatEnum.String, label: 'ID' },
+      { id: 'ref-col-2', prop: 'description', type: FormatEnum.String, label: 'Description' },
     ],
   },
 ];
@@ -54,7 +54,7 @@ const defaultArgs: ColumnSettingsProps = {
   column: {
     id: 'col-1',
     prop: 'name',
-    type: FieldFormatEnum.String,
+    type: FormatEnum.String,
     label: 'Name',
   },
   tableDef: sampleTableDef,
@@ -74,7 +74,7 @@ export const NumberColumn = {
     column: {
       id: 'col-2',
       prop: 'age',
-      type: FieldFormatEnum.Number,
+      type: FormatEnum.Number,
       label: 'Age',
       digits: 0,
     },
@@ -87,7 +87,7 @@ export const ReferenceColumn = {
     column: {
       id: 'col-3',
       prop: 'reference',
-      type: FieldFormatEnum.Ref,
+      type: FormatEnum.Ref,
       label: 'Reference',
       refTable: '2',
       refProp: 'ref-col-1',
@@ -101,7 +101,7 @@ export const NewColumn = {
     column: {
       id: 'new-col',
       prop: '',
-      type: FieldFormatEnum.String,
+      type: FormatEnum.String,
       label: '',
     },
   },

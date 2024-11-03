@@ -4,27 +4,30 @@
 
 import React, { type ReactNode, useMemo } from 'react';
 
+import { FormatEnums, FormatSchema, type FormatType } from '@dxos/echo-schema';
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { FieldFormatEnums, FieldPropertiesSchema, type FieldPropertiesType, type ViewType } from '@dxos/schema';
+import { type ViewType } from '@dxos/schema';
 
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 import { pathNotUniqueError, typeFeatures } from '../../util';
 
+// TODO(burdon): Define projection.
+
 export type FieldProps = ThemedClassName<{
   view: ViewType;
-  field: FieldPropertiesType;
+  field: FormatType;
   autoFocus?: boolean;
   readonly?: boolean;
-  onSave?: (field: FieldPropertiesType) => void;
+  onSave?: (field: FormatType) => void;
 }>;
 
 export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: FieldProps) => {
   const { t } = useTranslation(translationKey);
 
-  const { values, getInputProps, errors, touched, canSubmit, handleSubmit } = useForm<FieldPropertiesType>({
-    schema: FieldPropertiesSchema,
+  const { values, getInputProps, errors, touched, canSubmit, handleSubmit } = useForm<ViewType>({
+    schema: FormatSchema,
     // TODO(burdon): Caller should pass in the value (and clone if necessary).
     initialValues: field,
     additionalValidation: (values) => {
@@ -37,7 +40,7 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
         return [pathNotUniqueError(values.path)];
       }
     },
-    onSubmit: (values: FieldPropertiesType) => onSave?.(values),
+    onSubmit: (values: ViewType) => onSave?.(values),
   });
 
   const features = useMemo(() => (values.format ? typeFeatures[values.format] ?? [] : []), [values.format]);
@@ -77,7 +80,7 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
             <Select.Portal>
               <Select.Content>
                 <Select.Viewport>
-                  {FieldFormatEnums.map((type) => (
+                  {FormatEnums.map((type) => (
                     <Select.Option key={type} value={type}>
                       {t(`field type ${type}`)}
                     </Select.Option>

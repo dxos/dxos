@@ -64,7 +64,7 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
     return this._storedSchema.id;
   }
 
-  public get jsonSchema(): JSONSchema.JsonSchema7 {
+  public get jsonSchema(): JSONSchema.JsonSchema7Object {
     return this._storedSchema.jsonSchema;
   }
 

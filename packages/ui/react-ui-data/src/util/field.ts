@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FormatEnum } from '@dxos/schema';
+import { FormatEnum } from '@dxos/echo-schema';
 
 import { type ValidationError } from './';
 

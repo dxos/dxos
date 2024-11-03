@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type FormatEnum } from '@dxos/schema';
+import { type FormatEnum } from '@dxos/echo-schema';
 
 /**
  * @deprecated

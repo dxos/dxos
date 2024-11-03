@@ -5,8 +5,8 @@
 import { useEffect } from 'react';
 
 import { create, type MutableSchema, S, TypedObject } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { FormatEnum } from '@dxos/schema';
 
 import { createStarterView, TableType } from '../types';
 
