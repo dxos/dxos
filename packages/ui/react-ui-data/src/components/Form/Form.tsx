@@ -8,7 +8,7 @@ import React from 'react';
 import { AST, type S, getProperty } from '@dxos/effect';
 import { Input, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { RealNumberFormat, type ViewType, getPatternAnnotation, getFieldValue, setFieldValue } from '@dxos/schema';
+import { type ViewType, getFieldValue, setFieldValue } from '@dxos/schema';
 
 import { TextInput } from '../TextInput';
 
@@ -26,11 +26,11 @@ export const Form = <T extends {} = {}>({ classNames, view, object, schema, read
   return (
     <div role='none' className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
       {view.fields.map((field) => {
-        const prop = schema && getProperty(schema, field.path);
+        const prop = schema && getProperty(schema, field.property);
         const title = (prop && pipe(AST.getTitleAnnotation(prop), Option.getOrUndefined)) ?? '';
         const description = (prop && pipe(AST.getDescriptionAnnotation(prop), Option.getOrUndefined)) ?? title;
-        const format =
-          (prop && (getPatternAnnotation(prop) ?? (AST.isNumberKeyword(prop) && RealNumberFormat))) || undefined;
+        // const format =
+        //   (prop && (getPatternAnnotation(prop) ?? (AST.isNumberKeyword(prop) && RealNumberFormat))) || undefined;
 
         //
         // Boolean
@@ -43,7 +43,7 @@ export const Form = <T extends {} = {}>({ classNames, view, object, schema, read
           };
 
           return (
-            <div key={field.path} className='flex flex-col w-full gap-1'>
+            <div key={field.property} className='flex flex-col w-full gap-1'>
               <Input.Root>
                 <Input.Label classNames='px-1'>{title}</Input.Label>
                 <Input.Switch disabled={readonly} checked={!!value} onCheckedChange={(checked) => onChange(checked)} />
@@ -64,13 +64,13 @@ export const Form = <T extends {} = {}>({ classNames, view, object, schema, read
         const value = object ? getFieldValue(object, field) : undefined;
 
         return (
-          <div key={field.path} className='flex flex-col w-full gap-1'>
+          <div key={field.property} className='flex flex-col w-full gap-1'>
             <Input.Root>
               <Input.Label classNames='px-1'>{title}</Input.Label>
               <TextInput
                 disabled={readonly}
                 placeholder={description}
-                format={format}
+                // format={format}
                 value={value ? String(value) : ''}
                 onChange={(event) => setFieldValue(object, field, event.target.value)}
               />
