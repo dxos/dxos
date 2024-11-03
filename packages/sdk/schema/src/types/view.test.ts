@@ -63,14 +63,14 @@ describe('view', () => {
   });
 
   test('dynamic schema definitions with references', async () => {
-    const orgSchema = createStoredSchema('example.com/type/Org', '0.1.0');
+    const orgSchema = createStoredSchema({ typename: 'example.com/type/Org', version: '0.1.0' });
     setProperty(
       orgSchema.jsonSchema as any,
       'name',
       S.String.annotations({ [AST.DescriptionAnnotationId]: 'Org name' }),
     );
 
-    const personSchema = createStoredSchema('example.com/type/Person', '0.1.0');
+    const personSchema = createStoredSchema({ typename: 'example.com/type/Person', version: '0.1.0' });
     setProperty(
       personSchema.jsonSchema as any,
       'name',
@@ -104,7 +104,7 @@ describe('view', () => {
     const { db } = await builder.createDatabase();
     const registry = new MutableSchemaRegistry(db);
 
-    const schema = createStoredSchema('example.com/type/Org', '0.1.0');
+    const schema = createStoredSchema({ typename: 'example.com/type/Org', version: '0.1.0' });
     db.add(schema);
 
     // TODO(burdon): Should registration be automatic?
@@ -120,25 +120,19 @@ describe('view', () => {
     expect(before).not.to.deep.eq(mutable.schema.ast.toJSON());
 
     const view = createView(jsonSchema, schema.typename);
-    const projection = new ViewProjection(registry, view);
+    const projection = new ViewProjection(schema, view);
     const properties = projection.getFieldProjection('name');
     expect(properties).to.exist;
   });
 
-  test('projection', async ({ expect }) => {
-    const { db } = await builder.createDatabase();
-    const registry = new MutableSchemaRegistry(db);
-
-    const schema = createStoredSchema('example.com/type/Person', '0.1.0');
-    db.add(schema);
-    registry.registerSchema(schema);
-
+  test('gets and updates view projection', async ({ expect }) => {
+    const schema = createStoredSchema({ typename: 'example.com/type/Person', version: '0.1.0' });
     setProperty(schema.jsonSchema as any, 'name', S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }));
     setProperty(schema.jsonSchema as any, 'email', Format.Email);
     setProperty(schema.jsonSchema as any, 'salary', Format.Currency({ code: 'usd', decimals: 2 }));
 
     const view = createView(schema.jsonSchema, schema.typename);
-    const projection = new ViewProjection(registry, view);
+    const projection = new ViewProjection(schema, view);
     expect(view.fields).to.have.length(3);
 
     {

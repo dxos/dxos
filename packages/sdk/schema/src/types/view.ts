@@ -10,6 +10,7 @@ import { S } from '@dxos/effect';
  */
 export const FieldSchema = S.mutable(
   S.Struct({
+    // TODO(burdon): Property or path?
     property: S.String,
     visible: S.optional(S.Boolean),
     size: S.optional(S.Number),
