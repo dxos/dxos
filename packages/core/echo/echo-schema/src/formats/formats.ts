@@ -23,6 +23,13 @@ export const CustomAnnotations = {
   currency: CurrencyAnnotationId,
 };
 
+// TODO(burdon): Generate?
+export type FormatType = {
+  format: FormatEnum;
+  currency?: string;
+  multipleOf?: number;
+};
+
 //
 // Fields
 // https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
