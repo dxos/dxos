@@ -13,8 +13,6 @@ import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 import { typeFeatures } from '../../util';
 
-// TODO(burdon): Define projection.
-
 export type FieldProps = ThemedClassName<{
   view: ViewType;
   field: FieldProjectionType;
@@ -61,7 +59,6 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
           </Input.DescriptionAndValidation>
         </Input.Root>
       </FieldRow>
-
       <FieldRow>
         <Input.Root validationValence={touched.title && errors.title ? 'error' : undefined}>
           <Input.Label>{t('field label label')}</Input.Label>
@@ -71,7 +68,6 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
           </Input.DescriptionAndValidation>
         </Input.Root>
       </FieldRow>
-
       <FieldRow>
         <Input.Root validationValence={touched.format && errors.format ? 'error' : undefined}>
           <Input.Label>{t('field type label')}</Input.Label>
@@ -95,6 +91,8 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
         </Input.Root>
       </FieldRow>
 
+      {/* TODO(burdon): Convert multipleOf. */}
+      {/*
       {features.includes('numeric') && (
         <FieldRow>
           <Input.Root validationValence={touched.digits && errors.digits ? 'error' : undefined}>
@@ -106,7 +104,7 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
           </Input.Root>
         </FieldRow>
       )}
-
+      */}
       {/* {features.includes('ref') && (
         <>
           <FieldRow>
@@ -128,8 +126,8 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
             </Input.Root>
           </FieldRow>
         </>
-      )} */}
-
+      )}
+      */}
       {!readonly && (
         <FieldRow>
           <Button onClick={handleSubmit} disabled={!canSubmit}>

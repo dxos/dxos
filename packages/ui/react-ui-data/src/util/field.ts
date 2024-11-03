@@ -12,6 +12,7 @@ import { type ValidationError } from './';
  * Handles various data types including booleans, numbers, dates, and strings.
  * Returns undefined for empty or null inputs.
  */
+// TODO(burdon): Differentiate between data FormatEnum and display format (e.g., percent).
 export const parseValue = (type: FormatEnum, value: any) => {
   if (value === undefined || value === null || value === '') {
     return undefined;
@@ -43,10 +44,11 @@ export const parseValue = (type: FormatEnum, value: any) => {
       return Number.isNaN(num) ? null : num;
     }
 
-    case FormatEnum.Percent: {
-      const num = Number(value);
-      return Number.isNaN(num) ? null : num / 100;
-    }
+    // TODO(burdon): Percent is not part of the data format; it's just a diplay format.
+    // case FormatEnum.Percent: {
+    //   const num = Number(value);
+    //   return Number.isNaN(num) ? null : num / 100;
+    // }
 
     case FormatEnum.Currency: {
       if (typeof value !== 'string') {
@@ -97,8 +99,6 @@ export const cellClassesForFieldType = (type: FormatEnum): string[] | undefined 
     case FormatEnum.Date:
     case FormatEnum.Time:
       return ['font-mono'];
-    case FormatEnum.Percent:
-      return ['text-right'];
     case FormatEnum.Currency:
       return ['text-right'];
     case FormatEnum.JSON:
@@ -123,7 +123,6 @@ type TypeConfigSection = keyof typeof typeConfigSections;
 
 export const typeFeatures: Partial<Record<FormatEnum, TypeConfigSection[]>> = {
   [FormatEnum.Number]: ['numeric'],
-  [FormatEnum.Percent]: ['numeric'],
   [FormatEnum.Currency]: ['numeric'],
   [FormatEnum.Ref]: ['ref'],
 } as const;

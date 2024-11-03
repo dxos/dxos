@@ -13,17 +13,17 @@ type FormInputValue = string | number | readonly string[] | undefined;
 
 type BaseProps<T> = {
   name: keyof T;
-  value: T[keyof T] | string;
 };
 
 type InputProps<T> = BaseProps<T> & {
+  value: T[keyof T] | string;
   onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 };
 
 type SelectProps<T> = BaseProps<T> & {
-  onValueChange: (value: string | undefined) => void;
   value: string | undefined;
+  onValueChange: (value: string | undefined) => void;
 };
 
 export type FormResult<T = {}> = {
