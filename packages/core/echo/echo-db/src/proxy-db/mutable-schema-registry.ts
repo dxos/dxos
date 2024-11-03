@@ -4,6 +4,7 @@
 
 import { type UnsubscribeCallback } from '@dxos/async';
 import {
+  createStoredSchema,
   getObjectAnnotation,
   makeStaticSchema,
   toJsonSchema,
@@ -14,7 +15,6 @@ import {
   type StaticSchema,
   StoredSchema,
 } from '@dxos/echo-schema';
-import { createStoredSchema } from '@dxos/echo-schema/src';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
