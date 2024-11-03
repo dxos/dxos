@@ -11,18 +11,17 @@ import { validateSchema, type ValidationError } from '../util';
 
 type FormInputValue = string | number | readonly string[] | undefined;
 
-type BaseProps<T> = {
-  value: T[keyof T] | string;
+type BaseProps<T, V> = {
   name: keyof T;
+  value: V;
 };
 
-type InputProps<T> = BaseProps<T> & {
+type InputProps<T> = BaseProps<T, string> & {
   onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 };
 
-type SelectProps<T> = BaseProps<T> & {
-  value: string | undefined;
+type SelectProps<T> = BaseProps<T, string | undefined> & {
   onValueChange: (value: string | undefined) => void;
 };
 
@@ -168,11 +167,11 @@ export const useForm = <T extends object>({
   //
 
   const getInputProps = useCallback(
-    <InputT extends 'input' | 'select' = 'input'>(
+    <InputType extends 'input' | 'select' = 'input'>(
       key: keyof T,
-      type?: InputT,
-    ): InputT extends 'select' ? SelectProps<T> : InputProps<T> => {
-      const baseProps: BaseProps<T> = {
+      type?: InputType,
+    ): InputType extends 'select' ? SelectProps<T> : InputProps<T> => {
+      const baseProps: BaseProps<T, any> = {
         name: key,
         value: values[key] ?? '',
       };
@@ -181,14 +180,14 @@ export const useForm = <T extends object>({
         return {
           ...baseProps,
           onValueChange: (value: FormInputValue) => onValueChange(key, value),
-        } as InputT extends 'select' ? SelectProps<T> : InputProps<T>;
+        } as InputType extends 'select' ? SelectProps<T> : InputProps<T>;
       }
 
       return {
         ...baseProps,
         onChange: handleChange,
         onBlur: handleBlur,
-      } as InputT extends 'select' ? SelectProps<T> : InputProps<T>;
+      } as InputType extends 'select' ? SelectProps<T> : InputProps<T>;
     },
     [values, handleChange, handleBlur, onValueChange],
   );
