@@ -4,43 +4,43 @@
 
 import React, { type ReactNode, useMemo } from 'react';
 
-import { FormatEnums, FormatSchema, type FormatType } from '@dxos/echo-schema';
+import { FormatEnums } from '@dxos/echo-schema';
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type ViewType } from '@dxos/schema';
+import { type FieldProjectionType, FieldProjectionSchema, type ViewType } from '@dxos/schema';
 
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
-import { pathNotUniqueError, typeFeatures } from '../../util';
+import { typeFeatures } from '../../util';
 
 // TODO(burdon): Define projection.
 
 export type FieldProps = ThemedClassName<{
   view: ViewType;
-  field: FormatType;
+  field: FieldProjectionType;
   autoFocus?: boolean;
   readonly?: boolean;
-  onSave?: (field: FormatType) => void;
+  onSave?: (field: FieldProjectionType) => void;
 }>;
 
 export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: FieldProps) => {
   const { t } = useTranslation(translationKey);
 
-  const { values, getInputProps, errors, touched, canSubmit, handleSubmit } = useForm<ViewType>({
-    schema: FormatSchema,
+  const { values, getInputProps, errors, touched, canSubmit, handleSubmit } = useForm<FieldProjectionType>({
+    schema: FieldProjectionSchema,
     // TODO(burdon): Caller should pass in the value (and clone if necessary).
     initialValues: field,
-    additionalValidation: (values) => {
-      // Check that the path doesn't already exist in the schema.
-      // TODO(ZaymonFC) Need to use some sort of json path accessor to check paths like:
-      // 'address.zip'.
-      // This should be a util.
-      const pathChanged = values.path !== field.path;
-      if (pathChanged && view.schema && (view.schema as any).properties[values.path]) {
-        return [pathNotUniqueError(values.path)];
-      }
-    },
-    onSubmit: (values: ViewType) => onSave?.(values),
+    // additionalValidation: (values) => {
+    // Check that the path doesn't already exist in the schema.
+    // TODO(ZaymonFC) Need to use some sort of json path accessor to check paths like:
+    // 'address.zip'.
+    // This should be a util.
+    // const pathChanged = values.property !== field.property;
+    // if (pathChanged && view.schema && (view.schema as any).properties[values.property]) {
+    //   return [pathNotUniqueError(values.property)];
+    // }
+    // },
+    onSubmit: (values) => onSave?.(values),
   });
 
   const features = useMemo(() => (values.format ? typeFeatures[values.format] ?? [] : []), [values.format]);
@@ -48,16 +48,16 @@ export const Field = ({ classNames, view, field, autoFocus, readonly, onSave }: 
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
       <FieldRow>
-        <Input.Root validationValence={touched.path && errors.path ? 'error' : undefined}>
+        <Input.Root validationValence={touched.property && errors.property ? 'error' : undefined}>
           <Input.Label>{t('field path label')}</Input.Label>
           <Input.TextInput
             autoFocus={autoFocus}
             disabled={readonly}
             placeholder={t('field path placeholder')}
-            {...getInputProps('path')}
+            {...getInputProps('property')}
           />
           <Input.DescriptionAndValidation>
-            <Input.Validation>{touched.path && errors.path}</Input.Validation>
+            <Input.Validation>{touched.property && errors.property}</Input.Validation>
           </Input.DescriptionAndValidation>
         </Input.Root>
       </FieldRow>
