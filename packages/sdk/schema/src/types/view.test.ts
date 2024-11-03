@@ -23,7 +23,7 @@ import {
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { getFieldProjection } from './field';
+import { ViewProjection } from './field';
 import { createView } from './view';
 
 describe('view', () => {
@@ -120,7 +120,8 @@ describe('view', () => {
     expect(before).not.to.deep.eq(mutable.schema.ast.toJSON());
 
     const view = createView(jsonSchema, schema.typename);
-    const properties = getFieldProjection(registry, view, 'name');
+    const projection = new ViewProjection(registry, view);
+    const properties = projection.getFieldProjection('name');
     expect(properties).to.exist;
   });
 
@@ -137,26 +138,46 @@ describe('view', () => {
     setProperty(schema.jsonSchema as any, 'salary', Format.Currency({ code: 'usd', decimals: 2 }));
 
     const view = createView(schema.jsonSchema, schema.typename);
+    const projection = new ViewProjection(registry, view);
     expect(view.fields).to.have.length(3);
-    // projection.setField(view, { property: 'email', size: 100 });
 
     {
-      const props = getFieldProjection(registry, view, 'name');
+      const props = projection.getFieldProjection('name');
       expect(props).to.deep.eq({ property: 'name', type: 'string', title: 'Name' });
     }
 
     {
-      const props = getFieldProjection(registry, view, 'email');
+      const props = projection.getFieldProjection('email');
       expect(props).to.include({ property: 'email', type: 'string', format: 'email' });
     }
 
+    projection.updateField({ property: 'email', size: 100 });
+
     {
-      const props = getFieldProjection(registry, view, 'salary');
+      const props = projection.getFieldProjection('email');
+      expect(props).to.include({ property: 'email', type: 'string', format: 'email', size: 100 });
+    }
+
+    {
+      const props = projection.getFieldProjection('salary');
       expect(props).to.include({
         property: 'salary',
         type: 'number',
         format: 'currency',
         currency: 'USD',
+        multipleOf: 0.01,
+      });
+    }
+
+    projection.updateFormat('salary', { currency: 'GBP' });
+
+    {
+      const props = projection.getFieldProjection('salary');
+      expect(props).to.include({
+        property: 'salary',
+        type: 'number',
+        format: 'currency',
+        currency: 'GBP',
         multipleOf: 0.01,
       });
     }
