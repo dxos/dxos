@@ -8,18 +8,19 @@ import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 import { useIntentDispatcher } from '@dxos/app-framework';
 import {
   Icon,
-  Toolbar as NaturalToolbar,
-  Tooltip,
-  type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
-  type ToolbarButtonProps as NaturalToolbarButtonProps,
-  type ToolbarToggleProps as NaturalToolbarToggleProps,
   type ThemedClassName,
+  Toolbar as NaturalToolbar,
+  type ToolbarButtonProps as NaturalToolbarButtonProps,
+  type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
+  type ToolbarToggleProps as NaturalToolbarToggleProps,
+  Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
 
 import {
+  alignKey,
   type AlignKey,
   type AlignValue,
   type CommentKey,
@@ -118,7 +119,7 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
   const handleAction = useCallback(
     (action: ToolbarAction) => {
       switch (action.key) {
-        case 'align':
+        case 'alignment':
           if (cursor && cursorFallbackRange) {
             const index = model.sheet.ranges?.findIndex(
               (range) => range.key === action.key && inRange(rangeFromIndex(model.sheet, range.range), cursor),
@@ -210,7 +211,7 @@ const Alignment = () => {
     () =>
       cursor
         ? model.sheet.ranges?.find(
-            ({ range, key }) => key === 'alignment' && inRange(rangeFromIndex(model.sheet, range), cursor),
+            ({ range, key }) => key === alignKey && inRange(rangeFromIndex(model.sheet, range), cursor),
           )?.value
         : undefined,
     [cursor, model.sheet.ranges],
@@ -220,11 +221,14 @@ const Alignment = () => {
     <NaturalToolbar.ToggleGroup
       type='single'
       value={value}
-      onValueChange={(value: AlignValue) => onAction?.({ key: 'align', value })}
+      onValueChange={(value: AlignValue) => onAction?.({ key: alignKey, value })}
     >
       {alignmentOptions.map(({ value, icon }) => (
         <ToolbarItem itemType='toggleGroupItem' key={value} value={value} icon={icon}>
-          {t(`toolbar ${value} label`)}
+          {t('toolbar action label', {
+            key: t(`range key ${alignKey} label`),
+            value: t(`range value ${value} label`),
+          })}
         </ToolbarItem>
       ))}
     </NaturalToolbar.ToggleGroup>

@@ -6,7 +6,7 @@ import { type ClassNameValue } from '@dxos/react-ui';
 
 import { type SheetType } from '../types';
 
-export const alignKey = 'align';
+export const alignKey = 'alignment';
 export type AlignKey = typeof alignKey;
 export type AlignValue = 'start' | 'center' | 'end' | 'unset';
 
@@ -21,7 +21,7 @@ export type StyleValue = 'highlight' | 'unset';
 // TODO(burdon): Reconcile with plugin-table.
 export const cellClassNameForRange = ({ key, value }: SheetType['ranges'][number]): ClassNameValue => {
   switch (key) {
-    case 'align':
+    case alignKey:
       switch (value) {
         case 'start':
           return 'text-start';
@@ -32,9 +32,9 @@ export const cellClassNameForRange = ({ key, value }: SheetType['ranges'][number
         default:
           return undefined;
       }
-    case 'comment':
+    case commentKey:
       return 'bg-gridComment';
-    case 'style':
+    case styleKey:
       switch (value) {
         case 'highlight':
           return 'bg-gridHighlight';
