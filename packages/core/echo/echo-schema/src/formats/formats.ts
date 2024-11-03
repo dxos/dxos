@@ -23,13 +23,6 @@ export const CustomAnnotations = {
   currency: CurrencyAnnotationId,
 };
 
-// TODO(burdon): Generate?
-export type FormatType = {
-  format: FormatEnum;
-  currency?: string;
-  multipleOf?: number;
-};
-
 //
 // Fields
 // https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
@@ -67,6 +60,15 @@ export enum FormatEnum {
 }
 
 export const FormatEnums = Object.values(FormatEnum).sort();
+
+// TODO(burdon): Generate from annotations?
+export const FormatSchema = S.Struct({
+  format: S.Enums(FormatEnum),
+  currency: S.optional(S.String),
+  multipleOf: S.optional(S.Number),
+});
+
+export type FormatType = S.Schema.Type<typeof FormatSchema>;
 
 export namespace Format {
   /**
