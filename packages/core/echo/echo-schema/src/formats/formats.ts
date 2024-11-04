@@ -28,35 +28,34 @@ export const CustomAnnotations = {
 // https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
 //
 
-// TODO(burdon): Can this be derived from the annotation? Or just be a union of all the annotation symbols?
-//  - E.g., use a common annotation namespace.
 export enum FormatEnum {
-  // TODO(burdon): Array/Enum?
   // TODO(burdon): Remove primitives from format.
-  // NOTE: Currently including these as a convenience.
+  /** @deprecated */
   String = 'string',
+  /** @deprecated */
   Number = 'number',
+  /** @deprecated */
   Boolean = 'boolean',
-  Date = 'date', // TODO(burdon): Use S.Date instead?
+  /** @deprecated */
+  Date = 'date',
+  /** @deprecated */
   Ref = 'ref',
 
-  URI = 'uri',
-  Email = 'email',
   Currency = 'currency',
+  Email = 'email',
+  URI = 'uri',
 
   // TODO(burdon): Not implemented yet.
-  Text = 'text',
-  JSON = 'json',
-  Timestamp = 'timestamp',
   DateTime = 'datetime',
-  Duration = 'duration',
-  Time = 'time',
-  Formula = 'formula',
-  UUID = 'uuid',
-  REGEX = 'regex',
   DID = 'did', // Users, etc.
-  // TODO(burdon): ECHO query.
-  // TODO(burdon): IPLD.
+  Duration = 'duration',
+  Formula = 'formula',
+  JSON = 'json',
+  REGEX = 'regex',
+  Text = 'text',
+  Timestamp = 'timestamp',
+  Time = 'time',
+  UUID = 'uuid',
 }
 
 export const FormatEnums = Object.values(FormatEnum).sort();

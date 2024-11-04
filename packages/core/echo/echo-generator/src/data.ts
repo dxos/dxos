@@ -5,15 +5,15 @@
 import { next as A } from '@dxos/automerge/automerge';
 import { createDocAccessor, type Space } from '@dxos/client/echo';
 import {
-  MutableSchema,
-  EchoObject,
-  ObjectAnnotationId,
-  toJsonSchema,
+  createStoredSchema,
   getObjectAnnotation,
   ref,
+  toJsonSchema,
+  EchoObject,
+  MutableSchema,
+  ObjectAnnotationId,
   S,
 } from '@dxos/echo-schema';
-import { createStoredSchema } from '@dxos/echo-schema/src';
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';

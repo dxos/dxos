@@ -20,18 +20,19 @@ import {
   addressFromIndex,
   addressToA1Notation,
   addressToIndex,
-  type CellAddress,
-  type CellRange,
   initialize,
   insertIndices,
   isFormula,
+  type CellAddress,
+  type CellRange,
+  ReadonlyException,
   MAX_COLUMNS,
   MAX_ROWS,
-  ReadonlyException,
 } from '../defs';
 import { type CellScalarValue, type CellValue, type SheetType } from '../types';
 
 // Map sheet types to system types.
+// TODO(burdon): ?
 const typeMap: Record<string, FormatEnum> = {
   BOOLEAN: FormatEnum.Boolean,
   NUMBER_RAW: FormatEnum.Number,

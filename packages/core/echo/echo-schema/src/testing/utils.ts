@@ -34,16 +34,17 @@ export const createMutableSchema = (schema: S.Schema<any>): MutableSchema => {
   return mutableSchema;
 };
 
+// TODO(burdon): Move to util.
 export const updateCounter = (touch: () => void) => {
   let updateCount = -1;
-  const clear = effect(() => {
+  const unsubscribe = effect(() => {
     touch();
     updateCount++;
   });
 
   return {
     // https://github.com/tc39/proposal-explicit-resource-management
-    [Symbol.dispose]: clear,
+    [Symbol.dispose]: unsubscribe,
     get count() {
       return updateCount;
     },

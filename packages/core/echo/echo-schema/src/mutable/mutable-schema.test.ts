@@ -8,7 +8,12 @@ import { AST, S } from '@dxos/effect';
 
 import { PropertyMeta, getObjectAnnotation, getPropertyMetaAnnotation } from '../ast';
 import { TypedObject } from '../object';
-import { createMutableSchema, EmptySchemaType } from '../testing';
+import { createMutableSchema } from '../testing';
+
+class EmptySchemaType extends TypedObject({
+  typename: 'example.com/type/Empty',
+  version: '0.1.0',
+})({}) {}
 
 describe('dynamic schema', () => {
   test('getProperties filters out id and unwraps optionality', async () => {
