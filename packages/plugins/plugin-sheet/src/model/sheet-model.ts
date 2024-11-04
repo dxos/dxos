@@ -32,6 +32,9 @@ import {
 import { type CellScalarValue, type CellValue, type SheetType } from '../types';
 
 // Map sheet types to system types.
+// https://hyperformula.handsontable.com/guide/types-of-values.html
+//  - https://github.com/handsontable/hyperformula/blob/master/src/Cell.ts (CellValueType)
+//  - https://github.com/handsontable/hyperformula/blob/master/src/interpreter/InterpreterValue.ts (NumberType)
 // TODO(burdon): ?
 const typeMap: Record<string, FormatEnum> = {
   BOOLEAN: FormatEnum.Boolean,

@@ -40,6 +40,8 @@ export enum FormatEnum {
   Date = 'date',
   /** @deprecated */
   Ref = 'ref',
+  /** @deprecated */
+  Percent = 'percent',
 
   Currency = 'currency',
   Email = 'email',
