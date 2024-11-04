@@ -1,5 +1,68 @@
 # Changelog
 
+## [0.7.0](https://github.com/dxos/dxos/compare/v0.6.13...v0.7.0) (2024-11-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* Remove CJS build from packages ([#8085](https://github.com/dxos/dxos/issues/8085))
+
+### Features
+
+* Add `vebose` log level; Add invitation logs ([#8065](https://github.com/dxos/dxos/issues/8065)) ([d519d7f](https://github.com/dxos/dxos/commit/d519d7f2989d7f5d231871573093114a13b82b3e))
+* Add WNFS plugin ([#6636](https://github.com/dxos/dxos/issues/6636)) ([9fb8c14](https://github.com/dxos/dxos/commit/9fb8c14db3e6b34a77ceb957cf82770125d162bf))
+* Automation panels ([#8013](https://github.com/dxos/dxos/issues/8013)) ([0fdcdcc](https://github.com/dxos/dxos/commit/0fdcdccf8d108716b254f4b2154b6e1661ba1ff2))
+* Automation plugin (refactor of plugin-chain and plugin-function triggers) ([#8042](https://github.com/dxos/dxos/issues/8042)) ([080c61e](https://github.com/dxos/dxos/commit/080c61e62b03c3049772d030b3ba33f1db5be2d9))
+* Automation plugin complementary sidebar and fix for spreadsheet edge functions ([#8081](https://github.com/dxos/dxos/issues/8081)) ([4cbe754](https://github.com/dxos/dxos/commit/4cbe75470976dd4066423297354eb139223b8252))
+* Chat with function in the automation panel ([#8029](https://github.com/dxos/dxos/issues/8029)) ([e379735](https://github.com/dxos/dxos/commit/e3797350e004f9cd3866d9d9ee5678f1b65bdae5))
+* Detect focus to hide markdown if not focused. ([#8072](https://github.com/dxos/dxos/issues/8072)) ([9f04252](https://github.com/dxos/dxos/commit/9f04252b4ae49b0a0fbc9f912851c7a224ea05e4))
+* Grid & Sheet selection interactivity & model integration increment ([#8023](https://github.com/dxos/dxos/issues/8023)) ([54d207c](https://github.com/dxos/dxos/commit/54d207c51ea12ab06abe59ffe875a9852ee186d5))
+* **lit-grid:** Bug fixes & QoL increment ([#7997](https://github.com/dxos/dxos/issues/7997)) ([7bbe5cf](https://github.com/dxos/dxos/commit/7bbe5cff79b06b1cd11a351e6bd5a31831e204d2))
+* Mark modules as not having side effects ([#8033](https://github.com/dxos/dxos/issues/8033)) ([2b6a0f3](https://github.com/dxos/dxos/commit/2b6a0f3b94a80d01fdf8c1e84a7f7b03d4fa4506))
+* **plugin-sheet:** Restore axis insert ([#8106](https://github.com/dxos/dxos/issues/8106)) ([bdc4510](https://github.com/dxos/dxos/commit/bdc45108ed28c470acc858d83b7025f8d90a3b5b))
+* pragmatic tree ([#7967](https://github.com/dxos/dxos/issues/7967)) ([8af7113](https://github.com/dxos/dxos/commit/8af711320b1b361259e883746d4ef9f9f0afea2f))
+* **react-ui:** DropdownMenu fork for `virtualRef` support ([#8057](https://github.com/dxos/dxos/issues/8057)) ([8b2993e](https://github.com/dxos/dxos/commit/8b2993e342615935932ce0461c3908354962f169))
+* recovery phrase ([#8030](https://github.com/dxos/dxos/issues/8030)) ([7bd9c89](https://github.com/dxos/dxos/commit/7bd9c890e5acd075c27ee96ed678087191bb8052))
+* Remove CJS build from packages ([#8085](https://github.com/dxos/dxos/issues/8085)) ([e4b705b](https://github.com/dxos/dxos/commit/e4b705bb366fdd9bfe5a535a7cfd351bd6a01574))
+* Replace LocalStore with effect based SettingsStore ([#8061](https://github.com/dxos/dxos/issues/8061)) ([31366a7](https://github.com/dxos/dxos/commit/31366a7a73b2007ea3fe323456efe681c369992b))
+* Script toolbox ([#7762](https://github.com/dxos/dxos/issues/7762)) ([52c3004](https://github.com/dxos/dxos/commit/52c30044d2d7c5622ecd780f3a06883848230a17))
+* Settings reset ([#8050](https://github.com/dxos/dxos/issues/8050)) ([a8096ee](https://github.com/dxos/dxos/commit/a8096eea6f3e3286609f9f5d34be4d84090e8e7e))
+* **shell:** hookup recovery ([#8049](https://github.com/dxos/dxos/issues/8049)) ([1d180f8](https://github.com/dxos/dxos/commit/1d180f86b97b9de6e91ed22ed39d8a3b99e41641))
+* Storybook toolbar to change logging level ([#8040](https://github.com/dxos/dxos/issues/8040)) ([e74da08](https://github.com/dxos/dxos/commit/e74da08656493cf5ecda7fe91a1e086d7cbe827c))
+* **tables:** Action column ([#8022](https://github.com/dxos/dxos/issues/8022)) ([0ac960b](https://github.com/dxos/dxos/commit/0ac960bc32be2f98cd6a8c347aa49432f106b6ba))
+* **tables:** Integrate with `dx-grid` `getCells` ([#8056](https://github.com/dxos/dxos/issues/8056)) ([e4283d0](https://github.com/dxos/dxos/commit/e4283d01360860ca549bc3ce65ded71cb3274a61))
+* **ViewEditor:** Schema integration ([#8073](https://github.com/dxos/dxos/issues/8073)) ([d0fb9b4](https://github.com/dxos/dxos/commit/d0fb9b4db2414bcb705bf89b55325d186c491f01))
+
+
+### Bug Fixes
+
+* CLI bin path ([#8047](https://github.com/dxos/dxos/issues/8047)) ([48271dc](https://github.com/dxos/dxos/commit/48271dcf58707adbc7d6d4b0ecbcf7163c59983a))
+* Enable feed replicator on main.composer ([#8110](https://github.com/dxos/dxos/issues/8110)) ([2a40316](https://github.com/dxos/dxos/commit/2a403165441e4290985f6991302b49631fd1244f))
+* Fix @dxos/gem-spore exports ([#8089](https://github.com/dxos/dxos/issues/8089)) ([231cad4](https://github.com/dxos/dxos/commit/231cad469b06d2e0201b23e5f1c06d9c28aab81e))
+* Fix client status enum. ([#7784](https://github.com/dxos/dxos/issues/7784)) ([a51e4be](https://github.com/dxos/dxos/commit/a51e4bed0995f93cb1c2685edc56f6695ffe471d))
+* Fix merge ([#8064](https://github.com/dxos/dxos/issues/8064)) ([6600e6a](https://github.com/dxos/dxos/commit/6600e6a3ddd7075224ac6d9b7c64cb332c355aab))
+* Fix settings dialog tabs ([#8043](https://github.com/dxos/dxos/issues/8043)) ([5f93e54](https://github.com/dxos/dxos/commit/5f93e54d24bef68df931f1807617e3d2dec79626))
+* **grid:** Intrinsic sizing reactivity and refocus bug ([#8010](https://github.com/dxos/dxos/issues/8010)) ([fa30861](https://github.com/dxos/dxos/commit/fa308610fdf61882868fe723ff60cc662d144fde))
+* halo space feeds not getting into the edge replicator ([#8032](https://github.com/dxos/dxos/issues/8032)) ([2ffb086](https://github.com/dxos/dxos/commit/2ffb086dd5a67758e7ed2a81cb3dabeff9a73f40))
+* Import missing Buffer global ([#8066](https://github.com/dxos/dxos/issues/8066)) ([b88c70d](https://github.com/dxos/dxos/commit/b88c70d5077042e8817f198cedf7a0d9eb2714f5))
+* **lit-grid,react-ui-grid,plugin-sheet:** Improved & fixed keyboard access, focus/blur handling ([#8098](https://github.com/dxos/dxos/issues/8098)) ([b8aebf0](https://github.com/dxos/dxos/commit/b8aebf0dc84b0ce7a19af67480f3b5567729bdc0))
+* **lit-grid:** Virtualization & viewport snapping ([#8082](https://github.com/dxos/dxos/issues/8082)) ([6b4840d](https://github.com/dxos/dxos/commit/6b4840da53d504a82ca3e81be87cbb52a79ec25b))
+* local-storage reactivity ([#8078](https://github.com/dxos/dxos/issues/8078)) ([3608ba5](https://github.com/dxos/dxos/commit/3608ba56e715b9adb38e3e2efbee2ad89146f142))
+* **plugin-sheet:** Style empty cells & allow commenting on ranges ([#8083](https://github.com/dxos/dxos/issues/8083)) ([c82e5b6](https://github.com/dxos/dxos/commit/c82e5b623da8de99a5fa8ab80db5e2d57535b950))
+* react-ui-editor merge ([#8063](https://github.com/dxos/dxos/issues/8063)) ([7aa2ce1](https://github.com/dxos/dxos/commit/7aa2ce18a6ede7c6cdb1dfc040106c68e369dc0b))
+* **react-ui-list:** Fix rearranging when `getId` isn't specified ([#8105](https://github.com/dxos/dxos/issues/8105)) ([fef2983](https://github.com/dxos/dxos/commit/fef2983549347b3edac7d2b32f9dbad28c9a038d))
+* remove chess-app =&gt; chess-plugin ([#8092](https://github.com/dxos/dxos/issues/8092)) ([491450d](https://github.com/dxos/dxos/commit/491450dc437ce57351c0de8c6db81e0ca903d5ed))
+* Reorder schema fields ([#8041](https://github.com/dxos/dxos/issues/8041)) ([2238a6e](https://github.com/dxos/dxos/commit/2238a6e18620e3e8ddc4f93be0a9d009391049b5))
+* Represent ranges as string indexes, minor fixes ([#8053](https://github.com/dxos/dxos/issues/8053)) ([c1d2083](https://github.com/dxos/dxos/commit/c1d208313ac927c7e44aa80e8211f64f1fe0f844))
+* Restore Thread-Sheet integration, fix Sheet model interactions ([#8038](https://github.com/dxos/dxos/issues/8038)) ([c4c1587](https://github.com/dxos/dxos/commit/c4c158769d5058ea19d17484a23aa260069cb384))
+* Run CLI in ESM mode ([#7865](https://github.com/dxos/dxos/issues/7865)) ([db28fcd](https://github.com/dxos/dxos/commit/db28fcd47a8b45afa4e525b0fe75ff6bbe7a4769))
+* SSE transformer end-of-stream handling ([#8076](https://github.com/dxos/dxos/issues/8076)) ([2febdd0](https://github.com/dxos/dxos/commit/2febdd0cb8755b1100e9b526755b49bca06c0916))
+* Storybook darkmode bug ([#8028](https://github.com/dxos/dxos/issues/8028)) ([c8af73b](https://github.com/dxos/dxos/commit/c8af73bc82239ccec202b4c9070e8c1a380a0156))
+* testbench join space without identity ([#8045](https://github.com/dxos/dxos/issues/8045)) ([2583034](https://github.com/dxos/dxos/commit/258303492a976cab78335690c9a5daca39b9958b))
+* **testbench:** fixed broken default state ([#8046](https://github.com/dxos/dxos/issues/8046)) ([d779a25](https://github.com/dxos/dxos/commit/d779a25edbb253f6153c037e4ce5757a96cd0ebd))
+* tsconfig ([#8094](https://github.com/dxos/dxos/issues/8094)) ([344db82](https://github.com/dxos/dxos/commit/344db82abbd37a7f5c52ab613036a0b339f191a9))
+* Update View to remove query and add schema ([#8048](https://github.com/dxos/dxos/issues/8048)) ([433d11d](https://github.com/dxos/dxos/commit/433d11d80844af1020da707cbe75ebf90ef0a075))
+
 ## [0.6.13](https://github.com/dxos/dxos/compare/v0.6.12...v0.6.13) (2024-10-22)
 
 
