@@ -2,22 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { AST, S } from '@dxos/effect';
 
-import { MutableSchema } from './mutable-schema';
-import { StoredSchema } from './types';
 import { PropertyMeta, getObjectAnnotation, getPropertyMetaAnnotation } from '../ast';
-import { create } from '../handler';
-import { toJsonSchema } from '../json';
 import { TypedObject } from '../object';
-import { getTypeReference } from '../proxy';
-import { EmptySchemaType } from '../testing';
-
-registerSignalsRuntime();
+import { createMutableSchema, EmptySchemaType } from '../testing';
 
 describe('dynamic schema', () => {
   test('getProperties filters out id and unwraps optionality', async () => {
@@ -96,20 +87,3 @@ describe('dynamic schema', () => {
     expect(getPropertyMetaAnnotation(registered.getProperties()[0], metaNamespace)).to.deep.eq(metaInfo);
   });
 });
-
-const createMutableSchema = (schema: S.Schema<any>): MutableSchema => {
-  const mutableSchema = new MutableSchema(
-    create(StoredSchema, {
-      typename: getTypeReference(schema)!.objectId,
-      version: '0.1.0',
-      jsonSchema: toJsonSchema(schema),
-    }),
-  );
-
-  effect(() => {
-    const _ = mutableSchema.jsonSchema;
-    mutableSchema.invalidate();
-  });
-
-  return mutableSchema;
-};

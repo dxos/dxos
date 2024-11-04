@@ -8,9 +8,10 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
 import { create } from '@dxos/echo-schema';
+import { createMutableSchema } from '@dxos/echo-schema/testing';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { TestSchema, testView, createMutableSchema } from '@dxos/schema/testing';
+import { TestSchema, testView } from '@dxos/schema/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';

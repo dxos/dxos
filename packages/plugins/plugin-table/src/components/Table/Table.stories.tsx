@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { type MutableSchema } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { Filter, useSpaces, useQuery, create, getSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -27,25 +28,27 @@ import { createEmptyTable, createItems, createTable, type SimulatorProps, useSim
 //
 
 const DefaultStory = () => {
-  const [table, setTable] = useState<TableType | undefined>();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const tables = useQuery(space, Filter.schema(TableType));
-  const objects = useQuery(space, table?.schema ? Filter.schema(table.schema) : () => false, undefined, [
-    table?.schema,
-  ]);
-  const filteredObjects = useGlobalFilteredObjects(objects);
-
+  const [table, setTable] = useState<TableType | undefined>();
+  const [schema, setSchema] = useState<MutableSchema>();
   useEffect(() => {
     if (tables.length > 0) {
-      setTable(tables[0]);
+      const table = tables[0];
+      setTable(table);
+      if (table.view) {
+        setSchema(space.db.schemaRegistry.getSchema(table.view.query.__typename));
+      }
     }
   }, [tables]);
+
+  const objects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
+  const filteredObjects = useGlobalFilteredObjects(objects);
 
   const handleDeleteRow = useCallback((row: any) => space.db.remove(row), [space]);
 
   // TODO(ZaymonFC): Reimplement these with the new schema manipulation features.
-  //
   // const handleAddColumn = useCallback(
   //   (field: any) => {
   //     if (table && table.schema?.schema && table.view) {
@@ -73,8 +76,8 @@ const DefaultStory = () => {
         case 'add-row': {
           if (table) {
             const space = getSpace(table);
-            if (table?.schema && space) {
-              space.db.add(create(table.schema, {}));
+            if (space && schema) {
+              space.db.add(create(schema, {}));
             }
             break;
           }
@@ -92,7 +95,7 @@ const DefaultStory = () => {
     // onDeleteColumn: handleDeleteColumn,
   });
 
-  if (!table) {
+  if (!table || !schema) {
     return null;
   }
 
@@ -110,7 +113,7 @@ const DefaultStory = () => {
         </div>
       </div>
       <div className='border-l border-separator -mt-px flex flex-col h-full'>
-        <div className='flex-none'>{table.view && <ViewEditor view={table?.view} />}</div>
+        <div className='flex-none'>{table.view && <ViewEditor schema={schema} view={table?.view} />}</div>
         <div className='flex-1 min-h-0 overflow-auto'>
           <pre className='text-[10px] pli-2 font-mono text-wrap'>{JSON.stringify(table, null, 2)}</pre>
         </div>
@@ -174,24 +177,6 @@ const TablePerformanceStory = (props: StoryProps) => {
 // Story definitions.
 //
 
-export const Default = {};
-
-export const Mutations: StoryObj = {
-  render: TablePerformanceStory,
-  args: {
-    rows: 1000,
-    updateInterval: 1,
-  },
-};
-
-export const RapidInsertions: StoryObj = {
-  render: TablePerformanceStory,
-  args: {
-    rows: 0,
-    insertInterval: 100,
-  },
-};
-
 const meta: Meta<typeof Table> = {
   title: 'plugins/plugin-table/Table',
   component: Table,
@@ -212,3 +197,21 @@ const meta: Meta<typeof Table> = {
 };
 
 export default meta;
+
+export const Default = {};
+
+export const Mutations: StoryObj = {
+  render: TablePerformanceStory,
+  args: {
+    rows: 1000,
+    updateInterval: 1,
+  },
+};
+
+export const RapidInsertions: StoryObj = {
+  render: TablePerformanceStory,
+  args: {
+    rows: 0,
+    insertInterval: 100,
+  },
+};

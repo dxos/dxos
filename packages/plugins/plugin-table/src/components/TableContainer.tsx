@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -24,9 +24,11 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const { hasAttention } = useAttention(fullyQualifiedId(table));
   const dispatch = useIntentDispatcher();
   const space = getSpace(table);
-  const queriedObjects = useQuery(space, table.schema ? Filter.schema(table.schema) : () => false, undefined, [
-    table.schema,
-  ]);
+  const schema = useMemo(
+    () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.__typename) : undefined),
+    [table],
+  );
+  const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const handleDeleteRow = useCallback((row: any) => space?.db.remove(row), [space]);
@@ -77,13 +79,13 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
       }
       switch (action.type) {
         case 'add-row': {
-          if (table.schema && space) {
-            space.db.add(create(table.schema, {}));
+          if (schema && space) {
+            space.db.add(create(schema, {}));
           }
         }
       }
     },
-    [onThreadCreate, table.schema, space],
+    [onThreadCreate, space, schema],
   );
 
   return (

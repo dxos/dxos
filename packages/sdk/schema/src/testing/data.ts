@@ -2,28 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
-
 import {
   AST,
   Format,
-  MutableSchema,
+  type ReactiveObject,
   S,
-  StoredSchema,
-  create,
+  type StoredSchema,
   createObjectId,
   createStoredSchema,
-  getTypeReference,
   toJsonSchema,
 } from '@dxos/echo-schema';
 
-import { createView } from '../types';
-
-//
-// Schema
-//
+import { createView, type ViewType } from '../types';
 
 // TODO(burdon): TypedObject?
+
 export const TestSchema = S.Struct({
   id: S.String, // TODO(burdon): ID type?
   name: S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Full name.' })),
@@ -49,13 +42,16 @@ export const TestSchema = S.Struct({
 
 export type TestType = S.Schema.Type<typeof TestSchema>;
 
-export const testSchema = createStoredSchema({
+export const testSchema: ReactiveObject<StoredSchema> = createStoredSchema({
   typename: 'example.com/type/Test',
   version: '0.1.0',
   jsonSchema: toJsonSchema(TestSchema),
 });
 
-export const testView = createView({ typename: testSchema.typename, jsonSchema: toJsonSchema(TestSchema) });
+export const testView: ReactiveObject<ViewType> = createView({
+  typename: testSchema.typename,
+  jsonSchema: toJsonSchema(TestSchema),
+});
 
 export const testData: TestType = {
   id: createObjectId(),
@@ -64,21 +60,4 @@ export const testData: TestType = {
   address: {
     zip: '11205',
   },
-};
-
-export const createMutableSchema = (schema: S.Schema<any>): MutableSchema => {
-  const mutableSchema = new MutableSchema(
-    create(StoredSchema, {
-      typename: getTypeReference(schema)!.objectId,
-      version: '0.1.0',
-      jsonSchema: toJsonSchema(schema),
-    }),
-  );
-
-  effect(() => {
-    const _ = mutableSchema.jsonSchema;
-    mutableSchema.invalidate();
-  });
-
-  return mutableSchema;
 };

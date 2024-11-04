@@ -109,7 +109,11 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                 }
 
                 const space = getSpace(table);
-                const schema = space!.db.schemaRegistry.getSchema(table.view.query.__typename);
+                const schema = space?.db.schemaRegistry.getSchema(table.view.query.__typename);
+                if (!schema) {
+                  return null;
+                }
+
                 return {
                   node: <ViewEditor schema={schema} view={table.view} />,
                 };
