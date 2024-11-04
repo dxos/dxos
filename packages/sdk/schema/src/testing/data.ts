@@ -8,6 +8,7 @@ import {
   type ReactiveObject,
   S,
   type StoredSchema,
+  TypedObject,
   createObjectId,
   createStoredSchema,
   toJsonSchema,
@@ -15,12 +16,13 @@ import {
 
 import { createView, type ViewType } from '../types';
 
-// TODO(burdon): TypedObject?
-
-export const TestSchema = S.Struct({
+export class TestSchema extends TypedObject({
+  typename: 'example.com/type/Test',
+  version: '0.1.0',
+})({
   id: S.String, // TODO(burdon): ID type?
-  name: S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Full name.' })),
-  email: Format.Email,
+  name: S.optional(S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Full name.' }))),
+  email: Format.Email.pipe(S.optional),
   address: S.optional(
     S.Struct({
       city: S.optional(S.String),
@@ -34,11 +36,7 @@ export const TestSchema = S.Struct({
   ),
   admin: S.optional(S.Boolean),
   rating: S.optional(S.Number),
-}).pipe(
-  S.annotations({
-    [AST.DescriptionAnnotationId]: 'Test schema.',
-  }),
-);
+}) {}
 
 export type TestType = S.Schema.Type<typeof TestSchema>;
 

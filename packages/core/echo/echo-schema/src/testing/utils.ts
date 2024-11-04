@@ -5,11 +5,12 @@
 import { effect } from '@preact/signals-core';
 
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { type S } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 
 import { create } from '../handler';
 import { toJsonSchema } from '../json';
 import { MutableSchema, StoredSchema } from '../mutable';
+import { type AbstractSchema } from '../object';
 import { getTypeReference } from '../proxy';
 
 registerSignalsRuntime();
@@ -17,10 +18,13 @@ registerSignalsRuntime();
 /**
  * Create a reactive mutable schema that updates when the JSON schema is updated.
  */
-export const createMutableSchema = (schema: S.Schema<any>): MutableSchema => {
+export const createMutableSchema = (schema: AbstractSchema): MutableSchema => {
+  const typeReference = getTypeReference(schema);
+  invariant(typeReference, 'Type reference not found.');
+
   const mutableSchema = new MutableSchema(
     create(StoredSchema, {
-      typename: getTypeReference(schema)!.objectId,
+      typename: typeReference.objectId,
       version: '0.1.0',
       jsonSchema: toJsonSchema(schema),
     }),

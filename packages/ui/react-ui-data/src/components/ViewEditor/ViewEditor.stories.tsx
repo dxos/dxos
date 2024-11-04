@@ -46,6 +46,6 @@ type Story = StoryObj<typeof ViewEditor>;
 export const Default: Story = {
   args: {
     schema: createMutableSchema(TestSchema),
-    view: create(testView),
+    view: testView,
   },
 };
