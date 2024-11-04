@@ -25,7 +25,6 @@ export const Field = ({ classNames, field, autoFocus, readonly, onSave }: FieldP
 
   const { values, getInputProps, errors, touched, canSubmit, handleSubmit } = useForm<FieldProjectionType>({
     schema: FieldProjectionSchema,
-    // TODO(burdon): Caller should pass in the value (and clone if necessary).
     initialValues: field,
     // additionalValidation: (values) => {
     // Check that the path doesn't already exist in the schema.
