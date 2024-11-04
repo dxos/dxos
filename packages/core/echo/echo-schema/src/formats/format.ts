@@ -10,6 +10,8 @@ import { CurrencyAnnotationId } from './number';
 import * as String_ from './string';
 import { FormatAnnotationId, FormatEnum } from './types';
 
+// TODO(burdon): Consider factoring out to separate `@dxos/json-schema`
+
 // TODO(burdon): Media encoding.
 //  https://json-schema.org/understanding-json-schema/reference/non_json_data
 

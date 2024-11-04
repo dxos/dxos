@@ -39,7 +39,7 @@ export const getScalarType = (property: JSONSchema.JsonSchema7): ScalarEnum | un
 /**
  * https://json-schema.org/understanding-json-schema/reference/schema
  * https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
- * TODO(burdon): Reconcile.
+ * TODO(burdon): Reconcile below (pass type and format).
  *  - schema/formatting
  *  - react-ui-data/field
  *  - react-ui-table/column-utils
@@ -49,7 +49,7 @@ export const getScalarType = (property: JSONSchema.JsonSchema7): ScalarEnum | un
 export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
 
 export enum FormatEnum {
-  // TODO(burdon): Remove primitives from format?
+  // TODO(burdon): Remove primitives from format and pass (type, format) tuple instead.
   /** @deprecated */
   String = 'string',
   /** @deprecated */
@@ -65,12 +65,11 @@ export enum FormatEnum {
   //
   Email = 'email',
   URI = 'uri',
-  // TODO(burdon): Not yet implemented.
   DID = 'did', // Users, etc.
   Formula = 'formula', // Spreadsheet formula.
   JSON = 'json',
   Regex = 'regex',
-  Text = 'text', // TODO(burdon): ???
+  Text = 'text', // TODO(burdon): Different from string? E.g., S.String shouldn't be Automerge by default?
   UUID = 'uuid',
 
   //
