@@ -222,16 +222,19 @@ export class TableModel extends Resource {
     const values: DxGridPlaneCells = {};
     const fields = this.table.view?.fields ?? [];
 
-    const addCell = (row: any, field: any, colIndex: number, displayIndex: number): void => {
+    // TODO(burdon): Types.
+    const addCell = (row: any, field: FieldType, colIndex: number, displayIndex: number): void => {
       const cell: DxGridCellValue = {
         get value() {
-          return row?.[field.path] !== undefined ? formatValue(field.type, row[field.path]) : '';
+          // TODO(burdon): Infer type.
+          return row?.[field.property] !== undefined ? formatValue(field.type, row[field.property]) : '';
         },
       };
       const classes = cellClassesForFieldType(field.type);
       if (classes) {
         cell.className = mx(classes);
       }
+
       values[fromGridCell({ col: colIndex, row: displayIndex })] = cell;
     };
 
@@ -241,6 +244,7 @@ export class TableModel extends Resource {
         if (!field) {
           continue;
         }
+
         addCell(this.sortedRows.value[row], field, col, row);
       }
     }
