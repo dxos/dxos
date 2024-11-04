@@ -8,13 +8,6 @@ import { S } from '@dxos/effect';
 
 import { PropertyMeta } from './annotations';
 
-// TODO(burdon): Document.
-export const schemaVariance = {
-  _A: (_: any) => _,
-  _I: (_: any) => _,
-  _R: (_: never) => _,
-};
-
 // Branded type.
 export type JsonPath = string & { __JsonPath: true };
 
@@ -63,3 +56,10 @@ export type JsonSchemaType = JSONSchema.JsonSchema7 & {
  */
 // TODO(dmaretskyi): Define effect schema for json schema.
 export const JsonSchemaType = S.Any as S.Schema<JSONSchema.JsonSchema7Object>;
+
+// TODO(burdon): Document.
+export const schemaVariance = {
+  _A: (_: any) => _,
+  _I: (_: any) => _,
+  _R: (_: never) => _,
+};

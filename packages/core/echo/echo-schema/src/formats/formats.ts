@@ -7,7 +7,6 @@ import { AST, S } from '@dxos/effect';
 //
 // Custom annotations
 // https://json-schema.org/understanding-json-schema/reference/schema
-// TODO(burdon): Factor out JSON Schema dialog?
 //
 
 export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
@@ -23,11 +22,9 @@ export const CustomAnnotations = {
   currency: CurrencyAnnotationId,
 };
 
-//
-// Fields
-// https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
-//
-
+/**
+ * https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
+ */
 export enum FormatEnum {
   // TODO(burdon): Remove primitives from format.
   /** @deprecated */
@@ -47,11 +44,11 @@ export enum FormatEnum {
   Email = 'email',
   URI = 'uri',
 
-  // TODO(burdon): Not implemented yet.
+  // TODO(burdon): Not yet implemented.
   DateTime = 'datetime',
   DID = 'did', // Users, etc.
   Duration = 'duration',
-  Formula = 'formula',
+  Formula = 'formula', // Spreadsheet formula.
   JSON = 'json',
   REGEX = 'regex',
   Text = 'text',
@@ -62,6 +59,9 @@ export enum FormatEnum {
 
 export const FormatEnums = Object.values(FormatEnum).sort();
 
+/**
+ * Mixin of format annotation values.
+ */
 // TODO(burdon): Generate from annotations?
 export const FormatSchema = S.Struct({
   format: S.optional(S.Enums(FormatEnum)),
@@ -73,6 +73,9 @@ export const FormatSchema = S.Struct({
 
 export type FormatType = S.Schema.Type<typeof FormatSchema>;
 
+/**
+ * Namespace for format annotation definitions.
+ */
 export namespace Format {
   /**
    * ISO 4217 currency code.
