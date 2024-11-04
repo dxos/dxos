@@ -16,6 +16,7 @@ export const SectionSchema = S.Struct({
   custom: S.optional(S.Record({ key: S.String, value: S.Any })),
 });
 
+// TODO(burdon): Should be just type/Stack?
 export class StackViewType extends TypedObject({ typename: 'dxos.org/type/StackView', version: '0.1.0' })({
   sections: S.mutable(S.Record({ key: S.String, value: SectionSchema })),
 }) {}
