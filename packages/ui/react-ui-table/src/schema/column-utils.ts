@@ -10,6 +10,9 @@ import { mapSchemaToFields } from '@dxos/schema';
 
 import { createColumnBuilder } from '../helpers';
 
+/**
+ * @deprecated
+ */
 export const schemaToColumnDefs = <T>(schema: S.Schema<T, any>): ColumnDef<T, any>[] => {
   const { helper, builder } = createColumnBuilder<T>();
 

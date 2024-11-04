@@ -51,18 +51,18 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
     setField((f) => (f === field ? undefined : field));
   }, []);
 
+  const handleMove = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      arrayMove(view.fields, fromIndex, toIndex);
+    },
+    [view.fields],
+  );
+
   const handleDelete = useCallback(
     (field: FieldType) => {
       const idx = view.fields.findIndex((f) => field.property === f.property);
       view.fields.splice(idx, 1);
       setField(undefined);
-    },
-    [view.fields],
-  );
-
-  const handleMove = useCallback(
-    (fromIndex: number, toIndex: number) => {
-      arrayMove(view.fields, fromIndex, toIndex);
     },
     [view.fields],
   );
@@ -75,7 +75,6 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
     [view.fields],
   );
 
-  // TODO(burdon): Get getId.
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
       <List.Root<FieldType>

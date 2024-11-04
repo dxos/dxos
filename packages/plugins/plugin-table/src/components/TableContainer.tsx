@@ -50,6 +50,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     },
     [space],
   );
+
   const model = useTableModel({
     table,
     objects: filteredObjects,

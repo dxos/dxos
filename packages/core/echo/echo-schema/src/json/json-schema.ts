@@ -21,11 +21,6 @@ import { createEchoReferenceSchema } from '../handler';
 /**
  * @internal
  */
-export const ECHO_REFINEMENT_KEY = 'echo';
-
-/**
- * @internal
- */
 export const getEchoProp = (obj: JSONSchema.JsonSchema7): any => {
   return (obj as any)[ECHO_REFINEMENT_KEY];
 };
@@ -154,6 +149,7 @@ const withEchoRefinements = (ast: AST.AST): AST.AST => {
   if (Object.keys(annotationFields).length === 0) {
     return recursiveResult;
   } else {
+    console.log('>>>>>>>>>>', JSON.stringify(annotationFields));
     return new AST.Refinement(recursiveResult, () => null as any, {
       [AST.JSONSchemaAnnotationId]: annotationFields,
     });
@@ -301,19 +297,29 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
 // TODO(burdon): Pass in CustomAnnotations to keep separate.
 //
 
+/**
+ * @internal
+ */
+export const ECHO_REFINEMENT_KEY = 'echo';
+
+const ECHO_REFINEMENTS = [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId];
+
 const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<symbol, any> => {
-  const refinement: EchoRefinement = {};
-  for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
+  const schemaFields: Record<string, any> = {};
+
+  const echoRefinement: EchoRefinement = {};
+  for (const annotation of ECHO_REFINEMENTS) {
     if (annotations[annotation] != null) {
-      refinement[annotationToRefinementKey[annotation]] = annotations[annotation] as any;
+      echoRefinement[annotationToRefinementKey[annotation]] = annotations[annotation] as any;
     }
   }
-
-  const schemaFields: Record<string, any> = {};
-  if (Object.keys(refinement).length > 0) {
-    schemaFields[ECHO_REFINEMENT_KEY] = refinement;
+  if (Object.keys(echoRefinement).length > 0) {
+    schemaFields[ECHO_REFINEMENT_KEY] = echoRefinement;
   }
 
+  // TODO(burdon): References.
+
+  // Custom (at end).
   for (const [key, annotationId] of Object.entries(CustomAnnotations)) {
     const value = annotations[annotationId];
     if (value != null) {
@@ -327,17 +333,10 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<sym
 
 const jsonSchemaFieldsToAnnotations = (schema: JSONSchema.JsonSchema7): AST.Annotations => {
   const annotations: Types.Mutable<S.Annotations.Schema<any>> = {};
-  for (const [key, annotationId] of Object.entries(CustomAnnotations)) {
-    if (key in schema) {
-      // TODO(burdon): Clone?
-      annotations[annotationId] = (schema as any)[key];
-    }
-  }
 
   const echoRefinement: EchoRefinement = (schema as any)[ECHO_REFINEMENT_KEY];
-
   if (echoRefinement != null) {
-    for (const annotation of [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId]) {
+    for (const annotation of ECHO_REFINEMENTS) {
       if (echoRefinement[annotationToRefinementKey[annotation]]) {
         annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
       }
@@ -351,6 +350,14 @@ const jsonSchemaFieldsToAnnotations = (schema: JSONSchema.JsonSchema7): AST.Anno
   //     version: (schema as any).version,
   //   };
   // }
+
+  // Custom (at end).
+  for (const [key, annotationId] of Object.entries(CustomAnnotations)) {
+    if (key in schema) {
+      // TODO(burdon): Clone?
+      annotations[annotationId] = (schema as any)[key];
+    }
+  }
 
   return annotations;
 };

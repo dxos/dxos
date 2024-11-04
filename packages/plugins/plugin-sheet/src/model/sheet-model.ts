@@ -35,12 +35,10 @@ import { type CellScalarValue, type CellValue, type SheetType } from '../types';
 // https://hyperformula.handsontable.com/guide/types-of-values.html
 //  - https://github.com/handsontable/hyperformula/blob/master/src/Cell.ts (CellValueType)
 //  - https://github.com/handsontable/hyperformula/blob/master/src/interpreter/InterpreterValue.ts (NumberType)
-// TODO(burdon): ?
 const typeMap: Record<string, FormatEnum> = {
   BOOLEAN: FormatEnum.Boolean,
   NUMBER_RAW: FormatEnum.Number,
-  // TODO(burdon): Note part of data format.
-  // NUMBER_PERCENT: FormatEnum.Percent,
+  NUMBER_PERCENT: FormatEnum.Percent,
   NUMBER_CURRENCY: FormatEnum.Currency,
   NUMBER_DATETIME: FormatEnum.DateTime,
   NUMBER_DATE: FormatEnum.Date,

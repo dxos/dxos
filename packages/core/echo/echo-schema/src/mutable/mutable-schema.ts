@@ -120,7 +120,8 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
     return [...ast.propertySignatures].filter((p) => p.name !== 'id').map(unwrapOptionality);
   }
 
-  // TODO(burdon): Fields or Properties?
+  // TODO(burdon): Deprecate direct manipulation? Use JSONSchema directly.
+
   public addFields(fields: S.Struct.Fields) {
     const extended = addFieldsToSchema(this._getSchema(), fields);
     this._storedSchema.jsonSchema = toJsonSchema(extended);

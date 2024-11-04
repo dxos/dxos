@@ -47,7 +47,7 @@ describe('view', () => {
     }) {}
 
     const org = create(Org, { name: 'Org' });
-    const person = create(Person, { name: 'John', email: 'john@example.com', org });
+    const person = create(Person, { name: 'Alice', email: 'alice@example.com', org });
     log('schema', { org: toJsonSchema(Org), person: toJsonSchema(Person) });
     log('objects', { org, person });
     expect(getTypename(org)).to.eq(Org.typename);

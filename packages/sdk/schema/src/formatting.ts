@@ -8,6 +8,7 @@ import { FormatEnum, type ScalarType } from '@dxos/echo-schema';
  * Format value by type.
  * Used by Table, Sheet, etc.
  */
+// TODO(burdon): Move ot react-ui-data.
 // TODO(burdon): Formatting is different from kind format (e.g., percent is not a data format).
 export const formatValue = (
   type: ScalarType,
