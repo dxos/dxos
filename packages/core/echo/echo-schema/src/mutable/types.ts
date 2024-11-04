@@ -5,12 +5,11 @@
 import { S } from '@dxos/effect';
 
 import { getObjectAnnotation, JsonSchemaType } from '../ast';
+import { create } from '../handler';
+import { createJsonSchema } from '../json';
 import { TypedObject } from '../object';
 import { requireTypeReference } from '../proxy';
-
-/**
- * TypedObjects are stored in the database.
- */
+import { type ReactiveObject } from '../types';
 
 /**
  * Stored representation of a schema.
@@ -21,6 +20,22 @@ export class StoredSchema extends TypedObject({ typename: 'dxos.org/type/Schema'
   version: S.String,
   jsonSchema: JsonSchemaType,
 }) {}
+
+/**
+ * Create stored schema.
+ */
+export const createStoredSchema = ({
+  typename,
+  version,
+  jsonSchema,
+}: Pick<StoredSchema, 'typename' | 'version'> &
+  Partial<Pick<StoredSchema, 'jsonSchema'>>): ReactiveObject<StoredSchema> => {
+  return create(StoredSchema, {
+    typename,
+    version,
+    jsonSchema: jsonSchema ?? createJsonSchema(),
+  });
+};
 
 /**
  * Wrapper around a schema that is stored in the database (from a type definition) but cannot be modified at runtime.

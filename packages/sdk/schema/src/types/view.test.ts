@@ -21,6 +21,7 @@ import {
   setProperty,
   toJsonSchema,
 } from '@dxos/echo-schema';
+import type { JsonSchemaType } from '@dxos/echo-schema/src';
 import { log } from '@dxos/log';
 
 import { ViewProjection } from './field';
@@ -104,23 +105,22 @@ describe('view', () => {
     const { db } = await builder.createDatabase();
     const registry = new MutableSchemaRegistry(db);
 
-    const schema = createStoredSchema({ typename: 'example.com/type/Org', version: '0.1.0' });
-    db.add(schema);
-
     // TODO(burdon): Should registration be automatic?
+    const schema = db.add(createStoredSchema({ typename: 'example.com/type/Org', version: '0.1.0' }));
     const mutable = registry.registerSchema(schema);
     expect(await registry.list()).to.have.length(1);
+
     const before = mutable.schema.ast.toJSON();
 
     const jsonSchema = schema.jsonSchema;
-    setProperty(jsonSchema as any, 'name', S.String);
+    setProperty(jsonSchema as JsonSchemaType, 'name', S.String);
     setAnnotation(jsonSchema as any, 'name', { [AST.TitleAnnotationId]: 'Name' });
 
     // Check schema updated.
     expect(before).not.to.deep.eq(mutable.schema.ast.toJSON());
 
     const view = createView({ typename: schema.typename, jsonSchema });
-    const projection = new ViewProjection(schema, view);
+    const projection = new ViewProjection(mutable, view);
     const properties = projection.getFieldProjection('name');
     expect(properties).to.exist;
   });

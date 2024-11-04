@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FormatSchema, type ReactiveObject, S, type StoredSchema, type FormatType } from '@dxos/echo-schema';
+import { FormatSchema, type FormatType, type MutableSchema, S } from '@dxos/echo-schema';
 
 import { FieldSchema, type FieldType, type ViewType } from './view';
 
@@ -16,7 +16,8 @@ export type FieldProjectionType = S.Schema.Type<typeof FieldProjectionSchema>;
  */
 export class ViewProjection {
   constructor(
-    private readonly _schema: ReactiveObject<StoredSchema>,
+    // TODO(burdon): Consider how to use tables with static schema.
+    private readonly _schema: MutableSchema,
     private readonly _view: ViewType,
   ) {}
 
