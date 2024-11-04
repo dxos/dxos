@@ -69,6 +69,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
 
   const handleSet = useCallback(
     (field: FieldType, props: FieldProjectionType) => {
+      console.log(field, props);
       projection.updateField(field);
       projection.updateFormat(field.property, props);
     },
