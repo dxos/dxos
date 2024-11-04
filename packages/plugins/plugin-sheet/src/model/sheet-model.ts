@@ -35,7 +35,8 @@ import { type CellScalarValue, type CellValue, type SheetType } from '../types';
 const typeMap: Record<string, FormatEnum> = {
   BOOLEAN: FormatEnum.Boolean,
   NUMBER_RAW: FormatEnum.Number,
-  NUMBER_PERCENT: FormatEnum.Percent,
+  // TODO(burdon): Note part of data format.
+  // NUMBER_PERCENT: FormatEnum.Percent,
   NUMBER_CURRENCY: FormatEnum.Currency,
   NUMBER_DATETIME: FormatEnum.DateTime,
   NUMBER_DATE: FormatEnum.Date,

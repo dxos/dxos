@@ -129,13 +129,13 @@ export class TableModel extends Resource {
         return this.rows.value;
       }
 
-      const field = this.table.view?.fields.find((field) => field.path === sort.columnId);
+      const field = this.table.view?.fields.find((field) => field.property === sort.columnId);
       if (!field) {
         return this.rows.value;
       }
 
       const dataWithIndices = this.rows.value.map((item, index) => ({ item, index }));
-      const sorted = sortBy(dataWithIndices, [(wrapper) => wrapper.item[field.path]]);
+      const sorted = sortBy(dataWithIndices, [(wrapper) => wrapper.item[field.property]]);
       if (sort.direction === 'desc') {
         sorted.reverse();
       }
@@ -171,7 +171,7 @@ export class TableModel extends Resource {
         rowEffects.push(
           effect(() => {
             const rowData = this.sortedRows.value[row];
-            this?.table?.view?.fields.forEach((field) => touch(rowData?.[field.path]));
+            this?.table?.view?.fields.forEach((field) => touch(rowData?.[field.property]));
             this.onCellUpdate?.({ row, col: start.col });
           }),
         );
@@ -259,9 +259,9 @@ export class TableModel extends Resource {
       }
       values[fromGridCell({ col, row: 0 })] = {
         // TODO(ZaymonFC): Restore the label here.
-        value: field.path,
+        value: field.property,
         resizeHandle: 'col',
-        accessoryHtml: tableButtons.columnSettings.render({ columnId: field.path }),
+        accessoryHtml: tableButtons.columnSettings.render({ columnId: field.property }),
         readonly: true,
       };
     }
@@ -314,7 +314,7 @@ export class TableModel extends Resource {
 
     const field = fields[col];
     const dataIndex = this.displayToDataIndex.get(row) ?? row;
-    return this.rows.value[dataIndex][field.path];
+    return this.rows.value[dataIndex][field.property];
   };
 
   public setCellData = ({ col, row }: GridCell, value: any): void => {
@@ -327,7 +327,7 @@ export class TableModel extends Resource {
     const dataIndex = this.displayToDataIndex.get(row) ?? row;
     // TODO(ZaymonFC): We used to be able to discriminate on the type of the field here, but now we
     // need to inspect the view schema to discriminate.
-    this.rows.value[dataIndex][field.path] = ''; // parseValue(field.type, value);
+    this.rows.value[dataIndex][field.property] = ''; // parseValue(field.type, value);
   };
 
   public getRowCount = (): number => this.rows.value.length;
@@ -347,7 +347,7 @@ export class TableModel extends Resource {
       return;
     }
 
-    const field = this.table.view.fields.find((field) => field.path === columnId);
+    const field = this.table.view.fields.find((field) => field.property === columnId);
     if (field && this.onDeleteColumn) {
       if (this.sorting.value?.columnId === columnId) {
         this.clearSort();

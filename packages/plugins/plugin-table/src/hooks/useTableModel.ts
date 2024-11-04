@@ -28,7 +28,7 @@ export const useTableModel = ({
   // TODO(ZaymonFC): Not sure this belongs here. Seek feeback.
   useEffect(() => {
     if (space && !table?.schema && !table.view) {
-      table.schema = space.db.schema.addSchema(createStarterSchema());
+      table.schema = space.db.schemaRegistry.addSchema(createStarterSchema());
       table.view = createStarterView(table.schema);
       space.db.add(create(table.schema, {}));
     }

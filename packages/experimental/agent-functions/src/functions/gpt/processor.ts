@@ -164,7 +164,7 @@ export class RequestProcessor {
           }>((map, schema) => {
             map[schema.typename] = {
               type: 'array',
-              items: schema.serializedSchema.jsonSchema,
+              items: schema.jsonSchema,
               description: `An array of ${schema.typename} entities.`,
             };
             return map;
@@ -234,7 +234,7 @@ export class RequestProcessor {
         }
 
         // TODO(dmaretskyi): Convert to the new dynamic schema API.
-        const schemas = await space.db.schema.list();
+        const schemas = await space.db.schemaRegistry.list();
         const schema = schemas.find((schema) => schema.typename === type);
         if (schema) {
           // TODO(burdon): Use effect schema to generate JSON schema.
