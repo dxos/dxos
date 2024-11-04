@@ -11,6 +11,7 @@ import React, {
   type WheelEvent,
   type MouseEvent,
   useState,
+  useEffect,
 } from 'react';
 
 import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
@@ -62,6 +63,8 @@ export const GridSheet = () => {
   const dxGrid = useRef<DxGridElement | null>(null);
   const rangeController = useRef<RangeController>();
   const { hasAttention } = useAttention(id);
+
+  useEffect(() => () => console.log('[GridSheet unmount]'), []);
 
   const handleFocus = useCallback(
     (event: FocusEvent) => {

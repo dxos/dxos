@@ -12,6 +12,7 @@ import React, {
   forwardRef,
   type PropsWithChildren,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useState,
 } from 'react';
@@ -107,6 +108,8 @@ const GRID_CONTENT_NAME = 'GridContent';
 const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>((props, forwardedRef) => {
   const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME, props.__gridScope);
   const dxGrid = useForwardedRef(forwardedRef);
+
+  useEffect(() => () => console.log('[GridContent unmount]'), []);
 
   // Needed instead of `useEffect` to ensure the DxGrid ref is defined.
   useLayoutEffect(() => {
