@@ -18,6 +18,7 @@ type ToMutable<T> = T extends {} ? { -readonly [K in keyof T]: T[K] extends read
  */
 export const ObjectAnnotationId = Symbol.for('@dxos/schema/annotation/Object');
 
+// TODO(burdon): Reconcile with other types.
 export type ObjectAnnotation = {
   schemaId?: string;
   typename: string;

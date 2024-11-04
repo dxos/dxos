@@ -54,17 +54,22 @@ export class ViewType extends TypedObject({
   // TODO(burdon): Add array of sort orders (which might be tuples).
 }) {}
 
+type CreateViewProps = {
+  typename: string;
+  jsonSchema?: JSONSchema.JsonSchema7Object;
+};
+
 /**
  * Create view from existing schema.
  */
 // TODO(burdon): What is the minimal type that can be passed here that included TypedObjects (i.e., AbstractSchema).
-export const createView = (jsonSchema: JSONSchema.JsonSchema7Object, typename: string): ReactiveObject<ViewType> => {
+export const createView = ({ typename, jsonSchema }: CreateViewProps): ReactiveObject<ViewType> => {
   return create(ViewType, {
     // schema: jsonSchema,
     query: {
       __typename: typename,
     },
     // Create initial fields.
-    fields: Object.keys(jsonSchema.properties).map((property) => create(FieldSchema, { property })),
+    fields: Object.keys(jsonSchema?.properties ?? []).map((property) => create(FieldSchema, { property })),
   });
 };

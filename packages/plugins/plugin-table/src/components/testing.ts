@@ -4,17 +4,15 @@
 
 import { useEffect } from 'react';
 
-import { create, type MutableSchema, S, TypedObject } from '@dxos/echo-schema';
-import { FormatEnum } from '@dxos/echo-schema';
+import { create, S, TypedObject, FormatEnum, toJsonSchema } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
+import { createView } from '@dxos/schema';
 
-import { createStarterView, TableType } from '../types';
-
-// TODO(burdon): Factor out to @dxos/schema/testing!
+import { TableType } from '../types';
 
 export const createEmptyTable = () => create(TableType, {});
 
-export const TestSchema = TypedObject({ typename: 'example.com/type/test', version: '0.1.0' })({
+export const TestSchema = TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
   id: S.String,
   name: S.optional(S.String),
   age: S.optional(S.Number),
@@ -22,13 +20,12 @@ export const TestSchema = TypedObject({ typename: 'example.com/type/test', versi
   netWorth: S.optional(S.Number),
 });
 
-// TODO(ZaymonFC): Reconcile this with the new view schema system.
-export const createTable = (schema?: MutableSchema) => {
-  const schemaToUse = schema || TestSchema;
-
+export const createTable = (schema = TestSchema) => {
   return create(TableType, {
-    schema,
-    view: createStarterView(schemaToUse),
+    view: createView({
+      typename: schema.typename,
+      jsonSchema: toJsonSchema(schema),
+    }),
   });
 };
 
@@ -79,7 +76,7 @@ export const useSimulator = ({ items, table, insertInterval, updateInterval }: S
       const item = items[rowIdx];
 
       if (field) {
-        const path = field.path;
+        const path = field.property;
         // TODO(ZaymonFC): Restore this once I know how to derive the type from the schema.
         switch ('' as any as FormatEnum) {
           case FormatEnum.String: {

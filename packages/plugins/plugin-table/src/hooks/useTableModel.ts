@@ -4,12 +4,13 @@
 
 import { useEffect, useState } from 'react';
 
-import { create } from '@dxos/echo-schema';
+import { create, toJsonSchema, S, TypedObject } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/react-client';
 import { type EchoReactiveObject, getSpace } from '@dxos/react-client/echo';
+import { createView } from '@dxos/schema';
 
 import { TableModel, type TableModelProps } from '../model';
 import { type TableType } from '../types';
-import { createStarterSchema, createStarterView } from '../types';
 
 export type UseTableModelParams = {
   table: TableType;
@@ -24,15 +25,26 @@ export const useTableModel = ({
   onDeleteRow,
 }: UseTableModelParams): TableModel | undefined => {
   const space = getSpace(table);
-
-  // TODO(ZaymonFC): Not sure this belongs here. Seek feeback.
+  // TODO(burdon): Should be provided upstream?
   useEffect(() => {
-    if (space && !table?.schema && !table.view) {
-      table.schema = space.db.schemaRegistry.addSchema(createStarterSchema());
-      table.view = createStarterView(table.schema);
-      space.db.add(create(table.schema, {}));
+    if (space && !table.view) {
+      const schema = TypedObject({
+        typename: 'example.com/type/' + PublicKey.random().toHex(),
+        version: '0.1.0',
+      })({
+        name: S.optional(S.String),
+        description: S.optional(S.String),
+        quantity: S.optional(S.Number),
+      });
+
+      space.db.schemaRegistry.addSchema(schema);
+      table.view = createView({
+        typename: schema.typename,
+        jsonSchema: toJsonSchema(schema),
+      });
+      space.db.add(create(schema, {}));
     }
-  }, [space, table?.schema]);
+  }, [space, table]);
 
   const [tableModel, setTableModel] = useState<TableModel>();
   useEffect(() => {

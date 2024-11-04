@@ -42,7 +42,7 @@ export const testSchema = createStoredSchema({
   jsonSchema: toJsonSchema(TestSchema),
 });
 
-export const testView = createView(toJsonSchema(TestSchema), testSchema.typename);
+export const testView = createView({ typename: testSchema.typename, jsonSchema: toJsonSchema(TestSchema) });
 
 export const testData: TestType = {
   id: createObjectId(),

@@ -58,7 +58,7 @@ describe('view', () => {
 
   test('create view from TypedObject', async ({ expect }) => {
     class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({}) {}
-    const view = createView(toJsonSchema(TestSchema), TestSchema.typename);
+    const view = createView({ typename: TestSchema.typename, jsonSchema: toJsonSchema(TestSchema) });
     expect(view.query.__typename).to.eq(TestSchema.typename);
   });
 
@@ -95,7 +95,7 @@ describe('view', () => {
       createReferenceAnnotation(orgSchema).annotations({ [AST.DescriptionAnnotationId]: 'Employer' }),
     );
 
-    const personView = createView(personSchema.jsonSchema, personSchema.typename);
+    const personView = createView({ typename: personSchema.typename, jsonSchema: personSchema.jsonSchema });
     log('schema', { org: orgSchema, person: personSchema });
     log('view', { person: personView });
   });
@@ -119,7 +119,7 @@ describe('view', () => {
     // Check schema updated.
     expect(before).not.to.deep.eq(mutable.schema.ast.toJSON());
 
-    const view = createView(jsonSchema, schema.typename);
+    const view = createView({ typename: schema.typename, jsonSchema });
     const projection = new ViewProjection(schema, view);
     const properties = projection.getFieldProjection('name');
     expect(properties).to.exist;
@@ -131,7 +131,7 @@ describe('view', () => {
     setProperty(schema.jsonSchema as any, 'email', Format.Email);
     setProperty(schema.jsonSchema as any, 'salary', Format.Currency({ code: 'usd', decimals: 2 }));
 
-    const view = createView(schema.jsonSchema, schema.typename);
+    const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
     const projection = new ViewProjection(schema, view);
     expect(view.fields).to.have.length(3);
 
