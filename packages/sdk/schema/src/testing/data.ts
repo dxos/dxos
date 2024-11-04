@@ -2,7 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Format, S, createObjectId, toJsonSchema, createStoredSchema } from '@dxos/echo-schema';
+import { effect } from '@preact/signals-core';
+
+import {
+  AST,
+  Format,
+  MutableSchema,
+  S,
+  StoredSchema,
+  create,
+  createObjectId,
+  createStoredSchema,
+  getTypeReference,
+  toJsonSchema,
+} from '@dxos/echo-schema';
 
 import { createView } from '../types';
 
@@ -51,4 +64,21 @@ export const testData: TestType = {
   address: {
     zip: '11205',
   },
+};
+
+export const createMutableSchema = (schema: S.Schema<any>): MutableSchema => {
+  const mutableSchema = new MutableSchema(
+    create(StoredSchema, {
+      typename: getTypeReference(schema)!.objectId,
+      version: '0.1.0',
+      jsonSchema: toJsonSchema(schema),
+    }),
+  );
+
+  effect(() => {
+    const _ = mutableSchema.jsonSchema;
+    mutableSchema.invalidate();
+  });
+
+  return mutableSchema;
 };

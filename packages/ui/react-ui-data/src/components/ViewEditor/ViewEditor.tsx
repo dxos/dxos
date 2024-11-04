@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { S, type ReactiveObject, type StoredSchema } from '@dxos/echo-schema';
+import { type MutableSchema, S } from '@dxos/echo-schema';
 import { Button, Icon, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
@@ -24,7 +24,7 @@ import { Field } from '../Field';
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
 
 export type ViewEditorProps = ThemedClassName<{
-  schema: ReactiveObject<StoredSchema>;
+  schema: MutableSchema;
   view: ViewType;
   readonly?: boolean;
 }>;

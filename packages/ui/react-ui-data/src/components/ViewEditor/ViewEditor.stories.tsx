@@ -10,7 +10,7 @@ import React from 'react';
 import { create } from '@dxos/echo-schema';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { testView, testSchema } from '@dxos/schema/testing';
+import { TestSchema, testView, createMutableSchema } from '@dxos/schema/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
@@ -44,7 +44,7 @@ type Story = StoryObj<typeof ViewEditor>;
 
 export const Default: Story = {
   args: {
-    schema: testSchema,
+    schema: createMutableSchema(TestSchema),
     view: create(testView),
   },
 };

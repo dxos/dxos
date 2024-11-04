@@ -95,21 +95,21 @@ describe('dynamic schema', () => {
     });
     expect(getPropertyMetaAnnotation(registered.getProperties()[0], metaNamespace)).to.deep.eq(metaInfo);
   });
-
-  const createMutableSchema = (schema: S.Schema<any>): MutableSchema => {
-    const mutableSchema = new MutableSchema(
-      create(StoredSchema, {
-        typename: getTypeReference(schema)!.objectId,
-        version: '0.1.0',
-        jsonSchema: toJsonSchema(schema),
-      }),
-    );
-
-    effect(() => {
-      const _ = mutableSchema.jsonSchema;
-      mutableSchema.invalidate();
-    });
-
-    return mutableSchema;
-  };
 });
+
+const createMutableSchema = (schema: S.Schema<any>): MutableSchema => {
+  const mutableSchema = new MutableSchema(
+    create(StoredSchema, {
+      typename: getTypeReference(schema)!.objectId,
+      version: '0.1.0',
+      jsonSchema: toJsonSchema(schema),
+    }),
+  );
+
+  effect(() => {
+    const _ = mutableSchema.jsonSchema;
+    mutableSchema.invalidate();
+  });
+
+  return mutableSchema;
+};
