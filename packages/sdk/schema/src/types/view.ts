@@ -2,7 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create, type JSONSchema, JsonPath, type ReactiveObject, QueryType, TypedObject } from '@dxos/echo-schema';
+import {
+  create,
+  JsonPath,
+  type JSONSchema,
+  JsonSchemaType,
+  type ReactiveObject,
+  QueryType,
+  TypedObject,
+} from '@dxos/echo-schema';
 import { S } from '@dxos/effect';
 
 /**
@@ -37,13 +45,9 @@ export class ViewType extends TypedObject({
   query: QueryType,
 
   /**
-   * This is the projection schema!! -- not the object type.
-   * Schema used to render the view.
-   * The view may be entirely responsible for creating this schema, or it may just reference an existing schema.
+   * Optional schema override used to customize the underlying schema.
    */
-  // TODO(burdon): Change to MutableSchema?
-  // TODO(dmaretskyi): Currently empty since we don't do projection.
-  // schema: S.optional(JsonSchemaType),
+  schema: S.optional(JsonSchemaType),
 
   /**
    * UX metadata associated with displayed fields (in table, form, etc.)

@@ -63,7 +63,7 @@ export const FormatEnums = Object.values(FormatEnum).sort();
 
 // TODO(burdon): Generate from annotations?
 export const FormatSchema = S.Struct({
-  format: S.Enums(FormatEnum),
+  format: S.optional(S.Enums(FormatEnum)),
   title: S.optional(S.String),
   description: S.optional(S.String),
   currency: S.optional(S.String),

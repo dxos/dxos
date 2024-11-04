@@ -6,23 +6,24 @@ import React, { useMemo } from 'react';
 
 import { DropdownMenu, type DropdownMenuRootProps } from '@dxos/react-ui';
 import { Field } from '@dxos/react-ui-data';
-import { type FieldProjectionType } from '@dxos/schema';
+import { type FieldType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
 export type ColumnSettingsModalProps = {
   model?: TableModel;
-  columnId?: string;
+  columnId?: string; // TODO(burdon): Rename property?
   triggerRef: React.RefObject<HTMLButtonElement>;
 } & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
 
 export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, triggerRef }: ColumnSettingsModalProps) => {
-  const field = useMemo<FieldProjectionType>(
-    () => model?.table?.view?.fields.find((f) => f.path === columnId),
+  // TODO(burdon): Use ViewProjection.
+  const field = useMemo<FieldType | undefined>(
+    () => model?.table?.view?.fields.find((f) => f.property === columnId),
     [model?.table?.view?.fields, columnId],
   );
 
-  if (!field || !model?.table?.view) {
+  if (!field) {
     return null;
   }
 

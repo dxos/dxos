@@ -6,6 +6,7 @@ import { Table } from '@phosphor-icons/react';
 import React from 'react';
 
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
+import { getSpace } from '@dxos/client/echo';
 import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -101,9 +102,16 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             case 'article':
               return isTable(data.object) ? <TableContainer role={role} table={data.object} /> : null;
             case 'complementary--settings': {
-              if (data.subject instanceof TableType && data.subject.view) {
+              if (data.subject instanceof TableType) {
+                const table = data.subject;
+                if (!table.view) {
+                  return null;
+                }
+
+                const space = getSpace(table);
+                const schema = space!.db.schemaRegistry.getSchema(table.view.query.__typename);
                 return {
-                  node: <ViewEditor view={data.subject.view} />,
+                  node: <ViewEditor schema={schema} view={table.view} />,
                 };
               }
 
@@ -140,7 +148,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
 
             case TableAction.ADD_COLUMN: {
               const { table, field: _field } = intent.data as TableAction.AddColumn;
-              if (!isTable(table) || !table.schema || !table.view) {
+              if (!isTable(table) || !table.view) {
                 return;
               }
 
@@ -151,7 +159,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
 
             case TableAction.DELETE_COLUMN: {
               const { table, field } = intent.data as TableAction.DeleteColumn;
-              if (!isTable(table) || !table.view || !table.schema) {
+              if (!isTable(table) || !table.view) {
                 return;
               }
 
@@ -176,12 +184,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                   fieldPosition: number;
                 };
 
-                try {
-                  // TODO(ZaymonFC): We need to manipulate the schema with another method here.
-                  // addFieldToView(table.schema, table.view, field, fieldPosition);
-                } catch (error) {
-                  // TODO(ZaymonFC): Handle error.
-                }
+                // TODO(burdon): Update projection.
                 return { data: true };
               }
             }

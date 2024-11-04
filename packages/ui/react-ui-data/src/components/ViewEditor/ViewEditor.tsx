@@ -23,6 +23,7 @@ import { Field } from '../Field';
 
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
 
+// TODO(burdon): Resolver.
 export type ViewEditorProps = ThemedClassName<{
   schema: ReactiveObject<StoredSchema>;
   view: ViewType;
