@@ -23,4 +23,5 @@ export * from './json';
 export * from './mutable';
 export * from './object';
 export * from './proxy';
+export * from './query';
 export * from './types';
