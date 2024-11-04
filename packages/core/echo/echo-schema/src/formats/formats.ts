@@ -69,7 +69,7 @@ export const FormatSchema = S.Struct({
   description: S.optional(S.String),
   currency: S.optional(S.String),
   multipleOf: S.optional(S.Number),
-});
+}).pipe(S.mutable);
 
 export type FormatType = S.Schema.Type<typeof FormatSchema>;
 
