@@ -9,19 +9,16 @@ import { MutableSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   FormatEnum,
-  Format,
   FormatAnnotationId,
   TypedObject,
   create,
-  createReferenceAnnotation,
   createStoredSchema,
   getTypename,
   ref,
-  setAnnotation,
-  setProperty,
   toJsonSchema,
+  createReferenceAnnotation,
+  Format,
 } from '@dxos/echo-schema';
-import type { JsonSchemaType } from '@dxos/echo-schema/src';
 import { log } from '@dxos/log';
 
 import { ViewProjection } from './field';
@@ -64,75 +61,53 @@ describe('view', () => {
   });
 
   test('dynamic schema definitions with references', async () => {
-    const orgSchema = createStoredSchema({ typename: 'example.com/type/Org', version: '0.1.0' });
-    setProperty(
-      orgSchema.jsonSchema as any,
-      'name',
-      S.String.annotations({ [AST.DescriptionAnnotationId]: 'Org name' }),
-    );
+    const orgSchema = createStoredSchema({
+      typename: 'example.com/type/Org',
+      version: '0.1.0',
+      jsonSchema: toJsonSchema(
+        S.Struct({
+          name: S.String,
+        }).annotations({ [AST.DescriptionAnnotationId]: 'Org name' }),
+      ),
+    });
 
-    const personSchema = createStoredSchema({ typename: 'example.com/type/Person', version: '0.1.0' });
-    setProperty(
-      personSchema.jsonSchema as any,
-      'name',
-      S.String.annotations({
-        [AST.TitleAnnotationId]: 'Name',
-        [AST.DescriptionAnnotationId]: 'Full name',
-      }),
-    );
-
-    setProperty(
-      personSchema.jsonSchema as any,
-      'email',
-      S.String.annotations({
-        [AST.DescriptionAnnotationId]: 'Primary email',
-        [FormatAnnotationId]: FormatEnum.Email,
-      }),
-    );
-
-    setProperty(
-      personSchema.jsonSchema as any,
-      'org',
-      createReferenceAnnotation(orgSchema).annotations({ [AST.DescriptionAnnotationId]: 'Employer' }),
-    );
+    const personSchema = createStoredSchema({
+      typename: 'example.com/type/Person',
+      version: '0.1.0',
+      jsonSchema: toJsonSchema(
+        S.Struct({
+          name: S.String,
+          email: S.String,
+          org: createReferenceAnnotation(orgSchema).annotations({ [AST.DescriptionAnnotationId]: 'Employer' }),
+        }),
+      ),
+    });
 
     const personView = createView({ typename: personSchema.typename, jsonSchema: personSchema.jsonSchema });
     log('schema', { org: orgSchema, person: personSchema });
     log('view', { person: personView });
   });
 
-  test('adds dynamic schema to registry', async ({ expect }) => {
+  test('gets and updates view projection', async ({ expect }) => {
     const { db } = await builder.createDatabase();
     const registry = new MutableSchemaRegistry(db);
 
-    // TODO(burdon): Should registration be automatic?
-    const schema = db.add(createStoredSchema({ typename: 'example.com/type/Org', version: '0.1.0' }));
-    const mutable = registry.registerSchema(schema);
-    expect(await registry.list()).to.have.length(1);
+    const schema = createStoredSchema({
+      typename: 'example.com/type/Person',
+      version: '0.1.0',
+      jsonSchema: toJsonSchema(
+        S.Struct({
+          name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
+          email: Format.Email,
+          salary: Format.Currency({ code: 'usd', decimals: 2 }),
+        }),
+      ),
+    });
 
-    const before = mutable.schema.ast.toJSON();
-
-    const jsonSchema = schema.jsonSchema;
-    setProperty(jsonSchema as JsonSchemaType, 'name', S.String);
-    setAnnotation(jsonSchema as any, 'name', { [AST.TitleAnnotationId]: 'Name' });
-
-    // Check schema updated.
-    expect(before).not.to.deep.eq(mutable.schema.ast.toJSON());
-
-    const view = createView({ typename: schema.typename, jsonSchema });
-    const projection = new ViewProjection(mutable, view);
-    const properties = projection.getFieldProjection('name');
-    expect(properties).to.exist;
-  });
-
-  test('gets and updates view projection', async ({ expect }) => {
-    const schema = createStoredSchema({ typename: 'example.com/type/Person', version: '0.1.0' });
-    setProperty(schema.jsonSchema as any, 'name', S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }));
-    setProperty(schema.jsonSchema as any, 'email', Format.Email);
-    setProperty(schema.jsonSchema as any, 'salary', Format.Currency({ code: 'usd', decimals: 2 }));
+    const mutable = registry.registerSchema(db.add(schema));
 
     const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
-    const projection = new ViewProjection(schema, view);
+    const projection = new ViewProjection(mutable, view);
     expect(view.fields).to.have.length(3);
 
     {
