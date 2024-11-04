@@ -26,8 +26,8 @@
   ],
   "scripts": {
     "bin": "./bin/dx.js",
-    "manifest": "oclif manifest",
-    "prepack": "oclif manifest && oclif readme --multi",
+    "manifest": "NODE_OPTIONS='--import=extensionless/register' oclif manifest",
+    "prepack": "npm run manifest && npm run readme",
     "postpack": "shx rm -f oclif.manifest.json",
     "prepublishOnly": "scripts/patch_dx_environment.sh",
     "readme": "oclif readme --multi"
