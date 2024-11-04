@@ -42,6 +42,6 @@ type Story = StoryObj<typeof Field>;
 
 export const Default: Story = {
   args: {
-    field: { property: 'email', format: FormatEnum.String },
+    field: { property: 'email', format: FormatEnum.Email },
   },
 };
