@@ -5,31 +5,15 @@
 import { computed } from '@preact/signals-core';
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 
-import { create } from '@dxos/echo-schema';
-import { updateCounter } from '@dxos/echo-schema/testing';
+import { S, create } from '@dxos/echo-schema';
+import { createMutableSchema, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { createView, ViewProjection } from '@dxos/schema';
 
 import { TableModel } from './table-model';
-
-// TODO(Zan): Restore this when importing the type doesn't break bundling.
-// import { TableType } from '../types';
+import { TableType } from '../types';
 
 registerSignalsRuntime();
-
-const createTableModel = (): TableModel => {
-  // TODO(Zan): Restore schema specification when importing TableType doesn't break bundling.
-  const table = create({
-    view: {
-      fields: [
-        { id: 'col1', path: 'col1', label: 'Column 1', type: 'string' },
-        { id: 'col2', path: 'col2', label: 'Column 2', type: 'string' },
-        { id: 'col3', path: 'col3', label: 'Column 3', type: 'string' },
-      ],
-    },
-  });
-
-  return new TableModel({ table: table as any });
-};
 
 describe('TableModel', () => {
   let model: TableModel;
@@ -112,17 +96,7 @@ describe('TableModel', () => {
       let data: any[];
 
       beforeEach(async () => {
-        // TODO(Zan): Restore schema specification when importing TableType doesn't break bundling.
-        const table = create({
-          view: {
-            fields: [
-              { id: 'col1', path: 'col1', label: 'Column 1', type: 'string' },
-              { id: 'col2', path: 'col2', label: 'Column 2', type: 'string' },
-              { id: 'col3', path: 'col3', label: 'Column 3', type: 'string' },
-            ],
-          },
-        });
-
+        // TODO(burdon): Use generator.
         ({ data } = create({
           data: [
             { col1: 'A', col2: 1, col3: true },
@@ -130,7 +104,7 @@ describe('TableModel', () => {
           ],
         }));
 
-        model = new TableModel({ table: table as any });
+        const model = createTableModel();
         model.updateData(data);
         await model.open();
       });
@@ -203,3 +177,28 @@ describe('TableModel', () => {
     });
   });
 });
+
+const createTableModel = (): TableModel => {
+  const schema = createMutableSchema(
+    S.Struct({
+      name: S.String,
+    }),
+  );
+
+  const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
+  const projection = new ViewProjection(schema, view);
+
+  const table = create(TableType, {
+    view,
+    // TODO(burdon): Update schema above (use consistent schema).
+    // view: {
+    //   fields: [
+    //     { id: 'col1', path: 'col1', label: 'Column 1', type: 'string' },
+    //     { id: 'col2', path: 'col2', label: 'Column 2', type: 'string' },
+    //     { id: 'col3', path: 'col3', label: 'Column 3', type: 'string' },
+    //   ],
+    // },
+  });
+
+  return new TableModel({ table, projection });
+};

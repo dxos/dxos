@@ -6,6 +6,7 @@ import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-c
 import sortBy from 'lodash.sortby';
 
 import { Resource } from '@dxos/context';
+import { toFormatEnum } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 import { cellClassesForFieldType } from '@dxos/react-ui-data';
 import {
@@ -16,7 +17,7 @@ import {
   type DxGridCellValue,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { type FieldType, formatValue } from '@dxos/schema';
+import { type ViewProjection, type FieldType, formatValue } from '@dxos/schema';
 
 import { fromGridCell, type GridCell, type TableType } from '../types';
 import { tableButtons, touch } from '../util';
@@ -27,6 +28,7 @@ export type SortConfig = { columnId: ColumnId; direction: SortDirection };
 
 export type TableModelProps = {
   table: TableType;
+  projection: ViewProjection;
   sorting?: SortConfig[];
   pinnedRows?: { top: number[]; bottom: number[] };
   rowSelection?: number[];
@@ -41,7 +43,9 @@ export type TableModelProps = {
 export class TableModel extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
 
-  public readonly table: TableType;
+  public readonly _table: TableType;
+  public readonly _projection: ViewProjection;
+
   private rows = signal<any[]>([]);
   private sortedRows!: ReadonlySignal<any[]>;
 
@@ -71,6 +75,7 @@ export class TableModel extends Resource {
 
   constructor({
     table,
+    projection,
     sorting = [],
     pinnedRows = { top: [], bottom: [] },
     rowSelection = [],
@@ -82,7 +87,9 @@ export class TableModel extends Resource {
     onRowOrderChanged,
   }: TableModelProps) {
     super();
-    this.table = table;
+    this._table = table;
+    this._projection = projection;
+
     this.sorting.value = sorting.at(0);
     this.pinnedRows = pinnedRows;
     this.rowSelection = rowSelection;
@@ -93,6 +100,14 @@ export class TableModel extends Resource {
     this.onInsertRow = onInsertRow;
     this.onCellUpdate = onCellUpdate;
     this.onRowOrderChanged = onRowOrderChanged;
+  }
+
+  get table() {
+    return this._table;
+  }
+
+  get projection() {
+    return this._projection;
   }
 
   public updateData = (newData: any[]): void => {
@@ -107,7 +122,7 @@ export class TableModel extends Resource {
 
   private initializeColumnMeta(): void {
     this.columnMeta = computed(() => {
-      const fields = this.table.view?.fields ?? [];
+      const fields = this._table.view?.fields ?? [];
       const meta = Object.fromEntries(
         fields.map((field, index: number) => [index, { size: field?.size ?? 256, resizeable: true }]),
       );
@@ -129,7 +144,7 @@ export class TableModel extends Resource {
         return this.rows.value;
       }
 
-      const field = this.table.view?.fields.find((field) => field.property === sort.columnId);
+      const field = this._table.view?.fields.find((field) => field.property === sort.columnId);
       if (!field) {
         return this.rows.value;
       }
@@ -171,7 +186,7 @@ export class TableModel extends Resource {
         rowEffects.push(
           effect(() => {
             const rowData = this.sortedRows.value[row];
-            this?.table?.view?.fields.forEach((field) => touch(rowData?.[field.property]));
+            this?._table?.view?.fields.forEach((field) => touch(rowData?.[field.property]));
             this.onCellUpdate?.({ row, col: start.col });
           }),
         );
@@ -220,17 +235,20 @@ export class TableModel extends Resource {
 
   private getMainGridCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
     const values: DxGridPlaneCells = {};
-    const fields = this.table.view?.fields ?? [];
+    const fields = this._table.view?.fields ?? [];
 
     // TODO(burdon): Types.
     const addCell = (row: any, field: FieldType, colIndex: number, displayIndex: number): void => {
+      const props = this._projection.getFieldProjection(field.property);
+      const format = props.format ? toFormatEnum(props.format) : undefined;
       const cell: DxGridCellValue = {
         get value() {
           // TODO(burdon): Infer type.
-          return row?.[field.property] !== undefined ? formatValue(field.type, row[field.property]) : '';
+          return row?.[field.property] !== undefined ? formatValue(format, row[field.property]) : '';
         },
       };
-      const classes = cellClassesForFieldType(field.type);
+
+      const classes = cellClassesForFieldType(format);
       if (classes) {
         cell.className = mx(classes);
       }

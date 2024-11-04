@@ -85,8 +85,9 @@ export const parseValue = (type: FormatEnum, value: any) => {
   }
 };
 
-export const cellClassesForFieldType = (type: FormatEnum): string[] | undefined => {
-  switch (type) {
+// TODO(burdon): Type and format.
+export const cellClassesForFieldType = (format: FormatEnum | undefined): string[] | undefined => {
+  switch (format) {
     case FormatEnum.Number:
       return ['text-right', 'font-mono'];
     case FormatEnum.Boolean:

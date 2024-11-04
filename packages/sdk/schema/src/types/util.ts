@@ -26,7 +26,7 @@ export const createUniqueFieldForView = (view: ViewType): FieldType => {
   return { property: getUniqueProperty(view) };
 };
 
-// TODO(burdon): REMOVE: All deprecated.
+// TODO(burdon): REMOVE: All deprecated (old react-ui-table).
 
 /**
  * @deprecated

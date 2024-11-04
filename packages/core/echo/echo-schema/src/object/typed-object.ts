@@ -8,7 +8,7 @@ import { type ObjectAnnotation, ObjectAnnotationId, schemaVariance } from '../as
 import { getSchema, getTypeReference } from '../proxy';
 
 export interface AbstractSchema<Fields = any, I = any> extends S.Schema<Fields, I> {
-  // Fully qualified type name.
+  /** Fully qualified type name. */
   readonly typename: string;
 }
 
@@ -36,7 +36,7 @@ type TypeObjectOptions = {
 /**
  * Base class factory for typed objects.
  */
-// TODO(burdon): Need to document this and define a return type.
+// TODO(burdon): Document this and define a return type.
 // TODO(burdon): Support pipe(S.default({}))
 export const TypedObject = <ClassType>({
   typename,

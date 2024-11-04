@@ -33,9 +33,7 @@ export type FieldType = S.Schema.Type<typeof FieldSchema>;
  * They are used to configure the visual representation of the data.
  * The query is separate from the view (queries configure the projection of data objects).
  *
- *
  * [Table] => [View] => [Schema]:[JsonSchema]
- *
  */
 export class ViewType extends TypedObject({
   typename: 'dxos.org/type/View',

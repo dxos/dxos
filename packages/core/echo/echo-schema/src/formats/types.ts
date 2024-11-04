@@ -4,6 +4,8 @@
 
 import { type JSONSchema } from '@effect/schema';
 
+// TODO(burdon): Arrays, maps, enums.
+
 export enum ScalarEnum {
   String,
   Number,
@@ -76,6 +78,7 @@ export enum FormatEnum {
   //
   Currency = 'currency',
   Percent = 'percent',
+  Timestamp = 'timestamp', // TODO(burdon): Unix?
 
   //
   // { type: 'date' }
@@ -84,7 +87,8 @@ export enum FormatEnum {
   DateTime = 'date-time',
   Duration = 'duration',
   Time = 'time',
-  Timestamp = 'timestamp',
 }
+
+export const toFormatEnum = (value: string): FormatEnum | undefined => FormatEnum[value as keyof typeof FormatEnum];
 
 export const FormatEnums = Object.values(FormatEnum).sort();

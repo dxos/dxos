@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { DropdownMenu, type DropdownMenuRootProps } from '@dxos/react-ui';
 import { Field } from '@dxos/react-ui-data';
-import { type FieldType } from '@dxos/schema';
+import { type FieldProjectionType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
@@ -17,13 +17,14 @@ export type ColumnSettingsModalProps = {
 } & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
 
 export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, triggerRef }: ColumnSettingsModalProps) => {
-  // TODO(burdon): Use ViewProjection.
-  const field = useMemo<FieldType | undefined>(
-    () => model?.table?.view?.fields.find((f) => f.property === columnId),
-    [model?.table?.view?.fields, columnId],
-  );
+  const props = useMemo<FieldProjectionType | undefined>(() => {
+    const field = model?.table?.view?.fields.find((f) => f.property === columnId);
+    if (field) {
+      return model?.projection.getFieldProjection(field.property);
+    }
+  }, [model?.table?.view?.fields, columnId]);
 
-  if (!field) {
+  if (!props) {
     return null;
   }
 
@@ -31,7 +32,7 @@ export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, trigg
     <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
       <DropdownMenu.Content>
-        <Field field={field} onSave={() => onOpenChange?.(false)} />
+        <Field field={props} onSave={() => onOpenChange?.(false)} />
         <DropdownMenu.Arrow />
       </DropdownMenu.Content>
     </DropdownMenu.Root>

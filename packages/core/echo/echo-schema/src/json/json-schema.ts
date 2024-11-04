@@ -149,7 +149,6 @@ const withEchoRefinements = (ast: AST.AST): AST.AST => {
   if (Object.keys(annotationFields).length === 0) {
     return recursiveResult;
   } else {
-    console.log('>>>>>>>>>>', JSON.stringify(annotationFields));
     return new AST.Refinement(recursiveResult, () => null as any, {
       [AST.JSONSchemaAnnotationId]: annotationFields,
     });

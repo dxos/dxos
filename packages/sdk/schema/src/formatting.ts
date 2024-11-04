@@ -2,17 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FormatEnum, type ScalarType } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo-schema';
 
 /**
  * Format value by type.
  * Used by Table, Sheet, etc.
  */
-// TODO(burdon): Move ot react-ui-data.
+// TODO(burdon): Move to react-ui-data. Add type.
 // TODO(burdon): Formatting is different from kind format (e.g., percent is not a data format).
 export const formatValue = (
-  type: ScalarType,
-  format: FormatEnum,
+  // type: ScalarType,
+  format: FormatEnum | undefined,
   value: any,
   locale: string | undefined = undefined,
 ): string => {
@@ -29,14 +29,14 @@ export const formatValue = (
       return value.toLocaleString(locale);
     }
 
-    // case FormatEnum.Percent: {
-    //   return (value as number) * 100 + '%';
-    // }
+    case FormatEnum.Percent: {
+      return (value as number) * 100 + '%';
+    }
 
     case FormatEnum.Currency: {
       return (value as number).toLocaleString(locale, {
         style: 'currency',
-        currency: 'USD', // TODO(burdon): Get from value.
+        currency: 'USD', // TODO(burdon): Get from property annotation.
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });

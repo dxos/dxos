@@ -13,7 +13,7 @@ import { Filter, useSpaces, useQuery, create, getSpace } from '@dxos/react-clien
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-data';
-import { type FieldType } from '@dxos/schema';
+import { ViewProjection, type FieldType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
@@ -45,7 +45,6 @@ const DefaultStory = () => {
 
   const objects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
   const filteredObjects = useGlobalFilteredObjects(objects);
-
   const handleDeleteRow = useCallback((row: any) => space.db.remove(row), [space]);
 
   // TODO(ZaymonFC): Reimplement these with the new schema manipulation features.
@@ -87,15 +86,24 @@ const DefaultStory = () => {
     [table, spaces],
   );
 
+  const projection = useMemo(() => {
+    if (!schema || !table?.view) {
+      return;
+    }
+
+    return new ViewProjection(schema, table.view);
+  }, [schema, table?.view]);
+
   const model = useTableModel({
-    table: table!,
+    table,
+    projection,
     objects: filteredObjects,
     onDeleteRow: handleDeleteRow,
     // onAddColumn: handleAddColumn,
     // onDeleteColumn: handleDeleteColumn,
   });
 
-  if (!table || !schema) {
+  if (!schema || !table) {
     return null;
   }
 
