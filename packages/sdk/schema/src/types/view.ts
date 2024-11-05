@@ -123,9 +123,9 @@ export class ViewProjection {
   };
 
   updateFormat(property: string, value: Partial<FormatType>): FormatType {
-    let properties = this._schema.jsonSchema.properties[property] as any as FormatType;
+    let properties: JSONSchema.JsonSchema7 | undefined = this._schema.jsonSchema.properties[property];
     if (!properties) {
-      properties = { property };
+      properties = { ...value } as JSONSchema.JsonSchema7;
       this._schema.jsonSchema.properties[property] = properties;
     }
     Object.assign(properties, value);

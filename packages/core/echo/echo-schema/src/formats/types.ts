@@ -7,10 +7,10 @@ import { type JSONSchema } from '@effect/schema';
 // TODO(burdon): Arrays, maps, enums.
 
 export enum ScalarEnum {
-  String,
-  Number,
-  Boolean,
-  Ref,
+  String = 'string',
+  Number = 'number',
+  Boolean = 'boolean',
+  Ref = 'ref',
 }
 
 export type ScalarType =
@@ -91,6 +91,11 @@ export enum FormatEnum {
 export const toFormatEnum = (value: string): FormatEnum | undefined => FormatEnum[value as keyof typeof FormatEnum];
 
 export const FormatEnums = Object.values(FormatEnum).sort();
+
+export const PropertyKind = {
+  type: ScalarEnum,
+  format: FormatEnum,
+};
 
 /**
  * Map of format to type.
