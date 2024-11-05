@@ -4,13 +4,19 @@
 
 import React from 'react';
 
+import { type Space } from '@dxos/react-client/echo';
+
+import { type SheetType } from '../../types';
+import { useComputeGraph } from '../ComputeGraph';
 import { FunctionEditor } from '../FunctionEditor';
 import { GridSheet } from '../GridSheet';
-import { SheetProvider, type SheetProviderProps } from '../SheetContext';
+import { SheetProvider } from '../SheetContext';
 import { Toolbar } from '../Toolbar';
 
-export const SheetContainer = ({ graph, sheet, role }: SheetProviderProps & { role?: string }) => {
-  return (
+export const SheetContainer = ({ space, sheet, role }: { space: Space; sheet: SheetType; role?: string }) => {
+  const graph = useComputeGraph(space);
+
+  return graph ? (
     <SheetProvider sheet={sheet} graph={graph}>
       <Toolbar.Root role={role}>
         <Toolbar.Styles />
@@ -23,5 +29,5 @@ export const SheetContainer = ({ graph, sheet, role }: SheetProviderProps & { ro
         <FunctionEditor />
       </div>
     </SheetProvider>
-  );
+  ) : null;
 };
