@@ -2,59 +2,58 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ScalarEnum, FormatEnum, S } from '@dxos/echo-schema';
+import { AST, ScalarEnum, FormatEnum, S } from '@dxos/echo-schema';
 
-const DecimalPrecision = S.transform(S.Number, S.Number, {
+export const DecimalPrecision = S.transform(S.Number, S.Number, {
   strict: true,
   encode: (value) => Math.pow(10, -value),
   decode: (value) => Math.log10(1 / value),
 });
 
-export const BaseProperty = S.Struct({
-  // TODO(burdon): Cannot extend enum with literal.
-  // format: S.Enums(FormatEnum),
-  // type: S.Enums(ScalarEnum),
-  format: S.String,
-  type: S.String,
-  property: S.String,
+export const BasePropertySchema = S.Struct({
+  property: S.String, // TODO(burdon): Restrict chars.
   title: S.String,
   description: S.optional(S.String),
 }).pipe(S.mutable);
 
-export type BaseProperty = S.Schema.Type<typeof BaseProperty>;
+export type BaseProperty = S.Schema.Type<typeof BasePropertySchema>;
 
 //
 // Numbers
 //
 
 export const PercentSchema = S.extend(
-  BaseProperty,
+  BasePropertySchema,
   S.Struct({
     format: S.Literal(FormatEnum.Percent),
     type: S.Literal(ScalarEnum.Number),
-    multipleOf: DecimalPrecision,
+    multipleOf: S.optional(DecimalPrecision),
   }),
 );
 
 export const CurrencySchema = S.extend(
-  BaseProperty,
+  BasePropertySchema,
   S.Struct({
     format: S.Literal(FormatEnum.Currency),
     type: S.Literal(ScalarEnum.Number),
-    multipleOf: DecimalPrecision,
-    currency: S.String,
+    multipleOf: S.optional(DecimalPrecision),
+    currency: S.optional(S.String),
   }),
 );
 
-export const FieldSchema = S.Union(PercentSchema, CurrencySchema);
+export const PropertySchema = S.Union(PercentSchema, CurrencySchema);
 
-export type Field = S.Schema.Type<BaseProperty>;
+export type Property = S.Schema.Type<typeof PropertySchema>;
 
-export const FieldMap: Partial<Record<FormatEnum, S.Schema.Any>> = {
-  [FormatEnum.Percent]: PercentSchema,
-  [FormatEnum.Currency]: CurrencySchema,
-};
+// TODO(burdon): Generic util to determine type from discriminated union.
+export const getPropertySchema = (format: FormatEnum): S.Schema<any> | undefined => {
+  for (const member of PropertySchema.members) {
+    for (const prop of AST.getPropertySignatures(member.ast)) {
+      if (prop.name === 'format' && prop.type._tag === 'Literal' && prop.type.literal === format) {
+        return member;
+      }
+    }
+  }
 
-export const getSchema = (property: BaseProperty): S.Schema.Any | undefined => {
-  return FieldMap[property.format as FormatEnum];
+  return undefined;
 };
