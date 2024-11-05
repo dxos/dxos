@@ -6,8 +6,7 @@ import { type ChangeEvent, type FocusEvent, useCallback, useMemo, useState } fro
 
 import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-
-import { validateSchema, type ValidationError } from '../util';
+import { validateSchema, type ValidationError } from '@dxos/schema';
 
 type FormInputValue = string | number | readonly string[] | undefined;
 
