@@ -12,8 +12,8 @@ import { toJsonSchema } from '../json';
 
 // TODO(burdon): Are transformation viable with automerge?
 
-describe.only('formats', () => {
-  test.only('annotations', ({ expect }) => {
+describe('formats', () => {
+  test('annotations', ({ expect }) => {
     const TestSchema = S.Struct({
       name: S.String,
       email: S.optional(Format.Email),
