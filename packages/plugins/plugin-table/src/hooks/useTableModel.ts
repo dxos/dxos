@@ -45,6 +45,7 @@ export const useTableModel = ({
       table.view = createView({
         typename: mutable.typename,
         jsonSchema: mutable.jsonSchema,
+        properties: ['name', 'description', 'quantity'],
       });
 
       // Create first row.
