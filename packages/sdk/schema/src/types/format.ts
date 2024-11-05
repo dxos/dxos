@@ -12,7 +12,7 @@ export const DecimalPrecision = S.transform(S.Number, S.Number, {
 
 export const BasePropertySchema = S.Struct({
   property: S.String, // TODO(burdon): Restrict chars.
-  title: S.String,
+  title: S.optional(S.String),
   description: S.optional(S.String),
 }).pipe(S.mutable);
 
