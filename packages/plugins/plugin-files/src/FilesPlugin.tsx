@@ -21,14 +21,16 @@ import {
   parseGraphSerializerPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, Trigger } from '@dxos/async';
+import { scheduledEffect } from '@dxos/echo-signals/core';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
+import { parseAttentionPlugin } from '@dxos/plugin-attention';
 import { createExtension, isActionLike, ROOT_TYPE, type Node } from '@dxos/plugin-graph';
 import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import { listener } from '@dxos/react-ui-editor';
 import { type MaybePromise } from '@dxos/util';
 
-import { FilesSettings, LocalFileMain } from './components';
+import { FilesSettings, LocalFileContainer } from './components';
 import { ExportStatus } from './components/ExportStatus';
 import meta, { FILES_PLUGIN } from './meta';
 import translations from './translations';
@@ -56,7 +58,6 @@ import {
 // TODO(burdon): Rename package plugin-file (singular).
 
 export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, MarkdownExtensionProvides> => {
-  let onFilesUpdate: ((node?: Node<LocalEntity>) => void) | undefined;
   const settings = new LocalStorageStore<FilesSettingsProps>(FILES_PLUGIN, {
     autoExport: false,
     autoExportInterval: 30_000,
@@ -120,15 +121,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
     }
   };
 
-  const handleKeyDown = async (event: KeyboardEvent) => {
-    const modifier = event.ctrlKey || event.metaKey;
-    if (event.key === 's' && modifier && state.values.current) {
-      event.preventDefault();
-      await handleSave(state.values.current);
-      onFilesUpdate?.();
-    }
-  };
-
   return {
     meta,
     initialize: async () => {
@@ -169,11 +161,15 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
         markdown: {
           extensions: () => [
             listener({
-              onChange: (text) => {
-                if (settings.values.openLocalFiles && state.values.current && state.values.current.text !== text) {
+              onChange: (text, id) => {
+                if (
+                  settings.values.openLocalFiles &&
+                  state.values.current &&
+                  state.values.current.id === id &&
+                  state.values.current.text !== text
+                ) {
                   state.values.current.text = text.toString();
                   state.values.current.modified = true;
-                  onFilesUpdate?.();
                 }
               },
             }),
@@ -209,47 +205,38 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             return;
           }
 
-          window.addEventListener('keydown', handleKeyDown);
-          return () => window.removeEventListener('keydown', handleKeyDown);
-        }),
-      );
-
-      subscriptions.add(
-        effect(() => {
-          if (!settings.values.openLocalFiles) {
-            return;
-          }
-
           const fileHandles = state.values.files.map((file) => file.handle).filter(Boolean);
           void localforage.setItem(FILES_PLUGIN, fileHandles);
         }),
       );
 
-      // Subscribe to graph to track the currently active file.
-      const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
-      const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      if (navigationPlugin && graphPlugin) {
+      // Subscribe to attention to track the currently active file.
+      const attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
+      if (attentionPlugin) {
         subscriptions.add(
-          effect(() => {
-            if (!settings.values.openLocalFiles) {
-              return;
-            }
+          scheduledEffect(
+            () => ({
+              openLocalFiles: settings.values.openLocalFiles,
+              attended: attentionPlugin.provides.attention.attended,
+            }),
+            ({ openLocalFiles, attended }) => {
+              if (!openLocalFiles) {
+                return;
+              }
 
-            const active = firstIdInPart(navigationPlugin.provides.location.active, 'main');
-            const path =
-              active && graphPlugin.provides.graph.getPath({ target: active })?.filter((id) => id.startsWith(PREFIX));
-            const current = (active?.startsWith(PREFIX) && path && findFile(state.values.files, path)) || undefined;
-            if (state.values.current !== current) {
-              state.values.current = current;
-            }
-          }),
+              const active = attended?.[0];
+              const current =
+                (active?.startsWith(PREFIX) && attended && findFile(state.values.files, attended)) || undefined;
+              if (state.values.current !== current) {
+                state.values.current = current;
+              }
+            },
+          ),
         );
       }
     },
     unload: async () => {
-      onFilesUpdate = undefined;
       subscriptions.clear();
-      window.removeEventListener('keydown', handleKeyDown);
     },
     provides: {
       settings: settings.values,
@@ -257,8 +244,8 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
       surface: {
         component: ({ data, role }) => {
           switch (role) {
-            case 'main': {
-              return isLocalFile(data.active) ? <LocalFileMain file={data.active} /> : null;
+            case 'article': {
+              return isLocalFile(data.object) ? <LocalFileContainer file={data.object} /> : null;
             }
 
             case 'settings': {
@@ -382,7 +369,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   type: isLocalDirectory(entity) ? 'directory' : 'file',
                   data: entity,
                   properties: {
-                    label: entity.title,
+                    label: entity.name,
                     icon: 'children' in entity ? 'ph--folder--regular' : 'ph--file--regular',
                     modified: 'children' in entity ? undefined : entity.modified,
                   },
@@ -399,7 +386,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   type: 'file',
                   data: child,
                   properties: {
-                    label: child.title,
+                    label: child.name,
                     icon: 'ph--file--regular',
                   },
                 })),
@@ -457,6 +444,10 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                         properties: {
                           label: [node.data.handle ? 'save label' : 'save as label', { ns: FILES_PLUGIN }],
                           icon: 'ph--floppy-disk--regular',
+                          keyBinding: {
+                            macos: 'meta+s',
+                            windows: 'ctrl+s',
+                          },
                         },
                       },
                     ]
@@ -609,7 +600,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 }
               };
               input.click();
-              return { data: await result };
+              return { data: await result.wait() };
             }
 
             case LocalFilesAction.OPEN_DIRECTORY: {
@@ -630,7 +621,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 if (permission === 'granted') {
                   entity.children = await getDirectoryChildren(entity.handle, entity.handle.name);
                   entity.permission = permission;
-                  onFilesUpdate?.();
                 }
               } else {
                 const permission = await (entity.handle as any)?.requestPermission({ mode: 'readwrite' });
@@ -638,7 +628,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   const text = await (entity.handle as any).getFile?.().then((file: any) => file.text());
                   entity.text = text;
                   entity.permission = permission;
-                  onFilesUpdate?.();
                 }
               }
 
@@ -646,10 +635,9 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             }
 
             case LocalFilesAction.SAVE: {
-              const file = findFile(state.values.files, intent.data?.id);
+              const file = findFile(state.values.files, [intent.data?.id]);
               if (file) {
                 await handleSave(file);
-                onFilesUpdate?.();
                 return { data: true };
               }
               break;
@@ -660,7 +648,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 const index = state.values.files.findIndex((f) => f.id === intent.data?.id);
                 if (index >= 0) {
                   state.values.files.splice(index, 1);
-                  onFilesUpdate?.();
                   return { data: true };
                 }
               }

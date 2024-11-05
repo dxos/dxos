@@ -245,8 +245,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           switch (role) {
             case 'section':
             case 'article': {
-              // TODO(burdon): Normalize types (from FilesPlugin).
-              const doc = getDoc(data.active) ?? getDoc(data.object);
+              const doc = getDoc(data.object);
               const { id, object } = isEditorModel(data.object)
                 ? { id: data.object.id, object: data.object }
                 : doc
@@ -262,7 +261,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   id={id}
                   object={object}
                   role={role}
-                  coordinate={data.coordinate as LayoutCoordinate}
                   settings={settings.values}
                   extensionProviders={state.values.extensionProviders}
                   viewMode={getViewMode(id)}
