@@ -1496,14 +1496,8 @@ export class DxGrid extends LitElement {
     return false;
   }
 
-  override connectedCallback() {
-    super.connectedCallback();
-    console.log('[dx-grid connected]', this.gridId);
-  }
-
   override disconnectedCallback() {
     super.disconnectedCallback();
-    console.log('[dx-grid disconnected]', this.gridId);
     if (this.viewportRef.value) {
       this.observer.unobserve(this.viewportRef.value);
     }
