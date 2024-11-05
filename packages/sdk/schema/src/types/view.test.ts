@@ -8,21 +8,20 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { MutableSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
+  Format,
   FormatEnum,
   FormatAnnotationId,
   TypedObject,
   create,
+  createReferenceAnnotation,
   createStoredSchema,
   getTypename,
   ref,
   toJsonSchema,
-  createReferenceAnnotation,
-  Format,
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { ViewProjection } from './field';
-import { createView } from './view';
+import { ViewProjection, createView } from './view';
 
 describe('view', () => {
   let builder: EchoTestBuilder;
