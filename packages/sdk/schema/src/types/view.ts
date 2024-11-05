@@ -12,8 +12,8 @@ import {
   type MutableSchema,
   QueryType,
   type ReactiveObject,
-  TypedObject,
   S,
+  TypedObject,
 } from '@dxos/echo-schema';
 
 /**
