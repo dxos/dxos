@@ -88,8 +88,6 @@ export enum FormatEnum {
   Timestamp = 'timestamp',
 }
 
-export const toFormatEnum = (value: string): FormatEnum | undefined => FormatEnum[value as keyof typeof FormatEnum];
-
 export const FormatEnums = Object.values(FormatEnum).sort();
 
 export const PropertyKind = {

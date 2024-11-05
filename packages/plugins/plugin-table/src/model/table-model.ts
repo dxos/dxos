@@ -6,7 +6,6 @@ import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-c
 import sortBy from 'lodash.sortby';
 
 import { Resource } from '@dxos/context';
-import { toFormatEnum } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 import { cellClassesForFieldType } from '@dxos/react-ui-data';
 import {
@@ -240,15 +239,14 @@ export class TableModel extends Resource {
     // TODO(burdon): Types.
     const addCell = (row: any, field: FieldType, colIndex: number, displayIndex: number): void => {
       const props = this._projection.getFieldProjection(field.property);
-      const format = props.format ? toFormatEnum(props.format) : undefined;
       const cell: DxGridCellValue = {
         get value() {
           // TODO(burdon): Infer type.
-          return row?.[field.property] !== undefined ? formatValue(format, row[field.property]) : '';
+          return row?.[field.property] !== undefined ? formatValue(props.format, row[field.property]) : '';
         },
       };
 
-      const classes = cellClassesForFieldType(format);
+      const classes = cellClassesForFieldType(props.format);
       if (classes) {
         cell.className = mx(classes);
       }
