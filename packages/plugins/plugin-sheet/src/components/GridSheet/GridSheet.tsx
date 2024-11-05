@@ -60,7 +60,7 @@ export const GridSheet = () => {
   const { t } = useTranslation(SHEET_PLUGIN);
   const { id, model, editing, setEditing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs } =
     useSheetContext();
-  const dxGrid = useRef<DxGridElement | null>(null);
+  const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const rangeController = useRef<RangeController>();
   const { hasAttention } = useAttention(id);
 
@@ -91,9 +91,9 @@ export const GridSheet = () => {
           ? 'col'
           : undefined;
       const delta = key.startsWith('Arrow') ? (['ArrowUp', 'ArrowLeft'].includes(key) ? -1 : 1) : shift ? -1 : 1;
-      dxGrid.current?.refocus(axis, delta);
+      dxGrid?.refocus(axis, delta);
     },
-    [model, editing],
+    [model, editing, dxGrid],
   );
 
   const handleBlur = useCallback(
@@ -220,9 +220,9 @@ export const GridSheet = () => {
       rangeExtension({
         onInit: (fn) => (rangeController.current = fn),
         onStateChange: (state) => {
-          if (dxGrid.current) {
+          if (dxGrid) {
             // This can’t dispatch a setState in this component, otherwise the cell editor remounts and loses focus.
-            dxGrid.current.mode = typeof state.activeRange === 'undefined' ? 'edit' : 'edit-select';
+            dxGrid.mode = typeof state.activeRange === 'undefined' ? 'edit' : 'edit-select';
           }
         },
       }),
@@ -262,7 +262,7 @@ export const GridSheet = () => {
         overscroll='inline'
         className='[--dx-grid-base:var(--surface-bg)]'
         activeRefs={activeRefs}
-        ref={dxGrid}
+        ref={setDxGrid}
       />
       <DropdownMenu.Root
         modal={false}

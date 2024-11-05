@@ -18,7 +18,6 @@ import React, {
 } from 'react';
 
 import { type DxAxisResize, type DxEditRequest, type DxGridCellsSelect, DxGrid as NaturalDxGrid } from '@dxos/lit-grid';
-import { useForwardedRef } from '@dxos/react-ui';
 
 type DxGridElement = NaturalDxGrid;
 
@@ -107,24 +106,39 @@ const GRID_CONTENT_NAME = 'GridContent';
 
 const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>((props, forwardedRef) => {
   const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME, props.__gridScope);
-  const dxGrid = useForwardedRef(forwardedRef);
+  const [dxGrid, setDxGridInternal] = useState<NaturalDxGrid | null>(null);
+
+  const setDxGrid = useCallback(
+    (nextDxGrid: NaturalDxGrid | null) => {
+      setDxGridInternal(nextDxGrid);
+      if (forwardedRef) {
+        if (typeof forwardedRef === 'function') {
+          forwardedRef?.(nextDxGrid);
+        } else {
+          forwardedRef.current = nextDxGrid;
+        }
+      }
+    },
+    [forwardedRef, dxGrid],
+  );
 
   useEffect(() => () => console.log('[GridContent unmount]'), []);
 
   // Needed instead of `useEffect` to ensure the DxGrid ref is defined.
   useLayoutEffect(() => {
-    if (dxGrid.current && props.getCells) {
-      dxGrid.current.getCells = props.getCells;
-      dxGrid.current.requestUpdate('initialCells');
+    // todo(thure): Should this be deferred?
+    if (dxGrid && props.getCells) {
+      dxGrid.getCells = props.getCells;
+      dxGrid.requestUpdate('initialCells');
     }
-  }, [props.getCells]);
+  }, [props.getCells, dxGrid]);
 
   const handleEdit = useCallback((event: DxEditRequest) => {
     setEditBox(event.cellBox);
     setEditing({ index: event.cellIndex, initialContent: event.initialContent });
   }, []);
 
-  return <DxGrid {...props} gridId={id} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={dxGrid} />;
+  return <DxGrid {...props} gridId={id} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={setDxGrid} />;
 });
 
 GridContent.displayName = GRID_CONTENT_NAME;
