@@ -4,6 +4,7 @@
 
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
+
 import { documentId } from './selection';
 
 export type ListenerOptions = {

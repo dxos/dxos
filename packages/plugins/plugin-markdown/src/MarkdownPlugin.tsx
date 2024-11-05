@@ -9,7 +9,6 @@ import {
   parseIntentPlugin,
   resolvePlugin,
   LayoutAction,
-  type LayoutCoordinate,
   NavigationAction,
   type PluginDefinition,
 } from '@dxos/app-framework';

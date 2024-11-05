@@ -11,8 +11,6 @@ import {
   type PluginDefinition,
   parseGraphPlugin,
   parseIntentPlugin,
-  parseNavigationPlugin,
-  firstIdInPart,
   NavigationAction,
   type SerializedNode,
   type NodeSerializer,
