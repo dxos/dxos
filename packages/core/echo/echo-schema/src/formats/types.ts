@@ -63,8 +63,8 @@ export enum FormatEnum {
   //
   // { type: 'string' }
   //
-  Email = 'email',
   DID = 'did', // Users, etc.
+  Email = 'email',
   Formula = 'formula', // Spreadsheet formula.
   JSON = 'json',
   Regex = 'regex',
@@ -85,7 +85,7 @@ export enum FormatEnum {
   //
   Currency = 'currency',
   Percent = 'percent',
-  Timestamp = 'timestamp', // TODO(burdon): Unix?
+  Timestamp = 'timestamp',
 }
 
 export const toFormatEnum = (value: string): FormatEnum | undefined => FormatEnum[value as keyof typeof FormatEnum];
@@ -103,8 +103,8 @@ export const formatToType: Record<FormatEnum, ScalarEnum> = {
   [FormatEnum.Ref]: ScalarEnum.Ref,
 
   // Strings
-  [FormatEnum.Email]: ScalarEnum.String,
   [FormatEnum.DID]: ScalarEnum.String,
+  [FormatEnum.Email]: ScalarEnum.String,
   [FormatEnum.Formula]: ScalarEnum.String,
   [FormatEnum.JSON]: ScalarEnum.String,
   [FormatEnum.Regex]: ScalarEnum.String,
