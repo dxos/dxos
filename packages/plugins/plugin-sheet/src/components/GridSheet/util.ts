@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
 import { parseValue, cellClassesForFieldType } from '@dxos/react-ui-data';
@@ -80,9 +80,7 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
 const gridCellGetter = (model: SheetModel) => {
   // TODO(thure): Actually use the cache.
   const cachedGridCells: DxGridPlaneCells = {};
-  console.log('[grid cell getter created]');
   return (nextBounds: DxGridPlaneRange): DxGridPlaneCells => {
-    console.log('[grid cell getter called]', { nextBounds });
     [...Array(nextBounds.end.col - nextBounds.start.col)].forEach((_, c0) => {
       return [...Array(nextBounds.end.row - nextBounds.start.row)].forEach((_, r0) => {
         const col = nextBounds.start.col + c0;
@@ -104,9 +102,7 @@ export const colLabelCell = (col: number) => ({ value: colToA1Notation(col), res
 
 const cellGetter = (model: SheetModel) => {
   const getGridCells = gridCellGetter(model);
-  console.log('[sheet cell getter created]', { getGridCells });
   return (nextBounds: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells => {
-    console.log('[sheet cell getter called]', { nextBounds, plane, getGridCells });
     switch (plane) {
       case 'grid':
         return getGridCells(nextBounds);
@@ -135,15 +131,12 @@ export const useSheetModelDxGridProps = (
   const [columns, setColumns] = useState<DxGridAxisMeta>(createDxGridColumns(model));
   const [rows, setRows] = useState<DxGridAxisMeta>(createDxGridColumns(model));
 
-  useLayoutEffect(() => {
-    // todo(thure): Should this be deferred?
+  useEffect(() => {
     const cellsAccessor = createDocAccessor(model.sheet, ['cells']);
-    console.log('[sheet cell accessor mounting to grid]', { dxGrid, cellsAccessor });
     if (dxGrid) {
       dxGrid.getCells = cellGetter(model);
     }
     const handleCellsUpdate = () => {
-      console.log('[sheet requesting update of grid]', { dxGrid });
       dxGrid?.requestUpdate('initialCells');
     };
     cellsAccessor.handle.addListener('change', handleCellsUpdate);

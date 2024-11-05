@@ -13,7 +13,6 @@ import React, {
   type PropsWithChildren,
   useCallback,
   useEffect,
-  useLayoutEffect,
   useState,
 } from 'react';
 
@@ -122,11 +121,7 @@ const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>
     [forwardedRef, dxGrid],
   );
 
-  useEffect(() => () => console.log('[GridContent unmount]'), []);
-
-  // Needed instead of `useEffect` to ensure the DxGrid ref is defined.
-  useLayoutEffect(() => {
-    // todo(thure): Should this be deferred?
+  useEffect(() => {
     if (dxGrid && props.getCells) {
       dxGrid.getCells = props.getCells;
       dxGrid.requestUpdate('initialCells');
