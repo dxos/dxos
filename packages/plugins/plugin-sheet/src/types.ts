@@ -71,7 +71,7 @@ export const RowColumnMeta = S.Struct({
 });
 
 // TODO(burdon): Index to all updates when rows/columns are inserted/deleted.
-export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType', version: '0.1.0' })({
+export class SheetType extends TypedObject({ typename: 'dxos.org/type/Sheet', version: '0.1.0' })({
   name: S.optional(S.String),
 
   // Sparse map of cells referenced by index.
