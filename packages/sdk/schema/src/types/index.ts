@@ -4,3 +4,4 @@
 
 export * from './util';
 export * from './view';
+export * from './format';
