@@ -62,7 +62,6 @@ import {
   MissingObject,
   PopoverRenameObject,
   PopoverRenameSpace,
-  SaveStatus,
   ShareSpaceButton,
   SmallPresence,
   SmallPresenceLive,
@@ -450,12 +449,7 @@ export const SpacePlugin = ({
                 return null;
               }
             case 'status': {
-              return (
-                <>
-                  <SyncStatus />
-                  <SaveStatus />
-                </>
-              );
+              return <SyncStatus />;
             }
             default:
               return null;
