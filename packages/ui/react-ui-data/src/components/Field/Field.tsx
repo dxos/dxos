@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ReactNode, useMemo } from 'react';
+import React, { type ReactNode } from 'react';
 
 import { FormatEnums } from '@dxos/echo-schema';
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -11,7 +11,6 @@ import { type FieldProjectionType, FieldProjectionSchema } from '@dxos/schema';
 
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
-import { typeFeatures } from '../../util';
 
 export type FieldProps = ThemedClassName<{
   field: FieldProjectionType;
@@ -23,7 +22,7 @@ export type FieldProps = ThemedClassName<{
 export const Field = ({ classNames, field, autoFocus, readonly, onSave }: FieldProps) => {
   const { t } = useTranslation(translationKey);
 
-  const { values, getInputProps, errors, touched, canSubmit, handleSubmit } = useForm<FieldProjectionType>({
+  const { getInputProps, errors, touched, canSubmit, handleSubmit } = useForm<FieldProjectionType>({
     schema: FieldProjectionSchema,
     initialValues: field,
     // additionalValidation: (values) => {
@@ -38,9 +37,6 @@ export const Field = ({ classNames, field, autoFocus, readonly, onSave }: FieldP
     // },
     onSubmit: (values) => onSave?.(values),
   });
-
-  // TODO(burdon): ???
-  const features = useMemo(() => (values.format ? typeFeatures[values.format] ?? [] : []), [values.format]);
 
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>

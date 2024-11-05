@@ -3,8 +3,7 @@
 //
 
 import { FormatEnum } from '@dxos/echo-schema';
-
-import { type ValidationError } from './';
+import { type ValidationError } from '@dxos/schema';
 
 /**
  * Parse value by field value type.
@@ -108,25 +107,6 @@ export const cellClassesForFieldType = (format: FormatEnum | undefined): string[
       return undefined;
   }
 };
-
-//
-// Type Configs
-//
-
-// TODO(ZaymonFC): Should this move to '@dxos/schema' field module? Annotation?
-const typeConfigSections = {
-  base: ['path', 'label', 'type'] as const,
-  numeric: ['digits'] as const,
-  ref: ['schema', 'property'] as const,
-} as const;
-
-type TypeConfigSection = keyof typeof typeConfigSections;
-
-export const typeFeatures: Partial<Record<FormatEnum, TypeConfigSection[]>> = {
-  [FormatEnum.Number]: ['numeric'],
-  [FormatEnum.Currency]: ['numeric'],
-  [FormatEnum.Ref]: ['ref'],
-} as const;
 
 // TODO(ZaymonFC): How to do this with translations?
 export const pathNotUniqueError = (path: string): ValidationError => ({
