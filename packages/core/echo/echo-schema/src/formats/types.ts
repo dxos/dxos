@@ -64,20 +64,13 @@ export enum FormatEnum {
   // { type: 'string' }
   //
   Email = 'email',
-  URI = 'uri',
   DID = 'did', // Users, etc.
   Formula = 'formula', // Spreadsheet formula.
   JSON = 'json',
   Regex = 'regex',
   Text = 'text', // TODO(burdon): Different from string? E.g., S.String shouldn't be Automerge by default?
+  URI = 'uri',
   UUID = 'uuid',
-
-  //
-  // { type: 'number' }
-  //
-  Currency = 'currency',
-  Percent = 'percent',
-  Timestamp = 'timestamp', // TODO(burdon): Unix?
 
   //
   // { type: 'date' }
@@ -86,8 +79,47 @@ export enum FormatEnum {
   DateTime = 'date-time',
   Duration = 'duration',
   Time = 'time',
+
+  //
+  // { type: 'number' }
+  //
+  Currency = 'currency',
+  Percent = 'percent',
+  Timestamp = 'timestamp', // TODO(burdon): Unix?
 }
 
 export const toFormatEnum = (value: string): FormatEnum | undefined => FormatEnum[value as keyof typeof FormatEnum];
 
 export const FormatEnums = Object.values(FormatEnum).sort();
+
+/**
+ * Map of format to type.
+ */
+export const formatToType: Record<FormatEnum, ScalarEnum> = {
+  // TODO(burdon): Remove.
+  [FormatEnum.String]: ScalarEnum.String,
+  [FormatEnum.Number]: ScalarEnum.Number,
+  [FormatEnum.Boolean]: ScalarEnum.Boolean,
+  [FormatEnum.Ref]: ScalarEnum.Ref,
+
+  // Strings
+  [FormatEnum.Email]: ScalarEnum.String,
+  [FormatEnum.DID]: ScalarEnum.String,
+  [FormatEnum.Formula]: ScalarEnum.String,
+  [FormatEnum.JSON]: ScalarEnum.String,
+  [FormatEnum.Regex]: ScalarEnum.String,
+  [FormatEnum.Text]: ScalarEnum.String,
+  [FormatEnum.URI]: ScalarEnum.String,
+  [FormatEnum.UUID]: ScalarEnum.String,
+
+  // Dates
+  [FormatEnum.Date]: ScalarEnum.String,
+  [FormatEnum.DateTime]: ScalarEnum.String,
+  [FormatEnum.Duration]: ScalarEnum.String,
+  [FormatEnum.Time]: ScalarEnum.String,
+
+  // Numbers
+  [FormatEnum.Currency]: ScalarEnum.Number,
+  [FormatEnum.Percent]: ScalarEnum.Number,
+  [FormatEnum.Timestamp]: ScalarEnum.Number,
+};

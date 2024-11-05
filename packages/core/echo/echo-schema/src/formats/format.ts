@@ -61,11 +61,12 @@ export const CustomAnnotations = {
 /**
  * Mixin of format annotation values.
  */
-// TODO(burdon): Rename FieldProperties.
+// TODO(burdon): Rename PropertySchema.
 // TODO(burdon): Generate from annotations?
 export const FormatSchema = S.Struct({
   type: S.String, // TODO(burdon): Typedef.
   format: S.optional(S.Enums(FormatEnum)),
+
   title: S.optional(S.String),
   description: S.optional(S.String),
   multipleOf: S.optional(S.Number),

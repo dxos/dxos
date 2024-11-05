@@ -123,7 +123,11 @@ export class ViewProjection {
   };
 
   updateFormat(property: string, value: Partial<FormatType>): FormatType {
-    const properties = this._schema.jsonSchema.properties[property] as any as FormatType;
+    let properties = this._schema.jsonSchema.properties[property] as any as FormatType;
+    if (!properties) {
+      properties = { property };
+      this._schema.jsonSchema.properties[property] = properties;
+    }
     Object.assign(properties, value);
     return properties;
   }
