@@ -4,12 +4,13 @@
 
 import React from 'react';
 
-import { AST, type S, getAnnotation } from '@dxos/effect';
+import { type AbstractSchema } from '@dxos/echo-schema';
+import { AST, getAnnotation } from '@dxos/effect';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 export type SchemaEditorProps = ThemedClassName<{
-  schema: S.Struct<any>;
+  schema: AbstractSchema;
 }>;
 
 export const SchemaEditor = ({ classNames, schema }: SchemaEditorProps) => {

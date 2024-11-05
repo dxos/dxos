@@ -5,7 +5,7 @@
 import { computed } from '@preact/signals-core';
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 
-import { S, create } from '@dxos/echo-schema';
+import { S, TypedObject, create } from '@dxos/echo-schema';
 import { createMutableSchema, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { createView, ViewProjection } from '@dxos/schema';
@@ -178,16 +178,15 @@ describe('TableModel', () => {
   });
 });
 
-const createTableModel = (): TableModel => {
-  const schema = createMutableSchema(
-    S.Struct({
-      name: S.String,
-    }),
-  );
+class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+  title: S.String,
+  completed: S.Boolean,
+}) {}
 
+const createTableModel = (): TableModel => {
+  const schema = createMutableSchema(Test);
   const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
   const projection = new ViewProjection(schema, view);
-
   const table = create(TableType, {
     view,
     // TODO(burdon): Update schema above (use consistent schema).

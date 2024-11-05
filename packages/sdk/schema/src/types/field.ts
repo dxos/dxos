@@ -27,17 +27,20 @@ export class ViewProjection {
     return { ...field, ...properties };
   }
 
-  updateField = (value: FieldType) => {
-    const field = this._view.fields.find((f) => f.property === value.property);
+  updateField = (value: FieldType): FieldType => {
+    let field = this._view.fields.find((f) => f.property === value.property);
     if (field) {
       Object.assign(field, value);
     } else {
-      this._view.fields.push({ ...value });
+      field = { ...value };
+      this._view.fields.push(field);
     }
+    return field;
   };
 
-  updateFormat(property: string, value: Partial<FormatType>) {
+  updateFormat(property: string, value: Partial<FormatType>): FormatType {
     const properties = this._schema.jsonSchema.properties[property] as any as FormatType;
     Object.assign(properties, value);
+    return properties;
   }
 }
