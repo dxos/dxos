@@ -106,6 +106,7 @@ export class Client {
       typeof window !== 'undefined' &&
       typeof window.location !== 'undefined' &&
       window.location.protocol !== 'https:' &&
+      window.location.protocol !== 'chrome-extension:' &&
       window.location.protocol !== 'socket:' &&
       !window.location.hostname.endsWith('localhost')
     ) {
