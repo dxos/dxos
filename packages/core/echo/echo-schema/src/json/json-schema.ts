@@ -80,6 +80,7 @@ export const toPropType = (type?: PropType): string => {
       throw new Error(`Invalid type: ${type}`);
   }
 };
+
 /**
  * Convert effect schema to JSON Schema.
  * @param schema

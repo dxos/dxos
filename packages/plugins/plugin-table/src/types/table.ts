@@ -8,6 +8,6 @@ import { ViewType } from '@dxos/schema';
 
 export class TableType extends TypedObject({ typename: 'dxos.org/type/Table', version: '0.1.0' })({
   name: S.optional(S.String),
-  view: S.optional(ViewType),
+  view: S.optional(ref(ViewType)),
   threads: S.optional(S.mutable(S.Array(ref(ThreadType)))),
 }) {}

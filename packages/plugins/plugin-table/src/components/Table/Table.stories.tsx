@@ -13,7 +13,7 @@ import { Filter, useSpaces, useQuery, create, getSpace } from '@dxos/react-clien
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-data';
-import { ViewProjection, type FieldType } from '@dxos/schema';
+import { ViewProjection, ViewType, type FieldType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
@@ -104,7 +104,7 @@ const DefaultStory = () => {
   });
 
   if (!schema || !table) {
-    return null;
+    return <div />;
   }
 
   return (
@@ -188,11 +188,11 @@ const TablePerformanceStory = (props: StoryProps) => {
 const meta: Meta<typeof Table> = {
   title: 'plugins/plugin-table/Table',
   component: Table,
-  render: DefaultStory as any,
+  render: DefaultStory,
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType],
+      types: [TableType, ViewType],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: ({ space }) => {

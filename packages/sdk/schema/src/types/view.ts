@@ -76,6 +76,7 @@ export const createView = ({ typename, jsonSchema }: CreateViewProps): ReactiveO
       __typename: typename,
     },
     // Create initial fields.
-    fields: Object.keys(jsonSchema?.properties ?? []).map((property) => create(FieldSchema, { property })),
+    fields: Object.keys(jsonSchema?.properties ?? []).map((property) => ({ property })),
+    // fields: Object.keys(jsonSchema?.properties ?? []).map((property) => create(FieldSchema, { property })),
   });
 };
