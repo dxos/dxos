@@ -3,14 +3,12 @@
 //
 
 import { Option, pipe } from 'effect';
-import React from 'react';
+import React, { useState } from 'react';
 
 import { AST, type S, getProperty } from '@dxos/effect';
-import { Input, type ThemedClassName } from '@dxos/react-ui';
+import { Input, type ThemedClassName, type TextInputProps as NativeTextInputProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type ViewType, getFieldValue, setFieldValue } from '@dxos/schema';
-
-import { TextInput } from '../TextInput';
 
 export type FormProps<T extends {} = {}> = ThemedClassName<{
   view: ViewType;
@@ -79,5 +77,36 @@ export const Form = <T extends {} = {}>({ classNames, view, object, schema, read
         );
       })}
     </div>
+  );
+};
+
+type TextInputProps = {
+  // format?: PatternAnnotation;
+} & Omit<NativeTextInputProps, 'style'>;
+
+/**
+ * @deprecated
+ * Remove.
+ */
+const TextInput = ({ onChange, ...props }: TextInputProps) => {
+  const [valid, setValid] = useState(true);
+
+  const handleChange: NativeTextInputProps['onChange'] = (ev) => {
+    // const text = ev.target.value;
+    // if (!format?.filter || text.match(format.filter)) {
+    onChange?.(ev);
+    //   if (format?.valid) {
+    //     setValid(format.valid.test(text));
+    //   }
+    // }
+  };
+
+  return (
+    <Input.TextInput
+      {...props}
+      // TODO(burdon): validationValence on Input.
+      style={valid ? {} : ({ '--tw-ring-color': 'red' } as any)}
+      onChange={handleChange}
+    />
   );
 };

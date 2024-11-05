@@ -7,7 +7,6 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
-import { create } from '@dxos/echo-schema';
 import { createMutableSchema } from '@dxos/echo-schema/testing';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
