@@ -13,6 +13,7 @@ import { Filter, useSpaces, useQuery, create, getSpace } from '@dxos/react-clien
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-data';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { ViewProjection, ViewType, type FieldType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -108,23 +109,17 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='grid grid-cols-[1fr_256px] w-dvw h-dvh'>
-      <div className='flex flex-col h-full'>
-        <div className='border-b border-separator flex-none'>
-          <Toolbar.Root onAction={handleAction}>
-            <Toolbar.Separator />
-            <Toolbar.Actions />
-          </Toolbar.Root>
-        </div>
-        <div className='relative is-full max-is-max min-is-0 min-bs-0'>
-          <Table model={model} />
-        </div>
+    <div className='grow grid grid-cols-[1fr_350px]'>
+      <div className='flex flex-col h-full overflow-hidden'>
+        <Toolbar.Root classNames='border-b border-separator' onAction={handleAction}>
+          <Toolbar.Separator />
+          <Toolbar.Actions />
+        </Toolbar.Root>
+        <Table model={model} />
       </div>
-      <div className='border-l border-separator -mt-px flex flex-col h-full'>
-        <div className='flex-none'>{table.view && <ViewEditor schema={schema} view={table?.view} />}</div>
-        <div className='flex-1 min-h-0 overflow-auto'>
-          <pre className='text-[10px] pli-2 font-mono text-wrap'>{JSON.stringify(table, null, 2)}</pre>
-        </div>
+      <div className='flex flex-col h-full border-l border-separator'>
+        {table.view && <ViewEditor schema={schema} view={table.view} />}
+        <SyntaxHighlighter className='w-full text-xs'>{JSON.stringify(table.view, null, 2)}</SyntaxHighlighter>
       </div>
     </div>
   );
@@ -206,9 +201,11 @@ const meta: Meta<typeof Table> = {
 
 export default meta;
 
+type Story = StoryObj<StoryProps>;
+
 export const Default = {};
 
-export const Mutations: StoryObj = {
+export const Mutations: Story = {
   render: TablePerformanceStory,
   args: {
     rows: 1000,
@@ -216,7 +213,7 @@ export const Mutations: StoryObj = {
   },
 };
 
-export const RapidInsertions: StoryObj = {
+export const RapidInsertions: Story = {
   render: TablePerformanceStory,
   args: {
     rows: 0,
