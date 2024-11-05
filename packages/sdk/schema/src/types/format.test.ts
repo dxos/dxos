@@ -4,9 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { ScalarEnum, FormatEnum } from '@dxos/echo-schema';
+import { S, ScalarEnum, FormatEnum } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 
-import { getPropertySchema, type Property } from './format';
+import { getPropertySchemaForFormat, type Property } from './format';
 
 describe('format', () => {
   test('get fields for format', async ({ expect }) => {
@@ -15,10 +16,20 @@ describe('format', () => {
       type: ScalarEnum.Number,
       property: 'salary',
       title: 'Base salary',
+      multipleOf: 0.01,
     };
 
+    const schema = getPropertySchemaForFormat(prop.format);
+    invariant(schema);
+
+    const decoded = S.decodeSync(schema)(prop);
+    expect(decoded).to.include({
+      multipleOf: 2,
+    });
+
+    const encoded = S.encodeSync(schema)(decoded);
+    expect(encoded).to.deep.eq(prop);
+
     // TODO(burdon): Encode/decode validate.
-    const schema = getPropertySchema(prop.format);
-    console.log(JSON.stringify(schema?.ast.toJSON(), null, 2));
   });
 });

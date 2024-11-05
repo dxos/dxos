@@ -46,7 +46,7 @@ export const PropertySchema = S.Union(PercentSchema, CurrencySchema);
 export type Property = S.Schema.Type<typeof PropertySchema>;
 
 // TODO(burdon): Generic util to determine type from discriminated union.
-export const getPropertySchema = (format: FormatEnum): S.Schema<any> | undefined => {
+export const getPropertySchemaForFormat = (format: FormatEnum): S.Schema<any> | undefined => {
   for (const member of PropertySchema.members) {
     for (const prop of AST.getPropertySignatures(member.ast)) {
       if (prop.name === 'format' && prop.type._tag === 'Literal' && prop.type.literal === format) {
