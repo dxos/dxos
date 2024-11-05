@@ -86,8 +86,9 @@ type TextInputProps = {
 
 /**
  * @deprecated
- * Remove.
  */
+// TODO(burdon): Remove.
+// TODO(burdon): Use schema validation directly.
 const TextInput = ({ onChange, ...props }: TextInputProps) => {
   const [valid, setValid] = useState(true);
 
