@@ -105,12 +105,18 @@ export class ViewProjection {
     private readonly _view: ViewType,
   ) {}
 
+  /**
+   *
+   */
   getFieldProjection(property: string): FieldProjectionType {
     const field = this._view.fields.find((f) => f.property === property) ?? { property };
     const properties = this._schema.jsonSchema.properties[property] as any as FormatType;
     return { ...field, ...properties };
   }
 
+  /**
+   *
+   */
   updateField = (value: FieldType): FieldType => {
     let field = this._view.fields.find((f) => f.property === value.property);
     if (field) {
@@ -122,6 +128,10 @@ export class ViewProjection {
     return field;
   };
 
+  /**
+   *
+   */
+  // TODO(burdon): Move into echo-schema.
   updateFormat(property: string, value: Partial<FormatType>): FormatType {
     let properties: JSONSchema.JsonSchema7 | undefined = this._schema.jsonSchema.properties[property];
     if (!properties) {
@@ -129,6 +139,6 @@ export class ViewProjection {
       this._schema.jsonSchema.properties[property] = properties;
     }
     Object.assign(properties, value);
-    return properties;
+    return properties as FormatType;
   }
 }
