@@ -12,17 +12,17 @@ import { FormatAnnotationId, FormatEnum } from './types';
 
 // TODO(burdon): Consider factoring out to separate `@dxos/json-schema`
 
+// TODO(burdon): Arrays, maps, enums, etc.
+
 // TODO(burdon): Media encoding.
 //  https://json-schema.org/understanding-json-schema/reference/non_json_data
-
-// TODO(burdon): Arrays, maps, enums, etc.
 
 /**
  * Formats.
  * https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
  * NOTE: A JSON Schema validator will ignore any format type that it does not understand.
  */
-// TODO(burdon): Define $id property for all declarations.
+// TODO(burdon): Define $id property for all declarations?
 // TODO(burdon): Add fields for `examples`, `message`, etc.
 export namespace Format {
   // Dates and times

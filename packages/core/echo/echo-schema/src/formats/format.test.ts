@@ -72,7 +72,7 @@ describe('formats', () => {
       expect(getScalarType(prop)).to.eq(ScalarEnum.String);
       expect(prop).includes({
         type: 'string',
-        // format: 'date',
+        format: 'date',
       });
     }
   });
