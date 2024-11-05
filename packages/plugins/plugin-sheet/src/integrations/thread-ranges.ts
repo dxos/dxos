@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type MutableRefObject, useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import { type IntentResolver, LayoutAction, useIntentDispatcher, useIntentResolver } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
@@ -30,7 +30,7 @@ export const parseThreadAnchorAsCellRange = (cursor: string): CompleteCellRange 
   }
 };
 
-export const useUpdateFocusedCellOnThreadSelection = (grid: MutableRefObject<DxGridElement | null>) => {
+export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null) => {
   const { model, setActiveRefs } = useSheetContext();
   const handleScrollIntoView: IntentResolver = useCallback(
     ({ action, data }) => {
@@ -42,7 +42,7 @@ export const useUpdateFocusedCellOnThreadSelection = (grid: MutableRefObject<DxG
           setActiveRefs(data.thread);
           // TODO(Zan): Everywhere we refer to the cursor in a thread context should change to `anchor`.
           const range = parseThreadAnchorAsCellRange(data.cursor);
-          range && grid.current?.setFocus({ ...range.to, plane: 'grid' }, true);
+          range && grid?.setFocus({ ...range.to, plane: 'grid' }, true);
         }
       }
     },
