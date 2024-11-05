@@ -14,7 +14,7 @@ export const BasePropertySchema = S.Struct({
   property: S.String, // TODO(burdon): Restrict chars.
   title: S.String,
   description: S.optional(S.String),
-}).pipe(S.mutable);
+});
 
 export type BaseProperty = S.Schema.Type<typeof BasePropertySchema>;
 
@@ -29,7 +29,7 @@ export const PercentSchema = S.extend(
     type: S.Literal(ScalarEnum.Number),
     multipleOf: S.optional(DecimalPrecision),
   }),
-);
+).pipe(S.mutable);
 
 export const CurrencySchema = S.extend(
   BasePropertySchema,
@@ -39,7 +39,7 @@ export const CurrencySchema = S.extend(
     multipleOf: S.optional(DecimalPrecision),
     currency: S.optional(S.String),
   }),
-);
+).pipe(S.mutable);
 
 export const PropertySchema = S.Union(PercentSchema, CurrencySchema);
 
