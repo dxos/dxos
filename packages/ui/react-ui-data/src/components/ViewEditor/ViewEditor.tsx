@@ -84,7 +84,6 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
 
   const handleSet = useCallback(
     (field: FieldType, props: FieldProjectionType) => {
-      // TODO(burdon): !!!
       projection.updateField(field);
       // TODO(ZaymonFC): Where did this function go?
       // projection.updateFormat(field.property, props);
