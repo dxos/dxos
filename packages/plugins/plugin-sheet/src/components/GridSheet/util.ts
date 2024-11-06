@@ -140,7 +140,11 @@ export const useSheetModelDxGridProps = (
       dxGrid?.requestUpdate('initialCells');
     };
     cellsAccessor.handle.addListener('change', handleCellsUpdate);
-    return () => cellsAccessor.handle.removeListener('change', handleCellsUpdate);
+    const unsubscribe = model.graph.update.on(handleCellsUpdate);
+    return () => {
+      cellsAccessor.handle.removeListener('change', handleCellsUpdate);
+      unsubscribe();
+    };
   }, [model, dxGrid]);
 
   useEffect(() => {

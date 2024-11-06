@@ -64,7 +64,7 @@ export class ComputeGraph extends Resource {
   public readonly update = new Event<{ type: ComputeGraphEvent }>();
 
   // The context is passed to all functions.
-  public readonly context = new FunctionContext(this._hf, this._space, this._options);
+  public readonly context: FunctionContext;
 
   constructor(
     private readonly _hf: HyperFormula,
@@ -72,6 +72,15 @@ export class ComputeGraph extends Resource {
     private readonly _options?: Partial<FunctionContextOptions>,
   ) {
     super();
+
+    const contextOptions = {
+      ...this._options,
+      onUpdate: (update) => {
+        this._options?.onUpdate?.(update);
+        this.update.emit({ type: 'functionsUpdated' });
+      },
+    } satisfies Partial<FunctionContextOptions>;
+    this.context = new FunctionContext(this._hf, this._space, contextOptions);
     this._hf.updateConfig({ context: this.context });
 
     // TODO(burdon): If debounce then aggregate changes.
