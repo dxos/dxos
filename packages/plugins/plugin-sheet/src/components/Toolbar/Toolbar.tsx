@@ -215,11 +215,11 @@ const Alignment = () => {
   const value = useMemo(
     () =>
       cursor
-        ? model.sheet.ranges?.find(
+        ? model.sheet.ranges?.findLast(
             ({ range, key }) => key === alignKey && inRange(rangeFromIndex(model.sheet, range), cursor),
           )?.value
         : undefined,
-    [cursor, model.sheet],
+    [cursor, model.sheet.ranges],
   );
 
   return (
