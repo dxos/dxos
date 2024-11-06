@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type MutableSchema, S } from '@dxos/echo-schema';
 import { Button, Icon, useTranslation, type ThemedClassName } from '@dxos/react-ui';
@@ -45,9 +45,13 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
   );
   const [{ fieldSchema }, setSchema] = useState({ fieldSchema: getPropertySchemaForFormat(fieldProperties?.format) });
 
-  const handleFieldValueChange = useCallback((values: any) => {
-    setSchema({ fieldSchema: getPropertySchemaForFormat(values.format) });
+  const calculateFieldSchema = useCallback((values: any) => {
+    setSchema({ fieldSchema: getPropertySchemaForFormat(values?.format) });
   }, []);
+
+  useEffect(() => {
+    calculateFieldSchema(fieldProperties);
+  }, [fieldProperties]);
 
   const handleAdd = useCallback(() => {
     const field = createUniqueFieldForView(view);
@@ -112,7 +116,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
       </List.Root>
 
       {!fieldSchema ? (
-        <div>Schema not implemented for {fieldProperties?.format}</div>
+        <div>Schema not implemented for {fieldProperties?.format ?? 'undefined'}</div>
       ) : (
         fieldProperties &&
         field && (
@@ -122,7 +126,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
             autoFocus
             field={fieldProperties}
             schema={fieldSchema}
-            onValuesChanged={handleFieldValueChange}
+            onValuesChanged={calculateFieldSchema}
             onSave={(props) => handleSet(field, props)}
           />
         )
