@@ -896,8 +896,8 @@ importers:
         specifier: ^7.18.13
         version: 7.24.6
       '@crxjs/vite-plugin':
-        specifier: 2.0.0-beta.23
-        version: 2.0.0-beta.23(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+        specifier: 2.0.0-beta.28
+        version: 2.0.0-beta.28(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:../../common/esbuild-plugins
@@ -4326,8 +4326,8 @@ importers:
         specifier: ^7.18.13
         version: 7.21.3
       '@crxjs/vite-plugin':
-        specifier: 2.0.0-beta.23
-        version: 2.0.0-beta.23(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+        specifier: 2.0.0-beta.28
+        version: 2.0.0-beta.28(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:../../common/esbuild-plugins
@@ -13989,8 +13989,8 @@ packages:
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
     engines: {node: '>=0.1.90'}
 
-  '@crxjs/vite-plugin@2.0.0-beta.23':
-    resolution: {integrity: sha512-AO+VYhtNZ1fITq/sc54FZpTtFvHR+gJwFGiWTGKs07bwYzzZFdF0sYeiFgZiEjaNkddkAzuM4F4lgOmCm69YUw==}
+  '@crxjs/vite-plugin@2.0.0-beta.28':
+    resolution: {integrity: sha512-JUoB1431PvruQqVpxvJ5j6qh0NNx5sXafAXo+VltORtJQrS6wprI5QK4k6PLKV+WacsFuPLveM2ydBCEopU49w==}
     peerDependencies:
       vite: ^5.0.0
 
@@ -22677,10 +22677,6 @@ packages:
     resolution: {integrity: sha512-U73+6lQFmfiNPrYbXqr6kZ1i1wiRqXnp2nhMsINseWXO8lDau0LGEffJ8kQi4EjLZympVgRdvqjAgiZ1tgzDDA==}
     engines: {node: '>=0.8'}
 
-  connect-injector@0.4.4:
-    resolution: {integrity: sha512-hdBG8nXop42y2gWCqOV8y1O3uVk4cIU+SoxLCPyCUKRImyPiScoNiSulpHjoktRU1BdI0UzoUdxUa87thrcmHw==}
-    engines: {node: '>= 0.8.0'}
-
   console-control-strings@1.1.0:
     resolution: {integrity: sha512-ty/fTekppD2fIwRvnZAVdeOiGd1c7YXEixbgJTNzqcxJWKQnjJ/V1bNEEE6hygpM3WjwHFUVK6HTjWSzV4a8sQ==}
 
@@ -27304,10 +27300,6 @@ packages:
   magic-string@0.25.9:
     resolution: {integrity: sha512-RmF0AsMzgt25qzqqLc1+MbHmhdx0ojF2Fvs4XnOqz2ZOBXzzkEwc/dJQZCYHAn7v1jbVOjAZfK8msRn4BxO4VQ==}
 
-  magic-string@0.26.7:
-    resolution: {integrity: sha512-hX9XH3ziStPoPhJxLq1syWuZMxbDvGNbVchfrdCtanC7D13888bMFow61x8axrx+GfHLtVeAx2kxL7tTGRl+Ow==}
-    engines: {node: '>=12'}
-
   magic-string@0.27.0:
     resolution: {integrity: sha512-8UnnX2PeRAPZuN12svgR9j7M1uWMovg/CEnIwIG0LFkXSJJe4PdfUGiTGl8V9bsBHFUtfVINcSyYxd7q+kx9fA==}
     engines: {node: '>=12'}
@@ -29502,10 +29494,6 @@ packages:
   pure-rand@6.1.0:
     resolution: {integrity: sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA==}
 
-  q@1.5.1:
-    resolution: {integrity: sha512-kV/CThkXo6xyFEZUugw/+pIOywXcDbFYgSct5cT3gqlbkBE1SJdwy6UQoZvodiWF/ckQLZyDE/Bu1M6gVu5lVw==}
-    engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
-
   qrcode-generator@1.4.4:
     resolution: {integrity: sha512-HM7yY8O2ilqhmULxGMpcHSF1EhJJ9yBj8gvDEuZ6M+KGJ0YY2hKpnXvRD+hZPLrDVck3ExIGhmPtSdcjC+guuw==}
 
@@ -30361,13 +30349,13 @@ packages:
   rollup-pluginutils@2.8.2:
     resolution: {integrity: sha512-EEp9NhnUkwY8aif6bxgovPHMoMoNr2FulJziTndpt5H9RdwC47GSGuII9XxpSdzVGM0GWrNPHV6ie1LTNJPaLQ==}
 
-  rollup@2.78.1:
-    resolution: {integrity: sha512-VeeCgtGi4P+o9hIg+xz4qQpRl6R401LWEXBmxYKOV4zlF82lyhgh2hTZnheFUbANE8l2A41F458iwj2vEYaXJg==}
+  rollup@2.79.1:
+    resolution: {integrity: sha512-uKxbd0IhMZOhjAiD5oAFp7BqvkA4Dv47qpOCtaNvng4HBwdbWtdOh8f5nZNuk2rp51PMGk3bzfWu5oayNEuYnw==}
     engines: {node: '>=10.0.0'}
     hasBin: true
 
-  rollup@2.79.1:
-    resolution: {integrity: sha512-uKxbd0IhMZOhjAiD5oAFp7BqvkA4Dv47qpOCtaNvng4HBwdbWtdOh8f5nZNuk2rp51PMGk3bzfWu5oayNEuYnw==}
+  rollup@2.79.2:
+    resolution: {integrity: sha512-fS6iqSPZDs3dr/y7Od6y5nha8dW1YnbgtsyotCVvoFGKbERG++CVRFv1meyGDE1SNItQA8BrnCw7ScdAhRJ3XQ==}
     engines: {node: '>=10.0.0'}
     hasBin: true
 
@@ -31036,10 +31024,6 @@ packages:
   storybook@8.3.6:
     resolution: {integrity: sha512-9GVbtej6ZzPRUM7KRQ7848506FfHrUiJGqPuIQdoSJd09EmuEoLjmLAgEOmrHBQKgGYMaM7Vh9GsTLim6vwZTQ==}
     hasBin: true
-
-  stream-buffers@0.2.6:
-    resolution: {integrity: sha512-ZRpmWyuCdg0TtNKk8bEqvm13oQvXMmzXDsfD4cBgcx5LouborvU5pm3JMkdTP3HcszyUI08AM1dHMXA5r2g6Sg==}
-    engines: {node: '>= 0.3.0'}
 
   stream-chain@2.2.5:
     resolution: {integrity: sha512-1TJmBx6aSWqZ4tx7aTpBDXK0/e2hhcNSTV8+CbFJtDjbb+I1mZ8lHit0Grw9GRT+6JbIrrDd8esncgBi8aBXGA==}
@@ -31912,9 +31896,6 @@ packages:
   ua-parser-js@1.0.39:
     resolution: {integrity: sha512-k24RCVWlEcjkdOxYmVJgeD/0a1TiSpqLg+ZalVGV9lsnr4yqu0w7tX/x2xX6G4zpkgQnRf89lxuZ1wsbjXM8lw==}
     hasBin: true
-
-  uberproto@1.2.0:
-    resolution: {integrity: sha512-pGtPAQmLwh+R9w81WVHzui1FfedpQWQpiaIIfPCwhtsBez4q6DYbJFfyXPVHPUTNFnedAvNEnkoFiLuhXIR94w==}
 
   uc.micro@1.0.6:
     resolution: {integrity: sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==}
@@ -34395,7 +34376,7 @@ snapshots:
   '@babel/code-frame@7.25.7':
     dependencies:
       '@babel/highlight': 7.25.7
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   '@babel/code-frame@7.25.9':
     dependencies:
@@ -35112,14 +35093,14 @@ snapshots:
       '@babel/helper-validator-identifier': 7.25.7
       chalk: 2.4.2
       js-tokens: 4.0.0
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   '@babel/highlight@7.25.7':
     dependencies:
       '@babel/helper-validator-identifier': 7.25.7
       chalk: 2.4.2
       js-tokens: 4.0.0
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   '@babel/highlight@7.25.9':
     dependencies:
@@ -37516,23 +37497,22 @@ snapshots:
 
   '@colors/colors@1.6.0': {}
 
-  '@crxjs/vite-plugin@2.0.0-beta.23(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
+  '@crxjs/vite-plugin@2.0.0-beta.28(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
     dependencies:
-      '@rollup/pluginutils': 4.2.1(rollup@2.78.1)
+      '@rollup/pluginutils': 4.2.1(rollup@2.79.2)
       '@webcomponents/custom-elements': 1.5.1
       acorn-walk: 8.3.2
       cheerio: 1.0.0-rc.12
-      connect-injector: 0.4.4
       convert-source-map: 1.9.0
-      debug: 4.3.4
+      debug: 4.3.7(supports-color@5.5.0)
       es-module-lexer: 0.10.5
       fast-glob: 3.3.2
       fs-extra: 10.1.0
       jsesc: 3.0.2
-      magic-string: 0.26.7
-      picocolors: 1.0.0
+      magic-string: 0.30.12
+      picocolors: 1.1.1
       react-refresh: 0.13.0
-      rollup: 2.78.1
+      rollup: 2.79.2
       rxjs: 7.5.7
       vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
     transitivePeerDependencies:
@@ -42843,11 +42823,11 @@ snapshots:
       picomatch: 2.3.1
       rollup: 3.23.0
 
-  '@rollup/pluginutils@4.2.1(rollup@2.78.1)':
+  '@rollup/pluginutils@4.2.1(rollup@2.79.2)':
     dependencies:
       estree-walker: 2.0.2
       picomatch: 2.3.1
-      rollup: 2.78.1
+      rollup: 2.79.2
 
   '@rollup/pluginutils@5.1.0(rollup@3.23.0)':
     dependencies:
@@ -48149,15 +48129,6 @@ snapshots:
 
   connect-history-api-fallback@2.0.0: {}
 
-  connect-injector@0.4.4:
-    dependencies:
-      debug: 2.6.9
-      q: 1.5.1
-      stream-buffers: 0.2.6
-      uberproto: 1.2.0
-    transitivePeerDependencies:
-      - supports-color
-
   console-control-strings@1.1.0: {}
 
   console-table-printer@2.11.1:
@@ -53240,7 +53211,7 @@ snapshots:
 
   launch-editor@2.9.1:
     dependencies:
-      picocolors: 1.1.0
+      picocolors: 1.1.1
       shell-quote: 1.8.1
 
   layerr@2.1.0: {}
@@ -53633,10 +53604,6 @@ snapshots:
   magic-bytes.js@1.8.0: {}
 
   magic-string@0.25.9:
-    dependencies:
-      sourcemap-codec: 1.4.8
-
-  magic-string@0.26.7:
     dependencies:
       sourcemap-codec: 1.4.8
 
@@ -56435,8 +56402,6 @@ snapshots:
 
   pure-rand@6.1.0: {}
 
-  q@1.5.1: {}
-
   qrcode-generator@1.4.4: {}
 
   qrcode@1.5.3:
@@ -57543,11 +57508,11 @@ snapshots:
     dependencies:
       estree-walker: 0.6.1
 
-  rollup@2.78.1:
+  rollup@2.79.1:
     optionalDependencies:
       fsevents: 2.3.3
 
-  rollup@2.79.1:
+  rollup@2.79.2:
     optionalDependencies:
       fsevents: 2.3.3
 
@@ -58413,8 +58378,6 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  stream-buffers@0.2.6: {}
-
   stream-chain@2.2.5: {}
 
   stream-json@1.7.5:
@@ -58737,7 +58700,7 @@ snapshots:
       css-select: 4.3.0
       css-tree: 1.1.3
       csso: 4.2.0
-      picocolors: 1.1.0
+      picocolors: 1.1.1
       stable: 0.1.8
 
   svgo@3.3.2:
@@ -58748,7 +58711,7 @@ snapshots:
       css-tree: 2.3.1
       css-what: 6.1.0
       csso: 5.0.5
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   symbol-tree@3.2.4: {}
 
@@ -59470,8 +59433,6 @@ snapshots:
 
   ua-parser-js@1.0.39: {}
 
-  uberproto@1.2.0: {}
-
   uc.micro@1.0.6: {}
 
   ufo@1.5.4: {}
@@ -59759,37 +59720,37 @@ snapshots:
     dependencies:
       browserslist: 4.21.4
       escalade: 3.2.0
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   update-browserslist-db@1.1.1(browserslist@4.21.10):
     dependencies:
       browserslist: 4.21.10
       escalade: 3.2.0
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   update-browserslist-db@1.1.1(browserslist@4.22.2):
     dependencies:
       browserslist: 4.22.2
       escalade: 3.2.0
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   update-browserslist-db@1.1.1(browserslist@4.23.2):
     dependencies:
       browserslist: 4.23.2
       escalade: 3.2.0
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   update-browserslist-db@1.1.1(browserslist@4.24.0):
     dependencies:
       browserslist: 4.24.0
       escalade: 3.2.0
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   update-browserslist-db@1.1.1(browserslist@4.24.2):
     dependencies:
       browserslist: 4.24.2
       escalade: 3.2.0
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   update-check@1.5.4:
     dependencies:
