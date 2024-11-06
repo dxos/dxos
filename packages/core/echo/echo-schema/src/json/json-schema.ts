@@ -172,9 +172,9 @@ export const toEffectSchema = (
 
   let result: S.Schema<any> = S.Unknown;
   if ('$id' in root) {
-    switch (root.$id) {
+    switch (root.$id as string) {
       case '/schemas/any': {
-        result = anyToEffectSchema(root);
+        result = anyToEffectSchema(root as JSONSchema.JsonSchema7Any);
         break;
       }
       case '/schemas/unknown': {
@@ -185,6 +185,9 @@ export const toEffectSchema = (
       case '/schemas/object': {
         result = S.Object;
         break;
+      }
+      case '/schemas/echo/ref': {
+        result = refToEffectSchema(root);
       }
     }
   } else if ('enum' in root) {
@@ -235,6 +238,7 @@ const objectToEffectSchema = (
   defs: JSONSchema.JsonSchema7Root['$defs'],
 ): S.Schema<any> => {
   invariant('type' in root && root.type === 'object', `not an object: ${root}`);
+
   const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
   const isEchoObject =
     echoRefinement != null || ('$id' in root && typeof root.$id === 'string' && root.$id.startsWith('dxn:'));
@@ -284,6 +288,16 @@ const objectToEffectSchema = (
 };
 
 const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
+  const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
+  if (echoRefinement?.reference != null) {
+    return createEchoReferenceSchema(echoRefinement.reference);
+  }
+
+  return S.Any;
+};
+
+// TODO(dmaretskyi): Types.
+const refToEffectSchema = (root: any): S.Schema<any> => {
   const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
   if (echoRefinement?.reference != null) {
     return createEchoReferenceSchema(echoRefinement.reference);

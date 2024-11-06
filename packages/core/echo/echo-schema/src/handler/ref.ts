@@ -46,7 +46,16 @@ export const createEchoReferenceSchema = (annotation: ObjectAnnotation): S.Schem
 
         return isReactiveObject(obj) && typePredicate(obj);
       },
-      { jsonSchema: {} },
+      {
+        jsonSchema: {
+          $id: ECHO_REF_JSON_SCHEMA_ID,
+        },
+      },
     ),
   ).annotations({ [ReferenceAnnotationId]: annotation });
 };
+
+/**
+ * The `$id` field for an ECHO reference schema.
+ */
+export const ECHO_REF_JSON_SCHEMA_ID = '/schemas/echo/ref';

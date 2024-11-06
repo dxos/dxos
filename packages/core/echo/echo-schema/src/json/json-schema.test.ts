@@ -113,6 +113,54 @@ describe('effect-to-json', () => {
     });
   });
 
+  test('references', () => {
+    class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
+      field: S.String,
+    }) {}
+
+    class Contact extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
+      name: S.String,
+      org: ref(Org).annotations({ description: 'Contact organization' }),
+    }) {}
+
+    const jsonSchema = toJsonSchema(Contact);
+
+    expect(jsonSchema).toEqual({
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      $id: 'dxn:type:example.com/type/Contact',
+      version: '0.1.0',
+      type: 'object',
+      additionalProperties: false,
+
+      // TODO(dmaretskyi): Should remove.
+      echo: {
+        type: {
+          typename: 'example.com/type/Contact',
+          version: '0.1.0',
+        },
+      },
+      properties: {
+        id: {
+          type: 'string',
+        },
+        name: {
+          type: 'string',
+        },
+        org: {
+          $id: '/schemas/echo/ref',
+          description: 'Contact organization',
+          echo: {
+            reference: {
+              typename: 'example.com/type/Org',
+              version: '0.1.0',
+            },
+          },
+          title: 'any',
+        },
+      },
+      required: ['name', 'org', 'id'],
+    });
+  });
   const expectReferenceAnnotation = (object: JSONSchema.JsonSchema7) => {
     expect(getEchoProp(object).reference).to.deep.eq({
       typename: 'example.com/type/TestNested',
