@@ -25,9 +25,8 @@ describe('format', () => {
     expect(schema).to.eq(formatToSchema[FormatEnum.None]);
 
     // TODO(burdon): Validation options (e.g., exact).
-    expect(() => {
-      S.validate(PropertySchema)(prop);
-    }).to.throw;
+    const validate = S.validate(PropertySchema);
+    expect(() => validate(prop)).to.throw;
   });
 
   test('encode/decode format', async ({ expect }) => {
@@ -99,7 +98,6 @@ describe('format', () => {
 
     const schema = getPropertySchemaForFormat(prop.format);
     invariant(schema);
-    // TODO(burdon): Skips type literals.
     const props = getSchemaProperties(schema);
     expect(props).to.have.length(4);
     console.log(JSON.stringify(props, null, 2));
