@@ -86,10 +86,17 @@ export type PropertyType<T> = {
  */
 export const getProperties = <T>(schema: S.Schema<T>): PropertyType<T>[] => {
   return AST.getPropertySignatures(schema.ast).reduce<PropertyType<T>[]>((props, prop) => {
-    const propType = getType(prop.type);
+    let propType = getType(prop.type);
     if (propType) {
-      // TODO(burdon): Ignores type literals.
-      const type = getScalarTypeFromAst(propType);
+      // NOTE: Ignores type literals.
+      let type = getScalarTypeFromAst(propType);
+      if (!type && AST.isTransformation(propType)) {
+        propType = getType(propType.to);
+        if (propType) {
+          type = getScalarTypeFromAst(propType);
+        }
+      }
+
       if (type) {
         props.push({ name: prop.name.toString() as any, type });
       }

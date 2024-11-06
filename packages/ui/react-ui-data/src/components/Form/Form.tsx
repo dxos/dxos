@@ -2,39 +2,38 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { type FC } from 'react';
 
 import { type S } from '@dxos/echo-schema';
-import { Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { getProperties } from '@dxos/schema';
 
-import { FormInput } from './FormInput';
+import { FormInput, type FormInputProps } from './FormInput';
 import { useForm } from '../../hooks';
-import { translationKey } from '../../translations';
 
-export type FieldProps<T extends object> = ThemedClassName<{
+export type FormProps<T extends object> = ThemedClassName<{
   values: T;
   schema: S.Schema<T>;
   autoFocus?: boolean;
   readonly?: boolean;
-  // TODO(burdon): Property should be generic.
   onValuesChanged?: (values: T) => void;
   onSave?: (values: T) => void;
+  Custom?: FC<Omit<FormInputProps<T>, 'property' | 'label'>>;
 }>;
 
-// TODO(burdon): Remove extends Property.
-// TODO(burdon): Rename/reconcile with Form.
-export const Field = <T extends object>({
+/**
+ * General purpose form control that generates properties based on the schema.
+ */
+export const Form = <T extends object>({
   classNames,
   values,
   schema,
   readonly,
   onValuesChanged,
   onSave,
-}: FieldProps<T>) => {
-  const { t } = useTranslation(translationKey);
-
+  Custom,
+}: FormProps<T>) => {
   // TODO(burdon): Type for useForm.
   const { getInputProps, canSubmit, handleSubmit, getErrorValence, getErrorMessage } = useForm<T>({
     schema,
@@ -53,30 +52,28 @@ export const Field = <T extends object>({
     onSubmit: (values) => onSave?.(values),
   });
 
-  // TODO(ZaymonFC): Generate based off of schema.
-  // TODO(burdon): Type literals are skipped and should be handled explicitely.
+  // TODO(burdon): Create schema annotation for order?
   const props = getProperties<T>(schema);
 
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
-      {/* <FormInput<T> */}
-      {/*  property='format' */}
-      {/*  label={t('field type label')} */}
-      {/*  options={FormatEnums.map((type) => ({ value: type, label: t(`field type ${type}`) }))} */}
-      {/*  disabled={readonly} */}
-      {/*  placeholder='Type' */}
-      {/*  getInputProps={getInputProps} */}
-      {/*  getErrorValence={getErrorValence} */}
-      {/*  getErrorMessage={getErrorMessage} */}
-      {/* /> */}
+      {/* Custom fields. */}
+      {Custom && (
+        <Custom
+          disabled={readonly}
+          getInputProps={getInputProps}
+          getErrorValence={getErrorValence}
+          getErrorMessage={getErrorMessage}
+        />
+      )}
 
+      {/* Generated fields. */}
       {props.map(({ name }) => (
         <FormInput<T>
           key={name}
           property={name}
           label={name}
           disabled={readonly}
-          // placeholder={t('field multipleOf placeholder')}
           getInputProps={getInputProps}
           getErrorValence={getErrorValence}
           getErrorMessage={getErrorMessage}
@@ -107,10 +104,18 @@ export const Field = <T extends object>({
       )}
       */}
 
+      {/* TODO(burdon): Option. */}
       {!readonly && (
-        <Button onClick={handleSubmit} disabled={!canSubmit}>
-          {t('field save button label')}
-        </Button>
+        <div className='flex w-full justify-center'>
+          <div className='flex gap-2'>
+            <Button onClick={handleSubmit} disabled={!canSubmit}>
+              <Icon icon='ph--check--regular' />
+            </Button>
+            <Button disabled={!canSubmit}>
+              <Icon icon='ph--x--regular' />
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

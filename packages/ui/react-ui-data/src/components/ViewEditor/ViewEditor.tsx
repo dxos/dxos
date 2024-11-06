@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type MutableSchema, S } from '@dxos/echo-schema';
+import { FormatEnums, type MutableSchema, S } from '@dxos/echo-schema';
 import { Button, Icon, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
@@ -16,11 +16,12 @@ import {
   type ViewType,
   ViewProjection,
   getPropertySchemaForFormat,
+  type Property,
 } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '../../translations';
-import { Field } from '../Form';
+import { Form, FormInput } from '../Form';
 
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
 
@@ -118,25 +119,38 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
       {!fieldSchema ? (
         <div>Schema not implemented for {fieldProperties?.format ?? 'undefined'}</div>
       ) : (
-        fieldProperties &&
-        field && (
-          <Field
+        field &&
+        fieldProperties && (
+          <Form<Property>
             key={field.property}
-            classNames='p-2'
             autoFocus
             values={fieldProperties}
             schema={fieldSchema}
             onValuesChanged={calculateFieldSchema}
             onSave={(props) => handleSet(field, props)}
+            Custom={(props) => (
+              <>
+                {/* TODO(burdon): Move property here. */}
+                <FormInput<Property>
+                  property='format'
+                  label={t('field format label')}
+                  options={FormatEnums.map((value) => ({ value, label: String(value) }))}
+                  {...props}
+                />
+              </>
+            )}
           />
         )
       )}
 
+      {/* TODO(burdon): Option. */}
       {!readonly && (
-        <div className='flex justify-center'>
-          <Button onClick={handleAdd}>
-            <Icon icon='ph--plus--regular' size={4} />
-          </Button>
+        <div className='flex justify-center p-2'>
+          <div className='flex gap-2'>
+            <Button onClick={handleAdd}>
+              <Icon icon='ph--plus--regular' />
+            </Button>
+          </div>
         </div>
       )}
     </div>

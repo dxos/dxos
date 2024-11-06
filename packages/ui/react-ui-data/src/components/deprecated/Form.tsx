@@ -10,7 +10,7 @@ import { Input, type ThemedClassName, type TextInputProps as NativeTextInputProp
 import { mx } from '@dxos/react-ui-theme';
 import { type ViewType, getFieldValue, setFieldValue } from '@dxos/schema';
 
-export type FormProps<T extends {} = {}> = ThemedClassName<{
+export type DeprecatedFormProps<T extends {} = {}> = ThemedClassName<{
   view: ViewType;
   object: T;
   schema?: S.Schema<T>;
@@ -20,7 +20,13 @@ export type FormProps<T extends {} = {}> = ThemedClassName<{
 /**
  * Schema-based object form.
  */
-export const Form = <T extends {} = {}>({ classNames, view, object, schema, readonly }: FormProps<T>) => {
+export const DeprecatedForm = <T extends {} = {}>({
+  classNames,
+  view,
+  object,
+  schema,
+  readonly,
+}: DeprecatedFormProps<T>) => {
   return (
     <div role='none' className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
       {view.fields.map((field) => {

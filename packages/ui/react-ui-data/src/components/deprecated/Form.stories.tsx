@@ -12,15 +12,15 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { testData, testView, TestSchema, type TestType } from '@dxos/schema/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { Form, type FormProps } from './Form';
+import { type DeprecatedFormProps, DeprecatedForm } from './Form';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
 
-const DefaultStory = (props: FormProps) => (
+const DefaultStory = (props: DeprecatedFormProps) => (
   <div className='w-full grid grid-cols-3'>
     <div className='flex col-span-2 w-full justify-center p-4'>
       <TestPopup>
-        <Form {...props} />
+        <DeprecatedForm {...props} />
       </TestPopup>
     </div>
     <SyntaxHighlighter className='w-full text-xs'>{JSON.stringify(props, null, 2)}</SyntaxHighlighter>
@@ -28,8 +28,8 @@ const DefaultStory = (props: FormProps) => (
 );
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-data/Form',
-  component: Form,
+  title: 'ui/react-ui-data/DeprecatedForm',
+  component: DeprecatedForm,
   render: DefaultStory,
   decorators: [withLayout({ fullscreen: true }), withTheme],
   parameters: {
@@ -39,7 +39,7 @@ const meta: Meta<typeof DefaultStory> = {
 
 export default meta;
 
-type Story = StoryObj<FormProps<TestType>>;
+type Story = StoryObj<DeprecatedFormProps<TestType>>;
 
 export const Default: Story = {
   args: {

@@ -22,7 +22,7 @@ export type FormInputProps<T extends object> = {
 export const FormInput = <T extends object>({
   property,
   label,
-  options = [],
+  options,
   disabled,
   placeholder,
   getInputProps,

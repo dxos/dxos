@@ -8,22 +8,24 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useState } from 'react';
 
 import { FormatEnum, ScalarEnum } from '@dxos/echo-schema';
+import { useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getPropertySchemaForFormat, type Property } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Field, type FieldProps } from './Field';
-import translations from '../../translations';
+import { Form, type FormProps } from './Form';
+import translations, { translationKey } from '../../translations';
 import { TestPopup } from '../testing';
 
-type StoryProps = FieldProps<Property>;
+type StoryProps = FormProps<Property>;
 
 const DefaultStory = (props: StoryProps) => {
+  const { t } = useTranslation(translationKey);
   const [field, setField] = useState(props.values);
   // TODO(ZaymonFC): Workout why this throws if you unwrap the object.
   const [{ schema }, setSchema] = useState({ schema: getPropertySchemaForFormat(field.format) });
 
-  const handleValueChange = useCallback((values: FieldProps<Property>['values']) => {
+  const handleValueChange = useCallback((values: FormProps<Property>['values']) => {
     setSchema({ schema: getPropertySchemaForFormat(values.format) });
   }, []);
 
@@ -40,7 +42,7 @@ const DefaultStory = (props: StoryProps) => {
     <div className='w-full grid grid-cols-3'>
       <div className='flex col-span-2 w-full justify-center p-4'>
         <TestPopup>
-          <Field values={field} schema={schema} onValuesChanged={handleValueChange} onSave={handleSave} />
+          <Form values={field} schema={schema} onValuesChanged={handleValueChange} onSave={handleSave} />
         </TestPopup>
       </div>
       <SyntaxHighlighter className='w-full text-xs'>{JSON.stringify(field, null, 2)}</SyntaxHighlighter>
@@ -49,8 +51,8 @@ const DefaultStory = (props: StoryProps) => {
 };
 
 const meta: Meta<StoryProps> = {
-  title: 'ui/react-ui-data/Field',
-  component: Field,
+  title: 'ui/react-ui-data/Form',
+  component: Form,
   render: DefaultStory,
   decorators: [withLayout({ fullscreen: true }), withTheme],
   parameters: {

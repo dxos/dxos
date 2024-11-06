@@ -2,18 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-export const translationKey = 'data';
+export const translationKey = 'react-ui-data';
 
 export default [
   {
     'en-US': {
       [translationKey]: {
         'field path label': 'Property',
-        'field path placeholder': 'Label name',
-        'field label label': 'Label',
-        'field label placeholder': 'Label',
-        'field type label': 'Type',
-        'field save button label': 'Save',
+        'field format label': 'Type',
+
+        // TODO(burdon): Remove (get from schema).
         'field digits label': 'Decimal Places',
         'field ref schema label': 'Reference Schema',
         'field ref property label': 'Reference Property',
