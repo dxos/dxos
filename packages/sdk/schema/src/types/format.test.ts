@@ -7,16 +7,22 @@ import { describe, test } from 'vitest';
 import { S, ScalarEnum, FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { getPropertySchemaForFormat, PropertySchema, type Property, EmptySchema, getProperties } from './format';
+import {
+  getPropertySchemaForFormat,
+  PropertySchema,
+  type PropertyType,
+  getSchemaProperties,
+  FormatSchema,
+} from './format';
 
 describe('format', () => {
   test('invalid state', ({ expect }) => {
-    const prop: Partial<Property> = {
+    const prop: Partial<PropertyType> = {
       property: 'test',
     };
 
     const schema = getPropertySchemaForFormat(prop.format);
-    expect(schema).to.eq(EmptySchema);
+    expect(schema).to.eq(FormatSchema[FormatEnum.None]);
 
     // TODO(burdon): Validation options (e.g., exact).
     expect(() => {
@@ -25,7 +31,7 @@ describe('format', () => {
   });
 
   test('encode/decode format', async ({ expect }) => {
-    const prop: Property = {
+    const prop: PropertyType = {
       property: 'salary',
       type: ScalarEnum.Number,
       format: FormatEnum.Currency,
@@ -52,7 +58,7 @@ describe('format', () => {
     {
       const { property: _, format, ...props } = prop;
       expect(format).to.eq(FormatEnum.Currency);
-      const newProp: Property = { property: 'amount', format: FormatEnum.Percent, ...props };
+      const newProp: PropertyType = { property: 'amount', format: FormatEnum.Percent, ...props };
       newProp.format = FormatEnum.Percent;
 
       const schema = getPropertySchemaForFormat(newProp.format);
@@ -66,7 +72,7 @@ describe('format', () => {
 
   test('ref format', async ({ expect }) => {
     const validate = S.validateSync(PropertySchema);
-    const prop: Partial<Property> = {
+    const prop: Partial<PropertyType> = {
       property: 'org',
       type: ScalarEnum.Ref,
       format: FormatEnum.Ref,
@@ -85,7 +91,7 @@ describe('format', () => {
   });
 
   test('get props', ({ expect }) => {
-    const prop: Partial<Property> = {
+    const prop: Partial<PropertyType> = {
       property: 'org',
       type: ScalarEnum.Ref,
       format: FormatEnum.Ref,
@@ -94,7 +100,7 @@ describe('format', () => {
     const schema = getPropertySchemaForFormat(prop.format);
     invariant(schema);
     // TODO(burdon): Skips type literals.
-    const props = getProperties(schema);
+    const props = getSchemaProperties(schema);
     expect(props).to.have.length(4);
     console.log(JSON.stringify(props, null, 2));
   });

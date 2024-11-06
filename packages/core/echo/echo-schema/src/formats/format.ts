@@ -25,16 +25,6 @@ import { FormatAnnotationId, FormatEnum } from './types';
 // TODO(burdon): Define $id property for all declarations?
 // TODO(burdon): Add fields for `examples`, `message`, etc.
 export namespace Format {
-  // Dates and times
-  export const DateTime = Date_.DateTime;
-  export const Date = Date_.DateOnly;
-  export const Time = Date_.TimeOnly;
-  export const Duration = Date_.Duration;
-
-  // Numbers
-  export const Currency = Number_.Currency;
-  export const Percent = Number_.Percent;
-
   // Strings
   // TODO(burdon): Text?
   export const Email = String_.Email;
@@ -44,6 +34,16 @@ export namespace Format {
   export const Regex = String_.Regex;
   export const URI = String_.URI;
   export const UUID = String_.UUID;
+
+  // Numbers
+  export const Currency = Number_.Currency;
+  export const Percent = Number_.Percent;
+
+  // Dates and times
+  export const DateTime = Date_.DateTime;
+  export const Date = Date_.DateOnly;
+  export const Time = Date_.TimeOnly;
+  export const Duration = Date_.Duration;
 }
 
 /**

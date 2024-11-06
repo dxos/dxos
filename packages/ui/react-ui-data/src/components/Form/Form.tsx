@@ -7,7 +7,7 @@ import React, { type FC } from 'react';
 import { type S } from '@dxos/echo-schema';
 import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { getProperties } from '@dxos/schema';
+import { getSchemaProperties } from '@dxos/schema';
 
 import { FormInput, type FormInputProps } from './FormInput';
 import { useForm } from '../../hooks';
@@ -52,32 +52,35 @@ export const Form = <T extends object>({
     onSubmit: (values) => onSave?.(values),
   });
 
-  // TODO(burdon): Create schema annotation for order?
-  const props = getProperties<T>(schema);
+  // TODO(burdon): Create schema annotation for order or pass in params?
+  const props = getSchemaProperties<T>(schema);
 
   return (
-    <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
+    <div className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
       {/* Custom fields. */}
       {Custom && (
-        <Custom
-          disabled={readonly}
-          getInputProps={getInputProps}
-          getErrorValence={getErrorValence}
-          getErrorMessage={getErrorMessage}
-        />
+        <div role='none'>
+          <Custom
+            disabled={readonly}
+            getInputProps={getInputProps}
+            getErrorValence={getErrorValence}
+            getErrorMessage={getErrorMessage}
+          />
+        </div>
       )}
 
       {/* Generated fields. */}
-      {props.map(({ name }) => (
-        <FormInput<T>
-          key={name}
-          property={name}
-          label={name}
-          disabled={readonly}
-          getInputProps={getInputProps}
-          getErrorValence={getErrorValence}
-          getErrorMessage={getErrorMessage}
-        />
+      {props.map(({ name, label }) => (
+        <div key={name} role='none'>
+          <FormInput<T>
+            property={name}
+            label={label ?? name}
+            disabled={readonly}
+            getInputProps={getInputProps}
+            getErrorValence={getErrorValence}
+            getErrorMessage={getErrorMessage}
+          />
+        </div>
       ))}
 
       {/* {features.includes('ref') && (

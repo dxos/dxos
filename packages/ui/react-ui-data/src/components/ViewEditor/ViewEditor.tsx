@@ -16,7 +16,7 @@ import {
   type ViewType,
   ViewProjection,
   getPropertySchemaForFormat,
-  type Property,
+  type PropertyType,
 } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
@@ -121,7 +121,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
       ) : (
         field &&
         fieldProperties && (
-          <Form<Property>
+          <Form<PropertyType>
             key={field.property}
             autoFocus
             values={fieldProperties}
@@ -131,7 +131,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
             Custom={(props) => (
               <>
                 {/* TODO(burdon): Move property here. */}
-                <FormInput<Property>
+                <FormInput<PropertyType>
                   property='format'
                   label={t('field format label')}
                   options={FormatEnums.map((value) => ({ value, label: String(value) }))}

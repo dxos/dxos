@@ -36,21 +36,21 @@ export const FormInput = <T extends object>({
     return (
       <Input.Root validationValence={validationValence}>
         <Input.Label>{label}</Input.Label>
-        <Select.Root {...getInputProps(property, 'select')}>
-          <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {options.map(({ value, label }) => (
-                  <Select.Option key={String(value)} value={String(value)}>
-                    {label}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
-        </Select.Root>
         <Input.DescriptionAndValidation>
+          <Select.Root {...getInputProps(property, 'select')}>
+            <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
+            <Select.Portal>
+              <Select.Content>
+                <Select.Viewport>
+                  {options.map(({ value, label }) => (
+                    <Select.Option key={String(value)} value={String(value)}>
+                      {label}
+                    </Select.Option>
+                  ))}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
           <Input.Validation>{errorMessage}</Input.Validation>
         </Input.DescriptionAndValidation>
       </Input.Root>

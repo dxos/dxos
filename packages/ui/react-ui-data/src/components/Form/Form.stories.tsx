@@ -8,24 +8,22 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useState } from 'react';
 
 import { FormatEnum, ScalarEnum } from '@dxos/echo-schema';
-import { useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getPropertySchemaForFormat, type Property } from '@dxos/schema';
+import { getPropertySchemaForFormat, type PropertyType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Form, type FormProps } from './Form';
-import translations, { translationKey } from '../../translations';
+import translations from '../../translations';
 import { TestPopup } from '../testing';
 
-type StoryProps = FormProps<Property>;
+type StoryProps = FormProps<PropertyType>;
 
 const DefaultStory = (props: StoryProps) => {
-  const { t } = useTranslation(translationKey);
   const [field, setField] = useState(props.values);
   // TODO(ZaymonFC): Workout why this throws if you unwrap the object.
   const [{ schema }, setSchema] = useState({ schema: getPropertySchemaForFormat(field.format) });
 
-  const handleValueChange = useCallback((values: FormProps<Property>['values']) => {
+  const handleValueChange = useCallback((values: FormProps<PropertyType>['values']) => {
     setSchema({ schema: getPropertySchemaForFormat(values.format) });
   }, []);
 

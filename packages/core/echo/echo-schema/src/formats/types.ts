@@ -65,11 +65,8 @@ export enum FormatEnum {
   None = '',
 
   // TODO(burdon): Remove primitives from format and pass (type, format) tuple instead.
-  /** @deprecated */
   String = 'string',
-  /** @deprecated */
   Number = 'number',
-  /** @deprecated */
   Boolean = 'boolean',
 
   // TODO(burdon): Not implemented.
@@ -78,29 +75,34 @@ export enum FormatEnum {
   //
   // { type: 'string' }
   //
+
   DID = 'did', // Users, etc.
   Email = 'email',
   Formula = 'formula', // Spreadsheet formula.
   JSON = 'json',
   Regex = 'regex',
-  Text = 'text', // TODO(burdon): Different from string? E.g., S.String shouldn't be Automerge by default?
+  // TODO(burdon): Different from string? E.g., S.String shouldn't be Automerge by default?
+  Text = 'text',
   URI = 'uri',
   UUID = 'uuid',
-
-  //
-  // { type: 'date' }
-  //
-  Date = 'date',
-  DateTime = 'date-time',
-  Duration = 'duration',
-  Time = 'time',
+  // TODO(burdon): Phone number?
 
   //
   // { type: 'number' }
   //
+
   Currency = 'currency',
   Percent = 'percent',
   Timestamp = 'timestamp',
+
+  //
+  // { type: 'date' }
+  //
+
+  DateTime = 'date-time',
+  Date = 'date',
+  Time = 'time',
+  Duration = 'duration',
 }
 
 export const FormatEnums = Object.values(FormatEnum).sort();
