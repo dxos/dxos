@@ -19,16 +19,9 @@ import {
 import { FILES_PLUGIN } from '../meta';
 import { type LocalFile, type LocalEntity, LocalFilesAction } from '../types';
 
-const LocalFileMain: FC<{ file: LocalFile }> = ({ file }) => {
+const LocalFileContainer: FC<{ file: LocalFile }> = ({ file }) => {
   const transformedData = useMemo(
-    () =>
-      file.text
-        ? {
-            // TODO(burdon): Broken pending replacement of EditorModel.
-            // model: { id: file.id, text: () => file.text } as EditorModel,
-            properties: { title: file.title, readOnly: true },
-          }
-        : { file },
+    () => (file.text ? { object: { id: file.id, text: file.text } } : { file }),
     [file.id, Boolean(file.text)],
   );
 
@@ -41,7 +34,7 @@ const LocalFileMain: FC<{ file: LocalFile }> = ({ file }) => {
     return null;
   }
 
-  return <Surface role='main' data={transformedData} />;
+  return <Surface role='article' data={transformedData} />;
 };
 
 const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
@@ -74,4 +67,4 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   );
 };
 
-export default LocalFileMain;
+export default LocalFileContainer;

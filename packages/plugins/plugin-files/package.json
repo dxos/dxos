@@ -32,8 +32,10 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
