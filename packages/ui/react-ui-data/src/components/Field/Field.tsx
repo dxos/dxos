@@ -16,55 +16,75 @@ import { translationKey } from '../../translations';
 // Util (move once stable)
 //
 
-type SchemaInputProps<T extends object> = {
-  getInputProps: (field: keyof T, type?: 'select') => Record<string, any>;
-  getErrorValence: FormResult<T>['getErrorValence'];
-  getErrorMessage: FormResult<T>['getErrorMessage'];
-  fieldName: keyof T;
+// TODO(burdon): Does this need to be generic?
+export type FieldInputProps<T extends object> = {
+  property: keyof T;
+  type: 'string' | 'number' | 'select'; // TODO(burdon): Use type.
   label: string;
-  type: 'string' | 'number' | 'select';
   options?: Array<{ value: string; label: string }>;
   disabled?: boolean;
   placeholder?: string;
-};
+  getInputProps: (field: keyof T, type?: 'select') => Record<string, any>;
+} & Pick<FormResult<T>, 'getErrorValence' | 'getErrorMessage'>;
 
 export const FieldInput = <T extends object>({
-  getInputProps,
-  getErrorValence,
-  getErrorMessage,
-  fieldName,
-  label,
+  property,
   type,
+  label,
   options = [],
   disabled,
   placeholder,
-}: SchemaInputProps<T>) => {
-  return (
-    <Input.Root validationValence={getErrorValence(fieldName)}>
-      <Input.Label>{label}</Input.Label>
-      {type === 'select' ? (
-        <Select.Root {...getInputProps(fieldName, 'select')}>
-          <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {options.map(({ value, label }) => (
-                  <Select.Option key={value} value={value}>
-                    {label}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
-        </Select.Root>
-      ) : (
-        <Input.TextInput type={type} disabled={disabled} placeholder={placeholder} {...getInputProps(fieldName)} />
-      )}
-      <Input.DescriptionAndValidation>
-        <Input.Validation>{getErrorMessage(fieldName)}</Input.Validation>
-      </Input.DescriptionAndValidation>
-    </Input.Root>
-  );
+  getInputProps,
+  getErrorValence,
+  getErrorMessage,
+}: FieldInputProps<T>) => {
+  const validationValence = getErrorValence(property);
+  const errorMessage = getErrorMessage(property);
+
+  switch (type) {
+    // TODO(burdon): Restrict string pattern.
+    case 'string': {
+      return (
+        <Input.Root validationValence={validationValence}>
+          <Input.Label>{label}</Input.Label>
+          <Input.DescriptionAndValidation>
+            <Input.TextInput type='string' disabled={disabled} placeholder={placeholder} {...getInputProps(property)} />
+            <Input.Validation>{errorMessage}</Input.Validation>
+          </Input.DescriptionAndValidation>
+        </Input.Root>
+      );
+    }
+
+    // TODO(burdon): Restrict number.
+    case 'number': {
+      return <div>Not implemented</div>;
+    }
+
+    case 'select': {
+      return (
+        <Input.Root validationValence={validationValence}>
+          <Input.Label>{label}</Input.Label>
+          <Select.Root {...getInputProps(property, 'select')}>
+            <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
+            <Select.Portal>
+              <Select.Content>
+                <Select.Viewport>
+                  {options.map(({ value, label }) => (
+                    <Select.Option key={value} value={value}>
+                      {label}
+                    </Select.Option>
+                  ))}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+          <Input.DescriptionAndValidation>
+            <Input.Validation>{errorMessage}</Input.Validation>
+          </Input.DescriptionAndValidation>
+        </Input.Root>
+      );
+    }
+  }
 };
 
 //
@@ -104,60 +124,62 @@ export const Field = ({ classNames, field, schema, autoFocus, readonly, onSave }
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
       <FieldInput<Property>
-        getInputProps={getInputProps}
-        getErrorValence={getErrorValence}
-        getErrorMessage={getErrorMessage}
-        fieldName='property'
+        property='property'
         label={t('field path label')}
         type='string'
         disabled={readonly}
         placeholder={t('field path placeholder')}
-      />
-      <FieldInput<Property>
         getInputProps={getInputProps}
         getErrorValence={getErrorValence}
         getErrorMessage={getErrorMessage}
-        fieldName='title'
+      />
+
+      <FieldInput<Property>
+        property='title'
         label={t('field label label')}
         type='string'
         disabled={readonly}
         placeholder={t('field label placeholder')}
-      />
-      <FieldInput<Property>
         getInputProps={getInputProps}
         getErrorValence={getErrorValence}
         getErrorMessage={getErrorMessage}
-        fieldName='format'
+      />
+
+      <FieldInput<Property>
+        property='format'
         label={t('field type label')}
         type='select'
         options={FormatEnums.map((type) => ({ value: type, label: t(`field type ${type}`) }))}
         disabled={readonly}
         placeholder='Type'
+        getInputProps={getInputProps}
+        getErrorValence={getErrorValence}
+        getErrorMessage={getErrorMessage}
       />
 
       {astProps.findIndex((prop) => prop.name === 'multipleOf') !== -1 && (
         <FieldInput<any>
-          getInputProps={getInputProps}
-          getErrorValence={getErrorValence}
-          getErrorMessage={getErrorMessage}
-          fieldName='multipleOf'
+          property='multipleOf'
           label={t('field multipleOf label')}
           type='number'
           disabled={readonly}
           placeholder={t('field multipleOf placeholder')}
+          getInputProps={getInputProps}
+          getErrorValence={getErrorValence}
+          getErrorMessage={getErrorMessage}
         />
       )}
 
       {astProps.findIndex((prop) => prop.name === 'currency') !== -1 && (
         <FieldInput<any>
-          getInputProps={getInputProps}
-          getErrorValence={getErrorValence}
-          getErrorMessage={getErrorMessage}
-          fieldName='currency'
+          property='currency'
           label={t('field currency label')}
           type='string'
           disabled={readonly}
           placeholder={t('field currency placeholder')}
+          getInputProps={getInputProps}
+          getErrorValence={getErrorValence}
+          getErrorMessage={getErrorMessage}
         />
       )}
 
