@@ -89,7 +89,7 @@ dx-grid {
   }
 }
 
-.dx-grid-host:focus-within .dx-grid {
+.dx-grid-host:focus-within .dx-grid:not(:focus-within) {
   [role='gridcell'], [role='columnheader'], [role='rowheader'] {
     &[data-dx-active] {
       border-color: var(--dx-accentSurface);
