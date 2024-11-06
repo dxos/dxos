@@ -16,7 +16,8 @@ import {
   ReferenceAnnotationId,
 } from '../ast';
 import { CustomAnnotations } from '../formats';
-import { createEchoReferenceSchema } from '../handler';
+import { createEchoReferenceSchema, Expando, ref, type JsonSchemaReferenceInfo } from '../handler';
+import { DXN } from '@dxos/keys';
 
 /**
  * @internal
@@ -298,12 +299,22 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
 
 // TODO(dmaretskyi): Types.
 const refToEffectSchema = (root: any): S.Schema<any> => {
-  const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
-  if (echoRefinement?.reference != null) {
-    return createEchoReferenceSchema(echoRefinement.reference);
+  if (!('reference' in root)) {
+    return ref(Expando);
+  }
+  const reference: JsonSchemaReferenceInfo = root.reference;
+  if (typeof reference !== 'object') {
+    throw new Error('Invalid reference field in ref schema');
   }
 
-  return S.Any;
+  const targetSchemaDXN = DXN.parse(reference.schema.$ref);
+  invariant(targetSchemaDXN.kind === DXN.kind.TYPE);
+
+  return createEchoReferenceSchema({
+    typename: targetSchemaDXN.parts[0],
+    version: reference.schemaVersion,
+    schemaId: reference.schemaObject,
+  });
 };
 
 //
@@ -316,7 +327,7 @@ const refToEffectSchema = (root: any): S.Schema<any> => {
  */
 export const ECHO_REFINEMENT_KEY = 'echo';
 
-const ECHO_REFINEMENTS = [ObjectAnnotationId, ReferenceAnnotationId, PropertyMetaAnnotationId];
+const ECHO_REFINEMENTS = [ObjectAnnotationId, PropertyMetaAnnotationId];
 
 const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<symbol, any> => {
   const schemaFields: Record<string, any> = {};

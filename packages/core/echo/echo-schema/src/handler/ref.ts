@@ -23,6 +23,15 @@ export const ref = <T extends HasId>(schema: S.Schema<T, any>): ref<T> => {
 };
 
 /**
+ * `reference` field on the schema object.
+ */
+export type JsonSchemaReferenceInfo = {
+  schema: { $ref: string };
+  schemaVersion: string;
+  schemaObject?: string;
+};
+
+/**
  * @internal
  */
 // TODO(burdon): Move to json schema and make private?
@@ -32,27 +41,40 @@ export const createEchoReferenceSchema = (annotation: ObjectAnnotation): S.Schem
       ? () => true
       : (obj: object) => getTypename(obj) === (annotation.schemaId ?? annotation.typename);
 
-  return S.Any.pipe(
-    S.filter(
-      (obj) => {
-        if (obj === undefined) {
-          // Unresolved reference.
-          return true;
-        }
+  const referenceInfo: JsonSchemaReferenceInfo = {
+    schema: {
+      $ref: `dxn:type:${annotation.typename}`,
+    },
+    schemaVersion: annotation.version,
+  };
+  if (annotation.schemaId) {
+    referenceInfo.schemaObject = annotation.schemaId;
+  }
 
-        if (obj instanceof MutableSchema) {
-          return annotation.typename === StoredSchema.typename;
-        }
+  return S.Any.annotations({ jsonSchema: {} })
+    .pipe(
+      S.filter(
+        (obj) => {
+          if (obj === undefined) {
+            // Unresolved reference.
+            return true;
+          }
 
-        return isReactiveObject(obj) && typePredicate(obj);
-      },
-      {
-        jsonSchema: {
-          $id: ECHO_REF_JSON_SCHEMA_ID,
+          if (obj instanceof MutableSchema) {
+            return annotation.typename === StoredSchema.typename;
+          }
+
+          return isReactiveObject(obj) && typePredicate(obj);
         },
-      },
-    ),
-  ).annotations({ [ReferenceAnnotationId]: annotation });
+        {
+          jsonSchema: {
+            $id: ECHO_REF_JSON_SCHEMA_ID,
+            reference: referenceInfo,
+          },
+        },
+      ),
+    )
+    .annotations({ [ReferenceAnnotationId]: annotation });
 };
 
 /**

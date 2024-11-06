@@ -149,22 +149,23 @@ describe('effect-to-json', () => {
         org: {
           $id: '/schemas/echo/ref',
           description: 'Contact organization',
-          echo: {
-            reference: {
-              typename: 'example.com/type/Org',
-              version: '0.1.0',
+          reference: {
+            schema: {
+              $ref: 'dxn:type:example.com/type/Org',
             },
+            schemaVersion: '0.1.0',
           },
-          title: 'any',
         },
       },
       required: ['name', 'org', 'id'],
     });
   });
   const expectReferenceAnnotation = (object: JSONSchema.JsonSchema7) => {
-    expect(getEchoProp(object).reference).to.deep.eq({
-      typename: 'example.com/type/TestNested',
-      version: '0.1.0',
+    expect((object as any).reference).to.deep.eq({
+      schema: {
+        $ref: 'dxn:type:example.com/type/TestNested',
+      },
+      schemaVersion: '0.1.0',
     });
   };
 });
