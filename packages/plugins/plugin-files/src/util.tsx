@@ -9,10 +9,10 @@ export const PREFIX = 'fs';
 export const isLocalEntity = (data: unknown): data is LocalEntity => isLocalDirectory(data) || isLocalFile(data);
 
 export const isLocalDirectory = (data: unknown): data is LocalDirectory =>
-  data && typeof data === 'object' ? 'title' in data && 'handle' in data && 'children' in data : false;
+  data && typeof data === 'object' ? 'name' in data && 'handle' in data && 'children' in data : false;
 
 export const isLocalFile = (data: unknown): data is LocalFile =>
-  data && typeof data === 'object' ? 'title' in data && 'handle' in data && !('children' in data) : false;
+  data && typeof data === 'object' ? 'name' in data && 'handle' in data && !('children' in data) : false;
 
 export const handleToLocalDirectory = async (
   handle: any /* FileSystemDirectoryHandle */,
@@ -23,7 +23,7 @@ export const handleToLocalDirectory = async (
   const children = permission === 'granted' ? await getDirectoryChildren(handle, childrenPath) : [];
   return {
     id: `${PREFIX}:${path}${handle.name.replaceAll(/\./g, '-')}`,
-    title: handle.name,
+    name: handle.name,
     handle,
     permission,
     children,
@@ -36,7 +36,7 @@ export const handleToLocalFile = async (handle: any /* FileSystemFileHandle */, 
   path = path.length > 0 ? `${path}:` : path;
   return {
     id: `${PREFIX}:${path}${handle.name.replaceAll(/\./g, '')}`,
-    title: handle.name,
+    name: handle.name,
     handle,
     permission,
     text,
@@ -55,7 +55,7 @@ export const legacyFileToLocalFile = async (file: File): Promise<LocalFile> => {
 
   return {
     id: `${PREFIX}:${file.name.replaceAll(/\.| /g, '-')}`,
-    title: file.name,
+    name: file.name,
     handle: false,
     permission: 'granted',
     text,
@@ -78,7 +78,7 @@ export const getDirectoryChildren = async (
   return children;
 };
 
-export const findFile = (files: LocalEntity[], [id, ...path]: string[]): LocalFile | undefined => {
+export const findFile = (files: LocalEntity[], [id, ...path]: readonly string[]): LocalFile | undefined => {
   const file = files.find((n) => n.id === id);
   if (file && !('children' in file)) {
     return file;
@@ -107,7 +107,7 @@ const handleLegacySave = (file: LocalFile) => {
   const blob = new Blob([contents], { type: 'text/markdown' });
   const a = document.createElement('a');
   a.setAttribute('href', window.URL.createObjectURL(blob));
-  a.setAttribute('download', file.title);
+  a.setAttribute('download', file.name);
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
