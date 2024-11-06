@@ -57,17 +57,17 @@ export const FormInput = <T extends object>({
         </Input.DescriptionAndValidation>
       </Input.Root>
     );
-  } else {
-    // TODO(burdon): Restrict string pattern. Input masking based on schema?
-    // TODO(burdon): Checkbox.
-    return (
-      <Input.Root validationValence={validationValence}>
-        <Input.Label>{label}</Input.Label>
-        <Input.DescriptionAndValidation>
-          <Input.TextInput type={type} disabled={disabled} placeholder={placeholder} {...getInputProps(property)} />
-          <Input.Validation>{errorMessage}</Input.Validation>
-        </Input.DescriptionAndValidation>
-      </Input.Root>
-    );
   }
+
+  // TODO(burdon): Checkbox.
+  // TODO(burdon): Restrict string pattern. Input masking based on schema?
+  return (
+    <Input.Root validationValence={validationValence}>
+      <Input.Label>{label}</Input.Label>
+      <Input.DescriptionAndValidation>
+        <Input.TextInput type={type} disabled={disabled} placeholder={placeholder} {...getInputProps(property)} />
+        <Input.Validation>{errorMessage}</Input.Validation>
+      </Input.DescriptionAndValidation>
+    </Input.Root>
+  );
 };
