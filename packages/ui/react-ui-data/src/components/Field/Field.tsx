@@ -17,27 +17,27 @@ import { translationKey } from '../../translations';
 //
 
 type SchemaInputProps<T extends object> = {
-  getInputProps: (field: keyof T, type?: 'select') => Record<string, any>;
-  getErrorValence: FormResult<T>['getErrorValence'];
-  getErrorMessage: FormResult<T>['getErrorMessage'];
   fieldName: keyof T;
   label: string;
   type: 'string' | 'number' | 'select';
   options?: Array<{ value: string; label: string }>;
   disabled?: boolean;
   placeholder?: string;
+  getInputProps: (field: keyof T, type?: 'select') => Record<string, any>;
+  getErrorValence: FormResult<T>['getErrorValence'];
+  getErrorMessage: FormResult<T>['getErrorMessage'];
 };
 
 export const FieldInput = <T extends object>({
-  getInputProps,
-  getErrorValence,
-  getErrorMessage,
   fieldName,
   label,
   type,
   options = [],
   disabled,
   placeholder,
+  getInputProps,
+  getErrorValence,
+  getErrorMessage,
 }: SchemaInputProps<T>) => {
   return (
     <Input.Root validationValence={getErrorValence(fieldName)}>
