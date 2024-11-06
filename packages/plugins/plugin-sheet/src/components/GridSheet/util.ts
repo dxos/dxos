@@ -68,7 +68,7 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
     .map((thread) => fullyQualifiedId(thread!))
     .join(' ');
   const type = model.getValueType(address);
-  const classNames = ranges?.map(cellClassNameForRange).reverse();
+  const classNames = ranges?.map(cellClassNameForRange);
 
   return {
     value: parseValue(type, rawValue),
