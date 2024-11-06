@@ -42,7 +42,7 @@ export const FieldInput = <T extends object>({
   const errorMessage = getErrorMessage(property);
 
   switch (type) {
-    // TODO(burdon): Restrict string pattern.
+    // TODO(burdon): Restrict string pattern. Input masking based on schema?
     case 'string': {
       return (
         <Input.Root validationValence={validationValence}>
