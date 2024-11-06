@@ -655,9 +655,11 @@ export class DxGrid extends LitElement {
   // Selection setter for consumers
 
   setSelection(range: DxGridRange) {
-    this.selectionStart = range.start;
-    this.selectionEnd = range.end;
-    this.dispatchSelectionChange();
+    if (this.mode !== 'edit') {
+      this.selectionStart = range.start;
+      this.selectionEnd = range.end;
+      this.dispatchSelectionChange();
+    }
   }
 
   private focusedCellBox(): DxEditRequest['cellBox'] {
@@ -943,7 +945,7 @@ export class DxGrid extends LitElement {
 
   private handleFocus(event: FocusEvent) {
     const cellCoords = closestCell(event.target);
-    if (cellCoords && !this.cellReadonly(cellCoords.col, cellCoords.row, cellCoords.plane)) {
+    if (cellCoords) {
       this.focusActive = true;
       this.setFocusedCell(cellCoords);
     }
