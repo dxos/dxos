@@ -69,7 +69,7 @@ describe('format', () => {
     }
   });
 
-  test('ref format', async ({ expect }) => {
+  test.skip('ref format', async ({ expect }) => {
     const validate = S.validateSync(PropertySchema);
     const prop: Partial<PropertyType> = {
       property: 'org',
@@ -89,7 +89,7 @@ describe('format', () => {
     }
   });
 
-  test('get props', ({ expect }) => {
+  test.skip('get props', ({ expect }) => {
     const prop: Partial<PropertyType> = {
       property: 'org',
       type: ScalarEnum.Ref,

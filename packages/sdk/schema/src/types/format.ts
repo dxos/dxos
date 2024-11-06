@@ -63,10 +63,9 @@ export const formatToSchema: Record<FormatEnum, S.Schema<any>> = {
   [FormatEnum.Ref]: extend(FormatEnum.Ref, ScalarEnum.Ref, {
     // TODO(burdon): Annotation to store on View's field.
     // referenceProperty: S.optional(JsonPath.annotations({ [AST.TitleAnnotationId]: 'Lookup property' })),
-
     // TODO(burdon): Needs custom selector.
     // TODO(burdon): This needs to map onto $id and reference properties.
-    referenceSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
+    // referenceSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
   }),
 
   //
