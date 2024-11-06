@@ -124,7 +124,7 @@ describe('effect-to-json', () => {
 describe('json-to-effect', () => {
   for (const partial of [false, true]) {
     test('deserialized equals original', () => {
-      class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
+      class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
         field: S.String,
       }) {}
 
@@ -136,9 +136,9 @@ describe('json-to-effect', () => {
           array: S.Array(S.String),
           twoDArray: S.Array(S.Array(S.String)),
           record: S.Record({ key: S.String, value: S.Number }),
-          object: S.Struct({ id: S.String, field: ref(Nested) }),
-          echoObject: ref(Nested),
-          echoObjectArray: S.Array(ref(Nested)),
+          object: S.Struct({ id: S.String, field: ref(Org) }),
+          echoObject: ref(Org),
+          echoObjectArray: S.Array(ref(Org)),
           email: S.String.annotations({ [FormatAnnotationId]: 'email' }),
           null: S.Null,
         },
