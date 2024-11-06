@@ -59,6 +59,9 @@ const JsonSchemaOrBoolean = S.Union(
   S.Boolean,
 );
 
+// Describes a schema for the JSON-schema objects stored in ECHO.
+// Taken from https://json-schema.org/draft-07/schema#
+// Contains extensions for ECHO.
 // TODO(dmaretskyi): Fix circular types.
 const _JsonSchemaType = S.mutable(
   S.Struct({
