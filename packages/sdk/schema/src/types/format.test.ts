@@ -17,6 +17,8 @@ describe('format', () => {
 
     const schema = getPropertySchemaForFormat(prop.format);
     expect(schema).to.eq(EmptySchema);
+
+    // TODO(burdon): Validation options (e.g., exact).
     expect(() => {
       S.validate(PropertySchema)(prop);
     }).to.throw;
@@ -63,22 +65,22 @@ describe('format', () => {
   });
 
   test('ref format', async ({ expect }) => {
+    const validate = S.validateSync(PropertySchema);
     const prop: Partial<Property> = {
+      property: 'org',
       type: ScalarEnum.Ref,
       format: FormatEnum.Ref,
     };
 
+    // Invalid.
     {
-      const result = S.validate(PropertySchema)(prop);
-      console.log(result);
-
-      // expect(result).to.be.undefined;
-
-      // const schema = getPropertySchemaForFormat(prop.format);
-      // invariant(schema);
+      expect(() => validate(prop)).to.throw;
     }
 
-    // const result = S.validate(schema)(prop);
-    // console.log(JSON.stringify(schema?.ast?.toJSON(), null, 2));
+    // Valid.
+    {
+      prop.refSchema = 'example.com/type/Test';
+      expect(validate(prop)).to.deep.eq(prop);
+    }
   });
 });
