@@ -4,8 +4,6 @@
 
 import { AST, ScalarEnum, FormatEnum, S, getScalarTypeFromAst } from '@dxos/echo-schema';
 import { getType, getAnnotation } from '@dxos/effect';
-import { log } from '@dxos/log';
-import { expect } from 'vitest';
 
 /**
  * Convert number of digits to multipleOf annotation.

@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ParseResult } from '@effect/schema';
-
 import { AST, S } from '@dxos/effect';
 
 import { FormatAnnotationId, FormatEnum } from './types';
@@ -78,7 +76,7 @@ export const toSimpleDateTime = (date: Date): SimpleDateTime => ({
 /**
  * Format: 2018-11-13
  */
-export const DateOnly = /*S.transformOrFail(S.String, SimpleDate, {
+export const DateOnly = /* S.transformOrFail(S.String, SimpleDate, {
   strict: true,
   decode: (str, _, ast) => {
     if (!isValidDateFormat(str)) {
@@ -100,7 +98,7 @@ export const DateOnly = /*S.transformOrFail(S.String, SimpleDate, {
       ].join('-'),
     );
   },
-})*/ S.String.annotations({
+}) */ S.String.annotations({
   [FormatAnnotationId]: FormatEnum.Date,
   [AST.TitleAnnotationId]: 'Date',
   [AST.DescriptionAnnotationId]: 'Valid date in ISO format',
@@ -109,7 +107,7 @@ export const DateOnly = /*S.transformOrFail(S.String, SimpleDate, {
 /**
  * Format: 20:20:39+00:00
  */
-export const TimeOnly = /*S.transformOrFail(S.String, SimpleTime, {
+export const TimeOnly = /* S.transformOrFail(S.String, SimpleTime, {
   strict: true,
   decode: (str, _, ast) => {
     if (!isValidTimeFormat(str)) {
@@ -128,7 +126,7 @@ export const TimeOnly = /*S.transformOrFail(S.String, SimpleTime, {
       ].join(':'),
     );
   },
-})*/ S.String.annotations({
+}) */ S.String.annotations({
   [FormatAnnotationId]: FormatEnum.Date,
   [AST.TitleAnnotationId]: 'Time',
   [AST.DescriptionAnnotationId]: 'Valid time in ISO format',
@@ -137,7 +135,7 @@ export const TimeOnly = /*S.transformOrFail(S.String, SimpleTime, {
 /**
  * Format: 2018-11-13T20:20:39+00:00
  */
-export const DateTime = /*S.transformOrFail(S.String, SimpleDateTime, {
+export const DateTime = /* S.transformOrFail(S.String, SimpleDateTime, {
   strict: false,
   decode: (str, _, ast) => {
     const [date, time] = str.split('T');
@@ -171,7 +169,7 @@ export const DateTime = /*S.transformOrFail(S.String, SimpleDateTime, {
       ].join('T'),
     );
   },
-})*/ S.String.annotations({
+}) */ S.String.annotations({
   [FormatAnnotationId]: FormatEnum.DateTime,
   [AST.TitleAnnotationId]: 'DateTime',
 });
@@ -191,9 +189,9 @@ export const Duration = S.String.annotations({
 // YYYY-MM-DD
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
-const isValidDateFormat = (str: string) => DATE_REGEX.test(str);
+const _isValidDateFormat = (str: string) => DATE_REGEX.test(str);
 
-const isValidDate = (str: string) => {
+const _isValidDate = (str: string) => {
   const date = new Date(str);
   return !isNaN(date.getTime()) && date.toISOString().startsWith(str);
 };
@@ -201,4 +199,4 @@ const isValidDate = (str: string) => {
 // HH:mm:ss
 const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/;
 
-const isValidTimeFormat = (str: string) => TIME_REGEX.test(str);
+const _isValidTimeFormat = (str: string) => TIME_REGEX.test(str);

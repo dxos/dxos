@@ -128,5 +128,5 @@ const Viewport = ({ role = 'article', children }: PropsWithChildren<{ role?: str
 
 export const Table = {
   Table: TablePrimitive,
-  Viewport: Viewport,
+  Viewport,
 };

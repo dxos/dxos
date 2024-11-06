@@ -96,7 +96,7 @@ type TextInputProps = {
 // TODO(burdon): Remove.
 // TODO(burdon): Use schema validation directly.
 const TextInput = ({ onChange, ...props }: TextInputProps) => {
-  const [valid, setValid] = useState(true);
+  const [valid, _setValid] = useState(true);
 
   const handleChange: NativeTextInputProps['onChange'] = (ev) => {
     // const text = ev.target.value;

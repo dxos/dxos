@@ -5,11 +5,11 @@
 import { describe, test } from 'vitest';
 
 import { S } from '@dxos/effect';
+import { log } from '@dxos/log';
 
 import { Format } from './format';
 import { ScalarEnum, getScalarType } from './types';
 import { toJsonSchema } from '../json';
-import { log } from '@dxos/log';
 
 // TODO(burdon): Are transformation viable with automerge?
 

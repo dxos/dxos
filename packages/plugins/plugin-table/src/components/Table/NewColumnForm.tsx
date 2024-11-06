@@ -29,7 +29,7 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
     }
   }, [open, close, model]);
 
-  const handleCreate = useCallback(() => {
+  const _handleCreate = useCallback(() => {
     if (!field || !model || !model?.table?.view) {
       close();
       return;
