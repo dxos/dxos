@@ -147,7 +147,9 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
           if (action.unset) {
             const index = model.sheet.ranges?.findIndex(
               (range) =>
-                range.key === action.key && cursor && inRange(rangeFromIndex(model.sheet, range.range), cursor),
+                range.key === action.key &&
+                cursorFallbackRange &&
+                inRange(rangeFromIndex(model.sheet, range.range), cursorFallbackRange.from),
             );
             if (index >= 0) {
               model.sheet.ranges?.splice(index, 1);
@@ -182,6 +184,7 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
     <ToolbarContextProvider onAction={handleAction}>
       <NaturalToolbar.Root
         classNames={[
+          'pli-0.5',
           ...(role === 'section'
             ? ['z-[2] group-focus-within/section:visible', !hasAttention && 'invisible', sectionToolbarLayout]
             : ['attention-surface']),
