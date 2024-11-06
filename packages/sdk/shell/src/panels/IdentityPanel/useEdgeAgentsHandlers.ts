@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { type CancellableInvitation } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { QueryAgentStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 
@@ -70,6 +71,11 @@ export const useEdgeAgentHandlers = ({
     setValidationMessage('');
     try {
       await service.createAgent();
+      await Promise.all(
+        client.spaces
+          .get()
+          .map((space) => space?.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED)),
+      );
       setAgentStatus('created');
     } catch (err: any) {
       setAgentStatus('error');
