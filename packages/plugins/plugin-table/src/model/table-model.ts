@@ -7,7 +7,7 @@ import sortBy from 'lodash.sortby';
 
 import { Resource } from '@dxos/context';
 import { PublicKey } from '@dxos/react-client';
-import { cellClassesForFieldType } from '@dxos/react-ui-data';
+import { cellClassesForFieldType, parseValue } from '@dxos/react-ui-data';
 import {
   type DxGridPlaneCells,
   type DxGridAxisMeta,
@@ -334,20 +334,31 @@ export class TableModel extends Resource {
 
     const field = fields[col];
     const dataIndex = this.displayToDataIndex.get(row) ?? row;
-    return this.rows.value[dataIndex][field.property];
+    const value = this.rows.value[dataIndex][field.property];
+
+    const { format } = this._projection.getFieldProjection(field.property);
+    if (format) {
+      return formatValue(format, value);
+    }
+
+    return value;
   };
 
   public setCellData = ({ col, row }: GridCell, value: any): void => {
+    const dataIndex = this.displayToDataIndex.get(row) ?? row;
     const fields = this.table.view?.fields ?? [];
     if (col < 0 || col >= fields.length) {
       return;
     }
 
     const field = fields[col];
-    const dataIndex = this.displayToDataIndex.get(row) ?? row;
-    // TODO(ZaymonFC): We used to be able to discriminate on the type of the field here, but now we
-    // need to inspect the view schema to discriminate.
-    this.rows.value[dataIndex][field.property] = ''; // parseValue(field.type, value);
+    const { format } = this._projection.getFieldProjection(field.property);
+
+    if (format) {
+      this.rows.value[dataIndex][field.property] = parseValue(format, value);
+    } else {
+      this.rows.value[dataIndex][field.property] = value;
+    }
   };
 
   public getRowCount = (): number => this.rows.value.length;

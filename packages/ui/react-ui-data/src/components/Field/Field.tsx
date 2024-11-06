@@ -36,6 +36,7 @@ export const FieldInput = <T extends S.Schema.Type<any>, V = string | number>({
   const validationValence = getErrorValence(property);
   const errorMessage = getErrorMessage(property);
 
+<<<<<<< HEAD
   if (options) {
     return (
       <Input.Root validationValence={validationValence}>
@@ -60,6 +61,22 @@ export const FieldInput = <T extends S.Schema.Type<any>, V = string | number>({
       </Input.Root>
     );
   } else {
+=======
+  switch (type) {
+    // TODO(burdon): Restrict string pattern. Input masking based on schema?
+    case 'string': {
+      return (
+        <Input.Root validationValence={validationValence}>
+          <Input.Label>{label}</Input.Label>
+          <Input.DescriptionAndValidation>
+            <Input.TextInput type='string' disabled={disabled} placeholder={placeholder} {...getInputProps(property)} />
+            <Input.Validation>{errorMessage}</Input.Validation>
+          </Input.DescriptionAndValidation>
+        </Input.Root>
+      );
+    }
+
+>>>>>>> a9d60ae80fab8d142315437142eace4f4fc4b183
     // TODO(burdon): Restrict number.
     // TODO(burdon): Restrict string pattern.
     // TODO(burdon): Checkbox.

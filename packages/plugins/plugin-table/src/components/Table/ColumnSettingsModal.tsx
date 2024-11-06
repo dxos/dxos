@@ -32,7 +32,8 @@ export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, trigg
     <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
       <DropdownMenu.Content>
-        <Field field={props} onSave={() => onOpenChange?.(false)} />
+        {/* TODO(ZaymonFC: Restore. */}
+        {/* <Field field={props} onSave={() => onOpenChange?.(false)} /> */}
         <DropdownMenu.Arrow />
       </DropdownMenu.Content>
     </DropdownMenu.Root>

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type MutableSchema, S } from '@dxos/echo-schema';
 import { Button, Icon, useTranslation, type ThemedClassName } from '@dxos/react-ui';
@@ -15,6 +15,7 @@ import {
   type FieldType,
   type ViewType,
   ViewProjection,
+  getPropertySchemaForFormat,
 } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
@@ -36,10 +37,21 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
   const { t } = useTranslation(translationKey);
   const projection = useMemo(() => new ViewProjection(schema, view), [schema, view]);
   const [field, setField] = useState<FieldType | undefined>();
+
+  // TODO(ZaymonFC): Projection should return `Property` instead of `FieldProjectionType`
   const fieldProperties = useMemo(
-    () => (field ? projection.getFieldProjection(field.property) : undefined),
+    () => (field ? (projection.getFieldProjection(field.property) as any) : undefined),
     [field, view],
   );
+  const [{ fieldSchema }, setSchema] = useState({ fieldSchema: getPropertySchemaForFormat(fieldProperties?.format) });
+
+  const calculateFieldSchema = useCallback((values: any) => {
+    setSchema({ fieldSchema: getPropertySchemaForFormat(values?.format) });
+  }, []);
+
+  useEffect(() => {
+    calculateFieldSchema(fieldProperties);
+  }, [fieldProperties]);
 
   const handleAdd = useCallback(() => {
     const field = createUniqueFieldForView(view);
@@ -103,14 +115,21 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
         )}
       </List.Root>
 
-      {fieldProperties && field && (
-        <Field
-          key={field.property}
-          classNames='p-2'
-          autoFocus
-          field={fieldProperties}
-          onSave={(props) => handleSet(field, props)}
-        />
+      {!fieldSchema ? (
+        <div>Schema not implemented for {fieldProperties?.format ?? 'undefined'}</div>
+      ) : (
+        fieldProperties &&
+        field && (
+          <Field
+            key={field.property}
+            classNames='p-2'
+            autoFocus
+            field={fieldProperties}
+            schema={fieldSchema}
+            onValuesChanged={calculateFieldSchema}
+            onSave={(props) => handleSet(field, props)}
+          />
+        )
       )}
 
       {!readonly && (

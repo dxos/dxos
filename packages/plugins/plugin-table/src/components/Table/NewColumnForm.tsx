@@ -50,7 +50,8 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
     <DropdownMenu.Root open={open} onOpenChange={close}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
       <DropdownMenu.Content>
-        <Field field={field} onSave={handleCreate} />
+        {/* TODO(ZaymonFC): Restore */}
+        {/* <Field field={field} onSave={handleCreate} /> */}
         <DropdownMenu.Arrow />
       </DropdownMenu.Content>
     </DropdownMenu.Root>

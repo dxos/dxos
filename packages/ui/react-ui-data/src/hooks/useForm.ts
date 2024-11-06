@@ -244,8 +244,9 @@ const markAllTouched = <T extends Record<keyof T, any>>(values: T) => {
 const collapseErrorArray = <T extends {}>(errors: ValidationError[]) =>
   errors.reduce(
     (acc, { path, message }) => {
-      // TODO(Zan): This won't play well with nesting.
-      acc[path as keyof T] = message;
+      if (!(path in acc)) {
+        acc[path as keyof T] = message;
+      }
       return acc;
     },
     {} as Record<keyof T, string>,

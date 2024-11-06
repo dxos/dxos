@@ -115,7 +115,9 @@ const DefaultStory = () => {
           <Toolbar.Separator />
           <Toolbar.Actions />
         </Toolbar.Root>
-        <Table model={model} />
+        <Table.Viewport>
+          <Table.Table model={model} />
+        </Table.Viewport>
       </div>
       <div className='flex flex-col h-full border-l border-separator'>
         {table.view && <ViewEditor schema={schema} view={table.view} />}
@@ -170,9 +172,9 @@ const TablePerformanceStory = (props: StoryProps) => {
   });
 
   return (
-    <div className='relative is-full max-is-max min-is-0 min-bs-0'>
-      <Table model={model} />
-    </div>
+    <Table.Viewport>
+      <Table.Table model={model} />
+    </Table.Viewport>
   );
 };
 
@@ -182,7 +184,7 @@ const TablePerformanceStory = (props: StoryProps) => {
 
 const meta: Meta<typeof Table> = {
   title: 'plugins/plugin-table/Table',
-  component: Table,
+  component: Table.Table as any,
   render: DefaultStory,
   parameters: { translations },
   decorators: [
