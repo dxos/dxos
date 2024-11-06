@@ -32,7 +32,7 @@ export type LocalEntity = LocalDirectory | LocalFile;
 // TODO(burdon): Adapt to use/extend DocumentType.
 export type LocalFile = {
   id: string;
-  title: string;
+  name: string;
   handle: FileSystemFileHandle | false;
   permission: PermissionStatus;
   text?: string;
@@ -42,7 +42,7 @@ export type LocalFile = {
 
 export type LocalDirectory = {
   id: string;
-  title: string;
+  name: string;
   handle: FileSystemDirectoryHandle;
   permission: PermissionStatus;
   children: LocalEntity[];

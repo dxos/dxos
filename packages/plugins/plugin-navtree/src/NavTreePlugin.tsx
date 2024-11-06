@@ -24,6 +24,7 @@ import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Path } from '@dxos/react-ui-mosaic';
+import { mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import {
@@ -89,7 +90,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       icon: node.properties.icon,
       disabled: node.properties.disabled,
       testId: node.properties.testId,
-      className: node.properties.className,
+      className: mx(node.properties.modified && 'italic', node.properties.className),
       headingClassName: node.properties.headingClassName,
       path,
       parentOf,
