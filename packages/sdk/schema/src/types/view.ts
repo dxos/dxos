@@ -134,11 +134,12 @@ export class ViewProjection {
   // TODO(burdon): Move into echo-schema.
   updateFormat(property: string, value: Partial<FormatType>): FormatType {
     let properties: JSONSchema.JsonSchema7 | undefined = this._schema.jsonSchema.properties[property];
-    if (!properties) {
+    if (properties) {
+      Object.assign(properties, value);
+    } else {
       properties = { ...value } as JSONSchema.JsonSchema7;
       this._schema.jsonSchema.properties[property] = properties;
     }
-    Object.assign(properties, value);
     return properties as FormatType;
   }
 }
