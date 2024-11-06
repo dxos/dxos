@@ -56,6 +56,10 @@ const SchemaArray = S.Array(S.suspend(() => JsonSchemaType));
 const NonNegativeInteger = S.Number.pipe(S.greaterThanOrEqualTo(0));
 const SimpleTypes = S.Literal('array', 'boolean', 'integer', 'null', 'number', 'object', 'string');
 const StringArray = S.Array(S.String);
+const JsonSchemaOrBoolean = S.Union(
+  S.suspend(() => JsonSchemaType),
+  S.Boolean,
+);
 
 // TODO(dmaretskyi): Fix circular types.
 const _JsonSchemaType = S.mutable(
@@ -89,7 +93,7 @@ const _JsonSchemaType = S.mutable(
     maxProperties: S.optional(NonNegativeInteger),
     minProperties: S.optional(NonNegativeInteger),
     required: S.optional(StringArray),
-    additionalProperties: S.optional(S.suspend(() => JsonSchemaType)),
+    additionalProperties: S.optional(JsonSchemaOrBoolean),
     definitions: S.optional(
       S.mutable(
         S.Record({
@@ -142,6 +146,34 @@ const _JsonSchemaType = S.mutable(
         }),
       ),
     ),
+
+    // TODO(dmaretskyi): Remove echo namespace.
+    echo: S.optional(
+      S.mutable(
+        S.Struct({
+          type: S.optional(
+            S.mutable(
+              S.Struct({
+                typename: S.String,
+                version: S.String,
+                schemaId: S.optional(S.String),
+              }),
+            ),
+          ),
+          annotations: S.optional(
+            S.Record({
+              key: S.String,
+              value: S.Any,
+            }),
+          ),
+        }),
+      ),
+    ),
+
+    /**
+     * Currency symbol.
+     */
+    currency: S.optional(S.String),
   }),
 );
 

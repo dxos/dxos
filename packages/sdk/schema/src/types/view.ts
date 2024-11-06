@@ -65,7 +65,7 @@ export class ViewType extends TypedObject({
 
 type CreateViewProps = {
   typename: string;
-  jsonSchema?: JSONSchema.JsonSchema7Object;
+  jsonSchema?: JsonSchemaType;
   properties?: string[];
 };
 
@@ -110,7 +110,7 @@ export class ViewProjection {
    */
   getFieldProjection(property: string): FieldProjectionType {
     const field = this._view.fields.find((f) => f.property === property) ?? { property };
-    const properties = this._schema.jsonSchema.properties[property] as any as FormatType;
+    const properties = this._schema.jsonSchema.properties![property] as any as FormatType;
     return { ...field, ...properties };
   }
 
@@ -133,12 +133,12 @@ export class ViewProjection {
    */
   // TODO(burdon): Move into echo-schema.
   updateFormat(property: string, value: Partial<FormatType>): FormatType {
-    let properties: JSONSchema.JsonSchema7 | undefined = this._schema.jsonSchema.properties[property];
+    let properties: JSONSchema.JsonSchema7 | undefined = this._schema.jsonSchema.properties![property];
     if (properties) {
       Object.assign(properties, value);
     } else {
       properties = { ...value } as JSONSchema.JsonSchema7;
-      this._schema.jsonSchema.properties[property] = properties;
+      this._schema.jsonSchema.properties![property] = properties;
     }
     return properties as FormatType;
   }

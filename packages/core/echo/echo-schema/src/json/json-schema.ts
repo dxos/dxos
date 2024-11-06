@@ -49,8 +49,10 @@ interface EchoRefinement {
 
 const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
   [ObjectAnnotationId]: 'type',
-  [ReferenceAnnotationId]: 'reference',
   [PropertyMetaAnnotationId]: 'annotations',
+
+  // TODO(dmaretskyi): Remove.
+  [ReferenceAnnotationId]: 'reference',
 };
 
 // TODO(burdon): Are these values stored (can they be changed?)
