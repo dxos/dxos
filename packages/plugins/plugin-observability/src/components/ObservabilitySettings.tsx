@@ -6,7 +6,7 @@ import React from 'react';
 
 import { parseIntentPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
-import { FormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-data';
 
 import { OBSERVABILITY_PLUGIN, ObservabilityAction } from '../meta';
 
@@ -25,7 +25,7 @@ export const ObservabilitySettings = ({ settings }: { settings: ObservabilitySet
   return (
     <>
       {intentPlugin && (
-        <FormInput
+        <DeprecatedFormInput
           label={t('observability enabled label')}
           secondary={
             <Message.Root valence='info'>
@@ -43,7 +43,7 @@ export const ObservabilitySettings = ({ settings }: { settings: ObservabilitySet
               })
             }
           />
-        </FormInput>
+        </DeprecatedFormInput>
       )}
     </>
   );

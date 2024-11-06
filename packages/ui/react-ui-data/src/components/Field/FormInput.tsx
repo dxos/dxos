@@ -8,17 +8,18 @@ import { Input, Select } from '@dxos/react-ui';
 
 import { type FormResult } from '../../hooks';
 
-export type FieldInputProps<T> = {
+export type FormInputProps<T> = {
   property: keyof T;
   label: string;
   options?: Array<{ value: string | number; label: string }>;
   disabled?: boolean;
   placeholder?: string;
-  getInputProps: (field: keyof T, type?: 'select') => Record<string, any>;
+  // TODO(burdon): Pick from FormResult.
+  getInputProps: (property: keyof T, type?: 'input' | 'select') => Record<string, any>;
 } & Pick<FormResult<T>, 'getErrorValence' | 'getErrorMessage'>;
 
 // TODO(burdon): Create story.
-export const FieldInput = <T,>({
+export const FormInput = <T,>({
   property,
   label,
   options = [],
@@ -27,7 +28,7 @@ export const FieldInput = <T,>({
   getInputProps,
   getErrorValence,
   getErrorMessage,
-}: FieldInputProps<T>) => {
+}: FormInputProps<T>) => {
   const validationValence = getErrorValence(property);
   const errorMessage = getErrorMessage(property);
 

@@ -9,7 +9,7 @@ import { Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { getProperties, type Property } from '@dxos/schema';
 
-import { FieldInput } from './FieldInput';
+import { FormInput } from './FormInput';
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
@@ -20,7 +20,7 @@ export type FieldProps<T> = ThemedClassName<{
   readonly?: boolean;
   // TODO(burdon): Property should be generic.
   onValuesChanged?: (values: T) => void;
-  onSave?: (field: T) => void;
+  onSave?: (values: T) => void;
 }>;
 
 // TODO(burdon): Remove extends Property.
@@ -59,7 +59,7 @@ export const Field = <T extends Property>({
 
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
-      <FieldInput<T>
+      <FormInput<T>
         property='format'
         label={t('field type label')}
         options={FormatEnums.map((type) => ({ value: type, label: t(`field type ${type}`) }))}
@@ -71,7 +71,7 @@ export const Field = <T extends Property>({
       />
 
       {props.map(({ name }) => (
-        <FieldInput<T>
+        <FormInput<T>
           key={name}
           property={name}
           label={name}

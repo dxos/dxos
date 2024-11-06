@@ -33,7 +33,7 @@ export type FormResult<T = {}> = {
   /**
    * Provider for props for input controls.
    */
-  getInputProps: <InputType extends 'input' | 'select' = 'input'>(
+  getInputProps: <InputType extends 'input' | 'select'>(
     key: keyof T,
     type?: InputType,
   ) => InputType extends 'select' ? SelectProps<T> : InputProps<T>;

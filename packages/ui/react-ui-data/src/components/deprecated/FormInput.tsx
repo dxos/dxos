@@ -6,14 +6,22 @@ import React, { type JSX, type PropsWithChildren } from 'react';
 
 import { Input } from '@dxos/react-ui';
 
-type FormInputProps = {
+export type DeprecatedFormInputProps = {
   label: string;
   description?: JSX.Element;
   secondary?: JSX.Element;
 };
 
-// TODO(burdon): Specify type.
-export const FormInput = ({ label, description, secondary, children }: PropsWithChildren<FormInputProps>) => {
+/**
+ * @deprecated
+ */
+// TODO(burdon): Still used in ObservabilitySettings.
+export const DeprecatedFormInput = ({
+  label,
+  description,
+  secondary,
+  children,
+}: PropsWithChildren<DeprecatedFormInputProps>) => {
   const primary = (
     <div role='none' className='flex w-full gap-4 py-1'>
       <Input.Root>

@@ -7,7 +7,7 @@ import React, { useMemo, type PropsWithChildren } from 'react';
 import { type PluginMeta, useIntentDispatcher, usePlugins } from '@dxos/app-framework';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { Input, useTranslation } from '@dxos/react-ui';
-import { FormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-data';
 
 import { PluginList } from './PluginList';
 import { type RegistrySettingsProps } from '../RegistryPlugin';
@@ -56,13 +56,13 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
 
   return (
     <>
-      <FormInput label={t('settings show experimental label')}>
+      <DeprecatedFormInput label={t('settings show experimental label')}>
         <Input.Switch
           data-testid='pluginSettings.experimental'
           checked={settings.experimental}
           onCheckedChange={(checked) => (settings.experimental = !!checked)}
         />
-      </FormInput>
+      </DeprecatedFormInput>
 
       <Section label={t('settings section installed label')}>
         <PluginList

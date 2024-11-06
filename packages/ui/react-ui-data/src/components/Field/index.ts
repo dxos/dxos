@@ -3,3 +3,4 @@
 //
 
 export * from './Field';
+export * from './FormInput';
