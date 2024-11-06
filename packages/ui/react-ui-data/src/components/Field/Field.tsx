@@ -2,21 +2,70 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ReactNode } from 'react';
+import React from 'react';
 
 import { FormatEnums, type S } from '@dxos/echo-schema';
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type FieldProjectionType, type Property } from '@dxos/schema';
 
-import { useForm } from '../../hooks';
+import { type FormResult, useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
 //
 // Util (move once stable)
 //
 
-// const errorValence = (
+type SchemaInputProps<T extends object> = {
+  getInputProps: (field: keyof T, type?: 'select') => Record<string, any>;
+  getErrorValence: FormResult<T>['getErrorValence'];
+  getErrorMessage: FormResult<T>['getErrorMessage'];
+  fieldName: keyof T;
+  label: string;
+  type: 'string' | 'number' | 'select';
+  options?: Array<{ value: string; label: string }>;
+  disabled?: boolean;
+  placeholder?: string;
+};
+
+export const SchemaInput = <T extends object>({
+  getInputProps,
+  getErrorValence,
+  getErrorMessage,
+  fieldName,
+  label,
+  type,
+  options = [],
+  disabled,
+  placeholder,
+}: SchemaInputProps<T>) => {
+  return (
+    <Input.Root validationValence={getErrorValence(fieldName)}>
+      <Input.Label>{label}</Input.Label>
+      {type === 'select' ? (
+        <Select.Root {...getInputProps(fieldName, 'select')}>
+          <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                {options.map(({ value, label }) => (
+                  <Select.Option key={value} value={value}>
+                    {label}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
+      ) : (
+        <Input.TextInput type={type} disabled={disabled} placeholder={placeholder} {...getInputProps(fieldName)} />
+      )}
+      <Input.DescriptionAndValidation>
+        <Input.Validation>{getErrorMessage(fieldName)}</Input.Validation>
+      </Input.DescriptionAndValidation>
+    </Input.Root>
+  );
+};
 
 //
 // Field
@@ -51,51 +100,37 @@ export const Field = ({ classNames, field, schema, autoFocus, readonly, onSave }
 
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
-      <FieldRow>
-        <Input.Root validationValence={getErrorValence('property')}>
-          <Input.Label>{t('field path label')}</Input.Label>
-          <Input.TextInput
-            autoFocus={autoFocus}
-            disabled={readonly}
-            placeholder={t('field path placeholder')}
-            {...getInputProps('property')}
-          />
-          <Input.DescriptionAndValidation>
-            <Input.Validation>{getErrorMessage('property')}</Input.Validation>
-          </Input.DescriptionAndValidation>
-        </Input.Root>
-      </FieldRow>
-      <FieldRow>
-        <Input.Root validationValence={getErrorValence('title')}>
-          <Input.Label>{t('field label label')}</Input.Label>
-          <Input.TextInput disabled={readonly} placeholder={t('field label placeholder')} {...getInputProps('title')} />
-          <Input.DescriptionAndValidation>
-            <Input.Validation>{getErrorMessage('title')}</Input.Validation>
-          </Input.DescriptionAndValidation>
-        </Input.Root>
-      </FieldRow>
-      <FieldRow>
-        <Input.Root validationValence={getErrorValence('format')}>
-          <Input.Label>{t('field type label')}</Input.Label>
-          <Select.Root {...getInputProps('format', 'select')}>
-            <Select.TriggerButton classNames='is-full' placeholder='Type' />
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {FormatEnums.map((type) => (
-                    <Select.Option key={type} value={type}>
-                      {t(`field type ${type}`)}
-                    </Select.Option>
-                  ))}
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
-          <Input.DescriptionAndValidation>
-            <Input.Validation>{getErrorMessage('format')}</Input.Validation>
-          </Input.DescriptionAndValidation>
-        </Input.Root>
-      </FieldRow>
+      <SchemaInput<Property>
+        getInputProps={getInputProps}
+        getErrorValence={getErrorValence}
+        getErrorMessage={getErrorMessage}
+        fieldName='property'
+        label={t('field path label')}
+        type='string'
+        disabled={readonly}
+        placeholder={t('field path placeholder')}
+      />
+      <SchemaInput<Property>
+        getInputProps={getInputProps}
+        getErrorValence={getErrorValence}
+        getErrorMessage={getErrorMessage}
+        fieldName='title'
+        label={t('field label label')}
+        type='string'
+        disabled={readonly}
+        placeholder={t('field label placeholder')}
+      />
+      <SchemaInput<Property>
+        getInputProps={getInputProps}
+        getErrorValence={getErrorValence}
+        getErrorMessage={getErrorMessage}
+        fieldName='format'
+        label={t('field type label')}
+        type='select'
+        options={FormatEnums.map((type) => ({ value: type, label: t(`field type ${type}`) }))}
+        disabled={readonly}
+        placeholder='Type'
+      />
 
       {/* TODO(burdon): Convert multipleOf. */}
       {/*
@@ -135,16 +170,10 @@ export const Field = ({ classNames, field, schema, autoFocus, readonly, onSave }
       )}
       */}
       {!readonly && (
-        <FieldRow>
-          <Button onClick={handleSubmit} disabled={!canSubmit}>
-            {t('field save button label')}
-          </Button>
-        </FieldRow>
+        <Button onClick={handleSubmit} disabled={!canSubmit}>
+          {t('field save button label')}
+        </Button>
       )}
     </div>
   );
-};
-
-const FieldRow = ({ children }: { children: ReactNode }) => {
-  return <div className='flex flex-col w-full gap-1'>{children}</div>;
 };
