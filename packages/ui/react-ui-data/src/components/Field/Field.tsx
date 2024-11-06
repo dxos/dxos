@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { FormatEnums, type S } from '@dxos/echo-schema';
+import { AST, FormatEnums, type S } from '@dxos/echo-schema';
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type FieldProjectionType, type Property } from '@dxos/schema';
@@ -82,7 +82,7 @@ export type FieldProps = ThemedClassName<{
 export const Field = ({ classNames, field, schema, autoFocus, readonly, onSave }: FieldProps) => {
   const { t } = useTranslation(translationKey);
 
-  const { getInputProps, canSubmit, handleSubmit, getErrorValence, getErrorMessage } = useForm<Property>({
+  const { getInputProps, canSubmit, handleSubmit, getErrorValence, getErrorMessage } = useForm<any>({
     schema,
     initialValues: field,
     // additionalValidation: (values) => {
@@ -97,6 +97,10 @@ export const Field = ({ classNames, field, schema, autoFocus, readonly, onSave }
     // },
     onSubmit: (values) => onSave?.(values),
   });
+
+  // How can we generate the following based on the effect schema given to us?
+  const astProps = AST.getPropertySignatures(schema.ast);
+  console.log(astProps.map((prop) => prop.name));
 
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
@@ -132,20 +136,32 @@ export const Field = ({ classNames, field, schema, autoFocus, readonly, onSave }
         placeholder='Type'
       />
 
-      {/* TODO(burdon): Convert multipleOf. */}
-      {/*
-      {features.includes('numeric') && (
-        <FieldRow>
-          <Input.Root validationValence={getErrorValence('digits')}>
-            <Input.Label>{t('field digits label')}</Input.Label>
-            <Input.TextInput disabled={readonly} type='number' {...getInputProps('digits')} />
-            <Input.DescriptionAndValidation classNames='min-bs-[1em]'>
-              <Input.Validation>{getErrorMessage('digits')}</Input.Validation>
-            </Input.DescriptionAndValidation>
-          </Input.Root>
-        </FieldRow>
+      {astProps.findIndex((prop) => prop.name === 'multipleOf') !== -1 && (
+        <SchemaInput<any>
+          getInputProps={getInputProps}
+          getErrorValence={getErrorValence}
+          getErrorMessage={getErrorMessage}
+          fieldName='multipleOf'
+          label={t('field multipleOf label')}
+          type='number'
+          disabled={readonly}
+          placeholder={t('field multipleOf placeholder')}
+        />
       )}
-      */}
+
+      {astProps.findIndex((prop) => prop.name === 'currency') !== -1 && (
+        <SchemaInput<any>
+          getInputProps={getInputProps}
+          getErrorValence={getErrorValence}
+          getErrorMessage={getErrorMessage}
+          fieldName='currency'
+          label={t('field currency label')}
+          type='string'
+          disabled={readonly}
+          placeholder={t('field currency placeholder')}
+        />
+      )}
+
       {/* {features.includes('ref') && (
         <>
           <FieldRow>
