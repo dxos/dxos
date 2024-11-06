@@ -334,7 +334,14 @@ export class TableModel extends Resource {
 
     const field = fields[col];
     const dataIndex = this.displayToDataIndex.get(row) ?? row;
-    return this.rows.value[dataIndex][field.property];
+    const value = this.rows.value[dataIndex][field.property];
+
+    const { format } = this._projection.getFieldProjection(field.property);
+    if (format) {
+      return formatValue(format, value);
+    }
+
+    return value;
   };
 
   public setCellData = ({ col, row }: GridCell, value: any): void => {
