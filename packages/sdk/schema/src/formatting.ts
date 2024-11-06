@@ -17,7 +17,7 @@ type ValueFormatProps = {
  */
 // TODO(burdon): Move to react-ui-data.
 // TODO(burdon): Formatting is different from kind format (e.g., percent is not a data format).
-export const formatValue = ({ type, format, value, locale = undefined }: ValueFormatProps): string => {
+export const formatForDisplay = ({ type, format, value, locale = undefined }: ValueFormatProps): string => {
   if (!format) {
     switch (type) {
       case ScalarEnum.Boolean: {
@@ -79,6 +79,48 @@ export const formatValue = ({ type, format, value, locale = undefined }: ValueFo
       return date.toLocaleTimeString(locale);
     }
 
+    default: {
+      if (value === null || value === 'undefined') {
+        return '';
+      } else {
+        return String(value);
+      }
+    }
+  }
+};
+
+export const formatForEditing = ({ type, format, value, locale = undefined }: ValueFormatProps): string => {
+  if (!format) {
+    switch (type) {
+      case ScalarEnum.Boolean:
+      case ScalarEnum.Number:
+      case ScalarEnum.String:
+      case ScalarEnum.Ref:
+      default:
+        return String(value);
+    }
+  }
+
+  switch (format) {
+    case FormatEnum.Percent: {
+      return String(value * 100); // Just the number without '%'.
+    }
+    case FormatEnum.Currency: {
+      return String(value); // Just the number without currency formatting.
+    }
+    case FormatEnum.DateTime: {
+      const date = new Date(value as number);
+      // Could consider ISO string or specific format based on requirements.
+      return date.toISOString();
+    }
+    case FormatEnum.Date: {
+      const date = new Date(value as number);
+      return date.toISOString().split('T')[0];
+    }
+    case FormatEnum.Time: {
+      const date = new Date(value as number);
+      return date.toISOString().split('T')[1].split('.')[0];
+    }
     default: {
       return String(value);
     }

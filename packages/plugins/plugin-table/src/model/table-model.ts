@@ -16,7 +16,7 @@ import {
   type DxGridCellValue,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { type ViewProjection, type FieldType, formatValue } from '@dxos/schema';
+import { type ViewProjection, type FieldType, formatForDisplay, formatForEditing } from '@dxos/schema';
 
 import { fromGridCell, type GridCell, type TableType } from '../types';
 import { tableButtons, touch } from '../util';
@@ -241,17 +241,15 @@ export class TableModel extends Resource {
       const fieldProjection = this._projection.getFieldProjection(field.property);
       const cell: DxGridCellValue = {
         get value() {
-          // TODO(ZaymonFC): Check this!
-          console.log(fieldProjection);
           const value = row?.[field.property];
           if (!value) {
             return '';
           }
-          return formatValue({ type: fieldProjection.type, format: fieldProjection.format, value });
+          return formatForDisplay({ type: fieldProjection.type, format: fieldProjection.format, value });
         },
       };
 
-      const classes = cellClassesForFieldType(fieldProjection.format);
+      const classes = cellClassesForFieldType({ type: fieldProjection.type, format: fieldProjection.format });
       if (classes) {
         cell.className = mx(classes);
       }
@@ -341,10 +339,12 @@ export class TableModel extends Resource {
     const dataIndex = this.displayToDataIndex.get(row) ?? row;
     const value = this.rows.value[dataIndex][field.property];
 
-    // TODO(ZaymonFC): Switch to destructuring after verification.
+    if (value === undefined) {
+      return '';
+    }
+
     const fieldProjection = this._projection.getFieldProjection(field.property);
-    console.log('fieldProjection', fieldProjection, value);
-    return formatValue({ type: fieldProjection.type, format: fieldProjection.format, value });
+    return formatForEditing({ type: fieldProjection.type, format: fieldProjection.format, value });
   };
 
   public setCellData = ({ col, row }: GridCell, value: any): void => {
@@ -355,10 +355,12 @@ export class TableModel extends Resource {
     }
 
     const field = fields[col];
-    const { type, format } = this._projection.getFieldProjection(field.property);
-    // TODO(ZaymonFC): Remove.
-    console.log('setCellData', { col, row }, { type, format, value });
-    this.rows.value[dataIndex][field.property] = parseValue({ type, format, value });
+    const fieldProjection = this._projection.getFieldProjection(field.property);
+    this.rows.value[dataIndex][field.property] = parseValue({
+      type: fieldProjection.type,
+      format: fieldProjection.format,
+      value,
+    });
   };
 
   public getRowCount = (): number => this.rows.value.length;
