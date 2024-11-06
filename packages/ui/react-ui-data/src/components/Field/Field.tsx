@@ -28,7 +28,7 @@ type SchemaInputProps<T extends object> = {
   placeholder?: string;
 };
 
-export const SchemaInput = <T extends object>({
+export const FieldInput = <T extends object>({
   getInputProps,
   getErrorValence,
   getErrorMessage,
@@ -98,13 +98,12 @@ export const Field = ({ classNames, field, schema, autoFocus, readonly, onSave }
     onSubmit: (values) => onSave?.(values),
   });
 
-  // How can we generate the following based on the effect schema given to us?
   const astProps = AST.getPropertySignatures(schema.ast);
-  console.log(astProps.map((prop) => prop.name));
 
+  // TODO(ZaymonFC): How can we generate the following based on the effect schema given to us?
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
-      <SchemaInput<Property>
+      <FieldInput<Property>
         getInputProps={getInputProps}
         getErrorValence={getErrorValence}
         getErrorMessage={getErrorMessage}
@@ -114,7 +113,7 @@ export const Field = ({ classNames, field, schema, autoFocus, readonly, onSave }
         disabled={readonly}
         placeholder={t('field path placeholder')}
       />
-      <SchemaInput<Property>
+      <FieldInput<Property>
         getInputProps={getInputProps}
         getErrorValence={getErrorValence}
         getErrorMessage={getErrorMessage}
@@ -124,7 +123,7 @@ export const Field = ({ classNames, field, schema, autoFocus, readonly, onSave }
         disabled={readonly}
         placeholder={t('field label placeholder')}
       />
-      <SchemaInput<Property>
+      <FieldInput<Property>
         getInputProps={getInputProps}
         getErrorValence={getErrorValence}
         getErrorMessage={getErrorMessage}
@@ -137,7 +136,7 @@ export const Field = ({ classNames, field, schema, autoFocus, readonly, onSave }
       />
 
       {astProps.findIndex((prop) => prop.name === 'multipleOf') !== -1 && (
-        <SchemaInput<any>
+        <FieldInput<any>
           getInputProps={getInputProps}
           getErrorValence={getErrorValence}
           getErrorMessage={getErrorMessage}
@@ -150,7 +149,7 @@ export const Field = ({ classNames, field, schema, autoFocus, readonly, onSave }
       )}
 
       {astProps.findIndex((prop) => prop.name === 'currency') !== -1 && (
-        <SchemaInput<any>
+        <FieldInput<any>
           getInputProps={getInputProps}
           getErrorValence={getErrorValence}
           getErrorMessage={getErrorMessage}
