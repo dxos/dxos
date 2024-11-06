@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { FormatEnum, ScalarEnum } from '@dxos/echo-schema';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -18,12 +18,17 @@ import { TestPopup } from '../testing';
 
 const DefaultStory = (props: { field: FieldProps['field'] }) => {
   const [field, setField] = useState(props.field);
-  const schema = useMemo(() => getPropertySchemaForFormat(field.format), [field.format]);
+  // TODO(ZaymonFC): Workout why this throws if you unwrap the object.
+  const [{ schema }, setSchema] = useState({ schema: getPropertySchemaForFormat(field.format) });
 
-  const handleSave = (field: any) => {
+  const handleValueChange = useCallback((values: FieldProps['field']) => {
+    setSchema({ schema: getPropertySchemaForFormat(values.format) });
+  }, []);
+
+  const handleSave = useCallback((field: any) => {
     console.log('handleSave', field);
     setField(field);
-  };
+  }, []);
 
   if (!schema) {
     return <div>No schema found for format: {field.format}</div>;
@@ -33,7 +38,7 @@ const DefaultStory = (props: { field: FieldProps['field'] }) => {
     <div className='w-full grid grid-cols-3'>
       <div className='flex col-span-2 w-full justify-center p-4'>
         <TestPopup>
-          <Field field={field} schema={schema} onSave={handleSave} />
+          <Field field={field} schema={schema} onValuesChanged={handleValueChange} onSave={handleSave} />
         </TestPopup>
       </div>
       <SyntaxHighlighter className='w-full text-xs'>{JSON.stringify(field, null, 2)}</SyntaxHighlighter>

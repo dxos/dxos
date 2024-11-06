@@ -53,6 +53,12 @@ export interface FormOptions<T extends object> {
    * @returns Array of validation errors, or undefined if validation passes
    */
   additionalValidation?: (values: T) => ValidationError[] | undefined;
+  /**
+   * Callback for value changes. Note: This is called even when values are invalid.
+   * Sometimes the parent component may want to know about changes even if the form is
+   * in an invalid state.
+   */
+  onValuesChanged?: (values: T) => void;
   onSubmit: (values: T, meta: { changed: FormResult<T>['changed'] }) => void;
 }
 
@@ -64,6 +70,7 @@ export const useForm = <T extends object>({
   initialValues,
   schema,
   additionalValidation,
+  onValuesChanged,
   onSubmit,
 }: FormOptions<T>): FormResult<T> => {
   invariant(additionalValidation != null || schema != null, 'useForm must be called with schema and/or validate');
@@ -107,13 +114,13 @@ export const useForm = <T extends object>({
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name: property, value, type } = event.target;
       const parsedValue = type === 'number' ? parseFloat(value) || 0 : value;
-      // TODO(ZaymonFC): Think about nesting!
       const newValues = { ...values, [property]: parsedValue };
       setValues(newValues);
       validate(newValues);
       setChanged((prev) => ({ ...prev, [property]: true }));
+      onValuesChanged?.(newValues);
     },
-    [values, validate],
+    [values, validate, onValuesChanged],
   );
 
   const onValueChange = useCallback(
