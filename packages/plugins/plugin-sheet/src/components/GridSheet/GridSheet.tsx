@@ -27,7 +27,7 @@ import {
 } from '@dxos/react-ui-grid';
 
 import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
-import { DEFAULT_COLUMNS, DEFAULT_ROWS, rangeToA1Notation, type CellRange } from '../../defs';
+import { DEFAULT_COLUMNS, DEFAULT_ROWS, rangeToA1Notation, type CellRange, MAX_ROWS, MAX_COLUMNS } from '../../defs';
 import { rangeExtension, sheetExtension, type RangeController } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
 import { SHEET_PLUGIN } from '../../meta';
@@ -61,6 +61,7 @@ export const GridSheet = () => {
     useSheetContext();
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
+  const [extraplanarFocus, setExtraplanarFocus] = useState<DxGridPosition | null>(null);
   const rangeController = useRef<RangeController>();
   const { hasAttention } = useAttention(id);
 
@@ -68,8 +69,15 @@ export const GridSheet = () => {
     (event: FocusEvent) => {
       if (!editing) {
         const cell = closestCell(event.target);
-        if (cell && cell.plane === 'grid') {
-          setCursor({ col: cell.col, row: cell.row });
+        if (cell) {
+          if (cell.plane === 'grid') {
+            setCursor({ col: cell.col, row: cell.row });
+            setExtraplanarFocus(null);
+          } else {
+            setExtraplanarFocus(cell);
+          }
+        } else {
+          setExtraplanarFocus(null);
         }
       }
     },
@@ -144,6 +152,34 @@ export const GridSheet = () => {
     [hasAttention],
   );
 
+  const selectEntireAxis = useCallback(
+    (pos: DxGridPosition) => {
+      switch (pos.plane) {
+        case 'frozenRowsStart':
+          return dxGrid?.setSelection({
+            start: { col: pos.col, row: 0, plane: 'grid' },
+            end: { col: pos.col, row: MAX_ROWS, plane: 'grid' },
+          });
+        case 'frozenColsStart':
+          return dxGrid?.setSelection({
+            start: { row: pos.row, col: 0, plane: 'grid' },
+            end: { row: pos.row, col: MAX_COLUMNS, plane: 'grid' },
+          });
+      }
+    },
+    [dxGrid],
+  );
+
+  const handleClick = useCallback(
+    (event: MouseEvent) => {
+      const cell = closestCell(event.target);
+      if (cell) {
+        selectEntireAxis(cell);
+      }
+    },
+    [selectEntireAxis],
+  );
+
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       switch (event.key) {
@@ -151,6 +187,16 @@ export const GridSheet = () => {
         case 'Delete':
           event.preventDefault();
           return cursorFallbackRange && model.clear(cursorFallbackRange);
+        case 'Enter':
+        case 'Space':
+          if (dxGrid && extraplanarFocus) {
+            switch (extraplanarFocus.plane) {
+              case 'frozenRowsStart':
+              case 'frozenColsStart':
+                event.preventDefault();
+                return selectEntireAxis(extraplanarFocus);
+            }
+          }
       }
       if (event.metaKey || event.ctrlKey) {
         switch (event.key) {
@@ -176,7 +222,7 @@ export const GridSheet = () => {
         }
       }
     },
-    [cursorFallbackRange, model, cursor],
+    [cursorFallbackRange, model, cursor, extraplanarFocus, selectEntireAxis],
   );
 
   const contextMenuAnchorRef = useRef<HTMLButtonElement | null>(null);
@@ -257,6 +303,7 @@ export const GridSheet = () => {
         onWheelCapture={handleWheel}
         onKeyDown={handleKeyDown}
         onContextMenu={handleContextMenu}
+        onClick={handleClick}
         overscroll='inline'
         className='[--dx-grid-base:var(--surface-bg)]'
         activeRefs={activeRefs}

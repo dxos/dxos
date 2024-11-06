@@ -37,6 +37,7 @@ import {
   type DxGridAxis,
   type DxGridSelectionProps,
   type DxGridAnnotatedWheelEvent,
+  type DxGridRange,
 } from './types';
 import { separator, toCellIndex } from './util';
 
@@ -640,6 +641,8 @@ export class DxGrid extends LitElement {
     }
   }
 
+  // Internal utility for setting selection end.
+
   private setSelectionEnd(nextCoords: DxGridPosition) {
     if (
       this.selectionEnd.plane !== nextCoords.plane ||
@@ -649,6 +652,14 @@ export class DxGrid extends LitElement {
       this.selectionEnd = nextCoords;
       this.dispatchSelectionChange();
     }
+  }
+
+  // Selection setter for consumers
+
+  setSelection(range: DxGridRange) {
+    this.selectionStart = range.start;
+    this.selectionEnd = range.end;
+    this.dispatchSelectionChange();
   }
 
   private focusedCellBox(): DxEditRequest['cellBox'] {
