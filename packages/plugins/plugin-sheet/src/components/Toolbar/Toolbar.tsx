@@ -123,10 +123,12 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
       switch (action.key) {
         case 'alignment':
           if (cursorFallbackRange) {
-            const index = model.sheet.ranges?.findIndex(
-              (range) =>
-                range.key === action.key && inRange(rangeFromIndex(model.sheet, range.range), cursorFallbackRange.from),
-            );
+            const index =
+              model.sheet.ranges?.findIndex(
+                (range) =>
+                  range.key === action.key &&
+                  inRange(rangeFromIndex(model.sheet, range.range), cursorFallbackRange.from),
+              ) ?? -1;
             const nextRangeEntity = {
               range: rangeToIndex(model.sheet, cursorFallbackRange),
               key: action.key,
@@ -134,6 +136,8 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
             };
             if (index < 0) {
               model.sheet.ranges?.push(nextRangeEntity);
+            } else if (model.sheet.ranges![index].value === action.value) {
+              model.sheet.ranges?.splice(index, 1);
             } else {
               model.sheet.ranges?.splice(index, 1, nextRangeEntity);
             }
