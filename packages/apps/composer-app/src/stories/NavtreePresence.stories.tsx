@@ -16,7 +16,7 @@ import '@dxos-theme';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { translations } from '@dxos/react-ui-navtree';
+// import { translations } from '@dxos/react-ui-navtree';
 import { withTheme } from '@dxos/storybook-utils';
 
 faker.seed(3);
@@ -133,8 +133,8 @@ faker.seed(3);
 //
 // // TODO(burdon): Move to react-ui-navtree?
 export default {
-  title: 'composer-app/StorybookNavtreePresence',
+  title: 'apps/composer-app/StorybookNavtreePresence',
   component: () => <span>To do</span>,
   decorators: [withTheme],
-  parameters: { translations },
+  // parameters: { translations },
 };

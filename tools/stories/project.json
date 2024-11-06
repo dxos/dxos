@@ -10,74 +10,17 @@
         }
       },
       "dependsOn": [
-        "compile-all"
+        "^compile",
+        "mkdist"
       ],
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "tools/stories/config/all",
-        "outputDir": "tools/stories/out/stories"
+        "configDir": "{projectRoot}/config/all",
+        "outputDir": "{projectRoot}/out/stories"
       },
       "outputs": [
         "{options.outputDir}"
       ]
-    },
-    "chromatic": {
-      "dependsOn": [
-        "chromatic-examples",
-        "chromatic-shell",
-        "chromatic-ui"
-      ],
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "true"
-        ]
-      }
-    },
-    "chromatic-examples": {
-      "dependsOn": [
-        "storybook-build-examples"
-      ],
-      "executor": "nx:run-script",
-      "inputs": [
-        "^production",
-        "production"
-      ],
-      "options": {
-        "script": "chromatic-examples"
-      }
-    },
-    "chromatic-shell": {
-      "dependsOn": [
-        "storybook-build-shell"
-      ],
-      "executor": "nx:run-script",
-      "inputs": [
-        "^production",
-        "production"
-      ],
-      "options": {
-        "script": "chromatic-shell"
-      }
-    },
-    "chromatic-ui": {
-      "dependsOn": [
-        "storybook-build-ui"
-      ],
-      "executor": "nx:run-script",
-      "inputs": [
-        "^production",
-        "production"
-      ],
-      "options": {
-        "script": "chromatic-ui"
-      }
-    },
-    "compile-all": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "nx run-many --target=build --all"
-      }
     },
     "lint": {
       "options": {
@@ -89,7 +32,11 @@
       }
     },
     "mkdist": {
-      "command": "mkdir -p tools/stories/static"
+      "cache": true,
+      "command": "mkdir -p tools/stories/static",
+      "outputs": [
+        "{workspaceRoot}/tools/stories/static"
+      ]
     },
     "storybook": {
       "configurations": {
@@ -98,107 +45,13 @@
         }
       },
       "dependsOn": [
-        "app-graph:compile",
-        "chess-app:compile",
-        "composer-app:compile",
-        "devtools:compile",
-        "examples:compile",
-        "gem-core:compile",
-        "gem-globe:compile",
-        "halo-app:compile",
-        "mkdist",
-        "plexus:compile",
-        "react-appkit:compile",
-        "react-client:compile",
-        "react-icons:compile",
-        "react-shell:compile",
-        "react-ui-card:compile",
-        "react-ui-editor:compile",
-        "react-ui-grid:compile",
-        "react-ui-mosaic:compile",
-        "react-ui-navtree:compile",
-        "react-ui-searchlist:compile",
-        "react-ui-stack:compile",
-        "react-ui-table:compile",
-        "react-ui:compile",
-        "vite-plugin-icons:compile"
+        "^compile",
+        "mkdist"
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "{projectRoot}/config/all"
       }
-    },
-    "storybook-build-all": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "dependsOn": [
-        "compile-all"
-      ],
-      "executor": "@nx/storybook:build",
-      "options": {
-        "configDir": "{projectRoot}/config/all",
-        "outputDir": "{projectRoot}/out/all"
-      },
-      "outputs": [
-        "{options.outputDir}"
-      ]
-    },
-    "storybook-build-examples": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "dependsOn": [
-        "examples:prebuild"
-      ],
-      "executor": "@nx/storybook:build",
-      "options": {
-        "configDir": "{projectRoot}/config/examples",
-        "outputDir": "{projectRoot}/out/examples"
-      },
-      "outputs": [
-        "{options.outputDir}"
-      ]
-    },
-    "storybook-build-shell": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "dependsOn": [
-        "react-shell:compile"
-      ],
-      "executor": "@nx/storybook:build",
-      "options": {
-        "configDir": "{projectRoot}/config/shell",
-        "outputDir": "{projectRoot}/out/shell"
-      },
-      "outputs": [
-        "{options.outputDir}"
-      ]
-    },
-    "storybook-build-ui": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "dependsOn": [
-        "react-ui:compile"
-      ],
-      "executor": "@nx/storybook:build",
-      "options": {
-        "configDir": "{projectRoot}/config/ui",
-        "outputDir": "{projectRoot}/out/ui"
-      },
-      "outputs": [
-        "{options.outputDir}"
-      ]
     },
     "storybook-e2e": {
       "configurations": {
@@ -207,10 +60,8 @@
         }
       },
       "dependsOn": [
-        "mkdist",
-        "react-client:compile",
-        "react-shell:compile",
-        "react-ui-stack:compile"
+        "^compile",
+        "mkdist"
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
@@ -225,7 +76,7 @@
         }
       },
       "dependsOn": [
-        "react-client:compile"
+        "^compile"
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
@@ -233,5 +84,25 @@
         "outputDir": "{projectRoot}/out/examples"
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "app-graph",
+    "composer-app",
+    "devtools",
+    "examples",
+    "gem-core",
+    "gem-globe",
+    "plexus",
+    "react-client",
+    "react-ui",
+    "react-ui-card",
+    "react-ui-editor",
+    "react-ui-grid",
+    "react-ui-mosaic",
+    "react-ui-searchlist",
+    "react-ui-stack",
+    "react-ui-table",
+    "shell",
+    "vite-plugin-icons"
+  ]
 }

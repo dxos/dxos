@@ -4,9 +4,9 @@
 
 import {
   AST,
-  DynamicSchema,
   getSchema,
   getType,
+  MutableSchema,
   ReferenceAnnotationId,
   type S,
   SchemaValidator,
@@ -82,7 +82,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
               return links;
             }
 
-            if (!(objectSchema instanceof DynamicSchema)) {
+            if (!(objectSchema instanceof MutableSchema)) {
               const idx = objects.findIndex((obj) => obj.id === typename);
               if (idx === -1) {
                 this._graph.nodes.push({

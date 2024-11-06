@@ -10,9 +10,12 @@ import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
+import { translations as dataTranslations, ViewEditor } from '@dxos/react-ui-data';
+import { addFieldToView, type FieldType, removeFieldFromView } from '@dxos/schema';
 
 import { TableContainer } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
+import { serializer } from './serializer';
 import translations from './translations';
 import { TableType } from './types';
 import { TableAction, type TablePluginProvides, isTable } from './types';
@@ -33,10 +36,11 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             icon: 'ph--table--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (table: TableType) => [], // loadObjectReferences(table, (table) => [table.schema]),
+            serializer,
           },
         },
       },
-      translations,
+      translations: [...translations, ...dataTranslations],
       echo: {
         schema: [TableType],
       },
@@ -96,6 +100,15 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             case 'section':
             case 'article':
               return isTable(data.object) ? <TableContainer role={role} table={data.object} /> : null;
+            case 'complementary--settings': {
+              if (data.subject instanceof TableType && data.subject.view) {
+                return {
+                  node: <ViewEditor view={data.subject.view} />,
+                };
+              }
+
+              return null;
+            }
             default:
               return null;
           }
@@ -121,8 +134,49 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           switch (intent.action) {
             case TableAction.CREATE: {
               return {
-                data: create(TableType, { name: '', props: [] }),
+                data: create(TableType, { name: '', threads: [] }),
               };
+            }
+
+            case TableAction.ADD_COLUMN: {
+              const { table, field } = intent.data as TableAction.AddColumn;
+              if (!isTable(table) || !table.schema || !table.view) {
+                return;
+              }
+              addFieldToView(table.schema, table.view, field);
+              return { data: true };
+            }
+
+            case TableAction.DELETE_COLUMN: {
+              const { table, field } = intent.data as TableAction.DeleteColumn;
+              if (!isTable(table) || !table.view || !table.schema) {
+                return;
+              }
+
+              if (!intent.undo) {
+                const fieldPosition = table.view.fields.indexOf(field);
+                if (fieldPosition === undefined) {
+                  return;
+                }
+
+                removeFieldFromView(table.schema, table.view, field);
+
+                return {
+                  undoable: {
+                    message: translations[0]['en-US'][TABLE_PLUGIN]['column deleted label'],
+                    data: { view: table.view, field, fieldPosition },
+                  },
+                };
+              } else if (intent.undo) {
+                const { field, fieldPosition } = intent.data as { field: FieldType; fieldPosition: number };
+
+                try {
+                  addFieldToView(table.schema, table.view, field, fieldPosition);
+                } catch (error) {
+                  // TODO(ZaymonFC): Handle error.
+                }
+                return { data: true };
+              }
             }
           }
         },

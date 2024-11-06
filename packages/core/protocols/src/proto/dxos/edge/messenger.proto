@@ -41,7 +41,8 @@ message Message {
   optional Peer source = 10;
   repeated Peer target = 11;
 
-  // TODO(burdon): Routing info.
+  /// List of valid services is defined in the `EdgeService` enum. 
+  /// Maybe be used to address a service at EDGE, but also to address components inside the client.
   optional string service_id = 20;
 
   optional google.protobuf.Any payload = 100;

@@ -16,16 +16,16 @@ import {
 } from '@tanstack/react-table';
 import React, {
   type ComponentPropsWithoutRef,
+  type ReactNode,
   Fragment,
+  memo,
   useCallback,
   useEffect,
   useState,
   useContext,
-  type ReactNode,
-  memo,
 } from 'react';
 
-import { DensityProvider, type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
+import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { TableBody } from './TableBody';
@@ -40,11 +40,7 @@ type TableRootProps = { children: ReactNode };
 
 const TableRoot = ({ children }: TableRootProps) => {
   const contextValue = useTableRootContext();
-  return (
-    <TableRootContext.Provider value={contextValue}>
-      <DensityProvider density='fine'>{children}</DensityProvider>
-    </TableRootContext.Provider>
-  );
+  return <TableRootContext.Provider value={contextValue}>{children}</TableRootContext.Provider>;
 };
 
 type TableViewportProps = ThemedClassName<ComponentPropsWithoutRef<typeof Primitive.div>> & {
@@ -55,7 +51,6 @@ const TableViewport = ({ children, classNames, asChild, ...props }: TableViewpor
   const { scrollContextRef } = useContext(TableRootContext);
 
   const classes = mx(classNames, 'overflow-auto');
-
   return asChild ? (
     <Slot ref={scrollContextRef} className={classes} {...props}>
       {children}
@@ -70,17 +65,17 @@ const TableViewport = ({ children, classNames, asChild, ...props }: TableViewpor
 export const TablePrimitive = <TData extends RowData>(props: TableProps<TData>) => {
   const {
     role,
-    onColumnResize,
-    columnVisibility,
     header = true,
     rowsSelectable,
     debug,
-    onDataSelectionChange,
     pinLastRow,
+    columnVisibility,
+    onColumnResize,
+    onDataSelectionChange,
   } = props;
 
-  const columns = useDefaultValue(props.columns, []);
-  const incomingData = useDefaultValue(props.data, []);
+  const columns = useDefaultValue(props.columns, () => []);
+  const incomingData = useDefaultValue(props.data, () => []);
 
   const [data, setData] = useState([...incomingData]);
 

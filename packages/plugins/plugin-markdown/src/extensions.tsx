@@ -2,63 +2,133 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowSquareDown, ArrowSquareOut, type Icon } from '@phosphor-icons/react';
-import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
+import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { type IntentDispatcher, NavigationAction } from '@dxos/app-framework';
+import { type IntentDispatcher, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { fullyQualifiedId, type Query } from '@dxos/react-client/echo';
+import { createDocAccessor, fullyQualifiedId, getSpace, type Query } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { Icon, ThemeProvider } from '@dxos/react-ui';
 import {
   type AutocompleteResult,
-  type Extension,
+  type EditorStateStore,
   type EditorViewMode,
+  type Extension,
+  InputModeExtensions,
+  createDataExtensions,
   autocomplete,
   decorateMarkdown,
-  linkTooltip,
-  typewriter,
-  formattingKeymap,
-  InputModeExtensions,
   folding,
+  formattingKeymap,
+  linkTooltip,
+  listener,
+  selectionState,
+  typewriter,
 } from '@dxos/react-ui-editor';
-import { getSize, mx } from '@dxos/react-ui-theme';
-import { isNotFalsy, nonNullable } from '@dxos/util';
+import { defaultTx } from '@dxos/react-ui-theme';
+import { isNotFalsy } from '@dxos/util';
 
-import { type DocumentType, type MarkdownSettingsProps } from './types';
+import { type DocumentType, type MarkdownPluginState, type MarkdownSettingsProps } from './types';
+import { setFallbackName } from './util';
 
-export type ExtensionsOptions = {
-  viewMode?: EditorViewMode;
-  settings?: MarkdownSettingsProps;
+type ExtensionsOptions = {
   document?: DocumentType;
-  debug?: boolean;
-  experimental?: boolean;
-  numberedHeadings?: boolean;
-  folding?: boolean;
-  query?: Query<DocumentType>;
   dispatch?: IntentDispatcher;
+  query?: Query<DocumentType>;
+  settings: MarkdownSettingsProps;
+  viewMode?: EditorViewMode;
+  editorStateStore?: EditorStateStore;
+};
+
+// TODO(burdon): Merge with createBaseExtensions below.
+export const useExtensions = ({
+  document,
+  settings,
+  viewMode,
+  editorStateStore,
+  extensionProviders,
+}: ExtensionsOptions & Pick<MarkdownPluginState, 'extensionProviders'>): Extension[] => {
+  const dispatch = useIntentDispatcher();
+  const identity = useIdentity();
+  const space = getSpace(document);
+
+  // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
+  // TODO(burdon): Unsubscribe.
+  // const query = space?.db.query(Filter.schema(DocumentType));
+  // query?.subscribe();
+  const baseExtensions = useMemo(
+    () =>
+      createBaseExtensions({
+        document,
+        settings,
+        viewMode,
+        dispatch,
+        // query,
+      }),
+    [
+      document,
+      viewMode,
+      dispatch,
+      settings,
+      settings.editorInputMode,
+      settings.folding,
+      settings.numberedHeadings,
+      settings.debug,
+      settings.typewriter,
+    ],
+  );
+
+  //
+  // External extensions from other plugins.
+  //
+  const pluginExtensions = useMemo<Extension[] | undefined>(
+    () =>
+      extensionProviders?.reduce((acc: Extension[], provider) => {
+        const extension = typeof provider === 'function' ? provider({ document }) : provider;
+        if (extension) {
+          acc.push(extension);
+        }
+
+        return acc;
+      }, []),
+    [extensionProviders],
+  );
+
+  //
+  // Basic plugins.
+  //
+  return useMemo<Extension[]>(
+    () =>
+      [
+        // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
+        document &&
+          createDataExtensions({
+            id: document.id,
+            text: document.content && createDocAccessor(document.content, ['content']),
+            space,
+            identity,
+          }),
+        selectionState(editorStateStore),
+        document &&
+          listener({
+            onChange: (text) => setFallbackName(document, text),
+          }),
+        baseExtensions,
+        pluginExtensions,
+      ].filter(isNotFalsy),
+    [baseExtensions, pluginExtensions, document, document?.content, space, identity],
+  );
 };
 
 /**
  * Create extension instances for editor.
  */
-export const createBaseExtensions = ({
-  viewMode,
-  settings,
-  document,
-  query,
-  dispatch,
-}: ExtensionsOptions): Extension[] => {
-  const extensions: Extension[] = [];
-
-  //
-  // Editor mode.
-  //
-  if (settings?.editorInputMode) {
-    const extension = InputModeExtensions[settings.editorInputMode];
-    if (extension) {
-      extensions.push(extension);
-    }
-  }
+const createBaseExtensions = ({ document, dispatch, settings, query, viewMode }: ExtensionsOptions): Extension[] => {
+  const extensions: Extension[] = [
+    settings.editorInputMode && InputModeExtensions[settings.editorInputMode],
+    settings.folding && folding(),
+  ].filter(isNotFalsy);
 
   //
   // Markdown
@@ -69,7 +139,7 @@ export const createBaseExtensions = ({
         formattingKeymap(),
         decorateMarkdown({
           selectionChangeDelay: 100,
-          numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
+          numberedHeadings: settings.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links, consider ignoring the link text and rendering the label of the object being linked to.
           renderLinkButton:
             dispatch && document
@@ -98,7 +168,6 @@ export const createBaseExtensions = ({
     extensions.push(
       autocomplete({
         onSearch: (text: string) => {
-          // TODO query
           // TODO(burdon): Specify filter (e.g., stack).
           return query.objects
             .map<AutocompleteResult | undefined>((object) =>
@@ -110,29 +179,27 @@ export const createBaseExtensions = ({
                   }
                 : undefined,
             )
-            .filter(nonNullable);
+            .filter(isNotFalsy);
         },
       }),
     );
   }
 
-  extensions.push(
-    ...[
-      //
-      settings?.folding && folding(),
-    ].filter(isNotFalsy),
-  );
-
-  if (settings?.debug) {
-    const items = settings.typewriter ?? '';
-    extensions.push(...[items ? typewriter({ items: items.split(/[,\n]/) }) : undefined].filter(nonNullable));
+  if (settings.debug) {
+    const items = settings.typewriter?.split(/[,\n]/) ?? '';
+    if (items) {
+      extensions.push(typewriter({ items }));
+    }
   }
 
   return extensions;
 };
 
-// TODO(burdon): Factor out style.
-const hover = 'rounded-sm text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
+// TODO(burdon): Factor out styles.
+const style = {
+  hover: 'rounded-sm text-primary-500 hover:text-primary-600 dark:text-primary-500 hover:dark:text-primary-400',
+  icon: 'inline-block leading-none mis-1 cursor-pointer',
+};
 
 const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url: string) => {
   // TODO(burdon): Formalize/document internal link format.
@@ -155,25 +222,31 @@ const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url
         target: '_blank',
       };
 
-  const LinkIcon: Icon = isInternal ? ArrowSquareDown : ArrowSquareOut;
-
-  createRoot(el).render(
-    <StrictMode>
-      <a {...options} className={hover}>
-        <LinkIcon weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 cursor-pointer')} />
-      </a>
-    </StrictMode>,
+  renderRoot(
+    el,
+    <a {...options} className={style.hover}>
+      <Icon
+        icon={isInternal ? 'ph--arrow-square-down--bold' : 'ph--arrow-square-out--bold'}
+        size={4}
+        classNames={style.icon}
+      />
+    </a>,
   );
 };
 
 const renderLinkTooltip = (el: Element, url: string) => {
   const web = new URL(url);
-  createRoot(el).render(
-    <StrictMode>
-      <a href={url} target='_blank' rel='noreferrer' className={hover}>
-        {web.origin}
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 cursor-pointer')} />
-      </a>
-    </StrictMode>,
+  renderRoot(
+    el,
+    <a href={url} rel='noreferrer' target='_blank' className={style.hover}>
+      {web.origin}
+      <Icon icon='ph--arrow-square-out--bold' size={4} classNames={style.icon} />
+    </a>,
   );
+};
+
+// TODO(burdon): Remove react rendering; use DOM directly.
+export const renderRoot = <T extends Element>(root: T, node: ReactNode): T => {
+  createRoot(root).render(<ThemeProvider tx={defaultTx}>{node}</ThemeProvider>);
+  return root;
 };

@@ -1,5 +1,5 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
     "lib": [
@@ -21,12 +21,5 @@
     "src/.vscode/*",
     "test"
   ],
-  "references": [
-    {
-      "path": "../../../common/plate"
-    },
-    {
-      "path": "../../../common/process"
-    }
-  ]
+  "references": []
 }

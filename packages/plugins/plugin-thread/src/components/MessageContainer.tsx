@@ -7,20 +7,11 @@ import { Check, PencilSimple, X } from '@phosphor-icons/react';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { type Expando, type EchoReactiveObject } from '@dxos/echo-schema';
 import { type MessageType } from '@dxos/plugin-space/types';
 import { PublicKey } from '@dxos/react-client';
-import { type SpaceMember } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
-import {
-  Button,
-  ButtonGroup,
-  DensityProvider,
-  Tooltip,
-  useOnTransition,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Button, ButtonGroup, Tooltip, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import {
@@ -172,7 +163,7 @@ const TextboxBlock = ({
 };
 
 const MessageBlockObjectTile: MosaicTileComponent<EchoReactiveObject<any>> = forwardRef(
-  ({ draggableStyle, draggableProps, item, active, ...props }, forwardedRef) => {
+  ({ draggableStyle, draggableProps, item, active, ref: _ref, ...props }, forwardedRef) => {
     let title = item.name ?? item.title ?? item.__typename ?? 'Object';
     if (typeof title !== 'string') {
       title = title?.content ?? '';
@@ -185,16 +176,14 @@ const MessageBlockObjectTile: MosaicTileComponent<EchoReactiveObject<any>> = for
         style={draggableStyle}
         ref={forwardedRef}
       >
-        <DensityProvider density='fine'>
-          <Surface
-            role='card'
-            limit={1}
-            data={{ content: item }}
-            draggableProps={draggableProps}
-            fallback={title}
-            {...props}
-          />
-        </DensityProvider>
+        <Surface
+          role='card'
+          limit={1}
+          data={{ content: item }}
+          draggableProps={draggableProps}
+          fallback={title}
+          {...props}
+        />
       </div>
     );
   },

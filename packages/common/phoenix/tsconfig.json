@@ -1,7 +1,8 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "declarationDir": "dist/types",
+    "module": "ESNext",
     "types": [
       "@dxos/typings",
       "node"
@@ -10,18 +11,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../async"
-    },
-    {
-      "path": "../invariant"
-    },
-    {
-      "path": "../log"
-    },
-    {
-      "path": "../node-std"
-    }
-  ]
+  "references": []
 }

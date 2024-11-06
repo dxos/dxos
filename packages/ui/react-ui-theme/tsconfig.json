@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -18,12 +18,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../../common/node-std"
-    },
-    {
-      "path": "../react-ui-types"
-    }
-  ]
+  "references": []
 }

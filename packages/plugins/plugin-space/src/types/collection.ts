@@ -12,5 +12,5 @@ export class CollectionType extends TypedObject({ typename: 'dxos.org/type/Colle
   // This also leaves open a future where this key could be changed to allow for multiple stack views per section.
   // TODO(wittjosiah): Any way to make this more type safe?
   // TODO(wittjosiah): Should the views be separate objects or just be schemas for view data in this record?
-  views: S.mutable(S.Record(S.String, ref(Expando))),
+  views: S.mutable(S.Record({ key: S.String, value: ref(Expando) })),
 }) {}

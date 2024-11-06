@@ -1,11 +1,12 @@
 {
   "name": "@dxos/protocols",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Protobuf definitions for DXOS protocols.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": true,
   "type": "module",
   "exports": {
     ".": {
@@ -76,11 +77,11 @@
   "dependencies": {
     "@bufbuild/protobuf": "^2.1.0",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/timeframe": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.67.16"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@bufbuild/buf": "^1.43.0",

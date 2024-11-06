@@ -5,7 +5,16 @@
 import { randomBytes } from '@dxos/crypto';
 import { create } from '@dxos/echo-schema';
 
-import { type CellAddress, type CellRange, DEFAULT_COLUMNS, DEFAULT_ROWS, MAX_COLUMNS, MAX_ROWS } from './types';
+import {
+  addressFromA1Notation,
+  type CellAddress,
+  type CellRange,
+  type CompleteCellRange,
+  DEFAULT_COLUMNS,
+  DEFAULT_ROWS,
+  MAX_COLUMNS,
+  MAX_ROWS,
+} from './types';
 import { type CreateSheetOptions, type SheetSize, SheetType } from '../types';
 
 // TODO(burdon): Factor out from dxos/protocols to new common package.
@@ -52,18 +61,27 @@ export const initialize = (
   }
 };
 
-export const createSheet = ({ title, ...size }: CreateSheetOptions = {}): SheetType => {
+export const createSheet = ({ name, cells, ...size }: CreateSheetOptions = {}): SheetType => {
   const sheet = create(SheetType, {
-    title,
+    name,
     cells: {},
     rows: [],
     columns: [],
     rowMeta: {},
     columnMeta: {},
-    formatting: {},
+    ranges: [],
+    threads: [],
   });
 
   initialize(sheet, size);
+
+  if (cells) {
+    Object.entries(cells).forEach(([key, { value }]) => {
+      const idx = addressToIndex(sheet, addressFromA1Notation(key));
+      sheet.cells[idx] = { value };
+    });
+  }
+
   return sheet;
 };
 
@@ -95,27 +113,9 @@ export const rangeToIndex = (sheet: SheetType, range: CellRange): string => {
 /**
  * E.g., "CA2@CB3:CC4@CD5" => "A1:B2".
  */
-export const rangeFromIndex = (sheet: SheetType, idx: string): CellRange => {
+export const rangeFromIndex = (sheet: SheetType, idx: string): CompleteCellRange => {
   const [from, to] = idx.split(':').map((index) => addressFromIndex(sheet, index));
   return { from, to };
-};
-
-/**
- * Find closest cell to cursor.
- */
-export const closest = (cursor: CellAddress, cells: CellAddress[]): CellAddress | undefined => {
-  let closestCell: CellAddress | undefined;
-  let closestDistance = Number.MAX_SAFE_INTEGER;
-
-  for (const cell of cells) {
-    const distance = Math.abs(cell.row - cursor.row) + Math.abs(cell.col - cursor.col);
-    if (distance < closestDistance) {
-      closestCell = cell;
-      closestDistance = distance;
-    }
-  }
-
-  return closestCell;
 };
 
 /**

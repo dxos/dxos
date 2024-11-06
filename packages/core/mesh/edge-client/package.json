@@ -1,24 +1,31 @@
 {
   "name": "@dxos/edge-client",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "EDGE Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": true,
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
   },
   "files": [
     "dist",
@@ -28,8 +35,12 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/credentials": "workspace:*",
+    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keyring": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -38,7 +49,6 @@
     "ws": "^8.14.2"
   },
   "devDependencies": {
-    "@dxos/keys": "workspace:*",
     "@dxos/test-utils": "workspace:*"
   },
   "publishConfig": {

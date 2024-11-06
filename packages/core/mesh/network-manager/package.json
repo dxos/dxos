@@ -1,11 +1,12 @@
 {
   "name": "@dxos/network-manager",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Network Manager",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": true,
   "imports": {
     "#node-datachannel": {
       "browser": "./module-stub.js",
@@ -27,28 +28,19 @@
   },
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/testing/index.cjs",
-        "default": "./dist/lib/node-esm/testing/index.mjs"
-      },
-      "types": "./dist/types/src/testing/index.d.ts"
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     },
-    "./tcp": {
+    "./transport/tcp": {
+      "types": "./dist/types/src/transport/tcp/index.d.ts",
       "browser": "./dist/lib/browser/transport/tcp/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/transport/tcp/index.cjs",
-        "default": "./dist/lib/node-esm/transport/tcp/index.mjs"
-      },
-      "types": "./dist/types/src/transport/tcp/index.d.ts"
+      "node": "./dist/lib/node-esm/transport/tcp/index.mjs"
     }
   },
   "browser": {
@@ -60,7 +52,7 @@
       "testing": [
         "dist/types/src/testing/index.d.ts"
       ],
-      "tcp": [
+      "transport/tcp": [
         "dist/types/src/transport/tcp/index.d.ts"
       ]
     }
@@ -96,6 +88,8 @@
     "xor-distance": "^2.0.0"
   },
   "devDependencies": {
+    "@dxos/edge-client": "workspace:*",
+    "@dxos/keyring": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@swc-node/register": "1.9.1",
     "@types/ws": "^7.4.0",

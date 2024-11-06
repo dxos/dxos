@@ -1,6 +1,6 @@
 {
   "name": "@dxos/testbench-app",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "private": true,
   "description": "DXOS Testing",
   "homepage": "https://dxos.org",
@@ -8,6 +8,7 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": true,
   "dependencies": {
     "@baselime/node-opentelemetry": "^0.5.8",
     "@baselime/react-rum": "^0.2.9",
@@ -16,6 +17,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
@@ -24,6 +26,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",

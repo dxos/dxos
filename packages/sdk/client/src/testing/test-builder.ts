@@ -22,7 +22,7 @@ import {
   type TransportFactory,
   TransportKind,
 } from '@dxos/network-manager';
-import { TcpTransportFactory } from '@dxos/network-manager/tcp';
+import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
@@ -48,6 +48,8 @@ export const testConfigWithLocalSignal = new Config({
 /**
  * Client builder supports different configurations, incl. signaling, transports, storage.
  */
+// TODO(burdon): Make extensible.
+// TODO(burdon): Implement as Resource.
 export class TestBuilder {
   private readonly _ctx = new Context({ name: 'TestBuilder' });
 
@@ -70,6 +72,65 @@ export class TestBuilder {
 
   public get ctx() {
     return this._ctx;
+  }
+
+  async destroy() {
+    await this._ctx.dispose(false); // TODO(burdon): Set to true to check clean shutdown.
+  }
+
+  /**
+   * Create backend service handlers.
+   */
+  createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
+    const services = new ClientServicesHost({
+      config: this.config,
+      storage: this?.storage?.(),
+      level: this?.level?.(),
+      runtimeParams,
+      ...this.networking,
+    });
+
+    this._ctx.onDispose(() => services.close());
+    return services;
+  }
+
+  /**
+   * Create local services host.
+   * @param options - fastPeerPresenceUpdate: enable for faster space-member online/offline status changes.
+   */
+  createLocalClientServices(options?: { fastPeerPresenceUpdate?: boolean }): LocalClientServices {
+    const services = new LocalClientServices({
+      config: this.config,
+      storage: this?.storage?.(),
+      level: this?.level?.(),
+      runtimeParams: {
+        ...(options?.fastPeerPresenceUpdate
+          ? { spaceMemberPresenceAnnounceInterval: 200, spaceMemberPresenceOfflineTimeout: 400 }
+          : {}),
+        invitationConnectionDefaultParams: { teleport: { controlHeartbeatInterval: 200 } },
+      },
+      ...this.networking,
+    });
+
+    this._ctx.onDispose(() => services.close());
+    return services;
+  }
+
+  /**
+   * Create client/server.
+   */
+  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ProtoRpcPeer<{}>] {
+    const [proxyPort, hostPort] = createLinkedPorts();
+    const client = new Client({ config: this.config, services: new ClientServicesProxy(proxyPort) });
+    const server = createProtoRpcPeer({
+      exposed: host.descriptors,
+      handlers: host.services as ClientServices,
+      port: hostPort,
+    });
+
+    this._ctx.onDispose(() => server.close());
+    this._ctx.onDispose(() => client.destroy());
+    return [client, server];
   }
 
   /**
@@ -111,65 +172,6 @@ export class TestBuilder {
       signalManager: new MemorySignalManager(this.signalManagerContext),
       transportFactory: MemoryTransportFactory,
     };
-  }
-
-  /**
-   * Create backend service handlers.
-   */
-  createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
-    const services = new ClientServicesHost({
-      config: this.config,
-      storage: this?.storage?.(),
-      level: this?.level?.(),
-      runtimeParams,
-      ...this.networking,
-    });
-
-    this._ctx.onDispose(() => services.close());
-    return services;
-  }
-
-  /**
-   * Create local services host.
-   * @param options - fastPeerPresenceUpdate: enable for faster space-member online/offline status changes.
-   */
-  createLocalClientServices(options?: { fastPeerPresenceUpdate?: boolean }): LocalClientServices {
-    const services = new LocalClientServices({
-      config: this.config,
-      storage: this?.storage?.(),
-      level: this?.level?.(),
-      runtimeParams: {
-        ...(options?.fastPeerPresenceUpdate
-          ? { spaceMemberPresenceAnnounceInterval: 200, spaceMemberPresenceOfflineTimeout: 400 }
-          : {}),
-        invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
-      },
-      ...this.networking,
-    });
-
-    this._ctx.onDispose(() => services.close());
-    return services;
-  }
-
-  /**
-   * Create client/server.
-   */
-  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ProtoRpcPeer<{}>] {
-    const [proxyPort, hostPort] = createLinkedPorts();
-    const client = new Client({ config: this.config, services: new ClientServicesProxy(proxyPort) });
-    const server = createProtoRpcPeer({
-      exposed: host.descriptors,
-      handlers: host.services as ClientServices,
-      port: hostPort,
-    });
-
-    this._ctx.onDispose(() => server.close());
-    this._ctx.onDispose(() => client.destroy());
-    return [client, server];
-  }
-
-  async destroy() {
-    await this._ctx.dispose(false); // TODO(burdon): Set to true to check clean shutdown.
   }
 }
 

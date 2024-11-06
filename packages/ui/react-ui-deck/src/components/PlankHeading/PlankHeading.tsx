@@ -12,7 +12,14 @@ import {
   ArrowsOut,
   ArrowsIn,
 } from '@phosphor-icons/react';
-import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef, useRef, useState } from 'react';
+import React, {
+  type ComponentPropsWithRef,
+  Fragment,
+  type PropsWithChildren,
+  forwardRef,
+  useRef,
+  useState,
+} from 'react';
 
 import { keySymbols } from '@dxos/keyboard';
 import {
@@ -27,7 +34,7 @@ import {
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
-import { useHasAttention } from '@dxos/react-ui-attention';
+import { useAttention } from '@dxos/react-ui-attention';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
@@ -37,7 +44,9 @@ import { type PlankHeadingAction } from '../../types';
 
 type AttendableId = { attendableId?: string };
 
-type PlankHeadingButtonProps = Omit<ButtonProps, 'variant'> & AttendableId;
+type Related = { related?: boolean };
+
+type PlankHeadingButtonProps = Omit<ButtonProps, 'variant'> & AttendableId & Related;
 
 type PlankRootProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
 
@@ -78,12 +87,13 @@ const _MenuSignifierVertical = () => (
 );
 
 const PlankHeadingButton = forwardRef<HTMLButtonElement, PlankHeadingButtonProps>(
-  ({ attendableId, classNames, children, ...props }, forwardedRef) => {
-    const hasAttention = useHasAttention(attendableId);
+  ({ attendableId, classNames, related, children, ...props }, forwardedRef) => {
+    const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
+    const variant = (related && isRelated) || hasAttention || isAncestor ? 'primary' : 'ghost';
     return (
       <Button
         {...props}
-        variant={hasAttention ? 'primary' : 'ghost'}
+        variant={variant}
         classNames={['m-1 shrink-0 pli-0 min-bs-0 is-[--rail-action] bs-[--rail-action] relative', classNames]}
         ref={forwardedRef}
       >
@@ -94,16 +104,18 @@ const PlankHeadingButton = forwardRef<HTMLButtonElement, PlankHeadingButtonProps
   },
 );
 
-type PlankHeadingActionsMenuProps = PropsWithChildren<{
-  attendableId?: string;
-  triggerLabel: string;
-  actions?: PlankHeadingAction[];
-  icon: string;
-  onAction?: (action: PlankHeadingAction) => void;
-}>;
+type PlankHeadingActionsMenuProps = PropsWithChildren<
+  {
+    attendableId?: string;
+    triggerLabel: string;
+    actions?: PlankHeadingAction[][];
+    icon: string;
+    onAction?: (action: PlankHeadingAction) => void;
+  } & Related
+>;
 
 const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingActionsMenuProps>(
-  ({ actions, onAction, triggerLabel, attendableId, icon, children }, forwardedRef) => {
+  ({ actions: actionGroups, onAction, triggerLabel, attendableId, icon, related, children }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const suppressNextTooltip = useRef(false);
 
@@ -135,7 +147,7 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
         >
           <Tooltip.Trigger asChild>
             <DropdownMenu.Trigger asChild ref={forwardedRef}>
-              <PlankHeadingButton attendableId={attendableId}>
+              <PlankHeadingButton attendableId={attendableId} related={related}>
                 <span className='sr-only'>{triggerLabel}</span>
                 <Icon icon={icon} size={5} />
               </PlankHeadingButton>
@@ -144,44 +156,52 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
           <DropdownMenu.Portal>
             <DropdownMenu.Content classNames='z-[31]'>
               <DropdownMenu.Viewport>
-                {actions?.map((action) => {
-                  const shortcut =
-                    typeof action.properties.keyBinding === 'string'
-                      ? action.properties.keyBinding
-                      : action.properties.keyBinding?.[getHostPlatform()];
-
-                  const menuItemType = action.properties.menuItemType;
-                  const Root = menuItemType === 'toggle' ? DropdownMenu.CheckboxItem : DropdownMenu.Item;
-
+                {actionGroups?.map((actions, index) => {
+                  const separator = index > 0 ? <DropdownMenu.Separator /> : null;
                   return (
-                    <Root
-                      key={action.id}
-                      onClick={(event) => {
-                        if (action.properties.disabled) {
-                          return;
-                        }
-                        event.stopPropagation();
-                        // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                        suppressNextTooltip.current = true;
-                        setOptionsMenuOpen(false);
-                        onAction?.(action);
-                      }}
-                      classNames='gap-2'
-                      disabled={action.properties.disabled}
-                      checked={menuItemType === 'toggle' ? action.properties.isChecked : undefined}
-                      {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-                    >
-                      <Icon icon={action.properties.icon ?? 'ph--placeholder--regular'} size={4} />
-                      <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
-                      {menuItemType === 'toggle' && (
-                        <DropdownMenu.ItemIndicator asChild>
-                          <Check className={getSize(4)} />
-                        </DropdownMenu.ItemIndicator>
-                      )}
-                      {shortcut && (
-                        <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
-                      )}
-                    </Root>
+                    <Fragment key={index}>
+                      {separator}
+                      {actions.map((action) => {
+                        const shortcut =
+                          typeof action.properties.keyBinding === 'string'
+                            ? action.properties.keyBinding
+                            : action.properties.keyBinding?.[getHostPlatform()];
+
+                        const menuItemType = action.properties.menuItemType;
+                        const Root = menuItemType === 'toggle' ? DropdownMenu.CheckboxItem : DropdownMenu.Item;
+
+                        return (
+                          <Root
+                            key={action.id}
+                            onClick={(event) => {
+                              if (action.properties.disabled) {
+                                return;
+                              }
+                              event.stopPropagation();
+                              // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                              suppressNextTooltip.current = true;
+                              setOptionsMenuOpen(false);
+                              onAction?.(action);
+                            }}
+                            classNames='gap-2'
+                            disabled={action.properties.disabled}
+                            checked={menuItemType === 'toggle' ? action.properties.isChecked : undefined}
+                            {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+                          >
+                            <Icon icon={action.properties.icon ?? 'ph--placeholder--regular'} size={4} />
+                            <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
+                            {menuItemType === 'toggle' && (
+                              <DropdownMenu.ItemIndicator asChild>
+                                <Check className={getSize(4)} />
+                              </DropdownMenu.ItemIndicator>
+                            )}
+                            {shortcut && (
+                              <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
+                            )}
+                          </Root>
+                        );
+                      })}
+                    </Fragment>
                   );
                 })}
                 {children}
@@ -201,15 +221,15 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
   },
 );
 
-type PlankHeadingLabelProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId;
+type PlankHeadingLabelProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId & Related;
 
 const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>(
-  ({ attendableId, classNames, ...props }, forwardedRef) => {
-    const hasAttention = useHasAttention(attendableId);
+  ({ attendableId, related, classNames, ...props }, forwardedRef) => {
+    const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
     return (
       <h1
         {...props}
-        data-attention={hasAttention.toString()}
+        data-attention={((related && isRelated) || hasAttention || isAncestor).toString()}
         className={mx(
           'pli-1 min-is-0 is-0 grow truncate font-medium text-baseText data-[attention=true]:text-accentText',
           classNames,

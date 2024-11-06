@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -18,63 +18,5 @@
     "src",
     "stories"
   ],
-  "references": [
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/context"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/display-name"
-    },
-    {
-      "path": "../../common/invariant"
-    },
-    {
-      "path": "../../common/keyboard"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/automerge"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../sdk/config"
-    },
-    {
-      "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../primitives/react-hooks"
-    },
-    {
-      "path": "../react-ui"
-    },
-    {
-      "path": "../react-ui-theme"
-    },
-    {
-      "path": "../storybook-utils"
-    }
-  ]
+  "references": []
 }

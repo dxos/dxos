@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "types": [
       "node"
@@ -8,18 +8,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../debug"
-    },
-    {
-      "path": "../log"
-    },
-    {
-      "path": "../node-std"
-    },
-    {
-      "path": "../util"
-    }
-  ]
+  "references": []
 }

@@ -3,15 +3,7 @@
 //
 
 import { useFocusableGroup, useTabsterAttributes } from '@fluentui/react-tabster';
-import {
-  ArrowLineDown,
-  ArrowLineUp,
-  ArrowSquareOut,
-  CaretUpDown,
-  DotsNine,
-  type IconProps,
-  Trash,
-} from '@phosphor-icons/react';
+import { ArrowLineDown, ArrowLineUp, ArrowSquareOut, CaretUpDown, Trash } from '@phosphor-icons/react';
 import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import React, {
   forwardRef,
@@ -26,6 +18,7 @@ import React, {
 import {
   Button,
   DropdownMenu,
+  Icon,
   type Label,
   List,
   ListItem,
@@ -35,7 +28,7 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { createAttendableAttributes, useHasAttention } from '@dxos/react-ui-attention';
+import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
 import {
   type MosaicActiveType,
@@ -92,14 +85,14 @@ export type StackSectionItem = MosaicDataItem & {
   };
   // TODO(wittjosiah): Common type? Factor out?
   metadata?: {
-    icon?: FC<IconProps>;
+    icon?: string;
     placeholder?: Label;
     viewActions?: (item: StackSectionItem) => StackAction;
   };
 };
 
 export type StackAction = {
-  icon: FC<IconProps>;
+  icon: string;
   label: Label;
   onClick: () => void;
 };
@@ -133,7 +126,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
     {
       id,
       title,
-      icon: Icon = DotsNine,
+      icon = 'ph--placeholder--regular',
       size = 'intrinsic',
       collapsed,
       active,
@@ -157,8 +150,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       mover: { cyclic: true, direction: 1, memorizeCurrent: false },
     });
     const sectionContentGroup = useFocusableGroup({});
-    const attendableAttrs = createAttendableAttributes(id);
-    const hasAttention = useHasAttention(id);
+    const attendableAttrs = useAttendableAttributes(id);
 
     return (
       <CollapsiblePrimitive.Root
@@ -180,10 +172,9 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
             role='none'
             className={mx(
               'grid col-span-2 grid-cols-subgrid',
-              'bg-base focus-within:border-separator focus-within:attention-within',
+              'bg-base attention-surface',
               hoverableControls,
               hoverableFocusedWithinControls,
-              (active || hasAttention) && 'attention-surface border-separator',
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
           >
@@ -206,7 +197,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                   }}
                 >
                   <DropDownMenuDragHandleTrigger active={!!active} variant='ghost' classNames='m-0' {...draggableProps}>
-                    <Icon className={mx(getSize(5), 'transition-opacity')} />
+                    <Icon icon={icon} size={5} classNames='transition-opacity' />
                   </DropDownMenuDragHandleTrigger>
                   <DropdownMenu.Portal>
                     <DropdownMenu.Content>

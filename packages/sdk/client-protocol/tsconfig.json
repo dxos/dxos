@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -12,39 +12,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/context"
-    },
-    {
-      "path": "../../common/invariant"
-    },
-    {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/node-std"
-    },
-    {
-      "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/halo/credentials"
-    },
-    {
-      "path": "../../core/mesh/rpc"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../config"
-    }
-  ]
+  "references": []
 }

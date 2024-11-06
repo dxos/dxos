@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "resolveJsonModule": true,
     "types": [
@@ -10,9 +10,5 @@
     "scripts",
     "src"
   ],
-  "references": [
-    {
-      "path": "../keys"
-    }
-  ]
+  "references": []
 }

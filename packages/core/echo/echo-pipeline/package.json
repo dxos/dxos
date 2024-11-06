@@ -1,27 +1,22 @@
 {
   "name": "@dxos/echo-pipeline",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": true,
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/testing/index.cjs",
-        "default": "./dist/lib/node-esm/testing/index.mjs"
-      },
-      "types": "./dist/types/src/testing/index.d.ts"
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

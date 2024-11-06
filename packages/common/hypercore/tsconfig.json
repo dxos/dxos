@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "types": [
       "@dxos/typings",
@@ -9,45 +9,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../async"
-    },
-    {
-      "path": "../codec-protobuf"
-    },
-    {
-      "path": "../crypto"
-    },
-    {
-      "path": "../debug"
-    },
-    {
-      "path": "../invariant"
-    },
-    {
-      "path": "../keys"
-    },
-    {
-      "path": "../log"
-    },
-    {
-      "path": "../node-std"
-    },
-    {
-      "path": "../random"
-    },
-    {
-      "path": "../random-access-storage"
-    },
-    {
-      "path": "../tracing"
-    },
-    {
-      "path": "../typings"
-    },
-    {
-      "path": "../util"
-    }
-  ]
+  "references": []
 }

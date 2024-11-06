@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "types": [
       "@dxos/typings",
@@ -9,24 +9,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../context"
-    },
-    {
-      "path": "../debug"
-    },
-    {
-      "path": "../invariant"
-    },
-    {
-      "path": "../log"
-    },
-    {
-      "path": "../node-std"
-    },
-    {
-      "path": "../util"
-    }
-  ]
+  "references": []
 }

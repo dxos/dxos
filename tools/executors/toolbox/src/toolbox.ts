@@ -39,6 +39,7 @@ export type ToolboxConfig = {
        */
       include: string[];
     };
+    noProjectReferences?: boolean;
   };
 };
 
@@ -344,11 +345,15 @@ export class Toolbox {
         );
 
         const deps = Array.from(depsMap.entries());
-        tsConfigJson.references = deps.map(([dependencyName]) => {
-          const dependency = this._getProjectByPackageName(dependencyName)!;
-          const path = relative(project.path, dependency.path);
-          return { path };
-        });
+        if (!this.config.tsconfig?.noProjectReferences) {
+          tsConfigJson.references = deps.map(([dependencyName]) => {
+            const dependency = this._getProjectByPackageName(dependencyName)!;
+            const path = relative(project.path, dependency.path);
+            return { path };
+          });
+        } else {
+          tsConfigJson.references = [];
+        }
 
         const updated = sortJson(tsConfigJson, {
           depth: 3,
@@ -561,16 +566,13 @@ export class Toolbox {
 
         // console.log({ relativePath, exportName, distSlug });
         packageJson.exports[exportName] = {};
+        (packageJson.exports[exportName] as any).types = `./dist/types/src/${distSlug}.d.ts`;
         if (isBrowser) {
           (packageJson.exports[exportName] as any).browser = `./dist/lib/browser/${distSlug}.mjs`;
         }
         if (isNode) {
-          (packageJson.exports[exportName] as any).node = {
-            require: `./dist/lib/node/${distSlug}.cjs`,
-            default: `./dist/lib/node-esm/${distSlug}.mjs`,
-          };
+          (packageJson.exports[exportName] as any).node = `./dist/lib/node-esm/${distSlug}.mjs`;
         }
-        (packageJson.exports[exportName] as any).types = `./dist/types/src/${distSlug}.d.ts`;
 
         // exports.types are only used with modern module resolution strategies so we keep this for compatibility.
         if (exportName !== '.') {

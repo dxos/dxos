@@ -11,16 +11,17 @@ import {
   testAutomergeReplicatorFactory,
   TestReplicationNetwork,
 } from '@dxos/echo-pipeline/testing';
-import { create, Expando } from '@dxos/echo-schema';
+import { create, Expando, getObjectAnnotation, getSchema, S, TypedObject } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
-import { registerSignalRuntime } from '@dxos/echo-signals';
-import { PublicKey } from '@dxos/keys';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { DXN, PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
+import { Filter } from '../query';
 
-registerSignalRuntime();
+registerSignalsRuntime();
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -325,6 +326,89 @@ describe('Integration tests', () => {
         })
         .toEqual(0);
     }
+  });
+
+  test('replicate and load by id', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using network = await new TestReplicationNetwork().open();
+
+    await using peer1 = await builder.createPeer();
+    await using peer2 = await builder.createPeer();
+    await peer1.host.addReplicator(await network.createReplicator());
+    await peer2.host.addReplicator(await network.createReplicator());
+
+    await using db1 = await peer1.createDatabase(spaceKey);
+    await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+
+    const obj1 = db1.add(
+      create({
+        content: 'test',
+      }),
+    );
+    await db1.flush();
+    await expect.poll(() => db2.getObjectById(obj1.id)).not.toEqual(undefined);
+  });
+
+  describe('dynamic schema', () => {
+    test('query object with dynamic schema', async () => {
+      const [spaceKey] = PublicKey.randomSequence();
+      await using peer = await builder.createPeer();
+
+      let rootUrl: string, schemaDxn: string;
+      {
+        await using db = await peer.createDatabase(spaceKey);
+        rootUrl = db.rootUrl!;
+
+        class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+          field: S.String,
+        }) {}
+        const stored = db.schema.addSchema(TestSchema);
+        schemaDxn = DXN.localEchoObjectDXN(stored.id).toString();
+
+        const object = db.add(create(stored, { field: 'test' }));
+        expect(getSchema(object)).to.eq(stored);
+
+        db.add({ text: 'Expando object' }); // Add Expando object to test filtering
+        await db.flush({ indexes: true });
+      }
+
+      await peer.reload();
+      {
+        // Objects with stored schema get included in queries that select all objects..
+        await using db = await peer.openDatabase(spaceKey, rootUrl);
+        await db.schema.list(); // Have to preload schema.
+        const { objects } = await db.query().run();
+        expect(objects.length).to.eq(3);
+      }
+
+      await peer.reload();
+      {
+        // Can query by stored schema DXN.
+        await using db = await peer.openDatabase(spaceKey, rootUrl);
+        await db.schema.list(); // Have to preload schema.
+        const { objects } = await db.query(Filter.typeDXN(schemaDxn)).run();
+        expect(objects.length).to.eq(1);
+        expect(getObjectAnnotation(getSchema(objects[0])!)).to.include({
+          typename: 'example.com/type/Test',
+          version: '0.1.0',
+        });
+      }
+
+      await peer.reload();
+      {
+        // Can query by stored schema ref.
+        await using db = await peer.openDatabase(spaceKey, rootUrl);
+        await db.schema.list(); // Have to preload schema.
+        const schema = db.schema.getSchemaByTypename('example.com/type/Test');
+
+        const { objects } = await db.query(Filter.schema(schema!)).run();
+        expect(objects.length).to.eq(1);
+        expect(getObjectAnnotation(getSchema(objects[0])!)).to.include({
+          typename: 'example.com/type/Test',
+          version: '0.1.0',
+        });
+      }
+    });
   });
 });
 

@@ -1,19 +1,20 @@
 {
   "name": "@dxos/plugin-registry",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Braneframe plugin gallery",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": true,
   "exports": {
     ".": {
-      "browser": "./dist/lib/browser/index.mjs",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs"
     },
     "./meta": {
-      "browser": "./dist/lib/browser/meta.mjs",
-      "types": "./dist/types/src/meta.d.ts"
+      "types": "./dist/types/src/meta.d.ts",
+      "browser": "./dist/lib/browser/meta.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -32,7 +33,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
-    "@dxos/plugin-settings": "workspace:*",
+    "@dxos/react-ui-data": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {

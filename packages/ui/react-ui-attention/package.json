@@ -1,29 +1,38 @@
 {
   "name": "@dxos/react-ui-attention",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Signifier components and providers for attention system.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": true,
   "exports": {
     ".": {
-      "browser": "./dist/lib/browser/index.mjs",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs"
+    },
+    "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
   },
   "files": [
     "dist",
     "src"
   ],
   "dependencies": {
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.6.0",
     "@radix-ui/primitive": "^1.0.0",
     "@radix-ui/react-compose-refs": "^1.0.0",
     "@radix-ui/react-context": "^1.0.0",
@@ -35,6 +44,8 @@
   "devDependencies": {
     "@dxos/app-graph": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
@@ -44,6 +55,8 @@
     "vite": "5.4.7"
   },
   "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"

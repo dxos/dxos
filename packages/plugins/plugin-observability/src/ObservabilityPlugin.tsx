@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import React from 'react';
 
 import {
@@ -14,7 +13,6 @@ import {
   type TranslationsProvides,
   resolvePlugin,
   parseIntentPlugin,
-  parseNavigationPlugin,
   LayoutAction,
   SettingsAction,
   parsePluginHost,
@@ -44,7 +42,7 @@ export type ObservabilityPluginState = {
 
 export type ObservabilityPluginProvides = IntentResolverProvides &
   SurfaceProvides &
-  SettingsProvides &
+  SettingsProvides<ObservabilitySettingsProps> &
   TranslationsProvides & {
     observability: ObservabilityPluginState;
   };
@@ -66,12 +64,10 @@ export const ObservabilityPlugin = (options: {
     initialize: async () => {
       settings.enabled = !(await isObservabilityDisabled(options.namespace));
       state.values.group = await getObservabilityGroup(options.namespace);
-
       state.prop({ key: 'notified', type: LocalStorageStore.bool({ allowUndefined: true }) });
     },
     ready: async (plugins) => {
       const pluginHost = resolvePlugin(plugins, parsePluginHost);
-      const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
@@ -83,7 +79,7 @@ export const ObservabilityPlugin = (options: {
       const sendPrivacyNotice = async () => {
         const environment = clientPlugin?.provides?.client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;
         const notify =
-          environment && environment !== 'circleci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
+          environment && environment !== 'ci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
         if (!state.values.notified && notify) {
           await dispatch({
             action: LayoutAction.SET_LAYOUT,
@@ -124,17 +120,6 @@ export const ObservabilityPlugin = (options: {
         if (!client) {
           return;
         }
-
-        subscriptions.add(
-          effect(() => {
-            // Read active to subscribe to changes.
-            const _ = navigationPlugin?.provides?.location?.active;
-
-            observability?.page({
-              identityId: getTelemetryIdentifier(client),
-            });
-          }),
-        );
 
         await dispatch({
           action: ObservabilityAction.SEND_EVENT,

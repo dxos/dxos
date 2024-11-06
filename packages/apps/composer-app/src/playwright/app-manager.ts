@@ -107,13 +107,12 @@ export class AppManager {
   //
 
   async createSpace(timeout = 10_000) {
-    await this.page.getByTestId('spacePlugin.createSpace').click();
+    await this.page.getByTestId('spacePlugin.createSpace').getByTestId('treeItem.heading').click();
     await this.waitForSpaceReady(timeout);
   }
 
   async joinSpace() {
-    await this.page.getByTestId('navtree.treeItem.actionsLevel0').first().click();
-    await this.page.getByTestId('spacePlugin.joinSpace').click();
+    await this.page.getByTestId('spacePlugin.joinSpace').getByTestId('treeItem.heading').click();
   }
 
   async waitForSpaceReady(timeout = 30_000) {

@@ -34,8 +34,8 @@ export default template.define.text({
     const plainHtmlWelcome = plate`
     <div class='dxos flex justify-center align-middle'>
       <div class='max-w-md bg-zinc-100 dark:bg-zinc-800 p-6 m-8 rounded-md shadow-lg'>
-        <img src='dxos-white.svg' class='mb-10 dark' />
-        <img src='dxos.svg' class='mb-10 no-dark' />
+        <img src='dxos-logo-white.svg' class='mb-10 dark' />
+        <img src='dxos-logo-black.svg' class='mb-10 no-dark' />
         <h1>${name ?? 'hello'}</h1>
         <p>Your new DXOS app works.</p>
         <p>

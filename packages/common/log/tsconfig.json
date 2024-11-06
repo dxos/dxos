@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "lib": [
       "DOM"
@@ -9,12 +9,5 @@
     "src",
     "test"
   ],
-  "references": [
-    {
-      "path": "../node-std"
-    },
-    {
-      "path": "../util"
-    }
-  ]
+  "references": []
 }

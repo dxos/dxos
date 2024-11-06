@@ -4,26 +4,26 @@
 
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
-import {
-  type EchoReactiveObject,
-  getProxyHandlerSlot,
-  getSchema,
-  isReactiveObject,
-  type ReactiveObject,
-} from '@dxos/echo-schema';
+import { type ReactiveObject, getProxyTarget, getSchema, isReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import type { DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
+import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
-import { DynamicSchemaRegistry } from './dynamic-schema-registry';
-import { CoreDatabase, type FlushOptions, getObjectCore, type LoadObjectOptions, type ObjectCore } from '../core-db';
-import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from '../echo-handler';
-import { EchoReactiveHandler } from '../echo-handler/echo-handler';
-import { type ProxyTarget } from '../echo-handler/echo-proxy-target';
+import { MutableSchemaRegistry } from './mutable-schema-registry';
+import { CoreDatabase, type FlushOptions, type LoadObjectOptions, type ObjectCore } from '../core-db';
+import {
+  EchoReactiveHandler,
+  type EchoReactiveObject,
+  type ProxyTarget,
+  getObjectCore,
+  createObject,
+  initEchoReactiveObjectRootProxy,
+  isEchoObject,
+} from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { optionsToProto, type FilterSource, type QueryFn } from '../query';
 
@@ -31,12 +31,17 @@ export type GetObjectByIdOptions = {
   deleted?: boolean;
 };
 
+/**
+ *
+ */
+// TODO(burdon): Document.
+// TODO(burdon): Rename DatabaseProxy.
 export interface EchoDatabase {
   get spaceKey(): PublicKey;
 
   get spaceId(): SpaceId;
 
-  get schema(): DynamicSchemaRegistry;
+  get schema(): MutableSchemaRegistry;
 
   /**
    * All loaded objects.
@@ -122,7 +127,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   _coreDatabase: CoreDatabase;
 
-  public readonly schema: DynamicSchemaRegistry;
+  public readonly schema: MutableSchemaRegistry;
 
   private _rootUrl: string | undefined = undefined;
 
@@ -142,7 +147,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
     });
-    this.schema = new DynamicSchemaRegistry({ db: this, reactiveQuery: params.reactiveSchemaQuery });
+
+    this.schema = new MutableSchemaRegistry(this, { reactiveQuery: params.reactiveSchemaQuery });
   }
 
   get graph(): Hypergraph {
@@ -241,18 +247,19 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     let echoObject = obj;
     if (!isEchoObject(echoObject)) {
       const schema = getSchema(obj);
-
       if (schema != null) {
         if (!this.schema.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
           throw createSchemaNotRegisteredError(schema);
         }
       }
-      echoObject = createEchoObject(obj);
+
+      echoObject = createObject(obj);
     }
+
     invariant(isEchoObject(echoObject));
     this._rootProxies.set(getObjectCore(echoObject), echoObject);
 
-    const target = getProxyHandlerSlot(echoObject).target as ProxyTarget;
+    const target = getProxyTarget(echoObject) as ProxyTarget;
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
     this._coreDatabase.addCore(getObjectCore(echoObject));

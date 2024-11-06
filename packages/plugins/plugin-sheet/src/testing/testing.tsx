@@ -2,22 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { Decorator } from '@storybook/react';
+import { type Decorator } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncState } from '@dxos/react-hooks';
 
 import { ComputeGraphContextProvider } from '../components';
+import { type ComputeGraph, type ComputeGraphOptions, ComputeGraphRegistry } from '../compute-graph';
 import { createSheet } from '../defs';
-import { type ComputeGraph, ComputeGraphRegistry } from '../graph';
 import { type CellValue, type CreateSheetOptions } from '../types';
 
-export const testSheetName = 'test';
+const testSheetName = 'test';
 
-// TODO(thure): Remove this from the `/testing` entrypoint.
-export const createCells = (): Record<string, CellValue> => ({
-  B1: { value: 'Qty' },
+export const createTestCells = (): Record<string, CellValue> => ({
+  B1: { value: 'Qty2' },
   B3: { value: 1 },
   B4: { value: 2 },
   B5: { value: 3 },
@@ -45,7 +44,7 @@ export const createCells = (): Record<string, CellValue> => ({
 });
 
 export const useTestSheet = (space?: Space, graph?: ComputeGraph, options?: CreateSheetOptions) => {
-  return useAsyncState(async () => {
+  const [sheet] = useAsyncState(async () => {
     if (!space || !graph) {
       return;
     }
@@ -54,13 +53,16 @@ export const useTestSheet = (space?: Space, graph?: ComputeGraph, options?: Crea
     space.db.add(sheet);
     return sheet;
   }, [space, graph]);
+  return sheet;
 };
 
-export const withGraphDecorator: Decorator = (Story) => {
-  const [registry] = useState(new ComputeGraphRegistry());
-  return (
-    <ComputeGraphContextProvider registry={registry}>
-      <Story />
-    </ComputeGraphContextProvider>
-  );
-};
+export const withComputeGraphDecorator =
+  (options?: ComputeGraphOptions): Decorator =>
+  (Story) => {
+    const [registry] = useState(new ComputeGraphRegistry(options));
+    return (
+      <ComputeGraphContextProvider registry={registry}>
+        <Story />
+      </ComputeGraphContextProvider>
+    );
+  };

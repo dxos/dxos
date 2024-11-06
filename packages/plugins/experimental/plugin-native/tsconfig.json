@@ -1,6 +1,6 @@
 {
   "extends": [
-    "../../../../tsconfig.json"
+    "../../../../tsconfig.base.json"
   ],
   "compilerOptions": {
     "lib": [
@@ -20,21 +20,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../../../common/log"
-    },
-    {
-      "path": "../../../common/util"
-    },
-    {
-      "path": "../../../sdk/app-framework"
-    },
-    {
-      "path": "../../plugin-help"
-    },
-    {
-      "path": "../../plugin-navtree"
-    }
-  ]
+  "references": []
 }

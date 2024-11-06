@@ -1,19 +1,20 @@
 {
   "name": "@dxos/plugin-search",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": true,
   "exports": {
     ".": {
-      "browser": "./dist/lib/browser/index.mjs",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs"
     },
     "./meta": {
-      "browser": "./dist/lib/browser/meta.mjs",
-      "types": "./dist/types/src/meta.d.ts"
+      "types": "./dist/types/src/meta.d.ts",
+      "browser": "./dist/lib/browser/meta.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -39,6 +40,7 @@
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
+    "@effect/schema": "^0.75.1",
     "main-thread-scheduling": "^14.1.1"
   },
   "devDependencies": {

@@ -89,6 +89,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/effect/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/esbuild-plugins/package.json",
           "jsonpath": "$.version"
         },
@@ -149,6 +154,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/merkle-search-tree/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/node-std/package.json",
           "jsonpath": "$.version"
         },
@@ -180,6 +190,11 @@
         {
           "type": "json",
           "path": "packages/common/random-access-storage/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/storybook-utils/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -399,11 +414,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/chess-app/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/discord-bot/package.json",
           "jsonpath": "$.version"
         },
@@ -439,6 +449,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/script-toolbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/spyglass/package.json",
           "jsonpath": "$.version"
         },
@@ -459,12 +474,7 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-chain/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-debug/package.json",
+          "path": "packages/plugins/experimental/plugin-automation/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -475,11 +485,6 @@
         {
           "type": "json",
           "path": "packages/plugins/experimental/plugin-explorer/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-function/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -539,6 +544,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/experimental/plugin-wnfs/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-attention/package.json",
           "jsonpath": "$.version"
         },
@@ -559,6 +569,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-debug/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-deck/package.json",
           "jsonpath": "$.version"
         },
@@ -575,6 +590,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-help/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-manager/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -615,11 +635,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-registry/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-settings/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -719,6 +734,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/schema/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/shell/package.json",
           "jsonpath": "$.version"
         },
@@ -764,6 +784,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-data/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-deck/package.json",
           "jsonpath": "$.version"
         },
@@ -779,12 +804,12 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-mosaic/package.json",
+          "path": "packages/ui/react-ui-list/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-navtree/package.json",
+          "path": "packages/ui/react-ui-mosaic/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -830,11 +855,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-types/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/storybook-utils/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -2,22 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
 import { describe, expect, test } from 'vitest';
 
+import { S } from '@dxos/effect';
 import { getDeep } from '@dxos/util';
 
 import { SchemaValidator } from './schema-validator';
 import { create } from '../handler';
-import { TypedObject } from '../typed-object-class';
+import { TypedObject } from '../object';
 
 describe('schema-validator', () => {
   describe('validateSchema', () => {
     test('throws on ambiguous discriminated type union', () => {
-      const schema = S.Struct({
+      const TestSchema = S.Struct({
         union: S.Union(S.Struct({ a: S.Number }), S.Struct({ b: S.String })),
       });
-      expect(() => SchemaValidator.validateSchema(schema)).to.throw();
+
+      expect(() => SchemaValidator.validateSchema(TestSchema)).to.throw();
     });
   });
 
@@ -25,26 +26,26 @@ describe('schema-validator', () => {
     test('has annotation', () => {
       const annotationId = Symbol('foo');
       const annotationValue = 'bar';
-      const human: S.Schema<any> = S.Struct({
+      const TestSchema: S.Schema<any> = S.Struct({
         name: S.String.annotations({ [annotationId]: annotationValue }),
-        parent: S.optional(S.suspend(() => human.annotations({ [annotationId]: annotationValue }))),
-        friends: S.suspend(() => S.mutable(S.Array(human.annotations({ [annotationId]: annotationValue })))),
+        parent: S.optional(S.suspend(() => TestSchema.annotations({ [annotationId]: annotationValue }))),
+        friends: S.suspend(() => S.mutable(S.Array(TestSchema.annotations({ [annotationId]: annotationValue })))),
       });
-      expect(SchemaValidator.hasTypeAnnotation(human, 'name', annotationId)).to.be.true;
-      expect(SchemaValidator.hasTypeAnnotation(human, 'parent', annotationId)).to.be.true;
-      expect(SchemaValidator.hasTypeAnnotation(human, 'friends', annotationId)).to.be.true;
+      expect(SchemaValidator.hasTypeAnnotation(TestSchema, 'name', annotationId)).to.be.true;
+      expect(SchemaValidator.hasTypeAnnotation(TestSchema, 'parent', annotationId)).to.be.true;
+      expect(SchemaValidator.hasTypeAnnotation(TestSchema, 'friends', annotationId)).to.be.true;
     });
 
     test('no annotation', () => {
       const annotationId = Symbol('foo');
-      const human: S.Schema<any> = S.Struct({
+      const Person: S.Schema<any> = S.Struct({
         name: S.String,
-        parent: S.optional(S.suspend(() => human)),
-        friends: S.suspend(() => S.mutable(S.Array(human))),
+        parent: S.optional(S.suspend(() => Person)),
+        friends: S.suspend(() => S.mutable(S.Array(Person))),
       });
-      expect(SchemaValidator.hasTypeAnnotation(human, 'name', annotationId)).to.be.false;
-      expect(SchemaValidator.hasTypeAnnotation(human, 'parent', annotationId)).to.be.false;
-      expect(SchemaValidator.hasTypeAnnotation(human, 'friends', annotationId)).to.be.false;
+      expect(SchemaValidator.hasTypeAnnotation(Person, 'name', annotationId)).to.be.false;
+      expect(SchemaValidator.hasTypeAnnotation(Person, 'parent', annotationId)).to.be.false;
+      expect(SchemaValidator.hasTypeAnnotation(Person, 'friends', annotationId)).to.be.false;
     });
   });
 
@@ -84,12 +85,14 @@ describe('schema-validator', () => {
     test('preserves annotations', () => {
       const annotationId = Symbol('foo');
       const annotationValue = 'bar';
-      const human: S.Schema<any> = S.Struct({
-        parent: S.optional(S.suspend(() => human.annotations({ [annotationId]: annotationValue }))),
-        friends: S.suspend(() => S.mutable(S.Array(human.annotations({ [annotationId]: annotationValue })))),
+      const Person: S.Schema<any> = S.Struct({
+        parent: S.optional(S.suspend(() => Person.annotations({ [annotationId]: annotationValue }))),
+        friends: S.suspend(() => S.mutable(S.Array(Person.annotations({ [annotationId]: annotationValue })))),
       });
-      expect(SchemaValidator.getPropertySchema(human, ['parent']).ast.annotations[annotationId]).to.eq(annotationValue);
-      expect(SchemaValidator.getPropertySchema(human, ['friends', '0']).ast.annotations[annotationId]).to.eq(
+      expect(SchemaValidator.getPropertySchema(Person, ['parent']).ast.annotations[annotationId]).to.eq(
+        annotationValue,
+      );
+      expect(SchemaValidator.getPropertySchema(Person, ['friends', '0']).ast.annotations[annotationId]).to.eq(
         annotationValue,
       );
     });
@@ -135,7 +138,7 @@ describe('schema-validator', () => {
           meta: S.optional(S.mutable(S.Any)),
           // NOTE: S.Record only supports shallow values.
           // https://www.npmjs.com/package/@effect/schema#mutable-records
-          // meta: S.optional(S.mutable(S.Record(S.String, S.Any))),
+          // meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
           // meta: S.optional(S.mutable(S.object)),
         }),
       );
@@ -165,7 +168,7 @@ describe('schema-validator', () => {
           typename: 'dxos.org/type/FunctionTrigger',
           version: '0.1.0',
         })({
-          meta: S.optional(S.mutable(S.Record(S.String, S.Any))),
+          meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
         }) {}
 
         const object = create(Test2, {});
@@ -189,7 +192,7 @@ describe('schema-validator', () => {
     test('index signature from optional record', () => {
       for (const value of [42, '42']) {
         validateValueToAssign({
-          schema: S.Struct({ field: S.optional(S.Record(S.String, S.Number)) }),
+          schema: S.Struct({ field: S.optional(S.Record({ key: S.String, value: S.Number })) }),
           target: {},
           path: ['field', 'unknownField'],
           valueToAssign: value,

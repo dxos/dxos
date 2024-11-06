@@ -9,7 +9,7 @@ import React, { type PropsWithChildren, useState, type ComponentProps } from 're
 
 import { faker } from '@dxos/random';
 import { Button, Icon, Main } from '@dxos/react-ui';
-import { AttentionProvider } from '@dxos/react-ui-attention';
+import { RootAttentionProvider } from '@dxos/react-ui-attention';
 import { PlankHeading, Deck as NaturalDeck, Plank } from '@dxos/react-ui-deck';
 import { Mosaic, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
@@ -93,7 +93,7 @@ const DemoStackPlank = (rootProps: Partial<ComponentProps<typeof Plank.Root>>) =
 
 export default {
   // NOTE(thure): This is intentionally organized under `react-ui-deck` so that related stories appear together in Storybook despite needing to live in separate packages based on dependencies.
-  title: 'react-ui-deck/Deck',
+  title: 'ui/react-ui-deck/Deck',
   component: NaturalDeck.Root,
   decorators: [withTheme],
   args: {},
@@ -102,10 +102,9 @@ export default {
 export const StaticBasicStacks = {
   args: {},
   render: () => {
-    const [attended] = useState(new Set<string>());
     return (
       <Mosaic.Root>
-        <AttentionProvider attended={attended}>
+        <RootAttentionProvider>
           <Mosaic.DragOverlay />
           <NaturalDeck.Root classNames='fixed inset-0 z-0'>
             <DemoStackPlank />
@@ -116,7 +115,7 @@ export const StaticBasicStacks = {
             <DemoStackPlank />
             <DemoStackPlank />
           </NaturalDeck.Root>
-        </AttentionProvider>
+        </RootAttentionProvider>
       </Mosaic.Root>
     );
   },
@@ -125,10 +124,9 @@ export const StaticBasicStacks = {
 export const StaticBasicStacksWithOverscrolling = {
   args: {},
   render: () => {
-    const [attended] = useState(new Set<string>());
     return (
       <Mosaic.Root>
-        <AttentionProvider attended={attended}>
+        <RootAttentionProvider>
           <Mosaic.DragOverlay />
           <NaturalDeck.Root classNames='fixed inset-0 z-0'>
             <DemoStackPlank />
@@ -139,7 +137,7 @@ export const StaticBasicStacksWithOverscrolling = {
             <DemoStackPlank />
             <DemoStackPlank />
           </NaturalDeck.Root>
-        </AttentionProvider>
+        </RootAttentionProvider>
       </Mosaic.Root>
     );
   },
@@ -195,7 +193,6 @@ export const DynamicBasicStacks = () => {
         return acc;
       }, {}),
   );
-  const [attended] = useState(new Set<string>());
 
   const [navOpen, setNavOpen] = useState(true);
   const [c11yOpen, setC11yOpen] = useState(false);
@@ -285,7 +282,7 @@ export const DynamicBasicStacks = () => {
 
   return (
     <Mosaic.Root>
-      <AttentionProvider attended={attended}>
+      <RootAttentionProvider>
         <Main.Root complementarySidebarOpen={c11yOpen} navigationSidebarOpen={navOpen}>
           <Main.Overlay />
           <Mosaic.DragOverlay />
@@ -359,7 +356,7 @@ export const DynamicBasicStacks = () => {
             )}
           </NaturalDeck.Root>
         </Main.Root>
-      </AttentionProvider>
+      </RootAttentionProvider>
     </Mosaic.Root>
   );
 };

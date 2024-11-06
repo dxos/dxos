@@ -150,15 +150,15 @@ const Story = ({
   xAxis = false,
 }: StoryProps) => {
   const [controller, setController] = useState<GlobeController | null>();
-  const dots = useAsyncState(async () => {
+  const [dots] = useAsyncState(async () => {
     const points = (await import('../../data/countries-dots-3.ts')).default;
     return {
       type: 'Topology',
       objects: { dots: points },
     } as any as Topology;
   });
-  const topology = useAsyncState(async () => (await import('../../data/countries-110m.ts')).default);
-  const airports = useAsyncState(async () => (await import('../../data/airports.ts')).default);
+  const [topology] = useAsyncState(async () => (await import('../../data/countries-110m.ts')).default);
+  const [airports] = useAsyncState(async () => (await import('../../data/airports.ts')).default);
   const features = useMemo(() => {
     return airports ? createTrip(airports, routes, (dots?.objects.dots as any)?.geometries[0].coordinates) : undefined;
   }, [airports, routes, dots]);
@@ -230,13 +230,8 @@ const Story = ({
 
 const initialRotation: Vector = [0, -40, 0];
 
-export default {
-  title: 'gem-globe/Globe',
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#000]' })],
-};
-
 export const Earth1 = () => {
-  const topology = useAsyncState(async () => (await import('../../data/countries-110m.ts')).default);
+  const [topology] = useAsyncState(async () => (await import('../../data/countries-110m.ts')).default);
   const [controller, setController] = useState<GlobeController | null>();
   useDrag(controller);
 
@@ -248,7 +243,7 @@ export const Earth1 = () => {
 };
 
 export const Earth2 = () => {
-  const topology = useAsyncState(async () => (await import('../../data/countries-110m.ts')).default);
+  const [topology] = useAsyncState(async () => (await import('../../data/countries-110m.ts')).default);
   const [controller, setController] = useState<GlobeController | null>();
   useDrag(controller);
 
@@ -281,7 +276,7 @@ const monochrome: StyleSet = {
 };
 
 export const Mercator = () => {
-  const topology = useAsyncState(async () => (await import('../../data/countries-110m.ts')).default);
+  const [topology] = useAsyncState(async () => (await import('../../data/countries-110m.ts')).default);
   const [controller, setController] = useState<GlobeController | null>();
   useDrag(controller);
 
@@ -314,4 +309,9 @@ export const Globe5 = () => {
 
 export const Globe6 = () => {
   return <Story drag xAxis tour scale={2} translation={{ x: 0, y: 600 }} rotation={[0, -20, 0]} styles={dotStyles} />;
+};
+
+export default {
+  title: 'experimental/gem-globe/Globe',
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#000]' })],
 };

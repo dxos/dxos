@@ -1,0 +1,32 @@
+{
+  "name": "@dxos/merkle-search-tree",
+  "version": "0.6.5",
+  "description": "Merkle-Search Tree implementation and sync protocol.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/invariant": "workspace:*",
+    "@dxos/util": "workspace:*"
+  },
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  }
+}

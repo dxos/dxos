@@ -6,7 +6,8 @@ import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { decodeReference, type ObjectStructure } from '@dxos/echo-protocol';
 import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
@@ -76,6 +77,18 @@ export class IndexSchema extends Resource implements Index {
     for (const typename of filter.typenames) {
       if (typename === EXPANDO_TYPENAME) {
         results.push(...Array.from(this._index.get(null) ?? []).map((id) => ({ id, rank: 0 })));
+      } else if (DXN.isDXNString(typename)) {
+        const dxn = DXN.parse(typename);
+
+        if (dxn.isLocalEchoObjectDXN()) {
+          const objectId = dxn.parts[1];
+          results.push(...Array.from(this._index.get(objectId) ?? []).map((id) => ({ id, rank: 0 })));
+        } else if (dxn.parts[0] === DXN.kind.TYPE) {
+          const typename = dxn.parts[1];
+          results.push(...Array.from(this._index.get(typename) ?? []).map((id) => ({ id, rank: 0 })));
+        } else {
+          log.warn('Unsupported DXN', { dxn });
+        }
       } else {
         results.push(...Array.from(this._index.get(typename) ?? []).map((id) => ({ id, rank: 0 })));
       }

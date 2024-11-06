@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { SettingsValue } from '@dxos/plugin-settings';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
+import { FormInput } from '@dxos/react-ui-data';
 
 import { DECK_PLUGIN } from '../meta';
 import {
@@ -23,7 +23,7 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
 
   return (
     <>
-      <SettingsValue label={t('select new plank positioning label')}>
+      <FormInput label={t('select new plank positioning label')}>
         <Select.Root
           value={settings.newPlankPositioning ?? 'start'}
           onValueChange={(value) => (settings.newPlankPositioning = value as NewPlankPositioning)}
@@ -41,8 +41,8 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
             </Select.Content>
           </Select.Portal>
         </Select.Root>
-      </SettingsValue>
-      <SettingsValue label={t('settings overscroll label')}>
+      </FormInput>
+      <FormInput label={t('settings overscroll label')}>
         <Select.Root
           value={settings.overscroll ?? 'none'}
           onValueChange={(value) => (settings.overscroll = value as Overscroll)}
@@ -60,27 +60,24 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
             </Select.Content>
           </Select.Portal>
         </Select.Root>
-      </SettingsValue>
-      <SettingsValue label={t('settings show footer label')}>
-        <Input.Switch checked={settings.showFooter} onCheckedChange={(checked) => (settings.showFooter = !!checked)} />
-      </SettingsValue>
+      </FormInput>
+      <FormInput label={t('settings show hints label')}>
+        <Input.Switch checked={settings.showHints} onCheckedChange={(checked) => (settings.showHints = checked)} />
+      </FormInput>
       {!isSocket && (
-        <SettingsValue label={t('settings native redirect label')}>
+        <FormInput label={t('settings native redirect label')}>
           <Input.Switch
             checked={settings.enableNativeRedirect}
-            onCheckedChange={(checked) => (settings.enableNativeRedirect = !!checked)}
+            onCheckedChange={(checked) => (settings.enableNativeRedirect = checked)}
           />
-        </SettingsValue>
+        </FormInput>
       )}
-      <SettingsValue label={t('settings custom slots')}>
-        <Input.Switch
-          checked={settings.customSlots}
-          onCheckedChange={(checked) => (settings.customSlots = !!checked)}
-        />
-      </SettingsValue>
-      <SettingsValue label={t('settings flat deck')}>
-        <Input.Switch checked={settings.flatDeck} onCheckedChange={(checked) => (settings.flatDeck = !!checked)} />
-      </SettingsValue>
+      <FormInput label={t('settings custom slots')}>
+        <Input.Switch checked={settings.customSlots} onCheckedChange={(checked) => (settings.customSlots = checked)} />
+      </FormInput>
+      <FormInput label={t('settings flat deck')}>
+        <Input.Switch checked={settings.flatDeck} onCheckedChange={(checked) => (settings.flatDeck = checked)} />
+      </FormInput>
     </>
   );
 };

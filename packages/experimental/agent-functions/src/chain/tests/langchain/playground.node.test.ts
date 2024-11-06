@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { AST, Schema as S } from '@effect/schema';
 import { SerpAPI } from '@langchain/community/tools/serpapi';
 import { HNSWLib } from '@langchain/community/vectorstores/hnswlib';
 import { type BaseFunctionCallOptions } from '@langchain/core/language_models/base';
@@ -33,7 +34,7 @@ import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { z } from 'zod';
 
-import { effectToJsonSchema, S } from '@dxos/echo-schema';
+import { effectToJsonSchema } from '@dxos/echo-schema';
 
 import { getConfig, getKey } from '../../../util';
 
@@ -232,18 +233,18 @@ describe.skip('LangChain', () => {
     const defs = S.Struct({
       company: S.Array(
         S.Struct({
-          name: S.String.pipe(S.description('The name of the company')),
-          website: S.String.pipe(S.description('The URL of the company website')),
-          public: S.Boolean.pipe(S.description('Public company')),
+          name: S.String.annotations({ [AST.DescriptionAnnotationId]: 'The name of the company' }),
+          website: S.String.annotations({ [AST.DescriptionAnnotationId]: 'The URL of the company website' }),
+          public: S.Boolean.annotations({ [AST.DescriptionAnnotationId]: 'Public company' }),
         }),
-      ).pipe(S.description('An array of companies mentioned in the text')),
+      ).annotations({ [AST.DescriptionAnnotationId]: 'An array of companies mentioned in the text' }),
 
       person: S.Array(
         S.Struct({
-          name: S.String.pipe(S.description('The name of the person')),
-          wiki: S.String.pipe(S.description('The persons wikipedia article')),
+          name: S.String.annotations({ [AST.DescriptionAnnotationId]: 'The name of the person' }),
+          wiki: S.String.annotations({ [AST.DescriptionAnnotationId]: 'The persons wikipedia article' }),
         }),
-      ).pipe(S.description('An array of people mentioned in the text')),
+      ).annotations({ [AST.DescriptionAnnotationId]: 'An array of people mentioned in the text' }),
     });
 
     const jsonSchema: Record<string, unknown> = effectToJsonSchema(defs) as any;

@@ -6,17 +6,17 @@ import { Args, Flags } from '@oclif/core';
 import fs from 'node:fs';
 
 import { type Client } from '@dxos/client';
-import { Filter, loadObjectReferences } from '@dxos/client/echo';
+import { type EchoReactiveObject, Filter, loadObjectReferences } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
-import { create, type EchoReactiveObject, getMeta } from '@dxos/echo-schema';
+import { create, getMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { TextType } from '@dxos/plugin-markdown/types';
 import {
-  uploadWorkerFunction,
   getUserFunctionUrlInMetadata,
-  setUserFunctionUrlInMetadata,
-  type UserFunctionUploadResult,
   publicKeyToDid,
+  setUserFunctionUrlInMetadata,
+  uploadWorkerFunction,
+  type UserFunctionUploadResult,
 } from '@dxos/plugin-script/edge';
 import { ScriptType } from '@dxos/plugin-script/types';
 

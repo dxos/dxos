@@ -1,11 +1,12 @@
 {
   "name": "@dxos/util",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Temporary bucket for misc functions, which should graduate into separate packages.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": true,
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -28,9 +29,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/node-std": "workspace:*",
-    "@effect/schema": "^0.67.16",
-    "xcase": "^2.0.1"
+    "@dxos/node-std": "workspace:*"
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*"

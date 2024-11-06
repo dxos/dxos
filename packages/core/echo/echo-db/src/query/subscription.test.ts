@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 import { Expando, create, type ReactiveObject } from '@dxos/echo-schema';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 
 import { createSubscription } from './subscription';
@@ -60,7 +60,7 @@ describe('create subscription', () => {
   });
 
   test('signal updates are synchronous', async () => {
-    registerSignalRuntime();
+    registerSignalsRuntime();
 
     const { db } = await builder.createDatabase();
     const task = createExpando();

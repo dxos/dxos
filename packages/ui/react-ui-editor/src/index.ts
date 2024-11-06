@@ -14,6 +14,7 @@ export * from './components';
 export * from './defaults';
 export * from './extensions';
 export * from './hooks';
+export * from './types';
 export * from './util';
 
 export { translations };

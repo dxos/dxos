@@ -7,7 +7,7 @@ import { Decoration, EditorView } from '@codemirror/view';
 
 import { isNotFalsy } from '@dxos/util';
 
-import { Cursor } from './cursor';
+import { Cursor } from '../util';
 
 type Annotation = {
   cursor: string;

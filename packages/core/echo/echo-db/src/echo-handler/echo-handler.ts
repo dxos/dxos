@@ -2,17 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
 import { encodeReference, Reference } from '@dxos/echo-protocol';
 import {
-  createReactiveProxy,
+  createProxy,
   defineHiddenProperty,
-  DynamicSchema,
-  type EchoReactiveObject,
-  getProxyHandlerSlot,
+  getProxyTarget,
+  MutableSchema,
   isReactiveObject,
   type ObjectMeta,
   ObjectMetaSchema,
@@ -21,11 +19,12 @@ import {
   StoredSchema,
   symbolIsProxy,
 } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { setDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
 
-import { createEchoObject, isEchoObject } from './create';
+import { type EchoReactiveObject, createObject, isEchoObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
@@ -36,7 +35,7 @@ import {
   symbolPath,
   TargetKey,
 } from './echo-proxy-target';
-import { type KeyPath, META_NAMESPACE, type ObjectCore } from '../core-db';
+import { META_NAMESPACE, type KeyPath, type ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 export const PROPERTY_ID = 'id';
@@ -47,7 +46,7 @@ export const DATA_NAMESPACE = 'data';
  * Shared for all targets within one ECHO object.
  */
 export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
-  public static instance = new EchoReactiveHandler();
+  public static readonly instance = new EchoReactiveHandler();
 
   _proxyMap = new WeakMap<object, any>();
 
@@ -155,7 +154,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         array[symbolHandler] = this;
         return array;
       });
-      return createReactiveProxy(newTarget, this);
+      return createProxy(newTarget, this);
     }
     if (typeof decoded === 'object') {
       const targetKey = TargetKey.new(dataPath, namespace, 'record');
@@ -169,7 +168,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           [symbolNamespace]: namespace,
         }),
       );
-      return createReactiveProxy(newTarget, this);
+      return createProxy(newTarget, this);
     }
 
     return decoded;
@@ -280,7 +279,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
-    const unwrappedValue = value instanceof DynamicSchema ? value.serializedSchema : value;
+    const unwrappedValue = value instanceof MutableSchema ? value.serializedSchema : value;
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) => {
       return target[symbolInternals].core.getDecoded([getNamespace(target), ...path]);
     });
@@ -454,7 +453,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       [symbolNamespace]: META_NAMESPACE,
     };
 
-    return createReactiveProxy(metaTarget, this) as any;
+    return createProxy(metaTarget, this) as any;
   }
 
   setDatabase(target: ProxyTarget, database: EchoDatabase): void {
@@ -468,26 +467,24 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * @param proxy - the proxy that was passed to the method
    */
   createRef(target: ProxyTarget, proxy: any): Reference {
-    const otherEchoObj = !isEchoObject(proxy) ? createEchoObject(proxy) : proxy;
+    const otherEchoObj = !isEchoObject(proxy) ? createObject(proxy) : proxy;
     const otherObjId = otherEchoObj.id;
     invariant(typeof otherObjId === 'string' && otherObjId.length > 0);
 
-    const database = target[symbolInternals].database;
-
     // Note: Save proxy in `.linkCache` if the object is not yet saved in the database.
+    const database = target[symbolInternals].database;
     if (!database) {
       invariant(target[symbolInternals].linkCache);
 
       // Can be caused not using `object(Expando, { ... })` constructor.
       // TODO(dmaretskyi): Add better validation.
       invariant(otherObjId != null);
-
       target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as EchoReactiveObject<any>);
       return new Reference(otherObjId);
     }
 
     // TODO(burdon): Remote?
-    const foreignDatabase = (getProxyHandlerSlot(otherEchoObj).target as ProxyTarget)[symbolInternals].database;
+    const foreignDatabase = (getProxyTarget(otherEchoObj) as ProxyTarget)[symbolInternals].database;
     if (!foreignDatabase) {
       database.add(otherEchoObj);
       return new Reference(otherObjId);
@@ -623,6 +620,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           if (value instanceof Reference) {
             return this.lookupRef(target, value);
           }
+
           return recurse(value);
         });
         if (isRootDataObject(target)) {
@@ -651,29 +649,32 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 }
 
 export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
-  if (value == null || Array.isArray(value)) {
+  if (value == null || Array.isArray(value) || value instanceof MutableSchema) {
     return;
   }
-  if (value instanceof DynamicSchema) {
-    return;
-  }
+
   const proto = Object.getPrototypeOf(value);
   if (typeof value === 'object' && proto !== Object.prototype) {
     throw new Error(`class instances are not supported: setting ${proto} on ${String(prop)}`);
   }
 };
 
-export const getObjectCoreFromEchoTarget = (target: ProxyTarget): ObjectCore => target[symbolInternals].core;
-
-const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
+// TODO(burdon): Move ProxyTarget def to echo-schema and make EchoReactiveObject inherit?
+export const getObjectCore = <T extends object>(obj: EchoReactiveObject<T>): ObjectCore => {
+  const { core } = (obj as unknown as ProxyTarget)[symbolInternals];
+  return core;
+};
 
 const isRootDataObject = (target: ProxyTarget) => {
   const path = target[symbolPath];
   if (!Array.isArray(path) || path.length > 0) {
     return false;
   }
+
   return getNamespace(target) === DATA_NAMESPACE;
 };
+
+const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
 
 interface DecodedValueAtPath {
   value: any;

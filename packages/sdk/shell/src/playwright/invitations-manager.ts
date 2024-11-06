@@ -6,7 +6,6 @@ import { expect, type Browser, type ConsoleMessage } from '@playwright/test';
 
 import { Trigger } from '@dxos/async';
 import { type Invitation } from '@dxos/react-client/invitations';
-import { ConnectionState } from '@dxos/react-client/mesh';
 import { setupPage } from '@dxos/test-utils/playwright';
 
 import { ScopedShellManager } from '../testing';
@@ -32,7 +31,7 @@ export class InvitationsManager extends ScopedShellManager {
     }
 
     const { page } = await setupPage(this._browser, {
-      url: storybookUrl('invitations--default'),
+      url: storybookUrl('sdk-shell-invitations--default'),
     });
 
     this.page = page;
@@ -56,9 +55,9 @@ export class InvitationsManager extends ScopedShellManager {
 
     try {
       await selector.waitFor({ timeout: 500 });
-      return ConnectionState.OFFLINE;
+      return 0;
     } catch {
-      return ConnectionState.ONLINE;
+      return 1;
     }
   }
 
@@ -144,7 +143,8 @@ export class InvitationsManager extends ScopedShellManager {
       },
       { id, type, options },
     );
-    return this._invitationCode.wait();
+
+    return this._invitationCode.wait({ timeout: 1_000 });
   }
 
   async acceptInvitation(id: number, type: 'device' | 'space', invitation: string) {

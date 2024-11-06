@@ -5,10 +5,15 @@
 import { expect, test } from '@playwright/test';
 
 import { sleep } from '@dxos/async';
-import { Invitation } from '@dxos/react-client/invitations';
-import { ConnectionState } from '@dxos/react-client/mesh';
 
 import { InvitationsManager } from './invitations-manager';
+
+// TODO(wittjosiah): Can't import these because of ESM/CJS issues.
+// import { Invitation } from '@dxos/react-client/invitations';
+// import { ConnectionState } from '@dxos/react-client/mesh';
+const InvitationAuthMethodNone = 0;
+const ConnectionStateOffline = 0;
+const ConnectionStateOnline = 1;
 
 test.describe('Invitations', () => {
   let manager: InvitationsManager;
@@ -44,7 +49,6 @@ test.describe('Invitations', () => {
       await manager.acceptInvitation(1, 'device', invitation);
       await manager.readyToAuthenticate('device', manager.peer(1));
       await manager.authenticateInvitation('device', authCode, manager.peer(1));
-      await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).toEqual(await manager.getDisplayName(1));
     });
@@ -52,11 +56,10 @@ test.describe('Invitations', () => {
     test('no auth method', async () => {
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
-      const invitation = await manager.createInvitation(0, 'device', { authMethod: Invitation.AuthMethod.NONE });
+      const invitation = await manager.createInvitation(0, 'device', { authMethod: InvitationAuthMethodNone });
 
       await manager.openPanel(1, 'identity');
       await manager.acceptInvitation(1, 'device', invitation);
-      await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).toEqual(await manager.getDisplayName(1));
     });
@@ -72,7 +75,6 @@ test.describe('Invitations', () => {
       await manager.authenticateInvitation('device', '000000', manager.peer(1));
       await manager.clearAuthCode('device', manager.peer(1));
       await manager.authenticateInvitation('device', authCode, manager.peer(1));
-      await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).toEqual(await manager.getDisplayName(1));
     });
@@ -99,7 +101,6 @@ test.describe('Invitations', () => {
       await manager.invitationInputContinue('device', manager.peer(1));
       await manager.clearAuthCode('device', manager.peer(1));
       await manager.authenticateInvitation('device', authCode, manager.peer(1));
-      await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).toEqual(await manager.getDisplayName(1));
     });
@@ -144,7 +145,6 @@ test.describe('Invitations', () => {
       await manager.invitationInputContinue('device', manager.peer(1));
       await manager.clearAuthCode('device', manager.peer(1));
       await manager.authenticateInvitation('device', authCode, manager.peer(1));
-      await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).toEqual(await manager.getDisplayName(1));
     });
@@ -160,14 +160,13 @@ test.describe('Invitations', () => {
       await manager.acceptInvitation(1, 'device', invitation);
       expect(await manager.readyToAuthenticate('device', manager.peer(1))).toBe(true);
       await manager.toggleNetworkStatus(0);
-      expect(await manager.getNetworkStatus(0)).toEqual(ConnectionState.OFFLINE);
+      expect(await manager.getNetworkStatus(0)).toEqual(ConnectionStateOffline);
       await manager.toggleNetworkStatus(0);
-      expect(await manager.getNetworkStatus(0)).toEqual(ConnectionState.ONLINE);
+      expect(await manager.getNetworkStatus(0)).toEqual(ConnectionStateOnline);
       await manager.resetInvitation(manager.peer(1));
       await manager.invitationInputContinue('device', manager.peer(1));
       await manager.clearAuthCode('device', manager.peer(1));
       await manager.authenticateInvitation('device', authCode, manager.peer(1));
-      await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).toEqual(await manager.getDisplayName(1));
     });
@@ -186,7 +185,6 @@ test.describe('Invitations', () => {
       await manager.acceptInvitation(1, 'space', invitation);
       await manager.readyToAuthenticate('space', manager.peer(1));
       await manager.authenticateInvitation('space', authCode, manager.peer(1));
-      await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
       expect(await manager.getSpaceName(0, 1)).toEqual(await manager.getSpaceName(1, 1));
@@ -196,17 +194,15 @@ test.describe('Invitations', () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 1);
-      const invitation1 = await manager.createInvitation(0, 'space', { authMethod: Invitation.AuthMethod.NONE });
+      const invitation1 = await manager.createInvitation(0, 'space', { authMethod: InvitationAuthMethodNone });
       const invitation2 = await manager.createInvitation(0, 'space');
 
       await manager.createIdentity(1);
       await manager.openPanel(1, 'join');
       await manager.acceptInvitation(1, 'space', invitation1);
-      await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(1, 'join');
       await manager.acceptInvitation(1, 'space', invitation2);
-      await manager.doneInvitation('space', manager.peer(1));
 
       expect(await manager.getSpaceMembersCount(0)).toEqual(2);
     });
@@ -215,12 +211,11 @@ test.describe('Invitations', () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 1);
-      const invitation = await manager.createInvitation(0, 'space', { authMethod: Invitation.AuthMethod.NONE });
+      const invitation = await manager.createInvitation(0, 'space', { authMethod: InvitationAuthMethodNone });
 
       await manager.createIdentity(1);
       await manager.openPanel(1, 'join');
       await manager.acceptInvitation(1, 'space', invitation);
-      await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
       expect(await manager.getSpaceName(0, 1)).toEqual(await manager.getSpaceName(1, 1));
@@ -242,7 +237,6 @@ test.describe('Invitations', () => {
 
       await manager.clearAuthCode('space', manager.peer(1));
       await manager.authenticateInvitation('space', authCode, manager.peer(1));
-      await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
       expect(await manager.getSpaceName(0, 1)).toEqual(await manager.getSpaceName(1, 1));
@@ -272,7 +266,6 @@ test.describe('Invitations', () => {
       await manager.invitationInputContinue('space', manager.peer(1));
       await manager.clearAuthCode('space', manager.peer(1));
       await manager.authenticateInvitation('space', authCode, manager.peer(1));
-      await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
       expect(await manager.getSpaceName(0, 1)).toEqual(await manager.getSpaceName(1, 1));
@@ -323,7 +316,6 @@ test.describe('Invitations', () => {
       await manager.invitationInputContinue('space', manager.peer(1));
       await manager.clearAuthCode('space', manager.peer(1));
       await manager.authenticateInvitation('space', authCode, manager.peer(1));
-      await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
       expect(await manager.getSpaceName(0, 1)).toEqual(await manager.getSpaceName(1, 1));
@@ -342,14 +334,13 @@ test.describe('Invitations', () => {
       await manager.acceptInvitation(1, 'space', invitation);
       expect(await manager.readyToAuthenticate('space', manager.peer(1))).toBe(true);
       await manager.toggleNetworkStatus(0);
-      expect(await manager.getNetworkStatus(0)).toEqual(ConnectionState.OFFLINE);
+      expect(await manager.getNetworkStatus(0)).toEqual(ConnectionStateOffline);
       await manager.toggleNetworkStatus(0);
-      expect(await manager.getNetworkStatus(0)).toEqual(ConnectionState.ONLINE);
+      expect(await manager.getNetworkStatus(0)).toEqual(ConnectionStateOnline);
       await manager.resetInvitation(manager.peer(1));
       await manager.invitationInputContinue('space', manager.peer(1));
       await manager.clearAuthCode('space', manager.peer(1));
       await manager.authenticateInvitation('space', authCode, manager.peer(1));
-      await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
       expect(await manager.getSpaceName(0, 1)).toEqual(await manager.getSpaceName(1, 1));
@@ -380,8 +371,6 @@ test.describe('Invitations', () => {
       // Helps to ensure both auth codes are fully input (especially in webkit).
       await sleep(100);
       await manager.authenticateInvitation('space', authCode2, manager.peer(2));
-      await manager.doneInvitation('space', manager.peer(1));
-      await manager.doneInvitation('space', manager.peer(2));
 
       await manager.openPanel(0, 'spaces');
       expect(await manager.getSpaceName(0, 1)).toEqual(await manager.getSpaceName(1, 1));

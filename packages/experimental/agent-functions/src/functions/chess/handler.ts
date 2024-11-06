@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GameType } from '@dxos/chess-app/types';
-import { S } from '@dxos/echo-schema';
+import { AST, S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
+import { GameType } from '@dxos/plugin-chess/types';
 
 import { Engine } from './engine';
 
@@ -13,7 +13,7 @@ import { Engine } from './engine';
  */
 export const MetaSchema = S.mutable(
   S.Struct({
-    level: S.optional(S.Number.pipe(S.description('Engine strength.'))),
+    level: S.optional(S.Number.annotations({ [AST.DescriptionAnnotationId]: 'Engine strength.' })),
   }),
 );
 

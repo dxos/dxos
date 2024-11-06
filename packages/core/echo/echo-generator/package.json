@@ -1,19 +1,17 @@
 {
   "name": "@dxos/echo-generator",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "ECHO data generator for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": true,
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -30,10 +28,14 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/node-std": "workspace:*",
+    "@dxos/node-std": "workspace:*"
+  },
+  "devDependencies": {
     "@dxos/random": "workspace:*"
   },
-  "devDependencies": {},
+  "peerDependencies": {
+    "@dxos/random": "workspace:*"
+  },
   "publishConfig": {
     "access": "public"
   }

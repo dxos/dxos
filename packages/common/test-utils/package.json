@@ -8,20 +8,20 @@
   "author": "DXOS.org",
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
         "require": "./dist/lib/node/index.cjs",
         "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      }
     },
     "./playwright": {
+      "types": "./dist/types/src/playwright.d.ts",
       "browser": "./dist/lib/browser/playwright.mjs",
       "node": {
         "require": "./dist/lib/node/playwright.cjs",
         "default": "./dist/lib/node-esm/playwright.mjs"
-      },
-      "types": "./dist/types/src/playwright.d.ts"
+      }
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -42,7 +42,7 @@
     "@nx/devkit": "19.7.2",
     "@playwright/test": "^1.46.0",
     "pkg-up": "^3.1.0",
-    "vitest": "^2.1.1"
+    "vitest": "^2.1.3"
   },
   "publishConfig": {
     "access": "public"

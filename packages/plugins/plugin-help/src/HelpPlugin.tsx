@@ -25,12 +25,8 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
     meta,
     ready: async () => {
       settings
-        .prop({ key: 'showHints', storageKey: 'show-hints', type: LocalStorageStore.bool({ allowUndefined: true }) })
-        .prop({
-          key: 'showWelcome',
-          storageKey: 'show-welcome',
-          type: LocalStorageStore.bool({ allowUndefined: true }),
-        });
+        .prop({ key: 'showHints', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'showWelcome', type: LocalStorageStore.bool({ allowUndefined: true }) });
     },
     provides: {
       context: ({ children }) => {
@@ -107,9 +103,7 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
         component: ({ data, role }) => {
           switch (role) {
             case 'hints':
-              return settings.values.showHints ? (
-                <ShortcutsHints onClose={() => (settings.values.showHints = false)} />
-              ) : null;
+              return <ShortcutsHints />;
             case 'keyshortcuts':
               return <ShortcutsList />;
           }

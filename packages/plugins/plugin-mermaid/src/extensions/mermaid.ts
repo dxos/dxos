@@ -18,9 +18,9 @@ export type MermaidOptions = {};
 
 export const mermaid = (options: MermaidOptions = {}): Extension => {
   return [
-    StateField.define<RangeSet<any>>({
+    StateField.define<RangeSet<Decoration>>({
       create: (state) => update(state, options),
-      update: (_: RangeSet<any>, tr: Transaction) => update(tr.state, options),
+      update: (_: RangeSet<Decoration>, tr: Transaction) => update(tr.state, options),
       provide: (field) => EditorView.decorations.from(field),
     }),
     styles,
@@ -28,7 +28,7 @@ export const mermaid = (options: MermaidOptions = {}): Extension => {
 };
 
 const update = (state: EditorState, options: MermaidOptions) => {
-  const builder = new RangeSetBuilder();
+  const builder = new RangeSetBuilder<Decoration>();
   syntaxTree(state).iterate({
     enter: (node) => {
       if (node.name === 'FencedCode') {

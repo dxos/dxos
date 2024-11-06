@@ -37,3 +37,7 @@ DX_EDGE_BASE_URL:
 DX_EDGE_ECHO_REPLICATOR:
   path: runtime.client.edgeFeatures.echoReplicator
   type: boolean
+
+DX_EDGE_FEED_REPLICATOR:
+  path: runtime.client.edgeFeatures.feedReplicator
+  type: boolean

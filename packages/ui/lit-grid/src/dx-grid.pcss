@@ -1,25 +1,19 @@
+@import './dx-grid-axis-resize-handle.pcss';
+@import './dx-grid-multiselect-cell.pcss';
+
 dx-grid {
   display: contents;
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
-
 .dx-grid {
+  --dx-grid-gap: 1px;
+  --dx-plane-gap: 2px;
+
   display: grid;
+  gap: var(--dx-plane-gap);
   grid-template-columns: min-content 1fr min-content;
   grid-template-rows: min-content 1fr min-content;
   font-variant-numeric: tabular-nums;
-  --dx-grid-gap: 1px;
 
   min-inline-size: 4rem;
   min-block-size: 4rem;
@@ -29,34 +23,17 @@ dx-grid {
   max-block-size: 100dvh;
 
   user-select: none;
-}
 
-.dx-grid__scrollbar__thumb {
-  height: 1rem;
-  width: 1rem;
-  background: var(--dx-grid-thumb, var(--dx-separator));
-}
-
-.dx-grid__corner,
-.dx-grid__scrollbar {
-  background: var(--dx-grid-corner, var(--dx-hoverSurface));
-}
-
-.dx-grid__columnheader__content,
-.dx-grid__rowheader__content,
-.dx-grid__content {
-  display: grid;
-  gap: var(--dx-grid-gap);
   background: var(--dx-grid-lines, var(--dx-separator));
-  inline-size: min-content;
-  block-size: min-content;
 }
 
-.dx-grid__columnheader,
-.dx-grid__rowheader,
-.dx-grid__viewport {
+.dx-grid__plane--frozen-row,
+.dx-grid__plane--frozen-col,
+.dx-grid__plane--fixed,
+.dx-grid__plane--grid {
   overflow: hidden;
   position: relative;
+  display: grid;
   &:focus-visible {
     outline: none;
   }
@@ -69,20 +46,19 @@ dx-grid {
   }
 }
 
-.dx-grid__columnheader__content {
-  border-block-end: 2px solid var(--dx-grid-lines, var(--dx-separator));
-}
-
-.dx-grid__rowheader__content {
-  border-inline-end: 2px solid var(--dx-grid-lines, var(--dx-separator));
-  grid-template-columns: min-content;
-  text-align: end;
+.dx-grid__plane--fixed,
+.dx-grid__plane--frozen-row__content,
+.dx-grid__plane--frozen-col__content,
+.dx-grid__plane--grid__content {
+  display: grid;
+  gap: var(--dx-grid-gap);
 }
 
 .dx-grid {
   [role='gridcell'], [role='columnheader'], [role='rowheader'] {
+    position: relative;
     background: var(--dx-grid-base, var(--dx-base));
-    padding: 2px;
+    padding: 2px 3px;
     box-sizing: border-box;
     cursor: pointer;
     border: 1px solid transparent;
@@ -92,19 +68,16 @@ dx-grid {
     &[inert] {
       visibility: hidden;
     }
-    &:focus, &:focus-visible, &.dx-grid__cell--active {
-      cursor: text;
-      position: relative;
+    &:focus, &:focus-visible{
       z-index: 2;
       border-color: var(--dx-accentSurface);
       outline: none;
-    }
-  }
-  &[data-grid-mode="edit"] {
-    [role='gridcell'], [role='columnheader'], [role='rowheader'] {
-      &.dx-grid__cell--active {
-        color: transparent !important;
+      &:not([aria-readonly]) {
+        cursor: text;
       }
+    }
+    &.dx-grid__cell--commented {
+      background: var(--dx-grid-commented, var(--dx-gridCommented));
     }
   }
   &[data-grid-select] {
@@ -114,32 +87,24 @@ dx-grid {
       }
     }
   }
-}
-
-.dx-grid__columnheader__content,
-.dx-grid__rowheader__content {
-  & > [role='columnheader'], &> [role='rowheader'] {
-    position: relative;
-    & > button.dx-grid__resize-handle {
-      position: absolute;
-      background: transparent;
-      &:hover {
-        background: var(--dx-grid-resizeHandleHover, var(--dx-hoverSurface));
-      }
+  &[data-grid-mode="edit"]{
+    [role='gridcell'], [role='columnheader'], [role='rowheader'] {
+     &[data-dx-active] {
+       border-color: var(--dx-accentSurface);
+     }
     }
   }
 }
 
-.dx-grid__columnheader__content > [role='columnheader'] > button.dx-grid__resize-handle {
-  inset-block: 0;
-  inset-inline-end: 0;
-  inline-size: .5rem;
-  cursor: col-resize;
-}
-
-.dx-grid__rowheader__content > [role='rowheader'] > button.dx-grid__resize-handle {
-  inset-inline: 0;
-  inset-block-end: 0;
-  block-size: .5rem;
-  cursor: row-resize;
+/* todo(thure): Move this somewhere better. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }

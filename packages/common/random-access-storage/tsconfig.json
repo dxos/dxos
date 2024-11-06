@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -19,27 +19,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../async"
-    },
-    {
-      "path": "../debug"
-    },
-    {
-      "path": "../invariant"
-    },
-    {
-      "path": "../log"
-    },
-    {
-      "path": "../node-std"
-    },
-    {
-      "path": "../tracing"
-    },
-    {
-      "path": "../util"
-    }
-  ]
+  "references": []
 }

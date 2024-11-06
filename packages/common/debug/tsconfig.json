@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "allowJs": true,
     "lib": [
@@ -12,9 +12,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../node-std"
-    }
-  ]
+  "references": []
 }

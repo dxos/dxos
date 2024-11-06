@@ -1,27 +1,22 @@
 {
   "name": "@dxos/teleport",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Stream muxer.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": true,
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/testing/index.cjs",
-        "default": "./dist/lib/node-esm/testing/index.mjs"
-      },
-      "types": "./dist/types/src/testing/index.d.ts"
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -52,13 +47,13 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*",
-    "randombytes": "^2.1.0",
-    "varint": "6.0.0"
+    "randombytes": "^2.1.0"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
     "@types/randombytes": "^2.0.0",
-    "@types/varint": "6.0.0"
+    "@types/varint": "6.0.0",
+    "varint": "6.0.0"
   },
   "publishConfig": {
     "access": "public"

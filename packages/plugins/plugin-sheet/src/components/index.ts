@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
 export * from './ComputeGraph';
-export * from './Sheet';
+export * from './GridSheet';
+export * from './RangeList';
+export * from './SheetContext';
 
-// Lazily load components for content surfaces.
-export const SheetContainer = React.lazy(() => import('./SheetContainer'));
+export const SheetContainer = lazy(() => import('./SheetContainer'));

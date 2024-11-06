@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
     "outDir": "dist",
@@ -13,9 +13,5 @@
     "./src/**/*.ts",
     "src/template/LICENSE"
   ],
-  "references": [
-    {
-      "path": "../../packages/common/plate"
-    }
-  ]
+  "references": []
 }

@@ -1,10 +1,11 @@
 {
   "name": "@dxos/cf-labs",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": true,
   "scripts": {
     "dev": "wrangler dev"
   },
@@ -14,14 +15,14 @@
     "@dxos/log": "workspace:*"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.4.29",
-    "@cloudflare/workers-types": "^4.20240821.1",
-    "@vitest/browser": "~1.5.3",
-    "@vitest/runner": "~1.5.3",
-    "@vitest/snapshot": "~1.5.3",
-    "@vitest/ui": "~1.5.3",
-    "@vitest/utils": "~1.5.3",
-    "vitest": "~1.5.3"
+    "@cloudflare/vitest-pool-workers": "^0.5.17",
+    "@cloudflare/workers-types": "^4.20241018.0",
+    "@vitest/browser": "~2.1.3",
+    "@vitest/runner": "~2.1.3",
+    "@vitest/snapshot": "~2.1.3",
+    "@vitest/ui": "~2.1.3",
+    "@vitest/utils": "~2.1.3",
+    "vitest": "~2.1.3"
   },
   "publishConfig": {
     "access": "restricted"

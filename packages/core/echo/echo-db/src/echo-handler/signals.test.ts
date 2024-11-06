@@ -5,20 +5,19 @@
 import { test } from 'vitest';
 
 import { updateCounter } from '@dxos/echo-schema/testing';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
-registerSignalRuntime();
+registerSignalsRuntime();
 
+// Sanity test for signals.
 test('signals', ({ expect }) => {
-  const sig = compositeRuntime.createSignal();
-
+  const signal = compositeRuntime.createSignal();
   using updates = updateCounter(() => {
-    sig.notifyRead();
+    signal.notifyRead();
   });
   expect(updates.count).toEqual(0);
 
-  sig.notifyWrite();
-
+  signal.notifyWrite();
   expect(updates.count).toEqual(1);
 });

@@ -22,6 +22,11 @@ export interface Echo extends MulticastObservable<Space[]> {
   /**
    * Resolves when the default space is available.
    */
+  waitUntilReady(): Promise<void>;
+
+  /**
+   * Observable which indicates when the default space is available.
+   */
   // TODO(wittjosiah): Remove. Ensure default space is always available.
   get isReady(): MulticastObservable<boolean>;
 

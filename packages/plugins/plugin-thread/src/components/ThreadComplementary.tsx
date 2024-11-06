@@ -8,10 +8,10 @@ import { LayoutAction, type Plugin, useIntentDispatcher, useResolvePlugins } fro
 import { type ThreadType } from '@dxos/plugin-space';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
-import { createAttendableAttributes, useAttentionContext } from '@dxos/react-ui-attention';
+import { useAttended } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
 
-import { CommentsContainer, CommentsHeading } from '../components';
+import { CommentsContainer } from '../components';
 import { THREAD_PLUGIN } from '../meta';
 import { ThreadAction, type ThreadProvides } from '../types';
 
@@ -21,16 +21,14 @@ const providesThreadsConfig = (plugin: any): Plugin<ThreadProvides<any>> | undef
 export const ThreadComplementary = ({
   role,
   subject,
-  stagedThreads,
+  drafts,
   current,
-  focus,
   showResolvedThreads,
 }: {
   role: string;
   subject: any;
-  stagedThreads: ThreadType[] | undefined;
+  drafts: ThreadType[] | undefined;
   current?: string;
-  focus?: boolean;
   showResolvedThreads?: boolean;
 }) => {
   const dispatch = useIntentDispatcher();
@@ -44,8 +42,8 @@ export const ThreadComplementary = ({
   const sort = useMemo(() => createSort?.(subject), [createSort, subject]);
 
   const threads = useMemo(() => {
-    return subject.threads.concat(stagedThreads ?? []).filter(nonNullable) as ThreadType[];
-  }, [JSON.stringify(subject.threads), JSON.stringify(stagedThreads)]);
+    return subject.threads.concat(drafts ?? []).filter(nonNullable) as ThreadType[];
+  }, [JSON.stringify(subject.threads), JSON.stringify(drafts)]);
 
   const detachedIds = useMemo(() => {
     return threads.filter(({ anchor }) => !anchor).map((thread) => fullyQualifiedId(thread));
@@ -58,22 +56,17 @@ export const ThreadComplementary = ({
     threads.sort((a, b) => sort(a?.anchor, b?.anchor));
   }, [sort, threads]);
 
-  // TODO(Zan): Maybe we should have a hook for this?
-  const { attended } = useAttentionContext('Thread Complementary');
+  const attended = useAttended();
   const qualifiedSubjectId = fullyQualifiedId(subject);
 
-  const attendableAttrs = createAttendableAttributes(qualifiedSubjectId);
-
   return (
-    <div role='none' className='contents group/attention' {...attendableAttrs}>
-      {role === 'complementary' && <CommentsHeading attendableId={qualifiedSubjectId} />}
+    <div role='none' className='contents'>
       <ScrollArea.Root classNames='row-span-2'>
         <ScrollArea.Viewport>
           <CommentsContainer
             threads={threads}
             detached={detachedIds}
-            currentId={attended.has(qualifiedSubjectId) ? current : undefined}
-            autoFocusCurrentTextbox={focus}
+            currentId={attended.includes(qualifiedSubjectId) ? current : undefined}
             showResolvedThreads={showResolvedThreads}
             onThreadAttend={(thread) => {
               const threadId = fullyQualifiedId(thread);

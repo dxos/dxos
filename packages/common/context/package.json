@@ -1,11 +1,12 @@
 {
   "name": "@dxos/context",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Async utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": true,
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",

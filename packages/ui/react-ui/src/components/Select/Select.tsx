@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown, CaretUp, Check } from '@phosphor-icons/react';
+import { CaretDown, CaretUp } from '@phosphor-icons/react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import React, { forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Button, type ButtonProps } from '../Buttons';
+import { Icon } from '../Icon';
 
 type SelectRootProps = SelectPrimitive.SelectProps;
 
@@ -39,11 +40,9 @@ const SelectTriggerButton = forwardRef<HTMLButtonElement, SelectTriggerButtonPro
       <SelectPrimitive.Trigger asChild ref={forwardedRef}>
         <Button {...props}>
           <SelectPrimitive.Value placeholder={placeholder}>{children}</SelectPrimitive.Value>
+          <span className='w-1 flex-1' />
           <SelectPrimitive.Icon asChild>
-            <>
-              <span className='w-1' />
-              <CaretDown className={tx('select.triggerIcon', 'select__trigger__icon', {})} weight='bold' />
-            </>
+            <CaretDown className={tx('select.triggerIcon', 'select__trigger__icon', {})} weight='bold' />
           </SelectPrimitive.Icon>
         </Button>
       </SelectPrimitive.Trigger>
@@ -60,6 +59,7 @@ const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
       <SelectPrimitive.Content
         {...props}
         className={tx('select.content', 'select__content', {}, classNames)}
+        position='popper'
         ref={forwardedRef}
       >
         {children}
@@ -138,13 +138,13 @@ type SelectOptionProps = SelectItemProps;
 
 const SelectOption = forwardRef<HTMLDivElement, SelectItemProps>(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-
   return (
     <SelectPrimitive.Item {...props} className={tx('select.item', 'option', {}, classNames)} ref={forwardedRef}>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-      <SelectPrimitive.ItemIndicator className={tx('select.itemIndicator', 'option__indicator', {})}>
-        <Check weight='bold' />
-      </SelectPrimitive.ItemIndicator>
+      <span className='grow w-1' />
+      {/* <SelectPrimitive.ItemIndicator className={tx('select.itemIndicator', 'option__indicator', {})}> */}
+      <Icon icon='ph--check--regular' />
+      {/* </SelectPrimitive.ItemIndicator> */}
     </SelectPrimitive.Item>
   );
 });
@@ -174,7 +174,6 @@ type SelectArrowProps = ThemedClassName<SelectPrimitive.SelectArrowProps>;
 
 const SelectArrow = forwardRef<SVGSVGElement, SelectArrowProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-
   return (
     <SelectPrimitive.Arrow
       {...props}

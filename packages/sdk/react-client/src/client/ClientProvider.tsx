@@ -5,7 +5,7 @@
 import React, {
   forwardRef,
   type FunctionComponent,
-  type ReactNode,
+  type PropsWithChildren,
   useEffect,
   useImperativeHandle,
   useState,
@@ -13,8 +13,7 @@ import React, {
 
 import { Client, type ClientOptions, type ClientServicesProvider, SystemStatus } from '@dxos/client';
 import { type Config } from '@dxos/config';
-import { type S } from '@dxos/echo-schema';
-import { registerSignalRuntime } from '@dxos/echo-signals/react';
+import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { useControlledValue } from '@dxos/react-hooks';
 import { getAsyncProviderValue, type MaybePromise, type Provider } from '@dxos/util';
@@ -25,10 +24,9 @@ import { printBanner } from '../banner';
 /**
  * Properties for the ClientProvider.
  */
-export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
-  Omit<ClientOptions, 'config' | 'services'> & {
-    children?: ReactNode;
-
+export type ClientProviderProps = Omit<ClientOptions, 'config' | 'services'> &
+  Pick<ClientContextProps, 'status'> &
+  PropsWithChildren<{
     /**
      * Client object or async provider to enable to caller to do custom initialization.
      *
@@ -41,6 +39,7 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
      *
      * NOTE: If a `client` is provided then `config` is ignored.
      */
+    // TODO(burdon): Reconcile with ClientOptions.
     config?: Config | Provider<Promise<Config>>;
 
     /**
@@ -48,14 +47,8 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
      *
      * NOTE: If a `client` is provided then `services` is ignored.
      */
+    // TODO(burdon): Reconcile with ClientOptions.
     services?: ClientServicesProvider | ((config?: Config) => MaybePromise<ClientServicesProvider>);
-
-    /**
-     * List of schema to register.
-     *
-     * NOTE: If a `client` is provided then `types` will not be added until after the children are first rendered.
-     */
-    types?: S.Schema<any>[];
 
     /**
      * ReactNode to display until the client is available.
@@ -63,24 +56,21 @@ export type ClientProviderProps = Pick<ClientContextProps, 'status'> &
     fallback?: FunctionComponent<Partial<ClientContextProps>>;
 
     /**
-     * Set to false to stop default signal runtime from being registered.
-     *
-     * The signals runtime is used to provide reactive updates to ECHO objects.
+     * Enable (by default) registration of Preact signals runtime for reactive ECHO objects.
+     * @see https://www.npmjs.com/package/@preact/signals-react
      */
-    registerSignalRuntime?: boolean;
+    signalsRuntime?: boolean;
 
     /**
-     * Skip the DXOS banner print.
+     * Skip the DXOS banner.
      */
-    disableBanner?: boolean;
+    noBanner?: boolean;
 
     /**
      * Post initialization hook to enable to caller to do custom initialization.
-     *
-     * @param Client
      */
     onInitialized?: (client: Client) => MaybePromise<void>;
-  };
+  }>;
 
 /**
  * Root component that provides the DXOS client instance to child components.
@@ -93,11 +83,10 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
       config: configProvider,
       client: clientProvider,
       services: servicesProvider,
-      types,
       status: controlledStatus,
       fallback: Fallback = () => null,
-      registerSignalRuntime: _registerSignalRuntime = true,
-      disableBanner,
+      signalsRuntime = true,
+      noBanner,
       onInitialized,
       ...options
     },
@@ -106,8 +95,8 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
     useEffect(() => {
       // TODO(wittjosiah): Ideally this should be imported asynchronously because it is optional.
       //   Unfortunately, async import seemed to break signals React instrumentation.
-      _registerSignalRuntime && registerSignalRuntime();
-    }, [_registerSignalRuntime]);
+      signalsRuntime && registerSignalsRuntime();
+    }, []);
 
     // The client is initialized asynchronously.
     // If an error occurs during initialization, it is caught and the state is set.
@@ -141,18 +130,13 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
         if (!client.initialized) {
           await client.initialize().catch(setError);
           log('client ready');
-          if (types) {
-            client.addTypes(types);
-          }
           await onInitialized?.(client);
           log('initialization complete');
-        } else if (types) {
-          client.addTypes(types);
         }
 
         setClient(client);
 
-        if (!disableBanner) {
+        if (!noBanner) {
           printBanner(client);
         }
       };
@@ -185,7 +169,7 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
           })
           .catch((err) => log.catch(err));
       };
-    }, [configProvider, clientProvider, servicesProvider, disableBanner]);
+    }, [configProvider, clientProvider, servicesProvider, noBanner]);
 
     if (!client?.initialized || status !== SystemStatus.ACTIVE) {
       return <Fallback client={client} status={status} />;

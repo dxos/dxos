@@ -12,7 +12,7 @@ export const TLDRAW_SCHEMA = 'tldraw.com/2';
 export class CanvasType extends TypedObject({ typename: 'dxos.org/type/Canvas', version: '0.1.0' })({
   /** Fully qualified external schema reference */
   schema: S.optional(S.String),
-  content: S.mutable(S.Record(S.String, S.Any)).pipe(S.default({})),
+  content: S.mutable(S.Record({ key: S.String, value: S.Any })),
 }) {}
 
 export class DiagramType extends TypedObject({ typename: 'dxos.org/type/Diagram', version: '0.1.0' })({
@@ -26,4 +26,4 @@ export const isDiagramType = (object: any, schema: string): object is DiagramTyp
   object instanceof DiagramType && object.canvas?.schema === schema;
 
 export const createDiagramType = (schema: string, content: Record<string, any> = {}) =>
-  create(DiagramType, { canvas: create(CanvasType, { schema, content }) });
+  create(DiagramType, { canvas: create(CanvasType, { schema, content }), threads: [] });

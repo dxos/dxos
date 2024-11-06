@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "composite": false,
     "declaration": false,
@@ -15,57 +15,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../../tools/vite-plugin-icons"
-    },
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/esbuild-plugins"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../core/mesh/rpc"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../devtools/devtools"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-services"
-    },
-    {
-      "path": "../../sdk/config"
-    },
-    {
-      "path": "../../sdk/observability"
-    },
-    {
-      "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/shell"
-    },
-    {
-      "path": "../../ui/brand"
-    },
-    {
-      "path": "../../ui/primitives/react-hooks"
-    },
-    {
-      "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-theme"
-    }
-  ]
+  "references": []
 }

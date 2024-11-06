@@ -7,13 +7,10 @@ import '@dxos-theme';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
-import { type defs } from '@dxos/config';
-import { registerSignalRuntime } from '@dxos/echo-signals';
-import { log } from '@dxos/log';
+import { createApp } from '@dxos/app-framework';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
 import AttentionMeta from '@dxos/plugin-attention/meta';
-import CallsMeta from '@dxos/plugin-calls/meta';
 import ChainMeta from '@dxos/plugin-chain/meta';
 import ChessMeta from '@dxos/plugin-chess/meta';
 import ClientMeta from '@dxos/plugin-client/meta';
@@ -60,18 +57,15 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
-import { appKey, INITIAL_COLLECTION_TITLE, INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
-import { steps } from './help';
-import { meta as WelcomeMeta } from './plugins/welcome/meta';
+import { appKey } from './constants';
+import { type PluginConfig, core, defaults, plugins, recommended } from './plugins';
 import translations from './translations';
-
-const isTrue = (str?: string) => str === 'true' || str === '1';
-const isFalse = (str?: string) => str === 'false' || str === '0';
+import { defaultStorageIsEmpty, isTrue, isFalse } from './util';
 
 const main = async () => {
   TRACE_PROCESSOR.setInstanceTag('app');
 
-  registerSignalRuntime();
+  registerSignalsRuntime();
 
   const { Trigger } = await import('@dxos/async');
   const { defs, SaveConfig } = await import('@dxos/config');
@@ -119,10 +113,20 @@ const main = async () => {
   );
 
   const firstRun = new Trigger();
-  const isSocket = !!(globalThis as any).__args;
-  const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
-  const isDev = !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT);
-  const isLabs = isTrue(config.values.runtime?.app?.env?.DX_LABS);
+
+  const conf: PluginConfig = {
+    appKey,
+    firstRun,
+    config,
+    services,
+    observability,
+
+    isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
+    isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
+    isSocket: !!(globalThis as any).__args,
+    isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
+    isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
+  };
 
   const App = createApp({
     fallback: ({ error }) => (
@@ -173,7 +177,6 @@ const main = async () => {
       RegistryMeta,
 
       // Presentation
-      CallsMeta,
       ChessMeta,
       ExcalidrawMeta,
       ExplorerMeta,
@@ -197,7 +200,6 @@ const main = async () => {
     ],
     plugins: {
       [AttentionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-attention')),
-      [CallsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-calls')),
       [ChainMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chain')),
       [ChessMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chess')),
       [ClientMeta.id]: Plugin.lazy(() => import('@dxos/plugin-client'), {
@@ -329,9 +331,9 @@ const main = async () => {
   });
 
   createRoot(document.getElementById('root')!).render(
-    // <StrictMode>
-    <App />,
-    // </StrictMode>,
+    <StrictMode>
+      <App />
+    </StrictMode>,
   );
 };
 

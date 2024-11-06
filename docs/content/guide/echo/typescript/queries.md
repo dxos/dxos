@@ -52,7 +52,8 @@ It's possible to receive strongly typed results from `query`. This is done by de
 Consider this expression of schema declared with Effect Schema:
 
 ```ts file=./snippets/schema.ts#L5-
-import { S, TypedObject } from '@dxos/echo-schema';
+import { Schema as S } from '@effect/schema';
+import { TypedObject } from '@dxos/echo-schema';
 
 export class TaskType extends TypedObject({
   typename: 'dxos.org/type/Task',

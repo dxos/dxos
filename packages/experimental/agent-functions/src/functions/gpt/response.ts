@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Space } from '@dxos/client/echo';
+import { AST, create, type ReactiveObject } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { type Space } from '@dxos/client/echo';
-import { AST, create, type EchoReactiveObject } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
 
 import { type RequestContext } from './context';
 import { type ParseResult } from './parser';
@@ -14,7 +14,7 @@ import { type ParseResult } from './parser';
 type BlockType = {
   timestamp: string;
   content?: string;
-  object?: EchoReactiveObject<any>;
+  object?: ReactiveObject<any>;
 };
 
 // TODO(burdon): Create variant of StringOutputParser.

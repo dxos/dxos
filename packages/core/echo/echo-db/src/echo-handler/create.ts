@@ -2,24 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as S from '@effect/schema/Schema';
-
-import type { EchoReactiveObject, ObjectMeta } from '@dxos/echo-schema';
 import {
-  createReactiveProxy,
-  DynamicSchema,
+  createProxy,
   getMeta,
-  getProxyHandlerSlot,
+  getProxyHandler,
+  getProxySlot,
+  getProxyTarget,
   getSchema,
   isReactiveObject,
   requireTypeReference,
+  type HasId,
+  MutableSchema,
+  type ObjectMeta,
+  type ReactiveObject,
+  type S,
   SchemaValidator,
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { ComplexMap, deepMapValues } from '@dxos/util';
 
-import { DATA_NAMESPACE, EchoReactiveHandler, PROPERTY_ID, throwIfCustomClass } from './echo-handler';
+import { DATA_NAMESPACE, PROPERTY_ID, EchoReactiveHandler, throwIfCustomClass } from './echo-handler';
 import {
   type ObjectInternals,
   type ProxyTarget,
@@ -30,41 +33,46 @@ import {
 import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
+// TODO(burdon): Rename EchoObject (clashes with proto def).
+export type EchoReactiveObject<T> = ReactiveObject<T> & HasId;
+
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
-  isReactiveObject(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
+  isReactiveObject(value) && getProxyHandler(value) instanceof EchoReactiveHandler;
 
-export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
-  invariant(!isEchoObject(init));
-
-  const schema = getSchema(init);
+/**
+ * Creates a reactive ECHO object.
+ * @internal
+ */
+// TODO(burdon): Document lifecycle.
+export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
+  invariant(!isEchoObject(props));
+  const schema = getSchema(props);
   if (schema != null) {
     validateSchema(schema);
   }
-  validateInitialProps(init);
+  validateInitialProps(props);
 
-  if (isReactiveObject(init)) {
-    const proxy = init as any;
+  const core = new ObjectCore();
+  if (isReactiveObject(props)) {
+    // Already an echo-schema reactive object.
+    const proxy = props as any;
+    const meta = getProxyTarget<ObjectMeta>(getMeta(proxy));
 
-    const slot = getProxyHandlerSlot(proxy);
-    const meta = getProxyHandlerSlot<ObjectMeta>(getMeta(proxy)).target!;
+    // TODO(burdon): Document.
+    const slot = getProxySlot(proxy);
+    slot.setHandler(EchoReactiveHandler.instance);
 
-    const core = new ObjectCore();
-
-    slot.handler = EchoReactiveHandler.instance;
     const target = slot.target as ProxyTarget;
-
     target[symbolInternals] = initInternals(core);
-
-    // TODO(dmaretskyi): Does this need to be disposed?
-    core.updates.on(() => target[symbolInternals].signal.notifyWrite());
-
     target[symbolPath] = [];
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, proxy);
 
-    // Note: This call is recursively linking all nested objects
-    //       which can cause recursive loops of `createEchoObject` if `EchoReactiveHandler` is not set prior to this call.
-    //       Do not change order.
+    target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
+
+    // NOTE: This call is recursively linking all nested objects
+    //  which can cause recursive loops of `createObject` if `EchoReactiveHandler` is not set prior to this call.
+    //  Do not change order.
     initCore(core, target);
     slot.handler.init(target);
 
@@ -72,23 +80,32 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
     if (meta && meta.keys.length > 0) {
       target[symbolInternals].core.setMeta(meta);
     }
+
     return proxy;
   } else {
-    const core = new ObjectCore();
     const target: ProxyTarget = {
       [symbolInternals]: initInternals(core),
       [symbolPath]: [],
       [symbolNamespace]: DATA_NAMESPACE,
-      ...(init as any),
+      ...(props as any),
     };
 
-    // TODO(dmaretskyi): Does this need to be disposed?
-    core.updates.on(() => target[symbolInternals].signal.notifyWrite());
+    target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
 
     initCore(core, target);
-    const proxy = createReactiveProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
+    const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
     saveTypeInAutomerge(target[symbolInternals], schema);
     return proxy;
+  }
+};
+
+// TODO(burdon): Call and remove subscriptions.
+export const destroyObject = <T extends {}>(proxy: EchoReactiveObject<T>) => {
+  invariant(isEchoObject(proxy));
+  const target: ProxyTarget = getProxyTarget(proxy);
+  const internals: ObjectInternals = target[symbolInternals];
+  for (const unsubscribe of internals.subscriptions) {
+    unsubscribe();
   }
 };
 
@@ -98,9 +115,13 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
     target[symbolInternals].core.id = target[PROPERTY_ID];
     delete target[PROPERTY_ID];
   }
+
   core.initNewObject(linkAllNestedProperties(target));
 };
 
+/**
+ * @internal
+ */
 export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): EchoReactiveObject<any> => {
   const target: ProxyTarget = {
     [symbolInternals]: initInternals(core, database),
@@ -111,7 +132,7 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
   // TODO(dmaretskyi): Does this need to be disposed?
   core.updates.on(() => target[symbolInternals].signal.notifyWrite());
 
-  return createReactiveProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
+  return createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
 };
 
 const validateSchema = (schema: S.Schema<any>) => {
@@ -129,18 +150,17 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
   if (seen.has(target)) {
     return;
   }
+
   seen.add(target);
   for (const key in target) {
     const value = target[key];
     if (value === undefined) {
       delete target[key];
     } else if (typeof value === 'object') {
-      if (value instanceof DynamicSchema) {
+      if (value instanceof MutableSchema) {
         target[key] = value.serializedSchema;
         validateInitialProps(value.serializedSchema, seen);
-      } else if (isEchoObject(value)) {
-        continue;
-      } else {
+      } else if (!isEchoObject(value)) {
         throwIfCustomClass(key, value);
         validateInitialProps(target[key], seen);
       }
@@ -153,6 +173,7 @@ const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryVa
     if (isReactiveObject(value) as boolean) {
       return EchoReactiveHandler.instance.createRef(target, value);
     }
+
     return recurse(value);
   });
 };
@@ -163,4 +184,5 @@ const initInternals = (core: ObjectCore, database?: EchoDatabase): ObjectInterna
   signal: compositeRuntime.createSignal(),
   linkCache: new Map<string, EchoReactiveObject<any>>(),
   database,
+  subscriptions: [],
 });

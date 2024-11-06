@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Schema as S } from '@effect/schema';
 import React from 'react';
 
 import {
@@ -15,8 +16,7 @@ import {
   type TranslationsProvides,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
-import { type S } from '@dxos/echo-schema';
-import { registerSignalRuntime } from '@dxos/echo-signals/react';
+import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { Client, type ClientOptions, ClientProvider } from '@dxos/react-client';
@@ -69,7 +69,7 @@ export const ClientPlugin = ({
   Omit<ClientPluginProvides, 'client'>,
   Pick<ClientPluginProvides, 'client'>
 > => {
-  registerSignalRuntime();
+  registerSignalsRuntime();
 
   let client: Client;
   let error: unknown = null;
@@ -210,6 +210,24 @@ export const ClientPlugin = ({
                           error: data.error?.message,
                           canceled: data.cancelled,
                         },
+                      },
+                    },
+                  ],
+                ],
+              };
+            }
+
+            case ClientAction.RECOVER_IDENTITY: {
+              const data = await client.shell.recoverIdentity();
+              return {
+                data,
+                intents: [
+                  [
+                    {
+                      // NOTE: This action is hardcoded to avoid circular dependency with observability plugin.
+                      action: 'dxos.org/plugin/observability/send-event',
+                      data: {
+                        name: 'identity.recovered',
                       },
                     },
                   ],

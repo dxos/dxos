@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { join } from 'node:path';
-import inject from '@rollup/plugin-inject';
+import { join, relative } from 'node:path';
+import pkgUp from 'pkg-up';
 import { type Plugin, UserConfig as ViteConfig } from 'vite';
 import { defineConfig, type UserConfig as VitestConfig } from 'vitest/config';
-// import Inspect from 'vite-plugin-inspect';
 import WasmPlugin from 'vite-plugin-wasm';
 import Inspect from 'vite-plugin-inspect';
 
@@ -18,13 +17,13 @@ const isDebug = !!process.env.VITEST_DEBUG;
 const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
 const shouldCreateXmlReport = Boolean(process.env.VITEST_XML_REPORT);
 
-const createNodeConfig = () =>
+const createNodeConfig = (cwd: string) =>
   defineConfig({
     esbuild: {
       target: 'es2020',
     },
     test: {
-      ...resolveReporterConfig({ browserMode: false }),
+      ...resolveReporterConfig({ browserMode: false, cwd }),
       environment: 'node',
       include: [
         '**/src/**/*.test.{ts,tsx}',
@@ -41,11 +40,12 @@ const createNodeConfig = () =>
 
 type BrowserOptions = {
   browserName: string;
+  cwd: string;
   nodeExternal?: boolean;
   injectGlobals?: boolean;
 };
 
-const createBrowserConfig = ({ browserName, nodeExternal = false, injectGlobals = true }) =>
+const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>
   defineConfig({
     plugins: [
       nodeStdPlugin(),
@@ -66,7 +66,7 @@ const createBrowserConfig = ({ browserName, nodeExternal = false, injectGlobals 
       target: 'es2020',
     },
     test: {
-      ...resolveReporterConfig({ browserMode: true }),
+      ...resolveReporterConfig({ browserMode: true, cwd }),
       name: targetProject,
 
       env: {
@@ -101,15 +101,21 @@ const createBrowserConfig = ({ browserName, nodeExternal = false, injectGlobals 
     },
   });
 
-const resolveReporterConfig = (args: { browserMode: boolean }): VitestConfig['test'] => {
+const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd: string }): VitestConfig['test'] => {
+  const packageJson = pkgUp.sync({ cwd });
+  const packageDir = packageJson!.split('/').slice(0, -1).join('/');
+  const packageDirRelative = relative(__dirname, packageDir);
+  const coverageDir = join(__dirname, 'coverage', packageDirRelative);
+
   if (shouldCreateXmlReport) {
-    const vitestReportDir = `vitest${args.browserMode ? '-browser' : ''}-reports`;
     return {
       passWithNoTests: true,
       reporters: ['junit', 'verbose'],
-      outputFile: join(__dirname, `test-results/${vitestReportDir}/${targetProject}/report.xml`),
+      // TODO(wittjosiah): Browser mode will overwrite this, should be separate directories
+      //    however nx outputs config also needs to be aware of this.
+      outputFile: join(__dirname, 'test-results', packageDirRelative, 'results.xml'),
       coverage: {
-        reportsDirectory: join(__dirname, `coverage/${vitestReportDir}/${targetProject}/`),
+        reportsDirectory: coverageDir,
       },
     };
   }
@@ -117,6 +123,9 @@ const resolveReporterConfig = (args: { browserMode: boolean }): VitestConfig['te
   return {
     passWithNoTests: true,
     reporters: ['verbose'],
+    coverage: {
+      reportsDirectory: coverageDir,
+    },
   };
 };
 
@@ -131,19 +140,14 @@ export const baseConfig = (options: ConfigOptions = {}): ViteConfig => {
       if (environment.length > 0 && environment !== 'node') {
         console.log("Unrecognized VITEST_ENV value, falling back to 'node': " + environment);
       }
-      return createNodeConfig();
+      return createNodeConfig(options.cwd);
   }
 };
 
 /**
- * @deprecated use `baseConfig` instead.
- */
-export default baseConfig();
-
-// TODO(dmaretskyi): Extract.
-/**
  * Replaces node built-in modules with their browser equivalents.
  */
+// TODO(dmaretskyi): Extract.
 function nodeStdPlugin(): Plugin {
   return {
     name: 'node-std',

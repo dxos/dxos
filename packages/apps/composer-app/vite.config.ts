@@ -6,7 +6,7 @@ import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import sourceMaps from 'rollup-plugin-sourcemaps';
+import SourceMapsPlugin from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import Inspect from 'vite-plugin-inspect';
@@ -29,7 +29,8 @@ const isFalse = (str?: string) => str === 'false' || str === '0';
 
 // https://vitejs.dev/config
 export default defineConfig((env) => ({
-  test: baseConfig()['test'],
+  // Vitest config.
+  test: baseConfig({ cwd: __dirname })['test'] as any,
   server: {
     host: true,
     https:
@@ -57,7 +58,7 @@ export default defineConfig((env) => ({
     minify: !isFalse(process.env.DX_MINIFY),
     target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
     rollupOptions: {
-      // NOTE: Set cache to fix to help debug flaky builds.
+      // NOTE: Set cache to `false` to help debug flaky builds.
       // cache: false,
       input: {
         internal: resolve(__dirname, './internal.html'),
@@ -85,10 +86,10 @@ export default defineConfig((env) => ({
   },
   worker: {
     format: 'es',
-    plugins: () => [WasmPlugin(), sourceMaps()],
+    plugins: () => [WasmPlugin(), SourceMapsPlugin()],
   },
   plugins: [
-    sourceMaps(),
+    SourceMapsPlugin(),
     // TODO(wittjosiah): Causing issues with bundle.
     env.command === 'serve' &&
       tsconfigPaths({
@@ -101,6 +102,7 @@ export default defineConfig((env) => ({
         join(__dirname, './index.html'),
         join(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         join(rootDir, '/packages/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/devtools/*/src/**/*.{js,ts,jsx,tsx}'),
         join(rootDir, '/packages/plugins/*/src/**/*.{js,ts,jsx,tsx}'),
         join(rootDir, '/packages/plugins/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
         join(rootDir, '/packages/sdk/*/src/**/*.{js,ts,jsx,tsx}'),
@@ -119,10 +121,9 @@ export default defineConfig((env) => ({
       // verbose: true,
     }),
     // https://github.com/antfu-collective/vite-plugin-inspect#readme
-    // localhost:5173/__inspect
+    // Open: http://localhost:5173/__inspect
     isTrue(process.env.DX_INSPECT) && Inspect(),
     WasmPlugin(),
-    // https://github.com/preactjs/signals/issues/269
     ReactPlugin({
       plugins: [
         [

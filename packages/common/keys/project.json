@@ -18,13 +18,14 @@
         "entryPoints": [
           "{projectRoot}/src/index.ts"
         ],
-        "injectGlobals": false
+        "importGlobals": true
       }
     },
     "lint": {},
     "test": {}
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "node-std"
   ]
 }

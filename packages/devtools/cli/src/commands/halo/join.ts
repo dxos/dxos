@@ -45,6 +45,7 @@ export default class Join extends BaseCommand<typeof Join> {
 
         if (!encoded) {
           const { invitation } = await inquirer.prompt<{ invitation: string }>({
+            type: 'input',
             name: 'invitation',
             message: 'Invitation',
           });
@@ -72,6 +73,7 @@ export default class Join extends BaseCommand<typeof Join> {
                   onReadyForAuth: async () => {
                     if (!secret) {
                       const { secret } = await inquirer.prompt<{ secret: string }>({
+                        type: 'input',
                         name: 'secret',
                         message: chalk`\n{red Secret}`,
                       });

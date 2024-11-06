@@ -1,6 +1,6 @@
 {
   "extends": [
-    "../../../tsconfig.json"
+    "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
     "lib": [
@@ -20,15 +20,5 @@
     "src/**/*.ts",
     "src/**/*.tsx"
   ],
-  "references": [
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../sdk/app-framework"
-    },
-    {
-      "path": "../../ui/storybook-utils"
-    }
-  ]
+  "references": []
 }

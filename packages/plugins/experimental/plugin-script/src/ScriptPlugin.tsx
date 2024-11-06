@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Code, type IconProps } from '@phosphor-icons/react';
 // @ts-ignore
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React from 'react';
 
-import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
+import { NavigationAction, parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -17,12 +16,11 @@ import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { initializeBundler } from './bundler';
 import { Compiler } from './compiler';
-import { ScriptContainer, ScriptSettings } from './components';
+import { AutomationPanel, ScriptContainer, ScriptSettings } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import { templates } from './templates';
 import translations from './translations';
-import { FunctionType, ScriptType } from './types';
-import { ScriptAction, type ScriptPluginProvides } from './types';
+import { FunctionType, ScriptAction, type ScriptPluginProvides, ScriptType } from './types';
 
 export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
   const compiler = new Compiler();
@@ -51,7 +49,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
         records: {
           [ScriptType.typename]: {
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
-            icon: (props: IconProps) => <Code {...props} />,
+            icon: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (script: ScriptType) => loadObjectReferences(script, (script) => [script.source]),
           },
@@ -122,6 +120,15 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
               }
               break;
             }
+
+            case 'complementary--automation': {
+              if (data.object instanceof ScriptType) {
+                return {
+                  node: <AutomationPanel subject={data.subject as any} />,
+                  disposition: 'hoist',
+                };
+              }
+            }
           }
 
           return null;
@@ -131,7 +138,13 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ScriptAction.CREATE: {
-              return { data: create(ScriptType, { source: create(TextType, { content: templates[0].source }) }) };
+              return {
+                data: create(ScriptType, {
+                  source: create(TextType, {
+                    content: templates[0].source,
+                  }),
+                }),
+              };
             }
           }
         },

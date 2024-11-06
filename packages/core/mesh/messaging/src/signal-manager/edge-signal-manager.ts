@@ -9,12 +9,13 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeService } from '@dxos/protocols';
-import { bufWkt } from '@dxos/protocols/buf';
+import { type buf, bufWkt } from '@dxos/protocols/buf';
 import {
   SwarmRequestSchema,
   SwarmRequest_Action as SwarmRequestAction,
   SwarmResponseSchema,
   type Message as EdgeMessage,
+  type PeerSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -62,6 +63,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     await this._edgeConnection.send(
       protocol.createMessage(SwarmRequestSchema, {
         serviceId: EdgeService.SWARM_SERVICE_ID,
+        source: createMessageSource(topic, peer),
         payload: { action: SwarmRequestAction.JOIN, swarmKeys: [topic.toHex()] },
       }),
     );
@@ -72,6 +74,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     await this._edgeConnection.send(
       protocol.createMessage(SwarmRequestSchema, {
         serviceId: EdgeService.SWARM_SERVICE_ID,
+        source: createMessageSource(topic, peer),
         payload: { action: SwarmRequestAction.LEAVE, swarmKeys: [topic.toHex()] },
       }),
     );
@@ -187,3 +190,11 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     }
   }
 }
+
+const createMessageSource = (topic: PublicKey, peerInfo: PeerInfo): buf.MessageInitShape<typeof PeerSchema> => {
+  return {
+    swarmKey: topic.toHex(),
+    identityKey: peerInfo.identityKey,
+    peerKey: peerInfo.peerKey,
+  };
+};

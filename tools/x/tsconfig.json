@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
     "outDir": "dist"
@@ -7,9 +7,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../packages/common/log"
-    }
-  ]
+  "references": []
 }

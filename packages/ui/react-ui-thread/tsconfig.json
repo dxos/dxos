@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -14,39 +14,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../react-ui"
-    },
-    {
-      "path": "../react-ui-editor"
-    },
-    {
-      "path": "../react-ui-mosaic"
-    },
-    {
-      "path": "../react-ui-theme"
-    },
-    {
-      "path": "../storybook-utils"
-    }
-  ]
+  "references": []
 }
