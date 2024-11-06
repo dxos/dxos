@@ -254,7 +254,9 @@ const Styles = () => {
   // TODO(thure): Can this O(n) call be memoized?
   const activeValues = cursorFallbackRange
     ? model.sheet.ranges
-        ?.filter(({ range, key }) => key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursorFallbackRange.from))
+        ?.filter(
+          ({ range, key }) => key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursorFallbackRange.from),
+        )
         .reduce((acc, { value }) => {
           acc.add(value);
           return acc;
