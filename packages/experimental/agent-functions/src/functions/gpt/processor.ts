@@ -164,7 +164,8 @@ export class RequestProcessor {
           }>((map, schema) => {
             map[schema.typename] = {
               type: 'array',
-              items: schema.jsonSchema,
+              // TODO(burdon): ???
+              // items: schema.jsonSchema,
               description: `An array of ${schema.typename} entities.`,
             };
             return map;

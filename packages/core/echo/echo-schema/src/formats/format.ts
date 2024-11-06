@@ -9,9 +9,7 @@ import * as String_ from './string';
 import { FormatAnnotationId } from './types';
 
 // TODO(burdon): Consider factoring out to separate `@dxos/json-schema`
-
 // TODO(burdon): Arrays, maps, enums, etc.
-
 // TODO(burdon): Media encoding.
 //  https://json-schema.org/understanding-json-schema/reference/non_json_data
 
@@ -20,11 +18,9 @@ import { FormatAnnotationId } from './types';
  * https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
  * NOTE: A JSON Schema validator will ignore any format type that it does not understand.
  */
-// TODO(burdon): Define $id property for all declarations?
 // TODO(burdon): Add fields for `examples`, `message`, etc.
 export namespace Format {
   // Strings
-  // TODO(burdon): Text?
   export const Email = String_.Email;
   export const Formula = String_.Formula;
   export const Hostname = String_.Hostname;
@@ -55,26 +51,3 @@ export const CustomAnnotations = {
   // title: AST.TitleAnnotationId,
   // description: AST.DescriptionAnnotationId,
 };
-<<<<<<< HEAD
-=======
-
-/**
- * Mixin of format annotation values.
- */
-// TODO(burdon): Rename PropertySchema.
-// TODO(burdon): Generate from annotations?
-// TODO(dmaretskyi): Remove.
-export const FormatSchema = S.Struct({
-  type: S.String, // TODO(burdon): Typedef.
-  format: S.optional(S.Enums(FormatEnum)),
-
-  title: S.optional(S.String),
-  description: S.optional(S.String),
-  multipleOf: S.optional(S.Number),
-
-  // Custom.
-  currency: S.optional(S.String),
-});
-
-export type FormatType = S.Schema.Type<typeof FormatSchema>;
->>>>>>> e68a3d779f8c441bfbe9429a6789c2c2bf5023fa

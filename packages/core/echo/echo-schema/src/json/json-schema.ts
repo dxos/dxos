@@ -31,7 +31,7 @@ export const getEchoProp = (obj: JsonSchemaType): any => {
 /**
  * Create object jsonSchema.
  */
-export const createJsonSchema = (schema: S.Struct<any> = S.Struct({})) => {
+export const createJsonSchema = (schema: S.Struct<any> = S.Struct({})): JsonSchemaType => {
   const jsonSchema = toJsonSchema(schema);
 
   // TODO(dmaretskyi): Fix those in the serializer.
@@ -188,6 +188,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JSONSchema.JsonSche
         result = S.Object;
         break;
       }
+      // Custom ECHO object reference.
       case '/schemas/echo/ref': {
         result = refToEffectSchema(root);
       }
@@ -349,13 +350,10 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<sym
     schemaFields[ECHO_REFINEMENT_KEY] = echoRefinement;
   }
 
-  // TODO(burdon): References.
-
   // Custom (at end).
   for (const [key, annotationId] of Object.entries(CustomAnnotations)) {
     const value = annotations[annotationId];
     if (value != null) {
-      // TODO(burdon): Clone?
       schemaFields[key] = value;
     }
   }
@@ -386,7 +384,6 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
   // Custom (at end).
   for (const [key, annotationId] of Object.entries(CustomAnnotations)) {
     if (key in schema) {
-      // TODO(burdon): Clone?
       annotations[annotationId] = (schema as any)[key];
     }
   }

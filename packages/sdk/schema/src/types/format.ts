@@ -58,9 +58,11 @@ export const FormatSchema: Record<FormatEnum, S.Schema<any>> = {
   [FormatEnum.Number]: extend(FormatEnum.Number, ScalarEnum.Number),
   [FormatEnum.Boolean]: extend(FormatEnum.Boolean, ScalarEnum.Boolean),
   [FormatEnum.Ref]: extend(FormatEnum.Ref, ScalarEnum.Ref, {
-    refSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
     // TODO(burdon): Annotation to store on View's field (not schema property?)
     refProperty: S.optional(S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Lookup property' })),
+
+    // TODO(burdon): !!!
+    refSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
   }),
 
   //

@@ -7,6 +7,13 @@ import { S } from '@dxos/effect';
 import { PropertyMeta } from './annotations';
 import { FormatAnnotationId } from '../formats';
 
+/**
+ * Marker interface for object with an `id`.
+ */
+export interface HasId {
+  readonly id: string;
+}
+
 // Branded type.
 export type JsonPath = string & { __JsonPath: true };
 
@@ -33,12 +40,8 @@ export const FIELD_PATH_ANNOTATION = 'path';
 export const FieldPath = (path: string) => PropertyMeta(FIELD_PATH_ANNOTATION, path);
 
 /**
- * Marker interface for object with an `id`.
+ * @internal
  */
-export interface HasId {
-  readonly id: string;
-}
-
 // TODO(dmaretskyi): Document.
 export const schemaVariance = {
   _A: (_: any) => _,
@@ -50,20 +53,24 @@ export const schemaVariance = {
 // JSON Schema
 //
 
+// TODO(burdon): Reuse/reconcile with ScalarTypeEnum.
+const SimpleTypes = S.Literal('array', 'boolean', 'integer', 'null', 'number', 'object', 'string');
+
 const SchemaArray = S.Array(S.suspend(() => JsonSchemaType));
 const NonNegativeInteger = S.Number.pipe(S.greaterThanOrEqualTo(0));
-const SimpleTypes = S.Literal('array', 'boolean', 'integer', 'null', 'number', 'object', 'string');
 const StringArray = S.Array(S.String);
 const JsonSchemaOrBoolean = S.Union(
   S.suspend(() => JsonSchemaType),
   S.Boolean,
 );
 
-// Describes a schema for the JSON-schema objects stored in ECHO.
-// Taken from https://json-schema.org/draft-07/schema#
-// Contains extensions for ECHO.
+/**
+ * Describes a schema for the JSON-schema objects stored in ECHO.
+ * Contains extensions for ECHO (e.g., references).
+ * Ref: https://json-schema.org/draft-07/schema
+ */
 // TODO(dmaretskyi): Fix circular types.
-const _JsonSchemaType = S.mutable(
+const JsonSchemaSchema = S.mutable(
   S.Struct({
     $id: S.optional(S.String),
     $schema: S.optional(S.String),
@@ -148,9 +155,10 @@ const _JsonSchemaType = S.mutable(
       ),
     ),
 
-    /**
-     * Currency symbol.
-     */
+    //
+    // ECHO extensions.
+    //
+
     currency: S.optional(S.String),
 
     reference: S.optional(
@@ -191,5 +199,6 @@ const _JsonSchemaType = S.mutable(
 /**
  * https://json-schema.org/draft-07/schema
  */
-export interface JsonSchemaType extends S.Schema.Type<typeof _JsonSchemaType> {}
-export const JsonSchemaType: S.Schema<JsonSchemaType> = _JsonSchemaType;
+export interface JsonSchemaType extends S.Schema.Type<typeof JsonSchemaSchema> {}
+
+export const JsonSchemaType: S.Schema<JsonSchemaType> = JsonSchemaSchema;

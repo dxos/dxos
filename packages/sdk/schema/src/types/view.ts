@@ -98,8 +98,10 @@ export type FieldProjectionType = S.Schema.Type<typeof FieldProjectionSchema>;
 /**
  * Wrapper for View that manages Field and Format updates.
  */
+// TODO(burdon): Form values adapater for ViewEditor (schema).
 export class ViewProjection {
   constructor(
+    // TODO(burdon): This could be StoredSchema?
     // TODO(burdon): Consider how to use tables with static schema.
     private readonly _schema: MutableSchema,
     private readonly _view: ViewType,
@@ -112,7 +114,9 @@ export class ViewProjection {
     const field = this._view.fields.find((f) => f.property === property) ?? { property };
     const properties = this._schema.jsonSchema.properties![property] as JsonSchemaType;
     return { ...field, ...properties };
-    // TODO(burdon): PropertySchema.decode();
+    // TODO(burdon): Map ref to $id/ref. Custom selector.
+    // TODO(burdon): Recreate type if format has changed.
+    // TODO(burdon): decode()?
   }
 
   /**
@@ -143,7 +147,7 @@ export class ViewProjection {
       this._schema.jsonSchema.properties![property] = properties;
     }
 
-    // TODO(burdon): encode.
+    // TODO(burdon): encode?
     return properties as PropertyType;
   }
 }
