@@ -4,32 +4,27 @@
 
 import React from 'react';
 
-import { AST, FormatEnums, type S } from '@dxos/echo-schema';
+import { FormatEnums, type S, type FormatEnum } from '@dxos/echo-schema';
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type FieldProjectionType, type Property } from '@dxos/schema';
+import { getProperties, type Property } from '@dxos/schema';
 
 import { type FormResult, useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
-//
-// Util (move once stable)
-//
-
-// TODO(burdon): Does this need to be generic?
-export type FieldInputProps<T extends object> = {
+// TODO(burdon): Factor out.
+// TODO(burdon): Separate story.
+export type FieldInputProps<T extends S.Schema.Type<any>, V = string | number> = {
   property: keyof T;
-  type: 'string' | 'number' | 'select'; // TODO(burdon): Use type.
   label: string;
-  options?: Array<{ value: string; label: string }>;
+  options?: Array<{ value: V; label: string }>;
   disabled?: boolean;
   placeholder?: string;
   getInputProps: (field: keyof T, type?: 'select') => Record<string, any>;
 } & Pick<FormResult<T>, 'getErrorValence' | 'getErrorMessage'>;
 
-export const FieldInput = <T extends object>({
+export const FieldInput = <T extends S.Schema.Type<any>, V = string | number>({
   property,
-  type,
   label,
   options = [],
   disabled,
@@ -37,53 +32,46 @@ export const FieldInput = <T extends object>({
   getInputProps,
   getErrorValence,
   getErrorMessage,
-}: FieldInputProps<T>) => {
+}: FieldInputProps<T, V>) => {
   const validationValence = getErrorValence(property);
   const errorMessage = getErrorMessage(property);
 
-  switch (type) {
-    // TODO(burdon): Restrict string pattern.
-    case 'string': {
-      return (
-        <Input.Root validationValence={validationValence}>
-          <Input.Label>{label}</Input.Label>
-          <Input.DescriptionAndValidation>
-            <Input.TextInput type='string' disabled={disabled} placeholder={placeholder} {...getInputProps(property)} />
-            <Input.Validation>{errorMessage}</Input.Validation>
-          </Input.DescriptionAndValidation>
-        </Input.Root>
-      );
-    }
-
+  if (options) {
+    return (
+      <Input.Root validationValence={validationValence}>
+        <Input.Label>{label}</Input.Label>
+        <Select.Root {...getInputProps(property, 'select')}>
+          <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                {options.map(({ value, label }) => (
+                  <Select.Option key={String(value)} value={String(value)}>
+                    {label}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
+        <Input.DescriptionAndValidation>
+          <Input.Validation>{errorMessage}</Input.Validation>
+        </Input.DescriptionAndValidation>
+      </Input.Root>
+    );
+  } else {
     // TODO(burdon): Restrict number.
-    case 'number': {
-      return <div>Not implemented</div>;
-    }
-
-    case 'select': {
-      return (
-        <Input.Root validationValence={validationValence}>
-          <Input.Label>{label}</Input.Label>
-          <Select.Root {...getInputProps(property, 'select')}>
-            <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {options.map(({ value, label }) => (
-                    <Select.Option key={value} value={value}>
-                      {label}
-                    </Select.Option>
-                  ))}
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
-          <Input.DescriptionAndValidation>
-            <Input.Validation>{errorMessage}</Input.Validation>
-          </Input.DescriptionAndValidation>
-        </Input.Root>
-      );
-    }
+    // TODO(burdon): Restrict string pattern.
+    // TODO(burdon): Checkbox.
+    return (
+      <Input.Root validationValence={validationValence}>
+        <Input.Label>{label}</Input.Label>
+        <Input.DescriptionAndValidation>
+          <Input.TextInput type='string' disabled={disabled} placeholder={placeholder} {...getInputProps(property)} />
+          <Input.Validation>{errorMessage}</Input.Validation>
+        </Input.DescriptionAndValidation>
+      </Input.Root>
+    );
   }
 };
 
@@ -91,19 +79,30 @@ export const FieldInput = <T extends object>({
 // Field
 //
 
-export type FieldProps = ThemedClassName<{
-  field: Property;
+export type FieldProps<T extends S.Schema.Type<any>> = ThemedClassName<{
+  field: T; // TODO(burdon): Rename value.
   schema: S.Schema<any>;
   autoFocus?: boolean;
   readonly?: boolean;
-  onValuesChanged?: (values: Property) => void;
-  onSave?: (field: FieldProjectionType) => void;
+  // TODO(burdon): Property should be generic.
+  onValuesChanged?: (values: T) => void;
+  onSave?: (field: T) => void;
 }>;
 
-export const Field = ({ classNames, field, schema, readonly, onValuesChanged, onSave }: FieldProps) => {
+// TODO(burdon): Rename/reconcile with Form.
+// TODO(burdon): Remove extends Property.
+export const Field = <T extends Property>({
+  classNames,
+  field,
+  schema,
+  readonly,
+  onValuesChanged,
+  onSave,
+}: FieldProps<T>) => {
   const { t } = useTranslation(translationKey);
 
-  const { getInputProps, canSubmit, handleSubmit, getErrorValence, getErrorMessage } = useForm<any>({
+  // TODO(burdon): Type for useForm.
+  const { getInputProps, canSubmit, handleSubmit, getErrorValence, getErrorMessage } = useForm<T>({
     schema,
     initialValues: field,
     // additionalValidation: (values) => {
@@ -120,37 +119,15 @@ export const Field = ({ classNames, field, schema, readonly, onValuesChanged, on
     onSubmit: (values) => onSave?.(values),
   });
 
-  const astProps = AST.getPropertySignatures(schema.ast);
+  // TODO(ZaymonFC): Generate based off of schema.
+  // TODO(burdon): Type literals are skipped and should be handled explicitely.
+  const props = getProperties<T>(schema);
 
-  // TODO(ZaymonFC): How can we generate the following based on the effect schema given to us?
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
-      <FieldInput<Property>
-        property='property'
-        label={t('field path label')}
-        type='string'
-        disabled={readonly}
-        placeholder={t('field path placeholder')}
-        getInputProps={getInputProps}
-        getErrorValence={getErrorValence}
-        getErrorMessage={getErrorMessage}
-      />
-
-      <FieldInput<Property>
-        property='title'
-        label={t('field label label')}
-        type='string'
-        disabled={readonly}
-        placeholder={t('field label placeholder')}
-        getInputProps={getInputProps}
-        getErrorValence={getErrorValence}
-        getErrorMessage={getErrorMessage}
-      />
-
-      <FieldInput<Property>
+      <FieldInput<T, FormatEnum>
         property='format'
         label={t('field type label')}
-        type='select'
         options={FormatEnums.map((type) => ({ value: type, label: t(`field type ${type}`) }))}
         disabled={readonly}
         placeholder='Type'
@@ -159,31 +136,18 @@ export const Field = ({ classNames, field, schema, readonly, onValuesChanged, on
         getErrorMessage={getErrorMessage}
       />
 
-      {astProps.findIndex((prop) => prop.name === 'multipleOf') !== -1 && (
-        <FieldInput<any>
-          property='multipleOf'
-          label={t('field multipleOf label')}
-          type='number'
+      {props.map(({ name }) => (
+        <FieldInput<T>
+          key={name}
+          property={name}
+          label={name}
           disabled={readonly}
-          placeholder={t('field multipleOf placeholder')}
+          // placeholder={t('field multipleOf placeholder')}
           getInputProps={getInputProps}
           getErrorValence={getErrorValence}
           getErrorMessage={getErrorMessage}
         />
-      )}
-
-      {astProps.findIndex((prop) => prop.name === 'currency') !== -1 && (
-        <FieldInput<any>
-          property='currency'
-          label={t('field currency label')}
-          type='string'
-          disabled={readonly}
-          placeholder={t('field currency placeholder')}
-          getInputProps={getInputProps}
-          getErrorValence={getErrorValence}
-          getErrorMessage={getErrorMessage}
-        />
-      )}
+      ))}
 
       {/* {features.includes('ref') && (
         <>

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type JSONSchema } from '@effect/schema';
+import { AST, type JSONSchema } from '@effect/schema';
 
 // TODO(burdon): Arrays, maps, enums.
 // TODO(burdon): Reuse effect/JSON schema type literal?
@@ -34,6 +34,19 @@ export const getScalarType = (property: JSONSchema.JsonSchema7): ScalarEnum | un
   }
 
   return undefined;
+};
+
+// TODO(burdon): Better way?
+export const getScalarTypeFromAst = (ast: AST.AST): ScalarEnum | undefined => {
+  if (AST.isStringKeyword(ast)) {
+    return ScalarEnum.String;
+  } else if (AST.isNumberKeyword(ast)) {
+    return ScalarEnum.Number;
+  } else if (AST.isBooleanKeyword(ast)) {
+    return ScalarEnum.Boolean;
+  }
+
+  // TODO(burdon): Enum?
 };
 
 /**

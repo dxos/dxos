@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, ScalarEnum, FormatEnum, S } from '@dxos/echo-schema';
+import { AST, ScalarEnum, FormatEnum, S, getScalarTypeFromAst } from '@dxos/echo-schema';
+import { getType } from '@dxos/effect';
 
 export const DecimalPrecision = S.transform(S.Number, S.Number, {
   strict: true,
@@ -73,4 +74,27 @@ export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> |
   }
 
   return undefined;
+};
+
+export type PropertyType<T> = {
+  name: string & keyof T;
+  type: ScalarEnum;
+};
+
+/**
+ * Get top-level properties from schema.
+ */
+export const getProperties = <T>(schema: S.Schema<T>): PropertyType<T>[] => {
+  return AST.getPropertySignatures(schema.ast).reduce<PropertyType<T>[]>((acc, prop) => {
+    const propType = getType(prop.type);
+    if (propType) {
+      // TODO(burdon): Ignores type literals.
+      const type = getScalarTypeFromAst(propType);
+      if (type) {
+        acc.push({ name: prop.name.toString() as any, type });
+      }
+    }
+
+    return acc;
+  }, []);
 };

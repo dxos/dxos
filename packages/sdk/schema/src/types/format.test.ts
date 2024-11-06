@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { S, ScalarEnum, FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { getPropertySchemaForFormat, PropertySchema, type Property, EmptySchema } from './format';
+import { getPropertySchemaForFormat, PropertySchema, type Property, EmptySchema, getProperties } from './format';
 
 describe('format', () => {
   test('invalid state', ({ expect }) => {
@@ -82,5 +82,20 @@ describe('format', () => {
       prop.refSchema = 'example.com/type/Test';
       expect(validate(prop)).to.deep.eq(prop);
     }
+  });
+
+  test('get props', ({ expect }) => {
+    const prop: Partial<Property> = {
+      property: 'org',
+      type: ScalarEnum.Ref,
+      format: FormatEnum.Ref,
+    };
+
+    const schema = getPropertySchemaForFormat(prop.format);
+    invariant(schema);
+    // TODO(burdon): Skips type literals.
+    const props = getProperties(schema);
+    expect(props).to.have.length(4);
+    console.log(JSON.stringify(props, null, 2));
   });
 });

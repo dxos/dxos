@@ -9,19 +9,19 @@ import React, { useCallback, useState } from 'react';
 
 import { FormatEnum, ScalarEnum } from '@dxos/echo-schema';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getPropertySchemaForFormat } from '@dxos/schema';
+import { getPropertySchemaForFormat, type Property } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Field, type FieldProps } from './Field';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
 
-const DefaultStory = (props: { field: FieldProps['field'] }) => {
+const DefaultStory = (props: { field: FieldProps<Property>['field'] }) => {
   const [field, setField] = useState(props.field);
   // TODO(ZaymonFC): Workout why this throws if you unwrap the object.
   const [{ schema }, setSchema] = useState({ schema: getPropertySchemaForFormat(field.format) });
 
-  const handleValueChange = useCallback((values: FieldProps['field']) => {
+  const handleValueChange = useCallback((values: FieldProps<Property>['field']) => {
     setSchema({ schema: getPropertySchemaForFormat(values.format) });
   }, []);
 
