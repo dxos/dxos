@@ -5,7 +5,7 @@
 import { type JSONSchema } from '@effect/schema';
 
 // TODO(burdon): Arrays, maps, enums.
-
+// TODO(burdon): Reuse effect/JSON schema type literal?
 export enum ScalarEnum {
   String = 'string',
   Number = 'number',
@@ -108,6 +108,7 @@ export const formatToType: Record<FormatEnum, ScalarEnum> = {
   [FormatEnum.String]: ScalarEnum.String,
   [FormatEnum.Number]: ScalarEnum.Number,
   [FormatEnum.Boolean]: ScalarEnum.Boolean,
+
   [FormatEnum.Ref]: ScalarEnum.Ref,
 
   // Strings

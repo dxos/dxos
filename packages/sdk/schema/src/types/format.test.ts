@@ -10,14 +10,13 @@ import { invariant } from '@dxos/invariant';
 import { getPropertySchemaForFormat, PropertySchema, type Property, EmptySchema } from './format';
 
 describe('format', () => {
-  test('initial state', ({ expect }) => {
+  test('invalid state', ({ expect }) => {
     const prop: Partial<Property> = {
       property: 'test',
     };
 
     const schema = getPropertySchemaForFormat(prop.format);
     expect(schema).to.eq(EmptySchema);
-
     expect(() => {
       S.validate(PropertySchema)(prop);
     }).to.throw;
@@ -25,9 +24,9 @@ describe('format', () => {
 
   test('encode/decode format', async ({ expect }) => {
     const prop: Property = {
-      format: FormatEnum.Currency, // TODO(burdon): Can this be changed.
-      type: ScalarEnum.Number,
       property: 'salary',
+      type: ScalarEnum.Number,
+      format: FormatEnum.Currency,
       title: 'Base salary',
       multipleOf: 0.01,
       currency: 'USD',
@@ -49,9 +48,9 @@ describe('format', () => {
 
     // Changing format will change the schema.
     {
-      const { format, ...props } = prop;
+      const { property: _, format, ...props } = prop;
       expect(format).to.eq(FormatEnum.Currency);
-      const newProp: Property = { format: FormatEnum.Percent, ...props };
+      const newProp: Property = { property: 'amount', format: FormatEnum.Percent, ...props };
       newProp.format = FormatEnum.Percent;
 
       const schema = getPropertySchemaForFormat(newProp.format);
@@ -61,5 +60,25 @@ describe('format', () => {
       expect(Object.keys(newProp)).to.include('currency');
       expect(Object.keys(decoded)).not.to.include('currency');
     }
+  });
+
+  test('ref format', async ({ expect }) => {
+    const prop: Partial<Property> = {
+      type: ScalarEnum.Ref,
+      format: FormatEnum.Ref,
+    };
+
+    {
+      const result = S.validate(PropertySchema)(prop);
+      console.log(result);
+
+      // expect(result).to.be.undefined;
+
+      // const schema = getPropertySchemaForFormat(prop.format);
+      // invariant(schema);
+    }
+
+    // const result = S.validate(schema)(prop);
+    // console.log(JSON.stringify(schema?.ast?.toJSON(), null, 2));
   });
 });

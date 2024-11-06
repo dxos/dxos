@@ -26,6 +26,15 @@ export const EmptySchema = S.extend(
   }),
 ).pipe(S.mutable);
 
+export const RefSchema = S.extend(
+  BasePropertySchema,
+  S.Struct({
+    type: S.Literal(ScalarEnum.Ref),
+    format: S.Literal(FormatEnum.Ref),
+    refSchema: S.NonEmptyString,
+  }),
+).pipe(S.mutable);
+
 export const PercentSchema = S.extend(
   BasePropertySchema,
   S.Struct({
@@ -45,7 +54,7 @@ export const CurrencySchema = S.extend(
   }),
 ).pipe(S.mutable);
 
-export const PropertySchema = S.Union(EmptySchema, PercentSchema, CurrencySchema);
+export const PropertySchema = S.Union(EmptySchema, RefSchema, PercentSchema, CurrencySchema);
 
 export type Property = S.Schema.Type<typeof PropertySchema>;
 

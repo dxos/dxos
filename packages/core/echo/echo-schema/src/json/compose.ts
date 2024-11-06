@@ -17,6 +17,7 @@ TODO(dima)
 /**
  * Creates a composite schema from the source and projection schemas.
  */
+// TODO(burdon): Use effect schema projections.
 // TODO(burdon): Can avoid having to call this every time we modify any property on the view?
 export const composeSchema = (
   source: JSONSchema.JsonSchema7Object,
