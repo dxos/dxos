@@ -6,7 +6,7 @@ import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import sourceMaps from 'rollup-plugin-sourcemaps';
+import SourceMapsPlugin from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import Inspect from 'vite-plugin-inspect';
@@ -86,10 +86,10 @@ export default defineConfig((env) => ({
   },
   worker: {
     format: 'es',
-    plugins: () => [WasmPlugin(), sourceMaps()],
+    plugins: () => [WasmPlugin(), SourceMapsPlugin()],
   },
   plugins: [
-    sourceMaps(),
+    SourceMapsPlugin(),
     // TODO(wittjosiah): Causing issues with bundle.
     env.command === 'serve' &&
       tsconfigPaths({
@@ -124,7 +124,6 @@ export default defineConfig((env) => ({
     // Open: http://localhost:5173/__inspect
     isTrue(process.env.DX_INSPECT) && Inspect(),
     WasmPlugin(),
-    // https://github.com/preactjs/signals/issues/269
     ReactPlugin({
       plugins: [
         [
