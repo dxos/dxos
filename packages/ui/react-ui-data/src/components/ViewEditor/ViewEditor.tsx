@@ -43,7 +43,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
     () => (field ? (projection.getFieldProjection(field.property) as any) : undefined),
     [field, view],
   );
-  const [{ fieldSchema }, setSchema] = useState({ fieldSchema: getPropertySchemaForFormat(fieldProperties.format) });
+  const [{ fieldSchema }, setSchema] = useState({ fieldSchema: getPropertySchemaForFormat(fieldProperties?.format) });
 
   const handleFieldValueChange = useCallback((values: any) => {
     setSchema({ fieldSchema: getPropertySchemaForFormat(values.format) });
@@ -83,10 +83,6 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
     [view.fields],
   );
 
-  if (!fieldSchema) {
-    return null;
-  }
-
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
       <List.Root<FieldType>
@@ -115,16 +111,21 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
         )}
       </List.Root>
 
-      {fieldProperties && field && (
-        <Field
-          key={field.property}
-          classNames='p-2'
-          autoFocus
-          field={fieldProperties}
-          schema={fieldSchema}
-          onValuesChanged={handleFieldValueChange}
-          onSave={(props) => handleSet(field, props)}
-        />
+      {!fieldSchema ? (
+        <div>Schema not implemented for {fieldProperties?.format}</div>
+      ) : (
+        fieldProperties &&
+        field && (
+          <Field
+            key={field.property}
+            classNames='p-2'
+            autoFocus
+            field={fieldProperties}
+            schema={fieldSchema}
+            onValuesChanged={handleFieldValueChange}
+            onSave={(props) => handleSet(field, props)}
+          />
+        )
       )}
 
       {!readonly && (
