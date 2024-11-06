@@ -37,9 +37,9 @@ export const SimpleDate = S.Struct({
 export type SimpleDate = S.Schema.Type<typeof SimpleDate>;
 
 export const toSimpleDate = (date: Date): SimpleDate => ({
-  year: date.getFullYear(),
-  month: date.getMonth() + 1,
-  day: date.getDate(),
+  year: date.getUTCFullYear(),
+  month: date.getUTCMonth() + 1,
+  day: date.getUTCDate(),
 });
 
 /**
