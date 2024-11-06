@@ -72,6 +72,7 @@ describe('formats', () => {
       expect(getScalarType(prop)).to.eq(ScalarEnum.String);
       expect(prop).includes({
         type: 'string',
+        // TODO(burdon): Not present!
         // format: 'date',
       });
     }
