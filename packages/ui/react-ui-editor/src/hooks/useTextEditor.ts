@@ -138,11 +138,6 @@ export const useTextEditor = (
 
   useEffect(() => {
     if (view) {
-      // Remove tabster attribute (rely on custom keymap).
-      if (view.state.facet(editorInputMode).noTabster) {
-        parentRef.current?.removeAttribute('data-tabster');
-      }
-
       if (scrollTo || selection) {
         if (selection && selection.anchor > view.state.doc.length) {
           log.warn('invalid selection', { length: view.state.doc.length, scrollTo, selection });
@@ -160,7 +155,10 @@ export const useTextEditor = (
     }
   }, [autoFocus, view]);
 
-  const focusableGroup = useFocusableGroup({ tabBehavior: 'limited' });
+  const focusableGroup = useFocusableGroup({
+    tabBehavior: 'limited',
+    ignoreDefaultKeydown: { Escape: view?.state.facet(editorInputMode).noTabster },
+  });
 
   // Focus editor on Enter (e.g., when tabbing to this component).
   const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(

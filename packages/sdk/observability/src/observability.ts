@@ -468,7 +468,12 @@ export class Observability {
   //
 
   private async _initTelemetry() {
-    if (this._secrets.TELEMETRY_API_KEY && this._mode !== 'disabled' && typeof window.document !== 'undefined') {
+    if (
+      this._secrets.TELEMETRY_API_KEY &&
+      this._mode !== 'disabled' &&
+      typeof window !== 'undefined' &&
+      typeof window.document !== 'undefined'
+    ) {
       const { SegmentTelemetry } = await import('./segment');
       this._telemetry = new SegmentTelemetry({
         apiKey: this._secrets.TELEMETRY_API_KEY,
