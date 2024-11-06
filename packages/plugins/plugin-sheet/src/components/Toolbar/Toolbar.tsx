@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useCallback } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
 import {
@@ -212,20 +212,20 @@ const Alignment = () => {
   const { onAction } = useToolbarContext('Alignment');
   const { t } = useTranslation(SHEET_PLUGIN);
 
-  const value = useMemo(
-    () =>
-      cursor
-        ? model.sheet.ranges?.findLast(
-            ({ range, key }) => key === alignKey && inRange(rangeFromIndex(model.sheet, range), cursor),
-          )?.value
-        : undefined,
-    [cursor, model.sheet.ranges],
-  );
+  // TODO(thure): Can this O(n) call be memoized?
+  const value = cursor
+    ? model.sheet.ranges?.findLast(
+        ({ range, key }) => key === alignKey && inRange(rangeFromIndex(model.sheet, range), cursor),
+      )?.value
+    : undefined;
 
   return (
     <NaturalToolbar.ToggleGroup
       type='single'
-      value={value}
+      value={
+        // TODO(thure): providing `undefined` leaves the last item active which was active rather than showing none.
+        value ?? 'never'
+      }
       onValueChange={(value: AlignValue) => onAction?.({ key: alignKey, value })}
     >
       {alignmentOptions.map(({ value, icon }) => (
@@ -249,21 +249,16 @@ const Styles = () => {
   const { cursor, model } = useSheetContext();
   const { onAction } = useToolbarContext('Styles');
   const { t } = useTranslation(SHEET_PLUGIN);
-  // TODO(thure): Why is neither model.sheet nor model.sheet.ranges not usable as a memo dependency?
-  const [iter, setIter] = useState<void[]>([]);
 
-  const activeValues = useMemo(
-    () =>
-      cursor
-        ? model.sheet.ranges
-            ?.filter(({ range, key }) => key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursor))
-            .reduce((acc, { value }) => {
-              acc.add(value);
-              return acc;
-            }, new Set())
-        : undefined,
-    [cursor, model.sheet, iter],
-  );
+  // TODO(thure): Can this O(n) call be memoized?
+  const activeValues = cursor
+    ? model.sheet.ranges
+        ?.filter(({ range, key }) => key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursor))
+        .reduce((acc, { value }) => {
+          acc.add(value);
+          return acc;
+        }, new Set())
+    : undefined;
 
   return (
     <>
@@ -273,7 +268,6 @@ const Styles = () => {
           key={value}
           pressed={activeValues?.has(value)}
           onPressedChange={(nextPressed: boolean) => {
-            setIter([]);
             onAction?.({ key: 'style', value, unset: !nextPressed });
           }}
           icon={icon}
@@ -297,6 +291,7 @@ const Actions = () => {
   const { cursorFallbackRange, cursor, model } = useSheetContext();
   const { t } = useTranslation(SHEET_PLUGIN);
 
+  // TODO(thure): Can this O(n) call be memoized?
   const overlapsCommentAnchor = (model.sheet.threads ?? [])
     .filter(nonNullable)
     .filter((thread) => thread.status !== 'resolved')
