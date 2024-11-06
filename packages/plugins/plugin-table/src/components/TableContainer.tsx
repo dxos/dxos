@@ -113,15 +113,9 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
         <Toolbar.Separator />
         <Toolbar.Actions />
       </Toolbar.Root>
-      <div
-        className={mx(
-          role === 'article' && 'relative is-full max-is-max min-is-0 min-bs-0',
-          role === 'section' && 'grid cols-1 rows-[1fr_min-content] min-bs-0 !bg-[--surface-bg]',
-          role === 'slide' && 'bs-full overflow-auto grid place-items-center',
-        )}
-      >
-        <Table key={table.id} model={model} />
-      </div>
+      <Table.Viewport role={role}>
+        <Table.Table key={table.id} model={model} />
+      </Table.Viewport>
     </div>
   );
 };
