@@ -18,6 +18,8 @@ import {
 import { CustomAnnotations } from '../formats';
 import { createEchoReferenceSchema, Expando, ref, type JsonSchemaReferenceInfo } from '../handler';
 import { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { removeUndefinedProperties } from '@dxos/util';
 
 /**
  * @internal
@@ -231,7 +233,16 @@ export const toEffectSchema = (
   }
 
   const refinement: EchoRefinement | undefined = (root as any)[ECHO_REFINEMENT_KEY];
-  return refinement?.annotations ? result.annotations({ [PropertyMetaAnnotationId]: refinement.annotations }) : result;
+  if (refinement?.annotations) {
+    result = result.annotations({ [PropertyMetaAnnotationId]: refinement.annotations });
+  }
+
+  const annotations = jsonSchemaFieldsToAnnotations(root);
+
+  // log.info('toEffectSchema', { root, annotations });
+  result = result.annotations(annotations);
+
+  return result;
 };
 
 const objectToEffectSchema = (
@@ -310,11 +321,13 @@ const refToEffectSchema = (root: any): S.Schema<any> => {
   const targetSchemaDXN = DXN.parse(reference.schema.$ref);
   invariant(targetSchemaDXN.kind === DXN.kind.TYPE);
 
-  return createEchoReferenceSchema({
-    typename: targetSchemaDXN.parts[0],
-    version: reference.schemaVersion,
-    schemaId: reference.schemaObject,
-  });
+  return createEchoReferenceSchema(
+    removeUndefinedProperties({
+      typename: targetSchemaDXN.parts[0],
+      version: reference.schemaVersion,
+      schemaId: reference.schemaObject,
+    }),
+  );
 };
 
 //

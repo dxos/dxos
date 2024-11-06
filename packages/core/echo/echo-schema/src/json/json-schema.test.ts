@@ -4,14 +4,17 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type JSONSchema, S } from '@dxos/effect';
+import { type AST, type JSONSchema, S } from '@dxos/effect';
 import { deepMapValues } from '@dxos/util';
 
-import { toJsonSchema, toEffectSchema, getEchoProp } from './json-schema';
 import { PropertyMeta } from '../ast';
 import { FormatAnnotationId } from '../formats';
 import { ref } from '../handler';
 import { TypedObject } from '../object';
+import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
+import { log } from '@dxos/log';
+import { Email } from '../formats/string';
+import { pattern } from '@effect/schema/Schema';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {
@@ -171,6 +174,20 @@ describe('effect-to-json', () => {
 });
 
 describe('json-to-effect', () => {
+  describe('field schema', () => {
+    test('email', () => {
+      const schema = Email;
+      expect(toJsonSchema(schema)).to.deep.eq({
+        $schema: 'http://json-schema.org/draft-07/schema#',
+        type: 'string',
+        format: 'email',
+        title: 'Email',
+        description: 'Email address',
+        pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
+      });
+    });
+  });
+
   for (const partial of [false, true]) {
     test('deserialized equals original', () => {
       class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
@@ -179,7 +196,7 @@ describe('json-to-effect', () => {
 
       class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })(
         {
-          string: S.String.pipe(S.annotations({ identifier: 'String' })),
+          string: S.String,
           number: S.Number.pipe(PropertyMeta('dxos.test', { is_date: true })),
           boolean: S.Boolean,
           array: S.Array(S.String),
@@ -195,14 +212,14 @@ describe('json-to-effect', () => {
       ) {}
 
       const jsonSchema = toJsonSchema(Schema);
+      // log.info('', { jsonSchema });
       const schema = toEffectSchema(jsonSchema);
 
       expect(() => expect(schema.ast).to.deep.eq(Schema.ast)).to.throw();
-      expect(() => expect(removeFilterFunction(schema.ast)).to.deep.eq(Schema.ast)).to.throw();
-      expect(() => expect(schema.ast).to.deep.eq(removeFilterFunction(Schema.ast))).to.throw();
-      // TODO(dmaretskyi): Does not compare symbols!!!! -- important for annotations.
-      expect(removeFilterFunction(schema.ast)).to.deep.eq(removeFilterFunction(Schema.ast));
-      // log.info('', { type: AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'email')! });
+      expect(() => expect(prepareAstForCompare(schema.ast)).to.deep.eq(Schema.ast)).to.throw();
+      expect(() => expect(schema.ast).to.deep.eq(prepareAstForCompare(Schema.ast))).to.throw();
+      // log.info('', { original: prepareAstForCompare(Schema.ast), deserialized: prepareAstForCompare(schema.ast) });
+      expect(prepareAstForCompare(schema.ast)).to.deep.eq(prepareAstForCompare(Schema.ast));
 
       // TODO(dmaretskyi): Fix.
       // expect(
@@ -213,11 +230,29 @@ describe('json-to-effect', () => {
     });
   }
 
-  const removeFilterFunction = (obj: any): any =>
+  test('symbol annotations get compared', () => {
+    const schema1 = S.String.annotations({ [FormatAnnotationId]: 'email' });
+    const schema2 = S.String.annotations({ [FormatAnnotationId]: 'currency' });
+
+    expect(prepareAstForCompare(schema1.ast)).not.to.deep.eq(prepareAstForCompare(schema2.ast));
+  });
+
+  const prepareAstForCompare = (obj: AST.AST): any =>
     deepMapValues(obj, (value: any, recurse, key) => {
-      if (key === 'filter') {
-        return undefined;
+      if (typeof value === 'function') {
+        return null;
       }
+
+      // Convert symbols to strings.
+      if (typeof value === 'object') {
+        const clone = { ...value };
+        for (const sym of Object.getOwnPropertySymbols(clone as any)) {
+          clone[sym.toString()] = clone[sym];
+          delete clone[sym];
+        }
+        return recurse(clone);
+      }
+
       return recurse(value);
     });
 });
