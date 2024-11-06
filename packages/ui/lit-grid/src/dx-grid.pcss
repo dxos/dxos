@@ -68,7 +68,7 @@ dx-grid {
     &[inert] {
       visibility: hidden;
     }
-    &:focus, &:focus-visible{
+    &:focus, &:focus-visible {
       z-index: 2;
       border-color: var(--dx-accentSurface);
       outline: none;
@@ -87,11 +87,12 @@ dx-grid {
       }
     }
   }
-  &[data-grid-mode="edit"]{
-    [role='gridcell'], [role='columnheader'], [role='rowheader'] {
-     &[data-dx-active] {
-       border-color: var(--dx-accentSurface);
-     }
+}
+
+.dx-grid-host:focus-within .dx-grid {
+  [role='gridcell'], [role='columnheader'], [role='rowheader'] {
+    &[data-dx-active] {
+      border-color: var(--dx-accentSurface);
     }
   }
 }
