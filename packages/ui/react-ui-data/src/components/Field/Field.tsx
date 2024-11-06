@@ -4,26 +4,37 @@
 
 import React, { type ReactNode } from 'react';
 
-import { FormatEnums } from '@dxos/echo-schema';
+import { FormatEnums, type S } from '@dxos/echo-schema';
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type FieldProjectionType, FieldProjectionSchema } from '@dxos/schema';
+import { type FieldProjectionType, type Property } from '@dxos/schema';
 
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
+//
+// Util (move once stable)
+//
+
+// const errorValence = (
+
+//
+// Field
+//
+
 export type FieldProps = ThemedClassName<{
-  field: FieldProjectionType;
+  field: Property;
+  schema: S.Schema<any>;
   autoFocus?: boolean;
   readonly?: boolean;
   onSave?: (field: FieldProjectionType) => void;
 }>;
 
-export const Field = ({ classNames, field, autoFocus, readonly, onSave }: FieldProps) => {
+export const Field = ({ classNames, field, schema, autoFocus, readonly, onSave }: FieldProps) => {
   const { t } = useTranslation(translationKey);
 
-  const { getInputProps, errors, touched, canSubmit, handleSubmit } = useForm<FieldProjectionType>({
-    schema: FieldProjectionSchema,
+  const { getInputProps, canSubmit, handleSubmit, getErrorValence, getErrorMessage } = useForm<Property>({
+    schema,
     initialValues: field,
     // additionalValidation: (values) => {
     // Check that the path doesn't already exist in the schema.
@@ -41,7 +52,7 @@ export const Field = ({ classNames, field, autoFocus, readonly, onSave }: FieldP
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
       <FieldRow>
-        <Input.Root validationValence={touched.property && errors.property ? 'error' : undefined}>
+        <Input.Root validationValence={getErrorValence('property')}>
           <Input.Label>{t('field path label')}</Input.Label>
           <Input.TextInput
             autoFocus={autoFocus}
@@ -50,21 +61,21 @@ export const Field = ({ classNames, field, autoFocus, readonly, onSave }: FieldP
             {...getInputProps('property')}
           />
           <Input.DescriptionAndValidation>
-            <Input.Validation>{touched.property && errors.property}</Input.Validation>
+            <Input.Validation>{getErrorMessage('property')}</Input.Validation>
           </Input.DescriptionAndValidation>
         </Input.Root>
       </FieldRow>
       <FieldRow>
-        <Input.Root validationValence={touched.title && errors.title ? 'error' : undefined}>
+        <Input.Root validationValence={getErrorValence('title')}>
           <Input.Label>{t('field label label')}</Input.Label>
           <Input.TextInput disabled={readonly} placeholder={t('field label placeholder')} {...getInputProps('title')} />
           <Input.DescriptionAndValidation>
-            <Input.Validation>{touched.title && errors.title}</Input.Validation>
+            <Input.Validation>{getErrorMessage('title')}</Input.Validation>
           </Input.DescriptionAndValidation>
         </Input.Root>
       </FieldRow>
       <FieldRow>
-        <Input.Root validationValence={touched.format && errors.format ? 'error' : undefined}>
+        <Input.Root validationValence={getErrorValence('format')}>
           <Input.Label>{t('field type label')}</Input.Label>
           <Select.Root {...getInputProps('format', 'select')}>
             <Select.TriggerButton classNames='is-full' placeholder='Type' />
@@ -81,7 +92,7 @@ export const Field = ({ classNames, field, autoFocus, readonly, onSave }: FieldP
             </Select.Portal>
           </Select.Root>
           <Input.DescriptionAndValidation>
-            <Input.Validation>{touched.format && errors.format}</Input.Validation>
+            <Input.Validation>{getErrorMessage('format')}</Input.Validation>
           </Input.DescriptionAndValidation>
         </Input.Root>
       </FieldRow>
@@ -90,11 +101,11 @@ export const Field = ({ classNames, field, autoFocus, readonly, onSave }: FieldP
       {/*
       {features.includes('numeric') && (
         <FieldRow>
-          <Input.Root validationValence={touched.digits && errors.digits ? 'error' : undefined}>
+          <Input.Root validationValence={getErrorValence('digits')}>
             <Input.Label>{t('field digits label')}</Input.Label>
             <Input.TextInput disabled={readonly} type='number' {...getInputProps('digits')} />
             <Input.DescriptionAndValidation classNames='min-bs-[1em]'>
-              <Input.Validation>{touched.digits && errors.digits}</Input.Validation>
+              <Input.Validation>{getErrorMessage('digits')}</Input.Validation>
             </Input.DescriptionAndValidation>
           </Input.Root>
         </FieldRow>
@@ -103,20 +114,20 @@ export const Field = ({ classNames, field, autoFocus, readonly, onSave }: FieldP
       {/* {features.includes('ref') && (
         <>
           <FieldRow>
-            <Input.Root validationValence={touched.refSchema && errors.refSchema ? 'error' : undefined}>
+            <Input.Root validationValence={getErrorValence('refSchema')}>
               <Input.Label>{t('field ref schema label')}</Input.Label>
               <Input.TextInput disabled={readonly} {...getInputProps('refSchema')} />
               <Input.DescriptionAndValidation>
-                <Input.Validation>{touched.refSchema && errors.refSchema}</Input.Validation>
+                <Input.Validation>{getErrorMessage('refSchema')}</Input.Validation>
               </Input.DescriptionAndValidation>
             </Input.Root>
           </FieldRow>
           <FieldRow>
-            <Input.Root validationValence={touched.refProperty && errors.refProperty ? 'error' : undefined}>
+            <Input.Root validationValence={getErrorValence('refProperty')}>
               <Input.Label>{t('field ref property label')}</Input.Label>
               <Input.TextInput disabled={readonly} {...getInputProps('refProperty')} />
               <Input.DescriptionAndValidation>
-                <Input.Validation>{touched.refProperty && errors.refProperty}</Input.Validation>
+                <Input.Validation>{getErrorMessage('refProperty')}</Input.Validation>
               </Input.DescriptionAndValidation>
             </Input.Root>
           </FieldRow>
