@@ -16,12 +16,12 @@ import { Field, type FieldProps } from './Field';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
 
-const DefaultStory = (props: { field: FieldProps<Property>['field'] }) => {
-  const [field, setField] = useState(props.field);
+const DefaultStory = (props: { values: FieldProps<Property>['values'] }) => {
+  const [field, setField] = useState(props.values);
   // TODO(ZaymonFC): Workout why this throws if you unwrap the object.
   const [{ schema }, setSchema] = useState({ schema: getPropertySchemaForFormat(field.format) });
 
-  const handleValueChange = useCallback((values: FieldProps<Property>['field']) => {
+  const handleValueChange = useCallback((values: FieldProps<Property>['values']) => {
     setSchema({ schema: getPropertySchemaForFormat(values.format) });
   }, []);
 
@@ -38,7 +38,7 @@ const DefaultStory = (props: { field: FieldProps<Property>['field'] }) => {
     <div className='w-full grid grid-cols-3'>
       <div className='flex col-span-2 w-full justify-center p-4'>
         <TestPopup>
-          <Field field={field} schema={schema} onValuesChanged={handleValueChange} onSave={handleSave} />
+          <Field values={field} schema={schema} onValuesChanged={handleValueChange} onSave={handleSave} />
         </TestPopup>
       </div>
       <SyntaxHighlighter className='w-full text-xs'>{JSON.stringify(field, null, 2)}</SyntaxHighlighter>
@@ -62,6 +62,10 @@ type Story = StoryObj<typeof Field>;
 
 export const Default: Story = {
   args: {
-    field: { format: FormatEnum.Currency, property: 'currency', type: ScalarEnum.Number },
+    values: {
+      property: 'currency',
+      format: FormatEnum.Currency,
+      type: ScalarEnum.Number,
+    },
   },
 };

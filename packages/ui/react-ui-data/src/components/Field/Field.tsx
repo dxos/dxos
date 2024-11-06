@@ -4,84 +4,18 @@
 
 import React from 'react';
 
-import { FormatEnums, type S, type FormatEnum } from '@dxos/echo-schema';
-import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { FormatEnums, type S } from '@dxos/echo-schema';
+import { Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { getProperties, type Property } from '@dxos/schema';
 
-import { type FormResult, useForm } from '../../hooks';
+import { FieldInput } from './FieldInput';
+import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
-// TODO(burdon): Factor out.
-// TODO(burdon): Separate story.
-export type FieldInputProps<T extends S.Schema.Type<any>, V = string | number> = {
-  property: keyof T;
-  label: string;
-  options?: Array<{ value: V; label: string }>;
-  disabled?: boolean;
-  placeholder?: string;
-  getInputProps: (field: keyof T, type?: 'select') => Record<string, any>;
-} & Pick<FormResult<T>, 'getErrorValence' | 'getErrorMessage'>;
-
-export const FieldInput = <T extends S.Schema.Type<any>, V = string | number>({
-  property,
-  label,
-  options = [],
-  disabled,
-  placeholder,
-  getInputProps,
-  getErrorValence,
-  getErrorMessage,
-}: FieldInputProps<T, V>) => {
-  const validationValence = getErrorValence(property);
-  const errorMessage = getErrorMessage(property);
-
-  if (options) {
-    return (
-      <Input.Root validationValence={validationValence}>
-        <Input.Label>{label}</Input.Label>
-        <Select.Root {...getInputProps(property, 'select')}>
-          <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {options.map(({ value, label }) => (
-                  <Select.Option key={String(value)} value={String(value)}>
-                    {label}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
-        </Select.Root>
-        <Input.DescriptionAndValidation>
-          <Input.Validation>{errorMessage}</Input.Validation>
-        </Input.DescriptionAndValidation>
-      </Input.Root>
-    );
-  } else {
-    // TODO(burdon): Restrict number.
-    // TODO(burdon): Restrict string pattern. Input masking based on schema?
-    // TODO(burdon): Checkbox.
-    return (
-      <Input.Root validationValence={validationValence}>
-        <Input.Label>{label}</Input.Label>
-        <Input.DescriptionAndValidation>
-          <Input.TextInput type='string' disabled={disabled} placeholder={placeholder} {...getInputProps(property)} />
-          <Input.Validation>{errorMessage}</Input.Validation>
-        </Input.DescriptionAndValidation>
-      </Input.Root>
-    );
-  }
-};
-
-//
-// Field
-//
-
-export type FieldProps<T extends S.Schema.Type<any>> = ThemedClassName<{
-  field: T; // TODO(burdon): Rename value.
-  schema: S.Schema<any>;
+export type FieldProps<T> = ThemedClassName<{
+  values: T;
+  schema: S.Schema<T>;
   autoFocus?: boolean;
   readonly?: boolean;
   // TODO(burdon): Property should be generic.
@@ -89,11 +23,11 @@ export type FieldProps<T extends S.Schema.Type<any>> = ThemedClassName<{
   onSave?: (field: T) => void;
 }>;
 
-// TODO(burdon): Rename/reconcile with Form.
 // TODO(burdon): Remove extends Property.
+// TODO(burdon): Rename/reconcile with Form.
 export const Field = <T extends Property>({
   classNames,
-  field,
+  values,
   schema,
   readonly,
   onValuesChanged,
@@ -104,7 +38,7 @@ export const Field = <T extends Property>({
   // TODO(burdon): Type for useForm.
   const { getInputProps, canSubmit, handleSubmit, getErrorValence, getErrorMessage } = useForm<T>({
     schema,
-    initialValues: field,
+    initialValues: values,
     // additionalValidation: (values) => {
     // Check that the path doesn't already exist in the schema.
     // TODO(ZaymonFC) Need to use some sort of json path accessor to check paths like:
@@ -125,7 +59,7 @@ export const Field = <T extends Property>({
 
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
-      <FieldInput<T, FormatEnum>
+      <FieldInput<T>
         property='format'
         label={t('field type label')}
         options={FormatEnums.map((type) => ({ value: type, label: t(`field type ${type}`) }))}

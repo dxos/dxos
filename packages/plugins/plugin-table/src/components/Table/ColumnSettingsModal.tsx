@@ -5,7 +5,6 @@
 import React, { useMemo } from 'react';
 
 import { DropdownMenu, type DropdownMenuRootProps } from '@dxos/react-ui';
-import { Field } from '@dxos/react-ui-data';
 import { type FieldProjectionType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
@@ -33,7 +32,7 @@ export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, trigg
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
       <DropdownMenu.Content>
         {/* TODO(ZaymonFC: Restore. */}
-        {/* <Field field={props} onSave={() => onOpenChange?.(false)} /> */}
+        {/* <Field values={props} onSave={() => onOpenChange?.(false)} /> */}
         <DropdownMenu.Arrow />
       </DropdownMenu.Content>
     </DropdownMenu.Root>

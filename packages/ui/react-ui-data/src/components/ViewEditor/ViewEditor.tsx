@@ -90,10 +90,10 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
       <List.Root<FieldType>
-        isItem={S.is(FieldSchema)}
         items={view.fields}
-        onMove={handleMove}
+        isItem={S.is(FieldSchema)}
         getId={(field) => field.property}
+        onMove={handleMove}
       >
         {({ items }) => (
           <div className='w-full'>
@@ -124,7 +124,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
             key={field.property}
             classNames='p-2'
             autoFocus
-            field={fieldProperties}
+            values={fieldProperties}
             schema={fieldSchema}
             onValuesChanged={calculateFieldSchema}
             onSave={(props) => handleSet(field, props)}

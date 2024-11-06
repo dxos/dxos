@@ -5,7 +5,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { DropdownMenu } from '@dxos/react-ui';
-import { Field } from '@dxos/react-ui-data';
 import { type FieldProjectionType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
@@ -51,7 +50,7 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
       <DropdownMenu.Content>
         {/* TODO(ZaymonFC): Restore */}
-        {/* <Field field={field} onSave={handleCreate} /> */}
+        {/* <Field values={field} onSave={handleCreate} /> */}
         <DropdownMenu.Arrow />
       </DropdownMenu.Content>
     </DropdownMenu.Root>
