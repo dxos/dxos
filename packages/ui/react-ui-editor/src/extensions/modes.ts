@@ -9,8 +9,6 @@ import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
 
 import { singleValueFacet } from '../util';
 
-export const focusEvent = 'focus.container';
-
 export const EditorViewModes = ['preview', 'readonly', 'source'] as const;
 export type EditorViewMode = (typeof EditorViewModes)[number];
 
@@ -40,7 +38,7 @@ export const InputModeExtensions: { [mode: string]: Extension } = {
         key: 'Alt-Escape',
         run: (view) => {
           // Focus container for tab navigation.
-          view.dispatch({ userEvent: focusEvent });
+          view.dom.parentElement?.focus();
           return true;
         },
       },
