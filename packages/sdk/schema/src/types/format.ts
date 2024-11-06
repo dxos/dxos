@@ -27,6 +27,16 @@ export const BasePropertySchema = S.Struct({
 
 export type BaseProperty = S.Schema.Type<typeof BasePropertySchema>;
 
+const extend = (format: FormatEnum, type: ScalarEnum, fields = {}) =>
+  S.extend(
+    BasePropertySchema,
+    S.Struct({
+      type: S.Literal(type),
+      format: S.Literal(format),
+      ...fields,
+    }),
+  ).pipe(S.mutable);
+
 /**
  * Map of schema definitions.
  */
@@ -44,186 +54,61 @@ export const FormatSchema: Record<FormatEnum, S.Schema<any>> = {
   // Scalars
   //
 
-  [FormatEnum.String]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.String),
-      format: S.Literal(FormatEnum.String),
-    }),
-  ).pipe(S.mutable),
-
-  [FormatEnum.Number]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.Number),
-      format: S.Literal(FormatEnum.Number),
-    }),
-  ).pipe(S.mutable),
-
-  [FormatEnum.Boolean]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.Boolean),
-      format: S.Literal(FormatEnum.Boolean),
-    }),
-  ).pipe(S.mutable),
-
-  [FormatEnum.Ref]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.Ref),
-      format: S.Literal(FormatEnum.Ref),
-      refSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
-      // TODO(burdon): Annotation to store on View's field (not schema property?)
-      refProperty: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Lookup' }),
-    }),
-  ).pipe(S.mutable),
+  [FormatEnum.String]: extend(FormatEnum.String, ScalarEnum.String),
+  [FormatEnum.Number]: extend(FormatEnum.Number, ScalarEnum.Number),
+  [FormatEnum.Boolean]: extend(FormatEnum.Boolean, ScalarEnum.Boolean),
+  [FormatEnum.Ref]: extend(FormatEnum.Ref, ScalarEnum.Ref, {
+    refSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
+    // TODO(burdon): Annotation to store on View's field (not schema property?)
+    refProperty: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Lookup property' }),
+  }),
 
   //
   // Strings
   //
 
-  [FormatEnum.DID]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.String),
-      format: S.Literal(FormatEnum.DID),
-    }),
-  ).pipe(S.mutable),
-
-  [FormatEnum.Email]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.String),
-      format: S.Literal(FormatEnum.Email),
-    }),
-  ).pipe(S.mutable),
-
-  [FormatEnum.Formula]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.String),
-      format: S.Literal(FormatEnum.Formula),
-    }),
-  ).pipe(S.mutable),
-
-  [FormatEnum.JSON]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.String),
-      format: S.Literal(FormatEnum.JSON),
-    }),
-  ).pipe(S.mutable),
-
-  [FormatEnum.Regex]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.String),
-      format: S.Literal(FormatEnum.Regex),
-    }),
-  ).pipe(S.mutable),
-
-  [FormatEnum.Text]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.String),
-      format: S.Literal(FormatEnum.Text),
-    }),
-  ).pipe(S.mutable),
-
-  [FormatEnum.URI]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.String),
-      format: S.Literal(FormatEnum.URI),
-    }),
-  ).pipe(S.mutable),
-
-  [FormatEnum.UUID]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.String),
-      format: S.Literal(FormatEnum.UUID),
-    }),
-  ).pipe(S.mutable),
+  [FormatEnum.DID]: extend(FormatEnum.DID, ScalarEnum.String),
+  [FormatEnum.Email]: extend(FormatEnum.Email, ScalarEnum.String),
+  [FormatEnum.Formula]: extend(FormatEnum.Formula, ScalarEnum.String),
+  [FormatEnum.JSON]: extend(FormatEnum.JSON, ScalarEnum.String),
+  [FormatEnum.Regex]: extend(FormatEnum.Regex, ScalarEnum.String),
+  [FormatEnum.Text]: extend(FormatEnum.Text, ScalarEnum.String),
+  [FormatEnum.URI]: extend(FormatEnum.URI, ScalarEnum.String),
+  [FormatEnum.UUID]: extend(FormatEnum.UUID, ScalarEnum.String),
 
   //
   // Numbers
   //
 
-  [FormatEnum.Currency]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.Number),
-      format: S.Literal(FormatEnum.Currency),
-      multipleOf: S.optional(DecimalPrecision),
-      currency: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Currency code' })),
-    }),
-  ).pipe(S.mutable),
-
-  [FormatEnum.Percent]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.Number),
-      format: S.Literal(FormatEnum.Percent),
-      multipleOf: S.optional(DecimalPrecision),
-    }),
-  ).pipe(S.mutable),
-
-  [FormatEnum.Timestamp]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.Number),
-      format: S.Literal(FormatEnum.Timestamp),
-    }),
-  ).pipe(S.mutable),
+  [FormatEnum.Currency]: extend(FormatEnum.Currency, ScalarEnum.Number, {
+    multipleOf: S.optional(DecimalPrecision),
+    currency: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Currency code' })),
+  }),
+  [FormatEnum.Percent]: extend(FormatEnum.URI, ScalarEnum.Number, {
+    multipleOf: S.optional(DecimalPrecision),
+  }),
+  [FormatEnum.Timestamp]: extend(FormatEnum.UUID, ScalarEnum.Number),
 
   //
   // Dates
   //
 
-  [FormatEnum.DateTime]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.String),
-      format: S.Literal(FormatEnum.DateTime),
-    }),
-  ),
-
-  [FormatEnum.Date]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.String),
-      format: S.Literal(FormatEnum.Date),
-    }),
-  ),
-
-  [FormatEnum.Time]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.String),
-      format: S.Literal(FormatEnum.Time),
-    }),
-  ),
-
-  [FormatEnum.Duration]: S.extend(
-    BasePropertySchema,
-    S.Struct({
-      type: S.Literal(ScalarEnum.String),
-      format: S.Literal(FormatEnum.Duration),
-    }),
-  ),
+  [FormatEnum.DateTime]: extend(FormatEnum.DateTime, ScalarEnum.String),
+  [FormatEnum.Date]: extend(FormatEnum.Date, ScalarEnum.String),
+  [FormatEnum.Time]: extend(FormatEnum.Time, ScalarEnum.String),
+  [FormatEnum.Duration]: extend(FormatEnum.Duration, ScalarEnum.String),
 };
 
 /**
  * Discriminated union of schema based on format.
  */
 export const PropertySchema = S.Union(
+  FormatSchema[FormatEnum.None],
+
   //
   // Scalars
   //
 
-  FormatSchema[FormatEnum.None],
   FormatSchema[FormatEnum.String],
   FormatSchema[FormatEnum.Number],
   FormatSchema[FormatEnum.Boolean],
