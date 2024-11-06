@@ -24,6 +24,7 @@ export const useEdgeAgentHandlers = ({
   );
   const [agentStatus, setAgentStatus] = useState<AgentFormProps['agentStatus']>('getting');
   const client = useClient();
+  // TODO(wittjosiah): This should be based on HALO credentials.
   const agentHostingEnabled = Boolean(client.config.values.runtime?.client?.edgeFeatures?.agents);
 
   const handleStatus = (status: QueryAgentStatusResponse.AgentStatus) => {
