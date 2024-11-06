@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum, ScalarEnum } from '@dxos/echo-schema';
 import { type ValidationError } from '@dxos/schema';
 
 /**
@@ -12,12 +12,51 @@ import { type ValidationError } from '@dxos/schema';
  * Returns undefined for empty or null inputs.
  */
 // TODO(burdon): Differentiate between data FormatEnum and display format (e.g., percent).
-export const parseValue = (type: FormatEnum, value: any) => {
+export type ParseProps = {
+  type?: ScalarEnum;
+  format?: FormatEnum;
+  value: any;
+};
+
+export const parseValue = ({ type, format, value }: ParseProps) => {
   if (value === undefined || value === null || value === '') {
     return undefined;
   }
 
-  switch (type) {
+  if (!format) {
+    switch (type) {
+      case ScalarEnum.Boolean: {
+        if (typeof value === 'string') {
+          const lowercaseValue = value.toLowerCase();
+          if (lowercaseValue === '0' || lowercaseValue === 'false') {
+            return false;
+          } else if (lowercaseValue === '1' || lowercaseValue === 'true') {
+            return true;
+          }
+        }
+        return Boolean(value);
+      }
+
+      case ScalarEnum.Number: {
+        const num = Number(value);
+        return Number.isNaN(num) ? null : num;
+      }
+
+      case ScalarEnum.String: {
+        return String(value);
+      }
+
+      case ScalarEnum.Ref: {
+        return String(value);
+      }
+
+      default: {
+        return value;
+      }
+    }
+  }
+
+  switch (format) {
     //
     // Boolean.
     //
@@ -85,7 +124,28 @@ export const parseValue = (type: FormatEnum, value: any) => {
 };
 
 // TODO(burdon): Type and format.
-export const cellClassesForFieldType = (format: FormatEnum | undefined): string[] | undefined => {
+export type CellClassesForFieldTypeProps = {
+  type?: ScalarEnum;
+  format?: FormatEnum;
+};
+
+export const cellClassesForFieldType = ({ type, format }: CellClassesForFieldTypeProps): string[] | undefined => {
+  if (!format) {
+    switch (type) {
+      case ScalarEnum.Number: {
+        return ['text-right', 'font-mono'];
+      }
+
+      case ScalarEnum.Boolean: {
+        return ['text-right', 'font-mono'];
+      }
+
+      default: {
+        return undefined;
+      }
+    }
+  }
+
   switch (format) {
     case FormatEnum.Number:
       return ['text-right', 'font-mono'];

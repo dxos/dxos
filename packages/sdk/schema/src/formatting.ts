@@ -2,20 +2,46 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum, ScalarEnum } from '@dxos/echo-schema';
+
+type ValueFormatProps = {
+  type: ScalarEnum;
+  format?: FormatEnum | undefined;
+  value: any;
+  locale?: string | undefined;
+};
 
 /**
  * Format value by type.
  * Used by Table, Sheet, etc.
  */
-// TODO(burdon): Move to react-ui-data. Add type.
+// TODO(burdon): Move to react-ui-data.
 // TODO(burdon): Formatting is different from kind format (e.g., percent is not a data format).
-export const formatValue = (
-  // type: ScalarType,
-  format: FormatEnum | undefined,
-  value: any,
-  locale: string | undefined = undefined,
-): string => {
+export const formatValue = ({ type, format, value, locale = undefined }: ValueFormatProps): string => {
+  if (!format) {
+    switch (type) {
+      case ScalarEnum.Boolean: {
+        return (value as boolean).toLocaleString().toUpperCase();
+      }
+      case ScalarEnum.Number: {
+        return value.toLocaleString(locale);
+      }
+
+      case ScalarEnum.String: {
+        return String(value);
+      }
+
+      // TODO(ZaymonFC): Will we ever have a ref that doesn't have a format?
+      case ScalarEnum.Ref: {
+        return String(value);
+      }
+
+      default: {
+        return String(value);
+      }
+    }
+  }
+
   switch (format) {
     case FormatEnum.Boolean: {
       return (value as boolean).toLocaleString().toUpperCase();

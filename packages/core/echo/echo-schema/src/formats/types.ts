@@ -53,12 +53,14 @@ export const getScalarTypeFromAst = (ast: AST.AST): ScalarEnum | undefined => {
  *  - react-ui-data/field
  *  - react-ui-table/column-utils
  *  - plugin-sheet/sheet-model
+ *  - plugin-table/table-model
  *  - plugin-table/testing
  */
 export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
 
 export enum FormatEnum {
   None = '',
+  // TODO(ZaymonFC): Remove scalar types from format enum.
   String = 'string',
   Number = 'number',
   Boolean = 'boolean',

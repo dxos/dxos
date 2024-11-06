@@ -86,7 +86,8 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
     (field: FieldType, props: FieldProjectionType) => {
       // TODO(burdon): !!!
       projection.updateField(field);
-      projection.updateFormat(field.property, props);
+      // TODO(ZaymonFC): Where did this function go?
+      // projection.updateFormat(field.property, props);
     },
     [view.fields],
   );
