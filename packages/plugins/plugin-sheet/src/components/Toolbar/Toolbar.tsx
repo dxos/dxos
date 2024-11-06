@@ -120,9 +120,10 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
     (action: ToolbarAction) => {
       switch (action.key) {
         case 'alignment':
-          if (cursor && cursorFallbackRange) {
+          if (cursorFallbackRange) {
             const index = model.sheet.ranges?.findIndex(
-              (range) => range.key === action.key && inRange(rangeFromIndex(model.sheet, range.range), cursor),
+              (range) =>
+                range.key === action.key && inRange(rangeFromIndex(model.sheet, range.range), cursorFallbackRange.from),
             );
             const nextRangeEntity = {
               range: rangeToIndex(model.sheet, cursorFallbackRange),
@@ -238,21 +239,24 @@ const Alignment = () => {
 const styleOptions: ButtonProps<StyleValue>[] = [{ value: 'highlight', icon: 'ph--highlighter--regular' }];
 
 const Styles = () => {
-  const { cursor, model } = useSheetContext();
+  const { cursorFallbackRange, model } = useSheetContext();
   const { onAction } = useToolbarContext('Styles');
   const { t } = useTranslation(SHEET_PLUGIN);
 
   const activeValues = useMemo(
     () =>
-      cursor
+      cursorFallbackRange
         ? model.sheet.ranges
-            ?.filter(({ range, key }) => key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursor))
+            ?.filter(
+              ({ range, key }) =>
+                key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursorFallbackRange.from),
+            )
             .reduce((acc, { value }) => {
               acc.add(value);
               return acc;
             }, new Set())
         : undefined,
-    [cursor, model.sheet.ranges],
+    [cursorFallbackRange, model.sheet.ranges],
   );
 
   return (
@@ -304,16 +308,16 @@ const Actions = () => {
       icon='ph--chat-text--regular'
       data-testid='editor.toolbar.comment'
       onClick={() => {
-        if (!(cursorFallbackRange && cursor)) {
+        if (!cursorFallbackRange) {
           return;
         }
         return onAction?.({
           key: 'comment',
           value: rangeToIndex(model.sheet, cursorFallbackRange),
-          cellContent: model.getCellText(cursor),
+          cellContent: model.getCellText(cursorFallbackRange.from),
         });
       }}
-      disabled={!cursor || overlapsCommentAnchor}
+      disabled={!cursorFallbackRange || overlapsCommentAnchor}
     >
       {t(tooltipLabelKey)}
     </ToolbarItem>

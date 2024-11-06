@@ -27,7 +27,7 @@ import {
 } from '@dxos/react-ui-grid';
 
 import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
-import { DEFAULT_COLUMNS, DEFAULT_ROWS, rangeToA1Notation, type CellRange, MAX_ROWS, MAX_COLUMNS } from '../../defs';
+import { DEFAULT_COLUMNS, DEFAULT_ROWS, rangeToA1Notation, type CellRange } from '../../defs';
 import { rangeExtension, sheetExtension, type RangeController } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
 import { SHEET_PLUGIN } from '../../meta';
@@ -158,16 +158,16 @@ export const GridSheet = () => {
         case 'frozenRowsStart':
           return dxGrid?.setSelection({
             start: { col: pos.col, row: 0, plane: 'grid' },
-            end: { col: pos.col, row: MAX_ROWS, plane: 'grid' },
+            end: { col: pos.col, row: model.sheet.rows.length - 1, plane: 'grid' },
           });
         case 'frozenColsStart':
           return dxGrid?.setSelection({
             start: { row: pos.row, col: 0, plane: 'grid' },
-            end: { row: pos.row, col: MAX_COLUMNS, plane: 'grid' },
+            end: { row: pos.row, col: model.sheet.columns.length - 1, plane: 'grid' },
           });
       }
     },
-    [dxGrid],
+    [dxGrid, model.sheet],
   );
 
   const handleClick = useCallback(
