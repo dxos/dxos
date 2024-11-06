@@ -101,7 +101,7 @@ describe('format', () => {
     invariant(schema);
     // TODO(burdon): Skips type literals.
     const props = getSchemaProperties(schema);
-    expect(props).to.have.length(5);
+    expect(props).to.have.length(4);
     console.log(JSON.stringify(props, null, 2));
   });
 });
