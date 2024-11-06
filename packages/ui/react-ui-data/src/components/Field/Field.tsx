@@ -76,10 +76,11 @@ export type FieldProps = ThemedClassName<{
   schema: S.Schema<any>;
   autoFocus?: boolean;
   readonly?: boolean;
+  onValuesChanged?: (values: Property) => void;
   onSave?: (field: FieldProjectionType) => void;
 }>;
 
-export const Field = ({ classNames, field, schema, autoFocus, readonly, onSave }: FieldProps) => {
+export const Field = ({ classNames, field, schema, readonly, onValuesChanged, onSave }: FieldProps) => {
   const { t } = useTranslation(translationKey);
 
   const { getInputProps, canSubmit, handleSubmit, getErrorValence, getErrorMessage } = useForm<any>({
@@ -95,6 +96,7 @@ export const Field = ({ classNames, field, schema, autoFocus, readonly, onSave }
     //   return [pathNotUniqueError(values.property)];
     // }
     // },
+    onValuesChanged,
     onSubmit: (values) => onSave?.(values),
   });
 
@@ -184,6 +186,7 @@ export const Field = ({ classNames, field, schema, autoFocus, readonly, onSave }
         </>
       )}
       */}
+
       {!readonly && (
         <Button onClick={handleSubmit} disabled={!canSubmit}>
           {t('field save button label')}
