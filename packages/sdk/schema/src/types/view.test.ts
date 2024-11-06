@@ -9,8 +9,8 @@ import { MutableSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   Format,
-  FormatEnum,
   FormatAnnotationId,
+  FormatEnum,
   TypedObject,
   create,
   createJsonPath,
