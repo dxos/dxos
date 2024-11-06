@@ -122,10 +122,13 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
     (action: ToolbarActionAnnotated) => {
       switch (action.key) {
         case 'alignment':
-          if (cursor && cursorFallbackRange) {
-            const index = model.sheet.ranges?.findIndex(
-              (range) => range.key === action.key && inRange(rangeFromIndex(model.sheet, range.range), cursor),
-            );
+          if (cursorFallbackRange) {
+            const index =
+              model.sheet.ranges?.findIndex(
+                (range) =>
+                  range.key === action.key &&
+                  inRange(rangeFromIndex(model.sheet, range.range), cursorFallbackRange.from),
+              ) ?? -1;
             const nextRangeEntity = {
               range: rangeToIndex(model.sheet, cursorFallbackRange),
               key: action.key,
@@ -133,6 +136,8 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
             };
             if (index < 0) {
               model.sheet.ranges?.push(nextRangeEntity);
+            } else if (model.sheet.ranges![index].value === action.value) {
+              model.sheet.ranges?.splice(index, 1);
             } else {
               model.sheet.ranges?.splice(index, 1, nextRangeEntity);
             }
@@ -142,7 +147,9 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
           if (action.unset) {
             const index = model.sheet.ranges?.findIndex(
               (range) =>
-                range.key === action.key && cursor && inRange(rangeFromIndex(model.sheet, range.range), cursor),
+                range.key === action.key &&
+                cursorFallbackRange &&
+                inRange(rangeFromIndex(model.sheet, range.range), cursorFallbackRange.from),
             );
             if (index >= 0) {
               model.sheet.ranges?.splice(index, 1);
@@ -177,6 +184,7 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
     <ToolbarContextProvider onAction={handleAction}>
       <NaturalToolbar.Root
         classNames={[
+          'pli-0.5',
           ...(role === 'section'
             ? ['z-[2] group-focus-within/section:visible', !hasAttention && 'invisible', sectionToolbarLayout]
             : ['attention-surface']),
@@ -246,14 +254,16 @@ const styleOptions: ButtonProps<StyleValue>[] = [
 ];
 
 const Styles = () => {
-  const { cursor, model } = useSheetContext();
+  const { cursorFallbackRange, model } = useSheetContext();
   const { onAction } = useToolbarContext('Styles');
   const { t } = useTranslation(SHEET_PLUGIN);
 
   // TODO(thure): Can this O(n) call be memoized?
-  const activeValues = cursor
+  const activeValues = cursorFallbackRange
     ? model.sheet.ranges
-        ?.filter(({ range, key }) => key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursor))
+        ?.filter(
+          ({ range, key }) => key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursorFallbackRange.from),
+        )
         .reduce((acc, { value }) => {
           acc.add(value);
           return acc;
@@ -315,16 +325,16 @@ const Actions = () => {
       icon='ph--chat-text--regular'
       data-testid='editor.toolbar.comment'
       onClick={() => {
-        if (!(cursorFallbackRange && cursor)) {
+        if (!cursorFallbackRange) {
           return;
         }
         return onAction?.({
           key: 'comment',
           value: rangeToIndex(model.sheet, cursorFallbackRange),
-          cellContent: model.getCellText(cursor),
+          cellContent: model.getCellText(cursorFallbackRange.from),
         });
       }}
-      disabled={!cursor || overlapsCommentAnchor}
+      disabled={!cursorFallbackRange || overlapsCommentAnchor}
     >
       {t(tooltipLabelKey)}
     </ToolbarItem>
