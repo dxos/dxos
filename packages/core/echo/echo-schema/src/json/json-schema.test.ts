@@ -37,7 +37,7 @@ describe('effect-to-json', () => {
       name: S.String.pipe(PropertyMeta(metaNamespace, meta)),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
-    expect(getEchoProp(jsonSchema.properties.name).annotations[metaNamespace]).to.deep.eq(meta);
+    expect(getEchoProp(jsonSchema.properties!.name).annotations[metaNamespace]).to.deep.eq(meta);
   });
 
   test('reference annotation', () => {
@@ -48,7 +48,7 @@ describe('effect-to-json', () => {
       name: ref(Nested),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
-    const nested = jsonSchema.properties.name;
+    const nested = jsonSchema.properties!.name;
     expectReferenceAnnotation(nested);
   });
 
@@ -61,7 +61,7 @@ describe('effect-to-json', () => {
     }) {}
 
     const jsonSchema = toJsonSchema(Schema);
-    expectReferenceAnnotation((jsonSchema.properties.name as any).items);
+    expectReferenceAnnotation((jsonSchema.properties!.name as any).items);
   });
 
   test('optional references', () => {
@@ -72,14 +72,14 @@ describe('effect-to-json', () => {
       name: S.optional(ref(Nested)),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
-    expectReferenceAnnotation(jsonSchema.properties.name);
+    expectReferenceAnnotation(jsonSchema.properties!.name);
   });
 
   test('regular objects are not annotated', () => {
     const object = S.Struct({ name: S.Struct({ name: S.String }) });
     const jsonSchema = toJsonSchema(object);
     expect(getEchoProp(jsonSchema)).to.be.undefined;
-    expect(getEchoProp(jsonSchema.properties.name)).to.be.undefined;
+    expect(getEchoProp(jsonSchema.properties!.name)).to.be.undefined;
   });
 
   test('annotations', () => {
@@ -183,6 +183,7 @@ describe('json-to-effect', () => {
         format: 'email',
         title: 'Email',
         description: 'Email address',
+        // TODO(dmaretskyi): omit pattern.
         pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
       });
     });

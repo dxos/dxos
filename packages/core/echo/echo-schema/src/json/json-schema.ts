@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 
 import {
   getObjectAnnotation,
+  type JsonSchemaType,
   type ObjectAnnotation,
   ObjectAnnotationId,
   type PropertyMetaAnnotation,
@@ -24,7 +25,7 @@ import { removeUndefinedProperties } from '@dxos/util';
 /**
  * @internal
  */
-export const getEchoProp = (obj: JSONSchema.JsonSchema7): any => {
+export const getEchoProp = (obj: JsonSchemaType): any => {
   return (obj as any)[ECHO_REFINEMENT_KEY];
 };
 
@@ -88,10 +89,10 @@ export const toPropType = (type?: PropType): string => {
  * Convert effect schema to JSON Schema.
  * @param schema
  */
-export const toJsonSchema = (schema: S.Schema.Any): JSONSchema.JsonSchema7Object => {
+export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
   invariant(schema);
   const schemaWithRefinements = S.make(withEchoRefinements(schema.ast));
-  const jsonSchema = JSONSchema.make(schemaWithRefinements) as JSONSchema.JsonSchema7Object;
+  const jsonSchema = JSONSchema.make(schemaWithRefinements) as JsonSchemaType;
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     // Put id first.
     jsonSchema.properties = Object.assign({ id: undefined }, jsonSchema.properties);
@@ -164,10 +165,7 @@ const withEchoRefinements = (ast: AST.AST): AST.AST => {
  * @param root
  * @param definitions
  */
-export const toEffectSchema = (
-  root: JSONSchema.JsonSchema7Root,
-  _defs?: JSONSchema.JsonSchema7Root['$defs'],
-): S.Schema<any> => {
+export const toEffectSchema = (root: JsonSchemaType, _defs?: JSONSchema.JsonSchema7Root['$defs']): S.Schema<any> => {
   const defs = root.$defs ? { ..._defs, ...root.$defs } : _defs ?? {};
   if ('type' in root && root.type === 'object') {
     return objectToEffectSchema(root, defs);
@@ -194,9 +192,9 @@ export const toEffectSchema = (
       }
     }
   } else if ('enum' in root) {
-    result = S.Union(...root.enum.map((e) => S.Literal(e)));
+    result = S.Union(...root.enum!.map((e) => S.Literal(e)));
   } else if ('anyOf' in root) {
-    result = S.Union(...root.anyOf.map((v) => toEffectSchema(v, defs)));
+    result = S.Union(...root.anyOf!.map((v) => toEffectSchema(v, defs)));
   } else if ('type' in root) {
     switch (root.type) {
       case 'string': {
@@ -226,7 +224,7 @@ export const toEffectSchema = (
       }
     }
   } else if ('$ref' in root) {
-    const refSegments = root.$ref.split('/');
+    const refSegments = root.$ref!.split('/');
     const jsonSchema = defs[refSegments[refSegments.length - 1]];
     invariant(jsonSchema, `missing definition for ${root.$ref}`);
     result = toEffectSchema(jsonSchema, defs).pipe(S.annotations({ identifier: refSegments[refSegments.length - 1] }));
@@ -245,10 +243,7 @@ export const toEffectSchema = (
   return result;
 };
 
-const objectToEffectSchema = (
-  root: JSONSchema.JsonSchema7Object,
-  defs: JSONSchema.JsonSchema7Root['$defs'],
-): S.Schema<any> => {
+const objectToEffectSchema = (root: JsonSchemaType, defs: JSONSchema.JsonSchema7Root['$defs']): S.Schema<any> => {
   invariant('type' in root && root.type === 'object', `not an object: ${root}`);
 
   const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
@@ -367,7 +362,7 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<sym
   return schemaFields;
 };
 
-const jsonSchemaFieldsToAnnotations = (schema: JSONSchema.JsonSchema7): AST.Annotations => {
+const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations => {
   const annotations: Types.Mutable<S.Annotations.Schema<any>> = {};
 
   const echoRefinement: EchoRefinement = (schema as any)[ECHO_REFINEMENT_KEY];

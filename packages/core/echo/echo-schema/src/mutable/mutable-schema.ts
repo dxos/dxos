@@ -2,9 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type JSONSchema, S } from '@dxos/effect';
+import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
+import { type HasId, type JsonSchemaType, schemaVariance } from '../ast';
+import { toEffectSchema, toJsonSchema } from '../json';
 import {
   addFieldsToSchema,
   removeFieldsFromSchema,
@@ -12,8 +14,6 @@ import {
   updateFieldsInSchema,
 } from './manipulation';
 import { StoredSchema } from './types';
-import { type HasId, schemaVariance } from '../ast';
-import { toEffectSchema, toJsonSchema } from '../json';
 
 interface MutableSchemaConstructor extends S.Schema<MutableSchema> {
   new (): HasId;
@@ -64,7 +64,7 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
     return this._storedSchema.id;
   }
 
-  public get jsonSchema(): JSONSchema.JsonSchema7Object {
+  public get jsonSchema(): JsonSchemaType {
     return this._storedSchema.jsonSchema;
   }
 

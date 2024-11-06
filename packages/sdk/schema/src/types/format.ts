@@ -180,9 +180,9 @@ export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaPropertyType<
     let propType = getType(prop.type);
     if (propType) {
       let label = propType ? getAnnotation<string>(AST.TitleAnnotationId, propType) : undefined;
-      // NOTE: Ignores type literals.
+    // NOTE: Ignores type literals.
       let type = getScalarTypeFromAst(propType);
-      if (!type && AST.isTransformation(propType)) {
+    if (!type && AST.isTransformation(propType)) {
         label = getAnnotation<string>(AST.TitleAnnotationId, propType);
         propType = getType(propType.to);
         if (propType) {

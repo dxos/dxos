@@ -39,7 +39,7 @@ describe('formats', () => {
     console.log(JSON.stringify({ jsonSchema, data }, null, 2));
 
     {
-      const prop = jsonSchema.properties['active' as const];
+      const prop = jsonSchema.properties!['active' as const];
       expect(getScalarType(prop)).to.eq(ScalarEnum.Boolean);
       expect(prop).includes({
         type: 'boolean',
@@ -47,7 +47,7 @@ describe('formats', () => {
     }
 
     {
-      const prop = jsonSchema.properties['email' as const];
+      const prop = jsonSchema.properties!['email' as const];
       expect(getScalarType(prop)).to.eq(ScalarEnum.String);
       expect(prop).includes({
         type: 'string',
@@ -57,7 +57,7 @@ describe('formats', () => {
     }
 
     {
-      const prop = jsonSchema.properties['salary' as const];
+      const prop = jsonSchema.properties!['salary' as const];
       expect(getScalarType(prop)).to.eq(ScalarEnum.Number);
       expect(prop).includes({
         type: 'number',
@@ -69,7 +69,7 @@ describe('formats', () => {
     }
 
     {
-      const prop = jsonSchema.properties['birthday' as const];
+      const prop = jsonSchema.properties!['birthday' as const];
       log.info('', { prop });
       expect(getScalarType(prop)).to.eq(ScalarEnum.String);
       expect(prop).includes({
