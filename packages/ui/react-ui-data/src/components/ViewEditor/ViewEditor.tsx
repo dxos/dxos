@@ -20,7 +20,7 @@ import {
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '../../translations';
-import { Field } from '../Field';
+import { Field } from '../Form';
 
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
 

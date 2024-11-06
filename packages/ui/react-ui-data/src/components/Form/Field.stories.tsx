@@ -16,7 +16,9 @@ import { Field, type FieldProps } from './Field';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
 
-const DefaultStory = (props: { values: FieldProps<Property>['values'] }) => {
+type StoryProps = FieldProps<Property>;
+
+const DefaultStory = (props: StoryProps) => {
   const [field, setField] = useState(props.values);
   // TODO(ZaymonFC): Workout why this throws if you unwrap the object.
   const [{ schema }, setSchema] = useState({ schema: getPropertySchemaForFormat(field.format) });
@@ -46,7 +48,7 @@ const DefaultStory = (props: { values: FieldProps<Property>['values'] }) => {
   );
 };
 
-const meta: Meta<typeof Field> = {
+const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-data/Field',
   component: Field,
   render: DefaultStory,
@@ -58,7 +60,7 @@ const meta: Meta<typeof Field> = {
 
 export default meta;
 
-type Story = StoryObj<typeof Field>;
+type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {

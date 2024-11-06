@@ -8,18 +8,18 @@ import { Input, Select } from '@dxos/react-ui';
 
 import { type FormResult } from '../../hooks';
 
-export type FormInputProps<T> = {
+export type FormInputProps<T extends object> = {
   property: keyof T;
   label: string;
   options?: Array<{ value: string | number; label: string }>;
   disabled?: boolean;
   placeholder?: string;
-  // TODO(burdon): Pick from FormResult.
+  // TODO(burdon): Pick from FormResult?
   getInputProps: (property: keyof T, type?: 'input' | 'select') => Record<string, any>;
 } & Pick<FormResult<T>, 'getErrorValence' | 'getErrorMessage'>;
 
 // TODO(burdon): Create story.
-export const FormInput = <T,>({
+export const FormInput = <T extends object>({
   property,
   label,
   options = [],

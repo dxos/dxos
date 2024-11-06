@@ -4,16 +4,16 @@
 
 import React from 'react';
 
-import { FormatEnums, type S } from '@dxos/echo-schema';
+import { type S } from '@dxos/echo-schema';
 import { Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { getProperties, type Property } from '@dxos/schema';
+import { getProperties } from '@dxos/schema';
 
 import { FormInput } from './FormInput';
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
-export type FieldProps<T> = ThemedClassName<{
+export type FieldProps<T extends object> = ThemedClassName<{
   values: T;
   schema: S.Schema<T>;
   autoFocus?: boolean;
@@ -25,7 +25,7 @@ export type FieldProps<T> = ThemedClassName<{
 
 // TODO(burdon): Remove extends Property.
 // TODO(burdon): Rename/reconcile with Form.
-export const Field = <T extends Property>({
+export const Field = <T extends object>({
   classNames,
   values,
   schema,
@@ -59,16 +59,16 @@ export const Field = <T extends Property>({
 
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
-      <FormInput<T>
-        property='format'
-        label={t('field type label')}
-        options={FormatEnums.map((type) => ({ value: type, label: t(`field type ${type}`) }))}
-        disabled={readonly}
-        placeholder='Type'
-        getInputProps={getInputProps}
-        getErrorValence={getErrorValence}
-        getErrorMessage={getErrorMessage}
-      />
+      {/* <FormInput<T> */}
+      {/*  property='format' */}
+      {/*  label={t('field type label')} */}
+      {/*  options={FormatEnums.map((type) => ({ value: type, label: t(`field type ${type}`) }))} */}
+      {/*  disabled={readonly} */}
+      {/*  placeholder='Type' */}
+      {/*  getInputProps={getInputProps} */}
+      {/*  getErrorValence={getErrorValence} */}
+      {/*  getErrorMessage={getErrorMessage} */}
+      {/* /> */}
 
       {props.map(({ name }) => (
         <FormInput<T>

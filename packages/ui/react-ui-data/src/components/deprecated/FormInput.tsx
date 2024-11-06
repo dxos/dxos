@@ -15,7 +15,7 @@ export type DeprecatedFormInputProps = {
 /**
  * @deprecated
  */
-// TODO(burdon): Still used in ObservabilitySettings.
+// TODO(burdon): Still used in ObservabilitySettings and all settings.
 export const DeprecatedFormInput = ({
   label,
   description,

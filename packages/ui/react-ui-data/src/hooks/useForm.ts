@@ -24,7 +24,7 @@ type SelectProps<T> = BaseProps<T, string | undefined> & {
   onValueChange: (value: string | undefined) => void;
 };
 
-export type FormResult<T = {}> = {
+export type FormResult<T extends object> = {
   values: T;
   errors: Record<keyof T, string>;
   touched: Record<keyof T, boolean>;
@@ -66,7 +66,7 @@ export interface FormOptions<T extends object> {
  * Creates a hook for managing form state, including values, validation, and submission.
  * Deeply integrated with `@dxos/schema` for schema-based validation.
  */
-export const useForm = <T extends {}>({
+export const useForm = <T extends object>({
   initialValues,
   schema,
   additionalValidation,
@@ -233,7 +233,7 @@ export const useForm = <T extends {}>({
 // Util. (Keeping this here until useForm gets its own library).
 //
 
-const initialiseKeysWithValue = <T extends {}, V>(obj: T, value: V): Record<keyof T, V> => {
+const initialiseKeysWithValue = <T extends object, V>(obj: T, value: V): Record<keyof T, V> => {
   return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<keyof T, V>);
 };
 
@@ -241,7 +241,7 @@ const markAllTouched = <T extends Record<keyof T, any>>(values: T) => {
   return initialiseKeysWithValue(values, true);
 };
 
-const collapseErrorArray = <T extends {}>(errors: ValidationError[]) =>
+const collapseErrorArray = <T extends object>(errors: ValidationError[]) =>
   errors.reduce(
     (acc, { path, message }) => {
       if (!(path in acc)) {
