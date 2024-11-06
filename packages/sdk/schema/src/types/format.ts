@@ -18,15 +18,19 @@ export const BasePropertySchema = S.Struct({
 
 export type BaseProperty = S.Schema.Type<typeof BasePropertySchema>;
 
-//
-// Numbers
-//
+export const EmptySchema = S.extend(
+  BasePropertySchema,
+  S.Struct({
+    type: S.Enums(ScalarEnum),
+    format: S.Literal(FormatEnum.None),
+  }),
+).pipe(S.mutable);
 
 export const PercentSchema = S.extend(
   BasePropertySchema,
   S.Struct({
-    format: S.Literal(FormatEnum.Percent),
     type: S.Literal(ScalarEnum.Number),
+    format: S.Literal(FormatEnum.Percent),
     multipleOf: S.optional(DecimalPrecision),
   }),
 ).pipe(S.mutable);
@@ -34,19 +38,23 @@ export const PercentSchema = S.extend(
 export const CurrencySchema = S.extend(
   BasePropertySchema,
   S.Struct({
-    format: S.Literal(FormatEnum.Currency),
     type: S.Literal(ScalarEnum.Number),
+    format: S.Literal(FormatEnum.Currency),
     multipleOf: S.optional(DecimalPrecision),
     currency: S.optional(S.String),
   }),
 ).pipe(S.mutable);
 
-export const PropertySchema = S.Union(PercentSchema, CurrencySchema);
+export const PropertySchema = S.Union(EmptySchema, PercentSchema, CurrencySchema);
 
 export type Property = S.Schema.Type<typeof PropertySchema>;
 
 // TODO(burdon): Generic util to determine type from discriminated union.
-export const getPropertySchemaForFormat = (format: FormatEnum): S.Schema<any> | undefined => {
+export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> | undefined => {
+  if (format === undefined) {
+    return EmptySchema;
+  }
+
   for (const member of PropertySchema.members) {
     for (const prop of AST.getPropertySignatures(member.ast)) {
       if (prop.name === 'format' && prop.type._tag === 'Literal' && prop.type.literal === format) {

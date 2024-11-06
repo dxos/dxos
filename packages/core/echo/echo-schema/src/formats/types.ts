@@ -49,6 +49,8 @@ export const getScalarType = (property: JSONSchema.JsonSchema7): ScalarEnum | un
 export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
 
 export enum FormatEnum {
+  None = '',
+
   // TODO(burdon): Remove primitives from format and pass (type, format) tuple instead.
   /** @deprecated */
   String = 'string',
@@ -99,6 +101,9 @@ export const PropertyKind = {
  * Map of format to type.
  */
 export const formatToType: Record<FormatEnum, ScalarEnum> = {
+  // TODO(burdon): Can we remove this?
+  [FormatEnum.None]: undefined as any,
+
   // TODO(burdon): Remove.
   [FormatEnum.String]: ScalarEnum.String,
   [FormatEnum.Number]: ScalarEnum.Number,
