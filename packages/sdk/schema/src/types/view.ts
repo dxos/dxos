@@ -110,8 +110,9 @@ export class ViewProjection {
    */
   getFieldProjection(property: string): FieldProjectionType {
     const field = this._view.fields.find((f) => f.property === property) ?? { property };
-    const properties = this._schema.jsonSchema.properties![property] as any as PropertyType;
+    const properties = this._schema.jsonSchema.properties![property] as JsonSchemaType;
     return { ...field, ...properties };
+    // TODO(burdon): PropertySchema.decode();
   }
 
   /**
@@ -125,6 +126,7 @@ export class ViewProjection {
       field = { ...value };
       this._view.fields.push(field);
     }
+
     return field;
   };
 
@@ -140,6 +142,8 @@ export class ViewProjection {
       properties = { ...value } as JSONSchema.JsonSchema7;
       this._schema.jsonSchema.properties![property] = properties;
     }
+
+    // TODO(burdon): encode.
     return properties as PropertyType;
   }
 }

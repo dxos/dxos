@@ -35,7 +35,7 @@ export const Form = <T extends object>({
   Custom,
 }: FormProps<T>) => {
   // TODO(burdon): Type for useForm.
-  const { getInputProps, canSubmit, handleSubmit, getErrorValence, getErrorMessage } = useForm<T>({
+  const { canSubmit, handleSubmit, getInputProps, getErrorValence, getErrorMessage } = useForm<T>({
     schema,
     initialValues: values,
     // additionalValidation: (values) => {

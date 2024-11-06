@@ -46,23 +46,25 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
   );
   const [{ fieldSchema }, setSchema] = useState({ fieldSchema: getPropertySchemaForFormat(fieldProperties?.format) });
 
-  const calculateFieldSchema = useCallback((values: any) => {
+  // TODO(burdon): Called on every key press?
+  // TODO(burdon): If changed then create new/set type, etc.
+  const handleValueChanged = useCallback((values: any) => {
     setSchema({ fieldSchema: getPropertySchemaForFormat(values?.format) });
   }, []);
 
   useEffect(() => {
-    calculateFieldSchema(fieldProperties);
+    handleValueChanged(fieldProperties);
   }, [fieldProperties]);
+
+  const handleSelect = useCallback((field: FieldType) => {
+    setField((f) => (f === field ? undefined : field));
+  }, []);
 
   const handleAdd = useCallback(() => {
     const field = createUniqueFieldForView(view);
     view.fields.push(field);
     setField(field);
   }, [view]);
-
-  const handleSelect = useCallback((field: FieldType) => {
-    setField((f) => (f === field ? undefined : field));
-  }, []);
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
@@ -82,6 +84,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
 
   const handleSet = useCallback(
     (field: FieldType, props: FieldProjectionType) => {
+      // TODO(burdon): !!!
       projection.updateField(field);
       projection.updateFormat(field.property, props);
     },
@@ -126,11 +129,12 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
             autoFocus
             values={fieldProperties}
             schema={fieldSchema}
-            onValuesChanged={calculateFieldSchema}
+            onValuesChanged={handleValueChanged}
             onSave={(props) => handleSet(field, props)}
             Custom={(props) => (
               <>
-                {/* TODO(burdon): Move property here. */}
+                {/* TODO(burdon): Move property field here. */}
+                {/* TODO(burdon): Need to update type also. */}
                 <FormInput<PropertyType>
                   property='format'
                   label={t('field format label')}
