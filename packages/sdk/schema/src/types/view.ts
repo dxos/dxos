@@ -14,7 +14,7 @@ import {
   TypedObject,
 } from '@dxos/echo-schema';
 
-import { FormatSchema } from './format';
+import { PropertySchema, type PropertyType } from './format';
 
 /**
  * Stored field metadata (e.g., for UX).
@@ -91,7 +91,7 @@ export const createView = ({
 };
 
 // TODO(burdon): Field and Format are in different namespaces so we ideally shouldn't merge here.
-export const FieldProjectionSchema = S.extend(FieldSchema, FormatSchema);
+export const FieldProjectionSchema = S.extend(FieldSchema, PropertySchema);
 
 export type FieldProjectionType = S.Schema.Type<typeof FieldProjectionSchema>;
 
@@ -110,7 +110,7 @@ export class ViewProjection {
    */
   getFieldProjection(property: string): FieldProjectionType {
     const field = this._view.fields.find((f) => f.property === property) ?? { property };
-    const properties = this._schema.jsonSchema.properties![property] as any as FormatType;
+    const properties = this._schema.jsonSchema.properties![property] as any as PropertyType;
     return { ...field, ...properties };
   }
 
@@ -132,7 +132,7 @@ export class ViewProjection {
    *
    */
   // TODO(burdon): Move into echo-schema.
-  updateFormat(property: string, value: Partial<FormatType>): FormatType {
+  updateFormat(property: string, value: Partial<PropertyType>): PropertyType {
     let properties: JSONSchema.JsonSchema7 | undefined = this._schema.jsonSchema.properties![property];
     if (properties) {
       Object.assign(properties, value);
@@ -140,6 +140,6 @@ export class ViewProjection {
       properties = { ...value } as JSONSchema.JsonSchema7;
       this._schema.jsonSchema.properties![property] = properties;
     }
-    return properties as FormatType;
+    return properties as PropertyType;
   }
 }

@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type JSONSchema } from '@effect/schema';
-
 import { S } from '@dxos/effect';
 
 import { PropertyMeta } from './annotations';
@@ -147,6 +145,21 @@ const _JsonSchemaType = S.mutable(
       ),
     ),
 
+    /**
+     * Currency symbol.
+     */
+    currency: S.optional(S.String),
+
+    reference: S.optional(
+      S.mutable(
+        S.Struct({
+          schema: S.suspend(() => JsonSchemaType),
+          schemaVersion: S.optional(S.String),
+          schemaObject: S.optional(S.String),
+        }),
+      ),
+    ),
+
     // TODO(dmaretskyi): Remove echo namespace.
     echo: S.optional(
       S.mutable(
@@ -169,11 +182,6 @@ const _JsonSchemaType = S.mutable(
         }),
       ),
     ),
-
-    /**
-     * Currency symbol.
-     */
-    currency: S.optional(S.String),
   }),
 );
 

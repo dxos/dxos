@@ -55,3 +55,26 @@ export const CustomAnnotations = {
   // title: AST.TitleAnnotationId,
   // description: AST.DescriptionAnnotationId,
 };
+<<<<<<< HEAD
+=======
+
+/**
+ * Mixin of format annotation values.
+ */
+// TODO(burdon): Rename PropertySchema.
+// TODO(burdon): Generate from annotations?
+// TODO(dmaretskyi): Remove.
+export const FormatSchema = S.Struct({
+  type: S.String, // TODO(burdon): Typedef.
+  format: S.optional(S.Enums(FormatEnum)),
+
+  title: S.optional(S.String),
+  description: S.optional(S.String),
+  multipleOf: S.optional(S.Number),
+
+  // Custom.
+  currency: S.optional(S.String),
+});
+
+export type FormatType = S.Schema.Type<typeof FormatSchema>;
+>>>>>>> e68a3d779f8c441bfbe9429a6789c2c2bf5023fa

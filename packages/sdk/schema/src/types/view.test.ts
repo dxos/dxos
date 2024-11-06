@@ -18,6 +18,7 @@ import {
   getTypename,
   ref,
   toJsonSchema,
+  type JsonPath,
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
@@ -91,6 +92,10 @@ describe('view', () => {
     const { db } = await builder.createDatabase();
     const registry = new MutableSchemaRegistry(db);
 
+    class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
+      name: S.String,
+    }) {}
+
     const schema = createStoredSchema({
       typename: 'example.com/type/Person',
       version: '0.1.0',
@@ -99,6 +104,7 @@ describe('view', () => {
           name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
           email: Format.Email,
           salary: Format.Currency({ code: 'usd', decimals: 2 }),
+          org: ref(Org),
         }),
       ),
     });
@@ -107,7 +113,7 @@ describe('view', () => {
 
     const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
     const projection = new ViewProjection(mutable, view);
-    expect(view.fields).to.have.length(3);
+    expect(view.fields).to.have.length(4);
 
     {
       const props = projection.getFieldProjection('name');
@@ -150,23 +156,19 @@ describe('view', () => {
       });
     }
 
-    // TODO(dmaretskyi): References.
-    // if (false) {
-    //   const [orgProps, orgSchema] = projection.getFieldProperties(schema, view, 'org');
-    //   expect(orgProps).toEqual({
-    //     projection: 'org',
-    //     referenceProperty: 'name',
-    //   });
-    //   expect(orgSchema).toEqual({
-    //     $id: '/echo/ref',
-    //     reference: {
-    //       schema: {
-    //         $ref: 'dxn:type:example.com/type/Org', // Same as $id of the org schema.
-    //       },
-    //       schemaVersion: '0.1.0',
-    //       schemaObject: 'dnx:echo:@:XXXXXXXXX', // Temp.
-    //     },
-    //   });
-    // }
+    projection.updateField({ property: 'org', referenceProperty: 'name' as JsonPath });
+
+    const props = projection.getFieldProjection('org');
+    expect(props).toEqual({
+      property: 'org',
+      referenceProperty: 'name',
+      $id: '/schemas/echo/ref',
+      reference: {
+        schema: {
+          $ref: 'dxn:type:example.com/type/Org', // Same as $id of the org schema.
+        },
+        schemaVersion: '0.1.0',
+      },
+    });
   });
 });
