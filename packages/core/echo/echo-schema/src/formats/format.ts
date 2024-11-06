@@ -2,13 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S } from '@dxos/effect';
-
 import * as Date_ from './date';
 import * as Number_ from './number';
 import { CurrencyAnnotationId } from './number';
 import * as String_ from './string';
-import { FormatAnnotationId, FormatEnum } from './types';
+import { FormatAnnotationId } from './types';
 
 // TODO(burdon): Consider factoring out to separate `@dxos/json-schema`
 
@@ -57,22 +55,3 @@ export const CustomAnnotations = {
   // title: AST.TitleAnnotationId,
   // description: AST.DescriptionAnnotationId,
 };
-
-/**
- * Mixin of format annotation values.
- */
-// TODO(burdon): Rename PropertySchema.
-// TODO(burdon): Generate from annotations?
-export const FormatSchema = S.Struct({
-  type: S.String, // TODO(burdon): Typedef.
-  format: S.optional(S.Enums(FormatEnum)),
-
-  title: S.optional(S.String),
-  description: S.optional(S.String),
-  multipleOf: S.optional(S.Number),
-
-  // Custom.
-  currency: S.optional(S.String),
-});
-
-export type FormatType = S.Schema.Type<typeof FormatSchema>;

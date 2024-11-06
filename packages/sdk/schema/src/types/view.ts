@@ -7,14 +7,14 @@ import {
   JsonPath,
   type JSONSchema,
   JsonSchemaType,
-  FormatSchema,
-  type FormatType,
   type MutableSchema,
   QueryType,
   type ReactiveObject,
   S,
   TypedObject,
 } from '@dxos/echo-schema';
+
+import { FormatSchema } from './format';
 
 /**
  * Stored field metadata (e.g., for UX).
