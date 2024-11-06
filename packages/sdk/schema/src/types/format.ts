@@ -159,13 +159,6 @@ export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> |
 
   for (const member of PropertySchema.members) {
     for (const prop of AST.getPropertySignatures(member.ast)) {
-      log.info('', {
-        name: prop.name,
-        typeTag: prop.type._tag,
-        format: prop.type.literal,
-        expect: format,
-        match: prop.name === 'format' && prop.type._tag === 'Literal' && prop.type.literal === format,
-      });
       if (prop.name === 'format' && prop.type._tag === 'Literal' && prop.type.literal === format) {
         return member;
       }
