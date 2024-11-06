@@ -12,12 +12,11 @@ import React, {
   forwardRef,
   type PropsWithChildren,
   useCallback,
-  useLayoutEffect,
+  useEffect,
   useState,
 } from 'react';
 
 import { type DxAxisResize, type DxEditRequest, type DxGridCellsSelect, DxGrid as NaturalDxGrid } from '@dxos/lit-grid';
-import { useForwardedRef } from '@dxos/react-ui';
 
 type DxGridElement = NaturalDxGrid;
 
@@ -106,22 +105,36 @@ const GRID_CONTENT_NAME = 'GridContent';
 
 const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>((props, forwardedRef) => {
   const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME, props.__gridScope);
-  const dxGrid = useForwardedRef(forwardedRef);
+  const [dxGrid, setDxGridInternal] = useState<NaturalDxGrid | null>(null);
 
-  // Needed instead of `useEffect` to ensure the DxGrid ref is defined.
-  useLayoutEffect(() => {
-    if (dxGrid.current && props.getCells) {
-      dxGrid.current.getCells = props.getCells;
-      dxGrid.current.requestUpdate('initialCells');
+  // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
+  const setDxGrid = useCallback(
+    (nextDxGrid: NaturalDxGrid | null) => {
+      setDxGridInternal(nextDxGrid);
+      if (forwardedRef) {
+        if (typeof forwardedRef === 'function') {
+          forwardedRef?.(nextDxGrid);
+        } else {
+          forwardedRef.current = nextDxGrid;
+        }
+      }
+    },
+    [forwardedRef, dxGrid],
+  );
+
+  useEffect(() => {
+    if (dxGrid && props.getCells) {
+      dxGrid.getCells = props.getCells;
+      dxGrid.requestUpdate('initialCells');
     }
-  }, [props.getCells]);
+  }, [props.getCells, dxGrid]);
 
   const handleEdit = useCallback((event: DxEditRequest) => {
     setEditBox(event.cellBox);
     setEditing({ index: event.cellIndex, initialContent: event.initialContent });
   }, []);
 
-  return <DxGrid {...props} gridId={id} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={dxGrid} />;
+  return <DxGrid {...props} gridId={id} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={setDxGrid} />;
 });
 
 GridContent.displayName = GRID_CONTENT_NAME;

@@ -17,11 +17,12 @@ const sortPlugin = ({ name: a }: PluginMeta, { name: b }: PluginMeta) => a?.loca
 // TODO(burdon): Factor out common defs?
 const core = [
   'dxos.org/plugin/deck',
-  'dxos.org/plugin/space',
-  'dxos.org/plugin/stack',
+  'dxos.org/plugin/files',
+  'dxos.org/plugin/manager',
   'dxos.org/plugin/observability',
   'dxos.org/plugin/registry',
-  'dxos.org/plugin/settings',
+  'dxos.org/plugin/space',
+  'dxos.org/plugin/stack',
 ];
 
 export type SettingsDialogProps = {

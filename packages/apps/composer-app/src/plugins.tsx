@@ -86,6 +86,7 @@ export const core = ({ isPwa, isSocket }: PluginConfig): PluginMeta[] =>
     // Data integrations
     ClientMeta,
     SpaceMeta,
+    FilesMeta,
 
     // Framework extensions
     // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
