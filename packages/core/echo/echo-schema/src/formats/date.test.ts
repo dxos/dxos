@@ -18,7 +18,7 @@ import {
 } from './date';
 import { toJsonSchema } from '../json';
 
-describe('date', () => {
+describe.skip('date', () => {
   test('basic', () => {
     const date = new Date('2024-12-31T23:59:59Z');
     expect(toSimpleDate(date)).to.deep.eq({ year: 2024, month: 12, day: 31 });

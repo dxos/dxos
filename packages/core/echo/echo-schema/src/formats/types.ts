@@ -20,10 +20,6 @@ export type ScalarType =
   | JSONSchema.JsonSchema7Ref;
 
 export const getScalarType = (property: JSONSchema.JsonSchema7): ScalarEnum | undefined => {
-  if ((property as any).$ref) {
-    return ScalarEnum.Ref;
-  }
-
   switch ((property as any).type) {
     case 'string':
       return ScalarEnum.String;

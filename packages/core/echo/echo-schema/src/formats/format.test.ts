@@ -9,6 +9,7 @@ import { S } from '@dxos/effect';
 import { Format } from './format';
 import { ScalarEnum, getScalarType } from './types';
 import { toJsonSchema } from '../json';
+import { log } from '@dxos/log';
 
 // TODO(burdon): Are transformation viable with automerge?
 
@@ -32,7 +33,7 @@ describe('formats', () => {
     const data: TestType = {
       name: 'Alice',
       email: 'alice@example.com',
-      birthday: { year: 1999, month: 6, day: 11 },
+      birthday: '1999-06-11',
     };
 
     console.log(JSON.stringify({ jsonSchema, data }, null, 2));
@@ -69,11 +70,12 @@ describe('formats', () => {
 
     {
       const prop = jsonSchema.properties['birthday' as const];
+      log.info('', { prop });
       expect(getScalarType(prop)).to.eq(ScalarEnum.String);
       expect(prop).includes({
         type: 'string',
         // TODO(burdon): Not present!
-        // format: 'date',
+        format: 'date',
       });
     }
   });
