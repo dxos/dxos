@@ -42,13 +42,9 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
         return Number.isNaN(num) ? null : num;
       }
 
-      case ScalarEnum.String: {
+      case ScalarEnum.String:
+      case ScalarEnum.Ref:
         return String(value);
-      }
-
-      case ScalarEnum.Ref: {
-        return String(value);
-      }
 
       default: {
         return value;
@@ -57,31 +53,6 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
   }
 
   switch (format) {
-    //
-    // Boolean.
-    //
-
-    case FormatEnum.Boolean: {
-      if (typeof value === 'string') {
-        const lowercaseValue = value.toLowerCase();
-        if (lowercaseValue === '0' || lowercaseValue === 'false') {
-          return false;
-        } else if (lowercaseValue === '1' || lowercaseValue === 'true') {
-          return true;
-        }
-      }
-      return Boolean(value);
-    }
-
-    //
-    // Numbers.
-    //
-
-    case FormatEnum.Number: {
-      const num = Number(value);
-      return Number.isNaN(num) ? null : num;
-    }
-
     // TODO(burdon): Percent is not part of the data format; it's just a diplay format.
     // case FormatEnum.Percent: {
     //   const num = Number(value);
@@ -112,8 +83,7 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
     // Strings.
     //
 
-    case FormatEnum.Markdown:
-    case FormatEnum.String: {
+    case FormatEnum.Markdown: {
       return String(value);
     }
 
@@ -132,13 +102,14 @@ export type CellClassesForFieldTypeProps = {
 export const cellClassesForFieldType = ({ type, format }: CellClassesForFieldTypeProps): string[] | undefined => {
   if (!format) {
     switch (type) {
-      case ScalarEnum.Number: {
+      case ScalarEnum.Number:
         return ['text-right', 'font-mono'];
-      }
-
-      case ScalarEnum.Boolean: {
+      case ScalarEnum.Boolean:
         return ['text-right', 'font-mono'];
-      }
+      case ScalarEnum.String:
+        return undefined;
+      case ScalarEnum.Ref:
+        return undefined;
 
       default: {
         return undefined;
@@ -147,12 +118,7 @@ export const cellClassesForFieldType = ({ type, format }: CellClassesForFieldTyp
   }
 
   switch (format) {
-    case FormatEnum.Number:
-      return ['text-right', 'font-mono'];
-    case FormatEnum.Boolean:
-      return ['text-right', 'font-mono'];
     case FormatEnum.Markdown:
-    case FormatEnum.String:
       return undefined;
     case FormatEnum.Timestamp:
     case FormatEnum.DateTime:

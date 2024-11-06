@@ -43,17 +43,9 @@ export const formatValue = ({ type, format, value, locale = undefined }: ValueFo
   }
 
   switch (format) {
-    case FormatEnum.Boolean: {
-      return (value as boolean).toLocaleString().toUpperCase();
-    }
-
     //
     // Numbers.
     //
-
-    case FormatEnum.Number: {
-      return value.toLocaleString(locale);
-    }
 
     case FormatEnum.Percent: {
       return (value as number) * 100 + '%';

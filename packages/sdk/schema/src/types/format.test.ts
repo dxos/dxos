@@ -74,7 +74,6 @@ describe('format', () => {
     const prop: Partial<PropertyType> = {
       property: 'org',
       type: ScalarEnum.Ref,
-      format: FormatEnum.Ref,
     };
 
     // Invalid.
@@ -93,7 +92,6 @@ describe('format', () => {
     const prop: Partial<PropertyType> = {
       property: 'org',
       type: ScalarEnum.Ref,
-      format: FormatEnum.Ref,
     };
 
     const schema = getPropertySchemaForFormat(prop.format);
