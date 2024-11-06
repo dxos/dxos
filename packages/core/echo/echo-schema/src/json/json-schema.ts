@@ -269,7 +269,7 @@ const objectToEffectSchema = (
     }
   }
 
-  let schemaWithoutEchoId: S.Schema<any, any, unknown>;
+  let schema: S.Schema<any, any, unknown>;
   if (root.patternProperties) {
     invariant(propertyList.length === 0, 'pattern properties mixed with regular properties are not supported');
     invariant(
@@ -277,26 +277,24 @@ const objectToEffectSchema = (
       'only one pattern property is supported',
     );
 
-    schemaWithoutEchoId = S.Record({ key: S.String, value: toEffectSchema(root.patternProperties[''], defs) });
+    schema = S.Record({ key: S.String, value: toEffectSchema(root.patternProperties[''], defs) });
   } else if (typeof root.additionalProperties !== 'object') {
-    schemaWithoutEchoId = S.Struct(fields);
+    schema = S.Struct(fields);
   } else {
     const indexValue = toEffectSchema(root.additionalProperties, defs);
     if (propertyList.length > 0) {
-      schemaWithoutEchoId = S.Struct(fields, { key: S.String, value: indexValue });
+      schema = S.Struct(fields, { key: S.String, value: indexValue });
     } else {
-      schemaWithoutEchoId = S.Record({ key: S.String, value: indexValue });
+      schema = S.Record({ key: S.String, value: indexValue });
     }
   }
 
-  if (!isEchoObject) {
-    return schemaWithoutEchoId as any;
-  } else {
-    invariant(immutableIdField, 'no id in echo type');
-    const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
-    const annotations = jsonSchemaFieldsToAnnotations(root);
-    return schema.annotations(annotations) as any;
+  if (immutableIdField) {
+    schema = S.extend(S.mutable(schema), S.Struct({ id: immutableIdField }));
   }
+
+  const annotations = jsonSchemaFieldsToAnnotations(root);
+  return schema.annotations(annotations) as any;
 };
 
 const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
