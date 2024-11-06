@@ -6,7 +6,7 @@ import { openSearchPanel } from '@codemirror/search';
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 
-import { type FileInfo, LayoutAction, type LayoutCoordinate, useIntentDispatcher } from '@dxos/app-framework';
+import { type FileInfo, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
 import {
@@ -44,7 +44,6 @@ const DEFAULT_VIEW_MODE: EditorViewMode = 'preview';
 export type MarkdownEditorProps = {
   id: string;
   role?: string;
-  coordinate?: LayoutCoordinate;
   inputMode?: EditorInputMode;
   scrollPastEnd?: boolean;
   toolbar?: boolean;

@@ -89,7 +89,9 @@ const GridRoot = ({
       setEditBox={setEditBox}
       scope={__gridScope}
     >
-      {children}
+      <div className='dx-grid-host' style={{ display: 'contents' }}>
+        {children}
+      </div>
     </GridProvider>
   );
 };

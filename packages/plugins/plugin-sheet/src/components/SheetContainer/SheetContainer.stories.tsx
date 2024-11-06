@@ -11,6 +11,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { SheetContainer } from './SheetContainer';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
+import translations from '../../translations';
 import { SheetType } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
 
@@ -38,6 +39,7 @@ const meta: Meta = {
       classNames: 'grid grid-cols-1 grid-rows-[min-content_minmax(0,1fr)_min-content]',
     }),
   ],
+  parameters: { translations },
 };
 
 export default meta;

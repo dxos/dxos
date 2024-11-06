@@ -622,9 +622,7 @@ export class DxGrid extends LitElement {
   }
 
   private cellActive(c: number | string, r: number | string, plane: DxGridPlane): boolean {
-    return (
-      this.focusActive && this.focusedCell.plane === plane && this.focusedCell.col === c && this.focusedCell.row === r
-    );
+    return this.focusedCell.plane === plane && this.focusedCell.col === c && this.focusedCell.row === r;
   }
 
   private setFocusedCell(nextCoords: DxGridPosition) {

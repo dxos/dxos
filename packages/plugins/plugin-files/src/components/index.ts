@@ -6,4 +6,4 @@ import { lazy } from 'react';
 
 export * from './FilesSettings';
 
-export const LocalFileMain = lazy(() => import('./LocalFileMain'));
+export const LocalFileContainer = lazy(() => import('./LocalFileContainer'));
