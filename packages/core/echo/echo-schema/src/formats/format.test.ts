@@ -29,14 +29,14 @@ describe('formats', () => {
 
     const jsonSchema = toJsonSchema(TestSchema);
 
-    // TODO(burdon): Validate values (e.g., email, pattern).
     const data: TestType = {
       name: 'Alice',
       email: 'alice@example.com',
       birthday: '1999-06-11',
     };
 
-    console.log(JSON.stringify({ jsonSchema, data }, null, 2));
+    const validate = S.validateSync(TestSchema);
+    validate(data);
 
     {
       const prop = jsonSchema.properties!['active' as const];
@@ -74,7 +74,6 @@ describe('formats', () => {
       expect(getScalarType(prop)).to.eq(ScalarEnum.String);
       expect(prop).includes({
         type: 'string',
-        // TODO(burdon): Not present!
         format: 'date',
       });
     }
