@@ -85,7 +85,6 @@ export enum FormatEnum {
   Text = 'text',
   URI = 'uri',
   UUID = 'uuid',
-  // TODO(burdon): Phone number?
 
   //
   // { type: 'number' }
