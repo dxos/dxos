@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { JSONSchema, Schema as S } from '@effect/schema';
 import { expect, test } from 'vitest';
 

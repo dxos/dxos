@@ -5,8 +5,6 @@
 import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { type HasId, type JsonSchemaType, schemaVariance } from '../ast';
-import { toEffectSchema, toJsonSchema } from '../json';
 import {
   addFieldsToSchema,
   removeFieldsFromSchema,
@@ -14,6 +12,8 @@ import {
   updateFieldsInSchema,
 } from './manipulation';
 import { StoredSchema } from './types';
+import { type HasId, type JsonSchemaType, schemaVariance } from '../ast';
+import { toEffectSchema, toJsonSchema } from '../json';
 
 interface MutableSchemaConstructor extends S.Schema<MutableSchema> {
   new (): HasId;

@@ -6,6 +6,8 @@ import { type Types } from 'effect';
 
 import { AST, JSONSchema, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
+import { removeUndefinedProperties } from '@dxos/util';
 
 import {
   getObjectAnnotation,
@@ -18,9 +20,6 @@ import {
 } from '../ast';
 import { CustomAnnotations } from '../formats';
 import { createEchoReferenceSchema, Expando, ref, type JsonSchemaReferenceInfo } from '../handler';
-import { DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { removeUndefinedProperties } from '@dxos/util';
 
 /**
  * @internal

@@ -63,6 +63,7 @@ export const CustomAnnotations = {
  */
 // TODO(burdon): Rename PropertySchema.
 // TODO(burdon): Generate from annotations?
+// TODO(dmaretskyi): Remove.
 export const FormatSchema = S.Struct({
   type: S.String, // TODO(burdon): Typedef.
   format: S.optional(S.Enums(FormatEnum)),

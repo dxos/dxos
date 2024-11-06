@@ -7,14 +7,12 @@ import { describe, expect, test } from 'vitest';
 import { type AST, type JSONSchema, S } from '@dxos/effect';
 import { deepMapValues } from '@dxos/util';
 
+import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
 import { PropertyMeta } from '../ast';
 import { FormatAnnotationId } from '../formats';
+import { Email } from '../formats/string';
 import { ref } from '../handler';
 import { TypedObject } from '../object';
-import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
-import { log } from '@dxos/log';
-import { Email } from '../formats/string';
-import { pattern } from '@effect/schema/Schema';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {
