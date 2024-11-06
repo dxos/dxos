@@ -15,6 +15,7 @@ import {
   type FieldType,
   type ViewType,
   ViewProjection,
+  getPropertySchemaForFormat,
 } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
@@ -36,10 +37,17 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
   const { t } = useTranslation(translationKey);
   const projection = useMemo(() => new ViewProjection(schema, view), [schema, view]);
   const [field, setField] = useState<FieldType | undefined>();
+
+  // TODO(ZaymonFC): Projection should return `Property` instead of `FieldProjectionType`
   const fieldProperties = useMemo(
-    () => (field ? projection.getFieldProjection(field.property) : undefined),
+    () => (field ? (projection.getFieldProjection(field.property) as any) : undefined),
     [field, view],
   );
+  const [{ fieldSchema }, setSchema] = useState({ fieldSchema: getPropertySchemaForFormat(fieldProperties.format) });
+
+  const handleFieldValueChange = useCallback((values: any) => {
+    setSchema({ fieldSchema: getPropertySchemaForFormat(values.format) });
+  }, []);
 
   const handleAdd = useCallback(() => {
     const field = createUniqueFieldForView(view);
@@ -75,6 +83,10 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
     [view.fields],
   );
 
+  if (!fieldSchema) {
+    return null;
+  }
+
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
       <List.Root<FieldType>
@@ -109,6 +121,8 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
           classNames='p-2'
           autoFocus
           field={fieldProperties}
+          schema={fieldSchema}
+          onValuesChanged={handleFieldValueChange}
           onSave={(props) => handleSet(field, props)}
         />
       )}
