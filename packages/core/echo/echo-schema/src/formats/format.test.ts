@@ -11,8 +11,6 @@ import { Format } from './format';
 import { ScalarEnum, getScalarType } from './types';
 import { toJsonSchema } from '../json';
 
-// TODO(burdon): Are transformation viable with automerge?
-
 describe('formats', () => {
   test('annotations', ({ expect }) => {
     const TestSchema = S.Struct({

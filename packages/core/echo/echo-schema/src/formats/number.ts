@@ -29,6 +29,14 @@ export type PercentAnnotation = {
 };
 
 /**
+ * Integer.
+ */
+export const Integer = () =>
+  S.Number.pipe(S.int()).annotations({
+    [AST.TitleAnnotationId]: FormatEnum.Integer,
+  });
+
+/**
  * Percent.
  */
 // TODO(burdon): Define min/max (e.g., 0, 1).

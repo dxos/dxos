@@ -19,21 +19,37 @@ export const Email = S.String.pipe(
   }),
 );
 
-// TODO(burdon): Implement.
-export const Formula = S.String;
-
 /**
- * Hostname
- * https://datatracker.ietf.org/doc/html/rfc1123#section-2.1
+ *
  */
 // TODO(burdon): Implement.
-export const Hostname = S.String;
+export const Formula = S.String.annotations({
+  [FormatAnnotationId]: FormatEnum.Formula,
+});
 
 /**
  *
  */
 // TODO(burdon): Implement.
-export const JSON = S.String;
+export const Hostname = S.String.annotations({
+  [FormatAnnotationId]: FormatEnum.Hostname,
+});
+
+/**
+ *
+ */
+// TODO(burdon): Implement.
+export const JSON = S.String.annotations({
+  [FormatAnnotationId]: FormatEnum.JSON,
+});
+
+/**
+ *
+ */
+// TODO(burdon): Implement.
+export const Markdown = S.String.annotations({
+  [FormatAnnotationId]: FormatEnum.Markdown,
+});
 
 /**
  * Regex
@@ -41,7 +57,9 @@ export const JSON = S.String;
  * https://ecma-international.org/publications-and-standards/standards/ecma-262
  */
 // TODO(burdon): Implement.
-export const Regex = S.String;
+export const Regex = S.String.annotations({
+  [FormatAnnotationId]: FormatEnum.Regex,
+});
 
 /**
  * URI (RFC 3986)
@@ -62,5 +80,6 @@ export const URI = S.String.pipe(
  */
 // TODO(burdon): Implement.
 export const UUID = S.String.annotations({
+  [FormatAnnotationId]: FormatEnum.UUID,
   examples: ['3e4666bf-d5e5-4aa7-b8ce-cefe41c7568a'],
 });

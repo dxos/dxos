@@ -2,16 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Date_ from './date';
-import * as Number_ from './number';
+import * as DateUtil from './date';
+import * as NumberUtil from './number';
 import { CurrencyAnnotationId } from './number';
-import * as String_ from './string';
+import * as StringUtil from './string';
 import { FormatAnnotationId } from './types';
 
 // TODO(burdon): Consider factoring out to separate `@dxos/json-schema`
-// TODO(burdon): Arrays, maps, enums, etc.
 // TODO(burdon): Media encoding.
-//  https://json-schema.org/understanding-json-schema/reference/non_json_data
+//  - https://json-schema.org/understanding-json-schema/reference/non_json_data
 
 /**
  * Formats.
@@ -21,23 +20,27 @@ import { FormatAnnotationId } from './types';
 // TODO(burdon): Add fields for `examples`, `message`, etc.
 export namespace Format {
   // Strings
-  export const Email = String_.Email;
-  export const Formula = String_.Formula;
-  export const Hostname = String_.Hostname;
-  export const JSON = String_.JSON;
-  export const Regex = String_.Regex;
-  export const URI = String_.URI;
-  export const UUID = String_.UUID;
+  export const Email = StringUtil.Email;
+  export const Formula = StringUtil.Formula;
+  export const Hostname = StringUtil.Hostname;
+  export const JSON = StringUtil.JSON;
+  export const Markdown = StringUtil.Markdown;
+  export const Regex = StringUtil.Regex;
+  export const URI = StringUtil.URI;
+  export const UUID = StringUtil.UUID;
 
   // Numbers
-  export const Currency = Number_.Currency;
-  export const Percent = Number_.Percent;
+  // TODO(burdon): BigInt.
+  export const Currency = NumberUtil.Currency;
+  export const Integer = NumberUtil.Integer;
+  export const Percent = NumberUtil.Percent;
+  export const Timestamp = NumberUtil.Timestamp;
 
   // Dates and times
-  export const DateTime = Date_.DateTime;
-  export const Date = Date_.DateOnly;
-  export const Time = Date_.TimeOnly;
-  export const Duration = Date_.Duration;
+  export const DateTime = DateUtil.DateTime;
+  export const Date = DateUtil.DateOnly;
+  export const Time = DateUtil.TimeOnly;
+  export const Duration = DateUtil.Duration;
 }
 
 /**

@@ -19,15 +19,13 @@ import { PropertySchema, type PropertyType } from './format';
 /**
  * Stored field metadata (e.g., for UX).
  */
-export const FieldSchema = S.mutable(
-  S.Struct({
-    // TODO(burdon): Property or path?
-    property: S.String,
-    visible: S.optional(S.Boolean),
-    size: S.optional(S.Number),
-    referenceProperty: S.optional(JsonPath),
-  }),
-);
+export const FieldSchema = S.Struct({
+  // TODO(burdon): Property or path?
+  property: S.String,
+  visible: S.optional(S.Boolean),
+  size: S.optional(S.Number),
+  referenceProperty: S.optional(JsonPath),
+}).pipe(S.mutable);
 
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
 
@@ -98,7 +96,7 @@ export type FieldProjectionType = S.Schema.Type<typeof FieldProjectionSchema>;
 /**
  * Wrapper for View that manages Field and Format updates.
  */
-// TODO(burdon): Form values adapater for ViewEditor (schema).
+// TODO(burdon): Form values adapter for ViewEditor (schema).
 export class ViewProjection {
   constructor(
     // TODO(burdon): This could be StoredSchema?
@@ -113,6 +111,7 @@ export class ViewProjection {
   getFieldProjection(property: string): FieldProjectionType {
     const field = this._view.fields.find((f) => f.property === property) ?? { property };
     const properties = this._schema.jsonSchema.properties![property] as JsonSchemaType;
+    console.log('getFieldProjection', JSON.stringify({ field, properties }, null, 2));
     return { ...field, ...properties };
     // TODO(burdon): Map ref to $id/ref. Custom selector.
     // TODO(burdon): Recreate type if format has changed.

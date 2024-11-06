@@ -73,8 +73,8 @@ export const parseValue = (type: FormatEnum, value: any) => {
     // Strings.
     //
 
-    case FormatEnum.String:
-    case FormatEnum.Text: {
+    case FormatEnum.Markdown:
+    case FormatEnum.String: {
       return String(value);
     }
 
@@ -91,8 +91,8 @@ export const cellClassesForFieldType = (format: FormatEnum | undefined): string[
       return ['text-right', 'font-mono'];
     case FormatEnum.Boolean:
       return ['text-right', 'font-mono'];
+    case FormatEnum.Markdown:
     case FormatEnum.String:
-    case FormatEnum.Text:
       return undefined;
     case FormatEnum.Timestamp:
     case FormatEnum.DateTime:

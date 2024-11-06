@@ -12,7 +12,7 @@ import {
   PropertySchema,
   type PropertyType,
   getSchemaProperties,
-  FormatSchema,
+  formatToSchema,
 } from './format';
 
 describe('format', () => {
@@ -22,7 +22,7 @@ describe('format', () => {
     };
 
     const schema = getPropertySchemaForFormat(prop.format);
-    expect(schema).to.eq(FormatSchema[FormatEnum.None]);
+    expect(schema).to.eq(formatToSchema[FormatEnum.None]);
 
     // TODO(burdon): Validation options (e.g., exact).
     expect(() => {
@@ -85,7 +85,7 @@ describe('format', () => {
 
     // Valid.
     {
-      prop.refSchema = 'example.com/type/Test';
+      prop.referenceSchema = 'dxn:type:example.com/type/Test';
       expect(validate(prop)).to.deep.eq(prop);
     }
   });

@@ -4,7 +4,7 @@
 
 import jp from 'jsonpath';
 
-import { FormatEnum, type JsonPath } from '@dxos/echo-schema';
+import { createJsonPath, FormatEnum, type JsonPath } from '@dxos/echo-schema';
 import { AST, type S, isLeafType, visit } from '@dxos/effect';
 
 import { type FieldType, type ViewType } from './view';
@@ -17,7 +17,7 @@ export const getUniqueProperty = (view: ViewType): JsonPath => {
     const property = `prop_${n++}`;
     const idx = view.fields.findIndex((field) => field.property === property);
     if (idx === -1) {
-      return property as JsonPath;
+      return createJsonPath(property);
     }
   }
 };

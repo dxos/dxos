@@ -39,16 +39,16 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
   const projection = useMemo(() => new ViewProjection(schema, view), [schema, view]);
   const [field, setField] = useState<FieldType | undefined>();
 
-  // TODO(ZaymonFC): Projection should return `Property` instead of `FieldProjectionType`
   const fieldProperties = useMemo(
     () => (field ? (projection.getFieldProjection(field.property) as any) : undefined),
     [field, view],
   );
   const [{ fieldSchema }, setSchema] = useState({ fieldSchema: getPropertySchemaForFormat(fieldProperties?.format) });
 
-  // TODO(burdon): Called on every key press?
-  // TODO(burdon): If changed then create new/set type, etc.
-  const handleValueChanged = useCallback((values: any) => {
+  // TODO(burdon): Update object type (field) when format changes (get from FormatSchema map).
+  // TODO(burdon): Handle changes to `property` (e.g., uniqueness)?
+  const handleValueChanged = useCallback((values: PropertyType) => {
+    // TODO(burdon): Log.
     setSchema({ fieldSchema: getPropertySchemaForFormat(values?.format) });
   }, []);
 

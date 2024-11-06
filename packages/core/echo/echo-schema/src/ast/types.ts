@@ -17,6 +17,9 @@ export interface HasId {
 // Branded type.
 export type JsonPath = string & { __JsonPath: true };
 
+// TODO(burdon): Check validity.
+export const createJsonPath = (path: string): JsonPath => path as JsonPath;
+
 /**
  * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
  * @example $.name

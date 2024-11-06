@@ -13,12 +13,12 @@ import {
   FormatAnnotationId,
   TypedObject,
   create,
+  createJsonPath,
   createReferenceAnnotation,
   createStoredSchema,
   getTypename,
   ref,
   toJsonSchema,
-  type JsonPath,
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
@@ -156,7 +156,7 @@ describe('view', () => {
       });
     }
 
-    projection.updateField({ property: 'org', referenceProperty: 'name' as JsonPath });
+    projection.updateField({ property: 'org', referenceProperty: createJsonPath('name') });
 
     const props = projection.getFieldProjection('org');
     expect(props).toEqual({

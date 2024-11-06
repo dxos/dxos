@@ -73,6 +73,8 @@ export const toSimpleDateTime = (date: Date): SimpleDateTime => ({
  * https://effect.website/docs/guides/schema/transformations#date-transformations
  */
 
+// TODO(burdon): Consider if transformations should be supported with Automerge.
+
 /**
  * Format: 2018-11-13
  */

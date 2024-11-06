@@ -20,13 +20,16 @@ export const DecimalPrecision = S.transform(S.Number, S.Number, {
  * Base schema.
  */
 export const BasePropertySchema = S.Struct({
+  // NOTE: The property is not part of the JsonSchemaType property object.
   property: S.String.annotations({ [AST.TitleAnnotationId]: 'Property' }).pipe(S.pattern(/\w+/)),
+
   title: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Title' })),
   description: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Description' })),
 });
 
 export type BaseProperty = S.Schema.Type<typeof BasePropertySchema>;
 
+// TODO(burdon): Provenance annotation (field, prop).
 const extend = (format: FormatEnum, type: ScalarEnum, fields = {}) =>
   S.extend(
     BasePropertySchema,
@@ -41,7 +44,7 @@ const extend = (format: FormatEnum, type: ScalarEnum, fields = {}) =>
  * Map of schema definitions.
  */
 // TODO(burdon): Translations?
-export const FormatSchema: Record<FormatEnum, S.Schema<any>> = {
+export const formatToSchema: Record<FormatEnum, S.Schema<any>> = {
   [FormatEnum.None]: S.extend(
     BasePropertySchema,
     S.Struct({
@@ -58,11 +61,12 @@ export const FormatSchema: Record<FormatEnum, S.Schema<any>> = {
   [FormatEnum.Number]: extend(FormatEnum.Number, ScalarEnum.Number),
   [FormatEnum.Boolean]: extend(FormatEnum.Boolean, ScalarEnum.Boolean),
   [FormatEnum.Ref]: extend(FormatEnum.Ref, ScalarEnum.Ref, {
-    // TODO(burdon): Annotation to store on View's field (not schema property?)
-    refProperty: S.optional(S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Lookup property' })),
+    // TODO(burdon): Annotation to store on View's field.
+    referenceProperty: S.optional(S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Lookup property' })),
 
-    // TODO(burdon): !!!
-    refSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
+    // TODO(burdon): Needs custom selector.
+    // TODO(burdon): This needs to map onto $id and reference properties.
+    referenceSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
   }),
 
   //
@@ -72,9 +76,10 @@ export const FormatSchema: Record<FormatEnum, S.Schema<any>> = {
   [FormatEnum.DID]: extend(FormatEnum.DID, ScalarEnum.String),
   [FormatEnum.Email]: extend(FormatEnum.Email, ScalarEnum.String),
   [FormatEnum.Formula]: extend(FormatEnum.Formula, ScalarEnum.String),
+  [FormatEnum.Hostname]: extend(FormatEnum.Markdown, ScalarEnum.String),
   [FormatEnum.JSON]: extend(FormatEnum.JSON, ScalarEnum.String),
+  [FormatEnum.Markdown]: extend(FormatEnum.Markdown, ScalarEnum.String),
   [FormatEnum.Regex]: extend(FormatEnum.Regex, ScalarEnum.String),
-  [FormatEnum.Text]: extend(FormatEnum.Text, ScalarEnum.String),
   [FormatEnum.URI]: extend(FormatEnum.URI, ScalarEnum.String),
   [FormatEnum.UUID]: extend(FormatEnum.UUID, ScalarEnum.String),
 
@@ -86,6 +91,7 @@ export const FormatSchema: Record<FormatEnum, S.Schema<any>> = {
     multipleOf: S.optional(DecimalPrecision),
     currency: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Currency code' })),
   }),
+  [FormatEnum.Integer]: extend(FormatEnum.Integer, ScalarEnum.Number),
   [FormatEnum.Percent]: extend(FormatEnum.Percent, ScalarEnum.Number, {
     multipleOf: S.optional(DecimalPrecision),
   }),
@@ -105,48 +111,50 @@ export const FormatSchema: Record<FormatEnum, S.Schema<any>> = {
  * Discriminated union of schema based on format.
  */
 export const PropertySchema = S.Union(
-  FormatSchema[FormatEnum.None],
+  formatToSchema[FormatEnum.None],
 
   //
   // Scalars
   //
 
-  FormatSchema[FormatEnum.String],
-  FormatSchema[FormatEnum.Number],
-  FormatSchema[FormatEnum.Boolean],
-  FormatSchema[FormatEnum.Ref],
+  formatToSchema[FormatEnum.String],
+  formatToSchema[FormatEnum.Number],
+  formatToSchema[FormatEnum.Boolean],
+  formatToSchema[FormatEnum.Ref],
 
   //
   // Strings
   //
 
-  FormatSchema[FormatEnum.DID],
-  FormatSchema[FormatEnum.Email],
-  FormatSchema[FormatEnum.Formula],
-  FormatSchema[FormatEnum.JSON],
-  FormatSchema[FormatEnum.Regex],
-  FormatSchema[FormatEnum.Text],
-  FormatSchema[FormatEnum.URI],
-  FormatSchema[FormatEnum.UUID],
+  formatToSchema[FormatEnum.DID],
+  formatToSchema[FormatEnum.Email],
+  formatToSchema[FormatEnum.Formula],
+  formatToSchema[FormatEnum.Hostname],
+  formatToSchema[FormatEnum.JSON],
+  formatToSchema[FormatEnum.Markdown],
+  formatToSchema[FormatEnum.Regex],
+  formatToSchema[FormatEnum.URI],
+  formatToSchema[FormatEnum.UUID],
 
   //
   // Numbers
   //
 
-  FormatSchema[FormatEnum.Currency],
-  FormatSchema[FormatEnum.Percent],
-  FormatSchema[FormatEnum.Timestamp],
+  formatToSchema[FormatEnum.Currency],
+  formatToSchema[FormatEnum.Percent],
+  formatToSchema[FormatEnum.Timestamp],
 
   //
   // Dates
   //
 
-  FormatSchema[FormatEnum.DateTime],
-  FormatSchema[FormatEnum.Date],
-  FormatSchema[FormatEnum.Time],
-  FormatSchema[FormatEnum.Duration],
+  formatToSchema[FormatEnum.DateTime],
+  formatToSchema[FormatEnum.Date],
+  formatToSchema[FormatEnum.Time],
+  formatToSchema[FormatEnum.Duration],
 );
 
+// TODO(burdon): Widens to "any" (too complex for TSC?)
 export type PropertyType = S.Schema.Type<typeof PropertySchema>;
 
 /**
@@ -154,7 +162,7 @@ export type PropertyType = S.Schema.Type<typeof PropertySchema>;
  */
 export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> | undefined => {
   if (format === undefined) {
-    return FormatSchema[FormatEnum.None];
+    return formatToSchema[FormatEnum.None];
   }
 
   for (const member of PropertySchema.members) {

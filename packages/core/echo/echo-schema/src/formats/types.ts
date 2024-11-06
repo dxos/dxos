@@ -59,13 +59,9 @@ export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
 
 export enum FormatEnum {
   None = '',
-
-  // TODO(burdon): Remove primitives from format and pass (type, format) tuple instead.
   String = 'string',
   Number = 'number',
   Boolean = 'boolean',
-
-  // TODO(burdon): Not implemented.
   Ref = 'ref',
 
   //
@@ -75,10 +71,10 @@ export enum FormatEnum {
   DID = 'did', // Users, etc.
   Email = 'email',
   Formula = 'formula', // Spreadsheet formula.
+  Hostname = 'hostname',
   JSON = 'json',
+  Markdown = 'markdown',
   Regex = 'regex',
-  // TODO(burdon): Different from string? E.g., S.String shouldn't be Automerge by default?
-  Text = 'text',
   URI = 'uri',
   UUID = 'uuid',
 
@@ -87,6 +83,7 @@ export enum FormatEnum {
   //
 
   Currency = 'currency',
+  Integer = 'integer',
   Percent = 'percent',
   Timestamp = 'timestamp',
 
@@ -111,23 +108,20 @@ export const PropertyKind = {
  * Map of format to type.
  */
 export const formatToType: Record<FormatEnum, ScalarEnum> = {
-  // TODO(burdon): Can we remove this?
   [FormatEnum.None]: undefined as any,
-
-  // TODO(burdon): Remove.
   [FormatEnum.String]: ScalarEnum.String,
   [FormatEnum.Number]: ScalarEnum.Number,
   [FormatEnum.Boolean]: ScalarEnum.Boolean,
-
   [FormatEnum.Ref]: ScalarEnum.Ref,
 
   // Strings
   [FormatEnum.DID]: ScalarEnum.String,
   [FormatEnum.Email]: ScalarEnum.String,
   [FormatEnum.Formula]: ScalarEnum.String,
+  [FormatEnum.Hostname]: ScalarEnum.String,
   [FormatEnum.JSON]: ScalarEnum.String,
+  [FormatEnum.Markdown]: ScalarEnum.String,
   [FormatEnum.Regex]: ScalarEnum.String,
-  [FormatEnum.Text]: ScalarEnum.String,
   [FormatEnum.URI]: ScalarEnum.String,
   [FormatEnum.UUID]: ScalarEnum.String,
 
@@ -139,6 +133,7 @@ export const formatToType: Record<FormatEnum, ScalarEnum> = {
 
   // Numbers
   [FormatEnum.Currency]: ScalarEnum.Number,
+  [FormatEnum.Integer]: ScalarEnum.Number,
   [FormatEnum.Percent]: ScalarEnum.Number,
   [FormatEnum.Timestamp]: ScalarEnum.Number,
 };
