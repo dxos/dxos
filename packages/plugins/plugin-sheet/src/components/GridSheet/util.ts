@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type MutableRefObject, useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
 import { parseValue, cellClassesForFieldType } from '@dxos/react-ui-data';
@@ -125,23 +125,23 @@ const cellGetter = (model: SheetModel) => {
 };
 
 export const useSheetModelDxGridProps = (
-  dxGridRef: MutableRefObject<DxGridElement | null>,
+  dxGrid: DxGridElement | null,
   model: SheetModel,
 ): Pick<GridContentProps, 'columns' | 'rows'> => {
   const [columns, setColumns] = useState<DxGridAxisMeta>(createDxGridColumns(model));
   const [rows, setRows] = useState<DxGridAxisMeta>(createDxGridColumns(model));
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const cellsAccessor = createDocAccessor(model.sheet, ['cells']);
-    if (dxGridRef.current) {
-      dxGridRef.current.getCells = cellGetter(model);
+    if (dxGrid) {
+      dxGrid.getCells = cellGetter(model);
     }
     const handleCellsUpdate = () => {
-      dxGridRef.current?.requestUpdate('initialCells');
+      dxGrid?.requestUpdate('initialCells');
     };
     cellsAccessor.handle.addListener('change', handleCellsUpdate);
     return () => cellsAccessor.handle.removeListener('change', handleCellsUpdate);
-  }, [model]);
+  }, [model, dxGrid]);
 
   useEffect(() => {
     const columnMetaAccessor = createDocAccessor(model.sheet, ['columnMeta']);
