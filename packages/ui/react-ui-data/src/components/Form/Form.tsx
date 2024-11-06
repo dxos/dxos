@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React, { type FC, useMemo } from 'react';
 
-import { type S } from '@dxos/echo-schema';
+import { AST, type S } from '@dxos/echo-schema';
 import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties } from '@dxos/schema';
@@ -35,7 +35,7 @@ export const Form = <T extends object>({
   Custom,
 }: FormProps<T>) => {
   // TODO(burdon): Type for useForm.
-  const { canSubmit, handleSubmit, getInputProps, getErrorValence, getErrorMessage } = useForm<T>({
+  const { errors, canSubmit, handleSubmit, getInputProps, getErrorValence, getErrorMessage } = useForm<T>({
     schema,
     initialValues: values,
     // additionalValidation: (values) => {
@@ -53,7 +53,10 @@ export const Form = <T extends object>({
   });
 
   // TODO(burdon): Create schema annotation for order or pass in params?
-  const props = getSchemaProperties<T>(schema);
+  // TODO(ZaymonFC): We might need to use a variant of `getSchemaProperties` that uses the
+  // `from` type instead of `to` type for transformations since we are expecting the pre-encoded
+  // form as input from the user.
+  const props = useMemo(() => getSchemaProperties<T>(schema), [schema]);
 
   return (
     <div className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
@@ -70,7 +73,7 @@ export const Form = <T extends object>({
       )}
 
       {/* Generated fields. */}
-      {props.map(({ name, label }) => (
+      {props.map(({ name, label, type }) => (
         <div key={name} role='none'>
           <FormInput<T>
             property={name}
@@ -79,6 +82,7 @@ export const Form = <T extends object>({
             getInputProps={getInputProps}
             getErrorValence={getErrorValence}
             getErrorMessage={getErrorMessage}
+            type={type === 'number' ? 'number' : undefined}
           />
         </div>
       ))}

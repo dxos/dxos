@@ -14,6 +14,7 @@ export type FormInputProps<T extends object> = {
   options?: Array<{ value: string | number; label: string }>;
   disabled?: boolean;
   placeholder?: string;
+  type?: 'string' | 'number';
   // TODO(burdon): Pick from FormResult?
   getInputProps: (property: keyof T, type?: 'input' | 'select') => Record<string, any>;
 } & Pick<FormResult<T>, 'getErrorValence' | 'getErrorMessage'>;
@@ -24,6 +25,7 @@ export const FormInput = <T extends object>({
   label,
   options,
   disabled,
+  type = 'string',
   placeholder,
   getInputProps,
   getErrorValence,
@@ -62,7 +64,7 @@ export const FormInput = <T extends object>({
       <Input.Root validationValence={validationValence}>
         <Input.Label>{label}</Input.Label>
         <Input.DescriptionAndValidation>
-          <Input.TextInput type='string' disabled={disabled} placeholder={placeholder} {...getInputProps(property)} />
+          <Input.TextInput type={type} disabled={disabled} placeholder={placeholder} {...getInputProps(property)} />
           <Input.Validation>{errorMessage}</Input.Validation>
         </Input.DescriptionAndValidation>
       </Input.Root>
