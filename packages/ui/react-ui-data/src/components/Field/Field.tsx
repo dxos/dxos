@@ -2,28 +2,88 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ReactNode } from 'react';
+import React from 'react';
 
-import { FormatEnums } from '@dxos/echo-schema';
+import { FormatEnums, type S } from '@dxos/echo-schema';
 import { Button, Input, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type FieldProjectionType, FieldProjectionSchema } from '@dxos/schema';
+import { type FieldProjectionType, type Property } from '@dxos/schema';
 
-import { useForm } from '../../hooks';
+import { type FormResult, useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
+//
+// Util (move once stable)
+//
+
+type SchemaInputProps<T extends object> = {
+  getInputProps: (field: keyof T, type?: 'select') => Record<string, any>;
+  getErrorValence: FormResult<T>['getErrorValence'];
+  getErrorMessage: FormResult<T>['getErrorMessage'];
+  fieldName: keyof T;
+  label: string;
+  type: 'string' | 'number' | 'select';
+  options?: Array<{ value: string; label: string }>;
+  disabled?: boolean;
+  placeholder?: string;
+};
+
+export const SchemaInput = <T extends object>({
+  getInputProps,
+  getErrorValence,
+  getErrorMessage,
+  fieldName,
+  label,
+  type,
+  options = [],
+  disabled,
+  placeholder,
+}: SchemaInputProps<T>) => {
+  return (
+    <Input.Root validationValence={getErrorValence(fieldName)}>
+      <Input.Label>{label}</Input.Label>
+      {type === 'select' ? (
+        <Select.Root {...getInputProps(fieldName, 'select')}>
+          <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                {options.map(({ value, label }) => (
+                  <Select.Option key={value} value={value}>
+                    {label}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
+      ) : (
+        <Input.TextInput type={type} disabled={disabled} placeholder={placeholder} {...getInputProps(fieldName)} />
+      )}
+      <Input.DescriptionAndValidation>
+        <Input.Validation>{getErrorMessage(fieldName)}</Input.Validation>
+      </Input.DescriptionAndValidation>
+    </Input.Root>
+  );
+};
+
+//
+// Field
+//
+
 export type FieldProps = ThemedClassName<{
-  field: FieldProjectionType;
+  field: Property;
+  schema: S.Schema<any>;
   autoFocus?: boolean;
   readonly?: boolean;
   onSave?: (field: FieldProjectionType) => void;
 }>;
 
-export const Field = ({ classNames, field, autoFocus, readonly, onSave }: FieldProps) => {
+export const Field = ({ classNames, field, schema, autoFocus, readonly, onSave }: FieldProps) => {
   const { t } = useTranslation(translationKey);
 
-  const { getInputProps, errors, touched, canSubmit, handleSubmit } = useForm<FieldProjectionType>({
-    schema: FieldProjectionSchema,
+  const { getInputProps, canSubmit, handleSubmit, getErrorValence, getErrorMessage } = useForm<Property>({
+    schema,
     initialValues: field,
     // additionalValidation: (values) => {
     // Check that the path doesn't already exist in the schema.
@@ -40,61 +100,47 @@ export const Field = ({ classNames, field, autoFocus, readonly, onSave }: FieldP
 
   return (
     <div className={mx('flex flex-col w-full gap-1 p-2', classNames)}>
-      <FieldRow>
-        <Input.Root validationValence={touched.property && errors.property ? 'error' : undefined}>
-          <Input.Label>{t('field path label')}</Input.Label>
-          <Input.TextInput
-            autoFocus={autoFocus}
-            disabled={readonly}
-            placeholder={t('field path placeholder')}
-            {...getInputProps('property')}
-          />
-          <Input.DescriptionAndValidation>
-            <Input.Validation>{touched.property && errors.property}</Input.Validation>
-          </Input.DescriptionAndValidation>
-        </Input.Root>
-      </FieldRow>
-      <FieldRow>
-        <Input.Root validationValence={touched.title && errors.title ? 'error' : undefined}>
-          <Input.Label>{t('field label label')}</Input.Label>
-          <Input.TextInput disabled={readonly} placeholder={t('field label placeholder')} {...getInputProps('title')} />
-          <Input.DescriptionAndValidation>
-            <Input.Validation>{touched.title && errors.title}</Input.Validation>
-          </Input.DescriptionAndValidation>
-        </Input.Root>
-      </FieldRow>
-      <FieldRow>
-        <Input.Root validationValence={touched.format && errors.format ? 'error' : undefined}>
-          <Input.Label>{t('field type label')}</Input.Label>
-          <Select.Root {...getInputProps('format', 'select')}>
-            <Select.TriggerButton classNames='is-full' placeholder='Type' />
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {FormatEnums.map((type) => (
-                    <Select.Option key={type} value={type}>
-                      {t(`field type ${type}`)}
-                    </Select.Option>
-                  ))}
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
-          <Input.DescriptionAndValidation>
-            <Input.Validation>{touched.format && errors.format}</Input.Validation>
-          </Input.DescriptionAndValidation>
-        </Input.Root>
-      </FieldRow>
+      <SchemaInput<Property>
+        getInputProps={getInputProps}
+        getErrorValence={getErrorValence}
+        getErrorMessage={getErrorMessage}
+        fieldName='property'
+        label={t('field path label')}
+        type='string'
+        disabled={readonly}
+        placeholder={t('field path placeholder')}
+      />
+      <SchemaInput<Property>
+        getInputProps={getInputProps}
+        getErrorValence={getErrorValence}
+        getErrorMessage={getErrorMessage}
+        fieldName='title'
+        label={t('field label label')}
+        type='string'
+        disabled={readonly}
+        placeholder={t('field label placeholder')}
+      />
+      <SchemaInput<Property>
+        getInputProps={getInputProps}
+        getErrorValence={getErrorValence}
+        getErrorMessage={getErrorMessage}
+        fieldName='format'
+        label={t('field type label')}
+        type='select'
+        options={FormatEnums.map((type) => ({ value: type, label: t(`field type ${type}`) }))}
+        disabled={readonly}
+        placeholder='Type'
+      />
 
       {/* TODO(burdon): Convert multipleOf. */}
       {/*
       {features.includes('numeric') && (
         <FieldRow>
-          <Input.Root validationValence={touched.digits && errors.digits ? 'error' : undefined}>
+          <Input.Root validationValence={getErrorValence('digits')}>
             <Input.Label>{t('field digits label')}</Input.Label>
             <Input.TextInput disabled={readonly} type='number' {...getInputProps('digits')} />
             <Input.DescriptionAndValidation classNames='min-bs-[1em]'>
-              <Input.Validation>{touched.digits && errors.digits}</Input.Validation>
+              <Input.Validation>{getErrorMessage('digits')}</Input.Validation>
             </Input.DescriptionAndValidation>
           </Input.Root>
         </FieldRow>
@@ -103,20 +149,20 @@ export const Field = ({ classNames, field, autoFocus, readonly, onSave }: FieldP
       {/* {features.includes('ref') && (
         <>
           <FieldRow>
-            <Input.Root validationValence={touched.refSchema && errors.refSchema ? 'error' : undefined}>
+            <Input.Root validationValence={getErrorValence('refSchema')}>
               <Input.Label>{t('field ref schema label')}</Input.Label>
               <Input.TextInput disabled={readonly} {...getInputProps('refSchema')} />
               <Input.DescriptionAndValidation>
-                <Input.Validation>{touched.refSchema && errors.refSchema}</Input.Validation>
+                <Input.Validation>{getErrorMessage('refSchema')}</Input.Validation>
               </Input.DescriptionAndValidation>
             </Input.Root>
           </FieldRow>
           <FieldRow>
-            <Input.Root validationValence={touched.refProperty && errors.refProperty ? 'error' : undefined}>
+            <Input.Root validationValence={getErrorValence('refProperty')}>
               <Input.Label>{t('field ref property label')}</Input.Label>
               <Input.TextInput disabled={readonly} {...getInputProps('refProperty')} />
               <Input.DescriptionAndValidation>
-                <Input.Validation>{touched.refProperty && errors.refProperty}</Input.Validation>
+                <Input.Validation>{getErrorMessage('refProperty')}</Input.Validation>
               </Input.DescriptionAndValidation>
             </Input.Root>
           </FieldRow>
@@ -124,16 +170,10 @@ export const Field = ({ classNames, field, autoFocus, readonly, onSave }: FieldP
       )}
       */}
       {!readonly && (
-        <FieldRow>
-          <Button onClick={handleSubmit} disabled={!canSubmit}>
-            {t('field save button label')}
-          </Button>
-        </FieldRow>
+        <Button onClick={handleSubmit} disabled={!canSubmit}>
+          {t('field save button label')}
+        </Button>
       )}
     </div>
   );
-};
-
-const FieldRow = ({ children }: { children: ReactNode }) => {
-  return <div className='flex flex-col w-full gap-1'>{children}</div>;
 };

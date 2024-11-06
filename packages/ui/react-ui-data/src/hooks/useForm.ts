@@ -26,6 +26,10 @@ type SelectProps<T> = BaseProps<T, string | undefined> & {
 
 export type FormResult<T extends object> = {
   values: T;
+  errors: Record<keyof T, string>;
+  touched: Record<keyof T, boolean>;
+  canSubmit: boolean;
+  changed: Record<keyof T, boolean>;
   /**
    * Provider for props for input controls.
    */
@@ -33,10 +37,8 @@ export type FormResult<T extends object> = {
     key: keyof T,
     type?: InputType,
   ) => InputType extends 'select' ? SelectProps<T> : InputProps<T>;
-  errors: Record<keyof T, string>;
-  touched: Record<keyof T, boolean>;
-  canSubmit: boolean;
-  changed: Record<keyof T, boolean>;
+  getErrorValence: (key: keyof T) => 'error' | undefined;
+  getErrorMessage: (key: keyof T) => string | undefined;
   handleChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSubmit: () => void;
@@ -191,16 +193,32 @@ export const useForm = <T extends object>({
     [values, handleChange, handleBlur, onValueChange],
   );
 
+  //
+  // Helpers
+  //
+
+  const getErrorValence = useCallback(
+    (key: keyof T) => (touched[key] && errors[key] ? 'error' : undefined),
+    [touched, errors],
+  );
+
+  const getErrorMessage = useCallback(
+    (key: keyof T) => (touched[key] && errors[key] ? errors[key] : undefined),
+    [touched, errors],
+  );
+
   return {
     values,
-    changed,
     errors,
+    touched,
     canSubmit,
+    changed,
     getInputProps,
+    getErrorValence,
+    getErrorMessage,
     handleChange,
     handleBlur,
     handleSubmit,
-    touched,
   } satisfies FormResult<T>;
 };
 

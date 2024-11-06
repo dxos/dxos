@@ -5,25 +5,35 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum, ScalarEnum } from '@dxos/echo-schema';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { getPropertySchemaForFormat } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Field, type FieldProps } from './Field';
 import translations from '../../translations';
 import { TestPopup } from '../testing';
 
-const DefaultStory = (props: FieldProps) => {
+const DefaultStory = (props: { field: FieldProps['field'] }) => {
   const [field, setField] = useState(props.field);
-  const handleSave = (field: FieldProps['field']) => setField(field);
+  const schema = useMemo(() => getPropertySchemaForFormat(field.format), [field.format]);
+
+  const handleSave = (field: any) => {
+    console.log('handleSave', field);
+    setField(field);
+  };
+
+  if (!schema) {
+    return <div>No schema found for format: {field.format}</div>;
+  }
 
   return (
     <div className='w-full grid grid-cols-3'>
       <div className='flex col-span-2 w-full justify-center p-4'>
         <TestPopup>
-          <Field field={field} onSave={handleSave} />
+          <Field field={field} schema={schema} onSave={handleSave} />
         </TestPopup>
       </div>
       <SyntaxHighlighter className='w-full text-xs'>{JSON.stringify(field, null, 2)}</SyntaxHighlighter>
@@ -47,6 +57,6 @@ type Story = StoryObj<typeof Field>;
 
 export const Default: Story = {
   args: {
-    field: { property: 'email', type: 'string', format: FormatEnum.Email },
+    field: { format: FormatEnum.Currency, property: 'currency', type: ScalarEnum.Number },
   },
 };
