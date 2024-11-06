@@ -4,6 +4,8 @@
 
 import { AST, ScalarEnum, FormatEnum, S, getScalarTypeFromAst } from '@dxos/echo-schema';
 import { getType, getAnnotation } from '@dxos/effect';
+import { log } from '@dxos/log';
+import { expect } from 'vitest';
 
 /**
  * Convert number of digits to multipleOf annotation.
@@ -84,7 +86,7 @@ export const FormatSchema: Record<FormatEnum, S.Schema<any>> = {
     multipleOf: S.optional(DecimalPrecision),
     currency: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Currency code' })),
   }),
-  [FormatEnum.Percent]: extend(FormatEnum.URI, ScalarEnum.Number, {
+  [FormatEnum.Percent]: extend(FormatEnum.Percent, ScalarEnum.Number, {
     multipleOf: S.optional(DecimalPrecision),
   }),
   [FormatEnum.Timestamp]: extend(FormatEnum.UUID, ScalarEnum.Number),
@@ -157,6 +159,13 @@ export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> |
 
   for (const member of PropertySchema.members) {
     for (const prop of AST.getPropertySignatures(member.ast)) {
+      log.info('', {
+        name: prop.name,
+        typeTag: prop.type._tag,
+        format: prop.type.literal,
+        expect: format,
+        match: prop.name === 'format' && prop.type._tag === 'Literal' && prop.type.literal === format,
+      });
       if (prop.name === 'format' && prop.type._tag === 'Literal' && prop.type.literal === format) {
         return member;
       }
