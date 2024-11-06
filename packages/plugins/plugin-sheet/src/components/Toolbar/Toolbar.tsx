@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
+import React, { type PropsWithChildren, useCallback } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
 import {
@@ -28,6 +28,7 @@ import {
   inRange,
   rangeFromIndex,
   rangeToIndex,
+  styleKey,
   type StyleKey,
   type StyleValue,
 } from '../../defs';
@@ -89,10 +90,11 @@ type CommentAction = { key: CommentKey; value: CommentValue; cellContent?: strin
 type StyleAction = { key: StyleKey; value: StyleValue };
 
 export type ToolbarAction = StyleAction | AlignAction | CommentAction;
+export type ToolbarActionAnnotated = ToolbarAction & { unset?: boolean };
 
 export type ToolbarActionType = ToolbarAction['key'];
 
-export type ToolbarActionHandler = (action: ToolbarAction) => void;
+export type ToolbarActionHandler = (action: ToolbarActionAnnotated) => void;
 
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
@@ -100,9 +102,9 @@ export type ToolbarProps = ThemedClassName<
   }>
 >;
 
-const [ToolbarContextProvider, useToolbarContext] = createContext<{ onAction: (action: ToolbarAction) => void }>(
-  'Toolbar',
-);
+const [ToolbarContextProvider, useToolbarContext] = createContext<{
+  onAction: (action: ToolbarActionAnnotated) => void;
+}>('Toolbar');
 
 // TODO(Zan): Factor out, copied this from MarkdownPlugin.
 const sectionToolbarLayout =
@@ -117,7 +119,7 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
 
   // TODO(Zan): Externalize the toolbar action handler. E.g., Toolbar/keys should both fire events.
   const handleAction = useCallback(
-    (action: ToolbarAction) => {
+    (action: ToolbarActionAnnotated) => {
       switch (action.key) {
         case 'alignment':
           if (cursor && cursorFallbackRange) {
@@ -137,8 +139,11 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
           }
           break;
         case 'style':
-          if (action.value === 'unset') {
-            const index = model.sheet.ranges?.findIndex((range) => range.key === action.key);
+          if (action.unset) {
+            const index = model.sheet.ranges?.findIndex(
+              (range) =>
+                range.key === action.key && cursor && inRange(rangeFromIndex(model.sheet, range.range), cursor),
+            );
             if (index >= 0) {
               model.sheet.ranges?.splice(index, 1);
             }
@@ -207,20 +212,20 @@ const Alignment = () => {
   const { onAction } = useToolbarContext('Alignment');
   const { t } = useTranslation(SHEET_PLUGIN);
 
-  const value = useMemo(
-    () =>
-      cursor
-        ? model.sheet.ranges?.find(
-            ({ range, key }) => key === alignKey && inRange(rangeFromIndex(model.sheet, range), cursor),
-          )?.value
-        : undefined,
-    [cursor, model.sheet.ranges],
-  );
+  // TODO(thure): Can this O(n) call be memoized?
+  const value = cursor
+    ? model.sheet.ranges?.findLast(
+        ({ range, key }) => key === alignKey && inRange(rangeFromIndex(model.sheet, range), cursor),
+      )?.value
+    : undefined;
 
   return (
     <NaturalToolbar.ToggleGroup
       type='single'
-      value={value}
+      value={
+        // TODO(thure): providing `undefined` leaves the last item active which was active rather than showing none.
+        value ?? 'never'
+      }
       onValueChange={(value: AlignValue) => onAction?.({ key: alignKey, value })}
     >
       {alignmentOptions.map(({ value, icon }) => (
@@ -235,25 +240,25 @@ const Alignment = () => {
   );
 };
 
-const styleOptions: ButtonProps<StyleValue>[] = [{ value: 'highlight', icon: 'ph--highlighter--regular' }];
+const styleOptions: ButtonProps<StyleValue>[] = [
+  { value: 'highlight', icon: 'ph--highlighter--regular' },
+  { value: 'softwrap', icon: 'ph--paragraph--regular' },
+];
 
 const Styles = () => {
   const { cursor, model } = useSheetContext();
   const { onAction } = useToolbarContext('Styles');
   const { t } = useTranslation(SHEET_PLUGIN);
 
-  const activeValues = useMemo(
-    () =>
-      cursor
-        ? model.sheet.ranges
-            ?.filter(({ range, key }) => key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursor))
-            .reduce((acc, { value }) => {
-              acc.add(value);
-              return acc;
-            }, new Set())
-        : undefined,
-    [cursor, model.sheet.ranges],
-  );
+  // TODO(thure): Can this O(n) call be memoized?
+  const activeValues = cursor
+    ? model.sheet.ranges
+        ?.filter(({ range, key }) => key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursor))
+        .reduce((acc, { value }) => {
+          acc.add(value);
+          return acc;
+        }, new Set())
+    : undefined;
 
   return (
     <>
@@ -262,10 +267,15 @@ const Styles = () => {
           itemType='toggle'
           key={value}
           pressed={activeValues?.has(value)}
-          onPressedChange={(nextPressed: boolean) => onAction?.({ key: 'style', value: nextPressed ? value : 'unset' })}
+          onPressedChange={(nextPressed: boolean) => {
+            onAction?.({ key: 'style', value, unset: !nextPressed });
+          }}
           icon={icon}
         >
-          {t(`toolbar ${value} label`)}
+          {t('toolbar action label', {
+            key: t(`range key ${styleKey} label`),
+            value: t(`range value ${value} label`),
+          })}
         </ToolbarItem>
       ))}
     </>
@@ -281,6 +291,7 @@ const Actions = () => {
   const { cursorFallbackRange, cursor, model } = useSheetContext();
   const { t } = useTranslation(SHEET_PLUGIN);
 
+  // TODO(thure): Can this O(n) call be memoized?
   const overlapsCommentAnchor = (model.sheet.threads ?? [])
     .filter(nonNullable)
     .filter((thread) => thread.status !== 'resolved')
