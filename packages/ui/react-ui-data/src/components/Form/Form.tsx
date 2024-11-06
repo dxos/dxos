@@ -83,30 +83,6 @@ export const Form = <T extends object>({
         </div>
       ))}
 
-      {/* {features.includes('ref') && (
-        <>
-          <FieldRow>
-            <Input.Root validationValence={getErrorValence('refSchema')}>
-              <Input.Label>{t('field ref schema label')}</Input.Label>
-              <Input.TextInput disabled={readonly} {...getInputProps('refSchema')} />
-              <Input.DescriptionAndValidation>
-                <Input.Validation>{getErrorMessage('refSchema')}</Input.Validation>
-              </Input.DescriptionAndValidation>
-            </Input.Root>
-          </FieldRow>
-          <FieldRow>
-            <Input.Root validationValence={getErrorValence('refProperty')}>
-              <Input.Label>{t('field ref property label')}</Input.Label>
-              <Input.TextInput disabled={readonly} {...getInputProps('refProperty')} />
-              <Input.DescriptionAndValidation>
-                <Input.Validation>{getErrorMessage('refProperty')}</Input.Validation>
-              </Input.DescriptionAndValidation>
-            </Input.Root>
-          </FieldRow>
-        </>
-      )}
-      */}
-
       {/* TODO(burdon): Option. */}
       {!readonly && (
         <div className='flex w-full justify-center'>
