@@ -33,7 +33,7 @@ import { type DocumentType, type MarkdownPluginState, type MarkdownSettingsProps
 import { setFallbackName } from './util';
 
 type ExtensionsOptions = {
-  document: DocumentType;
+  document?: DocumentType;
   dispatch?: IntentDispatcher;
   query?: Query<DocumentType>;
   settings: MarkdownSettingsProps;
@@ -66,7 +66,17 @@ export const useExtensions = ({
         dispatch,
         // query,
       }),
-    [document, viewMode, dispatch, settings, settings.folding, settings.numberedHeadings],
+    [
+      document,
+      viewMode,
+      dispatch,
+      settings,
+      settings.editorInputMode,
+      settings.folding,
+      settings.numberedHeadings,
+      settings.debug,
+      settings.typewriter,
+    ],
   );
 
   //
@@ -92,20 +102,22 @@ export const useExtensions = ({
     () =>
       [
         // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
-        createDataExtensions({
-          id: document.id,
-          text: document.content && createDocAccessor(document.content, ['content']),
-          space,
-          identity,
-        }),
+        document &&
+          createDataExtensions({
+            id: document.id,
+            text: document.content && createDocAccessor(document.content, ['content']),
+            space,
+            identity,
+          }),
         selectionState(editorStateStore),
-        listener({
-          onChange: (text) => setFallbackName(document, text),
-        }),
+        document &&
+          listener({
+            onChange: (text) => setFallbackName(document, text),
+          }),
         baseExtensions,
         pluginExtensions,
       ].filter(isNotFalsy),
-    [baseExtensions, pluginExtensions, document, document.content, space, identity],
+    [baseExtensions, pluginExtensions, document, document?.content, space, identity],
   );
 };
 

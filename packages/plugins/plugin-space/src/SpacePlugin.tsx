@@ -356,24 +356,22 @@ export const SpacePlugin = ({
       },
       surface: {
         component: ({ data, role, ...rest }) => {
-          const primary = data.active ?? data.object;
           switch (role) {
             case 'article':
-            case 'main':
               // TODO(wittjosiah): Need to avoid shotgun parsing space state everywhere.
-              return isSpace(primary) && primary.state.get() === SpaceState.SPACE_READY ? (
+              return isSpace(data.object) && data.object.state.get() === SpaceState.SPACE_READY ? (
                 <Surface
-                  data={{ active: primary.properties[CollectionType.typename], id: primary.id }}
+                  data={{ object: data.object.properties[CollectionType.typename], id: data.object.id }}
                   role={role}
                   {...rest}
                 />
-              ) : primary instanceof CollectionType ? (
+              ) : data.object instanceof CollectionType ? (
                 {
-                  node: <CollectionMain collection={primary} />,
+                  node: <CollectionMain collection={data.object} />,
                   disposition: 'fallback',
                 }
-              ) : typeof primary === 'string' && primary.length === OBJECT_ID_LENGTH ? (
-                <MissingObject id={primary} />
+              ) : typeof data.object === 'string' && data.object.length === OBJECT_ID_LENGTH ? (
+                <MissingObject id={data.object} />
               ) : null;
             case 'complementary--settings':
               return isSpace(data.subject) ? (

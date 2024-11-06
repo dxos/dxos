@@ -14,7 +14,7 @@ import { getFallbackName } from '../util';
 
 export type MarkdownContainerProps = Pick<
   MarkdownEditorProps,
-  'role' | 'coordinate' | 'extensionProviders' | 'viewMode' | 'editorStateStore' | 'onViewModeChange'
+  'role' | 'extensionProviders' | 'viewMode' | 'editorStateStore' | 'onViewModeChange'
 > & {
   id: string;
   object: DocumentType | any;
@@ -23,17 +23,30 @@ export type MarkdownContainerProps = Pick<
 
 // TODO(burdon): Move toolbar here.
 // TODO(burdon): Factor out difference for ECHO and non-ECHO objects; i.e., single component.
-const MarkdownContainer = ({ id, role, object, settings, ...props }: MarkdownContainerProps) => {
+const MarkdownContainer = ({
+  id,
+  role,
+  object,
+  extensionProviders,
+  settings,
+  viewMode,
+  editorStateStore,
+  onViewModeChange,
+}: MarkdownContainerProps) => {
   const scrollPastEnd = role === 'article';
-  if (object instanceof DocumentType) {
+  const doc = object instanceof DocumentType ? object : undefined;
+  const extensions = useExtensions({ extensionProviders, document: doc, settings, viewMode, editorStateStore });
+
+  if (doc) {
     return (
       <DocumentEditor
         id={fullyQualifiedId(object)}
         role={role}
-        document={object}
+        document={doc}
+        extensions={extensions}
         settings={settings}
         scrollPastEnd={scrollPastEnd}
-        {...props}
+        onViewModeChange={onViewModeChange}
       />
     );
   } else {
@@ -42,31 +55,25 @@ const MarkdownContainer = ({ id, role, object, settings, ...props }: MarkdownCon
         id={id}
         role={role}
         initialValue={object.text}
+        extensions={extensions}
+        viewMode={viewMode}
         toolbar={settings.toolbar}
+        inputMode={settings.editorInputMode}
         scrollPastEnd={scrollPastEnd}
-        {...props}
+        onViewModeChange={onViewModeChange}
       />
     );
   }
 };
 
-type DocumentEditorProps = Omit<MarkdownContainerProps, 'object'> & { document: DocumentType } & Pick<
-    MarkdownEditorProps,
-    'id' | 'scrollPastEnd'
-  >;
+type DocumentEditorProps = Omit<MarkdownContainerProps, 'object' | 'extensionProviders' | 'editorStateStore'> &
+  Pick<MarkdownEditorProps, 'id' | 'scrollPastEnd' | 'extensions'> & {
+    document: DocumentType;
+  };
 
-export const DocumentEditor = ({
-  id,
-  document: doc,
-  extensionProviders,
-  settings,
-  viewMode,
-  editorStateStore,
-  ...props
-}: DocumentEditorProps) => {
+export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props }: DocumentEditorProps) => {
   const space = getSpace(doc);
   const initialValue = useMemo(() => doc.content?.content, [doc.content]);
-  const extensions = useExtensions({ extensionProviders, document: doc, settings, viewMode, editorStateStore });
 
   // Migrate gradually to `fallbackName`.
   useEffect(() => {
@@ -90,10 +97,9 @@ export const DocumentEditor = ({
     <MarkdownEditor
       id={id}
       initialValue={initialValue}
-      extensions={extensions}
+      viewMode={viewMode}
       toolbar={settings.toolbar}
       inputMode={settings.editorInputMode}
-      viewMode={viewMode}
       onFileUpload={handleFileUpload}
       {...props}
     />
