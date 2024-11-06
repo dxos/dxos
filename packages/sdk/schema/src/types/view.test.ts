@@ -92,10 +92,6 @@ describe('view', () => {
     const { db } = await builder.createDatabase();
     const registry = new MutableSchemaRegistry(db);
 
-    class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
-      name: S.String,
-    }) {}
-
     const schema = createStoredSchema({
       typename: 'example.com/type/Person',
       version: '0.1.0',
@@ -104,7 +100,6 @@ describe('view', () => {
           name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
           email: Format.Email,
           salary: Format.Currency({ code: 'usd', decimals: 2 }),
-          org: ref(Org),
         }),
       ),
     });
@@ -113,7 +108,7 @@ describe('view', () => {
 
     const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
     const projection = new ViewProjection(mutable, view);
-    expect(view.fields).to.have.length(4);
+    expect(view.fields).to.have.length(3);
 
     {
       const props = projection.getFieldProjection('name');
@@ -141,9 +136,10 @@ describe('view', () => {
         currency: 'USD',
         multipleOf: 0.01,
       });
-    }
 
-    projection.updateFormat('salary', { currency: 'GBP' });
+      props.currency = 'GBP';
+      projection.updateProperties('salary', props);
+    }
 
     {
       const props = projection.getFieldProjection('salary');
@@ -155,6 +151,35 @@ describe('view', () => {
         multipleOf: 0.01,
       });
     }
+  });
+
+  test('gets and updates references', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    const registry = new MutableSchemaRegistry(db);
+
+    // TODO(burdon): Reconcile with createStoredSchema.
+    class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
+      name: S.String,
+    }) {}
+
+    const schema = createStoredSchema({
+      typename: 'example.com/type/Person',
+      version: '0.1.0',
+      jsonSchema: toJsonSchema(
+        S.Struct({
+          name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
+          email: Format.Email,
+          salary: Format.Currency({ code: 'usd', decimals: 2 }),
+          org: ref(Org),
+        }),
+      ),
+    });
+
+    const mutable = registry.registerSchema(db.add(schema));
+
+    const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
+
+    const projection = new ViewProjection(mutable, view);
 
     projection.updateField({ property: 'org', referenceProperty: createJsonPath('name') });
 
@@ -171,4 +196,6 @@ describe('view', () => {
       },
     });
   });
+
+  // TODO(burdon): Test switching format.
 });

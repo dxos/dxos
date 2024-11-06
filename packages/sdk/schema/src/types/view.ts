@@ -13,6 +13,7 @@ import {
   S,
   TypedObject,
 } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 
 import { PropertySchema, type PropertyType } from './format';
 
@@ -106,22 +107,21 @@ export class ViewProjection {
   ) {}
 
   /**
-   *
+   * Get projection of View fields and JSON schema property annotations.
    */
+  // TODO(burdon): Map ref to $id/ref. Custom selector.
   getFieldProjection(property: string): FieldProjectionType {
     const field = this._view.fields.find((f) => f.property === property) ?? { property };
     const properties = this._schema.jsonSchema.properties![property] as JsonSchemaType;
-    console.log('getFieldProjection', JSON.stringify({ field, properties }, null, 2));
+    log.info('getFieldProjection', { field, properties });
     return { ...field, ...properties };
-    // TODO(burdon): Map ref to $id/ref. Custom selector.
-    // TODO(burdon): Recreate type if format has changed.
-    // TODO(burdon): decode()?
   }
 
   /**
-   *
+   * Update View field properties.
    */
   updateField = (value: FieldType): FieldType => {
+    log.info('updateField', { value });
     let field = this._view.fields.find((f) => f.property === value.property);
     if (field) {
       Object.assign(field, value);
@@ -134,19 +134,21 @@ export class ViewProjection {
   };
 
   /**
-   *
+   * Update JSON schema property annotations.
    */
-  // TODO(burdon): Move into echo-schema.
-  updateFormat(property: string, value: Partial<PropertyType>): PropertyType {
+  // TODO(burdon): Use schema annotations to determine how to map onto JsonSchema property object.
+  updateProperties(property: string, values: Partial<PropertyType>): PropertyType {
+    log.info('updateProperties', { property, values });
+    const { property: _, ...rest } = values;
     let properties: JSONSchema.JsonSchema7 | undefined = this._schema.jsonSchema.properties![property];
     if (properties) {
-      Object.assign(properties, value);
+      // TODO(burdon): Delete existing?
+      Object.assign(properties, rest);
     } else {
-      properties = { ...value } as JSONSchema.JsonSchema7;
+      properties = { ...rest } as JSONSchema.JsonSchema7;
       this._schema.jsonSchema.properties![property] = properties;
     }
 
-    // TODO(burdon): encode?
     return properties as PropertyType;
   }
 }
