@@ -61,13 +61,16 @@ export class ViewProjection {
    */
   // TODO(burdon): JsonProp.
   getFieldProjection(prop: string): FieldProjection {
-    let {
+    const {
       $id,
-      type,
-      format = FormatEnum.None,
+      type: schemaType,
+      format: schemaFormat = FormatEnum.None,
       reference,
       ...rest
     } = this._schema.jsonSchema.properties![prop] ?? { property: prop, format: FormatEnum.None };
+
+    let type: TypeEnum = schemaType as TypeEnum;
+    let format: FormatEnum = schemaFormat as FormatEnum;
 
     // Map reference.
     let referenceSchema: string | undefined;
@@ -77,7 +80,7 @@ export class ViewProjection {
       referenceSchema = reference.schema.$ref;
     }
     if (format === FormatEnum.None) {
-      format = typeToFormat[type as TypeEnum];
+      format = typeToFormat[type as TypeEnum]!;
     }
 
     const field: FieldType = this._view.fields.find((f) => f.property === prop) ?? { property: createJsonPath(prop) };
