@@ -24,7 +24,7 @@ const DefaultStory = (props: ViewEditorProps) => (
         <ViewEditor {...props} />
       </TestPopup>
     </div>
-    <SyntaxHighlighter language='json' className='w-full text-xs'>
+    <SyntaxHighlighter language='json' className='w-full text-xs font-thin'>
       {JSON.stringify(props, null, 2)}
     </SyntaxHighlighter>
   </div>
