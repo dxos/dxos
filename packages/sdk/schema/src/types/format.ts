@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { Simplify } from '@effect/schema/Schema';
+
 import { AST, DecimalPrecision, TypeEnum, FormatEnum, S, JsonPath } from '@dxos/echo-schema';
 import { getType, getAnnotation } from '@dxos/effect';
-import type { Simplify } from '@effect/schema/Schema';
 
 /**
  * Base schema.

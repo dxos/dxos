@@ -8,7 +8,6 @@ import { FormatEnum, FormatEnums, formatToType } from '@dxos/echo-schema';
 import { useTranslation } from '@dxos/react-ui';
 import {
   getPropertySchemaForFormat,
-  type FieldProjection,
   type FieldType,
   type ViewType,
   type ViewProjection,
