@@ -8,11 +8,11 @@ import { S, TypeEnum, FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import {
+  formatToSchema,
   getPropertySchemaForFormat,
+  getSchemaProperties,
   PropertySchema,
   type PropertyType,
-  getSchemaProperties,
-  formatToSchema,
 } from './format';
 
 describe('format', () => {
