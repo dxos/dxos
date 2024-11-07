@@ -75,44 +75,101 @@ const JsonSchemaOrBoolean = S.Union(
 // TODO(dmaretskyi): Fix circular types.
 const _JsonSchemaType = S.mutable(
   S.Struct({
+    /**
+     * Identifier for this schema.
+     * This schema might be referenced by $ref clause in other schemas.
+     */
     $id: S.optional(S.String),
+
+    /**
+     * Schema of this schema.
+     * Set to "https://json-schema.org/draft-07/schema".
+     */
     $schema: S.optional(S.String),
+
+    /**
+     * Reference to another schema.
+     */
     $ref: S.optional(S.String),
+
+    /**
+     * Comments are ignored when interpreting the schema.
+     */
     $comment: S.optional(S.String),
+
+    /**
+     * Version of this schema.
+     * Custom dialect for ECHO.
+     */
+    version: S.optional(S.String),
+
     title: S.optional(S.String),
     description: S.optional(S.String),
-    default: S.optional(S.Any),
-    version: S.optional(S.String),
+
     readOnly: S.optional(S.Boolean),
     writeOnly: S.optional(S.Boolean),
+
     examples: S.optional(S.Array(S.Any)),
+
+    /**
+     * Default value for this schema.
+     */
+    default: S.optional(S.Any),
+
+    const: S.optional(S.Any),
+    enum: S.optional(S.Array(S.Any)),
+
+    /**
+     * Base type of the schema.
+     */
+    type: S.optional(S.Union(SimpleTypes, S.Array(SimpleTypes))),
+
+    //
+    // Numbers.
+    //
+
     multipleOf: S.optional(S.Number.pipe(S.greaterThan(0))),
     maximum: S.optional(S.Number),
     exclusiveMaximum: S.optional(S.Number),
     minimum: S.optional(S.Number),
     exclusiveMinimum: S.optional(S.Number),
-    maxLength: S.optional(NonNegativeInteger),
-    minLength: S.optional(NonNegativeInteger),
-    pattern: S.optional(S.String.annotations({ [FormatAnnotationId]: 'regex' })),
-    additionalItems: S.optional(S.suspend(() => JsonSchemaType)),
 
+    //
+    // Strings.
+    //
+
+    maxLength: S.optional(NonNegativeInteger),
+
+    /**
+     * Regex pattern for strings.
+     */
+    pattern: S.optional(S.String.annotations({ [FormatAnnotationId]: 'regex' })),
+
+    /**
+     * Serialized from {@link FormatAnnotationId}.
+     */
+    format: S.optional(S.String),
+
+    //
+    // Arrays
+    //
+
+    minLength: S.optional(NonNegativeInteger),
     items: S.optional(S.suspend(() => JsonSchemaType)),
+    additionalItems: S.optional(S.suspend(() => JsonSchemaType)),
     maxItems: S.optional(NonNegativeInteger),
     minItems: S.optional(NonNegativeInteger),
     uniqueItems: S.optional(S.Boolean),
     contains: S.optional(S.suspend(() => JsonSchemaType)),
+
+    //
+    // Objects
+    //
+
     maxProperties: S.optional(NonNegativeInteger),
     minProperties: S.optional(NonNegativeInteger),
     required: S.optional(StringArray),
     additionalProperties: S.optional(JsonSchemaOrBoolean),
-    definitions: S.optional(
-      S.mutable(
-        S.Record({
-          key: S.String,
-          value: S.suspend(() => JsonSchemaType),
-        }),
-      ),
-    ),
     properties: S.optional(
       S.mutable(
         S.Record({
@@ -129,19 +186,26 @@ const _JsonSchemaType = S.mutable(
         }),
       ),
     ),
+    propertyNames: S.optional(S.suspend(() => JsonSchemaType)),
+
+    definitions: S.optional(
+      S.mutable(
+        S.Record({
+          key: S.String,
+          value: S.suspend(() => JsonSchemaType),
+        }),
+      ),
+    ),
     dependencies: S.optional(
       S.Record({
         key: S.String,
         value: S.suspend(() => S.Union(S.String, StringArray, JsonSchemaType)),
       }),
     ),
-    propertyNames: S.optional(S.suspend(() => JsonSchemaType)),
-    const: S.optional(S.Any),
-    enum: S.optional(S.Array(S.Any)),
-    type: S.optional(S.Union(SimpleTypes, S.Array(SimpleTypes))),
-    format: S.optional(S.String),
+
     contentMediaType: S.optional(S.String),
     contentEncoding: S.optional(S.String),
+
     if: S.optional(S.suspend(() => JsonSchemaType)),
     then: S.optional(S.suspend(() => JsonSchemaType)),
     else: S.optional(S.suspend(() => JsonSchemaType)),
@@ -175,6 +239,9 @@ const _JsonSchemaType = S.mutable(
     ),
 
     // TODO(dmaretskyi): Remove echo namespace.
+    /**
+     * @deprecated
+     */
     echo: S.optional(
       S.mutable(
         S.Struct({
