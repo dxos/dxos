@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { FormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-data';
 import { type EditorInputMode, EditorInputModes, type EditorViewMode, EditorViewModes } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN } from '../meta';
@@ -17,7 +17,7 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
   // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
   return (
     <>
-      <FormInput label={t('default view mode label')}>
+      <DeprecatedFormInput label={t('default view mode label')}>
         <Select.Root
           value={settings.defaultViewMode}
           onValueChange={(value) => {
@@ -37,9 +37,9 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
             </Select.Content>
           </Select.Portal>
         </Select.Root>
-      </FormInput>
+      </DeprecatedFormInput>
 
-      <FormInput label={t('editor input mode label')}>
+      <DeprecatedFormInput label={t('editor input mode label')}>
         <Select.Root
           value={settings.editorInputMode ?? 'default'}
           onValueChange={(value) => {
@@ -59,31 +59,31 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
             </Select.Content>
           </Select.Portal>
         </Select.Root>
-      </FormInput>
+      </DeprecatedFormInput>
 
-      <FormInput label={t('settings toolbar label')}>
+      <DeprecatedFormInput label={t('settings toolbar label')}>
         <Input.Switch checked={settings.toolbar} onCheckedChange={(checked) => (settings.toolbar = !!checked)} />
-      </FormInput>
+      </DeprecatedFormInput>
 
-      <FormInput label={t('settings numbered headings label')}>
+      <DeprecatedFormInput label={t('settings numbered headings label')}>
         <Input.Switch
           checked={settings.numberedHeadings}
           onCheckedChange={(checked) => (settings.numberedHeadings = !!checked)}
         />
-      </FormInput>
+      </DeprecatedFormInput>
 
-      <FormInput label={t('settings folding label')}>
+      <DeprecatedFormInput label={t('settings folding label')}>
         <Input.Switch checked={settings.folding} onCheckedChange={(checked) => (settings.folding = !!checked)} />
-      </FormInput>
+      </DeprecatedFormInput>
 
-      <FormInput label={t('settings experimental label')}>
+      <DeprecatedFormInput label={t('settings experimental label')}>
         <Input.Switch
           checked={settings.experimental}
           onCheckedChange={(checked) => (settings.experimental = !!checked)}
         />
-      </FormInput>
+      </DeprecatedFormInput>
 
-      <FormInput
+      <DeprecatedFormInput
         label={t('settings debug label')}
         secondary={
           settings.debug ? (
@@ -99,7 +99,7 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
         }
       >
         <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
-      </FormInput>
+      </DeprecatedFormInput>
     </>
   );
 };

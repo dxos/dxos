@@ -2,33 +2,84 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type MutableSchema } from '@dxos/echo-schema';
-import { getProperty } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
+import {
+  create,
+  createJsonPath,
+  JsonPath,
+  JsonSchemaType,
+  QueryType,
+  type ReactiveObject,
+  S,
+  TypedObject,
+} from '@dxos/echo-schema';
 
-import { schemaForType } from './field';
-import { type FieldType, type ViewType } from './types';
+/**
+ * Stored field metadata (e.g., for UX).
+ */
+export const FieldSchema = S.Struct({
+  // TODO(burdon): Property or path?
+  property: JsonPath,
+  visible: S.optional(S.Boolean),
+  size: S.optional(S.Number),
+  referenceProperty: S.optional(JsonPath),
+}).pipe(S.mutable);
 
-export const addFieldToView = (
-  schema: MutableSchema,
-  view: ViewType,
-  field: FieldType,
-  position = view.fields.length,
-) => {
-  invariant(!getProperty(schema, field.path), `Field path already exists in schema: ${field.path}`);
-  invariant(position >= 0 && position <= view.fields.length, `Invalid field position: ${position}`);
+export type FieldType = S.Schema.Type<typeof FieldSchema>;
 
-  const propertySchema = schemaForType[field.type];
-  invariant(propertySchema, `No schema for field type: ${field.type}`);
+/**
+ * Views are generated or user-defined projections of a schema's properties.
+ * They are used to configure the visual representation of the data.
+ * The query is separate from the view (queries configure the projection of data objects).
+ *
+ * [Table] => [View] => [Schema]:[JsonSchema]
+ */
+export class ViewType extends TypedObject({
+  typename: 'dxos.org/type/View',
+  version: '0.1.0',
+})({
+  /**
+   * Query used to retrieve data.
+   * This includes the base type that the view schema (above) references.
+   * It may include predicates that represent a persistent "drill-down" query.
+   */
+  query: QueryType,
 
-  schema.addFields({ [field.path]: propertySchema });
-  view.fields.splice(position, 0, field);
+  /**
+   * Optional schema override used to customize the underlying schema.
+   */
+  schema: S.optional(JsonSchemaType),
+
+  /**
+   * UX metadata associated with displayed fields (in table, form, etc.)
+   */
+  fields: S.mutable(S.Array(FieldSchema)),
+
+  // TODO(burdon): Readonly flag?
+  // TODO(burdon): Add array of sort orders (which might be tuples).
+}) {}
+
+type CreateViewProps = {
+  typename: string;
+  jsonSchema?: JsonSchemaType;
+  properties?: string[];
 };
 
-export const removeFieldFromView = (schema: MutableSchema, view: ViewType, field: FieldType) => {
-  const index = view.fields.findIndex((f) => f.path === field.path);
-  if (index !== -1) {
-    view.fields.splice(index, 1);
-  }
-  schema.removeFields([field.path]);
+/**
+ * Create view from existing schema.
+ */
+// TODO(burdon): What is the minimal type that can be passed here that included TypedObjects (i.e., AbstractSchema).
+export const createView = ({
+  typename,
+  jsonSchema,
+  properties: _properties,
+}: CreateViewProps): ReactiveObject<ViewType> => {
+  const properties = _properties ?? Object.keys(jsonSchema?.properties ?? []).filter((p) => p !== 'id');
+  return create(ViewType, {
+    // schema: jsonSchema,
+    query: {
+      __typename: typename,
+    },
+    // Create initial fields.
+    fields: properties.map((property) => ({ property: createJsonPath(property) })),
+  });
 };

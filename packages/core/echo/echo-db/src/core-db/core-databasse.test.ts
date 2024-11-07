@@ -570,7 +570,7 @@ describe('CoreDatabase', () => {
         field: S.String,
       }) {}
 
-      const stored = db.schema.addSchema(TestSchema);
+      const stored = db.schemaRegistry.addSchema(TestSchema);
       const schemaDxn = DXN.localEchoObjectDXN(stored.id).toString();
 
       const object = db.add(create(stored, { field: 'test' }));

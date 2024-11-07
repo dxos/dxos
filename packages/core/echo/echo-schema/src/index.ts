@@ -7,18 +7,21 @@
  */
 export { AST, JSONSchema, S } from '@dxos/effect';
 
-// TODO(burdon): Clean-up ./types (remove import deps from this file).
-// TODO(burdon): Change TypedObject to piped effector (not base class).
-// TODO(burdon): Organize subfolders to minimize cross-folder deps.
-// TODO(burdon): Rename EchoReactiveObject (remove ECHO prefix).
-// TODO(burdon): Consistent Symbol.for names.
-// TODO(burdon): S.Schema<HasId> everywhere?
-// TODO(burdon): Fix defaults.
+// TODO(burdon): Tech debt:
+//  - Clean-up ./types (remove import deps from this file).
+//  - Change TypedObject to piped effector (not base class).
+//  - Organize subfolders to minimize cross-folder deps.
+//  - Rename EchoReactiveObject (remove ECHO prefix).
+//  - Consistent Symbol.for names.
+//  - S.Schema<HasId> everywhere?
+//  - Fix defaults.
 
 export * from './ast';
+export * from './formats';
 export * from './handler';
 export * from './json';
 export * from './mutable';
 export * from './object';
 export * from './proxy';
+export * from './query';
 export * from './types';

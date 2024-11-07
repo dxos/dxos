@@ -2,22 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { S } from '@dxos/echo-schema';
-import { getSpace } from '@dxos/react-client/echo';
+import { type MutableSchema, S } from '@dxos/echo-schema';
 import { Button, Icon, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { FieldSchema, createUniqueFieldForView, type FieldType, type ViewType } from '@dxos/schema';
+import { FieldSchema, type FieldType, type ViewType, ViewProjection } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '../../translations';
-import { Field } from '../Field';
+import { FieldEditor } from '../Field/';
 
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
 
 export type ViewEditorProps = ThemedClassName<{
+  schema: MutableSchema;
   view: ViewType;
   readonly?: boolean;
 }>;
@@ -25,38 +25,45 @@ export type ViewEditorProps = ThemedClassName<{
 /**
  * Schema-based object form.
  */
-export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
+export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
-  const space = getSpace(view);
-  const [field, setField] = useState<FieldType | undefined>();
+  const projection = useMemo(() => new ViewProjection(schema, view), [schema, view]);
+  const [selectedField, setSelectedField] = useState<FieldType>();
 
-  const handleAdd = () => {
-    const field = createUniqueFieldForView(view);
-    view.fields.push(field);
-    setField(field);
-  };
+  const handleSelect = useCallback((field: FieldType) => {
+    setSelectedField((f) => (f === field ? undefined : field));
+  }, []);
 
-  const handleSelect = (field: FieldType) => {
-    setField((f) => (f === field ? undefined : field));
-  };
+  const handleAdd = useCallback(() => {
+    const field = projection.createFieldProjection();
+    setSelectedField(field);
+  }, [view]);
 
-  const handleDelete = (field: FieldType) => {
-    const idx = view.fields.findIndex((f) => field.path === f.path);
-    view.fields.splice(idx, 1);
-    setField(undefined);
-  };
+  const handleMove = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      arrayMove(view.fields, fromIndex, toIndex);
+    },
+    [view.fields],
+  );
 
-  const handleMove = (fromIndex: number, toIndex: number) => {
-    arrayMove(view.fields, fromIndex, toIndex);
-  };
+  const handleDelete = useCallback(
+    (field: FieldType) => {
+      const idx = view.fields.findIndex((f) => field.property === f.property);
+      view.fields.splice(idx, 1);
+      setSelectedField(undefined);
+    },
+    [view.fields],
+  );
+
+  const handleComplete = useCallback(() => setSelectedField(undefined), []);
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
       <List.Root<FieldType>
-        isItem={S.is(FieldSchema)}
         items={view.fields}
+        isItem={S.is(FieldSchema)}
+        getId={(field) => field.property}
         onMove={handleMove}
-        getId={(field) => field.path}
       >
         {({ items }) => (
           <div className='w-full'>
@@ -67,9 +74,9 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
 
             <div role='list' className='flex flex-col w-full'>
               {items?.map((item) => (
-                <List.Item<FieldType> key={item.path} item={item} classNames={mx(grid, ghostHover)}>
+                <List.Item<FieldType> key={item.property} item={item} classNames={mx(grid, ghostHover)}>
                   <List.ItemDragHandle />
-                  <List.ItemTitle onClick={() => handleSelect(item)}>{item.path}</List.ItemTitle>
+                  <List.ItemTitle onClick={() => handleSelect(item)}>{item.property}</List.ItemTitle>
                   <List.ItemDeleteButton onClick={() => handleDelete(item)} />
                 </List.Item>
               ))}
@@ -78,21 +85,18 @@ export const ViewEditor = ({ classNames, view, readonly }: ViewEditorProps) => {
         )}
       </List.Root>
 
-      {field && view.schema && (
-        <Field
-          key={field.path}
-          classNames='p-2'
-          autoFocus
-          field={field}
-          schema={space?.db.schema.getSchemaByTypename(view.schema)}
-        />
+      {selectedField && (
+        <FieldEditor field={selectedField} projection={projection} view={view} onComplete={handleComplete} />
       )}
 
+      {/* TODO(burdon): Option. */}
       {!readonly && (
-        <div className='flex justify-center'>
-          <Button onClick={handleAdd}>
-            <Icon icon='ph--plus--regular' size={4} />
-          </Button>
+        <div className='flex justify-center p-2'>
+          <div className='flex gap-2'>
+            <Button onClick={handleAdd}>
+              <Icon icon='ph--plus--regular' />
+            </Button>
+          </div>
         </div>
       )}
     </div>

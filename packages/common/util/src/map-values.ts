@@ -14,21 +14,30 @@ export const mapValues = <T, U>(obj: Record<string, T>, fn: (value: T, key: stri
  * Recursively maps values traversing arrays and objects.
  * @param fn Function to apply to each value. Second argument is a function to recurse into the value.
  */
-export const deepMapValues = (value: any, fn: (value: any, recurse: (value: any) => any) => any): any => {
+export const deepMapValues = (
+  value: any,
+  fn: (value: any, recurse: (value: any) => any, key: string | number | undefined) => any,
+): any => {
   return new DeepMapper(fn).map(value);
 };
 
 class DeepMapper {
   private readonly _cyclic = new Map<any, any>();
 
-  constructor(private readonly _fn: (value: any, recurse: (value: any) => any) => any) {}
+  constructor(
+    private readonly _fn: (value: any, recurse: (value: any) => any, key: string | number | undefined) => any,
+  ) {}
 
   map(value: any): any {
+    return this._map(value, undefined);
+  }
+
+  private _map(value: any, key: string | number | undefined): any {
     if (this._cyclic.has(value)) {
       return this._cyclic.get(value);
     }
 
-    return this._fn(value, this._recurse);
+    return this._fn(value, this._recurse, key);
   }
 
   private _recurse = (value: any) => {
@@ -40,14 +49,14 @@ class DeepMapper {
       const res = new Array(value.length);
       this._cyclic.set(value, res);
       for (let i = 0; i < value.length; i++) {
-        res[i] = this.map(value[i]);
+        res[i] = this._map(value[i], i);
       }
       return res;
     } else if (value !== null && typeof value === 'object') {
       const res: any = {};
       this._cyclic.set(value, res);
       for (const key in value) {
-        res[key] = this.map(value[key]);
+        res[key] = this._map(value[key], key);
       }
       return res;
     } else {
@@ -63,7 +72,7 @@ class DeepMapper {
  */
 export const deepMapValuesAsync = (
   value: any,
-  fn: (value: any, recurse: (value: any) => Promise<any>) => Promise<any>,
+  fn: (value: any, recurse: (value: any) => Promise<any>, key: string | number | undefined) => Promise<any>,
 ): Promise<any> => {
   return new DeepMapperAsync(fn).map(value);
 };
@@ -71,14 +80,24 @@ export const deepMapValuesAsync = (
 class DeepMapperAsync {
   private readonly _cyclic = new Map<any, any>();
 
-  constructor(private readonly _fn: (value: any, recurse: (value: any) => Promise<any>) => Promise<any>) {}
+  constructor(
+    private readonly _fn: (
+      value: any,
+      recurse: (value: any) => Promise<any>,
+      key: string | number | undefined,
+    ) => Promise<any>,
+  ) {}
 
   map(value: any): Promise<any> {
+    return this._map(value, undefined);
+  }
+
+  private _map(value: any, key: string | number | undefined): Promise<any> {
     if (this._cyclic.has(value)) {
       return this._cyclic.get(value);
     }
 
-    return this._fn(value, this._recurse);
+    return this._fn(value, this._recurse, key);
   }
 
   private _recurse = async (value: any) => {
@@ -90,14 +109,14 @@ class DeepMapperAsync {
       const res = new Array(value.length);
       this._cyclic.set(value, res);
       for (let i = 0; i < value.length; i++) {
-        res[i] = await this.map(value[i]);
+        res[i] = await this._map(value[i], i);
       }
       return res;
     } else if (value !== null && typeof value === 'object') {
       const res: any = {};
       this._cyclic.set(value, res);
       for (const key in value) {
-        res[key] = await this.map(value[key]);
+        res[key] = await this._map(value[key], key);
       }
       return res;
     } else {

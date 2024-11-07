@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useIntentDispatcher, useResolvePlugins } from '@dxos/app-framework';
 import { Input, Select, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { FormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-data';
 
 import { SpaceAction, SPACE_PLUGIN } from '../meta';
 import { parseSpaceInitPlugin, type SpaceSettingsProps } from '../types';
@@ -18,7 +18,7 @@ export const SpaceSettings = ({ settings }: { settings: SpaceSettingsProps }) =>
 
   return (
     <>
-      <FormInput label={t('show hidden spaces label')}>
+      <DeprecatedFormInput label={t('show hidden spaces label')}>
         <Input.Switch
           checked={settings.showHidden}
           onCheckedChange={(checked) =>
@@ -29,9 +29,9 @@ export const SpaceSettings = ({ settings }: { settings: SpaceSettingsProps }) =>
             })
           }
         />
-      </FormInput>
+      </DeprecatedFormInput>
 
-      <FormInput label={t('default on space create label')}>
+      <DeprecatedFormInput label={t('default on space create label')}>
         <Select.Root
           value={settings.onSpaceCreate}
           onValueChange={(value) => {
@@ -57,7 +57,7 @@ export const SpaceSettings = ({ settings }: { settings: SpaceSettingsProps }) =>
             </Select.Content>
           </Select.Portal>
         </Select.Root>
-      </FormInput>
+      </DeprecatedFormInput>
     </>
   );
 };

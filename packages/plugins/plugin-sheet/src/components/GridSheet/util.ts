@@ -67,12 +67,15 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
     })
     .map((thread) => fullyQualifiedId(thread!))
     .join(' ');
-  const type = model.getValueType(address);
-  const classNames = ranges?.map(cellClassNameForRange);
+
+  const description = model.getValueDescription(address);
+  const type = description?.type;
+  const format = description?.format;
+  const classNames = ranges?.map(cellClassNameForRange).reverse();
 
   return {
-    value: parseValue(type, rawValue),
-    className: mx(cellClassesForFieldType(type), threadRefs && commentedClassName, classNames),
+    value: parseValue({ type, format, value: rawValue }),
+    className: mx(cellClassesForFieldType({ type, format }), threadRefs && commentedClassName, classNames),
     dataRefs: threadRefs,
   };
 };
