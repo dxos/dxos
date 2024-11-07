@@ -4,17 +4,15 @@
 
 import { useEffect } from 'react';
 
-import { create, type MutableSchema, S, TypedObject } from '@dxos/echo-schema';
+import { create, S, TypeEnum, TypedObject, FormatEnum, toJsonSchema } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { FieldValueType } from '@dxos/schema';
+import { createView, type ViewProjection } from '@dxos/schema';
 
 import { TableType } from '../types';
 
-// TODO(burdon): Factor out to @dxos/schema/testing!
-
 export const createEmptyTable = () => create(TableType, {});
 
-export const TestSchema = TypedObject({ typename: 'example.com/type/test', version: '0.1.0' })({
+export const TestSchema = TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
   id: S.String,
   name: S.optional(S.String),
   age: S.optional(S.Number),
@@ -22,19 +20,14 @@ export const TestSchema = TypedObject({ typename: 'example.com/type/test', versi
   netWorth: S.optional(S.Number),
 });
 
-export const createTable = (schema?: MutableSchema) =>
-  create(TableType, {
-    schema,
-    view: {
-      schema: 'example.com/type/test',
-      fields: [
-        { path: 'name', label: 'Name', type: FieldValueType.String },
-        { path: 'age', label: 'Age', type: FieldValueType.Number },
-        { path: 'active', label: 'Active', type: FieldValueType.Boolean },
-        { path: 'netWorth', label: 'Net Worth', type: FieldValueType.Currency },
-      ],
-    },
+export const createTable = (schema = TestSchema) => {
+  return create(TableType, {
+    view: createView({
+      typename: schema.typename,
+      jsonSchema: toJsonSchema(schema),
+    }),
   });
+};
 
 export const createItems = (n: number) => {
   const { data } = create({
@@ -79,27 +72,38 @@ export const useSimulator = ({ items, table, insertInterval, updateInterval }: S
       const rowIdx = Math.floor(Math.random() * items.length);
       const fields = table.view?.fields ?? [];
       const columnIdx = Math.floor(Math.random() * fields.length);
+      const projection: ViewProjection = (table as any)._projection;
       const field = fields[columnIdx];
       const item = items[rowIdx];
 
+      const {
+        props: { type, format },
+      } = projection.getFieldProjection(field.property);
+
       if (field) {
-        const path = field.path;
-        switch (field.type) {
-          case FieldValueType.String: {
+        const path = field.property;
+        // TODO(ZaymonFC): Restore this once I know how to derive the type from the schema.
+        switch (type) {
+          case TypeEnum.String: {
             item[path] = `Updated ${Date.now()}`;
             break;
           }
-          case FieldValueType.Number: {
+          case TypeEnum.Number: {
             item[path] = Math.floor(Math.random() * 100);
             break;
           }
-          case FieldValueType.Boolean: {
+          case TypeEnum.Boolean: {
             item[path] = !item[path];
             break;
           }
-          case FieldValueType.Currency: {
-            item[path] = Math.floor(Math.random() * 1000);
-            break;
+        }
+
+        if (format) {
+          switch (format) {
+            case FormatEnum.Currency: {
+              item[path] = Math.floor(Math.random() * 1000);
+              break;
+            }
           }
         }
       }

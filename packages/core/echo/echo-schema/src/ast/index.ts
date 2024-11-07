@@ -4,4 +4,4 @@
 
 export * from './annotations';
 export * from './schema-validator';
-export * from './utils';
+export * from './types';

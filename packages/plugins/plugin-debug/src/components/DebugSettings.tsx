@@ -10,7 +10,7 @@ import { type ConfigProto, defs, SaveConfig, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useTranslation, Button, Toast, Input, useFileDownload, Select } from '@dxos/react-ui';
-import { FormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-data';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { setDeep } from '@dxos/util';
 
@@ -80,25 +80,25 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
 
   return (
     <>
-      <FormInput label={t('settings show debug panel')}>
+      <DeprecatedFormInput label={t('settings show debug panel')}>
         <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
-      </FormInput>
-      <FormInput label={t('settings show devtools panel')}>
+      </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('settings show devtools panel')}>
         <Input.Switch checked={settings.devtools} onCheckedChange={(checked) => (settings.devtools = !!checked)} />
-      </FormInput>
-      <FormInput label={t('settings wireframe')}>
+      </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('settings wireframe')}>
         <Input.Switch checked={settings.wireframe} onCheckedChange={(checked) => (settings.wireframe = !!checked)} />
-      </FormInput>
-      <FormInput label={t('settings download diagnostics')}>
+      </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('settings download diagnostics')}>
         <Button onClick={handleDownload}>
           <DownloadSimple className={getSize(5)} />
         </Button>
-      </FormInput>
-      <FormInput label={t('settings repair')}>
+      </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('settings repair')}>
         <Button onClick={handleRepair}>
           <FirstAidKit className={getSize(5)} />
         </Button>
-      </FormInput>
+      </DeprecatedFormInput>
 
       {/* TODO(burdon): Move to layout? */}
       {toast && (
@@ -113,7 +113,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
         </Toast.Root>
       )}
 
-      <FormInput label={t('settings choose storage adaptor')}>
+      <DeprecatedFormInput label={t('settings choose storage adaptor')}>
         <Select.Root
           value={
             Object.entries(StorageAdapters).find(
@@ -144,7 +144,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
             </Select.Content>
           </Select.Portal>
         </Select.Root>
-      </FormInput>
+      </DeprecatedFormInput>
     </>
   );
 };

@@ -7,12 +7,14 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { type MutableSchema } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { Filter, useSpaces, useQuery, create, getSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-data';
-import { addFieldToView, type FieldType, removeFieldFromView } from '@dxos/schema';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { ViewProjection, ViewType, type FieldType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
@@ -27,38 +29,42 @@ import { createEmptyTable, createItems, createTable, type SimulatorProps, useSim
 //
 
 const DefaultStory = () => {
-  const [table, setTable] = useState<TableType | undefined>();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const tables = useQuery(space, Filter.schema(TableType));
-  const objects = useQuery(space, table?.schema ? Filter.schema(table.schema) : () => false, undefined, [
-    table?.schema,
-  ]);
-  const filteredObjects = useGlobalFilteredObjects(objects);
-
+  const [table, setTable] = useState<TableType | undefined>();
+  const [schema, setSchema] = useState<MutableSchema>();
   useEffect(() => {
     if (tables.length > 0) {
-      setTable(tables[0]);
+      const table = tables[0];
+      setTable(table);
+      if (table.view) {
+        setSchema(space.db.schemaRegistry.getSchema(table.view.query.__typename));
+      }
     }
   }, [tables]);
 
+  const objects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
+  const filteredObjects = useGlobalFilteredObjects(objects);
   const handleDeleteRow = useCallback((row: any) => space.db.remove(row), [space]);
-  const handleAddColumn = useCallback(
-    (field: any) => {
-      if (table && table.schema?.schema && table.view) {
-        addFieldToView(table.schema, table.view, field);
-      }
-    },
-    [table],
-  );
-  const handleDeleteColumn = useCallback(
-    (field: any) => {
-      if (table && table.schema?.schema && table.view) {
-        removeFieldFromView(table.schema, table.view, field);
-      }
-    },
-    [table],
-  );
+
+  // TODO(ZaymonFC): Reimplement these with the new schema manipulation features.
+  // const handleAddColumn = useCallback(
+  //   (field: any) => {
+  //     if (table && table.schema?.schema && table.view) {
+  //       addFieldToView(table.schema, table.view, field);
+  //     }
+  //   },
+  //   [table],
+  // );
+  // const handleDeleteColumn = useCallback(
+  //   (field: any) => {
+  //     if (table && table.schema?.schema && table.view) {
+  //       removeFieldFromView(table.schema, table.view, field);
+  //     }
+  //   },
+  //   [table],
+  // );
 
   const handleAction = useCallback(
     (action: { type: string }) => {
@@ -70,8 +76,8 @@ const DefaultStory = () => {
         case 'add-row': {
           if (table) {
             const space = getSpace(table);
-            if (table?.schema && space) {
-              space.db.add(create(table.schema, {}));
+            if (space && schema) {
+              space.db.add(create(schema, {}));
             }
             break;
           }
@@ -81,36 +87,41 @@ const DefaultStory = () => {
     [table, spaces],
   );
 
+  const projection = useMemo(() => {
+    if (!schema || !table?.view) {
+      return;
+    }
+
+    return new ViewProjection(schema, table.view);
+  }, [schema, table?.view]);
+
   const model = useTableModel({
-    table: table!,
+    table,
+    projection,
     objects: filteredObjects,
     onDeleteRow: handleDeleteRow,
-    onAddColumn: handleAddColumn,
-    onDeleteColumn: handleDeleteColumn,
+    // onAddColumn: handleAddColumn,
+    // onDeleteColumn: handleDeleteColumn,
   });
 
-  if (!table) {
-    return null;
+  if (!schema || !table) {
+    return <div />;
   }
 
   return (
-    <div className='grid grid-cols-[1fr_256px] w-dvw h-dvh'>
-      <div className='flex flex-col h-full'>
-        <div className='border-b border-separator flex-none'>
-          <Toolbar.Root onAction={handleAction}>
-            <Toolbar.Separator />
-            <Toolbar.Actions />
-          </Toolbar.Root>
-        </div>
-        <div className='relative is-full max-is-max min-is-0 min-bs-0'>
-          <Table model={model} />
-        </div>
+    <div className='grow grid grid-cols-[1fr_350px]'>
+      <div className='flex flex-col h-full overflow-hidden'>
+        <Toolbar.Root classNames='border-b border-separator' onAction={handleAction}>
+          <Toolbar.Separator />
+          <Toolbar.Actions />
+        </Toolbar.Root>
+        <Table.Viewport>
+          <Table.Table model={model} />
+        </Table.Viewport>
       </div>
-      <div className='border-l border-separator -mt-px flex flex-col h-full'>
-        <div className='flex-none'>{table.view && <ViewEditor view={table?.view} />}</div>
-        <div className='flex-1 min-h-0 overflow-auto'>
-          <pre className='text-[10px] pli-2 font-mono text-wrap'>{JSON.stringify(table, null, 2)}</pre>
-        </div>
+      <div className='flex flex-col h-full border-l border-separator'>
+        {table.view && <ViewEditor schema={schema} view={table.view} />}
+        <SyntaxHighlighter className='w-full text-xs'>{JSON.stringify(table.view, null, 2)}</SyntaxHighlighter>
       </div>
     </div>
   );
@@ -161,9 +172,9 @@ const TablePerformanceStory = (props: StoryProps) => {
   });
 
   return (
-    <div className='relative is-full max-is-max min-is-0 min-bs-0'>
-      <Table model={model} />
-    </div>
+    <Table.Viewport>
+      <Table.Table model={model} />
+    </Table.Viewport>
   );
 };
 
@@ -171,32 +182,14 @@ const TablePerformanceStory = (props: StoryProps) => {
 // Story definitions.
 //
 
-export const Default = {};
-
-export const Mutations: StoryObj = {
-  render: TablePerformanceStory,
-  args: {
-    rows: 1000,
-    updateInterval: 1,
-  },
-};
-
-export const RapidInsertions: StoryObj = {
-  render: TablePerformanceStory,
-  args: {
-    rows: 0,
-    insertInterval: 100,
-  },
-};
-
 const meta: Meta<typeof Table> = {
   title: 'plugins/plugin-table/Table',
-  component: Table,
-  render: DefaultStory as any,
+  component: Table.Table as any,
+  render: DefaultStory,
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType],
+      types: [TableType, ViewType],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: ({ space }) => {
@@ -209,3 +202,23 @@ const meta: Meta<typeof Table> = {
 };
 
 export default meta;
+
+type Story = StoryObj<StoryProps>;
+
+export const Default = {};
+
+export const Mutations: Story = {
+  render: TablePerformanceStory,
+  args: {
+    rows: 1000,
+    updateInterval: 1,
+  },
+};
+
+export const RapidInsertions: Story = {
+  render: TablePerformanceStory,
+  args: {
+    rows: 0,
+    insertInterval: 100,
+  },
+};

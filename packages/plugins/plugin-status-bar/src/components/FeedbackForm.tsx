@@ -48,7 +48,7 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
     [dispatch, onClose],
   );
 
-  const { errors, handleSubmit, canSubmit, touched, getInputProps } = useForm<FeedbackFormState>({
+  const { handleSubmit, canSubmit, getInputProps, getErrorValence, getErrorMessage } = useForm<FeedbackFormState>({
     initialValues,
     schema: FeedbackFormSchema,
     onSubmit,
@@ -57,7 +57,7 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
   return (
     <div role='form' className='p-3 flex flex-col gap-2'>
       <div role='none' className='space-b-1'>
-        <Input.Root validationValence={touched.name && errors.name ? 'error' : undefined}>
+        <Input.Root validationValence={getErrorValence('name')}>
           <Input.Label>{translation('name label')}</Input.Label>
           <Input.TextInput
             classNames={'text-sm'}
@@ -66,13 +66,13 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
             {...getInputProps('name')}
           />
           <Input.DescriptionAndValidation>
-            <Input.Validation>{touched.name && errors.name}</Input.Validation>
+            <Input.Validation>{getErrorMessage('name')}</Input.Validation>
           </Input.DescriptionAndValidation>
         </Input.Root>
       </div>
 
       <div role='none' className='space-b-1'>
-        <Input.Root validationValence={touched.email && errors.email ? 'error' : undefined}>
+        <Input.Root validationValence={getErrorValence('email')}>
           <Input.Label>{translation('email input label')}</Input.Label>
           <Input.TextInput
             classNames={'text-sm'}
@@ -80,13 +80,13 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
             {...getInputProps('email')}
           />
           <Input.DescriptionAndValidation>
-            <Input.Validation>{touched.email && errors.email}</Input.Validation>
+            <Input.Validation>{getErrorMessage('email')}</Input.Validation>
           </Input.DescriptionAndValidation>
         </Input.Root>
       </div>
 
       <div role='none' className='space-b-1'>
-        <Input.Root validationValence={touched.message && errors.message ? 'error' : undefined}>
+        <Input.Root validationValence={getErrorValence('message')}>
           <Input.Label>{translation('feedback text area label')}</Input.Label>
           <Input.TextArea
             classNames={'text-sm'}
@@ -96,7 +96,7 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
             {...getInputProps('message')}
           />
           <Input.DescriptionAndValidation>
-            <Input.Validation>{touched.message && errors.message}</Input.Validation>
+            <Input.Validation>{getErrorMessage('message')}</Input.Validation>
           </Input.DescriptionAndValidation>
         </Input.Root>
       </div>

@@ -6,7 +6,7 @@ import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { Link, Input, Trans, useTranslation, useId } from '@dxos/react-ui';
-import { FormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-data';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { useOctokitContext } from './OctokitProvider';
@@ -45,7 +45,7 @@ export const GitHubSettings = () => {
 
   return (
     <>
-      <FormInput
+      <DeprecatedFormInput
         label={t('github pat label')}
         description={
           <Trans
@@ -66,7 +66,7 @@ export const GitHubSettings = () => {
           value={patValue ?? ''}
           onChange={({ target: { value } }) => setPatValue(value)}
         />
-      </FormInput>
+      </DeprecatedFormInput>
     </>
   );
 };

@@ -2,26 +2,33 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { DropdownMenu, type DropdownMenuRootProps } from '@dxos/react-ui';
-import { Field } from '@dxos/react-ui-data';
+import { FieldEditor } from '@dxos/react-ui-data';
+import { type FieldProjection } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
 export type ColumnSettingsModalProps = {
   model?: TableModel;
-  columnId?: string;
+  columnId?: string; // TODO(burdon): Rename property?
   triggerRef: React.RefObject<HTMLButtonElement>;
 } & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
 
 export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, triggerRef }: ColumnSettingsModalProps) => {
-  const field = React.useMemo(
-    () => model?.table?.view?.fields.find((f) => f.path === columnId),
+  const field = useMemo(
+    () => model?.table?.view?.fields.find((f) => f.property === columnId),
     [model?.table?.view?.fields, columnId],
   );
 
-  if (!field) {
+  const props = useMemo<FieldProjection | undefined>(() => {
+    if (field) {
+      return model?.projection.getFieldProjection(field.property);
+    }
+  }, [model?.table?.view?.fields, columnId]);
+
+  if (!props || !field || !model?.projection || !model?.table?.view?.fields) {
     return null;
   }
 
@@ -29,7 +36,12 @@ export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, trigg
     <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
       <DropdownMenu.Content>
-        <Field field={field} onSave={() => onOpenChange?.(false)} />
+        <FieldEditor
+          field={field}
+          projection={model?.projection}
+          view={model?.table.view}
+          onComplete={() => onOpenChange?.(false)}
+        />
         <DropdownMenu.Arrow />
       </DropdownMenu.Content>
     </DropdownMenu.Root>

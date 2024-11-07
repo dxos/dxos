@@ -178,7 +178,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // Object instanceof StoredEchoSchema requires database to lookup schema.
     const database = target[symbolInternals].database;
     if (object != null && database && object instanceof StoredSchema) {
-      return database.schema.registerSchema(object);
+      return database.schemaRegistry.registerSchema(object);
     }
 
     return object;
@@ -279,7 +279,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
-    const unwrappedValue = value instanceof MutableSchema ? value.serializedSchema : value;
+    const unwrappedValue = value instanceof MutableSchema ? value.storedSchema : value;
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) => {
       return target[symbolInternals].core.getDecoded([getNamespace(target), ...path]);
     });
@@ -316,7 +316,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    return target[symbolInternals].database.schema.getSchemaById(typeReference.objectId);
+    return target[symbolInternals].database.schemaRegistry.getSchemaById(typeReference.objectId);
   }
 
   getTypeReference(target: ProxyTarget): Reference | undefined {
