@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type AST, type JSONSchema, S } from '@dxos/effect';
+import { type AST, S } from '@dxos/effect';
 import { deepMapValues } from '@dxos/util';
 
 import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';

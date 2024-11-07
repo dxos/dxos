@@ -60,7 +60,6 @@ export const schemaVariance = {
 const SimpleTypes = S.Literal('array', 'boolean', 'integer', 'null', 'number', 'object', 'string');
 
 const NonNegativeInteger = S.Number.pipe(S.greaterThanOrEqualTo(0));
-const SchemaArray = S.Array(S.suspend(() => JsonSchemaType));
 const StringArray = S.Array(S.String);
 const JsonSchemaOrBoolean = S.Union(
   S.suspend(() => JsonSchemaType),
