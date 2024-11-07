@@ -4,10 +4,10 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { AST, type S } from '@dxos/echo-schema';
+import { type S } from '@dxos/echo-schema';
 import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { getSchemaProperties } from '@dxos/schema';
+import { getSchemaProperties, type ValidationError } from '@dxos/schema';
 
 import { FormInput, type FormInputProps } from './FormInput';
 import { useForm } from '../../hooks';
@@ -17,6 +17,7 @@ export type FormProps<T extends object> = ThemedClassName<{
   schema: S.Schema<T>;
   autoFocus?: boolean;
   readonly?: boolean;
+  additionalValidation?: (values: T) => ValidationError[] | undefined;
   onValuesChanged?: (values: T) => void;
   onSave?: (values: T) => void;
   Custom?: FC<Omit<FormInputProps<T>, 'property' | 'label'>>;
@@ -30,6 +31,7 @@ export const Form = <T extends object>({
   values,
   schema,
   readonly,
+  additionalValidation,
   onValuesChanged,
   onSave,
   Custom,
@@ -38,16 +40,7 @@ export const Form = <T extends object>({
   const { canSubmit, handleSubmit, getInputProps, getErrorValence, getErrorMessage } = useForm<T>({
     schema,
     initialValues: values,
-    // additionalValidation: (values) => {
-    // Check that the path doesn't already exist in the schema.
-    // TODO(ZaymonFC) Need to use some sort of json path accessor to check paths like:
-    // 'address.zip'.
-    // This should be a util.
-    // const pathChanged = values.property !== field.property;
-    // if (pathChanged && view.schema && (view.schema as any).properties[values.property]) {
-    //   return [pathNotUniqueError(values.property)];
-    // }
-    // },
+    additionalValidation,
     onValuesChanged,
     onSubmit: (values) => onSave?.(values),
   });

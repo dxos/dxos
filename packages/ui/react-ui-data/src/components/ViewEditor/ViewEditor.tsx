@@ -59,6 +59,15 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
     handleValueChanged(fieldProperties);
   }, [fieldProperties]);
 
+  const handleAdditionalValidation = useCallback(
+    ({ property }: PropertyType) => {
+      if (property && view.fields.find((f) => f.property === property && f !== field)) {
+        return [{ path: 'property', message: `'${property}' is not unique.` }];
+      }
+    },
+    [view.fields, field],
+  );
+
   const handleSelect = useCallback((field: FieldType) => {
     setField((f) => (f === field ? undefined : field));
   }, []);
@@ -128,6 +137,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
             autoFocus
             values={fieldProperties}
             schema={fieldSchema}
+            additionalValidation={handleAdditionalValidation}
             onValuesChanged={handleValueChanged}
             onSave={(props) => handleSet(field, props)}
             Custom={(props) => (
