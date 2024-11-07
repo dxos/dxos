@@ -16,7 +16,7 @@ import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { initializeBundler } from './bundler';
 import { Compiler } from './compiler';
-import { AutomationPanel, ScriptContainer, ScriptSettings } from './components';
+import { AutomationPanel, ScriptContainer, ScriptSettings, ScriptSettingsPanel } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import { templates } from './templates';
 import translations from './translations';
@@ -128,6 +128,14 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
                   disposition: 'hoist',
                 };
               }
+              break;
+            }
+
+            case 'complementary--settings': {
+              if (data.subject instanceof ScriptType) {
+                return <ScriptSettingsPanel script={data.subject} />;
+              }
+              break;
             }
           }
 
