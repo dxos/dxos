@@ -162,7 +162,7 @@ export const CommentContainer = ({
         {detached ? (
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
-              <ThreadHeading detached>{thread.name ?? t('thread title placeholder')}</ThreadHeading>
+              <ThreadHeading detached>{thread.name}</ThreadHeading>
             </Tooltip.Trigger>
             <Tooltip.Portal>
               <Tooltip.Content classNames='z-[21]' side='top'>
@@ -172,7 +172,7 @@ export const CommentContainer = ({
             </Tooltip.Portal>
           </Tooltip.Root>
         ) : (
-          <ThreadHeading>{thread.name ?? t('thread title placeholder')}</ThreadHeading>
+          <ThreadHeading>{thread.name}</ThreadHeading>
         )}
         <div className='flex flex-row items-center pli-1'>
           {thread.status === 'staged' && <Tag palette='neutral'>{t('draft button')}</Tag>}
