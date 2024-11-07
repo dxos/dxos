@@ -71,7 +71,6 @@ export const schemaVariance = {
 const SimpleTypes = S.Literal('array', 'boolean', 'integer', 'null', 'number', 'object', 'string');
 
 const NonNegativeInteger = S.Number.pipe(S.greaterThanOrEqualTo(0));
-const SchemaArray = S.Array(S.suspend(() => JsonSchemaType));
 const StringArray = S.Array(S.String);
 const JsonSchemaOrBoolean = S.Union(
   S.suspend(() => JsonSchemaType),
@@ -83,52 +82,108 @@ const JsonSchemaOrBoolean = S.Union(
  * Contains extensions for ECHO (e.g., references).
  * Ref: https://json-schema.org/draft-07/schema
  */
-// TODO(dmaretskyi): Fix circular types.
-const JsonSchemaSchema = S.mutable(
+const _JsonSchemaType = S.mutable(
   S.Struct({
+    /**
+     * Identifier for this schema.
+     * This schema might be referenced by $ref clause in other schemas.
+     */
     $id: S.optional(S.String),
+
+    /**
+     * Schema of this schema.
+     * Set to "https://json-schema.org/draft-07/schema".
+     */
     $schema: S.optional(S.String),
+
+    /**
+     * Reference to another schema.
+     */
     $ref: S.optional(S.String),
+
+    /**
+     * Comments are ignored when interpreting the schema.
+     */
     $comment: S.optional(S.String),
+
+    /**
+     * Version of this schema.
+     * Custom dialect for ECHO.
+     */
+    version: S.optional(S.String),
+
     title: S.optional(S.String),
     description: S.optional(S.String),
-    default: S.optional(S.Any),
-    version: S.optional(S.String),
+
     readOnly: S.optional(S.Boolean),
     writeOnly: S.optional(S.Boolean),
+
     examples: S.optional(S.Array(S.Any)),
+
+    /**
+     * Default value for this schema.
+     */
+    default: S.optional(S.Any),
+
+    const: S.optional(S.Any),
+    enum: S.optional(S.Array(S.Any)),
+
+    /**
+     * Base type of the schema.
+     */
+    type: S.optional(S.Union(SimpleTypes, S.Array(SimpleTypes))),
+
+    //
+    // Numbers.
+    //
+
     multipleOf: S.optional(S.Number.pipe(S.greaterThan(0))),
     maximum: S.optional(S.Number),
     exclusiveMaximum: S.optional(S.Number),
     minimum: S.optional(S.Number),
     exclusiveMinimum: S.optional(S.Number),
-    maxLength: S.optional(NonNegativeInteger),
-    minLength: S.optional(NonNegativeInteger),
-    pattern: S.optional(S.String.annotations({ [FormatAnnotationId]: 'regex' })),
-    additionalItems: S.optional(S.suspend(() => JsonSchemaType)),
 
-    items: S.optional(S.suspend((): S.Schema.AnyNoContext => S.Union(JsonSchemaType, SchemaArray))),
+    //
+    // Strings.
+    //
+
+    maxLength: S.optional(NonNegativeInteger),
+
+    /**
+     * Regex pattern for strings.
+     */
+    pattern: S.optional(S.String.annotations({ [FormatAnnotationId]: 'regex' })),
+
+    /**
+     * Serialized from {@link FormatAnnotationId}.
+     */
+    format: S.optional(S.String),
+
+    //
+    // Arrays
+    //
+
+    minLength: S.optional(NonNegativeInteger),
+    items: S.optional(S.suspend(() => JsonSchemaType)),
+    additionalItems: S.optional(S.suspend(() => JsonSchemaType)),
     maxItems: S.optional(NonNegativeInteger),
     minItems: S.optional(NonNegativeInteger),
     uniqueItems: S.optional(S.Boolean),
     contains: S.optional(S.suspend(() => JsonSchemaType)),
+
+    //
+    // Objects
+    //
+
     maxProperties: S.optional(NonNegativeInteger),
     minProperties: S.optional(NonNegativeInteger),
     required: S.optional(StringArray),
     additionalProperties: S.optional(JsonSchemaOrBoolean),
-    definitions: S.optional(
-      S.mutable(
-        S.Record({
-          key: S.String,
-          value: S.suspend((): S.Schema.AnyNoContext => JsonSchemaType),
-        }),
-      ),
-    ),
     properties: S.optional(
       S.mutable(
         S.Record({
           key: S.String,
-          value: S.suspend((): S.Schema.AnyNoContext => JsonSchemaType),
+          value: S.suspend(() => JsonSchemaType),
         }),
       ),
     ),
@@ -136,23 +191,30 @@ const JsonSchemaSchema = S.mutable(
       S.mutable(
         S.Record({
           key: S.String,
-          value: S.suspend((): S.Schema.AnyNoContext => JsonSchemaType),
+          value: S.suspend(() => JsonSchemaType),
+        }),
+      ),
+    ),
+    propertyNames: S.optional(S.suspend(() => JsonSchemaType)),
+
+    definitions: S.optional(
+      S.mutable(
+        S.Record({
+          key: S.String,
+          value: S.suspend(() => JsonSchemaType),
         }),
       ),
     ),
     dependencies: S.optional(
       S.Record({
         key: S.String,
-        value: S.suspend((): S.Schema.AnyNoContext => S.Union(S.String, StringArray, JsonSchemaType)),
+        value: S.suspend(() => S.Union(S.String, StringArray, JsonSchemaType)),
       }),
     ),
-    propertyNames: S.optional(S.suspend(() => JsonSchemaType)),
-    const: S.optional(S.Any),
-    enum: S.optional(S.Array(S.Any)),
-    type: S.optional(S.Union(SimpleTypes, S.Array(SimpleTypes))),
-    format: S.optional(S.String),
+
     contentMediaType: S.optional(S.String),
     contentEncoding: S.optional(S.String),
+
     if: S.optional(S.suspend(() => JsonSchemaType)),
     then: S.optional(S.suspend(() => JsonSchemaType)),
     else: S.optional(S.suspend(() => JsonSchemaType)),
@@ -164,7 +226,7 @@ const JsonSchemaSchema = S.mutable(
       S.mutable(
         S.Record({
           key: S.String,
-          value: S.suspend((): S.Schema.AnyNoContext => JsonSchemaType),
+          value: S.suspend(() => JsonSchemaType),
         }),
       ),
     ),
@@ -186,6 +248,9 @@ const JsonSchemaSchema = S.mutable(
     ),
 
     // TODO(dmaretskyi): Remove echo namespace.
+    /**
+     * @deprecated
+     */
     echo: S.optional(
       S.mutable(
         S.Struct({
@@ -194,10 +259,17 @@ const JsonSchemaSchema = S.mutable(
               S.Struct({
                 typename: S.String,
                 version: S.String,
+
+                // Note: schemaId is the id of the echo object containing the schema.
+                // This is why this annotation cannot be removed
                 schemaId: S.optional(S.String),
               }),
             ),
           ),
+
+          /**
+           * {@link PropertyMeta} annotations get serialized here.
+           */
           annotations: S.optional(
             S.Record({
               key: S.String,
@@ -213,6 +285,6 @@ const JsonSchemaSchema = S.mutable(
 /**
  * https://json-schema.org/draft-07/schema
  */
-export interface JsonSchemaType extends S.Schema.Type<typeof JsonSchemaSchema> {}
+export interface JsonSchemaType extends S.Schema.Type<typeof _JsonSchemaType> {}
 
-export const JsonSchemaType: S.Schema<JsonSchemaType> = JsonSchemaSchema;
+export const JsonSchemaType: S.Schema<JsonSchemaType> = _JsonSchemaType;
