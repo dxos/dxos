@@ -8,7 +8,7 @@ import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateT
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { getTypename, FormatEnum, ScalarEnum } from '@dxos/echo-schema';
+import { getTypename, FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -35,14 +35,14 @@ import { type CellScalarValue, type CellValue, type SheetType } from '../types';
 // https://hyperformula.handsontable.com/guide/types-of-values.html
 //  - https://github.com/handsontable/hyperformula/blob/master/src/Cell.ts (CellValueType)
 //  - https://github.com/handsontable/hyperformula/blob/master/src/interpreter/InterpreterValue.ts (NumberType)
-const typeMap: Record<string, { type: ScalarEnum; format?: FormatEnum }> = {
-  BOOLEAN: { type: ScalarEnum.Boolean },
-  NUMBER_RAW: { type: ScalarEnum.Number },
-  NUMBER_PERCENT: { type: ScalarEnum.Number, format: FormatEnum.Percent },
-  NUMBER_CURRENCY: { type: ScalarEnum.Number, format: FormatEnum.Currency },
-  NUMBER_DATETIME: { type: ScalarEnum.String, format: FormatEnum.DateTime },
-  NUMBER_DATE: { type: ScalarEnum.String, format: FormatEnum.Date },
-  NUMBER_TIME: { type: ScalarEnum.String, format: FormatEnum.Time },
+const typeMap: Record<string, { type: TypeEnum; format?: FormatEnum }> = {
+  BOOLEAN: { type: TypeEnum.Boolean },
+  NUMBER_RAW: { type: TypeEnum.Number },
+  NUMBER_PERCENT: { type: TypeEnum.Number, format: FormatEnum.Percent },
+  NUMBER_CURRENCY: { type: TypeEnum.Number, format: FormatEnum.Currency },
+  NUMBER_DATETIME: { type: TypeEnum.String, format: FormatEnum.DateTime },
+  NUMBER_DATE: { type: TypeEnum.String, format: FormatEnum.Date },
+  NUMBER_TIME: { type: TypeEnum.String, format: FormatEnum.Time },
 };
 
 const getTopLeft = (range: CellRange): CellAddress => {
@@ -278,7 +278,7 @@ export class SheetModel extends Resource {
   /**
    * Get value type.
    */
-  getValueDescription(cell: CellAddress): { type: ScalarEnum; format?: FormatEnum } | undefined {
+  getValueDescription(cell: CellAddress): { type: TypeEnum; format?: FormatEnum } | undefined {
     invariant(this._node);
     const addr = toSimpleCellAddress(this._node.sheetId, cell);
     const type = this._node.graph.hf.getCellValueDetailedType(addr);

@@ -5,8 +5,7 @@
 import { AST, type JSONSchema } from '@effect/schema';
 
 // TODO(burdon): Arrays, maps, enums.
-// TODO(burdon): Reuse effect/JSON schema type literal?
-export enum ScalarEnum {
+export enum TypeEnum {
   String = 'string',
   Number = 'number',
   Boolean = 'boolean',
@@ -18,26 +17,31 @@ export type ScalarType =
   | JSONSchema.JsonSchema7String
   | JSONSchema.JsonSchema7Number
   | JSONSchema.JsonSchema7Boolean
+  | JSONSchema.JsonSchema7Object
   | JSONSchema.JsonSchema7Ref;
 
-export const getScalarType = (property: JSONSchema.JsonSchema7): ScalarEnum | undefined => {
+export const getTypeEnum = (property: JSONSchema.JsonSchema7): TypeEnum | undefined => {
   switch ((property as any).type) {
     case 'string':
-      return ScalarEnum.String;
+      return TypeEnum.String;
     case 'number':
-      return ScalarEnum.Number;
+      return TypeEnum.Number;
     case 'boolean':
-      return ScalarEnum.Boolean;
+      return TypeEnum.Boolean;
+    case 'object':
+      return TypeEnum.Object;
   }
 };
 
-export const getScalarTypeFromAst = (ast: AST.AST): ScalarEnum | undefined => {
+export const getTypeEnumFromAst = (ast: AST.AST): TypeEnum | undefined => {
   if (AST.isStringKeyword(ast)) {
-    return ScalarEnum.String;
+    return TypeEnum.String;
   } else if (AST.isNumberKeyword(ast)) {
-    return ScalarEnum.Number;
+    return TypeEnum.Number;
   } else if (AST.isBooleanKeyword(ast)) {
-    return ScalarEnum.Boolean;
+    return TypeEnum.Boolean;
+  } else if (AST.isObjectKeyword(ast)) {
+    return TypeEnum.Object;
   }
 };
 
@@ -90,49 +94,49 @@ export enum FormatEnum {
 export const FormatEnums = Object.values(FormatEnum).sort();
 
 export const PropertyKind = {
-  type: ScalarEnum,
+  type: TypeEnum,
   format: FormatEnum,
 };
 
 /**
  * Default formats
  */
-export const typeToFormat: Partial<Record<ScalarEnum, FormatEnum>> = {
-  [ScalarEnum.String]: FormatEnum.String,
-  [ScalarEnum.Number]: FormatEnum.Number,
-  [ScalarEnum.Boolean]: FormatEnum.Boolean,
+export const typeToFormat: Partial<Record<TypeEnum, FormatEnum>> = {
+  [TypeEnum.String]: FormatEnum.String,
+  [TypeEnum.Number]: FormatEnum.Number,
+  [TypeEnum.Boolean]: FormatEnum.Boolean,
 };
 
 /**
  * Map of format to type.
  */
-export const formatToType: Record<FormatEnum, ScalarEnum> = {
+export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.None]: undefined as any,
-  [FormatEnum.String]: ScalarEnum.String,
-  [FormatEnum.Number]: ScalarEnum.Number,
-  [FormatEnum.Boolean]: ScalarEnum.Boolean,
-  [FormatEnum.Ref]: ScalarEnum.Ref,
+  [FormatEnum.String]: TypeEnum.String,
+  [FormatEnum.Number]: TypeEnum.Number,
+  [FormatEnum.Boolean]: TypeEnum.Boolean,
+  [FormatEnum.Ref]: TypeEnum.Ref,
 
   // Strings
-  [FormatEnum.DID]: ScalarEnum.String,
-  [FormatEnum.Email]: ScalarEnum.String,
-  [FormatEnum.Formula]: ScalarEnum.String,
-  [FormatEnum.Hostname]: ScalarEnum.String,
-  [FormatEnum.JSON]: ScalarEnum.String,
-  [FormatEnum.Markdown]: ScalarEnum.String,
-  [FormatEnum.Regex]: ScalarEnum.String,
-  [FormatEnum.URI]: ScalarEnum.String,
-  [FormatEnum.UUID]: ScalarEnum.String,
+  [FormatEnum.DID]: TypeEnum.String,
+  [FormatEnum.Email]: TypeEnum.String,
+  [FormatEnum.Formula]: TypeEnum.String,
+  [FormatEnum.Hostname]: TypeEnum.String,
+  [FormatEnum.JSON]: TypeEnum.String,
+  [FormatEnum.Markdown]: TypeEnum.String,
+  [FormatEnum.Regex]: TypeEnum.String,
+  [FormatEnum.URI]: TypeEnum.String,
+  [FormatEnum.UUID]: TypeEnum.String,
 
   // Dates
-  [FormatEnum.Date]: ScalarEnum.String,
-  [FormatEnum.DateTime]: ScalarEnum.String,
-  [FormatEnum.Duration]: ScalarEnum.String,
-  [FormatEnum.Time]: ScalarEnum.String,
+  [FormatEnum.Date]: TypeEnum.String,
+  [FormatEnum.DateTime]: TypeEnum.String,
+  [FormatEnum.Duration]: TypeEnum.String,
+  [FormatEnum.Time]: TypeEnum.String,
 
   // Numbers
-  [FormatEnum.Currency]: ScalarEnum.Number,
-  [FormatEnum.Integer]: ScalarEnum.Number,
-  [FormatEnum.Percent]: ScalarEnum.Number,
-  [FormatEnum.Timestamp]: ScalarEnum.Number,
+  [FormatEnum.Currency]: TypeEnum.Number,
+  [FormatEnum.Integer]: TypeEnum.Number,
+  [FormatEnum.Percent]: TypeEnum.Number,
+  [FormatEnum.Timestamp]: TypeEnum.Number,
 };

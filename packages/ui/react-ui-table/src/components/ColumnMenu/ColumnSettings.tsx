@@ -4,7 +4,7 @@
 
 import React, { useRef, useState } from 'react';
 
-import { FormatEnums, type ScalarEnum } from '@dxos/echo-schema';
+import { FormatEnums, type TypeEnum } from '@dxos/echo-schema';
 import { Button, Input, Select, useTranslation } from '@dxos/react-ui';
 import { safeParseInt } from '@dxos/util';
 
@@ -67,7 +67,7 @@ export const ColumnSettings = ({
       id: prop, // TODO(burdon): Make unique.
       prop,
       label,
-      type: type as ScalarEnum,
+      type: type as TypeEnum,
       refTable,
       refProp,
       digits: safeParseInt(digits),

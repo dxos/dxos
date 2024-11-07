@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 
-import { create, S, ScalarEnum, TypedObject, FormatEnum, toJsonSchema } from '@dxos/echo-schema';
+import { create, S, TypeEnum, TypedObject, FormatEnum, toJsonSchema } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { createView, type ViewProjection } from '@dxos/schema';
 
@@ -84,15 +84,15 @@ export const useSimulator = ({ items, table, insertInterval, updateInterval }: S
         const path = field.property;
         // TODO(ZaymonFC): Restore this once I know how to derive the type from the schema.
         switch (type) {
-          case ScalarEnum.String: {
+          case TypeEnum.String: {
             item[path] = `Updated ${Date.now()}`;
             break;
           }
-          case ScalarEnum.Number: {
+          case TypeEnum.Number: {
             item[path] = Math.floor(Math.random() * 100);
             break;
           }
-          case ScalarEnum.Boolean: {
+          case TypeEnum.Boolean: {
             item[path] = !item[path];
             break;
           }

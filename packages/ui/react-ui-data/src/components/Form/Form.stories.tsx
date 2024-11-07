@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useState } from 'react';
 
-import { FormatEnum, ScalarEnum } from '@dxos/echo-schema';
+import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getPropertySchemaForFormat, type PropertyType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -69,7 +69,7 @@ export const Default: Story = {
     values: {
       property: 'currency',
       format: FormatEnum.Currency,
-      type: ScalarEnum.Number,
+      type: TypeEnum.Number,
     },
   },
 };

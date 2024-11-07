@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ScalarEnum, type FormatEnum } from '@dxos/echo-schema';
+import { type TypeEnum, type FormatEnum } from '@dxos/echo-schema';
 
 /**
  * @deprecated
@@ -21,7 +21,7 @@ export type TableDef = {
 export type ColumnDef = {
   id: string;
   prop: string;
-  type: ScalarEnum;
+  type: TypeEnum;
   format?: FormatEnum;
   size?: number;
   label?: string;

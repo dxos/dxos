@@ -4,7 +4,7 @@
 
 import { type ColumnDef } from '@tanstack/react-table';
 
-import { ScalarEnum, type S } from '@dxos/echo-schema';
+import { TypeEnum, type S } from '@dxos/echo-schema';
 import { FormatEnum } from '@dxos/echo-schema';
 import { mapSchemaToFields } from '@dxos/schema';
 
@@ -21,16 +21,16 @@ export const schemaToColumnDefs = <T>(schema: S.Schema<T, any>): ColumnDef<T, an
 
     if (!format) {
       switch (type) {
-        case ScalarEnum.String: {
+        case TypeEnum.String: {
           return helper.accessor(
             propertyKey as any,
             builder.string({ label: propertyKey, classNames: [property === 'id' && 'font-mono'] }),
           );
         }
-        case ScalarEnum.Number: {
+        case TypeEnum.Number: {
           return helper.accessor(propertyKey as any, builder.number({ label: propertyKey }));
         }
-        case ScalarEnum.Boolean: {
+        case TypeEnum.Boolean: {
           return helper.accessor(propertyKey as any, builder.switch({ label: propertyKey }));
         }
         default: {

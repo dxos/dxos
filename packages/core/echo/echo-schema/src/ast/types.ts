@@ -59,8 +59,8 @@ export const schemaVariance = {
 // TODO(burdon): Reuse/reconcile with ScalarTypeEnum.
 const SimpleTypes = S.Literal('array', 'boolean', 'integer', 'null', 'number', 'object', 'string');
 
-const SchemaArray = S.Array(S.suspend(() => JsonSchemaType));
 const NonNegativeInteger = S.Number.pipe(S.greaterThanOrEqualTo(0));
+const SchemaArray = S.Array(S.suspend(() => JsonSchemaType));
 const StringArray = S.Array(S.String);
 const JsonSchemaOrBoolean = S.Union(
   S.suspend(() => JsonSchemaType),

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FormatEnum, ScalarEnum } from '@dxos/echo-schema';
+import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { type ValidationError } from '@dxos/schema';
 
 /**
@@ -13,7 +13,7 @@ import { type ValidationError } from '@dxos/schema';
  */
 // TODO(burdon): Differentiate between data FormatEnum and display format (e.g., percent).
 export type ParseProps = {
-  type?: ScalarEnum;
+  type?: TypeEnum;
   format?: FormatEnum;
   value: any;
 };
@@ -25,7 +25,7 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
 
   if (!format) {
     switch (type) {
-      case ScalarEnum.Boolean: {
+      case TypeEnum.Boolean: {
         if (typeof value === 'string') {
           const lowercaseValue = value.toLowerCase();
           if (lowercaseValue === '0' || lowercaseValue === 'false') {
@@ -37,13 +37,13 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
         return Boolean(value);
       }
 
-      case ScalarEnum.Number: {
+      case TypeEnum.Number: {
         const num = Number(value);
         return Number.isNaN(num) ? null : num;
       }
 
-      case ScalarEnum.String:
-      case ScalarEnum.Ref:
+      case TypeEnum.String:
+      case TypeEnum.Ref:
         return String(value);
 
       default: {
@@ -95,20 +95,20 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
 
 // TODO(burdon): Type and format.
 export type CellClassesForFieldTypeProps = {
-  type?: ScalarEnum;
+  type?: TypeEnum;
   format?: FormatEnum;
 };
 
 export const cellClassesForFieldType = ({ type, format }: CellClassesForFieldTypeProps): string[] | undefined => {
   if (!format) {
     switch (type) {
-      case ScalarEnum.Number:
+      case TypeEnum.Number:
         return ['text-right', 'font-mono'];
-      case ScalarEnum.Boolean:
+      case TypeEnum.Boolean:
         return ['text-right', 'font-mono'];
-      case ScalarEnum.String:
+      case TypeEnum.String:
         return undefined;
-      case ScalarEnum.Ref:
+      case TypeEnum.Ref:
         return undefined;
 
       default: {

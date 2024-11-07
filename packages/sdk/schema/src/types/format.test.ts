@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { S, ScalarEnum, FormatEnum } from '@dxos/echo-schema';
+import { S, TypeEnum, FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import {
@@ -32,7 +32,7 @@ describe('format', () => {
   test('encode/decode format', async ({ expect }) => {
     const prop: PropertyType = {
       property: 'salary',
-      type: ScalarEnum.Number,
+      type: TypeEnum.Number,
       format: FormatEnum.Currency,
       title: 'Base salary',
       multipleOf: 0.01,
@@ -73,7 +73,7 @@ describe('format', () => {
     const validate = S.validateSync(PropertySchema);
     const prop: Partial<PropertyType> = {
       property: 'org',
-      type: ScalarEnum.Ref,
+      type: TypeEnum.Ref,
       format: FormatEnum.Ref,
     };
 
@@ -92,13 +92,13 @@ describe('format', () => {
   test('get props', ({ expect }) => {
     const prop: Partial<PropertyType> = {
       property: 'org',
-      type: ScalarEnum.Ref,
+      type: TypeEnum.Ref,
       format: FormatEnum.Ref,
     };
 
     const schema = getPropertySchemaForFormat(prop.format);
     invariant(schema);
     const props = getSchemaProperties(schema);
-    expect(props).to.have.length(3);
+    expect(props).to.have.length(4);
   });
 });

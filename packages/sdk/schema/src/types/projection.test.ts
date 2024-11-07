@@ -10,7 +10,7 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   Format,
   FormatEnum,
-  ScalarEnum,
+  TypeEnum,
   TypedObject,
   createJsonPath,
   createStoredSchema,
@@ -58,8 +58,8 @@ describe('ViewProjection', () => {
       const { props } = projection.getFieldProjection('name');
       expect(props).to.deep.eq({
         property: 'name',
-        type: ScalarEnum.String,
-        format: FormatEnum.None,
+        type: TypeEnum.String,
+        format: FormatEnum.String,
         title: 'Name',
       });
     }
@@ -68,7 +68,7 @@ describe('ViewProjection', () => {
       const { props } = projection.getFieldProjection('email');
       expect(props).to.include({
         property: 'email',
-        type: ScalarEnum.String,
+        type: TypeEnum.String,
         format: FormatEnum.Email,
       });
     }
@@ -88,7 +88,7 @@ describe('ViewProjection', () => {
       });
       expect(props).to.include({
         property: 'email',
-        type: ScalarEnum.String,
+        type: TypeEnum.String,
         format: FormatEnum.Email,
       });
 
@@ -99,7 +99,7 @@ describe('ViewProjection', () => {
       const { props } = projection.getFieldProjection('salary');
       expect(props).to.include({
         property: 'salary',
-        type: ScalarEnum.Number,
+        type: TypeEnum.Number,
         format: FormatEnum.Currency,
         currency: 'USD',
         multipleOf: 2,
@@ -113,7 +113,7 @@ describe('ViewProjection', () => {
       const { props } = projection.getFieldProjection('salary');
       expect(props).to.include({
         property: 'salary',
-        type: ScalarEnum.Number,
+        type: TypeEnum.Number,
         format: FormatEnum.Currency,
         currency: 'GBP',
         multipleOf: 2,
@@ -161,7 +161,7 @@ describe('ViewProjection', () => {
     });
     expect(props).to.deep.eq({
       property: 'org',
-      type: ScalarEnum.Ref,
+      type: TypeEnum.Ref,
       format: FormatEnum.Ref,
       referenceSchema: 'dxn:type:example.com/type/Org',
     });

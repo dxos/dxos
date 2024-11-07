@@ -4,7 +4,7 @@
 
 import jp from 'jsonpath';
 
-import { FormatEnum, ScalarEnum } from '@dxos/echo-schema';
+import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { AST, type S, isLeafType, visit } from '@dxos/effect';
 
 import { type FieldType } from './view';
@@ -29,7 +29,7 @@ export const setFieldValue = <T extends object = {}, V = any>(object: T, field: 
  */
 export type SchemaFieldDescription = {
   property: string;
-  type: ScalarEnum;
+  type: TypeEnum;
   format?: FormatEnum;
 };
 
@@ -48,15 +48,15 @@ export const mapSchemaToFields = (schema: S.Schema<any, any>): SchemaFieldDescri
   return fields;
 };
 
-const toFieldValueType = (type: AST.AST): { format?: FormatEnum; type: ScalarEnum } => {
+const toFieldValueType = (type: AST.AST): { format?: FormatEnum; type: TypeEnum } => {
   if (AST.isTypeLiteral(type)) {
-    return { type: ScalarEnum.Ref, format: FormatEnum.Ref };
+    return { type: TypeEnum.Ref, format: FormatEnum.Ref };
   } else if (AST.isNumberKeyword(type)) {
-    return { type: ScalarEnum.Number };
+    return { type: TypeEnum.Number };
   } else if (AST.isBooleanKeyword(type)) {
-    return { type: ScalarEnum.Boolean };
+    return { type: TypeEnum.Boolean };
   } else if (AST.isStringKeyword(type)) {
-    return { type: ScalarEnum.String };
+    return { type: TypeEnum.String };
   }
 
   if (AST.isRefinement(type)) {
@@ -71,11 +71,11 @@ const toFieldValueType = (type: AST.AST): { format?: FormatEnum; type: ScalarEnu
     const identifier = AST.getIdentifierAnnotation(type);
     if (identifier._tag === 'Some') {
       if (identifier.value === 'DateFromString') {
-        return { type: ScalarEnum.String, format: FormatEnum.Date };
+        return { type: TypeEnum.String, format: FormatEnum.Date };
       }
     }
   }
 
   // TODO(burdon): Better fallback?
-  return { type: ScalarEnum.String, format: FormatEnum.JSON };
+  return { type: TypeEnum.String, format: FormatEnum.JSON };
 };

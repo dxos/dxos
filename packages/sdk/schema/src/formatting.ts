@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FormatEnum, ScalarEnum } from '@dxos/echo-schema';
+import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 
 type ValueFormatProps = {
-  type: ScalarEnum;
+  type: TypeEnum;
   format?: FormatEnum | undefined;
   value: any;
   locale?: string | undefined;
@@ -20,19 +20,19 @@ type ValueFormatProps = {
 export const formatForDisplay = ({ type, format, value, locale = undefined }: ValueFormatProps): string => {
   if (!format) {
     switch (type) {
-      case ScalarEnum.Boolean: {
+      case TypeEnum.Boolean: {
         return (value as boolean).toLocaleString().toUpperCase();
       }
-      case ScalarEnum.Number: {
+      case TypeEnum.Number: {
         return value.toLocaleString(locale);
       }
 
-      case ScalarEnum.String: {
+      case TypeEnum.String: {
         return String(value);
       }
 
       // TODO(ZaymonFC): Will we ever have a ref that doesn't have a format?
-      case ScalarEnum.Ref: {
+      case TypeEnum.Ref: {
         return String(value);
       }
 
@@ -92,10 +92,10 @@ export const formatForDisplay = ({ type, format, value, locale = undefined }: Va
 export const formatForEditing = ({ type, format, value, locale = undefined }: ValueFormatProps): string => {
   if (!format) {
     switch (type) {
-      case ScalarEnum.Boolean:
-      case ScalarEnum.Number:
-      case ScalarEnum.String:
-      case ScalarEnum.Ref:
+      case TypeEnum.Boolean:
+      case TypeEnum.Number:
+      case TypeEnum.String:
+      case TypeEnum.Ref:
       default:
         return String(value);
     }

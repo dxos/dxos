@@ -8,7 +8,7 @@ import { S } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import { Format } from './format';
-import { ScalarEnum, getScalarType } from './types';
+import { TypeEnum, getTypeEnum } from './types';
 import { toJsonSchema } from '../json';
 
 describe('formats', () => {
@@ -38,7 +38,7 @@ describe('formats', () => {
 
     {
       const prop = jsonSchema.properties!['active' as const];
-      expect(getScalarType(prop)).to.eq(ScalarEnum.Boolean);
+      expect(getTypeEnum(prop)).to.eq(TypeEnum.Boolean);
       expect(prop).includes({
         type: 'boolean',
       });
@@ -46,7 +46,7 @@ describe('formats', () => {
 
     {
       const prop = jsonSchema.properties!['email' as const];
-      expect(getScalarType(prop)).to.eq(ScalarEnum.String);
+      expect(getTypeEnum(prop)).to.eq(TypeEnum.String);
       expect(prop).includes({
         type: 'string',
         format: 'email',
@@ -56,7 +56,7 @@ describe('formats', () => {
 
     {
       const prop = jsonSchema.properties!['salary' as const];
-      expect(getScalarType(prop)).to.eq(ScalarEnum.Number);
+      expect(getTypeEnum(prop)).to.eq(TypeEnum.Number);
       expect(prop).includes({
         type: 'number',
         format: 'currency',
@@ -69,7 +69,7 @@ describe('formats', () => {
     {
       const prop = jsonSchema.properties!['birthday' as const];
       log.info('', { prop });
-      expect(getScalarType(prop)).to.eq(ScalarEnum.String);
+      expect(getTypeEnum(prop)).to.eq(TypeEnum.String);
       expect(prop).includes({
         type: 'string',
         format: 'date',

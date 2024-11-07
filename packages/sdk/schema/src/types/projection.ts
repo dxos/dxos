@@ -11,7 +11,7 @@ import {
   type JsonSchemaType,
   type MutableSchema,
   S,
-  ScalarEnum,
+  TypeEnum,
   type JsonPath,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -72,12 +72,12 @@ export class ViewProjection {
     // Map reference.
     let referenceSchema: string | undefined;
     if ($id && reference) {
-      type = ScalarEnum.Ref;
+      type = TypeEnum.Ref;
       format = FormatEnum.Ref;
       referenceSchema = reference.schema.$ref;
     }
     if (format === FormatEnum.None) {
-      format = typeToFormat[type as ScalarEnum];
+      format = typeToFormat[type as TypeEnum];
     }
 
     const field: FieldType = this._view.fields.find((f) => f.property === prop) ?? { property: createJsonPath(prop) };

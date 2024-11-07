@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, DecimalPrecision, ScalarEnum, FormatEnum, S, getScalarTypeFromAst, JsonPath } from '@dxos/echo-schema';
+import { AST, DecimalPrecision, TypeEnum, FormatEnum, S, getTypeEnumFromAst, JsonPath } from '@dxos/echo-schema';
 import { getType, getAnnotation } from '@dxos/effect';
 
 /**
@@ -16,7 +16,7 @@ export const BasePropertySchema = S.Struct({
 
 export type BaseProperty = S.Schema.Type<typeof BasePropertySchema>;
 
-const extend = (format: FormatEnum, type: ScalarEnum, fields = {}) =>
+const extend = (format: FormatEnum, type: TypeEnum, fields = {}) =>
   S.extend(
     BasePropertySchema,
     S.Struct({
@@ -34,7 +34,7 @@ export const formatToSchema: Record<FormatEnum, S.Schema<any>> = {
   [FormatEnum.None]: S.extend(
     BasePropertySchema,
     S.Struct({
-      type: S.Enums(ScalarEnum),
+      type: S.Enums(TypeEnum),
       format: S.Literal(FormatEnum.None),
     }),
   ).pipe(S.mutable),
@@ -43,10 +43,10 @@ export const formatToSchema: Record<FormatEnum, S.Schema<any>> = {
   // Scalars
   //
 
-  [FormatEnum.String]: extend(FormatEnum.String, ScalarEnum.String),
-  [FormatEnum.Number]: extend(FormatEnum.Number, ScalarEnum.Number),
-  [FormatEnum.Boolean]: extend(FormatEnum.Boolean, ScalarEnum.Boolean),
-  [FormatEnum.Ref]: extend(FormatEnum.Ref, ScalarEnum.Ref, {
+  [FormatEnum.String]: extend(FormatEnum.String, TypeEnum.String),
+  [FormatEnum.Number]: extend(FormatEnum.Number, TypeEnum.Number),
+  [FormatEnum.Boolean]: extend(FormatEnum.Boolean, TypeEnum.Boolean),
+  [FormatEnum.Ref]: extend(FormatEnum.Ref, TypeEnum.Ref, {
     referenceSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
     referenceProperty: S.optional(JsonPath).annotations({ [AST.TitleAnnotationId]: 'Lookup property' }),
   }),
@@ -55,38 +55,38 @@ export const formatToSchema: Record<FormatEnum, S.Schema<any>> = {
   // Strings
   //
 
-  [FormatEnum.DID]: extend(FormatEnum.DID, ScalarEnum.String),
-  [FormatEnum.Email]: extend(FormatEnum.Email, ScalarEnum.String),
-  [FormatEnum.Formula]: extend(FormatEnum.Formula, ScalarEnum.String),
-  [FormatEnum.Hostname]: extend(FormatEnum.Markdown, ScalarEnum.String),
-  [FormatEnum.JSON]: extend(FormatEnum.JSON, ScalarEnum.String),
-  [FormatEnum.Markdown]: extend(FormatEnum.Markdown, ScalarEnum.String),
-  [FormatEnum.Regex]: extend(FormatEnum.Regex, ScalarEnum.String),
-  [FormatEnum.URI]: extend(FormatEnum.URI, ScalarEnum.String),
-  [FormatEnum.UUID]: extend(FormatEnum.UUID, ScalarEnum.String),
+  [FormatEnum.DID]: extend(FormatEnum.DID, TypeEnum.String),
+  [FormatEnum.Email]: extend(FormatEnum.Email, TypeEnum.String),
+  [FormatEnum.Formula]: extend(FormatEnum.Formula, TypeEnum.String),
+  [FormatEnum.Hostname]: extend(FormatEnum.Markdown, TypeEnum.String),
+  [FormatEnum.JSON]: extend(FormatEnum.JSON, TypeEnum.String),
+  [FormatEnum.Markdown]: extend(FormatEnum.Markdown, TypeEnum.String),
+  [FormatEnum.Regex]: extend(FormatEnum.Regex, TypeEnum.String),
+  [FormatEnum.URI]: extend(FormatEnum.URI, TypeEnum.String),
+  [FormatEnum.UUID]: extend(FormatEnum.UUID, TypeEnum.String),
 
   //
   // Numbers
   //
 
-  [FormatEnum.Currency]: extend(FormatEnum.Currency, ScalarEnum.Number, {
+  [FormatEnum.Currency]: extend(FormatEnum.Currency, TypeEnum.Number, {
     multipleOf: S.optional(DecimalPrecision),
     currency: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Currency code' })),
   }),
-  [FormatEnum.Integer]: extend(FormatEnum.Integer, ScalarEnum.Number),
-  [FormatEnum.Percent]: extend(FormatEnum.Percent, ScalarEnum.Number, {
+  [FormatEnum.Integer]: extend(FormatEnum.Integer, TypeEnum.Number),
+  [FormatEnum.Percent]: extend(FormatEnum.Percent, TypeEnum.Number, {
     multipleOf: S.optional(DecimalPrecision),
   }),
-  [FormatEnum.Timestamp]: extend(FormatEnum.UUID, ScalarEnum.Number),
+  [FormatEnum.Timestamp]: extend(FormatEnum.UUID, TypeEnum.Number),
 
   //
   // Dates
   //
 
-  [FormatEnum.DateTime]: extend(FormatEnum.DateTime, ScalarEnum.String),
-  [FormatEnum.Date]: extend(FormatEnum.Date, ScalarEnum.String),
-  [FormatEnum.Time]: extend(FormatEnum.Time, ScalarEnum.String),
-  [FormatEnum.Duration]: extend(FormatEnum.Duration, ScalarEnum.String),
+  [FormatEnum.DateTime]: extend(FormatEnum.DateTime, TypeEnum.String),
+  [FormatEnum.Date]: extend(FormatEnum.Date, TypeEnum.String),
+  [FormatEnum.Time]: extend(FormatEnum.Time, TypeEnum.String),
+  [FormatEnum.Duration]: extend(FormatEnum.Duration, TypeEnum.String),
 };
 
 /**
@@ -156,7 +156,7 @@ export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> |
 
 export type SchemaPropertyType<T> = {
   name: string & keyof T;
-  type: ScalarEnum;
+  type: TypeEnum;
   label?: string;
 };
 
@@ -169,12 +169,12 @@ export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaPropertyType<
     if (propType) {
       let label = propType ? getAnnotation<string>(AST.TitleAnnotationId, propType) : undefined;
       // NOTE: Ignores type literals.
-      let type = getScalarTypeFromAst(propType);
+      let type = getTypeEnumFromAst(propType);
       if (!type && AST.isTransformation(propType)) {
         label = getAnnotation<string>(AST.TitleAnnotationId, propType);
         propType = getType(propType.to);
         if (propType) {
-          type = getScalarTypeFromAst(propType);
+          type = getTypeEnumFromAst(propType);
         }
       }
 
