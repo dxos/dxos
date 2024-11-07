@@ -73,11 +73,11 @@ export const Form = <T extends object>({
       )}
 
       {/* Generated fields. */}
-      {props.map(({ name, label, type }) => (
-        <div key={name} role='none'>
+      {props.map(({ property, type, title }) => (
+        <div key={property} role='none'>
           <FormInput<T>
-            property={name}
-            label={label ?? name}
+            property={property}
+            label={title ?? property} // TODO(burdon): Title.
             disabled={readonly}
             getInputProps={getInputProps}
             getErrorValence={getErrorValence}

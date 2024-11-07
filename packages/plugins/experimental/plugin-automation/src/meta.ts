@@ -11,5 +11,5 @@ export default {
   name: 'Automation',
   description: 'Automation workflows.',
   icon: 'ph--flow-arrow--regular',
-  tags: ['experimental']
+  tags: ['experimental'],
 } satisfies PluginMeta;
