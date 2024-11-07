@@ -29,11 +29,8 @@ export const getScalarType = (property: JSONSchema.JsonSchema7): ScalarEnum | un
     case 'boolean':
       return ScalarEnum.Boolean;
   }
-
-  return undefined;
 };
 
-// TODO(burdon): Better way?
 export const getScalarTypeFromAst = (ast: AST.AST): ScalarEnum | undefined => {
   if (AST.isStringKeyword(ast)) {
     return ScalarEnum.String;
@@ -42,20 +39,11 @@ export const getScalarTypeFromAst = (ast: AST.AST): ScalarEnum | undefined => {
   } else if (AST.isBooleanKeyword(ast)) {
     return ScalarEnum.Boolean;
   }
-
-  // TODO(burdon): Enum?
 };
 
 /**
  * https://json-schema.org/understanding-json-schema/reference/schema
  * https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
- * TODO(burdon): Reconcile below (pass type and format).
- *  - schema/formatting
- *  - react-ui-data/field
- *  - react-ui-table/column-utils
- *  - plugin-sheet/sheet-model
- *  - plugin-table/table-model
- *  - plugin-table/testing
  */
 export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
 
