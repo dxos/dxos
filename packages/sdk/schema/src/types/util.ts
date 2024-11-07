@@ -26,14 +26,10 @@ export const createUniqueFieldForView = (view: ViewType): FieldType => {
   return { property: getUniqueProperty(view) };
 };
 
-//
-// TODO(burdon): REMOVE: All deprecated (old react-ui-table).
-//
-
 /**
  * @deprecated
  */
-export const getFieldValue = <T extends {} = {}, V = any>(
+export const getFieldValue = <T extends object = {}, V = any>(
   object: T,
   field: FieldType,
   defaultValue?: V,
@@ -42,7 +38,7 @@ export const getFieldValue = <T extends {} = {}, V = any>(
 /**
  * @deprecated
  */
-export const setFieldValue = <T extends {} = {}, V = any>(object: T, field: FieldType, value: V): V =>
+export const setFieldValue = <T extends object = {}, V = any>(object: T, field: FieldType, value: V): V =>
   jp.value(object, '$.' + field.property, value);
 
 /**
@@ -71,7 +67,6 @@ export const mapSchemaToFields = (schema: S.Schema<any, any>): SchemaFieldDescri
 
 const toFieldValueType = (type: AST.AST): { format?: FormatEnum; type: ScalarEnum } => {
   if (AST.isTypeLiteral(type)) {
-    // TODO(burdon): ???
     return { type: ScalarEnum.Ref, format: FormatEnum.Ref };
   } else if (AST.isNumberKeyword(type)) {
     return { type: ScalarEnum.Number };
