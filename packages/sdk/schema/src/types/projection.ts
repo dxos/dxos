@@ -130,9 +130,7 @@ export class ViewProjection {
         format = undefined;
       }
 
-      // TODO(burdon): Strip undefined.
       const values: JsonSchemaType = { $id, type, format, reference, ...rest };
-      console.log(':::::::', values);
       this._schema.jsonSchema.properties![property] = values;
     }
   }
