@@ -318,7 +318,7 @@ export class ClientServicesHost {
 
       InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitationsManager),
 
-      DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
+      DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager, this._edgeConnection),
 
       SpacesService: new SpacesServiceImpl(
         this._serviceContext.identityManager,
