@@ -7,7 +7,6 @@ import {
   createJsonPath,
   FormatEnum,
   JsonPath,
-  type JSONSchema,
   JsonSchemaType,
   type MutableSchema,
   QueryType,
@@ -16,6 +15,7 @@ import {
   ScalarEnum,
   TypedObject,
 } from '@dxos/echo-schema';
+import { ECHO_REF_JSON_SCHEMA_ID } from '@dxos/echo-schema/src';
 import { log } from '@dxos/log';
 
 import { PropertySchema, type PropertyType } from './format';
@@ -113,8 +113,9 @@ export class ViewProjection {
    * Get projection of View fields and JSON schema property annotations.
    */
   getFieldProjection(prop: string): FieldProjectionType {
-    // Map references.
     let { $id, type, format = FormatEnum.None, reference, ...rest } = this._schema.jsonSchema.properties![prop];
+
+    // Map reference.
     let referenceSchema: string | undefined;
     if ($id && reference) {
       type = ScalarEnum.Ref;
@@ -125,10 +126,7 @@ export class ViewProjection {
     const field: FieldType = this._view.fields.find((f) => f.property === prop) ?? { property: createJsonPath(prop) };
     const props = S.decodeSync(PropertySchema)({ property: prop, type, format, referenceSchema, ...rest });
     log.info('getFieldProjection', { field, props });
-    return {
-      field,
-      props,
-    };
+    return { field, props };
   }
 
   /**
@@ -142,27 +140,32 @@ export class ViewProjection {
       if (!current) {
         this._view.fields.push({ ...field });
       } else {
-        // TODO(burdon): Overwrite all?
+        // TODO(burdon): Overwrite?
         Object.assign(current, field);
       }
     }
 
     if (props) {
-      let { property, type, format, ...rest } = S.encodeSync(PropertySchema)(props);
-      if (type === ScalarEnum.Ref) {
+      let { property, type, format, referenceSchema, ...rest } = S.encodeSync(PropertySchema)(props);
+
+      // Set reference.
+      // TODO(burdon): Types?
+      let $id;
+      let reference;
+      if (referenceSchema) {
+        $id = ECHO_REF_JSON_SCHEMA_ID;
         type = undefined;
-      }
-      if (format === FormatEnum.Ref) {
         format = undefined;
+        reference = {
+          schema: {
+            $ref: referenceSchema,
+          },
+        };
       }
 
-      const current: JSONSchema.JsonSchema7 | undefined = this._schema.jsonSchema.properties![props.property];
-      if (!current) {
-        this._schema.jsonSchema.properties![property] = { type, format, ...rest };
-      } else {
-        // TODO(burdon): Overwrite all?
-        Object.assign(current, { type, format, ...rest });
-      }
+      // TODO(burdon): Strip undefined.
+      const values: JsonSchemaType = { $id, type, format, reference, ...rest };
+      this._schema.jsonSchema.properties![property] = values;
     }
   }
 }

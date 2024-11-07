@@ -16,7 +16,7 @@ import {
   type DxGridCellValue,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { type ViewProjection, type FieldType, formatValue } from '@dxos/schema';
+import { type ViewProjection, type FieldType, formatForDisplay, formatForEditing } from '@dxos/schema';
 
 import { fromGridCell, type GridCell, type TableType } from '../types';
 import { tableButtons, touch } from '../util';
@@ -241,12 +241,15 @@ export class TableModel extends Resource {
       const { props } = this._projection.getFieldProjection(field.property);
       const cell: DxGridCellValue = {
         get value() {
-          // TODO(burdon): Infer type.
-          return row?.[field.property] !== undefined ? formatValue(props.format, row[field.property]) : '';
+          const value = row?.[field.property];
+          if (!value) {
+            return '';
+          }
+          return formatForDisplay({ type: props.type, format: props.format, value });
         },
       };
 
-      const classes = cellClassesForFieldType(props.format);
+      const classes = cellClassesForFieldType({ type: props.type, format: props.format });
       if (classes) {
         cell.className = mx(classes);
       }
@@ -336,14 +339,12 @@ export class TableModel extends Resource {
     const dataIndex = this.displayToDataIndex.get(row) ?? row;
     const value = this.rows.value[dataIndex][field.property];
 
-    const {
-      proms: { format },
-    } = this._projection.getFieldProjection(field.property);
-    if (format) {
-      return formatValue(format, value);
+    if (value === undefined) {
+      return '';
     }
 
-    return value;
+    const { props } = this._projection.getFieldProjection(field.property);
+    return formatForEditing({ type: props.type, format: props.format, value });
   };
 
   public setCellData = ({ col, row }: GridCell, value: any): void => {
@@ -354,14 +355,12 @@ export class TableModel extends Resource {
     }
 
     const field = fields[col];
-    const {
-      props: { format },
-    } = this._projection.getFieldProjection(field.property);
-    if (format) {
-      this.rows.value[dataIndex][field.property] = parseValue(format, value);
-    } else {
-      this.rows.value[dataIndex][field.property] = value;
-    }
+    const { props } = this._projection.getFieldProjection(field.property);
+    this.rows.value[dataIndex][field.property] = parseValue({
+      type: props.type,
+      format: props.format,
+      value,
+    });
   };
 
   public getRowCount = (): number => this.rows.value.length;

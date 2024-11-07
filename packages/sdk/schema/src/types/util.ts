@@ -4,7 +4,7 @@
 
 import jp from 'jsonpath';
 
-import { createJsonPath, FormatEnum, type JsonPath } from '@dxos/echo-schema';
+import { createJsonPath, FormatEnum, ScalarEnum, type JsonPath } from '@dxos/echo-schema';
 import { AST, type S, isLeafType, visit } from '@dxos/effect';
 
 import { type FieldType, type ViewType } from './view';
@@ -45,14 +45,21 @@ export const getFieldValue = <T extends {} = {}, V = any>(
 export const setFieldValue = <T extends {} = {}, V = any>(object: T, field: FieldType, value: V): V =>
   jp.value(object, '$.' + field.property, value);
 
+type SchemaFieldDescription = {
+  property: string;
+  type: ScalarEnum;
+  format?: FormatEnum;
+};
+
 /**
  * @deprecated
  */
-export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FormatEnum][] => {
-  const fields: [string, FormatEnum][] = [];
+export const mapSchemaToFields = (schema: S.Schema<any, any>): SchemaFieldDescription[] => {
+  const fields = [] as SchemaFieldDescription[];
   visit(schema.ast, (node, path) => {
     if (isLeafType(node)) {
-      fields.push([path.join('.'), toFieldValueType(node)]);
+      const { type, format } = toFieldValueType(node);
+      fields.push({ property: path.join('.'), type, format });
     }
   });
 
@@ -62,16 +69,16 @@ export const mapSchemaToFields = (schema: S.Schema<any, any>): [string, FormatEn
 /**
  * @deprecated
  */
-export const toFieldValueType = (type: AST.AST): FormatEnum => {
+export const toFieldValueType = (type: AST.AST): { format?: FormatEnum; type: ScalarEnum } => {
   if (AST.isTypeLiteral(type)) {
     // TODO(burdon): ???
-    return FormatEnum.Ref;
+    return { type: ScalarEnum.Ref, format: FormatEnum.Ref };
   } else if (AST.isNumberKeyword(type)) {
-    return FormatEnum.Number;
+    return { type: ScalarEnum.Number };
   } else if (AST.isBooleanKeyword(type)) {
-    return FormatEnum.Boolean;
+    return { type: ScalarEnum.Boolean };
   } else if (AST.isStringKeyword(type)) {
-    return FormatEnum.String;
+    return { type: ScalarEnum.String };
   }
 
   if (AST.isRefinement(type)) {
@@ -86,11 +93,11 @@ export const toFieldValueType = (type: AST.AST): FormatEnum => {
     const identifier = AST.getIdentifierAnnotation(type);
     if (identifier._tag === 'Some') {
       if (identifier.value === 'DateFromString') {
-        return FormatEnum.Date;
+        return { type: ScalarEnum.String, format: FormatEnum.Date };
       }
     }
   }
 
   // TODO(burdon): Better fallback?
-  return FormatEnum.JSON;
+  return { type: ScalarEnum.String, format: FormatEnum.JSON };
 };
