@@ -40,7 +40,10 @@ export type MessengerConfig = {
 };
 
 /**
- * Messenger client.
+ * Messenger client for EDGE:
+ *  - While open, uses PersistentLifecycle to keep an open EdgeWsConnection, reconnecting on failures.
+ *  - Manages identity and re-create EdgeWsConnection when identity changes.
+ *  - Dispatches connection state and message notifications.
  */
 export class EdgeClient extends Resource implements EdgeConnection {
   private readonly _persistentLifecycle = new PersistentLifecycle<EdgeWsConnection>({
