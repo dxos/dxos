@@ -78,6 +78,9 @@ export class Trigger<T = void> {
    * NOOP if the trigger is already resolved.
    */
   wake(value: T) {
+    if (this._state !== TriggerState.WAITING) {
+      return;
+    }
     this._state = TriggerState.RESOLVED;
     this._resolve(value);
     if (this._options.autoReset) {
@@ -106,6 +109,9 @@ export class Trigger<T = void> {
    * NOOP if the trigger is already resolved.
    */
   throw(error: Error) {
+    if (this._state !== TriggerState.WAITING) {
+      return;
+    }
     this._state = TriggerState.REJECTED;
     this._reject(error);
     if (this._options.autoReset) {
