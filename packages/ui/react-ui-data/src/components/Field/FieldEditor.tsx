@@ -46,7 +46,7 @@ export const FieldEditor = ({
       if (props.format !== _props.format) {
         const fieldSchema = getPropertySchemaForFormat(_props.format);
         setSchema({ fieldSchema });
-        const type = formatToType[_props.format as FormatEnum]; // TODO(burdon): Why is cast needed?
+        const type = formatToType[_props.format];
         setProps({ ...props, ..._props, type });
       }
     },
@@ -67,7 +67,7 @@ export const FieldEditor = ({
   );
 
   const handleSet = useCallback(
-    (props: FieldProjection) => {
+    (props: PropertyType) => {
       projection.setFieldProjection({ field, props });
       onComplete();
     },

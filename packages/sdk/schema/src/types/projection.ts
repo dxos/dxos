@@ -106,7 +106,7 @@ export class ViewProjection {
 
     if (props) {
       // TODO(burdon): Define type?
-      let { property, type, format, referenceSchema, ...rest } = this._encode(props);
+      let { property, type, format, referenceSchema, ...rest }: Partial<PropertyType> = this._encode(props);
       invariant(property);
       invariant(format);
 
@@ -132,6 +132,7 @@ export class ViewProjection {
       }
 
       // TODO(dmaretskyi): Check if the field base type (string, number, ref) hasn't changed and update only relevant fields.
+      invariant(type !== TypeEnum.Ref);
       const values: JsonSchemaType = { $id, type, format, reference, ...rest };
       this._schema.jsonSchema.properties![property] = values;
     }
