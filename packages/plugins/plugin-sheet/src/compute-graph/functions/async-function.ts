@@ -83,6 +83,7 @@ export class FunctionContext {
   ) {
     this._options = defaultsDeep(_options ?? {}, defaultFunctionContextOptions);
     this._onUpdate = debounce((update) => {
+      log('update', update);
       // TODO(burdon): Better way to trigger recalculation? (NOTE: rebuildAndRecalculate resets the undo history.)
       this._hf.resumeEvaluation();
       this._options.onUpdate?.(update);

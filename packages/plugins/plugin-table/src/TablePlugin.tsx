@@ -12,7 +12,7 @@ import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-g
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace } from '@dxos/react-client/echo';
 import { translations as dataTranslations, ViewEditor } from '@dxos/react-ui-data';
-import { type FieldType } from '@dxos/schema';
+import { ViewType, type FieldType } from '@dxos/schema';
 
 import { TableContainer } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
@@ -43,7 +43,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       },
       translations: [...translations, ...dataTranslations],
       echo: {
-        schema: [TableType],
+        schema: [TableType, ViewType],
       },
       space: {
         onSpaceCreate: {
