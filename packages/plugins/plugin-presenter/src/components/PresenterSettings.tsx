@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Input, useTranslation } from '@dxos/react-ui';
-import { FormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-data';
 
 import { PRESENTER_PLUGIN } from '../meta';
 import { type PresenterSettingsProps } from '../types';
@@ -15,12 +15,12 @@ export const PresenterSettings = ({ settings }: { settings: PresenterSettingsPro
 
   return (
     <>
-      <FormInput label={t('present collections label')}>
+      <DeprecatedFormInput label={t('present collections label')}>
         <Input.Switch
           checked={settings.presentCollections}
           onCheckedChange={(checked) => (settings.presentCollections = !!checked)}
         />
-      </FormInput>
+      </DeprecatedFormInput>
     </>
   );
 };

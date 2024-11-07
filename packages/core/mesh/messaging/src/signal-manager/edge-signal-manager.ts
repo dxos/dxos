@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, scheduleMicroTask } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { type EdgeConnection, protocol } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -39,9 +39,12 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   }
 
   protected override async _open() {
-    this._ctx.onDispose(this._edgeConnection.addListener((message) => this._onMessage(message)));
-    this._edgeConnection.reconnect.on(this._ctx, () => this._rejoinAllSwarms());
-    await this._rejoinAllSwarms();
+    this._ctx.onDispose(this._edgeConnection.onMessage((message) => this._onMessage(message)));
+    this._ctx.onDispose(
+      this._edgeConnection.onReconnected(() => {
+        scheduleMicroTask(this._ctx, () => this._rejoinAllSwarms());
+      }),
+    );
   }
 
   /**

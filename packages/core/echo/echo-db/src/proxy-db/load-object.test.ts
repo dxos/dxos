@@ -148,9 +148,9 @@ describe('loadObjectReferences', () => {
   });
 
   test('loads as array of non-nullable items', async () => {
-    class Nested extends TypedObject({ typename: 'example.com/Nested', version: '1.0.0' })({ value: S.Number }) {}
+    class Nested extends TypedObject({ typename: 'example.com/Nested', version: '0.1.0' })({ value: S.Number }) {}
 
-    class TestSchema extends TypedObject({ typename: 'example.com/Test', version: '1.0.0' })({
+    class TestSchema extends TypedObject({ typename: 'example.com/Test', version: '0.1.0' })({
       nested: S.mutable(S.Array(ref(Nested))),
     }) {}
 

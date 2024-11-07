@@ -2,22 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { AST, S } from '@dxos/effect';
 
-import { MutableSchema } from './mutable-schema';
-import { StoredSchema } from './types';
-import { FieldMeta, getObjectAnnotation, getFieldMetaAnnotation } from '../ast';
-import { create } from '../handler';
-import { effectToJsonSchema } from '../json';
+import { PropertyMeta, getObjectAnnotation, getPropertyMetaAnnotation } from '../ast';
 import { TypedObject } from '../object';
-import { getTypeReference } from '../proxy';
-import { EmptySchemaType } from '../testing';
+import { createMutableSchema } from '../testing';
 
-registerSignalsRuntime();
+class EmptySchemaType extends TypedObject({
+  typename: 'example.com/type/Empty',
+  version: '0.1.0',
+})({}) {}
 
 describe('dynamic schema', () => {
   test('getProperties filters out id and unwraps optionality', async () => {
@@ -83,7 +79,7 @@ describe('dynamic schema', () => {
     const metaInfo = { maxLength: 10 };
     const registered = createMutableSchema(EmptySchemaType);
     registered.addFields({
-      field1: S.String.pipe(FieldMeta(metaNamespace, metaInfo)),
+      field1: S.String.pipe(PropertyMeta(metaNamespace, metaInfo)),
       field2: S.String,
     });
     registered.addFields({ field3: S.String });
@@ -93,23 +89,6 @@ describe('dynamic schema', () => {
       typename: 'example.com/type/Empty',
       version: '0.1.0',
     });
-    expect(getFieldMetaAnnotation(registered.getProperties()[0], metaNamespace)).to.deep.eq(metaInfo);
+    expect(getPropertyMetaAnnotation(registered.getProperties()[0], metaNamespace)).to.deep.eq(metaInfo);
   });
-
-  const createMutableSchema = (schema: S.Schema<any>): MutableSchema => {
-    const mutableSchema = new MutableSchema(
-      create(StoredSchema, {
-        typename: getTypeReference(schema)!.objectId,
-        version: '0.1.0',
-        jsonSchema: effectToJsonSchema(schema),
-      }),
-    );
-
-    effect(() => {
-      const _ = mutableSchema.serializedSchema.jsonSchema;
-      mutableSchema.invalidate();
-    });
-
-    return mutableSchema;
-  };
 });

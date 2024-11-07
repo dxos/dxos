@@ -2,42 +2,56 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, S, createObjectId } from '@dxos/echo-schema';
+import {
+  AST,
+  Format,
+  type ReactiveObject,
+  S,
+  type StoredSchema,
+  TypedObject,
+  createObjectId,
+  createStoredSchema,
+  toJsonSchema,
+} from '@dxos/echo-schema';
 
-import { EmailFormat, FormatAnnotationId, FieldValueType, type ViewType } from '../types';
+import { createView, type ViewType } from '../types';
 
-//
-// Schema
-//
-
-export const TestSchema = S.Struct({
-  id: S.String, // TODO(burdon): ID annotation.
-  name: S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Full name.' })),
-  email: S.String.pipe(S.annotations({ [FormatAnnotationId]: EmailFormat })),
+export class TestSchema extends TypedObject({
+  typename: 'example.com/type/Test',
+  version: '0.1.0',
+})({
+  id: S.String, // TODO(burdon): ID type?
+  name: S.optional(S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Full name.' }))),
+  email: Format.Email.pipe(S.optional),
   address: S.optional(
     S.Struct({
       city: S.optional(S.String),
-      zip: S.String.pipe(
-        S.annotations({
-          [AST.DescriptionAnnotationId]: 'ZIP code.',
-          [FormatAnnotationId]: { filter: /^[0-9]{0,5}(?:-[0-9]{0,4})?$/, valid: /^[0-9]{5}(?:-[0-9]{4})?$/ },
-        }),
+      zip: S.optional(
+        S.String.pipe(
+          S.pattern(/^[0-9]{5}(?:-[0-9]{4})?$/),
+          S.annotations({
+            [AST.DescriptionAnnotationId]: 'ZIP code.',
+          }),
+        ),
       ),
     }),
   ),
   admin: S.optional(S.Boolean),
   rating: S.optional(S.Number),
-}).pipe(
-  S.annotations({
-    [AST.DescriptionAnnotationId]: 'Test schema.',
-  }),
-);
+}) {}
 
 export type TestType = S.Schema.Type<typeof TestSchema>;
 
-//
-// Data
-//
+export const testSchema: ReactiveObject<StoredSchema> = createStoredSchema({
+  typename: 'example.com/type/Test',
+  version: '0.1.0',
+  jsonSchema: toJsonSchema(TestSchema),
+});
+
+export const testView: ReactiveObject<ViewType> = createView({
+  typename: testSchema.typename,
+  jsonSchema: toJsonSchema(TestSchema),
+});
 
 export const testData: TestType = {
   id: createObjectId(),
@@ -46,33 +60,4 @@ export const testData: TestType = {
   address: {
     zip: '11205',
   },
-};
-
-const fields = [
-  {
-    path: 'name',
-    type: FieldValueType.String,
-  },
-  {
-    path: 'email',
-    type: FieldValueType.String,
-  },
-  {
-    path: 'address.zip',
-    label: 'ZIP',
-    type: FieldValueType.String,
-  },
-  {
-    path: 'rating',
-    type: FieldValueType.Number,
-  },
-  {
-    path: 'admin',
-    type: FieldValueType.Boolean,
-  },
-];
-
-export const testView: ViewType = {
-  schema: 'example.com/schema/TestSchema',
-  fields,
 };

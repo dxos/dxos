@@ -67,7 +67,7 @@ export const IdentityActionChooserImpl = ({
         connectionState={connectionState}
         onClickAdd={onClickAdd}
         onClickJoinExisting={onClickJoinExisting}
-        onClickRecover={onClickRecover}
+        onClickRecover={agentProps.agentStatus === 'created' ? onClickRecover : undefined}
         onClickReset={onClickReset}
         onAgentDestroy={agentProps.onAgentDestroy!}
       />
