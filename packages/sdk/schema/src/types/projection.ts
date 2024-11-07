@@ -42,7 +42,13 @@ export class ViewProjection {
    * Get projection of View fields and JSON schema property annotations.
    */
   getFieldProjection(prop: string): FieldProjection {
-    let { $id, type, format = FormatEnum.None, reference, ...rest } = this._schema.jsonSchema.properties![prop];
+    let {
+      $id,
+      type,
+      format = FormatEnum.None,
+      reference,
+      ...rest
+    } = this._schema.jsonSchema.properties![prop] ?? { property: prop, format: FormatEnum.None };
 
     // Map reference.
     let referenceSchema: string | undefined;
