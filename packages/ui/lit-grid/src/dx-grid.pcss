@@ -64,14 +64,11 @@ dx-grid {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    &[inert] {
-      visibility: hidden;
-    }
-    &:focus, &:focus-visible {
+    &:focus:not([aria-readonly='true']), &:focus-visible {
       z-index: 2;
       border-color: var(--dx-accentSurface);
       outline: none;
-      &:not([aria-readonly]) {
+      &:not([aria-readonly='true']) {
         cursor: text;
       }
     }
@@ -90,12 +87,13 @@ dx-grid {
 
 .dx-grid-host:focus-within .dx-grid:not(:focus-within) {
   [role='gridcell'], [role='columnheader'], [role='rowheader'] {
-    &[data-dx-active] {
+    &[data-dx-active]:not([aria-readonly='true']) {
       border-color: var(--dx-accentSurface);
     }
   }
 }
 
+/* TODO(thure): Finish implementation. */
 .dx-grid-layer--presentation {
   pointer-events: none;
   position: absolute;
@@ -108,7 +106,7 @@ dx-grid {
   }
 }
 
-/* todo(thure): Move this somewhere better. */
+/* TODO(thure): Move this somewhere better. */
 .sr-only {
   position: absolute;
   width: 1px;

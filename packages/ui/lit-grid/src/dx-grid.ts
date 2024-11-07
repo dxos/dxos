@@ -409,6 +409,7 @@ export class DxGrid extends LitElement {
         if (event.shiftKey) {
           // Prevent focus moving so the pointerup handler can move selectionEnd.
           event.preventDefault();
+          this.pointer = { state: 'selecting' };
         } else {
           const cellCoords = closestCell(event.target, actionEl);
           if (
@@ -1321,7 +1322,6 @@ export class DxGrid extends LitElement {
     return html`<div
       role="gridcell"
       tabindex="0"
-      ?inert=${col < 0 || row < 0}
       aria-selected=${selected ? 'true' : nothing}
       aria-readonly=${readonly ? 'true' : nothing}
       class=${cell?.className ?? nothing}
