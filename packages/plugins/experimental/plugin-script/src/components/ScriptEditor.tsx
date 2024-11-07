@@ -72,13 +72,6 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
   const existingFunctionUrl = fn && getUserFunctionUrlInMetadata(getMeta(fn));
   const [error, setError] = useState<string>();
 
-  const handleBindingChange = useCallback(
-    (binding: string) => {
-      fn.binding = binding;
-    },
-    [fn],
-  );
-
   const handleFormat = useCallback(async () => {
     if (!script.source) {
       return;
@@ -192,14 +185,7 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
         />
       )}
 
-      {view !== 'editor' && (
-        <DebugPanel
-          functionUrl={functionUrl}
-          showBindingConfig
-          binding={fn?.binding}
-          onBindingChange={handleBindingChange}
-        />
-      )}
+      {view !== 'editor' && <DebugPanel functionUrl={functionUrl} />}
     </div>
   );
 };

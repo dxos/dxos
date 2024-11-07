@@ -30,6 +30,9 @@ import { getMessageMetadata } from '../util';
 
 const sizeClass = getSize(4);
 
+// TODO(thure): #8149
+const commentControlClassNames = '!p-1 !min-bs-0 transition-opacity';
+
 const ToggleResolvedButton = ({
   isResolved,
   onResolve,
@@ -46,7 +49,7 @@ const ToggleResolvedButton = ({
           variant='ghost'
           data-testid='thread.toggle-resolved'
           onClick={onResolve}
-          classNames={['min-bs-0 p-1', !isResolved && hoverableControlItem]}
+          classNames={[commentControlClassNames, !isResolved && hoverableControlItem]}
         >
           <span className='sr-only'>{label}</span>
           {isResolved ? <CheckCircle className={sizeClass} weight='fill' /> : <CheckCircle className={sizeClass} />}
@@ -72,7 +75,7 @@ const DeleteThreadButton = ({ onDelete }: { onDelete: () => void }) => {
           variant='ghost'
           data-testid='thread.delete'
           onClick={onDelete}
-          classNames={['min-bs-0 p-1', hoverableControlItem]}
+          classNames={[commentControlClassNames, hoverableControlItem]}
         >
           <span className='sr-only'>{label}</span>
           <X className={sizeClass} />
