@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 
 import { AST, create, isReactiveObject, type ReactiveObject, type S } from '@dxos/echo-schema';
-import { getType, type Path } from '@dxos/effect';
+import { getBaseType, type Path } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { getDeep, hyphenize, setDeep } from '@dxos/util';
@@ -135,7 +135,7 @@ export class SettingsStore<T extends SettingsValue> {
     this.close();
 
     for (const prop of AST.getPropertySignatures(this._schema.ast)) {
-      const node = getType(prop.type)!;
+      const node = getBaseType(prop.type)!;
       const path = [prop.name.toString()];
       const key = this.getKey(path);
       const value = this._storage.getItem(key);
@@ -169,9 +169,9 @@ export class SettingsStore<T extends SettingsValue> {
 
   save() {
     for (const prop of AST.getPropertySignatures(this._schema.ast)) {
-      const node = getType(prop.type)!;
       const path = [prop.name.toString()];
       const key = this.getKey(path);
+      const node = getBaseType(prop.type)!;
       const value = getDeep(this.value, path);
       if (value == null) {
         this._storage.removeItem(key);

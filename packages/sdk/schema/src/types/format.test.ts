@@ -99,6 +99,6 @@ describe('format', () => {
     const schema = getPropertySchemaForFormat(prop.format);
     invariant(schema);
     const props = getSchemaProperties(schema);
-    expect(props).to.have.length(4);
+    expect(props).to.have.length(5);
   });
 });
