@@ -89,15 +89,21 @@ export class ViewProjection {
   }
 
   /**
-   * Update JSON schema property annotations.
+   * Update JSON schema property annotations and view fields.
+   * @param projection The field and props to update
+   * @param index Optional index for inserting new fields. Ignored when updating existing fields.
    */
-  setFieldProjection({ field, props }: Partial<FieldProjection>) {
-    log('setFieldProjection', { field, props });
+  setFieldProjection({ field, props }: Partial<FieldProjection>, index?: number) {
+    log.info('setFieldProjection', { field, props, index });
 
     if (field) {
       const current = this._view.fields.find((f) => f.property === field.property);
       if (!current) {
-        this._view.fields.push({ ...field });
+        if (typeof index === 'number' && index >= 0 && index <= this._view.fields.length) {
+          this._view.fields.splice(index, 0, { ...field });
+        } else {
+          this._view.fields.push({ ...field });
+        }
       } else {
         // TODO(burdon): Overwrite?
         Object.assign(current, field);
@@ -135,6 +141,24 @@ export class ViewProjection {
       const values: JsonSchemaType = { $id, type, format, reference, ...rest };
       this._schema.jsonSchema.properties![property] = values;
     }
+  }
+
+  /**
+   * Delete a field from the view and return the deleted projection for potential undo.
+   */
+  deleteFieldProjection(property: string): { deleted: FieldProjection; index: number } {
+    const projection = this.getFieldProjection(property as JsonProp);
+
+    const fieldIndex = this._view.fields.findIndex((f) => f.property === property);
+    if (fieldIndex !== -1) {
+      this._view.fields.splice(fieldIndex, 1);
+    }
+
+    if (this._schema.jsonSchema.properties?.[property]) {
+      delete this._schema.jsonSchema.properties[property];
+    }
+
+    return { deleted: projection, index: fieldIndex };
   }
 }
 
