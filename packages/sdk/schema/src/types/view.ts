@@ -4,6 +4,8 @@
 
 import {
   create,
+  createJsonPath,
+  FormatEnum,
   JsonPath,
   type JSONSchema,
   JsonSchemaType,
@@ -11,6 +13,7 @@ import {
   QueryType,
   type ReactiveObject,
   S,
+  ScalarEnum,
   TypedObject,
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -22,7 +25,7 @@ import { PropertySchema, type PropertyType } from './format';
  */
 export const FieldSchema = S.Struct({
   // TODO(burdon): Property or path?
-  property: S.String,
+  property: JsonPath,
   visible: S.optional(S.Boolean),
   size: S.optional(S.Number),
   referenceProperty: S.optional(JsonPath),
@@ -85,19 +88,19 @@ export const createView = ({
       __typename: typename,
     },
     // Create initial fields.
-    fields: properties.map((property) => ({ property })),
+    fields: properties.map((property) => ({ property: createJsonPath(property) })),
   });
 };
 
-// TODO(burdon): Field and Format are in different namespaces so we ideally shouldn't merge here.
-export const FieldProjectionSchema = S.extend(FieldSchema, PropertySchema);
-
-export type FieldProjectionType = S.Schema.Type<typeof FieldProjectionSchema>;
+// TODO(burdon): Rename.
+export type FieldProjectionType = {
+  field: FieldType;
+  props: PropertyType;
+};
 
 /**
  * Wrapper for View that manages Field and Format updates.
  */
-// TODO(burdon): Form values adapter for ViewEditor (schema).
 export class ViewProjection {
   constructor(
     // TODO(burdon): This could be StoredSchema?
@@ -109,46 +112,57 @@ export class ViewProjection {
   /**
    * Get projection of View fields and JSON schema property annotations.
    */
-  // TODO(burdon): Map ref to $id/ref. Custom selector.
-  getFieldProjection(property: string): FieldProjectionType {
-    const field = this._view.fields.find((f) => f.property === property) ?? { property };
-    const properties = this._schema.jsonSchema.properties![property] as JsonSchemaType;
-    log.info('getFieldProjection', { field, properties });
-    return { ...field, ...properties };
-  }
-
-  /**
-   * Update View field properties.
-   */
-  updateField = (value: FieldType): FieldType => {
-    log.info('updateField', { value });
-    let field = this._view.fields.find((f) => f.property === value.property);
-    if (field) {
-      Object.assign(field, value);
-    } else {
-      field = { ...value };
-      this._view.fields.push(field);
+  getFieldProjection(prop: string): FieldProjectionType {
+    // Map references.
+    let { $id, type, format = FormatEnum.None, reference, ...rest } = this._schema.jsonSchema.properties![prop];
+    let referenceSchema: string | undefined;
+    if ($id && reference) {
+      type = ScalarEnum.Ref;
+      format = FormatEnum.Ref;
+      referenceSchema = reference.schema.$ref;
     }
 
-    return field;
-  };
+    const field: FieldType = this._view.fields.find((f) => f.property === prop) ?? { property: createJsonPath(prop) };
+    const props = S.decodeSync(PropertySchema)({ property: prop, type, format, referenceSchema, ...rest });
+    log.info('getFieldProjection', { field, props });
+    return {
+      field,
+      props,
+    };
+  }
 
   /**
    * Update JSON schema property annotations.
    */
-  // TODO(burdon): Use schema annotations to determine how to map onto JsonSchema property object.
-  updateProperties(property: string, values: Partial<PropertyType>): PropertyType {
-    log.info('updateProperties', { property, values });
-    const { property: _, ...rest } = values;
-    let properties: JSONSchema.JsonSchema7 | undefined = this._schema.jsonSchema.properties![property];
-    if (properties) {
-      // TODO(burdon): Delete existing?
-      Object.assign(properties, rest);
-    } else {
-      properties = { ...rest } as JSONSchema.JsonSchema7;
-      this._schema.jsonSchema.properties![property] = properties;
+  setFieldProjection({ field, props }: Partial<FieldProjectionType>) {
+    log.info('updateProperties', { field, props });
+
+    if (field) {
+      const current = this._view.fields.find((f) => f.property === field.property);
+      if (!current) {
+        this._view.fields.push({ ...field });
+      } else {
+        // TODO(burdon): Overwrite all?
+        Object.assign(current, field);
+      }
     }
 
-    return properties as PropertyType;
+    if (props) {
+      let { property, type, format, ...rest } = S.encodeSync(PropertySchema)(props);
+      if (type === ScalarEnum.Ref) {
+        type = undefined;
+      }
+      if (format === FormatEnum.Ref) {
+        format = undefined;
+      }
+
+      const current: JSONSchema.JsonSchema7 | undefined = this._schema.jsonSchema.properties![props.property];
+      if (!current) {
+        this._schema.jsonSchema.properties![property] = { type, format, ...rest };
+      } else {
+        // TODO(burdon): Overwrite all?
+        Object.assign(current, { type, format, ...rest });
+      }
+    }
   }
 }

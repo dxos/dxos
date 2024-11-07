@@ -238,7 +238,7 @@ export class TableModel extends Resource {
 
     // TODO(burdon): Types.
     const addCell = (row: any, field: FieldType, colIndex: number, displayIndex: number): void => {
-      const props = this._projection.getFieldProjection(field.property);
+      const { props } = this._projection.getFieldProjection(field.property);
       const cell: DxGridCellValue = {
         get value() {
           // TODO(burdon): Infer type.
@@ -336,7 +336,9 @@ export class TableModel extends Resource {
     const dataIndex = this.displayToDataIndex.get(row) ?? row;
     const value = this.rows.value[dataIndex][field.property];
 
-    const { format } = this._projection.getFieldProjection(field.property);
+    const {
+      proms: { format },
+    } = this._projection.getFieldProjection(field.property);
     if (format) {
       return formatValue(format, value);
     }
@@ -352,8 +354,9 @@ export class TableModel extends Resource {
     }
 
     const field = fields[col];
-    const { format } = this._projection.getFieldProjection(field.property);
-
+    const {
+      props: { format },
+    } = this._projection.getFieldProjection(field.property);
     if (format) {
       this.rows.value[dataIndex][field.property] = parseValue(format, value);
     } else {

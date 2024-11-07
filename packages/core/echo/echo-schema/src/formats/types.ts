@@ -58,7 +58,7 @@ export const getScalarTypeFromAst = (ast: AST.AST): ScalarEnum | undefined => {
 export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
 
 export enum FormatEnum {
-  None = '',
+  None = 'none',
   String = 'string',
   Number = 'number',
   Boolean = 'boolean',

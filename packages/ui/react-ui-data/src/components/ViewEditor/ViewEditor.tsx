@@ -39,10 +39,14 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
   const projection = useMemo(() => new ViewProjection(schema, view), [schema, view]);
   const [field, setField] = useState<FieldType | undefined>();
 
-  const fieldProperties = useMemo(
-    () => (field ? (projection.getFieldProjection(field.property) as any) : undefined),
-    [field, view],
-  );
+  const fieldProperties = useMemo<PropertyType>(() => {
+    if (!field) {
+      return;
+    }
+
+    const { props } = projection.getFieldProjection(field.property);
+    return props;
+  }, [field, view]);
   const [{ fieldSchema }, setSchema] = useState({ fieldSchema: getPropertySchemaForFormat(fieldProperties?.format) });
 
   // TODO(burdon): Update object type (field) when format changes (get from FormatSchema map).
@@ -83,11 +87,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
   );
 
   const handleSet = useCallback(
-    (field: FieldType, props: FieldProjectionType) => {
-      // TODO(burdon): !!!
-      projection.updateField(field);
-      projection.updateFormat(field.property, props);
-    },
+    (field: FieldType, props: FieldProjectionType) => projection.setFieldProjection({ field, props }),
     [view.fields],
   );
 

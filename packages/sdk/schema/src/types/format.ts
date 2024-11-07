@@ -2,19 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, ScalarEnum, FormatEnum, S, getScalarTypeFromAst } from '@dxos/echo-schema';
+import { AST, DecimalPrecision, ScalarEnum, FormatEnum, S, getScalarTypeFromAst, JsonPath } from '@dxos/echo-schema';
 import { getType, getAnnotation } from '@dxos/effect';
-
-/**
- * Convert number of digits to multipleOf annotation.
- */
-export const DecimalPrecision = S.transform(S.Number, S.Number, {
-  strict: true,
-  encode: (value) => Math.pow(10, -value),
-  decode: (value) => Math.log10(1 / value),
-}).annotations({
-  [AST.TitleAnnotationId]: 'Number of digits',
-});
 
 /**
  * Base schema.
@@ -61,11 +50,8 @@ export const formatToSchema: Record<FormatEnum, S.Schema<any>> = {
   [FormatEnum.Number]: extend(FormatEnum.Number, ScalarEnum.Number),
   [FormatEnum.Boolean]: extend(FormatEnum.Boolean, ScalarEnum.Boolean),
   [FormatEnum.Ref]: extend(FormatEnum.Ref, ScalarEnum.Ref, {
-    // TODO(burdon): Annotation to store on View's field.
-    // referenceProperty: S.optional(JsonPath.annotations({ [AST.TitleAnnotationId]: 'Lookup property' })),
-    // TODO(burdon): Needs custom selector.
-    // TODO(burdon): This needs to map onto $id and reference properties.
-    // referenceSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
+    referenceSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
+    referenceProperty: S.optional(JsonPath).annotations({ [AST.TitleAnnotationId]: 'Lookup property' }),
   }),
 
   //
@@ -108,6 +94,8 @@ export const formatToSchema: Record<FormatEnum, S.Schema<any>> = {
 
 /**
  * Discriminated union of schema based on format.
+ * This is the schema used by the ViewEditor's Form.
+ * It is mapped to/from the View's Field and Schema properties via the ViewProjection.
  */
 export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.None],
@@ -153,8 +141,7 @@ export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.Duration],
 );
 
-// TODO(burdon): Widens to "any" (too complex for TSC?)
-export type PropertyType = S.Schema.Type<typeof PropertySchema>;
+export interface PropertyType extends S.Schema.Type<typeof PropertySchema> {}
 
 /**
  * Retrieves the schema definition for the given format.

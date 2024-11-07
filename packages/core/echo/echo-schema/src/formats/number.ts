@@ -6,6 +6,17 @@ import { AST, S } from '@dxos/effect';
 
 import { FormatAnnotationId, FormatEnum } from './types';
 
+/**
+ * Convert number of digits to multipleOf annotation.
+ */
+export const DecimalPrecision = S.transform(S.Number, S.Number, {
+  strict: true,
+  encode: (value) => Math.pow(10, -value),
+  decode: (value) => Math.log10(1 / value),
+}).annotations({
+  [AST.TitleAnnotationId]: 'Number of digits',
+});
+
 export const CurrencyAnnotationId = Symbol.for('@dxos/schema/annotation/Currency');
 
 export type CurrencyAnnotation = {

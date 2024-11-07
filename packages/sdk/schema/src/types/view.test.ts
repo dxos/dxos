@@ -11,6 +11,7 @@ import {
   Format,
   FormatAnnotationId,
   FormatEnum,
+  ScalarEnum,
   TypedObject,
   create,
   createJsonPath,
@@ -67,7 +68,9 @@ describe('view', () => {
       jsonSchema: toJsonSchema(
         S.Struct({
           name: S.String,
-        }).annotations({ [AST.DescriptionAnnotationId]: 'Org name' }),
+        }).annotations({
+          [AST.DescriptionAnnotationId]: 'Org name',
+        }),
       ),
     });
 
@@ -78,7 +81,9 @@ describe('view', () => {
         S.Struct({
           name: S.String,
           email: S.String,
-          org: createReferenceAnnotation(orgSchema).annotations({ [AST.DescriptionAnnotationId]: 'Employer' }),
+          org: createReferenceAnnotation(orgSchema).annotations({
+            [AST.DescriptionAnnotationId]: 'Employer',
+          }),
         }),
       ),
     });
@@ -88,7 +93,7 @@ describe('view', () => {
     log('view', { person: personView });
   });
 
-  test('gets and updates view projection', async ({ expect }) => {
+  test('gets and updates projection', async ({ expect }) => {
     const { db } = await builder.createDatabase();
     const registry = new MutableSchemaRegistry(db);
 
@@ -111,44 +116,63 @@ describe('view', () => {
     expect(view.fields).to.have.length(3);
 
     {
-      const props = projection.getFieldProjection('name');
-      expect(props).to.deep.eq({ property: 'name', type: 'string', title: 'Name' });
+      const { props } = projection.getFieldProjection('name');
+      expect(props).to.deep.eq({
+        property: 'name',
+        type: ScalarEnum.String,
+        format: FormatEnum.None,
+        title: 'Name',
+      });
     }
 
     {
-      const props = projection.getFieldProjection('email');
-      expect(props).to.include({ property: 'email', type: 'string', format: 'email' });
+      const { props } = projection.getFieldProjection('email');
+      expect(props).to.include({
+        property: 'email',
+        type: ScalarEnum.String,
+        format: FormatEnum.Email,
+      });
     }
 
-    projection.updateField({ property: 'email', size: 100 });
+    projection.setFieldProjection({ field: { property: createJsonPath('email'), size: 100 } });
 
     {
-      const props = projection.getFieldProjection('email');
-      expect(props).to.include({ property: 'email', type: 'string', format: 'email', size: 100 });
+      const { field, props } = projection.getFieldProjection('email');
+      expect(field).to.include({
+        property: 'email',
+        size: 100,
+      });
+      expect(props).to.include({
+        property: 'email',
+        type: ScalarEnum.String,
+        format: FormatEnum.Email,
+      });
+
+      projection.setFieldProjection({ props });
     }
 
     {
-      const props = projection.getFieldProjection('salary');
+      const { props } = projection.getFieldProjection('salary');
       expect(props).to.include({
         property: 'salary',
-        type: 'number',
-        format: 'currency',
+        type: ScalarEnum.Number,
+        format: FormatEnum.Currency,
         currency: 'USD',
-        multipleOf: 0.01,
+        multipleOf: 2,
       });
 
       props.currency = 'GBP';
-      projection.updateProperties('salary', props);
+      projection.setFieldProjection({ props });
     }
 
     {
-      const props = projection.getFieldProjection('salary');
+      const { props } = projection.getFieldProjection('salary');
       expect(props).to.include({
         property: 'salary',
-        type: 'number',
-        format: 'currency',
+        type: ScalarEnum.Number,
+        format: FormatEnum.Currency,
         currency: 'GBP',
-        multipleOf: 0.01,
+        multipleOf: 2,
       });
     }
   });
@@ -176,24 +200,26 @@ describe('view', () => {
     });
 
     const mutable = registry.registerSchema(db.add(schema));
-
     const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
-
     const projection = new ViewProjection(mutable, view);
 
-    projection.updateField({ property: 'org', referenceProperty: createJsonPath('name') });
+    projection.setFieldProjection({
+      field: {
+        property: createJsonPath('org'),
+        referenceProperty: createJsonPath('name'),
+      },
+    });
 
-    const props = projection.getFieldProjection('org');
-    expect(props).toEqual({
+    const { field, props } = projection.getFieldProjection('org');
+    expect(field).to.deep.eq({
       property: 'org',
       referenceProperty: 'name',
-      $id: '/schemas/echo/ref',
-      reference: {
-        schema: {
-          $ref: 'dxn:type:example.com/type/Org', // Same as $id of the org schema.
-        },
-        schemaVersion: '0.1.0',
-      },
+    });
+    expect(props).to.deep.eq({
+      property: 'org',
+      type: ScalarEnum.Ref,
+      format: FormatEnum.Ref,
+      referenceSchema: 'dxn:type:example.com/type/Org',
     });
   });
 
