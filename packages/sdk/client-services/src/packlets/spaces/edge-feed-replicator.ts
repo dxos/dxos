@@ -56,7 +56,7 @@ export class EdgeFeedReplicator extends Resource {
     log('open');
     // TODO: handle reconnects
     this._ctx.onDispose(
-      this._messenger.addListener((message: RouterMessage) => {
+      this._messenger.onMessage((message: RouterMessage) => {
         if (!message.serviceId) {
           return;
         }
@@ -77,11 +77,15 @@ export class EdgeFeedReplicator extends Resource {
       }),
     );
 
-    this._messenger.connected.on(this._ctx, async () => {
-      await this._resetConnection();
-      this._startReplication();
-    });
+    this._ctx.onDispose(
+      this._messenger.onReconnected(() => {
+        scheduleMicroTask(this._ctx, () => this._handleReconnect());
+      }),
+    );
+  }
 
+  private async _handleReconnect() {
+    await this._resetConnection();
     if (this._messenger.isConnected) {
       this._startReplication();
     }

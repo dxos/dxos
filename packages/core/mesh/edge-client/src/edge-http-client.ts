@@ -43,7 +43,10 @@ export class EdgeHttpClient {
   }
 
   setIdentity(identity: EdgeIdentity) {
-    this._edgeIdentity = identity;
+    if (this._edgeIdentity?.identityKey !== identity.identityKey || this._edgeIdentity?.peerKey !== identity.peerKey) {
+      this._edgeIdentity = identity;
+      this._authHeader = undefined;
+    }
   }
 
   public createAgent(body: CreateAgentRequestBody, args?: EdgeHttpGetArgs): Promise<CreateAgentResponseBody> {
