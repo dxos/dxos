@@ -154,7 +154,7 @@ export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> |
   return undefined;
 };
 
-export type SchemaPropertyType<T> = {
+export type SchemaProperty<T> = {
   property: string & keyof T;
   type: TypeEnum;
   format: FormatEnum;
@@ -165,8 +165,8 @@ export type SchemaPropertyType<T> = {
  * Get top-level properties from schema.
  * NOTE: Type literals are ignored (e.g., fixed type/format fields).
  */
-export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaPropertyType<T>[] => {
-  return AST.getPropertySignatures(schema.ast).reduce<SchemaPropertyType<T>[]>((props, prop) => {
+export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaProperty<T>[] => {
+  return AST.getPropertySignatures(schema.ast).reduce<SchemaProperty<T>[]>((props, prop) => {
     // TODO(burdon): Factor out.
     const baseType = getBaseType(prop.type);
     if (baseType) {
