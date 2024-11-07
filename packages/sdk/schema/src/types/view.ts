@@ -3,6 +3,7 @@
 //
 
 import {
+  JSON_SCHEMA_ECHO_REF_ID,
   create,
   createJsonPath,
   FormatEnum,
@@ -15,7 +16,6 @@ import {
   ScalarEnum,
   TypedObject,
 } from '@dxos/echo-schema';
-import { ECHO_REF_JSON_SCHEMA_ID } from '@dxos/echo-schema/src';
 import { log } from '@dxos/log';
 
 import { PropertySchema, type PropertyType } from './format';
@@ -83,7 +83,6 @@ export const createView = ({
   const properties = _properties ?? Object.keys(jsonSchema?.properties ?? []).filter((p) => p !== 'id');
   return create(ViewType, {
     // schema: jsonSchema,
-    // TODO(burdon): Add schema reference?
     query: {
       __typename: typename,
     },
@@ -92,8 +91,10 @@ export const createView = ({
   });
 };
 
-// TODO(burdon): Rename.
-export type FieldProjectionType = {
+/**
+ * Composite of view and schema metadata for a property.
+ */
+export type FieldProjection = {
   field: FieldType;
   props: PropertyType;
 };
@@ -112,7 +113,7 @@ export class ViewProjection {
   /**
    * Get projection of View fields and JSON schema property annotations.
    */
-  getFieldProjection(prop: string): FieldProjectionType {
+  getFieldProjection(prop: string): FieldProjection {
     let { $id, type, format = FormatEnum.None, reference, ...rest } = this._schema.jsonSchema.properties![prop];
 
     // Map reference.
@@ -123,7 +124,12 @@ export class ViewProjection {
       referenceSchema = reference.schema.$ref;
     }
 
+    console.log('::::::::', prop, type, format, referenceSchema, rest);
+
+    console.log(1);
     const field: FieldType = this._view.fields.find((f) => f.property === prop) ?? { property: createJsonPath(prop) };
+    console.log(2);
+
     const props = S.decodeSync(PropertySchema)({ property: prop, type, format, referenceSchema, ...rest });
     log.info('getFieldProjection', { field, props });
     return { field, props };
@@ -132,7 +138,7 @@ export class ViewProjection {
   /**
    * Update JSON schema property annotations.
    */
-  setFieldProjection({ field, props }: Partial<FieldProjectionType>) {
+  setFieldProjection({ field, props }: Partial<FieldProjection>) {
     log.info('updateProperties', { field, props });
 
     if (field) {
@@ -153,7 +159,7 @@ export class ViewProjection {
       let $id;
       let reference;
       if (referenceSchema) {
-        $id = ECHO_REF_JSON_SCHEMA_ID;
+        $id = JSON_SCHEMA_ECHO_REF_ID;
         type = undefined;
         format = undefined;
         reference = {

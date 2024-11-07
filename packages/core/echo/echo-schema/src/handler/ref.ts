@@ -11,6 +11,11 @@ import { MutableSchema, StoredSchema } from '../mutable';
 import { getTypename, isReactiveObject } from '../proxy';
 import { type Ref } from '../types';
 
+/**
+ * The `$id` field for an ECHO reference schema.
+ */
+export const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
+
 export interface ref<T> extends S.Schema<Ref<T>, EncodedReference> {}
 
 export const ref = <T extends HasId>(schema: S.Schema<T, any>): ref<T> => {
@@ -68,7 +73,7 @@ export const createEchoReferenceSchema = (annotation: ObjectAnnotation): S.Schem
         },
         {
           jsonSchema: {
-            $id: ECHO_REF_JSON_SCHEMA_ID,
+            $id: JSON_SCHEMA_ECHO_REF_ID,
             reference: referenceInfo,
           },
         },
@@ -76,8 +81,3 @@ export const createEchoReferenceSchema = (annotation: ObjectAnnotation): S.Schem
     )
     .annotations({ [ReferenceAnnotationId]: annotation });
 };
-
-/**
- * The `$id` field for an ECHO reference schema.
- */
-export const ECHO_REF_JSON_SCHEMA_ID = '/schemas/echo/ref';

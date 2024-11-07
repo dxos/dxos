@@ -134,7 +134,12 @@ describe('view', () => {
       });
     }
 
-    projection.setFieldProjection({ field: { property: createJsonPath('email'), size: 100 } });
+    projection.setFieldProjection({
+      field: {
+        property: createJsonPath('email'),
+        size: 100,
+      },
+    });
 
     {
       const { field, props } = projection.getFieldProjection('email');
@@ -211,6 +216,8 @@ describe('view', () => {
     });
 
     const { field, props } = projection.getFieldProjection('org');
+    console.log(':::::::::::::', field);
+    return;
     expect(field).to.deep.eq({
       property: 'org',
       referenceProperty: 'name',

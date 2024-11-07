@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { DropdownMenu } from '@dxos/react-ui';
-import { type FieldProjectionType } from '@dxos/schema';
+import { type FieldProjection } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
@@ -17,7 +17,7 @@ type NewColumnFormProps = {
 };
 
 export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewColumnFormProps) => {
-  const [field, setField] = useState<FieldProjectionType | undefined>(undefined);
+  const [field, setField] = useState<FieldProjection | undefined>(undefined);
   useEffect(() => {
     if (open) {
       if (model?.table?.view) {

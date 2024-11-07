@@ -10,12 +10,12 @@ import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 import {
   createUniqueFieldForView,
-  type FieldProjectionType,
+  getPropertySchemaForFormat,
+  type FieldProjection,
   FieldSchema,
   type FieldType,
   type ViewType,
   ViewProjection,
-  getPropertySchemaForFormat,
   type PropertyType,
 } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
@@ -87,7 +87,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
   );
 
   const handleSet = useCallback(
-    (field: FieldType, props: FieldProjectionType) => projection.setFieldProjection({ field, props }),
+    (field: FieldType, props: FieldProjection) => projection.setFieldProjection({ field, props }),
     [view.fields],
   );
 
@@ -134,7 +134,6 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
             Custom={(props) => (
               <>
                 {/* TODO(burdon): Move property field here. */}
-                {/* TODO(burdon): Need to update type also. */}
                 <FormInput<PropertyType>
                   property='format'
                   label={t('field format label')}

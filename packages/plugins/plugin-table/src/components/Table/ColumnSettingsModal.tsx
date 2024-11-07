@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { DropdownMenu, type DropdownMenuRootProps } from '@dxos/react-ui';
-import { type FieldProjectionType } from '@dxos/schema';
+import { type FieldProjection } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
@@ -16,7 +16,7 @@ export type ColumnSettingsModalProps = {
 } & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
 
 export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, triggerRef }: ColumnSettingsModalProps) => {
-  const props = useMemo<FieldProjectionType | undefined>(() => {
+  const props = useMemo<FieldProjection | undefined>(() => {
     const field = model?.table?.view?.fields.find((f) => f.property === columnId);
     if (field) {
       return model?.projection.getFieldProjection(field.property);
