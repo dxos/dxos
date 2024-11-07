@@ -2,36 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
-
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space, type SpaceId } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { StatusBar } from '@dxos/plugin-status-bar';
-import { useClient } from '@dxos/react-client';
-import { Icon, useTranslation } from '@dxos/react-ui';
 
-import { SPACE_PLUGIN } from '../meta';
-
-export const SaveStatus = () => {
-  const { t } = useTranslation(SPACE_PLUGIN);
-  const client = useClient();
-  const [state, setState] = useState<'saved' | 'saving'>('saved');
-  useEffect(() => {
-    return createClientSaveTracker(client, (state) => {
-      setState(state);
-    });
-  }, []);
-
-  return (
-    <StatusBar.Item title={state === 'saving' ? t('saving label') : t('saved label')}>
-      <Icon icon={state === 'saving' ? 'ph--arrows-clockwise--regular' : 'ph--check-circle--regular'} size={4} />
-    </StatusBar.Item>
-  );
-};
-
-const createClientSaveTracker = (client: Client, cb: (state: 'saved' | 'saving') => void) => {
+export const createClientSaveTracker = (client: Client, cb: (state: 'saved' | 'saving') => void) => {
   const unsubscribeCallbacks: Record<SpaceId, UnsubscribeCallback> = {};
   const state: Record<SpaceId, 'saved' | 'saving'> = {};
 

@@ -4,14 +4,14 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
 import { SpaceId } from '@dxos/keys';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { SyncStatusDetail, SyncStatusIndicator } from './SyncStatus';
-import { getSyncSummary, type SpaceSyncStateMap } from './types';
+import { getSyncSummary, type SpaceSyncStateMap } from './sync-state';
 import translations from '../../translations';
 
 const DefaultStory = (props: any) => {
@@ -39,13 +39,22 @@ const state: SpaceSyncStateMap = Array.from({ length: 5 }).reduce<SpaceSyncState
   return map;
 }, {});
 
-export const Default = {
+export const Default: StoryObj<typeof SyncStatusIndicator> = {
   args: {
     state,
+    saved: true,
   },
 };
 
-export const Detail = {
+export const Saving: StoryObj<typeof SyncStatusIndicator> = {
+  args: {
+    state,
+    saved: false,
+  },
+};
+
+// TODO(wittjosiah): Separate story path for separate component.
+export const Detail: StoryObj<typeof SyncStatusDetail> = {
   render: SyncStatusDetail,
   args: {
     state,
