@@ -26,11 +26,13 @@ export class TestSchema extends TypedObject({
   address: S.optional(
     S.Struct({
       city: S.optional(S.String),
-      zip: S.String.pipe(
-        S.pattern(/^[0-9]{5}(?:-[0-9]{4})?$/),
-        S.annotations({
-          [AST.DescriptionAnnotationId]: 'ZIP code.',
-        }),
+      zip: S.optional(
+        S.String.pipe(
+          S.pattern(/^[0-9]{5}(?:-[0-9]{4})?$/),
+          S.annotations({
+            [AST.DescriptionAnnotationId]: 'ZIP code.',
+          }),
+        ),
       ),
     }),
   ),

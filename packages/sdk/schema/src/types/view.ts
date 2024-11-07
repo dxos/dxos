@@ -104,7 +104,7 @@ export type FieldProjection = {
  */
 export class ViewProjection {
   private readonly _encode = S.encodeSync(PropertySchema);
-  private readonly _decode = S.decodeSync(PropertySchema);
+  private readonly _decode = S.decodeSync(PropertySchema, {});
 
   constructor(
     // TODO(burdon): This could be StoredSchema?

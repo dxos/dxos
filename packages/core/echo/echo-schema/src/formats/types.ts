@@ -10,6 +10,7 @@ export enum ScalarEnum {
   String = 'string',
   Number = 'number',
   Boolean = 'boolean',
+  Object = 'object',
   Ref = 'ref',
 }
 

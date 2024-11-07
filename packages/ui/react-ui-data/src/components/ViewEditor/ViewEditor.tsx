@@ -52,7 +52,6 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
   // TODO(burdon): Update object type (field) when format changes (get from FormatSchema map).
   // TODO(burdon): Handle changes to `property` (e.g., uniqueness)?
   const handleValueChanged = useCallback((values: PropertyType) => {
-    // TODO(burdon): Log.
     setSchema({ fieldSchema: getPropertySchemaForFormat(values?.format) });
   }, []);
 
