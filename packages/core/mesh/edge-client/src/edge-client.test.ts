@@ -80,12 +80,17 @@ describe('EdgeClient', () => {
 
   test('send fails if identity changes before connection becomes ready', async () => {
     const admitConnection = new Trigger();
-    const { endpoint, cleanup } = await createTestEdgeWsServer(wsServerPort++, { admitConnection });
+    const { endpoint, cleanup, messageSink } = await createTestEdgeWsServer(wsServerPort++, { admitConnection });
     onTestFinished(cleanup);
 
     const { client } = await openNewClient(endpoint);
     setTimeout(async () => client.setIdentity(await createEphemeralEdgeIdentity()));
     await expect(client.send(textMessage('Hello world 1'))).rejects.toThrow(EdgeIdentityChangedError);
+
+    // Test recovers.
+    setTimeout(() => admitConnection.wake(), 20);
+    await client.send(textMessage('Hello world 1'));
+    await expect.poll(() => messageSink.length).toBe(1);
   });
 
   test('send fails if client is closed before connection becomes ready', async () => {
