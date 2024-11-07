@@ -279,10 +279,10 @@ export class DxGrid extends LitElement {
   //
 
   @state()
-  private overscanInlineStart = 0;
+  private visColMinStart = 0;
 
   @state()
-  private overscanBlockStart = 0;
+  private visRowMinStart = 0;
 
   //
   // `bin`, not short for anything, is the range in pixels within which virtualization does not need to reassess.
@@ -780,28 +780,29 @@ export class DxGrid extends LitElement {
 
     this.visColMin = axisCursor;
 
-    this.overscanInlineStart = pxCursor - this.colSize(axisCursor, 'grid') - gap;
-    const bifurcateStart = pxCursor;
+    this.visColMinStart = pxCursor - this.colSize(axisCursor, 'grid') - gap;
+    const visColMinEnd = pxCursor;
 
     while (pxCursor < this.posInline + this.sizeInline) {
       axisCursor += 1;
       pxCursor += this.colSize(axisCursor, 'grid') + gap;
     }
 
-    const bifurcateEnd = pxCursor - this.sizeInline;
+    this.visColMax = Math.min(this.limitColumns, axisCursor + 1);
+    const visColMaxStart = pxCursor - this.colSize(axisCursor, 'grid') - gap;
+    const visColMaxEnd = pxCursor;
 
-    const bifurcateMin = Math.min(bifurcateStart, bifurcateEnd);
-    const bifurcateMax = Math.max(bifurcateStart, bifurcateEnd);
+    const bifurcateStart = visColMaxStart - this.sizeInline;
+    const bifurcateEnd = visColMaxEnd - this.sizeInline;
 
-    if (this.posInline < bifurcateMin) {
-      this.binInlineMin = this.overscanInlineStart;
-      this.binInlineMax = bifurcateMin + gap;
-    } else {
-      this.binInlineMin = bifurcateMin;
-      this.binInlineMax = bifurcateMax;
+    const bounds = [this.visColMinStart, visColMinEnd, bifurcateStart, bifurcateEnd].sort((a, b) => a - b);
+    let boundsCursor = 1;
+    while (bounds[boundsCursor] < this.posInline && boundsCursor < 3) {
+      boundsCursor += 1;
     }
 
-    this.visColMax = Math.min(this.limitColumns, axisCursor + 1);
+    this.binInlineMin = bounds[boundsCursor - 1];
+    this.binInlineMax = bounds[boundsCursor];
 
     this.templateGridColumns = [...Array(this.visColMax - this.visColMin)]
       .map((_, c0) => `${this.colSize(this.visColMin + c0, 'grid')}px`)
@@ -828,28 +829,29 @@ export class DxGrid extends LitElement {
 
     this.visRowMin = axisCursor;
 
-    this.overscanBlockStart = pxCursor - this.rowSize(axisCursor, 'grid') - gap;
-    const bifurcateStart = pxCursor;
+    this.visRowMinStart = pxCursor - this.rowSize(axisCursor, 'grid') - gap;
+    const visRowMinEnd = pxCursor;
 
     while (pxCursor < this.posBlock + this.sizeBlock) {
       axisCursor += 1;
       pxCursor += this.rowSize(axisCursor, 'grid') + gap;
     }
 
-    const bifurcateEnd = pxCursor - this.sizeBlock;
+    this.visRowMax = Math.min(this.limitRows, axisCursor + 1);
+    const visRowMaxStart = pxCursor - this.rowSize(axisCursor, 'grid') - gap;
+    const visRowMaxEnd = pxCursor;
 
-    const bifurcateMin = Math.min(bifurcateStart, bifurcateEnd);
-    const bifurcateMax = Math.max(bifurcateStart, bifurcateEnd);
+    const bifurcateStart = visRowMaxStart - this.sizeBlock;
+    const bifurcateEnd = visRowMaxEnd - this.sizeBlock;
 
-    if (this.posBlock < bifurcateMin) {
-      this.binBlockMin = this.overscanBlockStart;
-      this.binBlockMax = bifurcateMin + gap;
-    } else {
-      this.binInlineMin = bifurcateMin;
-      this.binInlineMax = bifurcateMax;
+    const bounds = [this.visRowMinStart, visRowMinEnd, bifurcateStart, bifurcateEnd].sort((a, b) => a - b);
+    let boundsCursor = 1;
+    while (bounds[boundsCursor] < this.posBlock && boundsCursor < 3) {
+      boundsCursor += 1;
     }
 
-    this.visRowMax = Math.min(this.limitRows, axisCursor + 1);
+    this.binBlockMin = bounds[boundsCursor - 1];
+    this.binBlockMax = bounds[boundsCursor];
 
     this.templateGridRows = [...Array(this.visRowMax - this.visRowMin)]
       .map((_, r0) => `${this.rowSize(this.visRowMin + r0, 'grid')}px`)
@@ -1347,8 +1349,8 @@ export class DxGrid extends LitElement {
   override render() {
     const visibleCols = this.visColMax - this.visColMin;
     const visibleRows = this.visRowMax - this.visRowMin;
-    const offsetInline = this.overscanInlineStart - this.posInline + gap;
-    const offsetBlock = this.overscanBlockStart - this.posBlock + gap;
+    const offsetInline = this.visColMinStart - this.posInline + gap;
+    const offsetBlock = this.visRowMinStart - this.posBlock + gap;
     const selection = selectionProps(this.selectionStart, this.selectionEnd);
 
     return html`<style>
