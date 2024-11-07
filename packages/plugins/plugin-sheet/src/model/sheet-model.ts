@@ -111,6 +111,12 @@ export class SheetModel extends Resource {
     log('initialize', { id: this.id });
     initialize(this._sheet);
 
+    this._graph.update.on((event) => {
+      if (event.type === 'functionsUpdated') {
+        this.reset();
+      }
+    });
+
     // TODO(burdon): SheetModel should extend ComputeNode and be constructed via the graph.
     this._node = this._graph.getOrCreateNode(createSheetName({ type: getTypename(this._sheet)!, id: this._sheet.id }));
     await this._node.open();
@@ -134,9 +140,14 @@ export class SheetModel extends Resource {
       invariant(this._node);
       const { col, row } = addressFromIndex(this._sheet, key);
       if (isFormula(value)) {
-        value = this._graph.mapFormulaToNative(
-          this._graph.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value)),
-        );
+        const binding = this._graph.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value));
+        if (binding) {
+          value = this._graph.mapFormulaToNative(binding);
+        } else {
+          // If binding is not found, render the cell as empty.
+          // This prevents the cell from momentarily rendering an error while the binding is being loaded.
+          value = '';
+        }
       }
 
       this._node.graph.hf.setCellContents({ sheet: this._node.sheetId, row, col }, value);
@@ -265,8 +276,11 @@ export class SheetModel extends Resource {
   getValue(cell: CellAddress): CellScalarValue {
     // Applies rounding and post-processing.
     invariant(this._node);
-    const value = this._node.graph.hf.getCellValue(toSimpleCellAddress(this._node.sheetId, cell));
+    const address = toSimpleCellAddress(this._node.sheetId, cell);
+    const value = this._node.graph.hf.getCellValue(address);
     if (value instanceof DetailedCellError) {
+      // TODO(wittjosiah): Error details should be shown in cell `title`.
+      log.info('cell error', { cell, error: value });
       return value.toString();
     }
 
