@@ -56,7 +56,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
     [view.fields],
   );
 
-  const handleComplete = useCallback( () => setSelectedField(undefined) ,[])
+  const handleComplete = useCallback(() => setSelectedField(undefined), []);
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
@@ -86,7 +86,9 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
         )}
       </List.Root>
 
-      {selectedField && <FieldEditor field={selectedField} projection={projection} view={view} onComplete={handleComplete} />}
+      {selectedField && (
+        <FieldEditor field={selectedField} projection={projection} view={view} onComplete={handleComplete} />
+      )}
 
       {/* TODO(burdon): Option. */}
       {!readonly && (

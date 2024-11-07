@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { DropdownMenu } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-data';
-import { type FieldProjection, type FieldType } from '@dxos/schema';
+import { type FieldType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
@@ -29,6 +29,7 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
   }, [open, model?.table?.view]);
 
   const handleComplete = useCallback(() => {
+    // TODO(ZaymonFC): Invoke a method on the projection to add new field.
     close();
     setStagedField(undefined);
   }, [close]);

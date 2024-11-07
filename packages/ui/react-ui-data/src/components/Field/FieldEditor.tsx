@@ -22,12 +22,12 @@ export const FieldEditor = ({
   field,
   projection,
   view,
-  onComplete
+  onComplete,
 }: {
   field: FieldType;
   projection: ViewProjection;
   view: ViewType;
-  onComplete: () => void
+  onComplete: () => void;
 }) => {
   const { t } = useTranslation(translationKey);
   const fieldProperties = useMemo<PropertyType>(() => {
