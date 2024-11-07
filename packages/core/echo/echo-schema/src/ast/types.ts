@@ -249,10 +249,17 @@ const _JsonSchemaType = S.mutable(
               S.Struct({
                 typename: S.String,
                 version: S.String,
+
+                // Note: schemaId is the id of the echo object containing the schema.
+                // This is why this annotation cannot be removed
                 schemaId: S.optional(S.String),
               }),
             ),
           ),
+
+          /**
+           * {@link PropertyMeta} annotations get serialized here.
+           */
           annotations: S.optional(
             S.Record({
               key: S.String,

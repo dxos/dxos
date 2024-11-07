@@ -6,14 +6,6 @@ import { invariant } from '@dxos/invariant';
 
 import type { JsonSchemaType } from '../ast';
 
-/*
-TODO(dima)
-- echo -> echo
-- echo.annotations -> annotations?
-- anyOf: ReactiveArray(2) [ { type: 'object' }, { type: 'array' } ], on toJsonSchema(S.Struct({}))
-- FieldMeta -> PropertyMeta
-*/
-
 /**
  * Creates a composite schema from the source and projection schemas.
  */
