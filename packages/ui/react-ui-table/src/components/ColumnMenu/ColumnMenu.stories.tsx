@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type SortDirection } from '@tanstack/react-table';
 import React, { useState } from 'react';
 
-import { FormatEnum, ScalarEnum } from '@dxos/echo-schema';
+import { ScalarEnum } from '@dxos/echo-schema';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { ColumnMenu } from './ColumnMenu';
