@@ -45,7 +45,10 @@ export const getFieldValue = <T extends {} = {}, V = any>(
 export const setFieldValue = <T extends {} = {}, V = any>(object: T, field: FieldType, value: V): V =>
   jp.value(object, '$.' + field.property, value);
 
-type SchemaFieldDescription = {
+/**
+ * @deprecated
+ */
+export type SchemaFieldDescription = {
   property: string;
   type: ScalarEnum;
   format?: FormatEnum;
@@ -66,10 +69,7 @@ export const mapSchemaToFields = (schema: S.Schema<any, any>): SchemaFieldDescri
   return fields;
 };
 
-/**
- * @deprecated
- */
-export const toFieldValueType = (type: AST.AST): { format?: FormatEnum; type: ScalarEnum } => {
+const toFieldValueType = (type: AST.AST): { format?: FormatEnum; type: ScalarEnum } => {
   if (AST.isTypeLiteral(type)) {
     // TODO(burdon): ???
     return { type: ScalarEnum.Ref, format: FormatEnum.Ref };
