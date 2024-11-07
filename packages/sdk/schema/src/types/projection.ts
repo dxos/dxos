@@ -131,6 +131,7 @@ export class ViewProjection {
         format = undefined;
       }
 
+      // TODO(dmaretskyi): Check if the field base type (string, number, ref) hasn't changed and update only relevant fields.
       const values: JsonSchemaType = { $id, type, format, reference, ...rest };
       this._schema.jsonSchema.properties![property] = values;
     }
