@@ -90,6 +90,7 @@ export const ComplementarySidebar = ({ panel, flatDeck }: ComplementarySidebarPr
             <Surface
               key={id}
               role={`complementary--${part}`}
+              limit={1}
               data={{ id, subject: node.properties.object ?? node.properties.space, popoverAnchorId }}
               fallback={PlankContentError}
               placeholder={<PlankLoading />}
