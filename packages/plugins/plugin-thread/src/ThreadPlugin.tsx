@@ -112,6 +112,15 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       },
       translations: [...translations, ...threadTranslations],
       echo: { schema: [ChannelType, ThreadType, MessageType] },
+      complementary: {
+        panels: [
+          {
+            id: 'comments',
+            label: ['open comments panel label', { ns: THREAD_PLUGIN }],
+            icon: 'ph--chat-text--regular',
+          },
+        ],
+      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;

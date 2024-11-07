@@ -30,6 +30,7 @@ export default [
         'settings storage adapter changed alert':
           'Warning: Swapping the storage adapter will make your data unavailable.',
         'settings space fragmentation': 'Enable AM space fragmentation',
+        'open debug panel label': 'Show Debug',
       },
     },
   },

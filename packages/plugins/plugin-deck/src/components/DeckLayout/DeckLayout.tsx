@@ -13,7 +13,7 @@ import { Deck } from '@dxos/react-ui-deck';
 import { getSize, mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
-import { ComplementarySidebar } from './ComplementarySidebar';
+import { ComplementarySidebar, ComplementarySidebarProps } from './ComplementarySidebar';
 import { ContentEmpty } from './ContentEmpty';
 import { Fullscreen } from './Fullscreen';
 import { Plank } from './Plank';
@@ -36,7 +36,7 @@ export type DeckLayoutProps = {
     wallpaper?: { classNames?: string };
   };
   onDismissToast: (id: string) => void;
-};
+} & Pick<ComplementarySidebarProps, 'panels'>;
 
 export const DeckLayout = ({
   layoutParts,
@@ -45,6 +45,7 @@ export const DeckLayout = ({
   overscroll,
   showHints,
   slots,
+  panels,
   onDismissToast,
 }: DeckLayoutProps) => {
   const context = useLayout();
@@ -168,7 +169,7 @@ export const DeckLayout = ({
         <Sidebar layoutParts={layoutParts} />
 
         {/* Right sidebar. */}
-        <ComplementarySidebar panel={layoutParts.complementary?.[0].id} flatDeck={flatDeck} />
+        <ComplementarySidebar panels={panels} current={layoutParts.complementary?.[0].id} flatDeck={flatDeck} />
 
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />
