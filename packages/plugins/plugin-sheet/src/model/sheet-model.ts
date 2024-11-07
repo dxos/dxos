@@ -8,11 +8,10 @@ import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateT
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { getTypename } from '@dxos/echo-schema';
+import { getTypename, FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FieldValueType } from '@dxos/schema';
 
 import { DetailedCellError, ExportedCellChange } from '#hyperformula';
 import { type ComputeGraph, type ComputeNode, type ComputeNodeEvent, createSheetName } from '../compute-graph';
@@ -21,26 +20,29 @@ import {
   addressFromIndex,
   addressToA1Notation,
   addressToIndex,
-  type CellAddress,
-  type CellRange,
   initialize,
   insertIndices,
   isFormula,
+  type CellAddress,
+  type CellRange,
+  ReadonlyException,
   MAX_COLUMNS,
   MAX_ROWS,
-  ReadonlyException,
 } from '../defs';
 import { type CellScalarValue, type CellValue, type SheetType } from '../types';
 
 // Map sheet types to system types.
-const typeMap: Record<string, FieldValueType> = {
-  BOOLEAN: FieldValueType.Boolean,
-  NUMBER_RAW: FieldValueType.Number,
-  NUMBER_PERCENT: FieldValueType.Percent,
-  NUMBER_CURRENCY: FieldValueType.Currency,
-  NUMBER_DATETIME: FieldValueType.DateTime,
-  NUMBER_DATE: FieldValueType.Date,
-  NUMBER_TIME: FieldValueType.Time,
+// https://hyperformula.handsontable.com/guide/types-of-values.html
+//  - https://github.com/handsontable/hyperformula/blob/master/src/Cell.ts (CellValueType)
+//  - https://github.com/handsontable/hyperformula/blob/master/src/interpreter/InterpreterValue.ts (NumberType)
+const typeMap: Record<string, { type: TypeEnum; format?: FormatEnum }> = {
+  BOOLEAN: { type: TypeEnum.Boolean },
+  NUMBER_RAW: { type: TypeEnum.Number },
+  NUMBER_PERCENT: { type: TypeEnum.Number, format: FormatEnum.Percent },
+  NUMBER_CURRENCY: { type: TypeEnum.Number, format: FormatEnum.Currency },
+  NUMBER_DATETIME: { type: TypeEnum.String, format: FormatEnum.DateTime },
+  NUMBER_DATE: { type: TypeEnum.String, format: FormatEnum.Date },
+  NUMBER_TIME: { type: TypeEnum.String, format: FormatEnum.Time },
 };
 
 const getTopLeft = (range: CellRange): CellAddress => {
@@ -111,6 +113,12 @@ export class SheetModel extends Resource {
     log('initialize', { id: this.id });
     initialize(this._sheet);
 
+    this._graph.update.on((event) => {
+      if (event.type === 'functionsUpdated') {
+        this.reset();
+      }
+    });
+
     // TODO(burdon): SheetModel should extend ComputeNode and be constructed via the graph.
     this._node = this._graph.getOrCreateNode(createSheetName({ type: getTypename(this._sheet)!, id: this._sheet.id }));
     await this._node.open();
@@ -134,9 +142,14 @@ export class SheetModel extends Resource {
       invariant(this._node);
       const { col, row } = addressFromIndex(this._sheet, key);
       if (isFormula(value)) {
-        value = this._graph.mapFormulaToNative(
-          this._graph.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value)),
-        );
+        const binding = this._graph.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value));
+        if (binding) {
+          value = this._graph.mapFormulaToNative(binding);
+        } else {
+          // If binding is not found, render the cell as empty.
+          // This prevents the cell from momentarily rendering an error while the binding is being loaded.
+          value = '';
+        }
       }
 
       this._node.graph.hf.setCellContents({ sheet: this._node.sheetId, row, col }, value);
@@ -265,8 +278,11 @@ export class SheetModel extends Resource {
   getValue(cell: CellAddress): CellScalarValue {
     // Applies rounding and post-processing.
     invariant(this._node);
-    const value = this._node.graph.hf.getCellValue(toSimpleCellAddress(this._node.sheetId, cell));
+    const address = toSimpleCellAddress(this._node.sheetId, cell);
+    const value = this._node.graph.hf.getCellValue(address);
     if (value instanceof DetailedCellError) {
+      // TODO(wittjosiah): Error details should be shown in cell `title`.
+      log.info('cell error', { cell, error: value });
       return value.toString();
     }
 
@@ -276,7 +292,7 @@ export class SheetModel extends Resource {
   /**
    * Get value type.
    */
-  getValueType(cell: CellAddress): FieldValueType {
+  getValueDescription(cell: CellAddress): { type: TypeEnum; format?: FormatEnum } | undefined {
     invariant(this._node);
     const addr = toSimpleCellAddress(this._node.sheetId, cell);
     const type = this._node.graph.hf.getCellValueDetailedType(addr);

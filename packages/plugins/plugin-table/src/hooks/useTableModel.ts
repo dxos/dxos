@@ -4,20 +4,23 @@
 
 import { useEffect, useState } from 'react';
 
-import { create } from '@dxos/echo-schema';
+import { create, S, TypedObject } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/react-client';
 import { type EchoReactiveObject, getSpace } from '@dxos/react-client/echo';
+import { createView, type ViewProjection } from '@dxos/schema';
 
 import { TableModel, type TableModelProps } from '../model';
 import { type TableType } from '../types';
-import { createStarterSchema, createStarterView } from '../types';
 
 export type UseTableModelParams = {
-  table: TableType;
-  objects: EchoReactiveObject<any>[];
+  table?: TableType;
+  projection?: ViewProjection;
+  objects?: EchoReactiveObject<any>[];
 } & Pick<TableModelProps, 'onAddColumn' | 'onDeleteColumn' | 'onDeleteRow'>;
 
 export const useTableModel = ({
   table,
+  projection,
   objects,
   onAddColumn,
   onDeleteColumn,
@@ -25,37 +28,57 @@ export const useTableModel = ({
 }: UseTableModelParams): TableModel | undefined => {
   const space = getSpace(table);
 
-  // TODO(ZaymonFC): Not sure this belongs here. Seek feeback.
+  // TODO(burdon): Move up-stream.
   useEffect(() => {
-    if (space && !table?.schema && !table.view) {
-      table.schema = space.db.schema.addSchema(createStarterSchema());
-      table.view = createStarterView(table.schema);
-      space.db.add(create(table.schema, {}));
-    }
-  }, [space, table?.schema]);
+    if (space && table && !table?.view) {
+      const schema = TypedObject({
+        typename: 'example.com/type/' + PublicKey.random().truncate(),
+        version: '0.1.0',
+      })({
+        name: S.optional(S.String),
+        description: S.optional(S.String),
+        quantity: S.optional(S.Number),
+      });
 
-  const [tableModel, setTableModel] = useState<TableModel>();
+      // Register schema.
+      const mutable = space.db.schemaRegistry.addSchema(schema);
+      table.view = createView({
+        typename: mutable.typename,
+        jsonSchema: mutable.jsonSchema,
+        properties: ['name', 'description', 'quantity'],
+      });
+
+      // Create first row.
+      space.db.add(create(mutable, {}));
+    }
+  }, [space, table]);
+
+  // Create model.
+  const [model, setModel] = useState<TableModel>();
   useEffect(() => {
-    if (!table) {
+    if (!table || !projection) {
       return;
     }
 
     let tableModel: TableModel | undefined;
     const t = setTimeout(async () => {
-      tableModel = new TableModel({ table, onAddColumn, onDeleteColumn, onDeleteRow });
+      tableModel = new TableModel({ table, projection, onAddColumn, onDeleteColumn, onDeleteRow });
       await tableModel.open();
-      setTableModel(tableModel);
+      setModel(tableModel);
     });
 
     return () => {
       clearTimeout(t);
       void tableModel?.close();
     };
-  }, [table, onAddColumn, onDeleteColumn, onDeleteRow]);
+  }, [table, projection, onAddColumn, onDeleteColumn, onDeleteRow]);
 
+  // Update data.
   useEffect(() => {
-    tableModel?.updateData(objects);
-  }, [objects, tableModel]);
+    if (objects) {
+      model?.updateData(objects);
+    }
+  }, [model, objects]);
 
-  return tableModel;
+  return model;
 };

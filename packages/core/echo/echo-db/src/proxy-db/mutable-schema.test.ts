@@ -42,7 +42,7 @@ describe('MutableSchema', () => {
       field: S.String,
     }) {}
 
-    instanceWithSchemaRef.schema = db.schema.addSchema(GeneratedSchema);
+    instanceWithSchemaRef.schema = db.schemaRegistry.addSchema(GeneratedSchema);
     const schemaWithId = GeneratedSchema.annotations({
       [ObjectAnnotationId]: {
         typename: 'example.com/type/Test',
@@ -63,14 +63,14 @@ describe('MutableSchema', () => {
       field: S.String,
     }) {}
 
-    const schema = db.schema.addSchema(GeneratedSchema);
+    const schema = db.schemaRegistry.addSchema(GeneratedSchema);
     const instanceWithSchemaRef = db.add(create(TestSchema, { schema }));
-    expect(instanceWithSchemaRef.schema!.serializedSchema.typename).to.eq('example.com/type/Test');
+    expect(instanceWithSchemaRef.schema!.typename).to.eq('example.com/type/Test');
   });
 
   test('can be used to create objects', async () => {
     const { db } = await setupTest();
-    const schema = db.schema.addSchema(EmptySchemaType);
+    const schema = db.schemaRegistry.addSchema(EmptySchemaType);
     const object = create(schema, {});
     schema.addFields({ field1: S.String });
     object.field1 = 'works';
@@ -93,7 +93,7 @@ describe('MutableSchema', () => {
 
   test('getTypeReference', async () => {
     const { db } = await setupTest();
-    const schema = db.schema.addSchema(EmptySchemaType);
+    const schema = db.schemaRegistry.addSchema(EmptySchemaType);
     expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
   });
 

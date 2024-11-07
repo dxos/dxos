@@ -65,15 +65,16 @@ describe('EdgeFeedReplicator', () => {
 
   test('re-requests metadata on reconnect', async () => {
     const { endpoint, admitConnection, messageSink } = await createEdge();
-    const { messenger } = await createClient(endpoint);
+    const { messenger, reconnectTrigger } = await createClient(endpoint);
 
     await attachReplicator(messenger);
 
     admitConnection.wake();
     await expect.poll(() => messageSink.length).toEqual(1);
 
+    reconnectTrigger.reset();
     await updateIdentity(messenger);
-    await messenger.reconnect.waitForCount(1);
+    await reconnectTrigger.wait();
 
     await expect.poll(() => messageSink.length).toEqual(2);
     expect(messageSink[1].type).toEqual('get-metadata');
@@ -100,7 +101,7 @@ describe('EdgeFeedReplicator', () => {
 
   test('recovers after response sending failure during identity change', async () => {
     const { endpoint, admitConnection, messageSink, sendResponseMessage } = await createEdge();
-    const { messenger, sendSpy } = await createClient(endpoint);
+    const { messenger, sendSpy, reconnectTrigger } = await createClient(endpoint);
 
     const { feed } = await attachReplicator(messenger);
     await appendMessage(feed);
@@ -117,9 +118,11 @@ describe('EdgeFeedReplicator', () => {
     await expect.poll(() => sendSpy.mock.calls.length).toEqual(2);
     sendSpy.mockRestore();
     expect(messageSink.length).toEqual(0);
-    await updateIdentity(messenger);
 
-    await messenger.reconnect.waitForCount(1);
+    reconnectTrigger.reset();
+    await updateIdentity(messenger);
+    await reconnectTrigger.wait();
+
     await expect.poll(() => messageSink.find((msg) => msg.type === 'data')).toBeDefined();
   });
 
@@ -151,8 +154,8 @@ describe('EdgeFeedReplicator', () => {
     await sleep(100);
     admitConnection.wake();
 
-    await expect.poll(() => messageSink.length).toEqual(2);
-    expect(messageSink.map((m) => m.type)).toStrictEqual(range(2, () => 'get-metadata'));
+    await expect.poll(() => messageSink.length).toEqual(1);
+    expect(messageSink.map((m) => m.type)).toStrictEqual(range(1, () => 'get-metadata'));
   });
 
   test('block appended during reconnect', async () => {
@@ -213,10 +216,12 @@ describe('EdgeFeedReplicator', () => {
   };
 
   const createClient = async (endpoint: string) => {
+    const reconnectTrigger = new Trigger();
     const messenger = new EdgeClient(await createEphemeralEdgeIdentity(), { socketEndpoint: endpoint });
+    messenger.onReconnected(() => reconnectTrigger.wake());
     const sendSpy = vi.spyOn(messenger, 'send');
     await openAndClose(messenger);
-    return { messenger, sendSpy };
+    return { messenger, sendSpy, reconnectTrigger };
   };
 
   const attachReplicator = async (messenger: EdgeClient, options?: { skipOpen?: boolean }) => {
