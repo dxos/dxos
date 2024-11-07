@@ -147,7 +147,7 @@ export class ViewProjection {
    * Delete a field from the view and return the deleted projection for potential undo.
    */
   deleteFieldProjection(property: string): { deleted: FieldProjection; index: number } {
-    const projection = this.getFieldProjection(property as JsonProp);
+    const fieldProjection = this.getFieldProjection(property as JsonProp);
 
     const fieldIndex = this._view.fields.findIndex((f) => f.property === property);
     if (fieldIndex !== -1) {
@@ -158,7 +158,7 @@ export class ViewProjection {
       delete this._schema.jsonSchema.properties[property];
     }
 
-    return { deleted: projection, index: fieldIndex };
+    return { deleted: fieldProjection, index: fieldIndex };
   }
 }
 

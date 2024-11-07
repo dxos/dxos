@@ -31,7 +31,7 @@ export type TableModelProps = {
   sorting?: SortConfig[];
   pinnedRows?: { top: number[]; bottom: number[] };
   rowSelection?: number[];
-  onDeleteColumn?: (field: FieldType) => void;
+  onDeleteColumn?: (field: string) => void;
   onDeleteRow?: (row: any) => void;
   onInsertRow?: (index?: number) => void;
   onCellUpdate?: (cell: GridCell) => void;
@@ -64,7 +64,7 @@ export class TableModel extends Resource {
    * Keys are display indices, values are corresponding data indices.
    */
   private readonly displayToDataIndex: Map<number, number> = new Map();
-  private readonly onDeleteColumn?: (field: FieldType) => void;
+  private readonly onDeleteColumn?: (field: string) => void;
   private readonly onDeleteRow?: (id: string) => void;
   private readonly onInsertRow?: (index?: number) => void;
   public onCellUpdate?: (cell: GridCell) => void;
@@ -374,7 +374,7 @@ export class TableModel extends Resource {
       if (this.sorting.value?.columnId === columnId) {
         this.clearSort();
       }
-      this.onDeleteColumn(field);
+      this.onDeleteColumn(field.property);
     }
   }
 

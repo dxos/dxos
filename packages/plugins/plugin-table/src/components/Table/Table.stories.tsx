@@ -14,7 +14,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-data';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { ViewProjection, ViewType, type FieldType } from '@dxos/schema';
+import { ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
@@ -81,10 +81,19 @@ const DefaultStory = () => {
   }, [schema, table?.view]);
 
   const handleDeleteColumn = useCallback(
-    (field: FieldType) => {
+    (property: string) => {
       if (projection) {
-        const deleted = projection.deleteFieldProjection(field.property);
-        console.log('Deleting column', deleted);
+        console.log('HANDLE_DELETE::Deleting', property);
+        console.log('Before delete - view fields:', JSON.stringify(table?.view?.fields, null, 2));
+        const { deleted, index } = projection.deleteFieldProjection(property);
+        console.log('After delete - view fields:', JSON.stringify(table?.view?.fields, null, 2));
+
+        console.log('Deleted projection returned', deleted);
+
+        setTimeout(() => {
+          projection.setFieldProjection(deleted, index);
+        }, 100);
+        console.log('After restore - view fields:', JSON.stringify(table?.view?.fields, null, 2));
       }
     },
     [table, projection],
@@ -139,9 +148,9 @@ const TablePerformanceStory = (props: StoryProps) => {
   }, []);
 
   const handleDeleteColumn = useCallback(
-    (field: FieldType) => {
+    (property: string) => {
       if (table && table.view) {
-        const fieldPosition = table.view.fields.indexOf(field);
+        const fieldPosition = table.view.fields.findIndex((field) => field.property === property);
         table.view.fields.splice(fieldPosition, 1);
       }
     },

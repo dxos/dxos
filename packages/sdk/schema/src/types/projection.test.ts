@@ -208,24 +208,30 @@ describe('ViewProjection', () => {
       version: '0.1.0',
       jsonSchema: toJsonSchema(
         S.Struct({
-          name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
-          email: Format.Email,
+          name: S.optional(S.Number),
+          email: S.optional(S.Number),
+          description: S.optional(S.String),
         }),
       ),
     });
 
     const mutable = registry.registerSchema(db.add(schema));
-    const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
+    const view = createView({
+      typename: schema.typename,
+      jsonSchema: schema.jsonSchema,
+    });
     const projection = new ViewProjection(mutable, view);
 
     // Capture initial states
     const initialFieldsOrder = view.fields.map((f) => f.property);
     const emailIndex = initialFieldsOrder.indexOf('email' as JsonProp);
-    const initialEmail = projection.getFieldProjection('email');
+    const initialEmail = projection.getFieldProjection('email' as JsonProp);
     const initialSchemaProps = { ...mutable.jsonSchema.properties! };
 
     // Delete and restore
     const { deleted, index } = projection.deleteFieldProjection('email');
+
+    console.log('deleted', deleted);
 
     // Verify email is deleted but name is unchanged
     expect(mutable.jsonSchema.properties!.email).to.be.undefined;
@@ -238,7 +244,7 @@ describe('ViewProjection', () => {
     expect(restoredFieldsOrder.indexOf('email' as JsonProp)).to.equal(emailIndex);
 
     // Verify projection data matches
-    const restored = projection.getFieldProjection('email');
+    const restored = projection.getFieldProjection('email' as JsonProp);
     expect(restored).to.deep.equal(initialEmail);
 
     // Verify all schema properties match initial state

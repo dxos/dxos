@@ -7,12 +7,13 @@ import React from 'react';
 
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace } from '@dxos/react-client/echo';
 import { translations as dataTranslations, ViewEditor } from '@dxos/react-ui-data';
-import { ViewType, type FieldType } from '@dxos/schema';
+import { type FieldProjection, ViewProjection, ViewType } from '@dxos/schema';
 
 import { TableContainer } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
@@ -152,32 +153,24 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
 
             case TableAction.DELETE_COLUMN: {
               const { table, field } = intent.data as TableAction.DeleteColumn;
-              if (!isTable(table) || !table.view) {
-                return;
-              }
+              invariant(isTable(table));
+              invariant(table.view, 'Table requires a view to delete columns');
+
+              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.__typename);
+              invariant(schema, 'Table schema not found');
+              const projection = new ViewProjection(schema, table.view);
 
               if (!intent.undo) {
-                const fieldPosition = table.view.fields.indexOf(field);
-                if (fieldPosition === undefined) {
-                  return;
-                }
-
-                // TODO(ZaymonFC): We need to manipulate the schema with another method here.
-                // removeFieldFromView(table.schema, table.view, field);
-
+                const { deleted, index } = projection.deleteFieldProjection(field.property);
                 return {
                   undoable: {
                     message: translations[0]['en-US'][TABLE_PLUGIN]['column deleted label'],
-                    data: { view: table.view, field, fieldPosition },
+                    data: { deleted, index },
                   },
                 };
               } else if (intent.undo) {
-                const { field: _field, fieldPosition: _fieldPosition } = intent.data as {
-                  field: FieldType;
-                  fieldPosition: number;
-                };
-
-                // TODO(burdon): Update projection.
+                const { deleted, index } = intent.data as { deleted: FieldProjection; index: number };
+                projection.setFieldProjection(deleted, index);
                 return { data: true };
               }
             }
