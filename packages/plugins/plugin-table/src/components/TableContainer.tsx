@@ -34,16 +34,6 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
 
   const handleDeleteRow = useCallback((row: any) => space?.db.remove(row), [space]);
 
-  const handleAddColumn = useCallback(
-    (field: any) => {
-      void dispatch({
-        action: TableAction.ADD_COLUMN,
-        data: { table, field } satisfies TableAction.AddColumn,
-      });
-    },
-    [table],
-  );
-
   const handleDeleteColumn = useCallback(
     (field: FieldType) => {
       void dispatch({
@@ -66,7 +56,6 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     projection,
     objects: filteredObjects,
     onDeleteRow: handleDeleteRow,
-    onAddColumn: handleAddColumn,
     onDeleteColumn: handleDeleteColumn,
   });
 

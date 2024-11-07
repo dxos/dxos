@@ -31,7 +31,6 @@ export type TableModelProps = {
   sorting?: SortConfig[];
   pinnedRows?: { top: number[]; bottom: number[] };
   rowSelection?: number[];
-  onAddColumn?: (field: FieldType) => void;
   onDeleteColumn?: (field: FieldType) => void;
   onDeleteRow?: (row: any) => void;
   onInsertRow?: (index?: number) => void;
@@ -65,7 +64,6 @@ export class TableModel extends Resource {
    * Keys are display indices, values are corresponding data indices.
    */
   private readonly displayToDataIndex: Map<number, number> = new Map();
-  private readonly onAddColumn?: (field: FieldType) => void;
   private readonly onDeleteColumn?: (field: FieldType) => void;
   private readonly onDeleteRow?: (id: string) => void;
   private readonly onInsertRow?: (index?: number) => void;
@@ -78,7 +76,6 @@ export class TableModel extends Resource {
     sorting = [],
     pinnedRows = { top: [], bottom: [] },
     rowSelection = [],
-    onAddColumn,
     onDeleteColumn,
     onDeleteRow,
     onInsertRow,
@@ -93,7 +90,6 @@ export class TableModel extends Resource {
     this.pinnedRows = pinnedRows;
     this.rowSelection = rowSelection;
 
-    this.onAddColumn = onAddColumn;
     this.onDeleteColumn = onDeleteColumn;
     this.onDeleteRow = onDeleteRow;
     this.onInsertRow = onInsertRow;
@@ -367,12 +363,6 @@ export class TableModel extends Resource {
   //
   // Column Operations
   //
-
-  public addColumn(field: FieldType): void {
-    if (this.onAddColumn) {
-      this.onAddColumn(field);
-    }
-  }
 
   public deleteColumn(columnId: string): void {
     if (!this.table.view) {

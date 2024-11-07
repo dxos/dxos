@@ -22,13 +22,11 @@ const TABLE_ACTION = `${TABLE_PLUGIN}/action`;
 
 export enum TableAction {
   CREATE = `${TABLE_ACTION}/create`,
-  ADD_COLUMN = `${TABLE_ACTION}/add-column`,
   DELETE_COLUMN = `${TABLE_ACTION}/delete-column`,
 }
 
 export namespace TableAction {
   export type Create = IntentData<{ table: TableType }>;
-  export type AddColumn = IntentData<{ table: TableType; field: FieldType }>;
   export type DeleteColumn = IntentData<{ table: TableType; field: FieldType }>;
 }
 

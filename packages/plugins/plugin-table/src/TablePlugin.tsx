@@ -150,17 +150,6 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               };
             }
 
-            case TableAction.ADD_COLUMN: {
-              const { table, field: _field } = intent.data as TableAction.AddColumn;
-              if (!isTable(table) || !table.view) {
-                return;
-              }
-
-              // TODO(ZaymonFC): We need to manipulate the schema with another method here.
-              // addFieldToView(table.schema, table.view, field);
-              return { data: true };
-            }
-
             case TableAction.DELETE_COLUMN: {
               const { table, field } = intent.data as TableAction.DeleteColumn;
               if (!isTable(table) || !table.view) {

@@ -100,7 +100,6 @@ const DefaultStory = () => {
     projection,
     objects: filteredObjects,
     onDeleteRow: handleDeleteRow,
-    // onAddColumn: handleAddColumn,
     // onDeleteColumn: handleDeleteColumn,
   });
 
@@ -144,15 +143,6 @@ const TablePerformanceStory = (props: StoryProps) => {
     itemsRef.current.splice(itemsRef.current.indexOf(row), 1);
   }, []);
 
-  const handleAddColumn = useCallback(
-    (field: FieldType) => {
-      if (table && table.view) {
-        table.view.fields.push(field);
-      }
-    },
-    [table],
-  );
-
   const handleDeleteColumn = useCallback(
     (field: FieldType) => {
       if (table && table.view) {
@@ -167,7 +157,6 @@ const TablePerformanceStory = (props: StoryProps) => {
     table,
     objects: items as any,
     onDeleteRow: handleDeleteRow,
-    onAddColumn: handleAddColumn,
     onDeleteColumn: handleDeleteColumn,
   });
 

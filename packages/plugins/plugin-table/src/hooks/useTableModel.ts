@@ -16,13 +16,12 @@ export type UseTableModelParams = {
   table?: TableType;
   projection?: ViewProjection;
   objects?: EchoReactiveObject<any>[];
-} & Pick<TableModelProps, 'onAddColumn' | 'onDeleteColumn' | 'onDeleteRow'>;
+} & Pick<TableModelProps, 'onDeleteColumn' | 'onDeleteRow'>;
 
 export const useTableModel = ({
   table,
   projection,
   objects,
-  onAddColumn,
   onDeleteColumn,
   onDeleteRow,
 }: UseTableModelParams): TableModel | undefined => {
@@ -62,7 +61,7 @@ export const useTableModel = ({
 
     let tableModel: TableModel | undefined;
     const t = setTimeout(async () => {
-      tableModel = new TableModel({ table, projection, onAddColumn, onDeleteColumn, onDeleteRow });
+      tableModel = new TableModel({ table, projection, onDeleteColumn, onDeleteRow });
       await tableModel.open();
       setModel(tableModel);
     });
@@ -71,7 +70,7 @@ export const useTableModel = ({
       clearTimeout(t);
       void tableModel?.close();
     };
-  }, [table, projection, onAddColumn, onDeleteColumn, onDeleteRow]);
+  }, [table, projection, onDeleteColumn, onDeleteRow]);
 
   // Update data.
   useEffect(() => {
