@@ -82,3 +82,24 @@ function pre () {
   CI=true pa test
   CI=true pa lint
 }
+
+#
+# Set CIRCLECI_TOKEN
+#
+
+CIRCLECI_ORG="dxos"
+CIRCLECI_REPO="dxos"
+
+function ci_status () {
+  curl -s -H "Circle-Token: $CIRCLECI_TOKEN" "https://circleci.com/api/v2/pipeline/$1/workflow" | jq
+}
+
+function ci () {
+  PROJECT_ID=$(curl -s -H "Circle-Token: $CIRCLECI_TOKEN" "https://circleci.com/api/v2/project/github/${CIRCLECI_ORG}/${CIRCLECI_REPO}/pipeline?branch=$(git branch --show-current)" | jq -r ".items.[0].id")
+  echo "Pipeline: ${PROJECT_ID}"
+  while true; do
+    clear
+    ci_status $PROJECT_ID
+    sleep 5
+  done
+}
