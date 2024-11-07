@@ -13,7 +13,7 @@ import { ViewProjection, type FieldType } from '@dxos/schema';
 
 import { Table } from './Table';
 import { Toolbar, type ToolbarAction } from './Toolbar';
-import { useTableModel } from '../hooks';
+import { useTableIntialisation, useTableModel } from '../hooks';
 import { TableAction, type TableType } from '../types';
 
 // TODO(zantonio): Factor out, copied this from MarkdownPlugin.
@@ -24,6 +24,9 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const { hasAttention } = useAttention(fullyQualifiedId(table));
   const dispatch = useIntentDispatcher();
   const space = getSpace(table);
+
+  useTableIntialisation(table);
+
   const schema = useMemo(
     () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.__typename) : undefined),
     [table],
@@ -33,7 +36,6 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const handleDeleteRow = useCallback((row: any) => space?.db.remove(row), [space]);
-
   const handleDeleteColumn = useCallback(
     (field: FieldType) => {
       void dispatch({
@@ -51,6 +53,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
 
     return new ViewProjection(schema, table.view);
   }, [schema, table.view]);
+
   const model = useTableModel({
     table,
     projection,

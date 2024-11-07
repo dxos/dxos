@@ -19,6 +19,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
 import { useTableModel } from '../../hooks';
+import { useTableIntialisation } from '../../hooks/';
 import translations from '../../translations';
 import { TableType } from '../../types';
 import { Toolbar } from '../Toolbar';
@@ -44,27 +45,11 @@ const DefaultStory = () => {
     }
   }, [tables]);
 
+  useTableIntialisation(table);
+
   const objects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
   const filteredObjects = useGlobalFilteredObjects(objects);
   const handleDeleteRow = useCallback((row: any) => space.db.remove(row), [space]);
-
-  // TODO(ZaymonFC): Reimplement these with the new schema manipulation features.
-  // const handleAddColumn = useCallback(
-  //   (field: any) => {
-  //     if (table && table.schema?.schema && table.view) {
-  //       addFieldToView(table.schema, table.view, field);
-  //     }
-  //   },
-  //   [table],
-  // );
-  // const handleDeleteColumn = useCallback(
-  //   (field: any) => {
-  //     if (table && table.schema?.schema && table.view) {
-  //       removeFieldFromView(table.schema, table.view, field);
-  //     }
-  //   },
-  //   [table],
-  // );
 
   const handleAction = useCallback(
     (action: { type: string }) => {
@@ -95,12 +80,22 @@ const DefaultStory = () => {
     return new ViewProjection(schema, table.view);
   }, [schema, table?.view]);
 
+  const handleDeleteColumn = useCallback(
+    (field: FieldType) => {
+      if (projection) {
+        const deleted = projection.deleteFieldProjection(field.property);
+        console.log('Deleting column', deleted);
+      }
+    },
+    [table, projection],
+  );
+
   const model = useTableModel({
     table,
     projection,
     objects: filteredObjects,
     onDeleteRow: handleDeleteRow,
-    // onDeleteColumn: handleDeleteColumn,
+    onDeleteColumn: handleDeleteColumn,
   });
 
   if (!schema || !table) {

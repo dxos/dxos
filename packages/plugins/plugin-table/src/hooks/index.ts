@@ -4,3 +4,4 @@
 
 export * from './useTableModel';
 export * from './useTableMenuController';
+export * from './useTableIntialisation';
