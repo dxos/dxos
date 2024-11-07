@@ -1156,6 +1156,7 @@ export class DxGrid extends LitElement {
   // Render and other lifecycle methods
   //
 
+  // TODO(thure): This is for rendering presentational objects superimposed onto the canonical grid (e.g. DnD drop line for #8108).
   private renderPresentationLayer(offsetInline: number, offsetBlock: number) {
     const visibleCols = this.visColMax - this.visColMin;
     const visibleRows = this.visRowMax - this.visRowMin;
@@ -1184,7 +1185,7 @@ export class DxGrid extends LitElement {
       })}
     >
       ${
-        /* TODO(thure): These are debug cells, remove when rendering actual overlay contact. */ [
+        /* TODO(thure): These are debug cells, remove when rendering actual overlay content. */ [
           ...Array((this.frozen.frozenRowsStart ?? 0) + visibleRows + (this.frozen.frozenRowsEnd ?? 0)),
         ].map((_, r0) =>
           [...Array((this.frozen.frozenColsStart ?? 0) + visibleCols + (this.frozen.frozenColsEnd ?? 0))].map(
@@ -1421,8 +1422,7 @@ export class DxGrid extends LitElement {
           'fixedEndEnd',
           selection,
         )}
-      </div>
-      ${this.renderPresentationLayer(offsetInline, offsetBlock)}`;
+      </div>`;
   }
 
   private updateIntrinsicInlineSize() {
