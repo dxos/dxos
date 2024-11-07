@@ -71,7 +71,6 @@ const JsonSchemaOrBoolean = S.Union(
  * Contains extensions for ECHO (e.g., references).
  * Ref: https://json-schema.org/draft-07/schema
  */
-// TODO(dmaretskyi): Fix circular types.
 const _JsonSchemaType = S.mutable(
   S.Struct({
     /**
