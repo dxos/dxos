@@ -4,27 +4,10 @@
 
 import jp from 'jsonpath';
 
-import { createJsonPath, FormatEnum, ScalarEnum, type JsonPath } from '@dxos/echo-schema';
+import { FormatEnum, ScalarEnum } from '@dxos/echo-schema';
 import { AST, type S, isLeafType, visit } from '@dxos/effect';
 
-import { type FieldType, type ViewType } from './view';
-
-// TODO(burdon): Check unique name against schema.
-// TODO(dmaretskyi): Not json-path anymore.
-export const getUniqueProperty = (view: ViewType): JsonPath => {
-  let n = 1;
-  while (true) {
-    const property = `prop_${n++}`;
-    const idx = view.fields.findIndex((field) => field.property === property);
-    if (idx === -1) {
-      return createJsonPath(property);
-    }
-  }
-};
-
-export const createUniqueFieldForView = (view: ViewType): FieldType => {
-  return { property: getUniqueProperty(view) };
-};
+import { type FieldType } from './view';
 
 /**
  * @deprecated

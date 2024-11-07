@@ -8,7 +8,7 @@ import { type MutableSchema, S } from '@dxos/echo-schema';
 import { Button, Icon, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { createUniqueFieldForView, FieldSchema, type FieldType, type ViewType, ViewProjection } from '@dxos/schema';
+import { FieldSchema, type FieldType, type ViewType, ViewProjection } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '../../translations';
@@ -35,8 +35,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
   }, []);
 
   const handleAdd = useCallback(() => {
-    const field = createUniqueFieldForView(view);
-    view.fields.push(field);
+    const { field } = projection.createFieldProjection();
     setSelectedField(field);
   }, [view]);
 

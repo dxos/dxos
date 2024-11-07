@@ -10,6 +10,7 @@ import {
   type MutableSchema,
   S,
   ScalarEnum,
+  type JsonPath,
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
@@ -39,8 +40,30 @@ export class ViewProjection {
   ) {}
 
   /**
+   * Construct a new property.
+   */
+  createProperty(): FieldProjection {
+    const prop = getUniqueProperty(this._view);
+
+    const field: FieldType = {
+      property: prop,
+    };
+
+    const props: PropertyType = {
+      property: prop,
+      format: FormatEnum.None,
+    };
+
+    this._view.fields.push(field);
+    this._schema.jsonSchema.properties![prop] = props;
+    return { field, props };
+  }
+
+  /**
    * Get projection of View fields and JSON schema property annotations.
    */
+  // TODO(burdon): JsonProp.
+  // TODO(burdon): Rename property to match create.
   getFieldProjection(prop: string): FieldProjection {
     let {
       $id,
@@ -111,3 +134,16 @@ export class ViewProjection {
     }
   }
 }
+
+// TODO(burdon): Check unique name against schema.
+// TODO(dmaretskyi): Not json-path anymore.
+const getUniqueProperty = (view: ViewType): JsonPath => {
+  let n = 1;
+  while (true) {
+    const property = `prop_${n++}`;
+    const idx = view.fields.findIndex((field) => field.property === property);
+    if (idx === -1) {
+      return createJsonPath(property);
+    }
+  }
+};
