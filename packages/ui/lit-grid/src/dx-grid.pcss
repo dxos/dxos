@@ -3,12 +3,11 @@
 
 dx-grid {
   display: contents;
+  --dx-grid-gap: 1px;
+  --dx-plane-gap: 1px;
 }
 
 .dx-grid {
-  --dx-grid-gap: 1px;
-  --dx-plane-gap: 2px;
-
   display: grid;
   gap: var(--dx-plane-gap);
   grid-template-columns: min-content 1fr min-content;
@@ -94,6 +93,18 @@ dx-grid {
     &[data-dx-active] {
       border-color: var(--dx-accentSurface);
     }
+  }
+}
+
+.dx-grid-layer--presentation {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: var(--dx-grid-gap);
+  background: rgba(255, 0, 0, .1);
+  & .dx-grid-layer--presentation__cell {
+    background: rgba(0, 255, 0, .1);
   }
 }
 

@@ -1154,6 +1154,46 @@ export class DxGrid extends LitElement {
   // Render and other lifecycle methods
   //
 
+  private renderPresentationLayer(offsetInline: number, offsetBlock: number) {
+    const visibleCols = this.visColMax - this.visColMin;
+    const visibleRows = this.visRowMax - this.visRowMin;
+    return html`<div
+      role="none"
+      class="dx-grid-layer--presentation"
+      style=${styleMap({
+        gridTemplateColumns: [
+          ...[...Array(this.frozen.frozenColsStart ?? 0)].map((_, c0) => `${this.colSize(c0, 'frozenColsStart')}px`),
+          ...[...Array(visibleCols)].map((_, c0) =>
+            c0 === visibleCols - 1
+              ? '1fr'
+              : `${this.colSize(this.visColMin + c0, 'grid') + (c0 === 0 ? offsetInline : 0)}px`,
+          ),
+          ...[...Array(this.frozen.frozenColsEnd ?? 0)].map((_, c0) => `${this.colSize(c0, 'frozenColsEnd')}px`),
+        ].join(' '),
+        gridTemplateRows: [
+          ...[...Array(this.frozen.frozenRowsStart ?? 0)].map((_, r0) => `${this.rowSize(r0, 'frozenRowsStart')}px`),
+          ...[...Array(visibleRows)].map((_, r0) =>
+            r0 === visibleRows - 1
+              ? '1fr'
+              : `${this.rowSize(this.visRowMin + r0, 'grid') + (r0 === 0 ? offsetBlock : 0)}px`,
+          ),
+          ...[...Array(this.frozen.frozenRowsEnd ?? 0)].map((_, r0) => `${this.rowSize(r0, 'frozenRowsEnd')}px`),
+        ].join(' '),
+      })}
+    >
+      ${[...Array(1 + (this.frozen.frozenRowsStart ?? 0) + (this.frozen.frozenRowsEnd ?? 0))].map((_, r0) =>
+        [...Array(1 + (this.frozen.frozenColsStart ?? 0) + (this.frozen.frozenColsEnd ?? 0))].map(
+          (_, c0) =>
+            html`<div
+              role="none"
+              class="dx-grid-layer--presentation__cell"
+              style="grid-column:${c0 + 1};grid-row:${r0 + 1}"
+            ></div>`,
+        ),
+      )}
+    </div>`;
+  }
+
   private renderFixed(plane: DxGridFixedPlane, selection: DxGridSelectionProps) {
     const colPlane = resolveColPlane(plane) as DxGridFrozenPlane;
     const rowPlane = resolveRowPlane(plane) as DxGridFrozenPlane;
@@ -1375,7 +1415,8 @@ export class DxGrid extends LitElement {
           'fixedEndEnd',
           selection,
         )}
-      </div>`;
+      </div>
+      ${this.renderPresentationLayer(offsetInline, offsetBlock)}`;
   }
 
   private updateIntrinsicInlineSize() {
