@@ -242,7 +242,7 @@ export class TableModel extends Resource {
       const cell: DxGridCellValue = {
         get value() {
           const value = row?.[field.property];
-          if (!value) {
+          if (value == null) {
             return '';
           }
           return formatForDisplay({ type: props.type, format: props.format, value });
