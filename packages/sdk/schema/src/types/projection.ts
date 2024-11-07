@@ -125,7 +125,7 @@ export class ViewProjection {
         };
       }
       if (format) {
-        type = formatToType[format as FormatEnum];
+        type = formatToType[format];
       }
       if (type === format) {
         format = undefined;
