@@ -79,7 +79,7 @@ export class Trigger<T = void> {
    */
   wake(value: T) {
     if (this._state !== TriggerState.WAITING) {
-      return;
+      return this;
     }
     this._state = TriggerState.RESOLVED;
     this._resolve(value);
@@ -110,7 +110,7 @@ export class Trigger<T = void> {
    */
   throw(error: Error) {
     if (this._state !== TriggerState.WAITING) {
-      return;
+      return this;
     }
     this._state = TriggerState.REJECTED;
     this._reject(error);
