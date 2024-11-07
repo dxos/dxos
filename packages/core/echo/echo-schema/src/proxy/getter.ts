@@ -44,7 +44,6 @@ export const getType = <T extends {}>(obj: T | undefined): Reference | undefined
   if (obj == null) {
     return undefined;
   }
-
   if (isReactiveObject(obj)) {
     return getProxyHandler(obj).getTypeReference(obj);
   }
@@ -52,13 +51,15 @@ export const getType = <T extends {}>(obj: T | undefined): Reference | undefined
   return undefined;
 };
 
+// TODO(burdon): Reconcile functions.
 export const getTypename = <T extends {}>(obj: T): string | undefined => getType(obj)?.objectId;
+export const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).objectId;
 
 export const requireTypeReference = (schema: S.Schema<any>): Reference => {
   const typeReference = getTypeReference(schema);
   if (typeReference == null) {
     // TODO(burdon): Catalog user-facing errors (this is too verbose).
-    throw new Error('Schema must have a valid annotation: MyTypeSchema.pipe(echoObject("MyType", "1.0.0"))');
+    throw new Error('Schema must be defined via TypedObject.');
   }
 
   return typeReference;

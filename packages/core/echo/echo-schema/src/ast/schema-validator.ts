@@ -9,8 +9,6 @@ import { getSchemaTypename } from './annotations';
 
 // TODO(burdon): Reconcile with @dxos/effect visit().
 
-// TODO(burdon): Reconcile with @dxos/effect visit().
-
 export const symbolSchema = Symbol.for('@dxos/schema/Schema');
 
 export class SchemaValidator {

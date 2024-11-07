@@ -98,7 +98,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   }, []);
 
   useEffect(() => {
-    void space.db.schema
+    void space.db.schemaRegistry
       .list()
       .then((schemas) => {
         // TODO(zan): We should solve double adding of stored schemas in the schema registry.

@@ -20,10 +20,10 @@
     "sourceMap": true,
     "strict": true,
     "stripInternal": true,
-    "target": "ES2018",
+    "target": "ES2018"
   },
   "include": [],
   "ts-node": {
-    "swc": true,
-  },
+    "swc": true
+  }
 }
