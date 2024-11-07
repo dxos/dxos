@@ -19,11 +19,7 @@ export const isLeafType = (node: AST.AST) => !AST.isTupleType(node) && !AST.isTy
 /**
  * Get annotation or return undefined.
  */
-export const getAnnotation = <T>(annotationId: symbol, node: AST.Annotated): T | undefined =>
-  pipe(AST.getAnnotation<T>(annotationId)(node), Option.getOrUndefined);
-
-// TODO(burdon): Use this format.
-export const getAnnotation2 =
+export const getAnnotation =
   <T>(annotationId: symbol) =>
   (node: AST.Annotated): T | undefined =>
     pipe(AST.getAnnotation<T>(annotationId)(node), Option.getOrUndefined);
@@ -32,7 +28,7 @@ export const getAnnotation2 =
  * Recursively descend into AST to find base type.
  * AST.PropertySignature: { name, type: AST, isOptional, isReadonly, annotations }
  */
-// TODO(burdon): getScalarType.
+// TODO(burdon): Reuse visitor to find node that represents a base type (move from echo-schema).
 export const getBaseType = (node: AST.AST): AST.AST => {
   if (AST.isRefinement(node)) {
     return getBaseType(node.from);

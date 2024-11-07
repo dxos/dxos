@@ -4,7 +4,6 @@
 
 import {
   JSON_SCHEMA_ECHO_REF_ID,
-  createJsonPath,
   formatToType,
   typeToFormat,
   FormatEnum,
@@ -12,7 +11,7 @@ import {
   type MutableSchema,
   S,
   TypeEnum,
-  type JsonPath,
+  type JsonProp,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -59,8 +58,7 @@ export class ViewProjection {
   /**
    * Get projection of View fields and JSON schema property annotations.
    */
-  // TODO(burdon): JsonProp.
-  getFieldProjection(prop: string): FieldProjection {
+  getFieldProjection(prop: JsonProp): FieldProjection {
     const {
       $id,
       type: schemaType,
@@ -83,7 +81,7 @@ export class ViewProjection {
       format = typeToFormat[type as TypeEnum]!;
     }
 
-    const field: FieldType = this._view.fields.find((f) => f.property === prop) ?? { property: createJsonPath(prop) };
+    const field: FieldType = this._view.fields.find((f) => f.property === prop) ?? { property: prop as JsonProp };
     const values = { property: prop, type, format, referenceSchema, ...rest };
     const props = values.type ? this._decode(values) : values;
 
@@ -142,15 +140,13 @@ export class ViewProjection {
   }
 }
 
-// TODO(burdon): Check unique name against schema.
-// TODO(dmaretskyi): Not json-path anymore.
-const getUniqueProperty = (view: ViewType): JsonPath => {
+const getUniqueProperty = (view: ViewType): JsonProp => {
   let n = 1;
   while (true) {
-    const property = `prop_${n++}`;
+    const property: JsonProp = `prop_${n++}` as JsonProp;
     const idx = view.fields.findIndex((field) => field.property === property);
     if (idx === -1) {
-      return createJsonPath(property);
+      return property;
     }
   }
 };

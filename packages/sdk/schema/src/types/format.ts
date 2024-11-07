@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, DecimalPrecision, TypeEnum, FormatEnum, S } from '@dxos/echo-schema';
+import { AST, DecimalPrecision, TypeEnum, FormatEnum, S, JsonProp } from '@dxos/echo-schema';
 import { getAnnotation, getBaseType } from '@dxos/effect';
 
 /**
  * Base schema.
  */
 export const BasePropertySchema = S.Struct({
-  property: S.String.annotations({ [AST.TitleAnnotationId]: 'Property' }).pipe(S.pattern(/\w+/)),
+  property: JsonProp.annotations({ [AST.TitleAnnotationId]: 'Property' }),
   title: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Title' })),
   description: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Description' })),
 });
@@ -57,7 +57,7 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
   [FormatEnum.Boolean]: extend(FormatEnum.Boolean, TypeEnum.Boolean),
   [FormatEnum.Ref]: extend(FormatEnum.Ref, TypeEnum.Ref, {
     referenceSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
-    referenceProperty: S.optional(S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Lookup property' })),
+    referenceProperty: S.optional(JsonProp.annotations({ [AST.TitleAnnotationId]: 'Lookup property' })),
   }),
 
   //
@@ -180,9 +180,9 @@ export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaProperty<T>[]
     const baseType = getBaseType(prop.type);
     if (baseType) {
       let type = getTypeEnumFrom(baseType);
-      let title = getAnnotation<string>(AST.TitleAnnotationId, baseType);
+      let title = getAnnotation<string>(AST.TitleAnnotationId)(baseType);
       if (!type && AST.isTransformation(baseType)) {
-        title = getAnnotation<string>(AST.TitleAnnotationId, baseType);
+        title = getAnnotation<string>(AST.TitleAnnotationId)(baseType);
         type = getTypeEnumFrom(baseType.to);
       }
 

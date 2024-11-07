@@ -18,28 +18,17 @@ export interface HasId {
 // Branded types
 //
 
-export type JsonProp = string & { __JsonProp: true };
 export type JsonPath = string & { __JsonPath: true };
+export type JsonProp = string & { __JsonProp: true };
 
-const PROP_REGEX = /^\w+$/;
 const PATH_REGEX = /^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*$/;
-
-export const JsonProp = S.String.pipe(
-  S.nonEmptyString({ message: () => 'Property is required.' }),
-  S.pattern(PROP_REGEX, { message: (x) => 'Invalid prop.' + x }),
-) as any as S.Schema<JsonProp>;
+const PROP_REGEX = /^\w+$/;
 
 /**
  * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
  */
-export const JsonPath = S.String.pipe(
-  S.nonEmptyString({ message: () => 'Path is required.' }),
-  S.pattern(PATH_REGEX, { message: () => 'Invalid path.' }),
-) as any as S.Schema<JsonPath>;
-
-// TODO(burdon): Check validity.
-export const createJsonProp = (path: string): JsonProp => path as JsonProp;
-export const createJsonPath = (path: string): JsonPath => path as JsonPath;
+export const JsonPath = S.NonEmptyString.pipe(S.pattern(PATH_REGEX)) as any as S.Schema<JsonPath>;
+export const JsonProp = S.NonEmptyString.pipe(S.pattern(PROP_REGEX)) as any as S.Schema<JsonProp>;
 
 /**
  * @internal
