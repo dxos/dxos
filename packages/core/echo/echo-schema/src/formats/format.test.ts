@@ -48,7 +48,7 @@ describe('formats', () => {
       expect(getTypeEnum(prop)).to.eq(TypeEnum.String);
       expect(prop).includes({
         type: TypeEnum.String,
-        format: 'email',
+        format: FormatEnum.Email,
         title: 'Email',
       });
     }
