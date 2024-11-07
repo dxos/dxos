@@ -41,7 +41,7 @@ export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
           <Input.Label>{t('name label')}</Input.Label>
           <Input.TextInput
             placeholder={t('name placeholder')}
-            value={space.properties.name}
+            value={space.properties.name ?? ''}
             onChange={(event) => {
               space.properties.name = event.target.value;
             }}
