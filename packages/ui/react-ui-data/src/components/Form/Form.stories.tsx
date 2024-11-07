@@ -43,7 +43,9 @@ const DefaultStory = (props: StoryProps) => {
           <Form values={field} schema={schema} onValuesChanged={handleValueChange} onSave={handleSave} />
         </TestPopup>
       </div>
-      <SyntaxHighlighter className='w-full text-xs'>{JSON.stringify(field, null, 2)}</SyntaxHighlighter>
+      <SyntaxHighlighter language='json' className='w-full text-xs'>
+        {JSON.stringify(field, null, 2)}
+      </SyntaxHighlighter>
     </div>
   );
 };
