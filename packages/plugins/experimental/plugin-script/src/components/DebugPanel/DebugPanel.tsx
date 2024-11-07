@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Avatar, Icon, Input, type ThemedClassName, Toolbar, useControlledValue, useTranslation } from '@dxos/react-ui';
+import { Avatar, Icon, Input, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -20,25 +20,10 @@ type Message = { type: 'request' | 'response'; text?: string; data?: any; error?
 
 export type DebugPanelProps = ThemedClassName<{
   functionUrl?: string;
-  binding?: string;
-  onBindingChange?: (binding: string) => void;
-  showBindingConfig?: boolean;
 }>;
 
-export const DebugPanel = ({
-  classNames,
-  functionUrl,
-  binding: _binding,
-  onBindingChange,
-  showBindingConfig = false,
-}: DebugPanelProps) => {
+export const DebugPanel = ({ classNames, functionUrl }: DebugPanelProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
-
-  const bindingInputRef = useRef<HTMLInputElement>(null);
-  const [binding, setBinding] = useControlledValue(_binding ?? '');
-  const handleBlur = () => {
-    onBindingChange?.(binding);
-  };
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [input, setInput] = useState('');
@@ -190,18 +175,6 @@ export const DebugPanel = ({
             onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
           />
         </Input.Root>
-        {showBindingConfig && (
-          <Input.Root>
-            <Input.TextInput
-              ref={bindingInputRef}
-              classNames='!w-[10rem]'
-              placeholder={t('binding placeholder')}
-              value={binding}
-              onChange={(ev) => setBinding(ev.target.value.toUpperCase())}
-              onBlur={handleBlur}
-            />
-          </Input.Root>
-        )}
         <Toolbar.Button onClick={() => handleRequest(input)}>
           <Icon icon='ph--play--regular' size={4} />
         </Toolbar.Button>
