@@ -3,7 +3,7 @@
 //
 
 import * as ModalPrimitive from '@radix-ui/react-popper';
-import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
 import { type DxGridElement, type DxAxisResize, Grid } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
@@ -28,7 +28,7 @@ const frozen = { frozenRowsStart: 1, frozenColsEnd: 1 };
 
 export type TableProps = { model?: TableModel; onDeleteRow?: (row: any) => void };
 
-export const Table = ({ model }: TableProps) => {
+const TablePrimitive = ({ model }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
 
   const handleCellUpdate = useCallback((cell: GridCell) => {
@@ -110,4 +110,23 @@ export const Table = ({ model }: TableProps) => {
       />
     </ModalPrimitive.Root>
   );
+};
+
+const Viewport = ({ role = 'article', children }: PropsWithChildren<{ role?: string }>) => {
+  return (
+    <div
+      className={mx(
+        role === 'article' && 'relative is-full max-is-max min-is-0 min-bs-0',
+        role === 'section' && 'grid cols-1 rows-[1fr_min-content] min-bs-0 !bg-[--surface-bg]',
+        role === 'slide' && 'bs-full overflow-auto grid place-items-center',
+      )}
+    >
+      {children}
+    </div>
+  );
+};
+
+export const Table = {
+  Table: TablePrimitive,
+  Viewport,
 };

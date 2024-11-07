@@ -63,7 +63,7 @@ export enum VisitResult {
    */
   SKIP = 1,
   /**
-   * Stop traversing immeditaely.
+   * Stop traversing immediately.
    */
   EXIT = 2,
 }

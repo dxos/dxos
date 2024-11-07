@@ -68,28 +68,28 @@ export const Item = ({ object, onDelete }: ItemProps<EchoReactiveObject<any>>) =
   return (
     <div className={mx('flex m-1 p-2 border', subtleHover)}>
       <div className='flex flex-col grow overflow-hidden gap-2'>
-        {props.map(([prop, type]) => (
-          <div key={prop} className='flex'>
+        {props.map(({ property, type }) => (
+          <div key={property} className='flex'>
             {/* TODO(burdon): Check if editable or meta prop (e.g., id). */}
-            {prop === 'id' && (
+            {property === 'id' && (
               <Input.Root>
-                <Input.Label classNames={labelProps}>{prop}</Input.Label>
-                <div className='font-mono text-xs py-1'>{getValue(object, prop).slice(0, 8)}</div>
+                <Input.Label classNames={labelProps}>{property}</Input.Label>
+                <div className='font-mono text-xs py-1'>{getValue(object, property).slice(0, 8)}</div>
               </Input.Root>
             )}
             {type === 'boolean' && (
               <Input.Root>
-                <Input.Label classNames={labelProps}>{prop}</Input.Label>
+                <Input.Label classNames={labelProps}>{property}</Input.Label>
                 <Input.Checkbox
-                  checked={(object as any)[prop]}
-                  onCheckedChange={(state) => setValue(object, prop, !!state)}
+                  checked={(object as any)[property]}
+                  onCheckedChange={(state) => setValue(object, property, !!state)}
                 />
               </Input.Root>
             )}
-            {prop !== 'id' && type === 'string' && (
+            {property !== 'id' && type === 'string' && (
               <Input.Root>
-                <Input.Label classNames={labelProps}>{prop}</Input.Label>
-                <Editor object={object} prop={prop} />
+                <Input.Label classNames={labelProps}>{property}</Input.Label>
+                <Editor object={object} prop={property} />
               </Input.Root>
             )}
           </div>

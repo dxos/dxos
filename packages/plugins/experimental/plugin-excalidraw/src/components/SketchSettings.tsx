@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Input, useTranslation } from '@dxos/react-ui';
-import { FormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-data';
 
 import { SKETCH_PLUGIN } from '../meta';
 import { type SketchSettingsProps } from '../types';
@@ -15,19 +15,19 @@ export const SketchSettings = ({ settings }: { settings: SketchSettingsProps }) 
 
   return (
     <>
-      <FormInput label={t('settings hover tools label')}>
+      <DeprecatedFormInput label={t('settings hover tools label')}>
         <Input.Switch
           checked={settings.autoHideControls}
           onCheckedChange={(checked) => (settings.autoHideControls = !!checked)}
         />
-      </FormInput>
+      </DeprecatedFormInput>
 
-      <FormInput label={t('settings grid type label')}>
+      <DeprecatedFormInput label={t('settings grid type label')}>
         <Input.Switch
           checked={settings.gridType === 'dotted'}
           onCheckedChange={(checked) => (settings.gridType = checked ? 'dotted' : 'mesh')}
         />
-      </FormInput>
+      </DeprecatedFormInput>
     </>
   );
 };

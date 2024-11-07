@@ -2,36 +2,39 @@
 // Copyright 2023 DXOS.org
 //
 
-export const translationKey = 'data';
+export const translationKey = 'react-ui-data';
 
 export default [
   {
     'en-US': {
       [translationKey]: {
         'field path label': 'Property',
-        'field path placeholder': 'Label name',
-        'field label label': 'Label',
-        'field label placeholder': 'Label',
-        'field type label': 'Type',
+        'field format label': 'Type',
 
-        // Types.
-        'field type number': 'Number',
-        'field type boolean': 'Boolean',
-        'field type string': 'String',
-        'field type text': 'Long text',
-        'field type ref': 'Reference',
-        'field type user': 'User',
-        'field type formula': 'Formula',
-        'field type timestamp': 'Timestamp',
-        'field type datetime': 'DateTime',
-        'field type date': 'Date',
-        'field type time': 'Time',
-        'field type percent': 'Percent',
-        'field type currency': 'Currency',
-        'field digits label': 'Decimal Places',
-        'field ref schema label': 'Reference Schema',
-        'field ref property label': 'Reference Property',
-        'field save button label': 'Save',
+        // FormatEnum
+        'format boolean': 'Boolean',
+        'format currency': 'Currency',
+        'format date': 'Date',
+        'format date-time': 'DateTime',
+        'format did': 'DID',
+        'format duration': 'Duration',
+        'format email': 'Email',
+        'format formula': 'Formula',
+        'format hostname': 'Hostname',
+        'format integer': 'Integer',
+        'format json': 'JSON',
+        'format markdown': 'Markdown',
+        'format percent': 'Percent',
+        'format ref': 'Reference',
+        'format regex': 'RegExp',
+        'format string': 'String',
+        'format text': 'Long text',
+        'format time': 'Time',
+        'format timestamp': 'Timestamp',
+        'format user': 'User',
+        'format number': 'Number',
+        'format uri': 'URI',
+        'format uuid': 'UUID',
       },
     },
   },

@@ -4,26 +4,25 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { S } from '@dxos/effect';
+import { type AST, type JSONSchema, S } from '@dxos/effect';
+import { deepMapValues } from '@dxos/util';
 
-import { effectToJsonSchema, jsonToEffectSchema } from './json-schema';
-import { FieldMeta } from '../ast';
+import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
+import { PropertyMeta } from '../ast';
+import { FormatAnnotationId } from '../formats';
+import { Email } from '../formats/string';
 import { ref } from '../handler';
 import { TypedObject } from '../object';
 
 describe('effect-to-json', () => {
-  const ECHO_KEY = '$echo';
-
   test('type annotation', () => {
     class Schema extends TypedObject({
       typename: 'example.com/type/Test',
       version: '0.1.0',
-    })({ field: S.String }) {}
-    const jsonSchema = effectToJsonSchema(Schema);
-    expect(jsonSchema[ECHO_KEY].type).to.deep.eq({
-      typename: 'example.com/type/Test',
-      version: '0.1.0',
-    });
+    })({ name: S.String }) {}
+    const jsonSchema = toJsonSchema(Schema);
+    expect((jsonSchema as any).$id).toEqual('dxn:type:example.com/type/Test');
+    expect((jsonSchema as any).version).toEqual('0.1.0');
   });
 
   test('field meta annotation', () => {
@@ -33,104 +32,226 @@ describe('effect-to-json', () => {
       typename: 'example.com/type/Test',
       version: '0.1.0',
     })({
-      field: S.String.pipe(FieldMeta(metaNamespace, meta)),
+      name: S.String.pipe(PropertyMeta(metaNamespace, meta)),
     }) {}
-    const jsonSchema = effectToJsonSchema(Schema);
-    expect(jsonSchema.properties.field[ECHO_KEY].fieldMeta[metaNamespace]).to.deep.eq(meta);
+    const jsonSchema = toJsonSchema(Schema);
+    expect(getEchoProp(jsonSchema.properties!.name).annotations[metaNamespace]).to.deep.eq(meta);
   });
 
   test('reference annotation', () => {
     class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
-      field: S.String,
+      name: S.String,
     }) {}
     class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-      field: ref(Nested),
+      name: ref(Nested),
     }) {}
-    const jsonSchema = effectToJsonSchema(Schema);
-    const nested = jsonSchema.properties.field;
+    const jsonSchema = toJsonSchema(Schema);
+    const nested = jsonSchema.properties!.name;
     expectReferenceAnnotation(nested);
   });
 
   test('array of references', () => {
     class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
-      field: S.String,
+      name: S.String,
     }) {}
     class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-      field: S.Array(ref(Nested)),
+      name: S.Array(ref(Nested)),
     }) {}
-    const jsonSchema = effectToJsonSchema(Schema);
-    expectReferenceAnnotation(jsonSchema.properties.field.items);
+
+    const jsonSchema = toJsonSchema(Schema);
+    expectReferenceAnnotation((jsonSchema.properties!.name as any).items);
   });
 
   test('optional references', () => {
     class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
-      field: S.String,
+      name: S.String,
     }) {}
     class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-      field: S.optional(ref(Nested)),
+      name: S.optional(ref(Nested)),
     }) {}
-    const jsonSchema = effectToJsonSchema(Schema);
-    expectReferenceAnnotation(jsonSchema.properties.field);
+    const jsonSchema = toJsonSchema(Schema);
+    expectReferenceAnnotation(jsonSchema.properties!.name);
   });
 
   test('regular objects are not annotated', () => {
-    const object = S.Struct({ field: S.Struct({ field: S.String }) });
-    const jsonSchema = effectToJsonSchema(object);
-    expect(jsonSchema[ECHO_KEY]).to.be.undefined;
-    expect(jsonSchema.properties.field[ECHO_KEY]).to.be.undefined;
+    const object = S.Struct({ name: S.Struct({ name: S.String }) });
+    const jsonSchema = toJsonSchema(object);
+    expect(getEchoProp(jsonSchema)).to.be.undefined;
+    expect(getEchoProp(jsonSchema.properties!.name)).to.be.undefined;
   });
 
-  const expectReferenceAnnotation = (object: any) => {
-    expect(object[ECHO_KEY].reference).to.deep.eq({ typename: 'example.com/type/TestNested', version: '0.1.0' });
+  test('annotations', () => {
+    class Schema extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
+      name: S.String.annotations({ description: 'Person name', title: 'Name' }),
+      email: S.String.annotations({ description: 'Email address', [FormatAnnotationId]: 'email' }),
+    }) {}
+    const jsonSchema = toJsonSchema(Schema);
+    expect(jsonSchema).to.deep.eq({
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      $id: 'dxn:type:example.com/type/Contact',
+      version: '0.1.0',
+
+      // TODO(dmaretskyi): Remove this.
+      echo: {
+        type: {
+          typename: 'example.com/type/Contact',
+          version: '0.1.0',
+        },
+      },
+
+      type: 'object',
+      required: ['name', 'email', 'id'],
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string', title: 'Name', description: 'Person name' },
+        email: {
+          type: 'string',
+          description: 'Email address',
+          format: 'email',
+        },
+      },
+      additionalProperties: false,
+    });
+  });
+
+  test('references', () => {
+    class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
+      field: S.String,
+    }) {}
+
+    class Contact extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
+      name: S.String,
+      org: ref(Org).annotations({ description: 'Contact organization' }),
+    }) {}
+
+    const jsonSchema = toJsonSchema(Contact);
+
+    expect(jsonSchema).toEqual({
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      $id: 'dxn:type:example.com/type/Contact',
+      version: '0.1.0',
+      type: 'object',
+      additionalProperties: false,
+
+      // TODO(dmaretskyi): Should remove.
+      echo: {
+        type: {
+          typename: 'example.com/type/Contact',
+          version: '0.1.0',
+        },
+      },
+      properties: {
+        id: {
+          type: 'string',
+        },
+        name: {
+          type: 'string',
+        },
+        org: {
+          $id: '/schemas/echo/ref',
+          description: 'Contact organization',
+          reference: {
+            schema: {
+              $ref: 'dxn:type:example.com/type/Org',
+            },
+            schemaVersion: '0.1.0',
+          },
+        },
+      },
+      required: ['name', 'org', 'id'],
+    });
+  });
+  const expectReferenceAnnotation = (object: JSONSchema.JsonSchema7) => {
+    expect((object as any).reference).to.deep.eq({
+      schema: {
+        $ref: 'dxn:type:example.com/type/TestNested',
+      },
+      schemaVersion: '0.1.0',
+    });
   };
 });
 
 describe('json-to-effect', () => {
+  describe('field schema', () => {
+    test('email', () => {
+      const schema = Email;
+      expect(toJsonSchema(schema)).to.deep.eq({
+        $schema: 'http://json-schema.org/draft-07/schema#',
+        type: 'string',
+        format: 'email',
+        title: 'Email',
+        description: 'Email address',
+        // TODO(dmaretskyi): omit pattern.
+        pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
+      });
+    });
+  });
+
   for (const partial of [false, true]) {
     test('deserialized equals original', () => {
-      class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
+      class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
         field: S.String,
       }) {}
 
       class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })(
         {
-          string: S.String.pipe(S.annotations({ identifier: 'String' })),
-          number: S.Number.pipe(FieldMeta('dxos.test', { is_date: true })),
+          string: S.String,
+          number: S.Number.pipe(PropertyMeta('dxos.test', { is_date: true })),
           boolean: S.Boolean,
           array: S.Array(S.String),
           twoDArray: S.Array(S.Array(S.String)),
           record: S.Record({ key: S.String, value: S.Number }),
-          object: S.Struct({ id: S.String, field: ref(Nested) }),
-          echoObject: ref(Nested),
-          echoObjectArray: S.Array(ref(Nested)),
+          object: S.Struct({ id: S.String, field: ref(Org) }),
+          echoObject: ref(Org),
+          echoObjectArray: S.Array(ref(Org)),
+          email: S.String.annotations({ [FormatAnnotationId]: 'email' }),
           null: S.Null,
         },
         partial ? { partial } : {},
       ) {}
 
-      const jsonSchema = effectToJsonSchema(Schema);
-      const schema = jsonToEffectSchema(jsonSchema);
+      const jsonSchema = toJsonSchema(Schema);
+      // log.info('', { jsonSchema });
+      const schema = toEffectSchema(jsonSchema);
+
       expect(() => expect(schema.ast).to.deep.eq(Schema.ast)).to.throw();
-      expect(() => expect(removeFilterFunction(schema.ast)).to.deep.eq(Schema.ast)).to.throw();
-      expect(() => expect(schema.ast).to.deep.eq(removeFilterFunction(Schema.ast))).to.throw();
-      expect(removeFilterFunction(schema.ast)).to.deep.eq(removeFilterFunction(Schema.ast));
+      expect(() => expect(prepareAstForCompare(schema.ast)).to.deep.eq(Schema.ast)).to.throw();
+      expect(() => expect(schema.ast).to.deep.eq(prepareAstForCompare(Schema.ast))).to.throw();
+      // log.info('', { original: prepareAstForCompare(Schema.ast), deserialized: prepareAstForCompare(schema.ast) });
+      expect(prepareAstForCompare(schema.ast)).to.deep.eq(prepareAstForCompare(Schema.ast));
+
+      // TODO(dmaretskyi): Fix.
+      // expect(
+      //   AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'email')!.type.annotations[
+      //     FormatAnnotationId
+      //   ],
+      // ).toEqual('email');
     });
   }
 
-  const removeFilterFunction = (obj: any): any => {
-    if (typeof obj !== 'object') {
-      return obj;
-    }
-    if (Array.isArray(obj)) {
-      return obj.map((o) => removeFilterFunction(o));
-    }
-    const result: any = {};
-    for (const key in obj) {
-      if (key !== 'filter') {
-        result[key] = removeFilterFunction(obj[key]);
-      }
-    }
+  test('symbol annotations get compared', () => {
+    const schema1 = S.String.annotations({ [FormatAnnotationId]: 'email' });
+    const schema2 = S.String.annotations({ [FormatAnnotationId]: 'currency' });
 
-    return result;
-  };
+    expect(prepareAstForCompare(schema1.ast)).not.to.deep.eq(prepareAstForCompare(schema2.ast));
+  });
+
+  const prepareAstForCompare = (obj: AST.AST): any =>
+    deepMapValues(obj, (value: any, recurse, key) => {
+      if (typeof value === 'function') {
+        return null;
+      }
+
+      // Convert symbols to strings.
+      if (typeof value === 'object') {
+        const clone = { ...value };
+        for (const sym of Object.getOwnPropertySymbols(clone as any)) {
+          clone[sym.toString()] = clone[sym];
+          delete clone[sym];
+        }
+        return recurse(clone);
+      }
+
+      return recurse(value);
+    });
 });

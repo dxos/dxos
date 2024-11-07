@@ -4,8 +4,8 @@
 
 import React, { useRef, useState } from 'react';
 
+import { FormatEnums, type TypeEnum } from '@dxos/echo-schema';
 import { Button, Input, Select, useTranslation } from '@dxos/react-ui';
-import { FieldValueTypes, type FieldValueType } from '@dxos/schema';
 import { safeParseInt } from '@dxos/util';
 
 import { type TableDef, type ColumnDef } from '../../schema';
@@ -67,7 +67,7 @@ export const ColumnSettings = ({
       id: prop, // TODO(burdon): Make unique.
       prop,
       label,
-      type: type as FieldValueType,
+      type: type as TypeEnum,
       refTable,
       refProp,
       digits: safeParseInt(digits),
@@ -117,7 +117,7 @@ export const ColumnSettings = ({
             <Select.Portal>
               <Select.Content>
                 <Select.Viewport>
-                  {FieldValueTypes.map((type) => (
+                  {FormatEnums.map((type) => (
                     <Select.Option key={type} value={type}>
                       {t(`${type} column type label`)}
                     </Select.Option>
