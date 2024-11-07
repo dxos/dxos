@@ -5,10 +5,9 @@
 import { describe, test } from 'vitest';
 
 import { S } from '@dxos/effect';
-import { log } from '@dxos/log';
 
 import { Format } from './format';
-import { TypeEnum, getTypeEnum } from './types';
+import { FormatEnum, TypeEnum, getTypeEnum } from './types';
 import { toJsonSchema } from '../json';
 
 describe('formats', () => {
@@ -40,7 +39,7 @@ describe('formats', () => {
       const prop = jsonSchema.properties!['active' as const];
       expect(getTypeEnum(prop)).to.eq(TypeEnum.Boolean);
       expect(prop).includes({
-        type: 'boolean',
+        type: TypeEnum.Boolean,
       });
     }
 
@@ -48,7 +47,7 @@ describe('formats', () => {
       const prop = jsonSchema.properties!['email' as const];
       expect(getTypeEnum(prop)).to.eq(TypeEnum.String);
       expect(prop).includes({
-        type: 'string',
+        type: TypeEnum.String,
         format: 'email',
         title: 'Email',
       });
@@ -58,8 +57,8 @@ describe('formats', () => {
       const prop = jsonSchema.properties!['salary' as const];
       expect(getTypeEnum(prop)).to.eq(TypeEnum.Number);
       expect(prop).includes({
-        type: 'number',
-        format: 'currency',
+        type: TypeEnum.Number,
+        format: FormatEnum.Currency,
         title: 'Currency',
         multipleOf: 0.01,
         currency: 'USD',
@@ -68,11 +67,10 @@ describe('formats', () => {
 
     {
       const prop = jsonSchema.properties!['birthday' as const];
-      log.info('', { prop });
       expect(getTypeEnum(prop)).to.eq(TypeEnum.String);
       expect(prop).includes({
-        type: 'string',
-        format: 'date',
+        type: TypeEnum.String,
+        format: FormatEnum.Date,
       });
     }
   });
