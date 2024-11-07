@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { FormatEnum, FormatEnums } from '@dxos/echo-schema';
+import { FormatEnum, FormatEnums, formatToType } from '@dxos/echo-schema';
 import { useTranslation } from '@dxos/react-ui';
 import {
   getPropertySchemaForFormat,
@@ -30,24 +30,26 @@ export const FieldEditor = ({
   onComplete: () => void;
 }) => {
   const { t } = useTranslation(translationKey);
-  const fieldProperties = useMemo<PropertyType>(() => {
+  const props = useMemo<PropertyType>(() => {
     const { props } = projection.getFieldProjection(field.property);
     return props;
   }, [field, projection]);
 
   const [{ fieldSchema }, setSchema] = useState({
-    fieldSchema: getPropertySchemaForFormat(fieldProperties?.format),
+    fieldSchema: getPropertySchemaForFormat(props?.format),
   });
 
+  // TODO(burdon): Determine what has changed.
   // TODO(burdon): Update object type (field) when format changes (get from FormatSchema map).
-  // TODO(burdon): Handle changes to `property` (e.g., uniqueness)?
-  const handleValueChanged = useCallback((values: PropertyType) => {
-    setSchema({ fieldSchema: getPropertySchemaForFormat(values?.format) });
+  const handleValueChanged = useCallback((_props: PropertyType) => {
+    const fieldSchema = getPropertySchemaForFormat(_props.format);
+    props.type = formatToType[props.format as FormatEnum]; // TODO(burdon): Why is type any?
+    setSchema({ fieldSchema });
   }, []);
 
   useEffect(() => {
-    handleValueChanged(fieldProperties);
-  }, [fieldProperties]);
+    handleValueChanged(props);
+  }, [props]);
 
   const handleAdditionalValidation = useCallback(
     ({ property }: PropertyType) => {
@@ -67,14 +69,14 @@ export const FieldEditor = ({
   );
 
   if (!fieldSchema) {
-    return <div>Schema not implemented for {fieldProperties?.format ?? 'undefined'}</div>;
+    return <div>Schema not implemented for {props?.format ?? 'undefined'}</div>;
   }
 
   return (
     <Form<PropertyType>
       key={field.property}
       autoFocus
-      values={fieldProperties}
+      values={props}
       schema={fieldSchema}
       additionalValidation={handleAdditionalValidation}
       onValuesChanged={handleValueChanged}

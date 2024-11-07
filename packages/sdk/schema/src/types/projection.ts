@@ -5,6 +5,7 @@
 import {
   JSON_SCHEMA_ECHO_REF_ID,
   createJsonPath,
+  formatToType,
   FormatEnum,
   type JsonSchemaType,
   type MutableSchema,
@@ -12,6 +13,7 @@ import {
   ScalarEnum,
   type JsonPath,
 } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { PropertySchema, type PropertyType } from './format';
@@ -42,28 +44,21 @@ export class ViewProjection {
   /**
    * Construct a new property.
    */
-  createProperty(): FieldProjection {
+  // TODO(burdon): Rename createProperty.
+  createFieldProjection(): FieldType {
     const prop = getUniqueProperty(this._view);
-
     const field: FieldType = {
       property: prop,
     };
 
-    const props: PropertyType = {
-      property: prop,
-      format: FormatEnum.None,
-    };
-
     this._view.fields.push(field);
-    this._schema.jsonSchema.properties![prop] = props;
-    return { field, props };
+    return field;
   }
 
   /**
    * Get projection of View fields and JSON schema property annotations.
    */
   // TODO(burdon): JsonProp.
-  // TODO(burdon): Rename property to match create.
   getFieldProjection(prop: string): FieldProjection {
     let {
       $id,
@@ -86,7 +81,8 @@ export class ViewProjection {
 
     const field: FieldType = this._view.fields.find((f) => f.property === prop) ?? { property: createJsonPath(prop) };
     const values = { property: prop, type, format, referenceSchema, ...rest };
-    const props = this._decode(values);
+    const props = values.type ? this._decode(values) : values;
+
     log.info('getFieldProjection', { field, props });
     return { field, props };
   }
@@ -108,7 +104,10 @@ export class ViewProjection {
     }
 
     if (props) {
+      // TODO(burdon): Define type?
       let { property, type, format, referenceSchema, ...rest } = this._encode(props);
+      invariant(property);
+      invariant(format);
 
       // Set reference.
       // TODO(burdon): Types?
@@ -124,12 +123,16 @@ export class ViewProjection {
           },
         };
       }
+      if (format) {
+        type = formatToType[format as FormatEnum];
+      }
       if (type === format) {
         format = undefined;
       }
 
       // TODO(burdon): Strip undefined.
       const values: JsonSchemaType = { $id, type, format, reference, ...rest };
+      console.log(':::::::', values);
       this._schema.jsonSchema.properties![property] = values;
     }
   }

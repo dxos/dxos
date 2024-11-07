@@ -26,7 +26,7 @@ export default [
         'format markdown': 'Markdown',
         'format percent': 'Percent',
         'format ref': 'Reference',
-        'format regx': 'RegExp',
+        'format regex': 'RegExp',
         'format string': 'String',
         'format text': 'Long text',
         'format time': 'Time',

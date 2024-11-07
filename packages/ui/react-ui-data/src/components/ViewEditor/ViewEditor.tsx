@@ -35,7 +35,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
   }, []);
 
   const handleAdd = useCallback(() => {
-    const { field } = projection.createFieldProjection();
+    const field = projection.createFieldProjection();
     setSelectedField(field);
   }, [view]);
 

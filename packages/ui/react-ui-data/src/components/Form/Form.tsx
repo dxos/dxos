@@ -5,6 +5,7 @@
 import React, { type FC, useMemo } from 'react';
 
 import { type S } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type ValidationError } from '@dxos/schema';
@@ -39,7 +40,7 @@ export const Form = <T extends object>({
   Custom,
 }: FormProps<T>) => {
   // TODO(burdon): Type for useForm.
-  const { canSubmit, handleSubmit, getInputProps, getErrorValence, getErrorMessage } = useForm<T>({
+  const { canSubmit, errors, handleSubmit, getInputProps, getErrorValence, getErrorMessage } = useForm<T>({
     schema,
     initialValues: values,
     additionalValidation,
@@ -47,10 +48,14 @@ export const Form = <T extends object>({
     onSubmit: (values) => onSave?.(values),
   });
 
+  if (errors && Object.keys(errors).length) {
+    log.warn('validation', { errors });
+  }
+
   // TODO(burdon): Create schema annotation for order or pass in params?
   // TODO(ZaymonFC): We might need to use a variant of `getSchemaProperties` that uses the
-  // `from` type instead of `to` type for transformations since we are expecting the pre-encoded
-  // form as input from the user.
+  //  `from` type instead of `to` type for transformations since we are expecting the pre-encoded
+  //  form as input from the user.
   const props = useMemo(() => getSchemaProperties<T>(schema), [schema]);
 
   return (

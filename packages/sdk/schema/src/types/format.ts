@@ -43,7 +43,7 @@ export const formatToSchema: Record<FormatEnum, S.Schema<any>> = {
   // Scalars
   //
 
-  [FormatEnum.String]: extend(FormatEnum.Ref, ScalarEnum.Ref),
+  [FormatEnum.String]: extend(FormatEnum.String, ScalarEnum.String),
   [FormatEnum.Number]: extend(FormatEnum.Number, ScalarEnum.Number),
   [FormatEnum.Boolean]: extend(FormatEnum.Boolean, ScalarEnum.Boolean),
   [FormatEnum.Ref]: extend(FormatEnum.Ref, ScalarEnum.Ref, {
