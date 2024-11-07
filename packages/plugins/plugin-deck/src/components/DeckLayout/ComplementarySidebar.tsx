@@ -21,7 +21,6 @@ import { NodePlankHeading } from './NodePlankHeading';
 import { PlankContentError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
 import { useNode, useNodeActionExpander } from '../../hooks';
-import { DECK_PLUGIN } from '../../meta';
 import { type Panel } from '../../types';
 import { useLayout } from '../LayoutContext';
 

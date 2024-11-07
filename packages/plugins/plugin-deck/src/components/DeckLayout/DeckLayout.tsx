@@ -13,7 +13,7 @@ import { Deck } from '@dxos/react-ui-deck';
 import { getSize, mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
-import { ComplementarySidebar, ComplementarySidebarProps } from './ComplementarySidebar';
+import { ComplementarySidebar, type ComplementarySidebarProps } from './ComplementarySidebar';
 import { ContentEmpty } from './ContentEmpty';
 import { Fullscreen } from './Fullscreen';
 import { Plank } from './Plank';

@@ -68,7 +68,7 @@ import {
   type DeckPluginProvides,
   type DeckSettingsProps,
   type Overscroll,
-  Panel,
+  type Panel,
   parsePanelPlugin,
 } from './types';
 import { checkAppScheme, getEffectivePart } from './util';

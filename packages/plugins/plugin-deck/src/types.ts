@@ -22,7 +22,7 @@ export const OverscrollOptions = ['none', 'centering'] as const;
 export type Overscroll = (typeof OverscrollOptions)[number];
 
 // TODO(wittjosiah): Include a predicate for whether the panel is visible for the current subject.
-export type Panel = { id: string; label: Label;  icon: string };
+export type Panel = { id: string; label: Label; icon: string };
 
 // TODO(wittjosiah): Is this generic enough to be in the app framework?
 export type PanelProvides = {
