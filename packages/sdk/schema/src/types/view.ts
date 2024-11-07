@@ -138,7 +138,7 @@ export class ViewProjection {
    * Update JSON schema property annotations.
    */
   setFieldProjection({ field, props }: Partial<FieldProjection>) {
-    log.info('updateProperties', { field, props });
+    log.info('setFieldProjection', { field, props });
 
     if (field) {
       const current = this._view.fields.find((f) => f.property === field.property);
