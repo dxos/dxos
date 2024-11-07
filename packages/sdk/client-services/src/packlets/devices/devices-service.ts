@@ -4,6 +4,7 @@
 
 import { EventSubscriptions } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
+import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import {
   Device,
@@ -16,7 +17,10 @@ import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/cred
 import { type IdentityManager } from '../identity';
 
 export class DevicesServiceImpl implements DevicesService {
-  constructor(private readonly _identityManager: IdentityManager) {}
+  constructor(
+    private readonly _identityManager: IdentityManager,
+    private readonly _edgeConnection?: EdgeConnection,
+  ) {}
 
   async updateDevice(profile: DeviceProfileDocument): Promise<Device> {
     return this._identityManager.updateDeviceProfile(profile);
@@ -34,17 +38,24 @@ export class DevicesServiceImpl implements DevicesService {
           next({
             devices: Array.from(deviceKeys.entries()).map(([key, profile]) => {
               const isMe = this._identityManager.identity?.deviceKey.equals(key);
-              const peerState = peers.find((peer) => peer.identityKey.equals(key));
+              let presence;
+              if (isMe) {
+                presence = Device.PresenceState.ONLINE;
+              } else if (profile.os?.toUpperCase() === 'EDGE') {
+                presence = this._edgeConnection?.isConnected
+                  ? Device.PresenceState.ONLINE
+                  : Device.PresenceState.OFFLINE;
+              } else {
+                presence = peers.some((peer) => peer.identityKey.equals(key))
+                  ? Device.PresenceState.ONLINE
+                  : Device.PresenceState.OFFLINE;
+              }
 
               return {
                 deviceKey: key,
                 kind: this._identityManager.identity?.deviceKey.equals(key) ? DeviceKind.CURRENT : DeviceKind.TRUSTED,
                 profile,
-                presence: isMe
-                  ? Device.PresenceState.ONLINE
-                  : peerState
-                    ? Device.PresenceState.ONLINE
-                    : Device.PresenceState.OFFLINE,
+                presence,
               };
             }),
           });
