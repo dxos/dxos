@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Avatar, Icon, Input, type ThemedClassName, Toolbar, useControlledValue, useTranslation } from '@dxos/react-ui';
+import { Avatar, Icon, Input, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 

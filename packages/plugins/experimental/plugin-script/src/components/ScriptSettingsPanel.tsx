@@ -2,15 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { ChangeEvent, KeyboardEvent, useCallback } from 'react';
+import React, { type ChangeEvent, useCallback } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Input, useControlledValue, useTranslation } from '@dxos/react-ui';
 
+import { getInvocationUrl, getUserFunctionUrlInMetadata } from '../edge';
 import { SCRIPT_PLUGIN } from '../meta';
 import { FunctionType, type ScriptType } from '../types';
-import { getInvocationUrl, getUserFunctionUrlInMetadata } from '../edge';
 
 export type ScriptSettingsPanelProps = {
   script: ScriptType;
@@ -52,9 +52,7 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
     });
 
   // TODO(wittjosiah): Use ClipboardProvider.
-  const handleCopy = useCallback(() => {
-    functionUrl && navigator.clipboard.writeText(functionUrl);
-  }, [functionUrl]);
+  const handleCopy = useCallback(() => functionUrl && navigator.clipboard.writeText(functionUrl), [functionUrl]);
 
   return (
     <div role='form' className='flex flex-col w-full p-2 gap-4'>
