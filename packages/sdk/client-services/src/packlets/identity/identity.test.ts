@@ -4,7 +4,6 @@
 
 import { onTestFinished, describe, expect, test } from 'vitest';
 
-import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
 import {
@@ -108,13 +107,24 @@ describe('identity/identity', () => {
 
   test('edge feed replicator', async () => {
     let replicationStarted = false;
-    const connectedEvent = new Event();
+    let isConnected = false;
+    const listeners: Array<() => void> = [];
     const setup = await setupIdentity({
       edgeConnection: {
-        connected: connectedEvent,
+        onReconnected: (listener) => {
+          if (isConnected) {
+            listener();
+          } else {
+            listeners.push(listener);
+          }
+          return () => {};
+        },
+        get isConnected() {
+          return isConnected;
+        },
         open: async () => {},
         close: async () => {},
-        addListener: (_: MessageListener): (() => void) => {
+        onMessage: (_: MessageListener): (() => void) => {
           return () => {};
         },
         send: async (_) => {
@@ -124,7 +134,8 @@ describe('identity/identity', () => {
     });
 
     await writeGenesisCredential(setup);
-    connectedEvent.emit();
+    listeners.forEach((callback) => callback());
+    isConnected = true;
 
     await expect.poll(() => replicationStarted).toBeTruthy();
   });
