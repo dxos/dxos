@@ -1181,16 +1181,20 @@ export class DxGrid extends LitElement {
         ].join(' '),
       })}
     >
-      ${[...Array(1 + (this.frozen.frozenRowsStart ?? 0) + (this.frozen.frozenRowsEnd ?? 0))].map((_, r0) =>
-        [...Array(1 + (this.frozen.frozenColsStart ?? 0) + (this.frozen.frozenColsEnd ?? 0))].map(
-          (_, c0) =>
-            html`<div
-              role="none"
-              class="dx-grid-layer--presentation__cell"
-              style="grid-column:${c0 + 1};grid-row:${r0 + 1}"
-            ></div>`,
-        ),
-      )}
+      ${
+        /* TODO(thure): These are debug cells, remove when rendering actual overlay contact. */ [
+          ...Array((this.frozen.frozenRowsStart ?? 0) + visibleRows + (this.frozen.frozenRowsEnd ?? 0)),
+        ].map((_, r0) =>
+          [...Array((this.frozen.frozenColsStart ?? 0) + visibleCols + (this.frozen.frozenColsEnd ?? 0))].map(
+            (_, c0) =>
+              html`<div
+                role="none"
+                class="dx-grid-layer--presentation__cell"
+                style="grid-column:${c0 + 1};grid-row:${r0 + 1}"
+              ></div>`,
+          ),
+        )
+      }
     </div>`;
   }
 
