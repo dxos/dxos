@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
+
 import * as DateUtil from './date';
 import * as NumberUtil from './number';
 import { CurrencyAnnotationId } from './number';
@@ -27,7 +29,7 @@ export namespace Format {
   export const Markdown = StringUtil.Markdown;
   export const Regex = StringUtil.Regex;
   export const URI = StringUtil.URI;
-  export const UUID = StringUtil.UUID;
+  export const UUID = S.UUID;
 
   // Numbers
   // TODO(burdon): BigInt.

@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, DecimalPrecision, TypeEnum, FormatEnum, S, JsonPath } from '@dxos/echo-schema';
-import { getType, getAnnotation } from '@dxos/effect';
+import { AST, DecimalPrecision, TypeEnum, FormatEnum, S } from '@dxos/echo-schema';
+import { getAnnotation, getBaseType } from '@dxos/effect';
 
 /**
  * Base schema.
@@ -48,7 +48,7 @@ export const formatToSchema: Record<FormatEnum, S.Schema<any>> = {
   [FormatEnum.Boolean]: extend(FormatEnum.Boolean, TypeEnum.Boolean),
   [FormatEnum.Ref]: extend(FormatEnum.Ref, TypeEnum.Ref, {
     referenceSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
-    referenceProperty: S.optional(JsonPath).annotations({ [AST.TitleAnnotationId]: 'Lookup property' }),
+    referenceProperty: S.optional(S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Lookup property' })),
   }),
 
   //
@@ -154,32 +154,31 @@ export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> |
   return undefined;
 };
 
-export type SchemaPropertyType<T> = {
-  name: string & keyof T;
+export type SchemaProperty<T> = {
+  property: string & keyof T;
   type: TypeEnum;
-  label?: string;
+  format: FormatEnum;
+  title?: string;
 };
 
 /**
  * Get top-level properties from schema.
+ * NOTE: Type literals are ignored (e.g., fixed type/format fields).
  */
-export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaPropertyType<T>[] => {
-  return AST.getPropertySignatures(schema.ast).reduce<SchemaPropertyType<T>[]>((props, prop) => {
-    let propType = getType(prop.type);
-    if (propType) {
-      let label = propType ? getAnnotation<string>(AST.TitleAnnotationId, propType) : undefined;
-      // NOTE: Ignores type literals.
-      let type = getTypeEnumFromAst(propType);
-      if (!type && AST.isTransformation(propType)) {
-        label = getAnnotation<string>(AST.TitleAnnotationId, propType);
-        propType = getType(propType.to);
-        if (propType) {
-          type = getTypeEnumFromAst(propType);
-        }
+export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaProperty<T>[] => {
+  return AST.getPropertySignatures(schema.ast).reduce<SchemaProperty<T>[]>((props, prop) => {
+    // TODO(burdon): Factor out.
+    const baseType = getBaseType(prop.type);
+    if (baseType) {
+      let type = getTypeEnumFrom(baseType);
+      let title = getAnnotation<string>(AST.TitleAnnotationId, baseType);
+      if (!type && AST.isTransformation(baseType)) {
+        title = getAnnotation<string>(AST.TitleAnnotationId, baseType);
+        type = getTypeEnumFrom(baseType.to);
       }
 
       if (type) {
-        props.push({ name: prop.name.toString() as any, type, label });
+        props.push({ property: prop.name.toString() as any, type, format: FormatEnum.None, title });
       }
     }
 
@@ -187,7 +186,7 @@ export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaPropertyType<
   }, []);
 };
 
-const getTypeEnumFromAst = (ast: AST.AST): TypeEnum | undefined => {
+const getTypeEnumFrom = (ast: AST.AST): TypeEnum | undefined => {
   if (AST.isStringKeyword(ast)) {
     return TypeEnum.String;
   } else if (AST.isNumberKeyword(ast)) {
