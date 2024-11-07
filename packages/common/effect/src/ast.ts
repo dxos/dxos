@@ -22,14 +22,20 @@ export const isLeafType = (node: AST.AST) => !AST.isTupleType(node) && !AST.isTy
 export const getAnnotation = <T>(annotationId: symbol, node: AST.Annotated): T | undefined =>
   pipe(AST.getAnnotation<T>(annotationId)(node), Option.getOrUndefined);
 
+// TODO(burdon): Use this format.
+export const getAnnotation2 =
+  <T>(annotationId: symbol) =>
+  (node: AST.Annotated): T | undefined =>
+    pipe(AST.getAnnotation<T>(annotationId)(node), Option.getOrUndefined);
+
 /**
- * Get type node.
+ * AST.PropertySignature: { name, type: AST, isOptional, isReadonly, annotations }
  */
-export const getType = (node: AST.AST): AST.AST | undefined => {
+export const getBaseType = (node: AST.AST): AST.AST | undefined => {
   if (AST.isUnion(node)) {
-    return node.types.find((type) => getType(type));
+    return node.types.find((type) => getBaseType(type));
   } else if (AST.isRefinement(node)) {
-    return getType(node.from);
+    return getBaseType(node.from);
   } else {
     return node;
   }
@@ -48,7 +54,7 @@ export const getProperty = (schema: S.Schema<any>, path: string): AST.AST | unde
     }
 
     // TODO(burdon): Check if leaf.
-    const type = getType(prop.type);
+    const type = getBaseType(prop.type);
     invariant(type, `invalid type: ${path}`);
     node = type;
   }
@@ -99,7 +105,7 @@ const visitNode = (
 ): VisitResult | undefined => {
   for (const prop of AST.getPropertySignatures(node)) {
     const currentPath = [...path, prop.name.toString()];
-    const type = getType(prop.type);
+    const type = getBaseType(prop.type);
     if (type) {
       const result = test?.(node, path, depth) ?? VisitResult.CONTINUE;
       if (result === VisitResult.EXIT) {
@@ -113,7 +119,7 @@ const visitNode = (
           visitNode(type, test, visitor, currentPath, depth + 1);
         } else if (AST.isTupleType(type)) {
           for (const [i, elementType] of type.elements.entries()) {
-            const type = getType(elementType.type);
+            const type = getBaseType(elementType.type);
             if (type) {
               visitNode(type, test, visitor, [i, ...currentPath], depth);
             }
