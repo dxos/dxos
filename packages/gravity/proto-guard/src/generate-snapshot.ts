@@ -18,7 +18,7 @@ import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { type SnapshotDescription, SnapshotsRegistry } from './snapshots-registry';
 import { SpacesDumper } from './space-json-dump';
 import { Todo } from './types';
-import { createConfig, EXPECTED_JSON_DATA, getBaseDataDir, SNAPSHOT_DIR, SNAPSHOTS_DIR } from './util';
+import { createConfig, getBaseDataDir, EXPECTED_JSON_DATA, SNAPSHOT_DIR, SNAPSHOTS_DIR } from './util';
 
 /**
  * Generates a snapshot of encoded protocol buffers to check for backwards compatibility.
