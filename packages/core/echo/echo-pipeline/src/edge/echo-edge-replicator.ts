@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Mutex, scheduleTask } from '@dxos/async';
+import { Mutex, scheduleTask, scheduleMicroTask } from '@dxos/async';
 import * as A from '@dxos/automerge/automerge';
 import { cbor } from '@dxos/automerge/automerge-repo';
 import { Context, Resource } from '@dxos/context';
@@ -61,24 +61,26 @@ export class EchoEdgeReplicator implements EchoReplicator {
     this._context = context;
 
     this._ctx = Context.default();
-    this._edgeConnection.reconnect.on(this._ctx, async () => {
-      using _guard = await this._mutex.acquire();
+    this._ctx.onDispose(
+      this._edgeConnection.onReconnected(() => {
+        this._ctx && scheduleMicroTask(this._ctx, () => this._handleReconnect());
+      }),
+    );
+  }
 
-      const spaces = [...this._connectedSpaces];
-      for (const connection of this._connections.values()) {
-        await connection.close();
+  private async _handleReconnect() {
+    using _guard = await this._mutex.acquire();
+
+    const spaces = [...this._connectedSpaces];
+    for (const connection of this._connections.values()) {
+      await connection.close();
+    }
+    this._connections.clear();
+
+    if (this._context !== null) {
+      for (const spaceId of spaces) {
+        await this._openConnection(spaceId);
       }
-      this._connections.clear();
-
-      if (this._context !== null) {
-        for (const spaceId of spaces) {
-          await this._openConnection(spaceId);
-        }
-      }
-    });
-
-    for (const spaceId of this._connectedSpaces) {
-      await this._openConnection(spaceId);
     }
   }
 
@@ -237,7 +239,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     log('open');
     // TODO: handle reconnects
     this._ctx.onDispose(
-      this._edgeConnection.addListener((msg: RouterMessage) => {
+      this._edgeConnection.onMessage((msg: RouterMessage) => {
         this._onMessage(msg);
       }),
     );

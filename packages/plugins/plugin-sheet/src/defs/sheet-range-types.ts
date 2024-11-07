@@ -16,7 +16,7 @@ export type CommentValue = string;
 
 export const styleKey = 'style';
 export type StyleKey = typeof styleKey;
-export type StyleValue = 'highlight' | 'unset';
+export type StyleValue = 'highlight' | 'softwrap';
 
 // TODO(burdon): Reconcile with plugin-table.
 export const cellClassNameForRange = ({ key, value }: SheetType['ranges'][number]): ClassNameValue => {
@@ -37,7 +37,9 @@ export const cellClassNameForRange = ({ key, value }: SheetType['ranges'][number
     case styleKey:
       switch (value) {
         case 'highlight':
-          return 'bg-gridHighlight';
+          return '!bg-gridHighlight';
+        case 'softwrap':
+          return '!whitespace-normal';
         default:
           return undefined;
       }

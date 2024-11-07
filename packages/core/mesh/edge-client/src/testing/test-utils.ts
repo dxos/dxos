@@ -26,6 +26,7 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
   let connection: WebSocket | undefined;
 
   const messageSink: any[] = [];
+  const messageSourceLog: any[] = [];
   const closeTrigger = new Trigger();
   const sendResponseMessage = createResponseSender(() => connection!);
 
@@ -38,6 +39,7 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
         return;
       }
       const { request, requestPayload } = await decodeRequest(params, data);
+      messageSourceLog.push(request.source);
       if (params?.messageHandler) {
         const responsePayload = await params.messageHandler(requestPayload);
         if (responsePayload && connection) {
@@ -57,6 +59,7 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
   return {
     server,
     messageSink,
+    messageSourceLog,
     endpoint: `ws://localhost:${port}`,
     cleanup: () => server.close(),
     currentConnection: () => connection,

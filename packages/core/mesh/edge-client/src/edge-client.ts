@@ -2,37 +2,33 @@
 // Copyright 2024 DXOS.org
 //
 
-import WebSocket from 'isomorphic-ws';
-
-import { Trigger, Event, scheduleTaskInterval, scheduleTask, TriggerState } from '@dxos/async';
-import { Context, LifecycleState, Resource, type Lifecycle } from '@dxos/context';
-import { log } from '@dxos/log';
-import { buf } from '@dxos/protocols/buf';
-import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { Trigger, scheduleMicroTask, TriggerState } from '@dxos/async';
+import { Resource, type Lifecycle } from '@dxos/context';
+import { log, logInfo } from '@dxos/log';
+import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 import { protocol } from './defs';
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
+import { EdgeWsConnection } from './edge-ws-connection';
 import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors';
 import { PersistentLifecycle } from './persistent-lifecycle';
-import { type Protocol, toUint8Array } from './protocol';
+import { type Protocol } from './protocol';
 import { getEdgeUrlWithProtocol } from './utils';
 
 const DEFAULT_TIMEOUT = 10_000;
-const SIGNAL_KEEPALIVE_INTERVAL = 5_000;
 
-export type MessageListener = (message: Message) => void | Promise<void>;
+export type MessageListener = (message: Message) => void;
+export type ReconnectListener = () => void;
 
 export interface EdgeConnection extends Required<Lifecycle> {
-  connected: Event;
-  reconnect: Event;
-
   get info(): any;
   get identityKey(): string;
   get peerKey(): string;
   get isOpen(): boolean;
   get isConnected(): boolean;
   setIdentity(identity: EdgeIdentity): void;
-  addListener(listener: MessageListener): () => void;
+  onMessage(listener: MessageListener): () => void;
+  onReconnected(listener: ReconnectListener): () => void;
   send(message: Message): Promise<void>;
 }
 
@@ -44,25 +40,25 @@ export type MessengerConfig = {
 };
 
 /**
- * Messenger client.
+ * Messenger client for EDGE:
+ *  - While open, uses PersistentLifecycle to keep an open EdgeWsConnection, reconnecting on failures.
+ *  - Manages identity and re-create EdgeWsConnection when identity changes.
+ *  - Dispatches connection state and message notifications.
  */
 export class EdgeClient extends Resource implements EdgeConnection {
-  public readonly reconnect = new Event();
-  public readonly connected = new Event();
-  private readonly _persistentLifecycle = new PersistentLifecycle({
-    start: async () => this._openWebSocket(),
-    stop: async () => this._closeWebSocket(),
-    onRestart: async () => this.reconnect.emit(),
+  private readonly _persistentLifecycle = new PersistentLifecycle<EdgeWsConnection>({
+    start: async () => this._connect(),
+    stop: async (state: EdgeWsConnection) => this._disconnect(state),
   });
 
-  private readonly _listeners = new Set<MessageListener>();
-  private _ready = new Trigger();
-  private _ws?: WebSocket = undefined;
-  private _keepaliveCtx?: Context = undefined;
-  private _heartBeatContext?: Context = undefined;
+  private readonly _messageListeners = new Set<MessageListener>();
+  private readonly _reconnectListeners = new Set<ReconnectListener>();
 
-  private _baseWsUrl: string;
-  private _baseHttpUrl: string;
+  private readonly _baseWsUrl: string;
+  private readonly _baseHttpUrl: string;
+
+  private _currentConnection?: EdgeWsConnection = undefined;
+  private _ready = new Trigger();
 
   constructor(
     private _identity: EdgeIdentity,
@@ -73,7 +69,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
     this._baseHttpUrl = getEdgeUrlWithProtocol(_config.socketEndpoint, 'http');
   }
 
-  // TODO(burdon): Attach logging.
+  @logInfo
   public get info() {
     return {
       open: this.isOpen,
@@ -83,7 +79,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   get isConnected() {
-    return Boolean(this._ws) && this._ready.state === TriggerState.RESOLVED;
+    return Boolean(this._currentConnection) && this._ready.state === TriggerState.RESOLVED;
   }
 
   get identityKey() {
@@ -98,13 +94,32 @@ export class EdgeClient extends Resource implements EdgeConnection {
     if (identity.identityKey !== this._identity.identityKey || identity.peerKey !== this._identity.peerKey) {
       log('Edge identity changed', { identity, oldIdentity: this._identity });
       this._identity = identity;
+      this._closeCurrentConnection(new EdgeIdentityChangedError());
       this._persistentLifecycle.scheduleRestart();
     }
   }
 
-  public addListener(listener: MessageListener): () => void {
-    this._listeners.add(listener);
-    return () => this._listeners.delete(listener);
+  public onMessage(listener: MessageListener): () => void {
+    this._messageListeners.add(listener);
+    return () => this._messageListeners.delete(listener);
+  }
+
+  public onReconnected(listener: () => void): () => void {
+    this._reconnectListeners.add(listener);
+    if (this._ready.state === TriggerState.RESOLVED) {
+      // Microtask so that listener is always called asynchronously, no matter the state of the ready trigger
+      // at the moment of registration.
+      scheduleMicroTask(this._ctx, () => {
+        if (this._reconnectListeners.has(listener)) {
+          try {
+            listener();
+          } catch (error) {
+            log.catch(error);
+          }
+        }
+      });
+    }
+    return () => this._reconnectListeners.delete(listener);
   }
 
   /**
@@ -122,97 +137,96 @@ export class EdgeClient extends Resource implements EdgeConnection {
    */
   protected override async _close() {
     log('closing...', { peerKey: this._identity.peerKey });
+    this._closeCurrentConnection();
     await this._persistentLifecycle.close();
   }
 
-  private async _openWebSocket() {
+  private async _connect(): Promise<EdgeWsConnection | undefined> {
     if (this._ctx.disposed) {
-      return;
+      return undefined;
     }
-    const path = `/ws/${this._identity.identityKey}/${this._identity.peerKey}`;
-    const protocolHeader = this._config.disableAuth ? undefined : await this._createAuthHeader(path);
 
+    const identity = this._identity;
+    const path = `/ws/${identity.identityKey}/${identity.peerKey}`;
+    const protocolHeader = this._config.disableAuth ? undefined : await this._createAuthHeader(path);
+    if (this._identity !== identity) {
+      log('identity changed during auth header request');
+      return undefined;
+    }
+
+    const restartRequired = new Trigger();
     const url = new URL(path, this._baseWsUrl);
     log('Opening websocket', { url: url.toString(), protocolHeader });
-    this._ws = new WebSocket(url, protocolHeader ? [protocolHeader] : []);
-
-    this._ws.onopen = () => {
-      log('opened', this.info);
-      this._ready.wake();
-      this.connected.emit();
-    };
-    this._ws.onclose = () => {
-      log('closed', this.info);
-      this._persistentLifecycle.scheduleRestart();
-    };
-    this._ws.onerror = (event) => {
-      log.warn('EdgeClient socket error', { error: event.error, info: event.message });
-      this._persistentLifecycle.scheduleRestart();
-    };
-    /**
-     * https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent/data
-     */
-    this._ws.onmessage = async (event) => {
-      if (event.data === '__pong__') {
-        this._onHeartbeat();
-        return;
-      }
-      const data = await toUint8Array(event.data);
-      const message = buf.fromBinary(MessageSchema, data);
-      log('received', { peerKey: this._identity.peerKey, payload: protocol.getPayloadType(message) });
-      if (message) {
-        for (const listener of this._listeners) {
-          try {
-            await listener(message);
-          } catch (err) {
-            log.error('processing', { err, payload: protocol.getPayloadType(message) });
+    const connection = new EdgeWsConnection(
+      identity,
+      { url, protocolHeader },
+      {
+        onConnected: () => {
+          if (this._isActive(connection)) {
+            this._ready.wake();
+            this._notifyReconnected();
+          } else {
+            log.verbose('connected callback ignored, because connection is not active');
           }
-        }
-      }
-    };
-
-    // TODO(dmaretskyi): Potential race condition here since web socket errors don't resolve this trigger.
-    await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
-    log('Websocket is ready', { identity: this._identity.identityKey, peer: this._identity.peerKey });
-
-    // TODO(dmaretskyi): Potential leak: context re-assigned without disposing the previous one.
-    this._keepaliveCtx = new Context();
-    scheduleTaskInterval(
-      this._keepaliveCtx,
-      async () => {
-        // TODO(mykola): use RFC6455 ping/pong once implemented in the browser?
-        // Cloudflare's worker responds to this `without interrupting hibernation`. https://developers.cloudflare.com/durable-objects/api/websockets/#setwebsocketautoresponse
-        this._ws?.send('__ping__');
+        },
+        onRestartRequired: () => {
+          if (this._isActive(connection)) {
+            this._closeCurrentConnection();
+            this._persistentLifecycle.scheduleRestart();
+          } else {
+            log.verbose('restart requested by inactive connection');
+          }
+          restartRequired.wake();
+        },
+        onMessage: (message) => {
+          if (this._isActive(connection)) {
+            this._notifyMessageReceived(message);
+          } else {
+            log.verbose('ignored a message on inactive connection', {
+              from: message.source,
+              type: message.payload?.typeUrl,
+            });
+          }
+        },
       },
-      SIGNAL_KEEPALIVE_INTERVAL,
     );
-    this._ws.send('__ping__');
-    this._onHeartbeat();
+    this._currentConnection = connection;
+
+    await connection.open();
+    // Race with restartRequired so that restart is not blocked by _connect execution.
+    // Wait on ready to attempt a reconnect if it times out.
+    await Promise.race([this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT }), restartRequired]);
+
+    return connection;
   }
 
-  private async _closeWebSocket() {
-    if (!this._ws) {
-      return;
-    }
-    try {
-      this._ready.throw(this.isOpen ? new EdgeIdentityChangedError() : new EdgeConnectionClosedError());
-      this._ready.reset();
-      void this._keepaliveCtx?.dispose();
-      this._keepaliveCtx = undefined;
-      void this._heartBeatContext?.dispose();
-      this._heartBeatContext = undefined;
+  private async _disconnect(state: EdgeWsConnection) {
+    await state.close();
+  }
 
-      // NOTE: Remove event handlers to avoid scheduling restart.
-      this._ws.onopen = () => {};
-      this._ws.onclose = () => {};
-      this._ws.onerror = () => {};
-      this._ws.close();
-      this._ws = undefined;
-    } catch (err) {
-      if (err instanceof Error && err.message.includes('WebSocket is closed before the connection is established.')) {
-        return;
+  private _closeCurrentConnection(error: Error = new EdgeConnectionClosedError()) {
+    this._currentConnection = undefined;
+    this._ready.throw(error);
+    this._ready.reset();
+  }
+
+  private _notifyReconnected() {
+    for (const listener of this._reconnectListeners) {
+      try {
+        listener();
+      } catch (err) {
+        log.error('ws reconnect listener failed', { err });
       }
-      log.warn('Error closing websocket', { err });
+    }
+  }
+
+  private _notifyMessageReceived(message: Message) {
+    for (const listener of this._messageListeners) {
+      try {
+        listener(message);
+      } catch (err) {
+        log.error('ws incoming message processing failed', { err, payload: protocol.getPayloadType(message) });
+      }
     }
   }
 
@@ -225,9 +239,11 @@ export class EdgeClient extends Resource implements EdgeConnection {
       log('waiting for websocket to become ready');
       await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
     }
-    if (!this._ws) {
+
+    if (!this._currentConnection) {
       throw new EdgeConnectionClosedError();
     }
+
     if (
       message.source &&
       (message.source.peerKey !== this._identity.peerKey || message.source.identityKey !== this.identityKey)
@@ -235,23 +251,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
       throw new EdgeIdentityChangedError();
     }
 
-    log('sending...', { peerKey: this._identity.peerKey, payload: protocol.getPayloadType(message) });
-    this._ws.send(buf.toBinary(MessageSchema, message));
-  }
-
-  private _onHeartbeat() {
-    if (this._lifecycleState !== LifecycleState.OPEN) {
-      return;
-    }
-    void this._heartBeatContext?.dispose();
-    this._heartBeatContext = new Context();
-    scheduleTask(
-      this._heartBeatContext,
-      () => {
-        this._persistentLifecycle.scheduleRestart();
-      },
-      2 * SIGNAL_KEEPALIVE_INTERVAL,
-    );
+    this._currentConnection.send(message);
   }
 
   private async _createAuthHeader(path: string): Promise<string | undefined> {
@@ -265,6 +265,8 @@ export class EdgeClient extends Resource implements EdgeConnection {
       return undefined;
     }
   }
+
+  private _isActive = (connection: EdgeWsConnection) => connection === this._currentConnection;
 }
 
 const encodePresentationWsAuthHeader = (encodedPresentation: Uint8Array): string => {

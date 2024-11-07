@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
-import { type FieldType } from '@dxos/schema';
+import { ViewProjection, type FieldType } from '@dxos/schema';
 
 import { Table } from './Table';
 import { Toolbar, type ToolbarAction } from './Toolbar';
@@ -24,12 +24,16 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const { hasAttention } = useAttention(fullyQualifiedId(table));
   const dispatch = useIntentDispatcher();
   const space = getSpace(table);
-  const queriedObjects = useQuery(space, table.schema ? Filter.schema(table.schema) : () => false, undefined, [
-    table.schema,
-  ]);
+  const schema = useMemo(
+    () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.__typename) : undefined),
+    [table],
+  );
+
+  const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const handleDeleteRow = useCallback((row: any) => space?.db.remove(row), [space]);
+
   const handleAddColumn = useCallback(
     (field: any) => {
       void dispatch({
@@ -39,6 +43,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     },
     [table],
   );
+
   const handleDeleteColumn = useCallback(
     (field: FieldType) => {
       void dispatch({
@@ -48,8 +53,17 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     },
     [space],
   );
+
+  const projection = useMemo(() => {
+    if (!schema || !table.view) {
+      return;
+    }
+
+    return new ViewProjection(schema, table.view);
+  }, [schema, table.view]);
   const model = useTableModel({
     table,
+    projection,
     objects: filteredObjects,
     onDeleteRow: handleDeleteRow,
     onAddColumn: handleAddColumn,
@@ -77,13 +91,13 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
       }
       switch (action.type) {
         case 'add-row': {
-          if (table.schema && space) {
-            space.db.add(create(table.schema, {}));
+          if (schema && space) {
+            space.db.add(create(schema, {}));
           }
         }
       }
     },
-    [onThreadCreate, table.schema, space],
+    [onThreadCreate, space, schema],
   );
 
   return (
@@ -99,15 +113,9 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
         <Toolbar.Separator />
         <Toolbar.Actions />
       </Toolbar.Root>
-      <div
-        className={mx(
-          role === 'article' && 'relative is-full max-is-max min-is-0 min-bs-0',
-          role === 'section' && 'grid cols-1 rows-[1fr_min-content] min-bs-0 !bg-[--surface-bg]',
-          role === 'slide' && 'bs-full overflow-auto grid place-items-center',
-        )}
-      >
-        <Table key={table.id} model={model} />
-      </div>
+      <Table.Viewport role={role}>
+        <Table.Table key={table.id} model={model} />
+      </Table.Viewport>
     </div>
   );
 };
