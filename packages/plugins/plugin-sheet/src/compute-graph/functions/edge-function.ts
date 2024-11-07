@@ -44,7 +44,7 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
 
         if (subscribe) {
           const unsubscribe = effect(() => {
-            log.info('function changed', { fn });
+            log('function changed', { fn });
             const _ = fn?.version;
 
             // TODO(wittjosiah): `ttl` should be 0 to force a recalculation when a new version is deployed.
@@ -56,13 +56,15 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
         }
 
         const path = getUserFunctionUrlInMetadata(getMeta(fn));
-        const result = await fetch(`${this.context.remoteFunctionUrl}${path}`, {
+        const response = await fetch(`${this.context.remoteFunctionUrl}${path}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ args: args.filter(nonNullable) }),
         });
+        const result = await response.text();
+        log('function executed', { result });
 
-        return await result.text();
+        return result;
       };
 
     return this.runAsyncFunction(ast, state, handler(true), { ttl: FUNCTION_TTL });
