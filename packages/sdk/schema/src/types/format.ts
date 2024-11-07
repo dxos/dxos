@@ -26,16 +26,25 @@ const extend = (format: FormatEnum, type: TypeEnum, fields = {}) =>
     }),
   ).pipe(S.mutable);
 
+interface FormatSchemaCommon extends BaseProperty {
+  type: TypeEnum;
+  format: FormatEnum;
+  multipleOf?: number;
+  currency?: string;
+  referenceSchema?: string;
+  referenceProperty?: string;
+}
+
 /**
  * Map of schema definitions.
  */
 // TODO(burdon): Translations?
-export const formatToSchema: Record<FormatEnum, S.Schema<any>> = {
+export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = {
   [FormatEnum.None]: S.extend(
     BasePropertySchema,
     S.Struct({
       type: S.Enums(TypeEnum),
-      format: S.Literal(FormatEnum.None),
+      format: S.Literal(FormatEnum.None) as S.Schema<FormatEnum>,
     }),
   ).pipe(S.mutable),
 
@@ -133,7 +142,7 @@ export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.Duration],
 );
 
-export interface PropertyType extends S.Schema.Type<typeof PropertySchema> {}
+export interface PropertyType extends S.Simplify<S.Schema.Type<typeof PropertySchema>> {}
 
 /**
  * Retrieves the schema definition for the given format.

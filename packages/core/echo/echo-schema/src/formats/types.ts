@@ -4,6 +4,8 @@
 
 import { type JSONSchema } from '@effect/schema';
 
+import type { JsonSchemaType } from '../ast';
+
 // TODO(burdon): Arrays, maps, enums.
 export enum TypeEnum {
   String = 'string',
@@ -21,7 +23,7 @@ export type ScalarType =
   | JSONSchema.JsonSchema7Ref;
 
 // TODO(burdon): Ref.
-export const getTypeEnum = (property: JSONSchema.JsonSchema7): TypeEnum | undefined => {
+export const getTypeEnum = (property: JsonSchemaType): TypeEnum | undefined => {
   switch ((property as any).type) {
     case 'string':
       return TypeEnum.String;

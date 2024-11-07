@@ -61,13 +61,16 @@ export class ViewProjection {
    */
   // TODO(burdon): JsonProp.
   getFieldProjection(prop: string): FieldProjection {
-    let {
+    const {
       $id,
-      type,
-      format = FormatEnum.None,
+      type: schemaType,
+      format: schemaFormat = FormatEnum.None,
       reference,
       ...rest
     } = this._schema.jsonSchema.properties![prop] ?? { property: prop, format: FormatEnum.None };
+
+    let type: TypeEnum = schemaType as TypeEnum;
+    let format: FormatEnum = schemaFormat as FormatEnum;
 
     // Map reference.
     let referenceSchema: string | undefined;
@@ -77,7 +80,7 @@ export class ViewProjection {
       referenceSchema = reference.schema.$ref;
     }
     if (format === FormatEnum.None) {
-      format = typeToFormat[type as TypeEnum];
+      format = typeToFormat[type as TypeEnum]!;
     }
 
     const field: FieldType = this._view.fields.find((f) => f.property === prop) ?? { property: createJsonPath(prop) };
@@ -106,7 +109,7 @@ export class ViewProjection {
 
     if (props) {
       // TODO(burdon): Define type?
-      let { property, type, format, referenceSchema, ...rest } = this._encode(props);
+      let { property, type, format, referenceSchema, ...rest }: Partial<PropertyType> = this._encode(props);
       invariant(property);
       invariant(format);
 
@@ -125,13 +128,14 @@ export class ViewProjection {
         };
       }
       if (format) {
-        type = formatToType[format as FormatEnum];
+        type = formatToType[format];
       }
       if (type === format) {
         format = undefined;
       }
 
       // TODO(dmaretskyi): Check if the field base type (string, number, ref) hasn't changed and update only relevant fields.
+      invariant(type !== TypeEnum.Ref);
       const values: JsonSchemaType = { $id, type, format, reference, ...rest };
       this._schema.jsonSchema.properties![property] = values;
     }
