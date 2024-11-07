@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type JSONSchema } from '@effect/schema';
+import { type JSONSchema } from '@effect/schema';
 
 // TODO(burdon): Arrays, maps, enums.
 export enum TypeEnum {
@@ -20,6 +20,7 @@ export type ScalarType =
   | JSONSchema.JsonSchema7Object
   | JSONSchema.JsonSchema7Ref;
 
+// TODO(burdon): Ref.
 export const getTypeEnum = (property: JSONSchema.JsonSchema7): TypeEnum | undefined => {
   switch ((property as any).type) {
     case 'string':
@@ -30,18 +31,6 @@ export const getTypeEnum = (property: JSONSchema.JsonSchema7): TypeEnum | undefi
       return TypeEnum.Boolean;
     case 'object':
       return TypeEnum.Object;
-  }
-};
-
-export const getTypeEnumFromAst = (ast: AST.AST): TypeEnum | undefined => {
-  if (AST.isStringKeyword(ast)) {
-    return TypeEnum.String;
-  } else if (AST.isNumberKeyword(ast)) {
-    return TypeEnum.Number;
-  } else if (AST.isBooleanKeyword(ast)) {
-    return TypeEnum.Boolean;
-  } else if (AST.isObjectKeyword(ast)) {
-    return TypeEnum.Object;
   }
 };
 

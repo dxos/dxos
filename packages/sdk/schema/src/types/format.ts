@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, DecimalPrecision, TypeEnum, FormatEnum, S, getTypeEnumFromAst, JsonPath } from '@dxos/echo-schema';
+import { AST, DecimalPrecision, TypeEnum, FormatEnum, S, JsonPath } from '@dxos/echo-schema';
 import { getType, getAnnotation } from '@dxos/effect';
 
 /**
@@ -185,4 +185,14 @@ export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaPropertyType<
 
     return props;
   }, []);
+};
+
+const getTypeEnumFromAst = (ast: AST.AST): TypeEnum | undefined => {
+  if (AST.isStringKeyword(ast)) {
+    return TypeEnum.String;
+  } else if (AST.isNumberKeyword(ast)) {
+    return TypeEnum.Number;
+  } else if (AST.isBooleanKeyword(ast)) {
+    return TypeEnum.Boolean;
+  }
 };
