@@ -5,7 +5,7 @@
 import { batch, signal } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
-import { ACTION_TYPE } from './graph';
+import { ACTION_TYPE, ROOT_ID, ROOT_TYPE } from './graph';
 import { GraphBuilder, createExtension, memoize } from './graph-builder';
 import { type Node } from './node';
 
@@ -83,6 +83,44 @@ describe('GraphBuilder', () => {
       expect(node?.data).to.equal('three');
       expect(count).to.equal(4);
       expect(memoizedCount).to.equal(1);
+    });
+
+    test('resolving pickled graph', async () => {
+      const pickle =
+        '{"nodes":[{"id":"root","type":"dxos.org/type/GraphRoot","properties":{}},{"id":"test1","type":"test","properties":{"value":1}},{"id":"test2","type":"test","properties":{"value":2}}],"edges":{"root":["test1","test2"],"test1":["test2"],"test2":[]}}';
+      const builder = GraphBuilder.from(pickle);
+      const graph = builder.graph;
+
+      builder.addExtension(
+        createExtension({
+          id: 'resolver',
+          resolver: ({ id }) => {
+            if (id === ROOT_ID) {
+              return { id: ROOT_ID, type: ROOT_TYPE };
+            } else {
+              return { id, type: EXAMPLE_TYPE, data: id, properties: { value: parseInt(id.replace('test', '')) } };
+            }
+          },
+        }),
+      );
+
+      {
+        expect(graph.findNode('test1', false)).toBeDefined();
+        expect(graph.findNode('test1', false)?.data).to.equal(null);
+        expect(graph.findNode('test1', false)?.properties.value).to.equal(1);
+        expect(graph.findNode('test2', false)).toBeDefined();
+        expect(graph.findNode('test2', false)?.data).to.equal(null);
+        expect(graph.findNode('test2', false)?.properties.value).to.equal(2);
+      }
+
+      await builder.initialize();
+
+      {
+        expect(graph.findNode('test1', false)?.data).to.equal('test1');
+        expect(graph.findNode('test1', false)?.properties.value).to.equal(1);
+        expect(graph.findNode('test2', false)?.data).to.equal('test2');
+        expect(graph.findNode('test2', false)?.properties.value).to.equal(2);
+      }
     });
   });
 
