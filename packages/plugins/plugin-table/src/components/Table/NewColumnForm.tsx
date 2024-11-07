@@ -5,7 +5,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { DropdownMenu } from '@dxos/react-ui';
-import { type FieldProjection } from '@dxos/schema';
+import { FieldEditor } from '@dxos/react-ui-data';
+import { type FieldProjection, type FieldType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
@@ -17,31 +18,22 @@ type NewColumnFormProps = {
 };
 
 export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewColumnFormProps) => {
-  const [field, setField] = useState<FieldProjection | undefined>(undefined);
+  const [stagedField, setStagedField] = useState<FieldType>();
+
   useEffect(() => {
-    if (open) {
-      if (model?.table?.view) {
-        // TODO(ZaymonFC): Create a unique field for the view field set and schema.
-        // setField(create(createUniqueFieldForView(model.table.view)));
-      } else {
-        close();
-      }
+    if (open && model?.table?.view) {
+      // TODO(ZaymonFC): Create and stage a unique field for the view field set and schema.
+    } else {
+      setStagedField(undefined);
     }
-  }, [open, close, model]);
+  }, [open, model?.table?.view]);
 
-  const _handleCreate = useCallback(() => {
-    if (!field || !model || !model?.table?.view) {
-      close();
-      return;
-    }
-
-    // TODO(ZaymonFC): Handle FieldProjectionType instead.
-    // model.addColumn({ ...field });
-    setField(undefined);
+  const handleComplete = useCallback(() => {
     close();
-  }, [model, field, close]);
+    setStagedField(undefined);
+  }, [close]);
 
-  if (!field || !model?.table?.view) {
+  if (!stagedField || !model?.table?.view || !model.projection) {
     return null;
   }
 
@@ -49,8 +41,12 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
     <DropdownMenu.Root open={open} onOpenChange={close}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
       <DropdownMenu.Content>
-        {/* TODO(ZaymonFC): Restore */}
-        {/* <Field values={field} onSave={handleCreate} /> */}
+        <FieldEditor
+          field={stagedField}
+          projection={model.projection}
+          view={model.table.view}
+          onComplete={handleComplete}
+        />
         <DropdownMenu.Arrow />
       </DropdownMenu.Content>
     </DropdownMenu.Root>

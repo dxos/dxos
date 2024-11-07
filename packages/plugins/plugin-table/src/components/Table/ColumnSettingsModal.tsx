@@ -5,6 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { DropdownMenu, type DropdownMenuRootProps } from '@dxos/react-ui';
+import { FieldEditor } from '@dxos/react-ui-data';
 import { type FieldProjection } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
@@ -16,14 +17,18 @@ export type ColumnSettingsModalProps = {
 } & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
 
 export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, triggerRef }: ColumnSettingsModalProps) => {
+  const field = useMemo(
+    () => model?.table?.view?.fields.find((f) => f.property === columnId),
+    [model?.table?.view?.fields, columnId],
+  );
+
   const props = useMemo<FieldProjection | undefined>(() => {
-    const field = model?.table?.view?.fields.find((f) => f.property === columnId);
     if (field) {
       return model?.projection.getFieldProjection(field.property);
     }
   }, [model?.table?.view?.fields, columnId]);
 
-  if (!props) {
+  if (!props || !field || !model?.projection || !model?.table?.view?.fields) {
     return null;
   }
 
@@ -31,8 +36,12 @@ export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, trigg
     <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
       <DropdownMenu.Content>
-        {/* TODO(ZaymonFC: Restore. */}
-        {/* <Field values={props} onSave={() => onOpenChange?.(false)} /> */}
+        <FieldEditor
+          field={field}
+          projection={model?.projection}
+          view={model?.table.view}
+          onComplete={() => onOpenChange?.(false)}
+        />
         <DropdownMenu.Arrow />
       </DropdownMenu.Content>
     </DropdownMenu.Root>

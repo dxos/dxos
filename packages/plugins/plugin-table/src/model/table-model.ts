@@ -277,12 +277,12 @@ export class TableModel extends Resource {
 
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
       const field = fields[col];
+      const fieldProjection = this._projection.getFieldProjection(field.property);
       if (!field) {
         continue;
       }
       values[fromGridCell({ col, row: 0 })] = {
-        // TODO(ZaymonFC): Restore the label here.
-        value: field.property,
+        value: fieldProjection.props.title ?? field.property,
         resizeHandle: 'col',
         accessoryHtml: tableButtons.columnSettings.render({ columnId: field.property }),
         readonly: true,

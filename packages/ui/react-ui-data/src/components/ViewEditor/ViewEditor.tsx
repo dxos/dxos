@@ -12,7 +12,7 @@ import { createUniqueFieldForView, FieldSchema, type FieldType, type ViewType, V
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '../../translations';
-import { FieldEditor } from '../Field/FieldEditor';
+import { FieldEditor } from '../Field/';
 
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
 
@@ -56,6 +56,8 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
     [view.fields],
   );
 
+  const handleComplete = useCallback( () => setSelectedField(undefined) ,[])
+
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
       <List.Root<FieldType>
@@ -84,7 +86,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
         )}
       </List.Root>
 
-      {selectedField && <FieldEditor field={selectedField} projection={projection} view={view} />}
+      {selectedField && <FieldEditor field={selectedField} projection={projection} view={view} onComplete={handleComplete} />}
 
       {/* TODO(burdon): Option. */}
       {!readonly && (
