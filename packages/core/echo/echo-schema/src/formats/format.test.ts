@@ -15,7 +15,7 @@ describe('formats', () => {
     const TestSchema = S.Struct({
       name: S.String,
       email: S.optional(Format.Email),
-      salary: S.optional(Format.Currency({ code: 'usd', decimals: 2 })),
+      salary: S.optional(Format.Currency({ decimals: 2, code: 'usd' })),
       website: S.optional(Format.URI),
       birthday: S.optional(Format.Date),
       started: S.optional(Format.DateTime),
