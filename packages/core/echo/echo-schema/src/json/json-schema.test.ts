@@ -8,7 +8,7 @@ import { type AST, type JSONSchema, S } from '@dxos/effect';
 import { deepMapValues } from '@dxos/util';
 
 import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
-import { PropertyMeta } from '../ast';
+import { PropertyMeta, type JsonSchemaType } from '../ast';
 import { FormatAnnotationId } from '../formats';
 import { Email } from '../formats/string';
 import { ref } from '../handler';
@@ -161,8 +161,8 @@ describe('effect-to-json', () => {
       required: ['name', 'org', 'id'],
     });
   });
-  const expectReferenceAnnotation = (object: JSONSchema.JsonSchema7) => {
-    expect((object as any).reference).to.deep.eq({
+  const expectReferenceAnnotation = (object: JsonSchemaType) => {
+    expect(object.reference).to.deep.eq({
       schema: {
         $ref: 'dxn:type:example.com/type/TestNested',
       },

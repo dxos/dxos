@@ -73,7 +73,7 @@ const JsonSchemaOrBoolean = S.Union(
  * Ref: https://json-schema.org/draft-07/schema
  */
 // TODO(dmaretskyi): Fix circular types.
-const JsonSchemaSchema = S.mutable(
+const _JsonSchemaType = S.mutable(
   S.Struct({
     $id: S.optional(S.String),
     $schema: S.optional(S.String),
@@ -96,7 +96,7 @@ const JsonSchemaSchema = S.mutable(
     pattern: S.optional(S.String.annotations({ [FormatAnnotationId]: 'regex' })),
     additionalItems: S.optional(S.suspend(() => JsonSchemaType)),
 
-    items: S.optional(S.suspend((): S.Schema.AnyNoContext => S.Union(JsonSchemaType, SchemaArray))),
+    items: S.optional(S.suspend(() => JsonSchemaType)),
     maxItems: S.optional(NonNegativeInteger),
     minItems: S.optional(NonNegativeInteger),
     uniqueItems: S.optional(S.Boolean),
@@ -109,7 +109,7 @@ const JsonSchemaSchema = S.mutable(
       S.mutable(
         S.Record({
           key: S.String,
-          value: S.suspend((): S.Schema.AnyNoContext => JsonSchemaType),
+          value: S.suspend(() => JsonSchemaType),
         }),
       ),
     ),
@@ -117,7 +117,7 @@ const JsonSchemaSchema = S.mutable(
       S.mutable(
         S.Record({
           key: S.String,
-          value: S.suspend((): S.Schema.AnyNoContext => JsonSchemaType),
+          value: S.suspend(() => JsonSchemaType),
         }),
       ),
     ),
@@ -125,14 +125,14 @@ const JsonSchemaSchema = S.mutable(
       S.mutable(
         S.Record({
           key: S.String,
-          value: S.suspend((): S.Schema.AnyNoContext => JsonSchemaType),
+          value: S.suspend(() => JsonSchemaType),
         }),
       ),
     ),
     dependencies: S.optional(
       S.Record({
         key: S.String,
-        value: S.suspend((): S.Schema.AnyNoContext => S.Union(S.String, StringArray, JsonSchemaType)),
+        value: S.suspend(() => S.Union(S.String, StringArray, JsonSchemaType)),
       }),
     ),
     propertyNames: S.optional(S.suspend(() => JsonSchemaType)),
@@ -153,7 +153,7 @@ const JsonSchemaSchema = S.mutable(
       S.mutable(
         S.Record({
           key: S.String,
-          value: S.suspend((): S.Schema.AnyNoContext => JsonSchemaType),
+          value: S.suspend(() => JsonSchemaType),
         }),
       ),
     ),
@@ -202,6 +202,6 @@ const JsonSchemaSchema = S.mutable(
 /**
  * https://json-schema.org/draft-07/schema
  */
-export interface JsonSchemaType extends S.Schema.Type<typeof JsonSchemaSchema> {}
+export interface JsonSchemaType extends S.Schema.Type<typeof _JsonSchemaType> {}
 
-export const JsonSchemaType: S.Schema<JsonSchemaType> = JsonSchemaSchema;
+export const JsonSchemaType: S.Schema<JsonSchemaType> = _JsonSchemaType;
