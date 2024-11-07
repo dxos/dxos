@@ -20,6 +20,7 @@ export type FormProps<T extends object> = ThemedClassName<{
   additionalValidation?: (values: T) => ValidationError[] | undefined;
   onValuesChanged?: (values: T) => void;
   onSave?: (values: T) => void;
+  onCancel?: () => void;
   Custom?: FC<Omit<FormInputProps<T>, 'property' | 'label'>>;
 }>;
 
@@ -34,6 +35,7 @@ export const Form = <T extends object>({
   additionalValidation,
   onValuesChanged,
   onSave,
+  onCancel,
   Custom,
 }: FormProps<T>) => {
   // TODO(burdon): Type for useForm.
@@ -87,7 +89,7 @@ export const Form = <T extends object>({
             <Button onClick={handleSubmit} disabled={!canSubmit}>
               <Icon icon='ph--check--regular' />
             </Button>
-            <Button disabled={!canSubmit}>
+            <Button onClick={onCancel}>
               <Icon icon='ph--x--regular' />
             </Button>
           </div>

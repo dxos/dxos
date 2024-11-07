@@ -22,10 +22,12 @@ export const FieldEditor = ({
   field,
   projection,
   view,
+  onComplete
 }: {
   field: FieldType;
   projection: ViewProjection;
   view: ViewType;
+  onComplete: () => void
 }) => {
   const { t } = useTranslation(translationKey);
   const fieldProperties = useMemo<PropertyType>(() => {
@@ -57,8 +59,11 @@ export const FieldEditor = ({
   );
 
   const handleSet = useCallback(
-    (props: FieldProjection) => projection.setFieldProjection({ field, props }),
-    [projection, field],
+    (props: FieldProjection) => {
+      projection.setFieldProjection({ field, props });
+      onComplete();
+    },
+    [projection, field, onComplete],
   );
 
   if (!fieldSchema) {
@@ -74,6 +79,7 @@ export const FieldEditor = ({
       additionalValidation={handleAdditionalValidation}
       onValuesChanged={handleValueChanged}
       onSave={handleSet}
+      onCancel={onComplete}
       Custom={(props) => (
         <>
           {/* TODO(burdon): Move property field here. */}
