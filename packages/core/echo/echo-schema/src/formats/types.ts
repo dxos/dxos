@@ -107,6 +107,15 @@ export const PropertyKind = {
 };
 
 /**
+ * Default formats
+ */
+export const typeToFormat: Partial<Record<ScalarEnum, FormatEnum>> = {
+  [ScalarEnum.String]: FormatEnum.String,
+  [ScalarEnum.Number]: FormatEnum.Number,
+  [ScalarEnum.Boolean]: FormatEnum.Boolean,
+};
+
+/**
  * Map of format to type.
  */
 export const formatToType: Record<FormatEnum, ScalarEnum> = {

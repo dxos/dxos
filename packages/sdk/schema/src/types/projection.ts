@@ -6,6 +6,7 @@ import {
   JSON_SCHEMA_ECHO_REF_ID,
   createJsonPath,
   formatToType,
+  typeToFormat,
   FormatEnum,
   type JsonSchemaType,
   type MutableSchema,
@@ -75,8 +76,8 @@ export class ViewProjection {
       format = FormatEnum.Ref;
       referenceSchema = reference.schema.$ref;
     }
-    if (!format) {
-      format = type;
+    if (format === FormatEnum.None) {
+      format = typeToFormat[type as ScalarEnum];
     }
 
     const field: FieldType = this._view.fields.find((f) => f.property === prop) ?? { property: createJsonPath(prop) };

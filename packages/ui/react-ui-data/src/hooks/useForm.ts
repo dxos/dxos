@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ChangeEvent, type FocusEvent, useCallback, useMemo, useState } from 'react';
+import { type ChangeEvent, type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -76,9 +76,13 @@ export const useForm = <T extends object>({
   invariant(additionalValidation != null || schema != null, 'useForm must be called with schema and/or validate');
 
   const [values, setValues] = useState<T>(initialValues);
+  useEffect(() => {
+    setValues(initialValues);
+  }, [initialValues]);
+
   const [changed, setChanged] = useState<Record<keyof T, boolean>>(initialiseKeysWithValue(initialValues, false));
-  const [errors, setErrors] = useState<Record<keyof T, string>>({} as Record<keyof T, string>);
   const [touched, setTouched] = useState<Record<keyof T, boolean>>(initialiseKeysWithValue(initialValues, false));
+  const [errors, setErrors] = useState<Record<keyof T, string>>({} as Record<keyof T, string>);
 
   //
   // Validation.

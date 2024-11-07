@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { FormatEnum, FormatEnums, formatToType } from '@dxos/echo-schema';
 import { useTranslation } from '@dxos/react-ui';
@@ -30,22 +30,28 @@ export const FieldEditor = ({
   onComplete: () => void;
 }) => {
   const { t } = useTranslation(translationKey);
-  const props = useMemo<PropertyType>(() => {
+  const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.property).props);
+  useEffect(() => {
     const { props } = projection.getFieldProjection(field.property);
-    return props;
+    setProps(props);
   }, [field, projection]);
 
-  const [{ fieldSchema }, setSchema] = useState({
-    fieldSchema: getPropertySchemaForFormat(props?.format),
-  });
-
-  // TODO(burdon): Determine what has changed.
-  // TODO(burdon): Update object type (field) when format changes (get from FormatSchema map).
-  const handleValueChanged = useCallback((_props: PropertyType) => {
-    const fieldSchema = getPropertySchemaForFormat(_props.format);
-    props.type = formatToType[props.format as FormatEnum]; // TODO(burdon): Why is type any?
-    setSchema({ fieldSchema });
-  }, []);
+  // TODO(burdon): Need to wrap otherwise throws error:
+  //  Class constructor SchemaClass cannot be invoked without 'new'
+  const [{ fieldSchema }, setSchema] = useState({ fieldSchema: getPropertySchemaForFormat(props?.format) });
+  const handleValueChanged = useCallback(
+    (_props: PropertyType) => {
+      // Update schema if format changed.
+      // TODO(burdon): Callback should pass `touched` to indicate which fields have changed.
+      if (props.format !== _props.format) {
+        const fieldSchema = getPropertySchemaForFormat(_props.format);
+        setSchema({ fieldSchema });
+        const type = formatToType[_props.format as FormatEnum]; // TODO(burdon): Why is cast needed?
+        setProps({ ...props, ..._props, type });
+      }
+    },
+    [props],
+  );
 
   useEffect(() => {
     handleValueChanged(props);
@@ -69,7 +75,7 @@ export const FieldEditor = ({
   );
 
   if (!fieldSchema) {
-    return <div>Schema not implemented for {props?.format ?? 'undefined'}</div>;
+    return <div>Invalid format: {props?.format}</div>;
   }
 
   return (
