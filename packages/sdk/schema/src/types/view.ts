@@ -103,6 +103,9 @@ export type FieldProjection = {
  * Wrapper for View that manages Field and Format updates.
  */
 export class ViewProjection {
+  private readonly _encode = S.encodeSync(PropertySchema);
+  private readonly _decode = S.decodeSync(PropertySchema);
+
   constructor(
     // TODO(burdon): This could be StoredSchema?
     // TODO(burdon): Consider how to use tables with static schema.
@@ -124,13 +127,9 @@ export class ViewProjection {
       referenceSchema = reference.schema.$ref;
     }
 
-    console.log('::::::::', prop, type, format, referenceSchema, rest);
-
-    console.log(1);
     const field: FieldType = this._view.fields.find((f) => f.property === prop) ?? { property: createJsonPath(prop) };
-    console.log(2);
-
-    const props = S.decodeSync(PropertySchema)({ property: prop, type, format, referenceSchema, ...rest });
+    const values = { property: prop, type, format, referenceSchema, ...rest };
+    const props = this._decode(values);
     log.info('getFieldProjection', { field, props });
     return { field, props };
   }
@@ -152,7 +151,7 @@ export class ViewProjection {
     }
 
     if (props) {
-      let { property, type, format, referenceSchema, ...rest } = S.encodeSync(PropertySchema)(props);
+      let { property, type, format, referenceSchema, ...rest } = this._encode(props);
 
       // Set reference.
       // TODO(burdon): Types?

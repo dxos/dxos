@@ -9,16 +9,13 @@ import { getType, getAnnotation } from '@dxos/effect';
  * Base schema.
  */
 export const BasePropertySchema = S.Struct({
-  // NOTE: The property is not part of the JsonSchemaType property object.
   property: S.String.annotations({ [AST.TitleAnnotationId]: 'Property' }).pipe(S.pattern(/\w+/)),
-
   title: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Title' })),
   description: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Description' })),
 });
 
 export type BaseProperty = S.Schema.Type<typeof BasePropertySchema>;
 
-// TODO(burdon): Provenance annotation (field, prop).
 const extend = (format: FormatEnum, type: ScalarEnum, fields = {}) =>
   S.extend(
     BasePropertySchema,
@@ -96,6 +93,7 @@ export const formatToSchema: Record<FormatEnum, S.Schema<any>> = {
  */
 export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.None],
+  formatToSchema[FormatEnum.Ref],
 
   //
   // Strings

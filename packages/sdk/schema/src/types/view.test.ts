@@ -216,8 +216,6 @@ describe('view', () => {
     });
 
     const { field, props } = projection.getFieldProjection('org');
-    console.log(':::::::::::::', field);
-    return;
     expect(field).to.deep.eq({
       property: 'org',
       referenceProperty: 'name',
