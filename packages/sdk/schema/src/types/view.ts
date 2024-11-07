@@ -3,22 +3,15 @@
 //
 
 import {
-  JSON_SCHEMA_ECHO_REF_ID,
   create,
   createJsonPath,
-  FormatEnum,
   JsonPath,
   JsonSchemaType,
-  type MutableSchema,
   QueryType,
   type ReactiveObject,
   S,
-  ScalarEnum,
   TypedObject,
 } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
-
-import { PropertySchema, type PropertyType } from './format';
 
 /**
  * Stored field metadata (e.g., for UX).
@@ -90,87 +83,3 @@ export const createView = ({
     fields: properties.map((property) => ({ property: createJsonPath(property) })),
   });
 };
-
-/**
- * Composite of view and schema metadata for a property.
- */
-export type FieldProjection = {
-  field: FieldType;
-  props: PropertyType;
-};
-
-/**
- * Wrapper for View that manages Field and Format updates.
- */
-export class ViewProjection {
-  private readonly _encode = S.encodeSync(PropertySchema);
-  private readonly _decode = S.decodeSync(PropertySchema, {});
-
-  constructor(
-    // TODO(burdon): This could be StoredSchema?
-    // TODO(burdon): Consider how to use tables with static schema.
-    private readonly _schema: MutableSchema,
-    private readonly _view: ViewType,
-  ) {}
-
-  /**
-   * Get projection of View fields and JSON schema property annotations.
-   */
-  getFieldProjection(prop: string): FieldProjection {
-    let { $id, type, format = FormatEnum.None, reference, ...rest } = this._schema.jsonSchema.properties![prop];
-
-    // Map reference.
-    let referenceSchema: string | undefined;
-    if ($id && reference) {
-      type = ScalarEnum.Ref;
-      format = FormatEnum.Ref;
-      referenceSchema = reference.schema.$ref;
-    }
-
-    const field: FieldType = this._view.fields.find((f) => f.property === prop) ?? { property: createJsonPath(prop) };
-    const values = { property: prop, type, format, referenceSchema, ...rest };
-    const props = this._decode(values);
-    log.info('getFieldProjection', { field, props });
-    return { field, props };
-  }
-
-  /**
-   * Update JSON schema property annotations.
-   */
-  setFieldProjection({ field, props }: Partial<FieldProjection>) {
-    log.info('setFieldProjection', { field, props });
-
-    if (field) {
-      const current = this._view.fields.find((f) => f.property === field.property);
-      if (!current) {
-        this._view.fields.push({ ...field });
-      } else {
-        // TODO(burdon): Overwrite?
-        Object.assign(current, field);
-      }
-    }
-
-    if (props) {
-      let { property, type, format, referenceSchema, ...rest } = this._encode(props);
-
-      // Set reference.
-      // TODO(burdon): Types?
-      let $id;
-      let reference;
-      if (referenceSchema) {
-        $id = JSON_SCHEMA_ECHO_REF_ID;
-        type = undefined;
-        format = undefined;
-        reference = {
-          schema: {
-            $ref: referenceSchema,
-          },
-        };
-      }
-
-      // TODO(burdon): Strip undefined.
-      const values: JsonSchemaType = { $id, type, format, reference, ...rest };
-      this._schema.jsonSchema.properties![property] = values;
-    }
-  }
-}

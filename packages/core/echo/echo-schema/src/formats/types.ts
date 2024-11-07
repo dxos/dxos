@@ -61,6 +61,9 @@ export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
 
 export enum FormatEnum {
   None = 'none',
+  String = 'string',
+  Number = 'number',
+  Boolean = 'boolean',
   Ref = 'ref',
 
   //
@@ -108,6 +111,9 @@ export const PropertyKind = {
  */
 export const formatToType: Record<FormatEnum, ScalarEnum> = {
   [FormatEnum.None]: undefined as any,
+  [FormatEnum.String]: ScalarEnum.String,
+  [FormatEnum.Number]: ScalarEnum.Number,
+  [FormatEnum.Boolean]: ScalarEnum.Boolean,
   [FormatEnum.Ref]: ScalarEnum.Ref,
 
   // Strings

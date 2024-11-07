@@ -43,6 +43,9 @@ export const formatToSchema: Record<FormatEnum, S.Schema<any>> = {
   // Scalars
   //
 
+  [FormatEnum.String]: extend(FormatEnum.Ref, ScalarEnum.Ref),
+  [FormatEnum.Number]: extend(FormatEnum.Number, ScalarEnum.Number),
+  [FormatEnum.Boolean]: extend(FormatEnum.Boolean, ScalarEnum.Boolean),
   [FormatEnum.Ref]: extend(FormatEnum.Ref, ScalarEnum.Ref, {
     referenceSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
     referenceProperty: S.optional(JsonPath).annotations({ [AST.TitleAnnotationId]: 'Lookup property' }),
@@ -93,6 +96,9 @@ export const formatToSchema: Record<FormatEnum, S.Schema<any>> = {
  */
 export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.None],
+  formatToSchema[FormatEnum.String],
+  formatToSchema[FormatEnum.Number],
+  formatToSchema[FormatEnum.Boolean],
   formatToSchema[FormatEnum.Ref],
 
   //

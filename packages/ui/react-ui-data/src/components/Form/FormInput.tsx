@@ -40,6 +40,7 @@ export const FormInput = <T extends object>({
         <Input.Label>{label}</Input.Label>
         <Input.DescriptionAndValidation>
           <Select.Root {...getInputProps(property, 'select')}>
+            {/* TODO(burdon): Placeholder not working? */}
             <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
             <Select.Portal>
               <Select.Content>

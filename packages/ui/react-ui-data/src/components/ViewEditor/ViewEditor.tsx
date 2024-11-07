@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { FormatEnums, type MutableSchema, S } from '@dxos/echo-schema';
+import { FormatEnum, FormatEnums, type MutableSchema, S } from '@dxos/echo-schema';
 import { Button, Icon, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
@@ -136,7 +136,11 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
                 <FormInput<PropertyType>
                   property='format'
                   label={t('field format label')}
-                  options={FormatEnums.map((value) => ({ value, label: String(value) }))}
+                  placeholder={t('field format label')}
+                  options={FormatEnums.filter((value) => value !== FormatEnum.None).map((value) => ({
+                    value,
+                    label: t(`format ${value}`),
+                  }))}
                   {...props}
                 />
               </>
