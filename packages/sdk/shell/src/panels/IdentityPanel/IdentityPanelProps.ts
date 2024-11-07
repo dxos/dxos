@@ -49,6 +49,7 @@ export type IdentityPanelHeadingProps = Pick<
   'titleId' | 'identity' | 'onDone' | 'onUpdateProfile' | 'connectionState' | 'onChangeConnectionState'
 > & {
   title: string;
+  hideRecover?: boolean;
 };
 
 export type IdentityPanelStepProps = Pick<

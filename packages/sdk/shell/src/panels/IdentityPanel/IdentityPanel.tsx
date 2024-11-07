@@ -47,6 +47,7 @@ const IdentityHeading = ({
   titleId,
   title,
   identity,
+  hideRecover,
   onDone,
   onUpdateProfile,
   connectionState,
@@ -80,7 +81,6 @@ const IdentityHeading = ({
   };
 
   const isConnected = connectionState === ConnectionState.ONLINE;
-  const isProduction = client.config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'production';
 
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
@@ -132,7 +132,7 @@ const IdentityHeading = ({
             </Tooltip.Portal>
           </Tooltip.Root>
           {/* TODO(wittjosiah): Remove. This should have its own flow. */}
-          {!isProduction && (
+          {!hideRecover && (
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
                 <Toolbar.Button classNames='bs-[--rail-action]' onClick={handleRecoveryCode}>
@@ -199,11 +199,21 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
   }, [activeView, t]);
 
   const onCancelReset = () => rest.send?.('unchooseAction');
+  const hideRecover = rest.agentStatus !== 'created';
 
   return (
     <>
       <IdentityHeading
-        {...{ identity, titleId, title, onDone, onUpdateProfile, connectionState, onChangeConnectionState }}
+        {...{
+          identity,
+          titleId,
+          title,
+          hideRecover,
+          onDone,
+          onUpdateProfile,
+          connectionState,
+          onChangeConnectionState,
+        }}
       />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
