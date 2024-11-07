@@ -29,16 +29,24 @@ export const getAnnotation2 =
     pipe(AST.getAnnotation<T>(annotationId)(node), Option.getOrUndefined);
 
 /**
+ * Recursively descend into AST to find base type.
  * AST.PropertySignature: { name, type: AST, isOptional, isReadonly, annotations }
  */
-export const getBaseType = (node: AST.AST): AST.AST | undefined => {
-  if (AST.isUnion(node)) {
-    return node.types.find((type) => getBaseType(type));
-  } else if (AST.isRefinement(node)) {
+// TODO(burdon): getScalarType.
+export const getBaseType = (node: AST.AST): AST.AST => {
+  if (AST.isRefinement(node)) {
     return getBaseType(node.from);
-  } else {
-    return node;
   }
+  if (AST.isUnion(node)) {
+    for (const type of node.types) {
+      const sub = getBaseType(type);
+      if (sub) {
+        return sub;
+      }
+    }
+  }
+
+  return node;
 };
 
 /**

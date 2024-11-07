@@ -9,8 +9,7 @@ import { describe, test } from 'vitest';
 import { getProperty, getBaseType, isLeafType, visit } from './ast';
 
 const TestPropTypeId = Symbol.for('@example/schema/test');
-const TestProp = S.String.pipe(
-  S.nonEmptyString(),
+const TestProp = S.NonEmptyString.pipe(
   S.pattern(/^[a-zA-Z]\w*$/, {
     typeId: TestPropTypeId,
     identifier: 'TestProp',

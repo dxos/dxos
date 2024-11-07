@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, DecimalPrecision, TypeEnum, FormatEnum, S, JsonPath } from '@dxos/echo-schema';
-import { getBaseType, getAnnotation } from '@dxos/effect';
+import { AST, DecimalPrecision, TypeEnum, FormatEnum, S } from '@dxos/echo-schema';
+import { getAnnotation, getBaseType } from '@dxos/effect';
 
 /**
  * Base schema.
@@ -48,7 +48,7 @@ export const formatToSchema: Record<FormatEnum, S.Schema<any>> = {
   [FormatEnum.Boolean]: extend(FormatEnum.Boolean, TypeEnum.Boolean),
   [FormatEnum.Ref]: extend(FormatEnum.Ref, TypeEnum.Ref, {
     referenceSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
-    referenceProperty: S.optional(JsonPath.annotations({ [AST.TitleAnnotationId]: 'Lookup property' })),
+    referenceProperty: S.optional(S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Lookup property' })),
   }),
 
   //
@@ -167,16 +167,14 @@ export type SchemaPropertyType<T> = {
  */
 export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaPropertyType<T>[] => {
   return AST.getPropertySignatures(schema.ast).reduce<SchemaPropertyType<T>[]>((props, prop) => {
-    const propType = getBaseType(prop.type);
-    if (!propType) {
-      console.log('=>>', prop.type);
-    }
-    if (propType) {
-      let type = getTypeEnumFrom(propType);
-      let title = getAnnotation<string>(AST.TitleAnnotationId, propType);
-      if (!type && AST.isTransformation(propType)) {
-        title = getAnnotation<string>(AST.TitleAnnotationId, propType);
-        type = getTypeEnumFrom(propType.to);
+    // TODO(burdon): Factor out.
+    const baseType = getBaseType(prop.type);
+    if (baseType) {
+      let type = getTypeEnumFrom(baseType);
+      let title = getAnnotation<string>(AST.TitleAnnotationId, baseType);
+      if (!type && AST.isTransformation(baseType)) {
+        title = getAnnotation<string>(AST.TitleAnnotationId, baseType);
+        type = getTypeEnumFrom(baseType.to);
       }
 
       if (type) {
