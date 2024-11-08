@@ -68,6 +68,7 @@ export const ResetDialog = ({
     const { ClientServicesHost } = await import('@dxos/client-services');
     const services = new ClientServicesHost({ config });
     await services.reset();
+    localStorage.clear();
     window.location.pathname = '/';
   };
 
