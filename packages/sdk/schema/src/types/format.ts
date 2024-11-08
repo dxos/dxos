@@ -3,7 +3,7 @@
 //
 
 import { AST, DecimalPrecision, TypeEnum, FormatEnum, S, JsonProp } from '@dxos/echo-schema';
-import { getAnnotation, getBaseType } from '@dxos/effect';
+import { getBaseType, getFirstAnnotation } from '@dxos/effect';
 
 /**
  * Base schema.
@@ -184,18 +184,12 @@ export type SchemaProperty<T> = {
  * NOTE: Type literals are ignored (e.g., fixed type/format fields).
  */
 export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaProperty<T>[] => {
-  const getTitle = getAnnotation<string>(AST.TitleAnnotationId);
-
   return AST.getPropertySignatures(schema.ast).reduce<SchemaProperty<T>[]>((props, prop) => {
     const baseType = getBaseType(prop.type);
     if (baseType) {
-      let type = getTypeEnum(baseType);
-      const title = getTitle(baseType);
-      if (!type && AST.isTransformation(baseType)) {
-        type = getTypeEnum(baseType.to);
-      }
-
+      const type = getTypeEnum(AST.isTransformation(baseType) ? baseType.to : baseType);
       if (type) {
+        const title = getFirstAnnotation<string>(prop.type, AST.TitleAnnotationId);
         props.push({ property: prop.name.toString() as any, type, title });
       }
     }

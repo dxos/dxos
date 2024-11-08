@@ -95,6 +95,5 @@ describe('format', () => {
     invariant(schema);
     const props = getSchemaProperties(schema);
     expect(props).to.have.length(5);
-    console.log(JSON.stringify(props, null, 2));
   });
 });
