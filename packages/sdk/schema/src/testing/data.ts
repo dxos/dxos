@@ -20,22 +20,23 @@ export class TestSchema extends TypedObject({
   typename: 'example.com/type/Test',
   version: '0.1.0',
 })({
-  id: S.String, // TODO(burdon): ID type?
+  id: S.String,
   name: S.optional(S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Full name.' }))),
   email: Format.Email.pipe(S.optional),
-  address: S.optional(
-    S.Struct({
-      city: S.optional(S.String),
-      zip: S.optional(
-        S.String.pipe(
-          S.pattern(/^[0-9]{5}(?:-[0-9]{4})?$/),
-          S.annotations({
-            [AST.DescriptionAnnotationId]: 'ZIP code.',
-          }),
-        ),
-      ),
-    }),
-  ),
+  // TODO(burdon): Define transforms for objects?
+  // address: S.optional(
+  //   S.Struct({
+  //     city: S.optional(S.String),
+  //     zip: S.optional(
+  //       S.String.pipe(
+  //         S.pattern(/^[0-9]{5}(?:-[0-9]{4})?$/),
+  //         S.annotations({
+  //           [AST.DescriptionAnnotationId]: 'ZIP code.',
+  //         }),
+  //       ),
+  //     ),
+  //   }),
+  // ),
   admin: S.optional(S.Boolean),
   rating: S.optional(S.Number),
 }) {}
@@ -57,7 +58,7 @@ export const testData: TestType = {
   id: createObjectId(),
   name: 'Tester',
   email: 'test@example.com',
-  address: {
-    zip: '11205',
-  },
+  // address: {
+  //   zip: '11205',
+  // },
 };

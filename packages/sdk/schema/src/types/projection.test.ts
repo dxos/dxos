@@ -10,9 +10,9 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   Format,
   FormatEnum,
+  type JsonProp,
   TypeEnum,
   TypedObject,
-  createJsonPath,
   createStoredSchema,
   ref,
   toJsonSchema,
@@ -55,7 +55,7 @@ describe('ViewProjection', () => {
     expect(view.fields).to.have.length(3);
 
     {
-      const { props } = projection.getFieldProjection('name');
+      const { props } = projection.getFieldProjection('name' as JsonProp);
       expect(props).to.deep.eq({
         property: 'name',
         type: TypeEnum.String,
@@ -65,7 +65,7 @@ describe('ViewProjection', () => {
     }
 
     {
-      const { props } = projection.getFieldProjection('email');
+      const { props } = projection.getFieldProjection('email' as JsonProp);
       expect(props).to.include({
         property: 'email',
         type: TypeEnum.String,
@@ -75,13 +75,13 @@ describe('ViewProjection', () => {
 
     projection.setFieldProjection({
       field: {
-        property: createJsonPath('email'),
+        property: 'email' as JsonProp,
         size: 100,
       },
     });
 
     {
-      const { field, props } = projection.getFieldProjection('email');
+      const { field, props } = projection.getFieldProjection('email' as JsonProp);
       expect(field).to.include({
         property: 'email',
         size: 100,
@@ -96,7 +96,7 @@ describe('ViewProjection', () => {
     }
 
     {
-      const { props } = projection.getFieldProjection('salary');
+      const { props } = projection.getFieldProjection('salary' as JsonProp);
       expect(props).to.include({
         property: 'salary',
         type: TypeEnum.Number,
@@ -110,7 +110,7 @@ describe('ViewProjection', () => {
     }
 
     {
-      const { props } = projection.getFieldProjection('salary');
+      const { props } = projection.getFieldProjection('salary' as JsonProp);
       expect(props).to.include({
         property: 'salary',
         type: TypeEnum.Number,
@@ -149,12 +149,12 @@ describe('ViewProjection', () => {
 
     projection.setFieldProjection({
       field: {
-        property: createJsonPath('org'),
-        referenceProperty: createJsonPath('name'),
+        property: 'org' as JsonProp,
+        referenceProperty: 'name' as JsonProp,
       },
     });
 
-    const { field, props } = projection.getFieldProjection('org');
+    const { field, props } = projection.getFieldProjection('org' as JsonProp);
     expect(field).to.deep.eq({
       property: 'org',
       referenceProperty: 'name',

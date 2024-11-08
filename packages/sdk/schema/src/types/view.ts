@@ -2,26 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  create,
-  createJsonPath,
-  JsonPath,
-  JsonSchemaType,
-  QueryType,
-  type ReactiveObject,
-  S,
-  TypedObject,
-} from '@dxos/echo-schema';
+import { create, JsonProp, JsonSchemaType, QueryType, type ReactiveObject, S, TypedObject } from '@dxos/echo-schema';
 
 /**
  * Stored field metadata (e.g., for UX).
  */
 export const FieldSchema = S.Struct({
-  // TODO(burdon): Property or path?
-  property: JsonPath,
+  property: JsonProp,
   visible: S.optional(S.Boolean),
   size: S.optional(S.Number),
-  referenceProperty: S.optional(JsonPath),
+  referenceProperty: S.optional(JsonProp),
 }).pipe(S.mutable);
 
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
@@ -80,6 +70,6 @@ export const createView = ({
       __typename: typename,
     },
     // Create initial fields.
-    fields: properties.map((property) => ({ property: createJsonPath(property) })),
+    fields: properties.map((property) => ({ property: property as JsonProp })),
   });
 };
