@@ -14,13 +14,14 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-data';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { ViewProjection, ViewType, type FieldType } from '@dxos/schema';
+import { ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
 import { useTableModel } from '../../hooks';
 import translations from '../../translations';
 import { TableType } from '../../types';
+import { initializeTable } from '../../util';
 import { Toolbar } from '../Toolbar';
 import { createEmptyTable, createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
 
@@ -44,27 +45,15 @@ const DefaultStory = () => {
     }
   }, [tables]);
 
+  useEffect(() => {
+    if (space && table) {
+      initializeTable(space, table);
+    }
+  }, [space, table]);
+
   const objects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
   const filteredObjects = useGlobalFilteredObjects(objects);
   const handleDeleteRow = useCallback((row: any) => space.db.remove(row), [space]);
-
-  // TODO(ZaymonFC): Reimplement these with the new schema manipulation features.
-  // const handleAddColumn = useCallback(
-  //   (field: any) => {
-  //     if (table && table.schema?.schema && table.view) {
-  //       addFieldToView(table.schema, table.view, field);
-  //     }
-  //   },
-  //   [table],
-  // );
-  // const handleDeleteColumn = useCallback(
-  //   (field: any) => {
-  //     if (table && table.schema?.schema && table.view) {
-  //       removeFieldFromView(table.schema, table.view, field);
-  //     }
-  //   },
-  //   [table],
-  // );
 
   const handleAction = useCallback(
     (action: { type: string }) => {
@@ -95,13 +84,21 @@ const DefaultStory = () => {
     return new ViewProjection(schema, table.view);
   }, [schema, table?.view]);
 
+  const handleDeleteColumn = useCallback(
+    (property: string) => {
+      if (projection) {
+        const _deleted = projection.deleteFieldProjection(property);
+      }
+    },
+    [table, projection],
+  );
+
   const model = useTableModel({
     table,
     projection,
     objects: filteredObjects,
     onDeleteRow: handleDeleteRow,
-    // onAddColumn: handleAddColumn,
-    // onDeleteColumn: handleDeleteColumn,
+    onDeleteColumn: handleDeleteColumn,
   });
 
   if (!schema || !table) {
@@ -120,7 +117,7 @@ const DefaultStory = () => {
         </Table.Viewport>
       </div>
       <div className='flex flex-col h-full border-l border-separator'>
-        {table.view && <ViewEditor schema={schema} view={table.view} />}
+        {table.view && <ViewEditor schema={schema} view={table.view} onDelete={handleDeleteColumn} />}
         <SyntaxHighlighter className='w-full text-xs'>{JSON.stringify(table.view, null, 2)}</SyntaxHighlighter>
       </div>
     </div>
@@ -144,19 +141,10 @@ const TablePerformanceStory = (props: StoryProps) => {
     itemsRef.current.splice(itemsRef.current.indexOf(row), 1);
   }, []);
 
-  const handleAddColumn = useCallback(
-    (field: FieldType) => {
-      if (table && table.view) {
-        table.view.fields.push(field);
-      }
-    },
-    [table],
-  );
-
   const handleDeleteColumn = useCallback(
-    (field: FieldType) => {
+    (property: string) => {
       if (table && table.view) {
-        const fieldPosition = table.view.fields.indexOf(field);
+        const fieldPosition = table.view.fields.findIndex((field) => field.property === property);
         table.view.fields.splice(fieldPosition, 1);
       }
     },
@@ -167,7 +155,6 @@ const TablePerformanceStory = (props: StoryProps) => {
     table,
     objects: items as any,
     onDeleteRow: handleDeleteRow,
-    onAddColumn: handleAddColumn,
     onDeleteColumn: handleDeleteColumn,
   });
 

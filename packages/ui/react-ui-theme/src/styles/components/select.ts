@@ -21,12 +21,14 @@ export type SelectStyleProps = Partial<{
 
 export const selectContent: ComponentFunction<SelectStyleProps> = ({ elevation = 'chrome' }, ...etc) => {
   return mx(
-    'z-[50] min-w-[--radix-select-trigger-width] rounded',
+    'z-[50] min-w-[--radix-select-trigger-width] rounded max-bs-[--radix-select-content-available-height]',
     modalSurface,
     surfaceElevation({ elevation }),
     ...etc,
   );
 };
+
+export const selectViewport: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(...etc);
 
 export const selectItem: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx(
@@ -51,6 +53,7 @@ export const selectTriggerIcon: ComponentFunction<SelectStyleProps> = (_props, .
 
 export const selectTheme: Theme<SelectStyleProps> = {
   content: selectContent,
+  viewport: selectViewport,
   item: selectItem,
   itemIndicator: selectItemIndicator,
   arrow: selectArrow,

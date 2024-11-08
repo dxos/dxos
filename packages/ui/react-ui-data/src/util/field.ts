@@ -23,7 +23,7 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
     return undefined;
   }
 
-  if (!format) {
+  const parseScalar = (type?: TypeEnum) => {
     switch (type) {
       case TypeEnum.Boolean: {
         if (typeof value === 'string') {
@@ -38,7 +38,8 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
       }
 
       case TypeEnum.Number: {
-        const num = Number(value);
+        const cleaned = typeof value === 'string' ? value.replace(/[^0-9.-]+/g, '') : value;
+        const num = Number(cleaned);
         return Number.isNaN(num) ? null : num;
       }
 
@@ -50,26 +51,28 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
         return value;
       }
     }
+  };
+
+  if (!format) {
+    return parseScalar(type);
   }
 
   switch (format) {
-    // TODO(burdon): Percent is not part of the data format; it's just a diplay format.
-    // case FormatEnum.Percent: {
-    //   const num = Number(value);
-    //   return Number.isNaN(num) ? null : num / 100;
-    // }
+    case FormatEnum.Boolean:
+      return parseScalar(TypeEnum.Boolean);
 
-    case FormatEnum.Currency: {
-      if (typeof value !== 'string') {
-        return null;
-      }
-      const num = Number(value.replace(/[^0-9.-]+/g, ''));
-      return Number.isNaN(num) ? null : num;
+    case FormatEnum.Number:
+    case FormatEnum.Percent:
+    case FormatEnum.Currency:
+      return parseScalar(TypeEnum.Number);
+
+    case FormatEnum.String:
+    case FormatEnum.Markdown: {
+      return parseScalar(TypeEnum.String);
     }
 
-    //
-    // Dates.
-    //
+    case FormatEnum.Ref:
+      return parseScalar(TypeEnum.Ref);
 
     case FormatEnum.DateTime:
     case FormatEnum.Date:
@@ -77,14 +80,6 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
     case FormatEnum.Timestamp: {
       const date = new Date(value as string | number);
       return isNaN(date.getTime()) ? null : date;
-    }
-
-    //
-    // Strings.
-    //
-
-    case FormatEnum.Markdown: {
-      return String(value);
     }
 
     default: {

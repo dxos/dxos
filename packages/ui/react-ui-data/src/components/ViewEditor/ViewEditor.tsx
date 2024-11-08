@@ -20,12 +20,13 @@ export type ViewEditorProps = ThemedClassName<{
   schema: MutableSchema;
   view: ViewType;
   readonly?: boolean;
+  onDelete: (property: string) => void;
 }>;
 
 /**
  * Schema-based object form.
  */
-export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorProps) => {
+export const ViewEditor = ({ classNames, schema, view, readonly, onDelete }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
   const projection = useMemo(() => new ViewProjection(schema, view), [schema, view]);
   const [selectedField, setSelectedField] = useState<FieldType>();
@@ -42,15 +43,6 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
       arrayMove(view.fields, fromIndex, toIndex);
-    },
-    [view.fields],
-  );
-
-  const handleDelete = useCallback(
-    (field: FieldType) => {
-      const idx = view.fields.findIndex((f) => field.property === f.property);
-      view.fields.splice(idx, 1);
-      setSelectedField(undefined);
     },
     [view.fields],
   );
@@ -77,7 +69,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
                 <List.Item<FieldType> key={item.property} item={item} classNames={mx(grid, ghostHover)}>
                   <List.ItemDragHandle />
                   <List.ItemTitle onClick={() => handleSelect(item)}>{item.property}</List.ItemTitle>
-                  <List.ItemDeleteButton onClick={() => handleDelete(item)} />
+                  <List.ItemDeleteButton onClick={() => onDelete(item.property)} />
                 </List.Item>
               ))}
             </div>
