@@ -84,6 +84,7 @@ export class TestPeer {
   ) {
     this._signalManager = this.testBuilder.createSignalManager();
     this._networkManager = this.createNetworkManager(this.transport);
+    this._networkManager.setPeerInfo({ identityKey: peerId.toHex(), peerKey: peerId.toHex() });
   }
 
   // TODO(burdon): Move to TestBuilder.

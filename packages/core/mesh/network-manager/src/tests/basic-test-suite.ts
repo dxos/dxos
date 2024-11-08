@@ -23,7 +23,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     return;
   }
 
-  test.skip('joins swarm, sends messages, and cleanly exits', async () => {
+  test('joins swarm, sends messages, and cleanly exits', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
@@ -35,7 +35,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
   });
 
   // TODO(burdon): Test with more peers (configure and test messaging).
-  test.skip('joins swarm with star topology', async () => {
+  test('joins swarm with star topology', async () => {
     const peer1 = testBuilder.createPeer();
     onTestFinished(() => peer1.close());
     const peer2 = testBuilder.createPeer();
@@ -49,7 +49,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
   });
 
   // TODO(burdon): Fails when trying to reconnect to same topic.
-  test.skip('joins swarm multiple times', async () => {
+  test('joins swarm multiple times', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
@@ -75,7 +75,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     }
   });
 
-  test.skip('joins multiple swarms', async () => {
+  test('joins multiple swarms', async () => {
     // TODO(burdon): N peers.
     // TODO(burdon): Merge with test below.
     const peer1 = testBuilder.createPeer();
@@ -87,7 +87,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     expect(topics).to.have.length(numSwarms);
   });
 
-  test.skip('joins multiple swarms concurrently', async () => {
+  test('joins multiple swarms concurrently', async () => {
     const createSwarm = async () => {
       const topicA = PublicKey.random();
       const peer1a = testBuilder.createPeer();
@@ -109,7 +109,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     ]);
   });
 
-  test.skip('peers reconnect after and error in connection', async () => {
+  test('peers reconnect after and error in connection', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
@@ -118,20 +118,20 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic, () => new FullyConnectedTopology());
     await exchangeMessages(swarm1, swarm2);
 
-    void swarm1.protocol.connections.get(swarm2.peer.peerId)!.closeConnection(new Error('test error'));
+    const disconnectedKeys = new Set();
+    swarm1.protocol.disconnected.on((peerInfo) => disconnectedKeys.add(peerInfo.toHex()));
+    swarm2.protocol.disconnected.on((peerInfo) => disconnectedKeys.add(peerInfo.toHex()));
 
+    void swarm1.protocol.connections.get(swarm2.peer.peerId)!.closeConnection(new Error('test error'));
     // Wait until both peers are disconnected.
-    await Promise.all([
-      swarm1.protocol.disconnected.waitForCondition(() => swarm1.protocol.connections.size === 0),
-      swarm2.protocol.disconnected.waitForCondition(() => swarm2.protocol.connections.size === 0),
-    ]);
+    await expect.poll(() => disconnectedKeys.size).toEqual(2);
 
     await exchangeMessages(swarm1, swarm2);
 
     await leaveSwarm([peer1, peer2], topic);
   });
 
-  test.skip('going offline and back online', { timeout: 2_000 }, async () => {
+  test('going offline and back online', { timeout: 2_000 }, async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
@@ -180,7 +180,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
   });
 
   // TODO(mykola): Fails with large amount of peers ~10.
-  test.skip('many peers and connections', async () => {
+  test('many peers and connections', async () => {
     const numTopics = 2;
     const peersPerTopic = 3;
     const swarmsAllPeersConnected: Promise<any>[] = [];
