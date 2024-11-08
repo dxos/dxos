@@ -71,7 +71,7 @@ describe('InvitationHandler', () => {
 
       await guest.sink.waitFor(Invitation.State.READY_FOR_AUTHENTICATION);
       await sleep(200);
-      await host.sink.waitFor(Invitation.State.TIMEOUT);
+      await host.sink.waitFor(Invitation.State.CONNECTING);
       await guest.sink.waitFor(Invitation.State.TIMEOUT);
 
       await sleep(10);

@@ -10,6 +10,7 @@ import {
   type InvitationsService,
   QueryInvitationsResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { trace } from '@dxos/tracing';
 
 import { type InvitationsManager } from './invitations-manager';
 
@@ -30,7 +31,10 @@ export class InvitationsServiceImpl implements InvitationsService {
     return new Stream<Invitation>(({ next, close }) => {
       void this._invitationsManager
         .createInvitation(options)
-        .then((invitation) => invitation.subscribe(next, close, close))
+        .then((invitation) => {
+          trace.metrics.increment('dxos.invitation.created');
+          invitation.subscribe(next, close, close);
+        })
         .catch(close);
     });
   }
