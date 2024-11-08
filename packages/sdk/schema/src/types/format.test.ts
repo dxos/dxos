@@ -93,8 +93,9 @@ describe('format', () => {
 
     const schema = getPropertySchemaForFormat(prop.format);
     invariant(schema);
+
     const props = getSchemaProperties(schema);
-    expect(props).to.have.length(5);
+    expect(props).to.have.length(7);
     console.log(JSON.stringify(props, null, 2));
   });
 });

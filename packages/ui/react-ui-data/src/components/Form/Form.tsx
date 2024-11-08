@@ -8,17 +8,20 @@ import { type S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { getSchemaProperties, type ValidationError } from '@dxos/schema';
+import { getSchemaProperties, type SchemaProperty, type ValidationError } from '@dxos/schema';
 
 import { FormInput, type FormInputProps } from './FormInput';
 import { useForm } from '../../hooks';
+
+export type PropsFilter<T extends Object> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
 export type FormProps<T extends object> = ThemedClassName<{
   values: T;
   schema: S.Schema<T>;
   autoFocus?: boolean;
   readonly?: boolean;
-  order?: (keyof T)[];
+  filter?: PropsFilter<T>;
+  sort?: (keyof T)[];
   additionalValidation?: (values: T) => ValidationError[] | undefined;
   onValuesChanged?: (values: T) => void;
   onSave?: (values: T) => void;
@@ -34,7 +37,8 @@ export const Form = <T extends object>({
   values,
   schema,
   readonly,
-  order = [],
+  filter,
+  sort,
   additionalValidation,
   onValuesChanged,
   onSave,
@@ -53,11 +57,15 @@ export const Form = <T extends object>({
     log.warn('validation', { errors });
   }
 
-  // TODO(burdon): Sort.
   const props = useMemo(() => {
     const props = getSchemaProperties<T>(schema);
-    return props;
-  }, [schema, order]);
+    const filtered = filter ? filter(props) : props;
+    const findIndex = (props: (keyof T)[], prop: keyof T) => {
+      const idx = props.findIndex((p) => p === prop);
+      return idx === -1 ? Infinity : idx;
+    };
+    return sort ? filtered.sort((a, b) => findIndex(sort, a.property) - findIndex(sort, b.property)) : filtered;
+  }, [schema, filter]);
 
   return (
     <div className={mx('flex flex-col w-full gap-2 p-2', classNames)}>

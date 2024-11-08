@@ -22,7 +22,9 @@ const extend = (format: FormatEnum, type: TypeEnum, fields: S.Struct.Fields = {}
     BasePropertySchema,
     S.Struct({
       type: S.Literal(type),
-      format: S.Literal(format),
+      format: S.Literal(format).annotations({
+        [AST.TitleAnnotationId]: 'Property format',
+      }),
       ...fields,
     }),
   ).pipe(S.mutable);
@@ -176,7 +178,7 @@ export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> |
 
 export type SchemaProperty<T> = {
   property: string & keyof T;
-  type: TypeEnum;
+  type?: TypeEnum;
   title?: string;
 };
 
@@ -186,26 +188,30 @@ export type SchemaProperty<T> = {
  */
 export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaProperty<T>[] => {
   return AST.getPropertySignatures(schema.ast).reduce<SchemaProperty<T>[]>((props, prop) => {
+    const property = prop.name.toString() as JsonProp & keyof T;
     const baseType = findNode(prop.type, isSimpleType);
     invariant(baseType);
     const type = getTypeEnum(AST.isTransformation(baseType) ? baseType.to : baseType);
     if (type) {
       const title = findAnnotation<string>(prop.type, AST.TitleAnnotationId);
-      props.push({ property: prop.name.toString() as any, type, title });
+      props.push({ property, type, title });
+    } else if (AST.isLiteral(baseType)) {
+      const title = findAnnotation<string>(baseType, AST.TitleAnnotationId);
+      props.push({ property, title });
     }
 
     return props;
   }, []);
 };
 
-const getTypeEnum = (ast: AST.AST): TypeEnum | undefined => {
-  if (AST.isStringKeyword(ast)) {
+const getTypeEnum = (node: AST.AST): TypeEnum | undefined => {
+  if (AST.isStringKeyword(node)) {
     return TypeEnum.String;
   }
-  if (AST.isNumberKeyword(ast)) {
+  if (AST.isNumberKeyword(node)) {
     return TypeEnum.Number;
   }
-  if (AST.isBooleanKeyword(ast)) {
+  if (AST.isBooleanKeyword(node)) {
     return TypeEnum.Boolean;
   }
 };

@@ -5,6 +5,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { FormatEnum, FormatEnums, formatToType } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 import {
   getPropertySchemaForFormat,
@@ -74,7 +75,8 @@ export const FieldEditor = ({
   );
 
   if (!fieldSchema) {
-    return <div>Invalid format: {props?.format}</div>;
+    log.warn('invalid format', props);
+    return null;
   }
 
   return (
@@ -83,7 +85,8 @@ export const FieldEditor = ({
       autoFocus
       values={props}
       schema={fieldSchema}
-      order={['property', 'format']}
+      filter={(props) => props.filter((p) => p.property !== 'type')}
+      sort={['property', 'format']}
       additionalValidation={handleAdditionalValidation}
       onValuesChanged={handleValueChanged}
       onSave={handleSet}
