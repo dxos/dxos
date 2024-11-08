@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useMemo } from 'react';
+import React, { type FC, useEffect, useMemo } from 'react';
 
 import { type S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -53,9 +53,12 @@ export const Form = <T extends object>({
     onSubmit: (values) => onSave?.(values),
   });
 
-  if (errors && Object.keys(errors).length) {
-    log.warn('validation', { errors });
-  }
+  // TODO(wittjosiah): Not wrapping this in useEffect causes the app to explode.
+  useEffect(() => {
+    if (errors && Object.keys(errors).length) {
+      log.warn('validation', { errors });
+    }
+  }, [errors]);
 
   const props = useMemo(() => {
     const props = getSchemaProperties<T>(schema);
