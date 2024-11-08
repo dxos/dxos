@@ -6,6 +6,7 @@ import { type Listeners } from 'hyperformula/typings/Emitter';
 
 import { Event } from '@dxos/async';
 import { type Space, Filter, fullyQualifiedId } from '@dxos/client/echo';
+import { FQ_ID_LENGTH } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -25,9 +26,6 @@ import {
 } from './functions';
 
 // TODO(burdon): Factor out compute-graph.
-
-// TODO(wittjosiah): Factor out.
-const OBJECT_ID_LENGTH = 60; // 33 (space id) + 1 (separator) + 26 (object id).
 
 const UNKNOWN_BINDING = '__UNKNOWN__';
 
@@ -222,7 +220,7 @@ export class ComputeGraph extends Resource {
   mapFunctionBindingFromId(formula: string) {
     const binding = formula.replace(/(\w+):([a-zA-Z0-9]+)\((.*)\)/g, (match, spaceId, objectId, args) => {
       const id = `${spaceId}:${objectId}`;
-      if (id.length !== OBJECT_ID_LENGTH) {
+      if (id.length !== FQ_ID_LENGTH) {
         return match;
       }
 

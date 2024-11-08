@@ -7,7 +7,6 @@ export * from './CollectionMain';
 export * from './CollectionSection';
 export * from './DefaultObjectSettings';
 export * from './MenuFooter';
-export * from './MissingObject';
 export * from './PersistenceStatus';
 export * from './PopoverRenameObject';
 export * from './PopoverRenameSpace';
