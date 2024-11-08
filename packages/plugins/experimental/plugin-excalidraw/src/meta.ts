@@ -10,6 +10,7 @@ export default {
   id: SKETCH_PLUGIN,
   name: 'Excalidraw',
   description: 'Diagramming tool.',
-  tags: ['experimental'],
   icon: 'ph--compass-tool--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-excalidraw',
+  tags: ['experimental'],
 } satisfies PluginMeta;
