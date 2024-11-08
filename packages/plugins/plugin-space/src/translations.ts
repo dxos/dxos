@@ -99,6 +99,7 @@ export default [
         'uploading label': 'Replicating to peers',
         'offline persisted label': 'Saved to disk (offline)',
         'remote synced label': 'Synced with peers',
+        'open settings panel label': 'Show Settings',
       },
     },
   },

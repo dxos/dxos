@@ -8,7 +8,8 @@ export default [
   {
     'en-US': {
       [translationKey]: {
-        'field path label': 'Property',
+        'field property label': 'Property',
+        'field property placeholder': 'Property name',
         'field format label': 'Type',
 
         // FormatEnum

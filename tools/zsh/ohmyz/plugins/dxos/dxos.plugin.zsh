@@ -82,3 +82,57 @@ function pre () {
   CI=true pa test
   CI=true pa lint
 }
+
+#
+# Set CIRCLECI_TOKEN
+#
+
+CIRCLECI_ORG="dxos"
+CIRCLECI_REPO="dxos"
+
+function ci () {
+  function ci_status () {
+    PROJECT_SLUG="gh/$CIRCLECI_ORG/$CIRCLECI_REPO"
+
+    # Get project.
+    PROJECT_ID=$(curl -s -H "Circle-Token: $CIRCLECI_TOKEN" \
+      "https://circleci.com/api/v2/project/${PROJECT_SLUG}/pipeline?branch=$(git branch --show-current)" | jq -r '.items.[0].id')
+
+    tput sc
+    echo -e "Pipeline: $PROJECT_ID"
+
+    # Get workflow.
+    URL="https://circleci.com/api/v2/pipeline/${PROJECT_ID}/workflow"
+    RESPONSE=$(curl -s -H "Circle-Token: $CIRCLECI_TOKEN" $URL)
+
+    echo -e "$RESPONSE" | jq
+    tput rc
+
+    STATUS=$(echo -e "$RESPONSE" | jq -r '.items.[0].status')
+    if [ "$STATUS" = "failed" ]; then
+      WORKFLOW_ID=$(echo -e "$RESPONSE" | jq -r '.items.[0].id')
+
+      # Get failed job.
+      JOB_ID=$(curl -s -H "Circle-Token: $CIRCLECI_TOKEN" \
+        "https://circleci.com/api/v2/workflow/${WORKFLOW_ID}/job" | jq -r '.items[] | select(.status=="failed") | .job_number')
+
+      URL=$(curl -s -H "Circle-Token: $CIRCLECI_TOKEN" \
+        "https://circleci.com/api/v2/project/${PROJECT_SLUG}/job/${JOB_ID}")
+    fi
+  }
+
+  while true; do
+    ci_status
+    case "$STATUS" in
+      "running")
+      ;;
+      *)
+        echo ""
+        echo "Result $STATUS"
+        echo "$URL"
+        break
+      ;;
+    esac
+    sleep 10
+  done
+}

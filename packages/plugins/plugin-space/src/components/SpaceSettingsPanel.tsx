@@ -6,7 +6,9 @@ import React, { useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
+import { DeviceType, useDevices } from '@dxos/react-client/halo';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -17,10 +19,16 @@ export type SpaceSettingsPanelProps = {
 
 export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
+
+  const client = useClient();
+  const devices = useDevices();
+  const managedDeviceAvailable = devices.find((device) => device.profile?.type === DeviceType.AGENT_MANAGED);
+  const edgeAgents = Boolean(client.config.values.runtime?.client?.edgeFeatures?.agents);
+  const edgeReplicationAvailable = edgeAgents && managedDeviceAvailable;
+
   const [edgeReplication, setEdgeReplication] = useState(
     space.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED,
   );
-
   const toggleEdgeReplication = useCallback(
     async (next: boolean) => {
       setEdgeReplication(next);
@@ -48,12 +56,14 @@ export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
           />
         </div>
       </Input.Root>
-      <Input.Root>
-        <div role='none' className='flex justify-between'>
-          <Input.Label>{t('edge replication label')}</Input.Label>
-          <Input.Switch checked={edgeReplication} onCheckedChange={toggleEdgeReplication} />
-        </div>
-      </Input.Root>
+      {edgeReplicationAvailable && (
+        <Input.Root>
+          <div role='none' className='flex justify-between'>
+            <Input.Label>{t('edge replication label')}</Input.Label>
+            <Input.Switch checked={edgeReplication} onCheckedChange={toggleEdgeReplication} />
+          </div>
+        </Input.Root>
+      )}
     </div>
   );
 };

@@ -5,6 +5,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { FormatEnum, FormatEnums, formatToType } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 import {
   getPropertySchemaForFormat,
@@ -74,7 +75,8 @@ export const FieldEditor = ({
   );
 
   if (!fieldSchema) {
-    return <div>Invalid format: {props?.format}</div>;
+    log.warn('invalid format', props);
+    return null;
   }
 
   return (
@@ -83,25 +85,23 @@ export const FieldEditor = ({
       autoFocus
       values={props}
       schema={fieldSchema}
+      filter={(props) => props.filter((p) => p.property !== 'type')}
+      sort={['property', 'format']}
       additionalValidation={handleAdditionalValidation}
       onValuesChanged={handleValueChanged}
       onSave={handleSet}
       onCancel={onComplete}
-      Custom={(props) => (
-        <>
-          {/* TODO(burdon): Move property field here. */}
+      Custom={{
+        format: (props) => (
           <FormInput<PropertyType>
-            property='format'
-            label={t('field format label')}
-            placeholder={t('field format label')}
+            {...props}
             options={FormatEnums.filter((value) => value !== FormatEnum.None).map((value) => ({
               value,
               label: t(`format ${value}`),
             }))}
-            {...props}
           />
-        </>
-      )}
+        ),
+      }}
     />
   );
 };

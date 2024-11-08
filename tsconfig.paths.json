@@ -161,6 +161,9 @@
       "@dxos/plugin-deck/meta": [
         "packages/plugins/plugin-deck/src/meta.ts"
       ],
+      "@dxos/plugin-deck/types": [
+        "packages/plugins/plugin-deck/src/types.ts"
+      ],
       "@dxos/plugin-files": [
         "packages/plugins/plugin-files/src/index.ts"
       ],

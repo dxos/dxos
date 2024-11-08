@@ -126,12 +126,20 @@ describe('RtcTransport', () => {
 
   const createSignalSender = (options?: { duplicateSignals?: boolean }) => {
     const deliverSignal = (channel: RtcTransportChannel, signal: any) => {
+      // There's a race in libdatachannel between ice candidate gathering, connectivity checks and dtls connection
+      // establishment, which seems to be 100% reproducible when there are only host candidates.
+      // When there are no iceServers the first pair attempt starts too fast and gets interrupted by an arriving
+      // remote candidate. Dtls has a retry backoff which starts with 1 second delay, so all tests finish in 1s+.
+      if (signal.payload.data.type === 'candidate' && !isInitiator) {
+        return;
+      }
       void channel.onSignal(signal);
       if (options?.duplicateSignals) {
         void channel.onSignal(signal);
       }
     };
     let remoteChannel: RtcTransportChannel | undefined;
+    let isInitiator = false;
     const signalBuffer: any[] = [];
     const sendSignal = async (signal: any) => {
       await sleep(10);
@@ -141,7 +149,8 @@ describe('RtcTransport', () => {
         signalBuffer.push(signal);
       }
     };
-    const onChannelCreated = (channel: RtcTransportChannel): void => {
+    const onChannelCreated = (channel: RtcTransportChannel, initiator: boolean) => {
+      isInitiator = initiator;
       remoteChannel = channel;
       for (const signal of signalBuffer) {
         deliverSignal(channel, signal);
@@ -152,20 +161,23 @@ describe('RtcTransport', () => {
 
   const createConnection = async (
     optionOverrides?: Partial<TransportOptions>,
-    onChannelCreated: (channel: RtcTransportChannel) => void = () => {},
+    onChannelCreated: (channel: RtcTransportChannel, initiator: boolean) => void = () => {},
   ): Promise<TestSetup> => {
+    const remotePeerKey = optionOverrides?.remotePeerKey ?? PublicKey.random().toHex();
+    const ownPeerKey = optionOverrides?.ownPeerKey ?? PublicKey.random().toHex();
+    const initiator = chooseInitiatorPeer(remotePeerKey, ownPeerKey) === ownPeerKey;
     const stream = new TestStream();
     const options: TransportOptions = {
-      initiator: false,
+      initiator,
       stream,
       sendSignal: async () => {},
-      remotePeerKey: PublicKey.random().toHex(),
-      ownPeerKey: PublicKey.random().toHex(),
+      remotePeerKey,
+      ownPeerKey,
       topic: PublicKey.random().toHex(),
       ...optionOverrides,
     };
     const connection = new RtcPeerConnection(connectionFactory, options);
-    return { options, connection, stream, onChannelOpen: onChannelCreated };
+    return { options, connection, stream, onChannelOpen: (channel) => onChannelCreated(channel, initiator) };
   };
 
   const chooseInitiator = (peer1: TestSetup, peer2: TestSetup) => {
