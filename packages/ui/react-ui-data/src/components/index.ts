@@ -4,6 +4,6 @@
 
 export * from './deprecated';
 
-export * from './Field';
+export * from './FieldEditor';
 export * from './Form';
 export * from './ViewEditor';

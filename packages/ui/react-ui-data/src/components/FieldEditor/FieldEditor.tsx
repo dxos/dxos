@@ -18,17 +18,14 @@ import {
 import { translationKey } from '../../translations';
 import { Form, FormInput } from '../Form';
 
-export const FieldEditor = ({
-  field,
-  projection,
-  view,
-  onComplete,
-}: {
-  field: FieldType;
-  projection: ViewProjection;
+export type FieldEditorProps = {
   view: ViewType;
-  onComplete: () => void;
-}) => {
+  projection: ViewProjection;
+  field: FieldType;
+  onClose: () => void; // TODO(burdon): Status?
+};
+
+export const FieldEditor = ({ view, projection, field, onClose }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.property).props);
   useEffect(() => {
@@ -56,7 +53,7 @@ export const FieldEditor = ({
     [props],
   );
 
-  const handleAdditionalValidation = useCallback(
+  const handleValidate = useCallback(
     ({ property }: PropertyType) => {
       if (property && view.fields.find((f) => f.property === property && f.property !== field.property)) {
         return [{ path: 'property', message: `'${property}' is not unique.` }];
@@ -65,12 +62,12 @@ export const FieldEditor = ({
     [view.fields, field],
   );
 
-  const handleSet = useCallback(
+  const handleSave = useCallback(
     (props: PropertyType) => {
       projection.setFieldProjection({ field, props });
-      onComplete();
+      onClose();
     },
-    [projection, field, onComplete],
+    [projection, field, onClose],
   );
 
   if (!fieldSchema) {
@@ -86,10 +83,10 @@ export const FieldEditor = ({
       schema={fieldSchema}
       filter={(props) => props.filter((p) => p.property !== 'type')}
       sort={['property', 'format']}
-      additionalValidation={handleAdditionalValidation}
       onValuesChanged={handleValueChanged}
-      onSave={handleSet}
-      onCancel={onComplete}
+      onValidate={handleValidate}
+      onSave={handleSave}
+      onCancel={onClose}
       Custom={{
         format: (props) => (
           <FormInput<PropertyType>
@@ -98,6 +95,32 @@ export const FieldEditor = ({
               value,
               label: t(`format ${value}`),
             }))}
+          />
+        ),
+        referenceSchema: (props) => (
+          <FormInput<PropertyType>
+            {...props}
+            options={
+              [
+                // TODO(burdon): Query.
+                // { value: 'example.com/type/A' },
+                // { value: 'example.com/type/B' },
+                // { value: 'example.com/type/C' },
+              ]
+            }
+          />
+        ),
+        referenceProperty: (props) => (
+          <FormInput<PropertyType>
+            {...props}
+            options={
+              [
+                // TODO(burdon): Query.
+                // { value: 'prop-1' },
+                // { value: 'prop-2' },
+                // { value: 'prop-3' },
+              ]
+            }
           />
         ),
       }}

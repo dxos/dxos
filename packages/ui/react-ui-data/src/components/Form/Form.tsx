@@ -22,7 +22,7 @@ export type FormProps<T extends object> = ThemedClassName<{
   readonly?: boolean;
   filter?: PropsFilter<T>;
   sort?: (keyof T)[];
-  additionalValidation?: (values: T) => ValidationError[] | undefined;
+  onValidate?: (values: T) => ValidationError[] | undefined;
   onValuesChanged?: (values: T) => void;
   onSave?: (values: T) => void;
   onCancel?: () => void;
@@ -39,8 +39,8 @@ export const Form = <T extends object>({
   readonly,
   filter,
   sort,
-  additionalValidation,
   onValuesChanged,
+  onValidate,
   onSave,
   onCancel,
   Custom,
@@ -48,11 +48,12 @@ export const Form = <T extends object>({
   const { canSubmit, errors, handleSubmit, getInputProps, getErrorValence, getErrorMessage } = useForm<T>({
     schema,
     initialValues: values,
-    additionalValidation,
     onValuesChanged,
+    onValidate,
     onSubmit: (values) => onSave?.(values),
   });
 
+  // TODO(burdon): Highlight in UX.
   // TODO(wittjosiah): Not wrapping this in useEffect causes the app to explode.
   useEffect(() => {
     if (errors && Object.keys(errors).length) {
@@ -60,6 +61,7 @@ export const Form = <T extends object>({
     }
   }, [errors]);
 
+  // Filter and sort props.
   const props = useMemo(() => {
     const props = getSchemaProperties<T>(schema);
     const filtered = filter ? filter(props) : props;
@@ -72,8 +74,7 @@ export const Form = <T extends object>({
 
   return (
     <div className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
-      {/* Generated fields. */}
-      {props.map(({ property, type, title }) => {
+      {props.map(({ property, type, title, description }) => {
         const PropertyInput = Custom?.[property] ?? FormInput<T>;
         return (
           <div key={property} role='none'>
@@ -81,6 +82,7 @@ export const Form = <T extends object>({
               property={property}
               type={type === 'number' ? 'number' : undefined}
               label={title ?? property}
+              placeholder={description}
               disabled={readonly}
               getInputProps={getInputProps}
               getErrorValence={getErrorValence}

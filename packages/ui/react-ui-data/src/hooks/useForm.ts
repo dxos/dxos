@@ -52,7 +52,7 @@ export interface FormOptions<T extends object> {
    * Use this for complex validation logic that can't be expressed in the schema.
    * @returns Array of validation errors, or undefined if validation passes
    */
-  additionalValidation?: (values: T) => ValidationError[] | undefined;
+  onValidate?: (values: T) => ValidationError[] | undefined;
   /**
    * Callback for value changes. Note: This is called even when values are invalid.
    * Sometimes the parent component may want to know about changes even if the form is
@@ -69,7 +69,7 @@ export interface FormOptions<T extends object> {
 export const useForm = <T extends object>({
   initialValues,
   schema,
-  additionalValidation,
+  onValidate,
   onValuesChanged,
   onSubmit,
 }: FormOptions<T>): FormResult<T> => {
@@ -97,14 +97,14 @@ export const useForm = <T extends object>({
         }
       }
 
-      if (additionalValidation && errors.length === 0) {
-        const validateErrors = additionalValidation(values) ?? [];
+      if (onValidate && errors.length === 0) {
+        const validateErrors = onValidate(values) ?? [];
         errors = validateErrors;
       }
 
       setErrors(errors.length > 0 ? collapseErrorArray(errors) : ({} as Record<keyof T, string>));
     },
-    [schema, additionalValidation],
+    [schema, onValidate],
   );
 
   useEffect(() => validate(values), [schema, validate, values]);
