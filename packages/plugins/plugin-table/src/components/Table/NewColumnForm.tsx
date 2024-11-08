@@ -28,7 +28,7 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
     }
   }, [open, model?.table?.view]);
 
-  const handleComplete = useCallback(() => {
+  const handleClose = useCallback(() => {
     // TODO(ZaymonFC): Invoke a method on the projection to add new field.
     close();
     setStagedField(undefined);
@@ -42,12 +42,7 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
     <DropdownMenu.Root open={open} onOpenChange={close}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
       <DropdownMenu.Content>
-        <FieldEditor
-          field={stagedField}
-          projection={model.projection}
-          view={model.table.view}
-          onComplete={handleComplete}
-        />
+        <FieldEditor field={stagedField} projection={model.projection} view={model.table.view} onClose={handleClose} />
         <DropdownMenu.Arrow />
       </DropdownMenu.Content>
     </DropdownMenu.Root>

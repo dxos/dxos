@@ -40,7 +40,7 @@ export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, trigg
           field={field}
           projection={model?.projection}
           view={model?.table.view}
-          onComplete={() => onOpenChange?.(false)}
+          onClose={() => onOpenChange?.(false)}
         />
         <DropdownMenu.Arrow />
       </DropdownMenu.Content>
