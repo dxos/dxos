@@ -8,6 +8,7 @@ import type {
   MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
+  IntentData,
 } from '@dxos/app-framework';
 import { ref, S, TypedObject } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-client';
@@ -15,13 +16,23 @@ import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { type StackProvides } from '@dxos/plugin-stack';
+import { type DxGridAxis } from '@dxos/react-ui-grid';
 
 import { SHEET_PLUGIN } from './meta';
+import { type SheetModel } from './model';
 
 const SHEET_ACTION = `${SHEET_PLUGIN}/action`;
 
 export enum SheetAction {
   CREATE = `${SHEET_ACTION}/create`,
+  INSERT_AXIS = `${SHEET_ACTION}/axis-insert`,
+  DROP_AXIS = `${SHEET_ACTION}/axis-drop`,
+}
+
+export namespace SheetAction {
+  export type Create = IntentData<{ sheet: SheetType }>;
+  export type InsertAxis = IntentData<{ model: SheetModel; axis: DxGridAxis; index: number; count?: number }>;
+  export type DropAxis = IntentData<{ model: SheetModel; axis: DxGridAxis; axisIndex: string }>;
 }
 
 // TODO(Zan): Move this to the plugin-space plugin or another common location

@@ -175,6 +175,21 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
             case SheetAction.CREATE: {
               return { data: createSheet() };
             }
+            case SheetAction.INSERT_AXIS: {
+              const { model, axis, index, count } = intent.data as SheetAction.InsertAxis;
+              const _indices = model[axis === 'col' ? 'insertColumns' : 'insertRows'](index, count);
+              return;
+            }
+            case SheetAction.DROP_AXIS: {
+              const { model, axis, axisIndex } = intent.data as SheetAction.DropAxis;
+              model[axis === 'col' ? 'dropColumns' : 'dropRows']([axisIndex]);
+              /* return {
+                undoable: {
+                  message: translations[0]['en-US'][SHEET_PLUGIN][`${axis} dropped label`],
+                  data: { model, axis, axisIndex },
+                },
+              }; */
+            }
           }
         },
       },

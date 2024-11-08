@@ -163,4 +163,5 @@ export type {
   DxGridCellValue,
   DxGridPlane,
   DxGridPosition,
+  DxGridAxis,
 } from '@dxos/lit-grid';

@@ -168,12 +168,36 @@ export class SheetModel extends Resource {
   }
 
   insertRows(i: number, n = 1) {
-    insertIndices(this._sheet.rows, i, n, MAX_ROWS);
+    const idx = insertIndices(this._sheet.rows, i, n, MAX_ROWS);
     this.reset();
+    return idx;
   }
 
   insertColumns(i: number, n = 1) {
-    insertIndices(this._sheet.columns, i, n, MAX_COLUMNS);
+    const idx = insertIndices(this._sheet.columns, i, n, MAX_COLUMNS);
+    this.reset();
+    return idx;
+  }
+
+  dropRows(idx: string[]) {
+    idx.forEach((rowIndex) => {
+      this.clear({
+        from: addressFromIndex(this._sheet, `${this._sheet.columns[0]}@${rowIndex}`),
+        to: addressFromIndex(this._sheet, `${this._sheet.columns[this._sheet.columns.length - 1]}@${rowIndex}`),
+      });
+      this._sheet.rows.splice(this._sheet.rows.indexOf(rowIndex), 1);
+    });
+    this.reset();
+  }
+
+  dropColumns(idx: string[]) {
+    idx.forEach((colIndex) => {
+      this.clear({
+        from: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[0]}`),
+        to: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[this._sheet.rows.length - 1]}`),
+      });
+      this._sheet.columns.splice(this._sheet.columns.indexOf(colIndex), 1);
+    });
     this.reset();
   }
 
