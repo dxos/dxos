@@ -180,7 +180,6 @@ export class SheetModel extends Resource {
   }
 
   dropRow(rowIndex: string): UndoDropAxis {
-    invariant(this._node);
     const range = {
       from: addressFromIndex(this._sheet, `${this._sheet.columns[0]}@${rowIndex}`),
       to: addressFromIndex(this._sheet, `${this._sheet.columns[this._sheet.columns.length - 1]}@${rowIndex}`),
@@ -195,7 +194,6 @@ export class SheetModel extends Resource {
   }
 
   dropColumn(colIndex: string): UndoDropAxis {
-    invariant(this._node);
     const range = {
       from: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[0]}`),
       to: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[this._sheet.rows.length - 1]}`),
@@ -210,9 +208,12 @@ export class SheetModel extends Resource {
   }
 
   undoDropRow({ index, axisIndex, axisMeta, values }: UndoDropAxis) {
-    invariant(this._node);
     this._sheet.rows.splice(index, 0, axisIndex);
-    values.forEach((value, col) => this.setValue({ row: index, col }, value));
+    values.forEach((value, col) => {
+      if (value) {
+        this._sheet.cells[`${this._sheet.columns[col]}@${axisIndex}`] = { value };
+      }
+    });
     if (axisMeta) {
       this._sheet.rowMeta[axisIndex] = axisMeta;
     }
@@ -220,9 +221,12 @@ export class SheetModel extends Resource {
   }
 
   undoDropColumn({ index, axisIndex, axisMeta, values }: UndoDropAxis) {
-    invariant(this._node);
     this._sheet.columns.splice(index, 0, axisIndex);
-    values.forEach((value, row) => this.setValue({ col: index, row }, value));
+    values.forEach((value, row) => {
+      if (value) {
+        this._sheet.cells[`${axisIndex}@${this._sheet.rows[row]}`] = { value };
+      }
+    });
     if (axisMeta) {
       this._sheet.columnMeta[axisIndex] = axisMeta;
     }
