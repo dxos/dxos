@@ -184,6 +184,7 @@ export type SchemaProperty<T> = {
  * NOTE: Type literals are ignored (e.g., fixed type/format fields).
  */
 export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaProperty<T>[] => {
+  console.log('!!!!!');
   return AST.getPropertySignatures(schema.ast).reduce<SchemaProperty<T>[]>((props, prop) => {
     const baseType = getBaseType(prop.type);
     if (baseType) {
