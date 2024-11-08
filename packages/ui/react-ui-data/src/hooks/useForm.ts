@@ -5,6 +5,7 @@
 import { type ChangeEvent, type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type S } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { validateSchema, type ValidationError } from '@dxos/schema';
 
 type FormInputValue = string | number | readonly string[] | undefined;
@@ -102,10 +103,11 @@ export const useForm = <T extends object>({
       }
 
       setErrors(errors.length > 0 ? collapseErrorArray(errors) : ({} as Record<keyof T, string>));
-      return errors.length === 0;
     },
     [schema, additionalValidation],
   );
+
+  useEffect(() => validate(values), [schema, validate, values]);
 
   //
   // Values.
@@ -117,11 +119,10 @@ export const useForm = <T extends object>({
       const parsedValue = type === 'number' ? parseFloat(value) || 0 : value;
       const newValues = { ...values, [property]: parsedValue };
       setValues(newValues);
-      validate(newValues);
       setChanged((prev) => ({ ...prev, [property]: true }));
       onValuesChanged?.(newValues);
     },
-    [values, validate, onValuesChanged],
+    [values, onValuesChanged],
   );
 
   const onValueChange = useCallback(
@@ -159,9 +160,8 @@ export const useForm = <T extends object>({
   //
 
   const handleSubmit = useCallback(() => {
-    if (validate(values)) {
-      onSubmit(values, { changed });
-    }
+    invariant(Object.keys(errors).length === 0, 'Submission should be disabled when there are errors present');
+    onSubmit(values, { changed });
   }, [values, validate, onSubmit]);
 
   const canSubmit = useMemo(

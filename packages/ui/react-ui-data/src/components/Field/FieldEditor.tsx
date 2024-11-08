@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { FormatEnum, FormatEnums, formatToType } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -31,27 +31,30 @@ export const FieldEditor = ({
 }) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.property).props);
-
   useEffect(() => {
     const { props } = projection.getFieldProjection(field.property);
     setProps(props);
   }, [field, projection]);
-
   // TODO(burdon): Need to wrap otherwise throws error:
   //  Class constructor SchemaClass cannot be invoked without 'new'
-  const fieldSchema = useMemo(() => getPropertySchemaForFormat(props?.format), [props?.format]);
-
-  const handleValueChanged = useCallback((_props: PropertyType) => {
-    // Update schema if format changed.
-    // TODO(burdon): Callback should pass `changed` to indicate which fields have changed.
-    setProps((props) => {
-      const type = formatToType[_props.format as keyof typeof formatToType];
-      if (props.type === type) {
-        return props;
+  const [{ fieldSchema }, setFieldSchema] = useState({ fieldSchema: getPropertySchemaForFormat(props?.format) });
+  const handleValueChanged = useCallback(
+    (_props: PropertyType) => {
+      // Update schema if format changed.
+      // TODO(burdon): Callback should pass `changed` to indicate which fields have changed.
+      if (_props.format !== props.format) {
+        setFieldSchema({ fieldSchema: getPropertySchemaForFormat(_props.format) });
       }
-      return { ...props, ..._props, type };
-    });
-  }, []);
+      setProps((props) => {
+        const type = formatToType[_props.format as keyof typeof formatToType];
+        if (props.type !== type) {
+          return { ...props, ..._props, type };
+        }
+        return props;
+      });
+    },
+    [props],
+  );
 
   const handleAdditionalValidation = useCallback(
     ({ property }: PropertyType) => {
