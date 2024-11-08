@@ -100,23 +100,27 @@ export const FieldEditor = ({ view, projection, field, onClose }: FieldEditorPro
         referenceSchema: (props) => (
           <FormInput<PropertyType>
             {...props}
-            options={[
-              // TODO(burdon): Query.
-              { value: 'example.com/type/A' },
-              { value: 'example.com/type/B' },
-              { value: 'example.com/type/C' },
-            ]}
+            options={
+              [
+                // TODO(burdon): Query.
+                // { value: 'example.com/type/A' },
+                // { value: 'example.com/type/B' },
+                // { value: 'example.com/type/C' },
+              ]
+            }
           />
         ),
         referenceProperty: (props) => (
           <FormInput<PropertyType>
             {...props}
-            options={[
-              // TODO(burdon): Query.
-              { value: 'prop-1' },
-              { value: 'prop-2' },
-              { value: 'prop-3' },
-            ]}
+            options={
+              [
+                // TODO(burdon): Query.
+                // { value: 'prop-1' },
+                // { value: 'prop-2' },
+                // { value: 'prop-3' },
+              ]
+            }
           />
         ),
       }}
