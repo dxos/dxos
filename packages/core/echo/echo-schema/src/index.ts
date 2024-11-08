@@ -5,16 +5,9 @@
 /**
  * Peer dependencies re-exported symbols that are effectively part of the ECHO API.
  */
-export { AST, JSONSchema, S } from '@dxos/effect';
+export { AST, JSONSchema, Schema as S } from '@effect/schema';
 
-// TODO(burdon): Tech debt:
-//  - Clean-up ./types (remove import deps from this file).
-//  - Change TypedObject to piped effector (not base class).
-//  - Organize subfolders to minimize cross-folder deps.
-//  - Rename EchoReactiveObject (remove ECHO prefix).
-//  - Consistent Symbol.for names.
-//  - S.Schema<HasId> everywhere?
-//  - Fix defaults.
+export { JsonPath, JsonProp } from '@dxos/effect';
 
 export * from './ast';
 export * from './formats';

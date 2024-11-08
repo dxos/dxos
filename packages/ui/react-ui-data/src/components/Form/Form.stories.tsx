@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useState } from 'react';
 
-import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
+import { FormatEnum, type JsonProp, TypeEnum } from '@dxos/echo-schema';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getPropertySchemaForFormat, type PropertyType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -67,7 +67,7 @@ type Story = StoryObj<StoryProps>;
 export const Default: Story = {
   args: {
     values: {
-      property: 'currency',
+      property: 'currency' as JsonProp,
       format: FormatEnum.Currency,
       type: TypeEnum.Number,
     },
