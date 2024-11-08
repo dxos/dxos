@@ -46,8 +46,8 @@ export const isSimpleType = (node: AST.AST) => !!getSimpleType(node);
 export type JsonProp = string & { __JsonProp: true };
 export type JsonPath = string & { __JsonPath: true };
 
-const PATH_REGEX = /^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*$/;
-const PROP_REGEX = /^\w+$/;
+const PATH_REGEX = /[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*/;
+const PROP_REGEX = /\w+/;
 
 /**
  * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
