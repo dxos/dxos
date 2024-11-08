@@ -6,7 +6,7 @@ import { signal } from '@preact/signals-core';
 import React from 'react';
 
 import {
-  GraphProvides,
+  type GraphProvides,
   type IntentDispatcher,
   type IntentPluginProvides,
   LayoutAction,
