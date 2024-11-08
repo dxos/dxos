@@ -90,26 +90,30 @@ function pre () {
 CIRCLECI_ORG="dxos"
 CIRCLECI_REPO="dxos"
 
-function ci_status () {
-  tput sc
-  PROJECT_ID=$(curl -s -H "Circle-Token: $CIRCLECI_TOKEN" "https://circleci.com/api/v2/project/github/$CIRCLECI_ORG/$CIRCLECI_REPO/pipeline?branch=$(git branch --show-current)" | jq -r ".items.[0].id")
-  echo "Pipeline: $PROJECT_ID"
-  RESULT=$(curl -s -H "Circle-Token: $CIRCLECI_TOKEN" "https://circleci.com/api/v2/pipeline/$PROJECT_ID/workflow")
-  STATUS=$(echo -e "$RESULT" | jq -r ".items.[0].status")
-  echo $STATUS
-  if [ "$STATUS" = "success" ] || [ "$STATUS" = "error" ]; then
-    return 1
-  fi;
-  echo -e "$RESULT" | jq
-  tput rc
-}
-
 function ci () {
+  function ci_status () {
+    PROJECT_ID=$(curl -s -H "Circle-Token: $CIRCLECI_TOKEN" "https://circleci.com/api/v2/project/github/$CIRCLECI_ORG/$CIRCLECI_REPO/pipeline?branch=$(git branch --show-current)" | jq -r ".items.[0].id")
+    tput sc
+    echo -e "Pipeline: $PROJECT_ID"
+
+    RESPONSE=$(curl -s -H "Circle-Token: $CIRCLECI_TOKEN" "https://circleci.com/api/v2/pipeline/$PROJECT_ID/workflow")
+    echo -e "$RESPONSE" | jq
+    tput rc
+
+    STATUS=$(echo -e "$RESPONSE" | jq -r ".items.[0].status")
+  }
+
   while true; do
     ci_status
-    if [ $? -eq 1 ]; then
-      break
-    fi
+    case "$STATUS" in
+      "running")
+      ;;
+      *)
+        echo ""
+        echo -e "Result $STATUS"
+        break
+      ;;
+    esac
     sleep 5
   done
 }
