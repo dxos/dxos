@@ -10,22 +10,20 @@ import { type FormResult } from '../../hooks';
 
 export type FormInputProps<T extends object> = {
   property: keyof T;
+  type?: 'string' | 'number' | 'boolean';
   label: string;
-  options?: Array<{ value: string | number; label: string }>;
+  options?: Array<{ value: string | number; label?: string }>;
   disabled?: boolean;
   placeholder?: string;
-  type?: 'string' | 'number';
-  // TODO(burdon): Pick from FormResult?
   getInputProps: (property: keyof T, type?: 'input' | 'select') => Record<string, any>;
 } & Pick<FormResult<T>, 'getErrorValence' | 'getErrorMessage'>;
 
-// TODO(burdon): Create story.
 export const FormInput = <T extends object>({
   property,
+  type = 'string',
   label,
   options,
   disabled,
-  type = 'string',
   placeholder,
   getInputProps,
   getErrorValence,
@@ -47,7 +45,7 @@ export const FormInput = <T extends object>({
                 <Select.Viewport>
                   {options.map(({ value, label }) => (
                     <Select.Option key={String(value)} value={String(value)}>
-                      {label}
+                      {label ?? String(value)}
                     </Select.Option>
                   ))}
                 </Select.Viewport>

@@ -28,7 +28,7 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
     }
   }, [open, model?.projection]);
 
-  const handleComplete = useCallback(() => {
+  const handleClose = useCallback(() => {
     close();
   }, [close]);
 
@@ -42,12 +42,7 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
       <DropdownMenu.Portal>
         <DropdownMenu.Content>
           <DropdownMenu.Viewport>
-            <FieldEditor
-              field={field}
-              projection={model.projection}
-              view={model.table.view}
-              onComplete={handleComplete}
-            />
+            <FieldEditor view={model.table.view} projection={model.projection} field={field} onClose={handleClose} />
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>
