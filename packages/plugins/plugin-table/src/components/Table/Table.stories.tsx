@@ -19,9 +19,9 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
 import { useTableModel } from '../../hooks';
-import { useTableIntialisation } from '../../hooks/';
 import translations from '../../translations';
 import { TableType } from '../../types';
+import { initializeTable } from '../../util';
 import { Toolbar } from '../Toolbar';
 import { createEmptyTable, createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
 
@@ -45,7 +45,11 @@ const DefaultStory = () => {
     }
   }, [tables]);
 
-  useTableIntialisation(table);
+  useEffect(() => {
+    if (space && table) {
+      initializeTable(space, table);
+    }
+  }, [space, table]);
 
   const objects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
   const filteredObjects = useGlobalFilteredObjects(objects);

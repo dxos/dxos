@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -13,8 +13,9 @@ import { ViewProjection } from '@dxos/schema';
 
 import { Table } from './Table';
 import { Toolbar, type ToolbarAction } from './Toolbar';
-import { useTableIntialisation, useTableModel } from '../hooks';
+import { useTableModel } from '../hooks';
 import { TableAction, type TableType } from '../types';
+import { initializeTable } from '../util';
 
 // TODO(zantonio): Factor out, copied this from MarkdownPlugin.
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
@@ -23,8 +24,14 @@ export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky 
 const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType; role?: string }>) => {
   const { hasAttention } = useAttention(fullyQualifiedId(table));
   const dispatch = useIntentDispatcher();
-  useTableIntialisation(table);
   const space = getSpace(table);
+
+  useEffect(() => {
+    if (space && table) {
+      initializeTable(space, table);
+    }
+  }, [space, table]);
+
   const schema = useMemo(
     () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.__typename) : undefined),
     [space, table.view],
