@@ -39,12 +39,6 @@ export default [
         'settings overscroll centering label': 'Centering',
         'settings overscroll none label': 'None',
         'settings flat deck': 'Flatten deck appearance',
-
-        // ComplementarySidebar
-        'open settings label': 'Show settings',
-        'open comments label': 'Show Comments',
-        'open automation label': 'Show Automation',
-        'open debug label': 'Show Debug',
       },
     },
   },

@@ -2,26 +2,28 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, DecimalPrecision, TypeEnum, FormatEnum, S } from '@dxos/echo-schema';
-import { getAnnotation, getBaseType } from '@dxos/effect';
+import { AST, DecimalPrecision, TypeEnum, FormatEnum, S, JsonProp } from '@dxos/echo-schema';
+import { findNode, findAnnotation, isSimpleType } from '@dxos/effect';
 
 /**
  * Base schema.
  */
 export const BasePropertySchema = S.Struct({
-  property: S.String.annotations({ [AST.TitleAnnotationId]: 'Property' }).pipe(S.pattern(/\w+/)),
+  property: JsonProp.annotations({ [AST.TitleAnnotationId]: 'Property' }),
   title: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Title' })),
   description: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Description' })),
 });
 
 export type BaseProperty = S.Schema.Type<typeof BasePropertySchema>;
 
-const extend = (format: FormatEnum, type: TypeEnum, fields = {}) =>
+const extend = (format: FormatEnum, type: TypeEnum, fields: S.Struct.Fields = {}) =>
   S.extend(
     BasePropertySchema,
     S.Struct({
       type: S.Literal(type),
-      format: S.Literal(format),
+      format: S.Literal(format).annotations({
+        [AST.TitleAnnotationId]: 'Property format',
+      }),
       ...fields,
     }),
   ).pipe(S.mutable);
@@ -56,8 +58,14 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
   [FormatEnum.Number]: extend(FormatEnum.Number, TypeEnum.Number),
   [FormatEnum.Boolean]: extend(FormatEnum.Boolean, TypeEnum.Boolean),
   [FormatEnum.Ref]: extend(FormatEnum.Ref, TypeEnum.Ref, {
-    referenceSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
-    referenceProperty: S.optional(S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Lookup property' })),
+    referenceSchema: S.NonEmptyString.annotations({
+      [AST.TitleAnnotationId]: 'Schema',
+    }),
+    referenceProperty: S.optional(
+      JsonProp.annotations({
+        [AST.TitleAnnotationId]: 'Lookup property',
+      }),
+    ),
   }),
 
   //
@@ -80,7 +88,11 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
 
   [FormatEnum.Currency]: extend(FormatEnum.Currency, TypeEnum.Number, {
     multipleOf: S.optional(DecimalPrecision),
-    currency: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Currency code' })),
+    currency: S.optional(
+      S.String.annotations({
+        [AST.TitleAnnotationId]: 'Currency code',
+      }),
+    ),
   }),
   [FormatEnum.Integer]: extend(FormatEnum.Integer, TypeEnum.Number),
   [FormatEnum.Percent]: extend(FormatEnum.Percent, TypeEnum.Number, {
@@ -165,29 +177,30 @@ export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> |
 
 export type SchemaProperty<T> = {
   property: string & keyof T;
-  type: TypeEnum;
-  format: FormatEnum;
+  type?: TypeEnum;
   title?: string;
 };
 
 /**
  * Get top-level properties from schema.
- * NOTE: Type literals are ignored (e.g., fixed type/format fields).
  */
 export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaProperty<T>[] => {
   return AST.getPropertySignatures(schema.ast).reduce<SchemaProperty<T>[]>((props, prop) => {
-    // TODO(burdon): Factor out.
-    const baseType = getBaseType(prop.type);
+    const property = prop.name.toString() as JsonProp & keyof T;
+    const title = findAnnotation<string>(prop.type, AST.TitleAnnotationId);
+    const baseType = findNode(prop.type, isSimpleType);
     if (baseType) {
-      let type = getTypeEnumFrom(baseType);
-      let title = getAnnotation<string>(AST.TitleAnnotationId, baseType);
-      if (!type && AST.isTransformation(baseType)) {
-        title = getAnnotation<string>(AST.TitleAnnotationId, baseType);
-        type = getTypeEnumFrom(baseType.to);
-      }
-
+      const type = getTypeEnum(baseType);
       if (type) {
-        props.push({ property: prop.name.toString() as any, type, format: FormatEnum.None, title });
+        props.push({ property, type, title });
+      } else if (AST.isLiteral(baseType)) {
+        props.push({ property, title });
+      }
+    } else {
+      const type = findNode(prop.type, AST.isTransformation);
+      if (type && AST.isTransformation(type)) {
+        const transformType = getTypeEnum(type.from);
+        props.push({ property, type: transformType, title });
       }
     }
 
@@ -195,12 +208,14 @@ export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaProperty<T>[]
   }, []);
 };
 
-const getTypeEnumFrom = (ast: AST.AST): TypeEnum | undefined => {
-  if (AST.isStringKeyword(ast)) {
+const getTypeEnum = (node: AST.AST): TypeEnum | undefined => {
+  if (AST.isStringKeyword(node)) {
     return TypeEnum.String;
-  } else if (AST.isNumberKeyword(ast)) {
+  }
+  if (AST.isNumberKeyword(node)) {
     return TypeEnum.Number;
-  } else if (AST.isBooleanKeyword(ast)) {
+  }
+  if (AST.isBooleanKeyword(node)) {
     return TypeEnum.Boolean;
   }
 };

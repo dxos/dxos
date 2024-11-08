@@ -335,6 +335,11 @@ export const SpacePlugin = ({
       space: state.values,
       settings: settings.values,
       translations: [...translations, osTranslations],
+      complementary: {
+        panels: [
+          { id: 'settings', label: ['open settings panel label', { ns: SPACE_PLUGIN }], icon: 'ph--gear--regular' },
+        ],
+      },
       root: () => (state.values.awaiting ? <AwaitingObject id={state.values.awaiting} /> : null),
       metadata: {
         records: {

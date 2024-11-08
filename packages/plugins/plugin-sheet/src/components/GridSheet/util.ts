@@ -79,7 +79,6 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
     dataRefs: threadRefs,
   };
 };
-
 const gridCellGetter = (model: SheetModel) => {
   // TODO(thure): Actually use the cache.
   const cachedGridCells: DxGridPlaneCells = {};
@@ -165,7 +164,7 @@ export const useSheetModelDxGridProps = (
       columnMetaAccessor.handle.removeListener('change', handleColumnMetaUpdate);
       rowMetaAccessor.handle.removeListener('change', handleRowMetaUpdate);
     };
-  }, [model]);
+  }, [model, dxGrid]);
 
   return { columns, rows };
 };

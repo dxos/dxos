@@ -327,7 +327,7 @@ export class RtcPeerConnection {
         break;
     }
 
-    log('signal processed');
+    log('signal processed', { type: data.type });
   }
 
   private async _processIceCandidate(connection: RTCPeerConnection, candidate: RTCIceCandidate) {

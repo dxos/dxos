@@ -34,6 +34,8 @@ export default [
         'delete row label': 'Delete row',
         'range list heading': 'Ranges',
         'range title': '{{position}} — {{value}}',
+        'col dropped label': 'Deleted a column',
+        'row dropped label': 'Deleted a row',
       },
     },
   },

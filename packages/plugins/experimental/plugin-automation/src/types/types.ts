@@ -10,6 +10,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-client';
+import { type PanelProvides } from '@dxos/plugin-deck/types';
 
 import { AUTOMATION_PLUGIN } from '../meta';
 
@@ -24,4 +25,5 @@ export type AutomationPluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   GraphBuilderProvides &
-  SchemaProvides;
+  SchemaProvides &
+  PanelProvides;
