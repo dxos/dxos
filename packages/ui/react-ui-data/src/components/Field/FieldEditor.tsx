@@ -22,10 +22,11 @@ export type FieldEditorProps = {
   field: FieldType;
   projection: ViewProjection;
   view: ViewType;
-  onComplete: () => void;
+  onClose: () => void; // TODO(burdon): Status?
 };
 
-export const FieldEditor = ({ field, projection, view, onComplete }: FieldEditorProps) => {
+// TODO(burdon): Rename PropertyFieldEditor.
+export const FieldEditor = ({ field, projection, view, onClose }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.property).props);
   useEffect(() => {
@@ -66,9 +67,9 @@ export const FieldEditor = ({ field, projection, view, onComplete }: FieldEditor
   const handleSet = useCallback(
     (props: PropertyType) => {
       projection.setFieldProjection({ field, props });
-      onComplete();
+      onClose();
     },
-    [projection, field, onComplete],
+    [projection, field, onClose],
   );
 
   if (!fieldSchema) {
@@ -87,7 +88,7 @@ export const FieldEditor = ({ field, projection, view, onComplete }: FieldEditor
       additionalValidation={handleAdditionalValidation}
       onValuesChanged={handleValueChanged}
       onSave={handleSet}
-      onCancel={onComplete}
+      onCancel={onClose}
       Custom={{
         format: (props) => (
           <FormInput<PropertyType>

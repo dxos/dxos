@@ -21,7 +21,7 @@ import { TestPopup } from '../testing';
 type StoryProps = FieldEditorProps;
 
 const DefaultStory = (props: FieldEditorProps) => {
-  const handleComplete: FieldEditorProps['onComplete'] = () => {
+  const handleComplete: FieldEditorProps['onClose'] = () => {
     console.log('complete');
   };
 
@@ -29,7 +29,7 @@ const DefaultStory = (props: FieldEditorProps) => {
     <div className='w-full grid grid-cols-3'>
       <div className='flex col-span-2 w-full justify-center p-4'>
         <TestPopup>
-          <FieldEditor {...props} onComplete={handleComplete} />
+          <FieldEditor {...props} onClose={handleComplete} />
         </TestPopup>
       </div>
       <SyntaxHighlighter language='json' className='w-full text-xs font-thin'>
