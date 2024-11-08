@@ -83,17 +83,7 @@ const DefaultStory = () => {
   const handleDeleteColumn = useCallback(
     (property: string) => {
       if (projection) {
-        console.log('HANDLE_DELETE::Deleting', property);
-        console.log('Before delete - view fields:', JSON.stringify(table?.view?.fields, null, 2));
-        const { deleted, index } = projection.deleteFieldProjection(property);
-        console.log('After delete - view fields:', JSON.stringify(table?.view?.fields, null, 2));
-
-        console.log('Deleted projection returned', deleted);
-
-        setTimeout(() => {
-          projection.setFieldProjection(deleted, index);
-        }, 100);
-        console.log('After restore - view fields:', JSON.stringify(table?.view?.fields, null, 2));
+        const _deleted = projection.deleteFieldProjection(property);
       }
     },
     [table, projection],

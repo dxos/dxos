@@ -152,7 +152,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             }
 
             case TableAction.DELETE_COLUMN: {
-              const { table, field } = intent.data as TableAction.DeleteColumn;
+              const { table, property } = intent.data as TableAction.DeleteColumn;
               invariant(isTable(table));
               invariant(table.view, 'Table requires a view to delete columns');
 
@@ -161,7 +161,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               const projection = new ViewProjection(schema, table.view);
 
               if (!intent.undo) {
-                const { deleted, index } = projection.deleteFieldProjection(field.property);
+                const { deleted, index } = projection.deleteFieldProjection(property);
                 return {
                   undoable: {
                     message: translations[0]['en-US'][TABLE_PLUGIN]['column deleted label'],

@@ -13,7 +13,6 @@ import type {
 import { type SchemaProvides } from '@dxos/plugin-client';
 import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { type StackProvides } from '@dxos/plugin-stack';
-import { type FieldType } from '@dxos/schema';
 
 import { TableType } from './table';
 import { TABLE_PLUGIN } from '../meta';
@@ -27,7 +26,7 @@ export enum TableAction {
 
 export namespace TableAction {
   export type Create = IntentData<{ table: TableType }>;
-  export type DeleteColumn = IntentData<{ table: TableType; field: FieldType }>;
+  export type DeleteColumn = IntentData<{ table: TableType; property: string }>;
 }
 
 export type TableProvides = {};
