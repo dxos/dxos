@@ -15,17 +15,18 @@ import React, { useEffect, useRef, useState, type ComponentPropsWithoutRef } fro
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type StackProps } from './Stack';
+import { useStack } from './Stack';
 
-export type StackItemProps = Omit<ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'aria-orientation'> & {
-  item: { id: string; type: 'column' | 'card' };
-  orientation?: StackProps['orientation'];
+export type StackItemProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
+  item: { id: string };
   onReorder: (sourceId: string, targetId: string, closestEdge: Edge | null) => void;
 };
 
-export const StackItem = ({ item, children, classNames, orientation, onReorder, ...props }: StackItemProps) => {
+export const StackItem = ({ item, children, classNames, onReorder, ...props }: StackItemProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
+  const { orientation, rail } = useStack();
+  const type = orientation === 'horizontal' ? 'column' : 'card';
 
   useEffect(() => {
     if (!ref.current) {
@@ -35,13 +36,13 @@ export const StackItem = ({ item, children, classNames, orientation, onReorder, 
     const element = ref.current;
 
     return combine(
-      draggable({ element, getInitialData: () => ({ id: item.id, type: item.type }) }),
+      draggable({ element, getInitialData: () => ({ id: item.id, type }) }),
       dropTargetForElements({
         element,
         getData: ({ input, element }) => {
           return attachClosestEdge(
-            { id: item.id, type: item.type },
-            { input, element, allowedEdges: orientation === 'vertical' ? ['top', 'bottom'] : ['left', 'right'] },
+            { id: item.id, type },
+            { input, element, allowedEdges: orientation === 'horizontal' ? ['left', 'right'] : ['top', 'bottom'] },
           );
         },
         onDragEnter: ({ self, source }) => {
@@ -68,7 +69,12 @@ export const StackItem = ({ item, children, classNames, orientation, onReorder, 
   return (
     <div
       ref={ref}
-      className={mx('relative', orientation === 'horizontal' ? 'grid-cols-subgrid' : 'grid-rows-subgrid', classNames)}
+      className={mx(
+        'grid relative is-min',
+        orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
+        rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
+        classNames,
+      )}
       {...props}
     >
       {children}

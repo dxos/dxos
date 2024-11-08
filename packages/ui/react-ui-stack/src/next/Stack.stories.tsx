@@ -6,77 +6,55 @@ import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useState, useCallback } from 'react';
 
+import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Stack } from './Stack';
 import { StackItem } from './StackItem';
+import { StackItemHeading } from './StackItemHeading';
 
-type CardItem = {
+type StoryStackItem = {
   id: string;
-  type: 'card';
-  content: string;
-};
-
-type ColumnItem = {
-  id: string;
-  type: 'column';
   title: string;
-  cards: CardItem[];
+  items?: StoryStackItem[];
 };
 
-const KanbanBlock = ({ item }: { item: CardItem }) => {
+const KanbanBlock = ({ item }: { item: StoryStackItem }) => {
   return (
-    <div className='is-64 bs-24 bg-input rounded-lg border border-separator shadow-sm grid place-content-center'>
-      <span className='text-sm font-medium'>{item.content}</span>
+    <div className='is-64 bs-24 text-center place-content-center'>
+      <span className='text-sm font-medium'>{item.title}</span>
     </div>
   );
 };
 
 const StorybookStack = () => {
-  const [columns, setColumns] = useState<ColumnItem[]>([
-    {
-      id: 'col-0',
-      type: 'column',
-      title: 'To Do',
-      cards: [
-        { id: 'banana', type: 'card', content: 'Banana' },
-        { id: 'pickle', type: 'card', content: 'Pickle' },
-        { id: 'wombat', type: 'card', content: 'Wombat' },
-        { id: 'kazoo', type: 'card', content: 'Kazoo' },
-      ],
-    },
-    {
-      id: 'col-1',
-      type: 'column',
-      title: 'In Progress',
-      cards: [
-        { id: 'noodle', type: 'card', content: 'Noodle' },
-        { id: 'squish', type: 'card', content: 'Squish' },
-        { id: 'wobble', type: 'card', content: 'Wobble' },
-        { id: 'floof', type: 'card', content: 'Floof' },
-      ],
-    },
-    {
-      id: 'col-2',
-      type: 'column',
-      title: 'Done',
-      cards: [
-        { id: 'snorkel', type: 'card', content: 'Snorkel' },
-        { id: 'bloop', type: 'card', content: 'Bloop' },
-        { id: 'wiggle', type: 'card', content: 'Wiggle' },
-        { id: 'zoop', type: 'card', content: 'Zoop' },
-      ],
-    },
-  ]);
+  const [columns, setColumns] = useState<StoryStackItem[]>(
+    faker.helpers.multiple(
+      () =>
+        ({
+          id: faker.string.uuid(),
+          title: faker.lorem.word(),
+          items: faker.helpers.multiple(
+            () =>
+              ({
+                id: faker.string.uuid(),
+                title: faker.lorem.word(),
+              }) satisfies StoryStackItem,
+            { count: { min: 32, max: 64 } },
+          ),
+        }) satisfies StoryStackItem,
+      { count: 8 },
+    ),
+  );
 
   const reorderItem = useCallback((sourceId: string, targetId: string, closestEdge: Edge | null) => {
     setColumns((prevColumns) => {
       const newColumns = [...prevColumns];
       const sourceColumn = newColumns.find(
-        (col) => col.id === sourceId || col.cards.some((card) => card.id === sourceId),
+        (col) => col.id === sourceId || col.items?.some((card) => card.id === sourceId),
       );
       const targetColumn = newColumns.find(
-        (col) => col.id === targetId || col.cards.some((card) => card.id === targetId),
+        (col) => col.id === targetId || col.items?.some((card) => card.id === targetId),
       );
 
       if (sourceColumn && targetColumn) {
@@ -89,17 +67,24 @@ const StorybookStack = () => {
           newColumns.splice(insertIndex, 0, movedColumn);
         } else {
           // Reordering cards within a column
-          const sourceCardIndex = sourceColumn.cards.findIndex((card) => card.id === sourceId);
-          const targetCardIndex = targetColumn.cards.findIndex((card) => card.id === targetId);
-          const [movedCard] = sourceColumn.cards.splice(sourceCardIndex, 1);
+          const sourceCardIndex = sourceColumn.items?.findIndex((card) => card.id === sourceId);
+          const targetCardIndex = targetColumn.items?.findIndex((card) => card.id === targetId);
+          if (
+            typeof sourceCardIndex === 'number' &&
+            typeof targetCardIndex === 'number' &&
+            sourceColumn.items &&
+            targetColumn.items
+          ) {
+            const [movedCard] = sourceColumn.items.splice(sourceCardIndex, 1);
 
-          let insertIndex;
-          if (sourceColumn === targetColumn && sourceCardIndex < targetCardIndex) {
-            insertIndex = closestEdge === 'bottom' ? targetCardIndex : targetCardIndex - 1;
-          } else {
-            insertIndex = closestEdge === 'bottom' ? targetCardIndex + 1 : targetCardIndex;
+            let insertIndex;
+            if (sourceColumn === targetColumn && sourceCardIndex < targetCardIndex) {
+              insertIndex = closestEdge === 'bottom' ? targetCardIndex : targetCardIndex - 1;
+            } else {
+              insertIndex = closestEdge === 'bottom' ? targetCardIndex + 1 : targetCardIndex;
+            }
+            targetColumn.items.splice(insertIndex, 0, movedCard);
           }
-          targetColumn.cards.splice(insertIndex, 0, movedCard);
         }
       }
 
@@ -108,18 +93,14 @@ const StorybookStack = () => {
   }, []);
 
   return (
-    <Stack orientation={'horizontal'} classNames='gap-1'>
+    <Stack orientation='horizontal'>
       {columns.map((column) => (
-        <StackItem
-          key={column.id}
-          item={column}
-          orientation={'horizontal'}
-          classNames='p-4 bg-deck rounded-md'
-          onReorder={reorderItem}
-        >
-          <Stack orientation={'vertical'} classNames='gap-1'>
-            {column.cards.map((card) => (
-              <StackItem key={card.id} item={card} orientation={'vertical'} onReorder={reorderItem}>
+        <StackItem key={column.id} item={column} classNames='bg-deck' onReorder={reorderItem}>
+          <StackItemHeading />
+          <Stack orientation='vertical'>
+            {column.items?.map((card) => (
+              <StackItem key={card.id} item={card} onReorder={reorderItem}>
+                <StackItemHeading />
                 <KanbanBlock item={card} />
               </StackItem>
             ))}
