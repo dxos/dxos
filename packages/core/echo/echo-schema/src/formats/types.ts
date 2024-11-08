@@ -6,7 +6,6 @@ import { type JSONSchema } from '@effect/schema';
 
 import type { JsonSchemaType } from '../ast';
 
-// TODO(burdon): Arrays, maps, enums.
 export enum TypeEnum {
   String = 'string',
   Number = 'number',

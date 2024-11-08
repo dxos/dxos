@@ -5,7 +5,7 @@
 import jp from 'jsonpath';
 
 import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
-import { AST, type S, isLeafType, visit } from '@dxos/effect';
+import { AST, type S, visit } from '@dxos/effect';
 
 import { type FieldType } from './view';
 
@@ -39,10 +39,8 @@ export type SchemaFieldDescription = {
 export const mapSchemaToFields = (schema: S.Schema<any, any>): SchemaFieldDescription[] => {
   const fields = [] as SchemaFieldDescription[];
   visit(schema.ast, (node, path) => {
-    if (isLeafType(node)) {
-      const { type, format } = toFieldValueType(node);
-      fields.push({ property: path.join('.'), type, format });
-    }
+    const { type, format } = toFieldValueType(node);
+    fields.push({ property: path.join('.'), type, format });
   });
 
   return fields;
