@@ -29,7 +29,7 @@ import {
   MAX_COLUMNS,
   MAX_ROWS,
 } from '../defs';
-import { type CellScalarValue, type CellValue, type SheetType } from '../types';
+import { type CellScalarValue, type CellValue, type SheetType, type UndoDropAxis } from '../types';
 
 // Map sheet types to system types.
 // https://hyperformula.handsontable.com/guide/types-of-values.html
@@ -179,25 +179,53 @@ export class SheetModel extends Resource {
     return idx;
   }
 
-  dropRows(idx: string[]) {
-    idx.forEach((rowIndex) => {
-      this.clear({
-        from: addressFromIndex(this._sheet, `${this._sheet.columns[0]}@${rowIndex}`),
-        to: addressFromIndex(this._sheet, `${this._sheet.columns[this._sheet.columns.length - 1]}@${rowIndex}`),
-      });
-      this._sheet.rows.splice(this._sheet.rows.indexOf(rowIndex), 1);
-    });
+  dropRow(rowIndex: string): UndoDropAxis {
+    invariant(this._node);
+    const range = {
+      from: addressFromIndex(this._sheet, `${this._sheet.columns[0]}@${rowIndex}`),
+      to: addressFromIndex(this._sheet, `${this._sheet.columns[this._sheet.columns.length - 1]}@${rowIndex}`),
+    };
+    const values = this.getCellValues(range).flat();
+    const index = this._sheet.rows.indexOf(rowIndex);
+    this.clear(range);
+    this._sheet.rows.splice(index, 1);
+    delete this._sheet.rowMeta[rowIndex];
+    this.reset();
+    return { axis: 'row', index, axisIndex: rowIndex, axisMeta: this._sheet.rowMeta[rowIndex], values };
+  }
+
+  dropColumn(colIndex: string): UndoDropAxis {
+    invariant(this._node);
+    const range = {
+      from: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[0]}`),
+      to: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[this._sheet.rows.length - 1]}`),
+    };
+    const values = this.getCellValues(range).flat();
+    const index = this._sheet.columns.indexOf(colIndex);
+    this.clear(range);
+    this._sheet.columns.splice(index, 1);
+    delete this._sheet.columnMeta[colIndex];
+    this.reset();
+    return { axis: 'col', index, axisIndex: colIndex, axisMeta: this._sheet.rowMeta[colIndex], values };
+  }
+
+  undoDropRow({ index, axisIndex, axisMeta, values }: UndoDropAxis) {
+    invariant(this._node);
+    this._sheet.rows.splice(index, 0, axisIndex);
+    values.forEach((value, col) => this.setValue({ row: index, col }, value));
+    if (axisMeta) {
+      this._sheet.rowMeta[axisIndex] = axisMeta;
+    }
     this.reset();
   }
 
-  dropColumns(idx: string[]) {
-    idx.forEach((colIndex) => {
-      this.clear({
-        from: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[0]}`),
-        to: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[this._sheet.rows.length - 1]}`),
-      });
-      this._sheet.columns.splice(this._sheet.columns.indexOf(colIndex), 1);
-    });
+  undoDropColumn({ index, axisIndex, axisMeta, values }: UndoDropAxis) {
+    invariant(this._node);
+    this._sheet.columns.splice(index, 0, axisIndex);
+    values.forEach((value, row) => this.setValue({ col: index, row }, value));
+    if (axisMeta) {
+      this._sheet.columnMeta[axisIndex] = axisMeta;
+    }
     this.reset();
   }
 
