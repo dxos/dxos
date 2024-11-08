@@ -147,13 +147,14 @@ export class ViewProjection {
    * Delete a field from the view and return the deleted projection for potential undo.
    */
   deleteFieldProjection(property: string): { deleted: FieldProjection; index: number } {
-    const fieldProjection = this.getFieldProjection(property as JsonProp);
+    const current = this.getFieldProjection(property as JsonProp);
+    // NOTE(ZaymonFC): We need to clone this because the underlying object is going to be modified.
+    const fieldProjection = { field: { ...current.field }, props: { ...current.props } };
 
-    const fieldIndex = this._view.fields.findIndex((f) => f.property === property);
+    const fieldIndex = this._view.fields.findIndex((field) => field.property === property);
     if (fieldIndex !== -1) {
       this._view.fields.splice(fieldIndex, 1);
     }
-
     if (this._schema.jsonSchema.properties?.[property]) {
       delete this._schema.jsonSchema.properties[property];
     }
