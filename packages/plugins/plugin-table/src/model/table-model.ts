@@ -338,7 +338,6 @@ export class TableModel extends Resource {
     const field = fields[col];
     const dataIndex = this.displayToDataIndex.get(row) ?? row;
     const value = this.rows.value[dataIndex][field.property];
-
     if (value === undefined) {
       return '';
     }

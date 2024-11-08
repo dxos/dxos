@@ -44,13 +44,13 @@ export class ViewProjection {
   /**
    * Construct a new property.
    */
-  // TODO(burdon): Rename createProperty.
   createFieldProjection(): FieldType {
     const prop = getUniqueProperty(this._view);
     const field: FieldType = {
       property: prop,
     };
 
+    log('createFieldProjection', { field });
     this._view.fields.push(field);
     return field;
   }
@@ -66,7 +66,6 @@ export class ViewProjection {
       reference,
       ...rest
     } = this._schema.jsonSchema.properties![prop] ?? { property: prop, format: FormatEnum.None };
-
     let type: TypeEnum = schemaType as TypeEnum;
     let format: FormatEnum = schemaFormat as FormatEnum;
 
@@ -85,7 +84,7 @@ export class ViewProjection {
     const values = { property: prop, type, format, referenceSchema, ...rest };
     const props = values.type ? this._decode(values) : values;
 
-    log.info('getFieldProjection', { field, props });
+    log('getFieldProjection', { field, props });
     return { field, props };
   }
 
@@ -93,7 +92,7 @@ export class ViewProjection {
    * Update JSON schema property annotations.
    */
   setFieldProjection({ field, props }: Partial<FieldProjection>) {
-    log.info('setFieldProjection', { field, props });
+    log('setFieldProjection', { field, props });
 
     if (field) {
       const current = this._view.fields.find((f) => f.property === field.property);

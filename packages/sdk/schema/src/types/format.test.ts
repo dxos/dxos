@@ -84,7 +84,7 @@ describe('format', () => {
     }
   });
 
-  test.only('get props', ({ expect }) => {
+  test('get props', ({ expect }) => {
     const prop: Partial<PropertyType> = {
       property: 'org' as JsonProp,
       type: TypeEnum.Ref,
@@ -96,6 +96,5 @@ describe('format', () => {
 
     const props = getSchemaProperties(schema);
     expect(props).to.have.length(7);
-    console.log(JSON.stringify(props, null, 2));
   });
 });

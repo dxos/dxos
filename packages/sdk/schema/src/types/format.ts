@@ -4,7 +4,6 @@
 
 import { AST, DecimalPrecision, TypeEnum, FormatEnum, S, JsonProp } from '@dxos/echo-schema';
 import { findNode, findAnnotation, isSimpleType } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
 
 /**
  * Base schema.
@@ -184,20 +183,25 @@ export type SchemaProperty<T> = {
 
 /**
  * Get top-level properties from schema.
- * NOTE: Type literals are ignored (e.g., fixed type/format fields).
  */
 export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaProperty<T>[] => {
   return AST.getPropertySignatures(schema.ast).reduce<SchemaProperty<T>[]>((props, prop) => {
     const property = prop.name.toString() as JsonProp & keyof T;
+    const title = findAnnotation<string>(prop.type, AST.TitleAnnotationId);
     const baseType = findNode(prop.type, isSimpleType);
-    invariant(baseType);
-    const type = getTypeEnum(AST.isTransformation(baseType) ? baseType.to : baseType);
-    if (type) {
-      const title = findAnnotation<string>(prop.type, AST.TitleAnnotationId);
-      props.push({ property, type, title });
-    } else if (AST.isLiteral(baseType)) {
-      const title = findAnnotation<string>(baseType, AST.TitleAnnotationId);
-      props.push({ property, title });
+    if (baseType) {
+      const type = getTypeEnum(baseType);
+      if (type) {
+        props.push({ property, type, title });
+      } else if (AST.isLiteral(baseType)) {
+        props.push({ property, title });
+      }
+    } else {
+      const type = findNode(prop.type, AST.isTransformation);
+      if (type && AST.isTransformation(type)) {
+        const transformType = getTypeEnum(type.from);
+        props.push({ property, type: transformType, title });
+      }
     }
 
     return props;
