@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as ModalPrimitive from '@radix-ui/react-popper';
 import React, { type PropsWithChildren, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
 import { type DxGridElement, type DxAxisResize, Grid } from '@dxos/react-ui-grid';
