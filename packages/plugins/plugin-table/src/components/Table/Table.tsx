@@ -66,7 +66,7 @@ const TablePrimitive = ({ model }: TableProps) => {
   const { state: menuState, triggerRef, handleClick, close, showColumnSettings } = useTableMenuController();
 
   return (
-    <ModalPrimitive.Root>
+    <>
       {/* TODO(burdon): Is this required to be unique? */}
       <Grid.Root id='table-next'>
         <TableCellEditor tableModel={model} gridRef={gridRef} />
@@ -108,7 +108,7 @@ const TablePrimitive = ({ model }: TableProps) => {
         onOpenChange={close}
         triggerRef={triggerRef}
       />
-    </ModalPrimitive.Root>
+    </>
   );
 };
 

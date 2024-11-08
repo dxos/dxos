@@ -26,7 +26,7 @@ export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, trigg
     if (field) {
       return model?.projection.getFieldProjection(field.property);
     }
-  }, [model?.table?.view?.fields, columnId]);
+  }, [model?.projection, field]);
 
   if (!props || !field || !model?.projection || !model?.table?.view?.fields) {
     return null;

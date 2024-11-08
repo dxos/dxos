@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FormatEnum, FormatEnums, formatToType } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -38,24 +38,19 @@ export const FieldEditor = ({
 
   // TODO(burdon): Need to wrap otherwise throws error:
   //  Class constructor SchemaClass cannot be invoked without 'new'
-  const [{ fieldSchema }, setSchema] = useState({ fieldSchema: getPropertySchemaForFormat(props?.format) });
-  const handleValueChanged = useCallback(
-    (_props: PropertyType) => {
-      // Update schema if format changed.
-      // TODO(burdon): Callback should pass `touched` to indicate which fields have changed.
-      if (props.format !== _props.format) {
-        const fieldSchema = getPropertySchemaForFormat(_props.format);
-        setSchema({ fieldSchema });
-        const type = formatToType[_props.format];
-        setProps({ ...props, ..._props, type });
-      }
-    },
-    [props],
-  );
+  const fieldSchema = useMemo(() => getPropertySchemaForFormat(props?.format), [props?.format]);
 
-  useEffect(() => {
-    handleValueChanged(props);
-  }, [props]);
+  const handleValueChanged = useCallback((_props: PropertyType) => {
+    // Update schema if format changed.
+    // TODO(burdon): Callback should pass `changed` to indicate which fields have changed.
+    setProps((props) => {
+      const type = formatToType[_props.format];
+      if (props.type !== type) {
+        return { ...props, ..._props, type };
+      }
+      return props;
+    });
+  }, []);
 
   const handleAdditionalValidation = useCallback(
     ({ property }: PropertyType) => {
