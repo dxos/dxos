@@ -198,7 +198,7 @@ export const DeckLayout = ({
                 ref={deckRef}
               >
                 <Plank
-                  entry={layoutParts.solo?.[0] ?? { id: 'unknown-solo' }}
+                  entry={layoutParts.solo?.[0]}
                   layoutParts={layoutParts}
                   part='solo'
                   layoutMode={layoutMode}

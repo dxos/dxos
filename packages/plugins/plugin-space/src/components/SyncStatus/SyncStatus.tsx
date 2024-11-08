@@ -60,14 +60,16 @@ export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap
     return <StatusBar.Item title={title}>{icon}</StatusBar.Item>;
   } else {
     return (
-      <StatusBar.Item title={title}>
-        <Popover.Root>
-          <Popover.Trigger>{icon}</Popover.Trigger>
+      <Popover.Root>
+        <Popover.Trigger asChild>
+          <StatusBar.Button title={title}>{icon}</StatusBar.Button>
+        </Popover.Trigger>
+        <Popover.Portal>
           <Popover.Content sideOffset={16}>
             <SyncStatusDetail state={state} summary={summary} debug={false} />
           </Popover.Content>
-        </Popover.Root>
-      </StatusBar.Item>
+        </Popover.Portal>
+      </Popover.Root>
     );
   }
 };
@@ -87,9 +89,9 @@ export const SyncStatusDetail = ({
 
   // TODO(burdon): Normalize to max document count?
   return (
-    <div className={mx('flex flex-col text-xs min-w-[16rem]', classNames)}>
-      <h1 className='p-2'>{t('sync status title')}</h1>
-      <div className='flex flex-col gap-[2px] my-[2px]'>
+    <div className={mx('flex flex-col gap-3 p-2 text-xs min-w-[16rem]', classNames)}>
+      <h1>{t('sync status title')}</h1>
+      <div className='flex flex-col gap-2'>
         {entries.map(([spaceId, state]) => (
           <SpaceRow key={spaceId} spaceId={spaceId} state={state} />
         ))}
