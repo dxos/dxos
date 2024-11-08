@@ -14,22 +14,6 @@ export interface HasId {
   readonly id: string;
 }
 
-//
-// Branded types
-//
-
-export type JsonPath = string & { __JsonPath: true };
-export type JsonProp = string & { __JsonProp: true };
-
-const PATH_REGEX = /^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*$/;
-const PROP_REGEX = /^\w+$/;
-
-/**
- * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
- */
-export const JsonPath = S.NonEmptyString.pipe(S.pattern(PATH_REGEX)) as any as S.Schema<JsonPath>;
-export const JsonProp = S.NonEmptyString.pipe(S.pattern(PROP_REGEX)) as any as S.Schema<JsonProp>;
-
 /**
  * @internal
  */

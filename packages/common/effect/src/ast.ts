@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type Schema as S } from '@effect/schema';
+import { AST, Schema as S } from '@effect/schema';
 import { Option, pipe } from 'effect';
 
 import { invariant } from '@dxos/invariant';
@@ -14,7 +14,25 @@ import { invariant } from '@dxos/invariant';
 // https://effect-ts.github.io/effect/schema/AST.ts.html
 //
 
+// const SimpleTypes = S.Literal('array', 'boolean', 'integer', 'null', 'number', 'object', 'string');
+
 export const isLeafType = (node: AST.AST) => !AST.isTupleType(node) && !AST.isTypeLiteral(node);
+
+//
+// Branded types
+//
+
+export type JsonProp = string & { __JsonProp: true };
+export type JsonPath = string & { __JsonPath: true };
+
+const PATH_REGEX = /^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*$/;
+const PROP_REGEX = /^\w+$/;
+
+/**
+ * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
+ */
+export const JsonPath = S.NonEmptyString.pipe(S.pattern(PATH_REGEX)) as any as S.Schema<JsonPath>;
+export const JsonProp = S.NonEmptyString.pipe(S.pattern(PROP_REGEX)) as any as S.Schema<JsonProp>;
 
 /**
  * Get annotation or return undefined.
@@ -28,7 +46,6 @@ export const getAnnotation =
  * Recursively descend into AST to find base type.
  * AST.PropertySignature: { name, type: AST, isOptional, isReadonly, annotations }
  */
-// TODO(burdon): Reuse visitor to find node that represents a base type (move from echo-schema).
 export const getBaseType = (node: AST.AST): AST.AST => {
   if (AST.isRefinement(node)) {
     return getBaseType(node.from);
@@ -46,24 +63,51 @@ export const getBaseType = (node: AST.AST): AST.AST => {
 };
 
 /**
- * Get the AST node for the given property (dot-path).
+ * Recursively descend into AST to find first matching annotations
  */
-export const getProperty = (schema: S.Schema<any>, path: string): AST.AST | undefined => {
-  let node: AST.AST = schema.ast;
-  for (const part of path.split('.')) {
-    const props = AST.getPropertySignatures(node);
-    const prop = props.find((prop) => prop.name === part);
-    if (!prop) {
-      return undefined;
+export const getFirstAnnotation = <T>(node: AST.AST, annotationId: symbol): T | undefined => {
+  const getAnnotationById = getAnnotation(annotationId);
+  const getBaseAnnotation = (node: AST.AST): T | undefined => {
+    const value = getAnnotationById(node);
+    if (value !== undefined) {
+      return value as T;
     }
 
-    // TODO(burdon): Check if leaf.
-    const type = getBaseType(prop.type);
-    invariant(type, `invalid type: ${path}`);
-    node = type;
-  }
+    if (AST.isUnion(node)) {
+      for (const type of node.types) {
+        const value = getBaseAnnotation(type);
+        if (value !== undefined) {
+          return value as T;
+        }
+      }
+    }
+  };
 
-  return node;
+  return getBaseAnnotation(node);
+};
+
+/**
+ * Get the AST node for the given property (dot-path).
+ */
+export const getPropertyType = (schema: S.Schema<any>, path: JsonPath | JsonProp): AST.AST | undefined => {
+  const getProp = (node: AST.AST, path: JsonProp[]): AST.AST | undefined => {
+    const [name, ...rest] = path;
+    const typeNode = getBaseType(node);
+    invariant(AST.isTypeLiteral(typeNode));
+    for (const prop of AST.getPropertySignatures(typeNode)) {
+      if (prop.name === name) {
+        if (rest.length) {
+          return getProp(prop.type, rest);
+        } else {
+          return prop.type;
+        }
+      }
+    }
+
+    return undefined;
+  };
+
+  return getProp(schema.ast, path.split('.') as JsonProp[]);
 };
 
 export enum VisitResult {

@@ -16,7 +16,7 @@ export const BasePropertySchema = S.Struct({
 
 export type BaseProperty = S.Schema.Type<typeof BasePropertySchema>;
 
-const extend = (format: FormatEnum, type: TypeEnum, fields = {}) =>
+const extend = (format: FormatEnum, type: TypeEnum, fields: S.Struct.Fields = {}) =>
   S.extend(
     BasePropertySchema,
     S.Struct({
@@ -56,8 +56,14 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
   [FormatEnum.Number]: extend(FormatEnum.Number, TypeEnum.Number),
   [FormatEnum.Boolean]: extend(FormatEnum.Boolean, TypeEnum.Boolean),
   [FormatEnum.Ref]: extend(FormatEnum.Ref, TypeEnum.Ref, {
-    referenceSchema: S.NonEmptyString.annotations({ [AST.TitleAnnotationId]: 'Schema' }),
-    referenceProperty: S.optional(JsonProp.annotations({ [AST.TitleAnnotationId]: 'Lookup property' })),
+    referenceSchema: S.NonEmptyString.annotations({
+      [AST.TitleAnnotationId]: 'Schema',
+    }),
+    referenceProperty: S.optional(
+      JsonProp.annotations({
+        [AST.TitleAnnotationId]: 'Lookup property',
+      }),
+    ),
   }),
 
   //
@@ -80,7 +86,11 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
 
   [FormatEnum.Currency]: extend(FormatEnum.Currency, TypeEnum.Number, {
     multipleOf: S.optional(DecimalPrecision),
-    currency: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Currency code' })),
+    currency: S.optional(
+      S.String.annotations({
+        [AST.TitleAnnotationId]: 'Currency code',
+      }),
+    ),
   }),
   [FormatEnum.Integer]: extend(FormatEnum.Integer, TypeEnum.Number),
   [FormatEnum.Percent]: extend(FormatEnum.Percent, TypeEnum.Number, {
@@ -166,7 +176,6 @@ export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> |
 export type SchemaProperty<T> = {
   property: string & keyof T;
   type: TypeEnum;
-  format: FormatEnum;
   title?: string;
 };
 
@@ -175,19 +184,19 @@ export type SchemaProperty<T> = {
  * NOTE: Type literals are ignored (e.g., fixed type/format fields).
  */
 export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaProperty<T>[] => {
+  const getTitle = getAnnotation<string>(AST.TitleAnnotationId);
+
   return AST.getPropertySignatures(schema.ast).reduce<SchemaProperty<T>[]>((props, prop) => {
-    // TODO(burdon): Factor out.
     const baseType = getBaseType(prop.type);
     if (baseType) {
-      let type = getTypeEnumFrom(baseType);
-      let title = getAnnotation<string>(AST.TitleAnnotationId)(baseType);
+      let type = getTypeEnum(baseType);
+      const title = getTitle(baseType);
       if (!type && AST.isTransformation(baseType)) {
-        title = getAnnotation<string>(AST.TitleAnnotationId)(baseType);
-        type = getTypeEnumFrom(baseType.to);
+        type = getTypeEnum(baseType.to);
       }
 
       if (type) {
-        props.push({ property: prop.name.toString() as any, type, format: FormatEnum.None, title });
+        props.push({ property: prop.name.toString() as any, type, title });
       }
     }
 
@@ -195,12 +204,14 @@ export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaProperty<T>[]
   }, []);
 };
 
-const getTypeEnumFrom = (ast: AST.AST): TypeEnum | undefined => {
+const getTypeEnum = (ast: AST.AST): TypeEnum | undefined => {
   if (AST.isStringKeyword(ast)) {
     return TypeEnum.String;
-  } else if (AST.isNumberKeyword(ast)) {
+  }
+  if (AST.isNumberKeyword(ast)) {
     return TypeEnum.Number;
-  } else if (AST.isBooleanKeyword(ast)) {
+  }
+  if (AST.isBooleanKeyword(ast)) {
     return TypeEnum.Boolean;
   }
 };

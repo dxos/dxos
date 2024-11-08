@@ -91,15 +91,25 @@ CIRCLECI_ORG="dxos"
 CIRCLECI_REPO="dxos"
 
 function ci_status () {
-  curl -s -H "Circle-Token: $CIRCLECI_TOKEN" "https://circleci.com/api/v2/pipeline/$1/workflow" | jq
+  tput sc
+  PROJECT_ID=$(curl -s -H "Circle-Token: $CIRCLECI_TOKEN" "https://circleci.com/api/v2/project/github/$CIRCLECI_ORG/$CIRCLECI_REPO/pipeline?branch=$(git branch --show-current)" | jq -r ".items.[0].id")
+  echo "Pipeline: $PROJECT_ID"
+  RESULT=$(curl -s -H "Circle-Token: $CIRCLECI_TOKEN" "https://circleci.com/api/v2/pipeline/$PROJECT_ID/workflow")
+  STATUS=$(echo -e "$RESULT" | jq -r ".items.[0].status")
+  echo $STATUS
+  if [ "$STATUS" = "success" ] || [ "$STATUS" = "error" ]; then
+    return 1
+  fi;
+  echo -e "$RESULT" | jq
+  tput rc
 }
 
 function ci () {
-  PROJECT_ID=$(curl -s -H "Circle-Token: $CIRCLECI_TOKEN" "https://circleci.com/api/v2/project/github/${CIRCLECI_ORG}/${CIRCLECI_REPO}/pipeline?branch=$(git branch --show-current)" | jq -r ".items.[0].id")
-  echo "Pipeline: ${PROJECT_ID}"
   while true; do
-    clear
-    ci_status $PROJECT_ID
+    ci_status
+    if [ $? -eq 1 ]; then
+      break
+    fi
     sleep 5
   done
 }

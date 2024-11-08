@@ -6,57 +6,78 @@ import { AST, Schema as S } from '@effect/schema';
 import { Option, pipe } from 'effect';
 import { describe, test } from 'vitest';
 
-import { getProperty, getBaseType, isLeafType, visit } from './ast';
+import { invariant } from '@dxos/invariant';
 
-const TestPropTypeId = Symbol.for('@example/schema/test');
-const TestProp = S.NonEmptyString.pipe(
-  S.pattern(/^[a-zA-Z]\w*$/, {
-    typeId: TestPropTypeId,
-    identifier: 'TestProp',
-    title: 'TestProp',
-    description: 'Test property name',
+import {
+  getPropertyType,
+  getBaseType,
+  isLeafType,
+  visit,
+  type JsonPath,
+  getAnnotation,
+  getFirstAnnotation,
+} from './ast';
+
+const ZipCode = S.String.pipe(
+  S.pattern(/^\d{5}$/, {
+    typeId: Symbol.for('@example/schema/ZipCode'),
+    identifier: 'ZipCode',
+    title: 'ZIP code',
+    description: 'Simple 5 digit zip code',
   }),
 );
 
-describe('AST', () => {
-  test('getProperty', ({ expect }) => {
-    const TestSchema = S.Struct({
-      name: S.String,
-      address: S.Struct({
-        zip: S.String,
-      }),
-    });
+const LatLng = S.Struct({
+  lat: S.Number,
+  lng: S.Number,
+});
 
-    {
-      const prop = getProperty(TestSchema, 'name');
-      expect(prop).to.exist;
-    }
-    {
-      const prop = getProperty(TestSchema, 'address.zip');
-      expect(prop).to.exist;
-    }
-    {
-      const prop = getProperty(TestSchema, 'address.city');
-      expect(prop).not.to.exist;
-    }
+const Contact = S.Struct({
+  name: S.String,
+  address: S.Struct({
+    zip: ZipCode,
+    location: S.optional(LatLng),
+  }),
+});
+
+const getTitle = getAnnotation(AST.TitleAnnotationId);
+
+describe('AST', () => {
+  test('validation', ({ expect }) => {
+    const validate = S.validateSync(ZipCode);
+    validate('11205');
+
+    expect(() => validate(null)).to.throw();
+    expect(() => validate(12345)).to.throw();
+    expect(() => validate('')).to.throw();
+    expect(() => validate('1234')).to.throw();
   });
 
-  test('validation', ({ expect }) => {
-    const validate = S.validateSync(TestProp);
-    validate('x');
-    validate('x100');
-    validate('foo_bar');
-
-    expect(() => validate('')).to.throw();
-    expect(() => validate('2foo')).to.throw();
-    expect(() => validate(4)).to.throw();
+  test('getProperty', ({ expect }) => {
+    {
+      const prop = getPropertyType(Contact, 'name' as JsonPath);
+      expect(prop).to.exist;
+    }
+    {
+      const prop = getPropertyType(Contact, 'address.zip' as JsonPath);
+      invariant(prop);
+      expect(getTitle(prop)).to.eq('ZIP code');
+    }
+    {
+      const prop = getPropertyType(Contact, 'address.location.lat' as JsonPath);
+      invariant(prop);
+      expect(AST.isNumberKeyword(prop)).to.be.true;
+    }
+    {
+      const prop = getPropertyType(Contact, 'address.city' as JsonPath);
+      expect(prop).not.to.exist;
+    }
   });
 
   test('getType', ({ expect }) => {
     const TestSchema = S.Struct({
       p1: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'P-1' })),
-      // p2: S.optional(TestProp.annotations({ [AST.TitleAnnotationId]: 'P-2' })),
-      p3: S.optional(TestProp).annotations({ [AST.TitleAnnotationId]: 'P-3' }),
+      p2: S.optional(ZipCode).annotations({ [AST.TitleAnnotationId]: 'P-2' }),
     });
 
     const props = [];
@@ -75,15 +96,27 @@ describe('AST', () => {
         name: 'p1',
         title: 'P-1',
       },
-      // {
-      //   name: 'p2',
-      //   title: 'P-2',
-      // },
       {
-        name: 'p3',
-        title: 'P-3',
+        name: 'p2',
+        title: 'P-2',
       },
     ]);
+  });
+
+  test('getAnnotation', ({ expect }) => {
+    const Type = S.NonEmptyString.pipe(S.pattern(/^\d{5}$/)).annotations({ [AST.TitleAnnotationId]: 'original title' });
+    const Contact = S.Struct({
+      p1: Type.annotations({ [AST.TitleAnnotationId]: 'new title' }),
+      p2: Type.annotations({ [AST.TitleAnnotationId]: 'new title' }).pipe(S.optional),
+      p3: S.optional(Type.annotations({ [AST.TitleAnnotationId]: 'new title' })),
+    });
+
+    {
+      const prop = getPropertyType(Contact, 'p3' as JsonPath);
+      invariant(prop);
+      const value = getFirstAnnotation(prop, AST.TitleAnnotationId);
+      expect(value).to.eq('new title');
+    }
   });
 
   test('visit', ({ expect }) => {
