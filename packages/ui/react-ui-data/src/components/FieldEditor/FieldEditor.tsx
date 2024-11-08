@@ -4,6 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { type SchemaResolver } from '@dxos/echo-db';
 import { FormatEnum, FormatEnums, formatToType } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
@@ -22,18 +23,21 @@ export type FieldEditorProps = {
   view: ViewType;
   projection: ViewProjection;
   field: FieldType;
-  onClose: () => void; // TODO(burdon): Status?
+  registry?: SchemaResolver;
+  onClose: () => void;
 };
 
 export const FieldEditor = ({ view, projection, field, onClose }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.property).props);
+
   useEffect(() => {
     const { props } = projection.getFieldProjection(field.property);
     setProps(props);
   }, [field, projection]);
+
   // TODO(burdon): Need to wrap otherwise throws error:
-  //  Class constructor SchemaClass cannot be invoked without 'new'
+  //  Class constructor SchemaClass cannot be invoked without 'new'.
   const [{ fieldSchema }, setFieldSchema] = useState({ fieldSchema: getPropertySchemaForFormat(props?.format) });
   const handleValueChanged = useCallback(
     (_props: PropertyType) => {

@@ -24,9 +24,10 @@ import { Filter } from '../query';
 
 export interface SchemaResolver {
   getSchema(typename: string): MutableSchema | undefined;
+  query(): Promise<MutableSchema[]>;
 }
 
-type SchemaListChangedCallback = (schema: MutableSchema[]) => void;
+export type SchemaSubscriptionCallback = (schema: MutableSchema[]) => void;
 
 export type MutableSchemaRegistryOptions = {
   /**
@@ -44,7 +45,7 @@ export class MutableSchemaRegistry implements SchemaResolver {
   private readonly _schemaById: Map<string, MutableSchema> = new Map();
   private readonly _schemaByType: Map<string, MutableSchema> = new Map();
   private readonly _unsubscribeById: Map<string, UnsubscribeCallback> = new Map();
-  private readonly _schemaListChangeListeners: SchemaListChangedCallback[] = [];
+  private readonly _schemaSubscriptionCallbacks: SchemaSubscriptionCallback[] = [];
 
   constructor(
     private readonly _db: EchoDatabase,
@@ -113,21 +114,21 @@ export class MutableSchemaRegistry implements SchemaResolver {
     return [...runtimeSchemas, ...storedSchemas];
   }
 
-  // TODO(burdon): Rename query (`list` shouldn't be async).
-  public async list(): Promise<MutableSchema[]> {
+  // TODO(burdon): Can this be made sync?
+  public async query(): Promise<MutableSchema[]> {
     const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
     return objects.map((stored) => {
       return this._register(stored);
     });
   }
 
-  public subscribe(callback: SchemaListChangedCallback): UnsubscribeCallback {
+  public subscribe(callback: SchemaSubscriptionCallback): UnsubscribeCallback {
     callback([...this._schemaById.values()]);
-    this._schemaListChangeListeners.push(callback);
+    this._schemaSubscriptionCallbacks.push(callback);
     return () => {
-      const index = this._schemaListChangeListeners.indexOf(callback);
+      const index = this._schemaSubscriptionCallbacks.indexOf(callback);
       if (index >= 0) {
-        this._schemaListChangeListeners.splice(index, 1);
+        this._schemaSubscriptionCallbacks.splice(index, 1);
       }
     };
   }
@@ -187,6 +188,6 @@ export class MutableSchemaRegistry implements SchemaResolver {
 
   private _notifySchemaListChanged() {
     const list = [...this._schemaById.values()];
-    this._schemaListChangeListeners.forEach((s) => s(list));
+    this._schemaSubscriptionCallbacks.forEach((s) => s(list));
   }
 }

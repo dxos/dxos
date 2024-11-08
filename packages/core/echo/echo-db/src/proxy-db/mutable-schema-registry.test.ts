@@ -74,7 +74,7 @@ describe('schema registry', () => {
   test('get all dynamic schemas', async () => {
     const { db, registry } = await setupTest();
     const schemas = createTestSchemas().map((s) => db.add(s));
-    const retrieved = await registry.list();
+    const retrieved = await registry.query();
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
       expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;

@@ -14,7 +14,7 @@ import { arrayMove } from '@dxos/util';
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
 
-const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
+const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
 
 export type ViewEditorProps = ThemedClassName<{
   schema: MutableSchema;
