@@ -18,17 +18,14 @@ import {
 import { translationKey } from '../../translations';
 import { Form, FormInput } from '../Form';
 
-export const FieldEditor = ({
-  field,
-  projection,
-  view,
-  onComplete,
-}: {
+export type FieldEditorProps = {
   field: FieldType;
   projection: ViewProjection;
   view: ViewType;
   onComplete: () => void;
-}) => {
+};
+
+export const FieldEditor = ({ field, projection, view, onComplete }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.property).props);
   useEffect(() => {
