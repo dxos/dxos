@@ -18,6 +18,7 @@ export const StatusBarPanel = () => {
     <Popover.Root open={open} onOpenChange={setOpen}>
       <StatusBar.Container>
         <StatusBar.EndContent>
+          <Surface role='status' />
           <Popover.Trigger asChild>
             <StatusBar.Button aria-label='Give feedback about composer' data-joyride='welcome/feedback'>
               <Icon icon='ph--paper-plane-tilt--regular' size={4} />
@@ -32,7 +33,6 @@ export const StatusBarPanel = () => {
             </a>
           </StatusBar.Button>
         </StatusBar.EndContent>
-        <Surface role='status' />
       </StatusBar.Container>
       <Popover.Content classNames='shadow-lg'>
         <FeedbackForm onClose={() => setOpen(false)} />

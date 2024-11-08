@@ -10,5 +10,6 @@ export default {
   id: AUTOMATION_PLUGIN,
   name: 'Automation',
   description: 'Automation workflows.',
-  icon: 'ph--magic-wand--regular',
+  icon: 'ph--flow-arrow--regular',
+  tags: ['experimental'],
 } satisfies PluginMeta;

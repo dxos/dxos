@@ -34,10 +34,12 @@ import { DECK_PLUGIN } from '../../meta';
 import { useDeckContext } from '../DeckContext';
 import { useLayout } from '../LayoutContext';
 
+const UNKNOWN_ID = 'unknown_id';
+
 export type PlankProps = {
-  entry: LayoutEntry;
+  entry?: LayoutEntry;
   layoutParts: LayoutParts;
-  // TODO(wittjosiah): Remove.
+  // TODO(wittjosiah): Remove. Pass in LayoutCoordinate instead of LayoutEntry.
   part: LayoutPart;
   layoutMode: Layout['layoutMode'];
   flatDeck?: boolean;
@@ -47,26 +49,28 @@ export type PlankProps = {
 export const Plank = memo(({ entry, layoutParts, part, flatDeck, searchEnabled, layoutMode }: PlankProps) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const dispatch = useIntentDispatcher();
+  const coordinate: LayoutCoordinate = useMemo(() => ({ part, entryId: entry?.id ?? UNKNOWN_ID }), [entry?.id, part]);
   const { popoverAnchorId, scrollIntoView } = useLayout();
   const { plankSizing } = useDeckContext();
   const { graph } = useGraph();
-  const node = useNode(graph, entry.id);
+  const node = useNode(graph, entry?.id);
   const rootElement = useRef<HTMLDivElement | null>(null);
   const resizeable = layoutMode === 'deck';
 
-  const attendableAttrs = useAttendableAttributes(entry.id);
-  const coordinate: LayoutCoordinate = useMemo(() => ({ part, entryId: entry.id }), [entry.id, part]);
+  const attendableAttrs = useAttendableAttributes(coordinate.entryId);
   const index = indexInPart(layoutParts, coordinate);
   const length = partLength(layoutParts, part);
   const canIncrementStart = part === 'main' && index !== undefined && index > 0 && length !== undefined && length > 1;
   const canIncrementEnd = part === 'main' && index !== undefined && index < length - 1 && length !== undefined;
 
-  const size = plankSizing?.[entry.id] as number | undefined;
+  const size = plankSizing?.[coordinate.entryId] as number | undefined;
   const setSize = useCallback(
-    debounce((newSize: number) => {
-      void dispatch({ action: DeckAction.UPDATE_PLANK_SIZE, data: { id: entry.id, size: newSize } });
-    }, 200),
-    [dispatch, entry.id],
+    debounce(
+      (newSize: number) =>
+        dispatch({ action: DeckAction.UPDATE_PLANK_SIZE, data: { id: coordinate.entryId, size: newSize } }),
+      200,
+    ),
+    [dispatch, coordinate.entryId],
   );
 
   // TODO(thure): Tabster’s focus group should handle moving focus to Main, but something is blocking it.
@@ -77,25 +81,28 @@ export const Plank = memo(({ entry, layoutParts, part, flatDeck, searchEnabled, 
   }, []);
 
   useLayoutEffect(() => {
-    if (scrollIntoView === entry.id) {
+    if (scrollIntoView === coordinate.entryId) {
       rootElement.current?.focus({ preventScroll: true });
       layoutMode === 'deck' && rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
     }
-  }, [scrollIntoView, layoutMode]);
+  }, [coordinate.entryId, scrollIntoView, layoutMode]);
 
   const isSolo = layoutMode === 'solo' && part === 'solo';
-  const isSuppressed = (layoutMode === 'solo' && part !== 'solo') || (layoutMode === 'deck' && part === 'solo');
+  const isSuppressed =
+    (layoutMode === 'solo' && part !== 'solo') ||
+    (layoutMode === 'deck' && part === 'solo') ||
+    coordinate.entryId === UNKNOWN_ID;
 
   const sizeAttrs = useMainSize();
 
   const data = useMemo(
     () =>
       node && {
-        ...(entry.path ? { subject: node.data, path: entry.path } : { object: node.data }),
+        ...(entry?.path ? { subject: node.data, path: entry.path } : { object: node.data }),
         coordinate,
         popoverAnchorId,
       },
-    [node],
+    [node, node?.data, entry?.path, coordinate, popoverAnchorId],
   );
 
   // TODO(wittjosiah): Change prop to accept a component.

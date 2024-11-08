@@ -34,7 +34,9 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
-    "@dxos/debug": "workspace:*"
+    "@dxos/async": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@preact/signals-core": "^1.6.0"
   },
   "devDependencies": {
     "@dxos/react-client": "workspace:*",

@@ -249,6 +249,13 @@ describe('Graph', () => {
     });
   });
 
+  test('pickle', () => {
+    const pickle =
+      '{"nodes":[{"id":"root","type":"dxos.org/type/GraphRoot","properties":{}},{"id":"test1","type":"test","properties":{"value":1}},{"id":"test2","type":"test","properties":{"value":2}}],"edges":{"root":["test1","test2"],"test1":["test2"],"test2":[]}}';
+    const graph = Graph.from(pickle);
+    expect(graph.pickle()).to.equal(pickle);
+  });
+
   test('waitForNode', async () => {
     const graph = new Graph();
     const promise = graph.waitForNode('test1');

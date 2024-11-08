@@ -55,6 +55,7 @@
     "@dxos/migrations": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-metadata": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
