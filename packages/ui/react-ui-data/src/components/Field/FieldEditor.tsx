@@ -55,7 +55,7 @@ export const FieldEditor = ({ field, projection, view, onClose }: FieldEditorPro
     handleValueChanged(props);
   }, [props]);
 
-  const handleAdditionalValidation = useCallback(
+  const handleValidate = useCallback(
     ({ property }: PropertyType) => {
       if (property && view.fields.find((f) => f.property === property && f.property !== field.property)) {
         return [{ path: 'property', message: `'${property}' is not unique.` }];
@@ -64,7 +64,7 @@ export const FieldEditor = ({ field, projection, view, onClose }: FieldEditorPro
     [view.fields, field],
   );
 
-  const handleSet = useCallback(
+  const handleSave = useCallback(
     (props: PropertyType) => {
       projection.setFieldProjection({ field, props });
       onClose();
@@ -85,9 +85,9 @@ export const FieldEditor = ({ field, projection, view, onClose }: FieldEditorPro
       schema={fieldSchema}
       filter={(props) => props.filter((p) => p.property !== 'type')}
       sort={['property', 'format']}
-      additionalValidation={handleAdditionalValidation}
       onValuesChanged={handleValueChanged}
-      onSave={handleSet}
+      onValidate={handleValidate}
+      onSave={handleSave}
       onCancel={onClose}
       Custom={{
         format: (props) => (
