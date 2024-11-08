@@ -73,10 +73,12 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
   [FormatEnum.Ref]: extend(FormatEnum.Ref, TypeEnum.Ref, {
     referenceSchema: S.NonEmptyString.annotations({
       [AST.TitleAnnotationId]: 'Schema',
+      [AST.DescriptionAnnotationId]: 'Schema typename.',
     }),
     referenceProperty: S.optional(
       JsonProp.annotations({
         [AST.TitleAnnotationId]: 'Lookup property',
+        [AST.DescriptionAnnotationId]: 'Referenced property.',
       }),
     ),
   }),

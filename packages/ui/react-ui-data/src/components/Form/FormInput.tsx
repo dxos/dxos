@@ -12,7 +12,7 @@ export type FormInputProps<T extends object> = {
   property: keyof T;
   type?: 'string' | 'number' | 'boolean';
   label: string;
-  options?: Array<{ value: string | number; label: string }>;
+  options?: Array<{ value: string | number; label?: string }>;
   disabled?: boolean;
   placeholder?: string;
   getInputProps: (property: keyof T, type?: 'input' | 'select') => Record<string, any>;
@@ -45,7 +45,7 @@ export const FormInput = <T extends object>({
                 <Select.Viewport>
                   {options.map(({ value, label }) => (
                     <Select.Option key={String(value)} value={String(value)}>
-                      {label}
+                      {label ?? String(value)}
                     </Select.Option>
                   ))}
                 </Select.Viewport>

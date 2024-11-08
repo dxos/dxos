@@ -101,6 +101,22 @@ export const FieldEditor = ({
             }))}
           />
         ),
+        referenceSchema: (props) => (
+          <FormInput<PropertyType>
+            {...props}
+            options={[
+              { value: 'example.com/type/A' },
+              { value: 'example.com/type/B' },
+              { value: 'example.com/type/C' },
+            ]}
+          />
+        ),
+        referenceProperty: (props) => (
+          <FormInput<PropertyType>
+            {...props}
+            options={[{ value: 'prop-1' }, { value: 'prop-2' }, { value: 'prop-3' }]}
+          />
+        ),
       }}
     />
   );
