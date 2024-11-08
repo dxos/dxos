@@ -54,6 +54,11 @@ export type PluginMeta = {
   homePage?: string;
 
   /**
+   * URL of source code.
+   */
+  source?: string;
+
+  /**
    * Tags to help categorize the plugin.
    */
   tags?: string[];
