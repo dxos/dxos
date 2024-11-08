@@ -9,9 +9,22 @@ import { findNode, findAnnotation, isSimpleType } from '@dxos/effect';
  * Base schema.
  */
 export const BasePropertySchema = S.Struct({
-  property: JsonProp.annotations({ [AST.TitleAnnotationId]: 'Property' }),
-  title: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Title' })),
-  description: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Description' })),
+  property: JsonProp.annotations({
+    [AST.TitleAnnotationId]: 'Property',
+    [AST.DescriptionAnnotationId]: 'Field name.',
+  }),
+  title: S.optional(
+    S.String.annotations({
+      [AST.TitleAnnotationId]: 'Label',
+      [AST.DescriptionAnnotationId]: 'Property label.',
+    }),
+  ),
+  description: S.optional(
+    S.String.annotations({
+      [AST.TitleAnnotationId]: 'Description',
+      [AST.DescriptionAnnotationId]: 'Property description.',
+    }),
+  ),
 });
 
 export type BaseProperty = S.Schema.Type<typeof BasePropertySchema>;
@@ -91,6 +104,7 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
     currency: S.optional(
       S.String.annotations({
         [AST.TitleAnnotationId]: 'Currency code',
+        [AST.DescriptionAnnotationId]: 'ISO 4217 currency code.',
       }),
     ),
   }),
@@ -175,10 +189,14 @@ export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> |
   return undefined;
 };
 
+const noDefault = (value?: string, defaultValue?: string): string | undefined =>
+  (value === 'a string' ? undefined : value) ?? defaultValue;
+
 export type SchemaProperty<T> = {
   property: string & keyof T;
   type?: TypeEnum;
   title?: string;
+  description?: string;
 };
 
 /**
@@ -187,20 +205,20 @@ export type SchemaProperty<T> = {
 export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaProperty<T>[] => {
   return AST.getPropertySignatures(schema.ast).reduce<SchemaProperty<T>[]>((props, prop) => {
     const property = prop.name.toString() as JsonProp & keyof T;
-    const title = findAnnotation<string>(prop.type, AST.TitleAnnotationId);
+    const title = noDefault(findAnnotation<string>(prop.type, AST.TitleAnnotationId));
+    const description = noDefault(findAnnotation<string>(prop.type, AST.DescriptionAnnotationId));
     const baseType = findNode(prop.type, isSimpleType);
     if (baseType) {
       const type = getTypeEnum(baseType);
       if (type) {
-        props.push({ property, type, title });
+        props.push({ property, type, title, description });
       } else if (AST.isLiteral(baseType)) {
-        props.push({ property, title });
+        props.push({ property, title, description });
       }
     } else {
       const type = findNode(prop.type, AST.isTransformation);
       if (type && AST.isTransformation(type)) {
-        const transformType = getTypeEnum(type.from);
-        props.push({ property, type: transformType, title });
+        props.push({ property, type: getTypeEnum(type.from), title, description });
       }
     }
 

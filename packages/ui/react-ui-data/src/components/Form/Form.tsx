@@ -70,7 +70,7 @@ export const Form = <T extends object>({
   return (
     <div className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
       {/* Generated fields. */}
-      {props.map(({ property, type, title }) => {
+      {props.map(({ property, type, title, description }) => {
         const PropertyInput = Custom?.[property] ?? FormInput<T>;
         return (
           <div key={property} role='none'>
@@ -78,6 +78,7 @@ export const Form = <T extends object>({
               property={property}
               type={type === 'number' ? 'number' : undefined}
               label={title ?? property}
+              placeholder={description}
               disabled={readonly}
               getInputProps={getInputProps}
               getErrorValence={getErrorValence}
