@@ -228,18 +228,16 @@ describe('ViewProjection', () => {
     const initialEmail = projection.getFieldProjection('email' as JsonProp);
     const initialSchemaProps = { ...mutable.jsonSchema.properties! };
 
-    // Delete and restore
+    // Delete and restore.
     const { deleted, index } = projection.deleteFieldProjection('email');
 
-    console.log('deleted', deleted);
-
-    // Verify email is deleted but name is unchanged
+    // Verify email is deleted but name is unchanged.
     expect(mutable.jsonSchema.properties!.email).to.be.undefined;
     expect(mutable.jsonSchema.properties!.name).to.deep.equal(initialSchemaProps.name);
 
     projection.setFieldProjection(deleted, index);
 
-    // Verify field position is restored
+    // Verify field position is restored.
     const restoredFieldsOrder = view.fields.map((f) => f.property);
     expect(restoredFieldsOrder.indexOf('email' as JsonProp)).to.equal(emailIndex);
 
@@ -247,7 +245,7 @@ describe('ViewProjection', () => {
     const restored = projection.getFieldProjection('email' as JsonProp);
     expect(restored).to.deep.equal(initialEmail);
 
-    // Verify all schema properties match initial state
+    // Verify all schema properties match initial state.
     expect(mutable.jsonSchema.properties).to.deep.equal(initialSchemaProps);
   });
 

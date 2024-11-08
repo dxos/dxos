@@ -7,7 +7,7 @@ import sortBy from 'lodash.sortby';
 
 import { Resource } from '@dxos/context';
 import { PublicKey } from '@dxos/react-client';
-import { cellClassesForFieldType, parseValue } from '@dxos/react-ui-data';
+import { cellClassesForFieldType, parseValue, formatForDisplay, formatForEditing } from '@dxos/react-ui-data';
 import {
   type DxGridPlaneCells,
   type DxGridAxisMeta,
@@ -16,7 +16,7 @@ import {
   type DxGridCellValue,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { type ViewProjection, type FieldType, formatForDisplay, formatForEditing } from '@dxos/schema';
+import { type ViewProjection, type FieldType } from '@dxos/schema';
 
 import { fromGridCell, type GridCell, type TableType } from '../types';
 import { tableButtons, touch } from '../util';

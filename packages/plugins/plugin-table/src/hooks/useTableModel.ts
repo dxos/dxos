@@ -29,16 +29,16 @@ export const useTableModel = ({
       return;
     }
 
-    let tableModel: TableModel | undefined;
+    let model: TableModel | undefined;
     const t = setTimeout(async () => {
-      tableModel = new TableModel({ table, projection, onDeleteColumn, onDeleteRow });
-      await tableModel.open();
-      setModel(tableModel);
+      model = new TableModel({ table, projection, onDeleteColumn, onDeleteRow });
+      await model.open();
+      setModel(model);
     });
 
     return () => {
       clearTimeout(t);
-      void tableModel?.close();
+      void model?.close();
     };
   }, [table, projection, onDeleteColumn, onDeleteRow]);
 
