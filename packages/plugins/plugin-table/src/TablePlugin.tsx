@@ -154,10 +154,10 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             case TableAction.DELETE_COLUMN: {
               const { table, property } = intent.data as TableAction.DeleteColumn;
               invariant(isTable(table));
-              invariant(table.view, 'Table requires a view to delete columns');
+              invariant(table.view);
 
               const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.__typename);
-              invariant(schema, 'Table schema not found');
+              invariant(schema);
               const projection = new ViewProjection(schema, table.view);
 
               if (!intent.undo) {

@@ -36,24 +36,28 @@ export const ColumnActionsMenu = ({
   return (
     <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
-      <DropdownMenu.Content>
-        {(!isCurrentColumnSorted || currentSort?.direction === 'asc') && (
-          <DropdownMenu.Item onClick={() => model.setSort(columnId, 'desc')}>
-            {t('column action sort descending')}
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content>
+          {(!isCurrentColumnSorted || currentSort?.direction === 'asc') && (
+            <DropdownMenu.Item onClick={() => model.setSort(columnId, 'desc')}>
+              {t('column action sort descending')}
+            </DropdownMenu.Item>
+          )}
+          {(!isCurrentColumnSorted || currentSort?.direction === 'desc') && (
+            <DropdownMenu.Item onClick={() => model.setSort(columnId, 'asc')}>
+              {t('column action sort ascending')}
+            </DropdownMenu.Item>
+          )}
+          {isCurrentColumnSorted && (
+            <DropdownMenu.Item onClick={() => model.clearSort()}>{t('column action clear sorting')}</DropdownMenu.Item>
+          )}
+          <DropdownMenu.Item onClick={() => model.deleteColumn(columnId)}>
+            {t('column action delete')}
           </DropdownMenu.Item>
-        )}
-        {(!isCurrentColumnSorted || currentSort?.direction === 'desc') && (
-          <DropdownMenu.Item onClick={() => model.setSort(columnId, 'asc')}>
-            {t('column action sort ascending')}
-          </DropdownMenu.Item>
-        )}
-        {isCurrentColumnSorted && (
-          <DropdownMenu.Item onClick={() => model.clearSort()}>{t('column action clear sorting')}</DropdownMenu.Item>
-        )}
-        <DropdownMenu.Item onClick={() => model.deleteColumn(columnId)}>{t('column action delete')}</DropdownMenu.Item>
-        <DropdownMenu.Item onClick={onShowColumnSettings}>{t('column action settings')}</DropdownMenu.Item>
-        <DropdownMenu.Arrow />
-      </DropdownMenu.Content>
+          <DropdownMenu.Item onClick={onShowColumnSettings}>{t('column action settings')}</DropdownMenu.Item>
+          <DropdownMenu.Arrow />
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
     </DropdownMenu.Root>
   );
 };

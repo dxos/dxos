@@ -67,7 +67,7 @@ const TablePrimitive = ({ model }: TableProps) => {
   return (
     <>
       {/* TODO(burdon): Is this required to be unique? */}
-      <Grid.Root id='table-next'>
+      <Grid.Root id={model?.table.id ?? 'table-grid'}>
         <TableCellEditor tableModel={model} gridRef={gridRef} />
         <Grid.Content
           ref={gridRef}

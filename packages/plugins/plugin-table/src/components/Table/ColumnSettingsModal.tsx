@@ -35,15 +35,17 @@ export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, trigg
   return (
     <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
-      <DropdownMenu.Content>
-        <FieldEditor
-          field={field}
-          projection={model?.projection}
-          view={model?.table.view}
-          onComplete={() => onOpenChange?.(false)}
-        />
-        <DropdownMenu.Arrow />
-      </DropdownMenu.Content>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content>
+          <FieldEditor
+            field={field}
+            projection={model?.projection}
+            view={model?.table.view}
+            onComplete={() => onOpenChange?.(false)}
+          />
+          <DropdownMenu.Arrow />
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
     </DropdownMenu.Root>
   );
 };
