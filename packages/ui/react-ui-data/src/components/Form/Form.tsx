@@ -18,11 +18,12 @@ export type FormProps<T extends object> = ThemedClassName<{
   schema: S.Schema<T>;
   autoFocus?: boolean;
   readonly?: boolean;
+  order?: (keyof T)[];
   additionalValidation?: (values: T) => ValidationError[] | undefined;
   onValuesChanged?: (values: T) => void;
   onSave?: (values: T) => void;
   onCancel?: () => void;
-  Custom?: FC<Omit<FormInputProps<T>, 'property' | 'label'>>;
+  Custom?: Partial<Record<keyof T, FC<FormInputProps<T>>>>;
 }>;
 
 /**
@@ -33,13 +34,13 @@ export const Form = <T extends object>({
   values,
   schema,
   readonly,
+  order = [],
   additionalValidation,
   onValuesChanged,
   onSave,
   onCancel,
   Custom,
 }: FormProps<T>) => {
-  // TODO(burdon): Type for useForm.
   const { canSubmit, errors, handleSubmit, getInputProps, getErrorValence, getErrorMessage } = useForm<T>({
     schema,
     initialValues: values,
@@ -52,40 +53,31 @@ export const Form = <T extends object>({
     log.warn('validation', { errors });
   }
 
-  // TODO(burdon): Create schema annotation for order or pass in params?
-  // TODO(ZaymonFC): We might need to use a variant of `getSchemaProperties` that uses the
-  //  `from` type instead of `to` type for transformations since we are expecting the pre-encoded
-  //  form as input from the user.
-  const props = useMemo(() => getSchemaProperties<T>(schema), [schema]);
+  // TODO(burdon): Sort.
+  const props = useMemo(() => {
+    const props = getSchemaProperties<T>(schema);
+    return props;
+  }, [schema, order]);
 
   return (
     <div className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
-      {/* Custom fields. */}
-      {Custom && (
-        <div role='none'>
-          <Custom
-            disabled={readonly}
-            getInputProps={getInputProps}
-            getErrorValence={getErrorValence}
-            getErrorMessage={getErrorMessage}
-          />
-        </div>
-      )}
-
       {/* Generated fields. */}
-      {props.map(({ property, type, title }) => (
-        <div key={property} role='none'>
-          <FormInput<T>
-            property={property}
-            label={title ?? property} // TODO(burdon): Title.
-            disabled={readonly}
-            getInputProps={getInputProps}
-            getErrorValence={getErrorValence}
-            getErrorMessage={getErrorMessage}
-            type={type === 'number' ? 'number' : undefined}
-          />
-        </div>
-      ))}
+      {props.map(({ property, type, title }) => {
+        const PropertyInput = Custom?.[property] ?? FormInput<T>;
+        return (
+          <div key={property} role='none'>
+            <PropertyInput
+              property={property}
+              type={type === 'number' ? 'number' : undefined}
+              label={title ?? property}
+              disabled={readonly}
+              getInputProps={getInputProps}
+              getErrorValence={getErrorValence}
+              getErrorMessage={getErrorMessage}
+            />
+          </div>
+        );
+      })}
 
       {/* TODO(burdon): Option. */}
       {!readonly && (

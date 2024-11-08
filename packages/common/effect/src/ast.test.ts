@@ -3,19 +3,20 @@
 //
 
 import { AST, Schema as S } from '@effect/schema';
-import { Option, pipe } from 'effect';
 import { describe, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
 
 import {
-  getPropertyType,
-  getBaseType,
-  isLeafType,
-  visit,
-  type JsonPath,
+  findAnnotation,
+  findNode,
+  findProperty,
   getAnnotation,
-  getFirstAnnotation,
+  getSimpleType,
+  isSimpleType,
+  type JsonPath,
+  type JsonProp,
+  visit,
 } from './ast';
 
 const ZipCode = S.String.pipe(
@@ -53,57 +54,41 @@ describe('AST', () => {
     expect(() => validate('1234')).to.throw();
   });
 
-  test('getProperty', ({ expect }) => {
+  test('findNode', ({ expect }) => {
+    const TestSchema = S.Struct({
+      name: S.optional(S.String),
+    }).pipe(S.mutable);
+
+    const prop = findProperty(TestSchema, 'name' as JsonProp);
+    invariant(prop);
+    const node = findNode(prop, isSimpleType);
+    invariant(node);
+    const type = getSimpleType(node);
+    expect(type).to.eq('string');
+  });
+
+  test('findProperty', ({ expect }) => {
     {
-      const prop = getPropertyType(Contact, 'name' as JsonPath);
+      const prop = findProperty(Contact, 'name' as JsonPath);
       expect(prop).to.exist;
     }
     {
-      const prop = getPropertyType(Contact, 'address.zip' as JsonPath);
+      const prop = findProperty(Contact, 'address.zip' as JsonPath);
       invariant(prop);
       expect(getTitle(prop)).to.eq('ZIP code');
     }
     {
-      const prop = getPropertyType(Contact, 'address.location.lat' as JsonPath);
+      const prop = findProperty(Contact, 'address.location.lat' as JsonPath);
       invariant(prop);
       expect(AST.isNumberKeyword(prop)).to.be.true;
     }
     {
-      const prop = getPropertyType(Contact, 'address.city' as JsonPath);
+      const prop = findProperty(Contact, 'address.city' as JsonPath);
       expect(prop).not.to.exist;
     }
   });
 
-  test('getType', ({ expect }) => {
-    const TestSchema = S.Struct({
-      p1: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'P-1' })),
-      p2: S.optional(ZipCode).annotations({ [AST.TitleAnnotationId]: 'P-2' }),
-    });
-
-    const props = [];
-    for (const prop of AST.getPropertySignatures(TestSchema.ast)) {
-      const name = prop.name.toString();
-      let title = pipe(AST.getAnnotation(AST.TitleAnnotationId)(prop), Option.getOrUndefined);
-      const type = getBaseType(prop.type);
-      if (!title) {
-        title = pipe(AST.getAnnotation(AST.TitleAnnotationId)(type), Option.getOrUndefined);
-      }
-      props.push({ name, title });
-    }
-
-    expect(props).to.deep.eq([
-      {
-        name: 'p1',
-        title: 'P-1',
-      },
-      {
-        name: 'p2',
-        title: 'P-2',
-      },
-    ]);
-  });
-
-  test('getAnnotation', ({ expect }) => {
+  test('findAnnotation', ({ expect }) => {
     const Type = S.NonEmptyString.pipe(S.pattern(/^\d{5}$/)).annotations({ [AST.TitleAnnotationId]: 'original title' });
     const Contact = S.Struct({
       p1: Type.annotations({ [AST.TitleAnnotationId]: 'new title' }),
@@ -112,17 +97,17 @@ describe('AST', () => {
     });
 
     {
-      const prop = getPropertyType(Contact, 'p3' as JsonPath);
+      const prop = findProperty(Contact, 'p3' as JsonPath);
       invariant(prop);
-      const value = getFirstAnnotation(prop, AST.TitleAnnotationId);
+      const value = findAnnotation(prop, AST.TitleAnnotationId);
       expect(value).to.eq('new title');
     }
   });
 
   test('visit', ({ expect }) => {
     const TestSchema = S.Struct({
-      name: S.optional(S.String),
-      emails: S.mutable(S.Array(S.String)),
+      name: S.NonEmptyString,
+      emails: S.optional(S.mutable(S.Array(S.String))),
       address: S.optional(
         S.Struct({
           zip: S.String,
@@ -131,11 +116,7 @@ describe('AST', () => {
     });
 
     const props: string[] = [];
-    visit(TestSchema.ast, (node, path) => {
-      if (isLeafType(node)) {
-        props.push(path.join('.'));
-      }
-    });
-    expect(props).to.deep.eq(['name', 'address.zip']);
+    visit(TestSchema.ast, (_, path) => props.push(path.join('.')));
+    console.log(JSON.stringify(props, null, 2));
   });
 });

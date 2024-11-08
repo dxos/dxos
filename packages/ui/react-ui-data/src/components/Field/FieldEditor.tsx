@@ -83,25 +83,22 @@ export const FieldEditor = ({
       autoFocus
       values={props}
       schema={fieldSchema}
+      order={['property', 'format']}
       additionalValidation={handleAdditionalValidation}
       onValuesChanged={handleValueChanged}
       onSave={handleSet}
       onCancel={onComplete}
-      Custom={(props) => (
-        <>
-          {/* TODO(burdon): Move property field here. */}
+      Custom={{
+        format: (props) => (
           <FormInput<PropertyType>
-            property='format'
-            label={t('field format label')}
-            placeholder={t('field format label')}
+            {...props}
             options={FormatEnums.filter((value) => value !== FormatEnum.None).map((value) => ({
               value,
               label: t(`format ${value}`),
             }))}
-            {...props}
           />
-        </>
-      )}
+        ),
+      }}
     />
   );
 };
