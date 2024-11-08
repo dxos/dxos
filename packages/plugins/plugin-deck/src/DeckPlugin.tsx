@@ -29,6 +29,7 @@ import {
   openIds,
   type LayoutMode,
   type IntentData,
+  filterPlugins,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
@@ -62,7 +63,14 @@ import {
 } from './layout';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
-import { type NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps, type Overscroll } from './types';
+import {
+  type NewPlankPositioning,
+  type DeckPluginProvides,
+  type DeckSettingsProps,
+  type Overscroll,
+  type Panel,
+  parsePanelPlugin,
+} from './types';
 import { checkAppScheme, getEffectivePart } from './util';
 
 const isSocket = !!(globalThis as any).__args;
@@ -109,6 +117,7 @@ export const DeckPlugin = ({
   const unsubscriptionCallbacks = [] as (UnsubscribeCallback | undefined)[];
   let currentUndoId: string | undefined;
   let handleNavigation: () => Promise<void> | undefined;
+  const panels: Panel[] = [];
 
   const settings = new LocalStorageStore<DeckSettingsProps>('dxos.org/settings/layout', {
     showHints: false,
@@ -230,6 +239,10 @@ export const DeckPlugin = ({
         .prop({ key: 'active', type: LocalStorageStore.json<LayoutParts>() })
         .prop({ key: 'closed', type: LocalStorageStore.json<string[]>() });
 
+      panels.push(
+        ...filterPlugins(plugins, parsePanelPlugin).flatMap((plugin) => plugin.provides.complementary.panels),
+      );
+
       unsubscriptionCallbacks.push(
         clientPlugin?.provides.client.shell.onReset(() => {
           layout.expunge();
@@ -342,6 +355,7 @@ export const DeckPlugin = ({
             flatDeck={settings.values.flatDeck}
             slots={settings.values.customSlots ? customSlots : undefined}
             toasts={layout.values.toasts}
+            panels={panels}
             onDismissToast={(id) => {
               const index = layout.values.toasts.findIndex((toast) => toast.id === id);
               if (index !== -1) {

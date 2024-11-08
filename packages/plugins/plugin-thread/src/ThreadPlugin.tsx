@@ -83,7 +83,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       metadata: {
         records: {
           [ChannelType.typename]: {
-            placeholder: ['channel title placeholder', { ns: THREAD_PLUGIN }],
+            placeholder: ['channel name placeholder', { ns: THREAD_PLUGIN }],
             icon: 'ph--chat--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (channel: ChannelType) => loadObjectReferences(channel, (channel) => channel.threads),
@@ -112,6 +112,15 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       },
       translations: [...translations, ...threadTranslations],
       echo: { schema: [ChannelType, ThreadType, MessageType] },
+      complementary: {
+        panels: [
+          {
+            id: 'comments',
+            label: ['open comments panel label', { ns: THREAD_PLUGIN }],
+            icon: 'ph--chat-text--regular',
+          },
+        ],
+      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -309,7 +318,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 data.subject &&
                 typeof data.subject === 'object' &&
                 'threads' in data.subject &&
-                Array.isArray(data.subject.threads)
+                Array.isArray(data.subject.threads) &&
+                !(data.subject instanceof ChannelType)
               ) {
                 const { showResolvedThreads } = getViewState(fullyQualifiedId(data.subject));
 
