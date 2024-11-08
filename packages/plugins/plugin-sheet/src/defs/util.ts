@@ -47,6 +47,7 @@ export const insertIndices = (indices: string[], i: number, n: number, max: numb
 
   const idx = createIndices(n);
   indices.splice(i, 0, ...idx);
+  return idx;
 };
 
 export const initialize = (

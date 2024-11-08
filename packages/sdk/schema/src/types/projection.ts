@@ -4,7 +4,6 @@
 
 import {
   JSON_SCHEMA_ECHO_REF_ID,
-  createJsonPath,
   formatToType,
   typeToFormat,
   FormatEnum,
@@ -12,7 +11,7 @@ import {
   type MutableSchema,
   S,
   TypeEnum,
-  type JsonPath,
+  type JsonProp,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -45,13 +44,13 @@ export class ViewProjection {
   /**
    * Construct a new property.
    */
-  // TODO(burdon): Rename createProperty.
   createFieldProjection(): FieldType {
     const prop = getUniqueProperty(this._view);
     const field: FieldType = {
       property: prop,
     };
 
+    log('createFieldProjection', { field });
     this._view.fields.push(field);
     return field;
   }
@@ -59,15 +58,16 @@ export class ViewProjection {
   /**
    * Get projection of View fields and JSON schema property annotations.
    */
-  // TODO(burdon): JsonProp.
-  getFieldProjection(prop: string): FieldProjection {
-    let {
+  getFieldProjection(prop: JsonProp): FieldProjection {
+    const {
       $id,
-      type,
-      format = FormatEnum.None,
+      type: schemaType,
+      format: schemaFormat = FormatEnum.None,
       reference,
       ...rest
     } = this._schema.jsonSchema.properties![prop] ?? { property: prop, format: FormatEnum.None };
+    let type: TypeEnum = schemaType as TypeEnum;
+    let format: FormatEnum = schemaFormat as FormatEnum;
 
     // Map reference.
     let referenceSchema: string | undefined;
@@ -77,14 +77,14 @@ export class ViewProjection {
       referenceSchema = reference.schema.$ref;
     }
     if (format === FormatEnum.None) {
-      format = typeToFormat[type as TypeEnum];
+      format = typeToFormat[type as TypeEnum]!;
     }
 
-    const field: FieldType = this._view.fields.find((f) => f.property === prop) ?? { property: createJsonPath(prop) };
+    const field: FieldType = this._view.fields.find((f) => f.property === prop) ?? { property: prop as JsonProp };
     const values = { property: prop, type, format, referenceSchema, ...rest };
     const props = values.type ? this._decode(values) : values;
 
-    log.info('getFieldProjection', { field, props });
+    log('getFieldProjection', { field, props });
     return { field, props };
   }
 
@@ -92,7 +92,7 @@ export class ViewProjection {
    * Update JSON schema property annotations.
    */
   setFieldProjection({ field, props }: Partial<FieldProjection>) {
-    log.info('setFieldProjection', { field, props });
+    log('setFieldProjection', { field, props });
 
     if (field) {
       const current = this._view.fields.find((f) => f.property === field.property);
@@ -106,7 +106,7 @@ export class ViewProjection {
 
     if (props) {
       // TODO(burdon): Define type?
-      let { property, type, format, referenceSchema, ...rest } = this._encode(props);
+      let { property, type, format, referenceSchema, ...rest }: Partial<PropertyType> = this._encode(props);
       invariant(property);
       invariant(format);
 
@@ -125,28 +125,26 @@ export class ViewProjection {
         };
       }
       if (format) {
-        type = formatToType[format as FormatEnum];
+        type = formatToType[format];
       }
       if (type === format) {
         format = undefined;
       }
 
-      // TODO(dmaretskyi): Check if the field base type (string, number, ref) hasn't changed and update only relevant fields.
+      invariant(type !== TypeEnum.Ref);
       const values: JsonSchemaType = { $id, type, format, reference, ...rest };
       this._schema.jsonSchema.properties![property] = values;
     }
   }
 }
 
-// TODO(burdon): Check unique name against schema.
-// TODO(dmaretskyi): Not json-path anymore.
-const getUniqueProperty = (view: ViewType): JsonPath => {
+const getUniqueProperty = (view: ViewType): JsonProp => {
   let n = 1;
   while (true) {
-    const property = `prop_${n++}`;
+    const property: JsonProp = `prop_${n++}` as JsonProp;
     const idx = view.fields.findIndex((field) => field.property === property);
     if (idx === -1) {
-      return createJsonPath(property);
+      return property;
     }
   }
 };

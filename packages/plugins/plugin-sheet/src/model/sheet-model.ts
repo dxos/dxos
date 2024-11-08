@@ -29,7 +29,7 @@ import {
   MAX_COLUMNS,
   MAX_ROWS,
 } from '../defs';
-import { type CellScalarValue, type CellValue, type SheetType } from '../types';
+import { type CellScalarValue, type CellValue, type SheetType, type RestoreAxis } from '../types';
 
 // Map sheet types to system types.
 // https://hyperformula.handsontable.com/guide/types-of-values.html
@@ -168,12 +168,68 @@ export class SheetModel extends Resource {
   }
 
   insertRows(i: number, n = 1) {
-    insertIndices(this._sheet.rows, i, n, MAX_ROWS);
+    const idx = insertIndices(this._sheet.rows, i, n, MAX_ROWS);
     this.reset();
+    return idx;
   }
 
   insertColumns(i: number, n = 1) {
-    insertIndices(this._sheet.columns, i, n, MAX_COLUMNS);
+    const idx = insertIndices(this._sheet.columns, i, n, MAX_COLUMNS);
+    this.reset();
+    return idx;
+  }
+
+  dropRow(rowIndex: string): RestoreAxis {
+    const range = {
+      from: addressFromIndex(this._sheet, `${this._sheet.columns[0]}@${rowIndex}`),
+      to: addressFromIndex(this._sheet, `${this._sheet.columns[this._sheet.columns.length - 1]}@${rowIndex}`),
+    };
+    const values = this.getCellValues(range).flat();
+    const index = this._sheet.rows.indexOf(rowIndex);
+    this.clear(range);
+    this._sheet.rows.splice(index, 1);
+    delete this._sheet.rowMeta[rowIndex];
+    this.reset();
+    return { axis: 'row', index, axisIndex: rowIndex, axisMeta: this._sheet.rowMeta[rowIndex], values };
+  }
+
+  dropColumn(colIndex: string): RestoreAxis {
+    const range = {
+      from: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[0]}`),
+      to: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[this._sheet.rows.length - 1]}`),
+    };
+    const values = this.getCellValues(range).flat();
+    const index = this._sheet.columns.indexOf(colIndex);
+    this.clear(range);
+    this._sheet.columns.splice(index, 1);
+    delete this._sheet.columnMeta[colIndex];
+    this.reset();
+    return { axis: 'col', index, axisIndex: colIndex, axisMeta: this._sheet.rowMeta[colIndex], values };
+  }
+
+  restoreRow({ index, axisIndex, axisMeta, values }: RestoreAxis) {
+    this._sheet.rows.splice(index, 0, axisIndex);
+    values.forEach((value, col) => {
+      if (value) {
+        this._sheet.cells[`${this._sheet.columns[col]}@${axisIndex}`] = { value };
+      }
+    });
+    if (axisMeta) {
+      this._sheet.rowMeta[axisIndex] = axisMeta;
+    }
+    this.reset();
+  }
+
+  restoreColumn({ index, axisIndex, axisMeta, values }: RestoreAxis) {
+    this._sheet.columns.splice(index, 0, axisIndex);
+    values.forEach((value, row) => {
+      if (value) {
+        this._sheet.cells[`${axisIndex}@${this._sheet.rows[row]}`] = { value };
+      }
+    });
+    if (axisMeta) {
+      this._sheet.columnMeta[axisIndex] = axisMeta;
+    }
     this.reset();
   }
 
