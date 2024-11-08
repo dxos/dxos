@@ -102,7 +102,7 @@ export const Plank = memo(({ entry, layoutParts, part, flatDeck, searchEnabled, 
         coordinate,
         popoverAnchorId,
       },
-    [node, entry?.path, coordinate, popoverAnchorId],
+    [node, node?.data, entry?.path, coordinate, popoverAnchorId],
   );
 
   // TODO(wittjosiah): Change prop to accept a component.
