@@ -10,6 +10,7 @@ export default {
   id: KANBAN_PLUGIN,
   name: 'Kanban',
   description: 'Kanban board for managing tasks.',
-  tags: ['experimental'],
   icon: 'ph--kanban--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-kanban',
+  tags: ['experimental'],
 } satisfies PluginMeta;

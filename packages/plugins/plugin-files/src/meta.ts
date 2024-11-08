@@ -10,6 +10,7 @@ export default {
   id: FILES_PLUGIN,
   name: 'Files',
   description: 'Open files from the local file system.',
-  tags: ['experimental'],
   icon: 'ph--file--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-files',
+  tags: ['experimental'],
 } satisfies PluginMeta;
