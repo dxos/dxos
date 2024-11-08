@@ -13,12 +13,14 @@ export const BasePropertySchema = S.Struct({
     [AST.TitleAnnotationId]: 'Property',
     [AST.DescriptionAnnotationId]: 'Field name.',
   }),
+
   title: S.optional(
     S.String.annotations({
       [AST.TitleAnnotationId]: 'Label',
       [AST.DescriptionAnnotationId]: 'Property label.',
     }),
   ),
+
   description: S.optional(
     S.String.annotations({
       [AST.TitleAnnotationId]: 'Description',
