@@ -166,7 +166,7 @@ const withEchoRefinements = (ast: AST.AST): AST.AST => {
  * @param root
  * @param definitions
  */
-export const toEffectSchema = (root: JsonSchemaType, _defs?: JSONSchema.JsonSchema7Root['$defs']): S.Schema<any> => {
+export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$defs']): S.Schema<any> => {
   const defs = root.$defs ? { ..._defs, ...root.$defs } : _defs ?? {};
   if ('type' in root && root.type === 'object') {
     return objectToEffectSchema(root, defs);
@@ -245,7 +245,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JSONSchema.JsonSche
   return result;
 };
 
-const objectToEffectSchema = (root: JsonSchemaType, defs: JSONSchema.JsonSchema7Root['$defs']): S.Schema<any> => {
+const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs']): S.Schema<any> => {
   invariant('type' in root && root.type === 'object', `not an object: ${root}`);
 
   const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
