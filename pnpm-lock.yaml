@@ -7279,9 +7279,15 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
     devDependencies:
       '@dxos/react-client':
         specifier: workspace:*

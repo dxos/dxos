@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { isNode, type MaybePromise, nonNullable } from '@dxos/util';
 
-import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph } from './graph';
+import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, type GraphParams } from './graph';
 import { type Relation, type NodeArg, type Node, type ActionData, actionGroupSymbol } from './node';
 
 /**
@@ -192,12 +192,30 @@ export class GraphBuilder {
   private readonly _nodeChanged: Record<string, Signal<{}>> = {};
   private _graph: Graph;
 
-  constructor() {
+  constructor(params: Pick<GraphParams, 'nodes' | 'edges'> = {}) {
     this._graph = new Graph({
+      ...params,
       onInitialNode: (id) => this._onInitialNode(id),
       onInitialNodes: (node, relation, type) => this._onInitialNodes(node, relation, type),
       onRemoveNode: (id) => this._onRemoveNode(id),
     });
+  }
+
+  static from(pickle?: string) {
+    if (!pickle) {
+      return new GraphBuilder();
+    }
+
+    const { nodes, edges } = JSON.parse(pickle);
+    return new GraphBuilder({ nodes, edges });
+  }
+
+  /**
+   * If graph is being restored from a pickle, the data will be null.
+   * Initialize the data of each node by calling resolvers.
+   */
+  async initialize() {
+    return Promise.all(Object.keys(this._graph._nodes).map((id) => this._onInitialNode(id)));
   }
 
   get graph() {
