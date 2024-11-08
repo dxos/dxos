@@ -31,6 +31,7 @@ export const FieldEditor = ({
 }) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.property).props);
+
   useEffect(() => {
     const { props } = projection.getFieldProjection(field.property);
     setProps(props);
@@ -44,11 +45,11 @@ export const FieldEditor = ({
     // Update schema if format changed.
     // TODO(burdon): Callback should pass `changed` to indicate which fields have changed.
     setProps((props) => {
-      const type = formatToType[_props.format];
-      if (props.type !== type) {
-        return { ...props, ..._props, type };
+      const type = formatToType[_props.format as keyof typeof formatToType];
+      if (props.type === type) {
+        return props;
       }
-      return props;
+      return { ...props, ..._props, type };
     });
   }, []);
 
