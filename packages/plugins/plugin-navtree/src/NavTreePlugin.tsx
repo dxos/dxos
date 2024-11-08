@@ -18,6 +18,7 @@ import {
   type GraphProvides,
   parseGraphPlugin,
   NavigationAction,
+  parseNavigationPlugin,
 } from '@dxos/app-framework';
 import { createExtension, type Graph, isAction, isGraphNode, type Node, type NodeFilter } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
@@ -130,18 +131,21 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
   return {
     meta,
     ready: async (plugins) => {
+      state.prop({ key: 'open', type: LocalStorageStore.json<string[]>() });
+
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       graph = graphPlugin?.provides.graph;
       if (!graph) {
         return;
       }
 
+      const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+      const soloPart = resolvePlugin(plugins, parseNavigationPlugin)?.provides.location.active.solo?.[0];
+      if (dispatch && soloPart) {
+        void dispatch({ plugin: NAVTREE_PLUGIN, action: NavigationAction.EXPOSE, data: { id: soloPart.id } });
+      }
+
       state.values.root = graph.root as NavTreeItemGraphNode;
-      getChildren(graph, state.values.root);
-      getActions(graph, state.values.root);
-
-      state.prop({ key: 'open', type: LocalStorageStore.json<string[]>() });
-
       void expandOpenGraphNodes(graph, state.values.open);
 
       // TODO(wittjosiah): Factor out.
@@ -261,7 +265,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                 if (Array.isArray(path)) {
                   const additionalOpenItems = [...Array(path.length)].reduce((acc: string[], _, index) => {
                     const itemId = Path.create(...path.slice(0, index));
-                    if (itemId.length > 0) {
+                    if (itemId.length > 0 && !state.values.open.includes(itemId)) {
                       acc.push(itemId);
                     }
                     return acc;
