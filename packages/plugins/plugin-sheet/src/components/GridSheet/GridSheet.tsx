@@ -13,6 +13,7 @@ import React, {
   useState,
 } from 'react';
 
+import { useIntentDispatcher } from '@dxos/app-framework';
 import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -31,6 +32,7 @@ import { DEFAULT_COLUMNS, DEFAULT_ROWS, rangeToA1Notation, type CellRange } from
 import { rangeExtension, sheetExtension, type RangeController } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
 import { SHEET_PLUGIN } from '../../meta';
+import { SheetAction } from '../../types';
 import { useSheetContext } from '../SheetContext';
 
 const inertPosition: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
@@ -62,6 +64,7 @@ export const GridSheet = () => {
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [extraplanarFocus, setExtraplanarFocus] = useState<DxGridPosition | null>(null);
+  const dispatch = useIntentDispatcher();
   const rangeController = useRef<RangeController>();
   const { hasAttention } = useAttention(id);
 
@@ -239,20 +242,31 @@ export const GridSheet = () => {
   }, []);
 
   const handleAxisMenuAction = useCallback(
-    (operation: 'add-before' | 'add-after' | 'remove') => {
+    (operation: 'insert-before' | 'insert-after' | 'drop') => {
       switch (operation) {
-        case 'add-before':
-        case 'add-after':
-          model[contextMenuAxis === 'col' ? 'insertColumns' : 'insertRows'](
-            contextMenuOpen![contextMenuAxis] + (operation === 'add-before' ? 0 : 1),
-            1,
-          );
+        case 'insert-before':
+        case 'insert-after':
+          return dispatch({
+            action: SheetAction.INSERT_AXIS,
+            data: {
+              model,
+              axis: contextMenuAxis,
+              index: contextMenuOpen![contextMenuAxis] + (operation === 'insert-before' ? 0 : 1),
+            } satisfies SheetAction.InsertAxis,
+          });
           break;
-        case 'remove':
-        // console.warn('[model does not implement]');
+        case 'drop':
+          return dispatch({
+            action: SheetAction.DROP_AXIS,
+            data: {
+              model,
+              axis: contextMenuAxis,
+              axisIndex: model.sheet[contextMenuAxis === 'row' ? 'rows' : 'columns'][contextMenuOpen![contextMenuAxis]],
+            } satisfies SheetAction.DropAxis,
+          });
       }
     },
-    [contextMenuAxis, contextMenuOpen, model],
+    [contextMenuAxis, contextMenuOpen, model, dispatch],
   );
 
   const { columns, rows } = useSheetModelDxGridProps(dxGrid, model);
@@ -317,21 +331,21 @@ export const GridSheet = () => {
         <DropdownMenu.VirtualTrigger virtualRef={contextMenuAnchorRef} />
         <DropdownMenu.Content side={contextMenuAxis === 'col' ? 'bottom' : 'right'} sideOffset={4} collisionPadding={8}>
           <DropdownMenu.Viewport>
-            <DropdownMenu.Item onClick={() => handleAxisMenuAction('add-before')}>
+            <DropdownMenu.Item onClick={() => handleAxisMenuAction('insert-before')}>
               <Icon
                 size={5}
                 icon={contextMenuAxis === 'col' ? 'ph--columns-plus-left--regular' : 'ph--rows-plus-top--regular'}
               />
               <span>{t(`add ${contextMenuAxis} before label`)}</span>
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => handleAxisMenuAction('add-after')}>
+            <DropdownMenu.Item onClick={() => handleAxisMenuAction('insert-after')}>
               <Icon
                 size={5}
                 icon={contextMenuAxis === 'col' ? 'ph--columns-plus-right--regular' : 'ph--rows-plus-bottom--regular'}
               />
               <span>{t(`add ${contextMenuAxis} after label`)}</span>
             </DropdownMenu.Item>
-            <DropdownMenu.Item disabled onClick={() => handleAxisMenuAction('remove')}>
+            <DropdownMenu.Item onClick={() => handleAxisMenuAction('drop')}>
               <Icon size={5} icon='ph--backspace--regular' />
               <span>{t(`delete ${contextMenuAxis} label`)}</span>
             </DropdownMenu.Item>
