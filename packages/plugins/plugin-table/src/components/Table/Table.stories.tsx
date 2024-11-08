@@ -117,7 +117,7 @@ const DefaultStory = () => {
         </Table.Viewport>
       </div>
       <div className='flex flex-col h-full border-l border-separator'>
-        {table.view && <ViewEditor schema={schema} view={table.view} />}
+        {table.view && <ViewEditor schema={schema} view={table.view} onDelete={handleDeleteColumn} />}
         <SyntaxHighlighter className='w-full text-xs'>{JSON.stringify(table.view, null, 2)}</SyntaxHighlighter>
       </div>
     </div>
