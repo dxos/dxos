@@ -12,7 +12,7 @@ import { FieldSchema, type FieldType, type ViewType, ViewProjection } from '@dxo
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '../../translations';
-import { FieldEditor } from '../Field/';
+import { FieldEditor } from '../FieldEditor';
 
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
 
@@ -78,7 +78,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly, onDelete }: Vie
       </List.Root>
 
       {selectedField && (
-        <FieldEditor field={selectedField} projection={projection} view={view} onClose={handleComplete} />
+        <FieldEditor view={view} projection={projection} field={selectedField} onClose={handleComplete} />
       )}
 
       {/* TODO(burdon): Option. */}

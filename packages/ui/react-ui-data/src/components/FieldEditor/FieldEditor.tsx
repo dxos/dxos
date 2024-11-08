@@ -19,14 +19,13 @@ import { translationKey } from '../../translations';
 import { Form, FormInput } from '../Form';
 
 export type FieldEditorProps = {
-  field: FieldType;
-  projection: ViewProjection;
   view: ViewType;
+  projection: ViewProjection;
+  field: FieldType;
   onClose: () => void; // TODO(burdon): Status?
 };
 
-// TODO(burdon): Rename PropertyFieldEditor.
-export const FieldEditor = ({ field, projection, view, onClose }: FieldEditorProps) => {
+export const FieldEditor = ({ view, projection, field, onClose }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.property).props);
   useEffect(() => {
@@ -101,23 +100,27 @@ export const FieldEditor = ({ field, projection, view, onClose }: FieldEditorPro
         referenceSchema: (props) => (
           <FormInput<PropertyType>
             {...props}
-            options={[
-              // TODO(burdon): Query.
-              { value: 'example.com/type/A' },
-              { value: 'example.com/type/B' },
-              { value: 'example.com/type/C' },
-            ]}
+            options={
+              [
+                // TODO(burdon): Query.
+                // { value: 'example.com/type/A' },
+                // { value: 'example.com/type/B' },
+                // { value: 'example.com/type/C' },
+              ]
+            }
           />
         ),
         referenceProperty: (props) => (
           <FormInput<PropertyType>
             {...props}
-            options={[
-              // TODO(burdon): Query.
-              { value: 'prop-1' },
-              { value: 'prop-2' },
-              { value: 'prop-3' },
-            ]}
+            options={
+              [
+                // TODO(burdon): Query.
+                // { value: 'prop-1' },
+                // { value: 'prop-2' },
+                // { value: 'prop-3' },
+              ]
+            }
           />
         ),
       }}
