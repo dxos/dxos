@@ -37,6 +37,15 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
       echo: {
         schema: [ChainType, ChainPromptType, FunctionDef, FunctionTrigger],
       },
+      complementary: {
+        panels: [
+          {
+            id: 'automation',
+            label: ['open automation panel label', { ns: AUTOMATION_PLUGIN }],
+            icon: 'ph--flow-arrow--regular',
+          },
+        ],
+      },
       graph: {
         builder: (plugins) => {
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
@@ -56,7 +65,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
                 }
 
                 const type = 'orphan-settings-for-subject';
-                const icon = 'ph--magic-wand--regular';
+                const icon = 'ph--flow-arrow--regular';
 
                 const [subjectId] = id.split('~');
                 const { spaceId, objectId } = parseId(subjectId);
