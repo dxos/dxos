@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 // https://effect-ts.github.io/effect/schema/AST.ts.html
 //
 
-export type SimpleType = 'object' | 'string' | 'number' | 'boolean' | 'literal';
+export type SimpleType = 'object' | 'string' | 'number' | 'boolean' | 'enum' | 'literal';
 
 export const getSimpleType = (node: AST.AST): SimpleType | undefined => {
   if (AST.isObjectKeyword(node)) {
@@ -28,6 +28,9 @@ export const getSimpleType = (node: AST.AST): SimpleType | undefined => {
   }
   if (AST.isBooleanKeyword(node)) {
     return 'boolean';
+  }
+  if (AST.isEnums(node)) {
+    return 'enum';
   }
   if (AST.isLiteral(node)) {
     return 'literal';
