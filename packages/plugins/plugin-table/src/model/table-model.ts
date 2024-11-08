@@ -7,7 +7,7 @@ import sortBy from 'lodash.sortby';
 
 import { Resource } from '@dxos/context';
 import { PublicKey } from '@dxos/react-client';
-import { cellClassesForFieldType, parseValue } from '@dxos/react-ui-data';
+import { cellClassesForFieldType, parseValue, formatForDisplay, formatForEditing } from '@dxos/react-ui-data';
 import {
   type DxGridPlaneCells,
   type DxGridAxisMeta,
@@ -16,7 +16,7 @@ import {
   type DxGridCellValue,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { type ViewProjection, type FieldType, formatForDisplay, formatForEditing } from '@dxos/schema';
+import { type ViewProjection, type FieldType } from '@dxos/schema';
 
 import { fromGridCell, type GridCell, type TableType } from '../types';
 import { tableButtons, touch } from '../util';
@@ -31,8 +31,7 @@ export type TableModelProps = {
   sorting?: SortConfig[];
   pinnedRows?: { top: number[]; bottom: number[] };
   rowSelection?: number[];
-  onAddColumn?: (field: FieldType) => void;
-  onDeleteColumn?: (field: FieldType) => void;
+  onDeleteColumn?: (field: string) => void;
   onDeleteRow?: (row: any) => void;
   onInsertRow?: (index?: number) => void;
   onCellUpdate?: (cell: GridCell) => void;
@@ -65,8 +64,7 @@ export class TableModel extends Resource {
    * Keys are display indices, values are corresponding data indices.
    */
   private readonly displayToDataIndex: Map<number, number> = new Map();
-  private readonly onAddColumn?: (field: FieldType) => void;
-  private readonly onDeleteColumn?: (field: FieldType) => void;
+  private readonly onDeleteColumn?: (field: string) => void;
   private readonly onDeleteRow?: (id: string) => void;
   private readonly onInsertRow?: (index?: number) => void;
   public onCellUpdate?: (cell: GridCell) => void;
@@ -78,7 +76,6 @@ export class TableModel extends Resource {
     sorting = [],
     pinnedRows = { top: [], bottom: [] },
     rowSelection = [],
-    onAddColumn,
     onDeleteColumn,
     onDeleteRow,
     onInsertRow,
@@ -93,7 +90,6 @@ export class TableModel extends Resource {
     this.pinnedRows = pinnedRows;
     this.rowSelection = rowSelection;
 
-    this.onAddColumn = onAddColumn;
     this.onDeleteColumn = onDeleteColumn;
     this.onDeleteRow = onDeleteRow;
     this.onInsertRow = onInsertRow;
@@ -242,7 +238,7 @@ export class TableModel extends Resource {
       const cell: DxGridCellValue = {
         get value() {
           const value = row?.[field.property];
-          if (!value) {
+          if (value == null) {
             return '';
           }
           return formatForDisplay({ type: props.type, format: props.format, value });
@@ -368,12 +364,6 @@ export class TableModel extends Resource {
   // Column Operations
   //
 
-  public addColumn(field: FieldType): void {
-    if (this.onAddColumn) {
-      this.onAddColumn(field);
-    }
-  }
-
   public deleteColumn(columnId: string): void {
     if (!this.table.view) {
       return;
@@ -384,7 +374,7 @@ export class TableModel extends Resource {
       if (this.sorting.value?.columnId === columnId) {
         this.clearSort();
       }
-      this.onDeleteColumn(field);
+      this.onDeleteColumn(field.property);
     }
   }
 

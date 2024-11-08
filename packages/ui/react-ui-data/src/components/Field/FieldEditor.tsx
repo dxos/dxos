@@ -33,27 +33,26 @@ export const FieldEditor = ({ field, projection, view, onClose }: FieldEditorPro
     const { props } = projection.getFieldProjection(field.property);
     setProps(props);
   }, [field, projection]);
-
   // TODO(burdon): Need to wrap otherwise throws error:
   //  Class constructor SchemaClass cannot be invoked without 'new'
-  const [{ fieldSchema }, setSchema] = useState({ fieldSchema: getPropertySchemaForFormat(props?.format) });
+  const [{ fieldSchema }, setFieldSchema] = useState({ fieldSchema: getPropertySchemaForFormat(props?.format) });
   const handleValueChanged = useCallback(
     (_props: PropertyType) => {
       // Update schema if format changed.
-      // TODO(burdon): Callback should pass `touched` to indicate which fields have changed.
-      if (props.format !== _props.format) {
-        const fieldSchema = getPropertySchemaForFormat(_props.format);
-        setSchema({ fieldSchema });
-        const type = formatToType[_props.format];
-        setProps({ ...props, ..._props, type });
+      // TODO(burdon): Callback should pass `changed` to indicate which fields have changed.
+      if (_props.format !== props.format) {
+        setFieldSchema({ fieldSchema: getPropertySchemaForFormat(_props.format) });
       }
+      setProps((props) => {
+        const type = formatToType[_props.format as keyof typeof formatToType];
+        if (props.type !== type) {
+          return { ...props, ..._props, type };
+        }
+        return props;
+      });
     },
     [props],
   );
-
-  useEffect(() => {
-    handleValueChanged(props);
-  }, [props]);
 
   const handleValidate = useCallback(
     ({ property }: PropertyType) => {

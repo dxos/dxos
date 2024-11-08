@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as ModalPrimitive from '@radix-ui/react-popper';
 import React, { type PropsWithChildren, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
 import { type DxGridElement, type DxAxisResize, Grid } from '@dxos/react-ui-grid';
@@ -66,9 +65,9 @@ const TablePrimitive = ({ model }: TableProps) => {
   const { state: menuState, triggerRef, handleClick, close, showColumnSettings } = useTableMenuController();
 
   return (
-    <ModalPrimitive.Root>
+    <>
       {/* TODO(burdon): Is this required to be unique? */}
-      <Grid.Root id='table-next'>
+      <Grid.Root id={model?.table.id ?? 'table-grid'}>
         <TableCellEditor tableModel={model} gridRef={gridRef} />
         <Grid.Content
           ref={gridRef}
@@ -108,7 +107,7 @@ const TablePrimitive = ({ model }: TableProps) => {
         onOpenChange={close}
         triggerRef={triggerRef}
       />
-    </ModalPrimitive.Root>
+    </>
   );
 };
 
