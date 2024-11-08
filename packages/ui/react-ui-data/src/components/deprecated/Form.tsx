@@ -5,7 +5,7 @@
 import { Option, pipe } from 'effect';
 import React, { useState } from 'react';
 
-import { AST, type S, getProperty } from '@dxos/effect';
+import { AST, type S, getPropertyType } from '@dxos/effect';
 import { Input, type ThemedClassName, type TextInputProps as NativeTextInputProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type ViewType, getFieldValue, setFieldValue } from '@dxos/schema';
@@ -30,7 +30,7 @@ export const DeprecatedForm = <T extends {} = {}>({
   return (
     <div role='none' className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
       {view.fields.map((field) => {
-        const prop = schema && getProperty(schema, field.property);
+        const prop = schema && getPropertyType(schema, field.property);
         const title = (prop && pipe(AST.getTitleAnnotation(prop), Option.getOrUndefined)) ?? '';
         const description = (prop && pipe(AST.getDescriptionAnnotation(prop), Option.getOrUndefined)) ?? title;
         // const format =
