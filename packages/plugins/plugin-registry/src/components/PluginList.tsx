@@ -6,17 +6,9 @@ import React, { useCallback } from 'react';
 
 import { type PluginMeta } from '@dxos/app-framework';
 import { Button, Icon, Input, Link, List, ListItem, useTranslation } from '@dxos/react-ui';
-import {
-  descriptionText,
-  fineBlockSize,
-  getSize,
-  hoverableControlItem,
-  hoverableControls,
-  mx,
-} from '@dxos/react-ui-theme';
+import { descriptionText, fineBlockSize, mx } from '@dxos/react-ui-theme';
 
 import { REGISTRY_PLUGIN } from '../meta';
-import { ArrowSquareOut } from '@phosphor-icons/react';
 
 export type PluginListProps = {
   plugins?: PluginMeta[];
