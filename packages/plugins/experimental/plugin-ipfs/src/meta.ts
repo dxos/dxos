@@ -10,6 +10,7 @@ export default {
   id: IPFS_PLUGIN,
   name: 'IPFS',
   description: 'Upload & view files with IPFS.',
-  tags: ['experimental'],
   icon: 'ph--file-cloud--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-ipfs',
+  tags: ['experimental'],
 } satisfies PluginMeta;

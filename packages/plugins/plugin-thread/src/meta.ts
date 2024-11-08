@@ -12,4 +12,5 @@ export default {
   name: 'Threads',
   description: 'Comment threads on documents.',
   icon: 'ph--chat--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-thread',
 } satisfies PluginMeta;

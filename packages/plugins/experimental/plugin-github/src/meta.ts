@@ -12,6 +12,7 @@ export default {
   shortId: GITHUB_PLUGIN_SHORT_ID,
   name: 'GitHub',
   description: 'GitHub integration.',
-  tags: ['experimental'],
   icon: 'ph--github-logo--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-github',
+  tags: ['experimental'],
 } satisfies PluginMeta;
