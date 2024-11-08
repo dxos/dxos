@@ -37,16 +37,18 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
   }
 
   return (
-    <DropdownMenu.Root open={open} onOpenChange={close}>
+    <DropdownMenu.Root modal={false} open={open} onOpenChange={close}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
       <DropdownMenu.Portal>
         <DropdownMenu.Content>
-          <FieldEditor
-            field={field}
-            projection={model.projection}
-            view={model.table.view}
-            onComplete={handleComplete}
-          />
+          <DropdownMenu.Viewport>
+            <FieldEditor
+              field={field}
+              projection={model.projection}
+              view={model.table.view}
+              onComplete={handleComplete}
+            />
+          </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>
       </DropdownMenu.Portal>

@@ -23,11 +23,13 @@ export const RowActionsMenu = ({ model, rowIndex, open, onOpenChange, triggerRef
   }
 
   return (
-    <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
+    <DropdownMenu.Root modal={false} open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
       <DropdownMenu.Portal>
         <DropdownMenu.Content>
-          <DropdownMenu.Item onClick={() => model.deleteRow(rowIndex)}>{t('delete row label')}</DropdownMenu.Item>
+          <DropdownMenu.Viewport>
+            <DropdownMenu.Item onClick={() => model.deleteRow(rowIndex)}>{t('delete row label')}</DropdownMenu.Item>
+          </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>
       </DropdownMenu.Portal>

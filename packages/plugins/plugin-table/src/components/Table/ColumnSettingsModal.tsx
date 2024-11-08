@@ -33,16 +33,18 @@ export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, trigg
   }
 
   return (
-    <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
+    <DropdownMenu.Root modal={false} open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
       <DropdownMenu.Portal>
         <DropdownMenu.Content>
-          <FieldEditor
-            field={field}
-            projection={model?.projection}
-            view={model?.table.view}
-            onComplete={() => onOpenChange?.(false)}
-          />
+          <DropdownMenu.Viewport>
+            <FieldEditor
+              field={field}
+              projection={model?.projection}
+              view={model?.table.view}
+              onComplete={() => onOpenChange?.(false)}
+            />
+          </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
