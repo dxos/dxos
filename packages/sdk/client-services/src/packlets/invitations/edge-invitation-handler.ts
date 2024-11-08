@@ -32,6 +32,7 @@ export interface EdgeInvitationHandlerCallbacks {
   onInvitationSuccess(response: AdmissionResponse, request: AdmissionRequest): Promise<void>;
 }
 
+export const MAX_RETRIES_PER_INVITATION = 5;
 export const DEFAULT_REQUEST_RETRY_INTERVAL_MS = 3000;
 export const DEFAULT_REQUEST_RETRY_JITTER_MS = 500;
 
@@ -85,7 +86,9 @@ export class EdgeInvitationHandler implements FlowLockHolder {
       this._flowLock = undefined;
     });
 
+    let requestCount = 0;
     const tryHandleInvitation = async () => {
+      requestCount++;
       const admissionRequest = await protocol.createAdmissionRequest(deviceProfile);
       if (admissionRequest.space) {
         try {
@@ -97,10 +100,10 @@ export class EdgeInvitationHandler implements FlowLockHolder {
               retryable: error.isRetryable,
               after: error.retryAfterMs ?? this._calculateNextRetryMs(),
             });
-            if (error.isRetryable) {
+            if (error.isRetryable && requestCount < MAX_RETRIES_PER_INVITATION) {
               scheduleTask(ctx, tryHandleInvitation, error.retryAfterMs ?? this._calculateNextRetryMs());
             }
-          } else {
+          } else if (requestCount < MAX_RETRIES_PER_INVITATION) {
             log.info('failed to handle invitation with edge', { error });
             scheduleTask(ctx, tryHandleInvitation, this._calculateNextRetryMs());
           }
