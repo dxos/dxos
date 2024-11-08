@@ -23,28 +23,22 @@ export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky 
 const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType; role?: string }>) => {
   const { hasAttention } = useAttention(fullyQualifiedId(table));
   const dispatch = useIntentDispatcher();
-  const space = getSpace(table);
-
   useTableIntialisation(table);
-
+  const space = getSpace(table);
   const schema = useMemo(
     () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.__typename) : undefined),
-    [table],
+    [space, table.view],
   );
-
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const handleDeleteRow = useCallback((row: any) => space?.db.remove(row), [space]);
-  const handleDeleteColumn = useCallback(
-    (property: string) => {
-      void dispatch({
-        action: TableAction.DELETE_COLUMN,
-        data: { table, property } satisfies TableAction.DeleteColumn,
-      });
-    },
-    [space],
-  );
+  const handleDeleteColumn = useCallback((property: string) => {
+    void dispatch({
+      action: TableAction.DELETE_COLUMN,
+      data: { table, property } satisfies TableAction.DeleteColumn,
+    });
+  }, []);
 
   const projection = useMemo(() => {
     if (!schema || !table.view) {
