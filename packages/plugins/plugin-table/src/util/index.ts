@@ -4,3 +4,4 @@
 
 export * from './table-buttons';
 export * from './signals';
+export * from './table';
