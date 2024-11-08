@@ -555,7 +555,6 @@ export const DeckPlugin = ({
                 Object.keys(intentParts).forEach((partName: string) => {
                   const effectivePart = getEffectivePart(partName as LayoutPart, layoutMode);
                   const ids = intentParts[partName];
-                  console.log('Closing', ids, 'from', effectivePart, 'part');
                   if (Array.isArray(ids)) {
                     ids.forEach((id: string) => {
                       newLayout = closeEntry(newLayout, { part: effectivePart, entryId: id });
