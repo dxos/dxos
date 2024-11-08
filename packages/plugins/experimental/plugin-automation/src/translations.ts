@@ -17,6 +17,7 @@ export default [
         'template placeholder': 'Enter template...',
         'value placeholder': 'Enter value...',
         'select preset template placeholder': 'Select preset',
+        'open automation panel label': 'Show Automations',
 
         // 'create object label': 'Create rule',
         // 'create stack section label': 'Create rule',

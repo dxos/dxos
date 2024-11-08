@@ -76,6 +76,9 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
     provides: {
       settings,
       translations,
+      complementary: {
+        panels: [{ id: 'debug', label: ['open debug panel label', { ns: DEBUG_PLUGIN }], icon: 'ph--bug--regular' }],
+      },
       context: ({ children }) => {
         const [timer, setTimer] = useState<Timer>();
         useEffect(() => timer?.state.on((value) => !value && setTimer(undefined)), [timer]);
