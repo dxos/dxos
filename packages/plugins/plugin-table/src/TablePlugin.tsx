@@ -5,7 +5,13 @@
 import { Table } from '@phosphor-icons/react';
 import React from 'react';
 
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
+import {
+  resolvePlugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  NavigationAction,
+  type IntentDispatcher,
+} from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
@@ -23,11 +29,14 @@ import { TableType } from './types';
 import { TableAction, type TablePluginProvides, isTable } from './types';
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
+  let dispatch: IntentDispatcher | undefined;
+
   return {
     meta,
     ready: async (plugins) => {
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       clientPlugin?.provides.client.addTypes([TableType]);
+      dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
     },
     provides: {
       metadata: {
@@ -111,12 +120,20 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
 
                 const space = getSpace(table);
                 const schema = space?.db.schemaRegistry.getSchema(table.view.query.__typename);
+                const handleDelete = (property: string) => {
+                  void dispatch?.({
+                    plugin: TABLE_PLUGIN,
+                    action: TableAction.DELETE_COLUMN,
+                    data: { table, property },
+                  });
+                };
+
                 if (!schema) {
                   return null;
                 }
 
                 return {
-                  node: <ViewEditor schema={schema} view={table.view} />,
+                  node: <ViewEditor schema={schema} view={table.view} onDelete={handleDelete} />,
                 };
               }
 
