@@ -26,24 +26,28 @@ export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, trigg
     if (field) {
       return model?.projection.getFieldProjection(field.property);
     }
-  }, [model?.table?.view?.fields, columnId]);
+  }, [model?.projection, field]);
 
   if (!props || !field || !model?.projection || !model?.table?.view?.fields) {
     return null;
   }
 
   return (
-    <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
+    <DropdownMenu.Root modal={false} open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
-      <DropdownMenu.Content>
-        <FieldEditor
-          field={field}
-          projection={model?.projection}
-          view={model?.table.view}
-          onComplete={() => onOpenChange?.(false)}
-        />
-        <DropdownMenu.Arrow />
-      </DropdownMenu.Content>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content>
+          <DropdownMenu.Viewport>
+            <FieldEditor
+              field={field}
+              projection={model?.projection}
+              view={model?.table.view}
+              onComplete={() => onOpenChange?.(false)}
+            />
+          </DropdownMenu.Viewport>
+          <DropdownMenu.Arrow />
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
     </DropdownMenu.Root>
   );
 };

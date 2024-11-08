@@ -73,8 +73,6 @@ export const useForm = <T extends object>({
   onValuesChanged,
   onSubmit,
 }: FormOptions<T>): FormResult<T> => {
-  invariant(additionalValidation != null || schema != null, 'useForm must be called with schema and/or validate');
-
   const [values, setValues] = useState<T>(initialValues);
   useEffect(() => {
     setValues(initialValues);
@@ -90,25 +88,26 @@ export const useForm = <T extends object>({
 
   const validate = useCallback(
     (values: T) => {
+      let errors: ValidationError[] = [];
+
       if (schema) {
         const schemaErrors = validateSchema(schema, values) ?? [];
         if (schemaErrors.length > 0) {
-          setErrors(collapseErrorArray(schemaErrors));
-          return false;
+          errors = schemaErrors;
         }
       }
 
-      if (additionalValidation) {
+      if (additionalValidation && errors.length === 0) {
         const validateErrors = additionalValidation(values) ?? [];
-        setErrors(collapseErrorArray(validateErrors));
-        return validateErrors.length === 0;
+        errors = validateErrors;
       }
 
-      setErrors({} as Record<keyof T, string>);
-      return true;
+      setErrors(errors.length > 0 ? collapseErrorArray(errors) : ({} as Record<keyof T, string>));
     },
     [schema, additionalValidation],
   );
+
+  useEffect(() => validate(values), [schema, validate, values]);
 
   //
   // Values.
@@ -120,11 +119,10 @@ export const useForm = <T extends object>({
       const parsedValue = type === 'number' ? parseFloat(value) || 0 : value;
       const newValues = { ...values, [property]: parsedValue };
       setValues(newValues);
-      validate(newValues);
       setChanged((prev) => ({ ...prev, [property]: true }));
       onValuesChanged?.(newValues);
     },
-    [values, validate, onValuesChanged],
+    [values, onValuesChanged],
   );
 
   const onValueChange = useCallback(
@@ -162,9 +160,8 @@ export const useForm = <T extends object>({
   //
 
   const handleSubmit = useCallback(() => {
-    if (validate(values)) {
-      onSubmit(values, { changed });
-    }
+    invariant(Object.keys(errors).length === 0, 'Submission should be disabled when there are errors present');
+    onSubmit(values, { changed });
   }, [values, validate, onSubmit]);
 
   const canSubmit = useMemo(
