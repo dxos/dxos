@@ -29,7 +29,7 @@ export enum SheetAction {
   DROP_AXIS = `${SHEET_ACTION}/axis-drop`,
 }
 
-export type UndoDropAxis = {
+export type RestoreAxis = {
   axis: DxGridAxis;
   axisIndex: string;
   index: number;
@@ -41,7 +41,7 @@ export namespace SheetAction {
   export type Create = IntentData<{ sheet: SheetType }>;
   export type InsertAxis = IntentData<{ model: SheetModel; axis: DxGridAxis; index: number; count?: number }>;
   export type DropAxis = IntentData<{ model: SheetModel; axis: DxGridAxis; axisIndex: string }>;
-  export type DropAxisUndo = IntentData<UndoDropAxis & { model: SheetModel }>;
+  export type DropAxisRestore = IntentData<RestoreAxis & { model: SheetModel }>;
 }
 
 // TODO(Zan): Move this to the plugin-space plugin or another common location

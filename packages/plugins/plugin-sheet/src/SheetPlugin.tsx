@@ -181,10 +181,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
               return;
             }
             case SheetAction.DROP_AXIS: {
-              if (intent.undo) {
-                const { model, ...undoData } = intent.data as SheetAction.DropAxisUndo;
-                model[undoData.axis === 'col' ? 'undoDropColumn' : 'undoDropRow'](undoData);
-              } else {
+              if (!intent.undo) {
                 const { model, axis, axisIndex } = intent.data as SheetAction.DropAxis;
                 const undoData = model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
                 return {
@@ -193,6 +190,9 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
                     data: { ...undoData, model },
                   },
                 };
+              } else {
+                const { model, ...undoData } = intent.data as SheetAction.DropAxisRestore;
+                model[undoData.axis === 'col' ? 'restoreColumn' : 'restoreRow'](undoData);
               }
             }
           }

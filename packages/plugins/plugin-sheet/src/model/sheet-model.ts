@@ -29,7 +29,7 @@ import {
   MAX_COLUMNS,
   MAX_ROWS,
 } from '../defs';
-import { type CellScalarValue, type CellValue, type SheetType, type UndoDropAxis } from '../types';
+import { type CellScalarValue, type CellValue, type SheetType, type RestoreAxis } from '../types';
 
 // Map sheet types to system types.
 // https://hyperformula.handsontable.com/guide/types-of-values.html
@@ -179,7 +179,7 @@ export class SheetModel extends Resource {
     return idx;
   }
 
-  dropRow(rowIndex: string): UndoDropAxis {
+  dropRow(rowIndex: string): RestoreAxis {
     const range = {
       from: addressFromIndex(this._sheet, `${this._sheet.columns[0]}@${rowIndex}`),
       to: addressFromIndex(this._sheet, `${this._sheet.columns[this._sheet.columns.length - 1]}@${rowIndex}`),
@@ -193,7 +193,7 @@ export class SheetModel extends Resource {
     return { axis: 'row', index, axisIndex: rowIndex, axisMeta: this._sheet.rowMeta[rowIndex], values };
   }
 
-  dropColumn(colIndex: string): UndoDropAxis {
+  dropColumn(colIndex: string): RestoreAxis {
     const range = {
       from: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[0]}`),
       to: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[this._sheet.rows.length - 1]}`),
@@ -207,7 +207,7 @@ export class SheetModel extends Resource {
     return { axis: 'col', index, axisIndex: colIndex, axisMeta: this._sheet.rowMeta[colIndex], values };
   }
 
-  undoDropRow({ index, axisIndex, axisMeta, values }: UndoDropAxis) {
+  restoreRow({ index, axisIndex, axisMeta, values }: RestoreAxis) {
     this._sheet.rows.splice(index, 0, axisIndex);
     values.forEach((value, col) => {
       if (value) {
@@ -220,7 +220,7 @@ export class SheetModel extends Resource {
     this.reset();
   }
 
-  undoDropColumn({ index, axisIndex, axisMeta, values }: UndoDropAxis) {
+  restoreColumn({ index, axisIndex, axisMeta, values }: RestoreAxis) {
     this._sheet.columns.splice(index, 0, axisIndex);
     values.forEach((value, row) => {
       if (value) {
