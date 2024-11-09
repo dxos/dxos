@@ -163,7 +163,7 @@ describe('ViewProjection', () => {
       property: 'org',
       type: TypeEnum.Ref,
       format: FormatEnum.Ref,
-      referenceSchema: 'dxn:type:example.com/type/Org',
+      referenceSchema: 'example.com/type/Org',
     });
   });
 
