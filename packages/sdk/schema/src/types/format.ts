@@ -206,6 +206,7 @@ export type SchemaProperty<T> = {
 /**
  * Get top-level properties from schema.
  */
+// TODO(burdon): Factor out (generic).
 export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaProperty<T>[] => {
   return AST.getPropertySignatures(schema.ast).reduce<SchemaProperty<T>[]>((props, prop) => {
     const property = prop.name.toString() as JsonProp & keyof T;

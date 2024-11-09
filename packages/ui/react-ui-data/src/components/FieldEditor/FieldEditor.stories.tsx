@@ -9,6 +9,7 @@ import React from 'react';
 
 import { createMutableSchema } from '@dxos/echo-schema/testing';
 import { type JsonProp } from '@dxos/effect';
+import { log } from '@dxos/log';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { ViewProjection } from '@dxos/schema';
 import { TestSchema, testView } from '@dxos/schema/testing';
@@ -22,7 +23,7 @@ type StoryProps = FieldEditorProps;
 
 const DefaultStory = (props: FieldEditorProps) => {
   const handleComplete: FieldEditorProps['onClose'] = () => {
-    console.log('complete');
+    log.info('onClose', { props });
   };
 
   return (
