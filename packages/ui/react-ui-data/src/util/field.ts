@@ -11,11 +11,10 @@ import { type ValidationError } from '@dxos/schema';
  * Handles various data types including booleans, numbers, dates, and strings.
  * Returns undefined for empty or null inputs.
  */
-// TODO(burdon): Differentiate between data FormatEnum and display format (e.g., percent).
 export type ParseProps = {
   type?: TypeEnum;
   format?: FormatEnum;
-  value: any;
+  value: any; // TODO(burdon): Type?
 };
 
 export const parseValue = ({ type, format, value }: ParseProps) => {

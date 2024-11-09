@@ -12,14 +12,14 @@ import { type TableModel } from '../../model';
 
 export type ColumnSettingsModalProps = {
   model?: TableModel;
-  columnId?: string; // TODO(burdon): Rename property?
+  fieldId?: string;
   triggerRef: React.RefObject<HTMLButtonElement>;
 } & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
 
-export const ColumnSettingsModal = ({ model, columnId, open, onOpenChange, triggerRef }: ColumnSettingsModalProps) => {
+export const ColumnSettingsModal = ({ model, fieldId, open, onOpenChange, triggerRef }: ColumnSettingsModalProps) => {
   const field = useMemo(
-    () => model?.table?.view?.fields.find((f) => f.property === columnId),
-    [model?.table?.view?.fields, columnId],
+    () => model?.table?.view?.fields.find((f) => f.property === fieldId),
+    [model?.table?.view?.fields, fieldId],
   );
 
   const props = useMemo<FieldProjection | undefined>(() => {

@@ -8,6 +8,9 @@ import { create, JsonProp, JsonSchemaType, QueryType, type ReactiveObject, S, Ty
  * Stored field metadata (e.g., for UX).
  */
 export const FieldSchema = S.Struct({
+  // TODO(burdon): We should add a fieldId distinct from the property since in principle we might have
+  //  multiple columns for the same property with different formats (e.g., date rendered as YY-MM-HH and relative).
+  // TODO(burdon): Standardize use of `field` and `property` (i,e., remove `columnId`).
   property: JsonProp,
   visible: S.optional(S.Boolean),
   size: S.optional(S.Number),

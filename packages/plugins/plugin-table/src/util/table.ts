@@ -9,6 +9,7 @@ import { createView } from '@dxos/schema';
 
 import { type TableType } from '../types';
 
+// TODO(burdon): User should determine typename.
 export const initializeTable = (space: Space, table: TableType): void => {
   if (!table?.view) {
     const schema = TypedObject({

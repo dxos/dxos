@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
-import { type DxGridElement, type DxAxisResize, Grid } from '@dxos/react-ui-grid';
+import { type DxGridElement, type DxAxisResize, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
@@ -25,9 +25,17 @@ const blockEndLine =
 
 const frozen = { frozenRowsStart: 1, frozenColsEnd: 1 };
 
-const TableRoot = ({ role = 'article', children }: PropsWithChildren<{ role?: string }>) => {
+//
+// Root
+//
+
+export type TableRootProps = PropsWithChildren<{ role?: string }>;
+
+const TableRoot = ({ role = 'article', children }: TableRootProps) => {
+  // TODO(burdon): article | section | slide shouldn't be handled here; move into framework.
   return (
     <div
+      role={role}
       className={mx(
         role === 'article' && 'relative is-full max-is-max min-is-0 min-bs-0',
         role === 'section' && 'grid cols-1 rows-[1fr_min-content] min-bs-0 !bg-[--surface-bg]',
@@ -39,9 +47,17 @@ const TableRoot = ({ role = 'article', children }: PropsWithChildren<{ role?: st
   );
 };
 
-export type TableProps = { model?: TableModel; onDeleteRow?: (row: any) => void };
+//
+// Main
+//
 
-const TableMain = ({ model }: TableProps) => {
+export type TableMainProps = {
+  model?: TableModel;
+  onAddRow?: (row: number) => void;
+  onDeleteRow?: (row: number) => void;
+};
+
+const TableMain = ({ model, onAddRow, onDeleteRow }: TableMainProps) => {
   const gridRef = useRef<DxGridElement>(null);
 
   const handleCellUpdate = useCallback((cell: GridCell) => {
@@ -51,6 +67,34 @@ const TableMain = ({ model }: TableProps) => {
   const handleRowOrderChanged = useCallback(() => {
     gridRef.current?.updateCells(true);
   }, []);
+
+  const handleKeyDown = useCallback<NonNullable<GridContentProps['onKeyDown']>>(
+    (event) => {
+      const cell = closestCell(event.target);
+      if (!model || !cell) {
+        return;
+      }
+
+      switch (event.key) {
+        case 'Backspace':
+        case 'Delete': {
+          model.setCellData(cell, undefined);
+          break;
+        }
+      }
+    },
+    [model],
+  );
+
+  const handleEnter = useCallback<NonNullable<TableCellEditor['onEnter']>>(
+    (cell) => {
+      // TODO(burdon): Insert row (if bottom row isn't completely blank already).
+      if (model && cell.row === model.getRowCount() - 1) {
+        onAddRow?.(cell.row);
+      }
+    },
+    [model],
+  );
 
   useLayoutEffect(() => {
     if (!gridRef.current || !model) {
@@ -82,7 +126,7 @@ const TableMain = ({ model }: TableProps) => {
     <>
       {/* TODO(burdon): Is this required to be unique? */}
       <Grid.Root id={model?.table.id ?? 'table-grid'}>
-        <TableCellEditor tableModel={model} gridRef={gridRef} />
+        <TableCellEditor model={model} gridRef={gridRef} onEnter={handleEnter} />
         <Grid.Content
           ref={gridRef}
           className={mx(
@@ -96,11 +140,12 @@ const TableMain = ({ model }: TableProps) => {
           limitColumns={model?.table.view?.fields?.length ?? 0}
           onAxisResize={handleAxisResize}
           onClick={handleClick}
+          onKeyDown={handleKeyDown}
         />
       </Grid.Root>
       <ColumnActionsMenu
         model={model}
-        columnId={menuState?.type === 'column' ? menuState.columnId : undefined}
+        fieldId={menuState?.type === 'column' ? menuState.fieldId : undefined}
         open={menuState?.type === 'column'}
         onOpenChange={close}
         onShowColumnSettings={showColumnSettings}
@@ -117,7 +162,7 @@ const TableMain = ({ model }: TableProps) => {
       <ColumnSettingsModal
         model={model}
         open={menuState?.type === 'columnSettings'}
-        columnId={menuState?.type === 'columnSettings' ? menuState.columnId : undefined}
+        fieldId={menuState?.type === 'columnSettings' ? menuState.fieldId : undefined}
         onOpenChange={close}
         triggerRef={triggerRef}
       />

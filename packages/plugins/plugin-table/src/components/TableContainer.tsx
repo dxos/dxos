@@ -39,7 +39,13 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
-  const handleDeleteRow = useCallback((row: any) => space?.db.remove(row), [space]);
+  // TODO(burdon): Undo action.
+  const handleDeleteRow = useCallback(
+    (row: number, object: any) => {
+      space?.db.remove(object);
+    },
+    [space],
+  );
   const handleDeleteColumn = useCallback((property: string) => {
     void dispatch({
       action: TableAction.DELETE_COLUMN,

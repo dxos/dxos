@@ -4,6 +4,7 @@
 
 import React, { type RefObject, useCallback } from 'react';
 
+import { invariant } from '@dxos/invariant';
 import {
   type DxGridElement,
   type EditorKeysProps,
@@ -15,22 +16,24 @@ import {
 } from '@dxos/react-ui-grid';
 
 import { type TableModel } from '../../model';
-import { toGridCell } from '../../types';
+import { type GridCell, toGridCell } from '../../types';
 
 export type TableCellEditor = GridScopedProps<{
   gridRef: RefObject<DxGridElement>;
-  tableModel?: TableModel;
+  model?: TableModel;
+  onEnter?: (cell: GridCell) => void;
 }>;
 
-export const TableCellEditor = ({ __gridScope, gridRef, tableModel }: TableCellEditor) => {
+export const TableCellEditor = ({ __gridScope, gridRef, model, onEnter }: TableCellEditor) => {
   const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
+
   const updateCell = useCallback(
     (value: any) => {
-      if (value !== undefined && editing && tableModel) {
-        tableModel.setCellData(toGridCell(editing.index), value);
+      if (value !== undefined && editing && model) {
+        model.setCellData(toGridCell(editing.index), value);
       }
     },
-    [editing, tableModel],
+    [model, editing],
   );
 
   const determineNavigationAxis = ({ key }: EditorKeyEvent): 'row' | 'col' | undefined => {
@@ -62,26 +65,35 @@ export const TableCellEditor = ({ __gridScope, gridRef, tableModel }: TableCellE
         return 1;
     }
 
-    return shift ? -1 : 1; // TODO(burdon): ???
+    return shift ? -1 : 1;
   };
 
   const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
     (value, event) => {
       updateCell(value);
       gridRef.current?.refocus(determineNavigationAxis(event), determineNavigationDelta(event));
+      invariant(editing);
+      const cell = toGridCell(editing.index);
       setEditing(null);
+      onEnter?.(cell);
     },
-    [updateCell, setEditing, determineNavigationAxis, determineNavigationDelta],
+    [updateCell, editing, setEditing, determineNavigationAxis, determineNavigationDelta],
   );
 
-  const extension = [editorKeys({ onClose: handleClose, ...(editing?.initialContent && { onNav: handleClose }) })];
+  // TODO(burdon): Autocomplete references, enums, etc.
+  const extension = [
+    editorKeys({
+      onClose: handleClose,
+      ...(editing?.initialContent && { onNav: handleClose }),
+    }),
+  ];
 
   const getCellContent = useCallback(() => {
-    if (editing && tableModel) {
-      const cellData = tableModel.getCellData(toGridCell(editing.index));
+    if (model && editing) {
+      const cellData = model.getCellData(toGridCell(editing.index));
       return cellData !== undefined ? String(cellData) : '';
     }
-  }, [editing, tableModel]);
+  }, [model, editing]);
 
   return <GridCellEditor extension={extension} getCellContent={getCellContent} />;
 };

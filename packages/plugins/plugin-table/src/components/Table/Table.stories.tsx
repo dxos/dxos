@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { type MutableSchema } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { Filter, useSpaces, useQuery, create, getSpace } from '@dxos/react-client/echo';
+import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-data';
@@ -46,35 +46,10 @@ const DefaultStory = () => {
   }, [tables]);
 
   useEffect(() => {
-    if (space && table) {
+    if (space && table && !table.view) {
       initializeTable(space, table);
     }
   }, [space, table]);
-
-  const objects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
-  const filteredObjects = useGlobalFilteredObjects(objects);
-  const handleDeleteRow = useCallback((row: any) => space.db.remove(row), [space]);
-
-  const handleAction = useCallback(
-    (action: { type: string }) => {
-      switch (action.type) {
-        case 'on-thread-create': {
-          console.log('Thread creation triggered');
-          break;
-        }
-        case 'add-row': {
-          if (table) {
-            const space = getSpace(table);
-            if (space && schema) {
-              space.db.add(create(schema, {}));
-            }
-            break;
-          }
-        }
-      }
-    },
-    [table, spaces],
-  );
 
   const projection = useMemo(() => {
     if (!schema || !table?.view) {
@@ -84,13 +59,44 @@ const DefaultStory = () => {
     return new ViewProjection(schema, table.view);
   }, [schema, table?.view]);
 
+  const objects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
+  const filteredObjects = useGlobalFilteredObjects(objects);
+
+  const handleAddRow = useCallback(() => {
+    if (space && schema) {
+      space.db.add(create(schema, {}));
+    }
+  }, [space]);
+
   const handleDeleteColumn = useCallback(
     (property: string) => {
       if (projection) {
-        const _deleted = projection.deleteFieldProjection(property);
+        projection.deleteFieldProjection(property);
       }
     },
     [table, projection],
+  );
+
+  const handleDeleteRow = useCallback(
+    (_: number, object: any) => {
+      space.db.remove(object);
+    },
+    [space],
+  );
+
+  const handleAction = useCallback(
+    (action: { type: string }) => {
+      switch (action.type) {
+        case 'on-thread-create': {
+          console.log('Thread creation triggered');
+          break;
+        }
+        case 'add-row': {
+          handleAddRow();
+        }
+      }
+    },
+    [table, spaces],
   );
 
   const model = useTableModel({
@@ -113,7 +119,7 @@ const DefaultStory = () => {
           <Toolbar.Actions />
         </Toolbar.Root>
         <Table.Root>
-          <Table.Main model={model} />
+          <Table.Main model={model} onAddRow={handleAddRow} />
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator'>
@@ -155,7 +161,7 @@ const TablePerformanceStory = (props: StoryProps) => {
 
   const model = useTableModel({
     table,
-    objects: items as any,
+    objects: items as any[],
     onDeleteRow: handleDeleteRow,
     onDeleteColumn: handleDeleteColumn,
   });

@@ -2,20 +2,28 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useRef, useCallback, useState, type MouseEvent } from 'react';
+import { useRef, useCallback, useState, type MouseEvent, type RefObject } from 'react';
 
 import { tableButtons } from '../util';
 
-type MenuState =
-  | { type: 'column'; columnId: string }
+export type TableMenuState =
+  | { type: 'column'; fieldId: string }
   | { type: 'row'; rowIndex: number }
   | { type: 'newColumn' }
-  | { type: 'columnSettings'; columnId: string }
+  | { type: 'columnSettings'; fieldId: string }
   | undefined;
 
-export const useTableMenuController = () => {
+export type TableMenuController = {
+  triggerRef: RefObject<HTMLButtonElement>;
+  state: TableMenuState;
+  handleClick: (event: MouseEvent) => void;
+  close: () => void;
+  showColumnSettings: () => void;
+};
+
+export const useTableMenuController = (): TableMenuController => {
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const [state, setState] = useState<MenuState>();
+  const [state, setState] = useState<TableMenuState>();
 
   const handleClick = useCallback((event: MouseEvent) => {
     const target = event.target as HTMLElement;
@@ -23,8 +31,8 @@ export const useTableMenuController = () => {
     const columnButton = target.closest(`button[${tableButtons.columnSettings.attr}]`);
     if (columnButton) {
       triggerRef.current = columnButton as HTMLButtonElement;
-      const columnId = columnButton.getAttribute(tableButtons.columnSettings.attr)!;
-      setState({ type: 'column', columnId });
+      const fieldId = columnButton.getAttribute(tableButtons.columnSettings.attr)!;
+      setState({ type: 'column', fieldId });
       return;
     }
 
@@ -45,13 +53,13 @@ export const useTableMenuController = () => {
 
   const showColumnSettings = useCallback(() => {
     if (state?.type === 'column') {
-      setTimeout(() => setState({ type: 'columnSettings', columnId: state.columnId }), 1);
+      setTimeout(() => setState({ type: 'columnSettings', fieldId: state.fieldId }), 1);
     }
   }, [state]);
 
   return {
-    state,
     triggerRef,
+    state,
     handleClick,
     close: () => setState(undefined),
     showColumnSettings,

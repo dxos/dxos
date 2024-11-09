@@ -6,6 +6,7 @@ import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-c
 import sortBy from 'lodash.sortby';
 
 import { Resource } from '@dxos/context';
+import { type JsonProp } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 import { cellClassesForFieldType, parseValue, formatForDisplay, formatForEditing } from '@dxos/react-ui-data';
 import {
@@ -21,33 +22,34 @@ import { type ViewProjection, type FieldType } from '@dxos/schema';
 import { fromGridCell, type GridCell, type TableType } from '../types';
 import { tableButtons, touch } from '../util';
 
-export type ColumnId = string;
 export type SortDirection = 'asc' | 'desc';
-export type SortConfig = { columnId: ColumnId; direction: SortDirection };
+export type SortConfig = { fieldId: string; direction: SortDirection };
 
-export type TableModelProps = {
+export type BaseTableRow = Record<JsonProp, any>;
+
+export type TableModelProps<T extends BaseTableRow = {}> = {
   table: TableType;
   projection: ViewProjection;
   sorting?: SortConfig[];
   pinnedRows?: { top: number[]; bottom: number[] };
   rowSelection?: number[];
-  onDeleteColumn?: (field: string) => void;
-  onDeleteRow?: (row: any) => void;
   onInsertRow?: (index?: number) => void;
+  onDeleteRow?: (row: number, object: T) => void;
+  onDeleteColumn?: (fieldId: string) => void;
   onCellUpdate?: (cell: GridCell) => void;
   onRowOrderChanged?: () => void;
 };
 
-export class TableModel extends Resource {
+export class TableModel<T extends BaseTableRow = {}> extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
 
   public readonly _table: TableType;
   public readonly _projection: ViewProjection;
 
-  private rows = signal<any[]>([]);
-  private sortedRows!: ReadonlySignal<any[]>;
+  private rows = signal<T[]>([]);
+  private sortedRows!: ReadonlySignal<T[]>;
 
-  private visibleRange = signal<DxGridPlaneRange>({
+  private readonly visibleRange = signal<DxGridPlaneRange>({
     start: { row: 0, col: 0 },
     end: { row: 0, col: 0 },
   });
@@ -55,8 +57,6 @@ export class TableModel extends Resource {
   public columnMeta!: ReadonlySignal<DxGridAxisMeta>;
 
   public readonly sorting = signal<SortConfig | undefined>(undefined);
-  public pinnedRows: { top: number[]; bottom: number[] };
-  public rowSelection: number[];
 
   /**
    * Maps display indices to data indices.
@@ -64,11 +64,16 @@ export class TableModel extends Resource {
    * Keys are display indices, values are corresponding data indices.
    */
   private readonly displayToDataIndex: Map<number, number> = new Map();
-  private readonly onDeleteColumn?: (field: string) => void;
-  private readonly onDeleteRow?: (id: string) => void;
-  private readonly onInsertRow?: (index?: number) => void;
-  public onCellUpdate?: (cell: GridCell) => void;
-  public onRowOrderChanged?: () => void;
+
+  public pinnedRows: NonNullable<TableModelProps<T>['pinnedRows']>;
+  public rowSelection: NonNullable<TableModelProps<T>['rowSelection']>;
+
+  private readonly onInsertRow?: TableModelProps<T>['onInsertRow'];
+  private readonly onDeleteRow?: TableModelProps<T>['onDeleteRow'];
+  private readonly onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
+
+  public onCellUpdate?: TableModelProps<T>['onCellUpdate'];
+  public onRowOrderChanged?: TableModelProps<T>['onRowOrderChanged'];
 
   constructor({
     table,
@@ -76,12 +81,12 @@ export class TableModel extends Resource {
     sorting = [],
     pinnedRows = { top: [], bottom: [] },
     rowSelection = [],
-    onDeleteColumn,
-    onDeleteRow,
     onInsertRow,
+    onDeleteRow,
+    onDeleteColumn,
     onCellUpdate,
     onRowOrderChanged,
-  }: TableModelProps) {
+  }: TableModelProps<T>) {
     super();
     this._table = table;
     this._projection = projection;
@@ -90,9 +95,9 @@ export class TableModel extends Resource {
     this.pinnedRows = pinnedRows;
     this.rowSelection = rowSelection;
 
-    this.onDeleteColumn = onDeleteColumn;
-    this.onDeleteRow = onDeleteRow;
     this.onInsertRow = onInsertRow;
+    this.onDeleteRow = onDeleteRow;
+    this.onDeleteColumn = onDeleteColumn;
     this.onCellUpdate = onCellUpdate;
     this.onRowOrderChanged = onRowOrderChanged;
   }
@@ -105,8 +110,8 @@ export class TableModel extends Resource {
     return this._projection;
   }
 
-  public updateData = (newData: any[]): void => {
-    this.rows.value = newData;
+  public updateData = (object: T[]): void => {
+    this.rows.value = object;
   };
 
   protected override async _open() {
@@ -139,7 +144,7 @@ export class TableModel extends Resource {
         return this.rows.value;
       }
 
-      const field = this._table.view?.fields.find((field) => field.property === sort.columnId);
+      const field = this._table.view?.fields.find((field) => field.property === sort.fieldId);
       if (!field) {
         return this.rows.value;
       }
@@ -175,7 +180,6 @@ export class TableModel extends Resource {
      */
     const rowEffectManager = effect(() => {
       const { start, end } = touch(this.visibleRange.value);
-
       const rowEffects: ReturnType<typeof effect>[] = [];
       for (let row = start.row; row <= end.row; row++) {
         rowEffects.push(
@@ -232,12 +236,11 @@ export class TableModel extends Resource {
     const values: DxGridPlaneCells = {};
     const fields = this._table.view?.fields ?? [];
 
-    // TODO(burdon): Types.
-    const addCell = (row: any, field: FieldType, colIndex: number, displayIndex: number): void => {
+    const addCell = (object: T, field: FieldType, colIndex: number, displayIndex: number): void => {
       const { props } = this._projection.getFieldProjection(field.property);
       const cell: DxGridCellValue = {
         get value() {
-          const value = row?.[field.property];
+          const value = object?.[field.property];
           if (value == null) {
             return '';
           }
@@ -314,15 +317,15 @@ export class TableModel extends Resource {
   // Data
   //
 
-  public deleteRow = (rowIndex: number): void => {
-    const dataIndex = this.displayToDataIndex.get(rowIndex) ?? rowIndex;
-    this.onDeleteRow?.(this.rows.value[dataIndex]);
+  public insertRow = (rowIndex?: number): void => {
+    const row = rowIndex !== undefined ? this.displayToDataIndex.get(rowIndex) ?? rowIndex : this.rows.value.length;
+    this.onInsertRow?.(row);
   };
 
-  public insertRow = (rowIndex?: number): void => {
-    const dataIndex =
-      rowIndex !== undefined ? this.displayToDataIndex.get(rowIndex) ?? rowIndex : this.rows.value.length;
-    this.onInsertRow?.(dataIndex);
+  public deleteRow = (rowIndex: number): void => {
+    const row = this.displayToDataIndex.get(rowIndex) ?? rowIndex;
+    const object = this.rows.value[row];
+    this.onDeleteRow?.(row, object);
   };
 
   public getCellData = ({ col, row }: GridCell): any => {
@@ -342,8 +345,8 @@ export class TableModel extends Resource {
     return formatForEditing({ type: props.type, format: props.format, value });
   };
 
-  public setCellData = ({ col, row }: GridCell, value: any): void => {
-    const dataIndex = this.displayToDataIndex.get(row) ?? row;
+  public setCellData = ({ col, row }: GridCell, value: any | undefined): void => {
+    const rowIdx = this.displayToDataIndex.get(row) ?? row;
     const fields = this.table.view?.fields ?? [];
     if (col < 0 || col >= fields.length) {
       return;
@@ -351,7 +354,9 @@ export class TableModel extends Resource {
 
     const field = fields[col];
     const { props } = this._projection.getFieldProjection(field.property);
-    this.rows.value[dataIndex][field.property] = parseValue({
+    const object = this.rows.value[rowIdx];
+    const obj: Record<JsonProp, any> = object;
+    obj[field.property] = parseValue({
       type: props.type,
       format: props.format,
       value,
@@ -364,14 +369,14 @@ export class TableModel extends Resource {
   // Column Operations
   //
 
-  public deleteColumn(columnId: string): void {
+  public deleteColumn(property: string): void {
     if (!this.table.view) {
       return;
     }
 
-    const field = this.table.view.fields.find((field) => field.property === columnId);
+    const field = this.table.view.fields.find((field) => field.property === property);
     if (field && this.onDeleteColumn) {
-      if (this.sorting.value?.columnId === columnId) {
+      if (this.sorting.value?.fieldId === property) {
         this.clearSort();
       }
       this.onDeleteColumn(field.property);
@@ -397,8 +402,8 @@ export class TableModel extends Resource {
   // Sorting
   //
 
-  public setSort(columnId: ColumnId, direction: SortDirection): void {
-    this.sorting.value = { columnId, direction };
+  public setSort(fieldId: string, direction: SortDirection): void {
+    this.sorting.value = { fieldId, direction };
   }
 
   public clearSort(): void {
