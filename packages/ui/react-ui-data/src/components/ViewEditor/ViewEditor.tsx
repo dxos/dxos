@@ -78,7 +78,13 @@ export const ViewEditor = ({ classNames, schema, view, readonly, onDelete }: Vie
       </List.Root>
 
       {selectedField && (
-        <FieldEditor view={view} projection={projection} field={selectedField} onClose={handleComplete} />
+        <FieldEditor
+          key={selectedField.property}
+          view={view}
+          projection={projection}
+          field={selectedField}
+          onClose={handleComplete}
+        />
       )}
 
       {/* TODO(burdon): Option. */}
