@@ -10,7 +10,7 @@ import {
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
-import React, { useEffect, useRef, useState, type ComponentPropsWithoutRef } from 'react';
+import React, { useLayoutEffect, useState, createContext, type ComponentPropsWithoutRef, useContext } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -22,23 +22,34 @@ export type StackItemProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & 
   onReorder: (sourceId: string, targetId: string, closestEdge: Edge | null) => void;
 };
 
+type StackItemContextValue = {
+  dragHandleRef: (element: HTMLDivElement | null) => void;
+};
+
+const StackItemContext = createContext<StackItemContextValue>({ dragHandleRef: () => {} });
+
+const useStackItem = () => useContext(StackItemContext);
+
 export const StackItem = ({ item, children, classNames, onReorder, ...props }: StackItemProps) => {
-  const ref = useRef<HTMLDivElement>(null);
+  const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
+  const [dragHandleElement, dragHandleRef] = useState<HTMLDivElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
   const { orientation, rail } = useStack();
   const type = orientation === 'horizontal' ? 'column' : 'card';
 
-  useEffect(() => {
-    if (!ref.current) {
+  useLayoutEffect(() => {
+    if (!itemElement) {
       return;
     }
 
-    const element = ref.current;
-
     return combine(
-      draggable({ element, getInitialData: () => ({ id: item.id, type }) }),
+      draggable({
+        element: itemElement,
+        ...(dragHandleElement && { dragHandle: dragHandleElement }),
+        getInitialData: () => ({ id: item.id, type }),
+      }),
       dropTargetForElements({
-        element,
+        element: itemElement,
         getData: ({ input, element }) => {
           return attachClosestEdge(
             { id: item.id, type },
@@ -64,26 +75,35 @@ export const StackItem = ({ item, children, classNames, onReorder, ...props }: S
         },
       }),
     );
-  }, [orientation, item, onReorder]);
+  }, [orientation, item, onReorder, dragHandleElement, itemElement]);
 
   return (
-    <div
-      ref={ref}
-      className={mx(
-        'grid relative is-min',
-        orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
-        rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
-        classNames,
-      )}
-      {...props}
-    >
-      {children}
-      {closestEdge && <DropIndicator edge={closestEdge} />}
-    </div>
+    <StackItemContext.Provider value={{ dragHandleRef }}>
+      <div
+        className={mx(
+          'grid relative is-min',
+          orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
+          rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
+          classNames,
+        )}
+        {...props}
+        ref={itemRef}
+      >
+        {children}
+        {closestEdge && <DropIndicator edge={closestEdge} />}
+      </div>
+    </StackItemContext.Provider>
   );
 };
 
 export const StackItemHeading = () => {
   const { orientation } = useStack();
-  return <div role='heading' className={orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size]'} />;
+  const { dragHandleRef } = useStackItem();
+  return (
+    <div
+      role='heading'
+      className={orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size]'}
+      ref={dragHandleRef}
+    />
+  );
 };
