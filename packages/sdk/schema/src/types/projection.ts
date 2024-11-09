@@ -121,7 +121,6 @@ export class ViewProjection {
       invariant(property);
       invariant(format);
 
-      // Handle property rename in schema
       if (isRename) {
         delete this._schema.jsonSchema.properties![sourcePropertyName!];
       }
