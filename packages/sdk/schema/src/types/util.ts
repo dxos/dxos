@@ -9,6 +9,8 @@ import { AST, type S, visit } from '@dxos/effect';
 
 import { type FieldType } from './view';
 
+// TODO(burdon): Remove once deprecated table is removed.
+
 /**
  * @deprecated
  */

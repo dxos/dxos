@@ -2,19 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
-import { ViewProjection, type FieldType } from '@dxos/schema';
+import { ViewProjection } from '@dxos/schema';
 
 import { Table } from './Table';
 import { Toolbar, type ToolbarAction } from './Toolbar';
 import { useTableModel } from '../hooks';
 import { TableAction, type TableType } from '../types';
+import { initializeTable } from '../util';
 
 // TODO(zantonio): Factor out, copied this from MarkdownPlugin.
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
@@ -24,35 +25,27 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const { hasAttention } = useAttention(fullyQualifiedId(table));
   const dispatch = useIntentDispatcher();
   const space = getSpace(table);
+
+  useEffect(() => {
+    if (space && table) {
+      initializeTable(space, table);
+    }
+  }, [space, table]);
+
   const schema = useMemo(
     () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.__typename) : undefined),
-    [table],
+    [space, table.view],
   );
-
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const handleDeleteRow = useCallback((row: any) => space?.db.remove(row), [space]);
-
-  const handleAddColumn = useCallback(
-    (field: any) => {
-      void dispatch({
-        action: TableAction.ADD_COLUMN,
-        data: { table, field } satisfies TableAction.AddColumn,
-      });
-    },
-    [table],
-  );
-
-  const handleDeleteColumn = useCallback(
-    (field: FieldType) => {
-      void dispatch({
-        action: TableAction.DELETE_COLUMN,
-        data: { table, field } satisfies TableAction.DeleteColumn,
-      });
-    },
-    [space],
-  );
+  const handleDeleteColumn = useCallback((property: string) => {
+    void dispatch({
+      action: TableAction.DELETE_COLUMN,
+      data: { table, property } satisfies TableAction.DeleteColumn,
+    });
+  }, []);
 
   const projection = useMemo(() => {
     if (!schema || !table.view) {
@@ -61,12 +54,12 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
 
     return new ViewProjection(schema, table.view);
   }, [schema, table.view]);
+
   const model = useTableModel({
     table,
     projection,
     objects: filteredObjects,
     onDeleteRow: handleDeleteRow,
-    onAddColumn: handleAddColumn,
     onDeleteColumn: handleDeleteColumn,
   });
 

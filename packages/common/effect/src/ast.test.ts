@@ -14,9 +14,9 @@ import {
   getAnnotation,
   getSimpleType,
   isSimpleType,
+  visit,
   type JsonPath,
   type JsonProp,
-  visit,
 } from './ast';
 
 const ZipCode = S.String.pipe(
@@ -89,7 +89,9 @@ describe('AST', () => {
   });
 
   test('findAnnotation', ({ expect }) => {
-    const Type = S.NonEmptyString.pipe(S.pattern(/^\d{5}$/)).annotations({ [AST.TitleAnnotationId]: 'original title' });
+    const Type = S.NonEmptyString.pipe(S.pattern(/^\d{5}$/)).annotations({
+      [AST.TitleAnnotationId]: 'original title',
+    });
     const Contact = S.Struct({
       p1: Type.annotations({ [AST.TitleAnnotationId]: 'new title' }),
       p2: Type.annotations({ [AST.TitleAnnotationId]: 'new title' }).pipe(S.optional),

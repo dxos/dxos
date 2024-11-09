@@ -10,6 +10,7 @@ export default {
   id: WNFS_PLUGIN,
   name: 'WNFS',
   description: 'Upload & view files with WNFS.',
-  tags: ['experimental'],
   icon: 'ph--file-cloud--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-wnfs',
+  tags: ['experimental'],
 } satisfies PluginMeta;

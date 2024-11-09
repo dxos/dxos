@@ -10,4 +10,5 @@ export default {
   id: TEMPLATE_PLUGIN,
   name: 'Template',
   icon: 'ph--asterisk--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-template',
 } satisfies PluginMeta;

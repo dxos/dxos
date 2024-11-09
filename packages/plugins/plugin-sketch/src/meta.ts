@@ -11,4 +11,5 @@ export default {
   name: 'Sketch',
   description: 'Digital whiteboard and diagram editor.',
   icon: 'ph--compass-tool--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-sketch',
 } satisfies PluginMeta;

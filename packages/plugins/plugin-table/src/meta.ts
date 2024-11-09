@@ -11,4 +11,5 @@ export default {
   name: 'Tables',
   description: 'Create and manage tables.',
   icon: 'ph--table--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-table',
 } satisfies PluginMeta;

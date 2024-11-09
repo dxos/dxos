@@ -4,6 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { type SchemaResolver } from '@dxos/echo-db';
 import { type MutableSchema, S } from '@dxos/echo-schema';
 import { Button, Icon, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
@@ -12,20 +13,22 @@ import { FieldSchema, type FieldType, type ViewType, ViewProjection } from '@dxo
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '../../translations';
-import { FieldEditor } from '../Field/';
+import { FieldEditor } from '../FieldEditor';
 
-const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem] rounded';
+const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
 
 export type ViewEditorProps = ThemedClassName<{
   schema: MutableSchema;
   view: ViewType;
+  registry?: SchemaResolver;
   readonly?: boolean;
+  onDelete: (property: string) => void;
 }>;
 
 /**
  * Schema-based object form.
  */
-export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorProps) => {
+export const ViewEditor = ({ classNames, schema, view, registry, readonly, onDelete }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
   const projection = useMemo(() => new ViewProjection(schema, view), [schema, view]);
   const [selectedField, setSelectedField] = useState<FieldType>();
@@ -46,16 +49,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
     [view.fields],
   );
 
-  const handleDelete = useCallback(
-    (field: FieldType) => {
-      const idx = view.fields.findIndex((f) => field.property === f.property);
-      view.fields.splice(idx, 1);
-      setSelectedField(undefined);
-    },
-    [view.fields],
-  );
-
-  const handleComplete = useCallback(() => setSelectedField(undefined), []);
+  const handleClose = useCallback(() => setSelectedField(undefined), []);
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
@@ -77,7 +71,7 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
                 <List.Item<FieldType> key={item.property} item={item} classNames={mx(grid, ghostHover)}>
                   <List.ItemDragHandle />
                   <List.ItemTitle onClick={() => handleSelect(item)}>{item.property}</List.ItemTitle>
-                  <List.ItemDeleteButton onClick={() => handleDelete(item)} />
+                  <List.ItemDeleteButton onClick={() => onDelete(item.property)} />
                 </List.Item>
               ))}
             </div>
@@ -86,7 +80,14 @@ export const ViewEditor = ({ classNames, schema, view, readonly }: ViewEditorPro
       </List.Root>
 
       {selectedField && (
-        <FieldEditor field={selectedField} projection={projection} view={view} onComplete={handleComplete} />
+        <FieldEditor
+          key={selectedField.property}
+          view={view}
+          projection={projection}
+          field={selectedField}
+          registry={registry}
+          onClose={handleClose}
+        />
       )}
 
       {/* TODO(burdon): Option. */}

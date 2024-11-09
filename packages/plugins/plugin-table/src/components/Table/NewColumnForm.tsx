@@ -18,38 +18,35 @@ type NewColumnFormProps = {
 };
 
 export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewColumnFormProps) => {
-  const [stagedField, setStagedField] = useState<FieldType>();
+  const [field, setField] = useState<FieldType>();
 
   useEffect(() => {
-    if (open && model?.table?.view) {
-      // TODO(ZaymonFC): Create and stage a unique field for the view field set and schema.
+    if (open && model?.projection) {
+      setField(model.projection.createFieldProjection());
     } else {
-      setStagedField(undefined);
+      setField(undefined);
     }
-  }, [open, model?.table?.view]);
+  }, [open, model?.projection]);
 
-  const handleComplete = useCallback(() => {
-    // TODO(ZaymonFC): Invoke a method on the projection to add new field.
+  const handleClose = useCallback(() => {
     close();
-    setStagedField(undefined);
   }, [close]);
 
-  if (!stagedField || !model?.table?.view || !model.projection) {
+  if (!model?.table?.view || !model.projection || !field) {
     return null;
   }
 
   return (
-    <DropdownMenu.Root open={open} onOpenChange={close}>
+    <DropdownMenu.Root modal={false} open={open} onOpenChange={close}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
-      <DropdownMenu.Content>
-        <FieldEditor
-          field={stagedField}
-          projection={model.projection}
-          view={model.table.view}
-          onComplete={handleComplete}
-        />
-        <DropdownMenu.Arrow />
-      </DropdownMenu.Content>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content>
+          <DropdownMenu.Viewport>
+            <FieldEditor view={model.table.view} projection={model.projection} field={field} onClose={handleClose} />
+          </DropdownMenu.Viewport>
+          <DropdownMenu.Arrow />
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
     </DropdownMenu.Root>
   );
 };

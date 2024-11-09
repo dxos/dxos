@@ -11,7 +11,7 @@ import { FormatAnnotationId, FormatEnum } from './types';
  */
 export const DecimalPrecision = S.transform(S.Number, S.Number, {
   strict: true,
-  encode: (value) => Math.pow(10, -value),
+  encode: (value) => 1 / Math.pow(10, value),
   decode: (value) => Math.log10(1 / value),
 }).annotations({
   [AST.TitleAnnotationId]: 'Number of digits',
@@ -28,7 +28,7 @@ export type CurrencyAnnotation = {
  * ISO 4217 currency code.
  */
 export const Currency = ({ decimals, code }: CurrencyAnnotation = { decimals: 2 }) =>
-  S.Number.pipe((s) => (decimals ? s.pipe(S.multipleOf(Math.pow(10, -decimals))) : s)).annotations({
+  S.Number.pipe((s) => (decimals ? s.pipe(S.multipleOf(1 / Math.pow(10, decimals))) : s)).annotations({
     [FormatAnnotationId]: FormatEnum.Currency,
     [AST.TitleAnnotationId]: 'Currency',
     [AST.DescriptionAnnotationId]: 'Currency value',
