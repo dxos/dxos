@@ -96,7 +96,7 @@ export const Form = <T extends object>({
       {!readonly && (
         <div className='flex w-full justify-center'>
           <div className='flex gap-2'>
-            <Button onClick={handleSubmit} disabled={!canSubmit}>
+            <Button onClick={handleSubmit} disabled={!canSubmit} type='submit'>
               <Icon icon='ph--check--regular' />
             </Button>
             <Button onClick={onCancel}>

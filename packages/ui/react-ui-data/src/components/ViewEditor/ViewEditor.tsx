@@ -49,7 +49,7 @@ export const ViewEditor = ({ classNames, schema, view, registry, readonly, onDel
     [view.fields],
   );
 
-  const handleComplete = useCallback(() => setSelectedField(undefined), []);
+  const handleClose = useCallback(() => setSelectedField(undefined), []);
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
@@ -81,11 +81,12 @@ export const ViewEditor = ({ classNames, schema, view, registry, readonly, onDel
 
       {selectedField && (
         <FieldEditor
-          registry={registry}
+          key={selectedField.property}
           view={view}
           projection={projection}
           field={selectedField}
-          onClose={handleComplete}
+          registry={registry}
+          onClose={handleClose}
         />
       )}
 

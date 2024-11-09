@@ -12,9 +12,9 @@ import {
   getPropertySchemaForFormat,
   getSchemaProperties,
   type FieldType,
+  type PropertyType,
   type ViewType,
   type ViewProjection,
-  type PropertyType,
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
@@ -65,10 +65,8 @@ export const FieldEditor = ({ view, projection, field, registry, onClose }: Fiel
       if (_props.format !== props.format) {
         setFieldSchema({ fieldSchema: getPropertySchemaForFormat(_props.format) });
       }
-
-      // TODO(burdon): Check if changed.
-      if (_props.referenceSchema) {
-        setSchema(schemas.find((s) => s.typename === _props.referenceSchema));
+      if (_props.referenceSchema !== props.referenceSchema) {
+        setSchema(schemas.find((schema) => schema.typename === _props.referenceSchema));
       }
 
       setProps((props) => {
@@ -139,9 +137,11 @@ export const FieldEditor = ({ view, projection, field, registry, onClose }: Fiel
             {...props}
             options={
               schema
-                ? getSchemaProperties(schema.schema).map((p) => ({
-                    value: p.property,
-                  }))
+                ? getSchemaProperties(schema.schema)
+                    .sort(({ property: a }, { property: b }) => a.localeCompare(b))
+                    .map((p) => ({
+                      value: p.property,
+                    }))
                 : []
             }
           />
