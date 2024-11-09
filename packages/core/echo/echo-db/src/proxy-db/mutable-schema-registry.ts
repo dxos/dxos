@@ -22,12 +22,13 @@ import { type EchoDatabase } from './database';
 import { getObjectCore } from '../echo-handler';
 import { Filter } from '../query';
 
+export type SchemaSubscriptionCallback = (schema: MutableSchema[]) => void;
+
 export interface SchemaResolver {
   getSchema(typename: string): MutableSchema | undefined;
   query(): Promise<MutableSchema[]>;
+  subscribe(cb: SchemaSubscriptionCallback): UnsubscribeCallback;
 }
-
-export type SchemaSubscriptionCallback = (schema: MutableSchema[]) => void;
 
 export type MutableSchemaRegistryOptions = {
   /**

@@ -5,11 +5,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { type SchemaResolver } from '@dxos/echo-db';
-import { FormatEnum, FormatEnums, formatToType } from '@dxos/echo-schema';
+import { FormatEnum, FormatEnums, formatToType, type MutableSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 import {
   getPropertySchemaForFormat,
+  getSchemaProperties,
   type FieldType,
   type ViewType,
   type ViewProjection,
@@ -27,7 +28,7 @@ export type FieldEditorProps = {
   onClose: () => void;
 };
 
-export const FieldEditor = ({ view, projection, field, onClose }: FieldEditorProps) => {
+export const FieldEditor = ({ view, projection, field, registry, onClose }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.property).props);
 
@@ -35,6 +36,24 @@ export const FieldEditor = ({ view, projection, field, onClose }: FieldEditorPro
     const { props } = projection.getFieldProjection(field.property);
     setProps(props);
   }, [field, projection]);
+
+  const [schemas, setSchemas] = useState<MutableSchema[]>([]);
+  const [schema, setSchema] = useState<MutableSchema>();
+  useEffect(() => {
+    if (!registry) {
+      return;
+    }
+
+    const subscription = registry.subscribe(setSchemas);
+    const t = setTimeout(async () => {
+      const schemas = await registry.query();
+      setSchemas(schemas);
+    });
+    return () => {
+      clearTimeout(t);
+      subscription?.();
+    };
+  }, [registry]);
 
   // TODO(burdon): Need to wrap otherwise throws error:
   //  Class constructor SchemaClass cannot be invoked without 'new'.
@@ -46,6 +65,12 @@ export const FieldEditor = ({ view, projection, field, onClose }: FieldEditorPro
       if (_props.format !== props.format) {
         setFieldSchema({ fieldSchema: getPropertySchemaForFormat(_props.format) });
       }
+
+      // TODO(burdon): Check if changed.
+      if (_props.referenceSchema) {
+        setSchema(schemas.find((s) => s.typename === _props.referenceSchema));
+      }
+
       setProps((props) => {
         const type = formatToType[_props.format as keyof typeof formatToType];
         if (props.type !== type) {
@@ -54,7 +79,7 @@ export const FieldEditor = ({ view, projection, field, onClose }: FieldEditorPro
         return props;
       });
     },
-    [props],
+    [schemas, props],
   );
 
   const handleValidate = useCallback(
@@ -104,26 +129,20 @@ export const FieldEditor = ({ view, projection, field, onClose }: FieldEditorPro
         referenceSchema: (props) => (
           <FormInput<PropertyType>
             {...props}
-            options={
-              [
-                // TODO(burdon): Query.
-                // { value: 'example.com/type/A' },
-                // { value: 'example.com/type/B' },
-                // { value: 'example.com/type/C' },
-              ]
-            }
+            options={schemas.map((schema) => ({
+              value: schema.typename,
+            }))}
           />
         ),
         referenceProperty: (props) => (
           <FormInput<PropertyType>
             {...props}
             options={
-              [
-                // TODO(burdon): Query.
-                // { value: 'prop-1' },
-                // { value: 'prop-2' },
-                // { value: 'prop-3' },
-              ]
+              schema
+                ? getSchemaProperties(schema.schema).map((p) => ({
+                    value: p.property,
+                  }))
+                : []
             }
           />
         ),

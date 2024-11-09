@@ -126,7 +126,7 @@ export class ViewProjection {
         format = undefined;
         reference = {
           schema: {
-            $ref: referenceSchema,
+            $ref: `dxn:type:${referenceSchema}`,
           },
         };
       }
