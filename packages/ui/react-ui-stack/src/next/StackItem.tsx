@@ -17,9 +17,11 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { useStack } from './Stack';
 
+export type StackItemData = { id: string; type: 'column' | 'card' };
+
 export type StackItemProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
-  item: { id: string };
-  onReorder: (sourceId: string, targetId: string, closestEdge: Edge | null) => void;
+  item: Omit<StackItemData, 'type'>;
+  onReorder: (source: StackItemData, target: StackItemData, closestEdge: Edge | null) => void;
 };
 
 type StackItemContextValue = {
@@ -70,7 +72,7 @@ export const StackItem = ({ item, children, classNames, onReorder, ...props }: S
         onDrop: ({ self, source }) => {
           setEdge(null);
           if (source.data.type === self.data.type) {
-            onReorder(source.data.id as string, self.data.id as string, extractClosestEdge(self.data));
+            onReorder(source.data as StackItemData, self.data as StackItemData, extractClosestEdge(self.data));
           }
         },
       }),

@@ -10,7 +10,7 @@ import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Stack } from './Stack';
-import { StackItem, StackItemHeading } from './StackItem';
+import { StackItem, type StackItemData, StackItemHeading } from './StackItem';
 
 type StoryStackItem = {
   id: string;
@@ -46,28 +46,28 @@ const StorybookStack = () => {
     ),
   );
 
-  const reorderItem = useCallback((sourceId: string, targetId: string, closestEdge: Edge | null) => {
+  const reorderItem = useCallback((source: StackItemData, target: StackItemData, closestEdge: Edge | null) => {
     setColumns((prevColumns) => {
       const newColumns = [...prevColumns];
       const sourceColumn = newColumns.find(
-        (col) => col.id === sourceId || col.items?.some((card) => card.id === sourceId),
+        (col) => col.id === source.id || col.items?.some((card) => card.id === source.id),
       );
       const targetColumn = newColumns.find(
-        (col) => col.id === targetId || col.items?.some((card) => card.id === targetId),
+        (col) => col.id === target.id || col.items?.some((card) => card.id === target.id),
       );
 
       if (sourceColumn && targetColumn) {
-        if (sourceId.startsWith('col-') && targetId.startsWith('col-')) {
+        if (source.type === 'column' && target.type === 'column') {
           // Reordering columns
-          const sourceIndex = newColumns.findIndex((col) => col.id === sourceId);
-          const targetIndex = newColumns.findIndex((col) => col.id === targetId);
+          const sourceIndex = newColumns.findIndex((col) => col.id === source.id);
+          const targetIndex = newColumns.findIndex((col) => col.id === target.id);
           const [movedColumn] = newColumns.splice(sourceIndex, 1);
-          const insertIndex = closestEdge === 'right' ? targetIndex + 1 : targetIndex;
+          const insertIndex = closestEdge === 'right' ? targetIndex : targetIndex - 1;
           newColumns.splice(insertIndex, 0, movedColumn);
         } else {
           // Reordering cards within a column
-          const sourceCardIndex = sourceColumn.items?.findIndex((card) => card.id === sourceId);
-          const targetCardIndex = targetColumn.items?.findIndex((card) => card.id === targetId);
+          const sourceCardIndex = sourceColumn.items?.findIndex((card) => card.id === source.id);
+          const targetCardIndex = targetColumn.items?.findIndex((card) => card.id === target.id);
           if (
             typeof sourceCardIndex === 'number' &&
             typeof targetCardIndex === 'number' &&
