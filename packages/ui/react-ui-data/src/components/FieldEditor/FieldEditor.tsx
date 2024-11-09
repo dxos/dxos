@@ -4,15 +4,17 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { FormatEnum, FormatEnums, formatToType } from '@dxos/echo-schema';
+import { type SchemaResolver } from '@dxos/echo-db';
+import { FormatEnum, FormatEnums, formatToType, type MutableSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 import {
   getPropertySchemaForFormat,
+  getSchemaProperties,
   type FieldType,
+  type PropertyType,
   type ViewType,
   type ViewProjection,
-  type PropertyType,
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
@@ -22,18 +24,43 @@ export type FieldEditorProps = {
   view: ViewType;
   projection: ViewProjection;
   field: FieldType;
-  onClose: () => void; // TODO(burdon): Status?
+  registry?: SchemaResolver;
+  onClose: () => void;
 };
 
-export const FieldEditor = ({ view, projection, field, onClose }: FieldEditorProps) => {
+export const FieldEditor = ({ view, projection, field, registry, onClose }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.property).props);
+
   useEffect(() => {
     const { props } = projection.getFieldProjection(field.property);
     setProps(props);
   }, [field, projection]);
+
+  const [schemas, setSchemas] = useState<MutableSchema[]>([]);
+  useEffect(() => {
+    if (!registry) {
+      return;
+    }
+
+    const subscription = registry.subscribe(setSchemas);
+    const t = setTimeout(async () => {
+      const schemas = await registry.query();
+      setSchemas(schemas);
+    });
+    return () => {
+      clearTimeout(t);
+      subscription?.();
+    };
+  }, [registry]);
+
+  const [schema, setSchema] = useState<MutableSchema>();
+  useEffect(() => {
+    setSchema(schemas.find((schema) => schema.typename === props.referenceSchema));
+  }, [schemas, props.referenceSchema]);
+
   // TODO(burdon): Need to wrap otherwise throws error:
-  //  Class constructor SchemaClass cannot be invoked without 'new'
+  //  Class constructor SchemaClass cannot be invoked without 'new'.
   const [{ fieldSchema }, setFieldSchema] = useState({ fieldSchema: getPropertySchemaForFormat(props?.format) });
   const handleValueChanged = useCallback(
     (_props: PropertyType) => {
@@ -42,6 +69,10 @@ export const FieldEditor = ({ view, projection, field, onClose }: FieldEditorPro
       if (_props.format !== props.format) {
         setFieldSchema({ fieldSchema: getPropertySchemaForFormat(_props.format) });
       }
+      if (_props.referenceSchema !== props.referenceSchema) {
+        setSchema(schemas.find((schema) => schema.typename === _props.referenceSchema));
+      }
+
       setProps((props) => {
         const type = formatToType[_props.format as keyof typeof formatToType];
         if (props.type !== type) {
@@ -50,7 +81,7 @@ export const FieldEditor = ({ view, projection, field, onClose }: FieldEditorPro
         return props;
       });
     },
-    [props],
+    [schemas, props],
   );
 
   const handleValidate = useCallback(
@@ -100,26 +131,22 @@ export const FieldEditor = ({ view, projection, field, onClose }: FieldEditorPro
         referenceSchema: (props) => (
           <FormInput<PropertyType>
             {...props}
-            options={
-              [
-                // TODO(burdon): Query.
-                // { value: 'example.com/type/A' },
-                // { value: 'example.com/type/B' },
-                // { value: 'example.com/type/C' },
-              ]
-            }
+            options={schemas.map((schema) => ({
+              value: schema.typename,
+            }))}
           />
         ),
         referenceProperty: (props) => (
           <FormInput<PropertyType>
             {...props}
             options={
-              [
-                // TODO(burdon): Query.
-                // { value: 'prop-1' },
-                // { value: 'prop-2' },
-                // { value: 'prop-3' },
-              ]
+              schema
+                ? getSchemaProperties(schema.schema)
+                    .sort(({ property: a }, { property: b }) => a.localeCompare(b))
+                    .map((p) => ({
+                      value: p.property,
+                    }))
+                : []
             }
           />
         ),
