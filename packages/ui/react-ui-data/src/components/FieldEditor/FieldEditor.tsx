@@ -38,7 +38,6 @@ export const FieldEditor = ({ view, projection, field, registry, onClose }: Fiel
   }, [field, projection]);
 
   const [schemas, setSchemas] = useState<MutableSchema[]>([]);
-  const [schema, setSchema] = useState<MutableSchema>();
   useEffect(() => {
     if (!registry) {
       return;
@@ -54,6 +53,11 @@ export const FieldEditor = ({ view, projection, field, registry, onClose }: Fiel
       subscription?.();
     };
   }, [registry]);
+
+  const [schema, setSchema] = useState<MutableSchema>();
+  useEffect(() => {
+    setSchema(schemas.find((schema) => schema.typename === props.referenceSchema));
+  }, [schemas, props.referenceSchema]);
 
   // TODO(burdon): Need to wrap otherwise throws error:
   //  Class constructor SchemaClass cannot be invoked without 'new'.

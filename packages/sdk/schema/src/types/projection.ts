@@ -19,6 +19,8 @@ import { log } from '@dxos/log';
 import { PropertySchema, type PropertyType } from './format';
 import { type ViewType, type FieldType } from './view';
 
+const DXN = /dxn:type:(.+)/;
+
 /**
  * Composite of view and schema metadata for a property.
  */
@@ -74,7 +76,10 @@ export class ViewProjection {
     if ($id && reference) {
       type = TypeEnum.Ref;
       format = FormatEnum.Ref;
-      referenceSchema = reference.schema.$ref;
+      const match = reference.schema.$ref?.match(DXN);
+      if (match) {
+        referenceSchema = match[1];
+      }
     }
     if (format === FormatEnum.None) {
       format = typeToFormat[type as TypeEnum]!;
@@ -94,7 +99,7 @@ export class ViewProjection {
    * @param index Optional index for inserting new fields. Ignored when updating existing fields.
    */
   setFieldProjection({ field, props }: Partial<FieldProjection>, index?: number) {
-    log.info('setFieldProjection', { field, props, index });
+    log('setFieldProjection', { field, props, index });
 
     const sourcePropertyName = field?.property;
     const targetPropertyName = props?.property;
