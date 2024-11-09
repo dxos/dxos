@@ -66,7 +66,7 @@ const DefaultStory = () => {
     if (space && schema) {
       space.db.add(create(schema, {}));
     }
-  }, [space]);
+  }, [space, schema]);
 
   const handleDeleteColumn = useCallback(
     (property: string) => {
