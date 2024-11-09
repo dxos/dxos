@@ -35,7 +35,10 @@ const railGridHorizontal = 'grid-rows-[[rail-start]_var(--rail-size)_[content-st
 const railGridVertical = 'grid-cols-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
 
 export const Stack = forwardRef<HTMLDivElement, StackProps>(
-  ({ children, classNames, style, orientation = 'vertical', rail = true, size = 'intrinsic', ...props }) => {
+  (
+    { children, classNames, style, orientation = 'vertical', rail = true, size = 'intrinsic', ...props },
+    forwardedRef,
+  ) => {
     const childrenCount = Children.count(children);
 
     const styles: CSSProperties = {
@@ -56,11 +59,16 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
               : orientation === 'horizontal'
                 ? 'grid-rows-1'
                 : 'grid-cols-1',
+            size === 'contain' &&
+              (orientation === 'horizontal'
+                ? 'overflow-x-auto bs-min max-bs-full'
+                : 'overflow-y-auto is-min max-is-full'),
             classNames,
           )}
           aria-orientation={orientation}
           style={styles}
           {...props}
+          ref={forwardedRef}
         >
           {children}
         </div>

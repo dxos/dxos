@@ -10,8 +10,7 @@ import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Stack } from './Stack';
-import { StackItem } from './StackItem';
-import { StackItemHeading } from './StackItemHeading';
+import { StackItem, StackItemHeading } from './StackItem';
 
 type StoryStackItem = {
   id: string;
@@ -93,21 +92,23 @@ const StorybookStack = () => {
   }, []);
 
   return (
-    <Stack orientation='horizontal'>
-      {columns.map((column) => (
-        <StackItem key={column.id} item={column} classNames='bg-deck' onReorder={reorderItem}>
-          <StackItemHeading />
-          <Stack orientation='vertical'>
-            {column.items?.map((card) => (
-              <StackItem key={card.id} item={card} onReorder={reorderItem}>
-                <StackItemHeading />
-                <KanbanBlock item={card} />
-              </StackItem>
-            ))}
-          </Stack>
-        </StackItem>
-      ))}
-    </Stack>
+    <main className='fixed inset-0'>
+      <Stack orientation='horizontal' size='contain'>
+        {columns.map((column) => (
+          <StackItem key={column.id} item={column} classNames='bg-deck' onReorder={reorderItem}>
+            <StackItemHeading />
+            <Stack orientation='vertical' size='contain'>
+              {column.items?.map((card) => (
+                <StackItem key={card.id} item={card} onReorder={reorderItem}>
+                  <StackItemHeading />
+                  <KanbanBlock item={card} />
+                </StackItem>
+              ))}
+            </Stack>
+          </StackItem>
+        ))}
+      </Stack>
+    </main>
   );
 };
 

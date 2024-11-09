@@ -82,3 +82,8 @@ export const StackItem = ({ item, children, classNames, onReorder, ...props }: S
     </div>
   );
 };
+
+export const StackItemHeading = () => {
+  const { orientation } = useStack();
+  return <div role='heading' className={orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size]'} />;
+};
