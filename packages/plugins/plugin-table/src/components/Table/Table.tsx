@@ -122,13 +122,17 @@ const TableMain = ({ model, onAddRow, onDeleteRow }: TableMainProps) => {
     [model],
   );
 
+  // TODO(burdon): Import types.
+  const handleFocus = (increment: 'col' | 'row' | undefined, delta: 0 | 1 | -1 | undefined) =>
+    gridRef.current?.refocus(increment, delta);
+
   const { state: menuState, triggerRef, handleClick, close, showColumnSettings } = useTableMenuController();
 
   return (
     <>
       {/* TODO(burdon): Is this required to be unique? */}
       <Grid.Root id={model?.table.id ?? 'table-grid'}>
-        <TableCellEditor model={model} gridRef={gridRef} onEnter={handleEnter} />
+        <TableCellEditor model={model} onFocus={handleFocus} onEnter={handleEnter} />
         <Grid.Content
           ref={gridRef}
           className={mx(

@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type RefObject, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import {
-  type DxGridElement,
   type EditorKeysProps,
   type EditorKeyEvent,
   GridCellEditor,
@@ -19,15 +18,15 @@ import { type TableModel } from '../../model';
 import { type GridCell, toGridCell } from '../../types';
 
 export type TableCellEditor = GridScopedProps<{
-  gridRef: RefObject<DxGridElement>;
   model?: TableModel;
   onEnter?: (cell: GridCell) => void;
+  onFocus?: (increment: 'col' | 'row' | undefined, delta: 0 | 1 | -1 | undefined) => void;
 }>;
 
-export const TableCellEditor = ({ __gridScope, gridRef, model, onEnter }: TableCellEditor) => {
+export const TableCellEditor = ({ __gridScope, model, onEnter, onFocus }: TableCellEditor) => {
   const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
 
-  const determineNavigationAxis = ({ key }: EditorKeyEvent): 'row' | 'col' | undefined => {
+  const determineNavigationAxis = ({ key }: EditorKeyEvent): 'col' | 'row' | undefined => {
     switch (key) {
       case 'ArrowUp':
       case 'ArrowDown':
@@ -71,7 +70,7 @@ export const TableCellEditor = ({ __gridScope, gridRef, model, onEnter }: TableC
   const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
     (value, event) => {
       updateCell(value);
-      gridRef.current?.refocus(determineNavigationAxis(event), determineNavigationDelta(event));
+      onFocus?.(determineNavigationAxis(event), determineNavigationDelta(event));
       invariant(editing);
       const cell = toGridCell(editing.index);
       setEditing(null);
@@ -81,7 +80,7 @@ export const TableCellEditor = ({ __gridScope, gridRef, model, onEnter }: TableC
   );
 
   const extension = useMemo(() => {
-    // TODO(burdon): Add autocomplete extension for references, enums, etc.
+    // TODO(burdon): Add autocomplete extension for references, enums, etc. based on type.
     return [
       editorKeys({
         onClose: handleClose,
