@@ -106,9 +106,9 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
         <Toolbar.Separator />
         <Toolbar.Actions />
       </Toolbar.Root>
-      <Table.Viewport role={role}>
-        <Table.Table key={table.id} model={model} />
-      </Table.Viewport>
+      <Table.Root role={role}>
+        <Table.Main key={table.id} model={model} />
+      </Table.Root>
     </div>
   );
 };

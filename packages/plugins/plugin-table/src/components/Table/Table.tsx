@@ -25,9 +25,23 @@ const blockEndLine =
 
 const frozen = { frozenRowsStart: 1, frozenColsEnd: 1 };
 
+const TableRoot = ({ role = 'article', children }: PropsWithChildren<{ role?: string }>) => {
+  return (
+    <div
+      className={mx(
+        role === 'article' && 'relative is-full max-is-max min-is-0 min-bs-0',
+        role === 'section' && 'grid cols-1 rows-[1fr_min-content] min-bs-0 !bg-[--surface-bg]',
+        role === 'slide' && 'bs-full overflow-auto grid place-items-center',
+      )}
+    >
+      {children}
+    </div>
+  );
+};
+
 export type TableProps = { model?: TableModel; onDeleteRow?: (row: any) => void };
 
-const TablePrimitive = ({ model }: TableProps) => {
+const TableMain = ({ model }: TableProps) => {
   const gridRef = useRef<DxGridElement>(null);
 
   const handleCellUpdate = useCallback((cell: GridCell) => {
@@ -111,21 +125,7 @@ const TablePrimitive = ({ model }: TableProps) => {
   );
 };
 
-const Viewport = ({ role = 'article', children }: PropsWithChildren<{ role?: string }>) => {
-  return (
-    <div
-      className={mx(
-        role === 'article' && 'relative is-full max-is-max min-is-0 min-bs-0',
-        role === 'section' && 'grid cols-1 rows-[1fr_min-content] min-bs-0 !bg-[--surface-bg]',
-        role === 'slide' && 'bs-full overflow-auto grid place-items-center',
-      )}
-    >
-      {children}
-    </div>
-  );
-};
-
 export const Table = {
-  Table: TablePrimitive,
-  Viewport,
+  Root: TableRoot,
+  Main: TableMain,
 };

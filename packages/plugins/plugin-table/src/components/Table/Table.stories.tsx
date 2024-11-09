@@ -112,13 +112,15 @@ const DefaultStory = () => {
           <Toolbar.Separator />
           <Toolbar.Actions />
         </Toolbar.Root>
-        <Table.Viewport>
-          <Table.Table model={model} />
-        </Table.Viewport>
+        <Table.Root>
+          <Table.Main model={model} />
+        </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator'>
         {table.view && <ViewEditor schema={schema} view={table.view} onDelete={handleDeleteColumn} />}
-        <SyntaxHighlighter className='w-full text-xs'>{JSON.stringify(table.view, null, 2)}</SyntaxHighlighter>
+        <SyntaxHighlighter language='json' className='w-full text-xs'>
+          {JSON.stringify(table.view, null, 2)}
+        </SyntaxHighlighter>
       </div>
     </div>
   );
@@ -159,9 +161,9 @@ const TablePerformanceStory = (props: StoryProps) => {
   });
 
   return (
-    <Table.Viewport>
-      <Table.Table model={model} />
-    </Table.Viewport>
+    <Table.Root>
+      <Table.Main model={model} />
+    </Table.Root>
   );
 };
 
@@ -171,7 +173,7 @@ const TablePerformanceStory = (props: StoryProps) => {
 
 const meta: Meta<typeof Table> = {
   title: 'plugins/plugin-table/Table',
-  component: Table.Table as any,
+  component: Table.Main as any,
   render: DefaultStory,
   parameters: { translations },
   decorators: [
