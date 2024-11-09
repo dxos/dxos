@@ -249,5 +249,55 @@ describe('ViewProjection', () => {
     expect(mutable.jsonSchema.properties).to.deep.equal(initialSchemaProps);
   });
 
+  test('handles property rename correctly', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    const registry = new MutableSchemaRegistry(db);
+
+    const schema = createStoredSchema({
+      typename: 'example.com/type/Person',
+      version: '0.1.0',
+      jsonSchema: toJsonSchema(
+        S.Struct({
+          name: S.String,
+          email: Format.Email.annotations({
+            [AST.TitleAnnotationId]: 'Email',
+            [AST.DescriptionAnnotationId]: 'Email address',
+          }),
+        }),
+      ),
+    });
+
+    const mutable = registry.registerSchema(db.add(schema));
+    const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
+    const projection = new ViewProjection(mutable, view);
+
+    // Capture initial state
+    const initialFieldsOrder = view.fields.map((f) => f.property);
+    const emailIndex = initialFieldsOrder.indexOf('email' as JsonProp);
+    const { field, props } = projection.getFieldProjection('email' as JsonProp);
+
+    // Perform rename
+    projection.setFieldProjection({
+      field,
+      props: { ...props, property: 'contactEmail' as JsonProp },
+    });
+
+    // Verify field order is preserved
+    const updatedFieldsOrder = view.fields.map((f) => f.property);
+    expect(updatedFieldsOrder.length).to.equal(initialFieldsOrder.length);
+    expect(updatedFieldsOrder[emailIndex]).to.equal('contactEmail');
+
+    // Verify the renamed field preserved all properties
+    const renamed = projection.getFieldProjection('contactEmail' as JsonProp);
+    expect(renamed.props).to.deep.equal({
+      ...props,
+      property: 'contactEmail',
+    });
+
+    // Verify old field is completely removed
+    expect(view.fields.find((f) => f.property === 'email')).to.be.undefined;
+    expect(mutable.jsonSchema.properties?.email).to.be.undefined;
+  });
+
   // TODO(burdon): Test switching format.
 });

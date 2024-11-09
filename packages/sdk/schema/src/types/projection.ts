@@ -97,27 +97,42 @@ export class ViewProjection {
     log.info('setFieldProjection', { field, props, index });
 
     if (field) {
-      const current = this._view.fields.find((f) => f.property === field.property);
-      if (!current) {
+      const sourcePropertyName = field.property;
+      const targetPropertyName = props?.property;
+      const isRename = targetPropertyName && targetPropertyName !== sourcePropertyName;
+
+      const fieldIndex = this._view.fields.findIndex((f) => f.property === sourcePropertyName);
+      const isNewField = fieldIndex === -1;
+      if (isNewField) {
+        const newField = { ...field };
         if (typeof index === 'number' && index >= 0 && index <= this._view.fields.length) {
-          this._view.fields.splice(index, 0, { ...field });
+          this._view.fields.splice(index, 0, newField);
         } else {
-          this._view.fields.push({ ...field });
+          this._view.fields.push(field, newField);
         }
       } else {
-        // TODO(burdon): Overwrite?
-        Object.assign(current, field);
+        if (isRename) {
+          delete this._schema.jsonSchema.properties![field.property];
+          Object.assign(this._view.fields[fieldIndex], field, { property: targetPropertyName });
+        } else {
+          Object.assign(this._view.fields[fieldIndex], field);
+        }
       }
     }
 
     if (props) {
-      // TODO(burdon): Define type?
       let { property, type, format, referenceSchema, ...rest }: Partial<PropertyType> = this._encode(props);
       invariant(property);
       invariant(format);
 
-      // Set reference.
-      // TODO(burdon): Types?
+      // Handle property rename in schema.
+      if (field && property !== field.property) {
+        const oldPropertySchema = this._schema.jsonSchema.properties?.[field.property];
+        if (oldPropertySchema) {
+          delete this._schema.jsonSchema.properties![field.property];
+        }
+      }
+
       let $id;
       let reference;
       if (referenceSchema) {
@@ -139,7 +154,8 @@ export class ViewProjection {
 
       invariant(type !== TypeEnum.Ref);
       const values: JsonSchemaType = { $id, type, format, reference, ...rest };
-      this._schema.jsonSchema.properties![property] = values;
+      this._schema.jsonSchema.properties ??= {};
+      this._schema.jsonSchema.properties[property] = values;
     }
   }
 
