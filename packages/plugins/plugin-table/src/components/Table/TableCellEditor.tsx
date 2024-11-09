@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type RefObject, useCallback } from 'react';
+import React, { type RefObject, useCallback, useMemo } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import {
@@ -26,15 +26,6 @@ export type TableCellEditor = GridScopedProps<{
 
 export const TableCellEditor = ({ __gridScope, gridRef, model, onEnter }: TableCellEditor) => {
   const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
-
-  const updateCell = useCallback(
-    (value: any) => {
-      if (value !== undefined && editing && model) {
-        model.setCellData(toGridCell(editing.index), value);
-      }
-    },
-    [model, editing],
-  );
 
   const determineNavigationAxis = ({ key }: EditorKeyEvent): 'row' | 'col' | undefined => {
     switch (key) {
@@ -68,6 +59,15 @@ export const TableCellEditor = ({ __gridScope, gridRef, model, onEnter }: TableC
     return shift ? -1 : 1;
   };
 
+  const updateCell = useCallback(
+    (value: string | undefined) => {
+      if (value !== undefined && editing && model) {
+        model.setCellData(toGridCell(editing.index), value);
+      }
+    },
+    [model, editing],
+  );
+
   const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
     (value, event) => {
       updateCell(value);
@@ -77,21 +77,23 @@ export const TableCellEditor = ({ __gridScope, gridRef, model, onEnter }: TableC
       setEditing(null);
       onEnter?.(cell);
     },
-    [updateCell, editing, setEditing, determineNavigationAxis, determineNavigationDelta],
+    [editing, setEditing, updateCell, determineNavigationAxis, determineNavigationDelta],
   );
 
-  // TODO(burdon): Autocomplete references, enums, etc.
-  const extension = [
-    editorKeys({
-      onClose: handleClose,
-      ...(editing?.initialContent && { onNav: handleClose }),
-    }),
-  ];
+  const extension = useMemo(() => {
+    // TODO(burdon): Add autocomplete extension for references, enums, etc.
+    return [
+      editorKeys({
+        onClose: handleClose,
+        ...(editing?.initialContent && { onNav: handleClose }),
+      }),
+    ];
+  }, [model, editing, handleClose]);
 
   const getCellContent = useCallback(() => {
     if (model && editing) {
-      const cellData = model.getCellData(toGridCell(editing.index));
-      return cellData !== undefined ? String(cellData) : '';
+      const value = model.getCellData(toGridCell(editing.index));
+      return value !== undefined ? String(value) : '';
     }
   }, [model, editing]);
 

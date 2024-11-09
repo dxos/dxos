@@ -110,10 +110,6 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     return this._projection;
   }
 
-  public updateData = (object: T[]): void => {
-    this.rows.value = object;
-  };
-
   protected override async _open() {
     this.initializeColumnMeta();
     this.initializeSorting();
@@ -197,7 +193,8 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   }
 
   //
-  // Setters
+  // Callbacks
+  // TODO(burdon): Move into constructor.
   //
 
   setOnCellUpdate(onCellUpdate: (cell: GridCell) => void): void {
@@ -211,6 +208,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   //
   // Get Cells
   //
+
   public getCells = (range: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells => {
     switch (plane) {
       case 'grid': {
@@ -317,6 +315,12 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   // Data
   //
 
+  public setRows = (object: T[]): void => {
+    this.rows.value = object;
+  };
+
+  public getRowCount = (): number => this.rows.value.length;
+
   public insertRow = (rowIndex?: number): void => {
     const row = rowIndex !== undefined ? this.displayToDataIndex.get(rowIndex) ?? rowIndex : this.rows.value.length;
     this.onInsertRow?.(row);
@@ -345,7 +349,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     return formatForEditing({ type: props.type, format: props.format, value });
   };
 
-  public setCellData = ({ col, row }: GridCell, value: any | undefined): void => {
+  public setCellData = ({ col, row }: GridCell, value: string | undefined): void => {
     const rowIdx = this.displayToDataIndex.get(row) ?? row;
     const fields = this.table.view?.fields ?? [];
     if (col < 0 || col >= fields.length) {
@@ -362,8 +366,6 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
       value,
     });
   };
-
-  public getRowCount = (): number => this.rows.value.length;
 
   //
   // Column Operations

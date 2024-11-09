@@ -60,6 +60,8 @@ export type TableMainProps = {
 const TableMain = ({ model, onAddRow, onDeleteRow }: TableMainProps) => {
   const gridRef = useRef<DxGridElement>(null);
 
+  // TODO(burdon): Consider moving this upstream via imperative handle.
+  //  (So that all callbacks passed to the model are passed into the constructor/hook).
   const handleCellUpdate = useCallback((cell: GridCell) => {
     gridRef.current?.updateIfWithinBounds(cell);
   }, []);
@@ -88,7 +90,7 @@ const TableMain = ({ model, onAddRow, onDeleteRow }: TableMainProps) => {
 
   const handleEnter = useCallback<NonNullable<TableCellEditor['onEnter']>>(
     (cell) => {
-      // TODO(burdon): Insert row (if bottom row isn't completely blank already).
+      // TODO(burdon): Insert row onl if bottom row isn't completely blank already.
       if (model && cell.row === model.getRowCount() - 1) {
         onAddRow?.(cell.row);
       }

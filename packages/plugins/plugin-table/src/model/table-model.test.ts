@@ -105,7 +105,7 @@ describe('TableModel', () => {
         }));
 
         const model = createTableModel();
-        model.updateData(data);
+        model.setRows(data);
         await model.open();
       });
 

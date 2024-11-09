@@ -45,7 +45,7 @@ export const useTableModel = <T extends BaseTableRow = {}>({
   // Update data.
   useEffect(() => {
     if (objects) {
-      model?.updateData(objects);
+      model?.setRows(objects);
     }
   }, [model, objects]);
 

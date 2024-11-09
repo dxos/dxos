@@ -40,7 +40,10 @@ const initialBox = {
   blockSize: 0,
 } satisfies GridEditBox;
 
-type GridEditing = { index: DxEditRequest['cellIndex']; initialContent: DxEditRequest['initialContent'] } | null;
+type GridEditing = {
+  index: DxEditRequest['cellIndex'];
+  initialContent: DxEditRequest['initialContent'];
+} | null;
 
 type GridContextValue = {
   id: string;
