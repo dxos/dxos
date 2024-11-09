@@ -96,13 +96,14 @@ export class ViewProjection {
   setFieldProjection({ field, props }: Partial<FieldProjection>, index?: number) {
     log.info('setFieldProjection', { field, props, index });
 
-    if (field) {
-      const sourcePropertyName = field.property;
-      const targetPropertyName = props?.property;
-      const isRename = targetPropertyName && targetPropertyName !== sourcePropertyName;
+    const sourcePropertyName = field?.property;
+    const targetPropertyName = props?.property;
+    const isRename = sourcePropertyName && targetPropertyName && targetPropertyName !== sourcePropertyName;
 
+    if (field) {
       const fieldIndex = this._view.fields.findIndex((f) => f.property === sourcePropertyName);
       const isNewField = fieldIndex === -1;
+
       if (isNewField) {
         const newField = { ...field };
         if (typeof index === 'number' && index >= 0 && index <= this._view.fields.length) {
@@ -111,12 +112,7 @@ export class ViewProjection {
           this._view.fields.push(field, newField);
         }
       } else {
-        if (isRename) {
-          delete this._schema.jsonSchema.properties![field.property];
-          Object.assign(this._view.fields[fieldIndex], field, { property: targetPropertyName });
-        } else {
-          Object.assign(this._view.fields[fieldIndex], field);
-        }
+        Object.assign(this._view.fields[fieldIndex], field, isRename ? { property: targetPropertyName } : undefined);
       }
     }
 
@@ -125,12 +121,9 @@ export class ViewProjection {
       invariant(property);
       invariant(format);
 
-      // Handle property rename in schema.
-      if (field && property !== field.property) {
-        const oldPropertySchema = this._schema.jsonSchema.properties?.[field.property];
-        if (oldPropertySchema) {
-          delete this._schema.jsonSchema.properties![field.property];
-        }
+      // Handle property rename in schema
+      if (isRename) {
+        delete this._schema.jsonSchema.properties![sourcePropertyName!];
       }
 
       let $id;
