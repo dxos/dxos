@@ -259,10 +259,7 @@ describe('ViewProjection', () => {
       jsonSchema: toJsonSchema(
         S.Struct({
           name: S.String,
-          email: Format.Email.annotations({
-            [AST.TitleAnnotationId]: 'Email',
-            [AST.DescriptionAnnotationId]: 'Email address',
-          }),
+          email: Format.Email,
         }),
       ),
     });
@@ -279,19 +276,19 @@ describe('ViewProjection', () => {
     // Perform rename
     projection.setFieldProjection({
       field,
-      props: { ...props, property: 'contactEmail' as JsonProp },
+      props: { ...props, property: 'primaryEmail' as JsonProp },
     });
 
     // Verify field order is preserved
     const updatedFieldsOrder = view.fields.map((f) => f.property);
     expect(updatedFieldsOrder.length).to.equal(initialFieldsOrder.length);
-    expect(updatedFieldsOrder[emailIndex]).to.equal('contactEmail');
+    expect(updatedFieldsOrder[emailIndex]).to.equal('primaryEmail');
 
     // Verify the renamed field preserved all properties
-    const renamed = projection.getFieldProjection('contactEmail' as JsonProp);
+    const renamed = projection.getFieldProjection('primaryEmail' as JsonProp);
     expect(renamed.props).to.deep.equal({
       ...props,
-      property: 'contactEmail',
+      property: 'primaryEmail',
     });
 
     // Verify old field is completely removed
