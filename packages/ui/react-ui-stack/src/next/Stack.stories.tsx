@@ -20,7 +20,7 @@ type StoryStackItem = {
 
 const KanbanBlock = ({ item }: { item: StoryStackItem }) => {
   return (
-    <div className='is-64 bs-24 text-center place-content-center'>
+    <div className='is-64 bs-24 bg-base text-center place-content-center'>
       <span className='text-sm font-medium'>{item.title}</span>
     </div>
   );
@@ -62,7 +62,7 @@ const StorybookStack = () => {
           const sourceIndex = newColumns.findIndex((col) => col.id === source.id);
           const targetIndex = newColumns.findIndex((col) => col.id === target.id);
           const [movedColumn] = newColumns.splice(sourceIndex, 1);
-          const insertIndex = closestEdge === 'right' ? targetIndex : targetIndex - 1;
+          const insertIndex = closestEdge === 'right' ? targetIndex + 1 : targetIndex;
           newColumns.splice(insertIndex, 0, movedColumn);
         } else {
           // Reordering cards within a column
@@ -95,7 +95,7 @@ const StorybookStack = () => {
     <main className='fixed inset-0'>
       <Stack orientation='horizontal' size='contain'>
         {columns.map((column) => (
-          <StackItem key={column.id} item={column} classNames='bg-deck' onReorder={reorderItem}>
+          <StackItem key={column.id} item={column} onReorder={reorderItem}>
             <StackItemHeading />
             <Stack orientation='vertical' size='contain'>
               {column.items?.map((card) => (
