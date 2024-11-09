@@ -22,11 +22,17 @@ export type StackProps = Omit<ThemedClassName<ComponentPropsWithRef<'div'>>, 'ar
 
 export type StackContextValue = {
   orientation: Orientation;
+  separators: boolean;
   rail: boolean;
   size: Size;
 };
 
-const StackContext = createContext<StackContextValue>({ orientation: 'vertical', rail: true, size: 'intrinsic' });
+const StackContext = createContext<StackContextValue>({
+  orientation: 'vertical',
+  rail: true,
+  size: 'intrinsic',
+  separators: true,
+});
 
 export const useStack = () => useContext(StackContext);
 
@@ -36,7 +42,16 @@ const railGridVertical = 'grid-cols-[[rail-start]_var(--rail-size)_[content-star
 
 export const Stack = forwardRef<HTMLDivElement, StackProps>(
   (
-    { children, classNames, style, orientation = 'vertical', rail = true, size = 'intrinsic', ...props },
+    {
+      children,
+      classNames,
+      style,
+      orientation = 'vertical',
+      rail = true,
+      separators = true,
+      size = 'intrinsic',
+      ...props
+    },
     forwardedRef,
   ) => {
     const childrenCount = Children.count(children);
@@ -48,7 +63,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
     };
 
     return (
-      <StackContext.Provider value={{ orientation, rail, size }}>
+      <StackContext.Provider value={{ orientation, rail, size, separators }}>
         <div
           className={mx(
             'grid relative',
@@ -63,6 +78,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
               (orientation === 'horizontal'
                 ? 'overflow-x-auto bs-min max-bs-full'
                 : 'overflow-y-auto is-min max-is-full'),
+            separators && 'bg-separator gap-px',
             classNames,
           )}
           aria-orientation={orientation}

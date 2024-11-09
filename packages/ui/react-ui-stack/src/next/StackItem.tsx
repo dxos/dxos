@@ -36,7 +36,7 @@ export const StackItem = ({ item, children, classNames, onReorder, ...props }: S
   const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
   const [dragHandleElement, dragHandleRef] = useState<HTMLDivElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
-  const { orientation, rail } = useStack();
+  const { orientation, rail, separators } = useStack();
   const type = orientation === 'horizontal' ? 'column' : 'card';
 
   useLayoutEffect(() => {
@@ -86,6 +86,7 @@ export const StackItem = ({ item, children, classNames, onReorder, ...props }: S
           'grid relative is-min',
           orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
           rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
+          separators && 'gap-px',
           classNames,
         )}
         {...props}
@@ -99,12 +100,12 @@ export const StackItem = ({ item, children, classNames, onReorder, ...props }: S
 };
 
 export const StackItemHeading = () => {
-  const { orientation } = useStack();
+  const { orientation, separators } = useStack();
   const { dragHandleRef } = useStackItem();
   return (
     <div
       role='heading'
-      className={orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size]'}
+      className={mx(orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size]', separators && 'bg-base')}
       ref={dragHandleRef}
     />
   );
