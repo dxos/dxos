@@ -9,7 +9,7 @@ import { Resource } from '@dxos/context';
 import { type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
-import { cellClassesForFieldType, parseValue, formatForDisplay, formatForEditing } from '@dxos/react-ui-data';
+import { cellClassesForFieldType, formatForDisplay, formatForEditing, parseValue } from '@dxos/react-ui-data';
 import {
   type DxGridAxisMeta,
   type DxGridCellValue,
