@@ -24,6 +24,7 @@ export type EditorKeysProps = {
   onClose: (value: string | undefined, event: EditorKeyEvent) => void;
   onNav?: (value: string | undefined, event: EditorKeyEvent) => void;
 };
+
 // TODO(Zan): Should each consumer be responsible for defining these?
 export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
   return keymap.of([
@@ -107,14 +108,6 @@ export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
   ]);
 };
 
-export type CellEditorProps = {
-  value?: string;
-  extension?: Extension;
-  variant?: keyof typeof editorVariants;
-  box?: GridEditBox;
-  gridId?: string;
-} & Pick<UseTextEditorProps, 'autoFocus'> & { onBlur?: (value?: string) => void };
-
 const editorVariants = {
   // TODO(thure): remove when legacy is no longer used.
   legacy: {
@@ -129,6 +122,14 @@ const editorVariants = {
     content: '!border !border-transparent !pli-[3px] !plb-0.5',
   },
 };
+
+export type CellEditorProps = {
+  value?: string;
+  extension?: Extension;
+  variant?: keyof typeof editorVariants;
+  box?: GridEditBox;
+  gridId?: string;
+} & Pick<UseTextEditorProps, 'autoFocus'> & { onBlur?: (value?: string) => void };
 
 export const CellEditor = ({
   value,

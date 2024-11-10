@@ -12,7 +12,7 @@ import { type TableType } from '../types';
 // TODO(burdon): User should determine typename.
 export const initializeTable = (space: Space, table: TableType): void => {
   if (!table?.view) {
-    const schema = TypedObject({
+    const TestSchema = TypedObject({
       typename: `example.com/type/${PublicKey.random().truncate()}`,
       version: '0.1.0',
     })({
@@ -21,7 +21,7 @@ export const initializeTable = (space: Space, table: TableType): void => {
       quantity: S.optional(S.Number),
     });
 
-    const mutable = space.db.schemaRegistry.addSchema(schema);
+    const mutable = space.db.schemaRegistry.addSchema(TestSchema);
     table.view = createView({
       typename: mutable.typename,
       jsonSchema: mutable.jsonSchema,

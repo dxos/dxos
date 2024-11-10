@@ -43,6 +43,10 @@ export class ViewProjection {
     private readonly _view: ViewType,
   ) {}
 
+  get view() {
+    return this._view;
+  }
+
   /**
    * Construct a new property.
    */

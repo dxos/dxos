@@ -18,7 +18,7 @@ import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnCreate } from './ColumnCreate';
 import { ColumnSettings } from './ColumnSettings';
 import { RowActionsMenu } from './RowActionsMenu';
-import { TableCellEditor } from './TableCellEditor';
+import { TableCellEditor, type TableCellEditorProps } from './TableCellEditor';
 import { useTableMenuController } from '../../hooks';
 import { type TableModel } from '../../model';
 import { type GridCell } from '../../types';
@@ -99,8 +99,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     [dxGrid, model],
   );
 
-  // TODO(burdon): Import types.
-  const handleFocus = (increment: 'col' | 'row' | undefined, delta: 0 | 1 | -1 | undefined) => {
+  const handleFocus: TableCellEditorProps['onFocus'] = (increment, delta) => {
     dxGrid?.refocus(increment, delta);
   };
 
@@ -122,9 +121,9 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     [model],
   );
 
-  const handleEnter = useCallback<NonNullable<TableCellEditor['onEnter']>>(
+  const handleEnter = useCallback<NonNullable<TableCellEditorProps['onEnter']>>(
     (cell) => {
-      // TODO(burdon): Insert row onl if bottom row isn't completely blank already.
+      // TODO(burdon): Insert row only if bottom row isn't completely blank already.
       if (model && cell.row === model.getRowCount() - 1) {
         model.insertRow(cell.row);
       }

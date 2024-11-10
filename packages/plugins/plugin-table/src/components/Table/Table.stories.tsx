@@ -119,7 +119,15 @@ const DefaultStory = () => {
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator'>
-        {table.view && <ViewEditor schema={schema} view={table.view} onDelete={handleDeleteColumn} />}
+        {table.view && (
+          <ViewEditor
+            registry={space?.db.schemaRegistry}
+            schema={schema}
+            view={table.view}
+            onDelete={handleDeleteColumn}
+          />
+        )}
+
         <SyntaxHighlighter language='json' className='w-full text-xs'>
           {JSON.stringify(table.view, null, 2)}
         </SyntaxHighlighter>
