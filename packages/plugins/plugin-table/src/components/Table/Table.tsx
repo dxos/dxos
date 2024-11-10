@@ -67,7 +67,7 @@ export type TableMainProps = {
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwardedRef) => {
-  const [dxGrid, setDxGrid] = useState<DxGridElement>();
+  const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   useLayoutEffect(() => {
     // TODO(burdon): Review/document API.
     if (dxGrid && model) {
