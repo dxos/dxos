@@ -246,8 +246,8 @@ export class DxGrid extends LitElement {
   activeRefs = '';
 
   /**
-   * When this function is defined, it is used first to try to get a value for a cell, and otherwise will fall back
-   * to `cells`.
+   * When this function is defined, it is used first to try to get a value for a cell,
+   * and otherwise will fall back to `cells`.
    */
   getCells: ((nextRange: DxGridPlaneRange, plane: DxGridPlane) => DxGridPlaneCells) | null = null;
 

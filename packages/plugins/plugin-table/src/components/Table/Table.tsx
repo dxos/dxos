@@ -64,26 +64,41 @@ export type TableController = {
 
 export type TableMainProps = {
   model?: TableModel;
-  onAddRow?: (row: number) => void;
-  onDeleteRow?: (row: number) => void;
 };
 
-const TableMain = forwardRef<TableController, TableMainProps>(({ model, onAddRow, onDeleteRow }, forwardedRef) => {
+const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwardedRef) => {
   const gridRef = useRef<DxGridElement>(null);
+  console.log('TableMain ########', gridRef.current);
 
+  // External controller.
   useImperativeHandle<TableController, TableController>(
     forwardedRef,
-    () => ({
-      update: (cell) => {
-        if (cell) {
-          gridRef.current?.updateIfWithinBounds(cell);
-        } else {
-          gridRef.current?.updateCells(true);
-        }
-      },
-    }),
-    [],
+    () => {
+      return {
+        update: (cell) => {
+          if (!gridRef.current || !model) {
+            return;
+          }
+
+          console.log('============ useImperativeHandle', gridRef.current);
+          if (cell) {
+            gridRef.current?.updateIfWithinBounds(cell);
+          } else {
+            gridRef.current?.updateCells(true);
+          }
+        },
+      };
+    },
+    [model],
   );
+
+  useLayoutEffect(() => {
+    if (!gridRef.current || !model) {
+      return;
+    }
+
+    gridRef.current.getCells = model.getCells.bind(model);
+  }, [model]);
 
   const handleKeyDown = useCallback<NonNullable<GridContentProps['onKeyDown']>>(
     (event) => {
@@ -107,18 +122,11 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, onAddRow
     (cell) => {
       // TODO(burdon): Insert row onl if bottom row isn't completely blank already.
       if (model && cell.row === model.getRowCount() - 1) {
-        onAddRow?.(cell.row);
+        model.insertRow(cell.row);
       }
     },
     [model],
   );
-
-  useLayoutEffect(() => {
-    if (!gridRef.current || !model) {
-      return;
-    }
-    gridRef.current.getCells = model.getCells.bind(model);
-  }, [model]);
 
   const handleAxisResize = useCallback(
     (event: DxAxisResize) => {
@@ -140,7 +148,12 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, onAddRow
     <>
       {/* TODO(burdon): Is this required to be unique? */}
       <Grid.Root id={model?.table.id ?? 'table-grid'}>
-        <TableCellEditor model={model} onFocus={handleFocus} onEnter={handleEnter} />
+        <TableCellEditor
+          //
+          model={model}
+          onFocus={handleFocus}
+          onEnter={handleEnter}
+        />
         <Grid.Content
           ref={gridRef}
           className={mx(
@@ -148,8 +161,8 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, onAddRow
             inlineEndLine,
             blockEndLine,
           )}
-          columns={model?.columnMeta.value}
           frozen={frozen}
+          columns={model?.columnMeta.value}
           limitRows={model?.getRowCount() ?? 0}
           limitColumns={model?.table.view?.fields?.length ?? 0}
           onAxisResize={handleAxisResize}
@@ -172,7 +185,13 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, onAddRow
         onOpenChange={close}
         triggerRef={triggerRef}
       />
-      <NewColumnForm model={model} open={menuState?.type === 'newColumn'} onClose={close} triggerRef={triggerRef} />
+      <NewColumnForm
+        //
+        model={model}
+        open={menuState?.type === 'newColumn'}
+        onClose={close}
+        triggerRef={triggerRef}
+      />
       <ColumnSettingsModal
         model={model}
         open={menuState?.type === 'columnSettings'}

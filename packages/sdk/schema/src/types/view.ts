@@ -58,7 +58,6 @@ type CreateViewProps = {
 /**
  * Create view from existing schema.
  */
-// TODO(burdon): What is the minimal type that can be passed here that included TypedObjects (i.e., AbstractSchema).
 export const createView = ({
   typename,
   jsonSchema,

@@ -52,21 +52,26 @@ const DefaultStory = () => {
   }, [space, table]);
 
   const projection = useMemo(() => {
-    if (!schema || !table?.view) {
-      return;
+    if (schema && table?.view) {
+      return new ViewProjection(schema, table.view);
     }
-
-    return new ViewProjection(schema, table.view);
   }, [schema, table?.view]);
 
   const objects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
   const filteredObjects = useGlobalFilteredObjects(objects);
 
-  const handleAddRow = useCallback(() => {
+  const handleInsertRow = useCallback(() => {
     if (space && schema) {
       space.db.add(create(schema, {}));
     }
   }, [space, schema]);
+
+  const handleDeleteRow = useCallback(
+    (_: number, object: any) => {
+      space.db.remove(object);
+    },
+    [space],
+  );
 
   const handleDeleteColumn = useCallback(
     (property: string) => {
@@ -77,13 +82,6 @@ const DefaultStory = () => {
     [table, projection],
   );
 
-  const handleDeleteRow = useCallback(
-    (_: number, object: any) => {
-      space.db.remove(object);
-    },
-    [space],
-  );
-
   const handleAction = useCallback(
     (action: { type: string }) => {
       switch (action.type) {
@@ -92,7 +90,7 @@ const DefaultStory = () => {
           break;
         }
         case 'add-row': {
-          handleAddRow();
+          handleInsertRow();
         }
       }
     },
@@ -104,11 +102,14 @@ const DefaultStory = () => {
     table,
     projection,
     objects: filteredObjects,
+    onInsertRow: handleInsertRow,
     onDeleteRow: handleDeleteRow,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: (cell) => tableRef.current?.update(cell),
     onRowOrderChanged: () => tableRef.current?.update(),
   });
+
+  console.log(':::', model);
 
   if (!schema || !table) {
     return <div />;
@@ -122,7 +123,7 @@ const DefaultStory = () => {
           <Toolbar.Actions />
         </Toolbar.Root>
         <Table.Root>
-          <Table.Main ref={tableRef} model={model} onAddRow={handleAddRow} />
+          <Table.Main ref={tableRef} model={model} />
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator'>
