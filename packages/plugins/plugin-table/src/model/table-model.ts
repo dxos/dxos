@@ -11,11 +11,11 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
 import { cellClassesForFieldType, parseValue, formatForDisplay, formatForEditing } from '@dxos/react-ui-data';
 import {
-  type DxGridPlaneCells,
   type DxGridAxisMeta,
-  type DxGridPlaneRange,
-  type DxGridPlane,
   type DxGridCellValue,
+  type DxGridPlane,
+  type DxGridPlaneCells,
+  type DxGridPlaneRange,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { type ViewProjection, type FieldType } from '@dxos/schema';
@@ -47,7 +47,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   private readonly _table: TableType;
   private readonly _projection: ViewProjection;
 
-  private readonly visibleRange = signal<DxGridPlaneRange>({
+  private readonly _visibleRange = signal<DxGridPlaneRange>({
     start: { row: 0, col: 0 },
     end: { row: 0, col: 0 },
   });
@@ -57,13 +57,13 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
    * Used for translating between sorted/displayed order and original data order.
    * Keys are display indices, values are corresponding data indices.
    */
-  private readonly displayToDataIndex: Map<number, number> = new Map();
+  private readonly _displayToDataIndex: Map<number, number> = new Map();
 
-  private readonly onInsertRow?: TableModelProps<T>['onInsertRow'];
-  private readonly onDeleteRow?: TableModelProps<T>['onDeleteRow'];
-  private readonly onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
-  private readonly onCellUpdate?: TableModelProps<T>['onCellUpdate'];
-  private readonly onRowOrderChanged?: TableModelProps<T>['onRowOrderChanged'];
+  private readonly _onInsertRow?: TableModelProps<T>['onInsertRow'];
+  private readonly _onDeleteRow?: TableModelProps<T>['onDeleteRow'];
+  private readonly _onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
+  private readonly _onCellUpdate?: TableModelProps<T>['onCellUpdate'];
+  private readonly _onRowOrderChanged?: TableModelProps<T>['onRowOrderChanged'];
 
   private readonly _sorting = signal<SortConfig | undefined>(undefined);
   private _sortedRows!: ReadonlySignal<T[]>;
@@ -93,30 +93,30 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     this._pinnedRows = pinnedRows;
     this._rowSelection = rowSelection;
 
-    this.onInsertRow = onInsertRow;
-    this.onDeleteRow = onDeleteRow;
-    this.onDeleteColumn = onDeleteColumn;
-    this.onCellUpdate = onCellUpdate;
-    this.onRowOrderChanged = onRowOrderChanged;
+    this._onInsertRow = onInsertRow;
+    this._onDeleteRow = onDeleteRow;
+    this._onDeleteColumn = onDeleteColumn;
+    this._onCellUpdate = onCellUpdate;
+    this._onRowOrderChanged = onRowOrderChanged;
   }
 
-  get table() {
+  public get table() {
     return this._table;
   }
 
-  get projection() {
+  public get projection() {
     return this._projection;
   }
 
-  get pinnedRows(): NonNullable<TableModelProps<T>['pinnedRows']> {
+  public get pinnedRows(): NonNullable<TableModelProps<T>['pinnedRows']> {
     return this._pinnedRows;
   }
 
-  get rowSelection(): NonNullable<TableModelProps<T>['rowSelection']> {
+  public get rowSelection(): NonNullable<TableModelProps<T>['rowSelection']> {
     return this._rowSelection;
   }
 
-  get columnMeta(): ReadonlySignal<DxGridAxisMeta> {
+  public get columnMeta(): ReadonlySignal<DxGridAxisMeta> {
     invariant(this._columnMeta);
     return this._columnMeta;
   }
@@ -149,7 +149,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
   private initializeSorting(): void {
     this._sortedRows = computed(() => {
-      this.displayToDataIndex.clear();
+      this._displayToDataIndex.clear();
       const sort = this._sorting.value;
       if (!sort) {
         return this._rows.value;
@@ -169,7 +169,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
       for (let displayIndex = 0; displayIndex < sorted.length; displayIndex++) {
         const { index: dataIndex } = sorted[displayIndex];
         if (displayIndex !== dataIndex) {
-          this.displayToDataIndex.set(displayIndex, dataIndex);
+          this._displayToDataIndex.set(displayIndex, dataIndex);
         }
       }
 
@@ -180,7 +180,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   private initializeEffects(): void {
     const rowOrderWatcher = effect(() => {
       touch(this._sortedRows.value);
-      this.onRowOrderChanged?.();
+      this._onRowOrderChanged?.();
     });
     this._ctx.onDispose(rowOrderWatcher);
 
@@ -190,14 +190,14 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
      * When a row's data changes, invokes onCellUpdate to notify subscribers and trigger UI updates.
      */
     const rowEffectManager = effect(() => {
-      const { start, end } = touch(this.visibleRange.value);
+      const { start, end } = touch(this._visibleRange.value);
       const rowEffects: ReturnType<typeof effect>[] = [];
       for (let row = start.row; row <= end.row; row++) {
         rowEffects.push(
           effect(() => {
             const rowData = this._sortedRows.value[row];
             this?._table?.view?.fields.forEach((field) => touch(rowData?.[field.property]));
-            this.onCellUpdate?.({ row, col: start.col });
+            this._onCellUpdate?.({ row, col: start.col });
           }),
         );
       }
@@ -214,7 +214,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   public getCells = (range: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells => {
     switch (plane) {
       case 'grid': {
-        this.visibleRange.value = range;
+        this._visibleRange.value = range;
         return this.getMainGridCells(range);
       }
       case 'frozenRowsStart': {
@@ -280,6 +280,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
       if (!field) {
         continue;
       }
+
       values[fromGridCell({ col, row: 0 })] = {
         value: fieldProjection.props.title ?? field.property,
         resizeHandle: 'col',
@@ -292,7 +293,6 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
   private getActionColumnCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
     const values: DxGridPlaneCells = {};
-
     for (let row = range.start.row; row <= range.end.row && row < this._rows.value.length; row++) {
       values[fromGridCell({ col: 0, row })] = {
         value: '',
@@ -300,6 +300,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
         readonly: true,
       };
     }
+
     return values;
   };
 
@@ -324,14 +325,14 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   public getRowCount = (): number => this._rows.value.length;
 
   public insertRow = (rowIndex?: number): void => {
-    const row = rowIndex !== undefined ? this.displayToDataIndex.get(rowIndex) ?? rowIndex : this._rows.value.length;
-    this.onInsertRow?.(row);
+    const row = rowIndex !== undefined ? this._displayToDataIndex.get(rowIndex) ?? rowIndex : this._rows.value.length;
+    this._onInsertRow?.(row);
   };
 
   public deleteRow = (rowIndex: number): void => {
-    const row = this.displayToDataIndex.get(rowIndex) ?? rowIndex;
+    const row = this._displayToDataIndex.get(rowIndex) ?? rowIndex;
     const object = this._rows.value[row];
-    this.onDeleteRow?.(row, object);
+    this._onDeleteRow?.(row, object);
   };
 
   public getCellData = ({ col, row }: GridCell): any => {
@@ -341,7 +342,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     }
 
     const field = fields[col];
-    const dataIndex = this.displayToDataIndex.get(row) ?? row;
+    const dataIndex = this._displayToDataIndex.get(row) ?? row;
     const value = this._rows.value[dataIndex][field.property];
     if (value === undefined) {
       return '';
@@ -352,7 +353,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   };
 
   public setCellData = ({ col, row }: GridCell, value: string | undefined): void => {
-    const rowIdx = this.displayToDataIndex.get(row) ?? row;
+    const rowIdx = this._displayToDataIndex.get(row) ?? row;
     const fields = this.table.view?.fields ?? [];
     if (col < 0 || col >= fields.length) {
       return;
@@ -379,11 +380,11 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     }
 
     const field = this.table.view.fields.find((field) => field.property === property);
-    if (field && this.onDeleteColumn) {
+    if (field && this._onDeleteColumn) {
       if (this._sorting.value?.fieldId === property) {
         this.clearSort();
       }
-      this.onDeleteColumn(field.property);
+      this._onDeleteColumn(field.property);
     }
   }
 
