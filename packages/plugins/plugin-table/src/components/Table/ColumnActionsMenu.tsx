@@ -30,7 +30,7 @@ export const ColumnActionsMenu = ({
     return null;
   }
 
-  const currentSort = model.sorting.value;
+  const currentSort = model.sorting;
   const isCurrentColumnSorted = currentSort?.fieldId === fieldId;
 
   return (

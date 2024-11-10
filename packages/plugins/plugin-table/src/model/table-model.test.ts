@@ -122,7 +122,6 @@ describe('TableModel', () => {
 
         // Trigger a row update
         data[0].col1 = 'New Value';
-
         expect(updateCount).toBe(1);
 
         // Verify the new value through getCells
@@ -135,7 +134,6 @@ describe('TableModel', () => {
         model.getCells({ start: { row: 0, col: 0 }, end: { row: 2, col: 2 } }, 'grid');
 
         data.push({ col1: 'C', col2: 3, col3: true });
-
         expect(updateCount).toBe(1);
 
         const cells = model.getCells({ start: { row: 0, col: 0 }, end: { row: 2, col: 2 } }, 'grid');

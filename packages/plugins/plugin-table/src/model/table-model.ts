@@ -7,6 +7,7 @@ import sortBy from 'lodash.sortby';
 
 import { Resource } from '@dxos/context';
 import { type JsonProp } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
 import { cellClassesForFieldType, parseValue, formatForDisplay, formatForEditing } from '@dxos/react-ui-data';
 import {
@@ -43,20 +44,13 @@ export type TableModelProps<T extends BaseTableRow = {}> = {
 export class TableModel<T extends BaseTableRow = {}> extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
 
-  public readonly _table: TableType;
-  public readonly _projection: ViewProjection;
-
-  private rows = signal<T[]>([]);
-  private sortedRows!: ReadonlySignal<T[]>;
+  private readonly _table: TableType;
+  private readonly _projection: ViewProjection;
 
   private readonly visibleRange = signal<DxGridPlaneRange>({
     start: { row: 0, col: 0 },
     end: { row: 0, col: 0 },
   });
-
-  public columnMeta!: ReadonlySignal<DxGridAxisMeta>;
-
-  public readonly sorting = signal<SortConfig | undefined>(undefined);
 
   /**
    * Maps display indices to data indices.
@@ -65,14 +59,19 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
    */
   private readonly displayToDataIndex: Map<number, number> = new Map();
 
-  public pinnedRows: NonNullable<TableModelProps<T>['pinnedRows']>;
-  public rowSelection: NonNullable<TableModelProps<T>['rowSelection']>;
-
   private readonly onInsertRow?: TableModelProps<T>['onInsertRow'];
   private readonly onDeleteRow?: TableModelProps<T>['onDeleteRow'];
   private readonly onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
   private readonly onCellUpdate?: TableModelProps<T>['onCellUpdate'];
   private readonly onRowOrderChanged?: TableModelProps<T>['onRowOrderChanged'];
+
+  private readonly _sorting = signal<SortConfig | undefined>(undefined);
+  private _sortedRows!: ReadonlySignal<T[]>;
+  private _rows = signal<T[]>([]);
+
+  private _pinnedRows: NonNullable<TableModelProps<T>['pinnedRows']>;
+  private _rowSelection: NonNullable<TableModelProps<T>['rowSelection']>;
+  private _columnMeta?: ReadonlySignal<DxGridAxisMeta>;
 
   constructor({
     table,
@@ -90,9 +89,9 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     this._table = table;
     this._projection = projection;
 
-    this.sorting.value = sorting.at(0);
-    this.pinnedRows = pinnedRows;
-    this.rowSelection = rowSelection;
+    this._sorting.value = sorting.at(0);
+    this._pinnedRows = pinnedRows;
+    this._rowSelection = rowSelection;
 
     this.onInsertRow = onInsertRow;
     this.onDeleteRow = onDeleteRow;
@@ -109,6 +108,23 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     return this._projection;
   }
 
+  get pinnedRows(): NonNullable<TableModelProps<T>['pinnedRows']> {
+    return this._pinnedRows;
+  }
+
+  get rowSelection(): NonNullable<TableModelProps<T>['rowSelection']> {
+    return this._rowSelection;
+  }
+
+  get columnMeta(): ReadonlySignal<DxGridAxisMeta> {
+    invariant(this._columnMeta);
+    return this._columnMeta;
+  }
+
+  public get sorting(): SortConfig | undefined {
+    return this._sorting.value;
+  }
+
   protected override async _open() {
     this.initializeColumnMeta();
     this.initializeSorting();
@@ -116,7 +132,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   }
 
   private initializeColumnMeta(): void {
-    this.columnMeta = computed(() => {
+    this._columnMeta = computed(() => {
       const fields = this._table.view?.fields ?? [];
       const meta = Object.fromEntries(
         fields.map((field, index: number) => [index, { size: field?.size ?? 256, resizeable: true }]),
@@ -132,19 +148,19 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   }
 
   private initializeSorting(): void {
-    this.sortedRows = computed(() => {
+    this._sortedRows = computed(() => {
       this.displayToDataIndex.clear();
-      const sort = this.sorting.value;
+      const sort = this._sorting.value;
       if (!sort) {
-        return this.rows.value;
+        return this._rows.value;
       }
 
       const field = this._table.view?.fields.find((field) => field.property === sort.fieldId);
       if (!field) {
-        return this.rows.value;
+        return this._rows.value;
       }
 
-      const dataWithIndices = this.rows.value.map((item, index) => ({ item, index }));
+      const dataWithIndices = this._rows.value.map((item, index) => ({ item, index }));
       const sorted = sortBy(dataWithIndices, [(wrapper) => wrapper.item[field.property]]);
       if (sort.direction === 'desc') {
         sorted.reverse();
@@ -163,7 +179,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
   private initializeEffects(): void {
     const rowOrderWatcher = effect(() => {
-      touch(this.sortedRows.value);
+      touch(this._sortedRows.value);
       this.onRowOrderChanged?.();
     });
     this._ctx.onDispose(rowOrderWatcher);
@@ -179,7 +195,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
       for (let row = start.row; row <= end.row; row++) {
         rowEffects.push(
           effect(() => {
-            const rowData = this.sortedRows.value[row];
+            const rowData = this._sortedRows.value[row];
             this?._table?.view?.fields.forEach((field) => touch(rowData?.[field.property]));
             this.onCellUpdate?.({ row, col: start.col });
           }),
@@ -240,14 +256,14 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
       values[fromGridCell({ col: colIndex, row: displayIndex })] = cell;
     };
 
-    for (let row = range.start.row; row <= range.end.row && row < this.sortedRows.value.length; row++) {
+    for (let row = range.start.row; row <= range.end.row && row < this._sortedRows.value.length; row++) {
       for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
         const field = fields[col];
         if (!field) {
           continue;
         }
 
-        addCell(this.sortedRows.value[row], field, col, row);
+        addCell(this._sortedRows.value[row], field, col, row);
       }
     }
 
@@ -277,7 +293,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   private getActionColumnCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
     const values: DxGridPlaneCells = {};
 
-    for (let row = range.start.row; row <= range.end.row && row < this.rows.value.length; row++) {
+    for (let row = range.start.row; row <= range.end.row && row < this._rows.value.length; row++) {
       values[fromGridCell({ col: 0, row })] = {
         value: '',
         accessoryHtml: tableButtons.rowMenu.render({ rowIndex: row }),
@@ -302,19 +318,19 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   //
 
   public setRows = (object: T[]): void => {
-    this.rows.value = object;
+    this._rows.value = object;
   };
 
-  public getRowCount = (): number => this.rows.value.length;
+  public getRowCount = (): number => this._rows.value.length;
 
   public insertRow = (rowIndex?: number): void => {
-    const row = rowIndex !== undefined ? this.displayToDataIndex.get(rowIndex) ?? rowIndex : this.rows.value.length;
+    const row = rowIndex !== undefined ? this.displayToDataIndex.get(rowIndex) ?? rowIndex : this._rows.value.length;
     this.onInsertRow?.(row);
   };
 
   public deleteRow = (rowIndex: number): void => {
     const row = this.displayToDataIndex.get(rowIndex) ?? rowIndex;
-    const object = this.rows.value[row];
+    const object = this._rows.value[row];
     this.onDeleteRow?.(row, object);
   };
 
@@ -326,7 +342,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
     const field = fields[col];
     const dataIndex = this.displayToDataIndex.get(row) ?? row;
-    const value = this.rows.value[dataIndex][field.property];
+    const value = this._rows.value[dataIndex][field.property];
     if (value === undefined) {
       return '';
     }
@@ -344,7 +360,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
     const field = fields[col];
     const { props } = this._projection.getFieldProjection(field.property);
-    const object = this.rows.value[rowIdx];
+    const object = this._rows.value[rowIdx];
     const obj: Record<JsonProp, any> = object;
     obj[field.property] = parseValue({
       type: props.type,
@@ -364,7 +380,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
     const field = this.table.view.fields.find((field) => field.property === property);
     if (field && this.onDeleteColumn) {
-      if (this.sorting.value?.fieldId === property) {
+      if (this._sorting.value?.fieldId === property) {
         this.clearSort();
       }
       this.onDeleteColumn(field.property);
@@ -391,11 +407,11 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   //
 
   public setSort(fieldId: string, direction: SortDirection): void {
-    this.sorting.value = { fieldId, direction };
+    this._sorting.value = { fieldId, direction };
   }
 
   public clearSort(): void {
-    this.sorting.value = undefined;
+    this._sorting.value = undefined;
   }
 
   //
@@ -404,12 +420,12 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
   // TODO(burdon): Change to setPinned(on/off).
   public pinRow(rowIndex: number, side: 'top' | 'bottom'): void {
-    this.pinnedRows[side].push(rowIndex);
+    this._pinnedRows[side].push(rowIndex);
   }
 
   public unpinRow(rowIndex: number): void {
-    this.pinnedRows.top = this.pinnedRows.top.filter((index: number) => index !== rowIndex);
-    this.pinnedRows.bottom = this.pinnedRows.bottom.filter((index: number) => index !== rowIndex);
+    this._pinnedRows.top = this._pinnedRows.top.filter((index: number) => index !== rowIndex);
+    this._pinnedRows.bottom = this._pinnedRows.bottom.filter((index: number) => index !== rowIndex);
   }
 
   //
@@ -418,16 +434,16 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
   // TODO(burdon): Change to setSelection(on/off).
   public selectRow(rowIndex: number) {
-    if (!this.rowSelection.includes(rowIndex)) {
-      this.rowSelection.push(rowIndex);
+    if (!this._rowSelection.includes(rowIndex)) {
+      this._rowSelection.push(rowIndex);
     }
   }
 
   public deselectRow(rowIndex: number) {
-    this.rowSelection = this.rowSelection.filter((index: number) => index !== rowIndex);
+    this._rowSelection = this._rowSelection.filter((index: number) => index !== rowIndex);
   }
 
   public deselectAllRows() {
-    this.rowSelection = [];
+    this._rowSelection = [];
   }
 }
