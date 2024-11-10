@@ -8,6 +8,7 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type MutableSchema } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -23,7 +24,7 @@ import translations from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
 import { Toolbar } from '../Toolbar';
-import { createEmptyTable, createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
+import { createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
 
 //
 // Story components.
@@ -33,23 +34,16 @@ const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const tables = useQuery(space, Filter.schema(TableType));
-  const [table, setTable] = useState<TableType | undefined>();
+  const [table, setTable] = useState<TableType>();
   const [schema, setSchema] = useState<MutableSchema>();
   useEffect(() => {
-    if (tables.length > 0) {
+    if (tables.length && !table) {
       const table = tables[0];
+      invariant(table.view);
       setTable(table);
-      if (table.view) {
-        setSchema(space.db.schemaRegistry.getSchema(table.view.query.__typename));
-      }
+      setSchema(space.db.schemaRegistry.getSchema(table.view.query.__typename));
     }
   }, [tables]);
-
-  useEffect(() => {
-    if (space && table && !table.view) {
-      initializeTable(space, table);
-    }
-  }, [space, table]);
 
   const projection = useMemo(() => {
     if (schema && table?.view) {
@@ -108,8 +102,6 @@ const DefaultStory = () => {
     onCellUpdate: (cell) => tableRef.current?.update(cell),
     onRowOrderChanged: () => tableRef.current?.update(),
   });
-
-  console.log(':::', model);
 
   if (!schema || !table) {
     return <div />;
@@ -195,7 +187,8 @@ const meta: Meta<typeof Table> = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: ({ space }) => {
-        space.db.add(createEmptyTable());
+        const table = space.db.add(create(TableType, {}));
+        initializeTable(space, table);
       },
     }),
     withTheme,

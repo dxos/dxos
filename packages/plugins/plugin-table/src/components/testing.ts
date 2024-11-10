@@ -10,8 +10,6 @@ import { createView, type ViewProjection } from '@dxos/schema';
 
 import { TableType } from '../types';
 
-export const createEmptyTable = () => create(TableType, {});
-
 export const TestSchema = TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
   id: S.String,
   name: S.optional(S.String),

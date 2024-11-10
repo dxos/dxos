@@ -8,7 +8,7 @@ import React, {
   useCallback,
   useImperativeHandle,
   useLayoutEffect,
-  useRef,
+  useState,
 } from 'react';
 
 import { type DxGridElement, type DxAxisResize, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
@@ -67,38 +67,42 @@ export type TableMainProps = {
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwardedRef) => {
-  const gridRef = useRef<DxGridElement>(null);
-  console.log('TableMain ########', gridRef.current);
+  const [dxGrid, setDxGrid] = useState<DxGridElement>();
+  useLayoutEffect(() => {
+    // TODO(burdon): Review/document API.
+    if (dxGrid && model) {
+      dxGrid.getCells = model.getCells.bind(model);
+    }
+  }, [dxGrid, model]);
 
-  // External controller.
+  /**
+   * Provides an external controller that can be called to repaint the table.
+   */
   useImperativeHandle<TableController, TableController>(
     forwardedRef,
     () => {
       return {
         update: (cell) => {
-          if (!gridRef.current || !model) {
+          // TODO(burdon): Better coordination with API above.
+          if (!dxGrid?.getCells) {
             return;
           }
 
-          console.log('============ useImperativeHandle', gridRef.current);
           if (cell) {
-            gridRef.current?.updateIfWithinBounds(cell);
+            dxGrid.updateIfWithinBounds(cell);
           } else {
-            gridRef.current?.updateCells(true);
+            dxGrid.updateCells(true);
           }
         },
       };
     },
-    [model],
+    [dxGrid, model],
   );
 
-  useLayoutEffect(() => {
-    if (!gridRef.current || !model) {
-      return;
-    }
-
-    gridRef.current.getCells = model.getCells.bind(model);
-  }, [model]);
+  // TODO(burdon): Import types.
+  const handleFocus = (increment: 'col' | 'row' | undefined, delta: 0 | 1 | -1 | undefined) => {
+    dxGrid?.refocus(increment, delta);
+  };
 
   const handleKeyDown = useCallback<NonNullable<GridContentProps['onKeyDown']>>(
     (event) => {
@@ -138,10 +142,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     [model],
   );
 
-  // TODO(burdon): Import types.
-  const handleFocus = (increment: 'col' | 'row' | undefined, delta: 0 | 1 | -1 | undefined) =>
-    gridRef.current?.refocus(increment, delta);
-
   const { state: menuState, triggerRef, handleClick, close, showColumnSettings } = useTableMenuController();
 
   return (
@@ -155,7 +155,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
           onEnter={handleEnter}
         />
         <Grid.Content
-          ref={gridRef}
           className={mx(
             '[&>.dx-grid]:min-bs-0 [&>.dx-grid]:bs-full [&>.dx-grid]:max-bs-max [--dx-grid-base:var(--surface-bg)]',
             inlineEndLine,
@@ -168,6 +167,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
           onAxisResize={handleAxisResize}
           onClick={handleClick}
           onKeyDown={handleKeyDown}
+          ref={setDxGrid}
         />
       </Grid.Root>
       <ColumnActionsMenu

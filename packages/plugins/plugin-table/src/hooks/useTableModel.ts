@@ -24,7 +24,6 @@ export const useTableModel = <T extends BaseTableRow = {}>({
 }: UseTableModelParams<T>): TableModel<T> | undefined => {
   const [model, setModel] = useState<TableModel<T>>();
   useEffect(() => {
-    console.log('======= useTableModel', !!table, !!projection);
     if (!table || !projection) {
       return;
     }
@@ -40,7 +39,7 @@ export const useTableModel = <T extends BaseTableRow = {}>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [table, projection]);
+  }, [table, projection]); // TODO(burdon): Trigger if callbacks change?
 
   // Update data.
   useEffect(() => {
