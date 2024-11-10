@@ -61,9 +61,8 @@ export const GridSheet = () => {
   const { t } = useTranslation(SHEET_PLUGIN);
   const { id, model, editing, setEditing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs } =
     useSheetContext();
-  // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
-  const [extraplanarFocus, setExtraplanarFocus] = useState<DxGridPosition | null>(null);
+  const [extraPlanarFocus, setExtraPlanarFocus] = useState<DxGridPosition | null>(null);
   const dispatch = useIntentDispatcher();
   const rangeController = useRef<RangeController>();
   const { hasAttention } = useAttention(id);
@@ -75,12 +74,12 @@ export const GridSheet = () => {
         if (cell) {
           if (cell.plane === 'grid') {
             setCursor({ col: cell.col, row: cell.row });
-            setExtraplanarFocus(null);
+            setExtraPlanarFocus(null);
           } else {
-            setExtraplanarFocus(cell);
+            setExtraPlanarFocus(cell);
           }
         } else {
-          setExtraplanarFocus(null);
+          setExtraPlanarFocus(null);
         }
       }
     },
@@ -192,12 +191,12 @@ export const GridSheet = () => {
           return cursorFallbackRange && model.clear(cursorFallbackRange);
         case 'Enter':
         case 'Space':
-          if (dxGrid && extraplanarFocus) {
-            switch (extraplanarFocus.plane) {
+          if (dxGrid && extraPlanarFocus) {
+            switch (extraPlanarFocus.plane) {
               case 'frozenRowsStart':
               case 'frozenColsStart':
                 event.preventDefault();
-                return selectEntireAxis(extraplanarFocus);
+                return selectEntireAxis(extraPlanarFocus);
             }
           }
       }
@@ -225,7 +224,7 @@ export const GridSheet = () => {
         }
       }
     },
-    [cursorFallbackRange, model, cursor, extraplanarFocus, selectEntireAxis],
+    [cursorFallbackRange, model, cursor, extraPlanarFocus, selectEntireAxis],
   );
 
   const contextMenuAnchorRef = useRef<HTMLButtonElement | null>(null);

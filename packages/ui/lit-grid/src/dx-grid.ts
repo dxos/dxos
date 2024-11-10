@@ -699,7 +699,6 @@ export class DxGrid extends LitElement {
       Math.abs(inlineSize - this.sizeInline) > resizeTolerance ||
       Math.abs(blockSize - this.sizeBlock) > resizeTolerance
     ) {
-      // console.info('[updating bounds]', 'resize', [inlineSize - this.sizeInline, blockSize - this.sizeBlock]);
       this.sizeInline = inlineSize;
       this.sizeBlock = blockSize;
       this.updateVis();
