@@ -72,6 +72,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   private readonly onDeleteRow?: TableModelProps<T>['onDeleteRow'];
   private readonly onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
 
+  // TODO(burdon): Make readonly.
   public onCellUpdate?: TableModelProps<T>['onCellUpdate'];
   public onRowOrderChanged?: TableModelProps<T>['onRowOrderChanged'];
 
@@ -194,7 +195,6 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
   //
   // Callbacks
-  // TODO(burdon): Move into constructor.
   //
 
   setOnCellUpdate(onCellUpdate: (cell: GridCell) => void): void {

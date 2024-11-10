@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -11,7 +11,7 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 import { ViewProjection } from '@dxos/schema';
 
-import { Table } from './Table';
+import { Table, type TableController } from './Table';
 import { Toolbar, type ToolbarAction } from './Toolbar';
 import { useTableModel } from '../hooks';
 import { TableAction, type TableType } from '../types';
@@ -61,12 +61,15 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     return new ViewProjection(schema, table.view);
   }, [schema, table.view]);
 
+  const tableRef = useRef<TableController>(null);
   const model = useTableModel({
     table,
     projection,
     objects: filteredObjects,
     onDeleteRow: handleDeleteRow,
     onDeleteColumn: handleDeleteColumn,
+    onCellUpdate: (cell) => tableRef.current?.update(cell),
+    onRowOrderChanged: () => tableRef.current?.update(),
   });
 
   const onThreadCreate = useCallback(() => {
@@ -87,12 +90,11 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
           onThreadCreate();
           break;
         }
-      }
-      switch (action.type) {
         case 'add-row': {
           if (schema && space) {
             space.db.add(create(schema, {}));
           }
+          break;
         }
       }
     },
@@ -113,7 +115,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
         <Toolbar.Actions />
       </Toolbar.Root>
       <Table.Root role={role}>
-        <Table.Main key={table.id} model={model} />
+        <Table.Main key={table.id} ref={tableRef} model={model} />
       </Table.Root>
     </div>
   );

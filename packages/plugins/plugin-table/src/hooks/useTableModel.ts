@@ -14,14 +14,13 @@ export type UseTableModelParams<T extends BaseTableRow = {}> = {
   table?: TableType;
   projection?: ViewProjection;
   objects?: ReactiveObject<T>[];
-} & Pick<TableModelProps<T>, 'onDeleteRow' | 'onDeleteColumn'>;
+} & Pick<TableModelProps<T>, 'onDeleteRow' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChanged'>;
 
 export const useTableModel = <T extends BaseTableRow = {}>({
+  objects,
   table,
   projection,
-  objects,
-  onDeleteRow,
-  onDeleteColumn,
+  ...props
 }: UseTableModelParams<T>): TableModel<T> | undefined => {
   const [model, setModel] = useState<TableModel<T>>();
   useEffect(() => {
@@ -31,7 +30,7 @@ export const useTableModel = <T extends BaseTableRow = {}>({
 
     let model: TableModel<T> | undefined;
     const t = setTimeout(async () => {
-      model = new TableModel<T>({ table, projection, onDeleteColumn, onDeleteRow });
+      model = new TableModel<T>({ table, projection, ...props });
       await model.open();
       setModel(model);
     });
@@ -40,7 +39,7 @@ export const useTableModel = <T extends BaseTableRow = {}>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [table, projection, onDeleteColumn, onDeleteRow]);
+  }, [table, projection, props]);
 
   // Update data.
   useEffect(() => {

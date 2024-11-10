@@ -187,17 +187,6 @@ const createTableModel = (): TableModel => {
   const schema = createMutableSchema(Test);
   const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
   const projection = new ViewProjection(schema, view);
-  const table = create(TableType, {
-    view,
-    // TODO(burdon): Update schema above (use consistent schema).
-    // view: {
-    //   fields: [
-    //     { id: 'col1', path: 'col1', label: 'Column 1', type: 'string' },
-    //     { id: 'col2', path: 'col2', label: 'Column 2', type: 'string' },
-    //     { id: 'col3', path: 'col3', label: 'Column 3', type: 'string' },
-    //   ],
-    // },
-  });
-
+  const table = create(TableType, { view });
   return new TableModel({ table, projection });
 };

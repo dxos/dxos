@@ -17,7 +17,7 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Table } from './Table';
+import { Table, type TableController } from './Table';
 import { useTableModel } from '../../hooks';
 import translations from '../../translations';
 import { TableType } from '../../types';
@@ -99,12 +99,15 @@ const DefaultStory = () => {
     [table, spaces],
   );
 
+  const tableRef = useRef<TableController>(null);
   const model = useTableModel({
     table,
     projection,
     objects: filteredObjects,
     onDeleteRow: handleDeleteRow,
     onDeleteColumn: handleDeleteColumn,
+    onCellUpdate: (cell) => tableRef.current?.update(cell),
+    onRowOrderChanged: () => tableRef.current?.update(),
   });
 
   if (!schema || !table) {
@@ -119,7 +122,7 @@ const DefaultStory = () => {
           <Toolbar.Actions />
         </Toolbar.Root>
         <Table.Root>
-          <Table.Main model={model} onAddRow={handleAddRow} />
+          <Table.Main ref={tableRef} model={model} onAddRow={handleAddRow} />
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator'>
@@ -159,16 +162,19 @@ const TablePerformanceStory = (props: StoryProps) => {
     [table],
   );
 
+  const tableRef = useRef<TableController>(null);
   const model = useTableModel({
     table,
     objects: items as any[],
     onDeleteRow: handleDeleteRow,
     onDeleteColumn: handleDeleteColumn,
+    onCellUpdate: (cell) => tableRef.current?.update(cell),
+    onRowOrderChanged: () => tableRef.current?.update(),
   });
 
   return (
     <Table.Root>
-      <Table.Main model={model} />
+      <Table.Main ref={tableRef} model={model} />
     </Table.Root>
   );
 };

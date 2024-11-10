@@ -2,7 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import React, {
+  forwardRef,
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+} from 'react';
 
 import { type DxGridElement, type DxAxisResize, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
@@ -51,17 +59,35 @@ const TableRoot = ({ role = 'article', children }: TableRootProps) => {
 // Main
 //
 
+export type TableController = {
+  update: (cell?: GridCell) => void;
+};
+
 export type TableMainProps = {
   model?: TableModel;
   onAddRow?: (row: number) => void;
   onDeleteRow?: (row: number) => void;
 };
 
-const TableMain = ({ model, onAddRow, onDeleteRow }: TableMainProps) => {
+const TableMain = forwardRef<TableController, TableMainProps>(({ model, onAddRow, onDeleteRow }, forwardedRef) => {
   const gridRef = useRef<DxGridElement>(null);
 
   // TODO(burdon): Consider moving this upstream via imperative handle.
   //  (So that all callbacks passed to the model are passed into the constructor/hook).
+  useImperativeHandle<TableController, TableController>(
+    forwardedRef,
+    () => ({
+      update: (cell) => {
+        if (cell) {
+          gridRef.current?.updateIfWithinBounds(cell);
+        } else {
+          gridRef.current?.updateCells(true);
+        }
+      },
+    }),
+    [],
+  );
+
   const handleCellUpdate = useCallback((cell: GridCell) => {
     gridRef.current?.updateIfWithinBounds(cell);
   }, []);
@@ -174,7 +200,7 @@ const TableMain = ({ model, onAddRow, onDeleteRow }: TableMainProps) => {
       />
     </>
   );
-};
+});
 
 export const Table = {
   Root: TableRoot,
