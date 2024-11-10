@@ -71,10 +71,8 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   private readonly onInsertRow?: TableModelProps<T>['onInsertRow'];
   private readonly onDeleteRow?: TableModelProps<T>['onDeleteRow'];
   private readonly onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
-
-  // TODO(burdon): Make readonly.
-  public onCellUpdate?: TableModelProps<T>['onCellUpdate'];
-  public onRowOrderChanged?: TableModelProps<T>['onRowOrderChanged'];
+  private readonly onCellUpdate?: TableModelProps<T>['onCellUpdate'];
+  private readonly onRowOrderChanged?: TableModelProps<T>['onRowOrderChanged'];
 
   constructor({
     table,
@@ -191,18 +189,6 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
       return () => rowEffects.forEach((cleanup) => cleanup());
     });
     this._ctx.onDispose(rowEffectManager);
-  }
-
-  //
-  // Callbacks
-  //
-
-  setOnCellUpdate(onCellUpdate: (cell: GridCell) => void): void {
-    this.onCellUpdate = onCellUpdate;
-  }
-
-  setOnRowOrderChange(onRowOrderChange: () => void): void {
-    this.onRowOrderChanged = onRowOrderChange;
   }
 
   //

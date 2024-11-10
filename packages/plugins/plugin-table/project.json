@@ -22,6 +22,8 @@
       }
     },
     "lint": {}
+    // TODO(burdon): Restore when moved to react-ui-table (no plugin deps).
+    // "test": {}
   },
   "implicitDependencies": [
     "esbuild",

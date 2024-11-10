@@ -10,16 +10,23 @@ import { createMutableSchema, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { createView, ViewProjection } from '@dxos/schema';
 
-import { TableModel } from './table-model';
+import { TableModel, type TableModelProps } from './table-model';
 import { TableType } from '../types';
+
+// TODO(burdon): Tests are disabled since they bring in plugin deps.
+//  Restore once factored out into react-ui-table.
 
 registerSignalsRuntime();
 
 describe('TableModel', () => {
+  let updateCount = 0;
   let model: TableModel;
 
   beforeEach(async () => {
-    model = createTableModel();
+    updateCount = 0;
+    model = createTableModel({
+      onCellUpdate: () => updateCount++,
+    });
     await model.open();
   });
 
@@ -110,11 +117,6 @@ describe('TableModel', () => {
       });
 
       it('should update with row-level reactivity', () => {
-        let updateCount = 0;
-        model.setOnCellUpdate(() => {
-          updateCount++;
-        });
-
         // Set up visible range to include our test data
         model.getCells({ start: { row: 0, col: 0 }, end: { row: 1, col: 2 } }, 'grid');
 
@@ -129,11 +131,6 @@ describe('TableModel', () => {
       });
 
       it('should update reactively when adding a new row', () => {
-        let updateCount = 0;
-        model.setOnCellUpdate(() => {
-          updateCount++;
-        });
-
         // Set up visible range to include our test data
         model.getCells({ start: { row: 0, col: 0 }, end: { row: 2, col: 2 } }, 'grid');
 
@@ -150,11 +147,6 @@ describe('TableModel', () => {
       });
 
       it('should handle combined operations reactively', () => {
-        let updateCount = 0;
-        model.setOnCellUpdate(() => {
-          updateCount++;
-        });
-
         // Set up visible range
         model.getCells({ start: { row: 0, col: 0 }, end: { row: 2, col: 2 } }, 'grid');
 
@@ -183,10 +175,10 @@ class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.
   completed: S.Boolean,
 }) {}
 
-const createTableModel = (): TableModel => {
+const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createMutableSchema(Test);
   const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
   const projection = new ViewProjection(schema, view);
   const table = create(TableType, { view });
-  return new TableModel({ table, projection });
+  return new TableModel({ table, projection, ...props });
 };

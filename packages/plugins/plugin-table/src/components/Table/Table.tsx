@@ -6,7 +6,6 @@ import React, {
   forwardRef,
   type PropsWithChildren,
   useCallback,
-  useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useRef,
@@ -72,8 +71,6 @@ export type TableMainProps = {
 const TableMain = forwardRef<TableController, TableMainProps>(({ model, onAddRow, onDeleteRow }, forwardedRef) => {
   const gridRef = useRef<DxGridElement>(null);
 
-  // TODO(burdon): Consider moving this upstream via imperative handle.
-  //  (So that all callbacks passed to the model are passed into the constructor/hook).
   useImperativeHandle<TableController, TableController>(
     forwardedRef,
     () => ({
@@ -87,14 +84,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, onAddRow
     }),
     [],
   );
-
-  const handleCellUpdate = useCallback((cell: GridCell) => {
-    gridRef.current?.updateIfWithinBounds(cell);
-  }, []);
-
-  const handleRowOrderChanged = useCallback(() => {
-    gridRef.current?.updateCells(true);
-  }, []);
 
   const handleKeyDown = useCallback<NonNullable<GridContentProps['onKeyDown']>>(
     (event) => {
@@ -130,13 +119,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, onAddRow
     }
     gridRef.current.getCells = model.getCells.bind(model);
   }, [model]);
-
-  useEffect(() => {
-    if (model) {
-      model.setOnCellUpdate(handleCellUpdate);
-      model.setOnRowOrderChange(handleRowOrderChanged);
-    }
-  }, [model, handleCellUpdate, handleRowOrderChanged]);
 
   const handleAxisResize = useCallback(
     (event: DxAxisResize) => {
