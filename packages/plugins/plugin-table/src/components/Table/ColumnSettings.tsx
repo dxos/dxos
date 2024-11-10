@@ -23,6 +23,7 @@ export const ColumnSettings = ({ model, open, fieldId, onOpenChange, triggerRef 
     [model?.table?.view?.fields, fieldId],
   );
 
+  // TODO(burdon): Props are not used?
   const props = useMemo<FieldProjection | undefined>(() => {
     if (field) {
       return model?.projection.getFieldProjection(field.property);
@@ -40,8 +41,8 @@ export const ColumnSettings = ({ model, open, fieldId, onOpenChange, triggerRef 
         <DropdownMenu.Content>
           <DropdownMenu.Viewport>
             <FieldEditor
-              view={model?.table.view}
-              projection={model?.projection}
+              view={model.table.view}
+              projection={model.projection}
               field={field}
               onClose={() => onOpenChange?.(false)}
             />

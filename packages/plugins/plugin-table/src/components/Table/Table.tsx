@@ -183,6 +183,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
         onShowColumnSettings={showColumnSettings}
         triggerRef={triggerRef}
       />
+
       <ColumnCreate
         // TODO(burdon): Replace with ColumnSettings.
         model={model}

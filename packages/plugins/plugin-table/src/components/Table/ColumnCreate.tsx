@@ -15,16 +15,19 @@ export type ColumnCreateProps = {
   triggerRef: RefObject<HTMLButtonElement>;
 } & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
 
+/**
+ * @deprecated
+ */
 // TODO(burdon): Replace with ColumnSettings.
 export const ColumnCreate = ({ model, open, onOpenChange, triggerRef }: ColumnCreateProps) => {
   const [field, setField] = useState<FieldType>();
   useEffect(() => {
-    if (open && model?.projection) {
+    if (model?.projection && open) {
       setField(model.projection.createFieldProjection());
     } else {
       setField(undefined);
     }
-  }, [open, model?.projection]);
+  }, [model?.projection, open]);
 
   if (!model?.table?.view || !model.projection || !field) {
     return null;
