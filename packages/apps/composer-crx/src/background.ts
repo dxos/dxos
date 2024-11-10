@@ -4,9 +4,7 @@
 
 import browser from 'webextension-polyfill';
 
-const main = async () => {
-  // eslint-disable-next-line no-console
-  console.log(browser);
-};
-
-void main();
+browser.runtime.onInstalled.addListener(() => {
+  // Chrome specific!
+  (browser as any).sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+});
