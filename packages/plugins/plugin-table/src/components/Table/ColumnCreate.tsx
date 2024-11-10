@@ -2,24 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { type RefObject, useEffect, useState } from 'react';
 
-import { DropdownMenu } from '@dxos/react-ui';
+import { DropdownMenu, type DropdownMenuRootProps } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-data';
 import { type FieldType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
-type NewColumnFormProps = {
+export type ColumnCreateProps = {
   model?: TableModel;
-  open: boolean;
-  onClose: () => void;
-  triggerRef: React.RefObject<HTMLButtonElement>;
-};
+  triggerRef: RefObject<HTMLButtonElement>;
+} & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
 
-export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewColumnFormProps) => {
+// TODO(burdon): Replace with ColumnSettings.
+export const ColumnCreate = ({ model, open, onOpenChange, triggerRef }: ColumnCreateProps) => {
   const [field, setField] = useState<FieldType>();
-
   useEffect(() => {
     if (open && model?.projection) {
       setField(model.projection.createFieldProjection());
@@ -28,21 +26,22 @@ export const NewColumnForm = ({ model, open, onClose: close, triggerRef }: NewCo
     }
   }, [open, model?.projection]);
 
-  const handleClose = useCallback(() => {
-    close();
-  }, [close]);
-
   if (!model?.table?.view || !model.projection || !field) {
     return null;
   }
 
   return (
-    <DropdownMenu.Root modal={false} open={open} onOpenChange={close}>
+    <DropdownMenu.Root modal={false} open={open} onOpenChange={onOpenChange}>
       <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
       <DropdownMenu.Portal>
         <DropdownMenu.Content>
           <DropdownMenu.Viewport>
-            <FieldEditor view={model.table.view} projection={model.projection} field={field} onClose={handleClose} />
+            <FieldEditor
+              view={model.table.view}
+              projection={model.projection}
+              field={field}
+              onClose={() => onOpenChange?.(false)}
+            />
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>

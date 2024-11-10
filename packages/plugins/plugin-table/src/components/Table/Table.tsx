@@ -15,8 +15,8 @@ import { type DxGridElement, type DxAxisResize, Grid, type GridContentProps, clo
 import { mx } from '@dxos/react-ui-theme';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
-import { ColumnSettingsModal } from './ColumnSettingsModal';
-import { NewColumnForm } from './NewColumnForm';
+import { ColumnCreate } from './ColumnCreate';
+import { ColumnSettings } from './ColumnSettings';
 import { RowActionsMenu } from './RowActionsMenu';
 import { TableCellEditor } from './TableCellEditor';
 import { useTableMenuController } from '../../hooks';
@@ -148,12 +148,8 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     <>
       {/* TODO(burdon): Is this required to be unique? */}
       <Grid.Root id={model?.table.id ?? 'table-grid'}>
-        <TableCellEditor
-          //
-          model={model}
-          onFocus={handleFocus}
-          onEnter={handleEnter}
-        />
+        <TableCellEditor model={model} onFocus={handleFocus} onEnter={handleEnter} />
+
         <Grid.Content
           className={mx(
             '[&>.dx-grid]:min-bs-0 [&>.dx-grid]:bs-full [&>.dx-grid]:max-bs-max [--dx-grid-base:var(--surface-bg)]',
@@ -170,6 +166,15 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
           ref={setDxGrid}
         />
       </Grid.Root>
+
+      <RowActionsMenu
+        model={model}
+        rowIndex={menuState?.type === 'row' ? menuState.rowIndex : undefined}
+        open={menuState?.type === 'row'}
+        onOpenChange={close}
+        triggerRef={triggerRef}
+      />
+
       <ColumnActionsMenu
         model={model}
         fieldId={menuState?.type === 'column' ? menuState.fieldId : undefined}
@@ -178,21 +183,14 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
         onShowColumnSettings={showColumnSettings}
         triggerRef={triggerRef}
       />
-      <RowActionsMenu
+      <ColumnCreate
+        // TODO(burdon): Replace with ColumnSettings.
         model={model}
-        rowIndex={menuState?.type === 'row' ? menuState.rowIndex : undefined}
-        open={menuState?.type === 'row'}
+        open={menuState?.type === 'newColumn'}
         onOpenChange={close}
         triggerRef={triggerRef}
       />
-      <NewColumnForm
-        //
-        model={model}
-        open={menuState?.type === 'newColumn'}
-        onClose={close}
-        triggerRef={triggerRef}
-      />
-      <ColumnSettingsModal
+      <ColumnSettings
         model={model}
         open={menuState?.type === 'columnSettings'}
         fieldId={menuState?.type === 'columnSettings' ? menuState.fieldId : undefined}

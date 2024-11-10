@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { type RefObject, useMemo } from 'react';
 
 import { DropdownMenu, type DropdownMenuRootProps } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-data';
@@ -13,10 +13,11 @@ import { type TableModel } from '../../model';
 export type ColumnSettingsModalProps = {
   model?: TableModel;
   fieldId?: string;
-  triggerRef: React.RefObject<HTMLButtonElement>;
+  triggerRef: RefObject<HTMLButtonElement>;
 } & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
 
-export const ColumnSettingsModal = ({ model, fieldId, open, onOpenChange, triggerRef }: ColumnSettingsModalProps) => {
+// TODO(burdon): Reconcile with ColumnCreate.
+export const ColumnSettings = ({ model, open, fieldId, onOpenChange, triggerRef }: ColumnSettingsModalProps) => {
   const field = useMemo(
     () => model?.table?.view?.fields.find((f) => f.property === fieldId),
     [model?.table?.view?.fields, fieldId],
@@ -28,7 +29,7 @@ export const ColumnSettingsModal = ({ model, fieldId, open, onOpenChange, trigge
     }
   }, [model?.projection, field]);
 
-  if (!props || !field || !model?.projection || !model?.table?.view?.fields) {
+  if (!model?.table?.view?.fields || !field || !model?.projection || !props) {
     return null;
   }
 
