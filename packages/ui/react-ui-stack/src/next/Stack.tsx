@@ -76,8 +76,8 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                 : 'grid-cols-1',
             size === 'contain' &&
               (orientation === 'horizontal'
-                ? 'overflow-x-auto bs-min max-bs-full'
-                : 'overflow-y-auto is-min max-is-full'),
+                ? 'overflow-x-auto min-bs-min bs-full max-bs-full'
+                : 'overflow-y-auto min-is-min is-full max-is-full'),
             separators && 'bg-separator gap-px',
             classNames,
           )}

@@ -19,11 +19,7 @@ type StoryStackItem = {
 };
 
 const KanbanBlock = ({ item }: { item: StoryStackItem }) => {
-  return (
-    <div className='is-64 bs-24 bg-base text-center place-content-center'>
-      <span className='text-sm font-medium'>{item.title}</span>
-    </div>
-  );
+  return <div className='bg-base place-content-center p-4'>{item.title}</div>;
 };
 
 const StorybookStack = () => {
@@ -32,12 +28,12 @@ const StorybookStack = () => {
       () =>
         ({
           id: faker.string.uuid(),
-          title: faker.lorem.word(),
+          title: faker.lorem.paragraph(),
           items: faker.helpers.multiple(
             () =>
               ({
                 id: faker.string.uuid(),
-                title: faker.lorem.word(),
+                title: faker.lorem.paragraph(),
               }) satisfies StoryStackItem,
             { count: { min: 32, max: 64 } },
           ),
@@ -95,11 +91,11 @@ const StorybookStack = () => {
     <main className='fixed inset-0'>
       <Stack orientation='horizontal' size='contain'>
         {columns.map((column) => (
-          <StackItem key={column.id} item={column} onReorder={reorderItem}>
+          <StackItem key={column.id} item={column} onRearrange={reorderItem}>
             <StackItemHeading />
             <Stack orientation='vertical' size='contain'>
               {column.items?.map((card) => (
-                <StackItem key={card.id} item={card} onReorder={reorderItem}>
+                <StackItem key={card.id} item={card} onRearrange={reorderItem}>
                   <StackItemHeading />
                   <KanbanBlock item={card} />
                 </StackItem>
