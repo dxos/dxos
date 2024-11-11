@@ -80,8 +80,6 @@ const meta: Meta<StoryProps> = {
       createSpace: true,
       onSpaceCreated: ({ space }) => {
         const table = space.db.add(create(TableType, {}));
-
-        // TODO(burdon): Pass in schema.
         const schema = initializeTable({ space, table });
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(

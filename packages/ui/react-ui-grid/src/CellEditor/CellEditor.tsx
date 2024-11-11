@@ -177,7 +177,7 @@ export const CellEditor = ({
       className={editorVariants[variant].root}
       style={{
         ...box,
-        ...{ '--dx-gridCellWidth': box ? `${box.inlineSize - 1}px` : undefined },
+        ...{ '--dx-gridCellWidth': box ? `${box.inlineSize}px` : undefined },
       }}
       {...(gridId && { 'data-grid': gridId })}
     />

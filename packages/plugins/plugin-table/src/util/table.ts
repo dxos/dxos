@@ -29,7 +29,7 @@ export const initializeTable = ({ space, table }: { space: Space; table: TableTy
   });
 
   // Add field with reference.
-  const ref = false;
+  const ref = true;
   if (ref) {
     const projection = new ViewProjection(mutable, table.view!);
     projection.setFieldProjection({
