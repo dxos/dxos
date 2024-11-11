@@ -140,8 +140,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
       }),
     );
 
-    expect(guestResult.error).to.exist;
-    expect(hostResult.error).to.exist;
+    await expectErrorState({ hostResult, guestResult });
   });
 
   test('incomplete shared keypair', async () => {
@@ -157,10 +156,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
       },
     });
 
-    expect((await guestResult).error).to.exist;
-    expect(await hostResult).toEqual({
-      error: expect.any(Error),
-    });
+    await expectErrorState({ hostResult, guestResult });
   });
 
   test('with target', async () => {
@@ -226,8 +222,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
     );
 
     expect(attempt).to.eq(3);
-    expect(guestResult).toEqual({ error: expect.any(Error) });
-    expect(hostResult).toEqual({ error: expect.any(Error) });
+    await expectErrorState({ hostResult, guestResult });
   });
 
   test('invitation timeout', async () => {
@@ -239,8 +234,8 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
       }),
     );
 
-    expect(hostResult.invitation?.state).to.eq(Invitation.State.TIMEOUT);
     expect(guestResult.invitation?.state).to.eq(Invitation.State.TIMEOUT);
+    await expectErrorState({ hostResult });
   });
 
   test('host cancels invitation', async () => {
@@ -282,7 +277,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
     );
 
     expect(guestResult.invitation?.state).to.eq(Invitation.State.CANCELLED);
-    expect(hostResult).toEqual({ error: expect.any(Error) });
+    await expectErrorState({ hostResult });
   });
 
   test('network error', async () => {
@@ -303,8 +298,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
         },
       }),
     );
-    expect(guestResult.error).to.exist;
-    expect(hostResult.error).to.exist;
+    await expectErrorState({ hostResult, guestResult });
 
     // Test cleanup fails if the guest is offline.
     await guest.networkManager.setConnectionState(ConnectionState.ONLINE);
@@ -672,6 +666,22 @@ describe('Invitations', () => {
     );
   });
 });
+
+const expectErrorState = async (args: {
+  hostResult?: Promise<Result> | Result;
+  guestResult?: Promise<Result> | Result;
+}) => {
+  const { hostResult, guestResult } = args;
+  if (guestResult) {
+    expect((await guestResult).error).to.exist;
+  }
+  if (hostResult) {
+    // Host terminal states are EXPIRED, CANCELLED and SUCCESS. Instead of ERROR or TIMEOUT hosts
+    // transition back to CONNECTING waiting for new guests.
+    expect((await hostResult).error).not.to.exist;
+    expect((await hostResult).invitation).toEqual(expect.objectContaining({ state: Invitation.State.CONNECTING }));
+  }
+};
 
 const createInvitationsApi = (
   context: ServiceContext,
