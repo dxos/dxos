@@ -44,13 +44,22 @@
           "env": "DX_ENVIRONMENT"
         },
         {
+          "env": "DX_HOST"
+        },
+        {
+          "env": "DX_HUB_URL"
+        },
+        {
           "env": "DX_IPDATA_API_KEY"
         },
         {
-          "env": "DX_SENTRY_DESTINATION"
+          "env": "DX_LOKI_AUTHORIZATION"
         },
         {
-          "env": "DX_TELEMETRY_API_KEY"
+          "env": "DX_LOKI_ENDPOINT"
+        },
+        {
+          "env": "DX_MINIFY"
         },
         {
           "env": "DX_OTEL_ENDPOINT"
@@ -59,16 +68,22 @@
           "env": "DX_OTEL_AUTHORIZATION"
         },
         {
-          "env": "DX_HOST"
-        },
-        {
-          "env": "DX_MINIFY"
-        },
-        {
           "env": "DX_PWA"
         },
         {
+          "env": "DX_SENTRY_DESTINATION"
+        },
+        {
           "env": "DX_STATS"
+        },
+        {
+          "env": "DX_TELEMETRY_API_KEY"
+        },
+        {
+          "env": "LOG_FILTER"
+        },
+        {
+          "env": "LOG_PREFIX"
         },
         {
           "env": "NODE_ENV"
@@ -80,19 +95,7 @@
           "env": "REMOTE_SOURCE"
         },
         {
-          "env": "LOG_FILTER"
-        },
-        {
-          "env": "LOG_PREFIX"
-        },
-        {
           "env": "SENTRY_RELEASE_AUTH_TOKEN"
-        },
-        {
-          "env": "DX_LOKI_AUTHORIZATION"
-        },
-        {
-          "env": "DX_LOKI_ENDPOINT"
         },
         "^production",
         "production"
