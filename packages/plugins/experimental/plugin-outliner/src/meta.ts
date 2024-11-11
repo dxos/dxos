@@ -10,6 +10,7 @@ export default {
   id: OUTLINER_PLUGIN,
   name: 'Outliner',
   description: 'Hierarchical note editor.',
-  tags: ['experimental'],
   icon: 'ph--tree-structure--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-outliner',
+  tags: ['experimental'],
 } satisfies PluginMeta;

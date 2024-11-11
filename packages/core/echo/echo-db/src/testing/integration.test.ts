@@ -376,7 +376,7 @@ describe('Integration tests', () => {
       {
         // Objects with stored schema get included in queries that select all objects..
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        await db.schemaRegistry.list(); // Have to preload schema.
+        await db.schemaRegistry.query(); // Have to preload schema.
         const { objects } = await db.query().run();
         expect(objects.length).to.eq(3);
       }
@@ -385,7 +385,7 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema DXN.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        await db.schemaRegistry.list(); // Have to preload schema.
+        await db.schemaRegistry.query(); // Have to preload schema.
         const { objects } = await db.query(Filter.typeDXN(schemaDxn)).run();
         expect(objects.length).to.eq(1);
         expect(getObjectAnnotation(getSchema(objects[0])!)).to.include({
@@ -398,7 +398,7 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema ref.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        await db.schemaRegistry.list(); // Have to preload schema.
+        await db.schemaRegistry.query(); // Have to preload schema.
         const schema = db.schemaRegistry.getSchema('example.com/type/Test');
 
         const { objects } = await db.query(Filter.schema(schema!)).run();

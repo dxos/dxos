@@ -123,7 +123,7 @@
         "packages/plugins/experimental/plugin-wnfs/src/index.ts"
       ],
       "@dxos/plugin-wnfs/meta": [
-        "packages/plugins/experimental/plugin-wnfs/src/meta.tsx"
+        "packages/plugins/experimental/plugin-wnfs/src/meta.ts"
       ],
       "@dxos/plugin-wnfs/types": [
         "packages/plugins/experimental/plugin-wnfs/src/types/index.ts"

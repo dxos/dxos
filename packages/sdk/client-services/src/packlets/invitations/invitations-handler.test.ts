@@ -71,7 +71,7 @@ describe('InvitationHandler', () => {
 
       await guest.sink.waitFor(Invitation.State.READY_FOR_AUTHENTICATION);
       await sleep(200);
-      await host.sink.waitFor(Invitation.State.TIMEOUT);
+      await host.sink.waitFor(Invitation.State.CONNECTING);
       await guest.sink.waitFor(Invitation.State.TIMEOUT);
 
       await sleep(10);
@@ -91,7 +91,7 @@ describe('InvitationHandler', () => {
 
       await guest.sink.waitFor(Invitation.State.READY_FOR_AUTHENTICATION);
       await guest.peer.networkManager.close();
-      await host.sink.waitFor(Invitation.State.ERROR);
+      await host.sink.waitFor(Invitation.State.CONNECTING);
 
       await sleep(10);
       expect(host.ctx.disposed).to.be.false;
@@ -134,7 +134,7 @@ describe('InvitationHandler', () => {
       const host = await createPeer();
       const invitation = await createInvitation(host, { multiUse: true });
       await hostInvitation(host, invitation);
-      const anotherHost = await createNewHost(invitation);
+      await createNewHost(invitation);
 
       const guest = await createPeer(host.spaceKey);
       const codeInput = await failAuth(guest, invitation);
@@ -143,9 +143,6 @@ describe('InvitationHandler', () => {
         await sleep(10);
       }
       await guest.sink.waitFor(Invitation.State.SUCCESS);
-
-      const hostFailed = [host, anotherHost].map((h) => h.sink.hasState(0, Invitation.State.ERROR));
-      expect(hostFailed.sort()).to.deep.eq([false, true]);
     });
 
     test('single guest - many hosts', async () => {

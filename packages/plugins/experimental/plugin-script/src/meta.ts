@@ -10,6 +10,7 @@ export default {
   id: SCRIPT_PLUGIN,
   name: 'Scripts',
   description: 'Distributed functions.',
-  tags: ['experimental'],
   icon: 'ph--code--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-explorer',
+  tags: ['experimental'],
 } satisfies PluginMeta;

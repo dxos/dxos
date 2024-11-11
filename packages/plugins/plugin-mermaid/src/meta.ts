@@ -11,4 +11,5 @@ export default {
   name: 'Mermaid',
   description: 'Tool that renders text definitions to create diagrams.',
   icon: 'ph--anchor-simple--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-mermaid',
 } satisfies PluginMeta;

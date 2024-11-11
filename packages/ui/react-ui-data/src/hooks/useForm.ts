@@ -5,7 +5,6 @@
 import { type ChangeEvent, type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type S } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
 import { validateSchema, type ValidationError } from '@dxos/schema';
 
 type FormInputValue = string | number | readonly string[] | undefined;
@@ -52,7 +51,7 @@ export interface FormOptions<T extends object> {
    * Use this for complex validation logic that can't be expressed in the schema.
    * @returns Array of validation errors, or undefined if validation passes
    */
-  additionalValidation?: (values: T) => ValidationError[] | undefined;
+  onValidate?: (values: T) => ValidationError[] | undefined;
   /**
    * Callback for value changes. Note: This is called even when values are invalid.
    * Sometimes the parent component may want to know about changes even if the form is
@@ -69,12 +68,10 @@ export interface FormOptions<T extends object> {
 export const useForm = <T extends object>({
   initialValues,
   schema,
-  additionalValidation,
+  onValidate,
   onValuesChanged,
   onSubmit,
 }: FormOptions<T>): FormResult<T> => {
-  invariant(additionalValidation != null || schema != null, 'useForm must be called with schema and/or validate');
-
   const [values, setValues] = useState<T>(initialValues);
   useEffect(() => {
     setValues(initialValues);
@@ -90,25 +87,29 @@ export const useForm = <T extends object>({
 
   const validate = useCallback(
     (values: T) => {
+      let errors: ValidationError[] = [];
+
       if (schema) {
         const schemaErrors = validateSchema(schema, values) ?? [];
         if (schemaErrors.length > 0) {
-          setErrors(collapseErrorArray(schemaErrors));
-          return false;
+          errors = schemaErrors;
         }
       }
 
-      if (additionalValidation) {
-        const validateErrors = additionalValidation(values) ?? [];
-        setErrors(collapseErrorArray(validateErrors));
-        return validateErrors.length === 0;
+      if (onValidate && errors.length === 0) {
+        const validateErrors = onValidate(values) ?? [];
+        errors = validateErrors;
       }
 
-      setErrors({} as Record<keyof T, string>);
-      return true;
+      setErrors(errors.length > 0 ? collapseErrorArray(errors) : ({} as Record<keyof T, string>));
+      return errors.length === 0;
     },
-    [schema, additionalValidation],
+    [schema, onValidate],
   );
+
+  useEffect(() => {
+    validate(values);
+  }, [schema, validate, values]);
 
   //
   // Values.
@@ -120,11 +121,10 @@ export const useForm = <T extends object>({
       const parsedValue = type === 'number' ? parseFloat(value) || 0 : value;
       const newValues = { ...values, [property]: parsedValue };
       setValues(newValues);
-      validate(newValues);
       setChanged((prev) => ({ ...prev, [property]: true }));
       onValuesChanged?.(newValues);
     },
-    [values, validate, onValuesChanged],
+    [values, onValuesChanged],
   );
 
   const onValueChange = useCallback(

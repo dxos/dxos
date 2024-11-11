@@ -10,6 +10,7 @@ export default {
   id: DEBUG_PLUGIN,
   name: 'Debug',
   description: 'DXOS debugging tools.',
-  tags: ['experimental'],
   icon: 'ph--bug--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-debug',
+  tags: ['experimental'],
 } satisfies PluginMeta;

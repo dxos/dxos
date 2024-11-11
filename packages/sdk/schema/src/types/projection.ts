@@ -19,6 +19,8 @@ import { log } from '@dxos/log';
 import { PropertySchema, type PropertyType } from './format';
 import { type ViewType, type FieldType } from './view';
 
+const DXN = /dxn:type:(.+)/;
+
 /**
  * Composite of view and schema metadata for a property.
  */
@@ -74,7 +76,10 @@ export class ViewProjection {
     if ($id && reference) {
       type = TypeEnum.Ref;
       format = FormatEnum.Ref;
-      referenceSchema = reference.schema.$ref;
+      const match = reference.schema.$ref?.match(DXN);
+      if (match) {
+        referenceSchema = match[1];
+      }
     }
     if (format === FormatEnum.None) {
       format = typeToFormat[type as TypeEnum]!;
@@ -89,29 +94,42 @@ export class ViewProjection {
   }
 
   /**
-   * Update JSON schema property annotations.
+   * Update JSON schema property annotations and view fields.
+   * @param projection The field and props to update
+   * @param index Optional index for inserting new fields. Ignored when updating existing fields.
    */
-  setFieldProjection({ field, props }: Partial<FieldProjection>) {
-    log('setFieldProjection', { field, props });
+  setFieldProjection({ field, props }: Partial<FieldProjection>, index?: number) {
+    log('setFieldProjection', { field, props, index });
+
+    const sourcePropertyName = field?.property;
+    const targetPropertyName = props?.property;
+    const isRename = sourcePropertyName && targetPropertyName && targetPropertyName !== sourcePropertyName;
 
     if (field) {
-      const current = this._view.fields.find((f) => f.property === field.property);
-      if (!current) {
-        this._view.fields.push({ ...field });
+      const fieldIndex = this._view.fields.findIndex((f) => f.property === sourcePropertyName);
+      const isNewField = fieldIndex === -1;
+
+      if (isNewField) {
+        const newField = { ...field };
+        if (typeof index === 'number' && index >= 0 && index <= this._view.fields.length) {
+          this._view.fields.splice(index, 0, newField);
+        } else {
+          this._view.fields.push(field, newField);
+        }
       } else {
-        // TODO(burdon): Overwrite?
-        Object.assign(current, field);
+        Object.assign(this._view.fields[fieldIndex], field, isRename ? { property: targetPropertyName } : undefined);
       }
     }
 
     if (props) {
-      // TODO(burdon): Define type?
       let { property, type, format, referenceSchema, ...rest }: Partial<PropertyType> = this._encode(props);
       invariant(property);
       invariant(format);
 
-      // Set reference.
-      // TODO(burdon): Types?
+      if (isRename) {
+        delete this._schema.jsonSchema.properties![sourcePropertyName!];
+      }
+
       let $id;
       let reference;
       if (referenceSchema) {
@@ -120,7 +138,7 @@ export class ViewProjection {
         format = undefined;
         reference = {
           schema: {
-            $ref: referenceSchema,
+            $ref: `dxn:type:${referenceSchema}`,
           },
         };
       }
@@ -133,8 +151,28 @@ export class ViewProjection {
 
       invariant(type !== TypeEnum.Ref);
       const values: JsonSchemaType = { $id, type, format, reference, ...rest };
-      this._schema.jsonSchema.properties![property] = values;
+      this._schema.jsonSchema.properties ??= {};
+      this._schema.jsonSchema.properties[property] = values;
     }
+  }
+
+  /**
+   * Delete a field from the view and return the deleted projection for potential undo.
+   */
+  deleteFieldProjection(property: string): { deleted: FieldProjection; index: number } {
+    const current = this.getFieldProjection(property as JsonProp);
+    // NOTE(ZaymonFC): We need to clone this because the underlying object is going to be modified.
+    const fieldProjection = { field: { ...current.field }, props: { ...current.props } };
+
+    const fieldIndex = this._view.fields.findIndex((field) => field.property === property);
+    if (fieldIndex !== -1) {
+      this._view.fields.splice(fieldIndex, 1);
+    }
+    if (this._schema.jsonSchema.properties?.[property]) {
+      delete this._schema.jsonSchema.properties[property];
+    }
+
+    return { deleted: fieldProjection, index: fieldIndex };
   }
 }
 
