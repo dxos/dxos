@@ -55,6 +55,12 @@ export type PluginState = {
    */
   // TODO(wittjosiah): Factor out to sdk. Migration running should probably be a space state.
   sdkMigrationRunning: Record<string, boolean>;
+
+  /**
+   * Whether or not the user can select collections in the graph.
+   * Determined by whether or not there is an available plugin that can render a collection.
+   */
+  selectableCollections: boolean;
 };
 
 export type SpaceSettingsProps = {

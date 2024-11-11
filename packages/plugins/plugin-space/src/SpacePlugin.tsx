@@ -16,6 +16,7 @@ import {
   type Plugin,
   type PluginDefinition,
   Surface,
+  findPlugin,
   firstIdInPart,
   openIds,
   parseGraphPlugin,
@@ -133,6 +134,7 @@ export const SpacePlugin = ({
     // TODO(wittjosiah): Stop using (Complex)Map inside reactive object.
     viewersByIdentity: new ComplexMap(PublicKey.hash),
     sdkMigrationRunning: {},
+    selectableCollections: false,
   });
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
@@ -314,6 +316,12 @@ export const SpacePlugin = ({
     ready: async (plugins) => {
       settings.prop({ key: 'showHidden', type: LocalStorageStore.bool({ allowUndefined: true }) });
       state.prop({ key: 'spaceNames', type: LocalStorageStore.json<Record<string, string>>() });
+
+      // TODO(wittjosiah): Hardcoded due to circular dependency.
+      //   Should be based on a provides interface.
+      if (findPlugin(plugins, 'dxos.org/plugin/stack')) {
+        state.values.selectableCollections = true;
+      }
 
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
@@ -533,6 +541,7 @@ export const SpacePlugin = ({
                       label: ['spaces label', { ns: SPACE_PLUGIN }],
                       testId: 'spacePlugin.spaces',
                       role: 'branch',
+                      disabled: true,
                       childrenPersistenceClass: 'echo',
                       onRearrangeChildren: async (nextOrder: Space[]) => {
                         // NOTE: This is needed to ensure order is updated by next animation frame.
@@ -637,6 +646,7 @@ export const SpacePlugin = ({
                   .map((space) =>
                     constructSpaceNode({
                       space,
+                      selectable: state.values.selectableCollections,
                       personal: space === client.spaces.default,
                       namesCache: state.values.spaceNames,
                       resolve,
@@ -655,12 +665,12 @@ export const SpacePlugin = ({
                   return;
                 }
 
-                const state = toSignal(
+                const spaceState = toSignal(
                   (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
                   () => space.state.get(),
                   space.id,
                 );
-                if (state !== SpaceState.SPACE_READY) {
+                if (spaceState !== SpaceState.SPACE_READY) {
                   return;
                 }
 
@@ -675,7 +685,7 @@ export const SpacePlugin = ({
                   return;
                 }
 
-                return createObjectNode({ object, space, resolve });
+                return createObjectNode({ object, space, resolve, selectable: state.values.selectableCollections });
               },
             }),
 
@@ -683,7 +693,12 @@ export const SpacePlugin = ({
             createExtension({
               id: `${SPACE_PLUGIN}/actions`,
               filter: (node): node is Node<Space> => isSpace(node.data),
-              actionGroups: ({ node }) => constructSpaceActionGroups({ space: node.data, dispatch }),
+              actionGroups: ({ node }) =>
+                constructSpaceActionGroups({
+                  space: node.data,
+                  dispatch,
+                  selectable: state.values.selectableCollections,
+                }),
               actions: ({ node }) => {
                 const space = node.data;
                 return constructSpaceActions({
@@ -701,12 +716,12 @@ export const SpacePlugin = ({
               filter: (node): node is Node<Space> => isSpace(node.data),
               connector: ({ node }) => {
                 const space = node.data;
-                const state = toSignal(
+                const spaceState = toSignal(
                   (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
                   () => space.state.get(),
                   space.id,
                 );
-                if (state !== SpaceState.SPACE_READY) {
+                if (spaceState !== SpaceState.SPACE_READY) {
                   return;
                 }
 
@@ -717,7 +732,9 @@ export const SpacePlugin = ({
 
                 return collection.objects
                   .filter(nonNullable)
-                  .map((object) => createObjectNode({ object, space, resolve }))
+                  .map((object) =>
+                    createObjectNode({ object, space, resolve, selectable: state.values.selectableCollections }),
+                  )
                   .filter(nonNullable);
               },
             }),
@@ -726,7 +743,12 @@ export const SpacePlugin = ({
             createExtension({
               id: `${SPACE_PLUGIN}/object-actions`,
               filter: (node): node is Node<EchoReactiveObject<any>> => isEchoObject(node.data),
-              actionGroups: ({ node }) => constructObjectActionGroups({ object: node.data, dispatch }),
+              actionGroups: ({ node }) =>
+                constructObjectActionGroups({
+                  object: node.data,
+                  dispatch,
+                  selectable: state.values.selectableCollections,
+                }),
               actions: ({ node }) => constructObjectActions({ node, dispatch }),
             }),
 
@@ -743,7 +765,9 @@ export const SpacePlugin = ({
 
                 return collection.objects
                   .filter(nonNullable)
-                  .map((object) => createObjectNode({ object, space, resolve }))
+                  .map((object) =>
+                    createObjectNode({ object, space, resolve, selectable: state.values.selectableCollections }),
+                  )
                   .filter(nonNullable);
               },
             }),

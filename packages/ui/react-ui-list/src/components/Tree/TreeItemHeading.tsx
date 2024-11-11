@@ -8,6 +8,8 @@ import { Button, Icon, toLocalizedString, useTranslation, type Label } from '@dx
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { mx } from '@dxos/react-ui-theme';
 
+// TODO(wittjosiah): Consider whether there should be a separate disabled prop which was visually distinct
+//   rather than just making the item unselectable.
 export type NavTreeItemHeadingProps = {
   label: Label;
   icon?: string;
@@ -42,11 +44,16 @@ export const TreeItemHeading = memo(
           asChild
           ref={forwardedRef}
         >
+          {/* TODO(wittjosiah): Class precedence. See #8149. */}
           <Button
             data-testid='treeItem.heading'
             variant='ghost'
             density='fine'
-            classNames={mx('grow gap-1 !pis-0.5 hover:!bg-transparent dark:hover:!bg-transparent', className)}
+            classNames={mx(
+              'grow gap-1 !pis-0.5 hover:!bg-transparent dark:hover:!bg-transparent',
+              'disabled:!cursor-default disabled:!opacity-100',
+              className,
+            )}
             disabled={disabled}
             onClick={onSelect}
             onKeyDown={handleButtonKeydown}

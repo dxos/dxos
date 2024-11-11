@@ -92,15 +92,18 @@ export const getSpaceDisplayName = (
 };
 
 const getCollectionGraphNodePartials = ({
+  selectable,
   collection,
   space,
   resolve,
 }: {
+  selectable: boolean;
   collection: CollectionType;
   space: Space;
   resolve: MetadataResolver;
 }) => {
   return {
+    disabled: !selectable,
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([space.id]),
     role: 'branch',
@@ -176,11 +179,13 @@ const checkPendingMigration = (space: Space) => {
 
 export const constructSpaceNode = ({
   space,
+  selectable = false,
   personal,
   namesCache,
   resolve,
 }: {
   space: Space;
+  selectable?: boolean;
   personal?: boolean;
   namesCache?: Record<string, string>;
   resolve: MetadataResolver;
@@ -189,7 +194,7 @@ export const constructSpaceNode = ({
   const collection = space.state.get() === SpaceState.SPACE_READY && space.properties[CollectionType.typename];
   const partials =
     space.state.get() === SpaceState.SPACE_READY && collection instanceof CollectionType
-      ? getCollectionGraphNodePartials({ collection, space, resolve })
+      ? getCollectionGraphNodePartials({ collection, space, resolve, selectable })
       : {};
 
   return {
@@ -201,13 +206,21 @@ export const constructSpaceNode = ({
       label: getSpaceDisplayName(space, { personal, namesCache }),
       description: space.state.get() === SpaceState.SPACE_READY && space.properties.description,
       icon: 'ph--planet--regular',
-      disabled: space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
+      disabled: !selectable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
       testId: 'spacePlugin.space',
     },
   };
 };
 
-export const constructSpaceActionGroups = ({ space, dispatch }: { space: Space; dispatch: IntentDispatcher }) => {
+export const constructSpaceActionGroups = ({
+  space,
+  selectable,
+  dispatch,
+}: {
+  space: Space;
+  selectable: boolean;
+  dispatch: IntentDispatcher;
+}) => {
   const state = space.state.get();
   const hasPendingMigration = checkPendingMigration(space);
   const getId = (id: string) => `${id}/${space.id}`;
@@ -242,9 +255,13 @@ export const constructSpaceActionGroups = ({ space, dispatch }: { space: Space; 
                 action: SpaceAction.ADD_OBJECT,
                 data: { target: collection, object: create(CollectionType, { objects: [], views: {} }) },
               },
-              {
-                action: NavigationAction.OPEN,
-              },
+              ...(selectable
+                ? [
+                    {
+                      action: NavigationAction.OPEN,
+                    },
+                  ]
+                : []),
             ]),
           properties: {
             label: ['create collection label', { ns: SPACE_PLUGIN }],
@@ -387,10 +404,12 @@ export const constructSpaceActions = ({
 export const createObjectNode = ({
   object,
   space,
+  selectable = false,
   resolve,
 }: {
   object: EchoReactiveObject<any>;
   space: Space;
+  selectable?: boolean;
   resolve: MetadataResolver;
 }) => {
   const type = getTypename(object);
@@ -405,7 +424,7 @@ export const createObjectNode = ({
 
   const partials =
     object instanceof CollectionType
-      ? getCollectionGraphNodePartials({ collection: object, space, resolve })
+      ? getCollectionGraphNodePartials({ collection: object, space, resolve, selectable })
       : metadata.graphProps;
 
   return {
@@ -427,9 +446,11 @@ export const createObjectNode = ({
 
 export const constructObjectActionGroups = ({
   object,
+  selectable,
   dispatch,
 }: {
   object: EchoReactiveObject<any>;
+  selectable: boolean;
   dispatch: IntentDispatcher;
 }) => {
   if (!(object instanceof CollectionType)) {
@@ -463,9 +484,13 @@ export const constructObjectActionGroups = ({
                 action: SpaceAction.ADD_OBJECT,
                 data: { target: collection, object: create(CollectionType, { objects: [], views: {} }) },
               },
-              {
-                action: NavigationAction.OPEN,
-              },
+              ...(selectable
+                ? [
+                    {
+                      action: NavigationAction.OPEN,
+                    },
+                  ]
+                : []),
             ]),
           properties: {
             label: ['create collection label', { ns: SPACE_PLUGIN }],
