@@ -231,7 +231,7 @@ export const StackItemResizeHandle = () => {
     <button
       ref={buttonRef}
       className={mx(
-        'text-description ch-focus-ring p-0.5 rounded',
+        'text-description ch-focus-ring p-px rounded',
         orientation === 'horizontal' ? 'self-center justify-self-end' : 'self-end justify-self-center',
       )}
     >
