@@ -74,6 +74,8 @@ const meta: Meta<StoryProps> = {
       onSpaceCreated: ({ space }) => {
         const table = space.db.add(create(TableType, {}));
         initializeTable(space, table);
+
+        // TODO(burdon): Generate data.
       },
     }),
     withTheme,

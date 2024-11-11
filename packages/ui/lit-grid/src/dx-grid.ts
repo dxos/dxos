@@ -1359,6 +1359,7 @@ export class DxGrid extends LitElement {
           .split(' ')
           .filter((value) => value)
           .map(
+            // TODO(burdon): Consistent camelCase?
             (activeRef) =>
               `[data-refs~="${activeRef}"] { background: var(--dx-grid-commented-active, var(--dx-gridCommentedActive)) !important; }`,
           )

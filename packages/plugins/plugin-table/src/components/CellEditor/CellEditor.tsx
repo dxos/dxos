@@ -3,6 +3,7 @@
 //
 
 import { autocompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
+import { EditorView } from '@codemirror/view';
 import React, { useCallback, useMemo } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
@@ -90,18 +91,23 @@ export const CellEditor = ({ editing, model, onEnter, onFocus }: CellEditorProps
     const { property } = model.projection.view.fields[col];
     const fieldProjection = model.projection.getFieldProjection(property);
     invariant(fieldProjection);
-    console.log(JSON.stringify(fieldProjection));
 
-    // TODO(burdon): Separate unit test for editor.
     switch (fieldProjection.props.format) {
       case FormatEnum.Ref:
       default: {
-        extension.push(
-          // TODO(burdon): Get width from grid.
+        // TODO(burdon): Remove default.
+        extension.push([
+          EditorView.theme({
+            '.cm-completionDialog': {
+              width: 'var(--dx-gridCellWidth)',
+            },
+          }),
+
           // https://codemirror.net/docs/ref/#autocomplete.autocompletion
           autocompletion({
             activateOnTyping: true,
             closeOnBlur: false,
+            tooltipClass: () => 'cm-completionDialog',
             override: [
               (context: CompletionContext): CompletionResult => {
                 console.log(context);
@@ -122,7 +128,7 @@ export const CellEditor = ({ editing, model, onEnter, onFocus }: CellEditorProps
               },
             ],
           }),
-        );
+        ]);
         break;
       }
     }

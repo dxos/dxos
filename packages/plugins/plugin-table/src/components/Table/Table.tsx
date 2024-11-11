@@ -69,11 +69,6 @@ export type TableMainProps = {
 
 const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwardedRef) => {
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
-  // useLayoutEffect(() => {
-  //   if (dxGrid && model) {
-  //     dxGrid.getCells = model.getCells.bind(model);
-  //   }
-  // }, [dxGrid, model]);
 
   /**
    * Provides an external controller that can be called to repaint the table.
