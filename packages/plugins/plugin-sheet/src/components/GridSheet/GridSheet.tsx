@@ -101,7 +101,7 @@ export const GridSheet = () => {
       const delta = key.startsWith('Arrow') ? (['ArrowUp', 'ArrowLeft'].includes(key) ? -1 : 1) : shift ? -1 : 1;
       dxGrid.current?.refocus(axis, delta);
     },
-    [model, editing, dxGrid],
+    [model, editing],
   );
 
   const handleBlur = useCallback(
@@ -169,7 +169,7 @@ export const GridSheet = () => {
           });
       }
     },
-    [dxGrid, model.sheet],
+    [model.sheet],
   );
 
   const handleClick = useCallback(
@@ -191,7 +191,7 @@ export const GridSheet = () => {
           return cursorFallbackRange && model.clear(cursorFallbackRange);
         case 'Enter':
         case 'Space':
-          if (dxGrid && extraPlanarFocus) {
+          if (dxGrid.current && extraPlanarFocus) {
             switch (extraPlanarFocus.plane) {
               case 'frozenRowsStart':
               case 'frozenColsStart':
