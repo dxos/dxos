@@ -2,16 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, {
-  forwardRef,
-  type PropsWithChildren,
-  useCallback,
-  useImperativeHandle,
-  useLayoutEffect,
-  useState,
-} from 'react';
+import React, { forwardRef, type PropsWithChildren, useCallback, useImperativeHandle, useState } from 'react';
 
-import { type DxGridElement, type DxAxisResize, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
+import {
+  type DxGridElement,
+  type DxAxisResize,
+  Grid,
+  type GridContentProps,
+  closestCell,
+  useGridContext,
+  type GridScopedProps,
+} from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
@@ -59,7 +60,7 @@ const TableRoot = ({ role = 'article', children }: TableRootProps) => {
 //
 
 export type TableController = {
-  update: (cell?: GridCell) => void;
+  update?: (cell?: GridCell) => void;
 };
 
 export type TableMainProps = {
@@ -68,12 +69,11 @@ export type TableMainProps = {
 
 const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwardedRef) => {
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
-  useLayoutEffect(() => {
-    // TODO(burdon): Review/document API.
-    if (dxGrid && model) {
-      dxGrid.getCells = model.getCells.bind(model);
-    }
-  }, [dxGrid, model]);
+  // useLayoutEffect(() => {
+  //   if (dxGrid && model) {
+  //     dxGrid.getCells = model.getCells.bind(model);
+  //   }
+  // }, [dxGrid, model]);
 
   /**
    * Provides an external controller that can be called to repaint the table.
@@ -81,13 +81,13 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
   useImperativeHandle<TableController, TableController>(
     forwardedRef,
     () => {
+      if (!model || !dxGrid) {
+        return {};
+      }
+
+      dxGrid.getCells = model.getCells.bind(model);
       return {
         update: (cell) => {
-          // TODO(burdon): Better coordination with API above.
-          if (!dxGrid?.getCells) {
-            return;
-          }
-
           if (cell) {
             dxGrid.updateIfWithinBounds(cell);
           } else {
@@ -96,7 +96,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
         },
       };
     },
-    [dxGrid, model],
+    [model, dxGrid],
   );
 
   const handleFocus: TableCellEditorProps['onFocus'] = (increment, delta) => {
@@ -147,7 +147,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     <>
       {/* TODO(burdon): Is this required to be unique? */}
       <Grid.Root id={model?.table.id ?? 'table-grid'}>
-        <TableCellEditor model={model} onFocus={handleFocus} onEnter={handleEnter} />
+        <Editor model={model} onEnter={handleEnter} onFocus={handleFocus} />
 
         <Grid.Content
           className={mx(
@@ -200,6 +200,18 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     </>
   );
 });
+
+export type EditorProps = GridScopedProps<Pick<TableCellEditorProps, 'model' | 'onEnter' | 'onFocus'>>;
+
+const Editor = ({ __gridScope, model, onEnter, ...props }: EditorProps) => {
+  const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
+  const handleEnter: TableCellEditorProps['onEnter'] = (cell) => {
+    setEditing(null);
+    onEnter?.(cell);
+  };
+
+  return <TableCellEditor editing={editing} model={model} onEnter={handleEnter} {...props} />;
+};
 
 export const Table = {
   Root: TableRoot,

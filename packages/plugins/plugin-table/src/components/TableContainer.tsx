@@ -68,8 +68,8 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     objects: filteredObjects,
     onDeleteRow: handleDeleteRow,
     onDeleteColumn: handleDeleteColumn,
-    onCellUpdate: (cell) => tableRef.current?.update(cell),
-    onRowOrderChanged: () => tableRef.current?.update(),
+    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
+    onRowOrderChanged: () => tableRef.current?.update?.(),
   });
 
   const onThreadCreate = useCallback(() => {

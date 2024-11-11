@@ -99,8 +99,8 @@ const DefaultStory = () => {
     onInsertRow: handleInsertRow,
     onDeleteRow: handleDeleteRow,
     onDeleteColumn: handleDeleteColumn,
-    onCellUpdate: (cell) => tableRef.current?.update(cell),
-    onRowOrderChanged: () => tableRef.current?.update(),
+    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
+    onRowOrderChanged: () => tableRef.current?.update?.(),
   });
 
   if (!schema || !table) {
@@ -169,8 +169,8 @@ const TablePerformanceStory = (props: StoryProps) => {
     objects: items as any[],
     onDeleteRow: handleDeleteRow,
     onDeleteColumn: handleDeleteColumn,
-    onCellUpdate: (cell) => tableRef.current?.update(cell),
-    onRowOrderChanged: () => tableRef.current?.update(),
+    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
+    onRowOrderChanged: () => tableRef.current?.update?.(),
   });
 
   return (
@@ -184,7 +184,7 @@ const TablePerformanceStory = (props: StoryProps) => {
 // Story definitions.
 //
 
-const meta: Meta<typeof Table> = {
+const meta: Meta<StoryProps> = {
   title: 'plugins/plugin-table/Table',
   component: Table.Main as any,
   render: DefaultStory,

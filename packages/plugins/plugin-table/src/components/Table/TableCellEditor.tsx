@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { autocompletion } from '@codemirror/autocomplete';
+import { autocompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
 import React, { useCallback, useMemo } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
@@ -11,24 +11,22 @@ import {
   type EditorKeysProps,
   type EditorKeyEvent,
   GridCellEditor,
-  type GridScopedProps,
   editorKeys,
-  useGridContext,
+  type GridEditing,
 } from '@dxos/react-ui-grid';
 
 import { type TableModel } from '../../model';
 import { type GridCell, toGridCell } from '../../types';
 
-export type TableCellEditorProps = GridScopedProps<{
+export type TableCellEditorProps = {
   model?: TableModel;
+  editing: GridEditing;
   onEnter?: (cell: GridCell) => void;
   // TODO(burdon): Import types (and reuse throughout file).
   onFocus?: (increment: 'col' | 'row' | undefined, delta: 0 | 1 | -1 | undefined) => void;
-}>;
+};
 
-export const TableCellEditor = ({ __gridScope, model, onEnter, onFocus }: TableCellEditorProps) => {
-  const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
-
+export const TableCellEditor = ({ model, editing, onEnter, onFocus }: TableCellEditorProps) => {
   const determineNavigationAxis = ({ key }: EditorKeyEvent): 'col' | 'row' | undefined => {
     switch (key) {
       case 'ArrowUp':
@@ -67,12 +65,10 @@ export const TableCellEditor = ({ __gridScope, model, onEnter, onFocus }: TableC
       }
 
       const cell = toGridCell(editing.index);
-      setEditing(null);
       onEnter?.(cell);
-
       onFocus?.(determineNavigationAxis(event), determineNavigationDelta(event));
     },
-    [model, editing, setEditing, determineNavigationAxis, determineNavigationDelta],
+    [model, editing, determineNavigationAxis, determineNavigationDelta],
   );
 
   const extension = useMemo(() => {
@@ -101,13 +97,16 @@ export const TableCellEditor = ({ __gridScope, model, onEnter, onFocus }: TableC
       case FormatEnum.Ref:
       default: {
         extension.push(
+          // TODO(burdon): Get width from grid.
           // https://codemirror.net/docs/ref/#autocomplete.autocompletion
           autocompletion({
             activateOnTyping: true,
             closeOnBlur: false,
             override: [
-              (context) => {
+              (context: CompletionContext): CompletionResult => {
+                console.log(context);
                 return {
+                  from: 0,
                   options: [
                     {
                       label: 'apple',
@@ -123,18 +122,6 @@ export const TableCellEditor = ({ __gridScope, model, onEnter, onFocus }: TableC
               },
             ],
           }),
-          // autocompletion({
-          //   activateOnTyping: true,
-          //   onSearch: (text: string) => {
-          //     console.log(text);
-          //     return [
-          //       //
-          //       { label: 'apple' },
-          //       { label: 'banana' },
-          //       { label: 'cherry' },
-          //     ];
-          //   },
-          // }),
         );
         break;
       }
