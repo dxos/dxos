@@ -8,25 +8,25 @@ import React, { useCallback, useMemo } from 'react';
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import {
+  editorKeys,
   type EditorKeysProps,
   type EditorKeyEvent,
   GridCellEditor,
-  editorKeys,
   type GridEditing,
 } from '@dxos/react-ui-grid';
 
 import { type TableModel } from '../../model';
 import { type GridCell, toGridCell } from '../../types';
 
-export type TableCellEditorProps = {
+export type CellEditorProps = {
+  editing?: GridEditing;
   model?: TableModel;
-  editing: GridEditing;
   onEnter?: (cell: GridCell) => void;
   // TODO(burdon): Import types (and reuse throughout file).
   onFocus?: (increment: 'col' | 'row' | undefined, delta: 0 | 1 | -1 | undefined) => void;
 };
 
-export const TableCellEditor = ({ model, editing, onEnter, onFocus }: TableCellEditorProps) => {
+export const CellEditor = ({ editing, model, onEnter, onFocus }: CellEditorProps) => {
   const determineNavigationAxis = ({ key }: EditorKeyEvent): 'col' | 'row' | undefined => {
     switch (key) {
       case 'ArrowUp':

@@ -19,10 +19,10 @@ import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnCreate } from './ColumnCreate';
 import { ColumnSettings } from './ColumnSettings';
 import { RowActionsMenu } from './RowActionsMenu';
-import { TableCellEditor, type TableCellEditorProps } from './TableCellEditor';
 import { useTableMenuController } from '../../hooks';
 import { type TableModel } from '../../model';
 import { type GridCell } from '../../types';
+import { CellEditor, type CellEditorProps } from '../CellEditor';
 
 // NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
 // These are offset by 1px to avoid double borders in planks.
@@ -147,7 +147,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     <>
       {/* TODO(burdon): Is this required to be unique? */}
       <Grid.Root id={model?.table.id ?? 'table-grid'}>
-        <Editor model={model} onEnter={handleEnter} onFocus={handleFocus} />
+        <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} />
 
         <Grid.Content
           className={mx(
@@ -201,16 +201,20 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
   );
 });
 
-export type EditorProps = GridScopedProps<Pick<TableCellEditorProps, 'model' | 'onEnter' | 'onFocus'>>;
+//
+// CellEditor
+//
 
-const Editor = ({ __gridScope, model, onEnter, ...props }: EditorProps) => {
-  const { editing, setEditing } = useGridContext('GridSheetCellEditor', __gridScope);
-  const handleEnter: TableCellEditorProps['onEnter'] = (cell) => {
+export type TableCellEditorProps = GridScopedProps<Pick<CellEditorProps, 'model' | 'onEnter' | 'onFocus'>>;
+
+const TableCellEditor = ({ __gridScope, model, onEnter, ...props }: TableCellEditorProps) => {
+  const { editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
+  const handleEnter: CellEditorProps['onEnter'] = (cell) => {
     setEditing(null);
     onEnter?.(cell);
   };
 
-  return <TableCellEditor editing={editing} model={model} onEnter={handleEnter} {...props} />;
+  return <CellEditor editing={editing} model={model} onEnter={handleEnter} {...props} />;
 };
 
 export const Table = {

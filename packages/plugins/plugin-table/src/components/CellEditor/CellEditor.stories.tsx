@@ -11,19 +11,21 @@ import { type MutableSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Grid } from '@dxos/react-ui-grid';
+import { Grid, type GridEditing } from '@dxos/react-ui-grid';
 import { ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { TableCellEditor } from './TableCellEditor';
+import { CellEditor } from './CellEditor';
 import { useTableModel } from '../../hooks';
 import translations from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
 
-type StoryProps = {};
+type StoryProps = {
+  editing: GridEditing;
+};
 
-const DefaultStory = (props: StoryProps) => {
+const DefaultStory = ({ editing }: StoryProps) => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const tables = useQuery(space, Filter.schema(TableType));
@@ -53,15 +55,15 @@ const DefaultStory = (props: StoryProps) => {
   return (
     <div className='flex w-[300px] h-[100px] border border-separator'>
       <Grid.Root id='test'>
-        <TableCellEditor model={model} />
+        <CellEditor model={model} editing={editing} />
       </Grid.Root>
     </div>
   );
 };
 
 const meta: Meta<StoryProps> = {
-  title: 'plugins/plugin-table/TableCellEditor',
-  component: TableCellEditor,
+  title: 'plugins/plugin-table/CellEditor',
+  component: CellEditor,
   render: DefaultStory,
   parameters: { translations, layout: 'centered' },
   decorators: [
@@ -83,4 +85,11 @@ export default meta;
 
 type Story = StoryObj<StoryProps>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    editing: {
+      index: '0,0',
+      initialContent: '',
+    },
+  },
+};
