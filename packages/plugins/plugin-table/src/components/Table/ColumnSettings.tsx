@@ -7,10 +7,9 @@ import React, { type RefObject, useMemo, useEffect, useState } from 'react';
 import { DropdownMenu, type DropdownMenuRootProps } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-data';
 import { type FieldType } from '@dxos/schema';
-import { type ColumnSettingsMode } from '../hooks'
 
 import { type TableModel } from '../../model';
-
+import { type ColumnSettingsMode } from '../hooks';
 
 export type ColumnSettingsProps = {
   model?: TableModel;

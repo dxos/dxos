@@ -6,9 +6,7 @@ import { useRef, useCallback, useState, type MouseEvent, type RefObject } from '
 
 import { tableButtons } from '../util';
 
-export type ColumnSettingsMode =
-  | { type: 'create' }
-  | { type: 'edit'; fieldId: string };
+export type ColumnSettingsMode = { type: 'create' } | { type: 'edit'; fieldId: string };
 
 export type TableMenuState =
   | { type: 'column'; fieldId: string }
@@ -56,7 +54,7 @@ export const useTableMenuController = (): TableMenuController => {
 
   const showColumnSettings = useCallback(() => {
     if (state?.type === 'column') {
-      setTimeout(() => setState({ type: 'columnSettings', mode: { type: 'edit', fieldId: state.fieldId }}), 1);
+      setTimeout(() => setState({ type: 'columnSettings', mode: { type: 'edit', fieldId: state.fieldId } }), 1);
     }
   }, [state]);
 
