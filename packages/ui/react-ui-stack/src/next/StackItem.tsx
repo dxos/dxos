@@ -20,6 +20,7 @@ import React, {
   useContext,
   useRef,
   useCallback,
+  useEffect,
 } from 'react';
 
 import { type ThemedClassName, Icon } from '@dxos/react-ui';
@@ -181,11 +182,18 @@ export const StackItemResizeHandle = () => {
   const { orientation } = useStack();
   const { setSize, size } = useStackItem();
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const dragStartSize = useRef<number>(size === 'min-content' ? DEFAULT_EXTRINSIC_SIZE : size);
+  const dragStartSize = useRef<StackItemSize>(size);
   const client = orientation === 'horizontal' ? 'clientX' : 'clientY';
 
+  useEffect(() => {
+    if (size === 'min-content') {
+      // Update dragStartSize ref if something resets the size to `min-content`.
+      dragStartSize.current = size;
+    }
+  }, [size]);
+
   useLayoutEffect(() => {
-    if (!buttonRef.current) {
+    if (!buttonRef.current || buttonRef.current.hasAttribute('draggable')) {
       return;
     }
     draggable({
@@ -200,23 +208,32 @@ export const StackItemResizeHandle = () => {
       },
       onDragStart: () => {
         dragStartSize.current =
-          size === 'min-content'
+          dragStartSize.current === 'min-content'
             ? measureStackItem(buttonRef.current!)[orientation === 'horizontal' ? 'width' : 'height'] / REM
             : size;
       },
       onDrag: ({ location }) => {
+        if (typeof dragStartSize.current !== 'number') {
+          return;
+        }
         setSize(dragStartSize.current + (location.current.input[client] - location.initial.input[client]) / REM);
       },
       onDrop: ({ location }) => {
+        if (typeof dragStartSize.current !== 'number') {
+          return;
+        }
         setSize(dragStartSize.current + (location.current.input[client] - location.initial.input[client]) / REM, true);
       },
     });
-  }, [size, setSize]);
+  }, []);
 
   return (
     <button
       ref={buttonRef}
-      className={orientation === 'horizontal' ? 'self-center justify-self-end' : 'self-end justify-self-center'}
+      className={mx(
+        'text-description ch-focus-ring p-0.5 rounded',
+        orientation === 'horizontal' ? 'self-center justify-self-end' : 'self-end justify-self-center',
+      )}
     >
       <Icon icon={orientation === 'horizontal' ? 'ph--dots-six-vertical--regular' : 'ph--dots-six--regular'} />
       <span className='sr-only'>Resize</span>
