@@ -6,11 +6,14 @@ import { useRef, useCallback, useState, type MouseEvent, type RefObject } from '
 
 import { tableButtons } from '../util';
 
+export type ColumnSettingsMode =
+  | { type: 'create' }
+  | { type: 'edit'; fieldId: string };
+
 export type TableMenuState =
   | { type: 'column'; fieldId: string }
   | { type: 'row'; rowIndex: number }
-  | { type: 'newColumn' }
-  | { type: 'columnSettings'; fieldId: string }
+  | { type: 'columnSettings'; mode: ColumnSettingsMode }
   | undefined;
 
 export type TableMenuController = {
@@ -47,13 +50,13 @@ export const useTableMenuController = (): TableMenuController => {
     const newColumnButton = target.closest(`button[${tableButtons.newColumn.attr}]`);
     if (newColumnButton) {
       triggerRef.current = newColumnButton as HTMLButtonElement;
-      setState({ type: 'newColumn' });
+      setState({ type: 'columnSettings', mode: { type: 'create' } });
     }
   }, []);
 
   const showColumnSettings = useCallback(() => {
     if (state?.type === 'column') {
-      setTimeout(() => setState({ type: 'columnSettings', fieldId: state.fieldId }), 1);
+      setTimeout(() => setState({ type: 'columnSettings', mode: { type: 'edit', fieldId: state.fieldId }}), 1);
     }
   }, [state]);
 

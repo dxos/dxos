@@ -18,7 +18,6 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
-import { ColumnCreate } from './ColumnCreate';
 import { ColumnSettings } from './ColumnSettings';
 import { RowActionsMenu } from './RowActionsMenu';
 import { useTableMenuController } from '../../hooks';
@@ -206,17 +205,10 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
         triggerRef={triggerRef}
       />
 
-      <ColumnCreate
-        // TODO(burdon): Replace with ColumnSettings.
-        model={model}
-        open={menuState?.type === 'newColumn'}
-        onOpenChange={close}
-        triggerRef={triggerRef}
-      />
       <ColumnSettings
         model={model}
         open={menuState?.type === 'columnSettings'}
-        fieldId={menuState?.type === 'columnSettings' ? menuState.fieldId : undefined}
+        mode={menuState?.mode ?? { type: 'create' }}
         onOpenChange={close}
         triggerRef={triggerRef}
       />
