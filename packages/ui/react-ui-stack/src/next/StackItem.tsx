@@ -4,16 +4,25 @@
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
+import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled';
 import {
   attachClosestEdge,
   type Edge,
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { useLayoutEffect, useState, createContext, type ComponentPropsWithoutRef, useContext } from 'react';
+import React, {
+  useLayoutEffect,
+  useState,
+  createContext,
+  type ComponentPropsWithoutRef,
+  useContext,
+  useRef,
+  useCallback,
+} from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStack } from './Stack';
@@ -21,6 +30,8 @@ import { useStack } from './Stack';
 export type StackItemSize = number | 'min-content';
 export const DEFAULT_HORIZONTAL_SIZE = 44 satisfies StackItemSize;
 export const DEFAULT_VERTICAL_SIZE = 'min-content' satisfies StackItemSize;
+export const DEFAULT_EXTRINSIC_SIZE = DEFAULT_HORIZONTAL_SIZE satisfies StackItemSize;
+const REM = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
 export type StackItemData = { id: string; type: 'column' | 'card' };
 
@@ -29,13 +40,12 @@ export type StackItemProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & 
   onRearrange: (source: StackItemData, target: StackItemData, closestEdge: Edge | null) => void;
   size?: StackItemSize;
   onSizeChange?: (nextSize: StackItemSize) => void;
-  defaultSize?: StackItemSize;
 };
 
 type StackItemContextValue = {
   selfDragHandleRef: (element: HTMLDivElement | null) => void;
   size: StackItemSize;
-  setSize: (nextSize: StackItemSize) => void;
+  setSize: (nextSize: StackItemSize, commit?: boolean) => void;
 };
 
 const StackItemContext = createContext<StackItemContextValue>({
@@ -53,7 +63,6 @@ export const StackItem = ({
   onRearrange,
   size: propsSize,
   onSizeChange,
-  defaultSize,
   style,
   ...props
 }: StackItemProps) => {
@@ -61,12 +70,18 @@ export const StackItem = ({
   const [selfDragHandleElement, selfDragHandleRef] = useState<HTMLDivElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
   const { orientation, rail, separators } = useStack();
-  const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setSize] =
-    useControllableState({
-      prop: propsSize,
-      onChange: onSizeChange,
-      defaultProp: defaultSize,
-    });
+  const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
+    useState(propsSize);
+
+  const setSize = useCallback(
+    (nextSize: StackItemSize, commit?: boolean) => {
+      setInternalSize(nextSize);
+      if (commit) {
+        onSizeChange?.(nextSize);
+      }
+    },
+    [onSizeChange],
+  );
 
   const type = orientation === 'horizontal' ? 'column' : 'card';
 
@@ -74,7 +89,6 @@ export const StackItem = ({
     if (!itemElement || !onRearrange) {
       return;
     }
-
     return combine(
       draggable({
         element: itemElement,
@@ -122,6 +136,7 @@ export const StackItem = ({
           separators && 'gap-px',
           classNames,
         )}
+        data-dx-stack-item
         style={{
           ...(size !== 'min-content' && { [orientation === 'horizontal' ? 'inlineSize' : 'blockSize']: `${size}rem` }),
           ...style,
@@ -135,14 +150,76 @@ export const StackItem = ({
   );
 };
 
-export const StackItemHeading = () => {
+export type StackItemHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+
+export const StackItemHeading = ({ children, classNames, ...props }: StackItemHeadingProps) => {
   const { orientation, separators } = useStack();
   const { selfDragHandleRef } = useStackItem();
   return (
     <div
       role='heading'
-      className={mx(orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size]', separators && 'bg-base')}
+      {...props}
+      className={mx(
+        'grid',
+        orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size]',
+        separators && 'bg-base',
+        classNames,
+      )}
       ref={selfDragHandleRef}
-    />
+    >
+      {children}
+    </div>
+  );
+};
+
+const measureStackItem = (element: HTMLButtonElement): { width: number; height: number } => {
+  const stackItemElement = element.closest('[data-dx-stack-item]');
+  return stackItemElement?.getBoundingClientRect() ?? { width: DEFAULT_EXTRINSIC_SIZE, height: DEFAULT_EXTRINSIC_SIZE };
+};
+
+export const StackItemResizeHandle = () => {
+  const { orientation } = useStack();
+  const { setSize, size } = useStackItem();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dragStartSize = useRef<number>(size === 'min-content' ? DEFAULT_EXTRINSIC_SIZE : size);
+  const client = orientation === 'horizontal' ? 'clientX' : 'clientY';
+
+  useLayoutEffect(() => {
+    if (!buttonRef.current) {
+      return;
+    }
+    draggable({
+      element: buttonRef.current,
+      onGenerateDragPreview: ({ nativeSetDragImage }) => {
+        // we will be moving the line to indicate a drag
+        // we can disable the native drag preview
+        disableNativeDragPreview({ nativeSetDragImage });
+        // we don't want any native drop animation for when the user
+        // does not drop on a drop target. we want the drag to finish immediately
+        preventUnhandled.start();
+      },
+      onDragStart: () => {
+        dragStartSize.current =
+          size === 'min-content'
+            ? measureStackItem(buttonRef.current!)[orientation === 'horizontal' ? 'width' : 'height'] / REM
+            : size;
+      },
+      onDrag: ({ location }) => {
+        setSize(dragStartSize.current + (location.current.input[client] - location.initial.input[client]) / REM);
+      },
+      onDrop: ({ location }) => {
+        setSize(dragStartSize.current + (location.current.input[client] - location.initial.input[client]) / REM, true);
+      },
+    });
+  }, [size, setSize]);
+
+  return (
+    <button
+      ref={buttonRef}
+      className={orientation === 'horizontal' ? 'self-center justify-self-end' : 'self-end justify-self-center'}
+    >
+      <Icon icon={orientation === 'horizontal' ? 'ph--dots-six-vertical--regular' : 'ph--dots-six--regular'} />
+      <span className='sr-only'>Resize</span>
+    </button>
   );
 };
