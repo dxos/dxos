@@ -10,6 +10,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { type MutableSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
+import { faker } from '@dxos/random';
 import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
@@ -194,9 +195,16 @@ const meta: Meta<StoryProps> = {
       types: [TableType, ViewType],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: ({ space }) => {
+      onSpaceCreated: async ({ space }) => {
         const table = space.db.add(create(TableType, {}));
-        initializeTable(space, table);
+        const schema = initializeTable({ space, table });
+        Array.from({ length: 30 }).forEach(() => {
+          space.db.add(
+            create(schema, {
+              name: faker.person.fullName(),
+            }),
+          );
+        });
       },
     }),
     withTheme,

@@ -15,6 +15,7 @@ import {
   GridCellEditor,
   type GridEditing,
 } from '@dxos/react-ui-grid';
+import { type FieldProjection } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 import { type GridCell, toGridCell } from '../../types';
@@ -25,9 +26,12 @@ export type CellEditorProps = {
   onEnter?: (cell: GridCell) => void;
   // TODO(burdon): Import types (and reuse throughout file).
   onFocus?: (increment: 'col' | 'row' | undefined, delta: 0 | 1 | -1 | undefined) => void;
+
+  // TODO(burdon): Type.
+  onComplete?: (field: FieldProjection, text: string) => Promise<{ label: string }[]>;
 };
 
-export const CellEditor = ({ editing, model, onEnter, onFocus }: CellEditorProps) => {
+export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: CellEditorProps) => {
   const determineNavigationAxis = ({ key }: EditorKeyEvent): 'col' | 'row' | undefined => {
     switch (key) {
       case 'ArrowUp':
@@ -84,52 +88,43 @@ export const CellEditor = ({ editing, model, onEnter, onFocus }: CellEditorProps
       }),
     ];
 
-    // TODO(burdon): Add autocomplete extension for references, enums, etc. based on type.
-    // TODO(burdon): Factor out factory?
     invariant(model);
     const { col } = toGridCell(editing.index);
     const { property } = model.projection.view.fields[col];
     const fieldProjection = model.projection.getFieldProjection(property);
     invariant(fieldProjection);
 
-    switch (fieldProjection.props.format) {
-      case FormatEnum.Ref:
-      default: {
+    if (onComplete) {
+      switch (fieldProjection.props.format) {
         // TODO(burdon): Remove default.
-        extension.push([
-          EditorView.theme({
-            '.cm-completionDialog': {
-              width: 'var(--dx-gridCellWidth)',
-            },
-          }),
-
-          // https://codemirror.net/docs/ref/#autocomplete.autocompletion
-          autocompletion({
-            activateOnTyping: true,
-            closeOnBlur: false,
-            tooltipClass: () => 'cm-completionDialog',
-            override: [
-              (context: CompletionContext): CompletionResult => {
-                console.log(context);
-                return {
-                  from: 0,
-                  options: [
-                    {
-                      label: 'apple',
-                    },
-                    {
-                      label: 'banana',
-                    },
-                    {
-                      label: 'cherry',
-                    },
-                  ],
-                };
+        case FormatEnum.Ref:
+        default: {
+          extension.push([
+            EditorView.theme({
+              '.cm-completionDialog': {
+                width: 'var(--dx-gridCellWidth)',
               },
-            ],
-          }),
-        ]);
-        break;
+            }),
+
+            // TODO(burdon): Select value.
+            // https://codemirror.net/docs/ref/#autocomplete.autocompletion
+            autocompletion({
+              activateOnTyping: true,
+              closeOnBlur: false, // TODO(burdon): Cancel.
+              tooltipClass: () => 'cm-completionDialog',
+              override: [
+                async (context: CompletionContext): Promise<CompletionResult> => {
+                  const text = context.state.doc.toString();
+                  return {
+                    from: 0,
+                    options: await onComplete(fieldProjection, text),
+                  };
+                },
+              ],
+            }),
+          ]);
+          break;
+        }
       }
     }
 

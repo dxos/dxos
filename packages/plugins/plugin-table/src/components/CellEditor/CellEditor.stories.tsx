@@ -9,13 +9,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { type MutableSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { faker } from '@dxos/random';
 import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Grid, type GridEditing } from '@dxos/react-ui-grid';
 import { ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { CellEditor } from './CellEditor';
+import { CellEditor, type CellEditorProps } from './CellEditor';
 import { useTableModel } from '../../hooks';
 import translations from '../../translations';
 import { TableType } from '../../types';
@@ -48,14 +49,20 @@ const DefaultStory = ({ editing }: StoryProps) => {
 
   const model = useTableModel({ table, projection });
 
-  if (!schema || !table) {
+  const handleComplete: CellEditorProps['onComplete'] = async (field, text) => {
+    const { objects } = await space.db.query(schema).run();
+    // TODO(burdon): Better fallback property.
+    return objects.map((obj) => obj[field.field.referenceProperty ?? 'id']);
+  };
+
+  if (!model || !schema || !table) {
     return <div />;
   }
 
   return (
     <div className='flex w-[300px] h-[100px] border border-separator'>
       <Grid.Root id='test'>
-        <CellEditor model={model} editing={editing} />
+        <CellEditor model={model} editing={editing} onComplete={handleComplete} />
       </Grid.Root>
     </div>
   );
@@ -73,9 +80,16 @@ const meta: Meta<StoryProps> = {
       createSpace: true,
       onSpaceCreated: ({ space }) => {
         const table = space.db.add(create(TableType, {}));
-        initializeTable(space, table);
 
-        // TODO(burdon): Generate data.
+        // TODO(burdon): Pass in schema.
+        const schema = initializeTable({ space, table });
+        Array.from({ length: 10 }).forEach(() => {
+          space.db.add(
+            create(schema, {
+              name: faker.person.fullName(),
+            }),
+          );
+        });
       },
     }),
     withTheme,
@@ -90,7 +104,7 @@ type Story = StoryObj<StoryProps>;
 export const Default: Story = {
   args: {
     editing: {
-      index: '0,0',
+      index: '0,3',
       initialContent: '',
     },
   },

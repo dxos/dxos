@@ -4,6 +4,8 @@
 
 import React, { forwardRef, type PropsWithChildren, useCallback, useImperativeHandle, useState } from 'react';
 
+import { invariant } from '@dxos/invariant';
+import { Filter, getSpace } from '@dxos/react-client/echo';
 import {
   type DxGridElement,
   type DxAxisResize,
@@ -136,13 +138,39 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     [model],
   );
 
+  // TODO(burdon): Make pluggable.
+  const handleComplete = useCallback<NonNullable<CellEditorProps['onComplete']>>(
+    async ({ field, props }, text) => {
+      if (!model) {
+        return [];
+      }
+
+      const space = getSpace(model.table);
+      invariant(space);
+      if (props.referenceSchema) {
+        const schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
+        if (schema) {
+          const { objects } = await space.db.query(Filter.schema(schema)).run();
+          return objects.map((obj: any) => {
+            // TODO(burdon): Better fallback property.
+            const value = obj[field.referenceProperty ?? 'id'];
+            return { label: value ?? '' };
+          });
+        }
+      }
+
+      return [];
+    },
+    [model],
+  );
+
   const { state: menuState, triggerRef, handleClick, close, showColumnSettings } = useTableMenuController();
 
   return (
     <>
       {/* TODO(burdon): Is this required to be unique? */}
       <Grid.Root id={model?.table.id ?? 'table-grid'}>
-        <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} />
+        <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} onComplete={handleComplete} />
 
         <Grid.Content
           className={mx(
@@ -200,7 +228,9 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
 // CellEditor
 //
 
-export type TableCellEditorProps = GridScopedProps<Pick<CellEditorProps, 'model' | 'onEnter' | 'onFocus'>>;
+export type TableCellEditorProps = GridScopedProps<
+  Pick<CellEditorProps, 'model' | 'onEnter' | 'onFocus' | 'onComplete'>
+>;
 
 const TableCellEditor = ({ __gridScope, model, onEnter, ...props }: TableCellEditorProps) => {
   const { editing, setEditing } = useGridContext('TableCellEditor', __gridScope);

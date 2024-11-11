@@ -27,8 +27,8 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const space = getSpace(table);
 
   useEffect(() => {
-    if (space && table) {
-      initializeTable(space, table);
+    if (space && table && !table?.view) {
+      initializeTable({ space, table });
     }
   }, [space, table]);
 
@@ -46,6 +46,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     },
     [space],
   );
+
   const handleDeleteColumn = useCallback((property: string) => {
     void dispatch({
       action: TableAction.DELETE_COLUMN,

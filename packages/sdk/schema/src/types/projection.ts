@@ -32,6 +32,7 @@ export type FieldProjection = {
 /**
  * Wrapper for View that manages Field and Format updates.
  */
+// TODO(burdon): Unit tests.
 export class ViewProjection {
   private readonly _encode = S.encodeSync(PropertySchema);
   private readonly _decode = S.decodeSync(PropertySchema, {});
@@ -105,23 +106,28 @@ export class ViewProjection {
   setFieldProjection({ field, props }: Partial<FieldProjection>, index?: number) {
     log('setFieldProjection', { field, props, index });
 
+    // TODO(burdon): Bug if deleted then re-added (create tests).
     const sourcePropertyName = field?.property;
     const targetPropertyName = props?.property;
     const isRename = sourcePropertyName && targetPropertyName && targetPropertyName !== sourcePropertyName;
 
     if (field) {
+      // TODO(burdon): Generalize extraction of field props.
+      const { referenceProperty } = props ?? {};
+      const clonedField: FieldType = { ...field, referenceProperty: referenceProperty as JsonProp };
       const fieldIndex = this._view.fields.findIndex((f) => f.property === sourcePropertyName);
-      const isNewField = fieldIndex === -1;
-
-      if (isNewField) {
-        const newField = { ...field };
-        if (typeof index === 'number' && index >= 0 && index <= this._view.fields.length) {
-          this._view.fields.splice(index, 0, newField);
+      if (fieldIndex === -1) {
+        if (index !== undefined && index >= 0 && index <= this._view.fields.length) {
+          this._view.fields.splice(index, 0, clonedField);
         } else {
-          this._view.fields.push(field, newField);
+          this._view.fields.push(clonedField);
         }
       } else {
-        Object.assign(this._view.fields[fieldIndex], field, isRename ? { property: targetPropertyName } : undefined);
+        Object.assign(
+          this._view.fields[fieldIndex],
+          clonedField,
+          isRename ? { property: targetPropertyName } : undefined,
+        );
       }
     }
 
