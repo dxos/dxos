@@ -109,11 +109,10 @@ export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: Cel
             // TODO(burdon): Select value.
             // https://codemirror.net/docs/ref/#autocomplete.autocompletion
             autocompletion({
-              activateOnTyping: true,
               closeOnBlur: false, // TODO(burdon): Cancel.
-              tooltipClass: () => 'cm-completionDialog !mt-[8px] !-ml-[24x] ',
-              optionClass: () => 'flex h-[33px] items-center', // TODO(burdon): Customize.
 
+              icons: false,
+              activateOnTyping: true,
               override: [
                 async (context: CompletionContext): Promise<CompletionResult> => {
                   const text = context.state.doc.toString();
@@ -123,6 +122,10 @@ export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: Cel
                   };
                 },
               ],
+
+              // TODO(burdon): Consts from grid.
+              tooltipClass: () => 'cm-completionDialog !mt-[8px] !-ml-[4px] [&>ul]:!max-h-[264px]',
+              optionClass: () => 'flex h-[33px] items-center',
             }),
           ]);
           break;
