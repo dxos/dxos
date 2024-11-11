@@ -134,7 +134,7 @@ export const SpacePlugin = ({
     // TODO(wittjosiah): Stop using (Complex)Map inside reactive object.
     viewersByIdentity: new ComplexMap(PublicKey.hash),
     sdkMigrationRunning: {},
-    selectableCollections: false,
+    navigableCollections: false,
   });
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
@@ -320,7 +320,7 @@ export const SpacePlugin = ({
       // TODO(wittjosiah): Hardcoded due to circular dependency.
       //   Should be based on a provides interface.
       if (findPlugin(plugins, 'dxos.org/plugin/stack')) {
-        state.values.selectableCollections = true;
+        state.values.navigableCollections = true;
       }
 
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
@@ -646,7 +646,7 @@ export const SpacePlugin = ({
                   .map((space) =>
                     constructSpaceNode({
                       space,
-                      selectable: state.values.selectableCollections,
+                      navigable: state.values.navigableCollections,
                       personal: space === client.spaces.default,
                       namesCache: state.values.spaceNames,
                       resolve,
@@ -685,7 +685,7 @@ export const SpacePlugin = ({
                   return;
                 }
 
-                return createObjectNode({ object, space, resolve, selectable: state.values.selectableCollections });
+                return createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections });
               },
             }),
 
@@ -697,7 +697,7 @@ export const SpacePlugin = ({
                 constructSpaceActionGroups({
                   space: node.data,
                   dispatch,
-                  selectable: state.values.selectableCollections,
+                  navigable: state.values.navigableCollections,
                 }),
               actions: ({ node }) => {
                 const space = node.data;
@@ -733,7 +733,7 @@ export const SpacePlugin = ({
                 return collection.objects
                   .filter(nonNullable)
                   .map((object) =>
-                    createObjectNode({ object, space, resolve, selectable: state.values.selectableCollections }),
+                    createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections }),
                   )
                   .filter(nonNullable);
               },
@@ -747,7 +747,7 @@ export const SpacePlugin = ({
                 constructObjectActionGroups({
                   object: node.data,
                   dispatch,
-                  selectable: state.values.selectableCollections,
+                  navigable: state.values.navigableCollections,
                 }),
               actions: ({ node }) => constructObjectActions({ node, dispatch }),
             }),
@@ -766,7 +766,7 @@ export const SpacePlugin = ({
                 return collection.objects
                   .filter(nonNullable)
                   .map((object) =>
-                    createObjectNode({ object, space, resolve, selectable: state.values.selectableCollections }),
+                    createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections }),
                   )
                   .filter(nonNullable);
               },

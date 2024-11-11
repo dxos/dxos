@@ -92,18 +92,18 @@ export const getSpaceDisplayName = (
 };
 
 const getCollectionGraphNodePartials = ({
-  selectable,
+  navigable,
   collection,
   space,
   resolve,
 }: {
-  selectable: boolean;
+  navigable: boolean;
   collection: CollectionType;
   space: Space;
   resolve: MetadataResolver;
 }) => {
   return {
-    disabled: !selectable,
+    disabled: !navigable,
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([space.id]),
     role: 'branch',
@@ -179,13 +179,13 @@ const checkPendingMigration = (space: Space) => {
 
 export const constructSpaceNode = ({
   space,
-  selectable = false,
+  navigable = false,
   personal,
   namesCache,
   resolve,
 }: {
   space: Space;
-  selectable?: boolean;
+  navigable?: boolean;
   personal?: boolean;
   namesCache?: Record<string, string>;
   resolve: MetadataResolver;
@@ -194,7 +194,7 @@ export const constructSpaceNode = ({
   const collection = space.state.get() === SpaceState.SPACE_READY && space.properties[CollectionType.typename];
   const partials =
     space.state.get() === SpaceState.SPACE_READY && collection instanceof CollectionType
-      ? getCollectionGraphNodePartials({ collection, space, resolve, selectable })
+      ? getCollectionGraphNodePartials({ collection, space, resolve, navigable })
       : {};
 
   return {
@@ -206,7 +206,7 @@ export const constructSpaceNode = ({
       label: getSpaceDisplayName(space, { personal, namesCache }),
       description: space.state.get() === SpaceState.SPACE_READY && space.properties.description,
       icon: 'ph--planet--regular',
-      disabled: !selectable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
+      disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
       testId: 'spacePlugin.space',
     },
   };
@@ -214,11 +214,11 @@ export const constructSpaceNode = ({
 
 export const constructSpaceActionGroups = ({
   space,
-  selectable,
+  navigable,
   dispatch,
 }: {
   space: Space;
-  selectable: boolean;
+  navigable: boolean;
   dispatch: IntentDispatcher;
 }) => {
   const state = space.state.get();
@@ -255,7 +255,7 @@ export const constructSpaceActionGroups = ({
                 action: SpaceAction.ADD_OBJECT,
                 data: { target: collection, object: create(CollectionType, { objects: [], views: {} }) },
               },
-              ...(selectable
+              ...(navigable
                 ? [
                     {
                       action: NavigationAction.OPEN,
@@ -404,12 +404,12 @@ export const constructSpaceActions = ({
 export const createObjectNode = ({
   object,
   space,
-  selectable = false,
+  navigable = false,
   resolve,
 }: {
   object: EchoReactiveObject<any>;
   space: Space;
-  selectable?: boolean;
+  navigable?: boolean;
   resolve: MetadataResolver;
 }) => {
   const type = getTypename(object);
@@ -424,7 +424,7 @@ export const createObjectNode = ({
 
   const partials =
     object instanceof CollectionType
-      ? getCollectionGraphNodePartials({ collection: object, space, resolve, selectable })
+      ? getCollectionGraphNodePartials({ collection: object, space, resolve, navigable })
       : metadata.graphProps;
 
   return {
@@ -446,11 +446,11 @@ export const createObjectNode = ({
 
 export const constructObjectActionGroups = ({
   object,
-  selectable,
+  navigable,
   dispatch,
 }: {
   object: EchoReactiveObject<any>;
-  selectable: boolean;
+  navigable: boolean;
   dispatch: IntentDispatcher;
 }) => {
   if (!(object instanceof CollectionType)) {
@@ -484,7 +484,7 @@ export const constructObjectActionGroups = ({
                 action: SpaceAction.ADD_OBJECT,
                 data: { target: collection, object: create(CollectionType, { objects: [], views: {} }) },
               },
-              ...(selectable
+              ...(navigable
                 ? [
                     {
                       action: NavigationAction.OPEN,
