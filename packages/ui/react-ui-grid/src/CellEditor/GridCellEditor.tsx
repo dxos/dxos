@@ -7,14 +7,11 @@ import React from 'react';
 import { CellEditor, type CellEditorProps } from './CellEditor';
 import { type GridScopedProps, useGridContext } from '../Grid';
 
-export const GridCellEditor = ({
-  extension,
-  getCellContent,
-  onBlur,
-  __gridScope,
-}: GridScopedProps<
+export type GridCellEditorProps = GridScopedProps<
   Pick<CellEditorProps, 'extension' | 'onBlur'> & { getCellContent: (index: string) => string | undefined }
->) => {
+>;
+
+export const GridCellEditor = ({ extension, getCellContent, onBlur, __gridScope }: GridCellEditorProps) => {
   const { id, editing, editBox } = useGridContext('GridSheetCellEditor', __gridScope);
 
   return editing ? (
