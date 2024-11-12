@@ -82,7 +82,7 @@ export const ViewEditor = ({
                 <List.Item<FieldType> key={field.id} item={field} classNames={mx(grid, ghostHover, 'cursor-pointer')}>
                   <List.ItemDragHandle />
                   <List.ItemTitle onClick={() => handleSelect(field)}>{field.path}</List.ItemTitle>
-                  <List.ItemDeleteButton onClick={() => onDelete(field.id)} />
+                  <List.ItemDeleteButton disabled={view.fields.length <= 1} onClick={() => onDelete(field.id)} />
                 </List.Item>
               ))}
             </div>

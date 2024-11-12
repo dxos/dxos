@@ -20,6 +20,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { type ViewProjection, type FieldType, getValue, setValue } from '@dxos/schema';
 
+import { ModalController } from './modal-controller';
 import { fromGridCell, type GridCell, type TableType } from '../types';
 import { tableButtons, touch } from '../util';
 
@@ -73,6 +74,8 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   private _rowSelection: NonNullable<TableModelProps<T>['rowSelection']>;
   private _columnMeta?: ReadonlySignal<DxGridAxisMeta>;
 
+  private readonly _modalController = new ModalController();
+
   constructor({
     table,
     projection,
@@ -124,6 +127,14 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   public get sorting(): SortConfig | undefined {
     return this._sorting.value;
   }
+
+  public get modalController() {
+    return this._modalController;
+  }
+
+  //
+  // Initialisation
+  //
 
   protected override async _open() {
     this.initializeColumnMeta();
@@ -317,7 +328,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     return {
       [fromGridCell({ col: 0, row: 0 })]: {
         value: '',
-        accessoryHtml: tableButtons.newColumn.render(),
+        accessoryHtml: tableButtons.addColumn.render(),
         readonly: true,
       },
     };
@@ -332,6 +343,8 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   };
 
   public getRowCount = (): number => this._rows.value.length;
+
+  public getColumnCount = (): number => this.table.view?.fields.length ?? 0;
 
   public insertRow = (rowIndex?: number): void => {
     const row = rowIndex !== undefined ? this._displayToDataIndex.get(rowIndex) ?? rowIndex : this._rows.value.length;
@@ -420,6 +433,15 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
       this._onDeleteColumn(field.id);
     }
   }
+
+  //
+  // Interactions
+  //
+  public handleGridClick = (event: React.MouseEvent): void => {
+    this._modalController.handleClick(event);
+    // TODO(ZaymonFC): Future cell-interaction click handling will go here. (checkboxes, toggles etc.)
+    //   _modalController.handleClick returns whether the click was handled by the modal controller.
+  };
 
   //
   // Resize

@@ -3,3 +3,4 @@
 //
 
 export * from './table-model';
+export * from './modal-controller';

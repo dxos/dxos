@@ -2,44 +2,47 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type RefObject, useMemo, useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { DropdownMenu, type DropdownMenuRootProps } from '@dxos/react-ui';
+import { DropdownMenu } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-data';
 import { type FieldType } from '@dxos/schema';
 
-import { type ColumnSettingsMode } from '../../hooks';
 import { type TableModel } from '../../model';
 
-export type ColumnSettingsProps = {
-  model?: TableModel;
-  mode: ColumnSettingsMode;
-  triggerRef: RefObject<HTMLButtonElement>;
-} & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
+type ColumnSettingsProps = { model?: TableModel };
 
-export const ColumnSettings = ({ model, mode, open, onOpenChange, triggerRef }: ColumnSettingsProps) => {
+export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
   const [newField, setNewField] = useState<FieldType>();
+  const state = model?.modalController.state.value;
 
   useEffect(() => {
-    if (mode.type === 'create' && model?.projection && open) {
+    if (state?.type === 'columnSettings' && state.mode.type === 'create' && model?.projection) {
       setNewField(model.projection.createFieldProjection());
     } else {
       setNewField(undefined);
     }
-  }, [model?.projection, open, mode]);
+  }, [model?.projection, state]);
 
   const existingField = useMemo(() => {
-    return mode.type === 'edit' ? model?.table?.view?.fields.find((f) => f.id === mode.fieldId) : undefined;
-  }, [model?.table?.view?.fields, mode]);
+    if (state?.type === 'columnSettings') {
+      const { mode } = state;
+      if (mode.type === 'edit') {
+        return model?.table?.view?.fields.find((f) => f.id === mode.fieldId);
+      }
+    }
+    return undefined;
+  }, [model?.table?.view?.fields, state]);
 
   const field = existingField ?? newField;
+
   if (!model?.table?.view || !model.projection || !field) {
     return null;
   }
 
   return (
-    <DropdownMenu.Root modal={false} open={open} onOpenChange={onOpenChange}>
-      <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
+    <DropdownMenu.Root modal={false} open={state?.type === 'columnSettings'}>
+      <DropdownMenu.VirtualTrigger virtualRef={model.modalController.trigger} />
       <DropdownMenu.Portal>
         <DropdownMenu.Content>
           <DropdownMenu.Viewport>
@@ -47,7 +50,7 @@ export const ColumnSettings = ({ model, mode, open, onOpenChange, triggerRef }: 
               view={model.table.view}
               projection={model.projection}
               field={field}
-              onClose={() => onOpenChange?.(false)}
+              onClose={() => model.modalController.close()}
             />
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
