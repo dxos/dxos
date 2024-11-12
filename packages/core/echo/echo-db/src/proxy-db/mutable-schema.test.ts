@@ -14,6 +14,7 @@ import {
   ref,
   TypedObject,
   S,
+  getTypename,
 } from '@dxos/echo-schema';
 import { EmptySchemaType } from '@dxos/echo-schema/testing';
 
@@ -84,6 +85,7 @@ describe('MutableSchema', () => {
 
     expect(getSchema(object)?.ast).to.deep.eq(schema.ast);
     expect(getType(object)?.objectId).to.be.eq(schema.id);
+    expect(getTypename(object)).to.be.eq(EmptySchemaType.typename);
 
     db.add(object);
     const queried = (await db.query(Filter.schema(schema)).run()).objects;
