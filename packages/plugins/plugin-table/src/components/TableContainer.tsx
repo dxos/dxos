@@ -47,10 +47,10 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     [space],
   );
 
-  const handleDeleteColumn = useCallback((property: string) => {
+  const handleDeleteColumn = useCallback((fieldId: string) => {
     void dispatch({
       action: TableAction.DELETE_COLUMN,
-      data: { table, property } satisfies TableAction.DeleteColumn,
+      data: { table, fieldId } satisfies TableAction.DeleteColumn,
     });
   }, []);
 
@@ -63,6 +63,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   }, [schema, table.view]);
 
   const tableRef = useRef<TableController>(null);
+
   const model = useTableModel({
     table,
     projection,

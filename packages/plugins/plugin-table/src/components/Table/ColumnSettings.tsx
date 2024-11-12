@@ -19,14 +19,14 @@ export type ColumnSettingsModalProps = {
 // TODO(burdon): Reconcile with ColumnCreate.
 export const ColumnSettings = ({ model, open, fieldId, onOpenChange, triggerRef }: ColumnSettingsModalProps) => {
   const field = useMemo(
-    () => model?.table?.view?.fields.find((f) => f.property === fieldId),
+    () => model?.table?.view?.fields.find((f) => f.id === fieldId),
     [model?.table?.view?.fields, fieldId],
   );
 
   // TODO(burdon): Props are not used?
   const props = useMemo<FieldProjection | undefined>(() => {
     if (field) {
-      return model?.projection.getFieldProjection(field.property);
+      return model?.projection.getFieldProjection(field.id);
     }
   }, [model?.projection, field]);
 

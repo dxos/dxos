@@ -52,7 +52,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
   const handleComplete: CellEditorProps['onComplete'] = async (field, text) => {
     const { objects } = await space.db.query(schema).run();
     // TODO(burdon): Better fallback property.
-    return objects.map((obj) => obj[field.field.referenceProperty ?? 'id']);
+    return objects.map((obj) => obj[field.field.referencePath ?? 'id']);
   };
 
   if (!model || !schema || !table) {

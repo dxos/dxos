@@ -18,7 +18,7 @@ import {
   type DxGridPlaneRange,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { type ViewProjection, type FieldType } from '@dxos/schema';
+import { type ViewProjection, type FieldType, getValue, setValue } from '@dxos/schema';
 
 import { fromGridCell, type GridCell, type TableType } from '../types';
 import { tableButtons, touch } from '../util';
@@ -35,7 +35,7 @@ export type TableModelProps<T extends BaseTableRow = {}> = {
   pinnedRows?: { top: number[]; bottom: number[] };
   rowSelection?: number[];
   onInsertRow?: (index?: number) => void;
-  onDeleteRow?: (row: number, object: T) => void;
+  onDeleteRow?: (index: number, obj: T) => void;
   onDeleteColumn?: (fieldId: string) => void;
   onCellUpdate?: (cell: GridCell) => void;
   onRowOrderChanged?: () => void;
@@ -155,13 +155,13 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
         return this._rows.value;
       }
 
-      const field = this._table.view?.fields.find((field) => field.property === sort.fieldId);
+      const field = this._table.view?.fields.find((field) => field.id === sort.fieldId);
       if (!field) {
         return this._rows.value;
       }
 
       const dataWithIndices = this._rows.value.map((item, index) => ({ item, index }));
-      const sorted = sortBy(dataWithIndices, [(wrapper) => wrapper.item[field.property]]);
+      const sorted = sortBy(dataWithIndices, [(wrapper) => getValue(wrapper.item, field.path)]);
       if (sort.direction === 'desc') {
         sorted.reverse();
       }
@@ -195,8 +195,8 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
       for (let row = start.row; row <= end.row; row++) {
         rowEffects.push(
           effect(() => {
-            const rowData = this._sortedRows.value[row];
-            this?._table?.view?.fields.forEach((field) => touch(rowData?.[field.property]));
+            const obj = this._sortedRows.value[row];
+            this?._table?.view?.fields.forEach((field) => touch(getValue(obj, field.path)));
             this._onCellUpdate?.({ row, col: start.col });
           }),
         );
@@ -236,14 +236,15 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     const values: DxGridPlaneCells = {};
     const fields = this._table.view?.fields ?? [];
 
-    const addCell = (object: T, field: FieldType, colIndex: number, displayIndex: number): void => {
-      const { props } = this._projection.getFieldProjection(field.property);
+    const addCell = (obj: T, field: FieldType, colIndex: number, displayIndex: number): void => {
+      const { props } = this._projection.getFieldProjection(field.id);
       const cell: DxGridCellValue = {
         get value() {
-          const value = object?.[field.property];
+          const value = getValue(obj, field.path);
           if (value == null) {
             return '';
           }
+
           return formatForDisplay({ type: props.type, format: props.format, value });
         },
       };
@@ -275,16 +276,11 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     const fields = this.table.view?.fields ?? [];
 
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
-      const field = fields[col];
-      const fieldProjection = this._projection.getFieldProjection(field.property);
-      if (!field) {
-        continue;
-      }
-
+      const { field, props } = this._projection.getFieldProjection(fields[col].id);
       values[fromGridCell({ col, row: 0 })] = {
-        value: fieldProjection.props.title ?? field.property,
+        value: props.title ?? field.path,
         resizeHandle: 'col',
-        accessoryHtml: tableButtons.columnSettings.render({ columnId: field.property }),
+        accessoryHtml: tableButtons.columnSettings.render({ fieldId: field.id }),
         readonly: true,
       };
     }
@@ -318,8 +314,8 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   // Data
   //
 
-  public setRows = (object: T[]): void => {
-    this._rows.value = object;
+  public setRows = (obj: T[]): void => {
+    this._rows.value = obj;
   };
 
   public getRowCount = (): number => this._rows.value.length;
@@ -331,8 +327,8 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
   public deleteRow = (rowIndex: number): void => {
     const row = this._displayToDataIndex.get(rowIndex) ?? rowIndex;
-    const object = this._rows.value[row];
-    this._onDeleteRow?.(row, object);
+    const obj = this._rows.value[row];
+    this._onDeleteRow?.(row, obj);
   };
 
   public getCellData = ({ col, row }: GridCell): any => {
@@ -343,12 +339,12 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
     const field = fields[col];
     const dataIndex = this._displayToDataIndex.get(row) ?? row;
-    const value = this._rows.value[dataIndex][field.property];
+    const value = getValue(this._rows.value[dataIndex], field.path);
     if (value === undefined) {
       return '';
     }
 
-    const { props } = this._projection.getFieldProjection(field.property);
+    const { props } = this._projection.getFieldProjection(field.id);
     return formatForEditing({ type: props.type, format: props.format, value });
   };
 
@@ -360,31 +356,33 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     }
 
     const field = fields[col];
-    const { props } = this._projection.getFieldProjection(field.property);
-    const object = this._rows.value[rowIdx];
-    const obj: Record<JsonProp, any> = object;
-    obj[field.property] = parseValue({
-      type: props.type,
-      format: props.format,
-      value,
-    });
+    const { props } = this._projection.getFieldProjection(field.id);
+    setValue(
+      this._rows.value[rowIdx],
+      field.path,
+      parseValue({
+        type: props.type,
+        format: props.format,
+        value,
+      }),
+    );
   };
 
   //
   // Column Operations
   //
 
-  public deleteColumn(property: string): void {
+  public deleteColumn(fieldId: string): void {
     if (!this.table.view) {
       return;
     }
 
-    const field = this.table.view.fields.find((field) => field.property === property);
+    const field = this.table.view.fields.find((field) => field.id === fieldId);
     if (field && this._onDeleteColumn) {
-      if (this._sorting.value?.fieldId === property) {
+      if (this._sorting.value?.fieldId === fieldId) {
         this.clearSort();
       }
-      this._onDeleteColumn(field.property);
+      this._onDeleteColumn(field.id);
     }
   }
 

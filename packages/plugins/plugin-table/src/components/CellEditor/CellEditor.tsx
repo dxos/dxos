@@ -26,8 +26,6 @@ export type CellEditorProps = {
   onEnter?: (cell: GridCell) => void;
   // TODO(burdon): Import types (and reuse throughout file).
   onFocus?: (increment: 'col' | 'row' | undefined, delta: 0 | 1 | -1 | undefined) => void;
-
-  // TODO(burdon): Type.
   onComplete?: (field: FieldProjection, text: string) => Promise<{ label: string }[]>;
 };
 
@@ -66,6 +64,8 @@ export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: Cel
       invariant(model);
       invariant(editing);
       if (value !== undefined) {
+        // TODO(burdon): ???
+        console.log('================= setCellData', value);
         model.setCellData(toGridCell(editing.index), value);
       }
 
@@ -90,8 +90,8 @@ export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: Cel
 
     invariant(model);
     const { col } = toGridCell(editing.index);
-    const { property } = model.projection.view.fields[col];
-    const fieldProjection = model.projection.getFieldProjection(property);
+    const field = model.projection.view.fields[col];
+    const fieldProjection = model.projection.getFieldProjection(field.id);
     invariant(fieldProjection);
 
     if (onComplete) {
@@ -109,8 +109,6 @@ export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: Cel
             // TODO(burdon): Select value.
             // https://codemirror.net/docs/ref/#autocomplete.autocompletion
             autocompletion({
-              closeOnBlur: false, // TODO(burdon): Cancel.
-
               icons: false,
               activateOnTyping: true,
               override: [
@@ -126,6 +124,9 @@ export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: Cel
               // TODO(burdon): Consts from grid.
               tooltipClass: () => 'cm-completionDialog !mt-[8px] !-ml-[4px] [&>ul]:!max-h-[264px]',
               optionClass: () => 'flex h-[33px] items-center',
+
+              // TODO(burdon): Debug.
+              closeOnBlur: true,
             }),
           ]);
           break;

@@ -2,19 +2,28 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create, JsonProp, JsonSchemaType, QueryType, type ReactiveObject, S, TypedObject } from '@dxos/echo-schema';
+import {
+  create,
+  JsonPath,
+  type JsonProp,
+  JsonSchemaType,
+  QueryType,
+  type ReactiveObject,
+  S,
+  TypedObject,
+} from '@dxos/echo-schema';
+
+import { createFieldId } from './projection';
 
 /**
  * Stored field metadata (e.g., for UX).
  */
 export const FieldSchema = S.Struct({
-  // TODO(burdon): We should add a fieldId distinct from the property since in principle we might have
-  //  multiple columns for the same property with different formats (e.g., date rendered as YY-MM-HH and relative).
-  // TODO(burdon): Standardize use of `field` and `property` (i,e., remove `columnId`).
-  property: JsonProp,
+  id: S.NonEmptyString,
+  path: JsonPath,
   visible: S.optional(S.Boolean),
   size: S.optional(S.Number),
-  referenceProperty: S.optional(JsonProp),
+  referencePath: S.optional(JsonPath),
 }).pipe(S.mutable);
 
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
@@ -63,6 +72,7 @@ export const createView = ({
   jsonSchema,
   properties: _properties,
 }: CreateViewProps): ReactiveObject<ViewType> => {
+  // TODO(burdon): Ensure not objects.
   const properties = _properties ?? Object.keys(jsonSchema?.properties ?? []).filter((p) => p !== 'id');
   return create(ViewType, {
     // schema: jsonSchema,
@@ -70,6 +80,9 @@ export const createView = ({
       __typename: typename,
     },
     // Create initial fields.
-    fields: properties.map((property) => ({ property: property as JsonProp })),
+    fields: properties.map((property) => ({
+      id: createFieldId(),
+      path: property as JsonProp,
+    })),
   });
 };

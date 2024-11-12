@@ -7,15 +7,17 @@ import React, { forwardRef, type PropsWithChildren, useCallback, useImperativeHa
 import { invariant } from '@dxos/invariant';
 import { Filter, getSpace } from '@dxos/react-client/echo';
 import {
-  type DxGridElement,
   type DxAxisResize,
+  type DxGridElement,
   Grid,
   type GridContentProps,
+  type GridScopedProps,
   closestCell,
   useGridContext,
-  type GridScopedProps,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
+import { getValue } from '@dxos/schema/src';
+import { isNotFalsy } from '@dxos/util';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnCreate } from './ColumnCreate';
@@ -138,24 +140,34 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     [model],
   );
 
-  // TODO(burdon): Make pluggable.
+  // TODO(burdon): Move to model?
   const handleComplete = useCallback<NonNullable<CellEditorProps['onComplete']>>(
-    async ({ field, props }, text) => {
+    async ({ field, props }, _text) => {
       if (!model) {
         return [];
       }
 
-      const space = getSpace(model.table);
-      invariant(space);
-      if (props.referenceSchema) {
+      if (props.referenceSchema && field.referencePath) {
+        const space = getSpace(model.table);
+        invariant(space);
         const schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
         if (schema) {
           const { objects } = await space.db.query(Filter.schema(schema)).run();
-          return objects.map((obj: any) => {
-            // TODO(burdon): Better fallback property.
-            const value = obj[field.referenceProperty ?? 'id'];
-            return { label: value ?? '' };
-          });
+          return objects
+            .map((obj) => {
+              const value = getValue(obj, field.referencePath!);
+              if (!value || typeof value !== 'string') {
+                return undefined;
+              }
+
+              return {
+                label: value,
+                // apply: () => {
+                //   console.log('###', obj);
+                // },
+              };
+            })
+            .filter(isNotFalsy);
         }
       }
 
@@ -215,8 +227,8 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
       />
       <ColumnSettings
         model={model}
-        open={menuState?.type === 'columnSettings'}
         fieldId={menuState?.type === 'columnSettings' ? menuState.fieldId : undefined}
+        open={menuState?.type === 'columnSettings'}
         onOpenChange={close}
         triggerRef={triggerRef}
       />

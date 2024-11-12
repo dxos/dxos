@@ -11,7 +11,7 @@ import { createMutableSchema } from '@dxos/echo-schema/testing';
 import { type JsonProp } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { ViewProjection } from '@dxos/schema';
+import { createFieldId, ViewProjection } from '@dxos/schema';
 import { TestSchema, testView } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -57,7 +57,8 @@ type Story = StoryObj<StoryProps>;
 export const Default: Story = {
   args: {
     field: {
-      property: 'name' as JsonProp,
+      id: createFieldId(),
+      path: 'name' as JsonProp,
     },
     projection: new ViewProjection(createMutableSchema(TestSchema), testView),
     view: testView,

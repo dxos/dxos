@@ -20,7 +20,7 @@ import { ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table, type TableController } from './Table';
-import { useTableModel } from '../../hooks';
+import { useTableModel, type UseTableModelParams } from '../../hooks';
 import translations from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
@@ -69,9 +69,9 @@ const DefaultStory = () => {
   );
 
   const handleDeleteColumn = useCallback(
-    (property: string) => {
+    (fieldId: string) => {
       if (projection) {
-        projection.deleteFieldProjection(property);
+        projection.deleteFieldProjection(fieldId);
       }
     },
     [table, projection],
@@ -119,7 +119,7 @@ const DefaultStory = () => {
           <Table.Main ref={tableRef} model={model} />
         </Table.Root>
       </div>
-      <div className='flex flex-col h-full border-l border-separator'>
+      <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
         {table.view && (
           <ViewEditor
             registry={space?.db.schemaRegistry}
@@ -130,7 +130,7 @@ const DefaultStory = () => {
         )}
 
         <SyntaxHighlighter language='json' className='w-full text-xs'>
-          {JSON.stringify(table.view, null, 2)}
+          {JSON.stringify({ view: table.view, schema }, null, 2)}
         </SyntaxHighlighter>
       </div>
     </div>
@@ -150,14 +150,14 @@ const TablePerformanceStory = (props: StoryProps) => {
   const simulatorProps = useMemo(() => ({ table, items, ...props }), [table, items, props]);
   useSimulator(simulatorProps);
 
-  const handleDeleteRow = useCallback((row: any) => {
-    itemsRef.current.splice(itemsRef.current.indexOf(row), 1);
+  const handleDeleteRow = useCallback<NonNullable<UseTableModelParams<any>['onDeleteRow']>>((row) => {
+    itemsRef.current.splice(row, 1);
   }, []);
 
-  const handleDeleteColumn = useCallback(
-    (property: string) => {
+  const handleDeleteColumn = useCallback<NonNullable<UseTableModelParams<any>['onDeleteColumn']>>(
+    (fieldId) => {
       if (table && table.view) {
-        const fieldPosition = table.view.fields.findIndex((field) => field.property === property);
+        const fieldPosition = table.view.fields.findIndex((field) => field.id === fieldId);
         table.view.fields.splice(fieldPosition, 1);
       }
     },

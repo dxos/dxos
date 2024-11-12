@@ -10,6 +10,7 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   Format,
   FormatEnum,
+  type JsonPath,
   type JsonProp,
   TypeEnum,
   TypedObject,
@@ -17,9 +18,16 @@ import {
   ref,
   toJsonSchema,
 } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 
 import { ViewProjection } from './projection';
-import { createView } from './view';
+import { createView, type ViewType } from './view';
+
+const getFieldId = (view: ViewType, path: string): string => {
+  const field = view.fields.find((f) => f.path === path);
+  invariant(field);
+  return field.id;
+};
 
 describe('ViewProjection', () => {
   let builder: EchoTestBuilder;
@@ -55,7 +63,7 @@ describe('ViewProjection', () => {
     expect(view.fields).to.have.length(3);
 
     {
-      const { props } = projection.getFieldProjection('name' as JsonProp);
+      const { props } = projection.getFieldProjection(getFieldId(view, 'name'));
       expect(props).to.deep.eq({
         property: 'name',
         type: TypeEnum.String,
@@ -65,7 +73,7 @@ describe('ViewProjection', () => {
     }
 
     {
-      const { props } = projection.getFieldProjection('email' as JsonProp);
+      const { props } = projection.getFieldProjection(getFieldId(view, 'email'));
       expect(props).to.include({
         property: 'email',
         type: TypeEnum.String,
@@ -75,15 +83,16 @@ describe('ViewProjection', () => {
 
     projection.setFieldProjection({
       field: {
-        property: 'email' as JsonProp,
+        id: getFieldId(view, 'email'),
+        path: 'email' as JsonPath,
         size: 100,
       },
     });
 
     {
-      const { field, props } = projection.getFieldProjection('email' as JsonProp);
+      const { field, props } = projection.getFieldProjection(getFieldId(view, 'email'));
       expect(field).to.include({
-        property: 'email',
+        path: 'email',
         size: 100,
       });
       expect(props).to.include({
@@ -96,7 +105,7 @@ describe('ViewProjection', () => {
     }
 
     {
-      const { props } = projection.getFieldProjection('salary' as JsonProp);
+      const { props } = projection.getFieldProjection(getFieldId(view, 'salary'));
       expect(props).to.include({
         property: 'salary',
         type: TypeEnum.Number,
@@ -110,7 +119,7 @@ describe('ViewProjection', () => {
     }
 
     {
-      const { props } = projection.getFieldProjection('salary' as JsonProp);
+      const { props } = projection.getFieldProjection(getFieldId(view, 'salary'));
       expect(props).to.include({
         property: 'salary',
         type: TypeEnum.Number,
@@ -149,15 +158,17 @@ describe('ViewProjection', () => {
 
     projection.setFieldProjection({
       field: {
-        property: 'org' as JsonProp,
-        referenceProperty: 'name' as JsonProp,
+        id: getFieldId(view, 'org'),
+        path: 'org' as JsonPath,
+        referencePath: 'name' as JsonPath,
       },
     });
 
-    const { field, props } = projection.getFieldProjection('org' as JsonProp);
+    const { field, props } = projection.getFieldProjection(getFieldId(view, 'org'));
     expect(field).to.deep.eq({
-      property: 'org',
-      referenceProperty: 'name',
+      id: getFieldId(view, 'org'),
+      path: 'org',
+      referencePath: 'name',
     });
     expect(props).to.deep.eq({
       property: 'org',
@@ -186,15 +197,15 @@ describe('ViewProjection', () => {
     const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
     const projection = new ViewProjection(mutable, view);
 
-    // Initial state
+    // Initial state.
     expect(view.fields).to.have.length(2);
-    expect(mutable.jsonSchema.properties?.email).to.exist;
+    expect(mutable.jsonSchema.properties?.['email' as const]).to.exist;
 
-    // Delete and verify
-    const { deleted, index } = projection.deleteFieldProjection('email');
+    // Delete and verify.
+    const { deleted, index } = projection.deleteFieldProjection(getFieldId(view, 'email'));
     expect(view.fields).to.have.length(1);
-    expect(mutable.jsonSchema.properties?.email).to.not.exist;
-    expect(deleted.field.property).to.equal('email');
+    expect(mutable.jsonSchema.properties?.['email' as const]).to.not.exist;
+    expect(deleted.field.path).to.equal('email');
     expect(deleted.props.format).to.equal(FormatEnum.Email);
     expect(index).to.equal(0);
   });
@@ -222,14 +233,14 @@ describe('ViewProjection', () => {
     });
     const projection = new ViewProjection(mutable, view);
 
-    // Capture initial states
-    const initialFieldsOrder = view.fields.map((f) => f.property);
-    const emailIndex = initialFieldsOrder.indexOf('email' as JsonProp);
-    const initialEmail = projection.getFieldProjection('email' as JsonProp);
+    // Capture initial states.
+    const initialFieldsOrder = view.fields.map((f) => f.path);
+    const emailIndex = initialFieldsOrder.indexOf('email' as JsonPath);
+    const initialEmail = projection.getFieldProjection(getFieldId(view, 'email'));
     const initialSchemaProps = { ...mutable.jsonSchema.properties! };
 
     // Delete and restore.
-    const { deleted, index } = projection.deleteFieldProjection('email');
+    const { deleted, index } = projection.deleteFieldProjection(getFieldId(view, 'email'));
 
     // Verify email is deleted but name is unchanged.
     expect(mutable.jsonSchema.properties!.email).to.be.undefined;
@@ -238,18 +249,18 @@ describe('ViewProjection', () => {
     projection.setFieldProjection(deleted, index);
 
     // Verify field position is restored.
-    const restoredFieldsOrder = view.fields.map((f) => f.property);
-    expect(restoredFieldsOrder.indexOf('email' as JsonProp)).to.equal(emailIndex);
+    const restoredFieldsOrder = view.fields.map((f) => f.path);
+    expect(restoredFieldsOrder.indexOf('email' as JsonPath)).to.equal(emailIndex);
 
-    // Verify projection data matches
-    const restored = projection.getFieldProjection('email' as JsonProp);
+    // Verify projection data matches.
+    const restored = projection.getFieldProjection(getFieldId(view, 'email'));
     expect(restored).to.deep.equal(initialEmail);
 
     // Verify all schema properties match initial state.
     expect(mutable.jsonSchema.properties).to.deep.equal(initialSchemaProps);
   });
 
-  test('handles property rename correctly', async ({ expect }) => {
+  test('property rename', async ({ expect }) => {
     const { db } = await builder.createDatabase();
     const registry = new MutableSchemaRegistry(db);
 
@@ -268,33 +279,33 @@ describe('ViewProjection', () => {
     const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
     const projection = new ViewProjection(mutable, view);
 
-    // Capture initial state
-    const initialFieldsOrder = view.fields.map((f) => f.property);
+    // Capture initial state.
+    const initialFieldsOrder = view.fields.map((f) => f.path);
     const emailIndex = initialFieldsOrder.indexOf('email' as JsonProp);
-    const { field, props } = projection.getFieldProjection('email' as JsonProp);
+    const { field, props } = projection.getFieldProjection(getFieldId(view, 'email'));
 
-    // Perform rename
+    // Perform rename.
     projection.setFieldProjection({
       field,
       props: { ...props, property: 'primaryEmail' as JsonProp },
     });
 
-    // Verify field order is preserved
-    const updatedFieldsOrder = view.fields.map((f) => f.property);
+    // Verify field order is preserved.
+    const updatedFieldsOrder = view.fields.map((f) => f.path);
     expect(updatedFieldsOrder.length).to.equal(initialFieldsOrder.length);
     expect(updatedFieldsOrder[emailIndex]).to.equal('primaryEmail');
 
-    // Verify the renamed field preserved all properties
-    const renamed = projection.getFieldProjection('primaryEmail' as JsonProp);
+    // Verify the renamed field preserved all properties.
+    const renamed = projection.getFieldProjection(getFieldId(view, 'primaryEmail'));
     expect(renamed.props).to.deep.equal({
       ...props,
       property: 'primaryEmail',
     });
 
-    // Verify old field is completely removed
-    expect(view.fields.find((f) => f.property === 'email')).to.be.undefined;
-    expect(mutable.jsonSchema.properties?.email).to.be.undefined;
+    // Verify old field is completely removed.
+    expect(view.fields.find((f) => f.path === 'email')).to.be.undefined;
+    expect(mutable.jsonSchema.properties?.['email' as const]).to.be.undefined;
   });
 
-  // TODO(burdon): Test switching format.
+  // TODO(burdon): Test changing format.
 });

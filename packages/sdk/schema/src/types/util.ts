@@ -18,13 +18,13 @@ export const getFieldValue = <T extends object = {}, V = any>(
   object: T,
   field: FieldType,
   defaultValue?: V,
-): V | undefined => (jp.value(object, '$.' + field.property) as V) ?? defaultValue;
+): V | undefined => (jp.value(object, '$.' + field.path) as V) ?? defaultValue;
 
 /**
  * @deprecated
  */
 export const setFieldValue = <T extends object = {}, V = any>(object: T, field: FieldType, value: V): V =>
-  jp.value(object, '$.' + field.property, value);
+  jp.value(object, '$.' + field.path, value);
 
 /**
  * @deprecated

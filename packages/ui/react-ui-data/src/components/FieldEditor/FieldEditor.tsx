@@ -18,7 +18,7 @@ import {
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
-import { Form, FormInput } from '../Form';
+import { Form, FormInput, type FormProps } from '../Form';
 
 export type FieldEditorProps = {
   view: ViewType;
@@ -30,12 +30,8 @@ export type FieldEditorProps = {
 
 export const FieldEditor = ({ view, projection, field, registry, onClose }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
-  const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.property).props);
-
-  useEffect(() => {
-    const { props } = projection.getFieldProjection(field.property);
-    setProps(props);
-  }, [field, projection]);
+  const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
+  useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
 
   const [schemas, setSchemas] = useState<MutableSchema[]>([]);
   useEffect(() => {
@@ -56,14 +52,14 @@ export const FieldEditor = ({ view, projection, field, registry, onClose }: Fiel
 
   const [schema, setSchema] = useState<MutableSchema>();
   useEffect(() => {
-    setSchema(schemas.find((schema) => schema.typename === props.referenceSchema));
-  }, [schemas, props.referenceSchema]);
+    setSchema(schemas.find((schema) => schema.typename === props?.referenceSchema));
+  }, [schemas, props?.referenceSchema]);
 
   // TODO(burdon): Need to wrap otherwise throws error:
   //  Class constructor SchemaClass cannot be invoked without 'new'.
   const [{ fieldSchema }, setFieldSchema] = useState({ fieldSchema: getPropertySchemaForFormat(props?.format) });
-  const handleValueChanged = useCallback(
-    (_props: PropertyType) => {
+  const handleValuesChanged = useCallback<NonNullable<FormProps<PropertyType>['onValuesChanged']>>(
+    (_props) => {
       // Update schema if format changed.
       // TODO(burdon): Callback should pass `changed` to indicate which fields have changed.
       if (_props.format !== props.format) {
@@ -84,17 +80,22 @@ export const FieldEditor = ({ view, projection, field, registry, onClose }: Fiel
     [schemas, props],
   );
 
-  const handleValidate = useCallback(
-    ({ property }: PropertyType) => {
-      if (property && view.fields.find((f) => f.property === property && f.property !== field.property)) {
-        return [{ path: 'property', message: `'${property}' is not unique.` }];
+  const handleValidate = useCallback<NonNullable<FormProps<PropertyType>['onValidate']>>(
+    ({ property }) => {
+      if (property && view.fields.find((f) => f.path === property && f.path !== field.path)) {
+        return [
+          {
+            path: 'property',
+            message: `property is not unique: '${property}'`,
+          },
+        ];
       }
     },
     [view.fields, field],
   );
 
-  const handleSave = useCallback(
-    (props: PropertyType) => {
+  const handleSave = useCallback<NonNullable<FormProps<PropertyType>['onSave']>>(
+    (props) => {
       projection.setFieldProjection({ field, props });
       onClose();
     },
@@ -108,13 +109,13 @@ export const FieldEditor = ({ view, projection, field, registry, onClose }: Fiel
 
   return (
     <Form<PropertyType>
-      key={field.property}
+      key={field.id}
       autoFocus
       values={props}
       schema={fieldSchema}
       filter={(props) => props.filter((p) => p.property !== 'type')}
       sort={['property', 'format']}
-      onValuesChanged={handleValueChanged}
+      onValuesChanged={handleValuesChanged}
       onValidate={handleValidate}
       onSave={handleSave}
       onCancel={onClose}
@@ -136,7 +137,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose }: Fiel
             }))}
           />
         ),
-        referenceProperty: (props) => (
+        referencePath: (props) => (
           <FormInput<PropertyType>
             {...props}
             options={

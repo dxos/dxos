@@ -7,7 +7,8 @@
 /**
  * Creates an object composed of the object properties predicate returns truthy for.
  */
-export const pick = <T extends object, U extends keyof T>(object: T, keys: U[]): Pick<T, U> =>
+
+export const pick = <T extends object, K extends keyof T>(object: T, keys: K[]): Pick<T, K> =>
   keys.reduce(
     (obj, key) => {
       if (object && key in object) {
@@ -15,7 +16,7 @@ export const pick = <T extends object, U extends keyof T>(object: T, keys: U[]):
       }
       return obj;
     },
-    {} as Pick<T, U>,
+    {} as Pick<T, K>,
   );
 
 /**

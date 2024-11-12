@@ -23,7 +23,7 @@ export type ViewEditorProps = ThemedClassName<{
   registry?: SchemaResolver;
   readonly?: boolean;
   showHeading?: boolean;
-  onDelete: (property: string) => void;
+  onDelete: (fieldId: string) => void;
 }>;
 
 /**
@@ -65,10 +65,10 @@ export const ViewEditor = ({
       <List.Root<FieldType>
         items={view.fields}
         isItem={S.is(FieldSchema)}
-        getId={(field) => field.property}
+        getId={(field) => field.id}
         onMove={handleMove}
       >
-        {({ items }) => (
+        {({ items: fields }) => (
           <>
             {showHeading && (
               <div role='heading' className={grid}>
@@ -78,15 +78,11 @@ export const ViewEditor = ({
             )}
 
             <div role='list' className='flex flex-col w-full'>
-              {items?.map((item) => (
-                <List.Item<FieldType>
-                  key={item.property}
-                  item={item}
-                  classNames={mx(grid, ghostHover, 'cursor-pointer')}
-                >
+              {fields?.map((field) => (
+                <List.Item<FieldType> key={field.id} item={field} classNames={mx(grid, ghostHover, 'cursor-pointer')}>
                   <List.ItemDragHandle />
-                  <List.ItemTitle onClick={() => handleSelect(item)}>{item.property}</List.ItemTitle>
-                  <List.ItemDeleteButton onClick={() => onDelete(item.property)} />
+                  <List.ItemTitle onClick={() => handleSelect(field)}>{field.path}</List.ItemTitle>
+                  <List.ItemDeleteButton onClick={() => onDelete(field.id)} />
                 </List.Item>
               ))}
             </div>
@@ -96,7 +92,7 @@ export const ViewEditor = ({
 
       {field && (
         <FieldEditor
-          key={field.property}
+          key={field.id}
           view={view}
           projection={projection}
           field={field}
