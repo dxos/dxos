@@ -124,13 +124,13 @@ export class ViewProjection {
   setFieldProjection({ field, props }: Partial<FieldProjection>, index?: number) {
     log('setFieldProjection', { field, props, index });
 
-    // TODO(burdon): Just setting a prop should create a field if missing.
     const sourcePropertyName = field?.path;
     const targetPropertyName = props?.property;
     const isRename = !!(sourcePropertyName && targetPropertyName && targetPropertyName !== sourcePropertyName);
 
     if (field) {
-      const clonedField: FieldType = { ...field, ...pick(field, ['referencePath']) };
+      const propsValues = props ? (pick(props, ['referencePath']) as Partial<FieldType>) : undefined;
+      const clonedField: FieldType = { ...field, ...propsValues };
       const fieldIndex = this._view.fields.findIndex((f) => f.path === sourcePropertyName);
       if (fieldIndex === -1) {
         if (index !== undefined && index >= 0 && index <= this._view.fields.length) {

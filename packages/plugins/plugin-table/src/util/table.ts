@@ -13,8 +13,9 @@ import {
   TypedObject,
   TypeEnum,
 } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/react-client';
-import { type Space } from '@dxos/react-client/echo';
+import { create, type Space } from '@dxos/react-client/echo';
 import { createFieldId, createView, ViewProjection } from '@dxos/schema';
 
 import { type TableType } from '../types';
@@ -22,6 +23,8 @@ import { type TableType } from '../types';
 // TODO(burdon): Pass in type.
 // TODO(burdon): User should determine typename.
 export const initializeTable = ({ space, table }: { space: Space; table: TableType }): MutableSchema => {
+  log.info('initializeTable', { table });
+
   const ContactSchema = TypedObject({
     typename: `example.com/type/${PublicKey.random().truncate()}`,
     version: '0.1.0',
@@ -65,6 +68,9 @@ export const initializeTable = ({ space, table }: { space: Space; table: TableTy
       title: 'Manager',
     },
   });
+
+  // TODO(burdon): Last (first) row should not be in db and should be managed by the model.
+  space.db.add(create(contactSchema, {}));
 
   return contactSchema;
 };

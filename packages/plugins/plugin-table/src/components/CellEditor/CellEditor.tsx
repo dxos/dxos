@@ -2,89 +2,65 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  autocompletion,
-  pickedCompletion,
-  type CompletionContext,
-  type CompletionResult,
-} from '@codemirror/autocomplete';
-import { EditorView } from '@codemirror/view';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { type DxGrid } from '@dxos/lit-grid';
 import {
   editorKeys,
   type EditorKeysProps,
   type EditorKeyEvent,
   GridCellEditor,
   type GridEditing,
+  type GridCellEditorProps,
 } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 
+import { completion } from './extension';
 import { type TableModel } from '../../model';
 import { type GridCell, toGridCell } from '../../types';
 
 export type CellEditorProps = {
-  editing?: GridEditing;
   model?: TableModel;
+  editing?: GridEditing;
   onEnter?: (cell: GridCell) => void;
-  // TODO(burdon): Import types (and reuse throughout file).
-  onFocus?: (increment: 'col' | 'row' | undefined, delta: 0 | 1 | -1 | undefined) => void;
-  onComplete?: (field: FieldProjection, text: string) => Promise<{ label: string }[]>;
+  onFocus?: DxGrid['refocus'];
+  onQuery?: (field: FieldProjection, text: string) => Promise<{ label: string; data: any }[]>;
 };
 
-export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: CellEditorProps) => {
-  const determineNavigationAxis = ({ key }: EditorKeyEvent): 'col' | 'row' | undefined => {
-    switch (key) {
-      case 'ArrowUp':
-      case 'ArrowDown':
-      case 'Enter': {
-        return 'row';
-      }
-
-      case 'ArrowLeft':
-      case 'ArrowRight':
-      case 'Tab':
-        return 'col';
-    }
-  };
-
-  const determineNavigationDelta = ({ key, shift }: EditorKeyEvent): -1 | 1 => {
-    switch (key) {
-      case 'ArrowUp':
-      case 'ArrowLeft':
-        return -1;
-
-      case 'ArrowDown':
-      case 'ArrowRight':
-        return 1;
+export const CellEditor = ({ model, editing, onEnter, onFocus, onQuery }: CellEditorProps) => {
+  const fieldProjection = useMemo<FieldProjection | undefined>(() => {
+    if (!model || !editing) {
+      return;
     }
 
-    return shift ? -1 : 1;
-  };
-
-  // Selected object reference.
-  const objectRef = useRef();
+    const { col } = toGridCell(editing.index);
+    const field = model.projection.view.fields[col];
+    const fieldProjection = model.projection.getFieldProjection(field.id);
+    invariant(fieldProjection);
+    return fieldProjection;
+  }, [model, editing]);
 
   const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
     (value, event) => {
-      invariant(model);
-      invariant(editing);
-      if (value !== undefined) {
-        // Set value or reference.
-        model.setCellData(toGridCell(editing.index), objectRef.current ?? value);
+      if (!model || !editing || !fieldProjection) {
+        return;
       }
 
       const cell = toGridCell(editing.index);
+      if (value !== undefined) {
+        model.setCellData(cell, value);
+      }
+
       onEnter?.(cell);
       onFocus?.(determineNavigationAxis(event), determineNavigationDelta(event));
     },
-    [model, editing, determineNavigationAxis, determineNavigationDelta],
+    [model, editing, fieldProjection, determineNavigationAxis, determineNavigationDelta],
   );
 
   const extension = useMemo(() => {
-    if (!editing) {
+    if (!fieldProjection) {
       return [];
     }
 
@@ -95,52 +71,20 @@ export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: Cel
       }),
     ];
 
-    invariant(model);
-    const { col } = toGridCell(editing.index);
-    const field = model.projection.view.fields[col];
-    const fieldProjection = model.projection.getFieldProjection(field.id);
-    invariant(fieldProjection);
-
-    if (onComplete) {
+    if (onQuery) {
       switch (fieldProjection.props.format) {
         case FormatEnum.Ref: {
           extension.push([
-            EditorView.theme({
-              '.cm-completionDialog': {
-                width: 'var(--dx-gridCellWidth)',
-              },
-            }),
-
-            // https://codemirror.net/docs/ref/#autocomplete.autocompletion
-            autocompletion({
-              icons: false,
-              activateOnTyping: true,
-              override: [
-                async (context: CompletionContext): Promise<CompletionResult> => {
-                  const text = context.state.doc.toString();
-                  return {
-                    from: 0,
-                    options: await onComplete(fieldProjection, text),
-                  };
-                },
-              ],
-
-              // TODO(burdon): Consts from grid (to line-up with grid).
-              tooltipClass: () => 'cm-completionDialog !mt-[8px] !-ml-[4px] [&>ul]:!max-h-[264px]',
-              optionClass: () => 'flex h-[33px] items-center',
-
-              // Uncomment to debug.
-              // closeOnBlur: true,
-            }),
-
-            // Check for accepted completion metadata in the transaction.
-            EditorView.updateListener.of((update) => {
-              update.transactions.forEach((tr) => {
-                const completion = tr.annotation(pickedCompletion);
-                if (completion) {
-                  objectRef.current = (completion as any).data;
+            completion({
+              onQuery: (text) => onQuery(fieldProjection, text),
+              onMatch: (data) => {
+                if (model && editing) {
+                  const cell = toGridCell(editing.index);
+                  model.setCellData(cell, data);
+                  onEnter?.(cell);
+                  onFocus?.();
                 }
-              });
+              },
             }),
           ]);
           break;
@@ -149,9 +93,9 @@ export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: Cel
     }
 
     return extension;
-  }, [model, editing, handleClose]);
+  }, [model, editing, fieldProjection, handleClose]);
 
-  const getCellContent = useCallback(() => {
+  const getCellContent = useCallback<GridCellEditorProps['getCellContent']>(() => {
     if (model && editing) {
       const value = model.getCellData(toGridCell(editing.index));
       return value !== undefined ? String(value) : '';
@@ -159,4 +103,33 @@ export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: Cel
   }, [model, editing]);
 
   return <GridCellEditor extension={extension} getCellContent={getCellContent} />;
+};
+
+const determineNavigationAxis = ({ key }: EditorKeyEvent): 'col' | 'row' | undefined => {
+  switch (key) {
+    case 'ArrowUp':
+    case 'ArrowDown':
+    case 'Enter': {
+      return 'row';
+    }
+
+    case 'ArrowLeft':
+    case 'ArrowRight':
+    case 'Tab':
+      return 'col';
+  }
+};
+
+const determineNavigationDelta = ({ key, shift }: EditorKeyEvent): -1 | 1 => {
+  switch (key) {
+    case 'ArrowUp':
+    case 'ArrowLeft':
+      return -1;
+
+    case 'ArrowDown':
+    case 'ArrowRight':
+      return 1;
+  }
+
+  return shift ? -1 : 1;
 };
