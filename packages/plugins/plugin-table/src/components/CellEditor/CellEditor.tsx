@@ -9,11 +9,11 @@ import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
 import {
   editorKeys,
-  type EditorKeysProps,
   type EditorKeyEvent,
   GridCellEditor,
   type GridEditing,
   type GridCellEditorProps,
+  type EditorKeyOrBlurHandler,
 } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 
@@ -42,7 +42,7 @@ export const CellEditor = ({ model, editing, onEnter, onFocus, onQuery }: CellEd
     return fieldProjection;
   }, [model, editing]);
 
-  const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
+  const handleClose = useCallback<EditorKeyOrBlurHandler>(
     (value, event) => {
       if (!model || !editing || !fieldProjection) {
         return;
@@ -54,9 +54,11 @@ export const CellEditor = ({ model, editing, onEnter, onFocus, onQuery }: CellEd
       }
 
       onEnter?.(cell);
-      onFocus?.(determineNavigationAxis(event), determineNavigationDelta(event));
+      if (event && onFocus) {
+        onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
+      }
     },
-    [model, editing, fieldProjection, determineNavigationAxis, determineNavigationDelta],
+    [model, editing, onFocus, onEnter, fieldProjection, determineNavigationAxis, determineNavigationDelta],
   );
 
   const extension = useMemo(() => {
@@ -102,7 +104,7 @@ export const CellEditor = ({ model, editing, onEnter, onFocus, onQuery }: CellEd
     }
   }, [model, editing]);
 
-  return <GridCellEditor extension={extension} getCellContent={getCellContent} />;
+  return <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleClose} />;
 };
 
 const determineNavigationAxis = ({ key }: EditorKeyEvent): 'col' | 'row' | undefined => {

@@ -191,6 +191,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
           onAxisResize={handleAxisResize}
           onClick={model?.handleGridClick}
           onKeyDown={handleKeyDown}
+          overscroll='trap'
           ref={setDxGrid}
         />
       </Grid.Root>
