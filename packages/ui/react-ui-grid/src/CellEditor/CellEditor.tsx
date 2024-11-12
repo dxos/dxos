@@ -20,9 +20,13 @@ import { type GridEditBox } from '../Grid';
 
 export type EditorKeyEvent = Pick<KeyboardEvent<HTMLInputElement>, 'key'> & { shift?: boolean };
 
+export type EditorKeyHandler = (value: string | undefined, event: EditorKeyEvent) => void;
+
+export type EditorKeyOrBlurHandler = (value: string | undefined, event?: EditorKeyEvent) => void;
+
 export type EditorKeysProps = {
-  onClose: (value: string | undefined, event: EditorKeyEvent) => void;
-  onNav?: (value: string | undefined, event: EditorKeyEvent) => void;
+  onClose: EditorKeyHandler;
+  onNav?: EditorKeyHandler;
 };
 
 // TODO(Zan): Should each consumer be responsible for defining these?
