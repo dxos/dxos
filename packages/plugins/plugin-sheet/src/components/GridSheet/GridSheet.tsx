@@ -22,7 +22,8 @@ import {
   Grid,
   GridCellEditor,
   type DxGridElement,
-  type EditorKeyOrBlurHandler,
+  type EditorKeyHandler,
+  type EditorBlurHandler,
   type GridContentProps,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
@@ -89,12 +90,8 @@ export const GridSheet = () => {
   );
 
   // TODO(burdon): Validate formula before closing: hf.validateFormula();
-  const handleClose = useCallback<EditorKeyOrBlurHandler>(
-    (value, event) => {
-      if (value !== undefined) {
-        model.setValue(dxGridCellIndexToSheetCellAddress(editing!.index), value);
-      }
-      setEditing(null);
+  const handleClose = useCallback<EditorKeyHandler>(
+    (_value, event) => {
       if (event) {
         const { key, shift } = event;
         const axis = ['Enter', 'ArrowUp', 'ArrowDown'].includes(key)
@@ -107,6 +104,15 @@ export const GridSheet = () => {
       }
     },
     [model, editing, dxGrid],
+  );
+
+  const handleBlur = useCallback<EditorBlurHandler>(
+    (value) => {
+      if (value !== undefined) {
+        model.setValue(dxGridCellIndexToSheetCellAddress(editing!.index), value);
+      }
+    },
+    [model, editing],
   );
 
   const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
@@ -295,7 +301,7 @@ export const GridSheet = () => {
 
   return (
     <>
-      <GridCellEditor getCellContent={getCellContent} extension={extension} onBlur={handleClose} />
+      <GridCellEditor getCellContent={getCellContent} extension={extension} onBlur={handleBlur} />
       <Grid.Content
         initialCells={initialCells}
         limitColumns={DEFAULT_COLUMNS}

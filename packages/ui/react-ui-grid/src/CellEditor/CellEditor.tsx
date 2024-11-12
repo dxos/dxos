@@ -21,7 +21,7 @@ import { type GridEditBox } from '../Grid';
 export type EditorKeyEvent = Pick<KeyboardEvent<HTMLInputElement>, 'key'> & { shift?: boolean };
 
 export type EditorKeyHandler = (value: string | undefined, event: EditorKeyEvent) => void;
-
+export type EditorBlurHandler = (value: string | undefined) => void;
 export type EditorKeyOrBlurHandler = (value: string | undefined, event?: EditorKeyEvent) => void;
 
 export type EditorKeysProps = {
@@ -133,7 +133,7 @@ export type CellEditorProps = {
   variant?: keyof typeof editorVariants;
   box?: GridEditBox;
   gridId?: string;
-} & Pick<UseTextEditorProps, 'autoFocus'> & { onBlur?: (value?: string) => void };
+} & Pick<UseTextEditorProps, 'autoFocus'> & { onBlur?: EditorBlurHandler };
 
 export const CellEditor = ({
   value,
