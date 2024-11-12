@@ -80,7 +80,22 @@ export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: Cel
       onEnter?.(cell);
       onFocus?.(determineNavigationAxis(event), determineNavigationDelta(event));
     },
-    [model, editing, determineNavigationAxis, determineNavigationDelta],
+    [model, editing, onEnter, onFocus, determineNavigationAxis, determineNavigationDelta],
+  );
+
+  const handleBlur = useCallback(
+    (value?: string) => {
+      invariant(model);
+      invariant(editing);
+      if (value !== undefined) {
+        // Set value or reference.
+        model.setCellData(toGridCell(editing.index), objectRef.current ?? value);
+      }
+
+      const cell = toGridCell(editing.index);
+      onEnter?.(cell);
+    },
+    [model, editing, onEnter],
   );
 
   const extension = useMemo(() => {
@@ -158,5 +173,5 @@ export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: Cel
     }
   }, [model, editing]);
 
-  return <GridCellEditor extension={extension} getCellContent={getCellContent} />;
+  return <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} />;
 };
