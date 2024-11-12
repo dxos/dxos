@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { type RefObject } from 'react';
 
 import { DropdownMenu, type DropdownMenuRootProps, useTranslation } from '@dxos/react-ui';
 
@@ -10,28 +10,28 @@ import { TABLE_PLUGIN } from '../../meta';
 import { type TableModel } from '../../model';
 
 export type ColumnActionsMenuProps = {
+  triggerRef: RefObject<HTMLButtonElement>;
   model?: TableModel;
-  columnId?: string;
+  fieldId?: string;
   onShowColumnSettings: () => void;
-  triggerRef: React.RefObject<HTMLButtonElement>;
 } & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
 
 export const ColumnActionsMenu = ({
+  triggerRef,
   model,
-  columnId,
+  fieldId,
   open,
   onOpenChange,
   onShowColumnSettings,
-  triggerRef,
 }: ColumnActionsMenuProps) => {
   const { t } = useTranslation(TABLE_PLUGIN);
 
-  if (!model || !columnId) {
+  if (!model || !fieldId) {
     return null;
   }
 
-  const currentSort = model.sorting.value;
-  const isCurrentColumnSorted = currentSort?.columnId === columnId;
+  const currentSort = model.sorting;
+  const isCurrentColumnSorted = currentSort?.fieldId === fieldId;
 
   return (
     <DropdownMenu.Root modal={false} open={open} onOpenChange={onOpenChange}>
@@ -40,12 +40,12 @@ export const ColumnActionsMenu = ({
         <DropdownMenu.Content>
           <DropdownMenu.Viewport>
             {(!isCurrentColumnSorted || currentSort?.direction === 'asc') && (
-              <DropdownMenu.Item onClick={() => model.setSort(columnId, 'desc')}>
+              <DropdownMenu.Item onClick={() => model.setSort(fieldId, 'desc')}>
                 {t('column action sort descending')}
               </DropdownMenu.Item>
             )}
             {(!isCurrentColumnSorted || currentSort?.direction === 'desc') && (
-              <DropdownMenu.Item onClick={() => model.setSort(columnId, 'asc')}>
+              <DropdownMenu.Item onClick={() => model.setSort(fieldId, 'asc')}>
                 {t('column action sort ascending')}
               </DropdownMenu.Item>
             )}
@@ -54,7 +54,7 @@ export const ColumnActionsMenu = ({
                 {t('column action clear sorting')}
               </DropdownMenu.Item>
             )}
-            <DropdownMenu.Item onClick={() => model.deleteColumn(columnId)}>
+            <DropdownMenu.Item onClick={() => model.deleteColumn(fieldId)}>
               {t('column action delete')}
             </DropdownMenu.Item>
             <DropdownMenu.Item onClick={onShowColumnSettings}>{t('column action settings')}</DropdownMenu.Item>

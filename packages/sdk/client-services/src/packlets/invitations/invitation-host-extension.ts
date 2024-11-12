@@ -125,7 +125,7 @@ export class InvitationHostExtension
             };
           }
 
-          log('guest introduced themselves', { guestProfile: profile });
+          log.verbose('guest introduced themselves', { guestProfile: profile });
           this.guestProfile = profile;
           this._callbacks.onStateUpdate(Invitation.State.READY_FOR_AUTHENTICATION);
           this._challenge =
@@ -143,7 +143,7 @@ export class InvitationHostExtension
           log.trace('dxos.sdk.invitation-handler.host.authenticate', trace.begin({ id: traceId }));
 
           const invitation = this._requireActiveInvitation();
-          log('received authentication request', { authCode: code });
+          log.verbose('received authentication request', { authCode: code });
           let status = AuthenticationResponse.Status.OK;
 
           this._assertInvitationState([Invitation.State.AUTHENTICATING, Invitation.State.READY_FOR_AUTHENTICATION]);
@@ -236,18 +236,15 @@ export class InvitationHostExtension
     await super.onOpen(context);
 
     try {
-      log('host acquire lock');
+      log.verbose('host acquire lock');
       this._invitationFlowLock = await tryAcquireBeforeContextDisposed(this._ctx, this._invitationFlowMutex);
-      log('host lock acquired');
-      const lastState = this._requireActiveInvitation().state;
+      log.verbose('host lock acquired');
       this._callbacks.onStateUpdate(Invitation.State.CONNECTING);
       await this.rpc.InvitationHostService.options({ role: InvitationOptions.Role.HOST });
-      log('options sent');
+      log.verbose('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
-      log('options received');
+      log.verbose('options received');
       if (this._remoteOptions?.role !== InvitationOptions.Role.GUEST) {
-        // we connected with another host, restore previous real invitation flow status
-        this._callbacks.onStateUpdate(lastState);
         throw new InvalidInvitationExtensionRoleError(undefined, {
           expected: InvitationOptions.Role.GUEST,
           remoteOptions: this._remoteOptions,
@@ -299,7 +296,7 @@ export class InvitationHostExtension
     if (this._invitationFlowLock != null) {
       this._invitationFlowLock?.release();
       this._invitationFlowLock = null;
-      log('invitation flow lock released');
+      log.verbose('invitation flow lock released');
     }
   }
 }

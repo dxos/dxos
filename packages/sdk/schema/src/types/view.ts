@@ -2,16 +2,28 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create, JsonProp, JsonSchemaType, QueryType, type ReactiveObject, S, TypedObject } from '@dxos/echo-schema';
+import {
+  create,
+  JsonPath,
+  type JsonProp,
+  JsonSchemaType,
+  QueryType,
+  type ReactiveObject,
+  S,
+  TypedObject,
+} from '@dxos/echo-schema';
+
+import { createFieldId } from './projection';
 
 /**
  * Stored field metadata (e.g., for UX).
  */
 export const FieldSchema = S.Struct({
-  property: JsonProp,
+  id: S.NonEmptyString,
+  path: JsonPath,
   visible: S.optional(S.Boolean),
   size: S.optional(S.Number),
-  referenceProperty: S.optional(JsonProp),
+  referencePath: S.optional(JsonPath),
 }).pipe(S.mutable);
 
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
@@ -20,8 +32,6 @@ export type FieldType = S.Schema.Type<typeof FieldSchema>;
  * Views are generated or user-defined projections of a schema's properties.
  * They are used to configure the visual representation of the data.
  * The query is separate from the view (queries configure the projection of data objects).
- *
- * [Table] => [View] => [Schema]:[JsonSchema]
  */
 export class ViewType extends TypedObject({
   typename: 'dxos.org/type/View',
@@ -57,12 +67,12 @@ type CreateViewProps = {
 /**
  * Create view from existing schema.
  */
-// TODO(burdon): What is the minimal type that can be passed here that included TypedObjects (i.e., AbstractSchema).
 export const createView = ({
   typename,
   jsonSchema,
   properties: _properties,
 }: CreateViewProps): ReactiveObject<ViewType> => {
+  // TODO(burdon): Ensure not objects.
   const properties = _properties ?? Object.keys(jsonSchema?.properties ?? []).filter((p) => p !== 'id');
   return create(ViewType, {
     // schema: jsonSchema,
@@ -70,6 +80,9 @@ export const createView = ({
       __typename: typename,
     },
     // Create initial fields.
-    fields: properties.map((property) => ({ property: property as JsonProp })),
+    fields: properties.map((property) => ({
+      id: createFieldId(),
+      path: property as JsonProp,
+    })),
   });
 };

@@ -72,17 +72,22 @@ export const WelcomePlugin = ({
         .find(matchServiceCredential(['composer:beta']));
       if (credential && hubUrl) {
         log('beta credential found', { credential });
-        // TODO(wittjosiah): If id is required to present credentials, then it should always be present for queried credentials.
-        invariant(credential.id, 'beta credential missing id');
-        const presentation = await client.halo.presentCredentials({ ids: [credential.id] });
-        const { capabilities } = await getProfile({ hubUrl, presentation });
-        const newCapabilities = capabilities.filter(
-          (capability) => !credential.subject.assertion.capabilities.includes(capability),
-        );
-        if (newCapabilities.length > 0) {
-          log('upgrading beta credential', { newCapabilities });
-          const newCredential = await upgradeCredential({ hubUrl, presentation });
-          await client.halo.writeCredentials([newCredential]);
+        try {
+          // TODO(wittjosiah): If id is required to present credentials, then it should always be present for queried credentials.
+          invariant(credential.id, 'beta credential missing id');
+          const presentation = await client.halo.presentCredentials({ ids: [credential.id] });
+          const { capabilities } = await getProfile({ hubUrl, presentation });
+          const newCapabilities = capabilities.filter(
+            (capability) => !credential.subject.assertion.capabilities.includes(capability),
+          );
+          if (newCapabilities.length > 0) {
+            log('upgrading beta credential', { newCapabilities });
+            const newCredential = await upgradeCredential({ hubUrl, presentation });
+            await client.halo.writeCredentials([newCredential]);
+          }
+        } catch (error) {
+          // If failed to upgrade, log the error and continue. Most likely offline.
+          log.catch(error);
         }
         return;
       }

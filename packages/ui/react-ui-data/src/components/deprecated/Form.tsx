@@ -30,7 +30,7 @@ export const DeprecatedForm = <T extends {} = {}>({
   return (
     <div role='none' className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
       {view.fields.map((field) => {
-        const prop = schema && findProperty(schema, field.property);
+        const prop = schema && findProperty(schema, field.path);
         const title = (prop && pipe(AST.getTitleAnnotation(prop), Option.getOrUndefined)) ?? '';
         const description = (prop && pipe(AST.getDescriptionAnnotation(prop), Option.getOrUndefined)) ?? title;
         // const format =
@@ -47,7 +47,7 @@ export const DeprecatedForm = <T extends {} = {}>({
           };
 
           return (
-            <div key={field.property} className='flex flex-col w-full gap-1'>
+            <div key={field.path} className='flex flex-col w-full gap-1'>
               <Input.Root>
                 <Input.Label classNames='px-1'>{title}</Input.Label>
                 <Input.Switch disabled={readonly} checked={!!value} onCheckedChange={(checked) => onChange(checked)} />
@@ -68,7 +68,7 @@ export const DeprecatedForm = <T extends {} = {}>({
         const value = object ? getFieldValue(object, field) : undefined;
 
         return (
-          <div key={field.property} className='flex flex-col w-full gap-1'>
+          <div key={field.path} className='flex flex-col w-full gap-1'>
             <Input.Root>
               <Input.Label classNames='px-1'>{title}</Input.Label>
               <TextInput
