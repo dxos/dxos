@@ -193,14 +193,15 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 export const ListItemDeleteButton = ({
   autoHide = true,
   classNames,
+  disabled,
   ...props
 }: Omit<IconButtonProps, 'icon'> & { autoHide?: boolean }) => {
   const { state } = useListContext('DELETE_BUTTON');
-  const disabled = state.type !== 'idle';
+  const isDisabled = state.type !== 'idle' || disabled;
   return (
     <IconButton
       icon='ph--x--regular'
-      disabled={disabled}
+      disabled={isDisabled}
       classNames={[classNames, autoHide && disabled && 'hidden']}
       {...props}
     />
