@@ -137,7 +137,7 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
 /**
  * Discriminated union of schema based on format.
  * This is the schema used by the ViewEditor's Form.
- * It is mapped to/from the View's Field and Schema properties via the ViewProjection.
+ * It is mapped to/from the View's Field AND Schema properties via the ViewProjection.
  */
 export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.None],
@@ -205,6 +205,7 @@ export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> |
   return undefined;
 };
 
+// NOTE: 'a string' is the fallback annotation provided by effect.
 const noDefault = (value?: string, defaultValue?: string): string | undefined =>
   (value === 'a string' ? undefined : value) ?? defaultValue;
 
@@ -252,5 +253,8 @@ const getTypeEnum = (node: AST.AST): TypeEnum | undefined => {
   }
   if (AST.isBooleanKeyword(node)) {
     return TypeEnum.Boolean;
+  }
+  if (AST.isObjectKeyword(node)) {
+    return TypeEnum.Object;
   }
 };

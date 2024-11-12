@@ -102,7 +102,14 @@ export class ViewProjection {
       format = typeToFormat[type as TypeEnum]!;
     }
 
-    const values = { property: field.path as JsonProp, type, format, referenceSchema, ...rest };
+    const values = {
+      property: field.path as JsonProp,
+      type,
+      format,
+      referenceSchema,
+      referencePath: field.referencePath,
+      ...rest,
+    };
     const props = values.type ? this._decode(values) : values;
 
     log('getFieldProjection', { field, props });
@@ -137,14 +144,9 @@ export class ViewProjection {
     }
 
     if (props) {
-      let {
-        property,
-        type,
-        format,
-        referenceSchema,
-        referencePath: _, // Strip.
-        ...rest
-      }: Partial<PropertyType> = this._encode(omit(props, ['referencePath']));
+      let { property, type, format, referenceSchema, ...rest }: Partial<PropertyType> = this._encode(
+        omit(props, ['referencePath']),
+      );
       invariant(property);
       invariant(format);
 
