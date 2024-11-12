@@ -43,9 +43,11 @@ export const ColumnActionsMenu = ({ model }: ColumnActionsMenuProps) => {
                 {t('column action clear sorting')}
               </DropdownMenu.Item>
             )}
-            <DropdownMenu.Item onClick={() => model.deleteColumn(state.fieldId)}>
-              {t('column action delete')}
-            </DropdownMenu.Item>
+            {model.getColumnCount() > 1 && (
+              <DropdownMenu.Item onClick={() => model.deleteColumn(state.fieldId)}>
+                {t('column action delete')}
+              </DropdownMenu.Item>
+            )}
             <DropdownMenu.Item onClick={() => model.modalController.openColumnSettings()}>
               {t('column action settings')}
             </DropdownMenu.Item>
