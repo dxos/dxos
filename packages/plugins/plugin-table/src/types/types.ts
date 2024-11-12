@@ -26,7 +26,7 @@ export enum TableAction {
 
 export namespace TableAction {
   export type Create = IntentData<{ table: TableType }>;
-  export type DeleteColumn = IntentData<{ table: TableType; property: string }>;
+  export type DeleteColumn = IntentData<{ table: TableType; fieldId: string }>;
 }
 
 export type TableProvides = {};

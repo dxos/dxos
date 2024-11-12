@@ -11,7 +11,6 @@ import { type ValidationError } from '@dxos/schema';
  * Handles various data types including booleans, numbers, dates, and strings.
  * Returns undefined for empty or null inputs.
  */
-// TODO(burdon): Differentiate between data FormatEnum and display format (e.g., percent).
 export type ParseProps = {
   type?: TypeEnum;
   format?: FormatEnum;
@@ -72,7 +71,7 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
     }
 
     case FormatEnum.Ref:
-      return parseScalar(TypeEnum.Ref);
+      throw new Error(`unexpected format: ${FormatEnum.Ref}`);
 
     case FormatEnum.DateTime:
     case FormatEnum.Date:

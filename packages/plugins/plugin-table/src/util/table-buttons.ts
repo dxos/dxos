@@ -25,7 +25,7 @@ export const tableButtons = {
   columnSettings: {
     attr: TABLE_ATTRS.columnSettings,
     icon: ICONS.columnSettings,
-    render: ({ columnId }: { columnId: string }) => createButtonHtml({ button: 'columnSettings', value: columnId }),
+    render: ({ fieldId }: { fieldId: string }) => createButtonHtml({ button: 'columnSettings', value: fieldId }),
   },
   rowMenu: {
     attr: TABLE_ATTRS.rowMenu,

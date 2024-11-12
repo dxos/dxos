@@ -79,6 +79,12 @@ export enum FormatEnum {
   Date = 'date',
   Time = 'time',
   Duration = 'duration',
+
+  //
+  // { type: 'object' }
+  //
+
+  LatLng = 'latlng',
 }
 
 export const FormatEnums = Object.values(FormatEnum).sort();
@@ -129,4 +135,7 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.Integer]: TypeEnum.Number,
   [FormatEnum.Percent]: TypeEnum.Number,
   [FormatEnum.Timestamp]: TypeEnum.Number,
+
+  // Objects
+  [FormatEnum.LatLng]: TypeEnum.Object,
 };
