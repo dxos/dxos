@@ -97,6 +97,32 @@ describe('MutableSchema', () => {
     expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
   });
 
+  // TODO(burdon): Throws Predicate refinement error.
+  test.skip('mutable schema refs', async () => {
+    const { db } = await setupTest();
+
+    const OrgSchema = TypedObject({
+      typename: 'example.com/type/org',
+      version: '0.1.0',
+    })({
+      name: S.optional(S.String),
+    });
+
+    const ContactSchema = TypedObject({
+      typename: 'example.com/type/contact',
+      version: '0.1.0',
+    })({
+      name: S.optional(S.String),
+      org: S.optional(ref(OrgSchema)),
+    });
+
+    const orgSchema = db.schemaRegistry.addSchema(OrgSchema);
+    const contactSchema = db.schemaRegistry.addSchema(ContactSchema);
+    const org = db.add(create(orgSchema, { name: 'DXOS' }));
+    const contact = db.add(create(contactSchema, { name: 'Bot', org }));
+    console.log(org, contact);
+  });
+
   const setupTest = async () => {
     const { db, graph } = await builder.createDatabase();
     graph.schemaRegistry.addSchema([TestSchema]);

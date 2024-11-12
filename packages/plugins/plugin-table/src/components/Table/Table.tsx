@@ -161,10 +161,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
 
               return {
                 label: value,
-                apply: () => {
-                  // TODO(burdon): Update.
-                  console.log('###', obj);
-                },
+                data: obj,
               };
             })
             .filter(isNotFalsy);

@@ -213,5 +213,5 @@ export const createUniqueProperty = (view: ViewType): JsonProp => {
 };
 
 // TODO(burdon): Move to echo-schema.
-export const getValue = <T>(obj: any, path: JsonPath) => getDeep<T>(obj, path.split('.'));
-export const setValue = <T>(obj: any, path: JsonPath, value: T) => setDeep<T>(obj, path.split('.'), value);
+export const getValue = <T = any>(obj: any, path: JsonPath) => getDeep<T>(obj, path.split('.'));
+export const setValue = <T = any>(obj: any, path: JsonPath, value: T) => setDeep<T>(obj, path.split('.'), value);

@@ -14,7 +14,7 @@ import { type ValidationError } from '@dxos/schema';
 export type ParseProps = {
   type?: TypeEnum;
   format?: FormatEnum;
-  value: any; // TODO(burdon): Type?
+  value: any;
 };
 
 export const parseValue = ({ type, format, value }: ParseProps) => {
@@ -71,7 +71,7 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
     }
 
     case FormatEnum.Ref:
-      return parseScalar(TypeEnum.Ref);
+      throw new Error(`unexpected format: ${FormatEnum.Ref}`);
 
     case FormatEnum.DateTime:
     case FormatEnum.Date:

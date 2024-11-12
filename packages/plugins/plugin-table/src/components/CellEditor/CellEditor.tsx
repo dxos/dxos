@@ -2,9 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { autocompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
+import {
+  autocompletion,
+  pickedCompletion,
+  type CompletionContext,
+  type CompletionResult,
+} from '@codemirror/autocomplete';
 import { EditorView } from '@codemirror/view';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -59,14 +64,16 @@ export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: Cel
     return shift ? -1 : 1;
   };
 
+  // Selected object reference.
+  const objectRef = useRef();
+
   const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
     (value, event) => {
       invariant(model);
       invariant(editing);
       if (value !== undefined) {
-        // TODO(burdon): ???
-        console.log('================= setCellData', value);
-        model.setCellData(toGridCell(editing.index), value);
+        // Set value or reference.
+        model.setCellData(toGridCell(editing.index), objectRef.current ?? value);
       }
 
       const cell = toGridCell(editing.index);
@@ -96,9 +103,7 @@ export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: Cel
 
     if (onComplete) {
       switch (fieldProjection.props.format) {
-        // TODO(burdon): Remove default.
-        case FormatEnum.Ref:
-        default: {
+        case FormatEnum.Ref: {
           extension.push([
             EditorView.theme({
               '.cm-completionDialog': {
@@ -106,7 +111,6 @@ export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: Cel
               },
             }),
 
-            // TODO(burdon): Select value.
             // https://codemirror.net/docs/ref/#autocomplete.autocompletion
             autocompletion({
               icons: false,
@@ -121,12 +125,22 @@ export const CellEditor = ({ editing, model, onEnter, onFocus, onComplete }: Cel
                 },
               ],
 
-              // TODO(burdon): Consts from grid.
+              // TODO(burdon): Consts from grid (to line-up with grid).
               tooltipClass: () => 'cm-completionDialog !mt-[8px] !-ml-[4px] [&>ul]:!max-h-[264px]',
               optionClass: () => 'flex h-[33px] items-center',
 
-              // TODO(burdon): Debug.
-              closeOnBlur: true,
+              // Uncomment to debug.
+              // closeOnBlur: true,
+            }),
+
+            // Check for accepted completion metadata in the transaction.
+            EditorView.updateListener.of((update) => {
+              update.transactions.forEach((tr) => {
+                const completion = tr.annotation(pickedCompletion);
+                if (completion) {
+                  objectRef.current = (completion as any).data;
+                }
+              });
             }),
           ]);
           break;

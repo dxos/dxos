@@ -22,7 +22,14 @@ import { type TableType } from '../types';
 // TODO(burdon): Pass in type.
 // TODO(burdon): User should determine typename.
 export const initializeTable = ({ space, table }: { space: Space; table: TableType }): MutableSchema => {
-  const TestSchema = TypedObject({
+  // const OrgSchema = TypedObject({
+  //   typename: `example.com/type/${PublicKey.random().truncate()}`,
+  //   version: '0.1.0',
+  // })({
+  //   name: S.optional(S.String),
+  // });
+
+  const ContactSchema = TypedObject({
     typename: `example.com/type/${PublicKey.random().truncate()}`,
     version: '0.1.0',
   })({
@@ -33,16 +40,18 @@ export const initializeTable = ({ space, table }: { space: Space; table: TableTy
     salary: S.optional(Format.Currency()).annotations({
       [AST.TitleAnnotationId]: 'Salary',
     }), // TODO(burdon): Should default to prop name?
+    // org: S.optional(ref(OrgSchema)),
   });
 
-  const mutable = space.db.schemaRegistry.addSchema(TestSchema);
+  // const orgSchema = space.db.schemaRegistry.addSchema(OrgSchema);
+  const contactSchema = space.db.schemaRegistry.addSchema(ContactSchema);
   table.view = createView({
-    typename: mutable.typename,
-    jsonSchema: mutable.jsonSchema,
+    typename: contactSchema.typename,
+    jsonSchema: contactSchema.jsonSchema,
     properties: ['name', 'email', 'salary'],
   });
 
-  const projection = new ViewProjection(mutable, table.view!);
+  const projection = new ViewProjection(contactSchema, table.view!);
   projection.setFieldProjection({
     field: {
       id: table.view.fields[2].id,
@@ -52,23 +61,24 @@ export const initializeTable = ({ space, table }: { space: Space; table: TableTy
   });
 
   // Add field with reference.
-  const ref = true;
-  if (ref) {
-    projection.setFieldProjection({
-      field: {
-        id: createFieldId(),
-        path: 'manager' as JsonPath,
-        referencePath: 'name' as JsonPath,
-      },
-      props: {
-        property: 'manager' as JsonProp,
-        type: TypeEnum.Ref,
-        format: FormatEnum.Ref,
-        referenceSchema: mutable.typename,
-        title: 'Manager',
-      },
-    });
-  }
+  projection.setFieldProjection({
+    field: {
+      id: createFieldId(),
+      path: 'manager' as JsonPath,
+      referencePath: 'name' as JsonPath,
+    },
+    props: {
+      property: 'manager' as JsonProp,
+      type: TypeEnum.Ref,
+      format: FormatEnum.Ref,
+      referenceSchema: contactSchema.typename,
+      title: 'Manager',
+    },
+  });
 
-  return mutable;
+  // TODO(burdon): Testing.
+  // const org = space.db.add(create(orgSchema, {}));
+  // const contact = space.db.add(create(contactSchema, { org }));
+
+  return contactSchema;
 };

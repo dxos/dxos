@@ -6,7 +6,7 @@ import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-c
 import sortBy from 'lodash.sortby';
 
 import { Resource } from '@dxos/context';
-import { type JsonProp } from '@dxos/echo-schema';
+import { FormatEnum, type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
 import { cellClassesForFieldType, formatForDisplay, formatForEditing, parseValue } from '@dxos/react-ui-data';
@@ -340,15 +340,23 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     const field = fields[col];
     const dataIndex = this._displayToDataIndex.get(row) ?? row;
     const value = getValue(this._rows.value[dataIndex], field.path);
-    if (value === undefined) {
+    if (value == undefined) {
       return '';
     }
 
     const { props } = this._projection.getFieldProjection(field.id);
-    return formatForEditing({ type: props.type, format: props.format, value });
+    if (props.format === FormatEnum.Ref) {
+      if (!field.referencePath) {
+        return ''; // TODO(burdon): Show error.
+      }
+
+      return getValue(value, field.referencePath);
+    } else {
+      return formatForEditing({ type: props.type, format: props.format, value });
+    }
   };
 
-  public setCellData = ({ col, row }: GridCell, value: string | undefined): void => {
+  public setCellData = ({ col, row }: GridCell, value: any): void => {
     const rowIdx = this._displayToDataIndex.get(row) ?? row;
     const fields = this.table.view?.fields ?? [];
     if (col < 0 || col >= fields.length) {
@@ -357,15 +365,19 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
     const field = fields[col];
     const { props } = this._projection.getFieldProjection(field.id);
-    setValue(
-      this._rows.value[rowIdx],
-      field.path,
-      parseValue({
-        type: props.type,
-        format: props.format,
-        value,
-      }),
-    );
+    if (props.format === FormatEnum.Ref) {
+      setValue(this._rows.value[rowIdx], field.path, value);
+    } else {
+      setValue(
+        this._rows.value[rowIdx],
+        field.path,
+        parseValue({
+          type: props.type,
+          format: props.format,
+          value,
+        }),
+      );
+    }
   };
 
   //

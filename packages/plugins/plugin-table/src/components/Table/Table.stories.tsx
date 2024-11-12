@@ -198,8 +198,8 @@ const meta: Meta<StoryProps> = {
       onSpaceCreated: async ({ space }) => {
         const table = space.db.add(create(TableType, {}));
         const schema = initializeTable({ space, table });
-        Array.from({ length: 30 }).forEach(() => {
-          space.db.add(
+        Array.from({ length: 30 }).map(() => {
+          return space.db.add(
             create(schema, {
               name: faker.person.fullName(),
             }),
