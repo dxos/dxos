@@ -122,10 +122,6 @@ export const DeckLayout = ({
     return {};
   }, [layoutMode, overscroll, layoutParts.main, plankSizing, sidebarOpen, complementarySidebarOpen]);
 
-  if (layoutMode === 'fullscreen') {
-    return <Fullscreen id={fullScreenSlug} />;
-  }
-
   return (
     <Popover.Root
       modal
@@ -141,127 +137,131 @@ export const DeckLayout = ({
     >
       <ActiveNode />
 
-      <Main.Root
-        navigationSidebarOpen={context.sidebarOpen}
-        onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
-        complementarySidebarOpen={context.complementarySidebarOpen}
-        onComplementarySidebarOpenChange={(next) => (context.complementarySidebarOpen = next)}
-      >
-        {/* Notch */}
-        <Main.Notch classNames='z-[21]'>
-          <Surface role='notch-start' />
-          <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost' classNames='p-1'>
-            <span className='sr-only'>{t('open navigation sidebar label')}</span>
-            <MenuIcon weight='light' className={getSize(5)} />
-          </Button>
-          <Button
-            onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
-            variant='ghost'
-            classNames='p-1'
-          >
-            <span className='sr-only'>{t('open complementary sidebar label')}</span>
-            <MenuIcon mirrored weight='light' className={getSize(5)} />
-          </Button>
-          <Surface role='notch-end' />
-        </Main.Notch>
+      {layoutMode === 'fullscreen' && <Fullscreen id={fullScreenSlug} />}
 
-        {/* Left sidebar. */}
-        <Sidebar layoutParts={layoutParts} />
+      {layoutMode !== 'fullscreen' && (
+        <Main.Root
+          navigationSidebarOpen={context.sidebarOpen}
+          onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
+          complementarySidebarOpen={context.complementarySidebarOpen}
+          onComplementarySidebarOpenChange={(next) => (context.complementarySidebarOpen = next)}
+        >
+          {/* Notch */}
+          <Main.Notch classNames='z-[21]'>
+            <Surface role='notch-start' />
+            <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost' classNames='p-1'>
+              <span className='sr-only'>{t('open navigation sidebar label')}</span>
+              <MenuIcon weight='light' className={getSize(5)} />
+            </Button>
+            <Button
+              onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
+              variant='ghost'
+              classNames='p-1'
+            >
+              <span className='sr-only'>{t('open complementary sidebar label')}</span>
+              <MenuIcon mirrored weight='light' className={getSize(5)} />
+            </Button>
+            <Surface role='notch-end' />
+          </Main.Notch>
 
-        {/* Right sidebar. */}
-        <ComplementarySidebar panels={panels} current={layoutParts.complementary?.[0].id} flatDeck={flatDeck} />
+          {/* Left sidebar. */}
+          <Sidebar layoutParts={layoutParts} />
 
-        {/* Dialog overlay to dismiss dialogs. */}
-        <Main.Overlay />
+          {/* Right sidebar. */}
+          <ComplementarySidebar panels={panels} current={layoutParts.complementary?.[0].id} flatDeck={flatDeck} />
 
-        {/* No content. */}
-        {isEmpty && (
-          <Main.Content handlesFocus>
-            <ContentEmpty />
-          </Main.Content>
-        )}
+          {/* Dialog overlay to dismiss dialogs. */}
+          <Main.Overlay />
 
-        {/* Solo/deck mode. */}
-        {!isEmpty && (
-          <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
-            <div role='none' className='relative'>
-              <Deck.Root
-                style={padding}
-                classNames={[
-                  !flatDeck && 'bg-deck',
-                  mainPaddingTransitions,
-                  'absolute inset-0',
-                  slots?.wallpaper?.classNames,
-                ]}
-                solo={layoutMode === 'solo'}
-                onScroll={handleScroll}
-                ref={deckRef}
-              >
-                <Plank
-                  entry={layoutParts.solo?.[0]}
-                  layoutParts={layoutParts}
-                  part='solo'
-                  layoutMode={layoutMode}
-                  flatDeck={flatDeck}
-                  searchEnabled={!!searchPlugin}
-                />
-                {layoutParts.main?.map((layoutEntry) => (
+          {/* No content. */}
+          {isEmpty && (
+            <Main.Content handlesFocus>
+              <ContentEmpty />
+            </Main.Content>
+          )}
+
+          {/* Solo/deck mode. */}
+          {!isEmpty && (
+            <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
+              <div role='none' className='relative'>
+                <Deck.Root
+                  style={padding}
+                  classNames={[
+                    !flatDeck && 'bg-deck',
+                    mainPaddingTransitions,
+                    'absolute inset-0',
+                    slots?.wallpaper?.classNames,
+                  ]}
+                  solo={layoutMode === 'solo'}
+                  onScroll={handleScroll}
+                  ref={deckRef}
+                >
                   <Plank
-                    key={layoutEntry.id}
-                    entry={layoutEntry}
+                    entry={layoutParts.solo?.[0]}
                     layoutParts={layoutParts}
-                    part='main'
+                    part='solo'
                     layoutMode={layoutMode}
                     flatDeck={flatDeck}
                     searchEnabled={!!searchPlugin}
                   />
-                ))}
-              </Deck.Root>
-            </div>
-          </Main.Content>
-        )}
+                  {layoutParts.main?.map((layoutEntry) => (
+                    <Plank
+                      key={layoutEntry.id}
+                      entry={layoutEntry}
+                      layoutParts={layoutParts}
+                      part='main'
+                      layoutMode={layoutMode}
+                      flatDeck={flatDeck}
+                      searchEnabled={!!searchPlugin}
+                    />
+                  ))}
+                </Deck.Root>
+              </div>
+            </Main.Content>
+          )}
 
-        {/* Footer status. */}
-        <StatusBar showHints={showHints} />
+          {/* Footer status. */}
+          <StatusBar showHints={showHints} />
+        </Main.Root>
+      )}
 
-        {/* Global popovers. */}
-        <Popover.Portal>
-          <Popover.Content
-            classNames='z-[60]'
-            onEscapeKeyDown={() => {
-              context.popoverOpen = false;
-              context.popoverAnchorId = undefined;
-            }}
-          >
-            <Popover.Viewport>
-              <Surface role='popover' data={popoverContent} />
-            </Popover.Viewport>
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Portal>
+      {/* Global popovers. */}
+      <Popover.Portal>
+        <Popover.Content
+          classNames='z-[60]'
+          onEscapeKeyDown={() => {
+            context.popoverOpen = false;
+            context.popoverAnchorId = undefined;
+          }}
+        >
+          <Popover.Viewport>
+            <Surface role='popover' data={popoverContent} />
+          </Popover.Viewport>
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
 
-        {/* Global dialog. */}
-        <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
-          <Dialog.Overlay blockAlign={dialogBlockAlign}>
-            <Surface role='dialog' data={dialogContent} />
-          </Dialog.Overlay>
-        </Dialog.Root>
+      {/* Global dialog. */}
+      <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
+        <Dialog.Overlay blockAlign={dialogBlockAlign}>
+          <Surface role='dialog' data={dialogContent} />
+        </Dialog.Overlay>
+      </Dialog.Root>
 
-        {/* Global toasts. */}
-        {toasts?.map((toast) => (
-          <Toast
-            {...toast}
-            key={toast.id}
-            onOpenChange={(open) => {
-              if (!open) {
-                onDismissToast(toast.id);
-              }
+      {/* Global toasts. */}
+      {toasts?.map((toast) => (
+        <Toast
+          {...toast}
+          key={toast.id}
+          onOpenChange={(open) => {
+            if (!open) {
+              onDismissToast(toast.id);
+            }
 
-              return open;
-            }}
-          />
-        ))}
-      </Main.Root>
+            return open;
+          }}
+        />
+      ))}
     </Popover.Root>
   );
 };

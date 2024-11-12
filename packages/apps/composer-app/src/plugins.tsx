@@ -233,15 +233,10 @@ export const plugins = ({
       const { DocumentType, TextType } = await import('@dxos/plugin-markdown/types');
       const { CollectionType } = await import('@dxos/plugin-space/types');
 
-      const readme = create(CollectionType, { name: INITIAL_COLLECTION_TITLE, objects: [], views: {} });
-      INITIAL_CONTENT.forEach((content, index) => {
-        readme.objects.push(
-          create(DocumentType, {
-            name: index === 0 ? INITIAL_DOC_TITLE : undefined,
-            content: create(TextType, { content: content + '\n' }),
-            threads: [],
-          }),
-        );
+      const readme = create(DocumentType, {
+        name: INITIAL_DOC_TITLE,
+        content: create(TextType, { content: INITIAL_CONTENT.join('\n\n') }),
+        threads: [],
       });
 
       const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;

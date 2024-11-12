@@ -77,36 +77,38 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
           </Button>
         </DropdownMenu.Trigger>
         {/* TODO(thure): Putting `DropdownMenu.Portal` here breaks highlighting and focus. Why? */}
-        <DropdownMenu.Content>
-          <DropdownMenu.Viewport>
-            {Object.entries(actions).map(([id, action]) => {
-              return (
-                <DropdownMenu.CheckboxItem
-                  key={id}
-                  aria-labelledby={`${id}__label`}
-                  aria-describedby={`${id}__description`}
-                  checked={activeActionKey === id}
-                  onCheckedChange={(checked) => checked && setActiveAction(id)}
-                  classNames='gap-2'
-                >
-                  {action.icon && <action.icon className={getSize(5)} />}
-                  <div role='none' className='flex-1 min-is-0 space-b-1'>
-                    <p id={`${id}__label`}>{action.label}</p>
-                    {action.description && (
-                      <p id={`${id}__description`} className={descriptionText}>
-                        {action.description}
-                      </p>
-                    )}
-                  </div>
-                  <DropdownMenu.ItemIndicator asChild>
-                    <Check weight='bold' className={getSize(4)} />
-                  </DropdownMenu.ItemIndicator>
-                </DropdownMenu.CheckboxItem>
-              );
-            })}
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content>
+            <DropdownMenu.Viewport>
+              {Object.entries(actions).map(([id, action]) => {
+                return (
+                  <DropdownMenu.CheckboxItem
+                    key={id}
+                    aria-labelledby={`${id}__label`}
+                    aria-describedby={`${id}__description`}
+                    checked={activeActionKey === id}
+                    onCheckedChange={(checked) => checked && setActiveAction(id)}
+                    classNames='gap-2'
+                  >
+                    {action.icon && <action.icon className={getSize(5)} />}
+                    <div role='none' className='flex-1 min-is-0 space-b-1'>
+                      <p id={`${id}__label`}>{action.label}</p>
+                      {action.description && (
+                        <p id={`${id}__description`} className={descriptionText}>
+                          {action.description}
+                        </p>
+                      )}
+                    </div>
+                    <DropdownMenu.ItemIndicator asChild>
+                      <Check weight='bold' className={getSize(4)} />
+                    </DropdownMenu.ItemIndicator>
+                  </DropdownMenu.CheckboxItem>
+                );
+              })}
+            </DropdownMenu.Viewport>
+            <DropdownMenu.Arrow />
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
       </DropdownMenu.Root>
     </div>
   );

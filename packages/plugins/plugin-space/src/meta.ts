@@ -30,4 +30,5 @@ export enum SpaceAction {
   DUPLICATE_OBJECT = `${SPACE_ACTION}/duplicate-object`,
   WAIT_FOR_OBJECT = `${SPACE_ACTION}/wait-for-object`,
   TOGGLE_HIDDEN = `${SPACE_ACTION}/toggle-hidden`,
+  OPEN_SETTINGS = `${SPACE_ACTION}/open-settings`,
 }
