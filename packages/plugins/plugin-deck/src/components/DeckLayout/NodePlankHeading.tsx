@@ -73,9 +73,7 @@ export const NodePlankHeading = memo(
     );
 
     return (
-      <PlankHeading.Root
-        {...((layoutPart !== 'main' || !flatDeck) && { classNames: 'pie-1 border-b border-separator' })}
-      >
+      <PlankHeading.Root {...((layoutPart !== 'main' || !flatDeck) && { classNames: 'pie-1' })}>
         <ActionRoot>
           {node ? (
             <PlankHeading.ActionsMenu

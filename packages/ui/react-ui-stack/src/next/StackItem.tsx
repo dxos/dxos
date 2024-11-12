@@ -25,9 +25,11 @@ import React, {
   useRef,
   useCallback,
   useEffect,
+  Children,
 } from 'react';
 
 import { type ThemedClassName, Icon } from '@dxos/react-ui';
+import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStack } from './Stack';
@@ -247,5 +249,34 @@ export const StackItemResizeHandle = () => {
       <Icon icon={orientation === 'horizontal' ? 'ph--dots-six-vertical--regular' : 'ph--dots-six--regular'} />
       <span className='sr-only'>Resize</span>
     </button>
+  );
+};
+
+export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { attendableId: string };
+
+export const StackItemContent = ({ children, attendableId, ...props }: StackItemContentProps) => {
+  const nChildren = Children.count(children);
+  const { size } = useStack();
+  const { hasAttention } = useAttention(attendableId);
+  const attendableAttributes = useAttendableAttributes(attendableId);
+
+  return (
+    <div
+      role='none'
+      {...props}
+      {...attendableAttributes}
+      {...(hasAttention && { 'aria-current': 'location' })}
+      className={mx(
+        'group',
+        size === 'contain' && 'overflow-hidden',
+        nChildren > 2
+          ? 'flex flex-col gap-px'
+          : nChildren === 2
+            ? 'grid cols-1 grid-rows-[var(--rail-action)_1fr] gap-px'
+            : 'contents',
+      )}
+    >
+      {children}
+    </div>
   );
 };

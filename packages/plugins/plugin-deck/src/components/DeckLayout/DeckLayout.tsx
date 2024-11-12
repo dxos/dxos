@@ -187,6 +187,7 @@ export const DeckLayout = ({
             <div role='none' className='relative'>
               <Stack
                 orientation='horizontal'
+                size='contain'
                 style={padding}
                 classNames={[
                   !flatDeck && 'bg-deck',
