@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
+import { SpaceAction } from '@dxos/plugin-space';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
@@ -39,12 +40,11 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
-  // TODO(burdon): Undo action.
   const handleDeleteRow = useCallback(
-    (row: number, object: any) => {
-      space?.db.remove(object);
+    (_row: number, object: any) => {
+      void dispatch({ action: SpaceAction.REMOVE_OBJECT, data: { object } });
     },
-    [space],
+    [dispatch],
   );
 
   const handleDeleteColumn = useCallback((fieldId: string) => {

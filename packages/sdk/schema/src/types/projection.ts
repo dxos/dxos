@@ -17,7 +17,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { getDeep, pick, setDeep } from '@dxos/util';
+import { getDeep, omit, pick, setDeep } from '@dxos/util';
 
 import { PropertySchema, type PropertyType } from './format';
 import { type ViewType, type FieldType } from './view';
@@ -137,7 +137,14 @@ export class ViewProjection {
     }
 
     if (props) {
-      let { property, type, format, referenceSchema, ...rest }: Partial<PropertyType> = this._encode(props);
+      let {
+        property,
+        type,
+        format,
+        referenceSchema,
+        referencePath: _, // Strip.
+        ...rest
+      }: Partial<PropertyType> = this._encode(omit(props, ['referencePath']));
       invariant(property);
       invariant(format);
 

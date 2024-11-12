@@ -6,8 +6,8 @@ import { useEffect } from 'react';
 
 import { create, S, TypeEnum, TypedObject, FormatEnum, toJsonSchema } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { createView, type ViewProjection } from '@dxos/schema';
-import { setValue } from '@dxos/schema/src';
+import { createView, setValue, type ViewProjection } from '@dxos/schema';
+import {} from '@dxos/schema';
 
 import { TableType } from '../types';
 

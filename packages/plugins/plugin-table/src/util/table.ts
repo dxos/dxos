@@ -15,8 +15,7 @@ import {
 } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { createView, ViewProjection } from '@dxos/schema';
-import { createFieldId } from '@dxos/schema/src';
+import { createFieldId, createView, ViewProjection } from '@dxos/schema';
 
 import { type TableType } from '../types';
 
@@ -59,13 +58,13 @@ export const initializeTable = ({ space, table }: { space: Space; table: TableTy
       field: {
         id: createFieldId(),
         path: 'manager' as JsonPath,
+        referencePath: 'name' as JsonPath,
       },
       props: {
         property: 'manager' as JsonProp,
         type: TypeEnum.Ref,
         format: FormatEnum.Ref,
         referenceSchema: mutable.typename,
-        referencePath: 'name' as JsonPath,
         title: 'Manager',
       },
     });

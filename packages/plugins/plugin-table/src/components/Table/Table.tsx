@@ -16,11 +16,10 @@ import {
   useGridContext,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { getValue } from '@dxos/schema/src';
+import { getValue } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
-import { ColumnCreate } from './ColumnCreate';
 import { ColumnSettings } from './ColumnSettings';
 import { RowActionsMenu } from './RowActionsMenu';
 import { useTableMenuController } from '../../hooks';
@@ -157,14 +156,16 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
             .map((obj) => {
               const value = getValue(obj, field.referencePath!);
               if (!value || typeof value !== 'string') {
+                console.log(obj, field);
                 return undefined;
               }
 
               return {
                 label: value,
-                // apply: () => {
-                //   console.log('###', obj);
-                // },
+                apply: () => {
+                  // TODO(burdon): Update.
+                  console.log('###', obj);
+                },
               };
             })
             .filter(isNotFalsy);
@@ -218,17 +219,10 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
         triggerRef={triggerRef}
       />
 
-      <ColumnCreate
-        // TODO(burdon): Replace with ColumnSettings.
-        model={model}
-        open={menuState?.type === 'newColumn'}
-        onOpenChange={close}
-        triggerRef={triggerRef}
-      />
       <ColumnSettings
         model={model}
-        fieldId={menuState?.type === 'columnSettings' ? menuState.fieldId : undefined}
         open={menuState?.type === 'columnSettings'}
+        mode={menuState?.type === 'columnSettings' ? menuState?.mode ?? { type: 'create' } : { type: 'create' }}
         onOpenChange={close}
         triggerRef={triggerRef}
       />

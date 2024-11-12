@@ -2,35 +2,38 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type RefObject, useMemo } from 'react';
+import React, { type RefObject, useMemo, useEffect, useState } from 'react';
 
 import { DropdownMenu, type DropdownMenuRootProps } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-data';
-import { type FieldProjection } from '@dxos/schema';
+import { type FieldType } from '@dxos/schema';
 
+import { type ColumnSettingsMode } from '../../hooks';
 import { type TableModel } from '../../model';
 
-export type ColumnSettingsModalProps = {
+export type ColumnSettingsProps = {
   model?: TableModel;
-  fieldId?: string;
+  mode: ColumnSettingsMode;
   triggerRef: RefObject<HTMLButtonElement>;
 } & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
 
-// TODO(burdon): Reconcile with ColumnCreate.
-export const ColumnSettings = ({ model, open, fieldId, onOpenChange, triggerRef }: ColumnSettingsModalProps) => {
-  const field = useMemo(
-    () => model?.table?.view?.fields.find((f) => f.id === fieldId),
-    [model?.table?.view?.fields, fieldId],
-  );
+export const ColumnSettings = ({ model, mode, open, onOpenChange, triggerRef }: ColumnSettingsProps) => {
+  const [newField, setNewField] = useState<FieldType>();
 
-  // TODO(burdon): Props are not used?
-  const props = useMemo<FieldProjection | undefined>(() => {
-    if (field) {
-      return model?.projection.getFieldProjection(field.id);
+  useEffect(() => {
+    if (mode.type === 'create' && model?.projection && open) {
+      setNewField(model.projection.createFieldProjection());
+    } else {
+      setNewField(undefined);
     }
-  }, [model?.projection, field]);
+  }, [model?.projection, open, mode]);
 
-  if (!model?.table?.view?.fields || !field || !model?.projection || !props) {
+  const existingField = useMemo(() => {
+    return mode.type === 'edit' ? model?.table?.view?.fields.find((f) => f.id === mode.fieldId) : undefined;
+  }, [model?.table?.view?.fields, mode]);
+
+  const field = existingField ?? newField;
+  if (!model?.table?.view || !model.projection || !field) {
     return null;
   }
 
