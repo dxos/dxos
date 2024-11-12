@@ -165,16 +165,30 @@ describe('ViewProjection', () => {
     });
 
     const { field, props } = projection.getFieldProjection(getFieldId(view, 'org'));
+
     expect(field).to.deep.eq({
       id: getFieldId(view, 'org'),
       path: 'org',
       referencePath: 'name',
     });
+
     expect(props).to.deep.eq({
       property: 'org',
       type: TypeEnum.Ref,
       format: FormatEnum.Ref,
       referenceSchema: 'example.com/type/Org',
+      referencePath: 'name',
+    });
+
+    // Note: `referencePath` is stripped from schema.
+    expect(schema.jsonSchema.properties?.['org' as const]).to.deep.eq({
+      $id: '/schemas/echo/ref',
+      reference: {
+        schema: {
+          $ref: 'dxn:type:example.com/type/Org',
+        },
+        schemaVersion: '0.1.0',
+      },
     });
   });
 
