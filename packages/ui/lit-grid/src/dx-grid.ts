@@ -406,7 +406,7 @@ export class DxGrid extends LitElement {
     if (event.isPrimary) {
       const { action, actionEl } = closestAction(event.target);
       if (action && action === 'cell') {
-        if (event.shiftKey) {
+        if (event.shiftKey && this.mode === 'browse') {
           // Prevent focus moving so the pointerup handler can move selectionEnd.
           event.preventDefault();
           this.pointer = { state: 'selecting' };
@@ -425,10 +425,8 @@ export class DxGrid extends LitElement {
           if (this.mode === 'edit-select') {
             // Prevent focus moving when editing while selection is possible
             event.preventDefault();
-          } else {
-            if (this.focusActive && isSameCell(this.focusedCell, cellCoords)) {
-              this.dispatchEditRequest();
-            }
+          } else if (this.focusActive && isSameCell(this.focusedCell, cellCoords)) {
+            this.dispatchEditRequest();
           }
         }
       }
@@ -1022,11 +1020,11 @@ export class DxGrid extends LitElement {
     if (increment) {
       switch (increment) {
         case 'col': {
-          this.focusedCell.col += delta;
+          this.focusedCell.col = Math.max(0, Math.min(this.limitColumns - 1, this.focusedCell.col + delta));
           break;
         }
         case 'row': {
-          this.focusedCell.row += delta;
+          this.focusedCell.row = Math.max(0, Math.min(this.limitRows - 1, this.focusedCell.row + delta));
           break;
         }
       }
@@ -1492,27 +1490,11 @@ export class DxGrid extends LitElement {
   }
 
   override willUpdate(changedProperties: Map<string, any>) {
-    if (
-      this.getCells &&
-      (changedProperties.has('initialCells') ||
-        changedProperties.has('visColMin') ||
-        changedProperties.has('visColMax') ||
-        changedProperties.has('visRowMin') ||
-        changedProperties.has('visRowMax') ||
-        changedProperties.has('columns') ||
-        changedProperties.has('rows') ||
-        changedProperties.has('limitColumns') ||
-        changedProperties.has('limitRows'))
-    ) {
-      this.updateCells(true);
-    }
-
     if (changedProperties.has('rowDefault') || changedProperties.has('rows') || changedProperties.has('limitRows')) {
       this.updateIntrinsicBlockSize();
       this.updatePosBlock();
       this.updateVisBlock();
     }
-
     if (
       changedProperties.has('colDefault') ||
       changedProperties.has('columns') ||
@@ -1530,6 +1512,21 @@ export class DxGrid extends LitElement {
     if (changedProperties.has('rows')) {
       this.computeRowSizes();
       this.updateIntrinsicBlockSize();
+    }
+
+    if (
+      this.getCells &&
+      (changedProperties.has('initialCells') ||
+        changedProperties.has('visColMin') ||
+        changedProperties.has('visColMax') ||
+        changedProperties.has('visRowMin') ||
+        changedProperties.has('visRowMax') ||
+        changedProperties.has('columns') ||
+        changedProperties.has('rows') ||
+        changedProperties.has('limitColumns') ||
+        changedProperties.has('limitRows'))
+    ) {
+      this.updateCells(true);
     }
   }
 
