@@ -16,6 +16,27 @@ import { type Ref } from '../types';
  */
 export const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 
+const DXN = /dxn:type:(.+)/;
+
+export const getSchemaReference = (property: any): string | undefined => {
+  const { $id, reference: { schema: { $ref } = {} } = {} } = property;
+  if ($id === JSON_SCHEMA_ECHO_REF_ID) {
+    const match = $ref?.match(DXN);
+    return match?.[1];
+  }
+};
+
+export const setSchemaReference = (property: any, schema: string) => {
+  Object.assign(property, {
+    $id: JSON_SCHEMA_ECHO_REF_ID,
+    reference: {
+      schema: {
+        $ref: `dxn:type:${schema}`,
+      },
+    },
+  });
+};
+
 export interface ref<T> extends S.Schema<Ref<T>, EncodedReference> {}
 
 export const ref = <T extends HasId>(schema: S.Schema<T, any>): ref<T> => {

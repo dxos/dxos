@@ -3,17 +3,17 @@
 //
 
 import {
-  JSON_SCHEMA_ECHO_REF_ID,
   formatToType,
   typeToFormat,
   FormatEnum,
+  type JsonPath,
   type JsonProp,
-  type JsonSchemaType,
   type MutableSchema,
   S,
   TypeEnum,
-  type JsonPath,
+  type JsonSchemaType,
 } from '@dxos/echo-schema';
+import { getSchemaReference, setSchemaReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -21,8 +21,6 @@ import { getDeep, omit, pick, setDeep } from '@dxos/util';
 
 import { PropertySchema, type PropertyType } from './format';
 import { type ViewType, type FieldType } from './view';
-
-const DXN = /dxn:type:(.+)/;
 
 /**
  * Composite of view and schema metadata for a property.
@@ -75,41 +73,28 @@ export class ViewProjection {
     invariant(field, `invalid field: ${fieldId}`);
     invariant(field.path.indexOf('.') === -1); // TODO(burdon): Paths not currently supported.
 
-    const {
-      $id,
-      type: schemaType,
-      format: schemaFormat = FormatEnum.None,
-      reference,
-      ...rest
-    } = this._schema.jsonSchema.properties[field.path] ?? {
-      format: FormatEnum.None,
-    };
+    const jsonProperty: JsonSchemaType = this._schema.jsonSchema.properties[field.path] ?? { format: FormatEnum.None };
+    const { type: schemaType, format: schemaFormat = FormatEnum.None, ...rest } = jsonProperty;
+    const referenceSchema = getSchemaReference(jsonProperty);
 
     let type: TypeEnum = schemaType as TypeEnum;
     let format: FormatEnum = schemaFormat as FormatEnum;
-
-    // Map reference.
-    let referenceSchema: string | undefined;
-    if ($id && reference) {
+    if (referenceSchema) {
       type = TypeEnum.Ref;
       format = FormatEnum.Ref;
-      const match = reference.schema.$ref?.match(DXN);
-      if (match) {
-        referenceSchema = match[1];
-      }
-    }
-    if (format === FormatEnum.None) {
+    } else if (format === FormatEnum.None) {
       format = typeToFormat[type as TypeEnum]!;
     }
 
     const values = {
-      property: field.path as JsonProp,
       type,
       format,
+      property: field.path as JsonProp,
       referenceSchema,
       referencePath: field.referencePath,
       ...rest,
     };
+
     const props = values.type ? this._decode(values) : values;
 
     log('getFieldProjection', { field, props });
@@ -131,7 +116,7 @@ export class ViewProjection {
     if (field) {
       const propsValues = props ? (pick(props, ['referencePath']) as Partial<FieldType>) : undefined;
       const clonedField: FieldType = { ...field, ...propsValues };
-      const fieldIndex = this._view.fields.findIndex((f) => f.path === sourcePropertyName);
+      const fieldIndex = this._view.fields.findIndex((field) => field.path === sourcePropertyName);
       if (fieldIndex === -1) {
         if (index !== undefined && index >= 0 && index <= this._view.fields.length) {
           this._view.fields.splice(index, 0, clonedField);
@@ -150,33 +135,21 @@ export class ViewProjection {
       invariant(property);
       invariant(format);
 
-      if (isRename) {
-        delete this._schema.jsonSchema.properties![sourcePropertyName!];
-      }
-
-      let $id;
-      let reference;
+      const jsonProperty: JsonSchemaType = {};
       if (referenceSchema) {
-        $id = JSON_SCHEMA_ECHO_REF_ID;
+        setSchemaReference(jsonProperty, referenceSchema);
         type = undefined;
         format = undefined;
-        reference = {
-          schema: {
-            $ref: `dxn:type:${referenceSchema}`,
-          },
-        };
-      }
-      if (format) {
+      } else if (format) {
         type = formatToType[format];
-      }
-      if (type === format) {
-        format = undefined;
       }
 
       invariant(type !== TypeEnum.Ref);
-      const values: JsonSchemaType = { $id, type, format, reference, ...rest };
       this._schema.jsonSchema.properties ??= {};
-      this._schema.jsonSchema.properties[property] = values;
+      this._schema.jsonSchema.properties[property] = { type, format, ...jsonProperty, ...rest };
+      if (isRename) {
+        delete this._schema.jsonSchema.properties[sourcePropertyName!];
+      }
     }
   }
 

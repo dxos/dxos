@@ -49,10 +49,15 @@ const DefaultStory = ({ editing }: StoryProps) => {
 
   const model = useTableModel({ table, projection });
 
-  const handleComplete: CellEditorProps['onQuery'] = async (field, text) => {
+  const handleQuery: CellEditorProps['onQuery'] = async ({ field }) => {
     const { objects } = await space.db.query(schema).run();
-    // TODO(burdon): Better fallback property.
-    return objects.map((obj) => obj[field.field.referencePath ?? 'id']);
+    return objects.map((obj) => {
+      const label = obj[field.referencePath ?? 'id'];
+      return {
+        label,
+        data: obj,
+      };
+    });
   };
 
   if (!model || !schema || !table) {
@@ -60,9 +65,9 @@ const DefaultStory = ({ editing }: StoryProps) => {
   }
 
   return (
-    <div className='flex w-[300px] h-[100px] border border-separator'>
+    <div className='flex w-[300px] h-[32px] border border-separator'>
       <Grid.Root id='test'>
-        <CellEditor model={model} editing={editing} onQuery={handleComplete} />
+        <CellEditor model={model} editing={editing} onQuery={handleQuery} />
       </Grid.Root>
     </div>
   );
@@ -103,7 +108,7 @@ export const Default: Story = {
   args: {
     editing: {
       index: '0,3',
-      initialContent: '',
+      initialContent: 'Test',
     },
   },
 };
