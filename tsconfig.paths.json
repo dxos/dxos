@@ -134,6 +134,12 @@
       "@dxos/plugin-attention/meta": [
         "packages/plugins/plugin-attention/src/meta.ts"
       ],
+      "@dxos/plugin-calls": [
+        "packages/plugins/plugin-calls/src/index.ts"
+      ],
+      "@dxos/plugin-calls/meta": [
+        "packages/plugins/plugin-calls/src/meta.tsx"
+      ],
       "@dxos/plugin-chess": [
         "packages/plugins/plugin-chess/src/index.ts"
       ],
