@@ -7,7 +7,6 @@ import React, { forwardRef, type PropsWithChildren, useCallback, useImperativeHa
 import { invariant } from '@dxos/invariant';
 import { Filter, getSpace } from '@dxos/react-client/echo';
 import {
-  type DxAxisResize,
   type DxGridElement,
   Grid,
   type GridContentProps,
@@ -101,6 +100,16 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     dxGrid?.refocus(increment, delta);
   };
 
+  const handleEnter = useCallback<NonNullable<TableCellEditorProps['onEnter']>>(
+    (cell) => {
+      // TODO(burdon): Insert row only if bottom row isn't completely blank already.
+      if (model && cell.row === model.getRowCount() - 1) {
+        model.insertRow(cell.row);
+      }
+    },
+    [model],
+  );
+
   const handleKeyDown = useCallback<NonNullable<GridContentProps['onKeyDown']>>(
     (event) => {
       const cell = closestCell(event.target);
@@ -119,18 +128,8 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     [model],
   );
 
-  const handleEnter = useCallback<NonNullable<TableCellEditorProps['onEnter']>>(
-    (cell) => {
-      // TODO(burdon): Insert row only if bottom row isn't completely blank already.
-      if (model && cell.row === model.getRowCount() - 1) {
-        model.insertRow(cell.row);
-      }
-    },
-    [model],
-  );
-
-  const handleAxisResize = useCallback(
-    (event: DxAxisResize) => {
+  const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
+    (event) => {
       if (event.axis === 'col') {
         const columnIndex = parseInt(event.index, 10);
         model?.setColumnWidth(columnIndex, event.size);
@@ -139,18 +138,15 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     [model],
   );
 
-  // TODO(burdon): Move to model?
-  const handleComplete = useCallback<NonNullable<CellEditorProps['onComplete']>>(
+  // TODO(burdon): Factor out?
+  const handleQuery = useCallback<NonNullable<CellEditorProps['onQuery']>>(
     async ({ field, props }, _text) => {
-      if (!model) {
-        return [];
-      }
-
-      if (props.referenceSchema && field.referencePath) {
+      if (model && props.referenceSchema && field.referencePath) {
         const space = getSpace(model.table);
         invariant(space);
         const schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
         if (schema) {
+          // TODO(burdon): Cache/filter.
           const { objects } = await space.db.query(Filter.schema(schema)).run();
           return objects
             .map((obj) => {
@@ -179,7 +175,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     <>
       {/* TODO(burdon): Is this required to be unique? */}
       <Grid.Root id={model?.table.id ?? 'table-grid'}>
-        <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} onComplete={handleComplete} />
+        <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} onQuery={handleQuery} />
 
         <Grid.Content
           className={mx(
@@ -231,9 +227,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
 // CellEditor
 //
 
-export type TableCellEditorProps = GridScopedProps<
-  Pick<CellEditorProps, 'model' | 'onEnter' | 'onFocus' | 'onComplete'>
->;
+export type TableCellEditorProps = GridScopedProps<Pick<CellEditorProps, 'model' | 'onEnter' | 'onFocus' | 'onQuery'>>;
 
 const TableCellEditor = ({ __gridScope, model, onEnter, ...props }: TableCellEditorProps) => {
   const { editing, setEditing } = useGridContext('TableCellEditor', __gridScope);

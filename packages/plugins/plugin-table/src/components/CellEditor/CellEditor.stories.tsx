@@ -49,7 +49,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
 
   const model = useTableModel({ table, projection });
 
-  const handleComplete: CellEditorProps['onComplete'] = async (field, text) => {
+  const handleComplete: CellEditorProps['onQuery'] = async (field, text) => {
     const { objects } = await space.db.query(schema).run();
     // TODO(burdon): Better fallback property.
     return objects.map((obj) => obj[field.field.referencePath ?? 'id']);
@@ -62,7 +62,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
   return (
     <div className='flex w-[300px] h-[100px] border border-separator'>
       <Grid.Root id='test'>
-        <CellEditor model={model} editing={editing} onComplete={handleComplete} />
+        <CellEditor model={model} editing={editing} onQuery={handleComplete} />
       </Grid.Root>
     </div>
   );
